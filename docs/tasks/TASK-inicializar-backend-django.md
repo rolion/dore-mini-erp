@@ -1,6 +1,6 @@
 # TASK-inicializar-backend-django: Inicializar el proyecto backend con Django
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-inicializar-backend-django`
@@ -13,6 +13,7 @@
 | 2026-10-05 | ARCHITECTURE → PLANNING | ADRs de stack/estructura y modelo de usuario propuestos | delivery-architect |
 | 2026-10-05 | PLANNING → ENGINEERING | Plan v1 listo y PR abierto, pendiente de aprobación | delivery-plan |
 | 2026-10-05 | ENGINEERING → REVIEW | Implementación completa | delivery-engineer |
+| 2026-10-05 | REVIEW → PUBLISH | Quality Gate PASS, sin issues abiertos | delivery-review |
 
 ## Investigación
 
@@ -85,7 +86,7 @@ Desvíos menores del plan: `wsgi.py`/`asgi.py` usan `config.settings.production`
 Deuda: sin lockfile transitivo, CI ni Docker (fuera de alcance).
 
 ## Review
-_Pendiente_
+**PASS** — ver secciones Testing y Review del PR #2 (https://github.com/rolion/dore-mini-erp/pull/2). 5/5 tests OK contra PostgreSQL, `check`, `makemigrations --check`, `bandit` sin hallazgos. Sin issues abiertos. Limitación: revisión en la misma sesión que la implementación (aislamiento procedimental). No se ejecutaron lint/mypy/coverage por no estar configurados en el proyecto.
 
 ## Publicación
 _Pendiente_
