@@ -14,6 +14,7 @@
 | 2026-10-05 | PLANNING → ENGINEERING | Plan v1 listo y PR abierto, pendiente de aprobación | delivery-plan |
 | 2026-10-05 | ENGINEERING → REVIEW | Implementación completa | delivery-engineer |
 | 2026-10-05 | REVIEW → PUBLISH | Quality Gate PASS, sin issues abiertos | delivery-review |
+| 2026-10-05 | PUBLISH → PUBLISH | Re-review del commit 3672037 (carga de `.env`) a pedido del usuario: PASS | delivery-review |
 
 ## Investigación
 
@@ -87,6 +88,7 @@ Deuda: sin lockfile transitivo, CI ni Docker (fuera de alcance).
 
 ## Review
 **PASS** — ver secciones Testing y Review del PR #2 (https://github.com/rolion/dore-mini-erp/pull/2). 5/5 tests OK contra PostgreSQL, `check`, `makemigrations --check`, `bandit` sin hallazgos. Sin issues abiertos. Limitación: revisión en la misma sesión que la implementación (aislamiento procedimental). No se ejecutaron lint/mypy/coverage por no estar configurados en el proyecto.
+Re-review de `3672037` (cambio posterior: `backend/settings/base.py` carga `backend/.env`): **PASS**, sin issues; observación baja: sin test automático de la carga de `.env`.
 
 ## Publicación
 _Pendiente_
