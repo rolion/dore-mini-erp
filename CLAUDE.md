@@ -4,7 +4,7 @@ Mini ERP. Proyecto nuevo, en construcción.
 
 ## Estructura
 
-- `backend/` — API en Python + Django + DRF, monolito modular con DDD pragmático en `backend/modules/` (aún vacío). Ver `docs/architecture/ddd.md`.
+- `backend/` — API en Python + Django + DRF, monolito modular con DDD pragmático en `backend/modules/` (aún vacío). Base de datos: PostgreSQL. Ver `docs/architecture/ddd.md`.
 - `frontend/panel_admin/` — Angular 21 sobre la plantilla "Oreva" (Bootstrap 5, ngx-datatable, ng-select, ngx-translate).
 - `frontend/panel_admin_doc/` — documentación HTML de la plantilla (referencia, no se edita).
 - `docs/` — artefactos del flujo `delivery-*` (ver `docs/README.md`).
@@ -13,7 +13,7 @@ Mini ERP. Proyecto nuevo, en construcción.
 ## Comandos
 
 - Frontend (desde `frontend/panel_admin/`): `npm start`, `npm run build`, `npm test` (Karma), `npm run lint`.
-- Backend (desde `backend/`): `python manage.py runserver`, `python manage.py test`, `python manage.py makemigrations`, `python manage.py migrate`. Actualizar esta sección cuando se defina el entorno (venv, requirements, DB).
+- Backend (desde `backend/`): `python manage.py runserver`, `python manage.py test`, `python manage.py makemigrations`, `python manage.py migrate`. Base de datos: PostgreSQL (no usar SQLite salvo tests explícitos); la conexión se configura por variables de entorno, nunca hardcodeada. Actualizar esta sección cuando se defina el entorno (venv, requirements, DB).
 
 ## Reglas
 
