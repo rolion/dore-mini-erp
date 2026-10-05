@@ -1,13 +1,13 @@
 ---
 name: delivery-plan
-description: Convierte la investigación y (si existen) las decisiones arquitectónicas de un task en un plan de implementación concreto y ejecutable para este monorepo (praxsa_manager en Django/DRF + proforma en Angular). Lee docs/tasks/TASK-<slug>.md, incorpora los ADR relevantes de docs/adr/, define cambios backend/frontend/base de datos, estrategia de testing (incluyendo el criterio explícito de si corresponde E2E con Playwright), acceptance criteria, edge cases, riesgos y fuera de alcance. Guarda el plan versionado en docs/plans/PLAN-<fecha>-<slug>.md y abre el único Pull Request del task (con el plan como primer contenido, sin código todavía), dejando el enlace registrado en el TASK. Si se le pide una actualización del plan (PLAN_UPDATE_REQUIRED), no sobrescribe en silencio: versiona e incluye un changelog. Respeta las reglas de docs/CLAUDE.md. Se invoca explícitamente con /delivery-plan TASK-<slug>; no debe activarse solo porque el usuario mencione "plan" o "implementar" en una frase suelta.
+description: Convierte la investigación y (si existen) las decisiones arquitectónicas de un task en un plan de implementación concreto y ejecutable para este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular). Lee docs/tasks/TASK-<slug>.md, incorpora los ADR relevantes de docs/adr/, define cambios backend/frontend/base de datos, estrategia de testing (incluyendo el criterio explícito de si corresponde E2E con Playwright), acceptance criteria, edge cases, riesgos y fuera de alcance. Guarda el plan versionado en docs/plans/PLAN-<fecha>-<slug>.md y abre el único Pull Request del task (con el plan como primer contenido, sin código todavía), dejando el enlace registrado en el TASK. Si se le pide una actualización del plan (PLAN_UPDATE_REQUIRED), no sobrescribe en silencio: versiona e incluye un changelog. Respeta las reglas de docs/CLAUDE.md. Se invoca explícitamente con /delivery-plan TASK-<slug>; no debe activarse solo porque el usuario mencione "plan" o "implementar" en una frase suelta.
 ---
 
 # Delivery Plan
 
 ## Por qué existe este skill
 
-`docs/CLAUDE.md` pide: "Antes de cambios que afecten varios archivos, proponer un plan y esperar confirmación." Este skill es esa práctica hecha repetible, y además el punto donde nace el único Pull Request de un task: abre el PR con el plan como contenido inicial, para que un humano pueda revisarlo y aprobarlo antes de que exista una sola línea de código de implementación. `delivery-engineer` seguirá empujando commits a esa misma rama/PR — este skill nunca abre un segundo PR para el mismo task.
+`CLAUDE.md` del proyecto (si existe) o la práctica del equipo pide: "Antes de cambios que afecten varios archivos, proponer un plan y esperar confirmación." Este skill es esa práctica hecha repetible, y además el punto donde nace el único Pull Request de un task: abre el PR con el plan como contenido inicial, para que un humano pueda revisarlo y aprobarlo antes de que exista una sola línea de código de implementación. `delivery-engineer` seguirá empujando commits a esa misma rama/PR — este skill nunca abre un segundo PR para el mismo task.
 
 ## Cuándo usarlo
 
@@ -45,9 +45,9 @@ Aunque el veredicto haya sido `NEEDS_PLAN` (sin `delivery-architect` de por medi
 - **Contrato API**: ¿rompe algo que Angular ya consume? ¿hay que coordinar despliegue backend/frontend?
 - **Datos existentes**: ¿una migración puede fallar o dejar datos inconsistentes?
 - **Dinero y precisión**: todo cálculo de precios/pagos en `Decimal`, nunca `float`.
-- **Rendimiento**: consultas N+1, cálculos en loop sobre inventario/proformas.
+- **Rendimiento**: consultas N+1, cálculos en loop sobre grandes conjuntos de datos.
 - **Seguridad y permisos**: vistas de admin o endpoints que deberían estar restringidos.
-- **Acoplamiento**: dada la deuda técnica conocida, ¿tocar este archivo tiene efectos secundarios en otra parte?
+- **Acoplamiento**: ¿tocar este archivo tiene efectos secundarios en otra parte?
 - **Consistencia visual**: si el task sí pasó por `delivery-design`, los componentes/patrones ya están decididos en el DDR — no los reinventes acá, solo tradúcelos a pasos de implementación.
 
 Si el task sí pasó por `delivery-architect`, esta sección resume las decisiones de los ADR relevantes en vez de re-derivarlas.
@@ -55,10 +55,10 @@ Si el task sí pasó por `delivery-architect`, esta sección resume las decision
 ### 4. Definir la estrategia de testing con criterio explícito de E2E
 
 No agregues E2E con Playwright por reflejo. Justifica explícitamente sí o no:
-- **Sí corresponde E2E** cuando el cambio afecta un flujo crítico de usuario de punta a punta (ej. login → elegir sucursal → generar proforma → pago), cambia navegación o un formulario multi-paso, o depende de la integración real entre frontend y backend de una forma que un test de integración aislado no puede validar.
+- **Sí corresponde E2E** cuando el cambio afecta un flujo crítico de usuario de punta a punta (ej. login → flujo principal de negocio → confirmación), cambia navegación o un formulario multi-paso, o depende de la integración real entre frontend y backend de una forma que un test de integración aislado no puede validar.
 - **No corresponde E2E** en el resto de los casos — dilo explícitamente con el motivo, no lo omitas.
-- Este proyecto no tiene Playwright instalado en `proforma/package.json` todavía. Si el plan concluye que sí hace falta E2E, marca la instalación de Playwright en "Dependencias nuevas" — es una dependencia nueva que requiere confirmación antes de que `delivery-engineer` la instale.
-- Para el resto de los casos, define si corresponde nivel unitario, de integración, o ambos, siguiendo los patrones ya usados (`praxsa_manager/product/tests/` con `helpers.py`; Angular con `TestBed` + `HttpTestingController`).
+- Verifica si Playwright ya está en `frontend/panel_admin/package.json`; si no lo está y el plan concluye que sí hace falta E2E, marca la instalación de Playwright en "Dependencias nuevas" — es una dependencia nueva que requiere confirmación antes de que `delivery-engineer` la instale.
+- Para el resto de los casos, define si corresponde nivel unitario, de integración, o ambos, siguiendo los patrones ya usados (tests del backend en `backend/`; Angular con `TestBed` + `HttpTestingController`).
 
 ### 5. Escribir el plan
 
@@ -116,9 +116,9 @@ Si aplica, qué se necesita instalar — requiere confirmación antes de que `de
 Si `**Pull Request:**` en el TASK ya tiene un enlace, salta al paso 7 — no abras un segundo PR.
 
 1. Revisa el estado del repo (`git status`) y no descartes trabajo sin comitear ajeno.
-2. Trae `origin/master` actualizado y crea la rama `task/TASK-<slug>` desde ahí (el nombre del task ya es descriptivo, no le agregues otro slug encima).
+2. Trae `origin/main` actualizado y crea la rama `task/TASK-<slug>` desde ahí (el nombre del task ya es descriptivo, no le agregues otro slug encima).
 3. Comitea únicamente el archivo del plan (y el TASK actualizado si vive en la misma rama de trabajo — normalmente el TASK se mantiene en la rama por defecto del repo si así lo prefiere el equipo; si no es obvio, pregunta). Mensaje de commit corto referenciando el plan.
-4. `git push` y abre el PR contra la rama base (normalmente `master`) con este cuerpo inicial:
+4. `git push` y abre el PR contra la rama base (normalmente `main`) con este cuerpo inicial:
 
 ```markdown
 ## Summary

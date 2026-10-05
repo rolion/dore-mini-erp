@@ -1,6 +1,6 @@
 ---
 name: delivery-review
-description: Actúa como Quality Gate independiente de la implementación de un task en este monorepo (praxsa_manager en Django/DRF + proforma en Angular). Evalúa el estado acumulado del PR único del task (plan + código en el momento de la revisión), ejecutando de verdad las verificaciones funcionales (unit, integración, E2E cuando corresponda) y técnicas (lint, formatting, type checking, build, coverage, security checks como bandit/npm audit) con evidencia real de cada comando, y comparando la implementación contra el plan (acceptance criteria, alcance, ADRs, tests definidos). Nunca corrige código: documenta cada problema como issue en docs/reviews/REV-<fecha>-<task-slug>-<seq>.md, con triage IMPLEMENTATION/PLAN/ARCHITECTURE, y emite PASS o FAIL. Debe ejecutarse preferentemente en una sesión nueva, sin el historial de delivery-engineer, usando el plan, el diff y los ADRs como única fuente de verdad. Se invoca explícitamente con /delivery-review TASK-<slug>; no debe activarse solo porque el usuario mencione "revisar" o "aprobar" en una frase suelta.
+description: Actúa como Quality Gate independiente de la implementación de un task en este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular). Evalúa el estado acumulado del PR único del task (plan + código en el momento de la revisión), ejecutando de verdad las verificaciones funcionales (unit, integración, E2E cuando corresponda) y técnicas (lint, formatting, type checking, build, coverage, security checks como bandit/npm audit) con evidencia real de cada comando, y comparando la implementación contra el plan (acceptance criteria, alcance, ADRs, tests definidos). Nunca corrige código: documenta cada problema como issue en docs/reviews/REV-<fecha>-<task-slug>-<seq>.md, con triage IMPLEMENTATION/PLAN/ARCHITECTURE, y emite PASS o FAIL. Debe ejecutarse preferentemente en una sesión nueva, sin el historial de delivery-engineer, usando el plan, el diff y los ADRs como única fuente de verdad. Se invoca explícitamente con /delivery-review TASK-<slug>; no debe activarse solo porque el usuario mencione "revisar" o "aprobar" en una frase suelta.
 ---
 
 # Delivery Review
@@ -13,7 +13,7 @@ Es el Quality Gate del flujo: el punto donde alguien que no escribió el código
 
 Todas las skills `delivery-*` pueden ejecutarse en la misma sesión de Claude Code — no hay aislamiento real de memoria entre ellas. Si esta skill corre en la misma sesión donde se acaba de implementar el código con `delivery-engineer`, existe sesgo de continuidad: es fácil "recordar" por qué se escribió algo de determinada forma y darlo por bueno en vez de cuestionarlo de nuevo.
 
-**Mitigación esperada:** ejecuta `delivery-review` en una sesión o contexto nuevo de Claude Code siempre que sea posible (una terminal/ventana distinta, o después de limpiar el contexto). Al iniciar, no asumas nada de una conversación previa sobre esta implementación: lee únicamente `docs/tasks/TASK-<slug>.md`, el plan enlazado (con su changelog), los ADR relacionados, y el diff real del PR (`git diff origin/master...HEAD` o el que corresponda) como única fuente de verdad. Si te invocan en la misma sesión que acaba de correr `delivery-engineer`, dilo explícitamente al usuario como una limitación de esta ejecución concreta (no te niegues a revisar, pero deja constancia de que el aislamiento es procedimental, no real).
+**Mitigación esperada:** ejecuta `delivery-review` en una sesión o contexto nuevo de Claude Code siempre que sea posible (una terminal/ventana distinta, o después de limpiar el contexto). Al iniciar, no asumas nada de una conversación previa sobre esta implementación: lee únicamente `docs/tasks/TASK-<slug>.md`, el plan enlazado (con su changelog), los ADR relacionados, y el diff real del PR (`git diff origin/main...HEAD` o el que corresponda) como única fuente de verdad. Si te invocan en la misma sesión que acaba de correr `delivery-engineer`, dilo explícitamente al usuario como una limitación de esta ejecución concreta (no te niegues a revisar, pero deja constancia de que el aislamiento es procedimental, no real).
 
 ## Cuándo usarlo
 
@@ -33,13 +33,13 @@ Solo cuando el usuario invoque `/delivery-review TASK-<slug>` explícitamente.
 
 ### 1. Reconstruir contexto solo desde artefactos
 
-Lee, en este orden, sin asumir nada previo: `docs/tasks/TASK-<slug>.md` completo, el plan vigente en `docs/plans/` (versión actual + changelog si lo hay), los ADR enlazados, y el diff acumulado del PR contra la base (`git diff origin/master...HEAD`, o la rama base que corresponda). Si el TASK no está en etapa `REVIEW`, detente y dilo.
+Lee, en este orden, sin asumir nada previo: `docs/tasks/TASK-<slug>.md` completo, el plan vigente en `docs/plans/` (versión actual + changelog si lo hay), los ADR enlazados, y el diff acumulado del PR contra la base (`git diff origin/main...HEAD`, o la rama base que corresponda). Si el TASK no está en etapa `REVIEW`, detente y dilo.
 
 ### 2. Verificación funcional — ejecutando, no solo leyendo
 
 Corre los comandos reales y registra la salida tal cual (sin suavizarla):
-- **Unit / integración backend**: `python manage.py test` (o acotado al app afectado) desde `praxsa_manager/`.
-- **Unit / integración frontend**: `ng test --watch=false --browsers=ChromeHeadless` desde `proforma/` (agrega `--code-coverage` para el paso de cobertura).
+- **Unit / integración backend**: `python manage.py test` (o acotado al app afectado) desde `backend/`.
+- **Unit / integración frontend**: `ng test --watch=false --browsers=ChromeHeadless` desde `frontend/panel_admin/` (agrega `--code-coverage` para el paso de cobertura).
 - **E2E**: solo si el plan lo definió como necesario y Playwright está instalado — corre la suite real y registra la salida. Si el plan pedía E2E y la herramienta no está instalada, es un hallazgo de categoría `IMPLEMENTATION` (o `PLAN` si nunca se gestionó la dependencia).
 - **Regresión**: si el cambio toca código compartido, corre también la suite completa del área afectada, no solo los tests nuevos.
 
@@ -52,8 +52,9 @@ Ejecuta lo que exista configurado en el proyecto y adjunta la salida real:
 - **Formatting**: el formateador que use el proyecto, si hay uno configurado.
 - **Type checking**: `mypy` si está configurado en backend; `tsc`/`ng build` (que type-chequea) en frontend.
 - **Build**: `ng build` en frontend como mínimo.
-- **Coverage**: `ng test --code-coverage` en frontend (usa `karma-coverage`, ya instalado). En backend, si `coverage.py` no está instalado, no lo instales por tu cuenta — revisa manualmente que cada función o rama nueva en `business/`, `custom_views/`, `serializer/`, etc. tenga un test que la ejercite, y dilo así en el reporte (verificación manual, no herramienta).
-- **Security checks**: corre las herramientas que ya estén disponibles en el proyecto (por ejemplo `npm audit` en `proforma/`; `bandit`/`safety` en backend si están instalados). Si ninguna está instalada, dilo explícitamente — no es un `PASS` silencioso, es una verificación no realizada que debe constar en el reporte.
+- **Coverage**: `ng test --code-coverage` en frontend (verifica que `karma-coverage` esté instalado). En backend, si `coverage.py` no está instalado, no lo instales por tu cuenta — revisa manualmente que cada función o rama nueva en services, views, serializers, etc. tenga un test que la ejercite, y dilo así en el reporte (verificación manual, no herramienta).
+- **Security checks**: corre las herramientas que ya estén disponibles en el proyecto (por ejemplo `npm audit` en `frontend/panel_admin/`; `bandit`/`safety` en backend si están instalados). Si ninguna está instalada, dilo explícitamente — no es un `PASS` silencioso, es una verificación no realizada que debe constar en el reporte.
+- **Límites DDD**: verifica contra `docs/architecture/ddd.md` que `domain/` no importe Django, que ningún módulo importe infraestructura/modelos de otro, que Reporting solo lea, y que no haya lógica de negocio en views/serializers.
 - **Clean code / SOLID**: señala violaciones evidentes **solo dentro del código nuevo o modificado por este cambio** (nunca del código preexistente no tocado), con severidad baja/media salvo que genere un riesgo real. No bloquees el PR por deuda técnica preexistente fuera del alcance del plan.
 
 ### 4. Plan compliance

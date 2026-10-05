@@ -1,6 +1,6 @@
 ---
 name: delivery-engineer
-description: Implementa el plan aprobado de un task (docs/tasks/TASK-<slug>.md) en este monorepo (praxsa_manager en Django/DRF + proforma en Angular), o —cuando el veredicto fue TRIVIAL_FIX— implementa directamente sobre la investigación sin plan ni ADR. Actúa como ingeniero de software senior experto en Django/DRF y Angular: sigue las convenciones existentes, escribe el nivel de pruebas que corresponde a cada caso (no siempre unit+integración+E2E), aplica clean code/SOLID sin forzar refactors fuera de alcance, y empuja sus commits a la misma rama/PR abierto por delivery-plan (o los abre él mismo en el camino TRIVIAL_FIX) — nunca crea un PR nuevo. Si descubre que el plan es incorrecto o incompleto, no cambia el alcance en silencio: lo documenta en el TASK y emite PLAN_UPDATE_REQUIRED o ARCHITECTURE_REVIEW_REQUIRED según corresponda, o lo resuelve directamente si es un detalle de implementación. No se aprueba a sí mismo ni ejecuta el Quality Gate. Se invoca explícitamente con /delivery-engineer TASK-<slug>; no debe activarse solo porque el usuario mencione "implementar" en una frase suelta.
+description: Implementa el plan aprobado de un task (docs/tasks/TASK-<slug>.md) en este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular), o —cuando el veredicto fue TRIVIAL_FIX— implementa directamente sobre la investigación sin plan ni ADR. Actúa como ingeniero de software senior experto en Django/DRF y Angular: sigue las convenciones existentes, escribe el nivel de pruebas que corresponde a cada caso (no siempre unit+integración+E2E), aplica clean code/SOLID sin forzar refactors fuera de alcance, y empuja sus commits a la misma rama/PR abierto por delivery-plan (o los abre él mismo en el camino TRIVIAL_FIX) — nunca crea un PR nuevo. Si descubre que el plan es incorrecto o incompleto, no cambia el alcance en silencio: lo documenta en el TASK y emite PLAN_UPDATE_REQUIRED o ARCHITECTURE_REVIEW_REQUIRED según corresponda, o lo resuelve directamente si es un detalle de implementación. No se aprueba a sí mismo ni ejecuta el Quality Gate. Se invoca explícitamente con /delivery-engineer TASK-<slug>; no debe activarse solo porque el usuario mencione "implementar" en una frase suelta.
 ---
 
 # Delivery Engineer
@@ -41,7 +41,7 @@ El PR ya lo abrió `delivery-plan`. Revisa `git status`, no descartes trabajo aj
 ### 2b. Camino TRIVIAL_FIX: abrir tú el PR
 
 No hay plan que abra el PR, así que lo haces tú antes de tocar código:
-1. `git status`, trae `origin/master`, crea `task/TASK-<slug>` desde ahí (el nombre del task ya es descriptivo, no le agregues otro slug encima).
+1. `git status`, trae `origin/main`, crea `task/TASK-<slug>` desde ahí (el nombre del task ya es descriptivo, no le agregues otro slug encima).
 2. Commit vacío o mínimo no es necesario — puedes abrir el PR como *draft* apenas tengas el primer commit de implementación, o abrirlo después del primer commit; cualquiera de las dos formas es válida siempre que quede registrado antes de terminar.
 3. El cuerpo inicial del PR usa la misma plantilla que `delivery-plan` (ver su SKILL.md, paso 6), reemplazando `## Plan` por: `_No aplica — veredicto TRIVIAL_FIX, ver Investigación en TASK-<slug>_`.
 4. Registra rama y PR en el TASK (`**Rama:**`, `**Pull Request:**`).
@@ -56,15 +56,16 @@ Si algún punto queda ambiguo para poder escribir el código — el plan describ
 
 ### 4. Implementar
 
-Sigue los pasos del plan en orden, sin salirte del alcance declarado. Aplica siempre `docs/CLAUDE.md`: cambios acotados a un objetivo, dinero en `Decimal` nunca `float`, nunca editar una migración ya aplicada (crear una nueva), no tocar `.env` ni credenciales, avisar antes de instalar cualquier dependencia nueva (aunque el plan ya la haya anticipado en "Dependencias nuevas" — confirma antes de correr `pip install`/`npm install`).
+Sigue los pasos del plan en orden, sin salirte del alcance declarado. Aplica siempre `CLAUDE.md` (si existe): cambios acotados a un objetivo, dinero en `Decimal` nunca `float`, nunca editar una migración ya aplicada (crear una nueva), no tocar `.env` ni credenciales, avisar antes de instalar cualquier dependencia nueva (aunque el plan ya la haya anticipado en "Dependencias nuevas" — confirma antes de correr `pip install`/`npm install`).
 
 **Django / DRF:**
-- Lógica de negocio fuera de las vistas: en `business/` (o `helper/` para utilidades), no inline en `custom_views/`.
+- Sigue `docs/architecture/ddd.md`: código en `backend/modules/<contexto>/` con capas `domain/` (entidades, value objects, reglas; sin imports de Django), `application/` (commands/queries/handlers), `infrastructure/` (modelos ORM, repositorios, mappers) y `api/` (serializers, views, urls). Las reglas de negocio viven en el dominio (`order.deliver()`, no `order.status = ...`); las views solo traducen HTTP a commands/queries.
+- Un módulo nunca importa modelos ni infraestructura de otro; se comunica por application services/interfaces o por ids (`customer_id`, `product_id`). Crea solo las carpetas que la tarea necesita.
 - Los serializers validan forma y tipos; no repliques esa validación a mano en la vista.
 - Cuidado con N+1: `select_related`/`prefetch_related` al iterar querysets con relaciones.
 - Todo cambio de modelo va con su migración generada por Django (`makemigrations`), nunca escrita ni editada a mano sobre una ya aplicada.
 - Dinero siempre en `Decimal`, incluyendo constantes y resultados intermedios.
-- Nombres y estructura consistentes con la carpeta donde se agrega código, no una convención propia nueva.
+- Nombres de commands (verbo: `CreateOrder`), queries (`GetOrder`) y eventos (pasado: `OrderCreated`) según el documento DDD. Nombres y estructura consistentes con la carpeta donde se agrega código, no una convención propia nueva.
 
 **Angular:**
 - Lógica que no es de presentación (HTTP, transformación de datos, reglas de negocio del frontend) va en un service inyectable.
@@ -78,15 +79,15 @@ Sigue los pasos del plan en orden, sin salirte del alcance declarado. Aplica sie
 ### 5. Escribir las pruebas — el nivel que corresponde
 
 Camino normal: la sección "Test strategy" del plan define los casos concretos; impleméntalos exactamente, con el nivel correcto:
-- **Unit**: lógica aislada sin BD ni HTTP (funciones en `business/`/`helper/`, o un service/pipe puro en Angular).
-- **Integración**: un endpoint DRF completo (view + serializer + modelo + BD real), siguiendo el patrón de `praxsa_manager/product/tests/test_smoke.py` y `helpers.py`. En Angular, componente + servicios reales vía `TestBed` + `HttpTestingController`.
-- **E2E**: solo si el plan lo pidió explícitamente con su justificación. Si el plan concluyó que hace falta Playwright y todavía no está instalado en `proforma/package.json`, la instalación es una dependencia nueva — confirma antes de agregarla.
+- **Unit**: lógica aislada sin BD ni HTTP (funciones de servicios/utilidades del backend, o un service/pipe puro en Angular).
+- **Integración**: un endpoint DRF completo (view + serializer + modelo + BD real), siguiendo el patrón de tests ya existente en `backend/` (APITestCase o pytest-django, factories/helpers compartidos). En Angular, componente + servicios reales vía `TestBed` + `HttpTestingController`.
+- **E2E**: solo si el plan lo pidió explícitamente con su justificación. Si el plan concluyó que hace falta Playwright y todavía no está instalado en `frontend/panel_admin/package.json`, la instalación es una dependencia nueva — confirma antes de agregarla.
 
 Camino `TRIVIAL_FIX`: usa criterio — la mayoría de estos cambios no necesitan test nuevo (un typo, un ajuste cosmético); si el cambio sí toca una condición o valor que un test existente debería cubrir, ajústalo.
 
 Señal de que te saliste de rango: si estás por escribir un test que no corresponde a ningún caso del plan (o, en `TRIVIAL_FIX`, que no tiene relación directa con el cambio), probablemente no debería estar ahí.
 
-Puedes correr las pruebas como verificación propia antes de comitear (`python manage.py test` desde `praxsa_manager/`, `ng test` desde `proforma/`), pero esa corrida es tuya, no la evidencia formal del Quality Gate — no declares el trabajo "verificado" en el TASK ni en el PR; eso es responsabilidad de `delivery-review`, que corre las pruebas de forma independiente.
+Puedes correr las pruebas como verificación propia antes de comitear (`python manage.py test` desde `backend/`, `ng test` desde `frontend/panel_admin/`), pero esa corrida es tuya, no la evidencia formal del Quality Gate — no declares el trabajo "verificado" en el TASK ni en el PR; eso es responsabilidad de `delivery-review`, que corre las pruebas de forma independiente.
 
 ### 6. Si el plan resulta incorrecto o incompleto: no lo cambies en silencio
 
