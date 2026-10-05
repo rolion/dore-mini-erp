@@ -4,7 +4,7 @@ Mini ERP. Proyecto nuevo, en construcción.
 
 ## Estructura
 
-- `backend/` — API en Python + Django + Django REST Framework (aún vacío).
+- `backend/` — API en Python + Django + DRF, monolito modular con DDD pragmático en `backend/modules/` (aún vacío). Ver `docs/architecture/ddd.md`.
 - `frontend/panel_admin/` — Angular 21 sobre la plantilla "Oreva" (Bootstrap 5, ngx-datatable, ng-select, ngx-translate).
 - `frontend/panel_admin_doc/` — documentación HTML de la plantilla (referencia, no se edita).
 - `docs/` — artefactos del flujo `delivery-*` (ver `docs/README.md`).
@@ -22,8 +22,9 @@ Mini ERP. Proyecto nuevo, en construcción.
 - Nunca editar una migración ya aplicada: crear una nueva con `makemigrations`.
 - No leer ni modificar `.env`, credenciales ni secretos; no commitearlos.
 - Avisar antes de instalar cualquier dependencia nueva (`pip` / `npm`).
-- Lógica de negocio fuera de views/viewsets (capa de servicios por app); los serializers validan forma y tipos.
-- Frontend: lógica no visual en services inyectables, tipos explícitos (sin `any`), Reactive Forms, sin suscripciones colgadas.
+- Arquitectura: `docs/architecture/ddd.md` es la referencia. Módulos `catalog`, `customers`, `sales`, `expenses`, `reporting`, cada uno con `domain/ application/ infrastructure/ api/` (crear carpetas solo cuando hagan falta). El dominio no importa Django; los módulos no se importan infraestructura entre sí; Reporting solo lee. Estados cambian por métodos del agregado (`order.deliver()`), no por asignación directa. Los serializers validan forma y tipos.
+- No agregar abstracciones DDD que no respondan a una necesidad real del negocio (ver sección 29 del documento). Fuera del MVP: microservicios, event sourcing, CQRS completo, inventario/producción avanzados.
+- Frontend: organizar por `src/app/features/<modulo>/` (pages, components, services, models) según el documento DDD. Lógica no visual en services inyectables, tipos explícitos (sin `any`), Reactive Forms, sin suscripciones colgadas.
 - Rama base: `main`. Una rama y un PR por task (`task/TASK-<slug>`).
 
 ## Flujo de trabajo

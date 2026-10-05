@@ -59,12 +59,13 @@ Si algún punto queda ambiguo para poder escribir el código — el plan describ
 Sigue los pasos del plan en orden, sin salirte del alcance declarado. Aplica siempre `CLAUDE.md` (si existe): cambios acotados a un objetivo, dinero en `Decimal` nunca `float`, nunca editar una migración ya aplicada (crear una nueva), no tocar `.env` ni credenciales, avisar antes de instalar cualquier dependencia nueva (aunque el plan ya la haya anticipado en "Dependencias nuevas" — confirma antes de correr `pip install`/`npm install`).
 
 **Django / DRF:**
-- Lógica de negocio fuera de las vistas: en una capa de servicios/selectores de la app (la convención que se establezca), no inline en views/viewsets.
+- Sigue `docs/architecture/ddd.md`: código en `backend/modules/<contexto>/` con capas `domain/` (entidades, value objects, reglas; sin imports de Django), `application/` (commands/queries/handlers), `infrastructure/` (modelos ORM, repositorios, mappers) y `api/` (serializers, views, urls). Las reglas de negocio viven en el dominio (`order.deliver()`, no `order.status = ...`); las views solo traducen HTTP a commands/queries.
+- Un módulo nunca importa modelos ni infraestructura de otro; se comunica por application services/interfaces o por ids (`customer_id`, `product_id`). Crea solo las carpetas que la tarea necesita.
 - Los serializers validan forma y tipos; no repliques esa validación a mano en la vista.
 - Cuidado con N+1: `select_related`/`prefetch_related` al iterar querysets con relaciones.
 - Todo cambio de modelo va con su migración generada por Django (`makemigrations`), nunca escrita ni editada a mano sobre una ya aplicada.
 - Dinero siempre en `Decimal`, incluyendo constantes y resultados intermedios.
-- Nombres y estructura consistentes con la carpeta donde se agrega código, no una convención propia nueva.
+- Nombres de commands (verbo: `CreateOrder`), queries (`GetOrder`) y eventos (pasado: `OrderCreated`) según el documento DDD. Nombres y estructura consistentes con la carpeta donde se agrega código, no una convención propia nueva.
 
 **Angular:**
 - Lógica que no es de presentación (HTTP, transformación de datos, reglas de negocio del frontend) va en un service inyectable.

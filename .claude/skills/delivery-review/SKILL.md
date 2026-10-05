@@ -54,6 +54,7 @@ Ejecuta lo que exista configurado en el proyecto y adjunta la salida real:
 - **Build**: `ng build` en frontend como mínimo.
 - **Coverage**: `ng test --code-coverage` en frontend (verifica que `karma-coverage` esté instalado). En backend, si `coverage.py` no está instalado, no lo instales por tu cuenta — revisa manualmente que cada función o rama nueva en services, views, serializers, etc. tenga un test que la ejercite, y dilo así en el reporte (verificación manual, no herramienta).
 - **Security checks**: corre las herramientas que ya estén disponibles en el proyecto (por ejemplo `npm audit` en `frontend/panel_admin/`; `bandit`/`safety` en backend si están instalados). Si ninguna está instalada, dilo explícitamente — no es un `PASS` silencioso, es una verificación no realizada que debe constar en el reporte.
+- **Límites DDD**: verifica contra `docs/architecture/ddd.md` que `domain/` no importe Django, que ningún módulo importe infraestructura/modelos de otro, que Reporting solo lea, y que no haya lógica de negocio en views/serializers.
 - **Clean code / SOLID**: señala violaciones evidentes **solo dentro del código nuevo o modificado por este cambio** (nunca del código preexistente no tocado), con severidad baja/media salvo que genere un riesgo real. No bloquees el PR por deuda técnica preexistente fuera del alcance del plan.
 
 ### 4. Plan compliance

@@ -30,7 +30,7 @@ Lee `docs/tasks/TASK-<slug>.md` completo. Si `## Investigación` está vacía o 
 
 ### 2. Evaluar la arquitectura existente
 
-No propongas en el vacío. Revisa cómo está construido hoy el área afectada (apps y capas del backend en `backend/`, estructura de servicios/componentes en `frontend/panel_admin/src/`, ADRs previos en `docs/adr/` que puedan ya haber decidido algo relacionado) antes de decidir. Mantén consistencia con decisiones arquitectónicas ya tomadas, a menos que la tarea justifique explícitamente revisarlas.
+No propongas en el vacío. Revisa cómo está construido hoy el área afectada (apps y capas del backend en `backend/`, estructura de servicios/componentes en `frontend/panel_admin/src/`, ADRs previos en `docs/adr/` que puedan ya haber decidido algo relacionado) antes de decidir. Parte siempre de `docs/architecture/ddd.md` (monolito modular, DDD pragmático, bounded contexts, dependencias permitidas entre módulos, shared kernel mínimo): una decisión nueva que lo contradiga debe justificarlo explícitamente. Mantén consistencia con decisiones arquitectónicas ya tomadas, a menos que la tarea justifique explícitamente revisarlas.
 
 ### 3. Identificar impactos
 

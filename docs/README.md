@@ -4,6 +4,7 @@ Artefactos del flujo `delivery-*`. Los nombres usan slug descriptivo, no número
 
 | Carpeta | Contenido | Skill |
 |---|---|---|
+| `architecture/` | `ddd.md`: referencia DDD del proyecto | — |
 | `tasks/` | `TASK-<slug>.md`: fuente de verdad de cada tarea | delivery-investigate |
 | `design/` | `DDR-<task-slug>-<decision-slug>.md` | delivery-design |
 | `adr/` | `ADR-<task-slug>-<decision-slug>.md` | delivery-architect |

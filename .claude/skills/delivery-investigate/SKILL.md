@@ -46,7 +46,7 @@ Lee la tarea con ojo crítico: qué problema de negocio resuelve, qué comportam
 
 El proyecto es nuevo y el código aún está en construcción, así que no asumas nada por el nombre de un archivo ni que exista una estructura que no verificaste. Usa Grep/Glob activamente y cita siempre `archivo:línea` real, nunca ubicaciones inventadas:
 
-- **Módulos y dependencias relacionadas**: en el backend (`backend/`, apps Django), identifica qué apps y capas toca (models, serializers, views/viewsets, services, urls, permisos). En el frontend (`frontend/panel_admin/src/`), qué componentes/servicios están involucrados.
+- **Módulos y dependencias relacionadas**: en el backend (`backend/`, apps Django), identifica qué bounded context (`modules/catalog|customers|sales|expenses|reporting`, ver `docs/architecture/ddd.md`) y qué capas toca (`domain`, `application`, `infrastructure`, `api`), y si cruza límites entre módulos. En el frontend (`frontend/panel_admin/src/`), qué componentes/servicios están involucrados.
 - **Implementaciones similares existentes**: busca si ya existe un patrón parecido en el código (otro endpoint similar, otro componente con la misma necesidad) que la solución debería seguir en vez de inventar uno nuevo.
 - **Comportamiento actual**: describe cómo funciona el sistema hoy en el área afectada, con evidencia concreta (qué hace la vista, qué devuelve el serializer, qué pinta el componente).
 - **Restricciones**: reglas de `CLAUDE.md` (si existe) que apliquen, y cualquier documentación del proyecto en `docs/` relevante al área.
