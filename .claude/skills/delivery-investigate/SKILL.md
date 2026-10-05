@@ -1,6 +1,6 @@
 ---
 name: delivery-investigate
-description: Investiga y documenta el contexto de una tarea de este monorepo (praxsa_manager en Django/DRF + proforma en Angular) antes de que nadie decida una solución. Analiza el requerimiento, explora el código relevante, identifica módulos y dependencias afectadas, busca implementaciones similares existentes, describe cómo funciona el sistema hoy, identifica restricciones y riesgos, y separa explícitamente hechos verificados de hipótesis. Emite un veredicto de complejidad (TRIVIAL_FIX, NEEDS_PLAN o NEEDS_ARCHITECTURE) y, por separado, si hace falta una decisión de diseño/UX (Diseño requerido: SI/NO), con su justificación. Crea o actualiza el artefacto de seguimiento docs/tasks/TASK-<slug>.md (nombrado con un slug descriptivo de la tarea, no un número secuencial, para evitar colisiones entre sesiones en paralelo) con el reporte embebido, listo para que delivery-design, delivery-architect o delivery-plan lo consuman. No propone soluciones ni modifica código. Se invoca explícitamente con /delivery-investigate <descripción de la tarea> para abrir un task nuevo, o /delivery-investigate TASK-<slug> para continuar uno existente; no debe activarse solo porque el usuario mencione "investigar" o "revisar" en una frase suelta.
+description: Investiga y documenta el contexto de una tarea de este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular) antes de que nadie decida una solución. Analiza el requerimiento, explora el código relevante, identifica módulos y dependencias afectadas, busca implementaciones similares existentes, describe cómo funciona el sistema hoy, identifica restricciones y riesgos, y separa explícitamente hechos verificados de hipótesis. Emite un veredicto de complejidad (TRIVIAL_FIX, NEEDS_PLAN o NEEDS_ARCHITECTURE) y, por separado, si hace falta una decisión de diseño/UX (Diseño requerido: SI/NO), con su justificación. Crea o actualiza el artefacto de seguimiento docs/tasks/TASK-<slug>.md (nombrado con un slug descriptivo de la tarea, no un número secuencial, para evitar colisiones entre sesiones en paralelo) con el reporte embebido, listo para que delivery-design, delivery-architect o delivery-plan lo consuman. No propone soluciones ni modifica código. Se invoca explícitamente con /delivery-investigate <descripción de la tarea> para abrir un task nuevo, o /delivery-investigate TASK-<slug> para continuar uno existente; no debe activarse solo porque el usuario mencione "investigar" o "revisar" en una frase suelta.
 ---
 
 # Delivery Investigate
@@ -29,15 +29,14 @@ Solo cuando el usuario invoque `/delivery-investigate` explícitamente. No lo di
 
 ### 1. Ubicar o crear el TASK
 
-- Si el usuario pasó un `TASK-<slug>` (o el `TASK-<slug>` numérico de un task viejo, siguen existiendo), lee `docs/tasks/TASK-<slug>.md`. Si no existe, dilo y detente.
-- Si pasó una descripción de tarea nueva, **no uses numeración secuencial** — con varias sesiones corriendo en paralelo, dos sesiones calculan el mismo "próximo número" antes de que la otra escriba su archivo y se pisan (ya pasó: hay dos `ADR-006` distintos en `docs/adr/`). En su lugar:
+- Si el usuario pasó un `TASK-<slug>`, lee `docs/tasks/TASK-<slug>.md`. Si no existe, dilo y detente.
+- Si pasó una descripción de tarea nueva, **no uses numeración secuencial** — con varias sesiones corriendo en paralelo, dos sesiones calculan el mismo "próximo número" antes de que la otra escriba su archivo y se pisan. En su lugar:
   1. Deriva un slug descriptivo del requerimiento: kebab-case, minúsculas, sin tildes ni caracteres especiales, 3-6 palabras que capturen el tema real (no genérico) — ej. "mejorar módulo de usuario: listar, editar y ver según privilegios" → `modulo-usuario-privilegios`.
   2. Verifica con Glob/Read si ya existe `docs/tasks/TASK-<slug>.md`.
      - No existe → ese es el nombre final, crea el archivo.
      - Existe y su `## Investigación` describe el mismo requerimiento → trátalo como continuar ese task existente, no crees uno nuevo (avisa al usuario que ya existía).
      - Existe pero es un requerimiento distinto (colisión real de nombre) → agrega un sufijo numérico corto al slug (`-2`, `-3`, ...) hasta encontrar uno libre, y dilo explícitamente en el chat para que quede claro que fue una colisión, no el id "oficial".
 - Si `docs/tasks/` no existe todavía, créala al escribir el primer archivo.
-- Tasks preexistentes con id numérico (`TASK-001`...`TASK-010`) no se renombran; el esquema por slug aplica solo a tasks nuevos.
 
 ### 2. Entender el requerimiento
 
@@ -45,13 +44,13 @@ Lee la tarea con ojo crítico: qué problema de negocio resuelve, qué comportam
 
 ### 3. Investigar el código como se hace hoy, no como debería ser
 
-Este proyecto tiene deuda técnica conocida ("El proyecto NO se construyó con buenas prácticas", según `docs/CLAUDE.md`), así que no asumas nada por el nombre de un archivo. Usa Grep/Glob activamente y cita siempre `archivo:línea` real, nunca ubicaciones inventadas:
+El proyecto es nuevo y el código aún está en construcción, así que no asumas nada por el nombre de un archivo ni que exista una estructura que no verificaste. Usa Grep/Glob activamente y cita siempre `archivo:línea` real, nunca ubicaciones inventadas:
 
-- **Módulos y dependencias relacionadas**: en el backend (`praxsa_manager/product/`), identifica qué capas toca (`business/`, `admin_config/`, `custom_views/`, `serializer/`, `Forms/`, `helper/`). En el frontend (`proforma/src/`), qué componentes/servicios están involucrados.
+- **Módulos y dependencias relacionadas**: en el backend (`backend/`, apps Django), identifica qué apps y capas toca (models, serializers, views/viewsets, services, urls, permisos). En el frontend (`frontend/panel_admin/src/`), qué componentes/servicios están involucrados.
 - **Implementaciones similares existentes**: busca si ya existe un patrón parecido en el código (otro endpoint similar, otro componente con la misma necesidad) que la solución debería seguir en vez de inventar uno nuevo.
 - **Comportamiento actual**: describe cómo funciona el sistema hoy en el área afectada, con evidencia concreta (qué hace la vista, qué devuelve el serializer, qué pinta el componente).
-- **Restricciones**: reglas de `docs/CLAUDE.md` que apliquen, y contexto ya documentado en `docs/backend-audit.md`, `docs/frontend-audit.md`, `docs/integration-and-backlog.md` si existe algo relevante al área.
-- **Migraciones**: si la tarea roza modelos, revisa `praxsa_manager/product/migrations/` para saber cuál es la última.
+- **Restricciones**: reglas de `CLAUDE.md` (si existe) que apliquen, y cualquier documentación del proyecto en `docs/` relevante al área.
+- **Migraciones**: si la tarea roza modelos, revisa las carpetas `migrations/` de la app afectada en `backend/` para saber cuál es la última.
 - **Riesgos observables**: lo que se ve a simple vista que podría complicar una solución (acoplamiento, falta de tests en el área, contrato de API frágil) — sin proponer cómo mitigarlo, eso es trabajo de `delivery-architect`/`delivery-plan`.
 
 ### 4. Separar hechos de hipótesis
@@ -74,7 +73,7 @@ Si dudas entre NEEDS_PLAN y NEEDS_ARCHITECTURE, prefiere NEEDS_ARCHITECTURE — 
 
 ### 5b. Evaluar si hace falta una decisión de diseño
 
-Independiente del veredicto de complejidad, decide **Diseño requerido: SI** cuando la tarea agrega o cambia superficie de UI de forma no trivial: pantallas nuevas, flujos con varios pasos, adopción de componentes de la plantilla `panel_admin/` (`docs/frontend/panel_admin/reference.md`), o cambios que dejan una pantalla visualmente inconsistente con el resto si no se piensan con criterio. **Diseño requerido: NO** para cambios puramente de backend, fixes de lógica sin impacto visual, o ajustes cosméticos menores que no ameritan comparar alternativas (esos son `TRIVIAL_FIX` y ni siquiera pasan por acá). Igual que con arquitectura, ante la duda preferí SI — es más barato que `delivery-design` confirme que no hacía falta nada especial.
+Independiente del veredicto de complejidad, decide **Diseño requerido: SI** cuando la tarea agrega o cambia superficie de UI de forma no trivial: pantallas nuevas, flujos con varios pasos, adopción de componentes de la plantilla `frontend/panel_admin/` (documentada en `frontend/panel_admin_doc/`), o cambios que dejan una pantalla visualmente inconsistente con el resto si no se piensan con criterio. **Diseño requerido: NO** para cambios puramente de backend, fixes de lógica sin impacto visual, o ajustes cosméticos menores que no ameritan comparar alternativas (esos son `TRIVIAL_FIX` y ni siquiera pasan por acá). Igual que con arquitectura, ante la duda preferí SI — es más barato que `delivery-design` confirme que no hacía falta nada especial.
 
 ### 6. Escribir/actualizar el TASK
 

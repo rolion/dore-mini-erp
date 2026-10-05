@@ -1,13 +1,13 @@
 ---
 name: delivery-design
-description: Toma la investigación de un task (docs/tasks/TASK-<slug>.md, producida por delivery-investigate) cuando esta marcó "Diseño requerido: SI", y decide qué componentes/patrones de la plantilla `panel_admin/` (docs/frontend/panel_admin/reference.md) usar para las pantallas y flujos involucrados, y cómo deben comportarse (estados, visibilidad según privilegios, navegación). Interviene cuando la tarea agrega o cambia superficie de UI significativa: pantallas nuevas, flujos con varios pasos, adopción de componentes de la plantilla, o inconsistencia visual entre lo existente y lo nuevo. No decide cómo se aplican permisos en el backend (eso es delivery-architect) ni implementa código. Registra la decisión como DDR en docs/design/DDR-<task-slug>-<decision-slug>.md y actualiza el TASK. Se invoca explícitamente con /delivery-design TASK-<slug>; no debe activarse solo porque el usuario mencione "diseño" o "UI" en una frase suelta.
+description: Toma la investigación de un task (docs/tasks/TASK-<slug>.md, producida por delivery-investigate) cuando esta marcó "Diseño requerido: SI", y decide qué componentes/patrones de la plantilla `frontend/panel_admin/` (documentada en `frontend/panel_admin_doc/`) usar para las pantallas y flujos involucrados, y cómo deben comportarse (estados, visibilidad según privilegios, navegación). Interviene cuando la tarea agrega o cambia superficie de UI significativa: pantallas nuevas, flujos con varios pasos, adopción de componentes de la plantilla, o inconsistencia visual entre lo existente y lo nuevo. No decide cómo se aplican permisos en el backend (eso es delivery-architect) ni implementa código. Registra la decisión como DDR en docs/design/DDR-<task-slug>-<decision-slug>.md y actualiza el TASK. Se invoca explícitamente con /delivery-design TASK-<slug>; no debe activarse solo porque el usuario mencione "diseño" o "UI" en una frase suelta.
 ---
 
 # Delivery Design
 
 ## Por qué existe este skill
 
-`delivery-architect` decide si algo se sostiene técnicamente; este skill decide qué necesita ver y hacer la persona que usa la pantalla, y con qué pieza de la plantilla `panel_admin/` se resuelve. Son preguntas distintas: "¿qué endpoint expone esto?" no es la misma decisión que "¿esto es una tabla con `ngx-datatable` o un listado simple? ¿el botón de editar se oculta o se deshabilita para quien no tiene privilegio?". Mezclar ambas en una sola etapa hace que la decisión de UX se tome de pasada, sin comparar alternativas, y que la decisión técnica herede una elección visual no cuestionada. Igual que `delivery-architect` con los ADR, este skill deja la decisión de diseño trazable en un documento propio (DDR — Design Decision Record), independiente del plan que la ejecuta.
+`delivery-architect` decide si algo se sostiene técnicamente; este skill decide qué necesita ver y hacer la persona que usa la pantalla, y con qué pieza de la plantilla `frontend/panel_admin/` se resuelve. Son preguntas distintas: "¿qué endpoint expone esto?" no es la misma decisión que "¿esto es una tabla de la plantilla o un listado simple? ¿el botón de editar se oculta o se deshabilita para quien no tiene privilegio?". Mezclar ambas en una sola etapa hace que la decisión de UX se tome de pasada, sin comparar alternativas, y que la decisión técnica herede una elección visual no cuestionada. Igual que `delivery-architect` con los ADR, este skill deja la decisión de diseño trazable en un documento propio (DDR — Design Decision Record), independiente del plan que la ejecuta.
 
 ## Cuándo usarlo
 
@@ -16,8 +16,7 @@ Solo cuando el usuario invoque `/delivery-design TASK-<slug>` explícitamente �
 ## Inputs
 
 - `TASK-<slug>` con la sección `## Investigación` completa.
-- `docs/frontend/panel_admin/reference.md` (qué trae la plantilla, y sus límites — leerlo siempre, no asumir qué componentes existen).
-- `docs/frontend-audit.md` (deuda técnica y patrones ya identificados en `proforma/`, para no repetir un problema conocido con la cara nueva de la plantilla).
+- `frontend/panel_admin_doc/` (documentación HTML de la plantilla: `folder-structure.html`, `form-elements.html`, `bootstrap-table.html`, etc.) y el código en `frontend/panel_admin/src/` — leer lo relevante siempre, no asumir qué componentes existen.
 - ADRs previos en `docs/adr/` y DDRs previos en `docs/design/` que puedan haber tocado la misma pantalla o componente.
 
 ## Outputs
@@ -29,7 +28,7 @@ Solo cuando el usuario invoque `/delivery-design TASK-<slug>` explícitamente �
 
 ### 1. Leer el TASK y la referencia de la plantilla
 
-Lee `docs/tasks/TASK-<slug>.md` completo. Si `## Investigación` está vacía o dice "Pendiente", detente y pide correr `/delivery-investigate TASK-<slug>` primero. Lee `docs/frontend/panel_admin/reference.md` completo — no asumas de memoria qué componentes trae `panel_admin/` ni qué tan resuelto viene algo (ej. el módulo de auth de la plantilla es un demo sin roles, ver esa referencia).
+Lee `docs/tasks/TASK-<slug>.md` completo. Si `## Investigación` está vacía o dice "Pendiente", detente y pide correr `/delivery-investigate TASK-<slug>` primero. Lee las páginas relevantes de `frontend/panel_admin_doc/` y el código de `frontend/panel_admin/src/` — no asumas de memoria qué componentes trae la plantilla ni qué tan resuelto viene algo (ej. el módulo de auth de una plantilla suele ser un demo sin roles; verifícalo).
 
 ### 2. Identificar pantallas y flujos afectados
 
@@ -37,7 +36,7 @@ A partir del requerimiento, lista explícitamente qué pantallas/vistas cambian 
 
 ### 3. Elegir componentes/patrones de la plantilla y justificar
 
-Para cada pantalla, decide qué pieza de la plantilla `panel_admin/` se usa (tabla, formulario, layout) citando la sección correspondiente de `docs/frontend/panel_admin/reference.md`. Si hay más de una opción razonable (ej. `ngx-datatable` vs. mantener `angular-datatables` que ya usa `proforma/`), compáralas explícitamente: consistencia con lo existente vs. beneficio del componente nuevo, esfuerzo de migración, qué se rompe si se mezclan ambos patrones en la misma app. Evita sobreingeniería — adoptar toda la plantilla de una vez no es gratis; prioriza lo que la tarea necesita hoy.
+Para cada pantalla, decide qué pieza de la plantilla `panel_admin/` se usa (tabla, formulario, layout) citando la página de `panel_admin_doc/` o el archivo de `panel_admin/src/` correspondiente. Si hay más de una opción razonable (ej. `bootstrap-table` vs. una tabla propia simple), compáralas explícitamente: consistencia con lo existente vs. beneficio del componente nuevo, esfuerzo, qué se rompe si se mezclan ambos patrones en la misma app. Evita sobreingeniería — adoptar toda la plantilla de una vez no es gratis; prioriza lo que la tarea necesita hoy.
 
 ### 4. Definir comportamiento por estado/privilegio — y marcar el límite con arquitectura
 
@@ -61,7 +60,7 @@ Qué llevó a esta decisión (resume lo relevante de la investigación del task)
 Lista de vistas y qué hace la persona en cada una.
 
 ## Componentes/patrones elegidos
-Por pantalla: qué pieza de la plantilla `panel_admin/` (o de lo ya existente en `proforma/`) se usa, citando `docs/frontend/panel_admin/reference.md`.
+Por pantalla: qué pieza de la plantilla `panel_admin/` (o de lo ya construido en la app) se usa, citando la página de `panel_admin_doc/` o el archivo de código.
 
 ## Alternativas consideradas
 Cada alternativa evaluada con su trade-off principal. Si solo hubo una opción razonable, dilo y por qué.
@@ -86,8 +85,8 @@ Resume la decisión en el chat. No invoques tú mismo la siguiente skill.
 ## Reglas
 
 - No decide arquitectura técnica (modelo de datos, cómo se verifica un permiso en el servidor, contrato de API) — eso es `delivery-architect`.
-- No implementa código ni toca `proforma/src/`.
-- Toda elección de componente cita la sección correspondiente de `docs/frontend/panel_admin/reference.md`, nunca una suposición sobre qué trae la plantilla.
+- No implementa código ni toca `frontend/panel_admin/src/`.
+- Toda elección de componente cita la página de `panel_admin_doc/` o el archivo de código correspondiente, nunca una suposición sobre qué trae la plantilla.
 - Si una pantalla necesita comportamiento por privilegio, siempre deja constancia explícita de que el frontend no es la barrera de seguridad real.
 
 ## Cuándo detenerse

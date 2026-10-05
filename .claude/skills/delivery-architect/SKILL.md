@@ -1,6 +1,6 @@
 ---
 name: delivery-architect
-description: Toma la investigación de un task (docs/tasks/TASK-<slug>.md, producida por delivery-investigate) y, si existe, la decisión de diseño (docs/design/DDR-*.md de delivery-design), y determina las decisiones arquitectónicas necesarias en este monorepo (praxsa_manager en Django/DRF + proforma en Angular). Interviene cuando hay cambio estructural, nuevo módulo o bounded context, nueva integración externa, cambios importantes de base de datos, cambios de autenticación/autorización, cambios de infraestructura, impacto en múltiples módulos, problemas con la arquitectura existente, o decisiones que puedan generar deuda técnica importante. Evalúa la arquitectura existente, identifica impactos, compara alternativas, explica trade-offs, evita sobreingeniería y define una estrategia explícita de rollback/mitigación para cambios sensibles (o justifica por qué no aplica). Registra la decisión como ADR en docs/adr/ADR-<task-slug>-<decision-slug>.md y actualiza el TASK. No implementa código. Se invoca explícitamente con /delivery-architect TASK-<slug>; no debe activarse solo porque el usuario mencione "arquitectura" o "diseño" en una frase suelta (para diseño/UX visual, el skill correcto es delivery-design).
+description: Toma la investigación de un task (docs/tasks/TASK-<slug>.md, producida por delivery-investigate) y, si existe, la decisión de diseño (docs/design/DDR-*.md de delivery-design), y determina las decisiones arquitectónicas necesarias en este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular). Interviene cuando hay cambio estructural, nuevo módulo o bounded context, nueva integración externa, cambios importantes de base de datos, cambios de autenticación/autorización, cambios de infraestructura, impacto en múltiples módulos, problemas con la arquitectura existente, o decisiones que puedan generar deuda técnica importante. Evalúa la arquitectura existente, identifica impactos, compara alternativas, explica trade-offs, evita sobreingeniería y define una estrategia explícita de rollback/mitigación para cambios sensibles (o justifica por qué no aplica). Registra la decisión como ADR en docs/adr/ADR-<task-slug>-<decision-slug>.md y actualiza el TASK. No implementa código. Se invoca explícitamente con /delivery-architect TASK-<slug>; no debe activarse solo porque el usuario mencione "arquitectura" o "diseño" en una frase suelta (para diseño/UX visual, el skill correcto es delivery-design).
 ---
 
 # Delivery Architect
@@ -30,7 +30,7 @@ Lee `docs/tasks/TASK-<slug>.md` completo. Si `## Investigación` está vacía o 
 
 ### 2. Evaluar la arquitectura existente
 
-No propongas en el vacío. Revisa cómo está construido hoy el área afectada (capas del backend en `praxsa_manager/product/`, estructura de servicios/componentes en `proforma/src/`, ADRs previos en `docs/adr/` que puedan ya haber decidido algo relacionado) antes de decidir. Mantén consistencia con decisiones arquitectónicas ya tomadas, a menos que la tarea justifique explícitamente revisarlas.
+No propongas en el vacío. Revisa cómo está construido hoy el área afectada (apps y capas del backend en `backend/`, estructura de servicios/componentes en `frontend/panel_admin/src/`, ADRs previos en `docs/adr/` que puedan ya haber decidido algo relacionado) antes de decidir. Mantén consistencia con decisiones arquitectónicas ya tomadas, a menos que la tarea justifique explícitamente revisarlas.
 
 ### 3. Identificar impactos
 
@@ -39,7 +39,7 @@ Piensa en términos concretos de este stack:
 - **Datos existentes / migraciones**: ¿una migración puede fallar sobre datos ya guardados?
 - **Autenticación/autorización**: ¿cambia quién puede hacer qué?
 - **Infraestructura**: ¿afecta Docker, variables de entorno, despliegue (`docker-compose.*.yml`, `nginx/`)?
-- **Acoplamiento**: dada la deuda técnica conocida (`docs/*-audit.md`), ¿el cambio se propaga a módulos que no se esperaban?
+- **Acoplamiento**: ¿el cambio se propaga a módulos que no se esperaban?
 
 ### 4. Proponer soluciones y comparar alternativas
 
@@ -51,7 +51,7 @@ Para cambios sensibles (infraestructura, autenticación/autorización, base de d
 
 ### 6. Crear o actualizar el ADR
 
-No uses un contador global (con sesiones en paralelo, dos calculan el mismo "próximo número" antes de que la otra escriba — ya pasó: hay dos `ADR-006` distintos en `docs/adr/`). En su lugar, nombra el archivo a partir del task y de un slug corto de la decisión (kebab-case, 2-4 palabras): `docs/adr/ADR-<task-slug>-<decision-slug>.md`. Si el task necesita más de un ADR, se diferencian solo por `<decision-slug>`. Antes de escribir, verifica con Glob que ese nombre exacto no exista ya con contenido distinto; si existe y es la misma decisión, actualízalo en vez de duplicar.
+No uses un contador global (con sesiones en paralelo, dos calculan el mismo "próximo número" antes de que la otra escriba). En su lugar, nombra el archivo a partir del task y de un slug corto de la decisión (kebab-case, 2-4 palabras): `docs/adr/ADR-<task-slug>-<decision-slug>.md`. Si el task necesita más de un ADR, se diferencian solo por `<decision-slug>`. Antes de escribir, verifica con Glob que ese nombre exacto no exista ya con contenido distinto; si existe y es la misma decisión, actualízalo en vez de duplicar.
 
 ```markdown
 # ADR-<task-slug>-<decision-slug>: <título de la decisión>
@@ -91,7 +91,7 @@ Resume la decisión y su justificación en el chat. Sugiere `/delivery-plan TASK
 - No implementa código ni pseudocódigo de implementación detallado — eso es trabajo de `delivery-plan`/`delivery-engineer`.
 - Toda decisión sensible (infra/auth/DB) lleva estrategia de rollback explícita o su justificación de por qué no aplica.
 - Mantiene consistencia con ADRs previos salvo que la tarea justifique revisarlos explícitamente.
-- No inventa restricciones del proyecto que no estén en `docs/CLAUDE.md` o en la investigación.
+- No inventa restricciones del proyecto que no estén en `CLAUDE.md` (si existe) o en la investigación.
 
 ## Cuándo detenerse
 

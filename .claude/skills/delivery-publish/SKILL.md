@@ -1,6 +1,6 @@
 ---
 name: delivery-publish
-description: Publica únicamente el trabajo de un task (docs/tasks/TASK-<slug>.md) que haya pasado el Quality Gate de delivery-review con veredicto PASS en este monorepo (praxsa_manager en Django/DRF + proforma en Angular). No crea un PR nuevo: actualiza la descripción del PR único del task (Summary, Changes, Testing con evidencia real, Architecture decisions, Related plan/ADRs, Known limitations) y lo deja listo para aprobación humana final. Verifica que no haya cambios accidentales, archivos temporales, secretos ni cambios fuera de scope. Nunca marca como listo para merge un PR cuyo review terminó en FAIL, y nunca mergea automáticamente cambios de arquitectura, autenticación/autorización, base de datos o infraestructura sin aprobación humana explícita — el auto-merge para veredictos TRIVIAL_FIX de bajo riesgo es una decisión explícita y configurable del equipo, no un comportamiento implícito. Se invoca explícitamente con /delivery-publish TASK-<slug>; no debe activarse solo porque el usuario mencione "publicar" o "subir" en una frase suelta.
+description: Publica únicamente el trabajo de un task (docs/tasks/TASK-<slug>.md) que haya pasado el Quality Gate de delivery-review con veredicto PASS en este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular). No crea un PR nuevo: actualiza la descripción del PR único del task (Summary, Changes, Testing con evidencia real, Architecture decisions, Related plan/ADRs, Known limitations) y lo deja listo para aprobación humana final. Verifica que no haya cambios accidentales, archivos temporales, secretos ni cambios fuera de scope. Nunca marca como listo para merge un PR cuyo review terminó en FAIL, y nunca mergea automáticamente cambios de arquitectura, autenticación/autorización, base de datos o infraestructura sin aprobación humana explícita — el auto-merge para veredictos TRIVIAL_FIX de bajo riesgo es una decisión explícita y configurable del equipo, no un comportamiento implícito. Se invoca explícitamente con /delivery-publish TASK-<slug>; no debe activarse solo porque el usuario mencione "publicar" o "subir" en una frase suelta.
 ---
 
 # Delivery Publish
@@ -33,7 +33,7 @@ Lee `docs/tasks/TASK-<slug>.md`. Si `**Etapa actual:**` no es `PUBLISH`, o `## R
 
 Sobre la rama del PR:
 - `git status` limpio (nada sin comitear que debiera ir en este cambio).
-- El diff (`git diff origin/master...HEAD`) corresponde al plan (o a la investigación, en `TRIVIAL_FIX`) — sin archivos que no tengan relación con el task.
+- El diff (`git diff origin/main...HEAD`) corresponde al plan (o a la investigación, en `TRIVIAL_FIX`) — sin archivos que no tengan relación con el task.
 - Sin archivos temporales (`.tmp`, logs de debug, artefactos de build que no deberían versionarse).
 - Sin secretos: revisa que no se haya comiteado nada de `.env`, credenciales, tokens o claves — si algo así aparece en el diff, detente y avisa, no lo publiques ni lo remuevas tú mismo sin confirmar con el usuario cómo manejarlo (puede requerir rotar la credencial expuesta, no solo borrarla del commit).
 - Sin cambios fuera de scope que `delivery-review` no haya evaluado ya (si el review es de un commit anterior y hay commits nuevos sin revisar, detente y pide una nueva pasada de `delivery-review`).
@@ -79,7 +79,7 @@ Si el task involucra arquitectura (tiene ADRs), autenticación/autorización, ba
 
 Este skill **no mergea por defecto**. Deja el PR listo, con su descripción completa, y se lo comunica al usuario para que apruebe el merge manualmente.
 
-La única excepción es un veredicto `TRIVIAL_FIX` de bajo riesgo, y solo si el equipo lo decidió explícitamente como aceptable (por ejemplo, una regla ya escrita en `docs/CLAUDE.md`, o una instrucción explícita del usuario en esta misma conversación pidiendo auto-merge para este task puntual). Sin esa autorización explícita —general o puntual—, trátalo igual que cualquier otro cambio: lo dejas listo, no lo mergeas.
+La única excepción es un veredicto `TRIVIAL_FIX` de bajo riesgo, y solo si el equipo lo decidió explícitamente como aceptable (por ejemplo, una regla ya escrita en `CLAUDE.md`, o una instrucción explícita del usuario en esta misma conversación pidiendo auto-merge para este task puntual). Sin esa autorización explícita —general o puntual—, trátalo igual que cualquier otro cambio: lo dejas listo, no lo mergeas.
 
 ### 6. Actualizar el TASK y detener
 
