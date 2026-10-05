@@ -5,6 +5,8 @@ import environ
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env()
+# Lee backend/.env si existe (no versionado); las variables ya exportadas en el entorno tienen prioridad.
+environ.Env.read_env(BASE_DIR / '.env')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
