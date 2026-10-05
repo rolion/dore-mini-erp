@@ -1,6 +1,6 @@
 # TASK-inicializar-backend-django: Inicializar el proyecto backend con Django
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-inicializar-backend-django`
@@ -12,6 +12,7 @@
 | 2026-10-05 | (nuevo) → INVESTIGATION | Task creado | delivery-investigate |
 | 2026-10-05 | ARCHITECTURE → PLANNING | ADRs de stack/estructura y modelo de usuario propuestos | delivery-architect |
 | 2026-10-05 | PLANNING → ENGINEERING | Plan v1 listo y PR abierto, pendiente de aprobación | delivery-plan |
+| 2026-10-05 | ENGINEERING → REVIEW | Implementación completa | delivery-engineer |
 
 ## Investigación
 
@@ -78,7 +79,10 @@ _No aplica_
 [PLAN-2026-10-05-inicializar-backend-django](../plans/PLAN-2026-10-05-inicializar-backend-django.md) — v1
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 en `backend/`: proyecto `config` (settings `base/local/test/production` con `django-environ`), app `modules/accounts` (`User(AbstractUser)` + migración `0001` generada con `makemigrations`), `GET /api/health/` público, DRF con `IsAuthenticated` por defecto, `requirements/{base,dev}.txt` con versiones fijadas (Django 5.2.17, DRF 3.18.1, psycopg 3.3.6, django-environ 0.14.0, bandit 1.9.4), `.env.example`, `.gitignore`. `CLAUDE.md` (Comandos) y `docs/architecture/ddd.md` (nota sobre `accounts`) actualizados.
+Pruebas escritas: 5 (health público, denegar anónimo por defecto, `production` sin variables lanza `ImproperlyConfigured`, `AUTH_USER_MODEL`, `create_user`). Verificación propia del Engineer (no es el Quality Gate): corrieron contra PostgreSQL local con la base `doredb` creada para el proyecto.
+Desvíos menores del plan: `wsgi.py`/`asgi.py` usan `config.settings.production` por defecto (solo `manage.py` usa `local`), para que un despliegue no arranque en modo desarrollo por omisión. `check --deploy` queda con 2 warnings (HSTS subdomains/preload) aceptados por ahora.
+Deuda: sin lockfile transitivo, CI ni Docker (fuera de alcance).
 
 ## Review
 _Pendiente_

@@ -13,7 +13,7 @@ Mini ERP. Proyecto nuevo, en construcción.
 ## Comandos
 
 - Frontend (desde `frontend/panel_admin/`): `npm start`, `npm run build`, `npm test` (Karma), `npm run lint`.
-- Backend (desde `backend/`): `python manage.py runserver`, `python manage.py test`, `python manage.py makemigrations`, `python manage.py migrate`. Base de datos: PostgreSQL (no usar SQLite salvo tests explícitos); la conexión se configura por variables de entorno, nunca hardcodeada. Actualizar esta sección cuando se defina el entorno (venv, requirements, DB).
+- Backend (desde `backend/`, Python 3.12): entorno con `python -m venv .venv`, activar y `pip install -r requirements/dev.txt`. Copiar `.env.example` a `.env` (no versionado) o exportar las variables: `DATABASE_URL` (PostgreSQL, p. ej. `postgres://usuario:clave@localhost:5432/doredb`), `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `TIME_ZONE`. Settings por entorno en `config/settings/` (`local` por defecto en `manage.py`; `DJANGO_SETTINGS_MODULE=config.settings.test` para tests; `production` exige todas las variables). Comandos: `python manage.py runserver`, `python manage.py test`, `python manage.py makemigrations`, `python manage.py migrate`. Salud: `GET /api/health/`. Base de datos: PostgreSQL (no usar SQLite salvo tests explícitos); la conexión se configura por variables de entorno, nunca hardcodeada.
 
 ## Reglas
 

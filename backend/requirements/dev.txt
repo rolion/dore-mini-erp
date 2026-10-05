@@ -1,0 +1,2 @@
+-r base.txt
+bandit==1.9.4

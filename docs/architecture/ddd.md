@@ -827,6 +827,8 @@ No convertir shared en un lugar para lógica genérica de negocio.
 
 ---
 
+> **Nota:** `backend/modules/accounts/` contiene solo el modelo de usuario propio (`AUTH_USER_MODEL`). Es infraestructura de identidad, no un bounded context de negocio: sin `domain/` ni `application/`, y los módulos de negocio no lo importan (se refieren al actor por id).
+
 # 12. Estructura sugerida del backend Django
 
 ```text
