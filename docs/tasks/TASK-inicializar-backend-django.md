@@ -15,6 +15,7 @@
 | 2026-10-05 | ENGINEERING → REVIEW | Implementación completa | delivery-engineer |
 | 2026-10-05 | REVIEW → PUBLISH | Quality Gate PASS, sin issues abiertos | delivery-review |
 | 2026-10-05 | PUBLISH → PUBLISH | Re-review del commit 3672037 (carga de `.env`) a pedido del usuario: PASS | delivery-review |
+| 2026-10-07 | PUBLISH → PUBLISH | PR completado y listo para aprobación humana (cambio sensible, sin merge) | delivery-publish |
 
 ## Investigación
 
@@ -91,4 +92,4 @@ Deuda: sin lockfile transitivo, CI ni Docker (fuera de alcance).
 Re-review de `3672037` (cambio posterior: `backend/settings/base.py` carga `backend/.env`): **PASS**, sin issues; observación baja: sin test automático de la carga de `.env`.
 
 ## Publicación
-_Pendiente_
+PR: https://github.com/rolion/dore-mini-erp/pull/2 — **Listo para aprobación humana** (cambio sensible: base de datos, modelo de usuario/auth y ADRs; no se mergea sin aprobación explícita). Descripción del PR completa; rama sin cambios pendientes ni commits sin revisar (último commit, `0eab963`, es solo documentación posterior al review).
