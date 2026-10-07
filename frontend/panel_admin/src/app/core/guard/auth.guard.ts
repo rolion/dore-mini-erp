@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, UrlTree } from '@angular/router';
 
 import { AuthService } from '../service/auth.service';
 
@@ -10,11 +10,10 @@ export class AuthGuard {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  canActivate() {
-    if (this.authService.currentUserValue) {
+  canActivate(): boolean | UrlTree {
+    if (this.authService.isAuthenticated) {
       return true;
     }
-    this.router.navigate(['/authentication/signin']);
-    return false;
+    return this.router.createUrlTree(['/authentication/signin']);
   }
 }

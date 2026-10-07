@@ -1,28 +1,24 @@
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { catchError, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../service/auth.service';
-import { Injectable, inject } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
-@Injectable()
-export class ErrorInterceptor implements HttpInterceptor {
-  private authenticationService = inject(AuthService);
+const LOGIN_URL = `${environment.apiUrl}/auth/login/`;
 
-  intercept(
-    request: HttpRequest<unknown>,
-    next: HttpHandler
-  ): Observable<HttpEvent<unknown>> {
-    return next.handle(request).pipe(
-      catchError((err) => {
-        if (err.status === 401) {
-          // auto logout if 401 response returned from api
-          this.authenticationService.logout();
-          location.reload();
-        }
+/** Ante un 401 fuera del login, la sesión ya no es válida: se limpia y se vuelve al login. */
+export const errorInterceptor: HttpInterceptorFn = (request, next) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
 
-        const error = err.error.message || err.statusText;
-        return throwError(error);
-      })
-    );
-  }
-}
+  return next(request).pipe(
+    catchError((err: HttpErrorResponse) => {
+      if (err.status === 401 && request.url !== LOGIN_URL) {
+        authService.clearSession();
+        router.navigate(['/authentication/signin']);
+      }
+      return throwError(() => err);
+    })
+  );
+};

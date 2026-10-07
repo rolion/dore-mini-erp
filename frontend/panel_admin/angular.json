@@ -101,7 +101,8 @@
               "buildTarget": "oreva:build:production"
             },
             "development": {
-              "buildTarget": "oreva:build:development"
+              "buildTarget": "oreva:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

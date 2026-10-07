@@ -1,11 +1,11 @@
-import { HTTP_INTERCEPTORS, provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { APP_ROUTE } from './app.routes';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
-import { JwtInterceptor } from '@core/interceptor/jwt.interceptor';
-import { ErrorInterceptor } from '@core/interceptor/error.interceptor';
+import { tokenInterceptor } from '@core/interceptor/jwt.interceptor';
+import { errorInterceptor } from '@core/interceptor/error.interceptor';
 import { DirectionService, LanguageService } from '@core';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -16,13 +16,11 @@ import { provideToastr } from 'ngx-toastr';
 
 export const appConfig: ApplicationConfig = {
     providers: [
-        provideHttpClient(),
+        provideHttpClient(withInterceptors([tokenInterceptor, errorInterceptor])),
         provideRouter(APP_ROUTE),
         provideToastr(),
         provideAnimations(),
         { provide: LocationStrategy, useClass: HashLocationStrategy },
-        { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-        { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
         DirectionService, LanguageService,
         provideTranslateService({
             defaultLanguage: 'en',

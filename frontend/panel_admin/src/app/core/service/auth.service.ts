@@ -1,76 +1,86 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { User } from '../models/user';
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, catchError, map, of, tap, throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { LoginResponse, User } from '../models/user';
 import { LocalStorageService } from './storage.service';
+
+export const INVALID_CREDENTIALS_MESSAGE = 'Credenciales inválidas';
+export const SERVER_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
+export const TOO_MANY_ATTEMPTS_MESSAGE = 'Demasiados intentos. Espera un momento e inténtalo de nuevo.';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private http = inject(HttpClient);
   private storageService = inject(LocalStorageService);
-  private currentUserSubject: BehaviorSubject<User>;
-  public currentUser: Observable<User>;
+  private currentUserSubject = new BehaviorSubject<User | null>(this.readStoredUser());
+  public currentUser: Observable<User | null> = this.currentUserSubject.asObservable();
 
-  private users = [
-    {
-      id: 1,
-      username: 'admin@email.com',
-      password: 'admin@123',
-      firstName: 'Sarah',
-      lastName: 'Smith',
-      token: 'admin-token',
-    },
-  ];
-
-  constructor() {
-    this.currentUserSubject = new BehaviorSubject<User>(
-      (this.storageService.get('currentUser') as User) || ({} as User)
-    );
-    this.currentUser = this.currentUserSubject.asObservable();
-  }
-
-  public get currentUserValue(): User {
+  public get currentUserValue(): User | null {
     return this.currentUserSubject.value;
   }
 
-  login(username: string, password: string) {
+  public get isAuthenticated(): boolean {
+    return !!this.currentUserValue?.token;
+  }
 
-    const user = this.users.find((u) => u.username === username && u.password === password);
+  login(username: string, password: string): Observable<User> {
+    return this.http
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login/`, { username, password })
+      .pipe(
+        map((res): User => ({
+          id: res.user.id,
+          username: res.user.username,
+          firstName: res.user.first_name,
+          lastName: res.user.last_name,
+          token: res.token,
+        })),
+        tap((user) => {
+          this.storageService.set('currentUser', user);
+          this.currentUserSubject.next(user);
+        }),
+        catchError((err: HttpErrorResponse) =>
+          throwError(() => new Error(this.loginErrorMessage(err.status)))
+        )
+      );
+  }
 
-    if (!user) {
-      return this.error('Username or password is incorrect');
-    } else {
-      this.storageService.set('currentUser', user);
-      this.currentUserSubject.next(user);
-      return this.ok({
-        id: user.id,
-        username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        token: user.token,
-      });
+  /** Cierra la sesión en el servidor (si hay token) y siempre limpia la sesión local. */
+  logout(): Observable<{ success: boolean }> {
+    const finish = (): { success: boolean } => {
+      this.clearSession();
+      return { success: false };
+    };
+    if (!this.isAuthenticated) {
+      return of(finish());
     }
-
-
-  }
-  ok(body?: {
-    id: number;
-    username: string;
-    firstName: string;
-    lastName: string;
-    token: string;
-  }) {
-    return of(new HttpResponse({ status: 200, body }));
-  }
-  error(message: string) {
-    return throwError(message);
+    return this.http.post(`${environment.apiUrl}/auth/logout/`, {}).pipe(
+      map(finish),
+      catchError(() => of(finish()))
+    );
   }
 
-  logout() {
-    // remove user from local storage to log user out
+  /** Limpia solo el estado local; no llama al backend. */
+  clearSession(): void {
     this.storageService.remove('currentUser');
-    this.currentUserSubject.next({} as User);
-    return of({ success: false });
+    this.currentUserSubject.next(null);
+  }
+
+  private readStoredUser(): User | null {
+    const stored = this.storageService.get('currentUser') as Partial<User> | null;
+    return stored && typeof stored.token === 'string' && stored.token ? (stored as User) : null;
+  }
+
+  private loginErrorMessage(status: number): string {
+    switch (status) {
+      case 401:
+        return INVALID_CREDENTIALS_MESSAGE;
+      case 429:
+        return TOO_MANY_ATTEMPTS_MESSAGE;
+      default:
+        return SERVER_ERROR_MESSAGE;
+    }
   }
 }

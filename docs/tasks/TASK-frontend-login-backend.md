@@ -1,6 +1,6 @@
 # TASK-frontend-login-backend: Login del frontend validado contra el backend
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-frontend-login-backend`
@@ -12,6 +12,7 @@
 | 2026-10-07 | (nuevo) → INVESTIGATION | Task creado | delivery-investigate |
 | 2026-10-07 | ARCHITECTURE → PLANNING | Decisión de autenticación registrada en ADR | delivery-architect |
 | 2026-10-07 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
+| 2026-10-07 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-engineer |
 
 ## Investigación
 
@@ -103,7 +104,26 @@ _No aplica_
 - [PLAN-2026-10-07-frontend-login-backend](../plans/PLAN-2026-10-07-frontend-login-backend.md) — **v1**, Modo COMPLETO, Specification readiness: READY. Decisión del usuario: `frontend/` se versiona con un commit base dentro de este mismo PR.
 
 ## Implementación
-_Pendiente_
+
+**Commits:** base de `frontend/` (plantilla sin modificar) → backend (login/logout) → frontend + `CLAUDE.md`.
+
+**Backend** (`backend/`): `rest_framework.authtoken` + `TokenAuthentication` + throttle `login` (10/min) en `config/settings/base.py`; `modules/accounts/api/{serializers,views,urls}.py`; ruta `api/auth/` en `config/urls.py`. Login sin autenticación previa (EDGE-01) y con respuesta 401 directa (en vez de excepción, que DRF degradaría a 403). Cubre AC-01, AC-02, AC-06, INV-02..04, API-01..03. Tests: `modules/accounts/tests.py` (`AuthApiTests`, 9 casos).
+
+**Frontend** (`frontend/panel_admin/`): `AuthService` real (HttpClient, sin usuarios hardcodeados, mensajes por estado 401/429/otros), `AuthGuard` por token real con `UrlTree`, interceptores funcionales (`withInterceptors`) con `Authorization: Token` solo hacia `environment.apiUrl` y limpieza de sesión/redirección en 401 fuera del login, `SigninComponent` con `NonNullableFormBuilder` sin valores precargados, botón deshabilitado en curso y navegación a `/dashboard/main`; proxy de `ng serve` (`proxy.conf.json` + `angular.json`), `apiUrl: '/api'`. Cubre AC-03..05, AC-07..09, EDGE-02, EDGE-03, UI-01..03. Tests: `auth.service.spec.ts`, `auth.guard.spec.ts`, `interceptors.spec.ts`, `signin.component.spec.ts`.
+
+**Verificación propia (no es el Quality Gate):**
+- Backend: 14 tests OK **con SQLite en memoria** mediante un settings temporal fuera del repo, porque en esta máquina no hay PostgreSQL ni Docker corriendo. No se ejecutó contra PostgreSQL: `delivery-review` debe correrlo con `DATABASE_URL`.
+- Frontend: `ng build` (development) OK, `ng lint` OK. Mis 4 specs pasan.
+
+**Desviaciones respecto al plan:**
+- `AuthService.currentUserValue` ahora es `User | null` (antes `{}`); no estaba explícito en el plan pero es necesario para que el guard y el sidebar (`sidebar.component.ts:95`) distingan sin sesión.
+- `User` ya no incluye `password`; se añadió `LoginResponse` en `core/models/user.ts`.
+- El `ErrorInterceptor` redirige con `router.navigate` en vez de `location.reload()`.
+- No se commiteó `package-lock.json` (el proyecto no tenía uno); `npm install` se corrió solo con las dependencias ya declaradas.
+
+**Deuda técnica / hallazgos fuera de alcance (preexistentes de la plantilla):**
+- `src/app/app.component.spec.ts` no compila (`title` no existe en `AppComponent`), lo que hace fallar `npm test` completo; además 79 de 97 specs de la plantilla fallan por falta de providers (`ActivatedRoute`, iconos Feather). Para validar mis specs moví temporalmente ese archivo (ya restaurado). El review debe tenerlo en cuenta: `npm test` completo no es una señal utilizable hasta que se arreglen.
+- Sin E2E automatizado (decisión del plan); smoke manual pendiente en review.
 
 ## Review
 _Pendiente_
