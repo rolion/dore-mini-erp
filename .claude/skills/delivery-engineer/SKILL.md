@@ -43,12 +43,12 @@ El PR ya lo abrió `delivery-plan`. Revisa `git status`, no descartes trabajo aj
 No hay plan que abra el PR, así que lo haces tú antes de tocar código:
 1. `git status`, trae `origin/main`, crea `task/TASK-<slug>` desde ahí (el nombre del task ya es descriptivo, no le agregues otro slug encima).
 2. Commit vacío o mínimo no es necesario — puedes abrir el PR como *draft* apenas tengas el primer commit de implementación, o abrirlo después del primer commit; cualquiera de las dos formas es válida siempre que quede registrado antes de terminar.
-3. El cuerpo inicial del PR usa la misma plantilla que `delivery-plan` (ver su SKILL.md, paso 6), reemplazando `## Plan` por: `_No aplica — veredicto TRIVIAL_FIX, ver Investigación en TASK-<slug>_`.
+3. El cuerpo inicial del PR usa la misma plantilla que `delivery-plan` (ver su SKILL.md, paso 7), reemplazando `## Specification / Plan` por: `_No aplica — veredicto TRIVIAL_FIX, ver Investigación en TASK-<slug>_`.
 4. Registra rama y PR en el TASK (`**Rama:**`, `**Pull Request:**`).
 
 ### 3. Entender el trabajo a implementar antes de tocar código
 
-Camino normal: lee el plan completo (objetivo, alcance, pasos, migraciones, pruebas, riesgos, fuera de alcance) y los ADR relacionados, con la misma mirada senior en Django/DRF y Angular con la que se escribieron. El plan puede haberse escrito hace tiempo — verifica que lo que describe siga vigente (¿el archivo sigue en esa ruta? ¿la función sigue con esa firma?). Si algo no cuadra, no lo adaptes en silencio: ve al paso 6.
+Camino normal: lee primero el campo `**Modo:**` del encabezado de `PLAN-*.md` (`COMPACTO` o `COMPLETO`; los criterios de selección están en la sección *Modo del documento* de `delivery-plan`). En modo `COMPACTO` no exijas secciones propias de `COMPLETO` (ubiquitous language, domain rules, API contract, authorization, architecture considerations, etc.): trabaja con las que existen, y sigue tratando la Specification como contrato de comportamiento, la Test Specification como guía de pruebas y los acceptance criteria como obligatorios. Si el campo `Modo` falta, trátalo como un plan incompleto y pide `/delivery-plan TASK-<slug>`. Lee el documento completo, que contiene dos partes: la **Specification** (QUÉ debe ser verdad: comportamiento esperado, invariantes `INV-`, acceptance criteria `AC-`, edge/error cases, contratos `API-`/`UI-`, fuera de alcance) y el **Implementation Plan** (CÓMO: solución, archivos, pasos, migraciones, riesgos), más la **Test Specification**. Léelos junto con los ADR/DDR relacionados, con la misma mirada senior en Django/DRF y Angular con la que se escribieron. Tu trabajo es implementar la solución siguiendo el Implementation Plan **sin violar la Specification**. Confirma que `Specification readiness` sea `READY`; si es `BLOCKED`, detente y pide `/delivery-plan TASK-<slug>`. El plan puede haberse escrito hace tiempo — verifica que lo que describe siga vigente (¿el archivo sigue en esa ruta? ¿la función sigue con esa firma?). Si algo no cuadra, no lo adaptes en silencio: ve al paso 6.
 
 Camino `TRIVIAL_FIX`: lee `## Investigación` y confirma con una mirada rápida que el cambio sigue siendo tan trivial como se evaluó. Si al mirar el código de cerca resulta que no lo es (toca más de lo esperado, hay lógica de negocio de por medio), detente y repórtalo como `ARCHITECTURE_REVIEW_REQUIRED` o pide una investigación más profunda en vez de forzar un cambio grande por el camino rápido.
 
@@ -78,7 +78,7 @@ Sigue los pasos del plan en orden, sin salirte del alcance declarado. Aplica sie
 
 ### 5. Escribir las pruebas — el nivel que corresponde
 
-Camino normal: la sección "Test strategy" del plan define los casos concretos; impleméntalos exactamente, con el nivel correcto:
+Camino normal: la sección "Test Specification" del plan (derivada de la Specification, con su tabla AC → verificación) define los casos concretos; impleméntalos exactamente, con el nivel correcto, cubriendo cada AC y cada regla nueva:
 - **Unit**: lógica aislada sin BD ni HTTP (funciones de servicios/utilidades del backend, o un service/pipe puro en Angular).
 - **Integración**: un endpoint DRF completo (view + serializer + modelo + BD real), siguiendo el patrón de tests ya existente en `backend/` (APITestCase o pytest-django, factories/helpers compartidos). En Angular, componente + servicios reales vía `TestBed` + `HttpTestingController`.
 - **E2E**: solo si el plan lo pidió explícitamente con su justificación. Si el plan concluyó que hace falta Playwright y todavía no está instalado en `frontend/panel_admin/package.json`, la instalación es una dependencia nueva — confirma antes de agregarla.
@@ -92,7 +92,9 @@ Puedes correr las pruebas como verificación propia antes de comitear (`python m
 ### 6. Si el plan resulta incorrecto o incompleto: no lo cambies en silencio
 
 - **Problema de implementación** (una función tiene una firma distinta a la esperada, un detalle menor no contemplado que no cambia alcance ni riesgo): resuélvelo directamente y sigue.
-- **Problema del plan** (un paso no funciona como está descrito, falta un caso, el alcance está mal dimensionado): documenta el hallazgo en `## Implementación` del TASK con evidencia concreta, marca `PLAN_UPDATE_REQUIRED`, actualiza `**Etapa actual:**` a `PLANNING`, agrega la fila al historial, y detente. Sugiere `/delivery-plan TASK-<slug>`.
+- **Plan COMPACTO insuficiente** (durante la implementación aparece una condición que habría exigido `COMPLETO` según los criterios de `delivery-plan`: decisión arquitectónica no prevista, varios bounded contexts, migración riesgosa, cambio de contrato API, reglas de negocio nuevas o ambiguas, cambio de permisos, lógica financiera material, o la Specification necesita secciones que COMPACTO no representa): detén la implementación en ese punto, **no expandas la Specification ni agregues excepciones al plan COMPACTO**, documenta en `## Implementación` qué condición obliga al upgrade, marca `PLAN_UPDATE_REQUIRED` (upgrade COMPACTO → COMPLETO), actualiza `**Etapa actual:**` a `PLANNING`, agrega la fila al historial y sugiere `/delivery-plan TASK-<slug>`. No hagas el upgrade tú.
+- **Problema de la Specification** (un acceptance criterion, invariante o regla de negocio parece incorrecto, ambiguo o contradictorio con lo que ves en el código): **no lo reinterpretes ni elijas tú una lectura, ni cambies la Specification por tu cuenta** (cualquier cambio de comportamiento, AC, reglas de negocio, permisos o contrato funcional requiere aprobación explícita del usuario vía `delivery-plan`). Documenta el hallazgo con evidencia citando el ID (`AC-xx`, `INV-xx`) o, si el criterio no tiene ID, una cita corta del criterio, marca `PLAN_UPDATE_REQUIRED` indicando que afecta a la **Specification**, actualiza `**Etapa actual:**` a `PLANNING`, agrega la fila al historial, y detente; la decisión es del usuario vía `/delivery-plan TASK-<slug>`.
+- **Problema del plan** (un paso del Implementation Plan no funciona como está descrito, falta un caso, el alcance está mal dimensionado, pero la Specification sigue siendo válida): documenta el hallazgo en `## Implementación` del TASK con evidencia concreta, marca `PLAN_UPDATE_REQUIRED`, actualiza `**Etapa actual:**` a `PLANNING`, agrega la fila al historial, y detente. Sugiere `/delivery-plan TASK-<slug>`.
 - **Problema arquitectónico** (la decisión técnica no sostiene lo que pide la implementación real, o expone un impacto que `delivery-architect` no había visto): documenta el hallazgo, marca `ARCHITECTURE_REVIEW_REQUIRED`, actualiza `**Etapa actual:**` a `ARCHITECTURE`, agrega la fila al historial, y detente. Sugiere `/delivery-architect TASK-<slug>`.
 - **Problema de diseño** (el DDR no contempla un caso real que aparece al implementar, o el componente/patrón elegido no sirve para lo que pide la pantalla): documenta el hallazgo, marca `DESIGN_REVIEW_REQUIRED`, actualiza `**Etapa actual:**` a `DESIGN`, agrega la fila al historial, y detente. Sugiere `/delivery-design TASK-<slug>`.
 
@@ -100,13 +102,13 @@ No continúes implementando la parte afectada mientras el problema esté sin res
 
 ### 7. Commit y push
 
-Revisa qué quedó modificado (`git status`/`git diff`) y confirma que solo son archivos relacionados al plan (o al cambio trivial) antes de comitear. Mensaje de commit corto, imperativo, referenciando el TASK (`TASK-<slug>`) y, si aplica, el plan.
+Revisa qué quedó modificado (`git status`/`git diff`) y confirma que solo son archivos relacionados al plan (o al cambio trivial) antes de comitear. Mensaje de commit corto, imperativo, referenciando el TASK (`TASK-<slug>`) y, si aplica, el plan y el criterio que satisface: el ID si el plan lo define (`AC-02`, `INV-01`) o, si no, una cita corta del criterio (`"user without sales.edit cannot edit the Sale"`). No inventes IDs que el plan no definió.
 
 `git push` a la rama del PR único del task. Actualiza `## Changes` del PR (`gh pr edit`) con un resumen de lo implementado — no toques `## Testing`, `## Review` ni `## Summary`, esas secciones son de otras etapas.
 
 ### 8. Actualizar el TASK y detener
 
-Completa `## Implementación` (resumen de lo hecho, deuda técnica señalada si la hay), agrega la fila al historial (`ENGINEERING → REVIEW`, motivo: implementación completa), actualiza `**Etapa actual:**` a `REVIEW`. Resume en el chat qué se implementó, qué pruebas se escribieron y en qué nivel, y sugiere `/delivery-review TASK-<slug>` — preferentemente en una sesión nueva (ver limitación de aislamiento abajo). No invoques `delivery-review` tú mismo ni declares el trabajo aprobado.
+Completa `## Implementación` (resumen de lo hecho, qué AC/INV cubre cada parte (por ID o cita corta), **desviaciones respecto al Implementation Plan** con su motivo —una desviación no es un defecto si la Specification sigue satisfecha y no viola ADR/DDR, pero debe quedar explicada para el review; si revela que COMPACTO era insuficiente, es `PLAN_UPDATE_REQUIRED` de upgrade—, deuda técnica señalada si la hay), agrega la fila al historial (`ENGINEERING → REVIEW`, motivo: implementación completa), actualiza `**Etapa actual:**` a `REVIEW`. Resume en el chat qué se implementó, qué pruebas se escribieron y en qué nivel, y sugiere `/delivery-review TASK-<slug>` — preferentemente en una sesión nueva (ver limitación de aislamiento abajo). No invoques `delivery-review` tú mismo ni declares el trabajo aprobado.
 
 ## Reglas
 
@@ -117,7 +119,7 @@ Completa `## Implementación` (resumen de lo hecho, deuda técnica señalada si 
 
 ## Cuándo detenerse
 
-- Falta un plan o investigación aprobados para el veredicto del task.
+- Falta un plan o investigación aprobados para el veredicto del task, o la Specification está `BLOCKED`.
 - Una dependencia nueva no confirmada todavía.
 - El plan contradice lo que hay hoy en el código de forma que cambia alcance o riesgo.
 - Un requerimiento sigue ambiguo después de leerlo con cuidado.
