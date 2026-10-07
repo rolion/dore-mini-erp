@@ -1,0 +1,345 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Widget</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Chart Widget</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-4 col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h4>Chart Sample</h4>
+          </div>
+          <div class="card-body">
+            <div id="chart">
+              <apx-chart [series]="circleChartOptions.series!" [chart]="circleChartOptions.chart!"
+                [plotOptions]="circleChartOptions.plotOptions!" [labels]="circleChartOptions.labels!"
+                [legend]="circleChartOptions.legend!" [colors]="circleChartOptions.colors!"
+                [responsive]="circleChartOptions.responsive!"></apx-chart>
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <p class="text-muted font-13 text-truncate m-0">Target</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-up col-green m-r-5"></i>$15.3k
+                </h6>
+              </div>
+              <div class="col-4">
+                <p class="text-muted font-15 text-truncate m-0">Last
+                  week</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-down col-red m-r-5"></i>$2.8k
+                </h6>
+              </div>
+              <div class="col-4">
+                <p class="text-muted text-truncate m-0">Last
+                  Month</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-up col-green m-r-5"></i>$12.5k
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4 col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h4>Chart Sample</h4>
+          </div>
+          <div class="card-body">
+            <div id="chart">
+              <apx-chart [series]="radarChartOptions.series!" [chart]="radarChartOptions.chart!"
+                [xaxis]="radarChartOptions.xaxis!" [stroke]="radarChartOptions.stroke!"
+                [markers]="radarChartOptions.markers!" [fill]="radarChartOptions.fill!"></apx-chart>
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <p class="text-muted font-13 text-truncate m-0">Target</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-up col-green m-r-5"></i>$15.3k
+                </h6>
+              </div>
+              <div class="col-4">
+                <p class="text-muted font-15 text-truncate m-0">Last
+                  week</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-down col-red m-r-5"></i>$2.8k
+                </h6>
+              </div>
+              <div class="col-4">
+                <p class="text-muted text-truncate m-0">Last
+                  Month</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-up col-green m-r-5"></i>$12.5k
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4 col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h4>Chart Sample</h4>
+          </div>
+          <div class="card-body">
+            <div id="chart">
+              <apx-chart [series]="areaChartOptions.series!" [chart]="areaChartOptions.chart!"
+                [xaxis]="areaChartOptions.xaxis!" [stroke]="areaChartOptions.stroke!"
+                [tooltip]="areaChartOptions.tooltip!" [dataLabels]="areaChartOptions.dataLabels!">
+              </apx-chart>
+            </div>
+            <div class="row">
+              <div class="col-4">
+                <p class="text-muted font-13 text-truncate m-0">Target</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-up col-green m-r-5"></i>$15.3k
+                </h6>
+              </div>
+              <div class="col-4">
+                <p class="text-muted font-15 text-truncate m-0">Last
+                  week</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-down col-red m-r-5"></i>$2.8k
+                </h6>
+              </div>
+              <div class="col-4">
+                <p class="text-muted text-truncate m-0">Last
+                  Month</p>
+                <h6>
+                  <i class="fas fa-arrow-circle-up col-green m-r-5"></i>$12.5k
+                </h6>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-8 col-lg-8 col-md-12 col-sm-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Chart Sample</h4>
+          </div>
+          <div class="card-body">
+            <div class="float-start">
+              <h6 class="text-muted">Average Lecture Per Month</h6>
+              <h5>65 <span class="text-muted font-12">(Average)</span></h5>
+            </div>
+            <div class="mb-5">
+              <apx-chart [series]="avgLecChartOptions.series!" [chart]="avgLecChartOptions.chart!"
+                [xaxis]="avgLecChartOptions.xaxis!" [stroke]="avgLecChartOptions.stroke!"
+                [colors]="avgLecChartOptions.colors!" [dataLabels]="avgLecChartOptions.dataLabels!"
+                [legend]="avgLecChartOptions.legend!" [markers]="avgLecChartOptions.markers!"
+                [grid]="avgLecChartOptions.grid!" [yaxis]="avgLecChartOptions.yaxis!"
+                [tooltip]="avgLecChartOptions.tooltip!" [title]="avgLecChartOptions.title!"
+                [fill]="avgLecChartOptions.fill!">
+              </apx-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-lg-4 col-md-12 col-sm-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Chart Sample</h4>
+          </div>
+          <div class="card-body">
+            <div id="chart">
+              <apx-chart [series]="pieChartOptions.series!" [chart]="pieChartOptions.chart!"
+                [labels]="pieChartOptions.labels!" [responsive]="pieChartOptions.responsive!"
+                [dataLabels]="pieChartOptions.dataLabels!" [legend]="pieChartOptions.legend!" class="apex-pie-center">
+              </apx-chart>
+            </div>
+            <div class="table-responsive m-t-15">
+              <table class="table align-items-center table-row-border">
+                <tbody>
+                  <tr>
+                    <td><i class="fa fa-circle col-cyan msr-2"></i> Music</td>
+                    <td>23</td>
+                    <td class="col-green">+32%</td>
+                  </tr>
+                  <tr>
+                    <td><i class="fa fa-circle col-blue msr-2"></i>Science</td>
+                    <td>32</td>
+                    <td class="col-green">+12%</td>
+                  </tr>
+                  <tr>
+                    <td><i class="fa fa-circle col-orange msr-2"></i>Economics</td>
+                    <td>12</td>
+                    <td class="col-orange">-12%</td>
+                  </tr>
+                  <tr>
+                    <td><i class="fa fa-circle col-green msr-2"></i>Mathes</td>
+                    <td>32</td>
+                    <td class="col-green">+3%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-12 col-sm-12 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Summary</h4>
+          </div>
+          <div class="card-body">
+            <div class="summary">
+              <div class="summary-chart">
+                <canvas baseChart class="chart" [data]="areaChartData" [options]="areaChart"
+                  [type]="areaChartType"></canvas>
+              </div>
+              <div class="summary-item">
+                <h6 class="mt-3">Recent Purchase <span class="text-muted">(4 Items)</span></h6>
+                <ul class="list-unstyled list-unstyled-border">
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-1.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex">
+                      <div class="float-end col-blue font-17 fw-bold">$112</div>
+                      <div class="media-title">
+                        <div class="fw-bold font-16">Sarah
+                          Smith</div>
+                      </div>
+                      <div class="text-small text-muted">From <a href="#" onClick="return false;">London</a>
+                        <div class="bullet"></div> Monday
+                      </div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <a href="#" onClick="return false;">
+                      <img alt="image" src="assets/images/users/user-2.png"
+                        class="msr-3 user-img-radious-style user-list-img" width="40">
+                    </a>
+                    <div class="set-flex">
+                      <div class="float-end col-blue font-17 fw-bold">$225</div>
+                      <div class="media-title">
+                        <div class="fw-bold font-16">Ashton
+                          Cox</div>
+                      </div>
+                      <div class="text-small text-muted">From <a href="#" onClick="return false;">India</a>
+                        <div class="bullet"></div> Sunday
+                      </div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <a href="#" onClick="return false;">
+                      <img alt="image" src="assets/images/users/user-3.png"
+                        class="msr-3 user-img-radious-style user-list-img" width="40">
+                    </a>
+                    <div class="set-flex">
+                      <div class="float-end col-blue font-17 fw-bold">$479</div>
+                      <div class="media-title">
+                        <div class="fw-bold font-16">John Doe</div>
+                      </div>
+                      <div class="text-muted text-small">From <a href="#" onClick="return false;">China</a>
+                        <div class="bullet"></div> Friday
+                      </div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <a href="#" onClick="return false;">
+                      <img alt="image" src="assets/images/users/user-4.png"
+                        class="msr-3 user-img-radious-style user-list-img" width="40">
+                    </a>
+                    <div class="set-flex">
+                      <div class="float-end col-blue font-17 fw-bold">$669</div>
+                      <div class="media-title">
+                        <div class="fw-bold font-16">Airi
+                          Satou</div>
+                      </div>
+                      <div class="text-small text-muted">From <a href="#" onClick="return false;">Shrilanka</a>
+                        <div class="bullet"></div> Tuesday
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-12 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Referral URL</h4>
+          </div>
+          <div class="card-body">
+            <canvas baseChart class="chart" [data]="lineChartData" [options]="lineChartOptions"
+              [type]="lineChartType"></canvas>
+            <div class="mb-4 mt-4">
+              <div class="text-small float-end fw-bold text-muted">558</div>
+              <div class="fw-bold mb-1">Google</div>
+              <ngb-progressbar type="warning" [value]="55" height="10px"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">338</div>
+              <div class="fw-bold mb-1">Facebook</div>
+              <ngb-progressbar type="info" [value]="64" height="10px"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">238</div>
+              <div class="fw-bold mb-1">Bing</div>
+              <ngb-progressbar type="success" [value]="33" height="10px"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">190</div>
+              <div class="fw-bold mb-1">Yahoo</div>
+              <ngb-progressbar type="primary" [value]="28" height="10px"></ngb-progressbar>
+            </div>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Popular Browser</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col mb-4 mb-lg-0 text-center">
+                <div class="browser browser-chrome"></div>
+                <div class="mt-2 fw-bold">Chrome</div>
+                <div class="text-small text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 38%
+                </div>
+              </div>
+              <div class="col mb-4 mb-lg-0 text-center">
+                <div class="browser browser-firefox"></div>
+                <div class="mt-2 fw-bold">Firefox</div>
+                <div class="text-small text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 22%
+                </div>
+              </div>
+              <div class="col mb-4 mb-lg-0 text-center">
+                <div class="browser browser-safari"></div>
+                <div class="mt-2 fw-bold">Safari</div>
+                <div class="text-small text-muted"><span class="text-danger"><i class="fas fa-caret-down"></i></span>
+                  27%</div>
+              </div>
+              <div class="col mb-4 mb-lg-0 text-center">
+                <div class="browser browser-opera"></div>
+                <div class="mt-2 fw-bold">Opera</div>
+                <div class="text-small text-muted">9%</div>
+              </div>
+              <div class="col mb-4 mb-lg-0 text-center">
+                <div class="browser browser-internet-explorer"></div>
+                <div class="mt-2 fw-bold">IE</div>
+                <div class="text-small text-muted"><span class="text-primary"><i class="fas fa-caret-up"></i></span> 4%
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

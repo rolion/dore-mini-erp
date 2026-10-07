@@ -1,0 +1,134 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Timepicker</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+      </li>
+      <li class="breadcrumb-item">UI</li>
+      <li class="breadcrumb-item">Timepicker</li>
+    </ul>
+    <div class="section-body">
+      <div class="row ">
+        <div class="col-md-4 col-lg-4">
+          <div class="card">
+            <div class="card-header">
+              <h4>Timepicker</h4>
+            </div>
+            <div class="card-body">
+              <ngb-timepicker [(ngModel)]="time"></ngb-timepicker>
+              <button class="btn mb-3 mt-3" style="opacity: 0;">&nbsp;</button>
+              <hr>
+                <p>Selected time: {{time | json}}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 col-lg-4">
+            <div class="card">
+              <div class="card-header">
+                <h4>Meridian</h4>
+              </div>
+              <div class="card-body">
+                <ngb-timepicker [(ngModel)]="meridianTime" [meridian]="meridian"></ngb-timepicker>
+                <button class="btn btn-outline-{{meridian ? 'success' : 'danger'}} mb-3 mt-3" (click)="toggleMeridian()">
+                  Meridian - {{meridian ? "ON" : "OFF"}}
+                </button>
+                <hr>
+                  <p>Selected time: {{meridianTime | json}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+              <div class="card">
+                <div class="card-header">
+                  <h4>Seconds</h4>
+                </div>
+                <div class="card-body">
+                  <ngb-timepicker [(ngModel)]="secondsTime" [seconds]="seconds"></ngb-timepicker>
+                  <button class="btn btn-outline-{{seconds ? 'success' : 'danger'}} mb-3 mt-3" (click)="toggleSeconds()">
+                    Seconds - {{seconds ? "ON" : "OFF"}}
+                  </button>
+                  <hr>
+                    <p>Selected time: {{secondsTime | json}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 col-lg-4">
+                <div class="card">
+                  <div class="card-header">
+                    <h4>Spinners</h4>
+                  </div>
+                  <div class="card-body">
+                    <ngb-timepicker [(ngModel)]="spinnersTime" [spinners]="spinners"></ngb-timepicker>
+                    <button class="m-t-1 btn btn-outline-{{spinners ? 'success' : 'danger'}} mb-3 mt-3"
+                      (click)="toggleSpinners()">
+                      Spinners - {{spinners ? "ON" : "OFF"}}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 col-lg-4">
+                <div class="card">
+                  <div class="card-header">
+                    <h4>Custom steps</h4>
+                  </div>
+                  <div class="card-body">
+                    <ngb-timepicker [(ngModel)]="stepsTime" [seconds]="true" [hourStep]="hourStep" [minuteStep]="minuteStep"
+                    [secondStep]="secondStep"></ngb-timepicker>
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <label for="changeHourStep">Hour Step</label>
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="hourStep" />
+                      </div>
+                      <div class="col-sm-3">
+                        <label for="changeMinuteStep">Minute Step</label>
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="minuteStep" />
+                      </div>
+                      <div class="col-sm-4">
+                        <label for="changeSecondStep">Second Step</label>
+                        <input type="number" class="form-control form-control-sm" [(ngModel)]="secondStep" />
+                      </div>
+                    </div>
+                    <hr>
+                      <p>Selected time: {{stepsTime | json}}</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4 col-lg-4">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4>Custom validation</h4>
+                    </div>
+                    <div class="card-body">
+                      <p>Illustrates custom validation, you have to select time between 12:00 and 13:59</p>
+                      <div class="form-group" [class.has-success]="ctrl.valid" [class.has-danger]="!ctrl.valid">
+                        <ngb-timepicker [(ngModel)]="validationTime" [formControl]="ctrl" required></ngb-timepicker>
+                        <div class="form-control-feedback">
+                          @if (ctrl.valid) {
+                            <div>Great choice</div>
+                          }
+                          @if (ctrl.errors && ctrl.errors['required']) {
+                            <div>Select some time during lunchtime</div>
+                          }
+                          @if (ctrl.errors && ctrl.errors['tooLate']) {
+                            <div>Oh no, it's way too late</div>
+                          }
+                          @if (ctrl.errors && ctrl.errors['tooEarly']) {
+                            <div>It's a bit too early</div>
+                          }
+                        </div>
+                      </div>
+                      <hr>
+                        <p>Selected time: {{validationTime | json}}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <!--Timepicker Custom validation Ends-->
+                </div>
+              </div>
+            </section>
+            

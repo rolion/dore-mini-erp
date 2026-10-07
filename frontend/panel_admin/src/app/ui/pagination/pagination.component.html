@@ -1,0 +1,97 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Pagination</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">UI</li>
+    <li class="breadcrumb-item">Pagination</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Basic pagination</h4>
+          </div>
+          <div class="card-body">
+            <p>Default pagination:</p>
+            <ngb-pagination [collectionSize]="70" [(page)]="page" aria-label="Default pagination"></ngb-pagination>
+
+            <p>No direction links:</p>
+            <ngb-pagination [collectionSize]="70" [(page)]="page" [directionLinks]="false"></ngb-pagination>
+
+            <p>With boundary links:</p>
+            <ngb-pagination [collectionSize]="70" [(page)]="page" [boundaryLinks]="true"></ngb-pagination>
+
+            <hr>
+
+            <pre>Current page: {{page}}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Advanced pagination</h4>
+          </div>
+          <div class="card-body">
+            <p>Restricted size, no rotation:</p>
+            <ngb-pagination [collectionSize]="120" [(page)]="page2" [maxSize]="5" [boundaryLinks]="true">
+            </ngb-pagination>
+
+            <p>Restricted size with rotation:</p>
+            <ngb-pagination [collectionSize]="120" [(page)]="page2" [maxSize]="5" [rotate]="true"
+              [boundaryLinks]="true">
+            </ngb-pagination>
+
+            <p>Restricted size with rotation and no ellipses:</p>
+            <ngb-pagination [collectionSize]="120" [(page)]="page2" [maxSize]="5" [rotate]="true" [ellipses]="false"
+              [boundaryLinks]="true"></ngb-pagination>
+
+            <hr>
+
+            <pre>Current page: {{page2}}</pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="row">
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Custom links</h4>
+          </div>
+          <div class="card-body">
+            <p>A pagination with customized links:</p>
+            <ngb-pagination [collectionSize]="70" [(page)]="page" aria-label="Custom pagination">
+              <ng-template ngbPaginationPrevious>Prev</ng-template>
+              <ng-template ngbPaginationNext>Next</ng-template>
+              <ng-template ngbPaginationNumber let-p>{{ getPageSymbol(p) }}</ng-template>
+            </ngb-pagination>
+            <hr>
+
+            <pre>Current page: {{page}}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Pagination size</h4>
+          </div>
+          <div class="card-body">
+            <ngb-pagination [collectionSize]="50" [(page)]="currentPage" size="lg"></ngb-pagination>
+            <ngb-pagination [collectionSize]="50" [(page)]="currentPage"></ngb-pagination>
+            <ngb-pagination [collectionSize]="50" [(page)]="currentPage" size="sm"></ngb-pagination>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>

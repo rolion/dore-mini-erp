@@ -1,0 +1,153 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Input Mask</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Form</li>
+    <li class="breadcrumb-item">Input Mask</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Input Mask</h4>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Date Format</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="far fa-calendar-alt"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 10/07/2020" mask="00/00/0000">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Date And Hour</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="far fa-calendar-alt"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 10/07/20 11:05:29 " mask="00/00/00 00:00:00">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Valid 24 hour format</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="far fa-clock"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 23:05:29 " mask="Hh:m0:s0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Prefix</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: (435) 345 34 54" prefix="+91 "
+                  mask="(000) 000 00 00">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Suffix</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-dollar-sign"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 6762 " suffix=" $" mask="0000">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Drop Special Character</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-exclamation-circle"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 565-656.55" [dropSpecialCharacters]="false"
+                  mask="000-000.00">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Show Mask Type</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-phone"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: (435) 345 34 54" mask="(000) 000-0000"
+                  [showMaskTyped]="true">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Thousand separator</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-dollar-sign"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 125 897 854 " mask="separator">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Dot separator</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-pen"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 125.878.754" mask="separator"
+                  thousandSeparator=".">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Secure input</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-credit-card"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control creditcard" placeholder="EX: ***/*4/4354" [hiddenInput]="true"
+                  mask="XXX/X0/0000">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>IP Address</label>
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <i class="fas fa-desktop"></i>
+                  </div>
+                </div>
+                <input type="text" class="form-control" placeholder="EX: 443.543.534.535" mask="IP"
+                  [showMaskTyped]="true">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

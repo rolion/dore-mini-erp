@@ -1,0 +1,54 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Faqs</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Extra</li>
+    <li class="breadcrumb-item">Faqs</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Faqs</h4>
+          </div>
+          <div class="card-body">
+            <div class="form-group row">
+              <div class="col-sm-12">
+                <div class="d-flex">
+                  <input type="text" class="form-control" placeholder="Search your question here..."
+                    (input)="filter($event)" #messageInput>
+                </div>
+              </div>
+            </div>
+            <div ngbAccordion [closeOthers]="true">
+              @for (faq of faqs; track faq) {
+              <div ngbAccordionItem>
+                <h2 ngbAccordionHeader>
+                  <button ngbAccordionButton>
+                    <div class="mb-0"><i class="far fa-question-circle msr-2"></i><span> {{faq.title}}</span></div>
+                  </button>
+                </h2>
+                <div ngbAccordionCollapse>
+                  <div ngbAccordionBody>
+                    <ng-template ngbPanelContent>
+                      <div class="msl-2">
+                        {{faq.content}}
+                      </div>
+                    </ng-template>
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
