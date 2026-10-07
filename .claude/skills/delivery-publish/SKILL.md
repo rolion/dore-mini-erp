@@ -58,8 +58,8 @@ TASK-<slug> (docs/tasks/TASK-<slug>.md)
 ## Architecture decisions
 <enlaces a ADRs relevantes con una línea de qué decidieron, o "Ninguna — cambio sin impacto arquitectónico">
 
-## Related plan
-docs/plans/PLAN-<fecha>-<slug>.md (v<N> — versión vigente)
+## Related specification / plan
+docs/plans/PLAN-<fecha>-<slug>.md (v<N> — versión vigente; Specification + Implementation Plan)
 
 ## Related ADRs
 <lista, o "Ninguno">
@@ -68,7 +68,7 @@ docs/plans/PLAN-<fecha>-<slug>.md (v<N> — versión vigente)
 <resultado y enlace a delivery-review — no lo reescribas>
 
 ## Known limitations
-Cualquier limitación conocida que quede consciente después de todo el proceso (deuda técnica señalada por delivery-engineer, riesgos del plan sin mitigación completa, fallas ignoradas explícitamente con autorización). Si no hay ninguna, dilo explícitamente.
+Cualquier limitación conocida que quede consciente después de todo el proceso (deuda técnica señalada por delivery-engineer, riesgos del plan sin mitigación completa, `Open questions` de la Specification que quedaron sin resolver, fallas ignoradas explícitamente con autorización). Si no hay ninguna, dilo explícitamente.
 ```
 
 ### 4. Cambios sensibles: aprobación humana explícita, siempre

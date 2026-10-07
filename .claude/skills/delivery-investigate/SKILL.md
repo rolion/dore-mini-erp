@@ -51,6 +51,7 @@ El proyecto es nuevo y el código aún está en construcción, así que no asuma
 - **Comportamiento actual**: describe cómo funciona el sistema hoy en el área afectada, con evidencia concreta (qué hace la vista, qué devuelve el serializer, qué pinta el componente).
 - **Restricciones**: reglas de `CLAUDE.md` (si existe) que apliquen, y cualquier documentación del proyecto en `docs/` relevante al área.
 - **Migraciones**: si la tarea roza modelos, revisa las carpetas `migrations/` de la app afectada en `backend/` para saber cuál es la última.
+- **Lenguaje de dominio y reglas existentes**: términos del dominio tal como aparecen en el requisito, la UI, la API y el modelo (anota explícitamente si el mismo concepto se llama distinto o significa algo distinto en cada capa) y las reglas/invariantes que el código ya impone, con `archivo:línea`. `delivery-plan` los usa para construir la Specification; no los resuelvas ni reinterpretes, solo repórtalos.
 - **Riesgos observables**: lo que se ve a simple vista que podría complicar una solución (acoplamiento, falta de tests en el área, contrato de API frágil) — sin proponer cómo mitigarlo, eso es trabajo de `delivery-architect`/`delivery-plan`.
 
 ### 4. Separar hechos de hipótesis

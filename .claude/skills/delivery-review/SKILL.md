@@ -1,6 +1,6 @@
 ---
 name: delivery-review
-description: Actúa como Quality Gate independiente de la implementación de un task en este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular). Evalúa el estado acumulado del PR único del task (plan + código en el momento de la revisión), ejecutando de verdad las verificaciones funcionales (unit, integración, E2E cuando corresponda) y técnicas (lint, formatting, type checking, build, coverage, security checks como bandit/npm audit) con evidencia real de cada comando, y comparando la implementación contra el plan (acceptance criteria, alcance, ADRs, tests definidos). Nunca corrige código: documenta cada problema como issue en docs/reviews/REV-<fecha>-<task-slug>-<seq>.md, con triage IMPLEMENTATION/PLAN/ARCHITECTURE, y emite PASS o FAIL. Debe ejecutarse preferentemente en una sesión nueva, sin el historial de delivery-engineer, usando el plan, el diff y los ADRs como única fuente de verdad. Se invoca explícitamente con /delivery-review TASK-<slug>; no debe activarse solo porque el usuario mencione "revisar" o "aprobar" en una frase suelta.
+description: Actúa como Quality Gate independiente de la implementación de un task en este monorepo (`backend/` en Django/DRF + `frontend/panel_admin/` en Angular). Evalúa el estado acumulado del PR único del task (plan + código en el momento de la revisión), ejecutando de verdad las verificaciones funcionales (unit, integración, E2E cuando corresponda) y técnicas (lint, formatting, type checking, build, coverage, security checks como bandit/npm audit) con evidencia real de cada comando, y comparando la implementación contra la Specification (acceptance criteria, invariantes, contratos, edge/error cases) y contra el Implementation Plan (alcance, ADRs/DDRs, tests definidos). Nunca corrige código: documenta cada problema como issue en docs/reviews/REV-<fecha>-<task-slug>-<seq>.md, con triage IMPLEMENTATION/SPECIFICATION/PLAN/ARCHITECTURE/DESIGN, y emite PASS o FAIL. Debe ejecutarse preferentemente en una sesión nueva, sin el historial de delivery-engineer, usando el plan, el diff y los ADRs como única fuente de verdad. Se invoca explícitamente con /delivery-review TASK-<slug>; no debe activarse solo porque el usuario mencione "revisar" o "aprobar" en una frase suelta.
 ---
 
 # Delivery Review
@@ -57,20 +57,36 @@ Ejecuta lo que exista configurado en el proyecto y adjunta la salida real:
 - **Límites DDD**: verifica contra `docs/architecture/ddd.md` que `domain/` no importe Django, que ningún módulo importe infraestructura/modelos de otro, que Reporting solo lea, y que no haya lógica de negocio en views/serializers.
 - **Clean code / SOLID**: señala violaciones evidentes **solo dentro del código nuevo o modificado por este cambio** (nunca del código preexistente no tocado), con severidad baja/media salvo que genere un riesgo real. No bloquees el PR por deuda técnica preexistente fuera del alcance del plan.
 
-### 4. Plan compliance
+### 4. Specification y plan compliance
 
-Compara plan (o, en `TRIVIAL_FIX`, la investigación) contra la implementación real:
-- Cada **acceptance criterion** del plan: ¿se cumple? Evidencia concreta, no impresión general.
+Antes de evaluar completitud, lee el campo `**Modo:**` de `PLAN-*.md` (`COMPACTO` o `COMPLETO`; criterios en la sección *Modo del documento* de `delivery-plan`). En `COMPACTO`, **no marques como faltantes** las secciones exclusivas de `COMPLETO` (ubiquitous language, domain rules, API contract, authorization, architecture considerations, etc.): verifica solo las estructuras que ese modo define (Expected behavior, Acceptance criteria, Edge/error cases, Out of scope, Test Specification, Implementation Plan). La Specification se sigue verificando antes que el plan. Si el campo `Modo` falta, repórtalo como hallazgo `PLAN`.
+
+**Si la implementación demuestra que COMPACTO era insuficiente** (aparece una condición de los criterios de `delivery-plan` que habría exigido `COMPLETO`: dependencia entre bounded contexts, contrato API, migración riesgosa, reglas de negocio nuevas, permisos, lógica financiera material, decisión arquitectónica, etc.), crea un hallazgo de categoría `PLAN` (o `SPECIFICATION` si falta contenido de comportamiento y no solo estructura), indica explícitamente en `Required action` que el PLAN necesita upgrade de COMPACTO a COMPLETO, y devuelve el task a `PLANNING`. Ejemplo: *Category: PLAN. Reason: la implementación introduce una dependencia entre contextos que requiere documentación de arquitectura/contrato no representada por el plan COMPACTO actual. Required action: upgrade del PLAN de COMPACTO a COMPLETO.*
+
+El documento `PLAN-*.md` tiene una **Specification** (QUÉ, el contrato de corrección), una **Test Specification** y un **Implementation Plan** (CÓMO). Verifica primero contra la Specification y después contra el plan (en `TRIVIAL_FIX`, contra la investigación). Si el documento está en modo `COMPACTO`, aplica solo lo que contiene.
+
+**Contra la Specification:**
+- Cada **acceptance criterion** (por ID `AC-xx` si el plan los define; si no, por cita corta o índice — **no inventes IDs** que el plan no definió): ¿se cumple? Evidencia concreta, no impresión general. Usa la tabla *Acceptance criteria mapping*: ¿existe y pasa la verificación asignada a cada AC?
+- **Invariantes de dominio** (`INV-xx`): ¿se siguen respetando las existentes y se aplican las nuevas?
+- **Contratos API/UI** (`API-xx`, `UI-xx`), **permisos** y **requisitos no funcionales** si la Specification los define.
+- **Edge cases** (`EDGE-xx`) y **error cases**: ¿tienen cobertura y el comportamiento esperado?
+- **Límites DDD** y restricciones de arquitectura declaradas en la Specification.
+
+**Contra el Implementation Plan:**
 - **Alcance**: ¿el diff toca archivos o módulos que el plan no mencionaba? Es un hallazgo aunque el cambio en sí parezca razonable (scope creep).
-- **Architecture decisions / ADR compliance**: ¿la implementación respeta lo decidido en los ADR relacionados?
-- **Tests definidos en el plan**: ¿están todos? ¿la justificación de E2E sí/no del plan se cumplió en la práctica?
-- **Edge cases** listados en el plan: ¿tienen cobertura?
+- **ADR / DDR compliance**: ¿la implementación respeta lo decidido en los ADR y DDR relacionados?
+- **Tests planificados**: ¿están todos? ¿la justificación de E2E sí/no se cumplió en la práctica? ¿se cubrieron los tests de regresión?
+- **Desviaciones**: una desviación del Implementation Plan no es un defecto por sí misma si la Specification sigue satisfecha y no viola ADR/DDR ni restricciones existentes, pero debe estar explicada en `## Implementación` del TASK; si no lo está, repórtala. Si la desviación revela que COMPACTO era insuficiente, aplica la regla de upgrade de arriba.
+- **Cambios de Specification**: si el diff o el hallazgo implica cambiar comportamiento, AC, reglas de negocio, permisos o contrato funcional, tú no lo resuelves: crea el hallazgo `SPECIFICATION`; requiere aprobación explícita del usuario vía `delivery-plan`.
+
+Principio: una implementación correcta de una Specification equivocada sigue siendo un fallo (categoría SPECIFICATION).
 
 ### 5. Triage de cada problema encontrado
 
 Por cada hallazgo, clasifícalo en una sola categoría:
-- **IMPLEMENTATION** — el plan es correcto pero el código está mal → corresponde a `delivery-engineer`.
-- **PLAN** — el plan estaba incompleto o incorrecto → corresponde a `delivery-plan`.
+- **IMPLEMENTATION** — la Specification y el plan son correctos pero el código está mal → corresponde a `delivery-engineer`.
+- **SPECIFICATION** — la implementación cumple lo especificado pero la Specification es incorrecta, ambigua, incompleta o contradice el comportamiento real/negocio (un AC mal formulado, un invariante faltante, un contrato incorrecto, un AC sin verificación asignada) → corresponde a `delivery-plan` (actualiza la Specification; requiere decisión del usuario si cambia comportamiento de negocio).
+- **PLAN** — la Specification es correcta pero el Implementation Plan (pasos, archivos, estrategia de tests) estaba incompleto o incorrecto → corresponde a `delivery-plan`.
 - **ARCHITECTURE** — la implementación sigue el plan correctamente, pero la decisión arquitectónica es insuficiente o incorrecta → corresponde a `delivery-architect`.
 - **DESIGN** — el plan sigue el DDR correctamente, pero la decisión de diseño no cubre un caso real o el componente elegido no funciona como se esperaba en uso real → corresponde a `delivery-design`.
 
@@ -81,15 +97,17 @@ Crea `docs/reviews/REV-<fecha>-<task-slug>-<seq>.md` por cada issue (secuencia d
 
 **Status:** Open
 **Severity:** <Critical | High | Medium | Low>
-**Category:** <IMPLEMENTATION | PLAN | ARCHITECTURE | DESIGN>
+**Category:** <IMPLEMENTATION | SPECIFICATION | PLAN | ARCHITECTURE | DESIGN>
 **Related plan:** docs/plans/PLAN-<fecha>-<slug>.md (v<N>)
+**Spec reference:** <AC-xx / INV-xx / EDGE-xx / API-xx / UI-xx afectados, o cita corta del criterio si el plan no usa IDs, o "N/A">
+**Plan mode:** <COMPACTO | COMPLETO>
 **Suggested owner:** <delivery-engineer | delivery-plan | delivery-architect | delivery-design>
 
 ## Description
 Qué está mal, en términos concretos.
 
 ## Expected behavior
-Qué dice el plan/ADR/acceptance criteria que debería pasar.
+Qué dice la Specification (cita el AC/INV), el plan o el ADR/DDR que debería pasar.
 
 ## Actual behavior
 Qué pasa realmente, con evidencia.
@@ -115,9 +133,10 @@ Actualiza `docs/tasks/TASK-<slug>.md`:
 - Historial de transiciones y `**Etapa actual:**`:
   - `PASS` → `PUBLISH`.
   - `FAIL` con issues `IMPLEMENTATION` → vuelve a `ENGINEERING`.
-  - `FAIL` con issues `PLAN` → vuelve a `PLANNING`.
+  - `FAIL` con issues `SPECIFICATION` o `PLAN` → vuelve a `PLANNING`.
   - `FAIL` con issues `ARCHITECTURE` → vuelve a `ARCHITECTURE`.
-  - Si hay issues de más de una categoría, la etapa vuelve a la más temprana de las involucradas (arquitectura > plan > implementación), porque resolver esa primero puede volver innecesarias las otras.
+  - `FAIL` con issues `DESIGN` → vuelve a `DESIGN`.
+  - Si hay issues de más de una categoría, la etapa vuelve a la más temprana de las involucradas (diseño > arquitectura > specification/plan > implementación), porque resolver esa primero puede volver innecesarias las otras.
 
 ### 8. Reportar y detener
 
@@ -137,4 +156,4 @@ Resume el veredicto y los issues (si los hay) en el chat, con el comando sugerid
 
 ## Cuándo delega a otra skill
 
-Según el triage: `delivery-engineer`, `delivery-plan` o `delivery-architect` en `FAIL`; `delivery-publish` en `PASS`.
+Según el triage: `delivery-engineer`, `delivery-plan` (SPECIFICATION o PLAN), `delivery-architect` o `delivery-design` en `FAIL`; `delivery-publish` en `PASS`.
