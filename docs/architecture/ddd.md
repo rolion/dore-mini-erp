@@ -935,6 +935,8 @@ GET    /api/customers
 POST   /api/customers
 GET    /api/customers/{id}
 PATCH  /api/customers/{id}
+POST   /api/customers/{id}/activate
+POST   /api/customers/{id}/deactivate
 ```
 
 ## Sales

@@ -22,6 +22,11 @@ export const APP_ROUTE: Route[] = [
                     import('./features/products/products.routes').then((m) => m.PRODUCTS_ROUTE),
             },
             {
+                path: 'customers',
+                loadChildren: () =>
+                    import('./features/customers/customers.routes').then((m) => m.CUSTOMERS_ROUTE),
+            },
+            {
                 path: 'advance-table',
                 loadChildren: () =>
                     import('./advance-table/advance-table.routes').then(
