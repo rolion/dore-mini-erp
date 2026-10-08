@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-ciclo-pedido-entrega-cobro`
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/7
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -12,7 +12,7 @@
 | 2026-10-08 | (nuevo) → INVESTIGATION | Task creado | delivery-investigate |
 | 2026-10-08 | DESIGN → ARCHITECTURE | Decisión de diseño registrada en 2 DDR (menú y lista de pedidos; formulario y detalle con ítems, estados, cancelación y pagos) | delivery-design |
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 5 ADR (modelo de dominio, contrato API, persistencia y concurrencia, integración Catalog/Customers, feature frontend); reglas de negocio confirmadas por el usuario | delivery-architect |
-| 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; rama y PR abiertos | delivery-plan |
+| 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #7 abierto | delivery-plan |
 
 ## Investigación
 
