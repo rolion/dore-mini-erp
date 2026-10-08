@@ -6,6 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { CustomerPurchaseHistoryComponent } from '../../components/customer-purchase-history/customer-purchase-history.component';
 import { Customer, CustomerApiError, CustomerOrderSummary } from '../../models/customer';
+import { CustomerOrdersApiService } from '../../services/customer-orders-api.service';
 import { CustomersApiService } from '../../services/customers-api.service';
 
 @Component({
@@ -16,10 +17,15 @@ import { CustomersApiService } from '../../services/customers-api.service';
 export class CustomerDetailComponent implements OnInit {
   customer: Customer | null = null;
   loading = true;
-  /** Pedidos del cliente. Se cargarán desde Sales cuando exista (ADR historial-compras); por ahora vacío. */
+  /** Pedidos del cliente, cargados desde Sales (ADR historial-compras) una vez conocido el cliente. */
   orders: CustomerOrderSummary[] = [];
+  ordersTotal = 0;
+  ordersLoading = false;
+  /** Un fallo del historial no impide ver los datos del cliente. */
+  ordersError = '';
 
   private api = inject(CustomersApiService);
+  private ordersApi = inject(CustomerOrdersApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
@@ -34,11 +40,31 @@ export class CustomerDetailComponent implements OnInit {
         next: (customer) => {
           this.customer = customer;
           this.loading = false;
+          this.loadOrders(customer.id);
         },
         error: (err: CustomerApiError) => {
           this.loading = false;
           this.toastr.error(err.message);
           this.router.navigate(['/customers']);
+        },
+      });
+  }
+
+  private loadOrders(customerId: string): void {
+    this.ordersLoading = true;
+    this.ordersError = '';
+    this.ordersApi
+      .list(customerId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (history) => {
+          this.orders = history.orders;
+          this.ordersTotal = history.total;
+          this.ordersLoading = false;
+        },
+        error: (err: Error) => {
+          this.ordersError = err.message;
+          this.ordersLoading = false;
         },
       });
   }

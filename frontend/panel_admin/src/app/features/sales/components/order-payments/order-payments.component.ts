@@ -1,6 +1,5 @@
-import { Component, effect, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { inject } from '@angular/core';
 import {
   FieldErrors,
   Order,
@@ -27,6 +26,8 @@ export class OrderPaymentsComponent {
   readonly errors = input<FieldErrors>({});
   readonly paymentSubmit = output<PaymentInput>();
 
+  private readonly paymentCount = computed(() => this.order().payments.length);
+
   readonly methods = PAYMENT_METHODS;
   readonly methodLabels = PAYMENT_METHOD_LABELS;
   readonly formOpen = signal(false);
@@ -40,8 +41,8 @@ export class OrderPaymentsComponent {
   constructor() {
     // Un pago nuevo (o un pedido que ya no admite pagos) cierra y limpia el formulario.
     effect(() => {
-      this.order().payments.length;
-      this.close();
+      this.paymentCount();
+      untracked(() => this.close());
     });
     effect(() => {
       if (!this.order().canRegisterPayment) {

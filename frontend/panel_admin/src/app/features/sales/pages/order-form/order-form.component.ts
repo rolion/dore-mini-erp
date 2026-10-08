@@ -5,8 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgSelectComponent } from '@ng-select/ng-select';
 import { ToastrService } from 'ngx-toastr';
-import { Observable, Subject, catchError, concat, debounceTime, distinctUntilChanged, finalize, map, of, switchMap, tap } from 'rxjs';
-import { CustomersApiService } from '../../../customers';
+import { Observable, Subject, concat, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs';
 import {
   Order,
   OrderApiError,
@@ -18,10 +17,10 @@ import {
   SalesChannel,
   todayIso,
 } from '../../models/order';
+import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 
 export const NOTES_MAX_LENGTH = 2000;
-export const CUSTOMER_SEARCH_PAGE_SIZE = 20;
 export const NOT_EDITABLE_MESSAGE = 'El pedido ya no admite cambios.';
 
 export type FormField = Extract<
@@ -58,7 +57,7 @@ export class OrderFormComponent implements OnInit {
   readonly customers$: Observable<OrderCustomer[]>;
 
   private ordersApi = inject(OrdersApiService);
-  private customersApi = inject(CustomersApiService);
+  private customerOptions = inject(CustomerOptionsService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
@@ -140,11 +139,7 @@ export class OrderFormComponent implements OnInit {
   }
 
   private searchCustomers(term: string): Observable<OrderCustomer[]> {
-    return this.customersApi.list({ search: term.trim(), active: true, pageSize: CUSTOMER_SEARCH_PAGE_SIZE }).pipe(
-      map((page) => page.results.map((customer) => ({ id: customer.id, name: customer.name }))),
-      catchError(() => of([] as OrderCustomer[])),
-      finalize(() => (this.customersLoading = false)),
-    );
+    return this.customerOptions.search(term).pipe(finalize(() => (this.customersLoading = false)));
   }
 
   private fill(order: Order): void {

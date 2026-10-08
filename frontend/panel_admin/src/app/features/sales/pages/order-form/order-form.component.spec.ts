@@ -8,7 +8,8 @@ import { Customer, CustomersApiService } from '../../../customers';
 import { Order, OrderApiError, todayIso } from '../../models/order';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { makeOrder } from '../../testing/order-fixtures';
-import { CUSTOMER_SEARCH_PAGE_SIZE, NOT_EDITABLE_MESSAGE, OrderFormComponent } from './order-form.component';
+import { CUSTOMER_SEARCH_PAGE_SIZE } from '../../services/customer-options.service';
+import { NOT_EDITABLE_MESSAGE, OrderFormComponent } from './order-form.component';
 
 const CUSTOMER: Customer = {
   id: 'c-2',

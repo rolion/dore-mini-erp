@@ -1,0 +1,168 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Pedidos</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Pedidos</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="ngxTableHeader">
+                  <div class="table-title">
+                    <h2><strong>Pedidos</strong></h2>
+                  </div>
+                  <div class="header-buttons-left">
+                    <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/sales/orders/new"
+                      title="Nuevo pedido" aria-label="Nuevo pedido">
+                      <i class="material-icons">add</i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-group flex-wrap m-2" role="group" aria-label="Atajos de vista" data-testid="shortcuts">
+              @for (shortcut of shortcuts; track shortcut.id) {
+              <button type="button" class="btn" [class.btn-primary]="currentShortcut === shortcut.id"
+                [class.btn-outline-primary]="currentShortcut !== shortcut.id" [attr.data-shortcut]="shortcut.id"
+                [attr.aria-pressed]="currentShortcut === shortcut.id" (click)="applyShortcut(shortcut)">
+                {{ shortcut.label }}
+              </button>
+              }
+            </div>
+
+            <form class="row g-2 m-2 order-filters" [formGroup]="filterForm" data-testid="filters">
+              <div class="col-md-3">
+                <label for="filter-status">Estado de entrega</label>
+                <select id="filter-status" class="form-select form-control" formControlName="statusKey">
+                  @for (option of statusOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="filter-payment">Estado de pago</label>
+                <select id="filter-payment" class="form-select form-control" formControlName="paymentKey">
+                  @for (option of paymentOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="filter-channel">Canal</label>
+                <select id="filter-channel" class="form-select form-control" formControlName="channel">
+                  <option value="">Todos</option>
+                  @for (option of channelOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="filter-customer">Cliente</label>
+                <ng-select inputId="filter-customer" [items]="customers$ | async" bindLabel="name"
+                  [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
+                  placeholder="Todos los clientes" notFoundText="Sin resultados"
+                  typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
+                </ng-select>
+              </div>
+              <div class="col-md-3">
+                <label for="filter-date-field">Fecha de</label>
+                <select id="filter-date-field" class="form-select form-control" formControlName="dateField">
+                  <option value="order_date">Pedido</option>
+                  <option value="expected_delivery_date">Entrega prevista</option>
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="filter-from">Desde</label>
+                <input id="filter-from" type="date" class="form-control" formControlName="dateFrom">
+              </div>
+              <div class="col-md-3">
+                <label for="filter-to">Hasta</label>
+                <input id="filter-to" type="date" class="form-control" formControlName="dateTo">
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
+                  (click)="clearFilters()">Limpiar filtros</button>
+              </div>
+            </form>
+
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              <ngx-datatable-column name="Pedido" [sortable]="false" [width]="130">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a class="fw-bold" [routerLink]="['/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a>
+                  <div><small class="text-muted">{{ row.code }}</small></div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Cliente" [sortable]="false" [width]="170">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.customer) {
+                  {{ row.customer.name }}
+                  } @else {
+                  <span class="text-muted">Sin cliente</span>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Canal" [sortable]="false" [width]="120">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ channelLabels[row.salesChannel] }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Entrega prevista" [sortable]="false" [width]="130">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row.expectedDeliveryDate ? (row.expectedDeliveryDate | date: 'dd/MM/yyyy') : '—' }}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Total" [sortable]="false" [width]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="text-end w-100">{{ row.total | money }}</div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Saldo" [sortable]="false" [width]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="text-end w-100" [class.text-danger]="owes(row)" [class.fw-bold]="owes(row)"
+                    data-testid="balance-cell">
+                    {{ showsBalance(row) ? (row.balance | money) : '—' }}
+                  </div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Entrega" [sortable]="false" [width]="160">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <app-order-status-badge [status]="row.status" />
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Pago" [sortable]="false" [width]="140">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <app-payment-status-badge [status]="row.paymentStatus" />
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="80">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/sales/orders', row.id]"
+                    title="Ver pedido" aria-label="Ver pedido">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+            <p class="m-2 text-muted" data-testid="ordering-help">
+              {{ ordering === 'expected'
+              ? 'Ordenado por entrega prevista, más próximas primero.'
+              : 'Ordenado por fecha de pedido, más recientes primero.' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

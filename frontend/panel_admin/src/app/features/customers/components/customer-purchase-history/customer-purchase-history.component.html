@@ -3,7 +3,11 @@
     <h4>Historial de compras</h4>
   </div>
   <div class="card-body">
-    @if (orders().length) {
+    @if (loading()) {
+    <p class="m-4" data-testid="history-loading">Cargando historial…</p>
+    } @else if (error()) {
+    <p class="m-4 text-danger" data-testid="history-error">{{ error() }}</p>
+    } @else if (orders().length) {
     <div class="table-responsive">
       <table class="table table-striped m-b-0">
         <thead>
@@ -11,19 +15,26 @@
             <th>Fecha</th>
             <th>Total</th>
             <th>Estado</th>
+            <th>Pago</th>
           </tr>
         </thead>
         <tbody>
           @for (order of orders(); track order.id) {
           <tr>
-            <td>{{ order.date | date: 'dd/MM/yyyy' }}</td>
-            <td>{{ order.total }}</td>
-            <td>{{ order.status }}</td>
+            <td><a [routerLink]="['/sales/orders', order.id]">{{ order.date | date: 'dd/MM/yyyy' }}</a></td>
+            <td>Bs {{ order.total }}</td>
+            <td>{{ statusLabel(order.status) }}</td>
+            <td>{{ paymentLabel(order.paymentStatus) }}</td>
           </tr>
           }
         </tbody>
       </table>
     </div>
+    @if (total() > orders().length) {
+    <p class="m-3 text-muted" data-testid="history-partial">
+      Se muestran los {{ orders().length }} pedidos más recientes de {{ total() }}.
+    </p>
+    }
     } @else {
     <p class="m-4">Este cliente aún no tiene pedidos.</p>
     }

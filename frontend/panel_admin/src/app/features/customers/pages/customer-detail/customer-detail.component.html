@@ -54,7 +54,8 @@
           </div>
         </div>
         @if (customer) {
-        <app-customer-purchase-history [orders]="orders" />
+        <app-customer-purchase-history [orders]="orders" [loading]="ordersLoading" [error]="ordersError"
+          [total]="ordersTotal" />
         }
       </div>
     </div>

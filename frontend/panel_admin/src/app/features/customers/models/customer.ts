@@ -38,13 +38,20 @@ export interface CustomerListParams {
   pageSize?: number;
 }
 
-/** Resumen de un pedido del cliente; lo proveerá Sales (`GET /api/orders/?customer_id=`). */
+/**
+ * Resumen de un pedido del cliente, tal como lo entrega Sales (`GET /api/orders/?customer_id=`).
+ * Los estados llegan como códigos del servidor; este módulo no importa nada de Sales.
+ */
 export interface CustomerOrderSummary {
   id: string;
+  /** Fecha del pedido (`AAAA-MM-DD`). */
   date: string;
   /** Texto decimal ("120.50"); no se opera con aritmética de coma flotante. */
   total: string;
+  /** Código del estado de entrega (p. ej. `DELIVERED`). */
   status: string;
+  /** Código del estado de pago (p. ej. `PARTIAL`). */
+  paymentStatus: string;
 }
 
 /** Otro cliente con el mismo teléfono, devuelto al intentar crear un duplicado. */
