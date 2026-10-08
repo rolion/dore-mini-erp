@@ -1,6 +1,6 @@
 # TASK-ciclo-pedido-entrega-cobro: Módulo Ventas (Sales): pedido → preparación → entrega → cobro, con estado logístico y de pago independientes
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-ciclo-pedido-entrega-cobro`
@@ -15,6 +15,7 @@
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #7 abierto | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `sales`, frontend `features/sales`, historial del cliente, creación rápida, extracción a `shared/`) | delivery-engineer |
 | 2026-10-08 | REVIEW → PLANNING | FAIL: 2 hallazgos IMPLEMENTATION (1 High, 1 Medium) y 1 SPECIFICATION (Low, decisión de negocio sobre precio 0); vuelve a la etapa más temprana implicada | delivery-review |
+| 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (precio 0 permitido en ítems, REV-03); REV-01 y REV-02 se corrigen en implementación (Fase 10) | delivery-plan |
 
 ## Investigación
 
@@ -155,8 +156,9 @@ Objetivo: gestionar el ciclo Pedido → preparación → entrega → cobro. El e
 - **Supuestos míos a confirmar en el plan:** cantidades enteras; un producto no repetible en un pedido; `delivered_date` y `payment_date` no futuras; el cancelado conserva el `payment_status` derivado; el cliente se valida solo al asignarlo; `code` derivado del UUID (sin número secuencial). **Riesgo operativo:** los pagos no se pueden corregir ni anular en este alcance.
 
 ## Plan
-- [PLAN-2026-10-08-ciclo-pedido-entrega-cobro](../plans/PLAN-2026-10-08-ciclo-pedido-entrega-cobro.md) — v1, Modo COMPLETO, Specification readiness: READY. 28 ACs (API de pedidos, ítems, descuento, estados, pagos, lista, detalle, menú, formulario, historial del cliente, creación rápida, extracción a `shared/`), 14 invariantes, 11 casos borde, sin dependencias nuevas, E2E: NO (humo manual obligatorio antes de fusionar). Implementación en 9 fases con commits separados; la creación rápida de cliente (Fase 8) es separable.
+- [PLAN-2026-10-08-ciclo-pedido-entrega-cobro](../plans/PLAN-2026-10-08-ciclo-pedido-entrega-cobro.md) — **v2** (antes v1), Modo COMPLETO, Specification readiness: READY. 28 ACs (API de pedidos, ítems, descuento, estados, pagos, lista, detalle, menú, formulario, historial del cliente, creación rápida, extracción a `shared/`), 14 invariantes, 11 casos borde, sin dependencias nuevas, E2E: NO (humo manual obligatorio antes de fusionar). Implementación en 9 fases con commits separados; la creación rápida de cliente (Fase 8) es separable.
 - Preguntas abiertas no bloqueantes (decisiones por defecto vetables en el PR): cantidades enteras y producto no repetible; fechas de entrega y de pago no futuras; "por cobrar" sin cancelados; pagos no corregibles ni anulables en este alcance (riesgo operativo); límites de longitud (`notes` 2000, `reason` 500, `reference` 100); código visible derivado del UUID.
+- **v2 (2026-10-08), tras el review FAIL:** [Specification] REV-03 resuelto con aprobación del usuario: el precio de un ítem puede ser 0 (INV-01, AC-03, nuevo EDGE-13); ADR `modelo-dominio` enmendado. [Implementation Plan] REV-01 (XSS en `Swal` por nombre de producto, y el mismo patrón en `customer-list`/`customer-detail`) y REV-02 (`null.trim()` en las búsquedas remotas, incluida la de productos) entran como Fase 10 con EDGE-14 y EDGE-15.
 
 ## Implementación
 Rama `task/TASK-ciclo-pedido-entrega-cobro`, PR #7, siguiendo el plan v1 (COMPLETO) en las 9 fases, con commits separados.

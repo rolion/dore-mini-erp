@@ -1,4 +1,4 @@
-# PLAN-2026-10-08-ciclo-pedido-entrega-cobro (v1)
+# PLAN-2026-10-08-ciclo-pedido-entrega-cobro (v2)
 
 **Task:** TASK-ciclo-pedido-entrega-cobro
 **Modo:** COMPLETO
@@ -56,7 +56,7 @@ Un usuario autenticado puede crear un pedido en estado NEW (cliente opcional, ca
 Reglas **existentes** que deben seguir siendo verdaderas: dinero en `Decimal` (`CLAUDE.md`); productos y clientes nunca se borran; un producto inactivo no entra a pedidos nuevos (`ddd.md:464`); Reporting solo lee; estados por métodos del agregado.
 
 Reglas **nuevas** (detalle y justificación en [ADR modelo-dominio](../adr/ADR-ciclo-pedido-entrega-cobro-modelo-dominio.md)):
-- INV-01: importes `Decimal` con ≤ 2 decimales, 0 ≤ importe ≤ 9 999 999 999,99; `float` y `bool` rechazados; precio de ítem y monto de pago > 0.
+- INV-01: importes `Decimal` con ≤ 2 decimales, 0 ≤ importe ≤ 9 999 999 999,99; `float` y `bool` rechazados; monto de pago > 0; precio de ítem ≥ 0 (un obsequio puede costar 0, como permite Catalog).
 - INV-02: `quantity` entero en 1…100 000; un `product_id` no se repite en el pedido.
 - INV-03: `0 ≤ discount ≤ subtotal`; `subtotal = Σ (unit_price × quantity)`; `total = subtotal − discount`; `total` no se asigna desde fuera.
 - INV-04: datos, ítems y descuento solo se modifican con `status ∈ {NEW, IN_PREPARATION, READY}`.
@@ -74,7 +74,7 @@ Reglas **nuevas** (detalle y justificación en [ADR modelo-dominio](../adr/ADR-c
 ## Acceptance criteria
 - **AC-01** (REQ-SAL-001, 007) `POST /api/orders/` con `sales_channel` válido crea un pedido NEW, `payment_status` PENDING, sin ítems, `total` `"0.00"`, `order_date` por defecto hoy, cliente opcional y notas opcionales; responde 201 con el recurso detalle. Canal inválido o ausente → 400 `sales_channel`.
 - **AC-02** (REQ-SAL-001, 004, 008) `prepare` con 0 ítems → 409 `empty_order` y el estado no cambia; con ≥ 1 ítem → IN_PREPARATION. Quitar el único ítem en IN_PREPARATION o READY → 409 `empty_order`; en NEW queda permitido.
-- **AC-03** (REQ-SAL-002) `POST …/items/` con `{product_id, quantity}` de un producto activo guarda `product_name` y `unit_price` del catálogo, calcula `subtotal = unit_price × quantity` (2 unidades de 35,00 → `"70.00"`) y recalcula `subtotal` y `total` del pedido. Producto inexistente o inactivo → 400 `product_id` sin cambios; cantidad no entera o ≤ 0 → 400 `quantity`; producto ya presente → 409 `duplicate_product`; cualquier `unit_price`/`product_name` enviado se ignora.
+- **AC-03** (REQ-SAL-002) `POST …/items/` con `{product_id, quantity}` de un producto activo guarda `product_name` y `unit_price` del catálogo, calcula `subtotal = unit_price × quantity` (2 unidades de 35,00 → `"70.00"`) y recalcula `subtotal` y `total` del pedido. Producto inexistente o inactivo → 400 `product_id` sin cambios; cantidad no entera o ≤ 0 → 400 `quantity`; producto ya presente → 409 `duplicate_product`; cualquier `unit_price`/`product_name` enviado se ignora. Un producto activo con precio 0 se agrega con subtotal de ítem `"0.00"` (v2, REV-03).
 - **AC-04** (REQ-SAL-003) `PATCH …/items/{item_id}/` con `{quantity}` válida actualiza el subtotal del ítem y los totales sin edición manual; cantidad ≤ 0 o no entera → 400 `quantity`.
 - **AC-05** (REQ-SAL-004) `DELETE …/items/{item_id}/` quita el ítem y recalcula; responde 200 con el pedido; ítem inexistente → 404.
 - **AC-06** (REQ-SAL-005) `subtotal`, `total`, `paid_total`, `balance`, `payment_status` y los estados son de solo lectura: se ignoran si llegan en `POST`/`PATCH`. Los importes son strings decimales.
@@ -114,6 +114,9 @@ Reglas **nuevas** (detalle y justificación en [ADR modelo-dominio](../adr/ADR-c
 - EDGE-10: `status=NEW,FOO` → 400 `status`; `date_from > date_to` → 400 `date_to`; `has_balance=maybe` → 400 `has_balance`.
 - EDGE-11: un pedido cancelado con pagos conserva `payment_status` PAID/PARTIAL y su saldo calculado; no se pueden registrar más pagos.
 - EDGE-12 (UI): pedido inexistente en el detalle o la edición → aviso y retorno a la lista; error de red → `toastr`.
+- EDGE-13 (v2, REV-03): un pedido con solo obsequios (precio 0) tiene total `"0.00"`, saldo `"0.00"`, `payment_status` PAID y `can_register_payment: false`; sigue el flujo de estados normal.
+- EDGE-14 (v2, REV-02): los selectores de cliente (formulario y lista) y de producto (detalle) siguen buscando después de seleccionar o limpiar una opción: `ng-select` emite `null` por el `typeahead` y no debe romper el flujo ni dejar el spinner fijo.
+- EDGE-15 (v2, REV-01): un nombre de producto o de cliente con HTML se muestra como texto en los diálogos de confirmación; nunca se interpreta como HTML.
 
 ## Error cases
 Forma/tipos del serializer y reglas atribuibles a un campo → 400 `{campo: [mensajes en español]}` (con todos los errores de campo juntos cuando sea posible); conflictos de estado o regla no atribuibles a un campo → 409 `{code, detail}`; pedido o ítem inexistente / id mal formado → 404 `{detail}` ("Pedido no encontrado." / "Ítem no encontrado."); sin token → 401; método no permitido (`DELETE`/`PUT` del pedido, edición de pagos) → 405. Códigos 409 vigentes: `invalid_transition`, `order_not_editable`, `empty_order`, `duplicate_product`, `total_below_paid`, `discount_exceeds_subtotal`, `order_cancelled`. (`discount_exceeds_subtotal` en 409 es un refinamiento de este plan para el caso inducido por un cambio de ítems; el caso del comando de descuento es 400 `discount`.)
@@ -159,9 +162,9 @@ No bloquean la implementación; son decisiones por defecto que el usuario puede 
 ## Unit tests
 Backend (sin base de datos, `SimpleTestCase`):
 - `backend/shared/tests/test_money.py`: `parse_money` (válidos, `float`/`bool`, >2 decimales, negativos, máximo).
-- `backend/modules/sales/tests/test_domain.py`: INV-01…INV-11 sobre `Order`: tabla de transiciones válidas e inválidas (AC-09), derivación de `payment_status` (AC-13, EDGE-04), subtotales/total/descuento (AC-03, AC-07), `total ≥ paid_total` (EDGE-05), vacío solo en NEW (AC-02), cancelación (AC-11), fechas (AC-10, EDGE-06, EDGE-07), pago y saldo (AC-12, AC-14, AC-15), acciones disponibles.
+- `backend/modules/sales/tests/test_domain.py`: INV-01…INV-11 sobre `Order` (v2: un ítem de precio 0 se acepta y el pedido solo de obsequios queda PAID con total 0, EDGE-13): tabla de transiciones válidas e inválidas (AC-09), derivación de `payment_status` (AC-13, EDGE-04), subtotales/total/descuento (AC-03, AC-07), `total ≥ paid_total` (EDGE-05), vacío solo en NEW (AC-02), cancelación (AC-11), fechas (AC-10, EDGE-06, EDGE-07), pago y saldo (AC-12, AC-14, AC-15), acciones disponibles.
 - `backend/modules/sales/tests/test_application.py`: casos de uso con repositorio en memoria y puertos falsos: producto/cliente inactivos o inexistentes (AC-03, AC-18), snapshot (EDGE-02), `UpdateOrder` solo valida cliente si cambió (INV-14), orquestación de cada comando.
-Frontend (Karma, `TestBed`): modelos/mapeo del servicio; componentes de badges.
+Frontend (Karma, `TestBed`): modelos/mapeo del servicio; componentes de badges. v2: `CustomerOptionsService.search` y las búsquedas de producto toleran `null`/`undefined` (EDGE-14); un test por cada `Swal.fire` con datos de usuario comprueba que un nombre con HTML llega como texto (`titleText`/`text`) y no como `title`/`html` sin escapar (EDGE-15).
 
 ## Integration tests
 - `test_repository.py` (PostgreSQL real): `save`/`get` ida y vuelta del agregado, sincronización de ítems, pagos solo agregados, coherencia de derivados (AC-20), `get_for_update` requiere transacción, filtros y orden de `list` (AC-16), restricciones `CheckConstraint`/`UniqueConstraint`.
@@ -184,6 +187,9 @@ Frontend (Karma, `TestBed`): modelos/mapeo del servicio; componentes de badges.
 | AC-02 | Dominio unit + API test |
 | AC-03 | Dominio unit + aplicación (fakes) + API test |
 | AC-04, AC-05 | Dominio unit + API test |
+| EDGE-13 | Dominio unit + API test (v2, REV-03) |
+| EDGE-14 | Angular specs de `order-form`, `order-list`, `order-items` y `customer-options.service` emitiendo `null` por el typeahead (v2, REV-02) |
+| EDGE-15 | Angular specs de `order-detail`, `customer-list` y `customer-detail` espiando `Swal.fire` sin sustituir el método de confirmación (v2, REV-01) |
 | AC-06 | API test (campos ignorados, strings decimales) |
 | AC-07 | Dominio unit + API test |
 | AC-08 | API test + repository test |
@@ -265,6 +271,12 @@ Un solo PR, por fases con commits separados; cada fase deja los tests de su capa
 **Fase 9 — Verificación**
 20. Backend: suite completa en PostgreSQL, `makemigrations --check`. Frontend: `ng lint`, `ng build` y specs de las features tocadas. Humo manual descrito en E2E. Documentar resultados en el TASK.
 
+**Fase 10 — Correcciones del review (v2; REV-01, REV-02, REV-03)**
+21. REV-01 (EDGE-15, NFR Seguridad): en `order-detail.component.ts`, `confirmRemove` muestra el nombre del producto como texto plano (`titleText`, no `title`). Auditar todos los `Swal.fire` de `features/sales` y `features/customers`: donde entre un dato de usuario, usar `titleText`/`text` o `escapeHtml`. Incluye el mismo patrón ya existente en `confirmToggle` de `customer-list` y `customer-detail` (nombre del cliente en `title`). Specs que llamen al método real con `Swal.fire` espiado y nombres con HTML (`<img src=x onerror=...>`).
+22. REV-02 (EDGE-14, AC-23, AC-24, AC-25): `CustomerOptionsService.search` y la búsqueda de productos de `order-items` aceptan `null`/`undefined` (`(term ?? '').trim()`); proteger los `switchMap` de `customers$` y `products$` de modo que un valor inesperado no termine el stream ni deje `loading` fijo. Specs que emiten `null` por `customerInput$` y `productInput$` y comprueban que la siguiente búsqueda sí se hace y el spinner se apaga (formulario, lista, ítems y servicio).
+23. REV-03 (INV-01, AC-03, EDGE-13; cambio de Specification aprobado): quitar de `Order.add_item` la comprobación de precio > 0; mantener el resto. Actualizar `test_domain.py` (el producto de precio 0 ahora se agrega; pedido solo de obsequios: total 0, PAID, sin saldo), `test_application.py` y `test_api.py`. Enmendar el ADR `modelo-dominio` (precio de ítem ≥ 0). Sin cambios de migración (la columna `unit_price` no tiene restricción de positividad) ni de frontend (el selector ya ofrece esos productos).
+24. Repetir la Fase 9: backend completo, `makemigrations --check`, `ng lint`, `ng build`, specs de las features tocadas y el humo manual de UI, incluida la cancelación y la creación rápida de cliente que el review no ejercitó.
+
 ## Database / migrations
 `modules/sales/migrations/0001_initial.py` generada por `makemigrations`; solo crea `sales_order`, `sales_order_item`, `sales_payment` con sus índices y restricciones; no toca tablas existentes ni requiere backfill. Reversible con `python manage.py migrate sales zero`. Nunca se edita una vez aplicada (cambios futuros en migraciones nuevas). Tras el merge: `python manage.py migrate` en cada entorno; este worktree no tiene `backend/.env`, así que las pruebas con PostgreSQL requieren `DATABASE_URL` exportada sin leer `.env`.
 
@@ -280,3 +292,7 @@ Un solo PR, por fases con commits separados; cada fase deja los tests de su capa
 
 ## New dependencies
 Ninguna (`pip`/`npm`): se usan Django/DRF existentes, `@ng-select/ng-select`, `@ng-bootstrap/ng-bootstrap`, `@swimlane/ngx-datatable`, `sweetalert2` y `ngx-toastr`, ya instalados.
+
+## Changelog
+- **v2** (2026-10-08): [Specification] INV-01 y AC-03 cambiados tras aprobación explícita del usuario (REV-03, decisión "permitir precio 0 en ítems"): el precio de un ítem puede ser 0 (los pagos siguen siendo > 0); nuevo EDGE-13 (pedido solo de obsequios: total 0, PAID). Solicitado por delivery-review (REV-2026-10-08-ciclo-pedido-entrega-cobro-03).
+- **v2** (2026-10-08): [Implementation Plan] Nuevos EDGE-14 y EDGE-15 y Fase 10 con las correcciones de REV-01 (XSS por nombre de producto en `Swal`, incluido el mismo patrón preexistente en `customer-list`/`customer-detail`) y REV-02 (`null.trim()` en las búsquedas remotas, también en `order-items`, que el review no ejercitó). Solicitado por delivery-review (REV-2026-10-08-ciclo-pedido-entrega-cobro-01 y -02). Los dos hallazgos son de implementación: la Specification ya los cubría (NFR Seguridad, AC-24).
