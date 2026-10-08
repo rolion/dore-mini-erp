@@ -1,6 +1,6 @@
 # TASK-clientes-mvp: Módulo Clientes (crear, editar, buscar, historial, desactivar, duplicados) + menú "Cliente"
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PLANNING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-clientes-mvp`
@@ -14,6 +14,7 @@
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 4 ADR (módulo `customers`, contrato API con 409 de duplicado, historial vía Sales, feature frontend) | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `customers`, frontend `features/customers`, menú) | delivery-engineer |
+| 2026-10-08 | REVIEW → PLANNING | Review FAIL: REV-01 (High, SPECIFICATION: AC-03 contradice la regla de normalización) y REV-03 (Low, SPECIFICATION); REV-02 (Low, IMPLEMENTATION) queda para ENGINEERING; vuelve a la etapa más temprana | delivery-review |
 
 ## Investigación
 
@@ -156,7 +157,22 @@ Rama `task/TASK-clientes-mvp`, PR #6, siguiendo el plan v1 (COMPLETO).
 - REQ-CUS-004 (historial real) y la asociación a pedido dependen de Sales; el código de país `591` sigue sin confirmar.
 
 ## Review
-_Pendiente_
+**Resultado: FAIL** (2026-10-08, revisor en sesión nueva, sin aislamiento real de memoria respecto de otras skills `delivery-*`).
+
+Issues abiertos:
+- [REV-2026-10-08-clientes-mvp-01](../reviews/REV-2026-10-08-clientes-mvp-01.md) — **High / SPECIFICATION**: AC-03 contradice la regla de normalización; `(591) 76543210` se guarda como `+59159176543210` y no se detecta como duplicado de `76543210`. Requiere decisión del usuario sobre la regla.
+- [REV-2026-10-08-clientes-mvp-02](../reviews/REV-2026-10-08-clientes-mvp-02.md) — Low / IMPLEMENTATION: con `name` inválido el 400 no incluye los errores de los demás campos (AC-02).
+- [REV-2026-10-08-clientes-mvp-03](../reviews/REV-2026-10-08-clientes-mvp-03.md) — Low / SPECIFICATION: AC-08 promete `{detail}` para ids no-UUID; Django responde su 404 HTML (mismo patrón que `catalog`).
+
+Verificación ejecutada (salida completa en el PR, `## Testing`):
+- Backend con **PostgreSQL** (`config.settings.test`): `modules.customers` 68 OK; suite completa 126 OK. (Con SQLite falla 1 test preexistente de `catalog` por collation; con PostgreSQL pasa.) `makemigrations --check --dry-run`: sin cambios. `bandit -r modules/customers`: 0 issues.
+- Humo de API contra `runserver` real + base PostgreSQL desechable (borrada): crear, 409 y confirmación, PATCH, búsqueda, filtro, paginación, activar/desactivar, 400/401/405/404.
+- Frontend: `ng lint` OK; `ng build` OK; 51 specs (clientes + sidebar) OK con cobertura (statements 95.11 %, branches 84 %, functions 91.04 %, lines 95.26 %); 39 specs de `features/products` OK. Todo con un `tsconfig` temporal (borrado) que excluye `app.component.spec.ts`, que no compila en `main` (preexistente).
+- Límites DDD: `domain/` y `application/` sin imports de Django/DRF; `customers` no importa `catalog`/`sales`/`accounts`; vistas delgadas.
+
+No realizado: `npm audit` (el proyecto no tiene lockfile: `ENOLOCK`); `flake8`/`ruff`/`mypy` (no configurados ni instalados); humo de UI en navegador (el proxy de `npm start` apunta a `127.0.0.1:8000`, ocupado por el backend del usuario con su propia base; los specs de componentes cubren AC-09..AC-13).
+
+Siguiente paso: `/delivery-plan TASK-clientes-mvp` (REV-01 y REV-03), luego `/delivery-engineer TASK-clientes-mvp` (REV-02 y lo que cambie el plan).
 
 ## Publicación
 _Pendiente_
