@@ -1,6 +1,6 @@
 # REV-2026-10-08-frontend-login-backend-01: El proxy de `ng serve` apunta a `localhost:8000` y no alcanza al backend de `runserver`
 
-**Status:** Open
+**Status:** Closed (verificado en re-review 2026-10-08)
 **Severity:** High
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-10-07-frontend-login-backend.md (v1)

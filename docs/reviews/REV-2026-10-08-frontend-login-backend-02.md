@@ -1,6 +1,6 @@
 # REV-2026-10-08-frontend-login-backend-02: Spec "logout without session does not call the API" no tiene expectativas de Jasmine
 
-**Status:** Open
+**Status:** Closed (verificado en re-review 2026-10-08)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-07-frontend-login-backend.md (v1)

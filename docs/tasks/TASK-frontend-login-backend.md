@@ -1,6 +1,6 @@
 # TASK-frontend-login-backend: Login del frontend validado contra el backend
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-frontend-login-backend`
@@ -16,6 +16,7 @@
 | 2026-10-08 | REVIEW → PLANNING | FAIL: REV-01 (High, PLAN: proxy a `localhost` no alcanza a `runserver` en Windows/Node 22) y REV-02 (Low, IMPLEMENTATION); vuelve a la etapa más temprana involucrada | delivery-review |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 (solo Implementation Plan: proxy a `127.0.0.1`); Specification sin cambios, READY | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Corrección de REV-01 (proxy a `127.0.0.1`, plan v2) y REV-02 (expectativas en spec de logout) | delivery-engineer |
+| 2026-10-08 | REVIEW → PUBLISH | PASS en re-review: REV-01 y REV-02 cerrados, sin issues abiertos | delivery-review |
 
 ## Investigación
 
@@ -144,6 +145,12 @@ Issues abiertos:
 
 Verificaciones ejecutadas (detalle en el PR): backend 14/14 con SQLite en memoria (**no** contra PostgreSQL: el entorno del review no tiene `DATABASE_URL` y no se leyó `.env`; queda pendiente para el re-review), `makemigrations --check` sin cambios, `bandit` 0 issues; frontend `ng lint` OK, `ng build` OK, 18/18 specs del cambio con cobertura 76.6 % de líneas (el `npm test` completo no compila por `app.component.spec.ts`, preexistente), smoke manual con backend + `ng serve` (solo pasa con el proxy apuntando a `127.0.0.1`). `npm audit`: 7 vulnerabilidades en dependencias preexistentes de la plantilla (sin cambios de dependencias en este task).
 
+
+### Re-review (2026-10-08) — **PASS**
+Sobre `c5cbade` (plan v2). REV-01 y REV-02 verificados y cerrados: [REV-01](../reviews/REV-2026-10-08-frontend-login-backend-01.md), [REV-02](../reviews/REV-2026-10-08-frontend-login-backend-02.md). Sin issues abiertos.
+- Backend `manage.py test` contra **PostgreSQL** (`config.settings.test`): 14 tests OK. `makemigrations --check` y `bandit` (primer review; el backend no cambió en el fix): sin cambios / 0 issues.
+- Frontend: 18/18 specs del cambio, sin advertencias; cobertura 76.6 % líneas; `ng lint` y `ng build` OK. Smoke manual con el `proxy.conf.json` del repo (sin override): sin sesión → signin, vacío → obligatorios, inválido → "Credenciales inválidas", válido → `/dashboard/main`, logout → signin y token viejo 401; acceso directo tras logout redirige.
+- Notas: `npm test` completo sigue sin compilar por `app.component.spec.ts` (preexistente); `npm audit` con 7 vulnerabilidades preexistentes de la plantilla; E2E automatizado no aplica (plan).
 
 ## Publicación
 _Pendiente_
