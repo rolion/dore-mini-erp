@@ -16,8 +16,15 @@ CC = '591'
 class NormalizePhoneTests(SimpleTestCase):
     def test_normalizable_numbers(self):  # AC-03
         for raw in ('76543210', '+591 7654-3210', '+(591) 76543210', '00591 76543210', '  +59176543210  ',
-                    '765.432.10'):
+                    '765.432.10', '591 76543210', '(591) 76543210', '59176543210', '591-7654-3210'):
             self.assertEqual(normalize_phone(raw, CC), '+59176543210', raw)
+
+    def test_digits_already_starting_with_country_code_are_prefixed(self):  # AC-03, EDGE-02
+        self.assertEqual(normalize_phone('59176543210', CC), normalize_phone('76543210', CC))
+
+    def test_short_numbers_starting_with_country_code_are_local(self):  # AC-03
+        self.assertEqual(normalize_phone('59176543', CC), '+59159176543')
+        self.assertEqual(normalize_phone('5917654321', CC), '+5915917654321')
 
     def test_uses_given_default_country_code(self):  # AC-03
         self.assertEqual(normalize_phone('3001234567', '57'), '+573001234567')

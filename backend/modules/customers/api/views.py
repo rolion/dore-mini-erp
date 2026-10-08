@@ -65,7 +65,7 @@ class CustomerListCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         use_case = CreateCustomer(DjangoCustomerRepository(), settings.DEFAULT_PHONE_COUNTRY_CODE)
         try:
-            customer = _run(use_case, **serializer.validated_data)
+            customer = _run(use_case, **{'name': None, **serializer.validated_data})
         except DuplicateCustomerPhone as exc:
             return _duplicate_response(exc)
         return Response(CustomerSerializer(customer).data, status=status.HTTP_201_CREATED)

@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from modules.customers.domain.customer import NAME_MAX_LENGTH
-
 
 class CustomerInputSerializer(serializers.Serializer):
     """Valida forma y tipos; las reglas (correo, teléfono, longitudes) las aplica el dominio.
@@ -9,7 +7,8 @@ class CustomerInputSerializer(serializers.Serializer):
     `active` no es editable aquí. `confirm_duplicate` solo se usa en el alta y no se persiste.
     """
 
-    name = serializers.CharField(max_length=NAME_MAX_LENGTH)
+    # Solo forma y tipo: obligatoriedad y longitud las valida el dominio, que junta los errores de todos los campos.
+    name = serializers.CharField(required=False, allow_blank=True)
     phone = serializers.CharField(required=False, allow_blank=True)
     email = serializers.CharField(required=False, allow_blank=True)
     notes = serializers.CharField(required=False, allow_blank=True)

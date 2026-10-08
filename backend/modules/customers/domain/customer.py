@@ -24,7 +24,8 @@ def normalize_phone(raw: str, default_country_code: str) -> str:
     """Devuelve `+<país><dígitos>` si el número es normalizable; si no, el texto recortado original.
 
     Es normalizable si queda `+` y de 8 a 15 dígitos. Un número solo de dígitos recibe el código de
-    país por defecto; `00` inicial equivale a `+`. No se elimina un `0` inicial de troncal.
+    país por defecto, salvo que ya empiece con él y deje al menos 8 dígitos después (ya prefijado);
+    `00` inicial equivale a `+`. No se elimina un `0` inicial de troncal.
     """
     text = raw.strip()
     cleaned = _PHONE_SEPARATORS.sub('', text)
@@ -33,7 +34,11 @@ def normalize_phone(raw: str, default_country_code: str) -> str:
     elif cleaned.startswith('00'):
         digits = cleaned[2:]
     elif cleaned.isdigit():
-        digits = default_country_code + cleaned
+        already_prefixed = (
+            cleaned.startswith(default_country_code)
+            and len(cleaned) - len(default_country_code) >= _MIN_PHONE_DIGITS
+        )
+        digits = cleaned if already_prefixed else default_country_code + cleaned
     else:
         return text
     if digits.isdigit() and _MIN_PHONE_DIGITS <= len(digits) <= _MAX_PHONE_DIGITS:

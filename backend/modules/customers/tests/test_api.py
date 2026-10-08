@@ -40,7 +40,7 @@ class CreateCustomerTests(CustomerApiTestCase):
         self.assertTrue(self.create(active=False)['active'])
 
     def test_create_normalizes_phone(self):  # AC-03
-        for raw in ('76543210', '+591 7654-3210', '+(591) 76543210', '00591 76543210'):
+        for raw in ('76543210', '+591 7654-3210', '(591) 76543210', '591 76543210', '00591 76543210'):
             CustomerModel.objects.all().delete()
             self.assertEqual(self.create(phone=raw)['phone'], '+59176543210', raw)
 
@@ -55,6 +55,17 @@ class CreateCustomerTests(CustomerApiTestCase):
         response = self.client.post(LIST_URL, {}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn('name', response.json())
+        self.assertEqual(CustomerModel.objects.count(), 0)
+
+    def test_invalid_name_is_reported_together_with_other_fields(self):  # AC-02, EDGE-10
+        for name in ('', '   ', 'a' * 151):
+            response = self.client.post(
+                LIST_URL, {'name': name, 'email': 'mal', 'phone': 'x' * 31, 'notes': 'n' * 2001}, format='json')
+            self.assertEqual(response.status_code, 400, name)
+            self.assertEqual(set(response.json()), {'name', 'email', 'phone', 'notes'}, name)
+        response = self.client.post(LIST_URL, {'email': 'mal'}, format='json')
+        self.assertEqual(set(response.json()), {'name', 'email'})
+        self.assertEqual(response.json()['name'], ['El nombre es obligatorio.'])
         self.assertEqual(CustomerModel.objects.count(), 0)
 
     def test_invalid_email_phone_notes_report_all_errors_together(self):  # AC-02
@@ -79,6 +90,14 @@ class DuplicatePhoneTests(CustomerApiTestCase):
         self.assertEqual(body['matches'], [
             {'id': first['id'], 'name': 'Ana', 'phone': '+59176543210', 'active': True},
         ])
+        self.assertEqual(CustomerModel.objects.count(), 1)
+
+    def test_all_formats_of_the_same_number_are_duplicates(self):  # EDGE-02
+        self.create(name='Ana', phone='(591) 76543210')
+        for raw in ('76543210', '+591 76543210', '591 76543210', '00591 7654 3210'):
+            response = self.client.post(LIST_URL, {'name': 'Otra', 'phone': raw}, format='json')
+            self.assertEqual(response.status_code, 409, raw)
+            self.assertEqual(response.json()['matches'][0]['phone'], '+59176543210', raw)
         self.assertEqual(CustomerModel.objects.count(), 1)
 
     def test_duplicate_with_confirmation_creates(self):  # AC-04, INV-06
@@ -239,7 +258,9 @@ class DetailAndAccessTests(CustomerApiTestCase):
         self.assertEqual(self.client.get(detail_url(created['id'])).json(), created)
 
     def test_unknown_and_malformed_ids_return_404(self):  # AC-08
-        self.assertEqual(self.client.get(detail_url(uuid4())).status_code, 404)
+        response = self.client.get(detail_url(uuid4()))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {'detail': 'Cliente no encontrado.'})
         self.assertEqual(self.client.get('/api/customers/no-es-uuid/').status_code, 404)
 
     def test_delete_and_put_are_not_allowed(self):  # AC-08, INV-05

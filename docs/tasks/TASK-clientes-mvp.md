@@ -1,6 +1,6 @@
 # TASK-clientes-mvp: Módulo Clientes (crear, editar, buscar, historial, desactivar, duplicados) + menú "Cliente"
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-clientes-mvp`
@@ -16,6 +16,7 @@
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `customers`, frontend `features/customers`, menú) | delivery-engineer |
 | 2026-10-08 | REVIEW → PLANNING | Review FAIL: REV-01 (High, SPECIFICATION) y REV-03 (Low, SPECIFICATION) requieren plan v2 | delivery-review |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (regla de normalización "ya prefijado", AC-08 acotado); REV-02 queda para implementación | delivery-plan |
+| 2026-10-08 | ENGINEERING → REVIEW | Plan v2 implementado (regla de teléfono ya prefijado, serializer sin validar `name`); REV-01, REV-02 y REV-03 atendidos | delivery-engineer |
 | 2026-10-08 | REVIEW → PLANNING | Review FAIL: REV-01 (High, SPECIFICATION: AC-03 contradice la regla de normalización) y REV-03 (Low, SPECIFICATION); REV-02 (Low, IMPLEMENTATION) queda para ENGINEERING; vuelve a la etapa más temprana | delivery-review |
 
 ## Investigación
@@ -158,6 +159,13 @@ Rama `task/TASK-clientes-mvp`, PR #6, siguiendo el plan v1 (COMPLETO).
 - Tests de API no ejecutados en PostgreSQL; sin humo manual con backend + `npm start` (queda para `delivery-review`).
 - Duplicados: `Page<T>` y los estilos de acciones de tabla están copiados de `products` (ADR frontend-feature); extraer a `shared/` cuando haya una tercera feature.
 - REQ-CUS-004 (historial real) y la asociación a pedido dependen de Sales; el código de país `591` sigue sin confirmar.
+
+### Iteración 2 (plan v2, tras el review FAIL)
+- **REV-01 / AC-03, EDGE-02** — `normalize_phone` (`domain/customer.py`): un número de solo dígitos que ya empieza con el código de país y deja 8 o más dígitos se toma como prefijado; `591 76543210`, `(591) 76543210` y `59176543210` → `+59176543210`; `59176543` → `+59159176543`. Tests: tabla de dominio ampliada y, en API, todos los formatos del mismo número dan 409 (`test_all_formats_of_the_same_number_are_duplicates`).
+- **REV-02 / AC-02, EDGE-10** — `CustomerInputSerializer`: `name` pasa a `CharField(required=False, allow_blank=True)` sin `max_length`; la vista del alta envía `name=None` si falta, y el dominio devuelve "El nombre es obligatorio." junto con los errores de los demás campos. Test: `test_invalid_name_is_reported_together_with_other_fields`.
+- **REV-03 / AC-08** — sin cambio de código: el texto del AC quedó acotado; el test de ids ahora comprueba además el cuerpo `{detail}` de un UUID válido inexistente.
+- La desviación "ejemplo de AC-03" de la iteración 1 queda resuelta por el plan v2. Los tests ya usan `(591) 76543210` sin `+`.
+- Verificación propia: `python manage.py test modules.customers` → 72 OK con SQLite en memoria (no PostgreSQL); el frontend no cambió en esta iteración.
 
 ## Review
 **Resultado: FAIL** (2026-10-08, revisor en sesión nueva, sin aislamiento real de memoria respecto de otras skills `delivery-*`).
