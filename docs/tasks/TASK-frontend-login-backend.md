@@ -1,6 +1,6 @@
 # TASK-frontend-login-backend: Login del frontend validado contra el backend
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PLANNING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-frontend-login-backend`
@@ -13,6 +13,7 @@
 | 2026-10-07 | ARCHITECTURE → PLANNING | Decisión de autenticación registrada en ADR | delivery-architect |
 | 2026-10-07 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
 | 2026-10-07 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-engineer |
+| 2026-10-08 | REVIEW → PLANNING | FAIL: REV-01 (High, PLAN: proxy a `localhost` no alcanza a `runserver` en Windows/Node 22) y REV-02 (Low, IMPLEMENTATION); vuelve a la etapa más temprana involucrada | delivery-review |
 
 ## Investigación
 
@@ -126,7 +127,15 @@ _No aplica_
 - Sin E2E automatizado (decisión del plan); smoke manual pendiente en review.
 
 ## Review
-_Pendiente_
+
+**Resultado: FAIL** — 2026-10-08.
+
+Issues abiertos:
+- [REV-2026-10-08-frontend-login-backend-01](../reviews/REV-2026-10-08-frontend-login-backend-01.md) — High, PLAN: el proxy de `ng serve` (`http://localhost:8000`) resuelve a `::1` y no alcanza al backend (`runserver` escucha en `127.0.0.1`): con el procedimiento documentado ningún login funciona.
+- [REV-2026-10-08-frontend-login-backend-02](../reviews/REV-2026-10-08-frontend-login-backend-02.md) — Low, IMPLEMENTATION: un spec sin expectativas de Jasmine.
+
+Verificaciones ejecutadas (detalle en el PR): backend 14/14 con SQLite en memoria (**no** contra PostgreSQL: el entorno del review no tiene `DATABASE_URL` y no se leyó `.env`; queda pendiente para el re-review), `makemigrations --check` sin cambios, `bandit` 0 issues; frontend `ng lint` OK, `ng build` OK, 18/18 specs del cambio con cobertura 76.6 % de líneas (el `npm test` completo no compila por `app.component.spec.ts`, preexistente), smoke manual con backend + `ng serve` (solo pasa con el proxy apuntando a `127.0.0.1`). `npm audit`: 7 vulnerabilidades en dependencias preexistentes de la plantilla (sin cambios de dependencias en este task).
+
 
 ## Publicación
 _Pendiente_
