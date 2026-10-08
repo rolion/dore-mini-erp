@@ -22,10 +22,14 @@
               <div class="row">
                 <div class="form-group col-md-6">
                   <label for="order-customer">Cliente</label>
-                  <ng-select inputId="order-customer" [items]="customers$ | async" bindLabel="name"
+                  <ng-select inputId="order-customer" [items]="(customers$ | async) ?? []" bindLabel="name"
                     [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
                     placeholder="Sin cliente (venta de mostrador)" notFoundText="Sin resultados"
                     typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
+                    <ng-template ng-footer-tmp>
+                      <button type="button" class="btn btn-link w-100 text-start" data-testid="new-customer"
+                        (click)="createCustomer()">+ Nuevo cliente</button>
+                    </ng-template>
                   </ng-select>
                   <small class="form-text text-muted">Opcional. Busque por nombre o teléfono.</small>
                   @if (hasError('customerId')) {

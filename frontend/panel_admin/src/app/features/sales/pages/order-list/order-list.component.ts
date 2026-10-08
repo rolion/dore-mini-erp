@@ -19,6 +19,7 @@ import {
   PAYMENT_STATUS_LABELS,
   SALES_CHANNELS,
   SALES_CHANNEL_LABELS,
+  SalesChannel,
   ZERO_AMOUNT,
 } from '../../models/order';
 import { MoneyPipe } from '../../pipes/money.pipe';
@@ -73,7 +74,6 @@ export class OrderListComponent implements OnInit {
     { value: 'WITH_BALANCE', label: 'Con saldo pendiente' },
   ];
   readonly channelOptions = SALES_CHANNELS.map((value) => ({ value, label: SALES_CHANNEL_LABELS[value] }));
-  readonly channelLabels = SALES_CHANNEL_LABELS;
 
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     statusKey: [DEFAULT_FILTERS.statusKey],
@@ -180,6 +180,11 @@ export class OrderListComponent implements OnInit {
       return;
     }
     this.navigate(this.filterForm.getRawValue(), event.offset + 1);
+  }
+
+  /** La fila del datatable no está tipada: se acepta cualquier código y se traduce el conocido. */
+  channelLabel(code: string): string {
+    return SALES_CHANNEL_LABELS[code as SalesChannel] ?? code;
   }
 
   /** Saldo en rojo solo si hay deuda en un pedido que sigue vivo. */

@@ -3,7 +3,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { NgSelectComponent } from '@ng-select/ng-select';
+import { NgFooterTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, Subject, concat, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs';
 import {
@@ -17,6 +17,7 @@ import {
   SalesChannel,
   todayIso,
 } from '../../models/order';
+import { CustomerQuickCreateService } from '../../../customers';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 
@@ -32,7 +33,7 @@ export type FormField = Extract<
 @Component({
   selector: 'app-order-form',
   templateUrl: './order-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent],
+  imports: [ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective],
 })
 export class OrderFormComponent implements OnInit {
   readonly notesMaxLength = NOTES_MAX_LENGTH;
@@ -58,6 +59,7 @@ export class OrderFormComponent implements OnInit {
 
   private ordersApi = inject(OrdersApiService);
   private customerOptions = inject(CustomerOptionsService);
+  private quickCreate = inject(CustomerQuickCreateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
@@ -131,6 +133,14 @@ export class OrderFormComponent implements OnInit {
         this.showServerError(err);
       },
     });
+  }
+
+  /** Crea un cliente sin salir del pedido (modal) y lo deja seleccionado. */
+  async createCustomer(): Promise<void> {
+    const customer = await this.quickCreate.open();
+    if (customer) {
+      this.selectCustomer({ id: customer.id, name: customer.name });
+    }
   }
 
   /** Selecciona un cliente recién creado (creación rápida) como cliente del pedido. */

@@ -68,7 +68,7 @@
               </div>
               <div class="col-md-3">
                 <label for="filter-customer">Cliente</label>
-                <ng-select inputId="filter-customer" [items]="customers$ | async" bindLabel="name"
+                <ng-select inputId="filter-customer" [items]="(customers$ | async) ?? []" bindLabel="name"
                   [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
                   placeholder="Todos los clientes" notFoundText="Sin resultados"
                   typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
@@ -115,7 +115,7 @@
               </ngx-datatable-column>
               <ngx-datatable-column name="Canal" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ channelLabels[row.salesChannel] }}
+                  {{ channelLabel(row.salesChannel) }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Entrega prevista" [sortable]="false" [width]="130">

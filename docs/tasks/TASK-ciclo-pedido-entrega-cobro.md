@@ -1,6 +1,6 @@
 # TASK-ciclo-pedido-entrega-cobro: Módulo Ventas (Sales): pedido → preparación → entrega → cobro, con estado logístico y de pago independientes
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-ciclo-pedido-entrega-cobro`
@@ -13,6 +13,7 @@
 | 2026-10-08 | DESIGN → ARCHITECTURE | Decisión de diseño registrada en 2 DDR (menú y lista de pedidos; formulario y detalle con ítems, estados, cancelación y pagos) | delivery-design |
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 5 ADR (modelo de dominio, contrato API, persistencia y concurrencia, integración Catalog/Customers, feature frontend); reglas de negocio confirmadas por el usuario | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #7 abierto | delivery-plan |
+| 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `sales`, frontend `features/sales`, historial del cliente, creación rápida, extracción a `shared/`) | delivery-engineer |
 
 ## Investigación
 
@@ -157,7 +158,45 @@ Objetivo: gestionar el ciclo Pedido → preparación → entrega → cobro. El e
 - Preguntas abiertas no bloqueantes (decisiones por defecto vetables en el PR): cantidades enteras y producto no repetible; fechas de entrega y de pago no futuras; "por cobrar" sin cancelados; pagos no corregibles ni anulables en este alcance (riesgo operativo); límites de longitud (`notes` 2000, `reason` 500, `reference` 100); código visible derivado del UUID.
 
 ## Implementación
-_Pendiente_
+Rama `task/TASK-ciclo-pedido-entrega-cobro`, PR #7, siguiendo el plan v1 (COMPLETO) en las 9 fases, con commits separados.
+
+**Backend**
+- `backend/shared/domain/money.py` (`parse_money`, `InvalidMoney`) — INV-01.
+- Fachadas `modules/catalog/services.py` (`get_product_for_sale`) y `modules/customers/services.py` (`get_customer_for_sale`, `get_customer_names`) con DTO congelados — AC-21.
+- `backend/modules/sales/`:
+  - `domain/` — `Order`/`OrderItem`/`Payment` (dataclasses sin Django; subtotal, total, pagado, saldo y `payment_status` son propiedades derivadas, nunca asignadas), enums, `OrderValidationError` (400) / `OrderRuleViolation` (409) / `OrderNotFound` / `OrderItemNotFound`, `OrderFilters` y `OrderSummary` (modelo de lectura de la lista): INV-01..INV-11, INV-13, INV-14, AC-02..AC-15.
+  - `application/` — puertos (`ProductCatalog`, `CustomerDirectory`, `Clock`), 11 comandos y `GetOrder`/`ListOrders`: AC-03, AC-18.
+  - `infrastructure/` — modelos `sales_order`/`sales_order_item`/`sales_payment` con `CheckConstraint`/`UniqueConstraint`, `migrations/0001_initial.py` generada con `makemigrations`, mapper, `DjangoOrderRepository` (upsert, ítems sincronizados, pagos solo agregados, `get_for_update`, lista perezosa con filtros), adaptadores y `SystemClock`: AC-08, AC-16, AC-20.
+  - `api/` — serializers, `parse_order_filters`, 10 vistas y `urls`; montado como `api/orders/`; `modules.sales` en `INSTALLED_APPS`: AC-01..AC-19.
+- `docs/architecture/ddd.md`: rutas reales de Sales y convención de fachadas `services.py`.
+
+**Frontend** (`frontend/panel_admin/src/app/`)
+- `shared/models/page.ts` y `shared/styles/_table-actions.scss`; `products` y `customers` migrados (commit aparte, AC-28).
+- `features/sales/` — modelos tipados (importes como texto), `OrdersApiService` (400→errores por campo, 409→`OrderRuleError`), `CustomerOptionsService`, `MoneyPipe`, badges de entrega y pago, componentes `order-summary`/`order-items`/`order-payments`, páginas `order-list` (atajos + filtros en la URL), `order-form` y `order-detail` (paneles Entrega/Cobro, alertas, diálogos `Swal` de entrega y cancelación), `sales.routes.ts`, `index.ts`: AC-23..AC-25.
+- Menú "Pedidos" (`routes.json`, i18n en/es/de, `sidebar-menu.spec.ts`) y ruta `sales/orders`: AC-22.
+- `features/customers/` — `CustomerOrdersApiService` y `customer-purchase-history` con enlaces, columna Pago y estados de carga/error (AC-26); `CustomerQuickCreateComponent` + `CustomerQuickCreateService` (modal) integrado en el selector del pedido (AC-27); `index.ts` en `products` y `customers`.
+
+**Tests escritos:** backend `shared/tests/test_money.py`, `catalog|customers/tests/test_services.py`, `sales/tests/{test_domain,test_application,test_repository,test_api,test_boundaries}.py`; frontend specs de servicio, pipe, badges, `order-summary`, `order-items`, `order-payments`, `order-list` (+ filtros), `order-form`, `order-detail`, `customer-options`, `customer-orders-api`, `customer-purchase-history`, `customer-detail` (actualizado), `customer-quick-create` (+ servicio).
+
+**Verificación propia (no es el Quality Gate):**
+- Backend: `python manage.py test` → 334 tests OK en PostgreSQL (primero en un PostgreSQL desechable propio y luego contra el servidor local del usuario, que solo crea y borra su base `test_doredb`); `makemigrations --check` sin cambios.
+- Frontend: `ng lint` OK; `ng build` OK; 258 specs OK (features `sales`, `customers`, `products` y `sidebar-menu`), con un `tsconfig` temporal fuera del repositorio porque la suite completa tiene fallas de plantilla preexistentes.
+- No se hizo humo manual con backend + `npm start` (queda para `delivery-review`).
+
+**Desviaciones respecto al plan**
+- Un producto con **precio 0** no se puede agregar a un pedido (error en `product_id`): lo exige INV-01 tal cual está escrito, aunque el catálogo permite precio 0. Conviene confirmarlo.
+- La lista devuelve un modelo de lectura `OrderSummary` (importes persistidos) en lugar de entidades `Order` sin ítems cargados; el contrato HTTP no cambia.
+- Se añadió un límite de dominio no listado: el subtotal del pedido no puede superar 9 999 999 999,99 (evita un error 500 por desbordar la columna `DecimalField(12,2)`); falla en `quantity`.
+- Los ids se reciben como `str` y la vista los convierte para responder 404 `{detail}` también con ids mal formados (AC-17).
+- Servicios y archivos auxiliares no previstos: `CustomerOptionsService` (búsqueda de clientes compartida por lista y formulario), `order-list-filters.ts` (funciones puras de URL↔filtros).
+- `ng build` (plantillas estrictas) detectó errores de tipos que `ng test` no mostraba; corregidos.
+- Los tests que afirmaban "el perfil no hace peticiones a pedidos" (clientes AC-13) se reemplazaron por los de AC-26, como pide el ADR de historial.
+
+**Deuda técnica / no verificado**
+- `customer-quick-create` importa `duplicateMatchesHtml` desde la página `customer-form` de su misma feature; conviene moverlo a una utilidad.
+- Las etiquetas de estado del historial del cliente están duplicadas en `customers` (no puede importar Sales).
+- Sin prueba multihilo de concurrencia: solo se comprueba que las mutaciones usan transacción y `select_for_update`.
+- Humo manual de UI pendiente (selectores `ng-select` remotos y fechas nativas no se pueden ejercitar bien en Karma).
 
 ## Review
 _Pendiente_

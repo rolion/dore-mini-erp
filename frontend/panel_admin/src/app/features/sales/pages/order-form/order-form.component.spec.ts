@@ -4,7 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import { Subject, of, throwError } from 'rxjs';
 
 import { Page } from '../../../../shared/models/page';
-import { Customer, CustomersApiService } from '../../../customers';
+import { Customer, CustomerQuickCreateService, CustomersApiService } from '../../../customers';
 import { Order, OrderApiError, todayIso } from '../../models/order';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { makeOrder } from '../../testing/order-fixtures';
@@ -32,6 +32,7 @@ describe('OrderFormComponent', () => {
   let ordersApi: jasmine.SpyObj<OrdersApiService>;
   let customersApi: jasmine.SpyObj<CustomersApiService>;
   let toastr: jasmine.SpyObj<ToastrService>;
+  let quickCreate: jasmine.SpyObj<CustomerQuickCreateService>;
   let navigate: jasmine.Spy;
   const route = { snapshot: { paramMap: convertToParamMap({}) } };
 
@@ -52,6 +53,7 @@ describe('OrderFormComponent', () => {
     customersApi = jasmine.createSpyObj<CustomersApiService>('CustomersApiService', ['list']);
     customersApi.list.and.returnValue(of(page([CUSTOMER])));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
+    quickCreate = jasmine.createSpyObj<CustomerQuickCreateService>('CustomerQuickCreateService', ['open']);
     TestBed.configureTestingModule({
       imports: [OrderFormComponent],
       providers: [
@@ -59,6 +61,7 @@ describe('OrderFormComponent', () => {
         { provide: OrdersApiService, useValue: ordersApi },
         { provide: CustomersApiService, useValue: customersApi },
         { provide: ToastrService, useValue: toastr },
+        { provide: CustomerQuickCreateService, useValue: quickCreate },
         { provide: ActivatedRoute, useValue: route },
       ],
     });
@@ -138,6 +141,22 @@ describe('OrderFormComponent', () => {
       setup();
       component.selectCustomer({ id: 'c-7', name: 'Nuevo' });
       expect(component.form.controls.customer.value).toEqual({ id: 'c-7', name: 'Nuevo' });
+    });
+
+    it('creates a customer from the order and leaves it selected (AC-27)', async () => {
+      quickCreate.open.and.resolveTo({ ...CUSTOMER, id: 'c-7', name: 'Nuevo Cliente' });
+      setup();
+      await component.createCustomer();
+      expect(quickCreate.open).toHaveBeenCalledTimes(1);
+      expect(component.form.controls.customer.value).toEqual({ id: 'c-7', name: 'Nuevo Cliente' });
+    });
+
+    it('keeps the current customer when the quick-create modal is dismissed (AC-27)', async () => {
+      quickCreate.open.and.resolveTo(null);
+      setup();
+      component.selectCustomer({ id: 'c-2', name: 'Luis Gómez' });
+      await component.createCustomer();
+      expect(component.form.controls.customer.value).toEqual({ id: 'c-2', name: 'Luis Gómez' });
     });
 
     it('does not submit an invalid form nor twice while saving (AC-24)', () => {

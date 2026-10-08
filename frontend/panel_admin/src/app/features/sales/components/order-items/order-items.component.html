@@ -6,7 +6,7 @@
     @if (order().editable) {
     <div class="row m-3 align-items-start" [formGroup]="addForm">
       <div class="col-md-7 mb-2">
-        <ng-select [items]="products$ | async" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
+        <ng-select [items]="(products$ | async) ?? []" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
           formControlName="product" placeholder="Buscar producto activo" notFoundText="Sin resultados"
           typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Producto">
           <ng-template ng-option-tmp let-item="item">{{ item.name }} · {{ item.salePrice | money }}</ng-template>
