@@ -47,3 +47,10 @@ No se diseñan pantallas de ventas, historial ni eliminación: el requerimiento 
 - Deuda aceptada: el menú queda en español/inglés/alemán mientras las pantallas de Catálogo están solo en español; las páginas de demo siguen accesibles por URL mientras no se retiren sus rutas de `app.routes.ts`; el búsqueda/filtro/paginación de la lista quedan sujetos al contrato de API que defina arquitectura (cliente vs. servidor).
 - Dejan de ser alcanzables desde el menú: Dashboard 2 y todas las secciones de demo; el logo y el post-login siguen apuntando a `/dashboard/main`.
 - Pendiente para arquitectura (no se decide aquí): campos exactos del producto (¿SKU? ¿moneda?), unicidad del nombre, paginación/filtros en servidor, y si activar/desactivar son endpoints separados.
+
+## Ajustes de implementación (2026-10-08)
+Decididos con el usuario al revisar las pantallas; no cambian el comportamiento definido arriba:
+- Selector de estado y botón "+" van juntos en una fila a la derecha del buscador.
+- Colores de las acciones de la tabla: **Ver** = color primario de la aplicación (`#6777ef`), **Editar** = amarillo (`#ffc107`), **Desactivar/Activar** = rojo (`#dc3545`, en ambos estados), con el icono centrado en el círculo.
+- El campo de precio es de texto con `inputmode="decimal"` (acepta coma o punto, hasta 2 decimales) en vez de `type="number"`, para enviar el valor como string sin pasar por `float`.
+- El idioma por defecto de la aplicación pasa a español (antes dependía del navegador); el menú se muestra como "Catálogo ▸ Producto". Cambio global, no solo de Catálogo.

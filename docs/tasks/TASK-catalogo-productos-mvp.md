@@ -155,6 +155,11 @@ Rama `task/TASK-catalogo-productos-mvp`, PR #5, siguiendo el plan v1 (COMPLETO).
 - La ruta se declaró directamente como `catalog/products` → `products.routes.ts` (sin archivo intermedio `catalog.routes.ts`).
 - `ProductList.onPage` ignora eventos `page` que no cambian de página: ngx-datatable emite `page` al inicializarse y provocaba una petición duplicada.
 
+**Ajustes posteriores a la entrega (pedidos del usuario, sin cambio de Specification)**
+- Lista: el selector de estado y el botón "+" se alinean en una fila (`d-flex gap-2`; antes el selector ocupaba todo el ancho y empujaba el botón).
+- Acciones de la tabla (`product-list.component.scss`): Ver = color primario de la aplicación (`#6777ef`), Editar = amarillo (`#ffc107`), Desactivar/Activar = rojo (`#dc3545`), con iconos centrados (`inline-flex`, sin relleno). No se agregó botón "Eliminar": el producto solo se desactiva (INV-05); el botón rojo es el de activar/desactivar y es rojo en ambos estados.
+- Idioma: la aplicación arranca en español (`DEFAULT_LANGUAGE = 'es'` en `language.service.ts`, `defaultLanguage: 'es'` en `app.config.ts`) en lugar de tomar el del navegador, para que el menú diga "Catálogo". Es un cambio global (afecta a toda la app); respeta el idioma ya elegido en el selector del encabezado. Spec: `language.service.spec.ts`.
+
 **Estado previo del repositorio (no causado por este cambio)**
 - `npm test` completo no compila: `src/app/app.component.spec.ts:24` referencia `AppComponent.title`, que no existe. Con ese archivo excluido corrieron 137 specs: 82 fallan en specs de la plantilla ("should create" sin providers: `ActivatedRoute`, `ToastConfig`, iconos feather), incluido `SidebarComponent should create`. Ninguno de esos archivos fue modificado. Hay que decidir si se corrigen en un task aparte; el Quality Gate no podrá usar `npm test` completo hasta entonces.
 
