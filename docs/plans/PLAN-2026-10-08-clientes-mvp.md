@@ -1,4 +1,4 @@
-# PLAN-2026-10-08-clientes-mvp (v1)
+# PLAN-2026-10-08-clientes-mvp (v2)
 
 **Task:** TASK-clientes-mvp
 **Modo:** COMPLETO
@@ -47,17 +47,17 @@ Nuevas (en `domain/`, `ddd.md:283-288`, REQ-CUS-001/005/006):
 - INV-06: dos clientes pueden compartir teléfono (no hay unicidad en BD); el duplicado es una advertencia confirmable solo en el alta.
 - INV-07: el dominio no importa Django; `customers` no importa `sales` ni `catalog`.
 
-**Regla de normalización (`normalize_phone(raw, default_country_code)`)**: recortar; quitar espacios, guiones, puntos y paréntesis; si empieza con `+` se conserva; si empieza con `00` se reemplaza por `+`; si son solo dígitos se antepone `+` y el código de país por defecto; es normalizable si queda `+` y 8 a 15 dígitos; si no lo es, se devuelve el texto recortado original. No se elimina un `0` inicial de troncal (límite conocido).
+**Regla de normalización (`normalize_phone(raw, default_country_code)`)**: recortar; quitar espacios, guiones, puntos y paréntesis; si empieza con `+` se conserva; si empieza con `00` se reemplaza por `+`; si son solo dígitos y **ya empiezan con el código de país por defecto seguido de 8 o más dígitos** se toman como ya prefijados (solo se antepone `+`); si son solo dígitos y no cumplen eso se antepone `+` y el código de país por defecto; es normalizable si queda `+` y 8 a 15 dígitos; si no lo es, se devuelve el texto recortado original. No se elimina un `0` inicial de troncal (límite conocido). Límite conocido de la heurística "ya prefijado": un número local de más de 8 dígitos que casualmente empiece con el código de país se tomará como prefijado (no ocurre con números locales de 8 dígitos).
 
 ## Acceptance criteria
 - AC-01: `POST /api/customers/` con solo `name` responde 201 con el cliente `active=true` y `phone`, `email`, `notes` vacíos (`""`); aparece en `GET /api/customers/`. (REQ-CUS-001)
 - AC-02: `name` ausente, vacío, solo espacios o de más de 150 caracteres → 400 con error en `name`; `email` con formato inválido o > 254 → 400 en `email`; `phone` > 30 → 400 en `phone`; `notes` > 2000 → 400 en `notes`. No se crea ni se modifica nada. Los errores de varios campos se devuelven juntos.
-- AC-03: al crear o editar, un `phone` normalizable se guarda como `+<país><dígitos>` (p. ej. `76543210`, `+591 7654-3210`, `(591) 76543210` y `00591 76543210` → `+59176543210`; con país por defecto `591`); uno no normalizable (p. ej. `abc`, `123`, `76543210 int. 5`) se guarda recortado sin error. Un `phone` vacío se guarda como `""`.
+- AC-03: al crear o editar, un `phone` normalizable se guarda como `+<país><dígitos>` (p. ej. `76543210`, `+591 7654-3210`, `591 76543210`, `(591) 76543210` y `00591 76543210` → `+59176543210`; con país por defecto `591`; un número de 8 dígitos que empieza con `591`, como `59176543`, se trata como local → `+59159176543`); uno no normalizable (p. ej. `abc`, `123`, `76543210 int. 5`) se guarda recortado sin error. Un `phone` vacío se guarda como `""`.
 - AC-04: duplicado en el alta: si `phone` es no vacío y otro cliente (activo o inactivo) tiene el mismo `phone` normalizado, y no viene `confirm_duplicate: true`, `POST` responde 409 `{code: "duplicate_phone", detail, matches[{id,name,phone,active}]}` (máx. 10) y **no crea** nada. Con `confirm_duplicate: true` crea (201). Sin teléfono no hay comprobación. `confirm_duplicate` no se persiste ni aparece en el recurso.
 - AC-05: `PATCH /api/customers/{id}/` actualiza solo los campos enviados (`name`, `phone`, `email`, `notes`), refresca `updated_at`, conserva `id`, `active` y `created_at`; un `GET` posterior y la lista reflejan los cambios. Un cuerpo vacío responde 200 sin cambios. `active` en el cuerpo se ignora. `PATCH` no comprueba duplicados. (REQ-CUS-002)
 - AC-06: `GET /api/customers/` soporta `search` (parcial, sin distinguir mayúsculas, por nombre; si el término contiene dígitos, también por teléfono comparando solo sus dígitos con `phone`, p. ej. `765 432` encuentra `+59176543210`), `active=true|false` (ausente = todos; otro valor → 400), combinación de ambos, `page` y `page_size` (máx. 100); orden por nombre e id. (REQ-CUS-003)
 - AC-07: `POST .../deactivate/` deja `active=false` (idempotente); el cliente sigue existiendo, consultable por detalle y excluido de `?active=true`. `POST .../activate/` lo reactiva (idempotente). (REQ-CUS-005)
-- AC-08: `GET /api/customers/{id}/` devuelve `id, name, phone, email, notes, active, created_at, updated_at`; id inexistente o que no es UUID → 404 `{detail}`. `DELETE` y `PUT` → 405. Sin token → 401 en todos los endpoints.
+- AC-08: `GET /api/customers/{id}/` devuelve `id, name, phone, email, notes, active, created_at, updated_at`; un UUID válido inexistente → 404 `{"detail": "Cliente no encontrado."}`; un id que no es UUID → 404 (la ruta no coincide con el convertidor `<uuid:…>`, igual que en catálogo; el cuerpo es el 404 estándar de Django, sin `{detail}`). `DELETE` y `PUT` → 405. Sin token → 401 en todos los endpoints.
 - AC-09 (menú): tras iniciar sesión el menú muestra "Dashboard", "Catálogo ▸ Producto" y "Cliente" (→ `/customers`, ícono `users`, sin submenú), traducidos en `en`, `es` y `de` (`es`: "Cliente").
 - AC-10 (lista): `/customers` muestra `ngx-datatable` con Nombre (enlace al perfil), Teléfono, Correo, Estado (badge) y Acciones (ver, editar, activar/desactivar); buscador único "Buscar por nombre o teléfono" con debounce; selector de estado con **Activos preseleccionado** (Activos / Inactivos / Todos); botón "+" a `/customers/new`; paginación en servidor; estado vacío; teléfono/correo vacíos se muestran "—". Activar/desactivar pide confirmación (`sweetalert2`), actualiza la fila y avisa con `toastr`.
 - AC-11 (formulario): `/customers/new` y `/customers/:id/edit` usan el mismo formulario (Nombre*, Teléfono, Correo, Notas); Reactive Form tipado; Guardar deshabilitado si es inválido o enviando; errores del servidor bajo cada campo; al guardar vuelve al perfil; Cancelar vuelve al perfil (edición) o a la lista (alta). El estado no es editable.
@@ -66,13 +66,14 @@ Nuevas (en `domain/`, `ddd.md:283-288`, REQ-CUS-001/005/006):
 
 ## Edge cases
 - EDGE-01: nombre con espacios alrededor → se guarda recortado.
-- EDGE-02: dos formatos del mismo número (`76543210` y `+591 76543210`) se detectan como duplicados.
+- EDGE-02: los formatos del mismo número (`76543210`, `+591 76543210`, `591 76543210` y `(591) 76543210`) se detectan como duplicados entre sí.
 - EDGE-03: el duplicado coincide con un cliente inactivo → se avisa igualmente, con `active=false` en `matches`.
 - EDGE-04: dos teléfonos no normalizables con el mismo texto recortado → se consideran duplicados.
 - EDGE-05: más de 10 coincidencias → se devuelven 10.
 - EDGE-06: búsqueda sin dígitos → solo por nombre; búsqueda vacía → sin filtro; `active` inválido → 400.
 - EDGE-07: `PATCH` con `name: ""` → 400; `PATCH` de `phone` a `""` borra el teléfono.
 - EDGE-08: el prefijo `+` con menos de 8 o más de 15 dígitos → no normalizable, se guarda recortado.
+- EDGE-10: con `name` inválido y otros campos inválidos a la vez, un solo 400 incluye los errores de todos, y el mensaje de `name` es el del dominio ("El nombre es obligatorio.").
 - EDGE-09: reenviar el alta con `confirm_duplicate: true` cuando ya no hay duplicado → crea normalmente.
 
 ## Error cases
@@ -170,11 +171,11 @@ Replicar el patrón de `catalog` para Customers con estas piezas específicas: (
 - **Documentación:** `docs/architecture/ddd.md` (endpoints `activate`/`deactivate` de clientes, como se hizo con productos), `CLAUDE.md` (mención de la variable opcional `DEFAULT_PHONE_COUNTRY_CODE`), TASK/PR.
 
 ## Implementation steps
-1. **Dominio** (`customers/domain`): constantes, validadores, `normalize_phone`, entidad `Customer` con `create`, `rename`, `change_contact`, `change_notes`, `activate`, `deactivate`; `CustomerValidationError`, `CustomerNotFound`; `CustomerRepository` (`get`, `save`, `list`, `find_by_phone(phone, exclude_id=None, limit=10)`). Tests de dominio primero (AC-02, AC-03, AC-07; INV-01..05, 07).
+1. **Dominio** (`customers/domain`): constantes, validadores, `normalize_phone`, entidad `Customer` con `create`, `rename`, `change_contact`, `change_notes`, `activate`, `deactivate`; `CustomerValidationError`, `CustomerNotFound`; `CustomerRepository` (`get`, `save`, `list`, `find_by_phone(phone, exclude_id=None, limit=10)`). Tests de dominio primero (AC-02, AC-03, AC-07; INV-01..05, 07). **v2:** actualizar `normalize_phone` con la regla "ya prefijado" y ampliar la tabla de tests (`591 76543210`, `(591) 76543210`, `59176543210` → `+59176543210`; `59176543` → `+59159176543`; `5917654321` → `+5915917654321`).
 2. **Aplicación**: `CreateCustomer` (con `default_country_code` y `confirm_duplicate`), `UpdateCustomer` (parcial, agrega errores, no guarda sin cambios), `ActivateCustomer`, `DeactivateCustomer`, `GetCustomer`, `ListCustomers`; `DuplicateCustomerPhone(matches)`. Tests con repositorio en memoria (AC-04, AC-05, EDGE-02..05, 09).
 3. **Infraestructura**: `CustomerModel` (UUID, `name` 150, `phone` 30 con índice no único, `email` 254, `notes` texto, `active`, timestamps, `db_table='customers_customer'`, orden `name,id`), mapper, `DjangoCustomerRepository` con lista perezosa paginable, búsqueda por nombre/dígitos y `find_by_phone`; `apps.py`, `models.py`; registrar `modules.customers` en `INSTALLED_APPS`; `makemigrations customers` (AC-06).
 4. **Settings**: `DEFAULT_PHONE_COUNTRY_CODE = env('DEFAULT_PHONE_COUNTRY_CODE', default='591')` en `base.py`; variable opcional en `.env.example` (sin tocar `.env`).
-5. **API**: serializers (forma/tipos; `confirm_duplicate` solo en alta), vistas (`_run`, 409 directo), paginación (máx. 100), urls; `path('api/customers/', include(...))` en `config/urls.py` (AC-01..AC-08, API-01). Tests de integración.
+5. **API**: serializers (forma/tipos; `confirm_duplicate` solo en alta), vistas (`_run`, 409 directo), paginación (máx. 100), urls; `path('api/customers/', include(...))` en `config/urls.py` (AC-01..AC-08, API-01). **v2 (REV-02):** el serializer deja `name` como `CharField(required=False, allow_blank=True)` sin `max_length` (solo forma y tipo); en el alta, un `name` ausente se pasa como `None` al dominio, que responde "El nombre es obligatorio."; en `PATCH` un `name` ausente significa "sin cambio"; los errores de serializer y de dominio no se mezclan en un mismo 400 salvo que el dominio los junte (EDGE-10). Nuevo test: `name` inválido + `email`/`phone`/`notes` inválidos → un solo 400 con todos. Tests de integración.
 6. **Frontend base**: `models/customer.ts` (`Customer`, `CustomerInput`, DTO, `Page<T>`, `CustomerOrderSummary`, `CustomerApiError`, `DuplicateCustomerError`), `customers-api.service.ts` (list/get/create(input, confirmDuplicate)/update/activate/deactivate; mapeo 400/404/409/red) y su spec (AC-12 parte servicio).
 7. **Páginas**: `customer-list` (AC-10; estilos de acciones copiados), `customer-form` (AC-11, AC-12; diálogo `Swal` con nombres escapados), `customer-detail` + `components/customer-purchase-history` (AC-13); `customers.routes.ts` (`''`, `new`, `:id/edit`, `:id`) y ruta `customers` en `app.routes.ts`. Specs de cada una.
 8. **Menú**: entrada "Cliente" en `routes.json` y claves `MENUITEMS.CUSTOMER.TEXT` en `en/es/de`; actualizar `sidebar-menu.spec.ts` (AC-09).
@@ -183,6 +184,8 @@ Replicar el patrón de `catalog` para Customers con estas piezas específicas: (
 
 ## Database / migrations
 Nueva migración `customers/migrations/0001_initial.py` (`CreateModel` + índice en `phone`), generada con `makemigrations`; solo tablas nuevas, reversible. No toca otras apps. Rollback: `migrate customers zero` o revertir el PR.
+
+> **v2:** `test_unknown_and_malformed_ids_return_404` sigue verificando solo el status 404 para ids mal formados (AC-08 acotado); añadir una aserción del cuerpo `{detail}` para un UUID válido inexistente. Tests de API: nombre inválido + otros campos (EDGE-10) y duplicados con `591 76543210` / `(591) 76543210` (EDGE-02, AC-04).
 
 ## Risks
 - Normalización de teléfono incorrecta para formatos no previstos (p. ej. `0` troncal): mitigado con tabla de casos y el criterio "no normalizable se guarda tal cual"; límite documentado.
@@ -195,3 +198,7 @@ Nueva migración `customers/migrations/0001_initial.py` (`CreateModel` + índice
 
 ## New dependencies
 Ninguna (pip ni npm). Sin Playwright.
+
+## Changelog
+- **v2** (2026-10-08): [Specification] AC-03 (regla de normalización: dígitos que ya empiezan con el código de país y tienen 8 o más dígitos después se toman como prefijados; ejemplos corregidos), EDGE-02 (más formatos) y AC-08 (404 de ids que no son UUID sin `{detail}`) modificados **con aprobación explícita del usuario** (resuelve REV-2026-10-08-clientes-mvp-01 y -03). Nuevo EDGE-10.
+- **v2** (2026-10-08): [Implementation Plan] pasos 1 y 5 ampliados (nueva regla en `normalize_phone` y su tabla de tests; serializer sin validar `name` para cumplir AC-02/EDGE-10, resuelve REV-2026-10-08-clientes-mvp-02). Solicitado por delivery-review.

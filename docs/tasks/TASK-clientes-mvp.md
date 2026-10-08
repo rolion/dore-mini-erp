@@ -1,6 +1,6 @@
 # TASK-clientes-mvp: Módulo Clientes (crear, editar, buscar, historial, desactivar, duplicados) + menú "Cliente"
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-clientes-mvp`
@@ -14,6 +14,8 @@
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 4 ADR (módulo `customers`, contrato API con 409 de duplicado, historial vía Sales, feature frontend) | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `customers`, frontend `features/customers`, menú) | delivery-engineer |
+| 2026-10-08 | REVIEW → PLANNING | Review FAIL: REV-01 (High, SPECIFICATION) y REV-03 (Low, SPECIFICATION) requieren plan v2 | delivery-review |
+| 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (regla de normalización "ya prefijado", AC-08 acotado); REV-02 queda para implementación | delivery-plan |
 | 2026-10-08 | REVIEW → PLANNING | Review FAIL: REV-01 (High, SPECIFICATION: AC-03 contradice la regla de normalización) y REV-03 (Low, SPECIFICATION); REV-02 (Low, IMPLEMENTATION) queda para ENGINEERING; vuelve a la etapa más temprana | delivery-review |
 
 ## Investigación
@@ -118,7 +120,8 @@ Objetivo: registrar clientes y permitir consultar su historial comercial sin con
 - Sin dependencias nuevas; cambios aditivos con rollback por revert de PR / `migrate customers zero`. Supuesto a confirmar: código de país por defecto `591`.
 
 ## Plan
-- [PLAN-2026-10-08-clientes-mvp](../plans/PLAN-2026-10-08-clientes-mvp.md) — v1, Modo COMPLETO, Specification readiness: READY. 13 ACs (API, menú, lista, formulario, duplicado, perfil), 7 invariantes, sin dependencias nuevas, E2E: NO (verificación manual de humo).
+- [PLAN-2026-10-08-clientes-mvp](../plans/PLAN-2026-10-08-clientes-mvp.md) — v2 (antes v1), Modo COMPLETO, Specification readiness: READY. 13 ACs (API, menú, lista, formulario, duplicado, perfil), 7 invariantes, sin dependencias nuevas, E2E: NO (verificación manual de humo).
+- **v2 (2026-10-08):** cambios de Specification aprobados por el usuario: AC-03/EDGE-02 (dígitos con código de país ya incluido se toman como prefijados) y AC-08 (404 sin `{detail}` para ids que no son UUID). Resuelve REV-01 y REV-03; REV-02 (IMPLEMENTATION, AC-02/EDGE-10) se corrige en implementación. ADR modelo-dominio enmendado.
 - Pregunta abierta no bloqueante: código de país por defecto `591` (configurable con `DEFAULT_PHONE_COUNTRY_CODE`). REQ-CUS-004 (historial real) y la asociación a pedido se cierran con el task de Sales.
 
 ## Implementación
