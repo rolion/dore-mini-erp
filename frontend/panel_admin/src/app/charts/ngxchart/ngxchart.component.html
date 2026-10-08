@@ -1,0 +1,85 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">NgxChart</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Charts</li>
+    <li class="breadcrumb-item">NgxChart</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Bar Chart</h4>
+          </div>
+          <div class="card-body">
+            <div style="height: 400px">
+              <ngx-charts-bar-vertical [scheme]="colorScheme" [results]="single" [gradient]="gradient"
+              [xAxis]="showXAxis" [yAxis]="showYAxis" [legend]="showLegend" [legendPosition]="legendPosition"
+              [showXAxisLabel]="showXAxisLabel" [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="vbarxAxisLabel"
+              [yAxisLabel]="vbaryAxisLabel">
+            </ngx-charts-bar-vertical>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Line Chart</h4>
+          </div>
+          <div class="card-body">
+            <div style="height: 400px">
+              <ngx-charts-line-chart [scheme]="colorScheme" [results]="multi" [gradient]="gradient" [xAxis]="showXAxis"
+                [yAxis]="showYAxis" [legend]="showLegend" [showXAxisLabel]="showXAxisLabel"
+                [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="linexAxisLabel" [curve]="shapeChartCurve"
+                [yAxisLabel]="lineyAxisLabel" [autoScale]="autoScale" [timeline]="timeline">
+              </ngx-charts-line-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Area Chart</h4>
+          </div>
+          <div class="card-body">
+            <div style="height: 400px">
+              <ngx-charts-area-chart [scheme]="colorScheme" [results]="multi" [gradient]="gradient" [xAxis]="showXAxis"
+                [yAxis]="showYAxis" [legend]="showLegend" [showXAxisLabel]="showXAxisLabel"
+                [showYAxisLabel]="showYAxisLabel" [xAxisLabel]="areaxAxisLabel" [yAxisLabel]="areayAxisLabel"
+                [curve]="shapeChartCurve" [autoScale]="autoScale">
+              </ngx-charts-area-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Pie Chart</h4>
+          </div>
+          <div class="card-body">
+            <div style="height: 400px">
+              <ngx-charts-pie-chart [scheme]="colorScheme" [results]="single" [legend]="showLegend"
+                [labels]="showLabels" [gradient]="gradient">
+              </ngx-charts-pie-chart>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

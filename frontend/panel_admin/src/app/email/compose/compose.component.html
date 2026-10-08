@@ -1,0 +1,131 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Compose</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Email</li>
+    <li class="breadcrumb-item active">Compose</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-xs-12 col-sm-12 col-md-3 col-lg-3">
+        <div class="card">
+          <div class="body">
+            <div id="mail-nav">
+              <button type="button" class="btn btn-danger waves-effect btn-compose m-b-15">COMPOSE</button>
+              <ul class="" id="mail-folders">
+                <li>
+                  <a routerLink="/email/inbox" title="Inbox">Inbox (10)
+                  </a>
+                </li>
+                <li>
+                  <a onClick="return false;" title="Sent">Sent</a>
+                </li>
+                <li>
+                  <a onClick="return false;" title="Draft">Draft</a>
+                </li>
+                <li>
+                  <a onClick="return false;" title="Bin">Bin</a>
+                </li>
+                <li>
+                  <a onClick="return false;" title="Important">Important</a>
+                </li>
+                <li>
+                  <a onClick="return false;" title="Starred">Starred</a>
+                </li>
+              </ul>
+              <h6 class="b-b p-10 text-strong">Labels</h6>
+              <ul class="" id="mail-labels">
+                <li>
+                  <a onClick="return false;">
+                    <i class="material-icons col-red">local_offer</i>Family</a>
+                </li>
+                <li>
+                  <a onClick="return false;">
+                    <i class="material-icons col-blue">local_offer</i>Work</a>
+                </li>
+                <li>
+                  <a onClick="return false;">
+                    <i class="material-icons col-orange">local_offer</i>Shop</a>
+                </li>
+                <li>
+                  <a onClick="return false;">
+                    <i class="material-icons col-cyan">local_offer</i>Themeforest</a>
+                </li>
+                <li>
+                  <a onClick="return false;">
+                    <i class="material-icons col-blue-grey">local_offer</i>Google</a>
+                </li>
+              </ul>
+              <h6 class="b-b p-10 text-strong">Online</h6>
+              <ul class="online-user" id="online-offline">
+                <li><a onClick="return false;"> <img alt="image" src="assets/images/users/user-2.png"
+                      class="rounded-circle" width="35" data-toggle="tooltip" title="Sachin Pandit">
+                    Sachin Pandit
+                  </a></li>
+                <li><a onClick="return false;"> <img alt="image" src="assets/images/users/user-1.png"
+                      class="rounded-circle" width="35" data-toggle="tooltip" title="Sarah Smith">
+                    Sarah Smith
+                  </a></li>
+                <li><a onClick="return false;"> <img alt="image" src="assets/images/users/user-3.png"
+                      class="rounded-circle" width="35" data-toggle="tooltip" title="Airi Satou">
+                    Airi Satou
+                  </a></li>
+                <li><a onClick="return false;"> <img alt="image" src="assets/images/users/user-4.png"
+                      class="rounded-circle" width="35" data-toggle="tooltip" title="Angelica Ramos	">
+                    Angelica Ramos
+                  </a></li>
+                <li><a onClick="return false;"> <img alt="image" src="assets/images/users/user-5.png"
+                      class="rounded-circle" width="35" data-toggle="tooltip" title="Cara Stevens">
+                    Cara Stevens
+                  </a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-12 col-sm-12 col-md-9 col-lg-9">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">Compose New Message</h4>
+          </div>
+          <div class="boxs mail_listing">
+            <div class="row">
+              <div class="col-lg-12">
+                <form class="composeForm">
+                  <div class="form-group">
+                    <div class="form-line">
+                      <input type="text" id="email_address" class="form-control" placeholder="TO">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="form-line">
+                      <input type="text" id="subject" class="form-control" placeholder="Subject">
+                    </div>
+                  </div>
+                  <div class="NgxEditor__Wrapper">
+                    <ngx-editor-menu [editor]="editor!" [toolbar]="toolbar!"> </ngx-editor-menu>
+                    <ngx-editor [editor]="editor!" [placeholder]="'Type here...'" class="emailEditorStyle"></ngx-editor>
+                  </div>
+                  <div class="compose-editor m-t-20">
+                    <input type="file" class="default" multiple>
+                  </div>
+                </form>
+              </div>
+              <div class="col-lg-12">
+                <div class="buttons m-l-25 m-b-20">
+                  <button type="button" class="btn btn-primary">Send</button>
+                  <button type="button" class="btn btn-danger">Discard</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

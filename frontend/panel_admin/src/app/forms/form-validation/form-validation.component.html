@@ -1,0 +1,121 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Validation</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+      </li>
+      <li class="breadcrumb-item">Forms</li>
+      <li class="breadcrumb-item">Form Validation</li>
+    </ul>
+    <div class="section-body">
+      <div class="row">
+        <div class="col-12 col-md-12 col-lg-12">
+          <div class="card">
+            <div class="card-header">
+              <h4>Form Validation</h4>
+            </div>
+            <div class="card-body">
+              <form class="register-form m-4" [formGroup]="register" (ngSubmit)="onRegister()">
+                <div class="row">
+                  <div class="form-group col-md-6">
+                    <label>First name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" placeholder="First name" formControlName="first" required>
+                      @if (!register.get('first')?.valid && register.get('first')?.touched) {
+                        <small class="form-text text-danger"
+                          >Please
+                        enter a first name!</small>
+                      }
+                    </div>
+                    <div class="form-group col-md-6">
+                      <label>Last Name</label>
+                      <input type="text" class="form-control" placeholder="Last Name" formControlName="last">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="form-group col-md-12">
+                        <label>Password<span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" placeholder="Password" formControlName="password"
+                          required>
+                          @if (!register.get('password')?.valid && register.get('password')?.touched) {
+                            <small class="form-text text-danger"
+                              >password length must be
+                            between 3 and 15 !</small>
+                          }
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="form-group col-md-12">
+                          <label>Email<span class="text-danger">*</span></label>
+                          <input type="email" class="form-control" placeholder="Email" formControlName="email" required>
+                            @if (!register.get('email')?.valid && (register.get('email')?.dirty || register.get('email')?.touched)) {
+                              <small class="form-text text-danger"
+                                >
+                              Enter velid email address!</small>
+                            }
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="form-group col-md-12">
+                            <label>Address<span class="text-danger"></span></label>
+                            <textarea type="textitem" class="form-control" placeholder="Address"
+                            formControlName="address"></textarea>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="form-group col-md-6">
+                            <label>City<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" placeholder="City" formControlName="city" required>
+                              @if (!register.get('city')?.valid && register.get('city')?.touched) {
+                                <small class="form-text text-danger"
+                                  >Please
+                                enter a city name!</small>
+                              }
+                            </div>
+                            <div class="form-group col-md-6">
+                              <label>State<span class="text-danger">*</span></label>
+                              <input type="text" class="form-control" placeholder="State" formControlName="state" required>
+                                @if (!register.get('state')?.valid && register.get('state')?.touched) {
+                                  <small class="form-text text-danger"
+                                    >Please
+                                  enter a state name!</small>
+                                }
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="form-group col-md-12">
+                                <label>Country<span class="text-danger">*</span></label>
+                                <select class="form-select form-control" formControlName="country" required>
+                                  <option>India</option>
+                                  <option>Algeria</option>
+                                  <option>Brazil</option>
+                                  <option>Poland</option>
+                                  <option>Sri Lanka</option>
+                                  <option>Thailand</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="form-group">
+                              <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="cb6" formControlName="termcondition">
+                                  <label class="form-check-label" for="cb6">
+                                    I accept terms and conditions
+                                  </label>
+                                </div>
+                              </div>
+                              <div class="row">
+                                <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 mb-2">
+                                  <button class="btn btn-primary msr-3" [disabled]="!register.valid">Submit</button>
+                                  <button class="btn btn-danger">Cancel</button>
+                                </div>
+                              </div>
+                            </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                

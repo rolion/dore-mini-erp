@@ -1,0 +1,135 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">ng-select</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+      </li>
+      <li class="breadcrumb-item">Forms</li>
+      <li class="breadcrumb-item">ng-select</li>
+    </ul>
+    <div class="section-body">
+      <div class="row">
+        <div class="col-12 col-md-12 col-lg-12">
+          <div class="card">
+            <div class="card-header">
+              <h4>ng-select</h4>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-sm-12 col-xl-6">
+                  <label>Backend data with async pipe</label>
+                  <ng-select [items]="(data | async) || []" bindLabel="name" autofocus bindValue="id">
+                  </ng-select>
+                  <p class="card-text">
+                    Most common case is showing data from backend
+                    API and with ng-select this is extremely simple since you can bind directly to
+                  observable when using angular <b> | async</b> pipe
+                </p>
+              </div>
+              <div class="col-sm-12 col-xl-6">
+                <label>Multi select</label>
+                <ng-select [items]="(data | async) || []" [multiple]="true" [closeOnSelect]="false" [searchable]="false"
+                  bindLabel="name" placeholder="Select people">
+                </ng-select>
+                <p>Select multiple elements</p>
+              </div>
+            </div>
+            <div class="row mt-5">
+              <div class="col-sm-12 col-xl-6">
+                <label>Display data using ng-option</label>
+                <ng-select [multiple]="true">
+                  @for (car of cars; track car) {
+                    <ng-option [value]="car.id" [disabled]="car.disabled">{{car.name}}
+                    </ng-option>
+                  }
+                  <ng-option [value]="'custom'">Custom</ng-option>
+                </ng-select>
+                <p>
+                  If you have simple use case, you can omit items array and bind options directly in html using
+                  <b>ng-option</b>
+                  component.
+                </p>
+              </div>
+              <div class="col-sm-12 col-xl-6">
+                <label>Hidden selected items</label>
+                <ng-select [items]="(data | async) || []" [multiple]="true" [closeOnSelect]="false" [hideSelected]="true"
+                  bindLabel="name" placeholder="Select people">
+                </ng-select>
+                <p>Selected items won't appear among dropdown options</p>
+              </div>
+            </div>
+            <div class="row mt-5">
+              <div class="col-sm-12 col-xl-6">
+                <label>Multi select with limited number of selections
+                </label>
+                <ng-select #select [items]="(data | async) || []" [multiple]="true" [maxSelectedItems]="3" bindLabel="name">
+                </ng-select>
+                <p>Select multiple elements with a limit number of selections (e.g.: 3)</p>
+              </div>
+              <div class="col-sm-12 col-xl-6">
+                <label>Tags without dropdown panel</label>
+                <ng-select [items]="[]" [addTag]="true" [multiple]="true" [selectOnTab]="true" [isOpen]="false">
+                </ng-select>
+                <p>Tagging without dropdown. Press enter to add item</p>
+              </div>
+            </div>
+            <div class="row mt-5">
+              <div class="col-sm-12 col-xl-6">
+                <label>Multi select with checkboxes</label>
+                <ng-select [items]="people" [multiple]="true" bindLabel="name" groupBy="gender" [selectableGroup]="true"
+                  [closeOnSelect]="false" bindValue="id">
+                  <ng-template ng-optgroup-tmp let-item="item" let-item$="item$" let-index="index">
+                    <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.gender | uppercase}}
+                  </ng-template>
+                  <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                    <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.name}}
+                  </ng-template>
+                </ng-select>
+                <p>Select multiple elements using custom templates with checkboxes</p>
+              </div>
+              <div class="col-sm-12 col-xl-6">
+                <label>Grouped multi select with checkboxes</label>
+                <ng-select [items]="people" [multiple]="true" bindLabel="name" groupBy="gender" [selectableGroup]="true"
+                  [selectableGroupAsModel]="false" [closeOnSelect]="false" bindValue="id">
+                  <ng-template ng-optgroup-tmp let-item="item" let-item$="item$" let-index="index">
+                    <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.gender | uppercase}}
+                  </ng-template>
+                  <ng-template ng-option-tmp let-item="item" let-item$="item$" let-index="index">
+                    <input id="item-{{index}}" type="checkbox" [ngModel]="item$.selected" /> {{item.name}}
+                  </ng-template>
+                </ng-select>
+                <p>Group selects children</p>
+              </div>
+            </div>
+            <div class="row mt-5">
+              <div class="col-sm-12 col-xl-6">
+                <label>Default search example
+                </label>
+                <ng-select [items]="people" bindLabel="name" [loading]="peopleLoading">
+                </ng-select>
+                <p>
+                By default ng-select will search using label text. You can also use <b>loading</b> input to set
+              loading state manually if <b>[typeahead]</b> is not used.
+            </p>
+          </div>
+          <div class="col-sm-12 col-xl-6">
+            <label>Dropdown position
+            </label>
+            <ng-select [dropdownPosition]="'top'" [searchable]="false" [items]="cities">
+            </ng-select>
+            <p>
+              By default the dropdown position is set to auto and will be shown above if there is not space placing
+              it at the
+              bottom.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</section>

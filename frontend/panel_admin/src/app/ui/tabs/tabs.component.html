@@ -1,0 +1,221 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Tabs</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">UI</li>
+    <li class="breadcrumb-item">Nav Tabs</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header">
+        <h4>Simple Tabs</h4>
+      </div>
+      <div class="card-body">
+        <ul ngbNav #nav="ngbNav" [(activeId)]="active" class="nav-tabs">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Tab One</a>
+            <ng-template ngbNavContent>
+              <p>{{content1}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>Tab Two</a>
+            <ng-template ngbNavContent>
+              <p>{{content2}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="3">
+            <a ngbNavLink>Tab Three</a>
+            <ng-template ngbNavContent>
+              <p>{{content3}}</p>
+            </ng-template>
+          </li>
+        </ul>
+
+        <div [ngbNavOutlet]="nav" class="mt-2"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h4>Pill Tabs</h4>
+      </div>
+      <div class="card-body">
+        <ul ngbNav #nav6="ngbNav" [(activeId)]="active4" class="nav-pills">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Tab One</a>
+            <ng-template ngbNavContent>
+              <p>{{content1}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>Tab Two</a>
+            <ng-template ngbNavContent>
+              <p>{{content2}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="3">
+            <a ngbNavLink>Tab Three</a>
+            <ng-template ngbNavContent>
+              <p>{{content3}}</p>
+            </ng-template>
+          </li>
+        </ul>
+
+        <div [ngbNavOutlet]="nav6" class="mt-2"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h4>Tabs without <code>ul li</code></h4>
+      </div>
+      <div class="card-body">
+        <p>You can use alternative markup without <code>ul li</code> elements</p>
+
+        <nav ngbNav #nav2="ngbNav" class="nav-tabs">
+          <ng-container ngbNavItem>
+            <a ngbNavLink>Tab One</a>
+            <ng-template ngbNavContent>
+              <p>{{content1}}</p>
+            </ng-template>
+          </ng-container>
+          <ng-container ngbNavItem>
+            <a ngbNavLink>Tab Two</a>
+            <ng-template ngbNavContent>
+              <p>{{content2}}</p>
+            </ng-template>
+          </ng-container>
+          <ng-container ngbNavItem>
+            <a ngbNavLink>Tab Three</a>
+            <ng-template ngbNavContent>
+              <p>{{content3}}</p>
+            </ng-template>
+          </ng-container>
+        </nav>
+
+        <div [ngbNavOutlet]="nav2" class="mt-2"></div>
+
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h4>Vertical Tab</h4>
+      </div>
+      <div class="card-body">
+        <p>
+          You should use <code>class="nav-pills"</code> if you need pills and the <code>[orientation]</code> input
+          to change nav orientation
+        </p>
+        <div class="d-flex">
+          <ul ngbNav #nav3="ngbNav" [(activeId)]="active2" class="nav-pills" orientation="vertical">
+            <li ngbNavItem="top">
+              <a ngbNavLink>Top</a>
+              <ng-template ngbNavContent>
+                <p>{{content1}}</p>
+              </ng-template>
+            </li>
+            <li ngbNavItem="middle">
+              <a ngbNavLink>Middle</a>
+              <ng-template ngbNavContent>
+                <p>{{content2}}</p>
+              </ng-template>
+            </li>
+            <li ngbNavItem="bottom">
+              <a ngbNavLink>Bottom</a>
+              <ng-template ngbNavContent>
+                <p>{{content3}}</p>
+              </ng-template>
+            </li>
+          </ul>
+          <div [ngbNavOutlet]="nav3" class="msl-4"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h4>Selecting Tab</h4>
+      </div>
+      <div class="card-body">
+        <ul ngbNav #nav4="ngbNav" [(activeId)]="active3" (navChange)="onNavChange($event)" class="nav-tabs">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Tab One</a>
+            <ng-template ngbNavContent>
+              <p>{{content1}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>Tab Two</a>
+            <ng-template ngbNavContent>
+              <p>{{content2}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="3">
+            <a ngbNavLink>I can't be selected on click</a>
+            <ng-template ngbNavContent>
+              <p>{{content3}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="4" [disabled]="disabled">
+            <a ngbNavLink>I'm disabled</a>
+            <ng-template ngbNavContent>
+              <p>{{content1}}</p>
+            </ng-template>
+          </li>
+        </ul>
+
+        <div [ngbNavOutlet]="nav4" class="mt-2"></div>
+
+        <div class="mb-3">
+          <button class="btn btn-sm btn-outline-primary" [disabled]="active3 === 2" (click)="nav4.select(2)">Select
+            second
+            tab</button>
+          <button class="btn btn-sm btn-outline-primary msl-2" (click)="toggleDisabled()">Toggle last disabled</button>
+        </div>
+
+        <pre>Active: {{ active3 }}</pre>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h4>Custom Style</h4>
+      </div>
+      <div class="card-body">
+        <ul ngbNav #nav5="ngbNav" [activeId]="2" class="nav-tabs justify-content-center">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Simple</a>
+            <ng-template ngbNavContent>
+              <p>{{content1}}</p>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink><b>Fancy</b> title</a>
+            <ng-template ngbNavContent>
+              <p>{{content2}}</p>
+            </ng-template>
+          </li>
+          <li ngbDropdown class="nav-item">
+            <a href (click)="false" class="nav-link" ngbDropdownToggle>Dropdown</a>
+            <div ngbDropdownMenu>
+              <button ngbDropdownItem>Action</button>
+              <button ngbDropdownItem>Another action</button>
+              <button ngbDropdownItem>Something else here</button>
+              <div class="dropdown-divider"></div>
+              <button ngbDropdownItem>Separated link</button>
+            </div>
+          </li>
+          <li ngbNavItem [disabled]="true" class="ms-auto">
+            <a ngbNavLink>Disabled</a>
+            <ng-template ngbNavContent>
+              <p>{{content3}}</p>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="nav5" class="mt-2"></div>
+      </div>
+    </div>
+  </div>
+</section>

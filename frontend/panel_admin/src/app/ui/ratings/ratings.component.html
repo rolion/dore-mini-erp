@@ -1,0 +1,93 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Rating</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">UI</li>
+    <li class="breadcrumb-item">Rating</li>
+  </ul>
+  <div class="section-body">
+    <div class="row ">
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Simple Rating</h4>
+          </div>
+          <div class="card-body">
+            <ngb-rating [(rate)]="currentRate"></ngb-rating>
+            <hr>
+            <pre>Rate: <b>{{currentRate}}</b></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Events and readonly ratings</h4>
+          </div>
+          <div class="card-body">
+            <ngb-rating [(rate)]="selected" (hover)="hovered=$event" (leave)="hovered=0" [readonly]="readonly">
+            </ngb-rating>
+            <hr>
+            <pre>
+            Selected: <b>{{selected}}</b>
+            Hovered: <b>{{hovered}}</b>
+            </pre>
+            <button class="btn btn-sm btn-outline-{{readonly ? 'danger' : 'success'}}" (click)="readonly = !readonly">
+              {{ readonly ? "readonly" : "editable"}}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row ">
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Custom star template</h4>
+          </div>
+          <div class="card-body">
+            <p>Custom rating template provided as child element</p>
+
+            <ngb-rating [(rate)]="currentRate">
+              <ng-template let-fill="fill" let-index="index">
+                <span class="star" [class.filled]="fill === 100" [class.bad]="index < 3">&#9733;</span>
+              </ng-template>
+            </ngb-rating>
+            <hr>
+            <pre>Rate: <b>{{currentRate}}</b></pre>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Custom decimal rating</h4>
+          </div>
+          <div class="card-body">
+            <p>Custom rating template provided via a variable. Shows fine-grained rating display</p>
+
+            <div class="custom-rating">
+              <ng-template #t let-fill="fill">
+                <span class="star" [class.full]="fill === 100">
+                  <span class="half" [style.width.%]="fill">&hearts;</span>&hearts;
+                </span>
+              </ng-template>
+
+              <ngb-rating [(rate)]="currentRate2" [starTemplate]="t" [readonly]="true" [max]="5"></ngb-rating>
+            </div>
+            <hr>
+            <pre>Rate: <b>{{currentRate2}}</b></pre>
+            <button class="btn btn-sm btn-outline-primary msr-2" (click)="currentRate2 = 1.35">1.35</button>
+            <button class="btn btn-sm btn-outline-primary msr-2" (click)="currentRate2 = 4.72">4.72</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

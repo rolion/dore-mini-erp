@@ -1,0 +1,1750 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Data Widget</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Widget</li>
+    <li class="breadcrumb-item">Data Widget</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-sm-12 col-lg-7">
+        <div class="card author-box card-primary">
+          <div class="card-body">
+            <div class="author-box-left">
+              <img alt="image" src="assets/images/users/user-1.png" class="rounded-circle author-box-picture">
+              <div class="clearfix"></div>
+              <a href="#" onClick="return false;" class="btn btn-primary mt-3 follow-btn"
+                data-follow-action="alert('follow clicked');"
+                data-unfollow-action="alert('unfollow clicked');">Follow</a>
+            </div>
+            <div class="author-box-details">
+              <div class="author-box-name">
+                <a href="#" onClick="return false;">Sarah Smith</a>
+              </div>
+              <div class="author-box-job">Web Developer</div>
+              <div class="author-box-description">
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+                  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+                  quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+                  consequat.</p>
+              </div>
+              <div class="mb-2 mt-3">
+                <div class="text-small fw-bold">Follow Sarah On</div>
+              </div>
+              <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-facebook">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-twitter">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-github">
+                <i class="fab fa-github"></i>
+              </a>
+              <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-instagram">
+                <i class="fab fa-instagram"></i>
+              </a>
+              <div class="w-100 d-sm-none"></div>
+              <div class="float-end mt-sm-0 mt-3">
+                <a href="#" onClick="return false;" class="btn">View Posts <i class="fas fa-chevron-right"></i></a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card ">
+          <div class="card-header">
+            <h4>New Orders</h4>
+          </div>
+          <div class="card-body">
+            <ng-scrollbar style="height: 320px" visibility="hover">
+              <div id="new-orders" class="media-list position-relative">
+                <div class="table-responsive">
+                  <table id="new-orders-table" class="table table-hover table-xl table-row-border mb-0">
+                    <thead>
+                      <tr>
+                        <th class="border-top-0">Product</th>
+                        <th class="border-top-0">Customers</th>
+                        <th class="border-top-0">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="text-truncate">iPhone X</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$8999</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">Pixel 2</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$5550</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">OnePlus</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$9000</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">Galaxy</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$7500</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">Moto Z2</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$8500</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">iPhone X</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$8999</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">iPhone X</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$8999</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">Pixel 2</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$5550</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">OnePlus</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$9000</td>
+                      </tr>
+                      <tr>
+                        <td class="text-truncate">Galaxy</td>
+                        <td class="text-truncate">
+                          <ul class="list-unstyled order-list">
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-1.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-2.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <img class="rounded-circle" src="assets/images/users/user-3.png" alt="user">
+                            </li>
+                            <li class="avatar avatar-sm">
+                              <span class="badge">+4</span>
+                            </li>
+                          </ul>
+                        </td>
+                        <td class="text-truncate">$7500</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </ng-scrollbar>
+          </div>
+        </div>
+
+
+      </div>
+      <div class="col-12 col-sm-12 col-lg-5">
+        <div class="card profile-widget">
+          <div class="profile-widget-header">
+            <img alt="image" src="assets/images/users/user-1.png" class="rounded-circle profile-widget-picture">
+            <div class="profile-widget-items">
+              <div class="profile-widget-item">
+                <div class="profile-widget-item-label">Posts</div>
+                <div class="profile-widget-item-value">225</div>
+              </div>
+              <div class="profile-widget-item">
+                <div class="profile-widget-item-label">Followers</div>
+                <div class="profile-widget-item-value">9,3K</div>
+              </div>
+              <div class="profile-widget-item">
+                <div class="profile-widget-item-label">Following</div>
+                <div class="profile-widget-item-value">3,7K</div>
+              </div>
+            </div>
+          </div>
+          <div class="profile-widget-description pb-0">
+            <div class="profile-widget-name">Sarah Smith <div class="text-muted d-inline font-weight-normal">
+                <div class="slash"></div> Web Developer
+              </div>
+            </div>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+              tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+              quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+              consequat.</p>
+          </div>
+          <div class="card-footer text-center pt-0">
+            <div class="fw-bold mb-2 text-small">Follow Hasan On</div>
+            <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-facebook">
+              <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-twitter">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-github">
+              <i class="fab fa-github"></i>
+            </a>
+            <a href="#" onClick="return false;" class="btn btn-social-icon msr-1 btn-instagram">
+              <i class="fab fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>Authors</h4>
+          </div>
+          <div class="card-body pb-0">
+            <div class="row">
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-1.png" class="img-fluid" data-toggle="tooltip"
+                    title="Ashton Cox">
+                  <div class="avatar-badge" title="Editor" data-toggle="tooltip"><i class="fas fa-wrench"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-2.png" class="img-fluid" data-toggle="tooltip"
+                    title="John Doe">
+                  <div class="avatar-badge" title="Admin" data-toggle="tooltip"><i class="fas fa-cog"></i></div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-3.png" class="img-fluid" data-toggle="tooltip"
+                    title="Airi Satou">
+                  <div class="avatar-badge" title="Author" data-toggle="tooltip"><i class="fas fa-pencil-alt"></i></div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-4.png" class="img-fluid" data-toggle="tooltip"
+                    title="Hasan Basri">
+                  <div class="avatar-badge" title="Author" data-toggle="tooltip"><i class="fas fa-pencil-alt"></i></div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-5.png" class="img-fluid" data-toggle="tooltip"
+                    title="Airi Satou">
+                  <div class="avatar-badge" title="Editor" data-toggle="tooltip"><i class="fas fa-wrench"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-4.png" class="img-fluid" data-toggle="tooltip"
+                    title="Angelica Ramos">
+                  <div class="avatar-badge" title="Admin" data-toggle="tooltip"><i class="fas fa-cog"></i></div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-1.png" class="img-fluid" data-toggle="tooltip"
+                    title="Ashton Cox">
+                  <div class="avatar-badge" title="Author" data-toggle="tooltip"><i class="fas fa-pencil-alt"></i></div>
+                </div>
+              </div>
+              <div class="col-6 col-sm-3 col-lg-3 mb-4 mb-md-0">
+                <div class="avatar-item">
+                  <img alt="image" src="assets/images/users/user-2.png" class="img-fluid" data-toggle="tooltip"
+                    title="Cara Stevens">
+                  <div class="avatar-badge" title="Admin" data-toggle="tooltip"><i class="fas fa-cog"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-bg">
+            <div class="p-3 d-flex justify-content-between">
+              <div class="col">
+                <h6 class="mb-0">New Booking</h6>
+                <span class="fw-bold mb-0 font-20">1,562</span>
+              </div>
+              <i class="fas fa-address-card card-icon col-orange font-30 col-auto"></i>
+            </div>
+            <div class="card-content m-3">
+              <div class="progress-text">55%</div>
+              <ngb-progressbar type="warning" [value]="55" height="10px"></ngb-progressbar>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-bg">
+            <div class="p-3 d-flex justify-content-between">
+              <div class="col">
+                <h6 class="mb-0">New Customers 1</h6>
+                <span class="fw-bold mb-0 font-20">895</span>
+              </div>
+              <i class="fas fa-diagnoses card-icon col-green font-30 col-auto"></i>
+            </div>
+            <div class="card-content m-3">
+              <div class="progress-text">30%</div>
+              <ngb-progressbar type="success" [value]="30" height="10px"></ngb-progressbar>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-bg">
+            <div class="p-3 d-flex justify-content-between">
+              <div class="col">
+                <h6 class="mb-0">Growth</h6>
+                <span class="fw-bold mb-0 font-20">+22.58%</span>
+              </div>
+              <i class="fas fa-chart-bar card-icon col-blue font-30 col-auto"></i>
+            </div>
+            <div class="card-content m-3">
+              <div class="progress-text">67%</div>
+              <ngb-progressbar type="info" [value]="67" height="10px"></ngb-progressbar>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-bg">
+            <div class="p-3 d-flex justify-content-between">
+              <div class="col">
+                <h6 class="mb-0">Revenue</h6>
+                <span class="fw-bold mb-0 font-20">$2,687</span>
+              </div>
+              <i class="fas fa-hand-holding-usd card-icon col-red font-30 col-auto"></i>
+            </div>
+            <div class="card-content m-3">
+              <div class="progress-text">44%</div>
+              <ngb-progressbar type="danger" [value]="44" height="10px"></ngb-progressbar>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Order Status</h4>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover table-xl table-row-border mb-0">
+                <thead>
+                  <tr>
+                    <th>Order No</th>
+                    <th>Cust Name</th>
+                    <th>Process</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <td>XY56987</td>
+                  <td>John Deo</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="success" [value]="25" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>$955</td>
+                </tr>
+                <tr>
+                  <td>XY12587</td>
+                  <td>Sarah Smith</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="warning" [value]="85" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>$215</td>
+                </tr>
+                <tr>
+                  <td>XY58987</td>
+                  <td>Sarah Smith</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="info" [value]="40" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>$215</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Employee Performance</h4>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-sm-6">
+                <div class="text-title mb-4">January-2019</div>
+                <ul class="list-unstyled list-unstyled-border mb-0">
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-1.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex msl-3">
+                      <div class="media-title">Sarah Smith</div>
+                      <div class="text-small text-muted">10% <i class="fas fa-arrow-up col-green"></i></div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-2.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex msl-3">
+                      <div class="media-title">John Doe</div>
+                      <div class="text-small text-muted">17% <i class="fas fa-arrow-down col-orange"></i></div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-3.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex msl-3">
+                      <div class="media-title">Cara Stevens</div>
+                      <div class="text-small text-muted">21% <i class="fas fa-arrow-up col-green"></i></div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="col-sm-6 mt-sm-0 mt-4">
+                <div class="text-title mb-4">February-2019</div>
+                <ul class="list-unstyled list-unstyled-border list-unstyled-noborder mb-0">
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-4.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex msl-3">
+                      <div class="media-title">Ashton Cox</div>
+                      <div class="text-small text-muted">10% <i class="fas fa-arrow-up col-green"></i></div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-5.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex msl-3">
+                      <div class="media-title">Airi Satou</div>
+                      <div class="text-small text-muted">09% <i class="fas fa-arrow-down col-orange"></i></div>
+                    </div>
+                  </li>
+                  <li class="product-list">
+                    <img alt="image" src="assets/images/users/user-6.png"
+                      class="msr-3 user-img-radious-style user-list-img" width="40">
+                    <div class="set-flex msl-3">
+                      <div class="media-title">Hasan Basri</div>
+                      <div class="text-small text-muted">20% <i class="fas fa-arrow-down col-orange"></i></div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-12 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Comments</h4>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled list-unstyled-border list-unstyled-noborder">
+              <li class="product-list">
+                <img alt="image" class="msr-3 rounded-circle" width="70" src="assets/images/users/user-1.png">
+                <div class="set-flex">
+                  <div class="float-end">
+                    <div class="col-green">Approved</div>
+                  </div>
+                  <div class="fw-bold font-16 mb-1">Cara Stevens</div>
+                  <div class="text-time">Yesterday</div>
+                  <div class="media-description">Duis aute irure dolor in reprehenderit in voluptate
+                    velit esse
+                    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+                    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+                  <div class="mt-2">
+                    <a href="#" onClick="return false;">View</a>
+                    <div class="bullet"></div>
+                    <a href="#" onClick="return false;">Edit</a>
+                    <div class="bullet"></div>
+                    <a href="#" onClick="return false;" class="text-danger">Trash</a>
+                  </div>
+                </div>
+              </li>
+              <li class="product-list">
+                <img alt="image" class="msr-3 rounded-circle" width="70" src="assets/images/users/user-2.png">
+                <div class="set-flex">
+                  <div class="float-end">
+                    <div class="col-orange">Pending</div>
+                  </div>
+                  <div class="fw-bold font-16 mb-1">Airi Satou</div>
+                  <div class="text-time">Yesterday</div>
+                  <div class="media-description">Duis aute irure dolor in reprehenderit in voluptate
+                    velit esse
+                    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+                    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+                  <div class="mt-2">
+                    <a href="#" onClick="return false;">View</a>
+                    <div class="bullet"></div>
+                    <a href="#" onClick="return false;">Edit</a>
+                    <div class="bullet"></div>
+                    <a href="#" onClick="return false;" class="text-danger">Trash</a>
+                  </div>
+                </div>
+              </li>
+              <li class="product-list">
+                <img alt="image" class="msr-3 rounded-circle" width="70" src="assets/images/users/user-1.png">
+                <div class="set-flex">
+                  <div class="float-end">
+                    <div class="col-green">Approved</div>
+                  </div>
+                  <div class="fw-bold font-16 mb-1">Hasan Basri</div>
+                  <div class="text-time">Yesterday</div>
+                  <div class="media-description">Duis aute irure dolor in reprehenderit in voluptate
+                    velit esse
+                    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+                    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</div>
+                  <div class="mt-2">
+                    <a href="#" onClick="return false;">View</a>
+                    <div class="bullet"></div>
+                    <a href="#" onClick="return false;">Edit</a>
+                    <div class="bullet"></div>
+                    <a href="#" onClick="return false;" class="text-danger">Trash</a>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-12 col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>User Progress</h4>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled user-progress list-unstyled-border list-unstyled-noborder">
+              <li class="product-list">
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-1.png">
+                <div class="set-flex">
+                  <div class="media-title fw-bold font-17">Cara Stevens</div>
+                  <div class="text-job text-muted">Web Developer</div>
+                </div>
+                <div class="set-flex media-progressbar">
+                  <div class="progress-text">30%</div>
+                  <ngb-progressbar type="success" [value]="30" height=".5rem"></ngb-progressbar>
+                </div>
+                <div class="ms-5">
+                  <a href="#" onClick="return false;" class="btn btn-outline-primary">Detail</a>
+                </div>
+              </li>
+              <li class="product-list">
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-2.png">
+                <div class="set-flex">
+                  <div class="media-title fw-bold font-17">Ashton Cox</div>
+                  <div class="text-job text-muted">Web Developer</div>
+                </div>
+                <div class="set-flex media-progressbar">
+                  <div class="progress-text">67%</div>
+                  <ngb-progressbar type="info" [value]="67" height=".5rem"></ngb-progressbar>
+                </div>
+                <div class="ms-5">
+                  <a href="#" onClick="return false;" class="btn btn-outline-primary">Detail</a>
+                </div>
+              </li>
+              <li class="product-list">
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-3.png">
+                <div class="set-flex">
+                  <div class="media-title fw-bold font-17">Sarah Smith</div>
+                  <div class="text-job text-muted">Web Developer</div>
+                </div>
+                <div class="set-flex media-progressbar">
+                  <div class="progress-text">45%</div>
+                  <ngb-progressbar type="danger" [value]="45" height=".5rem"></ngb-progressbar>
+                </div>
+                <div class="ms-5">
+                  <a href="#" onClick="return false;" class="btn btn-outline-primary">Detail</a>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card mt-4">
+          <div class="card-header">
+            <h4>User Details</h4>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled user-details list-unstyled-border list-unstyled-noborder">
+              <li class="items-list-compo">
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-1.png">
+                <div class="set-flex">
+                  <div class="media-title fw-bold font-16">Cara Stevens</div>
+                  <div class="text-job text-muted">Web Developer</div>
+                </div>
+                <div class="items-list">
+                  <div class="item-list">
+                    <div class="item-value">1,239</div>
+                    <div class="item-label">Posts</div>
+                  </div>
+                  <div class="item-list">
+                    <div class="item-value">10K</div>
+                    <div class="media-label">Followers</div>
+                  </div>
+                  <div class="item-list">
+                    <div class="item-value">2,312</div>
+                    <div class="media-label">Following</div>
+                  </div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-5.png">
+                <div class="set-flex">
+                  <div class="media-title fw-bold font-16">Ashton Cox</div>
+                  <div class="text-job text-muted">Web Developer</div>
+                </div>
+                <div class="items-list">
+                  <div class="item-list">
+                    <div class="item-value">4,872</div>
+                    <div class="item-label">Posts</div>
+                  </div>
+                  <div class="item-list">
+                    <div class="item-value">43k</div>
+                    <div class="media-label">Followers</div>
+                  </div>
+                  <div class="item-list">
+                    <div class="item-value">1,290</div>
+                    <div class="media-label">Following</div>
+                  </div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-4.png">
+                <div class="set-flex">
+                  <div class="media-title fw-bold font-16">Sarah Smith</div>
+                  <div class="text-job text-muted">Web Developer</div>
+                </div>
+                <div class="items-list">
+                  <div class="item-list">
+                    <div class="item-value">1,821</div>
+                    <div class="item-label">Posts</div>
+                  </div>
+                  <div class="item-list">
+                    <div class="item-value">14k</div>
+                    <div class="media-label">Followers</div>
+                  </div>
+                  <div class="item-list">
+                    <div class="item-value">2,864</div>
+                    <div class="media-label">Following</div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h4 class="d-inline">Tasks</h4>
+            <div class="card-header-action">
+              <a href="#" onClick="return false;" class="btn btn-primary">View All</a>
+            </div>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled list-unstyled-border">
+              <li class="task-list">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="cbx-1">
+                  <label class="custom-control-label" for="cbx-1"></label>
+                </div>
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-5.png">
+                <div class="set-flex">
+                  <div class="badge badge-pill bg-danger mb-1 float-end">Not Finished</div>
+                  <h6>Logo design task</h6>
+                  <div class="text-small text-muted">Cara Stevens <div class="bullet"></div> <span
+                      class="text-primary">Now</span></div>
+                </div>
+              </li>
+              <li class="task-list">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="cbx-2" checked>
+                  <label class="custom-control-label" for="cbx-2"></label>
+                </div>
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-4.png">
+                <div class="set-flex">
+                  <div class="badge badge-pill bg-primary mb-1 float-end">Completed</div>
+                  <h6>Changes related to upload file</h6>
+                  <div class="text-small text-muted">Hasan Basri <div class="bullet"></div> 4 Min</div>
+                </div>
+              </li>
+              <li class="task-list">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="cbx-3">
+                  <label class="custom-control-label" for="cbx-3"></label>
+                </div>
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-9.png">
+                <div class="set-flex">
+                  <div class="badge badge-pill bg-warning mb-1 float-end">Progress</div>
+                  <h6>Upload build on server</h6>
+                  <div class="text-small text-muted">John Doe <div class="bullet"></div> 8 Min</div>
+                </div>
+              </li>
+              <li class="task-list">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="cbx-4">
+                  <label class="custom-control-label" for="cbx-4"></label>
+                </div>
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-10.png">
+                <div class="set-flex">
+                  <div class="badge badge-pill bg-danger mb-1 float-end">Not Finished</div>
+                  <h6>Deliverd product to client</h6>
+                  <div class="text-small text-muted">Sarah Smith <div class="bullet"></div> 21 Min</div>
+                </div>
+              </li>
+              <li class="task-list">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="cbx-8">
+                  <label class="custom-control-label" for="cbx-8"></label>
+                </div>
+                <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-8.png">
+                <div class="set-flex">
+                  <div class="badge badge-pill bg-primary mb-1 float-end">Completed</div>
+                  <h6>Admin panel bug solve</h6>
+                  <div class="text-small text-muted">Poonam Patel <div class="bullet"></div> 11 Min</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header">
+            <h4>Customer Review</h4>
+          </div>
+          <div class="card-body pb-0">
+            <div class="review-block">
+              <div class="row">
+                <div class="review-img">
+                  <img src="assets/images/users/user-1.png" width="50" class="rounded-circle" alt="">
+                </div>
+                <div class="col">
+                  <h6 class="m-b-5">Alis Smith
+                    <span class="float-end m-r-10 text-muted font-12"> a week ago</span>
+                  </h6>
+                  <i class="material-icons">star</i>
+                  <i class="material-icons">star</i>
+                  <i class="material-icons">star</i>
+                  <i class="material-icons">star_half</i>
+                  <i class="material-icons">star_border</i>
+                  <p class="m-t-15 m-b-15">Lorem ipsum dolor sit amet, consectetur
+                    adipiscing elit. Etiam vel rutrum ex, at
+                    ornare mi. In quis scelerisque dui, eget rhoncus orci. Fusce et sodales
+                    ipsum.</p>
+                  <a href="#!" onClick="return false;">
+                    <i class="material-icons m-r-10">thumb_up</i>
+                  </a>
+                  <a href="#!" onClick="return false;">
+                    <i class="material-icons m-r-10 col-red">thumb_down</i>
+                  </a>
+                </div>
+              </div>
+              <div class="row">
+                <div class="review-img">
+                  <img src="assets/images/users/user-2.png" width="50" class="rounded-circle" alt="">
+                </div>
+                <div class="col">
+                  <h6 class="m-b-5">John Dio
+                    <span class="float-end m-r-10 text-muted font-12"> a week ago</span>
+                  </h6>
+                  <i class="material-icons">star</i>
+                  <i class="material-icons">star_half</i>
+                  <i class="material-icons">star_border</i>
+                  <i class="material-icons">star_border</i>
+                  <i class="material-icons">star_border</i>
+                  <p class="m-t-15 m-b-15">Nam quis ligula est. Nunc sed risus non
+                    turpis tristique tempor. Ut sollicitudin
+                    faucibus magna nec gravida. Suspendisse ullamcorper justo vel porta
+                    imperdiet.</p>
+                  <a href="#!" onClick="return false;">
+                    <i class="material-icons m-r-10">thumb_up</i>
+                  </a>
+                  <a href="#!" onClick="return false;">
+                    <i class="material-icons m-r-10 col-red">thumb_down</i>
+                  </a>
+                </div>
+              </div>
+              <div class="text-center m-b-15">
+                <a href="#!" onClick="return false;" class="b-b-primary ">View all Customer Reviews</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row ">
+      <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-xs-12">
+        <div class="card">
+          <div class="card-statistic-4">
+            <div class="align-items-center justify-content-between">
+              <div class="row ">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 left-grid-spacing">
+                  <div class="card-content">
+                    <h6>New Booking</h6>
+                    <h2 class="mb-3 font-18">258</h2>
+                    <p class="mb-0"><span class="col-green">42%</span></p>
+                  </div>
+                  <ngb-progressbar type="success" [value]="42" height=".3rem"></ngb-progressbar>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 right-grid-spacing">
+                  <div class="banner-img">
+                    <img src="assets/images/banner/1.png" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-xs-12">
+        <div class="card">
+          <div class="card-statistic-4">
+            <div class="align-items-center justify-content-between">
+              <div class="row ">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 left-grid-spacing">
+                  <div class="card-content">
+                    <h6> Customers</h6>
+                    <h2 class="mb-3 font-18">1,287</h2>
+                    <p class="mb-0"><span class="col-orange">33%</span></p>
+                  </div>
+                  <ngb-progressbar type="warning" [value]="33" height=".3rem"></ngb-progressbar>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 right-grid-spacing">
+                  <div class="banner-img">
+                    <img src="assets/images/banner/2.png" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-xs-12">
+        <div class="card">
+          <div class="card-statistic-4">
+            <div class="align-items-center justify-content-between">
+              <div class="row ">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 left-grid-spacing">
+                  <div class="card-content">
+                    <h6>New Project</h6>
+                    <h2 class="mb-3 font-18">128</h2>
+                    <p class="mb-0"><span class="col-blue">25%</span>
+                    </p>
+                  </div>
+                  <ngb-progressbar type="info" [value]="25" height=".3rem"></ngb-progressbar>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 right-grid-spacing">
+                  <div class="banner-img">
+                    <img src="assets/images/banner/3.png" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6 col-md-6 col-sm-6 col-xs-12">
+        <div class="card">
+          <div class="card-statistic-4">
+            <div class="align-items-center justify-content-between">
+              <div class="row ">
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 left-grid-spacing">
+                  <div class="card-content">
+                    <h6>Revenue</h6>
+                    <h2 class="mb-3 font-18">$48,697</h2>
+                    <p class="mb-0"><span class="col-red">65%</span></p>
+                  </div>
+                  <ngb-progressbar type="danger" [value]="65" height=".3rem"></ngb-progressbar>
+                </div>
+                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 right-grid-spacing">
+                  <div class="banner-img">
+                    <img src="assets/images/banner/4.png" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-8 col-md-12 col-12 col-sm-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Task Details</h4>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover table-xl table-row-border mb-0">
+                <thead>
+                  <tr>
+                    <th class="text-center">
+                      <div class="custom-checkbox custom-control">
+                        <input type="checkbox" data-checkboxes="mygroup" data-checkbox-role="dad"
+                          class="custom-control-input" id="checkbox-all">
+                        <label for="checkbox-all" class="custom-control-label">&nbsp;</label>
+                      </div>
+                    </th>
+                    <th>Task Name</th>
+                    <th>Progress</th>
+                    <th>Due Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tr>
+                  <td class="p-0 text-center">
+                    <div class="custom-checkbox custom-control">
+                      <input type="checkbox" data-checkboxes="mygroup" class="custom-control-input" id="checkbox-1">
+                      <label for="checkbox-1" class="custom-control-label">&nbsp;</label>
+                    </div>
+                  </td>
+                  <td>Ecommerce website</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="warning" [value]="75" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>2018-01-20</td>
+                  <td>
+                    <a class="btn btn-edit-custom btn-action msr-1"><i class="fas fa-pencil-alt"></i></a>
+                    <a class="btn btn-delete-custom btn-action"><i class="fas fa-trash"></i></a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-0 text-center">
+                    <div class="custom-checkbox custom-control">
+                      <input type="checkbox" data-checkboxes="mygroup" class="custom-control-input" id="checkbox-4">
+                      <label for="checkbox-4" class="custom-control-label">&nbsp;</label>
+                    </div>
+                  </td>
+                  <td>Android App</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="info" [value]="66" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>2018-09-11</td>
+                  <td>
+                    <a class="btn btn-edit-custom btn-action msr-1"><i class="fas fa-pencil-alt"></i></a>
+                    <a class="btn btn-delete-custom btn-action"><i class="fas fa-trash"></i></a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-0 text-center">
+                    <div class="custom-checkbox custom-control">
+                      <input type="checkbox" data-checkboxes="mygroup" class="custom-control-input" id="checkbox-5">
+                      <label for="checkbox-5" class="custom-control-label">&nbsp;</label>
+                    </div>
+                  </td>
+                  <td>Logo Design</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="success" [value]="45" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>2018-04-12</td>
+                  <td>
+                    <a class="btn btn-edit-custom btn-action msr-1"><i class="fas fa-pencil-alt"></i></a>
+                    <a class="btn btn-delete-custom btn-action"><i class="fas fa-trash"></i></a>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="p-0 text-center">
+                    <div class="custom-checkbox custom-control">
+                      <input type="checkbox" data-checkboxes="mygroup" class="custom-control-input" id="checkbox-6">
+                      <label for="checkbox-6" class="custom-control-label">&nbsp;</label>
+                    </div>
+                  </td>
+                  <td>Java Project</td>
+                  <td class="align-middle">
+                    <ngb-progressbar type="danger" [value]="70" height=".3rem" class="p-0"></ngb-progressbar>
+                  </td>
+                  <td>2018-01-20</td>
+                  <td>
+                    <a class="btn btn-edit-custom btn-action msr-1"><i class="fas fa-pencil-alt"></i></a>
+                    <a class="btn btn-delete-custom btn-action"><i class="fas fa-trash"></i></a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-md-12 col-12 col-sm-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Referral Link</h4>
+          </div>
+          <div class="card-body">
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">2,675</div>
+              <div class="fw-bold">Google</div>
+              <ngb-progressbar type="danger" [value]="70" height=".3rem"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">1,753</div>
+              <div class="fw-bold">Facebook</div>
+              <ngb-progressbar type="success" [value]="55" height=".3rem"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">1,254</div>
+              <div class="fw-bold">Bing</div>
+              <ngb-progressbar type="info" [value]="63" height=".3rem"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">984</div>
+              <div class="fw-bold">Yahoo</div>
+              <ngb-progressbar type="warning" [value]="45" height=".3rem"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">563</div>
+              <div class="fw-bold">Instagram</div>
+              <ngb-progressbar type="secondary" [value]="70" height=".3rem"></ngb-progressbar>
+            </div>
+            <div class="mb-4">
+              <div class="text-small float-end fw-bold text-muted">345</div>
+              <div class="fw-bold">Twitter</div>
+              <ngb-progressbar type="primary" [value]="51" height=".3rem"></ngb-progressbar>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row ">
+      <div class="col-xl-3 col-lg-6">
+        <div class="card l-bg-green">
+          <div class="card-statistic-3">
+            <div class="card-icon card-icon-large"><i class="fa fa-award"></i></div>
+            <div class="card-content">
+              <h5 class="card-title">New Orders</h5>
+              <span class="font-20">524</span>
+              <div class="mt-2">
+                <ngb-progressbar type="primary" [value]="51" height=".5rem"></ngb-progressbar>
+              </div>
+              <p class="mb-0 text-sm">
+                <span class="msr-2"><i class="fa fa-arrow-up"></i> 10%</span>
+                <span class="text-nowrap">Since last month</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card l-bg-cyan">
+          <div class="card-statistic-3">
+            <div class="card-icon card-icon-large"><i class="fa fa-briefcase"></i></div>
+            <div class="card-content">
+              <h5 class="card-title">New Booking</h5>
+              <span class="font-20">1,258</span>
+              <div class="mt-2">
+                <ngb-progressbar type="orange" [value]="51" height=".5rem"></ngb-progressbar>
+              </div>
+              <p class="mb-0 text-sm">
+                <span class="msr-2"><i class="fa fa-arrow-up"></i> 10%</span>
+                <span class="text-nowrap">Since last month</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card l-bg-purple">
+          <div class="card-statistic-3">
+            <div class="card-icon card-icon-large"><i class="fa fa-globe"></i></div>
+            <div class="card-content">
+              <h5 class="card-title">Inquiry</h5>
+              <span class="font-20">10,225</span>
+              <div class="mt-2">
+                <ngb-progressbar type="danger" [value]="51" height=".5rem"></ngb-progressbar>
+              </div>
+              <p class="mb-0 text-sm">
+                <span class="msr-2"><i class="fa fa-arrow-up"></i> 10%</span>
+                <span class="text-nowrap">Since last month</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card l-bg-orange">
+          <div class="card-statistic-3">
+            <div class="card-icon card-icon-large"><i class="fa fa-money-bill-alt"></i></div>
+            <div class="card-content">
+              <h5 class="card-title">Earning</h5>
+              <span class="font-20">$2,658</span>
+              <div class="mt-2">
+                <ngb-progressbar type="success" [value]="51" height=".5rem"></ngb-progressbar>
+              </div>
+              <p class="mb-0 text-sm">
+                <span class="msr-2"><i class="fa fa-arrow-up"></i> 10%</span>
+                <span class="text-nowrap">Since last month</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-body card-type-3">
+            <div class="row">
+              <div class="col">
+                <h5 class="text-muted mb-0">Orders</h5>
+                <span class="fw-bold mb-0">450</span>
+              </div>
+              <div class="col-auto">
+                <div class="card-circle l-bg-orange text-white">
+                  <i class="fas fa-book-open"></i>
+                </div>
+              </div>
+            </div>
+            <p class="mt-3 mb-0 text-muted text-sm">
+              <span class="text-success msr-2"><i class="fa fa-arrow-up"></i> 10%</span>
+              <span class="text-nowrap">Since last month</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-body card-type-3">
+            <div class="row">
+              <div class="col">
+                <h5 class="text-muted mb-0">New Booking</h5>
+                <span class="fw-bold mb-0">1,562</span>
+              </div>
+              <div class="col-auto">
+                <div class="card-circle l-bg-cyan text-white">
+                  <i class="fas fa-briefcase"></i>
+                </div>
+              </div>
+            </div>
+            <p class="mt-3 mb-0 text-muted text-sm">
+              <span class="text-success msr-2"><i class="fa fa-arrow-up"></i> 7.8%</span>
+              <span class="text-nowrap">Since last month</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-body card-type-3">
+            <div class="row">
+              <div class="col">
+                <h5 class="text-muted mb-0">Inquiry</h5>
+                <span class="fw-bold mb-0">7,897</span>
+              </div>
+              <div class="col-auto">
+                <div class="card-circle l-bg-green text-white">
+                  <i class="fas fa-phone"></i>
+                </div>
+              </div>
+            </div>
+            <p class="mt-3 mb-0 text-muted text-sm">
+              <span class="text-success msr-2"><i class="fa fa-arrow-up"></i> 15%</span>
+              <span class="text-nowrap">Since last month</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-3 col-lg-6">
+        <div class="card">
+          <div class="card-body card-type-3">
+            <div class="row">
+              <div class="col">
+                <h5 class="text-muted mb-0">Earning</h5>
+                <span class="fw-bold mb-0">$8,965</span>
+              </div>
+              <div class="col-auto">
+                <div class="card-circle l-bg-purple text-white">
+                  <i class="fas fa-dollar-sign"></i>
+                </div>
+              </div>
+            </div>
+            <p class="mt-3 mb-0 text-muted text-sm">
+              <span class="text-success msr-2"><i class="fa fa-arrow-up"></i> 5.4%</span>
+              <span class="text-nowrap">Since last month</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h4>Who's Online?</h4>
+          </div>
+          <div class="card-body">
+            <ng-scrollbar style="height: 380px" visibility="hover">
+              <ul class="list-unstyled list-unstyled-border">
+                <li class="items-list-compo">
+                  <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-1.png">
+                  <div class="media-body">
+                    <div class="mt-0 mb-1 fw-bold">Cara Stevens</div>
+                    <div class="text-success text-small font-600-bold"><i class="fas fa-circle"></i> Online</div>
+                  </div>
+                </li>
+                <li class="items-list-compo">
+                  <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-2.png">
+                  <div class="media-body">
+                    <div class="mt-0 mb-1 fw-bold">Airi Satou</div>
+                    <div class="text-small font-weight-600 text-muted"><i class="fas fa-circle"></i> Offline</div>
+                  </div>
+                </li>
+                <li class="items-list-compo">
+                  <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-3.png">
+                  <div class="media-body">
+                    <div class="mt-0 mb-1 fw-bold">Ashton Cox</div>
+                    <div class="text-small font-weight-600 text-success"><i class="fas fa-circle"></i> Online
+                    </div>
+                  </div>
+                </li>
+                <li class="items-list-compo">
+                  <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-4.png">
+                  <div class="media-body">
+                    <div class="mt-0 mb-1 fw-bold">Cara Stevens</div>
+                    <div class="text-small font-weight-600 text-success"><i class="fas fa-circle"></i> Online
+                    </div>
+                  </div>
+                </li>
+                <li class="items-list-compo">
+                  <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-5.png">
+                  <div class="media-body">
+                    <div class="mt-0 mb-1 fw-bold">Angelica Ramos</div>
+                    <div class="text-small font-weight-600 text-success"><i class="fas fa-circle"></i> Online
+                    </div>
+                  </div>
+                </li>
+                <li class="items-list-compo">
+                  <img alt="image" class="msr-3 rounded-circle" width="50" src="assets/images/users/user-6.png">
+                  <div class="media-body">
+                    <div class="mt-0 mb-1 fw-bold">John Dio</div>
+                    <div class="text-small font-weight-600 text-success"><i class="fas fa-circle"></i> Online
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </ng-scrollbar>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card gradient-bottom">
+          <div class="card-header">
+            <h4>Top 5 Products</h4>
+          </div>
+          <div class="card-body" id="top-5-scroll">
+            <ng-scrollbar style="height: 320px" visibility="hover">
+              <ul class="list-unstyled list-unstyled-border">
+                <li class="product-list">
+                  <img class="msr-3 rounded" width="55" src="assets/images/products/product-3.png" alt="product">
+                  <div class="set-flex">
+                    <div class="float-end">
+                      <div class="font-weight-600 text-muted text-small">112 Sales</div>
+                    </div>
+                    <div class="fw-bold font-15">Mobile</div>
+                    <div class="mt-1">
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-primary" style="width: 60%;"></div>
+                        <div class="budget-price-label">$24,897</div>
+                      </div>
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-danger" style="width: 40%;"></div>
+                        <div class="budget-price-label">$18,865</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="product-list">
+                  <img class="msr-3 rounded" width="55" src="assets/images/products/product-4.png" alt="product">
+                  <div class="set-flex">
+                    <div class="float-end">
+                      <div class="font-weight-600 text-muted text-small">49 Sales</div>
+                    </div>
+                    <div class="fw-bold font-15">Laptop</div>
+                    <div class="mt-1">
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-primary" style="width: 78%;"></div>
+                        <div class="budget-price-label">$74,568</div>
+                      </div>
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-danger" style="width: 55%;"></div>
+                        <div class="budget-price-label">$65,892</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="product-list">
+                  <img class="msr-3 rounded" width="55" src="assets/images/products/product-1.png" alt="product">
+                  <div class="set-flex">
+                    <div class="float-end">
+                      <div class="font-weight-600 text-muted text-small">63 Sales</div>
+                    </div>
+                    <div class="fw-bold font-15">Headphone</div>
+                    <div class="mt-1">
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-primary" style="width: 38%;"></div>
+                        <div class="budget-price-label">$2,859</div>
+                      </div>
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-danger" style="width: 25%;"></div>
+                        <div class="budget-price-label">$1,872</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="product-list">
+                  <img class="msr-3 rounded" width="55" src="assets/images/products/product-2.png" alt="product">
+                  <div class="set-flex">
+                    <div class="float-end">
+                      <div class="font-weight-600 text-muted text-small">28 Sales</div>
+                    </div>
+                    <div class="fw-bold font-15">Tablet</div>
+                    <div class="mt-1">
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-primary" style="width: 48%;"></div>
+                        <div class="budget-price-label">$11,238</div>
+                      </div>
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-danger" style="width: 33%;"></div>
+                        <div class="budget-price-label">$7,564</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+                <li class="product-list">
+                  <img class="msr-3 rounded" width="55" src="assets/images/products/product-5.png" alt="product">
+                  <div class="set-flex">
+                    <div class="float-end">
+                      <div class="font-weight-600 text-muted text-small">19 Sales</div>
+                    </div>
+                    <div class="fw-bold font-15">Camera</div>
+                    <div class="mt-1">
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-primary" style="width: 91%;"></div>
+                        <div class="budget-price-label">$7,285</div>
+                      </div>
+                      <div class="budget-price">
+                        <div class="budget-price-square bg-danger" style="width: 74%;"></div>
+                        <div class="budget-price-label">$5,147</div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </ng-scrollbar>
+          </div>
+          <div class="card-footer pt-3 d-flex justify-content-center">
+            <div class="budget-price justify-content-center">
+              <div class="budget-price-square bg-primary" data-width="20"></div>
+              <div class="budget-price-label">Selling Price</div>
+            </div>
+            <div class="budget-price justify-content-center">
+              <div class="budget-price-square bg-danger" data-width="20"></div>
+              <div class="budget-price-label">Product Cost</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card">
+          <div class="card-header">
+            <h4>Messages</h4>
+          </div>
+          <div class="card-body">
+            <ul class="list-unstyled list-unstyled-border user-list" id="message-list">
+              <li class="items-list-compo">
+                <img alt="image" src="assets/images/users/user-1.png"
+                  class="msr-3 user-img-radious-style user-list-img">
+                <div class="media-body">
+                  <div class="mt-0 fw-bold">Cara Stevens</div>
+                  <div class="text-small">Hello How R You?</div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" src="assets/images/users/user-4.png"
+                  class="msr-3 user-img-radious-style user-list-img">
+                <div class="media-body">
+                  <div class="mt-0 fw-bold">Airi Satou</div>
+                  <div class="text-small">Please email me regarding this</div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" src="assets/images/users/user-7.png"
+                  class="msr-3 user-img-radious-style user-list-img">
+                <div class="media-body">
+                  <div class="mt-0 fw-bold">Angelica Ramos</div>
+                  <div class="text-small">Will You marry me??</div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" src="assets/images/users/user-2.png"
+                  class="msr-3 user-img-radious-style user-list-img">
+                <div class="media-body">
+                  <div class="mt-0 fw-bold">Ashton Cox</div>
+                  <div class="text-small">Can't talk!!!</div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" src="assets/images/users/user-3.png"
+                  class="msr-3 user-img-radious-style user-list-img">
+                <div class="media-body">
+                  <div class="mt-0 fw-bold">Alis Smith</div>
+                  <div class="text-small">Request for leave application</div>
+                </div>
+              </li>
+              <li class="items-list-compo">
+                <img alt="image" src="assets/images/users/user-5.png"
+                  class="msr-3 user-img-radious-style user-list-img">
+                <div class="media-body">
+                  <div class="mt-0 fw-bold">Priya Mehta</div>
+                  <div class="text-small">Hello How R You?</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="card card-statistic-1">
+          <div class="card-icon l-bg-purple">
+            <i class="fas fa-cart-plus"></i>
+          </div>
+          <div class="card-wrap">
+            <div class="padding-20">
+              <div class="text-end">
+                <h4 class="font-light mb-0">
+                  <i class="ti-arrow-up text-success"></i> 524
+                </h4>
+                <span class="text-muted">Order Received</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="card card-statistic-1">
+          <div class="card-icon l-bg-green">
+            <i class="fas fa-hiking"></i>
+          </div>
+          <div class="card-wrap">
+            <div class="padding-20">
+              <div class="text-end">
+                <h4 class="font-light mb-0">
+                  <i class="ti-arrow-up text-success"></i> 158
+                </h4>
+                <span class="text-muted">New Clients</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="card card-statistic-1">
+          <div class="card-icon l-bg-cyan">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <div class="card-wrap">
+            <div class="padding-20">
+              <div class="text-end">
+                <h4 class="font-light mb-0">
+                  <i class="ti-arrow-up text-success"></i> 785
+                </h4>
+                <span class="text-muted">New Orders</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="card card-statistic-1">
+          <div class="card-icon l-bg-orange">
+            <i class="fas fa-dollar-sign"></i>
+          </div>
+          <div class="card-wrap">
+            <div class="padding-20">
+              <div class="text-end">
+                <h4 class="font-light mb-0">
+                  <i class="ti-arrow-up text-success"></i> $5,263
+                </h4>
+                <span class="text-muted">Todays Income</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-3 col-sm-6">
+        <div class="info-box7 l-bg-blue order-info-box7">
+          <div class="info-box7-block">
+            <h6 class="m-b-20">Orders Received</h6>
+            <h4 class="text-end"><i class="fas fa-cart-plus float-start"></i><span>358</span></h4>
+            <p class="m-b-0">18% Higher Then Last Month</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-sm-6">
+        <div class="info-box7 l-bg-orange order-info-box7">
+          <div class="info-box7-block">
+            <h6 class="m-b-20">Completed Orders</h6>
+            <h4 class="text-end"><i class="fas fa-business-time float-start"></i><span>865</span></h4>
+            <p class="m-b-0">21% Higher Then Last Month</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-sm-6">
+        <div class="info-box7 l-bg-purple order-info-box7">
+          <div class="info-box7-block">
+            <h6 class="m-b-20">New Orders</h6>
+            <h4 class="text-end"><i class="fas fa-chart-line float-start"></i><span>128</span></h4>
+            <p class="m-b-0">37% Higher Then Last Month</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-sm-6">
+        <div class="info-box7 l-bg-green order-info-box7">
+          <div class="info-box7-block">
+            <h6 class="m-b-20">Total Earning</h6>
+            <h4 class="text-end"><i class="fas fa-dollar-sign float-start"></i><span>$25698</span></h4>
+            <p class="m-b-0">10% Higher Then Last Month</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-sm-6 col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h6>Todays Income</h6>
+                <p class="text-muted">Income For Today</p>
+              </div>
+              <h4 class="text-info">$170</h4>
+            </div>
+            <div class="card-content mt-2">
+              <ngb-progressbar type="info" [value]="55" height="10px"></ngb-progressbar>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <p class="text-muted mb-0">Change</p>
+              <p class="text-muted mb-0">75%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h6>Total Revenue</h6>
+                <p class="text-muted">Total Income</p>
+              </div>
+              <h4 class="text-success">$120</h4>
+            </div>
+            <div class="card-content mt-2">
+              <ngb-progressbar type="warning" [value]="55" height="10px"></ngb-progressbar>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <p class="text-muted mb-0">Change</p>
+              <p class="text-muted mb-0">25%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h6>New Orders</h6>
+                <p class="text-muted">Fresh New Order</p>
+              </div>
+              <h4 class="text-danger">15</h4>
+            </div>
+            <div class="card-content mt-2">
+              <ngb-progressbar type="success" [value]="55" height="10px"></ngb-progressbar>
+            </div>
+            <div class="d-flex justify-content-between">
+              <p class="text-muted mb-0">Change</p>
+              <p class="text-muted mb-0">50%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-md-3">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h6>New Users</h6>
+                <p class="text-muted">Joined New User</p>
+              </div>
+              <h4 class="text-secondary">12</h4>
+            </div>
+            <div class="card-content mt-2">
+              <ngb-progressbar type="danger" [value]="55" height="10px"></ngb-progressbar>
+            </div>
+            <div class="d-flex justify-content-between mt-2">
+              <p class="text-muted mb-0">Change</p>
+              <p class="text-muted mb-0">25%</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
