@@ -268,3 +268,10 @@ export function todayIso(now: Date = new Date()): string {
   const day = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${month}-${day}`;
 }
+
+/** El servidor siempre entrega los importes con 2 decimales, así que "sin saldo" es exactamente "0.00". */
+export const ZERO_AMOUNT = '0.00';
+
+export function hasBalance(order: { balance: string }): boolean {
+  return order.balance !== ZERO_AMOUNT;
+}

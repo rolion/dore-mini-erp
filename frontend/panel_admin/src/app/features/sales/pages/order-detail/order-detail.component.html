@@ -1,0 +1,135 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Pedido</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/sales/orders">Pedidos</a></li>
+    <li class="breadcrumb-item">Detalle</li>
+  </ul>
+  <div class="section-body">
+    @if (order; as o) {
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+      <h4 class="m-0" data-testid="order-code">Pedido {{ o.code }}</h4>
+      <div class="d-flex flex-wrap gap-2" data-testid="actions">
+        @if (primaryAction; as action) {
+        <button type="button" class="btn btn-primary" data-testid="primary-action" [disabled]="busy"
+          (click)="runPrimary()">{{ primaryLabels[action] }}</button>
+        }
+        @if (canCancel) {
+        <button type="button" class="btn btn-outline-danger" data-testid="cancel-action" [disabled]="busy"
+          (click)="cancel()">Cancelar pedido</button>
+        }
+        <a class="btn btn-light" routerLink="/sales/orders">Volver a pedidos</a>
+      </div>
+    </div>
+
+    @if (cancelled) {
+    <div class="alert alert-danger" role="alert" data-testid="alert-cancelled">
+      <strong>Pedido cancelado.</strong> Motivo: {{ o.cancellationReason }}
+      @if (o.payments.length) {
+      <div>Los pagos registrados se conservan.</div>
+      }
+    </div>
+    }
+    @if (deliveredWithBalance) {
+    <div class="alert alert-warning" role="alert" data-testid="alert-delivered-balance">
+      Entregado con saldo pendiente de {{ o.balance | money }}.
+    </div>
+    }
+    @if (paidPendingDelivery) {
+    <div class="alert alert-info" role="alert" data-testid="alert-paid-pending">
+      Pagado, pendiente de entrega.
+    </div>
+    }
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card" data-testid="delivery-panel">
+          <div class="card-header">
+            <h4>Entrega</h4>
+          </div>
+          <div class="card-body">
+            <div class="m-3">
+              <app-order-status-badge [status]="o.status" />
+              <dl class="row mt-3 mb-0">
+                <dt class="col-sm-5">Entrega prevista</dt>
+                <dd class="col-sm-7" data-testid="expected-date">
+                  {{ o.expectedDeliveryDate ? (o.expectedDeliveryDate | date: 'dd/MM/yyyy') : '—' }}
+                </dd>
+                @if (o.deliveredDate) {
+                <dt class="col-sm-5">Entrega real</dt>
+                <dd class="col-sm-7" data-testid="delivered-date">{{ o.deliveredDate | date: 'dd/MM/yyyy' }}</dd>
+                }
+              </dl>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card" data-testid="payment-panel">
+          <div class="card-header">
+            <h4>Cobro</h4>
+          </div>
+          <div class="card-body">
+            <div class="m-3">
+              <app-payment-status-badge [status]="o.paymentStatus" />
+              <p class="mt-3 mb-1" data-testid="paid-of-total">Pagado {{ o.paidTotal | money }} de {{ o.total | money }}</p>
+              <p class="mb-0 fs-4 fw-bold" data-testid="balance-panel"
+                [class.text-danger]="hasBalance" [class.text-success]="!hasBalance">
+                @if (hasBalance) {
+                Saldo {{ o.balance | money }}
+                } @else {
+                Sin saldo
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4>Datos del pedido</h4>
+        @if (o.editable) {
+        <a class="btn btn-sm btn-primary" data-testid="edit-link" [routerLink]="['/sales/orders', o.id, 'edit']">
+          Editar datos</a>
+        }
+      </div>
+      <div class="card-body">
+        <dl class="row m-4">
+          <dt class="col-sm-3">Cliente</dt>
+          <dd class="col-sm-9" data-testid="customer">
+            @if (o.customer; as customer) {
+            <a [routerLink]="['/customers', customer.id]">{{ customer.name }}</a>
+            } @else {
+            Sin cliente
+            }
+          </dd>
+          <dt class="col-sm-3">Canal</dt>
+          <dd class="col-sm-9">{{ channelLabels[o.salesChannel] }}</dd>
+          <dt class="col-sm-3">Fecha del pedido</dt>
+          <dd class="col-sm-9">{{ o.orderDate | date: 'dd/MM/yyyy' }}</dd>
+          <dt class="col-sm-3">Notas</dt>
+          <dd class="col-sm-9">{{ o.notes || 'Sin notas' }}</dd>
+          <dt class="col-sm-3">Creado</dt>
+          <dd class="col-sm-9">{{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+          <dt class="col-sm-3">Última actualización</dt>
+          <dd class="col-sm-9">{{ o.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <app-order-items [order]="o" [busy]="busy" [errors]="fieldErrors" (itemAdd)="addItem($event)"
+      (quantityChange)="changeQuantity($event)" (itemRemove)="removeItem($event)" />
+    <app-order-summary [order]="o" [busy]="busy" [errors]="fieldErrors" (discountSubmit)="applyDiscount($event)" />
+    <app-order-payments [order]="o" [busy]="busy" [errors]="fieldErrors" (paymentSubmit)="registerPayment($event)" />
+    } @else if (loading) {
+    <p class="m-4">Cargando…</p>
+    }
+  </div>
+</section>

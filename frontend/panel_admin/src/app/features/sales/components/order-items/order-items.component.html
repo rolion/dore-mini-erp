@@ -51,7 +51,7 @@
             <td class="text-end">
               @if (order().editable) {
               <input #qty type="number" min="1" step="1" class="form-control form-control-sm text-end"
-                [attr.aria-label]="'Cantidad de ' + item.productName" [value]="item.quantity" [disabled]="busy()"
+                [attr.aria-label]="'Cantidad de ' + item.productName" [attr.data-item-id]="item.id" [value]="item.quantity" [disabled]="busy()"
                 (change)="onQuantity(item, qty)">
               } @else {
               {{ item.quantity }}

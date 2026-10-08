@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, DestroyRef, inject, input, output } from '@angular/core';
+import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 import { Observable, Subject, catchError, concat, debounceTime, distinctUntilChanged, finalize, map, of, switchMap, tap } from 'rxjs';
@@ -48,8 +48,21 @@ export class OrderItemsComponent {
 
   private api = inject(ProductsApiService);
   private destroyRef = inject(DestroyRef);
+  private quantityInputs = viewChildren<ElementRef<HTMLInputElement>>('qty');
 
   constructor() {
+    // Si el servidor rechaza un cambio (o el pedido cambia), los campos vuelven a la cantidad vigente.
+    effect(() => {
+      this.errors();
+      const items = this.order().items;
+      for (const ref of this.quantityInputs()) {
+        const item = items.find((candidate) => candidate.id === ref.nativeElement.dataset['itemId']);
+        if (item) {
+          ref.nativeElement.value = String(item.quantity);
+        }
+      }
+    });
+
     // Lista inicial de productos activos y, luego, búsqueda remota mientras se escribe.
     this.products$ = concat(
       this.searchProducts(''),
