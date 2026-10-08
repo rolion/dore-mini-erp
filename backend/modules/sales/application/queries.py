@@ -3,7 +3,7 @@ from uuid import UUID
 
 from modules.sales.domain.exceptions import OrderNotFound
 from modules.sales.domain.order import Order
-from modules.sales.domain.repositories import OrderFilters, OrderRepository
+from modules.sales.domain.repositories import OrderFilters, OrderRepository, OrderSummary
 
 
 class GetOrder:
@@ -23,5 +23,5 @@ class ListOrders:
     def __init__(self, repository: OrderRepository):
         self.repository = repository
 
-    def execute(self, filters: OrderFilters | None = None) -> Sequence[Order]:
+    def execute(self, filters: OrderFilters | None = None) -> Sequence[OrderSummary]:
         return self.repository.list(filters or OrderFilters())

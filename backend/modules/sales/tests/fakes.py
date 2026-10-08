@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from modules.sales.application.ports import CustomerInfo, ProductInfo
 from modules.sales.domain.order import Order
-from modules.sales.domain.repositories import OrderFilters
+from modules.sales.domain.repositories import OrderFilters, OrderSummary
 
 TODAY = date(2026, 10, 8)
 NOW = datetime(2026, 10, 8, 12, 0, tzinfo=timezone.utc)
@@ -32,7 +32,7 @@ class InMemoryOrderRepository:
         return copy.deepcopy(order)
 
     def list(self, filters: OrderFilters):
-        return [copy.deepcopy(order) for order in self.orders.values()]
+        return [OrderSummary.from_order(order) for order in self.orders.values()]
 
 
 class FakeProducts:

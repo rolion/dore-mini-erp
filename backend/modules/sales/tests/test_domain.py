@@ -155,6 +155,13 @@ class ItemTests(SimpleTestCase):
         self.assertEqual(violation_code(self, order.add_item, product, 'A', D('1.00'), 1), 'duplicate_product')
         self.assertEqual(len(order.items), 1)
 
+    def test_order_amount_cannot_exceed_the_maximum(self):  # INV-01
+        order = new_order()
+        self.assertIn('quantity', field_errors(self, order.add_item, uuid4(), 'Caro', D('9999999999.99'), 2))
+        item = order.add_item(uuid4(), 'Caro', D('5000000000.00'), 1)
+        self.assertIn('quantity', field_errors(self, order.change_item_quantity, item.id, 3))
+        self.assertEqual(item.quantity, 1)
+
     def test_product_with_zero_price_cannot_be_added(self):  # INV-01
         self.assertIn('product_id', field_errors(self, new_order().add_item, uuid4(), 'Gratis', D('0.00'), 1))
 

@@ -91,6 +91,12 @@ def validate_quantity(value: object) -> int:
     return value
 
 
+def _check_subtotal_range(subtotal: Decimal) -> None:
+    """El subtotal debe caber en un importe válido (la persistencia usa 12 dígitos con 2 decimales)."""
+    if subtotal > MONEY_MAX:
+        raise _fail('quantity', 'El importe del pedido supera el máximo permitido.')
+
+
 def _run_checks(checks: list[tuple[str, Callable[[], object]]]) -> tuple[dict[str, object], dict[str, list[str]]]:
     values: dict[str, object] = {}
     errors: dict[str, list[str]] = {}
@@ -254,6 +260,7 @@ class Order:
         if any(item.product_id == product_id for item in self.items):
             raise OrderRuleViolation('duplicate_product',
                                      'El producto ya está en el pedido; modifique su cantidad.')
+        _check_subtotal_range(self.subtotal + unit_price * quantity)
         item = OrderItem(id=uuid4(), product_id=product_id, product_name=product_name,
                          unit_price=unit_price, quantity=quantity)
         self.items.append(item)
@@ -263,7 +270,9 @@ class Order:
         self.ensure_editable()
         item = self._find_item(item_id)
         quantity = validate_quantity(quantity)
-        self._check_amounts(self.subtotal - item.subtotal + item.unit_price * quantity)
+        new_subtotal = self.subtotal - item.subtotal + item.unit_price * quantity
+        _check_subtotal_range(new_subtotal)
+        self._check_amounts(new_subtotal)
         item.quantity = quantity
         return item
 
