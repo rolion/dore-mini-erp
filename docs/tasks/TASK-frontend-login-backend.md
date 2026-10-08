@@ -1,6 +1,6 @@
 # TASK-frontend-login-backend: Login del frontend validado contra el backend
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-frontend-login-backend`
@@ -14,6 +14,7 @@
 | 2026-10-07 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
 | 2026-10-07 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-engineer |
 | 2026-10-08 | REVIEW → PLANNING | FAIL: REV-01 (High, PLAN: proxy a `localhost` no alcanza a `runserver` en Windows/Node 22) y REV-02 (Low, IMPLEMENTATION); vuelve a la etapa más temprana involucrada | delivery-review |
+| 2026-10-08 | PLANNING → ENGINEERING | Plan v2 (solo Implementation Plan: proxy a `127.0.0.1`); Specification sin cambios, READY | delivery-plan |
 
 ## Investigación
 
@@ -102,7 +103,7 @@ _No aplica_
 - [ADR-frontend-login-backend-autenticacion-token](../adr/ADR-frontend-login-backend-autenticacion-token.md) — token DRF (`authtoken`), `POST /api/auth/login/` y `/logout/`, login por `username`, proxy de `ng serve` en lugar de CORS, mensaje genérico 401. Estado: Propuesto.
 
 ## Plan
-- [PLAN-2026-10-07-frontend-login-backend](../plans/PLAN-2026-10-07-frontend-login-backend.md) — **v1**, Modo COMPLETO, Specification readiness: READY. Decisión del usuario: `frontend/` se versiona con un commit base dentro de este mismo PR.
+- [PLAN-2026-10-07-frontend-login-backend](../plans/PLAN-2026-10-07-frontend-login-backend.md) — **v2**, Modo COMPLETO, Specification readiness: READY. Decisión del usuario: `frontend/` se versiona con un commit base dentro de este mismo PR.
 
 ## Implementación
 

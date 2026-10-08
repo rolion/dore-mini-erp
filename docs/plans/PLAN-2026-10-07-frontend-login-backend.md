@@ -1,4 +1,4 @@
-# PLAN-2026-10-07-frontend-login-backend (v1)
+# PLAN-2026-10-07-frontend-login-backend (v2)
 
 **Task:** TASK-frontend-login-backend
 **Modo:** COMPLETO
@@ -142,14 +142,14 @@ Sigue el ADR: sin dependencias nuevas, sin CORS, `accounts` sigue siendo infraes
 4. Migración: `python manage.py migrate` aplica las de `authtoken` (de la librería; no se crea ninguna en el repo).
 
 **Frontend** (`frontend/panel_admin/`)
-5. `proxy.conf.json` (`/api` → `http://localhost:8000`) y referencia `proxyConfig` en la configuración `development` de `serve` en `angular.json`; `environment*.ts`: `apiUrl: '/api'`.
+5. `proxy.conf.json` (`/api` → `http://127.0.0.1:8000`, IP literal: en Node 22 `localhost` resuelve primero a `::1` y `runserver` solo escucha en `127.0.0.1`, ver REV-2026-10-08-frontend-login-backend-01) y referencia `proxyConfig` en la configuración `development` de `serve` en `angular.json`; `environment*.ts`: `apiUrl: '/api'`.
 6. `core/models/user.ts`: modelo sin `password`; `token` requerido para sesión. Tipos de respuesta del login (`LoginResponse`).
 7. `core/service/auth.service.ts`: eliminar `users`; `login()` con `HttpClient.post`, guarda `{...user, token}` en `LocalStorageService`, emite el usuario, mapea errores a mensajes (401 → "Credenciales inválidas"; 429; otros → conexión); `logout()` llama `POST /auth/logout/` y limpia la sesión siempre (mantiene el retorno `{success:false}` que consume `header.component.ts:166-172`); `isAuthenticated` por token.
 8. `core/guard/auth.guard.ts`: autenticado solo si `currentUserValue?.token`; si no, `UrlTree` a `/authentication/signin`.
 9. Interceptores: convertir `jwt.interceptor.ts` y `error.interceptor.ts` a interceptores funcionales y registrarlos con `provideHttpClient(withInterceptors([...]))` en `app.config.ts` (quitar `HTTP_INTERCEPTORS`). Token con prefijo `Token`; error: excepción para la URL de login, null-safe sobre `err.error`, 401 en otras URLs limpia la sesión y redirige a signin.
 10. `signin.component.ts/html`: `FormBuilder` tipado no-nullable, sin valores iniciales, validación de requeridos, deshabilitar botón durante la petición, mensajes de UI-02, navegar a `/dashboard/main`; ajustar etiqueta/`type` del campo usuario (UI-01).
 11. Tests de la Test Specification; actualizar `auth.service.spec.ts` y `signin.component.spec.ts`.
-12. Documentar en `CLAUDE.md` (comandos): `ng serve` usa proxy a `localhost:8000`; crear usuario con `createsuperuser`.
+12. Documentar en `CLAUDE.md` (comandos): `ng serve` usa proxy a `127.0.0.1:8000` (backend con `runserver` en su bind por defecto); crear usuario con `createsuperuser`.
 
 ## Files/components affected
 - Backend: `config/settings/base.py`, `config/urls.py`, `modules/accounts/api/{__init__,serializers,views,urls}.py`, tests en `modules/accounts/tests.py` (o `api/tests.py`).
@@ -170,6 +170,7 @@ Sigue el ADR: sin dependencias nuevas, sin CORS, `accounts` sigue siendo infraes
 `rest_framework.authtoken` aporta su migración (tabla `authtoken_token`, FK a `AUTH_USER_MODEL`). Aditiva y reversible con `migrate authtoken zero`. No se edita ninguna migración existente.
 
 ## Risks
+- El target del proxy debe ser la IP literal `127.0.0.1`: con `localhost` el login falla en Windows/Node 22 (`ECONNREFUSED ::1:8000`). Si algún día el backend corre con otro bind (p. ej. `[::]`), ajustar el target.
 - Interceptores de la plantilla hoy probablemente inactivos: al activarlos (paso 9) pueden cambiar el comportamiento de otras pantallas de la plantilla que hagan HTTP; la plantilla no consume `/api` hoy, riesgo bajo. Mitigación: tests de interceptores y smoke.
 - Activar la protección real del guard puede dejar inaccesibles rutas de demo si algún componente espera sesión simulada; mitigación: smoke de navegación al dashboard.
 - Token sin expiración en `localStorage` (deuda aceptada en el ADR).
@@ -178,3 +179,6 @@ Sigue el ADR: sin dependencias nuevas, sin CORS, `accounts` sigue siendo infraes
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-10-08): [Implementation Plan] Paso 5 y nota de `CLAUDE.md` (paso 12): el target del proxy pasa de `http://localhost:8000` a `http://127.0.0.1:8000`; riesgo añadido. La Specification no cambia. Solicitado por delivery-review (REV-2026-10-08-frontend-login-backend-01). REV-02 (spec de logout sin expectativas) es un defecto de implementación y no requiere cambio de plan: lo corrige delivery-engineer.
