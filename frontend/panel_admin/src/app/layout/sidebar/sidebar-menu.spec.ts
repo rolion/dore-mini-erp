@@ -11,10 +11,10 @@ function translate(dictionary: unknown, key: string): unknown {
 describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
-  it('only has Dashboard, Catalog > Product and Customer (AC-09)', () => {
-    expect(routes.length).toBe(3);
+  it('only has Dashboard, Catalog > Product, Customer and Orders (AC-09, AC-22)', () => {
+    expect(routes.length).toBe(4);
 
-    const [dashboard, catalog, customer] = routes;
+    const [dashboard, catalog, customer, orders] = routes;
     expect(dashboard.path).toBe('/dashboard/main');
     expect(dashboard.submenu).toEqual([]);
     expect(dashboard.groupTitle).toBeFalse();
@@ -27,11 +27,18 @@ describe('Sidebar menu (routes.json)', () => {
     expect(customer.class).toBe('');
     expect(customer.submenu).toEqual([]);
     expect(customer.groupTitle).toBeFalse();
+
+    expect(orders.path).toBe('/sales/orders');
+    expect(orders.title).toBe('MENUITEMS.ORDERS.TEXT');
+    expect(orders.icon).toBe('shopping-cart');
+    expect(orders.class).toBe('');
+    expect(orders.submenu).toEqual([]);
+    expect(orders.groupTitle).toBeFalse();
   });
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(4);
+    expect(titles.length).toBe(5);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -41,5 +48,8 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.CATALOG.TEXT')).toBe('Catálogo');
     expect(translate(es, 'MENUITEMS.CATALOG.LIST.PRODUCT')).toBe('Producto');
     expect(translate(es, 'MENUITEMS.CUSTOMER.TEXT')).toBe('Cliente');
+    expect(translate(es, 'MENUITEMS.ORDERS.TEXT')).toBe('Pedidos');
+    expect(translate(en, 'MENUITEMS.ORDERS.TEXT')).toBe('Orders');
+    expect(translate(de, 'MENUITEMS.ORDERS.TEXT')).toBe('Bestellungen');
   });
 });

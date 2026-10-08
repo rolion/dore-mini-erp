@@ -23,6 +23,9 @@
     "CUSTOMER": {
       "TEXT": "Cliente"
     },
+    "ORDERS": {
+      "TEXT": "Pedidos"
+    },
     "HOME": {
       "TEXT": "Casa",
       "LIST": {

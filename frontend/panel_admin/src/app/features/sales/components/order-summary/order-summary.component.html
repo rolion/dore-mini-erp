@@ -1,0 +1,39 @@
+<div class="card">
+  <div class="card-header">
+    <h4>Importes</h4>
+  </div>
+  <div class="card-body">
+    <dl class="row m-4 text-end">
+      <dt class="col-sm-6">Subtotal</dt>
+      <dd class="col-sm-6" data-testid="subtotal">{{ order().subtotal | money }}</dd>
+
+      <dt class="col-sm-6">Descuento</dt>
+      <dd class="col-sm-6" data-testid="discount">
+        @if (order().editable) {
+        <div class="d-flex justify-content-end align-items-start gap-2">
+          <div>
+            <input type="text" inputmode="decimal" class="form-control form-control-sm text-end"
+              aria-label="Descuento en Bs" [formControl]="discountControl" (keydown.enter)="submitDiscount()">
+            @if (errors().discount?.length) {
+            <small class="form-text text-danger" data-testid="discount-error">{{ errors().discount?.join(' ') }}</small>
+            }
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" [disabled]="busy()"
+            (click)="submitDiscount()">Aplicar</button>
+        </div>
+        } @else {
+        {{ order().discount | money }}
+        }
+      </dd>
+
+      <dt class="col-sm-6">Total</dt>
+      <dd class="col-sm-6 fw-bold" data-testid="total">{{ order().total | money }}</dd>
+
+      <dt class="col-sm-6">Pagado</dt>
+      <dd class="col-sm-6" data-testid="paid">{{ order().paidTotal | money }}</dd>
+
+      <dt class="col-sm-6">Saldo</dt>
+      <dd class="col-sm-6 fw-bold" data-testid="balance">{{ order().balance | money }}</dd>
+    </dl>
+  </div>
+</div>
