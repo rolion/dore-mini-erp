@@ -20,6 +20,9 @@
         "PRODUCT": "Product"
       }
     },
+    "CUSTOMER": {
+      "TEXT": "Customer"
+    },
     "HOME": {
       "TEXT": "Home",
       "LIST": {

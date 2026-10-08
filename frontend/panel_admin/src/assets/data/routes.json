@@ -33,6 +33,17 @@
           "submenu": []
         }
       ]
+    },
+    {
+      "path": "/customers",
+      "title": "MENUITEMS.CUSTOMER.TEXT",
+      "iconType": "feather",
+      "icon": "users",
+      "class": "",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": []
     }
   ]
 }

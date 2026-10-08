@@ -1,0 +1,62 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Perfil del cliente</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/customers">Cliente</a></li>
+    <li class="breadcrumb-item">Perfil</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ customer?.name ?? 'Cliente' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (customer; as c) {
+            <dl class="row m-4">
+              <dt class="col-sm-3">Nombre</dt>
+              <dd class="col-sm-9">{{ c.name }}</dd>
+              <dt class="col-sm-3">Teléfono</dt>
+              <dd class="col-sm-9">{{ c.phone || '—' }}</dd>
+              <dt class="col-sm-3">Correo</dt>
+              <dd class="col-sm-9">{{ c.email || '—' }}</dd>
+              <dt class="col-sm-3">Notas</dt>
+              <dd class="col-sm-9">{{ c.notes || 'Sin notas' }}</dd>
+              <dt class="col-sm-3">Estado</dt>
+              <dd class="col-sm-9">
+                @if (c.active) {
+                <div class="badge-outline col-green d-inline-block">Activo</div>
+                } @else {
+                <div class="badge-outline col-red d-inline-block">Inactivo</div>
+                }
+              </dd>
+              <dt class="col-sm-3">Creado</dt>
+              <dd class="col-sm-9">{{ c.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Última actualización</dt>
+              <dd class="col-sm-9">{{ c.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            </dl>
+            <div class="m-4">
+              <a class="btn btn-primary" [routerLink]="['/customers', c.id, 'edit']">Editar</a>
+              <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">
+                {{ c.active ? 'Desactivar' : 'Activar' }}
+              </button>
+              <a class="btn btn-light ms-2" routerLink="/customers">Volver</a>
+            </div>
+            } @else if (loading) {
+            <p class="m-4">Cargando…</p>
+            }
+          </div>
+        </div>
+        @if (customer) {
+        <app-customer-purchase-history [orders]="orders" />
+        }
+      </div>
+    </div>
+  </div>
+</section>

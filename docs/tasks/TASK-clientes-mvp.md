@@ -1,6 +1,6 @@
 # TASK-clientes-mvp: Módulo Clientes (crear, editar, buscar, historial, desactivar, duplicados) + menú "Cliente"
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-clientes-mvp`
@@ -13,6 +13,7 @@
 | 2026-10-08 | DESIGN → ARCHITECTURE | Decisión de diseño registrada en DDR (menú directo "Cliente"; lista con filtro Activos por defecto; formulario y perfil como páginas; duplicado por diálogo al enviar; historial como sección del perfil) | delivery-design |
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 4 ADR (módulo `customers`, contrato API con 409 de duplicado, historial vía Sales, feature frontend) | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
+| 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `customers`, frontend `features/customers`, menú) | delivery-engineer |
 
 ## Investigación
 
@@ -120,7 +121,39 @@ Objetivo: registrar clientes y permitir consultar su historial comercial sin con
 - Pregunta abierta no bloqueante: código de país por defecto `591` (configurable con `DEFAULT_PHONE_COUNTRY_CODE`). REQ-CUS-004 (historial real) y la asociación a pedido se cierran con el task de Sales.
 
 ## Implementación
-_Pendiente_
+Rama `task/TASK-clientes-mvp`, PR #6, siguiendo el plan v1 (COMPLETO).
+
+**Backend** (`backend/modules/customers/`)
+- `domain/` — `Customer` (dataclass sin Django) con `create`, `rename`, `change_contact`, `change_notes`, `activate`, `deactivate`; `normalize_phone` y validadores; `CustomerValidationError`, `CustomerNotFound`, `CustomerRepository` (Protocol con `find_by_phone`): INV-01..05, INV-07, AC-02, AC-03.
+- `application/` — `CreateCustomer` (consulta duplicados y lanza `DuplicateCustomerPhone` salvo `confirm_duplicate`), `UpdateCustomer` (parcial, junta errores, no guarda sin cambios, no comprueba duplicados), `ActivateCustomer`, `DeactivateCustomer`, `GetCustomer`, `ListCustomers`: AC-01, AC-04, AC-05, AC-07, INV-06.
+- `infrastructure/django/` — `CustomerModel` (UUID, `phone` con índice **no** único, tabla `customers_customer`), mapper, `DjangoCustomerRepository` (lista perezosa; búsqueda `name__icontains` o dígitos del término en `phone`; `find_by_phone`); `migrations/0001_initial.py` generada con `makemigrations`: AC-06.
+- `api/` — serializers, vistas `APIView` delgadas (`_run` traduce dominio→400/404; el duplicado se devuelve como `Response` 409 directa), `CustomerPagination` (máx. 100), urls; montado como `api/customers/` en `config/urls.py`, app en `INSTALLED_APPS`, setting `DEFAULT_PHONE_COUNTRY_CODE` (env, por defecto `591`) y variable documentada en `.env.example`: AC-01..AC-08, API-01.
+
+**Frontend** (`frontend/panel_admin/src/app/features/customers/`)
+- `models/customer.ts`, `services/customers-api.service.ts` (DTO snake_case ↔ modelo, 400→errores por campo, 409 `duplicate_phone`→`DuplicateCustomerError`, `create(input, confirmDuplicate)`).
+- `pages/customer-list` (Activos por defecto, búsqueda única con debounce, paginación en servidor, confirmación `Swal` + `toastr`), `pages/customer-form` (alta/edición tipado, diálogo de duplicado con nombres escapados y reintento con confirmación), `pages/customer-detail` + `components/customer-purchase-history` (sección vacía, **sin ninguna petición a pedidos**); `customers.routes.ts` y ruta `customers` en `app.routes.ts`: AC-10..AC-13.
+- Menú: entrada directa "Cliente" en `routes.json` (ícono `users`) y claves `MENUITEMS.CUSTOMER.TEXT` en en/es/de: AC-09. `sidebar-menu.spec.ts` actualizado a 3 entradas y 4 títulos.
+- Docs: `ddd.md` (endpoints `activate`/`deactivate` de clientes) y `CLAUDE.md` (variable opcional).
+
+**Tests escritos**
+- Backend: `test_domain.py` (SimpleTestCase, tabla de `normalize_phone`), `test_application.py` (repositorio en memoria), `test_api.py` (APITestCase con token; AC-01..AC-08, EDGE-01..09).
+- Frontend: specs del servicio, de lista, formulario (incl. flujo de duplicado y escape HTML), perfil, sección de historial y `sidebar-menu.spec.ts`.
+
+**Verificación propia (no es el Quality Gate):**
+- `python manage.py test modules.customers` → 68 tests OK, **ejecutados con SQLite en memoria** (`DATABASE_URL=sqlite:///:memory:`) porque este worktree no tiene `backend/.env` y no se leyó el `.env` del checkout principal. **No se corrieron contra PostgreSQL**; hay que repetirlo allí. Suite completa con SQLite: 126 tests, 1 falla preexistente de `catalog` (`test_orders_by_name_and_filters`, orden por mayúsculas/minúsculas dependiente de la collation de SQLite).
+- `makemigrations --check --dry-run` → sin cambios pendientes.
+- `ng lint` OK; `ng build` OK; 51 specs (clientes + sidebar) OK y 39 specs de `features/products` OK, ejecutados con un `tsconfig` temporal (ya borrado) que excluye `app.component.spec.ts`, que no compila en `main` (preexistente).
+
+**Desviaciones respecto al plan**
+- **Ejemplo de AC-03:** el plan lista `(591) 76543210` como normalizable a `+59176543210`, pero la regla del plan y del ADR (sin `+` ni `00` y solo dígitos, antepone el país) lo convertiría en `+59159176543210`. Se implementó la **regla** tal cual; el ejemplo es un error de redacción del AC y los tests usan `+(591) 76543210`. Conviene corregir el texto del AC-03 en el plan (no cambia comportamiento).
+- Los tests de API usan nombres con inicial mayúscula en todos los casos para no depender de la collation de la base de datos al ordenar.
+- El correo se valida en el formulario sobre el valor recortado (validador propio en lugar de `Validators.pattern`) para que un espacio al final no deshabilite Guardar.
+- Tras crear un cliente la UI navega a su perfil (AC-11), a diferencia de productos, que vuelve a la lista.
+
+**Deuda técnica / no verificado**
+- Tests de API no ejecutados en PostgreSQL; sin humo manual con backend + `npm start` (queda para `delivery-review`).
+- Duplicados: `Page<T>` y los estilos de acciones de tabla están copiados de `products` (ADR frontend-feature); extraer a `shared/` cuando haya una tercera feature.
+- REQ-CUS-004 (historial real) y la asociación a pedido dependen de Sales; el código de país `591` sigue sin confirmar.
 
 ## Review
 _Pendiente_

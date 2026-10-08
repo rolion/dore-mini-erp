@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'modules.accounts',
     'modules.catalog',
+    'modules.customers',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'
@@ -63,6 +64,9 @@ LANGUAGE_CODE = 'es'
 TIME_ZONE = env('TIME_ZONE', default='UTC')
 USE_I18N = True
 USE_TZ = True
+
+# Código de país (sin '+') que se antepone a teléfonos locales al normalizarlos (Customers).
+DEFAULT_PHONE_COUNTRY_CODE = env('DEFAULT_PHONE_COUNTRY_CODE', default='591')
 
 STATIC_URL = 'static/'
 
