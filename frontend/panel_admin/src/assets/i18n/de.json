@@ -11,6 +11,15 @@
     "MAIN": {
       "TEXT": "-- Main"
     },
+    "DASHBOARD": {
+      "TEXT": "Dashboard"
+    },
+    "CATALOG": {
+      "TEXT": "Katalog",
+      "LIST": {
+        "PRODUCT": "Produkt"
+      }
+    },
     "HOME": {
       "TEXT": "Zuhause",
       "LIST": {

@@ -924,6 +924,7 @@ GET    /api/products
 POST   /api/products
 GET    /api/products/{id}
 PATCH  /api/products/{id}
+POST   /api/products/{id}/activate
 POST   /api/products/{id}/deactivate
 ```
 

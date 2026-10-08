@@ -1,0 +1,104 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Productos</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Catálogo</li>
+    <li class="breadcrumb-item">Producto</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="row">
+              <div class="col-lg-8">
+                <div class="row m-0">
+                  <div class="col-auto p-0">
+                    <div class="ngxTableHeader">
+                      <div class="table-title">
+                        <h2><strong>Productos</strong></h2>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col p-0">
+                    <div class="ngxTableHeader">
+                      <div class="table-search-area">
+                        <div>
+                          <label for="product-search"><i class="material-icons search-icon">search</i></label>
+                          <input id="product-search" placeholder="Buscar por nombre" type="text"
+                            class="browser-default search-field" [formControl]="searchControl"
+                            aria-label="Buscar por nombre">
+                        </div>
+                      </div>
+                      <div class="header-buttons-left">
+                        <div class="d-flex align-items-center gap-2 ms-3">
+                          <select class="form-select form-control w-auto" [formControl]="statusControl"
+                            aria-label="Filtrar por estado">
+                            <option value="all">Todos</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                          </select>
+                          <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/catalog/products/new"
+                            title="Nuevo producto" aria-label="Nuevo producto">
+                            <i class="material-icons">add</i>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              <ngx-datatable-column name="Nombre" [sortable]="false" [width]="250">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a class="fw-bold" [routerLink]="['/catalog/products', row.id]">{{row.name}}</a>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Precio" [sortable]="false" [width]="120">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.salePrice}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Estado" [sortable]="false" [width]="120">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.active) {
+                  <div class="badge-outline col-green">Activo</div>
+                  } @else {
+                  <div class="badge-outline col-red">Inactivo</div>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="180">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span>
+                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/catalog/products', row.id]" title="Ver detalle"
+                      aria-label="Ver detalle">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/catalog/products', row.id, 'edit']"
+                      title="Editar" aria-label="Editar">
+                      <i class="fas fa-pen"></i>
+                    </a>
+                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"
+                      [title]="row.active ? 'Desactivar' : 'Activar'"
+                      [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'">
+                      <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
+                    </button>
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

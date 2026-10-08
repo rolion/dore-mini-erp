@@ -1,0 +1,75 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Catálogo</li>
+    <li class="breadcrumb-item"><a routerLink="/catalog/products">Producto</a></li>
+    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h4>
+          </div>
+          <div class="card-body">
+            <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="product-name">Nombre <span class="text-danger">*</span></label>
+                  <input id="product-name" type="text" class="form-control" placeholder="Nombre del producto"
+                    formControlName="name" [attr.maxlength]="nameMaxLength">
+                  @if (hasError('name')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+                    'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="product-description">Descripción</label>
+                  <textarea id="product-description" class="form-control" rows="3" placeholder="Descripción"
+                    formControlName="description"></textarea>
+                  @if (serverErrors.description) {
+                  <small class="form-text text-danger">{{ serverErrors.description }}</small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="product-price">Precio de venta <span class="text-danger">*</span></label>
+                  <input id="product-price" type="text" inputmode="decimal" class="form-control" placeholder="0.00"
+                    formControlName="salePrice">
+                  @if (hasError('salePrice')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.salePrice || (form.controls.salePrice.hasError('required') ?
+                    'El precio de venta es obligatorio.' :
+                    'Ingresa un precio válido, mayor o igual a 0, con hasta 2 decimales.') }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">
+                    Guardar
+                  </button>
+                  <a class="btn btn-light ms-2"
+                    [routerLink]="isEdit ? ['/catalog/products', productId] : ['/catalog/products']">Cancelar</a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

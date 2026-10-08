@@ -23,7 +23,7 @@ export const appConfig: ApplicationConfig = {
         { provide: LocationStrategy, useClass: HashLocationStrategy },
         DirectionService, LanguageService,
         provideTranslateService({
-            defaultLanguage: 'en',
+            defaultLanguage: 'es',
         }),
         provideTranslateHttpLoader({
             prefix: './assets/i18n/',
