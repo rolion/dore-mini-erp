@@ -107,7 +107,10 @@ describe('AuthService', () => {
   });
 
   it('logout without session does not call the API', () => {
-    service.logout().subscribe();
+    let result: { success: boolean } | undefined;
+    service.logout().subscribe((res) => (result = res));
     http.expectNone('/api/auth/logout/');
+    expect(result).toEqual({ success: false });
+    expect(service.isAuthenticated).toBeFalse();
   });
 });

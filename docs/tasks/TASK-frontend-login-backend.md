@@ -1,6 +1,6 @@
 # TASK-frontend-login-backend: Login del frontend validado contra el backend
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-frontend-login-backend`
@@ -15,6 +15,7 @@
 | 2026-10-07 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-engineer |
 | 2026-10-08 | REVIEW → PLANNING | FAIL: REV-01 (High, PLAN: proxy a `localhost` no alcanza a `runserver` en Windows/Node 22) y REV-02 (Low, IMPLEMENTATION); vuelve a la etapa más temprana involucrada | delivery-review |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 (solo Implementation Plan: proxy a `127.0.0.1`); Specification sin cambios, READY | delivery-plan |
+| 2026-10-08 | ENGINEERING → REVIEW | Corrección de REV-01 (proxy a `127.0.0.1`, plan v2) y REV-02 (expectativas en spec de logout) | delivery-engineer |
 
 ## Investigación
 
@@ -126,6 +127,12 @@ _No aplica_
 **Deuda técnica / hallazgos fuera de alcance (preexistentes de la plantilla):**
 - `src/app/app.component.spec.ts` no compila (`title` no existe en `AppComponent`), lo que hace fallar `npm test` completo; además 79 de 97 specs de la plantilla fallan por falta de providers (`ActivatedRoute`, iconos Feather). Para validar mis specs moví temporalmente ese archivo (ya restaurado). El review debe tenerlo en cuenta: `npm test` completo no es una señal utilizable hasta que se arreglen.
 - Sin E2E automatizado (decisión del plan); smoke manual pendiente en review.
+
+### Ronda de correcciones tras el review (plan v2)
+- **REV-01 (PLAN):** `proxy.conf.json` apunta ahora a `http://127.0.0.1:8000`; nota de `CLAUDE.md` actualizada (con el motivo: `localhost` → `::1`).
+- **REV-02 (IMPLEMENTATION):** el spec `logout without session does not call the API` ahora verifica que emite `{success:false}` y que `isAuthenticated` es `false`, además de que no hay petición (AC-06).
+- Verificación propia: los specs de AuthService, guard, interceptores y SigninComponent pasan sin advertencias de "no expectations" (con `app.component.spec.ts` preexistente apartado temporalmente y restaurado). No se repitió el smoke ni la corrida contra PostgreSQL: quedan para el re-review.
+- Sin desviaciones adicionales respecto al plan v2.
 
 ## Review
 
