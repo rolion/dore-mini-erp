@@ -1,6 +1,6 @@
 # TASK-ciclo-pedido-entrega-cobro: Módulo Ventas (Sales): pedido → preparación → entrega → cobro, con estado logístico y de pago independientes
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PLANNING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-ciclo-pedido-entrega-cobro`
@@ -14,6 +14,7 @@
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 5 ADR (modelo de dominio, contrato API, persistencia y concurrencia, integración Catalog/Customers, feature frontend); reglas de negocio confirmadas por el usuario | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #7 abierto | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `sales`, frontend `features/sales`, historial del cliente, creación rápida, extracción a `shared/`) | delivery-engineer |
+| 2026-10-08 | REVIEW → PLANNING | FAIL: 2 hallazgos IMPLEMENTATION (1 High, 1 Medium) y 1 SPECIFICATION (Low, decisión de negocio sobre precio 0); vuelve a la etapa más temprana implicada | delivery-review |
 
 ## Investigación
 
@@ -199,7 +200,20 @@ Rama `task/TASK-ciclo-pedido-entrega-cobro`, PR #7, siguiendo el plan v1 (COMPLE
 - Humo manual de UI pendiente (selectores `ng-select` remotos y fechas nativas no se pueden ejercitar bien en Karma).
 
 ## Review
-_Pendiente_
+**Resultado: FAIL** — revisión del 2026-10-08 sobre `task/TASK-ciclo-pedido-entrega-cobro` @ `251ff56` (PR #7). Aislamiento de contexto: esta revisión se hizo en una sesión nueva, solo desde los artefactos y el diff del PR.
+
+**Issues abiertos**
+- [REV-01](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-01.md) — High, IMPLEMENTATION: XSS almacenado por `productName` en el título del `Swal` "Quitar ítem" (`order-detail.component.ts:198`).
+- [REV-02](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-02.md) — Medium, IMPLEMENTATION: `null.trim()` en la búsqueda de clientes al seleccionar; el typeahead muere y el spinner queda fijo.
+- [REV-03](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-03.md) — Low, SPECIFICATION: producto con precio 0 seleccionable pero no agregable (INV-01 vs. Catalog); requiere decisión del usuario.
+
+**Verificaciones ejecutadas (resumen; detalle en el PR)**
+- Backend `python manage.py test`: 334 tests OK (PostgreSQL 16 desechable); `makemigrations --check`: sin cambios; `bandit`: solo B106/B107 en tests (falsos positivos).
+- Frontend `ng lint` OK; `ng build` OK; Karma acotado a `features/**`, `sidebar-menu` y `shared/**`: 258/258 OK, cobertura 85,3 % sentencias / 82 % ramas.
+- Humo manual (backend y `ng serve` propios, BD desechable): crear pedido → ítems → preparar → listo → pago parcial → entregar con saldo → lista "Por cobrar" → historial del cliente: OK; detectó REV-02. No se ejercitó la cancelación ni la creación rápida de cliente desde la UI.
+- No ejecutado: `npm audit` (no hay `package-lock.json`), `ruff`/`flake8`/`mypy`/`coverage.py` (no configurados/instalados en backend), E2E (el plan lo descarta).
+- Preexistentes, no atribuibles a este PR: `app.component.spec.ts` no compila en `main`; `sidebar.component.spec.ts` falla con "No icon provided" también con el menú de `main`.
+
 
 ## Publicación
 _Pendiente_
