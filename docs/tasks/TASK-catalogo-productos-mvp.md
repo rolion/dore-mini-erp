@@ -15,6 +15,7 @@
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #5 abierto | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `catalog`, frontend `features/products`, menú) | delivery-engineer |
 | 2026-10-08 | REVIEW → PUBLISH | Review PASS (0 issues Critical/High; 1 Low abierto) | delivery-review |
+| 2026-10-08 | PUBLISH (pendiente) | PR #5 completo; cambio sensible (ADR + migración de BD), espera aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -183,4 +184,6 @@ Verificación:
 - No realizado: `npm audit` (no hay `package-lock.json`); no hay `bandit`/`safety` configurados. Cobertura de backend por revisión manual, no por herramienta.
 
 ## Publicación
-_Pendiente_
+PR: https://github.com/rolion/dore-mini-erp/pull/5 — **Listo para aprobación humana** (no mergeado).
+
+Verificado: Review en PASS sobre `b3660ed`; el único commit posterior (`76521f7`) es el del propio review (solo docs); árbol limpio; sin archivos temporales ni secretos en el diff; diff acorde al plan v1 (más el cambio de idioma, REV-01 Low). Cambio sensible (arquitectura y base de datos), por lo que requiere aprobación explícita antes del merge.
