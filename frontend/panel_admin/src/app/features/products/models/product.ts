@@ -27,13 +27,6 @@ export interface ProductDto {
   updated_at: string;
 }
 
-export interface Page<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
-
 export interface ProductListParams {
   search?: string;
   active?: boolean;

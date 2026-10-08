@@ -4,7 +4,8 @@ import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 
-import { Customer, CustomerApiError, Page } from '../../models/customer';
+import { Customer, CustomerApiError } from '../../models/customer';
+import { Page } from '../../../../shared/models/page';
 import { CustomersApiService } from '../../services/customers-api.service';
 import { makeCustomer } from '../../testing/customer-fixtures';
 import { CustomerListComponent } from './customer-list.component';

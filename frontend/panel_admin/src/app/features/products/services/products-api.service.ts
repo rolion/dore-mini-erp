@@ -4,13 +4,13 @@ import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   FieldErrors,
-  Page,
   Product,
   ProductApiError,
   ProductDto,
   ProductInput,
   ProductListParams,
 } from '../models/product';
+import { Page } from '../../../shared/models/page';
 
 export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
 export const NOT_FOUND_MESSAGE = 'Producto no encontrado.';
