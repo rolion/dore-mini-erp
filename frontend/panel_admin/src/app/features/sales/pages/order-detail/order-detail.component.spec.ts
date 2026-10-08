@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
-import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import Swal, { SweetAlertResult } from 'sweetalert2';
 
 import { Page } from '../../../../shared/models/page';
@@ -26,6 +26,7 @@ describe('OrderDetailComponent', () => {
   let toastr: jasmine.SpyObj<ToastrService>;
   let router: Router;
   let navigate: jasmine.Spy;
+  let params$: BehaviorSubject<ParamMap>;
 
   function setup(order: Order = makeOrder()): HTMLElement {
     api.get.and.returnValue(of(order));
@@ -53,6 +54,7 @@ describe('OrderDetailComponent', () => {
       'applyDiscount', 'registerPayment',
     ]);
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
+    params$ = new BehaviorSubject<ParamMap>(convertToParamMap({ id: 'o-1' }));
     const products = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['list']);
     products.list.and.returnValue(of(EMPTY_PRODUCTS));
 
@@ -63,7 +65,7 @@ describe('OrderDetailComponent', () => {
         { provide: OrdersApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },
         { provide: ToastrService, useValue: toastr },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'o-1' }) } } },
+        { provide: ActivatedRoute, useValue: { paramMap: params$.asObservable() } },
       ],
     });
     router = TestBed.inject(Router);
@@ -75,6 +77,41 @@ describe('OrderDetailComponent', () => {
       setup();
       expect(api.get).toHaveBeenCalledOnceWith('o-1');
       expect(component.order?.id).toBe('o-1');
+    });
+
+    it('loads the new order when only the id in the route changes, dropping the previous one (AC-17, AC-25)', () => {
+      const other = makeOrder({ id: 'o-2', code: 'P-22222222', notes: 'Otro pedido' });
+      setup();
+      component.fieldErrors = { discount: ['viejo'] };
+      api.get.and.returnValue(of(other));
+      params$.next(convertToParamMap({ id: 'o-2' }));
+      fixture.detectChanges();
+      expect(api.get).toHaveBeenCalledWith('o-2');
+      expect(component.order?.id).toBe('o-2');
+      expect(component.fieldErrors).toEqual({});
+      expect(text(fixture.nativeElement as HTMLElement, 'order-code')).toBe('Pedido P-22222222');
+    });
+
+    it('acts on the order of the current route after the id changed (AC-25)', () => {
+      api.prepare.and.returnValue(of(makeOrder({ id: 'o-2', status: 'IN_PREPARATION' })));
+      setup();
+      api.get.and.returnValue(of(makeOrder({ id: 'o-2' })));
+      params$.next(convertToParamMap({ id: 'o-2' }));
+      component.runPrimary();
+      expect(api.prepare).toHaveBeenCalledOnceWith('o-2');
+    });
+
+    it('ignores the answer of a previous order that arrives late (AC-17)', () => {
+      const first = new Subject<Order>();
+      api.get.and.returnValue(first);
+      fixture = TestBed.createComponent(OrderDetailComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      api.get.and.returnValue(of(makeOrder({ id: 'o-2' })));
+      params$.next(convertToParamMap({ id: 'o-2' }));
+      first.next(makeOrder({ id: 'o-1' }));
+      fixture.detectChanges();
+      expect(component.order?.id).toBe('o-2');
     });
 
     it('warns and goes back to the list when the order does not exist (EDGE-12)', () => {

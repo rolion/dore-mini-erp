@@ -3,7 +3,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { Observable, finalize } from 'rxjs';
+import { EMPTY, Observable, catchError, finalize, switchMap, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
   AddItemEvent,
@@ -70,8 +70,36 @@ export class OrderDetailComponent implements OnInit {
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
 
+  /** Id del pedido de la URL; cambia si se navega a otro pedido sin salir de esta pantalla. */
+  private orderId = '';
+
   ngOnInit(): void {
-    this.load();
+    // El componente se reutiliza al cambiar solo el id de la ruta: se vuelve a cargar y se descarta el estado anterior.
+    this.route.paramMap
+      .pipe(
+        tap((params) => {
+          this.orderId = params.get('id') ?? '';
+          this.order = null;
+          this.loading = true;
+          this.fieldErrors = {};
+          this.busy = false;
+        }),
+        switchMap(() =>
+          this.api.get(this.orderId).pipe(
+            catchError((err: OrderApiError) => {
+              this.loading = false;
+              this.toastr.error(err.message);
+              this.router.navigate(['/sales/orders']);
+              return EMPTY;
+            }),
+          ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((order) => {
+        this.order = order;
+        this.loading = false;
+      });
   }
 
   get primaryAction(): PrimaryAction | null {
@@ -205,23 +233,14 @@ export class OrderDetailComponent implements OnInit {
     return result.isConfirmed;
   }
 
-  private load(): void {
-    const id = this.route.snapshot.paramMap.get('id') ?? '';
+  /** Vuelve a leer el pedido actual tras un conflicto; si falla, se avisa y se conserva lo que ya se mostraba. */
+  private reload(): void {
     this.api
-      .get(id)
+      .get(this.orderId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (order) => {
-          this.order = order;
-          this.loading = false;
-        },
-        error: (err: OrderApiError) => {
-          this.loading = false;
-          this.toastr.error(err.message);
-          if (this.order === null) {
-            this.router.navigate(['/sales/orders']);
-          }
-        },
+        next: (order) => (this.order = order),
+        error: (err: OrderApiError) => this.toastr.error(err.message),
       });
   }
 
@@ -253,7 +272,7 @@ export class OrderDetailComponent implements OnInit {
     this.toastr.error(err.message);
     if (err instanceof OrderRuleError) {
       // El estado del pedido pudo cambiar (otra pestaña, otro usuario): se vuelve a leer del servidor.
-      this.load();
+      this.reload();
     }
   }
 }

@@ -1,6 +1,6 @@
 # TASK-ciclo-pedido-entrega-cobro: Módulo Ventas (Sales): pedido → preparación → entrega → cobro, con estado logístico y de pago independientes
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-ciclo-pedido-entrega-cobro`
@@ -16,6 +16,7 @@
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `sales`, frontend `features/sales`, historial del cliente, creación rápida, extracción a `shared/`) | delivery-engineer |
 | 2026-10-08 | REVIEW → PLANNING | FAIL: 2 hallazgos IMPLEMENTATION (1 High, 1 Medium) y 1 SPECIFICATION (Low, decisión de negocio sobre precio 0); vuelve a la etapa más temprana implicada | delivery-review |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (precio 0 permitido en ítems, REV-03); REV-01 y REV-02 se corrigen en implementación (Fase 10) | delivery-plan |
+| 2026-10-08 | ENGINEERING → REVIEW | Plan v2 implementado (REV-01, REV-02 y REV-03 atendidos; humo manual hecho) | delivery-engineer |
 
 ## Investigación
 
@@ -219,3 +220,10 @@ Rama `task/TASK-ciclo-pedido-entrega-cobro`, PR #7, siguiendo el plan v1 (COMPLE
 
 ## Publicación
 _Pendiente_
+
+### Iteración 2 (plan v2, tras el review FAIL)
+- **REV-01 / EDGE-15:** `titleText` en los diálogos `Swal` con datos de usuario (`order-detail`, `customer-list`, `customer-detail`); specs que llaman al método real. Mismo patrón sin corregir en `product-list` y `product-detail` (fuera del alcance del plan, anotado como deuda).
+- **REV-02 / EDGE-14:** búsquedas de cliente y de producto toleran `null`/`undefined` y errores síncronos; specs que emiten `null` por el typeahead (formulario, lista, ítems, servicio).
+- **REV-03 / EDGE-13 (Specification v2):** el precio de un ítem puede ser 0; tests de dominio, aplicación y API.
+- **Hallazgo propio del humo:** el detalle no recargaba al cambiar solo el id de la ruta (mostraba el pedido anterior y actuaba sobre él); ahora reacciona a `paramMap`, con specs. `order-form` en modo edición y `customer-detail` conservan la lectura única del id (deuda).
+- Verificación propia: backend 339 tests OK (PostgreSQL local, base de pruebas aparte); frontend 272 specs OK, `ng lint` y `ng build` OK. Humo manual en el navegador con backend/`ng serve` propios y base desechable: selector de cliente tras elegir, creación rápida con duplicado, pedido con producto de precio 0, preparar, pago (sobrepago rechazado, pago parcial), cancelación con motivo obligatorio y XSS en el diálogo de quitar ítem: OK.
