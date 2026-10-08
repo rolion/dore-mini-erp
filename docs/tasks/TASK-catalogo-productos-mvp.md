@@ -1,6 +1,6 @@
 # TASK-catalogo-productos-mvp: Catálogo de productos (crear, editar, activar/desactivar, listar, consultar) + menú
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-catalogo-productos-mvp`
@@ -13,6 +13,7 @@
 | 2026-10-08 | DESIGN → ARCHITECTURE | Decisión de diseño registrada en DDR (menú reducido; lista, formulario y detalle como páginas) | delivery-design |
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 3 ADR (módulo `catalog`, contrato API, feature frontend) | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #5 abierto | delivery-plan |
+| 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `catalog`, frontend `features/products`, menú) | delivery-engineer |
 
 ## Investigación
 
@@ -129,7 +130,39 @@ Pedido adicional del usuario (frontend): en el menú lateral borrar las opciones
 - [PLAN-2026-10-08-catalogo-productos-mvp](../plans/PLAN-2026-10-08-catalogo-productos-mvp.md) — v1, Modo COMPLETO, Specification readiness: READY. 13 ACs (API, menú, lista, formulario, detalle), 5 invariantes, sin dependencias nuevas, E2E: NO (verificación manual de humo).
 
 ## Implementación
-_Pendiente_
+Rama `task/TASK-catalogo-productos-mvp`, PR #5, siguiendo el plan v1 (COMPLETO).
+
+**Backend** (`backend/modules/catalog/`)
+- `domain/` — `Product` (dataclass sin Django), `validate_name`/`validate_price`, `ProductValidationError`, `ProductNotFound`, `ProductRepository` (Protocol): INV-01..04, AC-02, AC-03.
+- `application/` — `CreateProduct`, `UpdateProduct` (parcial, junta errores de varios campos, no guarda si no hay cambios), `ActivateProduct`, `DeactivateProduct`, `GetProduct`, `ListProducts`: AC-01, AC-04..AC-07.
+- `infrastructure/django/` — `ProductModel` (UUID, `Decimal(12,2)`, orden `name,id`), mapper, `DjangoProductRepository` y `ProductList` (vista perezosa para paginar sin cargar todo); `migrations/0001_initial.py` generada con `makemigrations`.
+- `api/` — serializers de entrada/salida, vistas `APIView` delgadas (`_run` traduce dominio→400/404), `ProductPagination` (`page_size` máx. 100), urls con `<uuid:product_id>`; montado en `config/urls.py` como `api/products/` y app registrada en `INSTALLED_APPS`: AC-01..AC-08, INV-05 (no hay `DELETE`/`PUT`).
+
+**Frontend** (`frontend/panel_admin/src/app/features/products/`)
+- `models/product.ts`, `services/products-api.service.ts` (DTO snake_case ↔ modelo camelCase, errores 400 por campo → `ProductApiError`).
+- `pages/product-list` (ngx-datatable con paginación externa, buscador con debounce, filtro de estado, confirmación `Swal` + `toastr`), `pages/product-form` (alta/edición, `FormBuilder` tipado, errores del servidor bajo cada campo), `pages/product-detail`; `products.routes.ts` y ruta `catalog/products` en `app.routes.ts`: AC-10..AC-13.
+- Menú: `assets/data/routes.json` reducido a Dashboard + Catálogo ▸ Producto y claves `MENUITEMS.*` en en/es/de: AC-09.
+- `docs/architecture/ddd.md`: agregado `POST /api/products/{id}/activate`.
+
+**Tests escritos**
+- Backend: `test_domain.py` (dominio sin BD), `test_application.py` (repositorio en memoria), `test_api.py` (APITestCase con token y PostgreSQL; cubre AC-01..AC-08, EDGE-01..05).
+- Frontend: specs del servicio, de lista, formulario y detalle, y `layout/sidebar/sidebar-menu.spec.ts` (AC-09; requirió `"resolveJsonModule": true` en `tsconfig.spec.json`).
+
+**Verificación propia (no es el Quality Gate):** `python manage.py test` → 58 tests OK (44 de `catalog`); `makemigrations --check` sin cambios; `ng lint` y `ng build` OK; los 41 specs nuevos de Angular pasan.
+
+**Desviaciones respecto al plan**
+- El precio del formulario es `input type="text" inputmode="decimal"` con validación por patrón (hasta 10 enteros y 2 decimales, acepta coma y la normaliza a punto) en lugar del `type="number"` del DDR: así el valor viaja como string sin pasar por `float`. La Specification (AC-12, UI-02) sigue satisfecha.
+- La ruta se declaró directamente como `catalog/products` → `products.routes.ts` (sin archivo intermedio `catalog.routes.ts`).
+- `ProductList.onPage` ignora eventos `page` que no cambian de página: ngx-datatable emite `page` al inicializarse y provocaba una petición duplicada.
+
+**Estado previo del repositorio (no causado por este cambio)**
+- `npm test` completo no compila: `src/app/app.component.spec.ts:24` referencia `AppComponent.title`, que no existe. Con ese archivo excluido corrieron 137 specs: 82 fallan en specs de la plantilla ("should create" sin providers: `ActivatedRoute`, `ToastConfig`, iconos feather), incluido `SidebarComponent should create`. Ninguno de esos archivos fue modificado. Hay que decidir si se corrigen en un task aparte; el Quality Gate no podrá usar `npm test` completo hasta entonces.
+
+**Entorno de la verificación:** el worktree no tenía `node_modules` ni `backend/.env`; se enlazaron (junction y hard link) a los del checkout principal, sin leer ni modificar `.env`; ambos están en `.gitignore`.
+
+**Deuda técnica / no verificado**
+- No se hizo la verificación manual de humo con backend + `npm start` (queda para `delivery-review`).
+- Rutas y componentes de demo siguen accesibles por URL (ADR frontend-feature).
 
 ## Review
 _Pendiente_
