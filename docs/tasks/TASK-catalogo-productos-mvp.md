@@ -1,6 +1,6 @@
 # TASK-catalogo-productos-mvp: Catálogo de productos (crear, editar, activar/desactivar, listar, consultar) + menú
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-catalogo-productos-mvp`
@@ -14,6 +14,7 @@
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 3 ADR (módulo `catalog`, contrato API, feature frontend) | delivery-architect |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #5 abierto | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `catalog`, frontend `features/products`, menú) | delivery-engineer |
+| 2026-10-08 | REVIEW → PUBLISH | Review PASS (0 issues Critical/High; 1 Low abierto) | delivery-review |
 
 ## Investigación
 
@@ -170,7 +171,16 @@ Rama `task/TASK-catalogo-productos-mvp`, PR #5, siguiendo el plan v1 (COMPLETO).
 - Rutas y componentes de demo siguen accesibles por URL (ADR frontend-feature).
 
 ## Review
-_Pendiente_
+**Resultado: PASS** (2026-10-08, rama `task/TASK-catalogo-productos-mvp` en `b3660ed`).
+
+Issues abiertos: [REV-2026-10-08-catalogo-productos-mvp-01](../reviews/REV-2026-10-08-catalogo-productos-mvp-01.md) (Low, PLAN: cambio de idioma por defecto fuera del plan v1; no bloquea).
+
+Verificación:
+- Backend (ejecutado por el usuario en otro worktree en el mismo commit `b3660ed`; el reviewer no tuvo acceso a la BD): `python manage.py test` → 58 tests OK; `makemigrations --check --dry-run` → sin cambios; `migrate` aplica `catalog.0001_initial`.
+- Frontend (ejecutado por el reviewer): `ng lint` OK; `ng build` OK; 44 specs de la funcionalidad OK (cobertura de esos specs: statements 84,5 %, branches 78,4 %, funciones 75 %, líneas 83,5 %). Suite completa: 66 OK / 75 fallos, todos "should create" de specs de la plantilla preexistentes; `app.component.spec.ts` no compila en `main` (excluido).
+- Smoke manual (backend + `npm start`): ejecutado por el usuario, sin problemas.
+- Límites DDD revisados: `domain/` sin Django; `catalog` no importa otros módulos; vistas delgadas.
+- No realizado: `npm audit` (no hay `package-lock.json`); no hay `bandit`/`safety` configurados. Cobertura de backend por revisión manual, no por herramienta.
 
 ## Publicación
 _Pendiente_
