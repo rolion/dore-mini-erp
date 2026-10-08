@@ -14,6 +14,7 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
+  styleUrl: './product-list.component.scss',
   imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule],
 })
 export class ProductListComponent implements OnInit {

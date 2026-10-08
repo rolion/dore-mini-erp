@@ -1,0 +1,14 @@
+// Colores de las acciones de la tabla: ver = primario de la aplicación, editar = amarillo, desactivar/activar = rojo.
+.btn-tbl-edit {
+  &.btn-tbl-view {
+    background-color: #6777ef !important;
+  }
+
+  &.btn-tbl-update {
+    background-color: #ffc107 !important;
+  }
+
+  &.btn-tbl-toggle {
+    background-color: #dc3545 !important;
+  }
+}

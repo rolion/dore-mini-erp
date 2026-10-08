@@ -79,15 +79,15 @@
               <ngx-datatable-column name="Acciones" [sortable]="false" [width]="180">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
-                    <a class="btn btn-tbl-edit h-auto" [routerLink]="['/catalog/products', row.id]" title="Ver detalle"
+                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/catalog/products', row.id]" title="Ver detalle"
                       aria-label="Ver detalle">
                       <i class="fas fa-eye"></i>
                     </a>
-                    <a class="btn btn-tbl-edit h-auto" [routerLink]="['/catalog/products', row.id, 'edit']"
+                    <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/catalog/products', row.id, 'edit']"
                       title="Editar" aria-label="Editar">
                       <i class="fas fa-pen"></i>
                     </a>
-                    <button type="button" class="btn btn-tbl-edit h-auto" (click)="toggleActive(row)"
+                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"
                       [title]="row.active ? 'Desactivar' : 'Activar'"
                       [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'">
                       <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
