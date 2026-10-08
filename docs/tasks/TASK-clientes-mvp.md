@@ -18,6 +18,7 @@
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (regla de normalización "ya prefijado", AC-08 acotado); REV-02 queda para implementación | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Plan v2 implementado (regla de teléfono ya prefijado, serializer sin validar `name`); REV-01, REV-02 y REV-03 atendidos | delivery-engineer |
 | 2026-10-08 | REVIEW → PUBLISH | Re-review PASS: REV-01, REV-02 y REV-03 cerrados; 72 tests de clientes y 130 de backend OK en PostgreSQL, frontend 90 specs OK | delivery-review |
+| 2026-10-08 | PUBLISH (sin cambio) | PR completado; pendiente de aprobación humana por ser cambio sensible (DB + arquitectura) | delivery-publish |
 
 ## Investigación
 
@@ -184,4 +185,6 @@ Pendientes aceptados del plan: código de país `591` sin confirmar con el negoc
 Siguiente paso: `/delivery-publish TASK-clientes-mvp`.
 
 ## Publicación
-_Pendiente_
+- PR: https://github.com/rolion/dore-mini-erp/pull/6 — descripción completa (Summary, Architecture decisions, Known limitations).
+- Estado: **Listo para aprobación humana** (no mergeado). Cambio sensible: base de datos (migración `customers.0001_initial`) y arquitectura (4 ADR: módulo `customers`, contrato API, historial vía Sales, feature frontend); requiere aprobación explícita antes del merge.
+- Antes de fusionar: humo manual de UI (menú → crear → duplicado → confirmar → editar → buscar → desactivar) y, tras el merge, `python manage.py migrate` en cada entorno.
