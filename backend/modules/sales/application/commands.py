@@ -30,7 +30,7 @@ class CreateOrder:
         self.customers = customers
         self.clock = clock
 
-    def execute(self, sales_channel: object, order_date: object = None, customer_id: UUID | None = None,
+    def execute(self, sales_channel: object = None, order_date: object = None, customer_id: UUID | None = None,
                 expected_delivery_date: object = None, notes: object = '') -> Order:
         errors: dict[str, list[str]] = {}
         order = None
@@ -170,7 +170,7 @@ class CancelOrder:
         self.repository = repository
         self.clock = clock
 
-    def execute(self, order_id: UUID, reason: object) -> Order:
+    def execute(self, order_id: UUID, reason: object = None) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.cancel(reason, self.clock.now())
         return self.repository.save(order)
@@ -181,7 +181,7 @@ class RegisterPayment:
         self.repository = repository
         self.clock = clock
 
-    def execute(self, order_id: UUID, amount: object, payment_method: object, payment_date: object = None,
+    def execute(self, order_id: UUID, amount: object = None, payment_method: object = None, payment_date: object = None,
                 reference: object = '') -> Order:
         order = _load_for_update(self.repository, order_id)
         order.register_payment(amount, payment_method, payment_date, reference, self.clock.today())
