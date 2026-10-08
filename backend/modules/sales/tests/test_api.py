@@ -204,6 +204,22 @@ class ItemTests(SalesApiTestCase):
         item = self.get(order)['items'][0]
         self.assertEqual((item['unit_price'], item['product_name']), ('35.00', 'Pack cuñapé'))
 
+    def test_free_product_can_be_added_and_the_order_is_settled(self):  # AC-03 (v2, REV-03), EDGE-13
+        order = self.create()
+        gift = self.product(name='Galleta gratis', price='0.00')
+        body = self.add_item(order, gift, 2)
+        item = body['items'][0]
+        self.assertEqual((item['unit_price'], item['subtotal']), ('0.00', '0.00'))
+        self.assertEqual((body['total'], body['balance'], body['payment_status'], body['can_register_payment']),
+                         ('0.00', '0.00', 'PAID', False))
+        body = self.act(self.act(self.act(body, 'prepare'), 'ready'), 'deliver')
+        self.assertEqual((body['status'], body['payment_status']), ('DELIVERED', 'PAID'))
+
+    def test_free_items_do_not_change_what_is_owed(self):  # EDGE-13
+        order = self.order_with_item('35.00', 2)
+        body = self.add_item(order, self.product(name='Obsequio', price='0.00'), 1)
+        self.assertEqual((body['total'], body['balance'], body['payment_status']), ('70.00', '70.00', 'PENDING'))
+
     def test_inactive_and_unknown_products_are_rejected(self):  # AC-03
         order = self.create()
         inactive = self.product(active=False)

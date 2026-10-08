@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 
@@ -60,6 +60,19 @@ describe('OrderItemsComponent', () => {
     render(makeOrder());
     expect(api.list).toHaveBeenCalledWith({ search: '', active: true, pageSize: 20 });
   });
+
+  it('keeps searching products after an option is chosen and ng-select emits null (EDGE-14, REV-02)', fakeAsync(() => {
+    render(makeOrder());
+    api.list.calls.reset();
+    component.productInput$.next(null as unknown as string);
+    tick(300);
+    expect(api.list).toHaveBeenCalledOnceWith({ search: '', active: true, pageSize: 20 });
+    expect(component.productsLoading).toBeFalse();
+    component.productInput$.next('chi');
+    tick(300);
+    expect(api.list.calls.mostRecent().args[0]).toEqual({ search: 'chi', active: true, pageSize: 20 });
+    expect(component.productsLoading).toBeFalse();
+  }));
 
   it('keeps working when the product search fails', () => {
     api.list.and.returnValue(throwError(() => new Error('boom')));

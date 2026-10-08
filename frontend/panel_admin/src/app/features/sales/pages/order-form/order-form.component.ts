@@ -53,6 +53,7 @@ export class OrderFormComponent implements OnInit {
   /** Errores del servidor por campo; se limpian al editar. */
   serverErrors: Partial<Record<FormField, string>> = {};
 
+  /** `ng-select` tipa el typeahead como `Subject<string>`, pero emite `null` al elegir o limpiar una opción. */
   readonly customerInput$ = new Subject<string>();
   customersLoading = false;
   readonly customers$: Observable<OrderCustomer[]>;
@@ -73,7 +74,7 @@ export class OrderFormComponent implements OnInit {
         debounceTime(300),
         distinctUntilChanged(),
         tap(() => (this.customersLoading = true)),
-        switchMap((term) => this.searchCustomers(term)),
+        switchMap((term: string | null) => this.searchCustomers(term)),
       ),
     );
     this.destroyRef.onDestroy(() => this.customerInput$.complete());
@@ -148,7 +149,7 @@ export class OrderFormComponent implements OnInit {
     this.form.controls.customer.setValue(customer);
   }
 
-  private searchCustomers(term: string): Observable<OrderCustomer[]> {
+  private searchCustomers(term: string | null): Observable<OrderCustomer[]> {
     return this.customerOptions.search(term).pipe(finalize(() => (this.customersLoading = false)));
   }
 

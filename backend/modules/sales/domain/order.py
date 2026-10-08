@@ -255,8 +255,6 @@ class Order:
     def add_item(self, product_id: UUID, product_name: str, unit_price: Decimal, quantity: object) -> OrderItem:
         self.ensure_editable()
         quantity = validate_quantity(quantity)
-        if unit_price <= 0:
-            raise _fail('product_id', 'El producto no tiene un precio de venta mayor a cero.')
         if any(item.product_id == product_id for item in self.items):
             raise OrderRuleViolation('duplicate_product',
                                      'El producto ya está en el pedido; modifique su cantidad.')

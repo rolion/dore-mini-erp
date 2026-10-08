@@ -2,7 +2,7 @@ import { AsyncPipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
-import { Observable, Subject, catchError, concat, debounceTime, distinctUntilChanged, finalize, map, of, switchMap, tap } from 'rxjs';
+import { Observable, Subject, catchError, concat, debounceTime, defer, distinctUntilChanged, finalize, map, of, switchMap, tap } from 'rxjs';
 import { Product, ProductsApiService } from '../../../products';
 import { FieldErrors, Order, OrderItem } from '../../models/order';
 import { MoneyPipe } from '../../pipes/money.pipe';
@@ -42,6 +42,7 @@ export class OrderItemsComponent {
     product: [null as Product | null, Validators.required],
     quantity: [1, [Validators.required, Validators.min(1)]],
   });
+  /** `ng-select` tipa el typeahead como `Subject<string>`, pero emite `null` al elegir o limpiar una opción. */
   readonly productInput$ = new Subject<string>();
   productsLoading = false;
   readonly products$: Observable<Product[]>;
@@ -70,7 +71,7 @@ export class OrderItemsComponent {
         debounceTime(300),
         distinctUntilChanged(),
         tap(() => (this.productsLoading = true)),
-        switchMap((term) => this.searchProducts(term)),
+        switchMap((term: string | null) => this.searchProducts(term)),
       ),
     );
     this.destroyRef.onDestroy(() => this.productInput$.complete());
@@ -102,8 +103,11 @@ export class OrderItemsComponent {
     }
   }
 
-  private searchProducts(term: string): Observable<Product[]> {
-    return this.api.list({ search: term.trim(), active: true, pageSize: PRODUCT_SEARCH_PAGE_SIZE }).pipe(
+  /** `ng-select` emite `null` por el typeahead al elegir o limpiar; un fallo deja la lista vacía sin romper el stream. */
+  private searchProducts(term: string | null | undefined): Observable<Product[]> {
+    return defer(() =>
+      this.api.list({ search: (term ?? '').trim(), active: true, pageSize: PRODUCT_SEARCH_PAGE_SIZE }),
+    ).pipe(
       map((page) => page.results),
       catchError(() => of([] as Product[])),
       finalize(() => (this.productsLoading = false)),

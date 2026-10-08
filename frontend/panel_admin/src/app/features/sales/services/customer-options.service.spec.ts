@@ -33,6 +33,25 @@ describe('CustomerOptionsService', () => {
     expect(result).toEqual([{ id: 'c-1', name: 'Ana Pérez' }]);
   });
 
+  it('tolerates a null or undefined term, as ng-select emits when an option is chosen (EDGE-14, REV-02)', () => {
+    api.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    for (const term of [null, undefined]) {
+      let result: unknown;
+      expect(() => service.search(term).subscribe((options) => (result = options))).not.toThrow();
+      expect(result).toEqual([]);
+      expect(api.list.calls.mostRecent().args[0]).toEqual({
+        search: '', active: true, pageSize: CUSTOMER_SEARCH_PAGE_SIZE,
+      });
+    }
+  });
+
+  it('turns a synchronous failure of the request into an empty list instead of killing the stream (EDGE-14)', () => {
+    api.list.and.throwError('boom');
+    let result: unknown;
+    service.search('x').subscribe((options) => (result = options));
+    expect(result).toEqual([]);
+  });
+
   it('returns an empty list when the search fails', () => {
     api.list.and.returnValue(throwError(() => new Error('red')));
     let result: unknown;

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import Swal, { SweetAlertResult } from 'sweetalert2';
 import { of, throwError } from 'rxjs';
 
 import { Customer, CustomerApiError } from '../../models/customer';
@@ -174,5 +175,15 @@ describe('CustomerListComponent', () => {
     await component.toggleActive(active);
 
     expect(toastr.error).toHaveBeenCalledWith('Cliente no encontrado.');
+  });
+  it('shows the customer name of the confirmation dialog as plain text (EDGE-15, REV-01)', async () => {
+    fixture.detectChanges();
+    const fire = spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: true } as SweetAlertResult);
+    const customer = makeCustomer({ name: '<img src=x onerror="window.__xss=1">' });
+    await (component as unknown as ToggleHook).confirmToggle(customer);
+    const options = fire.calls.mostRecent().args[0] as unknown as Record<string, unknown>;
+    expect(options['titleText']).toBe('¿Quieres desactivar a "<img src=x onerror="window.__xss=1">"?');
+    expect(options['title']).toBeUndefined();
+    expect(options['html']).toBeUndefined();
   });
 });

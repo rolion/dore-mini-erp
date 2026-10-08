@@ -145,6 +145,12 @@ class AddOrderItemTests(ApplicationTestCase):
             AddOrderItem(self.repository, self.products).execute(order.id, uuid4(), 0)
         self.assertEqual(ctx.exception.code, 'order_not_editable')
 
+    def test_free_products_can_be_added(self):  # AC-03 (v2, REV-03)
+        gift = self.products.add(name='Obsequio', price='0.00')
+        order = self.add_item(self.create(), gift, 2)
+        self.assertEqual((order.items[0].unit_price, order.total, order.payment_status),
+                         (D('0.00'), D('0.00'), PaymentStatus.PAID))
+
     def test_duplicate_product(self):  # AC-03
         product = self.products.add()
         order = self.add_item(self.create(), product)

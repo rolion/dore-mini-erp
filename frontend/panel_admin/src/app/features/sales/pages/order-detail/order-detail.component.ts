@@ -195,7 +195,7 @@ export class OrderDetailComponent implements OnInit {
 
   protected async confirmRemove(item: OrderItem): Promise<boolean> {
     const result = await Swal.fire({
-      title: `¿Quitar "${item.productName}"?`,
+      titleText: `¿Quitar "${item.productName}"?`,
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',

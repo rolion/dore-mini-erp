@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, of, throwError } from 'rxjs';
@@ -91,6 +91,21 @@ describe('OrderFormComponent', () => {
       setup();
       expect(customersApi.list).toHaveBeenCalledWith({ search: '', active: true, pageSize: CUSTOMER_SEARCH_PAGE_SIZE });
     });
+
+    it('keeps searching after an option is chosen and ng-select emits null (EDGE-14, REV-02)', fakeAsync(() => {
+      setup();
+      customersApi.list.calls.reset();
+      component.customerInput$.next(null as unknown as string);
+      tick(300);
+      expect(customersApi.list).toHaveBeenCalledOnceWith({ search: '', active: true, pageSize: CUSTOMER_SEARCH_PAGE_SIZE });
+      expect(component.customersLoading).toBeFalse();
+      component.customerInput$.next('zzz');
+      tick(300);
+      expect(customersApi.list.calls.mostRecent().args[0]).toEqual({
+        search: 'zzz', active: true, pageSize: CUSTOMER_SEARCH_PAGE_SIZE,
+      });
+      expect(component.customersLoading).toBeFalse();
+    }));
 
     it('survives a failing customer search', () => {
       customersApi.list.and.returnValue(throwError(() => new Error('boom')));

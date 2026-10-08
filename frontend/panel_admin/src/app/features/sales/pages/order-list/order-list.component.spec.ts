@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -22,6 +22,7 @@ describe('OrderListComponent', () => {
   let toastr: jasmine.SpyObj<ToastrService>;
   let navigate: jasmine.Spy;
   let queryParams: BehaviorSubject<ParamMap>;
+  let customerOptions: jasmine.SpyObj<CustomerOptionsService>;
 
   const open = makeSummary({ id: 'a', code: 'P-AAAAAAAA' });
   const owing = makeSummary({
@@ -63,8 +64,8 @@ describe('OrderListComponent', () => {
     api = jasmine.createSpyObj<OrdersApiService>('OrdersApiService', ['list']);
     api.list.and.returnValue(of(page([open, owing, cancelledNoPayments, cancelledWithPayments])));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
-    const options = jasmine.createSpyObj<CustomerOptionsService>('CustomerOptionsService', ['search']);
-    options.search.and.returnValue(of([{ id: 'c-1', name: 'Ana Pérez' }]));
+    customerOptions = jasmine.createSpyObj<CustomerOptionsService>('CustomerOptionsService', ['search']);
+    customerOptions.search.and.returnValue(of([{ id: 'c-1', name: 'Ana Pérez' }]));
     queryParams = new BehaviorSubject<ParamMap>(params());
 
     TestBed.configureTestingModule({
@@ -72,7 +73,7 @@ describe('OrderListComponent', () => {
       providers: [
         provideRouter([]),
         { provide: OrdersApiService, useValue: api },
-        { provide: CustomerOptionsService, useValue: options },
+        { provide: CustomerOptionsService, useValue: customerOptions },
         { provide: ToastrService, useValue: toastr },
         { provide: ActivatedRoute, useValue: { queryParamMap: queryParams } },
       ],
@@ -276,6 +277,19 @@ describe('OrderListComponent', () => {
       });
     });
   });
+
+  it('keeps searching customers after an option is chosen and ng-select emits null (EDGE-14, REV-02)', fakeAsync(() => {
+    start();
+    customerOptions.search.calls.reset();
+    component.customerInput$.next(null as unknown as string);
+    tick(300);
+    expect(customerOptions.search).toHaveBeenCalledTimes(1);
+    expect(component.customersLoading).toBeFalse();
+    component.customerInput$.next('zzz');
+    tick(300);
+    expect(customerOptions.search.calls.mostRecent().args[0]).toBe('zzz');
+    expect(component.customersLoading).toBeFalse();
+  }));
 
   describe('paging and errors', () => {
     it('navigates to the requested page and ignores the initial page event (AC-23)', () => {

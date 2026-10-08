@@ -93,6 +93,7 @@ export class OrderListComponent implements OnInit {
   emptyMessage = EMPTY_ALL;
   ordering: 'newest' | 'expected' = 'newest';
 
+  /** `ng-select` tipa el typeahead como `Subject<string>`, pero emite `null` al elegir o limpiar una opción. */
   readonly customerInput$ = new Subject<string>();
   customersLoading = false;
   readonly customers$: Observable<OrderCustomer[]>;
@@ -112,7 +113,7 @@ export class OrderListComponent implements OnInit {
         debounceTime(300),
         distinctUntilChanged(),
         tap(() => (this.customersLoading = true)),
-        switchMap((term) => this.customerOptions.search(term).pipe(finalize(() => (this.customersLoading = false)))),
+        switchMap((term: string | null) => this.customerOptions.search(term).pipe(finalize(() => (this.customersLoading = false)))),
       ),
     );
     this.destroyRef.onDestroy(() => this.customerInput$.complete());

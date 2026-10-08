@@ -88,7 +88,7 @@ export class CustomerDetailComponent implements OnInit {
   protected async confirmToggle(customer: Customer): Promise<boolean> {
     const verb = customer.active ? 'desactivar' : 'activar';
     const result = await Swal.fire({
-      title: `¿Quieres ${verb} a "${customer.name}"?`,
+      titleText: `¿Quieres ${verb} a "${customer.name}"?`,
       text: customer.active
         ? 'Dejará de aparecer entre los clientes activos. Su historial de pedidos se conserva.'
         : 'Volverá a aparecer entre los clientes activos.',

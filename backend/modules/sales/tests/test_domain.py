@@ -162,8 +162,30 @@ class ItemTests(SimpleTestCase):
         self.assertIn('quantity', field_errors(self, order.change_item_quantity, item.id, 3))
         self.assertEqual(item.quantity, 1)
 
-    def test_product_with_zero_price_cannot_be_added(self):  # INV-01
-        self.assertIn('product_id', field_errors(self, new_order().add_item, uuid4(), 'Gratis', D('0.00'), 1))
+    def test_product_with_zero_price_can_be_added(self):  # INV-01, AC-03 (v2, REV-03)
+        order = new_order()
+        item = order.add_item(uuid4(), 'Muestra gratis', D('0.00'), 3)
+        self.assertEqual((item.unit_price, item.subtotal), (D('0.00'), D('0.00')))
+        self.assertEqual((order.subtotal, order.total), (D('0.00'), D('0.00')))
+
+    def test_order_with_only_free_items_is_paid_with_no_balance(self):  # EDGE-13
+        order = new_order()
+        order.add_item(uuid4(), 'Muestra gratis', D('0.00'), 2)
+        self.assertEqual((order.total, order.balance, order.payment_status), (D('0.00'), D('0.00'), PaymentStatus.PAID))
+        self.assertFalse(order.can_register_payment)
+        self.assertIn('amount', field_errors(self, pay, order, '1.00'))
+        order.start_preparation()
+        order.mark_ready()
+        order.deliver(None, TODAY)
+        self.assertEqual((order.status, order.payment_status), (OrderStatus.DELIVERED, PaymentStatus.PAID))
+
+    def test_free_and_paid_items_mix_correctly(self):  # EDGE-13
+        order = order_with_item('35.00', 2)
+        order.add_item(uuid4(), 'Obsequio', D('0.00'), 1)
+        self.assertEqual(order.total, D('70.00'))
+        self.assertEqual(order.payment_status, PaymentStatus.PENDING)
+        pay(order, '70.00')
+        self.assertEqual(order.payment_status, PaymentStatus.PAID)
 
     def test_change_quantity_recalculates(self):  # AC-04
         order = order_with_item('35.00', 2)

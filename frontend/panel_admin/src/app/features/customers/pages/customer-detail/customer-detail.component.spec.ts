@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ToastrService } from 'ngx-toastr';
+import Swal, { SweetAlertResult } from 'sweetalert2';
 import { of, throwError } from 'rxjs';
 
 import { Customer, CustomerApiError } from '../../models/customer';
@@ -182,5 +183,15 @@ describe('CustomerDetailComponent', () => {
 
     expect(api.activate).toHaveBeenCalledOnceWith('c-1');
     expect(toastr.success).toHaveBeenCalledWith('Cliente activado');
+  });
+  it('shows the customer name of the confirmation dialog as plain text (EDGE-15, REV-01)', async () => {
+    api.get.and.returnValue(of(makeCustomer({ name: '<img src=x onerror="window.__xss=1">' })));
+    const { component } = await open();
+    const fire = spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: true } as SweetAlertResult);
+    await (component as unknown as ToggleHook).confirmToggle(makeCustomer({ name: '<img src=x onerror="window.__xss=1">' }));
+    const options = fire.calls.mostRecent().args[0] as unknown as Record<string, unknown>;
+    expect(options['titleText']).toBe('¿Quieres desactivar a "<img src=x onerror="window.__xss=1">"?');
+    expect(options['title']).toBeUndefined();
+    expect(options['html']).toBeUndefined();
   });
 });

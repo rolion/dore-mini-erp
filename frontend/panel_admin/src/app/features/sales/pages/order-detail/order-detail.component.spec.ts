@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, of, throwError } from 'rxjs';
+import Swal, { SweetAlertResult } from 'sweetalert2';
 
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../../products';
@@ -344,6 +345,54 @@ describe('OrderDetailComponent', () => {
       component.runPrimary();
       expect(toastr.error).toHaveBeenCalledWith('Sin conexión');
       expect(api.get).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('dialogs show user data as text, never as HTML (EDGE-15, REV-01)', () => {
+    const NAME = '<img src=x onerror="window.__xss=1">';
+
+    it('shows the product name of the remove dialog as plain text', async () => {
+      setup();
+      const fire = spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: true } as SweetAlertResult);
+      const confirmed = await (component as unknown as DialogHooks).confirmRemove(makeItem({ productName: NAME }));
+      expect(confirmed).toBeTrue();
+      const options = fire.calls.mostRecent().args[0] as unknown as Record<string, unknown>;
+      expect(options['titleText']).toBe(`¿Quitar "${NAME}"?`);
+      expect(options['title']).toBeUndefined();
+      expect(options['html']).toBeUndefined();
+    });
+
+    it('keeps the delivery and cancellation dialogs free of user HTML', async () => {
+      setup();
+      const fire = spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: false } as SweetAlertResult);
+      await (component as unknown as DialogHooks).askDeliveryDate(makeOrder());
+      await (component as unknown as DialogHooks).askCancelReason(makeOrder({ payments: [makePayment()] }));
+      for (const call of fire.calls.allArgs()) {
+        expect((call[0] as unknown as Record<string, unknown>)['html']).toBeUndefined();
+      }
+    });
+
+    it('returns the typed reason and date only when the dialogs are confirmed', async () => {
+      setup();
+      const fire = spyOn(Swal, 'fire');
+      fire.and.resolveTo({ isConfirmed: true, value: ' Motivo ' } as SweetAlertResult);
+      expect(await (component as unknown as DialogHooks).askCancelReason(makeOrder())).toBe('Motivo');
+      fire.and.resolveTo({ isConfirmed: true, value: '2026-10-03' } as SweetAlertResult);
+      expect(await (component as unknown as DialogHooks).askDeliveryDate(makeOrder())).toBe('2026-10-03');
+      fire.and.resolveTo({ isConfirmed: false } as SweetAlertResult);
+      expect(await (component as unknown as DialogHooks).askCancelReason(makeOrder())).toBeNull();
+      expect(await (component as unknown as DialogHooks).askDeliveryDate(makeOrder())).toBeNull();
+    });
+
+    it('does not offer a balance warning when nothing is owed', async () => {
+      setup();
+      const fire = spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: false } as SweetAlertResult);
+      await (component as unknown as DialogHooks).askDeliveryDate(makeOrder({ balance: '0.00' }));
+      expect((fire.calls.mostRecent().args[0] as unknown as Record<string, unknown>)['text']).toBeUndefined();
+      await (component as unknown as DialogHooks).askDeliveryDate(makeOrder({ balance: '70.00' }));
+      expect((fire.calls.mostRecent().args[0] as unknown as Record<string, unknown>)['text']).toBe(
+        'Quedará un saldo de Bs 70.00 por cobrar.',
+      );
     });
   });
 
