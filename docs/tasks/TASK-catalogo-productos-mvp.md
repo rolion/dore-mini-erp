@@ -1,10 +1,10 @@
 # TASK-catalogo-productos-mvp: Catálogo de productos (crear, editar, activar/desactivar, listar, consultar) + menú
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-catalogo-productos-mvp`
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/5
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -12,6 +12,7 @@
 | 2026-10-08 | (nuevo) → INVESTIGATION | Task creado | delivery-investigate |
 | 2026-10-08 | DESIGN → ARCHITECTURE | Decisión de diseño registrada en DDR (menú reducido; lista, formulario y detalle como páginas) | delivery-design |
 | 2026-10-08 | ARCHITECTURE → PLANNING | Decisiones registradas en 3 ADR (módulo `catalog`, contrato API, feature frontend) | delivery-architect |
+| 2026-10-08 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR #5 abierto | delivery-plan |
 
 ## Investigación
 
