@@ -1,6 +1,6 @@
 # REV-2026-10-08-clientes-mvp-02: AC-02 no se cumple cuando `name` es inválido junto con otros campos (errores no se devuelven juntos)
 
-**Status:** Open
+**Status:** Closed (verificado en re-review sobre 58e1784)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-08-clientes-mvp.md (v1)

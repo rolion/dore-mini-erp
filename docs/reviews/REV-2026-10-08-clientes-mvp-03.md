@@ -1,6 +1,6 @@
 # REV-2026-10-08-clientes-mvp-03: AC-08 promete 404 `{detail}` para ids que no son UUID, pero responde la página 404 de Django
 
-**Status:** Open
+**Status:** Closed (verificado en re-review sobre 58e1784)
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-08-clientes-mvp.md (v1)

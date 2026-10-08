@@ -1,6 +1,6 @@
 # REV-2026-10-08-clientes-mvp-01: AC-03 contradice la regla de normalización; `591 76543210` se guarda como `+59159176543210`
 
-**Status:** Open
+**Status:** Closed (verificado en re-review sobre 58e1784)
 **Severity:** High
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-08-clientes-mvp.md (v1)
