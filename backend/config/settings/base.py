@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'modules.accounts',
+    'modules.catalog',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

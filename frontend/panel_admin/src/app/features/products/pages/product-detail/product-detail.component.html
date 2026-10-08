@@ -1,0 +1,58 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Detalle del producto</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Catálogo</li>
+    <li class="breadcrumb-item"><a routerLink="/catalog/products">Producto</a></li>
+    <li class="breadcrumb-item">Detalle</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ product?.name ?? 'Producto' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (product; as p) {
+            <dl class="row m-4">
+              <dt class="col-sm-3">Nombre</dt>
+              <dd class="col-sm-9">{{ p.name }}</dd>
+              <dt class="col-sm-3">Descripción</dt>
+              <dd class="col-sm-9">{{ p.description || 'Sin descripción' }}</dd>
+              <dt class="col-sm-3">Precio de venta</dt>
+              <dd class="col-sm-9">{{ p.salePrice }}</dd>
+              <dt class="col-sm-3">Estado</dt>
+              <dd class="col-sm-9">
+                @if (p.active) {
+                <div class="badge-outline col-green d-inline-block">Activo</div>
+                } @else {
+                <div class="badge-outline col-red d-inline-block">Inactivo</div>
+                }
+              </dd>
+              <dt class="col-sm-3">Creado</dt>
+              <dd class="col-sm-9">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Última actualización</dt>
+              <dd class="col-sm-9">{{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            </dl>
+            <div class="m-4">
+              <a class="btn btn-primary" [routerLink]="['/catalog/products', p.id, 'edit']">Editar</a>
+              <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">
+                {{ p.active ? 'Desactivar' : 'Activar' }}
+              </button>
+              <a class="btn btn-light ms-2" routerLink="/catalog/products">Volver</a>
+            </div>
+            } @else if (loading) {
+            <p class="m-4">Cargando…</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
