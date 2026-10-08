@@ -17,6 +17,7 @@
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 (solo Implementation Plan: proxy a `127.0.0.1`); Specification sin cambios, READY | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Corrección de REV-01 (proxy a `127.0.0.1`, plan v2) y REV-02 (expectativas en spec de logout) | delivery-engineer |
 | 2026-10-08 | REVIEW → PUBLISH | PASS en re-review: REV-01 y REV-02 cerrados, sin issues abiertos | delivery-review |
+| 2026-10-08 | PUBLISH (sin cambio de etapa) | PR completo; cambio sensible (auth + ADR): pendiente de aprobación humana explícita | delivery-publish |
 
 ## Investigación
 
@@ -153,4 +154,8 @@ Sobre `c5cbade` (plan v2). REV-01 y REV-02 verificados y cerrados: [REV-01](../r
 - Notas: `npm test` completo sigue sin compilar por `app.component.spec.ts` (preexistente); `npm audit` con 7 vulnerabilidades preexistentes de la plantilla; E2E automatizado no aplica (plan).
 
 ## Publicación
-_Pendiente_
+- PR: https://github.com/rolion/dore-mini-erp/pull/4
+- Estado: **Listo para aprobación humana** (no mergeado).
+- Descripción del PR completa (Summary, Changes, Testing, Architecture decisions, plan v2, ADR, Review PASS, Known limitations).
+- Verificado antes de publicar: árbol limpio, rama en `fff61ab` sin commits posteriores al último review (salvo los documentos del propio review), sin secretos/archivos temporales en el diff.
+- Categoría sensible: **autenticación** (respaldada por ADR-frontend-login-backend-autenticacion-token). Requiere aprobación humana explícita en el chat antes de mergear.
