@@ -589,10 +589,13 @@ expense_date
 payment_method
 supplier_name
 notes
-receipt_url
+status (ACTIVE | VOIDED)
+voided_at
 created_at
 updated_at
 ```
+
+`receipt_url` y `ExpenseType` quedan fuera del MVP (ningún REQ-EXP los pide); añadirlos después es una migración aditiva.
 
 ---
 
@@ -634,7 +637,10 @@ Esto puede ayudar posteriormente en reportes.
 - Todo gasto debe tener una fecha.
 - Todo gasto debe pertenecer a una categoría.
 - Categorías utilizadas históricamente no deberían eliminarse físicamente.
-- Un gasto puede modificarse mientras no haya sido bloqueado por un cierre contable futuro.
+- Un gasto vigente puede editarse; un gasto **anulado** no (la anulación es lógica e irreversible, sin motivo; no existe borrado físico de gastos ni de categorías).
+- El cierre contable no existe en el MVP.
+- `payment_method` es opcional en la entrada y vale `CASH` por omisión; Expenses tiene su propio enum (no importa el de Sales).
+- El nombre de categoría es único sin distinguir mayúsculas.
 
 ---
 
@@ -645,9 +651,10 @@ Esto puede ayudar posteriormente en reportes.
 ```text
 CreateExpense
 UpdateExpense
-DeleteExpense
+VoidExpense
 CreateExpenseCategory
-UpdateExpenseCategory
+RenameExpenseCategory
+ActivateExpenseCategory
 DeactivateExpenseCategory
 ```
 
@@ -655,9 +662,8 @@ DeactivateExpenseCategory
 
 ```text
 GetExpense
-ListExpenses
-ListExpensesByDateRange
-ListExpensesByCategory
+ListExpenses            (rango de fechas, categoría y estado son filtros)
+GetExpenseCategory
 ListExpenseCategories
 ```
 
@@ -703,8 +709,10 @@ Gastos por periodo
 Inicialmente:
 
 ```text
-Resultado simple = Ventas cobradas - Gastos registrados
+Ganancia estimada = Ventas del periodo - Gastos vigentes del periodo
 ```
+
+Ventas del periodo = suma del `total` de los pedidos **válidos** (no cancelados y con al menos un ítem) con `order_date` en el rango, base devengada; los cobros no intervienen y los pagos de pedidos cancelados se ignoran en el MVP. Los gastos anulados no suman. Las listas de pendientes de entrega y de cobro reflejan el estado actual de todos los pedidos y no dependen del periodo. La semana va de lunes a domingo.
 
 Debe llamarse explícitamente "resultado simple" o "ganancia estimada" mientras no exista un módulo de costos de producción completo.
 
@@ -806,7 +814,9 @@ from modules.catalog.infrastructure.django.models import ProductModel
 
 desde el módulo Sales.
 
-**Convención:** la única vía de entrada de un módulo a otro es su fachada `modules/<modulo>/services.py`, que cablea sus propios repositorios y devuelve DTO inmutables (dataclasses congeladas), nunca entidades ni modelos. Hoy existen `modules/catalog/services.py` (`get_product_for_sale`) y `modules/customers/services.py` (`get_customer_for_sale`, `get_customer_names`), consumidas por Sales a través de puertos (`sales/application/ports.py`) y adaptadores (`sales/infrastructure/adapters.py`). Un test (`modules/sales/tests/test_boundaries.py`) comprueba este límite.
+**Convención:** la única vía de entrada de un módulo a otro es su fachada `modules/<modulo>/services.py`, que cablea sus propios repositorios y devuelve DTO inmutables (dataclasses congeladas), nunca entidades ni modelos. Hoy existen `modules/catalog/services.py` (`get_product_for_sale`) y `modules/customers/services.py` (`get_customer_for_sale`, `get_customer_names`), consumidas por Sales a través de puertos (`sales/application/ports.py`) y adaptadores (`sales/infrastructure/adapters.py`). Además existen `modules/sales/services.py` y `modules/expenses/services.py`, fachadas **de solo lectura** (totales, agrupaciones y pendientes) que consume Reporting a través de sus puertos (`reporting/application/ports.py`) y adaptadores (`reporting/infrastructure/adapters.py`).
+
+Dependencias permitidas, siempre y solo mediante `services.py`: `sales → {catalog, customers}`, `reporting → {sales, expenses, customers}`; `catalog`, `customers` y `expenses` no importan a ningún módulo de negocio y nadie importa `reporting`. Un test (`modules/sales/tests/test_boundaries.py`) comprueba este mapa y que los módulos consumidores solo lo hagan desde sus adaptadores. Reporting no tiene modelos ni migraciones.
 
 ---
 
@@ -970,12 +980,19 @@ Contrato completo en `docs/adr/ADR-ciclo-pedido-entrega-cobro-contrato-api.md`.
 ```text
 GET    /api/expenses
 POST   /api/expenses
+GET    /api/expenses/{id}
 PATCH  /api/expenses/{id}
-DELETE /api/expenses/{id}
+POST   /api/expenses/{id}/void       (anulación lógica; no hay DELETE)
 
 GET    /api/expense-categories
 POST   /api/expense-categories
+GET    /api/expense-categories/{id}
+PATCH  /api/expense-categories/{id}
+POST   /api/expense-categories/{id}/activate
+POST   /api/expense-categories/{id}/deactivate
 ```
+
+Contrato completo en `docs/adr/ADR-gastos-reporting-mvp-contrato-api-gastos.md`.
 
 ## Reporting
 
@@ -983,8 +1000,13 @@ POST   /api/expense-categories
 GET /api/reports/dashboard
 GET /api/reports/sales
 GET /api/reports/expenses
-GET /api/reports/profitability
+GET /api/reports/sales-by-channel
+GET /api/reports/top-products
+GET /api/reports/top-customers
+GET /api/reports/pending
 ```
+
+Solo lectura. Contrato completo en `docs/adr/ADR-gastos-reporting-mvp-contrato-api-reportes.md`.
 
 ---
 
@@ -1006,7 +1028,6 @@ src/app/
 │   └── directives/
 │
 └── features/
-    ├── dashboard/
     ├── sales/
     ├── products/
     ├── customers/
@@ -1089,14 +1110,14 @@ features/expenses/
 # 20. Angular: Reporting y Dashboard
 
 ```text
-features/dashboard/
+features/reporting/
 ├── pages/
-│   └── dashboard/
+│   ├── dashboard/          (ruta /dashboard/main)
+│   └── reports/            (ruta /reports)
 ├── components/
-│   ├── sales-summary/
-│   ├── expense-summary/
-│   ├── profit-summary/
-│   └── pending-orders/
+│   ├── period-selector/
+│   └── report-card/
+├── models/
 └── services/
 ```
 

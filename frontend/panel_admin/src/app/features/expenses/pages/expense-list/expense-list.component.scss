@@ -15,3 +15,7 @@
     text-decoration: line-through;
   }
 }
+
+:host ::ng-deep .expense-amount {
+  white-space: nowrap;
+}

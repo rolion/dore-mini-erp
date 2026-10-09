@@ -88,15 +88,15 @@
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" [rowClass]="rowClass"
               (page)="onPage($event)">
-              <ngx-datatable-column name="Fecha" [sortable]="false" [width]="110">
+              <ngx-datatable-column name="Fecha" [sortable]="false" [width]="118">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold" [routerLink]="['/expenses', row.id]">{{ row.expenseDate | date: 'dd/MM/yyyy' }}</a>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Descripción" [sortable]="false" [width]="200">
+              <ngx-datatable-column name="Descripción" [sortable]="false" [width]="147">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.description }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Categoría" [sortable]="false" [width]="160">
+              <ngx-datatable-column name="Categoría" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{ row.category.name }}
                   @if (!row.category.active) {
@@ -104,19 +104,19 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Método de pago" [sortable]="false" [width]="130">
+              <ngx-datatable-column name="Método de pago" [sortable]="false" [width]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ paymentLabel(row.paymentMethod) }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Proveedor" [sortable]="false" [width]="140">
+              <ngx-datatable-column name="Proveedor" [sortable]="false" [width]="115">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.supplierName || '—' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Monto" [sortable]="false" [width]="120" cellClass="text-end"
+              <ngx-datatable-column name="Monto" [sortable]="false" [width]="125" cellClass="text-end"
                 headerClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span class="expense-amount">{{ row.amount | money }}</span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [width]="100">
+              <ngx-datatable-column name="Estado" [sortable]="false" [width]="90">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.status === 'ACTIVE') {
                   <div class="badge-outline col-green">{{ statusLabel(row.status) }}</div>
@@ -125,7 +125,7 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="140">
+              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
                     <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/expenses', row.id]"

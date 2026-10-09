@@ -1,6 +1,6 @@
 # TASK-gastos-reporting-mvp: Módulo Gastos (categorías, gastos, anulación, método de pago) y módulo Reporting (dashboard y reportes de ventas/gastos)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-gastos-reporting-mvp`
@@ -13,6 +13,7 @@
 | 2026-10-09 | DESIGN → ARCHITECTURE | Decisión de diseño registrada en 2 DDR (menú y pantallas de gastos/categorías; dashboard y reportes) | delivery-design |
 | 2026-10-09 | ARCHITECTURE → PLANNING | Decisiones registradas en 5 ADR (modelo de dominio de gastos, contrato API de gastos, lectura entre módulos, contrato API de reportes, features frontend); reglas de negocio confirmadas por el usuario | delivery-architect |
 | 2026-10-09 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; rama creada desde `origin/main` (Sales incluido); PR abierto | delivery-plan |
+| 2026-10-09 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `expenses` y `reporting`, fachadas de Sales, features Angular `expenses` y `reporting`, `shared/`, `ddd.md`); suites en verde y humo manual hecho | delivery-engineer |
 
 ## Investigación
 
@@ -148,7 +149,43 @@ Objetivo: registrar las salidas de dinero del negocio y clasificarlas de forma s
 - [PLAN-2026-10-09-gastos-reporting-mvp](../plans/PLAN-2026-10-09-gastos-reporting-mvp.md) — **v1**, Modo COMPLETO, Specification readiness: **READY**. 28 AC; 5 fases (Expenses backend → Expenses frontend → fachadas de Sales + Reporting backend → Reporting frontend y limpieza → documentación). E2E: NO (humo manual). Sin dependencias nuevas.
 
 ## Implementación
-_Pendiente_
+
+Implementado según el plan v1 en 6 commits sobre `task/TASK-gastos-reporting-mvp` (PR #8), sin dependencias nuevas ni cambios de Specification.
+
+**Backend**
+- `backend/modules/expenses/` (nuevo): dominio (`Expense`, `ExpenseCategory`, `void()` irreversible, validadores sobre `shared/domain/money.py`), aplicación (11 casos de uso, regla de categoría activa/conservada), infraestructura Django (modelos, mapeadores, repositorios con `get_for_update`, restricción única `Lower(name)`, FK `PROTECT`), API (`/api/expenses/`, `/api/expense-categories/`, `POST …/void/`, sin `DELETE`, `total_amount` en la lista) y fachada `services.get_expense_report`. Migración `expenses/0001_initial`. (AC-01 a AC-09; INV-01 a INV-07)
+- `backend/modules/sales/services.py` y `infrastructure/django/read_queries.py` (nuevos, solo lectura): definición única de pedido válido, ventas, canal, productos, clientes y pendientes. Sin cambios en endpoints ni modelos de Sales. (AC-10, 15 a 18; INV-08, INV-10)
+- `backend/modules/reporting/` (nuevo, sin modelos): `Period` (día, semana lunes–domingo, mes, rango), siete casos de uso, adaptadores solo sobre `services.py`, siete rutas `GET /api/reports/*`, criterio único de ventas. (AC-10 a AC-14; INV-09)
+- `modules/sales/tests/test_boundaries.py` reescrito con mapa explícito de dependencias, adaptadores como único punto de salida y capas sin Django. (AC-19)
+- `config/settings/base.py`, `config/urls.py`: apps y rutas nuevas.
+
+**Frontend**
+- `features/expenses/` (lista con filtros, atajos y total del servidor; formulario con categoría activa o actual "(inactiva)"; detalle con anulación; categorías con diálogo `NgbModal`). (AC-21 a AC-24)
+- `features/reporting/` (dashboard real con selector de periodo, seis indicadores, "Ganancia estimada" rotulada como estimación, pendientes independientes del periodo; página Reportes con canal, productos, clientes y dona de gastos por categoría; `RemoteResource` para carga y reintento por tarjeta). `dashboard/main` de ejemplo eliminado. (AC-25, AC-26)
+- `shared/pipes/money.pipe.ts` y `shared/models/sales-channel.ts` (movidos desde Sales; `features/sales/index.ts` exporta etiquetas y badges para Reporting). (AC-27)
+- Menú: grupo Gastos y entrada Reportes, i18n `en/es/de`, `sidebar-menu.spec.ts` (6 rutas, 9 títulos). (AC-20)
+- `docs/architecture/ddd.md` actualizado. (AC-28)
+
+**Desviaciones respecto al plan (la Specification se satisface; ninguna viola ADR/DDR)**
+1. **Orden de fases:** el backend de Reporting (fase 3) se hizo antes que el frontend de Expenses (fase 2); sin efecto en el resultado.
+2. **`ExpenseSummary`** (mencionado en el ADR de dominio) no se creó: la lista devuelve entidades `Expense` y la vista resuelve las categorías por lote (`get_many`). Menos código con el mismo contrato.
+3. **DTO de los puertos de Reporting** se redefinen en `reporting/application/ports.py` (el adaptador los copia desde la fachada de Sales/Expenses) para que `application` no importe otros módulos; es duplicación pequeña a cambio de aislamiento.
+4. **Orden de productos más vendidos:** la agregación es SQL, pero el desempate por nombre y el límite se aplican en Python sobre los grupos del periodo para poder usar el nombre del snapshot más reciente.
+5. **Seis indicadores del dashboard** comparten una consulta (`/dashboard/`), así que comparten estado de carga/error con un único "Reintentar"; los pendientes de entrega y de cobro y cada informe de Reportes sí son independientes (el DDR pedía independencia por tarjeta; el contrato de ADR agrupa esos seis valores).
+6. **Barra de porcentaje de canales:** se usa la barra de Bootstrap en lugar de `ngb-progressbar` porque este componente exige `$localize` y rompe sus specs en Karma.
+7. **Dona de ApexCharts validada** con la plantilla (ya trae un ejemplo `pie`) y comprobada en el navegador; cierra la pregunta abierta del plan.
+8. **Porcentajes y series de la dona** se calculan en el navegador con `Number()` solo para mostrar; los importes exactos siguen siendo texto del servidor.
+
+**Deuda técnica señalada**
+- Productos más vendidos carga todos los grupos del periodo antes de ordenar/limitar (aceptable para el volumen del MVP).
+- `test_boundaries.py` vive en `modules/sales/tests/` aunque ahora es una prueba global.
+- Contenido de pantallas solo en español (como Catálogo, Cliente y Pedidos).
+- Preexistentes y fuera del PR: `app.component.spec.ts` no compila y 74 specs de plantilla fallan (`Dashboard2Component`, `SidebarComponent`, etc.), igual que en `main`.
+
+**Verificación propia (no es el Quality Gate; ese es de `delivery-review`)**
+- Backend `python manage.py test`: 498 pruebas OK (339 previas + 159 nuevas); `makemigrations --check` sin cambios.
+- Frontend `ng lint` OK; `ng build` OK; Karma acotado (features, shared, sidebar-menu; excluyendo el spec preexistente que no compila): 369/369 OK.
+- Humo manual con backend aislado (puerto 8001, base descartable `doredb_smoke`, ya eliminada; el `runserver` del puerto 8000 no se tocó) y `ng serve` en el puerto 4301: login, categoría creada en el diálogo, gasto registrado con `ng-select`, gasto anulado con confirmación (el total bajó de 1149.50 a 150.50), dashboard con ventas 155.00, 3 pedidos, ticket 51.67, ganancia estimada y pendientes (el pedido entregado con pago parcial aparece solo en cobro), página Reportes con canal, categorías y dona.
 
 ## Review
 _Pendiente_
