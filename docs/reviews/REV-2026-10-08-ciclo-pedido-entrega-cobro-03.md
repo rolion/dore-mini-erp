@@ -1,6 +1,6 @@
 # REV-2026-10-08-ciclo-pedido-entrega-cobro-03: un producto con precio 0 es seleccionable pero no se puede agregar al pedido
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-08-ciclo-pedido-entrega-cobro.md (v1)
@@ -22,3 +22,6 @@ POST /api/orders/{id}/items/ {"product_id": "<producto con precio 0>", "quantity
 
 ## Evidence
 Salida real del comando anterior contra el backend de revisión; captura del selector con "Galleta gratis · Bs 0.00" disponible. No bloquea el PR por sí misma (severidad Low); queda registrada para decisión del usuario.
+
+## Resolution (re-review 2026-10-09, `3b55ffc`)
+Cerrado. El usuario decidió permitir precio 0 en ítems; plan v2 cambió INV-01/AC-03 y añadió EDGE-13. Se retiró la validación de precio en `Order.add_item`. Verificado: `POST …/items/` con "Galleta gratis" (precio 0) responde 201; tests nuevos en dominio, aplicación y API (339 en total).

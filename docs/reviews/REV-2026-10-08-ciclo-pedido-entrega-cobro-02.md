@@ -1,6 +1,6 @@
 # REV-2026-10-08-ciclo-pedido-entrega-cobro-02: la búsqueda remota de clientes se rompe al seleccionar (TypeError `null.trim()`) y deja el selector cargando
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-08-ciclo-pedido-entrega-cobro.md (v1)
@@ -32,3 +32,6 @@ Peticiones tras reabrir y teclear "Zzz": ninguna `?search=Zzz` (la última fue `
 
 ## Required action
 Tolerar `null`/`undefined` en el término (p. ej. `term ?? ''` en el servicio o en el `switchMap`), proteger el stream para que un error no lo termine, y añadir specs que emitan `null` por `customerInput$` en el formulario y en la lista.
+
+## Resolution (re-review 2026-10-09, `3b55ffc`)
+Cerrado. `CustomerOptionsService.search` acepta `null` (`term ?? ''`) y construye la petición dentro de `defer`; los typeahead de `order-form`, `order-list` y `order-items` toleran `null`. Verificado en la UI real con el mismo flujo del hallazgo (escribir "Ana", esperar, elegir): sin errores en consola, sin spinner, y al reabrir y escribir "Zzz" se emite `GET /api/customers/?search=Zzz`.

@@ -1,6 +1,6 @@
 # REV-2026-10-08-ciclo-pedido-entrega-cobro-01: XSS almacenado por el nombre de producto en el diálogo "Quitar ítem"
 
-**Status:** Open
+**Status:** Closed
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-08-ciclo-pedido-entrega-cobro.md (v1)
@@ -43,3 +43,6 @@ Los specs existentes (`order-detail.component.spec.ts`) espían `confirmRemove` 
 
 ## Required action
 Mostrar el nombre como texto (`titleText`/`text`, o escapar con la utilidad `escapeHtml` ya existente) y añadir un spec que verifique que un nombre con HTML no llega como HTML a `Swal.fire`.
+
+## Resolution (re-review 2026-10-09, `3b55ffc`)
+Cerrado. `confirmRemove` usa `titleText` (también `customer-list`/`customer-detail`); no quedan `title:` con datos interpolados en la app. Verificado en la UI real con un producto llamado `<img src=x onerror="window.__xss=1">Pan`: el diálogo muestra el texto literal, `window.__xss` queda `undefined` y no hay `<img>` en `.swal2-title`. Specs nuevos en `order-detail`, `customer-list` y `customer-detail`.

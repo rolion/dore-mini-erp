@@ -1,6 +1,6 @@
 # TASK-ciclo-pedido-entrega-cobro: Módulo Ventas (Sales): pedido → preparación → entrega → cobro, con estado logístico y de pago independientes
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-ciclo-pedido-entrega-cobro`
@@ -17,6 +17,7 @@
 | 2026-10-08 | REVIEW → PLANNING | FAIL: 2 hallazgos IMPLEMENTATION (1 High, 1 Medium) y 1 SPECIFICATION (Low, decisión de negocio sobre precio 0); vuelve a la etapa más temprana implicada | delivery-review |
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (precio 0 permitido en ítems, REV-03); REV-01 y REV-02 se corrigen en implementación (Fase 10) | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Plan v2 implementado (REV-01, REV-02 y REV-03 atendidos; humo manual hecho) | delivery-engineer |
+| 2026-10-09 | REVIEW → PUBLISH | PASS en re-review sobre `3b55ffc`: REV-01, REV-02 y REV-03 cerrados; suites y humo manual en verde | delivery-review |
 
 ## Investigación
 
@@ -203,20 +204,19 @@ Rama `task/TASK-ciclo-pedido-entrega-cobro`, PR #7, siguiendo el plan v1 (COMPLE
 - Humo manual de UI pendiente (selectores `ng-select` remotos y fechas nativas no se pueden ejercitar bien en Karma).
 
 ## Review
-**Resultado: FAIL** — revisión del 2026-10-08 sobre `task/TASK-ciclo-pedido-entrega-cobro` @ `251ff56` (PR #7). Aislamiento de contexto: esta revisión se hizo en una sesión nueva, solo desde los artefactos y el diff del PR.
+**Resultado: PASS** — re-review del 2026-10-09 sobre `task/TASK-ciclo-pedido-entrega-cobro` @ `3b55ffc` (PR #7), plan v2. Revisión hecha en la misma sesión que la revisión anterior: el aislamiento de contexto es procedimental, no real (se releyó el diff y se re-ejecutó todo).
 
-**Issues abiertos**
-- [REV-01](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-01.md) — High, IMPLEMENTATION: XSS almacenado por `productName` en el título del `Swal` "Quitar ítem" (`order-detail.component.ts:198`).
-- [REV-02](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-02.md) — Medium, IMPLEMENTATION: `null.trim()` en la búsqueda de clientes al seleccionar; el typeahead muere y el spinner queda fijo.
-- [REV-03](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-03.md) — Low, SPECIFICATION: producto con precio 0 seleccionable pero no agregable (INV-01 vs. Catalog); requiere decisión del usuario.
+**Historial de revisiones**
+- 2026-10-08: FAIL → [REV-01](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-01.md) (High, XSS en `Swal`), [REV-02](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-02.md) (Medium, typeahead con `null`), [REV-03](../reviews/REV-2026-10-08-ciclo-pedido-entrega-cobro-03.md) (Low, precio 0). Los tres **cerrados** con evidencia en cada archivo.
+- 2026-10-09: PASS, sin issues abiertos.
 
-**Verificaciones ejecutadas (resumen; detalle en el PR)**
-- Backend `python manage.py test`: 334 tests OK (PostgreSQL 16 desechable); `makemigrations --check`: sin cambios; `bandit`: solo B106/B107 en tests (falsos positivos).
-- Frontend `ng lint` OK; `ng build` OK; Karma acotado a `features/**`, `sidebar-menu` y `shared/**`: 258/258 OK, cobertura 85,3 % sentencias / 82 % ramas.
-- Humo manual (backend y `ng serve` propios, BD desechable): crear pedido → ítems → preparar → listo → pago parcial → entregar con saldo → lista "Por cobrar" → historial del cliente: OK; detectó REV-02. No se ejercitó la cancelación ni la creación rápida de cliente desde la UI.
-- No ejecutado: `npm audit` (no hay `package-lock.json`), `ruff`/`flake8`/`mypy`/`coverage.py` (no configurados/instalados en backend), E2E (el plan lo descarta).
-- Preexistentes, no atribuibles a este PR: `app.component.spec.ts` no compila en `main`; `sidebar.component.spec.ts` falla con "No icon provided" también con el menú de `main`.
-
+**Verificaciones ejecutadas (detalle en el PR)**
+- Backend `python manage.py test`: 339 tests OK (PostgreSQL 16 desechable); `makemigrations --check`: sin cambios; `bandit` en `modules/sales` y `shared` (sin tests): sin hallazgos.
+- Frontend `ng lint` OK; `ng build` OK; Karma acotado (features, `sidebar-menu`, shared): 272/272 OK; cobertura 97,8 % sentencias, 92,8 % ramas.
+- Límites DDD OK (sin Django en `domain/`/`application/`; Catalog y Customers no importan Sales).
+- Humo manual completo en backend y `ng serve` propios: crear pedido, ítems, preparar, listo, pago parcial, entrega con saldo, lista "Por cobrar", historial del cliente, cancelación con motivo (vacío rechazado; válido conserva pagos), creación rápida de cliente con aviso de duplicado, ítem de precio 0, XSS y typeahead.
+- No ejecutado: `npm audit` (sin lockfile), ruff/flake8/mypy/coverage.py (no configurados en backend; cobertura backend revisada solo por la suite), E2E (el plan lo descarta).
+- Preexistentes, no de este PR: `app.component.spec.ts` no compila en `main`; `sidebar.component.spec.ts` falla con "No icon provided" también con el menú de `main`.
 
 ## Publicación
 _Pendiente_
