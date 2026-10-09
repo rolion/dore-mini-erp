@@ -18,6 +18,7 @@
 | 2026-10-08 | PLANNING → ENGINEERING | Plan v2 con aprobación del usuario (precio 0 permitido en ítems, REV-03); REV-01 y REV-02 se corrigen en implementación (Fase 10) | delivery-plan |
 | 2026-10-08 | ENGINEERING → REVIEW | Plan v2 implementado (REV-01, REV-02 y REV-03 atendidos; humo manual hecho) | delivery-engineer |
 | 2026-10-09 | REVIEW → PUBLISH | PASS en re-review sobre `3b55ffc`: REV-01, REV-02 y REV-03 cerrados; suites y humo manual en verde | delivery-review |
+| 2026-10-09 | PUBLISH (pendiente de aprobación) | Descripción del PR completada; listo para aprobación humana (cambio sensible: ADR y base de datos) | delivery-publish |
 
 ## Investigación
 
@@ -219,7 +220,10 @@ Rama `task/TASK-ciclo-pedido-entrega-cobro`, PR #7, siguiendo el plan v1 (COMPLE
 - Preexistentes, no de este PR: `app.component.spec.ts` no compila en `main`; `sidebar.component.spec.ts` falla con "No icon provided" también con el menú de `main`.
 
 ## Publicación
-_Pendiente_
+- PR: https://github.com/rolion/dore-mini-erp/pull/7
+- Estado: **Listo para aprobación humana** (no mergeado). Cambio sensible: tiene 5 ADR y una migración nueva de base de datos (`sales/0001_initial`), así que requiere aprobación explícita antes del merge.
+- Verificado al publicar: Quality Gate en PASS (re-review sobre `3b55ffc`), sin commits posteriores salvo los documentos del propio review, árbol limpio, sin archivos temporales ni secretos (solo credenciales de fixtures de tests), PR mergeable.
+- Tras el merge: `python manage.py migrate` en cada entorno.
 
 ### Iteración 2 (plan v2, tras el review FAIL)
 - **REV-01 / EDGE-15:** `titleText` en los diálogos `Swal` con datos de usuario (`order-detail`, `customer-list`, `customer-detail`); specs que llaman al método real. Mismo patrón sin corregir en `product-list` y `product-detail` (fuera del alcance del plan, anotado como deuda).
