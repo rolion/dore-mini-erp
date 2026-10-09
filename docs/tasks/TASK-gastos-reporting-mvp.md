@@ -1,6 +1,6 @@
 # TASK-gastos-reporting-mvp: Módulo Gastos (categorías, gastos, anulación, método de pago) y módulo Reporting (dashboard y reportes de ventas/gastos)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-gastos-reporting-mvp`
@@ -15,6 +15,7 @@
 | 2026-10-09 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; rama creada desde `origin/main` (Sales incluido); PR abierto | delivery-plan |
 | 2026-10-09 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `expenses` y `reporting`, fachadas de Sales, features Angular `expenses` y `reporting`, `shared/`, `ddd.md`); suites en verde y humo manual hecho | delivery-engineer |
 | 2026-10-09 | REVIEW → PUBLISH | Review PASS: backend 498/498, frontend 369/369 acotado, lint/build/bandit OK; 2 observaciones no bloqueantes abiertas (REV-01 Medium, REV-02 Low) | delivery-review |
+| 2026-10-09 | PUBLISH → ENGINEERING | Plan v3: REV-01 (Medium) entra como fase 6 del plan de implementación y REV-02 (Low) reformula UI-03 con aprobación explícita del usuario; vuelve a ENGINEERING para corregir REV-01 | delivery-plan |
 
 ## Investigación
 
@@ -147,7 +148,7 @@ Objetivo: registrar las salidas de dinero del negocio y clasificarlas de forma s
 **Para `delivery-plan`:** (a) la rama está detrás de `main` y Sales no existe aquí: la fase 0 es traer `main` (merge); (b) validar el gráfico de dona o usar barra horizontal; (c) fijar el texto exacto de `criteria`; (d) actualizar `ddd.md` (anulación sin `DELETE`, mapa de dependencias, `features/reporting`); (e) decidir si el tamaño del PR obliga a dividir el task entre Gastos y Reporting (opción no adoptada en el ADR de frontend).
 
 ## Plan
-- [PLAN-2026-10-09-gastos-reporting-mvp](../plans/PLAN-2026-10-09-gastos-reporting-mvp.md) — **v1**, Modo COMPLETO, Specification readiness: **READY**. 28 AC; 5 fases (Expenses backend → Expenses frontend → fachadas de Sales + Reporting backend → Reporting frontend y limpieza → documentación). E2E: NO (humo manual). Sin dependencias nuevas.
+- [PLAN-2026-10-09-gastos-reporting-mvp](../plans/PLAN-2026-10-09-gastos-reporting-mvp.md) — **v3**, Modo COMPLETO, Specification readiness: **READY**. 28 AC; 5 fases implementadas más la fase 6 (correcciones del review: REV-01 monto con notación científica/separadores y errores acumulados; REV-02 UI-03 reformulado, aprobado por el usuario). E2E: NO (humo manual). Sin dependencias nuevas. Ver `## Changelog` del plan.
 
 ## Implementación
 

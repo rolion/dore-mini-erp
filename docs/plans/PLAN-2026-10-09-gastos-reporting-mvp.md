@@ -1,4 +1,4 @@
-# PLAN-2026-10-09-gastos-reporting-mvp (v1)
+# PLAN-2026-10-09-gastos-reporting-mvp (v3)
 
 **Task:** TASK-gastos-reporting-mvp
 **Modo:** COMPLETO
@@ -62,7 +62,7 @@ No hay gastos, categorías ni reportes (`backend/modules/` sin `expenses`/`repor
 - AC-01: Crear una categoría con nombre válido devuelve 201 y aparece en `GET /api/expense-categories/?active=true`; sin nombre → 400 en `name`; el mismo nombre en otras mayúsculas → 400 en `name`.
 - AC-02: Renombrar, desactivar y activar una categoría funcionan; desactivarla no cambia sus gastos; no existe `DELETE` (405).
 - AC-03: Un gasto válido se registra (201), se devuelve con su categoría embebida y aparece en `GET /api/expenses/` con el filtro de su fecha.
-- AC-04: Monto 0, negativo, con más de 2 decimales o no numérico → 400 en `amount`; descripción, fecha o categoría faltantes → 400 en su campo; los errores se acumulan por campo.
+- AC-04: Monto 0, negativo, con más de 2 decimales, no numérico o escrito con notación científica o separadores (`1e3`, `1_000`) → 400 en `amount`; descripción, fecha o categoría faltantes → 400 en su campo; los errores se acumulan por campo.
 - AC-05: Registrar con categoría inexistente o inactiva → 400 en `category_id`; editar un gasto conservando su categoría ya inactiva se acepta; cambiarlo a una categoría inactiva → 400.
 - AC-06: `PATCH` con monto, categoría o fecha actualiza el gasto con las mismas validaciones, y las consultas y totales posteriores lo reflejan.
 - AC-07: `POST …/void/` deja el gasto `VOIDED` con `voided_at`; deja de sumar en `total_amount` y en los reportes; repetirlo → 409 `already_voided`; `PATCH` sobre un anulado → 409 `expense_voided`; `DELETE` → 405.
@@ -92,7 +92,7 @@ No hay gastos, categorías ni reportes (`backend/modules/` sin `expenses`/`repor
 - AC-28: `docs/architecture/ddd.md` refleja anulación sin `DELETE`, base devengada de la ganancia, mapa de dependencias por `services.py`, fachadas de Sales/Expenses y `features/reporting`.
 
 ## Edge cases
-- EDGE-01: Gasto con monto `0.001`, `1e3`, `"abc"`, `true` o `10000000000.00` → 400 en `amount`.
+- EDGE-01: Gasto con monto `0.001`, `1e3`, `1E3`, `1_000`, `"abc"`, `true` o `10000000000.00` → 400 en `amount`. Un monto inválido no oculta los errores de los demás campos: `{amount: "abc", description: ""}` → 400 con `amount`, `description`, `category_id` y `expense_date` a la vez.
 - EDGE-02: Rango con un solo día (`date_from == date_to`) incluye ese día; gastos y pedidos en los bordes cuentan.
 - EDGE-03: Sin gastos o sin pedidos: totales `"0.00"`, listas vacías, `average_ticket = null`, 200 (nunca 404/500).
 - EDGE-04: Ganancia negativa (gastos > ventas) se devuelve con signo.
@@ -125,7 +125,7 @@ Detallado en [contrato de gastos](../adr/ADR-gastos-reporting-mvp-contrato-api-g
 Derivado de los DDR sin cambios (menú, lista, formulario, detalle, categorías en `NgbModal`, selector de periodo, tarjetas de indicador, tablas de pendientes, reportes). Estados: `loadingIndicator`/spinner por tarjeta, vacío con mensaje, error con `toastr` o con "Reintentar", Guardar deshabilitado si inválido o enviando. Textos de pantalla en español; el menú pasa por `translate`.
 - UI-01: Importes con `MoneyPipe` ("Bs 70.00"); fechas `dd/MM/yyyy`.
 - UI-02: Gasto anulado atenuado, monto tachado, sin Editar/Anular.
-- UI-03: Ganancia ≥ 0 en verde, < 0 en rojo; rótulo literal "Ganancia estimada"; sin las palabras "costo", "margen" ni "utilidad".
+- UI-03: Ganancia ≥ 0 en verde, < 0 en rojo; rótulo literal "Ganancia estimada"; la pantalla no afirma ni insinúa costo de producción, margen ni utilidad contable: esas palabras solo pueden aparecer para negarlas (la nota fija del dashboard y el criterio de ventas de API-04).
 
 ## Non-functional requirements
 - Precisión: `Decimal` en dominio, agregaciones y serialización; nunca `float`.
@@ -142,7 +142,7 @@ No bloqueantes: (1) si la dona de ApexCharts no es viable en la plantilla se usa
 # Test Specification
 
 ## Unit tests
-- Dominio de Expenses (`SimpleTestCase`, sin base de datos): `Expense.create/update/void` y `ExpenseCategory.create/rename/activate/deactivate` cubren INV-01 a 06 y EDGE-01, 09; acumulación de errores por campo.
+- Dominio de Expenses (`SimpleTestCase`, sin base de datos): `Expense.create/update/void` y `ExpenseCategory.create/rename/activate/deactivate` cubren INV-01 a 06 y EDGE-01, 09; acumulación de errores por campo. v2: EDGE-01 con `1e3`, `1E3`, `1_000`, `' 1e3 '`, `+5` y `1e-7`; un monto no numérico con otros campos inválidos acumula todos los errores.
 - Dominio de Reporting: `Period` (día, semana lunes–domingo, mes, rango y validaciones) con EDGE-02 y EDGE-11; fórmulas de ganancia y ticket (INV-09, EDGE-03/04) con fakes de los puertos.
 - Frontend: servicios de API (mapeo DTO↔modelo, errores), validadores y mapeo de filtros de la lista de gastos, lógica del selector de periodo, formateo del `MoneyPipe` ya en `shared/`.
 
@@ -226,6 +226,12 @@ Cinco fases con commits separados dentro de un solo task y PR; cada fase deja la
 14. Enrutar `dashboard/main` a la página de `features/reporting`, borrar `dashboard/main/*`, añadir `reports` a `app.routes.ts`, entrada de menú "Reportes", i18n y `sidebar-menu.spec.ts` final (6 rutas, 9 títulos); specs de dashboard, reportes y selector.
 15. `npm test`, `npm run lint`, `npm run build`; humo manual (backend + `npm start`): categoría → gasto → editar → anular → dashboard y Reportes con un pedido real; registrar el resultado en `## Implementación`.
 
+**Fase 6 — Correcciones del review (REV-2026-10-09-gastos-reporting-mvp-01).**
+17. `modules/expenses/domain/validation.py`: `positive_money` rechaza (error en `amount`) los textos que no sean un decimal plano (`^\d+(\.\d+)?$` tras recortar espacios): notación científica, `_`, signo y separadores. Los `Decimal`/`int` siguen pasando por `parse_money`. No se modifica `shared/domain/money.py` (su endurecimiento afectaría a Catalog y Sales; fuera de alcance). (AC-04, EDGE-01, INV-01)
+18. `modules/expenses/api/serializers.py`: `amount` pasa de `DecimalField` a `CharField` (forma y tipo; los números JSON se aceptan como texto) para que el dominio valide y acumule los errores de todos los campos. El contrato y la representación de salida (`"120.50"`) no cambian. (AC-04, API-01)
+19. Tests: dominio y API con los casos de EDGE-01 ampliados y el caso de errores acumulados; verificar que `1000`, `"10"`, `"120.5"` y `12.5` siguen aceptándose.
+20. REV-02 no requiere código: UI-03 queda reformulado en esta versión.
+
 **Fase 5 — Documentación (AC-28).**
 16. Actualizar `ddd.md` (secciones 7, 8, 10 y endpoints/estructura): anulación lógica sin `DELETE`, ganancia por ventas devengadas, mapa de dependencias por `services.py` y fachadas existentes, `features/reporting`. Actualizar el TASK.
 
@@ -243,3 +249,7 @@ Una migración nueva: `modules/expenses/migrations/0001_initial.py` (generada co
 
 ## New dependencies
 Ninguna (backend: Django/DRF/psycopg existentes; frontend: `ng-apexcharts`, `@ng-bootstrap/ng-bootstrap`, `@ng-select/ng-select`, `ngx-datatable`, `sweetalert2`, `ngx-toastr` ya instalados). No se instala Playwright ni librería de datepicker.
+
+## Changelog
+- **v2** (2026-10-09): [Implementation Plan] Se agrega la fase 6 para rechazar montos con notación científica o separadores y acumular los errores del dominio (EDGE-01, AC-04 se verifican con casos más amplios; la regla ya estaba en la Specification). Solicitado por delivery-review (REV-2026-10-09-gastos-reporting-mvp-01).
+- **v3** (2026-10-09): [Specification] UI-03 reformulado: ya no prohíbe las palabras "costo", "margen" y "utilidad" sino que exige no afirmarlas ni insinuarlas (pueden aparecer para negarlas, como en la nota fija del dashboard y en el criterio de API-04). Cambio aprobado explícitamente por el usuario; no modifica comportamiento ni código. Solicitado por delivery-review (REV-2026-10-09-gastos-reporting-mvp-02).
