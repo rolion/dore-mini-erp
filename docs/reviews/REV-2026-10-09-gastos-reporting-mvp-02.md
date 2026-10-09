@@ -1,6 +1,6 @@
 # REV-2026-10-09-gastos-reporting-mvp-02: UI-03 prohíbe palabras que el DDR y API-04 exigen ("utilidad", "costo")
 
-**Status:** Open
+**Status:** Closed (re-review 2026-10-09: UI-03 reformulado en plan v3, aprobado por el usuario)
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-09-gastos-reporting-mvp.md (v1)

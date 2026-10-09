@@ -1,6 +1,6 @@
 # REV-2026-10-09-gastos-reporting-mvp-01: El monto acepta notación científica (`1e3`) y los errores de monto ocultan los del dominio
 
-**Status:** Open
+**Status:** Closed (re-review 2026-10-09: corregido en a137261, verificado)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-09-gastos-reporting-mvp.md (v1)

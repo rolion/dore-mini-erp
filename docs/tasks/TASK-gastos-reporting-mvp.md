@@ -1,6 +1,6 @@
 # TASK-gastos-reporting-mvp: Módulo Gastos (categorías, gastos, anulación, método de pago) y módulo Reporting (dashboard y reportes de ventas/gastos)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-gastos-reporting-mvp`
@@ -17,6 +17,7 @@
 | 2026-10-09 | REVIEW → PUBLISH | Review PASS: backend 498/498, frontend 369/369 acotado, lint/build/bandit OK; 2 observaciones no bloqueantes abiertas (REV-01 Medium, REV-02 Low) | delivery-review |
 | 2026-10-09 | PUBLISH → ENGINEERING | Plan v3: REV-01 (Medium) entra como fase 6 del plan de implementación y REV-02 (Low) reformula UI-03 con aprobación explícita del usuario; vuelve a ENGINEERING para corregir REV-01 | delivery-plan |
 | 2026-10-09 | ENGINEERING → REVIEW | Fase 6 del plan v3 implementada: REV-01 corregido (monto con notación científica o separadores rechazado y errores acumulados); REV-02 resuelto en la Specification sin código | delivery-engineer |
+| 2026-10-09 | REVIEW → PUBLISH | Re-review PASS: REV-01 y REV-02 cerrados; backend 503/503, bandit sin hallazgos | delivery-review |
 
 ## Investigación
 
@@ -199,15 +200,15 @@ Implementado según el plan v1 en 6 commits sobre `task/TASK-gastos-reporting-mv
 
 ## Review
 
-**Resultado: PASS** (2026-10-09, `delivery-review`, sesión nueva; aislamiento real respecto de `delivery-engineer`). Rama `task/TASK-gastos-reporting-mvp` en `06dd70b`, contra `origin/main` (`f7af20f`).
+**Resultado: PASS** (re-review 2026-10-09, `delivery-review`, sesión nueva) sobre `a137261`, plan v3. Review anterior (PASS con observaciones) sobre `06dd70b`.
 
-**Issues abiertos (no bloqueantes, ninguno Critical/High):**
-- [REV-2026-10-09-gastos-reporting-mvp-01](../reviews/REV-2026-10-09-gastos-reporting-mvp-01.md) — Medium, IMPLEMENTATION: el monto acepta `1e3`/`1_000` (EDGE-01) y los errores del serializer ocultan los del dominio. Corrección pequeña; se recomienda resolverla antes de publicar, o aceptar explícitamente el riesgo.
-- [REV-2026-10-09-gastos-reporting-mvp-02](../reviews/REV-2026-10-09-gastos-reporting-mvp-02.md) — Low, SPECIFICATION: UI-03 prohíbe "utilidad"/"costo", pero el DDR y API-04 fijan textos que las contienen (negándolas). Solo requiere reformular UI-03.
+**Issues:** ninguno abierto.
+- [REV-01](../reviews/REV-2026-10-09-gastos-reporting-mvp-01.md) — **Cerrado**: `positive_money` rechaza texto que no sea decimal plano (`1e3`, `1_000`, `Infinity`, `.5`, `1 000`) y `amount` pasa a `CharField`, de modo que el dominio acumula los errores de todos los campos. Verificado con la suite y con un sondeo directo del API.
+- [REV-02](../reviews/REV-2026-10-09-gastos-reporting-mvp-02.md) — **Cerrado**: UI-03 reformulado en el plan v3 (aprobado por el usuario); la implementación ya lo cumplía.
 
-**Verificaciones ejecutadas (salida real en el PR):** `python manage.py test` 498 OK; `makemigrations --check` sin cambios; `manage.py check` sin problemas; `bandit` 0 hallazgos en el código nuevo; `ng lint` OK; `ng build` OK; Karma de `features/`, `shared/` y `sidebar-menu` 369/369 con cobertura 97.1% sentencias / 91.9% ramas; Karma de todo `src/app` (sin `app.component.spec.ts`, que no compila igual en `main`): 74 fallos, subconjunto exacto de los 75 de `main` (solo desaparece el de `MainComponent`, eliminado). Límites DDD revisados (dominio sin Django, módulos solo vía `services.py`, Reporting solo lectura, `test_boundaries.py` en verde).
+**Verificaciones ejecutadas:** `python manage.py test` 503 OK (498 + 5 nuevas); `makemigrations --check` sin cambios; `manage.py check` sin problemas; `bandit` 0 hallazgos. El diff desde la review anterior solo toca `backend/modules/expenses/{api,domain,tests}` y documentación; el frontend no cambió, por lo que `ng lint`, `ng build` y Karma (369/369; 74 fallos de plantilla idénticos a `main`) de la review anterior siguen vigentes y **no se repitieron**.
 
-**No realizadas / limitaciones:** `flake8`/`ruff`/`mypy` y `coverage.py` no están instalados (cobertura backend revisada a mano: cada caso de uso, vista, fachada y consulta nueva tiene test; EDGE-01 es la excepción, REV-01); `npm audit` no ejecutable (no hay lockfile versionado); E2E no aplica (plan: NO); el humo manual no se repitió (consta el del engineer). Para ejecutar el frontend se usó un `tsconfig` temporal sin `app.component.spec.ts` (no versionado, eliminado).
+**No realizadas:** `flake8`/`ruff`/`mypy`/`coverage.py` no instalados (cobertura de los cambios revisada a mano: los tres comportamientos nuevos tienen test de dominio y de API); `npm audit` no ejecutable (sin lockfile); E2E no aplica; humo manual no repetido.
 
 ## Publicación
 _Pendiente_
