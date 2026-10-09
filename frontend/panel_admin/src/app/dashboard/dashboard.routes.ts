@@ -1,7 +1,7 @@
 import { Route } from "@angular/router";
 import { Page404Component } from "../authentication/page404/page404.component";
 import { Dashboard2Component } from "./dashboard2/dashboard2.component";
-import { MainComponent } from "./main/main.component";
+import { DashboardComponent } from "../features/reporting";
 
 export const DASHBOARD_ROUTE: Route[] = [
   {
@@ -11,7 +11,7 @@ export const DASHBOARD_ROUTE: Route[] = [
   },
   {
     path: 'main',
-    component: MainComponent,
+    component: DashboardComponent,
   },
   {
     path: 'dashboard2',

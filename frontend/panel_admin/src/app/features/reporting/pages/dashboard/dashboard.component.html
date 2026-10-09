@@ -1,0 +1,169 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Dashboard</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Dashboard</li>
+  </ul>
+  <div class="section-body">
+    <div class="d-flex flex-wrap align-items-start justify-content-between mb-3">
+      <app-period-selector [effective]="(summary.state$ | async)?.data?.period ?? null"
+        (selectionChange)="onSelection($event)" />
+      <button type="button" class="btn btn-light" (click)="refresh()" data-testid="refresh">
+        <i class="fas fa-sync-alt me-1" aria-hidden="true"></i>Actualizar
+      </button>
+    </div>
+
+    @if (summary.state$ | async; as s) {
+    @if (s.status === 'ready' && s.data; as d) {
+    <div class="row" data-testid="indicators">
+      <div class="col-xl-4 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="text-muted">Ventas</h6>
+            <h3 class="mb-1" data-testid="sales-total">{{ d.salesTotal | money }}</h3>
+            <small class="text-muted">Total de los pedidos del periodo</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="text-muted">Gastos</h6>
+            <h3 class="mb-1" data-testid="expenses-total">{{ d.expensesTotal | money }}</h3>
+            <a routerLink="/reports" class="small">Ver gastos por categoría</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="text-muted">Ganancia estimada</h6>
+            <h3 class="mb-1" data-testid="estimated-profit" [class.col-green]="!isNegative(d.estimatedProfit)"
+              [class.col-red]="isNegative(d.estimatedProfit)" [ngbTooltip]="profitFormula(d)">
+              {{ d.estimatedProfit | money }}
+            </h3>
+            <small class="text-muted" data-testid="estimate-note">{{ estimateNote }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="text-muted">Pedidos</h6>
+            <h3 class="mb-1" data-testid="orders-count">{{ d.ordersCount }}</h3>
+            <small class="text-muted" data-testid="average-ticket">Ticket promedio {{ d.averageTicket | money }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="text-muted">Pendientes de entrega</h6>
+            <h3 class="mb-1" data-testid="pending-delivery-count">{{ d.pendingDeliveryCount }}</h3>
+            <small class="text-muted">Pedidos sin entregar</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4 col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h6 class="text-muted">Pendientes de cobro</h6>
+            <h3 class="mb-1" data-testid="pending-collection-count">{{ d.pendingCollectionCount }}</h3>
+            <small class="text-muted" data-testid="pending-collection-balance">
+              {{ d.pendingCollectionBalance | money }} por cobrar
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="text-muted small" data-testid="criteria">{{ d.salesCriteria }}</p>
+    } @else if (s.status === 'loading') {
+    <div class="card"><div class="card-body" data-testid="indicators-loading">Cargando indicadores…</div></div>
+    } @else if (s.status === 'error') {
+    <div class="card">
+      <div class="card-body d-flex align-items-center gap-3" data-testid="indicators-error">
+        <span class="text-danger">{{ s.error }}</span>
+        <button type="button" class="btn btn-light btn-sm" (click)="summary.reload()">Reintentar</button>
+      </div>
+    </div>
+    }
+    }
+
+    @if (pending.state$ | async; as p) {
+    <div class="row">
+      <div class="col-lg-6">
+        <app-report-card title="Pendientes de entrega" [status]="p.status" [error]="p.error" [subtitle]="pendingNote"
+          (retry)="pending.reload()">
+          @if (p.data; as data) {
+          @if (data.delivery.rows.length) {
+          <div class="table-responsive">
+            <table class="table table-sm" data-testid="delivery-table">
+              <thead>
+                <tr><th>Pedido</th><th>Cliente</th><th>Entrega prevista</th><th>Estado</th></tr>
+              </thead>
+              <tbody>
+                @for (row of data.delivery.rows; track row.id) {
+                <tr>
+                  <td><a [routerLink]="['/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a></td>
+                  <td>{{ row.customer?.name || 'Sin cliente' }}</td>
+                  <td>{{ row.expectedDeliveryDate ? (row.expectedDeliveryDate | date: 'dd/MM/yyyy') : '—' }}</td>
+                  <td><app-order-status-badge [status]="row.status" /></td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (data.delivery.count > data.delivery.rows.length) {
+          <small class="text-muted d-block mb-2">Mostrando {{ data.delivery.rows.length }} de {{ data.delivery.count }}.</small>
+          }
+          <a class="btn btn-outline-primary btn-sm" routerLink="/sales/orders"
+            [queryParams]="{ status: 'PENDING_DELIVERY' }" data-testid="delivery-all">Ver todos</a>
+          } @else {
+          <p class="mb-0" data-testid="delivery-empty">No hay pedidos pendientes de entrega.</p>
+          }
+          }
+        </app-report-card>
+      </div>
+      <div class="col-lg-6">
+        <app-report-card title="Pendientes de cobro" [status]="p.status" [error]="p.error" [subtitle]="pendingNote"
+          (retry)="pending.reload()">
+          @if (p.data; as data) {
+          @if (data.collection.rows.length) {
+          <div class="table-responsive">
+            <table class="table table-sm" data-testid="collection-table">
+              <thead>
+                <tr><th>Pedido</th><th>Cliente</th><th class="text-end">Total</th><th class="text-end">Saldo</th><th>Pago</th></tr>
+              </thead>
+              <tbody>
+                @for (row of data.collection.rows; track row.id) {
+                <tr>
+                  <td><a [routerLink]="['/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a></td>
+                  <td>{{ row.customer?.name || 'Sin cliente' }}</td>
+                  <td class="text-end">{{ row.total | money }}</td>
+                  <td class="text-end">{{ row.balance | money }}</td>
+                  <td><app-payment-status-badge [status]="row.paymentStatus" /></td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (data.collection.count > data.collection.rows.length) {
+          <small class="text-muted d-block mb-2">Mostrando {{ data.collection.rows.length }} de {{ data.collection.count }}.</small>
+          }
+          <a class="btn btn-outline-primary btn-sm" routerLink="/sales/orders"
+            [queryParams]="{ status: 'NOT_CANCELLED', pay: 'WITH_BALANCE' }" data-testid="collection-all">Ver todos</a>
+          } @else {
+          <p class="mb-0" data-testid="collection-empty">No hay pedidos pendientes de cobro.</p>
+          }
+          }
+        </app-report-card>
+      </div>
+    </div>
+    }
+  </div>
+</section>

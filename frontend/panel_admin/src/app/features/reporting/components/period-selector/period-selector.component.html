@@ -1,0 +1,42 @@
+<div class="period-selector">
+  <div class="btn-group flex-wrap" role="group" aria-label="Periodo" data-testid="period-options">
+    @for (option of options; track option.kind) {
+    <button type="button" class="btn" [class.btn-primary]="kind === option.kind"
+      [class.btn-outline-primary]="kind !== option.kind" [attr.data-kind]="option.kind"
+      [attr.aria-pressed]="kind === option.kind" (click)="select(option.kind)">
+      {{ option.label }}
+    </button>
+    }
+  </div>
+
+  @if (kind === 'range') {
+  <form class="row g-2 mt-2 align-items-end" [formGroup]="rangeForm" (ngSubmit)="applyRange()" data-testid="range-form">
+    <div class="col-auto">
+      <label for="period-from" class="small mb-0">Desde</label>
+      <input id="period-from" type="date" class="form-control" formControlName="dateFrom">
+    </div>
+    <div class="col-auto">
+      <label for="period-to" class="small mb-0">Hasta</label>
+      <input id="period-to" type="date" class="form-control" formControlName="dateTo">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Aplicar</button>
+    </div>
+    @if (rangeError) {
+    <div class="col-12">
+      <small class="form-text text-danger" data-testid="range-error">{{ rangeError }}</small>
+    </div>
+    }
+  </form>
+  }
+
+  @if (effective(); as period) {
+  <p class="text-muted small mt-2 mb-0" data-testid="effective-period">
+    @if (period.dateFrom === period.dateTo) {
+    Día {{ period.dateFrom | date: 'dd/MM/yyyy' }}
+    } @else {
+    Del {{ period.dateFrom | date: 'dd/MM/yyyy' }} al {{ period.dateTo | date: 'dd/MM/yyyy' }}
+    }
+  </p>
+  }
+</div>

@@ -11,10 +11,10 @@ function translate(dictionary: unknown, key: string): unknown {
 describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
-  it('only has Dashboard, Catalog > Product, Customer, Orders and Expenses (AC-09, AC-20, AC-22)', () => {
-    expect(routes.length).toBe(5);
+  it('only has Dashboard, Catalog > Product, Customer, Orders, Expenses and Reports (AC-09, AC-20, AC-22)', () => {
+    expect(routes.length).toBe(6);
 
-    const [dashboard, catalog, customer, orders, expenses] = routes;
+    const [dashboard, catalog, customer, orders, expenses, reports] = routes;
     expect(dashboard.path).toBe('/dashboard/main');
     expect(dashboard.submenu).toEqual([]);
     expect(dashboard.groupTitle).toBeFalse();
@@ -40,11 +40,18 @@ describe('Sidebar menu (routes.json)', () => {
     expect(expenses.class).toBe('menu-toggle');
     expect(expenses.submenu.map((item) => item.path)).toEqual(['/expenses', '/expenses/categories']);
     expect(expenses.groupTitle).toBeFalse();
+
+    expect(reports.path).toBe('/reports');
+    expect(reports.title).toBe('MENUITEMS.REPORTS.TEXT');
+    expect(reports.icon).toBe('bar-chart-2');
+    expect(reports.class).toBe('');
+    expect(reports.submenu).toEqual([]);
+    expect(reports.groupTitle).toBeFalse();
   });
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(8);
+    expect(titles.length).toBe(9);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -61,5 +68,8 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Categorías');
     expect(translate(en, 'MENUITEMS.EXPENSES.TEXT')).toBe('Expenses');
     expect(translate(de, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Kategorien');
+    expect(translate(es, 'MENUITEMS.REPORTS.TEXT')).toBe('Reportes');
+    expect(translate(en, 'MENUITEMS.REPORTS.TEXT')).toBe('Reports');
+    expect(translate(de, 'MENUITEMS.REPORTS.TEXT')).toBe('Berichte');
   });
 });

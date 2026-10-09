@@ -33,6 +33,9 @@
         "CATEGORY": "Categories"
       }
     },
+    "REPORTS": {
+      "TEXT": "Reports"
+    },
     "HOME": {
       "TEXT": "Home",
       "LIST": {

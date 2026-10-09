@@ -89,6 +89,17 @@
           "submenu": []
         }
       ]
+    },
+    {
+      "path": "/reports",
+      "title": "MENUITEMS.REPORTS.TEXT",
+      "iconType": "feather",
+      "icon": "bar-chart-2",
+      "class": "",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": []
     }
   ]
 }
