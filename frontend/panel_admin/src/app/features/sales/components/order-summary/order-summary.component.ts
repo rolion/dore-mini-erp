@@ -1,7 +1,7 @@
 import { Component, effect, input, output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { FieldErrors, Order } from '../../models/order';
-import { MoneyPipe } from '../../pipes/money.pipe';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 /**
  * Importes del pedido. Todo se muestra tal como lo calcula el servidor; el total nunca es un campo editable

@@ -1,13 +1,16 @@
+import { SALES_CHANNELS, SALES_CHANNEL_LABELS, SalesChannel } from '../../../shared/models/sales-channel';
+
+// El canal de venta es un tipo compartido (lo usan Pedidos y Reportes); se reexporta para no cambiar los imports de Sales.
+export { SALES_CHANNELS, SALES_CHANNEL_LABELS };
+export type { SalesChannel };
 export type OrderStatus = 'NEW' | 'IN_PREPARATION' | 'READY' | 'DELIVERED' | 'CANCELLED';
 export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'REFUNDED';
-export type SalesChannel = 'WHATSAPP' | 'FACEBOOK' | 'INSTAGRAM' | 'STORE' | 'FAIR' | 'OTHER';
 export type PaymentMethod = 'CASH' | 'QR' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
 /** Acciones de estado que el servidor declara disponibles para un pedido. */
 export type OrderAction = 'prepare' | 'ready' | 'deliver' | 'cancel';
 
 export const ORDER_STATUSES: readonly OrderStatus[] = ['NEW', 'IN_PREPARATION', 'READY', 'DELIVERED', 'CANCELLED'];
 export const PAYMENT_STATUSES: readonly PaymentStatus[] = ['PENDING', 'PARTIAL', 'PAID', 'REFUNDED'];
-export const SALES_CHANNELS: readonly SalesChannel[] = ['WHATSAPP', 'FACEBOOK', 'INSTAGRAM', 'STORE', 'FAIR', 'OTHER'];
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ['CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER'];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -23,15 +26,6 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   PARTIAL: 'Parcial',
   PAID: 'Pagado',
   REFUNDED: 'Reembolsado',
-};
-
-export const SALES_CHANNEL_LABELS: Record<SalesChannel, string> = {
-  WHATSAPP: 'WhatsApp',
-  FACEBOOK: 'Facebook',
-  INSTAGRAM: 'Instagram',
-  STORE: 'Venta directa',
-  FAIR: 'Feria',
-  OTHER: 'Otro',
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {

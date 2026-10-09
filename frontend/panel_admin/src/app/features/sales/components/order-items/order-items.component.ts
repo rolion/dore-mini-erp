@@ -5,7 +5,7 @@ import { NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-sele
 import { Observable, Subject, catchError, concat, debounceTime, defer, distinctUntilChanged, finalize, map, of, switchMap, tap } from 'rxjs';
 import { Product, ProductsApiService } from '../../../products';
 import { FieldErrors, Order, OrderItem } from '../../models/order';
-import { MoneyPipe } from '../../pipes/money.pipe';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 export const PRODUCT_SEARCH_PAGE_SIZE = 20;
 export const LAST_ITEM_TOOLTIP = 'Un pedido confirmado debe tener al menos un producto';
