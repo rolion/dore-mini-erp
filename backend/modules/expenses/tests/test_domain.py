@@ -35,11 +35,23 @@ class ExpenseCreationTests(SimpleTestCase):
         self.assertEqual((expense.supplier_name, expense.notes), ('Molino', 'n'))
 
     def test_rejects_zero_negative_and_invalid_amounts(self):  # AC-04, INV-01, EDGE-01
-        for bad in (0, '0', Decimal('0.00'), -1, '-5.00', '0.001', 'abc', True, 12.5, None, '10000000000.00'):
+        for bad in (0, '0', Decimal('0.00'), -1, '-5.00', '0.001', 'abc', True, 12.5, None, '10000000000.00',
+                    '1e3', '1E3', '1_000', ' 1e3 ', '+5', '1e-7', 'Infinity', 'NaN', '', '1,5', '١٢'):
             with self.subTest(amount=bad):
                 with self.assertRaises(ExpenseValidationError) as ctx:
                     make_expense(amount=bad)
                 self.assertEqual(list(ctx.exception.errors), ['amount'])
+
+    def test_accepts_plain_decimal_texts_and_numbers(self):  # EDGE-01
+        for good, expected in (('10', '10.00'), (' 45.50 ', '45.50'), ('120.5', '120.50'), (1000, '1000.00'),
+                               (Decimal('0.01'), '0.01')):
+            with self.subTest(amount=good):
+                self.assertEqual(make_expense(amount=good).amount, Decimal(expected))
+
+    def test_invalid_amount_does_not_hide_the_other_errors(self):  # AC-04, EDGE-01
+        with self.assertRaises(ExpenseValidationError) as ctx:
+            Expense.create(description='', amount='1e3', category_id=None, expense_date=None)
+        self.assertEqual(set(ctx.exception.errors), {'description', 'amount', 'category_id', 'expense_date'})
 
     def test_requires_description_date_and_category(self):  # AC-04, INV-02
         with self.assertRaises(ExpenseValidationError) as ctx:

@@ -1,6 +1,6 @@
 # TASK-gastos-reporting-mvp: Módulo Gastos (categorías, gastos, anulación, método de pago) y módulo Reporting (dashboard y reportes de ventas/gastos)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-gastos-reporting-mvp`
@@ -16,6 +16,7 @@
 | 2026-10-09 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `expenses` y `reporting`, fachadas de Sales, features Angular `expenses` y `reporting`, `shared/`, `ddd.md`); suites en verde y humo manual hecho | delivery-engineer |
 | 2026-10-09 | REVIEW → PUBLISH | Review PASS: backend 498/498, frontend 369/369 acotado, lint/build/bandit OK; 2 observaciones no bloqueantes abiertas (REV-01 Medium, REV-02 Low) | delivery-review |
 | 2026-10-09 | PUBLISH → ENGINEERING | Plan v3: REV-01 (Medium) entra como fase 6 del plan de implementación y REV-02 (Low) reformula UI-03 con aprobación explícita del usuario; vuelve a ENGINEERING para corregir REV-01 | delivery-plan |
+| 2026-10-09 | ENGINEERING → REVIEW | Fase 6 del plan v3 implementada: REV-01 corregido (monto con notación científica o separadores rechazado y errores acumulados); REV-02 resuelto en la Specification sin código | delivery-engineer |
 
 ## Investigación
 
@@ -188,6 +189,13 @@ Implementado según el plan v1 en 6 commits sobre `task/TASK-gastos-reporting-mv
 - Backend `python manage.py test`: 498 pruebas OK (339 previas + 159 nuevas); `makemigrations --check` sin cambios.
 - Frontend `ng lint` OK; `ng build` OK; Karma acotado (features, shared, sidebar-menu; excluyendo el spec preexistente que no compila): 369/369 OK.
 - Humo manual con backend aislado (puerto 8001, base descartable `doredb_smoke`, ya eliminada; el `runserver` del puerto 8000 no se tocó) y `ng serve` en el puerto 4301: login, categoría creada en el diálogo, gasto registrado con `ng-select`, gasto anulado con confirmación (el total bajó de 1149.50 a 150.50), dashboard con ventas 155.00, 3 pedidos, ticket 51.67, ganancia estimada y pendientes (el pedido entregado con pago parcial aparece solo en cobro), página Reportes con canal, categorías y dona.
+
+### Fase 6 — correcciones del review (plan v3)
+- **REV-2026-10-09-gastos-reporting-mvp-01 (Medium, EDGE-01, AC-04):** `domain/validation.py` (`positive_money`) rechaza con error en `amount` los textos que no sean un decimal plano (`-?[0-9]+(\.[0-9]+)?` tras recortar espacios): `1e3`, `1E3`, `1_000`, `+5`, `Infinity`, `NaN`, vacío o con coma. Un signo `-` sigue pasando a `parse_money`, que lo informa como "mayor a cero". `api/serializers.py`: `amount` es ahora `CharField` (acepta texto o número JSON; rechaza booleanos), de modo que el dominio valida y acumula los errores de todos los campos; la salida (`"120.50"`) no cambia. `shared/domain/money.py` no se tocó.
+- **REV-2026-10-09-gastos-reporting-mvp-02 (Low, UI-03):** resuelto en la Specification (plan v3); sin cambios de código.
+- **Pruebas nuevas:** dominio (montos planos aceptados; `1e3`, `1_000`, `+5`, `1e-7`, `Infinity`, `NaN`, `''`, `1,5` y dígitos no ASCII rechazados; el monto inválido no oculta los demás errores) y API (mismos casos en alta y edición, números JSON aceptados, errores acumulados `amount`+`description`+`category_id`+`expense_date`).
+- **Desviación menor:** el plan decía rechazar también el signo; se deja pasar `-` a propósito para conservar el mensaje preciso "debe ser mayor a cero" (el monto negativo se rechaza igual, AC-04).
+- **Verificación propia:** `python manage.py test` 503 OK (dos corridas consecutivas); en una corrida previa fallaron dos tests preexistentes y ajenos (`catalog.test_api...updated_at` por marcas de tiempo idénticas y `sales.test_repository...item_order` por orden de ítems con igual `created_at`); volvieron a pasar sin cambios, y quedan como deuda técnica de intermitencia. Frontend sin cambios (el formulario ya rechaza esos formatos en el cliente).
 
 ## Review
 

@@ -6,7 +6,8 @@ from rest_framework import serializers
 
 class ExpenseInputSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    # Texto (o número JSON): el dominio valida formato, rango y decimales y junta los errores de todos los campos.
+    amount = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     category_id = serializers.UUIDField(required=False, allow_null=True)
     expense_date = serializers.DateField(required=False, allow_null=True)
     payment_method = serializers.CharField(required=False, allow_blank=True, allow_null=True)

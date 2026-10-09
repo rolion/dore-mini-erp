@@ -135,12 +135,34 @@ class CreateExpenseApiTests(ExpensesApiTestCase):
 
     def test_rejects_zero_negative_and_malformed_amounts(self):  # AC-04, EDGE-01
         category = self.category()
-        for bad in ('0', '0.00', '-5', '0.001', 'abc', '10000000000.00', True, None):
+        for bad in ('0', '0.00', '-5', '0.001', 'abc', '10000000000.00', True, None, '1e3', '1E3', '1_000', ' 1e3', '+5',
+                    '', 1e-7):
             with self.subTest(amount=bad):
                 body = {'description': 'x', 'amount': bad, 'category_id': category['id'], 'expense_date': '2026-10-05'}
                 response = self.client.post(EXPENSES, body, format='json')
                 self.assertEqual(response.status_code, 400, response.content)
                 self.assertEqual(list(response.json()), ['amount'])
+
+    def test_accepts_plain_decimal_texts_and_json_numbers(self):  # EDGE-01
+        category = self.category()
+        for sent, stored in (('10', '10.00'), ('120.5', '120.50'), (1000, '1000.00'), (12.5, '12.50'), (' 45.50 ', '45.50')):
+            with self.subTest(amount=sent):
+                body = {'description': 'x', 'amount': sent, 'category_id': category['id'], 'expense_date': '2026-10-05'}
+                response = self.client.post(EXPENSES, body, format='json')
+                self.assertEqual(response.status_code, 201, response.content)
+                self.assertEqual(response.json()['amount'], stored)
+
+    def test_invalid_amount_is_reported_together_with_the_other_errors(self):  # AC-04, EDGE-01
+        response = self.client.post(EXPENSES, {'amount': 'abc', 'description': ''}, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(set(response.json()), {'description', 'amount', 'category_id', 'expense_date'})
+
+    def test_scientific_notation_is_rejected_on_edit_too(self):  # EDGE-01
+        expense = self.expense(amount='50.00')
+        for bad in ('1e3', '1_000'):
+            response = self.client.patch(f'{EXPENSES}{expense["id"]}/', {'amount': bad}, format='json')
+            self.assertEqual((response.status_code, list(response.json())), (400, ['amount']))
+        self.assertEqual(self.client.get(f'{EXPENSES}{expense["id"]}/').json()['amount'], '50.00')
 
     def test_required_fields_are_reported_together(self):  # AC-04
         response = self.client.post(EXPENSES, {}, format='json')

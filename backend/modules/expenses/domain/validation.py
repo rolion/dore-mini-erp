@@ -1,4 +1,5 @@
 """Validadores de campo compartidos por los agregados del módulo; cada uno lanza `ExpenseValidationError`."""
+import re
 from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
@@ -13,6 +14,11 @@ _MONEY_MESSAGES = {
     DECIMALS: '{label} admite como máximo 2 decimales.',
     TOO_LARGE: '{label} no puede superar ' + str(MONEY_MAX) + '.',
 }
+
+
+# Un monto escrito como texto debe ser un decimal plano: `Decimal()` también acepta `1e3`, `1_000` o `Infinity`,
+# que no son importes (el signo se deja pasar para que `parse_money` lo informe como negativo).
+_PLAIN_DECIMAL = re.compile(r'-?[0-9]+(\.[0-9]+)?')
 
 
 def fail(field_name: str, message: str) -> ExpenseValidationError:
@@ -37,6 +43,8 @@ def optional_text(value: object, field_name: str, label: str, max_length: int) -
 
 
 def positive_money(value: object, field_name: str, label: str) -> Decimal:
+    if isinstance(value, str) and not _PLAIN_DECIMAL.fullmatch(value.strip()):
+        raise fail(field_name, f'{label} debe ser un número decimal.')
     try:
         amount = parse_money(value)
     except InvalidMoney as exc:
