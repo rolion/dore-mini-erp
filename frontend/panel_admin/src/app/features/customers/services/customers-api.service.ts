@@ -11,8 +11,8 @@ import {
   DuplicateCustomerError,
   DuplicateMatch,
   FieldErrors,
-  Page,
 } from '../models/customer';
+import { Page } from '../../../shared/models/page';
 
 export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
 export const NOT_FOUND_MESSAGE = 'Cliente no encontrado.';

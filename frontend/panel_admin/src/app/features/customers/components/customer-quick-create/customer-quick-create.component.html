@@ -1,0 +1,34 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">Nuevo cliente</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss('cerrar')"></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group mb-3">
+      <label for="quick-customer-name">Nombre <span class="text-danger">*</span></label>
+      <input id="quick-customer-name" type="text" class="form-control" placeholder="Nombre del cliente"
+        formControlName="name" [attr.maxlength]="nameMaxLength">
+      @if (serverErrors.name || (form.controls.name.invalid && (form.controls.name.touched || form.controls.name.dirty))) {
+      <small class="form-text text-danger" data-testid="name-error">
+        {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+      </small>
+      }
+    </div>
+    <div class="form-group">
+      <label for="quick-customer-phone">Teléfono</label>
+      <input id="quick-customer-phone" type="text" inputmode="tel" class="form-control" placeholder="+591 7xxxxxxx"
+        formControlName="phone" [attr.maxlength]="phoneMaxLength">
+      <small class="form-text text-muted">Opcional. Se guardará normalizado, p. ej. +591 7xxxxxxx.</small>
+      @if (serverErrors.phone || form.controls.phone.hasError('maxlength')) {
+      <small class="form-text text-danger d-block" data-testid="phone-error">
+        {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
+      </small>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss('cancelar')">Cancelar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+  </div>
+</form>

@@ -9,4 +9,5 @@ urlpatterns = [
     path('api/auth/', include('modules.accounts.api.urls')),
     path('api/products/', include('modules.catalog.api.urls')),
     path('api/customers/', include('modules.customers.api.urls')),
+    path('api/orders/', include('modules.sales.api.urls')),
 ]

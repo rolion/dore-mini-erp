@@ -1,0 +1,79 @@
+<div class="card">
+  <div class="card-header">
+    <h4>Productos del pedido</h4>
+  </div>
+  <div class="card-body">
+    @if (order().editable) {
+    <div class="row m-3 align-items-start" [formGroup]="addForm">
+      <div class="col-md-7 mb-2">
+        <ng-select [items]="(products$ | async) ?? []" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
+          formControlName="product" placeholder="Buscar producto activo" notFoundText="Sin resultados"
+          typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Producto">
+          <ng-template ng-option-tmp let-item="item">{{ item.name }} · {{ item.salePrice | money }}</ng-template>
+        </ng-select>
+        @if (errors().productId?.length) {
+        <small class="form-text text-danger" data-testid="product-error">{{ errors().productId?.join(' ') }}</small>
+        }
+      </div>
+      <div class="col-md-3 mb-2">
+        <input type="number" min="1" step="1" class="form-control" aria-label="Cantidad" formControlName="quantity"
+          (keydown.enter)="add()">
+        @if (errors().quantity?.length) {
+        <small class="form-text text-danger" data-testid="quantity-error">{{ errors().quantity?.join(' ') }}</small>
+        }
+      </div>
+      <div class="col-md-2 mb-2">
+        <button type="button" class="btn btn-primary w-100" [disabled]="addForm.invalid || busy()"
+          (click)="add()">Agregar</button>
+      </div>
+    </div>
+    }
+
+    @if (order().items.length) {
+    <div class="table-responsive">
+      <table class="table table-striped m-b-0">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="text-end">Precio unitario</th>
+            <th class="text-end" style="width: 140px">Cantidad</th>
+            <th class="text-end">Subtotal</th>
+            @if (order().editable) {
+            <th style="width: 60px"><span class="visually-hidden">Quitar</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of order().items; track item.id) {
+          <tr data-testid="item-row">
+            <td>{{ item.productName }}</td>
+            <td class="text-end">{{ item.unitPrice | money }}</td>
+            <td class="text-end">
+              @if (order().editable) {
+              <input #qty type="number" min="1" step="1" class="form-control form-control-sm text-end"
+                [attr.aria-label]="'Cantidad de ' + item.productName" [attr.data-item-id]="item.id" [value]="item.quantity" [disabled]="busy()"
+                (change)="onQuantity(item, qty)">
+              } @else {
+              {{ item.quantity }}
+              }
+            </td>
+            <td class="text-end">{{ item.subtotal | money }}</td>
+            @if (order().editable) {
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-danger" [disabled]="busy() || isLastConfirmedItem(order())"
+                [title]="isLastConfirmedItem(order()) ? lastItemTooltip : 'Quitar producto'"
+                [attr.aria-label]="'Quitar ' + item.productName" (click)="itemRemove.emit(item)">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+            }
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    } @else {
+    <p class="m-4" data-testid="items-empty">Agregue al menos un producto para poder avanzar el pedido.</p>
+    }
+  </div>
+</div>

@@ -44,6 +44,17 @@
       "badge": "",
       "badgeClass": "",
       "submenu": []
+    },
+    {
+      "path": "/sales/orders",
+      "title": "MENUITEMS.ORDERS.TEXT",
+      "iconType": "feather",
+      "icon": "shopping-cart",
+      "class": "",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": []
     }
   ]
 }

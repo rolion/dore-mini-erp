@@ -806,6 +806,8 @@ from modules.catalog.infrastructure.django.models import ProductModel
 
 desde el módulo Sales.
 
+**Convención:** la única vía de entrada de un módulo a otro es su fachada `modules/<modulo>/services.py`, que cablea sus propios repositorios y devuelve DTO inmutables (dataclasses congeladas), nunca entidades ni modelos. Hoy existen `modules/catalog/services.py` (`get_product_for_sale`) y `modules/customers/services.py` (`get_customer_for_sale`, `get_customer_names`), consumidas por Sales a través de puertos (`sales/application/ports.py`) y adaptadores (`sales/infrastructure/adapters.py`). Un test (`modules/sales/tests/test_boundaries.py`) comprueba este límite.
+
 ---
 
 # 11. Shared Kernel
@@ -942,20 +944,26 @@ POST   /api/customers/{id}/deactivate
 ## Sales
 
 ```text
-GET    /api/orders
-POST   /api/orders
-GET    /api/orders/{id}
+GET    /api/orders/                         filtros: status, payment_status, sales_channel, customer_id,
+                                            date_field + date_from + date_to, has_balance, ordering
+POST   /api/orders/
+GET    /api/orders/{id}/
+PATCH  /api/orders/{id}/
 
-POST   /api/orders/{id}/items
-DELETE /api/orders/{id}/items/{item_id}
+POST   /api/orders/{id}/items/
+PATCH  /api/orders/{id}/items/{item_id}/
+DELETE /api/orders/{id}/items/{item_id}/
+POST   /api/orders/{id}/discount/
 
-POST   /api/orders/{id}/prepare
-POST   /api/orders/{id}/ready
-POST   /api/orders/{id}/deliver
-POST   /api/orders/{id}/cancel
+POST   /api/orders/{id}/prepare/
+POST   /api/orders/{id}/ready/
+POST   /api/orders/{id}/deliver/
+POST   /api/orders/{id}/cancel/
 
-POST   /api/orders/{id}/payments
+POST   /api/orders/{id}/payments/
 ```
+
+Contrato completo en `docs/adr/ADR-ciclo-pedido-entrega-cobro-contrato-api.md`.
 
 ## Expenses
 
