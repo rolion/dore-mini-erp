@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/orders/', include('modules.sales.api.urls')),
     path('api/expenses/', include(expense_urlpatterns)),
     path('api/expense-categories/', include(category_urlpatterns)),
+    path('api/reports/', include('modules.reporting.api.urls')),
 ]
