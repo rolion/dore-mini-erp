@@ -25,7 +25,7 @@ import {
   hasBalance,
   todayIso,
 } from '../../models/order';
-import { MoneyPipe } from '../../pipes/money.pipe';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { OrdersApiService } from '../../services/orders-api.service';
 
 type PrimaryAction = 'prepare' | 'ready' | 'deliver';

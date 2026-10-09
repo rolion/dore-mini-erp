@@ -26,6 +26,16 @@
     "ORDERS": {
       "TEXT": "Bestellungen"
     },
+    "EXPENSES": {
+      "TEXT": "Ausgaben",
+      "LIST": {
+        "EXPENSE": "Ausgaben",
+        "CATEGORY": "Kategorien"
+      }
+    },
+    "REPORTS": {
+      "TEXT": "Berichte"
+    },
     "HOME": {
       "TEXT": "Zuhause",
       "LIST": {

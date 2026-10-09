@@ -21,6 +21,8 @@ INSTALLED_APPS = [
     'modules.catalog',
     'modules.customers',
     'modules.sales',
+    'modules.expenses',
+    'modules.reporting',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

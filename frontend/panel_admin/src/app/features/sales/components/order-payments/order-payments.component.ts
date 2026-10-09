@@ -9,7 +9,7 @@ import {
   PaymentMethod,
   todayIso,
 } from '../../models/order';
-import { MoneyPipe } from '../../pipes/money.pipe';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 /**
  * Pagos del pedido y formulario de registro en la misma tarjeta, para ver el saldo mientras se escribe el

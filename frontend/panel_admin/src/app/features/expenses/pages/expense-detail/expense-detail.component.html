@@ -1,0 +1,73 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Detalle del gasto</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/expenses">Gastos</a></li>
+    <li class="breadcrumb-item">Detalle</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ expense?.description ?? 'Gasto' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (expense; as e) {
+            <dl class="row m-4">
+              <dt class="col-sm-3">Descripción</dt>
+              <dd class="col-sm-9">{{ e.description }}</dd>
+              <dt class="col-sm-3">Monto</dt>
+              <dd class="col-sm-9">{{ e.amount | money }}</dd>
+              <dt class="col-sm-3">Fecha</dt>
+              <dd class="col-sm-9">{{ e.expenseDate | date: 'dd/MM/yyyy' }}</dd>
+              <dt class="col-sm-3">Categoría</dt>
+              <dd class="col-sm-9">
+                {{ e.category.name }}
+                @if (!e.category.active) {
+                <small class="text-muted">(inactiva)</small>
+                }
+              </dd>
+              <dt class="col-sm-3">Método de pago</dt>
+              <dd class="col-sm-9" data-testid="payment-method">{{ paymentLabels[e.paymentMethod] }}</dd>
+              <dt class="col-sm-3">Proveedor</dt>
+              <dd class="col-sm-9">{{ e.supplierName || '—' }}</dd>
+              <dt class="col-sm-3">Notas</dt>
+              <dd class="col-sm-9">{{ e.notes || 'Sin notas' }}</dd>
+              <dt class="col-sm-3">Estado</dt>
+              <dd class="col-sm-9">
+                @if (e.status === 'ACTIVE') {
+                <div class="badge-outline col-green d-inline-block">{{ statusLabels[e.status] }}</div>
+                } @else {
+                <div class="badge-outline col-red d-inline-block">{{ statusLabels[e.status] }}</div>
+                @if (e.voidedAt) {
+                <small class="text-muted ms-2">el {{ e.voidedAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                }
+                }
+              </dd>
+              <dt class="col-sm-3">Creado</dt>
+              <dd class="col-sm-9">{{ e.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Última actualización</dt>
+              <dd class="col-sm-9">{{ e.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            </dl>
+            <div class="m-4">
+              @if (!voided) {
+              <a class="btn btn-primary" [routerLink]="['/expenses', e.id, 'edit']">Editar</a>
+              <button type="button" class="btn btn-warning ms-2" (click)="voidExpense()">Anular gasto</button>
+              }
+              <a class="btn btn-light ms-2" routerLink="/expenses">Volver</a>
+            </div>
+            } @else if (loading) {
+            <p class="m-4">Cargando…</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

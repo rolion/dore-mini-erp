@@ -22,7 +22,7 @@ import {
   SalesChannel,
   ZERO_AMOUNT,
 } from '../../models/order';
-import { MoneyPipe } from '../../pipes/money.pipe';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 import {
