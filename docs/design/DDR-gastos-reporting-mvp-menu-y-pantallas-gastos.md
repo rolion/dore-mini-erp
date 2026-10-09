@@ -1,0 +1,62 @@
+# DDR-gastos-reporting-mvp-menu-y-pantallas-gastos: Menú "Gastos" y pantallas de gastos y categorías (lista, formulario, detalle con anulación, categorías)
+
+**Estado:** Propuesto
+**Task relacionado:** TASK-gastos-reporting-mvp
+**Fecha:** 2026-10-09
+
+## Contexto
+No existe ninguna pantalla de gastos ni de categorías (`frontend/panel_admin/src/app/features/` tiene `customers`, `products` y, en `main`, `sales`; `app.routes.ts` no tiene ruta de gastos). El menú (`src/assets/data/routes.json`, en `main`) tiene Dashboard, Catálogo ▸ Producto, Cliente y Pedidos, y `sidebar-menu.spec.ts:14-40` fija ese contenido exacto. Hay que cubrir REQ-EXP-001 a 007: crear/editar/desactivar categorías, registrar y editar gastos (descripción, monto, categoría, fecha, método de pago, proveedor y notas opcionales), anular un gasto, y listar con filtros de rango de fechas y categoría. Ya existen patrones aprobados y construidos: [DDR-clientes-mvp-menu-y-pantallas-cliente](DDR-clientes-mvp-menu-y-pantallas-cliente.md) (lista con `ngx-datatable`, formulario, detalle con `dl.row`, confirmaciones con `sweetalert2`, avisos con `ngx-toastr`) y, en `main`, `DDR-ciclo-pedido-entrega-cobro-menu-y-lista-pedidos` (atajos de vista y filtros de fecha con `input type="date"`, `ng-select` para entidades). Este DDR los reutiliza y diseña solo lo nuevo. La plantilla no tiene roles (ver DDR del catálogo): no hay variación por privilegio.
+
+## Pantallas/flujos afectados
+1. **Menú lateral**: nuevo grupo "Gastos" con dos hijos: **Gastos** y **Categorías**.
+2. **Lista de gastos** (`/expenses`): filtrar por rango de fechas y categoría (REQ-EXP-005), ver el total de lo filtrado, ir a crear, ver, editar y anular.
+3. **Formulario de gasto** (`/expenses/new`, `/expenses/:id/edit`): registrar y corregir (REQ-EXP-002, 003, 007).
+4. **Detalle de gasto** (`/expenses/:id`): ver todos los datos incluido el método de pago (REQ-EXP-007) y anular (REQ-EXP-004).
+5. **Lista de categorías** (`/expenses/categories`): crear, renombrar, activar/desactivar (REQ-EXP-001, 006), con alta/edición en un diálogo.
+
+No se diseñan: borrado físico de gastos o categorías, adjuntar comprobante (`receipt_url`), tipo fijo/variable (`ExpenseType`), creación de categoría desde el formulario de gasto ni importación; ninguno está en los REQ.
+
+## Componentes/patrones elegidos
+
+**Menú** — mismo mecanismo (`routes.json` + claves `MENUITEMS.*` en `assets/i18n/{en,es,de}.json`). Grupo de primer nivel `class: "menu-toggle"`, icono feather `dollar-sign`, igual que "Catálogo" (`routes.json`, entrada con `submenu`), con hijos `/expenses` ("Gastos") y `/expenses/categories` ("Categorías"). Claves nuevas: `MENUITEMS.EXPENSES.TEXT` ("Gastos"/"Expenses"/"Ausgaben"), `MENUITEMS.EXPENSES.LIST.EXPENSE` ("Gastos"/"Expenses"/"Ausgaben") y `MENUITEMS.EXPENSES.LIST.CATEGORY` ("Categorías"/"Categories"/"Kategorien"). Esto obliga a actualizar `sidebar-menu.spec.ts` (cantidad de rutas y de títulos).
+
+**Lista de gastos** — copia estructural de `customer-list.component.html` / `order-list.component.html`: breadcrumb "Gastos", `ngx-datatable class="material"` con paginación externa, botón redondo "+" (`btn-primary rounded-button`) a `/expenses/new`.
+- **Filtros** (fila `form-select`/`form-control` bajo el título, como Pedidos): Desde y Hasta (`input type="date"`, sin dependencia de datepicker), Categoría (`select` con **todas** las categorías, activas e inactivas, porque filtrar históricos las necesita; las inactivas se marcan "(inactiva)"), Estado (Vigentes / Anulados / Todos; **Vigentes preseleccionado**) y "Limpiar filtros".
+- **Atajos de rango** (`btn-group` como en Pedidos): **Este mes** (inicial) · Mes anterior · Todo. Solo fijan Desde/Hasta; REQ-EXP-005 pide poder consultar "gastos de un mes".
+- **Columnas**: Fecha (`dd/MM/yyyy`, enlace al detalle), Descripción, Categoría, Método de pago, Proveedor ("—" si vacío), Monto (`money` pipe de `features/sales/pipes/money.pipe.ts`, en `main`, alineado a la derecha), Estado (badge `col-green` "Vigente" / `col-red` "Anulado"), Acciones (Ver / Editar / Anular con los mismos estilos de `shared/styles/_table-actions.scss`). Un gasto anulado se muestra atenuado, con el monto tachado y sin acciones de Editar/Anular.
+- **Total del filtro**: línea destacada sobre la tabla, "Total de gastos vigentes del filtro: Bs X". **Suma solo vigentes** aunque el filtro de estado incluya anulados (así coincide con los reportes, REQ-REP-003/004); si el filtro muestra anulados, una nota lo aclara: "Los gastos anulados no se suman."
+- Estado vacío: "No hay gastos que coincidan." / "Aún no hay gastos registrados."
+
+**Formulario de gasto** — copia estructural de `customer-form` / `product-form` (`main-content` → breadcrumb → `card`, `form-control`, `*` rojo, `small.form-text.text-danger`, Guardar deshabilitado si inválido o enviando, Cancelar). Reactive Forms tipados. Campos, en este orden: Descripción (obligatorio), Monto (obligatorio, `type="number"`, `step="0.01"`, `min="0.01"`; error "El monto debe ser mayor a cero"), Fecha (obligatorio, `input type="date"`, **hoy por defecto**), Categoría (obligatorio, `ng-select` de `@ng-select/ng-select` con búsqueda, **solo categorías activas** — REQ-EXP-006), Método de pago (`select`: Efectivo, QR, Transferencia, Tarjeta, Otro; **Efectivo** preseleccionado al crear — ver Alternativas), Proveedor (opcional) y Notas (`textarea`, opcional). Los errores del servidor se muestran bajo su campo.
+- **Edición de un gasto cuya categoría ya está inactiva**: el selector muestra esa categoría actual como "Nombre (inactiva)" y la conserva mientras no se cambie; las demás opciones siguen siendo solo activas. Así editar el monto de un gasto histórico no obliga a cambiar su categoría (REQ-EXP-006: los históricos conservan su categoría).
+- **Sin categorías activas**: el selector se bloquea y aparece un aviso "Primero crea una categoría" con enlace a `/expenses/categories`; Guardar queda deshabilitado.
+- **Editar un gasto anulado** no se ofrece: la ruta redirige al detalle con aviso.
+
+**Detalle de gasto** — copia estructural de `customer-detail` / `product-detail` (`card` con `dl.row`): Descripción, Monto, Fecha, Categoría (con "(inactiva)" si corresponde), Método de pago, Proveedor, Notas, Estado, Creado, Última actualización. Botones "Editar", "Anular gasto" y "Volver". Si está anulado: badge rojo "Anulado" y, si el servidor lo informa, fecha de anulación; sin Editar/Anular.
+- **Anular**: confirmación `sweetalert2` con el texto "Este gasto dejará de sumar en los reportes. Se conserva en el historial." (botones "Anular gasto" / "Cancelar"). No hay botón "Eliminar".
+
+**Lista de categorías** — `ngx-datatable class="material"` sin paginación externa (pocas filas) o con la misma paginación si el contrato lo exige; columnas Nombre, Estado (badge `col-green` "Activa" / `col-red` "Inactiva"), Acciones (Editar / Desactivar-Activar). Botón redondo "+" abre un diálogo (`NgbModal` de `@ng-bootstrap/ng-bootstrap`, ya instalado en `package.json`) con un solo campo "Nombre" (obligatorio) y botones Guardar/Cancelar; Editar abre el mismo diálogo. Filtro de estado con **Activas** preseleccionado (Activas / Inactivas / Todas). Desactivar pide confirmación `Swal`: "La categoría dejará de ofrecerse para nuevos gastos. Los gastos ya registrados la conservan." No hay botón "Eliminar" (REQ-EXP-006). Estado vacío: "Aún no hay categorías. Crea la primera para registrar gastos."
+
+## Alternativas consideradas
+- **Menú: grupo "Gastos ▸ Gastos / Categorías" vs. entrada directa "Gastos" con categorías dentro.** Entrada directa (como Cliente/Pedidos) ahorra un clic, pero esconde la gestión de categorías (REQ-EXP-006) en un botón dentro de la lista y no deja crecer el módulo. El grupo imita a "Catálogo" y deja visible que hay dos listas. **Se elige el grupo**; coste: dos entradas más en el menú y actualizar el test del menú.
+- **Categorías: diálogo vs. página de formulario propia.** Una categoría es un solo campo (nombre) y el estado; una página `/new` y `/:id/edit` añade rutas y navegación para casi nada. Los DDR anteriores eligieron página para entidades con muchos campos, no para esto. **Diálogo `NgbModal`.**
+- **Crear categoría desde el formulario de gasto (creación rápida).** Evita ir y volver, pero no está en los REQ y requeriría un segundo diálogo anidado en un formulario. **Descartado en el MVP**; el aviso con enlace cubre el caso "no hay categorías".
+- **Selector de categoría: `select` nativo vs. `ng-select`.** Con 8-15 categorías un `select` nativo basta, pero `ng-select` ya se usa en el filtro de clientes de Pedidos, permite buscar y mostrar "(inactiva)" con estilo. **`ng-select` en el formulario, `select` nativo en el filtro de la lista** (más liviano para un filtro).
+- **Método de pago: preseleccionar Efectivo vs. obligar a elegir.** REQ-EXP-007 no dice si es obligatorio (la validación mínima de REQ-EXP-002 no lo incluye). Preseleccionar agiliza el registro pero puede registrar "Efectivo" por inercia; dejarlo vacío exige que el dato sea opcional. **Preseleccionar Efectivo; su obligatoriedad y valor por omisión en servidor los cierra `delivery-architect`/`delivery-plan`.**
+- **Anulación: botón en la lista y el detalle vs. solo en el detalle.** Anular es poco frecuente y destructivo en efecto (deja de sumar); ponerlo en cada fila de la lista invita al clic accidental. Se mantiene en ambos para ser coherente con "Desactivar" de clientes, con confirmación obligatoria. **Ambos, con confirmación.**
+- **Mostrar anulados por defecto vs. ocultarlos.** Mostrarlos mezcla gastos que no cuentan con los que sí y confunde el total; ocultarlos por defecto (como los inactivos en Clientes) es coherente con "no debe sumar en reportes normales". **Vigentes por defecto, con opción de verlos.**
+- **Motivo de anulación obligatorio (como en cancelar pedido).** Aporta trazabilidad pero REQ-EXP-004 no lo exige y añade fricción a corregir un error de captura. **Sin campo de motivo en el MVP**; se deja como mejora y como pregunta abierta para arquitectura.
+- **Tabla propia simple o `bootstrap-table` vs. `ngx-datatable`.** Mezclar patrones de tabla dentro de la app rompe la consistencia visual con Productos, Clientes y Pedidos; `ngx-datatable` ya está construido y probado en esas listas. **`ngx-datatable`.**
+
+## Comportamiento por privilegio/estado
+- **Privilegios:** no existen roles; todo usuario autenticado ve y hace todo. Es solo UX: la verificación real corresponde al backend (`IsAuthenticated` por defecto, `backend/config/settings/base.py:75-90`). El frontend no es la barrera de seguridad.
+- **Gasto anulado:** atenuado en la lista, sin Editar/Anular, sin sumar en el total; visible solo con el filtro Anulados/Todos.
+- **Categoría inactiva:** no se ofrece al crear gastos; sí aparece en filtros y en gastos históricos con "(inactiva)". Reactivarla la devuelve al selector.
+- **Estados de pantalla:** `loadingIndicator` en tablas; vacío con mensaje; error de red con `toastr`; Guardar deshabilitado si inválido o enviando; gasto o categoría inexistente → aviso y retorno a la lista; error de validación del servidor bajo su campo; rango con Desde > Hasta marcado como error en el filtro, sin consultar.
+- **Textos:** contenido de pantallas en español; solo el menú pasa por `translate` (igual que Catálogo, Cliente y Pedidos).
+
+## Consecuencias
+- Más simple: todo se arma con piezas ya presentes (`ngx-datatable`, `ng-select`, `NgbModal`, `Swal`, `toastr`, `money` pipe); sin nuevas dependencias de UI.
+- Deuda aceptada: el `money` pipe vive en `features/sales/pipes/`; Gastos y Reporting lo necesitan, y importarlo de otra feature crea acoplamiento entre features — mover a `shared/` es decisión de plan (ya se hizo algo similar con `shared/models/page.ts`). El menú es el único texto traducido; el resto está solo en español.
+- `sidebar-menu.spec.ts` y las traducciones `en/es/de` deben actualizarse junto con el menú; dejarlos sin tocar rompe el test.
+- Pendiente para arquitectura (no se decide aquí): si se anula con `DELETE` o con un `POST …/void/` (hay contradicción en `ddd.md:648,966` frente a REQ-EXP-004), si la anulación es reversible y si lleva motivo/fecha; obligatoriedad y valores de `payment_method`; si el listado devuelve el total del filtro (suma de vigentes) o lo calcula el frontend; unicidad y longitud del nombre de categoría; filtros `date_from`/`date_to`/`category_id`/`status` y paginación del contrato; qué hace el servidor si se edita un gasto a una categoría inactiva distinta de la actual.
