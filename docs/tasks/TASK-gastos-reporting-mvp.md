@@ -1,6 +1,6 @@
 # TASK-gastos-reporting-mvp: Módulo Gastos (categorías, gastos, anulación, método de pago) y módulo Reporting (dashboard y reportes de ventas/gastos)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-gastos-reporting-mvp`
@@ -14,6 +14,7 @@
 | 2026-10-09 | ARCHITECTURE → PLANNING | Decisiones registradas en 5 ADR (modelo de dominio de gastos, contrato API de gastos, lectura entre módulos, contrato API de reportes, features frontend); reglas de negocio confirmadas por el usuario | delivery-architect |
 | 2026-10-09 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; rama creada desde `origin/main` (Sales incluido); PR abierto | delivery-plan |
 | 2026-10-09 | ENGINEERING → REVIEW | Implementación completa según plan v1 (backend `expenses` y `reporting`, fachadas de Sales, features Angular `expenses` y `reporting`, `shared/`, `ddd.md`); suites en verde y humo manual hecho | delivery-engineer |
+| 2026-10-09 | REVIEW → PUBLISH | Review PASS: backend 498/498, frontend 369/369 acotado, lint/build/bandit OK; 2 observaciones no bloqueantes abiertas (REV-01 Medium, REV-02 Low) | delivery-review |
 
 ## Investigación
 
@@ -188,7 +189,16 @@ Implementado según el plan v1 en 6 commits sobre `task/TASK-gastos-reporting-mv
 - Humo manual con backend aislado (puerto 8001, base descartable `doredb_smoke`, ya eliminada; el `runserver` del puerto 8000 no se tocó) y `ng serve` en el puerto 4301: login, categoría creada en el diálogo, gasto registrado con `ng-select`, gasto anulado con confirmación (el total bajó de 1149.50 a 150.50), dashboard con ventas 155.00, 3 pedidos, ticket 51.67, ganancia estimada y pendientes (el pedido entregado con pago parcial aparece solo en cobro), página Reportes con canal, categorías y dona.
 
 ## Review
-_Pendiente_
+
+**Resultado: PASS** (2026-10-09, `delivery-review`, sesión nueva; aislamiento real respecto de `delivery-engineer`). Rama `task/TASK-gastos-reporting-mvp` en `06dd70b`, contra `origin/main` (`f7af20f`).
+
+**Issues abiertos (no bloqueantes, ninguno Critical/High):**
+- [REV-2026-10-09-gastos-reporting-mvp-01](../reviews/REV-2026-10-09-gastos-reporting-mvp-01.md) — Medium, IMPLEMENTATION: el monto acepta `1e3`/`1_000` (EDGE-01) y los errores del serializer ocultan los del dominio. Corrección pequeña; se recomienda resolverla antes de publicar, o aceptar explícitamente el riesgo.
+- [REV-2026-10-09-gastos-reporting-mvp-02](../reviews/REV-2026-10-09-gastos-reporting-mvp-02.md) — Low, SPECIFICATION: UI-03 prohíbe "utilidad"/"costo", pero el DDR y API-04 fijan textos que las contienen (negándolas). Solo requiere reformular UI-03.
+
+**Verificaciones ejecutadas (salida real en el PR):** `python manage.py test` 498 OK; `makemigrations --check` sin cambios; `manage.py check` sin problemas; `bandit` 0 hallazgos en el código nuevo; `ng lint` OK; `ng build` OK; Karma de `features/`, `shared/` y `sidebar-menu` 369/369 con cobertura 97.1% sentencias / 91.9% ramas; Karma de todo `src/app` (sin `app.component.spec.ts`, que no compila igual en `main`): 74 fallos, subconjunto exacto de los 75 de `main` (solo desaparece el de `MainComponent`, eliminado). Límites DDD revisados (dominio sin Django, módulos solo vía `services.py`, Reporting solo lectura, `test_boundaries.py` en verde).
+
+**No realizadas / limitaciones:** `flake8`/`ruff`/`mypy` y `coverage.py` no están instalados (cobertura backend revisada a mano: cada caso de uso, vista, fachada y consulta nueva tiene test; EDGE-01 es la excepción, REV-01); `npm audit` no ejecutable (no hay lockfile versionado); E2E no aplica (plan: NO); el humo manual no se repitió (consta el del engineer). Para ejecutar el frontend se usó un `tsconfig` temporal sin `app.component.spec.ts` (no versionado, eliminado).
 
 ## Publicación
 _Pendiente_
