@@ -55,6 +55,40 @@
       "badge": "",
       "badgeClass": "",
       "submenu": []
+    },
+    {
+      "path": "",
+      "title": "MENUITEMS.EXPENSES.TEXT",
+      "iconType": "feather",
+      "icon": "dollar-sign",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/expenses",
+          "title": "MENUITEMS.EXPENSES.LIST.EXPENSE",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/expenses/categories",
+          "title": "MENUITEMS.EXPENSES.LIST.CATEGORY",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ]
     }
   ]
 }

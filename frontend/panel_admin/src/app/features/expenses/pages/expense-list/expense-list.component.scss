@@ -1,0 +1,17 @@
+@use '../../../../shared/styles/table-actions';
+
+.expense-filters {
+  label {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+  }
+}
+
+// Las filas se pintan dentro de ngx-datatable (otro componente): hace falta ::ng-deep para alcanzarlas.
+:host ::ng-deep .expense-voided {
+  opacity: 0.55;
+
+  .expense-amount {
+    text-decoration: line-through;
+  }
+}

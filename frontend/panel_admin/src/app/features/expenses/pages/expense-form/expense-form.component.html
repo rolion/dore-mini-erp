@@ -1,0 +1,123 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar gasto' : 'Nuevo gasto' }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/expenses">Gastos</a></li>
+    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ isEdit ? 'Editar gasto' : 'Nuevo gasto' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (noCategories) {
+            <div class="alert alert-warning m-4" role="alert" data-testid="no-categories">
+              {{ noCategoriesMessage }}.
+              <a routerLink="/expenses/categories">Ir a Categorías</a>
+            </div>
+            }
+            <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="expense-description">Descripción <span class="text-danger">*</span></label>
+                  <input id="expense-description" type="text" class="form-control" placeholder="Qué se compró o pagó"
+                    formControlName="description" [attr.maxlength]="descriptionMaxLength">
+                  @if (hasError('description')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.description || (form.controls.description.hasError('maxlength') ?
+                    'La descripción no puede superar ' + descriptionMaxLength + ' caracteres.' :
+                    'La descripción es obligatoria.') }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-4">
+                  <label for="expense-amount">Monto <span class="text-danger">*</span></label>
+                  <input id="expense-amount" type="text" inputmode="decimal" autocomplete="off" class="form-control"
+                    placeholder="0.00" formControlName="amount">
+                  @if (hasError('amount')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.amount || (form.controls.amount.hasError('required') ? 'El monto es obligatorio.' :
+                    form.controls.amount.hasError('pattern') ? 'El monto admite como máximo 2 decimales.' :
+                    'El monto debe ser mayor a cero.') }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="expense-date">Fecha <span class="text-danger">*</span></label>
+                  <input id="expense-date" type="date" class="form-control" formControlName="expenseDate">
+                  @if (hasError('expenseDate')) {
+                  <small class="form-text text-danger">{{ serverErrors.expenseDate || 'La fecha es obligatoria.' }}</small>
+                  }
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="expense-payment">Método de pago</label>
+                  <select id="expense-payment" class="form-select form-control" formControlName="paymentMethod">
+                    @for (method of paymentMethods; track method) {
+                    <option [value]="method">{{ paymentLabels[method] }}</option>
+                    }
+                  </select>
+                  @if (hasError('paymentMethod')) {
+                  <small class="form-text text-danger">{{ serverErrors.paymentMethod || 'Elige un método de pago.' }}</small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="expense-category">Categoría <span class="text-danger">*</span></label>
+                  <ng-select inputId="expense-category" [items]="categoryOptions" bindLabel="label" bindValue="id"
+                    formControlName="categoryId" placeholder="Elige una categoría" notFoundText="Sin resultados"
+                    [clearable]="false" ariaLabel="Categoría">
+                  </ng-select>
+                  @if (hasError('categoryId')) {
+                  <small class="form-text text-danger">{{ serverErrors.categoryId || 'La categoría es obligatoria.' }}</small>
+                  }
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="expense-supplier">Proveedor</label>
+                  <input id="expense-supplier" type="text" class="form-control" placeholder="Opcional"
+                    formControlName="supplierName" [attr.maxlength]="supplierMaxLength">
+                  @if (hasError('supplierName')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.supplierName || 'El proveedor no puede superar ' + supplierMaxLength + ' caracteres.' }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="expense-notes">Notas</label>
+                  <textarea id="expense-notes" class="form-control" rows="3" placeholder="Opcional"
+                    formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
+                  @if (hasError('notes')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.notes || 'Las notas no pueden superar ' + notesMaxLength + ' caracteres.' }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary"
+                    [disabled]="form.invalid || saving || loading || noCategories">
+                    Guardar
+                  </button>
+                  <a class="btn btn-light ms-2" [routerLink]="isEdit ? ['/expenses', expenseId] : ['/expenses']">Cancelar</a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

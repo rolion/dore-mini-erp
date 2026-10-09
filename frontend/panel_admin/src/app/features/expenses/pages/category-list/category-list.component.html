@@ -1,0 +1,79 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Categorías de gasto</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/expenses">Gastos</a></li>
+    <li class="breadcrumb-item">Categorías</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="ngxTableHeader">
+                  <div class="table-title">
+                    <h2><strong>Categorías</strong></h2>
+                  </div>
+                  <div class="header-buttons-left">
+                    <div class="d-flex align-items-center gap-2 ms-3">
+                      <select class="form-select form-control w-auto" [formControl]="statusControl"
+                        aria-label="Filtrar por estado">
+                        <option value="active">Activas</option>
+                        <option value="inactive">Inactivas</option>
+                        <option value="all">Todas</option>
+                      </select>
+                      <button type="button" class="btn btn-icon icon-left btn-primary rounded-button"
+                        (click)="openDialog()" title="Nueva categoría" aria-label="Nueva categoría">
+                        <i class="material-icons">add</i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              <ngx-datatable-column name="Nombre" [sortable]="false" [width]="320">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span class="fw-bold">{{ row.name }}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Estado" [sortable]="false" [width]="120">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.active) {
+                  <div class="badge-outline col-green">Activa</div>
+                  } @else {
+                  <div class="badge-outline col-red">Inactiva</div>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="140">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span>
+                    <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto" (click)="openDialog(row)"
+                      title="Editar" aria-label="Editar">
+                      <i class="fas fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"
+                      [title]="row.active ? 'Desactivar' : 'Activar'"
+                      [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'">
+                      <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
+                    </button>
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -26,6 +26,13 @@
     "ORDERS": {
       "TEXT": "Pedidos"
     },
+    "EXPENSES": {
+      "TEXT": "Gastos",
+      "LIST": {
+        "EXPENSE": "Gastos",
+        "CATEGORY": "Categorías"
+      }
+    },
     "HOME": {
       "TEXT": "Casa",
       "LIST": {

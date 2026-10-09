@@ -11,10 +11,10 @@ function translate(dictionary: unknown, key: string): unknown {
 describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
-  it('only has Dashboard, Catalog > Product, Customer and Orders (AC-09, AC-22)', () => {
-    expect(routes.length).toBe(4);
+  it('only has Dashboard, Catalog > Product, Customer, Orders and Expenses (AC-09, AC-20, AC-22)', () => {
+    expect(routes.length).toBe(5);
 
-    const [dashboard, catalog, customer, orders] = routes;
+    const [dashboard, catalog, customer, orders, expenses] = routes;
     expect(dashboard.path).toBe('/dashboard/main');
     expect(dashboard.submenu).toEqual([]);
     expect(dashboard.groupTitle).toBeFalse();
@@ -34,11 +34,17 @@ describe('Sidebar menu (routes.json)', () => {
     expect(orders.class).toBe('');
     expect(orders.submenu).toEqual([]);
     expect(orders.groupTitle).toBeFalse();
+
+    expect(expenses.title).toBe('MENUITEMS.EXPENSES.TEXT');
+    expect(expenses.icon).toBe('dollar-sign');
+    expect(expenses.class).toBe('menu-toggle');
+    expect(expenses.submenu.map((item) => item.path)).toEqual(['/expenses', '/expenses/categories']);
+    expect(expenses.groupTitle).toBeFalse();
   });
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(5);
+    expect(titles.length).toBe(8);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -51,5 +57,9 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.ORDERS.TEXT')).toBe('Pedidos');
     expect(translate(en, 'MENUITEMS.ORDERS.TEXT')).toBe('Orders');
     expect(translate(de, 'MENUITEMS.ORDERS.TEXT')).toBe('Bestellungen');
+    expect(translate(es, 'MENUITEMS.EXPENSES.TEXT')).toBe('Gastos');
+    expect(translate(es, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Categorías');
+    expect(translate(en, 'MENUITEMS.EXPENSES.TEXT')).toBe('Expenses');
+    expect(translate(de, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Kategorien');
   });
 });
