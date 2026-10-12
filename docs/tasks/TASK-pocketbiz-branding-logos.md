@@ -1,6 +1,6 @@
 # TASK-pocketbiz-branding-logos: Branding PocketBiz (logos, favicon, título y color principal)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-pocketbiz-branding-logos`
@@ -15,6 +15,7 @@
 | 2026-10-12 19:50 | ENGINEERING → REVIEW | Implementación completa (AC-01..AC-08); pendiente review independiente | delivery-engineer |
 | 2026-10-12 20:05 | REVIEW → REVIEW | AC-08 cambiado por el usuario (fondo del brand sigue al modo); PLAN v2, `_darksidebar.scss` corregido | delivery-engineer |
 | 2026-10-12 20:30 | REVIEW → REVIEW | PLAN v3: AC-09 (fuente Inter) y AC-10 (menú light) agregados y registrados; DDR y PR actualizados | delivery-engineer |
+| 2026-10-12 21:58 | REVIEW → PUBLISH | Review PASS (AC-01..AC-10 verificados; REV-01 y REV-02 Low abiertos, no bloqueantes) | delivery-review |
 
 ## Investigación
 
@@ -124,7 +125,13 @@ Implementado según PLAN v1 (sin desviaciones de la Specification).
 - `.logo-name` queda en reglas SCSS de `_auth.scss`/`_sidebar.scss:869` (código muerto inofensivo).
 
 ## Review
-_Pendiente_
+**Resultado: PASS** (2026-10-12, PR #9). Revisión en la misma sesión que no implementó el código; contexto reconstruido solo desde TASK, PLAN v3, DDR y `git diff origin/main...HEAD`.
+
+- Issues abiertos (ambos Low, no bloqueantes):
+  - [REV-2026-10-12-pocketbiz-branding-logos-01](../reviews/REV-2026-10-12-pocketbiz-branding-logos-01.md) — IMPLEMENTATION: halo `#acb5f6` en `.btn-edit-custom` y muestra "purple" del right-sidebar con el azul de marca.
+  - [REV-2026-10-12-pocketbiz-branding-logos-02](../reviews/REV-2026-10-12-pocketbiz-branding-logos-02.md) — SPECIFICATION: AC-10 resalta dos ítems de submenú a la vez (`routerLinkActive` por prefijo, preexistente).
+- Verificaciones: `ng lint` OK; `ng build` OK; `ng test` (todas las specs de `src/app/*/**`, sin `app.component.spec.ts` que no compila en `main`): 73 FAILED / 397 OK en el PR frente a 74 / 394 en `main`, **mismo conjunto de fallos preexistentes** salvo `SidebarComponent should create`, que el PR corrige; sin fallos en signin/sidebar. Verificación visual en navegador de AC-01..05, 08, 09, 10.
+- **No realizadas**: `npm audit` (no hay `package-lock.json` en el repo: `ENOLOCK`); E2E (el plan lo descartó); `npm test` completo (no compila en `main`, preexistente); móvil 375 px (EDGE-01) solo por inspección del CSS compilado.
 
 ## Publicación
 _Pendiente_
