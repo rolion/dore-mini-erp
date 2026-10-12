@@ -1,10 +1,9 @@
 from uuid import uuid4
 
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
-from modules.expenses.infrastructure.django.models import ExpenseCategoryModel
+from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.expenses.infrastructure.django.models import ExpenseCategoryModel, ExpenseModel
 
 EXPENSES = '/api/expenses/'
 CATEGORIES = '/api/expense-categories/'
@@ -17,9 +16,8 @@ EXPENSE_KEYS = {
 
 class ExpensesApiTestCase(APITestCase):
     def setUp(self):
-        user = get_user_model().objects.create_user(username='ana', password='x-Pass-123')
-        token = Token.objects.create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
 
     def category(self, name='Empaque', expected_status=201):
         response = self.client.post(CATEGORIES, {'name': name}, format='json')
@@ -308,3 +306,58 @@ class ListExpensesApiTests(ExpensesApiTestCase):
                 response = self.client.get(EXPENSES, params)
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(list(response.json()), [field])
+
+
+class CompanyIsolationTests(ExpensesApiTestCase):
+    """AC-04..AC-07: un usuario solo ve y modifica categorías y gastos de su empresa."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_company = make_company('Empresa B')
+        self.other_category = ExpenseCategoryModel.objects.create(company_id=self.other_company.id, name='Empaque')
+        self.other_expense = ExpenseModel.objects.create(
+            company_id=self.other_company.id, category=self.other_category, description='Ajeno',
+            amount='10.00', expense_date='2026-10-05', payment_method='CASH', status='ACTIVE')
+
+    def test_lists_only_own_company_data(self):  # AC-04
+        mine_category = self.category('Mía')
+        mine = self.expense(mine_category)
+        categories = self.client.get(CATEGORIES).json()['results']
+        self.assertEqual([c['id'] for c in categories], [mine_category['id']])
+        expenses = self.client.get(EXPENSES).json()
+        self.assertEqual([e['id'] for e in expenses['results']], [mine['id']])
+        self.assertEqual(expenses['count'], 1)
+
+    def test_total_amount_ignores_other_company(self):  # AC-04
+        self.expense(self.category('Mía'), amount='5.00')
+        self.assertEqual(self.client.get(EXPENSES).json()['total_amount'], '5.00')
+
+    def test_detail_and_actions_on_foreign_ids_are_404(self):  # AC-04
+        expense_id, category_id = self.other_expense.id, self.other_category.id
+        self.assertEqual(self.client.get(f'{EXPENSES}{expense_id}/').status_code, 404)
+        self.assertEqual(self.client.patch(f'{EXPENSES}{expense_id}/', {'notes': 'x'}, format='json').status_code, 404)
+        self.assertEqual(self.client.post(f'{EXPENSES}{expense_id}/void/').status_code, 404)
+        self.assertEqual(self.client.get(f'{CATEGORIES}{category_id}/').status_code, 404)
+        self.assertEqual(self.client.patch(f'{CATEGORIES}{category_id}/', {'name': 'x'}, format='json').status_code, 404)
+        self.assertEqual(self.client.post(f'{CATEGORIES}{category_id}/deactivate/').status_code, 404)
+        self.other_expense.refresh_from_db()
+        self.assertEqual(self.other_expense.status, 'ACTIVE')
+
+    def test_expense_with_foreign_category_is_rejected_as_unknown_category(self):  # AC-06
+        body = {'description': 'Harina', 'amount': '50.00', 'category_id': str(self.other_category.id),
+                'expense_date': '2026-10-05'}
+        response = self.client.post(EXPENSES, body, format='json')
+        known = self.client.post(EXPENSES, {**body, 'category_id': str(uuid4())}, format='json')
+        self.assertEqual(response.status_code, known.status_code)
+        self.assertEqual(response.json(), known.json())
+        self.assertEqual(ExpenseModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_same_category_name_is_allowed_across_companies_but_not_within_one(self):  # AC-07
+        self.category('Empaque')  # la otra empresa ya tiene "Empaque"
+        self.category('empaque', expected_status=400)
+
+    def test_created_rows_belong_to_users_company_and_body_company_is_ignored(self):  # AC-05
+        category = self.category('Nueva', )
+        self.assertEqual(ExpenseCategoryModel.objects.get(pk=category['id']).company_id, self.company.id)
+        body = self.expense(category, company_id=str(self.other_company.id))
+        self.assertEqual(ExpenseModel.objects.get(pk=body['id']).company_id, self.company.id)

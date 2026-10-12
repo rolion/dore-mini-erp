@@ -163,6 +163,17 @@ export class HeaderComponent implements OnInit, AfterViewInit {
       (this.isOpenSidebar = !this.isOpenSidebar)
     );
   }
+  /** Nombre y apellido de la sesión (con el usuario de respaldo); vacío si no hay sesión. */
+  get userDisplayName(): string {
+    const user = this.authService.currentUserValue;
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
+    return fullName || user?.username || '';
+  }
+
+  get companyName(): string {
+    return this.authService.currentUserValue?.company?.name ?? '';
+  }
+
   logout() {
     this.authService.logout().subscribe((res) => {
       if (!res.success) {

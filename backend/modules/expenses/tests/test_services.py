@@ -1,5 +1,6 @@
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from uuid import uuid4
 
 from django.test import TestCase
 
@@ -14,8 +15,9 @@ from modules.expenses.infrastructure.django.repositories import (
 
 class ExpenseReportServiceTests(TestCase):
     def setUp(self):
-        self.categories = DjangoExpenseCategoryRepository()
-        self.expenses = DjangoExpenseRepository()
+        self.company_id = uuid4()
+        self.categories = DjangoExpenseCategoryRepository(self.company_id)
+        self.expenses = DjangoExpenseRepository(self.company_id)
 
     def category(self, name, active=True):
         category = ExpenseCategory.create(name)
@@ -30,7 +32,7 @@ class ExpenseReportServiceTests(TestCase):
         return expense
 
     def report(self, start=date(2026, 10, 1), end=date(2026, 10, 31)):
-        return services.get_expense_report(start, end)
+        return services.get_expense_report(self.company_id, start, end)
 
     def test_groups_by_category_and_total_is_the_sum_of_rows(self):  # AC-11, INV-07
         a, b = self.category('Materia prima'), self.category('Empaque')
@@ -68,3 +70,14 @@ class ExpenseReportServiceTests(TestCase):
     def test_empty_period_is_zero_without_rows(self):  # EDGE-03
         report = self.report()
         self.assertEqual((report.total, report.rows), (Decimal('0.00'), ()))
+
+    def test_report_excludes_other_companies(self):  # AC-08
+        mine = self.category('Empaque')
+        self.expense(mine, '10.00')
+        other_categories = DjangoExpenseCategoryRepository(uuid4())
+        other_expenses = DjangoExpenseRepository(other_categories.company_id)
+        foreign = other_categories.save(ExpenseCategory.create('Ajena'))
+        other_expenses.save(Expense.create('Gasto', '999.00', foreign.id, date(2026, 10, 5)))
+        report = self.report()
+        self.assertEqual(report.total, Decimal('10.00'))
+        self.assertEqual([row.name for row in report.rows], ['Empaque'])

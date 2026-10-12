@@ -25,41 +25,52 @@ def _pending(pending: sales_services.PendingOrders) -> ports.PendingOrders:
 
 
 class SalesReaderAdapter:
+    """Lector de Sales acotado a una empresa: solo ve los pedidos de esa empresa."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
     def totals(self, date_from: date, date_to: date) -> ports.SalesTotals:
-        totals = sales_services.get_sales_totals(date_from, date_to)
+        totals = sales_services.get_sales_totals(self.company_id, date_from, date_to)
         return ports.SalesTotals(total=totals.total, orders_count=totals.orders_count)
 
     def by_channel(self, date_from: date, date_to: date) -> Sequence[ports.ChannelSales]:
         return [ports.ChannelSales(sales_channel=c.sales_channel, orders_count=c.orders_count, total=c.total)
-                for c in sales_services.get_sales_by_channel(date_from, date_to)]
+                for c in sales_services.get_sales_by_channel(self.company_id, date_from, date_to)]
 
     def top_products(self, date_from: date, date_to: date, limit: int) -> Sequence[ports.ProductSales]:
         return [ports.ProductSales(product_id=p.product_id, product_name=p.product_name, units=p.units,
                                    amount=p.amount)
-                for p in sales_services.get_top_products(date_from, date_to, limit)]
+                for p in sales_services.get_top_products(self.company_id, date_from, date_to, limit)]
 
     def top_customers(self, date_from: date, date_to: date, limit: int) -> Sequence[ports.CustomerSales]:
         return [ports.CustomerSales(customer_id=c.customer_id, orders_count=c.orders_count, total=c.total)
-                for c in sales_services.get_top_customers(date_from, date_to, limit)]
+                for c in sales_services.get_top_customers(self.company_id, date_from, date_to, limit)]
 
     def pending_delivery(self, limit: int) -> ports.PendingOrders:
-        return _pending(sales_services.get_pending_delivery(limit))
+        return _pending(sales_services.get_pending_delivery(self.company_id, limit))
 
     def pending_collection(self, limit: int) -> ports.PendingOrders:
-        return _pending(sales_services.get_pending_collection(limit))
+        return _pending(sales_services.get_pending_collection(self.company_id, limit))
 
 
 class ExpensesReaderAdapter:
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
     def report(self, date_from: date, date_to: date) -> ports.ExpenseTotals:
-        report = expense_services.get_expense_report(date_from, date_to)
+        report = expense_services.get_expense_report(self.company_id, date_from, date_to)
         categories = [ports.CategoryExpense(category_id=r.category_id, name=r.name, active=r.active, total=r.total)
                       for r in report.rows]
         return ports.ExpenseTotals(total=report.total, categories=categories)
 
 
 class CustomerNamesAdapter:
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]:
-        return customer_services.get_customer_names(customer_ids)
+        return customer_services.get_customer_names(self.company_id, customer_ids)
 
 
 class SystemClock:

@@ -1,9 +1,8 @@
 from uuid import uuid4
 
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
+from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.customers.infrastructure.django.models import CustomerModel
 
 LIST_URL = '/api/customers/'
@@ -15,9 +14,8 @@ def detail_url(customer_id, suffix=''):
 
 class CustomerApiTestCase(APITestCase):
     def setUp(self):
-        user = get_user_model().objects.create_user(username='ana', password='x-Pass-123')
-        token = Token.objects.create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
 
     def create(self, name='Ana Pérez', **extra):
         response = self.client.post(LIST_URL, {'name': name, **extra}, format='json')
@@ -128,8 +126,8 @@ class DuplicatePhoneTests(CustomerApiTestCase):
         self.create(phone='76543210', confirm_duplicate=True)
 
     def test_database_has_no_unique_constraint_on_phone(self):  # INV-06
-        CustomerModel.objects.create(name='A', phone='+59176543210')
-        CustomerModel.objects.create(name='B', phone='+59176543210')
+        CustomerModel.objects.create(company_id=self.company.id, name='A', phone='+59176543210')
+        CustomerModel.objects.create(company_id=self.company.id, name='B', phone='+59176543210')
         self.assertEqual(CustomerModel.objects.count(), 2)
 
 
@@ -223,7 +221,7 @@ class ListCustomersTests(CustomerApiTestCase):
         self.assertIsNotNone(body['next'])
         self.assertEqual(self.names('?page_size=2&page=2'), ['Carla'])
         for i in range(105):
-            CustomerModel.objects.create(name=f'Z{i:03d}')
+            CustomerModel.objects.create(company_id=self.company.id, name=f'Z{i:03d}')
         body = self.client.get(f'{LIST_URL}?page_size=500').json()
         self.assertEqual(len(body['results']), 100)
 
@@ -283,3 +281,43 @@ class DetailAndAccessTests(CustomerApiTestCase):
         )
         for response in requests:
             self.assertEqual(response.status_code, 401)
+
+
+class CompanyIsolationTests(CustomerApiTestCase):
+    """AC-04 / AC-05 / AC-07: un usuario solo ve y modifica los clientes de su empresa."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_company = make_company('Empresa B')
+        self.other = CustomerModel.objects.create(
+            company_id=self.other_company.id, name='Ajeno', phone='+59176543210')
+
+    def test_list_and_search_only_return_own_company_customers(self):  # AC-04
+        mine = self.create(name='Propio')
+        listed = self.client.get(LIST_URL).json()
+        self.assertEqual([c['id'] for c in listed['results']], [mine['id']])
+        self.assertEqual(self.client.get(LIST_URL, {'search': 'Ajeno'}).json()['results'], [])
+        self.assertEqual(self.client.get(LIST_URL, {'search': '76543210'}).json()['results'], [])
+
+    def test_detail_and_actions_on_foreign_id_are_404(self):  # AC-04
+        foreign = str(self.other.id)
+        self.assertEqual(self.client.get(detail_url(foreign)).status_code, 404)
+        self.assertEqual(self.client.patch(detail_url(foreign), {'name': 'x'}, format='json').status_code, 404)
+        self.assertEqual(self.client.post(detail_url(foreign, 'deactivate/')).status_code, 404)
+        self.assertEqual(self.client.post(detail_url(foreign, 'activate/')).status_code, 404)
+        self.other.refresh_from_db()
+        self.assertEqual(self.other.name, 'Ajeno')
+
+    def test_same_phone_in_another_company_is_not_a_duplicate(self):  # AC-07
+        response = self.client.post(LIST_URL, {'name': 'Mío', 'phone': '76543210'}, format='json')
+        self.assertEqual(response.status_code, 201, response.content)
+
+    def test_same_phone_in_same_company_still_warns(self):  # AC-07 / INV-06
+        self.create(name='Primero', phone='76543210')
+        response = self.client.post(LIST_URL, {'name': 'Otro', 'phone': '76543210'}, format='json')
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual([m['name'] for m in response.json()['matches']], ['Primero'])
+
+    def test_created_customer_belongs_to_users_company_and_body_company_is_ignored(self):  # AC-05
+        body = self.create(name='Nuevo', company_id=str(self.other_company.id))
+        self.assertEqual(CustomerModel.objects.get(pk=body['id']).company_id, self.company.id)

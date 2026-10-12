@@ -166,7 +166,10 @@ template! <span class="time">Yesterday</span>
   <img alt="image" src="assets/images/user.png" class="user-img-radious-style collapse-btn"> <span
   class="d-sm-none d-lg-inline-block"></span></a>
   <div ngbDropdownMenu class="dropdown-menu dropdown-menu-right header-dropdown pullDown">
-    <div class="dropdown-title">Hello Sarah..</div>
+    <div class="dropdown-title">{{ userDisplayName }}</div>
+    @if (companyName) {
+    <div class="dropdown-item-text text-muted small px-3 pb-2 company-name">{{ companyName }}</div>
+    }
     <a routerLink="/extra-pages/profile" class="dropdown-item has-icon"> <i class="far
     fa-user"></i> Profile
   </a> <a routerLink="/email/inbox" class="dropdown-item has-icon"> <i class="far fa-envelope"></i>

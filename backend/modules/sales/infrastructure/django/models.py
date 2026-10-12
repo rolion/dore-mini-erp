@@ -6,6 +6,8 @@ from django.db.models import Q
 
 class OrderModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Empresa propietaria; solo UUID, sin FK. Ítems y pagos heredan la empresa de su pedido.
+    company_id = models.UUIDField(db_index=True)
     # Referencias a otros módulos solo por UUID, sin FK (los módulos no acoplan modelos ni migraciones).
     customer_id = models.UUIDField(null=True, blank=True, db_index=True)
     status = models.CharField(max_length=20, db_index=True)

@@ -1,6 +1,7 @@
 """Fachada pública de solo lectura del módulo Sales para otros módulos (p. ej. Reporting).
 
 Es la única vía de entrada entre módulos: devuelve DTO inmutables, nunca entidades ni modelos.
+Toda función recibe la empresa como primer argumento y solo ve los pedidos de esa empresa.
 
 Definiciones únicas (propiedad de Sales):
 - Pedido válido: no cancelado y con al menos un ítem. Toda métrica de ventas sale solo de pedidos válidos.
@@ -66,22 +67,23 @@ class PendingOrders:
     rows: tuple[PendingOrder, ...]
 
 
-def get_sales_totals(date_from: date, date_to: date) -> SalesTotals:
-    result = read_queries.totals(date_from, date_to)
+def get_sales_totals(company_id: UUID, date_from: date, date_to: date) -> SalesTotals:
+    result = read_queries.totals(company_id, date_from, date_to)
     return SalesTotals(total=result['total'] or ZERO, orders_count=result['orders_count'])
 
 
-def get_sales_by_channel(date_from: date, date_to: date) -> tuple[ChannelSales, ...]:
+def get_sales_by_channel(company_id: UUID, date_from: date, date_to: date) -> tuple[ChannelSales, ...]:
     return tuple(
         ChannelSales(sales_channel=row['sales_channel'], orders_count=row['orders_count'], total=row['total'])
-        for row in read_queries.by_channel(date_from, date_to)
+        for row in read_queries.by_channel(company_id, date_from, date_to)
     )
 
 
-def get_top_products(date_from: date, date_to: date, limit: int = DEFAULT_LIMIT) -> tuple[ProductSales, ...]:
+def get_top_products(company_id: UUID, date_from: date, date_to: date,
+                     limit: int = DEFAULT_LIMIT) -> tuple[ProductSales, ...]:
     """Orden: unidades desc, importe desc, nombre. El nombre es el del snapshot más reciente del rango."""
-    rows = read_queries.product_totals(date_from, date_to)
-    names = read_queries.latest_product_names(date_from, date_to, [row['product_id'] for row in rows])
+    rows = read_queries.product_totals(company_id, date_from, date_to)
+    names = read_queries.latest_product_names(company_id, date_from, date_to, [row['product_id'] for row in rows])
     products = [
         ProductSales(product_id=row['product_id'], product_name=names.get(row['product_id'], ''),
                      units=row['units'], amount=row['amount'])
@@ -91,11 +93,12 @@ def get_top_products(date_from: date, date_to: date, limit: int = DEFAULT_LIMIT)
     return tuple(products[:limit])
 
 
-def get_top_customers(date_from: date, date_to: date, limit: int = DEFAULT_LIMIT) -> tuple[CustomerSales, ...]:
+def get_top_customers(company_id: UUID, date_from: date, date_to: date,
+                      limit: int = DEFAULT_LIMIT) -> tuple[CustomerSales, ...]:
     """Solo pedidos con cliente; orden: total desc, pedidos desc."""
     return tuple(
         CustomerSales(customer_id=row['customer_id'], orders_count=row['orders_count'], total=row['total'])
-        for row in read_queries.customer_totals(date_from, date_to, limit)
+        for row in read_queries.customer_totals(company_id, date_from, date_to, limit)
     )
 
 
@@ -108,14 +111,14 @@ def _pending_rows(queryset, limit: int) -> tuple[PendingOrder, ...]:
     )
 
 
-def get_pending_delivery(limit: int = DEFAULT_LIMIT) -> PendingOrders:
+def get_pending_delivery(company_id: UUID, limit: int = DEFAULT_LIMIT) -> PendingOrders:
     """Entrega prevista más próxima primero (sin fecha al final). No depende de ningún periodo."""
-    queryset = read_queries.pending_delivery()
+    queryset = read_queries.pending_delivery(company_id)
     return PendingOrders(count=queryset.count(), balance_total=ZERO, rows=_pending_rows(queryset, limit))
 
 
-def get_pending_collection(limit: int = DEFAULT_LIMIT) -> PendingOrders:
+def get_pending_collection(company_id: UUID, limit: int = DEFAULT_LIMIT) -> PendingOrders:
     """Pedidos con saldo, los más antiguos primero. No depende de ningún periodo."""
-    queryset = read_queries.pending_collection()
+    queryset = read_queries.pending_collection(company_id)
     return PendingOrders(count=queryset.count(), balance_total=read_queries.collection_balance(queryset) or ZERO,
                          rows=_pending_rows(queryset, limit))

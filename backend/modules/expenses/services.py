@@ -31,14 +31,15 @@ class ExpenseReport:
     rows: tuple[CategoryExpense, ...]
 
 
-def get_expense_report(date_from: date, date_to: date) -> ExpenseReport:
-    """Gastos vigentes con `expense_date` entre ambas fechas (inclusive), por categoría y de mayor a menor monto.
+def get_expense_report(company_id: UUID, date_from: date, date_to: date) -> ExpenseReport:
+    """Gastos vigentes de la empresa con `expense_date` entre ambas fechas (inclusive), por categoría y de mayor a menor monto.
 
     Incluye categorías inactivas con monto; excluye los gastos anulados.
     """
     grouped = (
         ExpenseModel.objects
-        .filter(status=ExpenseStatus.ACTIVE.value, expense_date__gte=date_from, expense_date__lte=date_to)
+        .filter(company_id=company_id, status=ExpenseStatus.ACTIVE.value,
+                expense_date__gte=date_from, expense_date__lte=date_to)
         .values('category_id', 'category__name', 'category__active')
         .annotate(total=Sum('amount'))
         .order_by('-total', 'category__name', 'category_id')

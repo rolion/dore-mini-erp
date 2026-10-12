@@ -1,9 +1,8 @@
 from uuid import uuid4
 
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
+from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.catalog.infrastructure.django.models import ProductModel
 
 LIST_URL = '/api/products/'
@@ -15,9 +14,8 @@ def detail_url(product_id, suffix=''):
 
 class ProductApiTestCase(APITestCase):
     def setUp(self):
-        user = get_user_model().objects.create_user(username='ana', password='x-Pass-123')
-        token = Token.objects.create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
 
     def create(self, name='Cuñapé', sale_price='10.00', **extra):
         response = self.client.post(LIST_URL, {'name': name, 'sale_price': sale_price, **extra}, format='json')
@@ -208,3 +206,37 @@ class AccessTests(ProductApiTestCase):
         self.assertEqual(self.client.patch(detail_url(created['id']), {}, format='json').status_code, 401)
         self.assertEqual(self.client.post(detail_url(created['id'], 'deactivate/')).status_code, 401)
         self.assertEqual(self.client.post(detail_url(created['id'], 'activate/')).status_code, 401)
+
+
+class CompanyIsolationTests(ProductApiTestCase):
+    """AC-04 / AC-05: un usuario solo ve y modifica los productos de su empresa."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_company = make_company('Empresa B')
+        self.other = ProductModel.objects.create(
+            company_id=self.other_company.id, name='Ajeno', sale_price='9.00')
+
+    def test_list_only_returns_own_company_products(self):  # AC-04
+        mine = self.create(name='Propio')
+        listed = self.client.get(LIST_URL).json()
+        self.assertEqual([p['id'] for p in listed['results']], [mine['id']])
+        self.assertEqual(listed['count'], 1)
+
+    def test_search_does_not_reach_other_company(self):  # AC-04
+        self.assertEqual(self.client.get(LIST_URL, {'search': 'Ajeno'}).json()['results'], [])
+
+    def test_detail_and_actions_on_foreign_id_are_404(self):  # AC-04 / EDGE-04
+        foreign = str(self.other.id)
+        self.assertEqual(self.client.get(detail_url(foreign)).status_code, 404)
+        self.assertEqual(self.client.patch(detail_url(foreign), {'name': 'x'}, format='json').status_code, 404)
+        self.assertEqual(self.client.post(detail_url(foreign, 'deactivate/')).status_code, 404)
+        self.assertEqual(self.client.post(detail_url(foreign, 'activate/')).status_code, 404)
+        self.other.refresh_from_db()
+        self.assertEqual(self.other.name, 'Ajeno')
+        self.assertTrue(self.other.active)
+
+    def test_created_product_belongs_to_users_company_and_body_company_is_ignored(self):  # AC-05
+        body = self.create(name='Nuevo', company_id=str(self.other_company.id), company='Empresa B')
+        self.assertEqual(ProductModel.objects.get(pk=body['id']).company_id, self.company.id)
+        self.assertNotIn('company_id', body)

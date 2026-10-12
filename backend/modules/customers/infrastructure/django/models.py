@@ -5,6 +5,8 @@ from django.db import models
 
 class CustomerModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Empresa propietaria; solo UUID, sin FK (los módulos no acoplan modelos ni migraciones).
+    company_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=150)
     # Índice no único: el teléfono repetido es una advertencia confirmable, no una restricción (REQ-CUS-006).
     phone = models.CharField(max_length=30, blank=True, default='', db_index=True)

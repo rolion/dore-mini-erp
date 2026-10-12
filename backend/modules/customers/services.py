@@ -17,20 +17,20 @@ class CustomerForSale:
     active: bool
 
 
-def get_customer_for_sale(customer_id: UUID) -> CustomerForSale | None:
-    """El cliente con su estado vigente, o `None` si no existe.
+def get_customer_for_sale(company_id: UUID, customer_id: UUID) -> CustomerForSale | None:
+    """El cliente de la empresa con su estado vigente, o `None` si no existe (o es de otra empresa).
 
     La regla de "cliente activo" la aplica quien vende, no la fachada.
     """
-    customer = DjangoCustomerRepository().get(customer_id)
+    customer = DjangoCustomerRepository(company_id).get(customer_id)
     if customer is None:
         return None
     return CustomerForSale(id=customer.id, name=customer.name, active=customer.active)
 
 
-def get_customer_names(customer_ids: Iterable[UUID]) -> dict[UUID, str]:
-    """Nombres vigentes de varios clientes en una sola consulta; los ids inexistentes no aparecen."""
+def get_customer_names(company_id: UUID, customer_ids: Iterable[UUID]) -> dict[UUID, str]:
+    """Nombres vigentes de varios clientes de la empresa en una sola consulta; los ids inexistentes no aparecen."""
     ids = set(customer_ids)
     if not ids:
         return {}
-    return dict(CustomerModel.objects.filter(pk__in=ids).values_list('id', 'name'))
+    return dict(CustomerModel.objects.filter(company_id=company_id, pk__in=ids).values_list('id', 'name'))

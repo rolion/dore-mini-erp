@@ -839,7 +839,9 @@ No convertir shared en un lugar para lógica genérica de negocio.
 
 ---
 
-> **Nota:** `backend/modules/accounts/` contiene solo el modelo de usuario propio (`AUTH_USER_MODEL`). Es infraestructura de identidad, no un bounded context de negocio: sin `domain/` ni `application/`, y los módulos de negocio no lo importan (se refieren al actor por id).
+> **Nota:** `backend/modules/accounts/` contiene la identidad: el modelo de usuario propio (`AUTH_USER_MODEL`), la empresa (`Company`), el rol (`User.role`, hoy solo `admin`), el login y el registro público (`POST /api/auth/register/`, que crea la empresa y su primer admin) y el permiso por defecto de la API (`CompanyAdminPermission`). Es infraestructura de identidad, no un bounded context de negocio: sin `domain/` ni `application/`, y los módulos de negocio **no la importan** (lo comprueba `test_boundaries.py`); reciben la empresa como un `company_id` derivado del usuario autenticado (`shared/tenancy.py`).
+
+**Multiempresa simple (aislamiento por empresa).** Cada usuario pertenece a una sola empresa y solo ve y modifica los datos de ella. Reglas: (1) cada tabla raíz de negocio (`catalog_product`, `customers_customer`, `sales_order`, `expenses_category`, `expenses_expense`) tiene `company_id` (UUID obligatorio e indexado, sin FK entre módulos); `sales_order_item` y `sales_payment` heredan la empresa de su pedido; (2) la empresa sale **siempre** del token, nunca de la ruta, query ni cuerpo; (3) los repositorios `Django…Repository(company_id)` exigen la empresa en el constructor y filtran toda consulta; las fachadas `services.py` reciben `company_id` como primer argumento y los adaptadores de Sales y Reporting se construyen con él (puertos y casos de uso no cambian); (4) un id de otra empresa responde 404; (5) las entidades de dominio no conocen la empresa; (6) las unicidades (categoría de gasto, teléfono) son por empresa. Un repositorio o consulta nuevos **deben** filtrar por empresa: `accounts/test_guards.py` y las pruebas de fuga de cada módulo lo vigilan.
 
 # 12. Estructura sugerida del backend Django
 
@@ -1254,6 +1256,8 @@ Multiempresa compleja
 ```
 
 Estas capacidades pueden incorporarse cuando el producto haya validado su uso.
+
+> **Nota:** "Multiempresa compleja" sigue fuera de alcance (jerarquías de empresas, usuarios en varias empresas, transferencias, roles por empresa). Lo que sí existe es la **multiempresa simple** descrita en la sección de módulos: una empresa por usuario, aislamiento por columna `company_id` y un único rol `admin`.
 
 ---
 

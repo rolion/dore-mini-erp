@@ -71,6 +71,17 @@ class ModuleBoundaryTests(SimpleTestCase):
                         offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
         self.assertEqual(offenders, [])
 
+    def test_business_modules_do_not_import_accounts(self):  # AC-16 (b): reciben la empresa, no la identidad
+        offenders = []
+        for module_dir in business_modules():
+            if module_dir.name in NON_BUSINESS:
+                continue
+            for path in source_files(module_dir):
+                for module, names in imports(path):
+                    if module.startswith('modules.accounts') or (module == 'modules' and 'accounts' in names):
+                        offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
+        self.assertEqual(offenders, [])
+
     def test_nobody_imports_reporting(self):  # AC-19: Reporting solo lee, nadie depende de él
         offenders = []
         for module_dir in business_modules():

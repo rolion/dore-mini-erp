@@ -32,16 +32,25 @@ class CustomerList:
 
 
 class DjangoCustomerRepository:
+    """Repositorio acotado a una empresa: toda consulta filtra por `company_id` y `save` lo establece al crear."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _customers(self) -> QuerySet:
+        return CustomerModel.objects.filter(company_id=self.company_id)
+
     def get(self, customer_id: UUID) -> Customer | None:
-        model = CustomerModel.objects.filter(pk=customer_id).first()
+        model = self._customers().filter(pk=customer_id).first()
         return to_entity(model) if model else None
 
     def save(self, customer: Customer) -> Customer:
-        model, _ = CustomerModel.objects.update_or_create(id=customer.id, defaults=to_model_values(customer))
+        model, _ = CustomerModel.objects.update_or_create(
+            id=customer.id, company_id=self.company_id, defaults=to_model_values(customer))
         return to_entity(model)
 
     def list(self, search: str | None = None, active: bool | None = None) -> CustomerList:
-        queryset = CustomerModel.objects.order_by('name', 'id')
+        queryset = self._customers().order_by('name', 'id')
         if search:
             condition = Q(name__icontains=search)
             digits = re.sub(r'\D', '', search)
@@ -53,7 +62,7 @@ class DjangoCustomerRepository:
         return CustomerList(queryset)
 
     def find_by_phone(self, phone: str, exclude_id: UUID | None = None, limit: int = 10) -> Sequence[Customer]:
-        queryset = CustomerModel.objects.filter(phone=phone).order_by('name', 'id')
+        queryset = self._customers().filter(phone=phone).order_by('name', 'id')
         if exclude_id is not None:
             queryset = queryset.exclude(pk=exclude_id)
         return [to_entity(model) for model in queryset[:limit]]

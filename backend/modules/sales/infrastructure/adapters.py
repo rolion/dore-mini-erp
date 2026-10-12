@@ -14,22 +14,28 @@ from modules.sales.application.ports import CustomerInfo, ProductInfo
 
 
 class ProductCatalogAdapter:
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
     def get_product_for_sale(self, product_id: UUID) -> ProductInfo | None:
-        product = catalog_services.get_product_for_sale(product_id)
+        product = catalog_services.get_product_for_sale(self.company_id, product_id)
         if product is None:
             return None
         return ProductInfo(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active)
 
 
 class CustomerDirectoryAdapter:
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
     def get_customer_for_sale(self, customer_id: UUID) -> CustomerInfo | None:
-        customer = customer_services.get_customer_for_sale(customer_id)
+        customer = customer_services.get_customer_for_sale(self.company_id, customer_id)
         if customer is None:
             return None
         return CustomerInfo(id=customer.id, name=customer.name, active=customer.active)
 
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]:
-        return customer_services.get_customer_names(customer_ids)
+        return customer_services.get_customer_names(self.company_id, customer_ids)
 
 
 class SystemClock:

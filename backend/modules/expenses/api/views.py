@@ -27,6 +27,7 @@ from modules.expenses.infrastructure.django.repositories import (
     DjangoExpenseCategoryRepository,
     DjangoExpenseRepository,
 )
+from shared.tenancy import company_id_from
 
 from .filters import parse_expense_filters
 from .pagination import CategoryPagination, ExpensePagination
@@ -83,8 +84,17 @@ def _validated(serializer_class, data, partial: bool = False) -> dict:
     return serializer.validated_data
 
 
-def _expense_response(expense, http_status: int = status.HTTP_200_OK) -> Response:
-    categories = DjangoExpenseCategoryRepository().get_many([expense.category_id])
+def _expenses(request) -> DjangoExpenseRepository:
+    """Repositorios de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
+    return DjangoExpenseRepository(company_id_from(request))
+
+
+def _categories(request) -> DjangoExpenseCategoryRepository:
+    return DjangoExpenseCategoryRepository(company_id_from(request))
+
+
+def _expense_response(request, expense, http_status: int = status.HTTP_200_OK) -> Response:
+    categories = _categories(request).get_many([expense.category_id])
     return Response(ExpenseSerializer(expense, context={'categories': categories}).data, status=http_status)
 
 
@@ -99,49 +109,49 @@ def _parse_active(raw: str | None) -> bool | None:
 class ExpenseListCreateView(APIView):
     def get(self, request):
         filters = parse_expense_filters(request.query_params)
-        repository = DjangoExpenseRepository()
+        repository = _expenses(request)
         expenses = _run(ListExpenses(repository), mutates=False, filters=filters)
         paginator = ExpensePagination()
         page = paginator.paginate_queryset(expenses, request, view=self)
         paginator.total_amount = repository.total_active(filters)
-        categories = DjangoExpenseCategoryRepository().get_many({e.category_id for e in page})
+        categories = _categories(request).get_many({e.category_id for e in page})
         data = ExpenseSummarySerializer(page, many=True, context={'categories': categories}).data
         return paginator.get_paginated_response(data)
 
     def post(self, request):
         values = _validated(ExpenseInputSerializer, request.data)
-        use_case = CreateExpense(DjangoExpenseRepository(), DjangoExpenseCategoryRepository())
+        use_case = CreateExpense(_expenses(request), _categories(request))
         expense = _run(use_case, **values)
-        return _expense_response(expense, status.HTTP_201_CREATED)
+        return _expense_response(request, expense, status.HTTP_201_CREATED)
 
 
 class ExpenseDetailView(APIView):
     # Sin DELETE: los gastos se anulan, no se borran (la ausencia del método da 405).
 
     def get(self, request, expense_id: str):
-        expense = _run(GetExpense(DjangoExpenseRepository()), mutates=False,
+        expense = _run(GetExpense(_expenses(request)), mutates=False,
                        expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND))
-        return _expense_response(expense)
+        return _expense_response(request, expense)
 
     def patch(self, request, expense_id: str):
         values = _validated(ExpenseInputSerializer, request.data, partial=True)
-        use_case = UpdateExpense(DjangoExpenseRepository(), DjangoExpenseCategoryRepository())
+        use_case = UpdateExpense(_expenses(request), _categories(request))
         expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND), **values)
-        return _expense_response(expense)
+        return _expense_response(request, expense)
 
 
 class ExpenseVoidView(APIView):
     def post(self, request, expense_id: str):
-        use_case = VoidExpense(DjangoExpenseRepository(), SystemClock())
+        use_case = VoidExpense(_expenses(request), SystemClock())
         expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND))
-        return _expense_response(expense)
+        return _expense_response(request, expense)
 
 
 class CategoryListCreateView(APIView):
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
-        categories = _run(ListExpenseCategories(DjangoExpenseCategoryRepository()), mutates=False,
+        categories = _run(ListExpenseCategories(_categories(request)), mutates=False,
                           active=active, search=search)
         paginator = CategoryPagination()
         page = paginator.paginate_queryset(categories, request, view=self)
@@ -149,32 +159,32 @@ class CategoryListCreateView(APIView):
 
     def post(self, request):
         values = _validated(CategoryInputSerializer, request.data)
-        category = _run(CreateExpenseCategory(DjangoExpenseCategoryRepository()), **values)
+        category = _run(CreateExpenseCategory(_categories(request)), **values)
         return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
 
 
 class CategoryDetailView(APIView):
     def get(self, request, category_id: str):
-        category = _run(GetExpenseCategory(DjangoExpenseCategoryRepository()), mutates=False,
+        category = _run(GetExpenseCategory(_categories(request)), mutates=False,
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
         return Response(CategorySerializer(category).data)
 
     def patch(self, request, category_id: str):
         values = _validated(CategoryInputSerializer, request.data, partial=True)
-        category = _run(RenameExpenseCategory(DjangoExpenseCategoryRepository()),
+        category = _run(RenameExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND), **values)
         return Response(CategorySerializer(category).data)
 
 
 class CategoryActivateView(APIView):
     def post(self, request, category_id: str):
-        category = _run(ActivateExpenseCategory(DjangoExpenseCategoryRepository()),
+        category = _run(ActivateExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
         return Response(CategorySerializer(category).data)
 
 
 class CategoryDeactivateView(APIView):
     def post(self, request, category_id: str):
-        category = _run(DeactivateExpenseCategory(DjangoExpenseCategoryRepository()),
+        category = _run(DeactivateExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
         return Response(CategorySerializer(category).data)

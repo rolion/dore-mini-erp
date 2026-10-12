@@ -3,12 +3,11 @@ from decimal import Decimal
 from unittest import mock
 from uuid import uuid4
 
-from django.contrib.auth import get_user_model
 from django.db import connection
 from django.utils import timezone
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
+from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.catalog.infrastructure.django.models import ProductModel
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.sales.infrastructure.django.models import OrderModel
@@ -38,16 +37,16 @@ def today():
 
 class SalesApiTestCase(APITestCase):
     def setUp(self):
-        user = get_user_model().objects.create_user(username='ana', password='x-Pass-123')
-        token = Token.objects.create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
 
     # --- fixtures ---
     def product(self, name='Pack cuñapé', price='35.00', active=True):
-        return ProductModel.objects.create(name=name, description='', sale_price=Decimal(price), active=active)
+        return ProductModel.objects.create(company_id=self.company.id, name=name, description='',
+                                           sale_price=Decimal(price), active=active)
 
     def customer(self, name='Ana Pérez', active=True):
-        return CustomerModel.objects.create(name=name, active=active)
+        return CustomerModel.objects.create(company_id=self.company.id, name=name, active=active)
 
     def create(self, expected_status=201, **extra):
         body = {'sales_channel': 'WHATSAPP', **extra}
@@ -741,5 +740,81 @@ class ListTests(SalesApiTestCase):
         self.assertEqual(self.client.get(f'{LIST_URL}?page=9').status_code, 404)
 
     def test_list_does_not_query_per_row(self):  # NFR rendimiento
-        with self.assertNumQueries(4):  # token con usuario + count + filas + nombres de cliente
+        with self.assertNumQueries(5):  # token con usuario + empresa + count + filas + nombres de cliente
             self.client.get(LIST_URL)
+
+
+class CompanyIsolationTests(SalesApiTestCase):
+    """AC-04..AC-06: un usuario solo ve y modifica los pedidos de su empresa y de sus productos y clientes."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_company = make_company('Empresa B')
+        self.other_client = APIClient()
+        authenticate(self.other_client, make_admin(self.other_company, username='beto'))
+        self.other_product = ProductModel.objects.create(
+            company_id=self.other_company.id, name='Ajeno', description='', sale_price=Decimal('10.00'))
+        self.other_customer = CustomerModel.objects.create(company_id=self.other_company.id, name='Cliente ajeno')
+        response = self.other_client.post(LIST_URL, {'sales_channel': 'STORE'}, format='json')
+        self.assertEqual(response.status_code, 201, response.content)
+        self.foreign = response.json()
+        response = self.other_client.post(
+            url(self.foreign['id'], 'items/'), {'product_id': str(self.other_product.id), 'quantity': 1}, format='json')
+        self.assertEqual(response.status_code, 201, response.content)
+
+    def test_list_only_returns_own_company_orders(self):  # AC-04
+        mine = self.create()
+        listed = self.client.get(LIST_URL).json()
+        self.assertEqual([o['id'] for o in listed['results']], [mine['id']])
+        self.assertEqual(listed['count'], 1)
+        self.assertEqual(self.client.get(LIST_URL, {'customer_id': str(self.other_customer.id)}).json()['count'], 0)
+
+    def test_detail_and_actions_on_foreign_order_are_404(self):  # AC-04 / AC-05
+        order_id = self.foreign['id']
+        item_id = self.other_client.get(url(order_id)).json()['items'][0]['id']
+        calls = [
+            self.client.get(url(order_id)),
+            self.client.patch(url(order_id), {'notes': 'x'}, format='json'),
+            self.client.post(url(order_id, 'items/'), {'product_id': str(self.product().id), 'quantity': 1},
+                             format='json'),
+            self.client.patch(url(order_id, f'items/{item_id}/'), {'quantity': 5}, format='json'),
+            self.client.delete(url(order_id, f'items/{item_id}/')),
+            self.client.post(url(order_id, 'discount/'), {'discount': '1.00'}, format='json'),
+            self.client.post(url(order_id, 'prepare/')),
+            self.client.post(url(order_id, 'ready/')),
+            self.client.post(url(order_id, 'deliver/'), {}, format='json'),
+            self.client.post(url(order_id, 'cancel/'), {'reason': 'x'}, format='json'),
+            self.client.post(url(order_id, 'payments/'),
+                             {'amount': '1.00', 'payment_method': 'CASH', 'payment_date': str(today())},
+                             format='json'),
+        ]
+        self.assertEqual([c.status_code for c in calls], [404] * len(calls), [c.content for c in calls])
+        untouched = self.other_client.get(url(order_id)).json()
+        self.assertEqual((untouched['status'], untouched['notes'], len(untouched['items'])), ('NEW', '', 1))
+
+    def test_order_with_foreign_customer_is_rejected_as_unknown_customer(self):  # AC-06
+        foreign = self.client.post(
+            LIST_URL, {'sales_channel': 'STORE', 'customer_id': str(self.other_customer.id)}, format='json')
+        unknown = self.client.post(
+            LIST_URL, {'sales_channel': 'STORE', 'customer_id': str(uuid4())}, format='json')
+        self.assertEqual(foreign.status_code, unknown.status_code)
+        self.assertEqual(foreign.json(), unknown.json())
+        self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_item_with_foreign_product_is_rejected_as_unknown_product(self):  # AC-06
+        order = self.create()
+        path = url(order['id'], 'items/')
+        foreign = self.client.post(path, {'product_id': str(self.other_product.id), 'quantity': 1}, format='json')
+        unknown = self.client.post(path, {'product_id': str(uuid4()), 'quantity': 1}, format='json')
+        self.assertEqual(foreign.status_code, unknown.status_code)
+        self.assertEqual(foreign.json(), unknown.json())
+
+    def test_created_order_belongs_to_users_company_and_body_company_is_ignored(self):  # AC-05
+        body = self.create(company_id=str(self.other_company.id))
+        self.assertEqual(OrderModel.objects.get(pk=body['id']).company_id, self.company.id)
+
+    def test_customer_names_are_resolved_inside_the_company(self):  # AC-08
+        mine = self.customer('Ana')
+        order = self.create(customer_id=str(mine.id))
+        self.assertEqual(self.client.get(url(order['id'])).json()['customer']['name'], 'Ana')
+        self.assertEqual(self.client.get(LIST_URL).json()['results'][0]['customer']['name'], 'Ana')
