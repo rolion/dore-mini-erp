@@ -15,6 +15,7 @@
 | 2026-10-12 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
 | 2026-10-12 | ENGINEERING → REVIEW | Implementación completa según plan v1 (fases A–E) | delivery-engineer |
 | 2026-10-12 | REVIEW → PUBLISH | Review PASS: 571 tests backend OK, lint/build/bandit sin hallazgos, 415/486 specs Angular OK (71 fallos preexistentes de la plantilla), sin issues abiertos | delivery-review |
+| 2026-10-12 | PUBLISH (pendiente) | Descripción del PR completa; cambio sensible (auth/DB, 3 ADR): a la espera de aprobación humana para el merge | delivery-publish |
 
 ## Investigación
 
@@ -207,4 +208,8 @@ Nota de aislamiento: la revisión se ejecutó en una sesión distinta de la impl
 
 
 ## Publicación
-_Pendiente_
+
+- PR: https://github.com/rolion/dore-mini-erp/pull/10 (rama `task/TASK-registro-usuarios-empresa-multitenant`, base `main`).
+- Estado: **Listo para aprobación humana** — no mergeado.
+- Verificado: Review en PASS sin commits posteriores salvo el del propio review; `git status` limpio; sin secretos ni temporales en el diff (solo contraseñas de prueba en tests).
+- Cambio sensible (autenticación/autorización y base de datos, respaldado por 3 ADR): requiere aprobación explícita en el chat antes del merge. Recomendado: `pg_dump` antes de migrar entornos con datos.
