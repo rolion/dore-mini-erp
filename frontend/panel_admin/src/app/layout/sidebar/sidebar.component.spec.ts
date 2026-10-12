@@ -7,6 +7,7 @@ import { FeatherModule } from 'angular-feather';
 import { allIcons } from 'angular-feather/icons';
 import { provideTranslateService } from '@ngx-translate/core';
 import { SidebarComponent } from './sidebar.component';
+import { RouteInfo } from './sidebar.metadata';
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
   let fixture: ComponentFixture<SidebarComponent>;
@@ -29,6 +30,32 @@ describe('SidebarComponent', () => {
   });
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  describe('linkActiveOptions (AC-10, un solo ítem resaltado)', () => {
+    const item = (path: string): RouteInfo => ({
+      path,
+      title: '',
+      iconType: '',
+      icon: '',
+      class: '',
+      groupTitle: false,
+      badge: '',
+      badgeClass: '',
+      submenu: [],
+    });
+    const expenses = item('/expenses');
+    const categories = item('/expenses/categories');
+    const products = item('/catalog/products');
+
+    it('requires an exact match when a sibling extends the path', () => {
+      expect(component.linkActiveOptions(expenses, [expenses, categories])).toEqual({ exact: true });
+    });
+
+    it('keeps prefix matching for the extending item and for unrelated siblings', () => {
+      expect(component.linkActiveOptions(categories, [expenses, categories])).toEqual({ exact: false });
+      expect(component.linkActiveOptions(products, [products])).toEqual({ exact: false });
+    });
   });
 
   it('renders the main and the collapsed PocketBiz logos without the old brand text (AC-03)', () => {

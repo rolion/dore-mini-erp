@@ -1,6 +1,6 @@
 # REV-2026-10-12-pocketbiz-branding-logos-02: AC-10 resalta dos ítems de submenú a la vez (coincidencia por prefijo)
 
-**Status:** Open
+**Status:** Resolved (PLAN v4: AC-10 exige ítem único; delivery-engineer implementó `linkActiveOptions`, 2026-10-12). Pendiente de re-review.
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-12-pocketbiz-branding-logos.md (v3)

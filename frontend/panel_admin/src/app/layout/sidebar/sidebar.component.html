@@ -46,7 +46,8 @@
               <ul class="ml-menu">
                 @for (sidebarSubItem1 of sidebarItem.submenu; track sidebarSubItem1) {
                   <li
-                    [routerLinkActive]="sidebarSubItem1.submenu.length > 0 ? '' : 'active'">
+                    [routerLinkActive]="sidebarSubItem1.submenu.length > 0 ? '' : 'active'"
+                    [routerLinkActiveOptions]="linkActiveOptions(sidebarSubItem1, sidebarItem.submenu)">
                     <a [routerLink]="sidebarSubItem1.submenu.length > 0 ? null : [sidebarSubItem1.path]"
                       (click)="callToggleMenu($event,sidebarSubItem1.submenu.length)" [ngClass]="[sidebarSubItem1.class]">
                       {{sidebarSubItem1.title | translate}}
@@ -56,7 +57,8 @@
                       <ul class="ml-menu-2">
                         @for (sidebarSubItem2 of sidebarSubItem1.submenu; track sidebarSubItem2) {
                           <li
-                            [routerLinkActive]="sidebarSubItem2.submenu.length > 0 ? '' : 'active'">
+                            [routerLinkActive]="sidebarSubItem2.submenu.length > 0 ? '' : 'active'"
+                            [routerLinkActiveOptions]="linkActiveOptions(sidebarSubItem2, sidebarSubItem1.submenu)">
                             <a [routerLink]="sidebarSubItem2.submenu.length > 0 ? null : [sidebarSubItem2.path]"
                               (click)="callToggleMenu($event,sidebarSubItem2.submenu.length)"
                               [ngClass]="[sidebarSubItem2.class]">
@@ -67,7 +69,8 @@
                               <ul class="ml-menu-3">
                                 @for (sidebarSubItem3 of sidebarSubItem2.submenu; track sidebarSubItem3) {
                                   <li
-                                    [routerLinkActive]="sidebarSubItem3.submenu.length > 0 ? '' : 'active'">
+                                    [routerLinkActive]="sidebarSubItem3.submenu.length > 0 ? '' : 'active'"
+                                    [routerLinkActiveOptions]="linkActiveOptions(sidebarSubItem3, sidebarSubItem2.submenu)">
                                     <a [routerLink]="sidebarSubItem3.submenu.length > 0 ? null : [sidebarSubItem3.path]"
                                       (click)="callToggleMenu($event,sidebarSubItem3.submenu.length)"
                                       [ngClass]="[sidebarSubItem3.class]">

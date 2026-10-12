@@ -1,6 +1,6 @@
 # TASK-pocketbiz-branding-logos: Branding PocketBiz (logos, favicon, título y color principal)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-pocketbiz-branding-logos`
@@ -17,6 +17,7 @@
 | 2026-10-12 20:30 | REVIEW → REVIEW | PLAN v3: AC-09 (fuente Inter) y AC-10 (menú light) agregados y registrados; DDR y PR actualizados | delivery-engineer |
 | 2026-10-12 21:58 | REVIEW → PUBLISH | Review PASS (AC-01..AC-10 verificados; REV-01 y REV-02 Low abiertos, no bloqueantes) | delivery-review |
 | 2026-10-12 22:15 | PUBLISH → PUBLISH | REV-01 resuelto por el engineer (`_button.scss`, `_settingSidebar.scss`); REV-02 (SPECIFICATION) sigue abierto, pendiente de decisión del usuario | delivery-engineer |
+| 2026-10-12 22:40 | PUBLISH → REVIEW | REV-02: usuario eligió opción A (ítem único); PLAN v4 (cambio de Specification en AC-10) implementado; requiere re-review | delivery-engineer |
 
 ## Investigación
 
@@ -119,6 +120,7 @@ Implementado según PLAN v1 (sin desviaciones de la Specification).
 - Specs plantilla `Header/Footer/Page404/Page500/Signup should create` fallan por falta de `FeatherModule` (preexistente; no tocados).
 - `node_modules` no existe en el worktree; se usó una *junction* local al `node_modules` del checkout principal (ignorada por git).
 - Residuos de marca fuera de alcance: "Welcome to Oreva" (`header.component.html:153`), typography.
+- **REV-01 / REV-02 (PLAN v4)**: REV-01 resuelto (halo de `.btn-edit-custom` y muestra purple). REV-02: `linkActiveOptions()` en `sidebar.component.ts` aplica coincidencia exacta solo a ítems con hermano que extiende su ruta, para resaltar un único ítem; +2 tests en `sidebar.component.spec.ts`. Verificación propia: lint, build y 11/11 specs (sidebar+signin) OK; sin verificación visual (sin sesión autenticada).
 - **Registro a posteriori (PLAN v3)**: AC-09 (fuente Inter) y AC-10 (menú light) quedaron en la Specification tras pedido explícito del usuario.
 - **AC-08 (PLAN v2)**: tras indicación del usuario, el fondo del brand ya no es blanco fijo en dark; usa `$color-dark` (`_darksidebar.scss`).
 - **Fuente (pedido posterior del usuario, fuera del PLAN)**: Karla → Inter (400/500/600/700) en `index.html:14` y `_misc.scss:21`.
