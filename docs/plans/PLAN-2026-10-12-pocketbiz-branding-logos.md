@@ -1,4 +1,4 @@
-# PLAN-2026-10-12-pocketbiz-branding-logos (v1)
+# PLAN-2026-10-12-pocketbiz-branding-logos (v2)
 
 **Task:** TASK-pocketbiz-branding-logos
 **Modo:** COMPLETO (eje 3: DDR con impacto visual relevante — marca y color primario en toda la app)
@@ -45,7 +45,7 @@ Ver TASK → Hechos encontrados (login con imagen lateral y logo+"Oreva"; sideba
 - AC-05: `index.html` declara `<title>PocketBiz</title>` y `<link rel="icon">` apuntando a `assets/images/pocketbiz.ico`.
 - AC-06: `$colors.primary` y `$color-primary` de `_white.scss` valen `#1677FF`; ningún archivo de `src/` conserva `#6777ef`/`#6777EF`/`rgb(103,119,239)` salvo el color con nombre `indigo` de `_helpers.scss:7` (paleta genérica de colores de texto).
 - AC-07: El logo en `signup` pasa a `main-logo` sin texto "Oreva" (la imagen lateral de signup se conserva).
-- AC-08: Con `dark-sidebar` activo, el bloque `.sidebar-brand` tiene fondo blanco y el logo se distingue.
+- AC-08: El fondo del bloque `.sidebar-brand` sigue al modo: claro en light y oscuro (`$color-dark`) con `dark-sidebar`/tema dark; el logo transparente se ve sobre ambos (v2: antes pedía fondo blanco fijo).
 
 ## Edge cases
 - EDGE-01: Móvil (≤422 px): el logo del login no desborda (`max-width: 100%`).
@@ -102,7 +102,7 @@ No aplica (sin backend).
 | AC-05 | Inspección de `index.html` + revisión visual de la pestaña |
 | AC-06 | `grep` estático + `npm run build` + revisión visual |
 | AC-07 | Revisión visual (signup) / `grep` de `logo.png` en `authentication/` |
-| AC-08 | Revisión visual con skin oscuro |
+| AC-08 | Revisión visual con skin oscuro y claro |
 
 # Implementation Plan
 
@@ -124,7 +124,7 @@ Dos `<img>` en `.sidebar-brand` alternadas por CSS; login reducido a una columna
 2. **Pestaña** (AC-05): título y `<link rel="icon">` en `index.html`.
 3. **Login** (AC-01, AC-02, UI-01, EDGE-01): quitar la columna `col-md-5`; reemplazar `logo.png` + `logo-name` por `main-logo.png`; envolver/limitar el ancho de la tarjeta con un modificador en `_auth.scss` (sin romper `signup`/`forgot` que comparten `.login-card`).
 4. **Sidebar** (AC-03, AC-04, UI-02, EDGE-02, EDGE-03): dos `<img>` (`.header-logo-main`, `.header-logo-mini`) en `sidebar.component.html`; CSS en `_layout.scss`/`_sidebar.scss`: `.header-logo-mini { display: none }`; bajo `.side-closed.submenu-closed` se invierte; eliminar el `logo-name`.
-5. **Sidebar oscuro** (AC-08): en `_darksidebar.scss`, fondo blanco para `.sidebar-brand`.
+5. **Sidebar oscuro** (AC-08): `_darksidebar.scss` conserva el fondo oscuro del brand (sin override blanco).
 6. **Color** (AC-06, UI-03): cambiar `_variable.scss:4` y `_white.scss:4`; reemplazar los hardcodeados; ajustar los 3 colores de `dashboard2.component.ts`; ejecutar el `grep` hasta que solo quede `_helpers.scss:7`.
 7. **Signup** (AC-07): reemplazar logo y quitar texto en `signup.component.html`.
 8. **Tests**: añadir los casos de `signin.component.spec.ts` y `sidebar.component.spec.ts` (AC-01..03); `npm test`, `npm run lint`, `npm run build`.
@@ -138,3 +138,6 @@ Dos `<img>` en `.sidebar-brand` alternadas por CSS; login reducido a una columna
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-10-12): [Specification] AC-08 cambiado tras aprobación explícita del usuario: el fondo del brand del sidebar debe seguir al modo (oscuro en dark, claro en light) en vez de ser blanco fijo.

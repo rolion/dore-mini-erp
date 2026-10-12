@@ -55,7 +55,7 @@ Hechos verificados sobre los assets (adjuntos de la sesión): ambos son PNG/WebP
 
 ## Comportamiento por privilegio/estado
 No depende de rol/privilegio. Solo varía por estado del layout (sidebar expandido/contraído/hover y viewport móvil) y por skin/tema oscuro:
-- **Sidebar oscuro (`dark-sidebar`, `_darksidebar.scss:87`)**: el logo es azul sobre fondo transparente y se vería con bajo contraste sobre `$color-dark`. **Supuesto**: en ese skin el bloque `.sidebar-brand` se pinta con fondo blanco (o el logo se coloca sobre una "pastilla" blanca redondeada). No se genera una versión blanca del logo (no hay asset).
+- **Sidebar oscuro (`dark-sidebar`, `_darksidebar.scss:87`)**: *(actualizado por indicación del usuario)* el fondo del brand sigue al modo: `$color-dark` en dark y claro en light; el logo es transparente y se muestra sobre ambos. Contraste del azul sobre `$color-dark` aceptado; no se genera versión blanca del logo (no hay asset).
 - **Tema dark general** (`variant: dark`): mismo tratamiento que el sidebar oscuro; el login no tiene fondo oscuro dedicado en la plantilla, se verifica visualmente.
 - Nada de esto es seguridad; no hay nota pendiente para backend/arquitectura.
 
