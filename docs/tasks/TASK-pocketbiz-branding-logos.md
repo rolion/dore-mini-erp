@@ -1,6 +1,6 @@
 # TASK-pocketbiz-branding-logos: Branding PocketBiz (logos, favicon, título y color principal)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-pocketbiz-branding-logos`
@@ -18,6 +18,7 @@
 | 2026-10-12 21:58 | REVIEW → PUBLISH | Review PASS (AC-01..AC-10 verificados; REV-01 y REV-02 Low abiertos, no bloqueantes) | delivery-review |
 | 2026-10-12 22:15 | PUBLISH → PUBLISH | REV-01 resuelto por el engineer (`_button.scss`, `_settingSidebar.scss`); REV-02 (SPECIFICATION) sigue abierto, pendiente de decisión del usuario | delivery-engineer |
 | 2026-10-12 22:40 | PUBLISH → REVIEW | REV-02: usuario eligió opción A (ítem único); PLAN v4 (cambio de Specification en AC-10) implementado; requiere re-review | delivery-engineer |
+| 2026-10-12 22:10 | REVIEW → PUBLISH | Re-review PASS (PLAN v4): REV-01 y REV-02 cerrados; lint, build y specs sin regresiones | delivery-review |
 
 ## Investigación
 
@@ -128,13 +129,12 @@ Implementado según PLAN v1 (sin desviaciones de la Specification).
 - `.logo-name` queda en reglas SCSS de `_auth.scss`/`_sidebar.scss:869` (código muerto inofensivo).
 
 ## Review
-**Resultado: PASS** (2026-10-12, PR #9). Revisión en la misma sesión que no implementó el código; contexto reconstruido solo desde TASK, PLAN v3, DDR y `git diff origin/main...HEAD`.
+**Resultado: PASS** (re-review 2026-10-12, PR #9, PLAN v4, HEAD `2403d44`). Contexto reconstruido solo desde TASK, PLAN v4 (changelog), DDR y diff; el aislamiento de esta ejecución es procedimental, no real. Review anterior: PASS sobre `12c2320` (PLAN v3).
 
-- Issues abiertos (ambos Low, no bloqueantes):
-  - [REV-2026-10-12-pocketbiz-branding-logos-01](../reviews/REV-2026-10-12-pocketbiz-branding-logos-01.md) — **Resuelto** — IMPLEMENTATION: halo `#acb5f6` en `.btn-edit-custom` y muestra "purple" del right-sidebar con el azul de marca.
-  - [REV-2026-10-12-pocketbiz-branding-logos-02](../reviews/REV-2026-10-12-pocketbiz-branding-logos-02.md) — SPECIFICATION: AC-10 resalta dos ítems de submenú a la vez (`routerLinkActive` por prefijo, preexistente).
-- Verificaciones: `ng lint` OK; `ng build` OK; `ng test` (todas las specs de `src/app/*/**`, sin `app.component.spec.ts` que no compila en `main`): 73 FAILED / 397 OK en el PR frente a 74 / 394 en `main`, **mismo conjunto de fallos preexistentes** salvo `SidebarComponent should create`, que el PR corrige; sin fallos en signin/sidebar. Verificación visual en navegador de AC-01..05, 08, 09, 10.
-- **No realizadas**: `npm audit` (no hay `package-lock.json` en el repo: `ENOLOCK`); E2E (el plan lo descartó); `npm test` completo (no compila en `main`, preexistente); móvil 375 px (EDGE-01) solo por inspección del CSS compilado.
+- Issues: [REV-01](../reviews/REV-2026-10-12-pocketbiz-branding-logos-01.md) **Cerrado** (halo del botón y muestra purple corregidos); [REV-02](../reviews/REV-2026-10-12-pocketbiz-branding-logos-02.md) **Cerrado** (AC-10 v4: un solo subítem resaltado por grupo). Sin issues abiertos.
+- Verificaciones: `ng lint` OK; `ng build` OK; `ng test` (src/app/*/**, sin `app.component.spec.ts` que no compila en `main`): 73 FAILED / 399 OK, sin fallos nuevos frente a `main` y sin fallos en sidebar/signin (+2 tests de `linkActiveOptions`). Navegador: ítem único verificado.
+- Observación (no es hallazgo): el grupo padre del ítem activo (p. ej. "Gastos") también se ve resaltado junto al subítem; es consistente con AC-10 original ("principal y submenú") y con el alcance de v4 (hermanos). Si se quiere solo el subítem, es un cambio de Specification.
+- **No realizadas**: `npm audit` (sin `package-lock.json`, ENOLOCK); E2E (descartado por el plan); `npm test` completo (no compila en `main`, preexistente); móvil 375 px solo por CSS compilado.
 
 ## Publicación
 _Pendiente_
