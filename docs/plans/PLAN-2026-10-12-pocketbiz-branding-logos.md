@@ -1,4 +1,4 @@
-# PLAN-2026-10-12-pocketbiz-branding-logos (v2)
+# PLAN-2026-10-12-pocketbiz-branding-logos (v3)
 
 **Task:** TASK-pocketbiz-branding-logos
 **Modo:** COMPLETO (eje 3: DDR con impacto visual relevante — marca y color primario en toda la app)
@@ -46,6 +46,8 @@ Ver TASK → Hechos encontrados (login con imagen lateral y logo+"Oreva"; sideba
 - AC-06: `$colors.primary` y `$color-primary` de `_white.scss` valen `#1677FF`; ningún archivo de `src/` conserva `#6777ef`/`#6777EF`/`rgb(103,119,239)` salvo el color con nombre `indigo` de `_helpers.scss:7` (paleta genérica de colores de texto).
 - AC-07: El logo en `signup` pasa a `main-logo` sin texto "Oreva" (la imagen lateral de signup se conserva).
 - AC-08: El fondo del bloque `.sidebar-brand` sigue al modo: claro en light y oscuro (`$color-dark`) con `dark-sidebar`/tema dark; el logo transparente se ve sobre ambos (v2: antes pedía fondo blanco fijo).
+- AC-09: La tipografía de la aplicación es Inter (400/500/600/700, Google Fonts) con `sans-serif` de respaldo; Karla deja de cargarse. *(v3, pedido del usuario)*
+- AC-10: En modo light el texto del menú lateral es negro (`#000`); el ítem activo/seleccionado (principal y submenú) tiene fondo `#125AC4` con texto e icono blancos por contraste. El modo dark no cambia. *(v3, pedido del usuario)*
 
 ## Edge cases
 - EDGE-01: Móvil (≤422 px): el logo del login no desborda (`max-width: 100%`).
@@ -64,7 +66,7 @@ Derivado del DDR (no se rediseña):
 - No se agregan dependencias.
 
 ## Out of scope
-- Eliminar o reducir los skins alternativos; títulos dinámicos por ruta; manifest/apple-touch-icon.
+- Aplicar `#125AC4`/texto negro al modo dark o a los skins alternativos; eliminar o reducir los skins alternativos; títulos dinámicos por ruta; manifest/apple-touch-icon.
 - Cambiar textos de plantilla en inglés del login/signup ("Sign in", "Remember me", …).
 - "Welcome to Oreva" (`header.component.html:153`) y `typography.component.html:121`.
 - Limpiar assets sin uso (`login.jpg`, `logo.png`, `favicon.ico`).
@@ -86,7 +88,7 @@ No aplica (sin backend).
 **¿Corresponde E2E?** NO — es un cambio visual sin flujo de usuario nuevo; Playwright no está en `package.json` y no se justifica instalarlo.
 
 ## Regression tests
-`npm test` completo (el spec de signin conserva sus casos de AC-08/AC-09 del flujo de login) y `npm run build` sin errores de Sass.
+`npm test` completo (el spec de signin conserva sus casos del task de login (sus AC-08/AC-09, no los de este plan)) y `npm run build` sin errores de Sass.
 
 ## Verificación visual / estática (no automatizable con Karma)
 - `grep` de `6777ef` en `src/` → solo `_helpers.scss` (AC-06).
@@ -103,6 +105,8 @@ No aplica (sin backend).
 | AC-06 | `grep` estático + `npm run build` + revisión visual |
 | AC-07 | Revisión visual (signup) / `grep` de `logo.png` en `authentication/` |
 | AC-08 | Revisión visual con skin oscuro y claro |
+| AC-09 | Inspección de `index.html` y `_misc.scss` + revisión visual |
+| AC-10 | Revisión visual del menú en light (activo y submenú) |
 
 # Implementation Plan
 
@@ -141,3 +145,4 @@ Ninguna.
 
 ## Changelog
 - **v2** (2026-10-12): [Specification] AC-08 cambiado tras aprobación explícita del usuario: el fondo del brand del sidebar debe seguir al modo (oscuro en dark, claro en light) en vez de ser blanco fijo.
+- **v3** (2026-10-12): [Specification] AC-09 (fuente Inter) y AC-10 (menú light: texto negro y activo `#125AC4`) agregados tras pedido explícito del usuario en el chat. Ya implementados en `index.html`, `_misc.scss` y `skins/_lightsidebar.scss`; registrados a posteriori.

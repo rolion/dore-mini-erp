@@ -71,3 +71,7 @@ No depende de rol/privilegio. Solo varía por estado del layout (sidebar expandi
 - Los skins alternativos conservan sus propios colores, por lo que la persona puede apartarse de la paleta de marca desde el panel de configuración.
 - `login.jpg`, `logo.png` y `favicon.ico` de la plantilla quedan sin uso; limpiarlos es opcional y no forma parte de la tarea.
 - La verificación es visual (no hay tests de layout): la fase de plan debe incluir revisar los tres estados del sidebar, móvil y el skin de sidebar oscuro.
+
+## Actualizaciones posteriores (pedidos del usuario)
+- **Tipografía:** Inter (400/500/600/700) reemplaza a Karla, de la plantilla Oreva. Mantiene `sans-serif` como respaldo. Inter es algo más ancha: revisar tablas y botones. (PLAN v3, AC-09)
+- **Menú lateral en light:** texto negro (`#000`, antes gris `#484848`) y fondo `#125AC4` para el ítem activo/seleccionado, con texto e icono blancos (negro sobre `#125AC4` queda ≈ 3,3:1; blanco ≈ 6,7:1). Aplica a ítems principales y submenús, solo bajo `.light-sidebar`; el modo dark y los skins alternativos no cambian. `#125AC4` es un azul más oscuro que el primario `#1677FF`, usado solo como estado seleccionado del menú. (PLAN v3, AC-10)

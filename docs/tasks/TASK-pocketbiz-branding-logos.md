@@ -14,6 +14,7 @@
 | 2026-10-12 19:40 | PLANNING → ENGINEERING | Specification READY (v1, modo COMPLETO); PR abierto | delivery-plan |
 | 2026-10-12 19:50 | ENGINEERING → REVIEW | Implementación completa (AC-01..AC-08); pendiente review independiente | delivery-engineer |
 | 2026-10-12 20:05 | REVIEW → REVIEW | AC-08 cambiado por el usuario (fondo del brand sigue al modo); PLAN v2, `_darksidebar.scss` corregido | delivery-engineer |
+| 2026-10-12 20:30 | REVIEW → REVIEW | PLAN v3: AC-09 (fuente Inter) y AC-10 (menú light) agregados y registrados; DDR y PR actualizados | delivery-engineer |
 
 ## Investigación
 
@@ -116,6 +117,7 @@ Implementado según PLAN v1 (sin desviaciones de la Specification).
 - Specs plantilla `Header/Footer/Page404/Page500/Signup should create` fallan por falta de `FeatherModule` (preexistente; no tocados).
 - `node_modules` no existe en el worktree; se usó una *junction* local al `node_modules` del checkout principal (ignorada por git).
 - Residuos de marca fuera de alcance: "Welcome to Oreva" (`header.component.html:153`), typography.
+- **Registro a posteriori (PLAN v3)**: AC-09 (fuente Inter) y AC-10 (menú light) quedaron en la Specification tras pedido explícito del usuario.
 - **AC-08 (PLAN v2)**: tras indicación del usuario, el fondo del brand ya no es blanco fijo en dark; usa `$color-dark` (`_darksidebar.scss`).
 - **Fuente (pedido posterior del usuario, fuera del PLAN)**: Karla → Inter (400/500/600/700) en `index.html:14` y `_misc.scss:21`.
 - **Menú light (pedido posterior, fuera del PLAN)**: texto negro y ítem activo/seleccionado con fondo `#125AC4` (texto blanco por contraste) en `skins/_lightsidebar.scss`; el modo dark no se toca.
