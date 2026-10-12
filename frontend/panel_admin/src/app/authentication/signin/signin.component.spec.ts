@@ -37,6 +37,15 @@ describe('SigninComponent', () => {
   const alertText = (): string | undefined =>
     fixture.nativeElement.querySelector('.alert-danger')?.textContent?.trim();
 
+  it('shows the PocketBiz main logo without the side image (AC-01, AC-02)', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('.login-card-img')).toBeNull();
+    const logo = el.querySelector<HTMLImageElement>('.brand-wrapper img.logo');
+    expect(logo?.getAttribute('src')).toBe('assets/images/main-logo.png');
+    expect(logo?.getAttribute('alt')).toBe('PocketBiz');
+    expect(el.querySelector('.logo-name')).toBeNull();
+  });
+
   it('starts empty, without prefilled credentials (AC-09)', () => {
     expect(component.loginForm.getRawValue()).toEqual({ username: '', password: '', remember: false });
   });

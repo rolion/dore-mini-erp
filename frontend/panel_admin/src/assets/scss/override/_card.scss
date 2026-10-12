@@ -330,7 +330,7 @@
     margin: 25px;
     box-shadow: 5px 3px 10px 0 rgba(21, 15, 15, 0.3);
     border-radius: 10px;
-    background: #6777ef;
+    background: variable.color(primary);
   }
 
   &.card-statistic-1 .card-header,

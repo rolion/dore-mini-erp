@@ -1,6 +1,6 @@
 # TASK-pocketbiz-branding-logos: Branding PocketBiz (logos, favicon, título y color principal)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-pocketbiz-branding-logos`
@@ -12,6 +12,7 @@
 | 2026-10-12 19:26 | (nuevo) → INVESTIGATION | Task creado | delivery-investigate |
 | 2026-10-12 19:28 | INVESTIGATION → DESIGN → PLANNING | DDR propuesto; veredicto NEEDS_PLAN, sin arquitectura | delivery-design |
 | 2026-10-12 19:40 | PLANNING → ENGINEERING | Specification READY (v1, modo COMPLETO); PR abierto | delivery-plan |
+| 2026-10-12 19:50 | ENGINEERING → REVIEW | Implementación completa (AC-01..AC-08); pendiente review independiente | delivery-engineer |
 
 ## Investigación
 
@@ -90,7 +91,31 @@ _No aplica según veredicto_
 - [PLAN-2026-10-12-pocketbiz-branding-logos](../plans/PLAN-2026-10-12-pocketbiz-branding-logos.md) — **v1**, Modo COMPLETO, Specification readiness: **READY**. 8 AC (AC-01..AC-08); E2E: NO.
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (sin desviaciones de la Specification).
+
+| Parte | Cubre |
+|---|---|
+| `main-logo.png` (1000×218, 21 KB), `simple-logo.png` (256×250, 7 KB) recortados de los adjuntos y cuantizados a paleta con alfa; `pocketbiz.ico` copiado de Downloads | AC-02..05 |
+| `index.html`: título "PocketBiz" y favicon `pocketbiz.ico` | AC-05 |
+| Login: columna de imagen eliminada, `login-card--single` (máx. 520 px, centrado), `main-logo` 260 px, sin "Oreva" | AC-01, AC-02, EDGE-01 |
+| Signup: solo logo → `main-logo` | AC-07 |
+| Sidebar: dos `<img>` (`header-logo-main`/`header-logo-mini`) alternadas con `body.side-closed.submenu-closed` en `_sidebar.scss`; el hover ya quita `submenu-closed` | AC-03, AC-04, EDGE-02/03 |
+| `dark-sidebar`: `.sidebar-brand` con fondo blanco | AC-08 |
+| Color: `#1677ff` en `_variable.scss` y `_white.scss`; resto de hardcodeados → `variable.color(primary)` (calendar, layout, button, card, form) o literal (archivos sin `@use variable`); 3 colores de `dashboard2.component.ts`; queda solo `indigo` en `_helpers.scss` | AC-06 |
+| Tests: `signin.component.spec.ts` (+1), `sidebar.component.spec.ts` (+1 y providers) | AC-01..03 |
+
+### Verificación propia (no es el Quality Gate)
+- `npm run build` OK; `npm run lint` OK.
+- Karma restringido a `signin` + `sidebar`: 9/9 OK.
+- Navegador (login en `localhost:4300`): título "PocketBiz", logo, tarjeta centrada y botón con primario `#1677FF` OK.
+- **No verificado visualmente**: sidebar expandido/contraído/hover y `dark-sidebar` (AC-04, AC-08, EDGE-01..03) — requieren sesión autenticada; con token falso el interceptor 401 devuelve al login. El `review` debe comprobarlos con un usuario real.
+
+### Deuda técnica / notas
+- `npm test` completo no compila en `main`: `src/app/app.component.spec.ts:24` usa `app.title`, que no existe (preexistente, fuera de alcance).
+- Specs plantilla `Header/Footer/Page404/Page500/Signup should create` fallan por falta de `FeatherModule` (preexistente; no tocados).
+- `node_modules` no existe en el worktree; se usó una *junction* local al `node_modules` del checkout principal (ignorada por git).
+- Residuos de marca fuera de alcance: "Welcome to Oreva" (`header.component.html:153`), typography.
+- `.logo-name` queda en reglas SCSS de `_auth.scss`/`_sidebar.scss:869` (código muerto inofensivo).
 
 ## Review
 _Pendiente_

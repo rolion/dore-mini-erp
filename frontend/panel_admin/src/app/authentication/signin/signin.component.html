@@ -1,15 +1,12 @@
 <main class="d-flex align-items-center min-vh-100 py-3 py-md-0">
   <div class="container">
-    <div class="card login-card mb-0">
+    <div class="card login-card login-card--single mb-0">
       <div class="row no-gutters">
-        <div class="col-md-5">
-          <img src="assets/images/login.jpg" alt="login" class="login-card-img">
-          </div>
-          <div class="col-md-7">
+          <div class="col-12">
             <div class="login-body">
               <div class="text-center">
                 <div class="brand-wrapper">
-                  <img src="assets/images/logo.png" alt="logo" class="logo"><span class="logo-name">Oreva</span>
+                  <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
                 </div>
               </div>
               <form class="validate-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">

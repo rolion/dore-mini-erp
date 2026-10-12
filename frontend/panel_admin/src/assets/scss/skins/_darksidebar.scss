@@ -85,7 +85,8 @@ $color-dark: #16192a;
     border-right: none;
 
     .sidebar-brand {
-      background-color: $color-dark;
+      // el logo es azul sobre fondo transparente: necesita fondo claro
+      background-color: #fff;
 
       a {
         color: #fff;

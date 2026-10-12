@@ -271,7 +271,7 @@ select.form-control:not([size]):not([multiple]) {
   }
 
   input:checked + span {
-    background-color: #6777ef;
+    background-color: variable.color(primary);
     border-radius: 50px !important;
     color: #fff;
     z-index: 1;
