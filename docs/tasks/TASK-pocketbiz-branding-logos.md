@@ -19,6 +19,7 @@
 | 2026-10-12 22:15 | PUBLISH → PUBLISH | REV-01 resuelto por el engineer (`_button.scss`, `_settingSidebar.scss`); REV-02 (SPECIFICATION) sigue abierto, pendiente de decisión del usuario | delivery-engineer |
 | 2026-10-12 22:40 | PUBLISH → REVIEW | REV-02: usuario eligió opción A (ítem único); PLAN v4 (cambio de Specification en AC-10) implementado; requiere re-review | delivery-engineer |
 | 2026-10-12 22:10 | REVIEW → PUBLISH | Re-review PASS (PLAN v4): REV-01 y REV-02 cerrados; lint, build y specs sin regresiones | delivery-review |
+| 2026-10-12 22:30 | PUBLISH → PUBLISH | Descripción del PR completada; pendiente de aprobación humana del merge | delivery-publish |
 
 ## Investigación
 
@@ -137,4 +138,7 @@ Implementado según PLAN v1 (sin desviaciones de la Specification).
 - **No realizadas**: `npm audit` (sin `package-lock.json`, ENOLOCK); E2E (descartado por el plan); `npm test` completo (no compila en `main`, preexistente); móvil 375 px solo por CSS compilado.
 
 ## Publicación
-_Pendiente_
+- PR: https://github.com/rolion/dore-mini-erp/pull/9 — descripción completa (Summary, Architecture decisions, Related plan v4, Testing/Review del re-review, Known limitations).
+- Verificaciones previas: árbol limpio; diff solo `frontend/panel_admin/src` y `docs/`; sin secretos ni temporales; único commit posterior al review es el del propio review (solo docs).
+- Cambio no sensible (sin ADR, auth, DB ni infraestructura). Sin auto-merge.
+- **Estado: Listo para aprobación humana** (no mergeado).
