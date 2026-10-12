@@ -1,6 +1,6 @@
 # TASK-registro-usuarios-empresa-multitenant: Registro de usuarios con empresa y aislamiento de datos por empresa
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-registro-usuarios-empresa-multitenant`
@@ -13,6 +13,7 @@
 | 2026-10-12 | DESIGN → ARCHITECTURE | DDR de pantalla de registro y señales de empresa en el header; veredicto NEEDS_ARCHITECTURE | delivery-design |
 | 2026-10-12 | ARCHITECTURE → PLANNING | 3 ADR: aislamiento por columna company_id, empresa derivada de la sesión y propagada por repositorios/fachadas, registro público que crea empresa + rol admin. Decisión de negocio del usuario: nombre de empresa existente se rechaza; usuarios adicionales los agrega el admin | delivery-architect |
 | 2026-10-12 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
+| 2026-10-12 | ENGINEERING → REVIEW | Implementación completa según plan v1 (fases A–E) | delivery-engineer |
 
 ## Investigación
 
@@ -155,7 +156,35 @@ Cuatro partes: (1) registro de usuarios desde el formulario sign-up de la planti
 - [PLAN-2026-10-12-registro-usuarios-empresa-multitenant](../plans/PLAN-2026-10-12-registro-usuarios-empresa-multitenant.md) — **v1**, Modo COMPLETO, Specification **READY**. 16 AC; fases A (identidad/permiso), B (aislamiento por módulo), C (guardas y migración), D (frontend), E (docs y verificación). E2E: NO. Sin dependencias nuevas.
 
 ## Implementación
-_Pendiente_
+
+Implementado según el plan v1 (COMPLETO), fases A–E. Commits: `e051b62` (backend) y `0c9d018` (frontend y documentación).
+
+**Backend**
+- **Fase A (identidad):** `Company`, `User.company` (nullable, `PROTECT`) y `User.role` (`accounts/models.py`); migración `accounts/0002_company_and_role` (esquema + empresa por defecto con UUID fijo y asignación de usuarios existentes); `CompanyAdminPermission` como permiso por defecto de DRF; `POST /api/auth/register/` (`registration.py`, throttle `register` `5/hour`, interruptor `REGISTRATION_ENABLED`); login y registro devuelven `role` y `company`; `accounts/admin.py`; `shared/tenancy.py`. Cubre AC-01, AC-02, AC-03, AC-09, AC-10, AC-11, INV-02, INV-03, INV-05, EDGE-01, EDGE-02, EDGE-06.
+- **Fase B (aislamiento):** `company_id` (UUID, indexado, obligatorio) en `ProductModel`, `CustomerModel`, `OrderModel`, `ExpenseCategoryModel` y `ExpenseModel` con migraciones `0002_company_id` por app (nullable → relleno con la empresa por defecto → `NOT NULL`); repositorios con `company_id` en el constructor (incl. `get_for_update`, `find_by_phone`, `find_by_name`, `get_many`, `total_active`); fachadas `services.py` y `read_queries.py` con `company_id` como primer argumento; adaptadores de Sales y Reporting construidos con `company_id` (puertos y casos de uso sin cambios); views construyen todo con `company_id_from(request)`. Unicidad de categoría de gasto por empresa (`expenses_category_company_name_ci_unique`). Cubre AC-04..AC-08, AC-13, INV-01, INV-04, INV-06.
+- **Fase C (guardas):** `accounts/test_guards.py` (toda tabla raíz con `company_id`; ninguna view de negocio sobreescribe el permiso por defecto; sin FK a `accounts`), `test_business_modules_do_not_import_accounts` en `sales/tests/test_boundaries.py`, `accounts/test_migrations.py` (relleno y reversa). Cubre AC-12, AC-16.
+
+**Frontend**
+- `AuthService.register` y mapeo de rol/empresa en la sesión (`core/service/auth.service.ts`, `core/models/user.ts`); `RegisterError` con errores por campo.
+- `SignupComponent` según el DDR: tarjeta única, logo `main-logo.png`, campos Empresa/Nombre/Apellido/Usuario/Correo/Contraseña/Confirmar, sin social ni términos, `NonNullableFormBuilder`, errores por campo, alerta general, entrada directa a `/dashboard/main`. Cubre AC-14, UI-01..UI-03, UI-05.
+- Header: nombre y empresa de la sesión en el menú de usuario. Cubre AC-15, UI-04.
+
+**Documentación:** `docs/architecture/ddd.md` (multiempresa simple y `accounts`), `CLAUDE.md`, `backend/.env.example` (`REGISTRATION_ENABLED`).
+
+**Pruebas escritas**
+- Backend (PostgreSQL real): 503 → 571 tests. Nuevos: registro, login, permiso por defecto, aislamiento por recurso con dos empresas (API, repositorio y fachada de cada módulo), reportes, guardas y migración.
+- Frontend: specs de `AuthService` (login con empresa y registro: éxito, 400 por campo, 403/429/red), `SignupComponent` (9) y `HeaderComponent` (3).
+
+**Desviaciones respecto al plan (la Specification sigue satisfecha)**
+- Se añadió una consulta por petición (la empresa del usuario, para validar `is_active`): `ListTests.test_list_does_not_query_per_row` pasó de 4 a 5 consultas. No hay N+1.
+- `User.company` y `User.role` son opcionales en el modelo `User` del frontend para tolerar sesiones guardadas antes del cambio (EDGE-03).
+- La migración `accounts/0002` crea la empresa por defecto incondicionalmente (EDGE-05), tal como decidió el ADR.
+
+**Deuda técnica / observaciones**
+- `app.component.spec.ts` sigue sin compilar en `main` (salvedad ya documentada); la suite de Angular se corrió con un `tsconfig` temporal que lo excluye: 415 OK / 71 fallos, **todos** "should create" de specs de la plantilla preexistentes; ninguno en archivos tocados.
+- Se observó una vez `sales...ItemAndPaymentSyncTests.test_item_order_is_preserved` fallando en la suite completa y pasando 6/6 aislado: parece una carrera preexistente por `created_at` iguales entre ítems creados en la misma transacción (el orden desempata por `id` aleatorio). No lo introduce este cambio; no se corrigió.
+- Verificación manual con dos empresas contra un servidor real (recomendada en el plan, no bloqueante): **no realizada**; habría que migrar la base de desarrollo del usuario.
+- Para correr los tests en este worktree se copió `backend/.env` (ignorado por git, sin leer) y se enlazó `node_modules` del checkout principal.
 
 ## Review
 _Pendiente_
