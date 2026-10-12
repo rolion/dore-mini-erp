@@ -117,6 +117,7 @@ Implementado según PLAN v1 (sin desviaciones de la Specification).
 - `node_modules` no existe en el worktree; se usó una *junction* local al `node_modules` del checkout principal (ignorada por git).
 - Residuos de marca fuera de alcance: "Welcome to Oreva" (`header.component.html:153`), typography.
 - **AC-08 (PLAN v2)**: tras indicación del usuario, el fondo del brand ya no es blanco fijo en dark; usa `$color-dark` (`_darksidebar.scss`).
+- **Fuente (pedido posterior del usuario, fuera del PLAN)**: Karla → Inter (400/500/600/700) en `index.html:14` y `_misc.scss:21`.
 - `.logo-name` queda en reglas SCSS de `_auth.scss`/`_sidebar.scss:869` (código muerto inofensivo).
 
 ## Review
