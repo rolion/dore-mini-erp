@@ -104,10 +104,30 @@ $color-light: #fff;
 
   .ml-menu .active {
     .ml-menu {
-      color: #6777ef;
+      color: #1677ff;
       &::before {
-        color: #6777ef;
+        color: #1677ff;
       }
+    }
+  }
+}
+
+// Menú lateral en modo claro: texto negro y ítem activo/seleccionado con fondo de marca.
+.light-sidebar .main-sidebar .menu .list {
+  li a,
+  li a span {
+    color: #000000;
+  }
+
+  li.active > .menu-top,
+  li.active-top > .menu-top,
+  .ml-menu li.active > a {
+    background-color: #125ac4;
+
+    &,
+    span,
+    &::before {
+      color: #ffffff;
     }
   }
 }

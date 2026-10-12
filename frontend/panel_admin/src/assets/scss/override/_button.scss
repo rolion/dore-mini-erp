@@ -153,9 +153,9 @@
 }
 
 .btn-edit-custom {
-  background-color: #6777ef !important;
-  border-color: #6777ef !important;
-  box-shadow: 0 2px 6px #acb5f6 !important;
+  background-color: variable.color(primary) !important;
+  border-color: variable.color(primary) !important;
+  box-shadow: 0 2px 6px rgba(22, 119, 255, 0.35) !important;
   padding: 0.3rem 0.8rem !important;
 }
 .btn-delete-custom {

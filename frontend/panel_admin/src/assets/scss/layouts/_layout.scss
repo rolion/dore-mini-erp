@@ -459,13 +459,18 @@ body.layout-3 {
       color: #000;
 
       .header-logo {
-        height: 30px;
+        vertical-align: middle;
+        width: auto;
       }
 
-      .logo-name {
-        vertical-align: middle;
-        font-size: 20px;
-        margin: 0px 5px;
+      .header-logo-main {
+        max-height: 44px;
+        max-width: 200px;
+      }
+
+      .header-logo-mini {
+        display: none;
+        height: 32px;
       }
     }
   }
@@ -791,7 +796,7 @@ body:not(.sidebar-mini) .sidebar-style-2 {
         > a {
           padding-left: 20px;
           position: relative;
-          color: #6777ef;
+          color: variable.color(primary);
         }
       }
     }

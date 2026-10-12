@@ -38,6 +38,8 @@ import { Subscription } from 'rxjs';
 export class SidebarComponent implements OnInit, OnDestroy {
   public sidebarItems!: RouteInfo[];
   public innerHeight?: number;
+  private readonly exactMatch = { exact: true };
+  private readonly prefixMatch = { exact: false };
   public bodyTag!: HTMLElement;
   listMaxHeight?: string;
   listMaxWidth?: string;
@@ -78,6 +80,17 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.renderer.removeClass(this.document.body, 'overlay-open');
       this.sidebbarClose();
     }
+  }
+  /**
+   * Un ítem se marca activo por prefijo de ruta; si un hermano extiende su ruta
+   * (p. ej. `/expenses` y `/expenses/categories`) se exige coincidencia exacta para
+   * que quede un único ítem resaltado.
+   */
+  linkActiveOptions(item: RouteInfo, siblings: RouteInfo[]): { exact: boolean } {
+    const shadowed =
+      item.path !== '' &&
+      siblings.some((sibling) => sibling !== item && sibling.path.startsWith(item.path + '/'));
+    return shadowed ? this.exactMatch : this.prefixMatch;
   }
   callToggleMenu(event: Event, length: number) {
     if (length > 0) {
