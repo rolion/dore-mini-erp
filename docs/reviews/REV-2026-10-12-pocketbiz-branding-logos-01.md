@@ -1,6 +1,6 @@
 # REV-2026-10-12-pocketbiz-branding-logos-01: Restos violáceos del primario antiguo (halo `#acb5f6` y muestra "purple")
 
-**Status:** Open
+**Status:** Resolved (delivery-engineer, 2026-10-12): halo de `.btn-edit-custom` → `rgba(22,119,255,.35)` y muestra `purple` → `#5864bd` (color real del skin).
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-12-pocketbiz-branding-logos.md (v3)
