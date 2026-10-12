@@ -71,6 +71,9 @@ USE_TZ = True
 # Código de país (sin '+') que se antepone a teléfonos locales al normalizarlos (Customers).
 DEFAULT_PHONE_COUNTRY_CODE = env('DEFAULT_PHONE_COUNTRY_CODE', default='591')
 
+# Interruptor del registro público (`POST /api/auth/register/`): en falso responde 403 y no crea nada.
+REGISTRATION_ENABLED = env.bool('REGISTRATION_ENABLED', default=True)
+
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -81,7 +84,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'modules.accounts.api.permissions.CompanyAdminPermission',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -90,5 +93,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
     'DEFAULT_THROTTLE_RATES': {
         'login': '10/min',
+        'register': '5/hour',
     },
 }

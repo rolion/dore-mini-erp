@@ -31,25 +31,30 @@ class OrderSummaryList:
         return (to_summary(model) for model in self._queryset)
 
 
-def _detail_queryset() -> QuerySet:
-    return OrderModel.objects.prefetch_related('items', 'payments')
-
-
 class DjangoOrderRepository:
+    """Repositorio acotado a una empresa: toda consulta filtra por `company_id` y `save` lo establece al crear."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _orders(self) -> QuerySet:
+        return OrderModel.objects.filter(company_id=self.company_id)
+
     def get(self, order_id: UUID) -> Order | None:
-        model = _detail_queryset().filter(pk=order_id).first()
+        model = self._orders().prefetch_related('items', 'payments').filter(pk=order_id).first()
         return to_entity(model) if model else None
 
     def get_for_update(self, order_id: UUID) -> Order | None:
         """Bloquea la fila del pedido (exige una transacción abierta); ítems y pagos se leen ya con el bloqueo."""
-        locked = OrderModel.objects.select_for_update().filter(pk=order_id).first()
+        locked = self._orders().select_for_update().filter(pk=order_id).first()
         if locked is None:
             return None
         return self.get(order_id)
 
     @transaction.atomic
     def save(self, order: Order) -> Order:
-        model, _ = OrderModel.objects.update_or_create(id=order.id, defaults=to_order_values(order))
+        model, _ = OrderModel.objects.update_or_create(
+            id=order.id, company_id=self.company_id, defaults=to_order_values(order))
         self._sync_items(order, model)
         self._append_new_payments(order, model)
         return self.get(order.id)
@@ -69,7 +74,7 @@ class DjangoOrderRepository:
         PaymentModel.objects.bulk_create(new)
 
     def list(self, filters: OrderFilters) -> OrderSummaryList:
-        queryset = OrderModel.objects.all()
+        queryset = self._orders()
         if filters.statuses:
             queryset = queryset.filter(status__in=[s.value for s in filters.statuses])
         if filters.payment_statuses:

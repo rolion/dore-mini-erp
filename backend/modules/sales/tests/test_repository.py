@@ -31,7 +31,8 @@ def make_order(order_date=date(2026, 10, 1), channel='WHATSAPP', items=(('Pack',
 
 class RepositoryTestCase(TestCase):
     def setUp(self):
-        self.repository = DjangoOrderRepository()
+        self.company_id = uuid4()
+        self.repository = DjangoOrderRepository(self.company_id)
 
     def store(self, order: Order) -> Order:
         return self.repository.save(order)
@@ -180,7 +181,7 @@ class LockingTests(RepositoryTestCase):
 class LockingOutsideTransactionTests(TransactionTestCase):
     def test_get_for_update_fails_without_an_open_transaction(self):  # AC-20
         # Por eso las vistas de Sales abren `transaction.atomic()` antes de cada mutación.
-        repository = DjangoOrderRepository()
+        repository = DjangoOrderRepository(uuid4())
         order = repository.save(make_order())
         with self.assertRaises(TransactionManagementError):
             repository.get_for_update(order.id)
@@ -263,3 +264,29 @@ class QueryCountTests(RepositoryTestCase):
         with self.assertNumQueries(3):
             self.repository.get(order.id)
         self.assertEqual(OrderModel.objects.filter(total__gt=F('paid_total')).count(), 1)
+
+
+class CompanyScopeTests(RepositoryTestCase):
+    """AC-04 / AC-05: cada repositorio solo ve y escribe dentro de su empresa."""
+
+    def setUp(self):
+        super().setUp()
+        self.other = DjangoOrderRepository(uuid4())
+
+    def test_get_list_and_lock_do_not_cross_companies(self):
+        own = self.store(make_order())
+        foreign = self.other.save(make_order())
+        self.assertIsNone(self.repository.get(foreign.id))
+        self.assertIsNone(self.other.get(own.id))
+        self.assertEqual([s.id for s in self.repository.list(OrderFilters())], [own.id])
+        with transaction.atomic():
+            self.assertIsNone(self.repository.get_for_update(foreign.id))
+            self.assertIsNotNone(self.repository.get_for_update(own.id))
+
+    def test_save_sets_company_and_never_moves_an_order(self):
+        order = self.store(make_order())
+        self.assertEqual(OrderModel.objects.get(pk=order.id).company_id, self.company_id)
+        # Un repositorio de otra empresa no puede sobrescribir un pedido ajeno: la fila no cambia de dueño.
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            self.other.save(order)
+        self.assertEqual(OrderModel.objects.get(pk=order.id).company_id, self.company_id)

@@ -28,6 +28,7 @@ from modules.sales.domain.exceptions import (
 )
 from modules.sales.infrastructure.adapters import CustomerDirectoryAdapter, ProductCatalogAdapter, SystemClock
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
+from shared.tenancy import company_id_from
 
 from .filters import parse_order_filters
 from .pagination import OrderPagination
@@ -83,12 +84,21 @@ def _run(use_case, mutates: bool = True, **kwargs):
         raise NotFound(ITEM_NOT_FOUND) from exc
 
 
-def _repository() -> DjangoOrderRepository:
-    return DjangoOrderRepository()
+def _repository(request) -> DjangoOrderRepository:
+    """Repositorio de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
+    return DjangoOrderRepository(company_id_from(request))
 
 
-def _order_response(order, http_status: int = status.HTTP_200_OK) -> Response:
-    names = CustomerDirectoryAdapter().get_customer_names([order.customer_id] if order.customer_id else [])
+def _customers(request) -> CustomerDirectoryAdapter:
+    return CustomerDirectoryAdapter(company_id_from(request))
+
+
+def _products(request) -> ProductCatalogAdapter:
+    return ProductCatalogAdapter(company_id_from(request))
+
+
+def _order_response(request, order, http_status: int = status.HTTP_200_OK) -> Response:
+    names = _customers(request).get_customer_names([order.customer_id] if order.customer_id else [])
     return Response(OrderSerializer(order, context={'customer_names': names}).data, status=http_status)
 
 
@@ -101,88 +111,88 @@ def _validated(serializer_class, data, partial: bool = False) -> dict:
 class OrderListCreateView(APIView):
     def get(self, request):
         filters = parse_order_filters(request.query_params)
-        summaries = _run(ListOrders(_repository()), mutates=False, filters=filters)
+        summaries = _run(ListOrders(_repository(request)), mutates=False, filters=filters)
         paginator = OrderPagination()
         page = paginator.paginate_queryset(summaries, request, view=self)
-        names = CustomerDirectoryAdapter().get_customer_names({o.customer_id for o in page if o.customer_id})
+        names = _customers(request).get_customer_names({o.customer_id for o in page if o.customer_id})
         data = OrderSummarySerializer(page, many=True, context={'customer_names': names}).data
         return paginator.get_paginated_response(data)
 
     def post(self, request):
         data = _validated(OrderInputSerializer, request.data)
-        order = _run(CreateOrder(_repository(), CustomerDirectoryAdapter(), SystemClock()), **data)
-        return _order_response(order, status.HTTP_201_CREATED)
+        order = _run(CreateOrder(_repository(request), _customers(request), SystemClock()), **data)
+        return _order_response(request, order, status.HTTP_201_CREATED)
 
 
 class OrderDetailView(APIView):
     def get(self, request, order_id):
-        order = _run(GetOrder(_repository()), mutates=False, order_id=_uuid(order_id, ORDER_NOT_FOUND))
-        return _order_response(order)
+        order = _run(GetOrder(_repository(request)), mutates=False, order_id=_uuid(order_id, ORDER_NOT_FOUND))
+        return _order_response(request, order)
 
     def patch(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(OrderInputSerializer, request.data, partial=True)
-        order = _run(UpdateOrder(_repository(), CustomerDirectoryAdapter()), order_id=order_id, **data)
-        return _order_response(order)
+        order = _run(UpdateOrder(_repository(request), _customers(request)), order_id=order_id, **data)
+        return _order_response(request, order)
 
 
 class OrderItemListView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(OrderItemCreateSerializer, request.data)
-        order = _run(AddOrderItem(_repository(), ProductCatalogAdapter()), order_id=order_id, **data)
-        return _order_response(order, status.HTTP_201_CREATED)
+        order = _run(AddOrderItem(_repository(request), _products(request)), order_id=order_id, **data)
+        return _order_response(request, order, status.HTTP_201_CREATED)
 
 
 class OrderItemDetailView(APIView):
     def patch(self, request, order_id, item_id):
         order_id, item_id = _uuid(order_id, ORDER_NOT_FOUND), _uuid(item_id, ITEM_NOT_FOUND)
         data = _validated(OrderItemUpdateSerializer, request.data)
-        order = _run(ChangeOrderItemQuantity(_repository()), order_id=order_id, item_id=item_id, **data)
-        return _order_response(order)
+        order = _run(ChangeOrderItemQuantity(_repository(request)), order_id=order_id, item_id=item_id, **data)
+        return _order_response(request, order)
 
     def delete(self, request, order_id, item_id):
         order_id, item_id = _uuid(order_id, ORDER_NOT_FOUND), _uuid(item_id, ITEM_NOT_FOUND)
-        order = _run(RemoveOrderItem(_repository()), order_id=order_id, item_id=item_id)
-        return _order_response(order)
+        order = _run(RemoveOrderItem(_repository(request)), order_id=order_id, item_id=item_id)
+        return _order_response(request, order)
 
 
 class OrderDiscountView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DiscountSerializer, request.data)
-        return _order_response(_run(ApplyOrderDiscount(_repository()), order_id=order_id, **data))
+        return _order_response(request, _run(ApplyOrderDiscount(_repository(request)), order_id=order_id, **data))
 
 
 class OrderPrepareView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
-        return _order_response(_run(StartOrderPreparation(_repository()), order_id=order_id))
+        return _order_response(request, _run(StartOrderPreparation(_repository(request)), order_id=order_id))
 
 
 class OrderReadyView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
-        return _order_response(_run(MarkOrderReady(_repository()), order_id=order_id))
+        return _order_response(request, _run(MarkOrderReady(_repository(request)), order_id=order_id))
 
 
 class OrderDeliverView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DeliverSerializer, request.data)
-        return _order_response(_run(DeliverOrder(_repository(), SystemClock()), order_id=order_id, **data))
+        return _order_response(request, _run(DeliverOrder(_repository(request), SystemClock()), order_id=order_id, **data))
 
 
 class OrderCancelView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(CancelSerializer, request.data)
-        return _order_response(_run(CancelOrder(_repository(), SystemClock()), order_id=order_id, **data))
+        return _order_response(request, _run(CancelOrder(_repository(request), SystemClock()), order_id=order_id, **data))
 
 
 class OrderPaymentView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(PaymentInputSerializer, request.data)
-        order = _run(RegisterPayment(_repository(), SystemClock()), order_id=order_id, **data)
-        return _order_response(order, status.HTTP_201_CREATED)
+        order = _run(RegisterPayment(_repository(request), SystemClock()), order_id=order_id, **data)
+        return _order_response(request, order, status.HTTP_201_CREATED)

@@ -12,11 +12,17 @@ from modules.catalog.application.commands import (
 from modules.catalog.application.queries import GetProduct, ListProducts
 from modules.catalog.domain.exceptions import ProductNotFound, ProductValidationError
 from modules.catalog.infrastructure.django.repositories import DjangoProductRepository
+from shared.tenancy import company_id_from
 
 from .pagination import ProductPagination
 from .serializers import ProductInputSerializer, ProductSerializer
 
 PRODUCT_NOT_FOUND = 'Producto no encontrado.'
+
+
+def _repository(request) -> DjangoProductRepository:
+    """Repositorio de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
+    return DjangoProductRepository(company_id_from(request))
 
 
 def _run(use_case, **kwargs):
@@ -41,7 +47,7 @@ class ProductListCreateView(APIView):
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
-        products = ListProducts(DjangoProductRepository()).execute(search=search, active=active)
+        products = ListProducts(_repository(request)).execute(search=search, active=active)
         paginator = ProductPagination()
         page = paginator.paginate_queryset(products, request, view=self)
         return paginator.get_paginated_response(ProductSerializer(page, many=True).data)
@@ -49,30 +55,30 @@ class ProductListCreateView(APIView):
     def post(self, request):
         serializer = ProductInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        product = _run(CreateProduct(DjangoProductRepository()), **serializer.validated_data)
+        product = _run(CreateProduct(_repository(request)), **serializer.validated_data)
         return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
 
 
 class ProductDetailView(APIView):
     def get(self, request, product_id):
-        product = _run(GetProduct(DjangoProductRepository()), product_id=product_id)
+        product = _run(GetProduct(_repository(request)), product_id=product_id)
         return Response(ProductSerializer(product).data)
 
     def patch(self, request, product_id):
         serializer = ProductInputSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        product = _run(UpdateProduct(DjangoProductRepository()), product_id=product_id,
+        product = _run(UpdateProduct(_repository(request)), product_id=product_id,
                        **serializer.validated_data)
         return Response(ProductSerializer(product).data)
 
 
 class ProductActivateView(APIView):
     def post(self, request, product_id):
-        product = _run(ActivateProduct(DjangoProductRepository()), product_id=product_id)
+        product = _run(ActivateProduct(_repository(request)), product_id=product_id)
         return Response(ProductSerializer(product).data)
 
 
 class ProductDeactivateView(APIView):
     def post(self, request, product_id):
-        product = _run(DeactivateProduct(DjangoProductRepository()), product_id=product_id)
+        product = _run(DeactivateProduct(_repository(request)), product_id=product_id)
         return Response(ProductSerializer(product).data)

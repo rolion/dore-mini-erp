@@ -3,6 +3,7 @@
 Una sola definición de "pedido válido" para todas las métricas: no cancelado y con al menos un ítem.
 """
 from datetime import date
+from uuid import UUID
 
 from django.db.models import Count, Exists, F, OuterRef, QuerySet, Sum
 
@@ -13,31 +14,33 @@ from .models import OrderItemModel, OrderModel
 OPEN_STATUSES = (OrderStatus.NEW.value, OrderStatus.IN_PREPARATION.value, OrderStatus.READY.value)
 
 
-def valid_orders() -> QuerySet:
+def valid_orders(company_id: UUID) -> QuerySet:
     has_items = Exists(OrderItemModel.objects.filter(order=OuterRef('pk')))
-    return OrderModel.objects.exclude(status=OrderStatus.CANCELLED.value).filter(has_items)
+    return (OrderModel.objects.filter(company_id=company_id)
+            .exclude(status=OrderStatus.CANCELLED.value).filter(has_items))
 
 
-def valid_orders_between(date_from: date, date_to: date) -> QuerySet:
-    return valid_orders().filter(order_date__gte=date_from, order_date__lte=date_to)
+def valid_orders_between(company_id: UUID, date_from: date, date_to: date) -> QuerySet:
+    return valid_orders(company_id).filter(order_date__gte=date_from, order_date__lte=date_to)
 
 
-def totals(date_from: date, date_to: date) -> dict:
-    return valid_orders_between(date_from, date_to).aggregate(total=Sum('total'), orders_count=Count('id'))
+def totals(company_id: UUID, date_from: date, date_to: date) -> dict:
+    return valid_orders_between(company_id, date_from, date_to).aggregate(
+        total=Sum('total'), orders_count=Count('id'))
 
 
-def by_channel(date_from: date, date_to: date) -> list[dict]:
+def by_channel(company_id: UUID, date_from: date, date_to: date) -> list[dict]:
     return list(
-        valid_orders_between(date_from, date_to)
+        valid_orders_between(company_id, date_from, date_to)
         .values('sales_channel')
         .annotate(orders_count=Count('id'), total=Sum('total'))
         .order_by('-total', 'sales_channel')
     )
 
 
-def product_totals(date_from: date, date_to: date) -> list[dict]:
+def product_totals(company_id: UUID, date_from: date, date_to: date) -> list[dict]:
     """Unidades e importe (antes del descuento del pedido) por producto, en pedidos válidos del rango."""
-    orders = valid_orders_between(date_from, date_to).values('pk')
+    orders = valid_orders_between(company_id, date_from, date_to).values('pk')
     return list(
         OrderItemModel.objects.filter(order__in=orders)
         .values('product_id')
@@ -45,9 +48,9 @@ def product_totals(date_from: date, date_to: date) -> list[dict]:
     )
 
 
-def latest_product_names(date_from: date, date_to: date, product_ids: list) -> dict:
+def latest_product_names(company_id: UUID, date_from: date, date_to: date, product_ids: list) -> dict:
     """Nombre del snapshot más reciente (por fecha de pedido y alta del ítem) de cada producto."""
-    orders = valid_orders_between(date_from, date_to).values('pk')
+    orders = valid_orders_between(company_id, date_from, date_to).values('pk')
     rows = (
         OrderItemModel.objects.filter(order__in=orders, product_id__in=product_ids)
         .order_by('-order__order_date', '-created_at', '-id')
@@ -59,9 +62,9 @@ def latest_product_names(date_from: date, date_to: date, product_ids: list) -> d
     return names
 
 
-def customer_totals(date_from: date, date_to: date, limit: int) -> list[dict]:
+def customer_totals(company_id: UUID, date_from: date, date_to: date, limit: int) -> list[dict]:
     return list(
-        valid_orders_between(date_from, date_to)
+        valid_orders_between(company_id, date_from, date_to)
         .filter(customer_id__isnull=False)
         .values('customer_id')
         .annotate(orders_count=Count('id'), total=Sum('total'))
@@ -69,13 +72,13 @@ def customer_totals(date_from: date, date_to: date, limit: int) -> list[dict]:
     )
 
 
-def pending_delivery() -> QuerySet:
-    return valid_orders().filter(status__in=OPEN_STATUSES).order_by(
+def pending_delivery(company_id: UUID) -> QuerySet:
+    return valid_orders(company_id).filter(status__in=OPEN_STATUSES).order_by(
         F('expected_delivery_date').asc(nulls_last=True), 'order_date', 'created_at', 'id')
 
 
-def pending_collection() -> QuerySet:
-    return valid_orders().filter(total__gt=F('paid_total')).order_by('order_date', 'created_at', 'id')
+def pending_collection(company_id: UUID) -> QuerySet:
+    return valid_orders(company_id).filter(total__gt=F('paid_total')).order_by('order_date', 'created_at', 'id')
 
 
 def collection_balance(queryset: QuerySet):

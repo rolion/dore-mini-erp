@@ -11,6 +11,8 @@ from modules.reporting.infrastructure.adapters import (
     SystemClock,
 )
 
+from shared.tenancy import company_id_from
+
 from . import serializers
 from .params import parse_period_params
 
@@ -22,7 +24,14 @@ def _run(use_case, **kwargs):
         raise ValidationError(exc.errors) from exc
 
 
-class _PeriodReportView(APIView):
+class _CompanyReportView(APIView):
+    """Reporte de solo lectura de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
+
+    def _company_id(self):
+        return company_id_from(self.request)
+
+
+class _PeriodReportView(_CompanyReportView):
     """Reporte de solo lectura que recibe un periodo (`period` o `date_from` + `date_to`)."""
 
     present = staticmethod(lambda result: result)
@@ -39,47 +48,47 @@ class DashboardView(_PeriodReportView):
     present = staticmethod(serializers.dashboard_data)
 
     def build(self):
-        return queries.GetDashboardSummary(SalesReaderAdapter(), ExpensesReaderAdapter(), SystemClock())
+        return queries.GetDashboardSummary(SalesReaderAdapter(self._company_id()), ExpensesReaderAdapter(self._company_id()), SystemClock())
 
 
 class SalesReportView(_PeriodReportView):
     present = staticmethod(serializers.sales_data)
 
     def build(self):
-        return queries.GetSalesReport(SalesReaderAdapter(), SystemClock())
+        return queries.GetSalesReport(SalesReaderAdapter(self._company_id()), SystemClock())
 
 
 class ExpensesReportView(_PeriodReportView):
     present = staticmethod(serializers.expenses_data)
 
     def build(self):
-        return queries.GetExpenseReport(ExpensesReaderAdapter(), SystemClock())
+        return queries.GetExpenseReport(ExpensesReaderAdapter(self._company_id()), SystemClock())
 
 
 class SalesByChannelView(_PeriodReportView):
     present = staticmethod(serializers.channels_data)
 
     def build(self):
-        return queries.GetSalesByChannel(SalesReaderAdapter(), SystemClock())
+        return queries.GetSalesByChannel(SalesReaderAdapter(self._company_id()), SystemClock())
 
 
 class TopProductsView(_PeriodReportView):
     present = staticmethod(serializers.products_data)
 
     def build(self):
-        return queries.GetTopProducts(SalesReaderAdapter(), SystemClock())
+        return queries.GetTopProducts(SalesReaderAdapter(self._company_id()), SystemClock())
 
 
 class TopCustomersView(_PeriodReportView):
     present = staticmethod(serializers.customers_data)
 
     def build(self):
-        return queries.GetTopCustomers(SalesReaderAdapter(), CustomerNamesAdapter(), SystemClock())
+        return queries.GetTopCustomers(SalesReaderAdapter(self._company_id()), CustomerNamesAdapter(self._company_id()), SystemClock())
 
 
-class PendingView(APIView):
+class PendingView(_CompanyReportView):
     """Estado actual de los pedidos pendientes; no recibe periodo."""
 
     def get(self, request):
-        report = queries.GetPendingOrders(SalesReaderAdapter(), CustomerNamesAdapter()).execute()
+        report = queries.GetPendingOrders(SalesReaderAdapter(self._company_id()), CustomerNamesAdapter(self._company_id())).execute()
         return Response(serializers.pending_data(report))

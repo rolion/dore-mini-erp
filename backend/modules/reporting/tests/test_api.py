@@ -4,10 +4,9 @@ from decimal import Decimal
 from unittest import mock
 from uuid import uuid4
 
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
+from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.expenses.domain.category import ExpenseCategory
 from modules.expenses.domain.expense import Expense
@@ -28,15 +27,14 @@ PERIOD_ROUTES = ('dashboard', 'sales', 'expenses', 'sales-by-channel', 'top-prod
 
 class ReportingApiTestCase(APITestCase):
     def setUp(self):
-        user = get_user_model().objects.create_user(username='ana', password='x-Pass-123')
-        token = Token.objects.create(user=user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
         patcher = mock.patch('modules.reporting.infrastructure.adapters.timezone.localdate', return_value=WEDNESDAY)
         patcher.start()
         self.addCleanup(patcher.stop)
-        self.orders = DjangoOrderRepository()
-        self.categories = DjangoExpenseCategoryRepository()
-        self.expenses = DjangoExpenseRepository()
+        self.orders = DjangoOrderRepository(self.company.id)
+        self.categories = DjangoExpenseCategoryRepository(self.company.id)
+        self.expenses = DjangoExpenseRepository(self.company.id)
 
     # --- fixtures ---
     def order(self, on=date(2026, 10, 5), channel='WHATSAPP', items=(('Pack', '35.00', 2),), customer_id=None,
@@ -84,9 +82,8 @@ class AuthenticationTests(APITestCase):
                 self.assertEqual(APIClient().get(f'{BASE}{route}/').status_code, 401)
 
     def test_routes_are_read_only(self):  # Reporting solo lee
-        user = get_user_model().objects.create_user(username='luis', password='x-Pass-123')
         client = APIClient()
-        client.force_authenticate(user)
+        client.force_authenticate(make_admin(username='luis'))
         for route in (*PERIOD_ROUTES, 'pending'):
             with self.subTest(route=route):
                 self.assertEqual(client.post(f'{BASE}{route}/', {}, format='json').status_code, 405)
@@ -220,8 +217,8 @@ class SalesBreakdownApiTests(ReportingApiTestCase):
                          [('Chipa', 5, '50.00'), ('Pack', 2, '70.00')])
 
     def test_top_customers_have_names_and_skip_orders_without_customer(self):  # AC-17
-        ana = CustomerModel.objects.create(name='Ana Pérez')
-        luis = CustomerModel.objects.create(name='Luis')
+        ana = CustomerModel.objects.create(company_id=self.company.id, name='Ana Pérez')
+        luis = CustomerModel.objects.create(company_id=self.company.id, name='Luis')
         self.order(customer_id=ana.id, items=(('A', '50.00', 1),))
         self.order(customer_id=ana.id, items=(('A', '50.00', 1),))
         self.order(customer_id=luis.id, items=(('A', '30.00', 1),))
@@ -234,7 +231,7 @@ class SalesBreakdownApiTests(ReportingApiTestCase):
 
 class PendingApiTests(ReportingApiTestCase):
     def test_delivered_and_partial_is_only_pending_collection(self):  # AC-18, EDGE-07
-        ana = CustomerModel.objects.create(name='Ana')
+        ana = CustomerModel.objects.create(company_id=self.company.id, name='Ana')
         order = self.order(customer_id=ana.id, status='DELIVERED', paid='20.00', items=(('A', '70.00', 1),))
         data = self.get('pending')
         self.assertEqual(data['delivery'], {'count': 0, 'rows': []})
@@ -263,3 +260,41 @@ class PendingApiTests(ReportingApiTestCase):
             'delivery': {'count': 0, 'rows': []},
             'collection': {'count': 0, 'balance_total': '0.00', 'rows': []},
         })
+
+
+class CompanyIsolationTests(ReportingApiTestCase):
+    """AC-08: ningún reporte incluye datos de otra empresa."""
+
+    def setUp(self):
+        super().setUp()
+        other = make_company('Empresa B')
+        self.other_customer = CustomerModel.objects.create(company_id=other.id, name='Cliente ajeno')
+        foreign_orders = DjangoOrderRepository(other.id)
+        order = Order.create(sales_channel='STORE', order_date=date(2026, 10, 5), customer_id=self.other_customer.id,
+                             expected_delivery_date=date(2026, 10, 20))
+        order.add_item(uuid4(), 'Ajeno', D('500.00'), 1)
+        foreign_orders.save(order)
+        foreign_categories = DjangoExpenseCategoryRepository(other.id)
+        foreign_category = foreign_categories.save(ExpenseCategory.create('Ajena'))
+        DjangoExpenseRepository(other.id).save(Expense.create('Gasto ajeno', '300.00', foreign_category.id,
+                                                              date(2026, 10, 5)))
+        own = CustomerModel.objects.create(company_id=self.company.id, name='Propio')
+        self.order(customer_id=own.id, items=(('Pack', '10.00', 1),), paid='2.00')
+        self.expense(self.category('Materia prima'), '4.00')
+
+    def test_dashboard_sales_and_expenses_only_count_own_data(self):
+        dashboard = self.get('dashboard')
+        text = str(dashboard)
+        self.assertNotIn('500.00', text)
+        self.assertNotIn('300.00', text)
+        self.assertEqual(self.get('sales')['total'], '10.00')
+        self.assertEqual(self.get('expenses')['total'], '4.00')
+
+    def test_breakdowns_and_pending_only_see_own_data(self):
+        self.assertEqual([c['sales_channel'] for c in self.get('sales-by-channel')['channels']], ['WHATSAPP'])
+        self.assertEqual([p['product_name'] for p in self.get('top-products')['products']], ['Pack'])
+        self.assertEqual([c['name'] for c in self.get('top-customers')['customers']], ['Propio'])
+        pending = self.get('pending')
+        self.assertEqual((pending['delivery']['count'], pending['collection']['count']), (1, 1))
+        self.assertEqual(pending['collection']['balance_total'], '8.00')
+        self.assertNotIn('Cliente ajeno', str(pending))

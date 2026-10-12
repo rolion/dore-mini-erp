@@ -7,6 +7,8 @@ from django.db.models.functions import Lower
 
 class ExpenseCategoryModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Empresa propietaria; solo UUID, sin FK (los módulos no acoplan modelos ni migraciones).
+    company_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=100)
     active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -16,13 +18,15 @@ class ExpenseCategoryModel(models.Model):
         db_table = 'expenses_category'
         ordering = ['name', 'id']
         constraints = [
-            # El nombre es único sin distinguir mayúsculas: dos "Empaque" repartirían un mismo concepto en los reportes.
-            models.UniqueConstraint(Lower('name'), name='expenses_category_name_ci_unique'),
+            # El nombre es único por empresa sin distinguir mayúsculas: dos "Empaque" repartirían un mismo concepto
+            # en los reportes de la empresa; empresas distintas sí pueden repetirlo.
+            models.UniqueConstraint('company_id', Lower('name'), name='expenses_category_company_name_ci_unique'),
         ]
 
 
 class ExpenseModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
     # FK dentro del mismo módulo; PROTECT impide borrar físicamente una categoría usada (REQ-EXP-006).
     category = models.ForeignKey(ExpenseCategoryModel, on_delete=models.PROTECT, related_name='expenses')
     description = models.CharField(max_length=200)

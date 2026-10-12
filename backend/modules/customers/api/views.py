@@ -14,12 +14,18 @@ from modules.customers.application.exceptions import DuplicateCustomerPhone
 from modules.customers.application.queries import GetCustomer, ListCustomers
 from modules.customers.domain.exceptions import CustomerNotFound, CustomerValidationError
 from modules.customers.infrastructure.django.repositories import DjangoCustomerRepository
+from shared.tenancy import company_id_from
 
 from .pagination import CustomerPagination
 from .serializers import CustomerInputSerializer, CustomerSerializer
 
 CUSTOMER_NOT_FOUND = 'Cliente no encontrado.'
 DUPLICATE_PHONE_CODE = 'duplicate_phone'
+
+
+def _repository(request) -> DjangoCustomerRepository:
+    """Repositorio de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
+    return DjangoCustomerRepository(company_id_from(request))
 
 
 def _run(use_case, **kwargs):
@@ -55,7 +61,7 @@ class CustomerListCreateView(APIView):
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
-        customers = ListCustomers(DjangoCustomerRepository()).execute(search=search, active=active)
+        customers = ListCustomers(_repository(request)).execute(search=search, active=active)
         paginator = CustomerPagination()
         page = paginator.paginate_queryset(customers, request, view=self)
         return paginator.get_paginated_response(CustomerSerializer(page, many=True).data)
@@ -63,7 +69,7 @@ class CustomerListCreateView(APIView):
     def post(self, request):
         serializer = CustomerInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        use_case = CreateCustomer(DjangoCustomerRepository(), settings.DEFAULT_PHONE_COUNTRY_CODE)
+        use_case = CreateCustomer(_repository(request), settings.DEFAULT_PHONE_COUNTRY_CODE)
         try:
             customer = _run(use_case, **{'name': None, **serializer.validated_data})
         except DuplicateCustomerPhone as exc:
@@ -73,25 +79,25 @@ class CustomerListCreateView(APIView):
 
 class CustomerDetailView(APIView):
     def get(self, request, customer_id):
-        customer = _run(GetCustomer(DjangoCustomerRepository()), customer_id=customer_id)
+        customer = _run(GetCustomer(_repository(request)), customer_id=customer_id)
         return Response(CustomerSerializer(customer).data)
 
     def patch(self, request, customer_id):
         serializer = CustomerInputSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         changes = {k: v for k, v in serializer.validated_data.items() if k != 'confirm_duplicate'}
-        use_case = UpdateCustomer(DjangoCustomerRepository(), settings.DEFAULT_PHONE_COUNTRY_CODE)
+        use_case = UpdateCustomer(_repository(request), settings.DEFAULT_PHONE_COUNTRY_CODE)
         customer = _run(use_case, customer_id=customer_id, **changes)
         return Response(CustomerSerializer(customer).data)
 
 
 class CustomerActivateView(APIView):
     def post(self, request, customer_id):
-        customer = _run(ActivateCustomer(DjangoCustomerRepository()), customer_id=customer_id)
+        customer = _run(ActivateCustomer(_repository(request)), customer_id=customer_id)
         return Response(CustomerSerializer(customer).data)
 
 
 class CustomerDeactivateView(APIView):
     def post(self, request, customer_id):
-        customer = _run(DeactivateCustomer(DjangoCustomerRepository()), customer_id=customer_id)
+        customer = _run(DeactivateCustomer(_repository(request)), customer_id=customer_id)
         return Response(CustomerSerializer(customer).data)

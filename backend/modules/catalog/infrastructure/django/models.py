@@ -5,6 +5,8 @@ from django.db import models
 
 class ProductModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Empresa propietaria; solo UUID, sin FK (los módulos no acoplan modelos ni migraciones).
+    company_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=150)
     description = models.TextField(blank=True, default='')
     sale_price = models.DecimalField(max_digits=12, decimal_places=2)

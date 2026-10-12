@@ -30,16 +30,25 @@ class ProductList:
 
 
 class DjangoProductRepository:
+    """Repositorio acotado a una empresa: toda consulta filtra por `company_id` y `save` lo establece al crear."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _products(self) -> QuerySet:
+        return ProductModel.objects.filter(company_id=self.company_id)
+
     def get(self, product_id: UUID) -> Product | None:
-        model = ProductModel.objects.filter(pk=product_id).first()
+        model = self._products().filter(pk=product_id).first()
         return to_entity(model) if model else None
 
     def save(self, product: Product) -> Product:
-        model, _ = ProductModel.objects.update_or_create(id=product.id, defaults=to_model_values(product))
+        model, _ = ProductModel.objects.update_or_create(
+            id=product.id, company_id=self.company_id, defaults=to_model_values(product))
         return to_entity(model)
 
     def list(self, search: str | None = None, active: bool | None = None) -> ProductList:
-        queryset = ProductModel.objects.order_by('name', 'id')
+        queryset = self._products().order_by('name', 'id')
         if search:
             queryset = queryset.filter(name__icontains=search)
         if active is not None:

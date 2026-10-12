@@ -20,8 +20,9 @@ from modules.expenses.infrastructure.django.repositories import (
 
 class RepositoryTestCase(TestCase):
     def setUp(self):
-        self.categories = DjangoExpenseCategoryRepository()
-        self.expenses = DjangoExpenseRepository()
+        self.company_id = uuid4()
+        self.categories = DjangoExpenseCategoryRepository(self.company_id)
+        self.expenses = DjangoExpenseRepository(self.company_id)
 
     def category(self, name='Empaque', active=True):
         category = ExpenseCategory.create(name)
@@ -99,9 +100,9 @@ class ExpenseRepositoryTests(RepositoryTestCase):
         self.assertIsNotNone(loaded.voided_at)
 
     def test_database_rejects_a_non_positive_amount(self):  # INV-01
-        category = ExpenseCategoryModel.objects.create(name='X')
+        category = ExpenseCategoryModel.objects.create(company_id=self.company_id, name='X')
         with self.assertRaises(IntegrityError), transaction.atomic():
-            ExpenseModel.objects.create(category=category, description='d', amount=Decimal('0.00'),
+            ExpenseModel.objects.create(company_id=self.company_id, category=category, description='d', amount=Decimal('0.00'),
                                         expense_date=date(2026, 10, 1), payment_method='CASH', status='ACTIVE')
 
     def test_list_filters_by_date_category_and_status(self):  # AC-08
@@ -138,3 +139,36 @@ class ExpenseRepositoryTests(RepositoryTestCase):
         with transaction.atomic():
             self.assertEqual(self.expenses.get_for_update(expense.id).id, expense.id)
         self.assertIsNone(self.expenses.get_for_update(uuid4()))
+
+
+class CompanyScopeTests(RepositoryTestCase):
+    """AC-04 / AC-07: cada repositorio solo ve y escribe dentro de su empresa."""
+
+    def setUp(self):
+        super().setUp()
+        self.other_categories = DjangoExpenseCategoryRepository(uuid4())
+        self.other_expenses = DjangoExpenseRepository(self.other_categories.company_id)
+
+    def test_get_and_list_do_not_cross_companies(self):
+        mine = self.category('Empaque')
+        foreign = ExpenseCategory.create('Ajena')
+        self.other_categories.save(foreign)
+        self.assertIsNone(self.categories.get(foreign.id))
+        self.assertEqual(self.categories.get_many([mine.id, foreign.id]), {mine.id: self.categories.get(mine.id)})
+        self.assertEqual([c.name for c in self.categories.list()], ['Empaque'])
+
+    def test_same_name_is_unique_per_company(self):  # AC-07
+        self.category('Empaque')
+        self.other_categories.save(ExpenseCategory.create('Empaque'))
+        self.assertEqual(ExpenseCategoryModel.objects.filter(name='Empaque').count(), 2)
+        self.assertIsNone(self.categories.find_by_name('Otra'))
+        self.assertIsNotNone(self.other_categories.find_by_name('empaque'))
+
+    def test_expenses_do_not_cross_companies(self):
+        category = self.category('Empaque')
+        own = self.expense(category)
+        self.assertIsNone(self.other_expenses.get(own.id))
+        self.assertIsNone(self.other_expenses.get_for_update(own.id))
+        self.assertEqual(len(self.other_expenses.list(ExpenseFilters())), 0)
+        self.assertEqual(self.other_expenses.total_active(ExpenseFilters()), Decimal('0.00'))
+        self.assertEqual(len(self.expenses.list(ExpenseFilters())), 1)

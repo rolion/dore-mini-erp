@@ -39,8 +39,8 @@ class LazyList:
         return (self._to_entity(model) for model in self._queryset)
 
 
-def _filtered(filters: ExpenseFilters, include_status: bool) -> QuerySet:
-    queryset = ExpenseModel.objects.all()
+def _filtered(company_id: UUID, filters: ExpenseFilters, include_status: bool) -> QuerySet:
+    queryset = ExpenseModel.objects.filter(company_id=company_id)
     if filters.date_from is not None:
         queryset = queryset.filter(expense_date__gte=filters.date_from)
     if filters.date_to is not None:
@@ -53,40 +53,56 @@ def _filtered(filters: ExpenseFilters, include_status: bool) -> QuerySet:
 
 
 class DjangoExpenseRepository:
+    """Repositorio acotado a una empresa: toda consulta filtra por `company_id` y `save` lo establece al crear."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
     def get(self, expense_id: UUID) -> Expense | None:
-        model = ExpenseModel.objects.filter(pk=expense_id).first()
+        model = ExpenseModel.objects.filter(company_id=self.company_id, pk=expense_id).first()
         return expense_to_entity(model) if model else None
 
     def get_for_update(self, expense_id: UUID) -> Expense | None:
         """Bloquea la fila (exige una transacción abierta) y la lee ya con el bloqueo."""
-        model = ExpenseModel.objects.select_for_update().filter(pk=expense_id).first()
+        model = (ExpenseModel.objects.select_for_update()
+                 .filter(company_id=self.company_id, pk=expense_id).first())
         return expense_to_entity(model) if model else None
 
     def save(self, expense: Expense) -> Expense:
-        model, _ = ExpenseModel.objects.update_or_create(id=expense.id, defaults=expense_to_values(expense))
+        model, _ = ExpenseModel.objects.update_or_create(
+            id=expense.id, company_id=self.company_id, defaults=expense_to_values(expense))
         return expense_to_entity(model)
 
     def list(self, filters: ExpenseFilters) -> LazyList:
-        return LazyList(_filtered(filters, include_status=True), expense_to_entity)
+        return LazyList(_filtered(self.company_id, filters, include_status=True), expense_to_entity)
 
     def total_active(self, filters: ExpenseFilters) -> Decimal:
-        queryset = _filtered(filters, include_status=False).filter(status=ExpenseStatus.ACTIVE.value)
+        queryset = _filtered(self.company_id, filters, include_status=False).filter(
+            status=ExpenseStatus.ACTIVE.value)
         return queryset.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
 
 class DjangoExpenseCategoryRepository:
+    """Repositorio acotado a una empresa: toda consulta filtra por `company_id` y `save` lo establece al crear."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _categories(self) -> QuerySet:
+        return ExpenseCategoryModel.objects.filter(company_id=self.company_id)
+
     def get(self, category_id: UUID) -> ExpenseCategory | None:
-        model = ExpenseCategoryModel.objects.filter(pk=category_id).first()
+        model = self._categories().filter(pk=category_id).first()
         return category_to_entity(model) if model else None
 
     def get_many(self, category_ids: Iterable[UUID]) -> dict[UUID, ExpenseCategory]:
         ids = set(category_ids)
         if not ids:
             return {}
-        return {m.id: category_to_entity(m) for m in ExpenseCategoryModel.objects.filter(pk__in=ids)}
+        return {m.id: category_to_entity(m) for m in self._categories().filter(pk__in=ids)}
 
     def find_by_name(self, name: str, exclude_id: UUID | None = None) -> ExpenseCategory | None:
-        queryset = ExpenseCategoryModel.objects.filter(name__iexact=name.strip())
+        queryset = self._categories().filter(name__iexact=name.strip())
         if exclude_id is not None:
             queryset = queryset.exclude(pk=exclude_id)
         model = queryset.first()
@@ -96,14 +112,14 @@ class DjangoExpenseCategoryRepository:
         try:
             with transaction.atomic():
                 model, _ = ExpenseCategoryModel.objects.update_or_create(
-                    id=category.id, defaults=category_to_values(category))
+                    id=category.id, company_id=self.company_id, defaults=category_to_values(category))
         except IntegrityError:
             # Carrera entre dos altas con el mismo nombre: la restricción única de la BD es la última barrera.
             raise ExpenseValidationError({'name': [DUPLICATE_NAME]}) from None
         return category_to_entity(model)
 
     def list(self, active: bool | None = None, search: str | None = None) -> LazyList:
-        queryset = ExpenseCategoryModel.objects.order_by('name', 'id')
+        queryset = self._categories().order_by('name', 'id')
         if active is not None:
             queryset = queryset.filter(active=active)
         if search:

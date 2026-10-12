@@ -17,12 +17,12 @@ class ProductForSale:
     active: bool
 
 
-def get_product_for_sale(product_id: UUID) -> ProductForSale | None:
-    """El producto con su nombre y precio vigentes, o `None` si no existe.
+def get_product_for_sale(company_id: UUID, product_id: UUID) -> ProductForSale | None:
+    """El producto de la empresa con su nombre y precio vigentes, o `None` si no existe (o es de otra empresa).
 
     La regla de "producto activo" la aplica quien vende, no la fachada.
     """
-    product = DjangoProductRepository().get(product_id)
+    product = DjangoProductRepository(company_id).get(product_id)
     if product is None:
         return None
     return ProductForSale(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active)
