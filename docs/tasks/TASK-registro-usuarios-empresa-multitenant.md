@@ -1,6 +1,6 @@
 # TASK-registro-usuarios-empresa-multitenant: Registro de usuarios con empresa y aislamiento de datos por empresa
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-registro-usuarios-empresa-multitenant`
@@ -14,6 +14,7 @@
 | 2026-10-12 | ARCHITECTURE → PLANNING | 3 ADR: aislamiento por columna company_id, empresa derivada de la sesión y propagada por repositorios/fachadas, registro público que crea empresa + rol admin. Decisión de negocio del usuario: nombre de empresa existente se rechaza; usuarios adicionales los agrega el admin | delivery-architect |
 | 2026-10-12 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto | delivery-plan |
 | 2026-10-12 | ENGINEERING → REVIEW | Implementación completa según plan v1 (fases A–E) | delivery-engineer |
+| 2026-10-12 | REVIEW → PUBLISH | Review PASS: 571 tests backend OK, lint/build/bandit sin hallazgos, 415/486 specs Angular OK (71 fallos preexistentes de la plantilla), sin issues abiertos | delivery-review |
 
 ## Investigación
 
@@ -187,7 +188,23 @@ Implementado según el plan v1 (COMPLETO), fases A–E. Commits: `e051b62` (back
 - Para correr los tests en este worktree se copió `backend/.env` (ignorado por git, sin leer) y se enlazó `node_modules` del checkout principal.
 
 ## Review
-_Pendiente_
+
+**Resultado: PASS** (2026-10-12, PR [#10](https://github.com/rolion/dore-mini-erp/pull/10)). Issues abiertos: ninguno (no se generaron `REV-*`).
+
+Nota de aislamiento: la revisión se ejecutó en una sesión distinta de la implementación; contexto reconstruido solo desde TASK, plan v1, ADR/DDR y el diff `origin/main...HEAD`.
+
+**Funcional (ejecutado):**
+- Backend `python manage.py test --noinput` (PostgreSQL real): `Ran 571 tests ... OK`; `makemigrations --check` sin cambios.
+- Frontend: `npm run lint` OK; `npm run build` OK; `ng test` (excluyendo `app.component.spec.ts`, que no compila en `main`): 415 OK / 71 FAILED, todos `should create` de specs de la plantilla no tocados por este cambio (ActivatedRoute/ToastConfig/iconos/standalone). Cobertura: stmts 80.05 %, branches 73.31 %, funcs 73.89 %, lines 79.1 %.
+
+**Técnica:** `bandit` sin issues (3989 líneas); límites DDD respetados (dominio sin Django, módulos de negocio sin importar `accounts`, Reporting solo lee); sin `flake8`/`ruff`/`mypy`/`coverage.py` configurados (cobertura backend verificada manualmente).
+
+**Specification:** AC-01..AC-16 cubiertos con tests ejecutados; invariantes INV-01..06, API-01..03 y EDGE-01..06 verificados.
+
+**No realizado (consta, no bloqueante):** `npm audit` (no hay `package-lock.json`) y prueba manual con dos empresas contra servidor real (recomendada en el plan).
+
+**Fuera de alcance / observaciones:** fallo intermitente `sales...test_item_order_is_preserved` no reproducido (preexistente); `app.component.spec.ts` sin compilar en `main` (preexistente).
+
 
 ## Publicación
 _Pendiente_
