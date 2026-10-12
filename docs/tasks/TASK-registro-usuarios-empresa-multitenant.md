@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-registro-usuarios-empresa-multitenant`
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/10
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
