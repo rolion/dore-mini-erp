@@ -1,6 +1,6 @@
 # TASK-perfil-usuario-menus-lateral-superior: Perfil de usuario con iniciales y limpieza del menú superior
 
-**Etapa actual:** REVIEW
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-perfil-usuario-menus-lateral-superior
@@ -13,6 +13,7 @@
 | 2026-10-13 | DESIGN → PLANNING | DDR de avatar con iniciales y menú de usuario simplificado; veredicto NEEDS_PLAN | delivery-design |
 | 2026-10-13 | PLANNING → ENGINEERING | PLAN v1 (COMPACTO) READY, PR abierto para aprobación humana | delivery-plan |
 | 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-engineer |
+| 2026-10-13 | REVIEW → ENGINEERING | Review FAIL: 1 issue IMPLEMENTATION Medium (elipsis/desborde del sidebar) y 1 Low (test de Logout) | delivery-review |
 
 ## Investigación
 
@@ -110,7 +111,13 @@ Implementado según PLAN v1 (COMPACTO), solo en `frontend/panel_admin/`:
 **Verificación propia (no es el Quality Gate):** specs de `layout/` y `shared/` pasan (25/26); `ng build` OK; ESLint sin hallazgos en lo tocado. Fallos previos y ajenos a esta tarea: `app.component.spec.ts` no compila (`app.title`) y `FooterComponent should create` falla (falta `FeatherModule.pick`). No se hizo la revisión visual manual (requiere backend corriendo).
 
 ## Review
-_Pendiente_
+**Resultado: FAIL** (2026-10-13, delivery-review). Aislamiento procedimental: revisión hecha desde artefactos y diff del PR #12 (commit 9148259).
+
+Issues abiertos:
+- [REV-2026-10-13-perfil-usuario-menus-lateral-superior-01](../reviews/REV-2026-10-13-perfil-usuario-menus-lateral-superior-01.md) — Medium, IMPLEMENTATION: empresa/nombre largos desbordan el sidebar y no se aplica la elipsis (edge case de la Specification).
+- [REV-2026-10-13-perfil-usuario-menus-lateral-superior-02](../reviews/REV-2026-10-13-perfil-usuario-menus-lateral-superior-02.md) — Low, IMPLEMENTATION: falta el test de clic en Logout previsto en la Test Specification.
+
+Verificación: AC-01..AC-07 cubiertos y pasan; 12 tests nuevos verdes; suite completa con los mismos 71 fallos preexistentes que `origin/main`; lint y build OK. Siguiente etapa: `/delivery-engineer TASK-perfil-usuario-menus-lateral-superior`.
 
 ## Publicación
 _Pendiente_
