@@ -16,6 +16,7 @@
 | 2026-10-13 | REVIEW → ENGINEERING | Review FAIL: 1 issue IMPLEMENTATION Medium (elipsis/desborde del sidebar) y 1 Low (test de Logout) | delivery-review |
 | 2026-10-13 | ENGINEERING → REVIEW | Corregidos REV-01 (elipsis/desborde del sidebar) y REV-02 (test de Logout) | delivery-engineer |
 | 2026-10-13 | REVIEW → PUBLISH | Review PASS en segunda ronda: REV-01 y REV-02 corregidos y verificados | delivery-review |
+| 2026-10-13 | PUBLISH → PUBLISH | PR completo, listo para aprobación humana final | delivery-publish |
 
 ## Investigación
 
@@ -132,4 +133,7 @@ Verificación ronda 2:
 No ejecutado: `npm audit` (no hay `package-lock.json`); verificación visual de tema oscuro y móvil (la regla `_darksidebar.scss` cubre `.profile-usertitle-job` y el nombre, revisada por lectura). Siguiente etapa: `/delivery-publish TASK-perfil-usuario-menus-lateral-superior`.
 
 ## Publicación
-_Pendiente_
+- **PR:** https://github.com/rolion/dore-mini-erp/pull/12 — **Estado: Listo para aprobación humana** (no mergeado).
+- Verificado: review PASS en 99b6a36; los commits posteriores solo tocan documentación; diff limitado a `frontend/panel_admin/` y `docs/`; sin secretos ni archivos temporales; `git status` limpio.
+- Descripción del PR completada (`## Testing` y `## Review` actualizados con el resultado de la segunda ronda, que había quedado con el FAIL de la primera).
+- Cambio no sensible: sin ADR, autenticación, base de datos ni infraestructura.
