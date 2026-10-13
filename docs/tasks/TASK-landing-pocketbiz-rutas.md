@@ -1,6 +1,6 @@
 # TASK-landing-pocketbiz-rutas: Landing pública de PocketBiz en "/" y aplicación bajo "/pocketbiz"
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** ARCHITECTURE
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-landing-pocketbiz-rutas`
@@ -13,6 +13,7 @@
 | 2026-10-13 | DESIGN → ARCHITECTURE | DDR de landing y pantallas de entrada propuesto; veredicto NEEDS_ARCHITECTURE | delivery-design |
 | 2026-10-13 | ARCHITECTURE → PLANNING | 2 ADR: una sola SPA con prefijo `/pocketbiz` en el router (base href sin cambios) y redirecciones temporales de URLs antiguas | delivery-architect |
 | 2026-10-13 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; rama creada desde `origin/main` (1071dc7); PR abierto | delivery-plan |
+| 2026-10-13 | ENGINEERING → ARCHITECTURE | `ARCHITECTURE_REVIEW_REQUIRED`: la app usa `HashLocationStrategy` (`app.config.ts:23`); las URLs reales son `/#/pocketbiz/…`, no `/pocketbiz/…`; pasar a URLs limpias exige fallback de SPA en el servidor. Rutas y landing implementadas y verificadas | delivery-engineer |
 
 ## Investigación
 
@@ -126,7 +127,46 @@ Documentos de entrada ya existentes (no se repiten aquí): `docs/design/ux-brief
 - Preguntas abiertas no bloqueantes: F-01 (color/tamaño del texto del CTA), logo y captura reales sustituyen las recreaciones de Stitch, fallback de SPA en el servidor (fuera del repo).
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (COMPLETO) en dos commits (`71ca1a5` rutas, `f3d34b7` landing). **Detenido por `ARCHITECTURE_REVIEW_REQUIRED`** (ver abajo) antes de dar la implementación por completa.
+
+### Qué se hizo
+| Parte | Cubre |
+|---|---|
+| `core/routing/app-paths.ts` (`APP_BASE`, `APP_PATHS`) y uso en guard, interceptor, header, signin y signup | AC-06 |
+| `app.routes.ts`: `''` landing (lazy, pública); `pocketbiz` con grupo privado (`MainLayout` + `AuthGuard`, `''`→`dashboard/main`) y grupo público (`AUTH_ROUTE`: `login`, `signup`, `forgot`, `reset`, `page404`, `page500`); `**` → `Page404` | AC-01, AC-03, AC-04, AC-05 |
+| `core/routing/legacy-redirects.ts`: redirecciones temporales con query y fragmento (UrlTree) | AC-08 |
+| Reemplazo mecánico de rutas absolutas en **124 archivos** (103 no-spec + 20 specs + `routes.json`), 256 sustituciones; `grep` sin literales antiguos fuera de las redirecciones y su spec | AC-07, AC-09 |
+| 404/500 "Back to Home" → `/pocketbiz`; logo de login/registro → `/` | AC-06, AC-10 |
+| `features/landing` (página, contenido tipado, SCSS) + captura en `assets/images/landing/` | AC-11..AC-16 |
+| `CLAUDE.md:15` con las rutas nuevas | AC-17 |
+| Specs: `core/routing/app-routes.spec.ts` (estructura y 13 redirecciones + query + 404 + sin ciclos), `landing.component.spec.ts` (anónimo y con sesión), 4 specs de features con tablas de rutas de prueba prefijadas | AC-01..AC-17 |
+
+### Verificación propia (no es el Quality Gate)
+- `ng lint`: OK. `ng build --configuration development`: OK.
+- `ng test` (excluyendo `app.component.spec.ts`, que no compila en `main`): **463 OK / 71 FAILED**; los 71 son todos `should create` de specs de la plantilla ya fallidos en `main` (línea base 415 OK / 71 FAILED); sin fallos nuevos.
+- Humo en navegador (`ng serve`, sin sesión): `/` muestra la landing sin redirigir; `#/authentication/signin`→`#/pocketbiz/login`; `#/dashboard/main` y `#/sales/orders?status=NEW`→`#/pocketbiz/login` (por el guard); `#/pocketbiz`→`#/pocketbiz/login`; `#/ui/tabs`→404; a 375 px (388 de ancho útil) sin desborde horizontal, botón del menú 44×44 y CTA visible.
+- **No verificado:** humo con sesión activa y backend (CTA "Ir a mi panel" solo en spec), 1440 px por captura, foco/teclado en navegador, contraste con herramienta; `npm audit`.
+
+### Hallazgo que bloquea: ARCHITECTURE_REVIEW_REQUIRED
+- **Hecho:** la aplicación usa `HashLocationStrategy` (`frontend/panel_admin/src/app/app.config.ts:6,23`). Las URLs reales son `http://host/#/pocketbiz/login`, no `/pocketbiz/login`. La investigación afirmó que no había `withHashLocation`/base href por un `grep` incompleto (no buscó `HashLocationStrategy`), y el ADR `esquema-rutas-montaje` dio por hecho `PathLocationStrategy`.
+- **Impacto:** el requisito de usuario Q7 ("`/pocketbiz/login`, `/pocketbiz/signup`, `/pocketbiz/**`") **no se cumple en URL real** con el código actual: en navegador la URL es `/#/pocketbiz/login`. Con `HashLocationStrategy` tampoco existe una "ruta `/pocketbiz`" en el servidor: una URL `/pocketbiz/login` sin hash carga la landing.
+- **Por qué es de arquitectura:** pasar a `PathLocationStrategy` quita el provider (`app.config.ts:23`) pero **exige fallback de SPA en el servidor para `/pocketbiz/**`** (hoy no lo necesita porque el servidor solo ve `/`), cambia todas las URLs ya compartidas (`/#/…`), y afecta al dev server y a cualquier despliegue; es una decisión de infraestructura que no tomé.
+- **Lo ya implementado es válido bajo ambas estrategias:** los paths del router, constantes, redirecciones y landing no dependen de la estrategia; si se elige Path, el cambio es un provider y su verificación; las redirecciones deberán revisarse (en Hash, las URLs antiguas son `/#/authentication/signin`).
+- **Preguntas para arquitectura/usuario:** (1) ¿mantener hash (`/#/pocketbiz/login`) o pasar a URLs limpias? (2) si se pasa a Path, ¿qué servidor/proxy servirá el fallback y cómo se despliega? (3) ¿las URLs antiguas con `#` deben redirigir igual (sí, ya lo hacen)?
+
+### Desviaciones respecto al plan (Specification sigue satisfecha salvo lo anterior)
+- **El plan hablaba de componentes pequeños** (marco de teléfono, tarjeta de plan, paso); se implementó **un solo componente** de página con contenido tipado, sin subcomponentes (YAGNI; el marco y las tarjetas son marcado y SCSS locales).
+- **Orden de grupos en `pocketbiz`:** el plan describía "grupo público + grupo privado"; el privado tuvo que ir **primero** porque el público con `path: ''` coincidía con `/pocketbiz` vacío y mostraba un layout vacío (AC-05). Detectado en el humo y corregido; cubierto por un test de orden.
+- **Redirección con función:** la versión por cadena perdía la query; se resolvió con `UrlTree` (`createUrlTree`) y quedó cubierto por test (EDGE-02).
+- **"Entrega y pago":** se usó recreación HTML de las tarjetas de estado en vez de capturas recortadas (legibles en móvil; Q25 del spec).
+- **Resumen:** las 4 pestañas de periodo son ilustrativas (no interactivas).
+- **Entorno:** el `node_modules` de este checkout estaba incompleto (sin `@angular`); se apartó como `frontend/panel_admin/.node_modules.partial` (excluido en `.git/info/exclude`) y se enlazó una *junction* local a un `node_modules` completo de otro worktree (Angular 21.2.25, `ng-bootstrap` 20.0.0). Sin cambios en `package.json`.
+
+### Deuda técnica / notas
+- Pendientes de revisión visual contra Stitch (`/delivery-visual-review`): logo y captura reales ya usados; F-01 (contraste del CTA) sin decidir.
+- El spec de `app.component` sigue sin compilar en `main` (preexistente).
+- Las páginas demo de la plantilla siguen accesibles bajo `/pocketbiz/**`.
+- El texto del login sigue mezclado inglés/español (fuera de alcance).
 
 ## Review
 _Pendiente_
