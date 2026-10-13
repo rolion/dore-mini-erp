@@ -1,6 +1,6 @@
 # REV-2026-10-13-perfil-usuario-menus-lateral-superior-02: Falta el test de clic en Logout previsto en la Test Specification
 
-**Status:** Fixed (pendiente de verificación por delivery-review)
+**Status:** Closed (verificado por delivery-review, 2026-10-13)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-13-perfil-usuario-menus-lateral-superior.md (v1)

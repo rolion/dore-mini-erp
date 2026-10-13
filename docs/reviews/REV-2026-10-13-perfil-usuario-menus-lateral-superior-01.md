@@ -1,6 +1,6 @@
 # REV-2026-10-13-perfil-usuario-menus-lateral-superior-01: Empresa/nombre largos desbordan el sidebar y la elipsis nunca se aplica
 
-**Status:** Fixed (pendiente de verificación por delivery-review)
+**Status:** Closed (verificado por delivery-review, 2026-10-13)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-13-perfil-usuario-menus-lateral-superior.md (v1)

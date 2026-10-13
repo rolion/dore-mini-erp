@@ -1,6 +1,6 @@
 # TASK-perfil-usuario-menus-lateral-superior: Perfil de usuario con iniciales y limpieza del menú superior
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-perfil-usuario-menus-lateral-superior
@@ -15,6 +15,7 @@
 | 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-engineer |
 | 2026-10-13 | REVIEW → ENGINEERING | Review FAIL: 1 issue IMPLEMENTATION Medium (elipsis/desborde del sidebar) y 1 Low (test de Logout) | delivery-review |
 | 2026-10-13 | ENGINEERING → REVIEW | Corregidos REV-01 (elipsis/desborde del sidebar) y REV-02 (test de Logout) | delivery-engineer |
+| 2026-10-13 | REVIEW → PUBLISH | Review PASS en segunda ronda: REV-01 y REV-02 corregidos y verificados | delivery-review |
 
 ## Investigación
 
@@ -118,13 +119,17 @@ Implementado según PLAN v1 (COMPACTO), solo en `frontend/panel_admin/`:
 - Entorno: el `node_modules` del checkout principal estaba incompleto (sin `@angular`) y no hay `package-lock.json`; se instaló con `npm install --no-package-lock` en el worktree (sin dependencias nuevas).
 
 ## Review
-**Resultado: FAIL** (2026-10-13, delivery-review). Aislamiento procedimental: revisión hecha desde artefactos y diff del PR #12 (commit 9148259).
+**Resultado: PASS** (2026-10-13, segunda ronda, delivery-review; commit 99b6a36). Aislamiento procedimental: revisión desde artefactos y diff del PR #12.
 
-Issues abiertos:
-- [REV-2026-10-13-perfil-usuario-menus-lateral-superior-01](../reviews/REV-2026-10-13-perfil-usuario-menus-lateral-superior-01.md) — Medium, IMPLEMENTATION: empresa/nombre largos desbordan el sidebar y no se aplica la elipsis (edge case de la Specification).
-- [REV-2026-10-13-perfil-usuario-menus-lateral-superior-02](../reviews/REV-2026-10-13-perfil-usuario-menus-lateral-superior-02.md) — Low, IMPLEMENTATION: falta el test de clic en Logout previsto en la Test Specification.
+Ronda 1: FAIL con [REV-01](../reviews/REV-2026-10-13-perfil-usuario-menus-lateral-superior-01.md) (Medium) y [REV-02](../reviews/REV-2026-10-13-perfil-usuario-menus-lateral-superior-02.md) (Low), ambos IMPLEMENTATION y ahora cerrados.
 
-Verificación: AC-01..AC-07 cubiertos y pasan; 12 tests nuevos verdes; suite completa con los mismos 71 fallos preexistentes que `origin/main`; lint y build OK. Siguiente etapa: `/delivery-engineer TASK-perfil-usuario-menus-lateral-superior`.
+Verificación ronda 2:
+- `ng test` completo (sin `app.component.spec.ts`, que no compila en `main`): 499 tests, 71 FAILED, 428 SUCCESS; la lista de fallos es idéntica a la de `origin/main` (0 fallos nuevos). Acotado a `layout/` y `shared/`: 27 tests, 26 OK, 1 preexistente (`FooterComponent should create`).
+- `ng lint`: "All files pass linting." · `ng build`: complete (solo warnings SCSS preexistentes).
+- REV-01 verificado en navegador (1280x800, nombre de 56 y empresa de 43 caracteres): sidebar 260px, bloque 259px, elipsis activa y `title` completo. Colapsado: 60px, avatar 35x35, textos ocultos.
+- REV-02: test `logout item closes the session (AC-06)` presente y verde.
+
+No ejecutado: `npm audit` (no hay `package-lock.json`); verificación visual de tema oscuro y móvil (la regla `_darksidebar.scss` cubre `.profile-usertitle-job` y el nombre, revisada por lectura). Siguiente etapa: `/delivery-publish TASK-perfil-usuario-menus-lateral-superior`.
 
 ## Publicación
 _Pendiente_
