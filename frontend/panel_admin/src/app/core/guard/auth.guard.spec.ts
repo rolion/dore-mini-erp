@@ -24,7 +24,7 @@ describe('AuthGuard', () => {
   it('redirects to signin when there is no session (AC-05)', () => {
     const result = guard.canActivate();
     expect(result instanceof UrlTree).toBeTrue();
-    expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/authentication/signin');
+    expect(TestBed.inject(Router).serializeUrl(result as UrlTree)).toBe('/pocketbiz/login');
   });
 
   it('allows access when there is a token', () => {

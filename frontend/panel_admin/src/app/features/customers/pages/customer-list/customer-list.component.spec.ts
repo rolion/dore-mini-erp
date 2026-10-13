@@ -81,7 +81,7 @@ describe('CustomerListComponent', () => {
   it('links the "+" button to the new customer form (AC-10)', () => {
     fixture.detectChanges();
     const link = fixture.debugElement.query(By.css('a[title="Nuevo cliente"]'));
-    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/customers/new');
+    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/pocketbiz/customers/new');
   });
 
   it('searches by name or phone with a single debounced field and goes back to page 1 (AC-10, REQ-CUS-003)', fakeAsync(() => {

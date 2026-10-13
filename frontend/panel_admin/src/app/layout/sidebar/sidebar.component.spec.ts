@@ -73,9 +73,9 @@ describe('SidebarComponent', () => {
       badgeClass: '',
       submenu: [],
     });
-    const expenses = item('/expenses');
-    const categories = item('/expenses/categories');
-    const products = item('/catalog/products');
+    const expenses = item('/pocketbiz/expenses');
+    const categories = item('/pocketbiz/expenses/categories');
+    const products = item('/pocketbiz/catalog/products');
 
     it('requires an exact match when a sibling extends the path', () => {
       expect(component.linkActiveOptions(expenses, [expenses, categories])).toEqual({ exact: true });

@@ -30,7 +30,7 @@ describe('CustomerDetailComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'customers/:id', component: CustomerDetailComponent }]),
+        provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
         { provide: CustomersApiService, useValue: api },
         { provide: CustomerOrdersApiService, useValue: ordersApi },
         { provide: ToastrService, useValue: toastr },
@@ -41,7 +41,7 @@ describe('CustomerDetailComponent', () => {
 
   async function open(id = 'c-1') {
     const harness = await RouterTestingHarness.create();
-    const component = await harness.navigateByUrl(`/customers/${id}`, CustomerDetailComponent);
+    const component = await harness.navigateByUrl(`/pocketbiz/customers/${id}`, CustomerDetailComponent);
     harness.detectChanges();
     return { component, el: harness.routeNativeElement as HTMLElement, harness };
   }
@@ -56,7 +56,7 @@ describe('CustomerDetailComponent', () => {
       expect(text).toContain(expected);
     }
     const editLink = el.querySelector('a.btn-primary') as HTMLAnchorElement;
-    expect(editLink.getAttribute('href')).toBe('/customers/c-1/edit');
+    expect(editLink.getAttribute('href')).toBe('/pocketbiz/customers/c-1/edit');
     expect(el.querySelector('button.btn-warning')?.textContent?.trim()).toBe('Desactivar');
     expect(el.textContent).toContain('Volver');
   });
@@ -93,7 +93,7 @@ describe('CustomerDetailComponent', () => {
     expect(rows[0].textContent).toContain('Bs 120.50');
     expect(rows[0].textContent).toContain('Entregado');
     expect(rows[0].textContent).toContain('Parcial');
-    expect(rows[0].querySelector('a')?.getAttribute('href')).toBe('/sales/orders/o2');
+    expect(rows[0].querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/sales/orders/o2');
     expect(el.textContent).not.toContain('Este cliente aún no tiene pedidos.');
   });
 
@@ -110,7 +110,7 @@ describe('CustomerDetailComponent', () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'customers/:id', component: CustomerDetailComponent }]),
+        provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: ToastrService, useValue: toastr },
@@ -118,7 +118,7 @@ describe('CustomerDetailComponent', () => {
     });
     const http = TestBed.inject(HttpTestingController);
     const harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/customers/c-1', CustomerDetailComponent);
+    await harness.navigateByUrl('/pocketbiz/customers/c-1', CustomerDetailComponent);
     const first = http.match(() => true);
     expect(first.map((r) => r.request.url)).toEqual(['/api/customers/c-1/']);
     first[0].flush({
@@ -145,7 +145,7 @@ describe('CustomerDetailComponent', () => {
     api.get.and.returnValue(throwError(() => new CustomerApiError('Cliente no encontrado.', 404)));
     await open('nope');
     expect(toastr.error).toHaveBeenCalledWith('Cliente no encontrado.');
-    expect(navigate).toHaveBeenCalledWith(['/customers']);
+    expect(navigate).toHaveBeenCalledWith(['/pocketbiz/customers']);
   });
 
   it('deactivates after confirmation and refreshes the state (AC-13)', async () => {

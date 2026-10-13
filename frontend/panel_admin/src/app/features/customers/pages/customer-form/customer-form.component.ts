@@ -42,7 +42,7 @@ export function duplicateMatchesHtml(matches: DuplicateMatch[]): string {
   const items = matches
     .map((match) => {
       const state = match.active ? '' : ' <em>(inactivo)</em>';
-      const link = `/customers/${encodeURIComponent(match.id)}`;
+      const link = `/pocketbiz/customers/${encodeURIComponent(match.id)}`;
       return `<li><a href="${link}" target="_blank" rel="noopener">${escapeHtml(match.name)}</a>${state}</li>`;
     })
     .join('');
@@ -95,7 +95,7 @@ export class CustomerFormComponent implements OnInit {
           error: (err: CustomerApiError) => {
             this.loading = false;
             this.toastr.error(err.message);
-            this.router.navigate(['/customers']);
+            this.router.navigate(['/pocketbiz/customers']);
           },
         });
     }
@@ -144,7 +144,7 @@ export class CustomerFormComponent implements OnInit {
       next: (customer) => {
         this.saving = false;
         this.toastr.success(this.isEdit ? 'Cliente actualizado' : 'Cliente creado');
-        this.router.navigate(['/customers', customer.id]);
+        this.router.navigate(['/pocketbiz/customers', customer.id]);
       },
       error: (err: CustomerApiError) => {
         this.saving = false;

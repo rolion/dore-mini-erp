@@ -7,12 +7,7 @@ import { ForgotComponent } from "./forgot/forgot.component";
 import { ResetComponent } from "./reset/reset.component";
 export const AUTH_ROUTE: Route[] = [
   {
-    path: '',
-    redirectTo: 'signin',
-    pathMatch: 'full',
-  },
-  {
-    path: 'signin',
+    path: 'login',
     component: SigninComponent,
   },
   {

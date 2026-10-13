@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../service/auth.service';
+import { APP_PATHS } from '../routing/app-paths';
 
 const LOGIN_URL = `${environment.apiUrl}/auth/login/`;
 
@@ -16,7 +17,7 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401 && request.url !== LOGIN_URL) {
         authService.clearSession();
-        router.navigate(['/authentication/signin']);
+        router.navigate([APP_PATHS.login]);
       }
       return throwError(() => err);
     })

@@ -15,20 +15,20 @@ describe('Sidebar menu (routes.json)', () => {
     expect(routes.length).toBe(6);
 
     const [dashboard, catalog, customer, orders, expenses, reports] = routes;
-    expect(dashboard.path).toBe('/dashboard/main');
+    expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
     expect(dashboard.submenu).toEqual([]);
     expect(dashboard.groupTitle).toBeFalse();
 
     expect(catalog.class).toBe('menu-toggle');
-    expect(catalog.submenu.map((item) => item.path)).toEqual(['/catalog/products']);
+    expect(catalog.submenu.map((item) => item.path)).toEqual(['/pocketbiz/catalog/products']);
 
-    expect(customer.path).toBe('/customers');
+    expect(customer.path).toBe('/pocketbiz/customers');
     expect(customer.icon).toBe('users');
     expect(customer.class).toBe('');
     expect(customer.submenu).toEqual([]);
     expect(customer.groupTitle).toBeFalse();
 
-    expect(orders.path).toBe('/sales/orders');
+    expect(orders.path).toBe('/pocketbiz/sales/orders');
     expect(orders.title).toBe('MENUITEMS.ORDERS.TEXT');
     expect(orders.icon).toBe('shopping-cart');
     expect(orders.class).toBe('');
@@ -38,10 +38,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(expenses.title).toBe('MENUITEMS.EXPENSES.TEXT');
     expect(expenses.icon).toBe('dollar-sign');
     expect(expenses.class).toBe('menu-toggle');
-    expect(expenses.submenu.map((item) => item.path)).toEqual(['/expenses', '/expenses/categories']);
+    expect(expenses.submenu.map((item) => item.path)).toEqual(['/pocketbiz/expenses', '/pocketbiz/expenses/categories']);
     expect(expenses.groupTitle).toBeFalse();
 
-    expect(reports.path).toBe('/reports');
+    expect(reports.path).toBe('/pocketbiz/reports');
     expect(reports.title).toBe('MENUITEMS.REPORTS.TEXT');
     expect(reports.icon).toBe('bar-chart-2');
     expect(reports.class).toBe('');

@@ -137,7 +137,7 @@ export class ExpenseFormComponent implements OnInit {
       next: (expense) => {
         this.saving = false;
         this.toastr.success(this.isEdit ? 'Gasto actualizado' : 'Gasto registrado');
-        this.router.navigate(['/expenses', expense.id]);
+        this.router.navigate(['/pocketbiz/expenses', expense.id]);
       },
       error: (err: ExpensesApiError) => {
         this.saving = false;
@@ -160,7 +160,7 @@ export class ExpenseFormComponent implements OnInit {
         error: (err: ExpensesApiError) => {
           this.loading = false;
           this.toastr.error(err.message);
-          this.router.navigate(['/expenses']);
+          this.router.navigate(['/pocketbiz/expenses']);
         },
       });
   }
@@ -169,7 +169,7 @@ export class ExpenseFormComponent implements OnInit {
     if (isVoided(expense)) {
       this.loading = false;
       this.toastr.warning('El gasto está anulado y no se puede editar.');
-      this.router.navigate(['/expenses', expense.id]);
+      this.router.navigate(['/pocketbiz/expenses', expense.id]);
       return;
     }
     // La categoría actual se conserva aunque esté inactiva (REQ-EXP-006); las demás opciones son solo activas.

@@ -66,7 +66,7 @@ describe('ProductListComponent', () => {
   it('links the "+" button to the new product form (AC-10)', () => {
     fixture.detectChanges();
     const link = fixture.debugElement.query(By.css('a[title="Nuevo producto"]'));
-    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/catalog/products/new');
+    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/pocketbiz/catalog/products/new');
   });
 
   it('searches by name with debounce and goes back to the first page (AC-06, AC-10)', fakeAsync(() => {
