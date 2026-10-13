@@ -228,6 +228,11 @@
         content: none;
       }
 
+      // Anillo claro para que el avatar se distinga sobre barras de color primario.
+      .avatar {
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+      }
+
       .user-img-radious-style {
         border-radius: 6px;
         box-shadow: 4px 3px 6px 0 rgba(0, 0, 0, 0.2);

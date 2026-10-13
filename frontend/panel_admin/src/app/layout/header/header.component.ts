@@ -7,14 +7,13 @@ import {
   AfterViewInit,
   inject
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
-import { NgScrollbar } from 'ngx-scrollbar';
+import { Router } from '@angular/router';
 import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
-import { FormsModule } from '@angular/forms';
 import { FeatherModule } from 'angular-feather';
 import { AuthService, InConfiguration, LanguageService, LocalStorageService, RightSidebarService } from '@core';
 import { ConfigService } from '@config/config.service';
+import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
+import { userFullName, userInitials } from '../../shared/models/user-profile';
 
 
 @Component({
@@ -23,14 +22,11 @@ import { ConfigService } from '@config/config.service';
     styleUrls: ['./header.component.sass'],
     imports: [
         FeatherModule,
-        FormsModule,
         NgbDropdown,
         NgbDropdownToggle,
         NgbDropdownMenu,
         NgClass,
-        NgScrollbar,
-        RouterLink,
-        TranslateModule,
+        UserAvatarComponent,
     ],
     providers: [RightSidebarService]
 })
@@ -165,9 +161,11 @@ export class HeaderComponent implements OnInit, AfterViewInit {
   }
   /** Nombre y apellido de la sesión (con el usuario de respaldo); vacío si no hay sesión. */
   get userDisplayName(): string {
-    const user = this.authService.currentUserValue;
-    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
-    return fullName || user?.username || '';
+    return userFullName(this.authService.currentUserValue);
+  }
+
+  get userInitials(): string {
+    return userInitials(this.authService.currentUserValue);
   }
 
   get companyName(): string {

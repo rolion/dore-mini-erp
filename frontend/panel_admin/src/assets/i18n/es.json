@@ -1,13 +1,5 @@
 {
-  "HEADER":{
-    "SEARCH": {
-      "TEXT": "Buscar.."
-    }
-  },
   "MENUITEMS": {
-    "USER":{
-      "POST": "Gerente"
-    },
     "MAIN": {
       "TEXT": "-- Principal"
     },

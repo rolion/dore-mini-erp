@@ -13,13 +13,15 @@
       <ul class="list">
         <li class="sidebar-user-panel">
           <div class="user-panel">
-            <div class=" image">
-              <img src="assets/images/user.png" class="img-circle user-img-circle" alt="User Image" />
+            <div class="image">
+              <app-user-avatar [initials]="userInitials" [label]="userDisplayName" size="xl" />
             </div>
           </div>
           <div class="profile-usertitle">
-            <div class="sidebar-userpic-name">Emily Smith </div>
-            <div class="profile-usertitle-job ">{{'MENUITEMS.USER.POST' | translate}} </div>
+            <div class="sidebar-userpic-name">{{ userDisplayName }}</div>
+            @if (companyName) {
+              <div class="profile-usertitle-job" [title]="companyName">{{ companyName }}</div>
+            }
           </div>
         </li>
         <!-- Top Most level menu -->

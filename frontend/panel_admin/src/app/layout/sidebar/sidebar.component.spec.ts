@@ -6,12 +6,15 @@ import { provideRouter } from '@angular/router';
 import { FeatherModule } from 'angular-feather';
 import { allIcons } from 'angular-feather/icons';
 import { provideTranslateService } from '@ngx-translate/core';
+import { AuthService, User } from '@core';
 import { SidebarComponent } from './sidebar.component';
 import { RouteInfo } from './sidebar.metadata';
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
   let fixture: ComponentFixture<SidebarComponent>;
+  let session: User | null;
   beforeEach(waitForAsync(() => {
+    session = null;
     TestBed.configureTestingModule({
     imports: [SidebarComponent],
     providers: [
@@ -20,16 +23,42 @@ describe('SidebarComponent', () => {
       provideHttpClientTesting(),
       provideTranslateService(),
       importProvidersFrom(FeatherModule.pick(allIcons)),
+      { provide: AuthService, useValue: { get currentUserValue() { return session; } } },
     ]
 }).compileComponents();
   }));
-  beforeEach(() => {
+  const create = (user: User | null = null) => {
+    session = user;
     fixture = TestBed.createComponent(SidebarComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
+  };
+  beforeEach(() => create());
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  describe('user panel (AC-02, AC-03)', () => {
+    it('shows initials, full name and company of the session', () => {
+      create({
+        id: 1, username: 'maria', firstName: 'María', lastName: 'Quispe', token: 't',
+        company: { id: 'c-1', name: 'Cuñapés SRL' },
+      });
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('.user-panel img')).toBeNull();
+      expect(el.querySelector('.user-panel figure.avatar')?.getAttribute('data-initial')).toBe('MQ');
+      expect(el.querySelector('.sidebar-userpic-name')?.textContent?.trim()).toBe('María Quispe');
+      expect(el.querySelector('.profile-usertitle-job')?.textContent?.trim()).toBe('Cuñapés SRL');
+      expect(el.textContent).not.toContain('Emily');
+    });
+
+    it('omits the company line for old sessions without company', () => {
+      create({ id: 1, username: 'ana', firstName: '', lastName: '', token: 't' });
+      const el: HTMLElement = fixture.nativeElement;
+      expect(el.querySelector('.sidebar-userpic-name')?.textContent?.trim()).toBe('ana');
+      expect(el.querySelector('.user-panel figure.avatar')?.getAttribute('data-initial')).toBe('A');
+      expect(el.querySelector('.profile-usertitle-job')).toBeNull();
+    });
   });
 
   describe('linkActiveOptions (AC-10, un solo ítem resaltado)', () => {

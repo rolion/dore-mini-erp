@@ -893,8 +893,21 @@
   font-weight: 400;
   color: #0a0a0a;
   font-size: 11px;
-  line-height: 10px;
+  line-height: 14px;
   letter-spacing: 0.5px;
+}
+// Nombre y empresa largos: una línea con elipsis (el texto completo va en `title`).
+// `contain: inline-size` evita que el texto `nowrap` ensanche el contenedor del scroll;
+// el bloque toma el ancho del sidebar y es ahí donde se trunca.
+.sidebar-user-panel {
+  contain: inline-size;
+}
+.sidebar-userpic-name,
+.profile-usertitle-job {
+  overflow: hidden;
+  padding: 0 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu_dark {
@@ -1037,6 +1050,11 @@
       padding: 0px 0px 25px 0;
       .image {
         width: 35px;
+        .avatar {
+          font-size: 14px;
+          height: 35px;
+          width: 35px;
+        }
       }
     }
   }

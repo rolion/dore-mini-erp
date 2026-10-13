@@ -19,6 +19,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FeatherModule } from 'angular-feather';
 import { NgScrollbar } from 'ngx-scrollbar';
 import { AuthService } from '@core';
+import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
+import { userFullName, userInitials } from '../../shared/models/user-profile';
 import { SidebarService } from './sidebar.service';
 import { Subscription } from 'rxjs';
 
@@ -33,6 +35,7 @@ import { Subscription } from 'rxjs';
     NgClass,
     FeatherModule,
     TranslateModule,
+    UserAvatarComponent,
   ],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
@@ -43,9 +46,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
   public bodyTag!: HTMLElement;
   listMaxHeight?: string;
   listMaxWidth?: string;
-  userFullName?: string;
-  userImg?: string;
-  userType?: string;
   headerHeight = 60;
   currentRoute?: string;
   routerObj: Subscription;
@@ -140,6 +140,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
       this.renderer.removeClass(this.document.body, 'sidebar-gone');
     }
   }
+  /** Nombre y apellido de la sesión (con el usuario de respaldo); vacío si no hay sesión. */
+  get userDisplayName(): string {
+    return userFullName(this.authService.currentUserValue);
+  }
+
+  get userInitials(): string {
+    return userInitials(this.authService.currentUserValue);
+  }
+
+  get companyName(): string {
+    return this.authService.currentUserValue?.company?.name ?? '';
+  }
+
   mouseHover() {
     const body = this.elementRef.nativeElement.closest('body');
     if (body.classList.contains('submenu-closed')) {
