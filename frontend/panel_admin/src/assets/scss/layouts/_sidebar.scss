@@ -897,6 +897,11 @@
   letter-spacing: 0.5px;
 }
 // Nombre y empresa largos: una línea con elipsis (el texto completo va en `title`).
+// `contain: inline-size` evita que el texto `nowrap` ensanche el contenedor del scroll;
+// el bloque toma el ancho del sidebar y es ahí donde se trunca.
+.sidebar-user-panel {
+  contain: inline-size;
+}
 .sidebar-userpic-name,
 .profile-usertitle-job {
   overflow: hidden;

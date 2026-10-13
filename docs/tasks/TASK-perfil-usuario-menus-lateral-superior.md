@@ -1,6 +1,6 @@
 # TASK-perfil-usuario-menus-lateral-superior: Perfil de usuario con iniciales y limpieza del menú superior
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-perfil-usuario-menus-lateral-superior
@@ -14,6 +14,7 @@
 | 2026-10-13 | PLANNING → ENGINEERING | PLAN v1 (COMPACTO) READY, PR abierto para aprobación humana | delivery-plan |
 | 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-engineer |
 | 2026-10-13 | REVIEW → ENGINEERING | Review FAIL: 1 issue IMPLEMENTATION Medium (elipsis/desborde del sidebar) y 1 Low (test de Logout) | delivery-review |
+| 2026-10-13 | ENGINEERING → REVIEW | Corregidos REV-01 (elipsis/desborde del sidebar) y REV-02 (test de Logout) | delivery-engineer |
 
 ## Investigación
 
@@ -109,6 +110,12 @@ Implementado según PLAN v1 (COMPACTO), solo en `frontend/panel_admin/`:
 **Desviaciones:** el componente usa plantilla y estilos en línea (es mínimo). Se conservaron estilos huérfanos de `.search-element` (fuera de alcance).
 
 **Verificación propia (no es el Quality Gate):** specs de `layout/` y `shared/` pasan (25/26); `ng build` OK; ESLint sin hallazgos en lo tocado. Fallos previos y ajenos a esta tarea: `app.component.spec.ts` no compila (`app.title`) y `FooterComponent should create` falla (falta `FeatherModule.pick`). No se hizo la revisión visual manual (requiere backend corriendo).
+
+**Ronda de corrección (tras review FAIL):**
+- **REV-01:** `.sidebar-user-panel { contain: inline-size }` en `_sidebar.scss`, para que el texto `nowrap` no ensanche `ng-scroll-content`. Verificado en `ng serve` (1280x800, sesión simulada solo en el navegador con empresa de 43 caracteres): `li`, nombre y empresa miden 259px = sidebar; `scrollWidth` 286 > `clientWidth` 259, o sea que la elipsis aplica y el `title` trae el texto completo. Sidebar colapsado: 60px, avatar 35x35, nombre y empresa ocultos. Menú del header: nombre, empresa y Logout. No se revisó el tema oscuro.
+- **REV-02:** `header.component.spec.ts` con `logout` simulado y test `logout item closes the session (AC-06)`.
+- Specs de `layout/` y `shared/`: 26 de 27 pasan; el fallo restante es `FooterComponent should create` (preexistente, ajeno).
+- Entorno: el `node_modules` del checkout principal estaba incompleto (sin `@angular`) y no hay `package-lock.json`; se instaló con `npm install --no-package-lock` en el worktree (sin dependencias nuevas).
 
 ## Review
 **Resultado: FAIL** (2026-10-13, delivery-review). Aislamiento procedimental: revisión hecha desde artefactos y diff del PR #12 (commit 9148259).

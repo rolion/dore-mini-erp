@@ -3,6 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { importProvidersFrom } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { provideTranslateService } from '@ngx-translate/core';
 import { FeatherModule } from 'angular-feather';
 import { allIcons } from 'angular-feather/icons';
@@ -13,9 +14,11 @@ describe('HeaderComponent', () => {
   let component: HeaderComponent;
   let fixture: ComponentFixture<HeaderComponent>;
   let session: User | null;
+  let logoutCalls: number;
 
   beforeEach(waitForAsync(() => {
     session = null;
+    logoutCalls = 0;
     TestBed.configureTestingModule({
       imports: [HeaderComponent],
       providers: [
@@ -24,7 +27,13 @@ describe('HeaderComponent', () => {
         provideRouter([]),
         provideTranslateService(),
         importProvidersFrom(FeatherModule.pick(allIcons)),
-        { provide: AuthService, useValue: { get currentUserValue() { return session; } } },
+        {
+          provide: AuthService,
+          useValue: {
+            get currentUserValue() { return session; },
+            logout: () => { logoutCalls += 1; return of({ success: false }); },
+          },
+        },
       ],
     }).compileComponents();
   }));
@@ -95,5 +104,12 @@ describe('HeaderComponent', () => {
     expect(component.userDisplayName).toBe('ana');
     expect(component.companyName).toBe('');
     expect((fixture.nativeElement as HTMLElement).querySelector('.company-name')).toBeNull();
+  });
+
+  it('logout item closes the session (AC-06)', () => {
+    create();
+    const logout = (fixture.nativeElement as HTMLElement).querySelector('.logout-item') as HTMLElement;
+    logout.click();
+    expect(logoutCalls).toBe(1);
   });
 });
