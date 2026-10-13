@@ -1,6 +1,6 @@
 # TASK-perfil-usuario-menus-lateral-superior: Perfil de usuario con iniciales y limpieza del menú superior
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-perfil-usuario-menus-lateral-superior
@@ -12,6 +12,7 @@
 | 2026-10-13 | (nuevo) → INVESTIGATION | Task creado | delivery-investigate |
 | 2026-10-13 | DESIGN → PLANNING | DDR de avatar con iniciales y menú de usuario simplificado; veredicto NEEDS_PLAN | delivery-design |
 | 2026-10-13 | PLANNING → ENGINEERING | PLAN v1 (COMPACTO) READY, PR abierto para aprobación humana | delivery-plan |
+| 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-engineer |
 
 ## Investigación
 
@@ -97,7 +98,16 @@ _Pendiente / No aplica según veredicto_
 - [PLAN-2026-10-13-perfil-usuario-menus-lateral-superior](../plans/PLAN-2026-10-13-perfil-usuario-menus-lateral-superior.md) — v1 · Modo COMPACTO · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (COMPACTO), solo en `frontend/panel_admin/`:
+- **AC-01:** `src/app/shared/models/user-profile.ts` (`userFullName`, `userInitials`) + spec.
+- **AC-07:** `src/app/shared/components/user-avatar/` (`app-user-avatar`, `role="img"` y `aria-label`) + spec.
+- **AC-02, AC-03:** sidebar con avatar `xl`, nombre y apellido, y empresa (omitida si no hay); SCSS de elipsis y avatar 35px colapsado (`_sidebar.scss`); spec con `AuthService` simulado.
+- **AC-04, AC-05, AC-06:** header sin buscador/mensajes/notificaciones; avatar `sm` en el botón; menú con nombre, empresa y Logout; imports sin uso podados; anillo claro del avatar en `_navbar.scss`; spec ampliado.
+- Claves i18n `HEADER.SEARCH.TEXT` y `MENUITEMS.USER.POST` eliminadas de `en/es/de.json`.
+
+**Desviaciones:** el componente usa plantilla y estilos en línea (es mínimo). Se conservaron estilos huérfanos de `.search-element` (fuera de alcance).
+
+**Verificación propia (no es el Quality Gate):** specs de `layout/` y `shared/` pasan (25/26); `ng build` OK; ESLint sin hallazgos en lo tocado. Fallos previos y ajenos a esta tarea: `app.component.spec.ts` no compila (`app.title`) y `FooterComponent should create` falla (falta `FeatherModule.pick`). No se hizo la revisión visual manual (requiere backend corriendo).
 
 ## Review
 _Pendiente_
