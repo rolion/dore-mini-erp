@@ -63,6 +63,14 @@ describe('Rutas de la aplicación (ADR landing-pocketbiz-rutas)', () => {
       }
     });
 
+    it('lists the private group before the public one so an empty /pocketbiz hits the redirect (AC-05)', () => {
+      const children = pocketbizRoute().children ?? [];
+      const mainIndex = children.findIndex((r) => r.component === MainLayoutComponent);
+      const authIndex = children.findIndex((r) => r.component === AuthLayoutComponent);
+      expect(mainIndex).toBeGreaterThanOrEqual(0);
+      expect(mainIndex).toBeLessThan(authIndex);
+    });
+
     it('sends /pocketbiz without a subroute to the dashboard (AC-05)', () => {
       const mainGroup = (pocketbizRoute().children ?? []).find((r) => r.component === MainLayoutComponent);
       const index = (mainGroup?.children ?? []).find((r) => r.path === '');

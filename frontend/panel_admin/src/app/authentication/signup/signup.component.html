@@ -6,8 +6,10 @@
           <div class="login-body">
             <div class="text-center">
               <div class="brand-wrapper">
-                <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
-              </div>
+                  <a routerLink="/" aria-label="PocketBiz, volver al inicio">
+                    <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
+                  </a>
+                </div>
             </div>
             <form class="validate-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
               <div class="row">
