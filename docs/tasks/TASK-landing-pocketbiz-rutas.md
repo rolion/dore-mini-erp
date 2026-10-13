@@ -1,6 +1,6 @@
 # TASK-landing-pocketbiz-rutas: Landing pública de PocketBiz en "/" y aplicación bajo "/pocketbiz"
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-landing-pocketbiz-rutas`
@@ -16,6 +16,7 @@
 | 2026-10-13 | ENGINEERING → ARCHITECTURE | `ARCHITECTURE_REVIEW_REQUIRED`: la app usa `HashLocationStrategy` (`app.config.ts:23`); las URLs reales son `/#/pocketbiz/…`, no `/pocketbiz/…`; pasar a URLs limpias exige fallback de SPA en el servidor. Rutas y landing implementadas y verificadas | delivery-engineer |
 | 2026-10-13 | ARCHITECTURE → PLANNING | ADR `url-sin-hash`: pasar a `PathLocationStrategy` con arranque de compatibilidad para `/#/…`; requisito de fallback de SPA en servidor. Requiere `PLAN_UPDATE_REQUIRED` (v2) | delivery-architect |
 | 2026-10-13 | PLANNING → ENGINEERING | Plan v2 COMPLETO (Fase 2b URLs sin hash; AC-18/AC-19 aprobados por el usuario); Specification READY; mismo PR | delivery-plan |
+| 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según plan v2 (AC-01..AC-19); pendiente review independiente | delivery-engineer |
 
 ## Investigación
 
@@ -131,7 +132,24 @@ Documentos de entrada ya existentes (no se repiten aquí): `docs/design/ux-brief
 - Preguntas abiertas no bloqueantes: F-01 (color/tamaño del texto del CTA), logo y captura reales sustituyen las recreaciones de Stitch, fallback de SPA en el servidor (fuera del repo; requisito documentado en AC-19).
 
 ## Implementación
-Implementado según PLAN v1 (COMPLETO) en dos commits (`71ca1a5` rutas, `f3d34b7` landing). **Detenido por `ARCHITECTURE_REVIEW_REQUIRED`** (ver abajo) antes de dar la implementación por completa.
+Implementado según PLAN **v2** (COMPLETO) en tres commits de código: `71ca1a5` (rutas), `f3d34b7` (landing) y `e6f55ab` (URLs sin hash, Fase 2b). Entre el segundo y el tercero hubo un `ARCHITECTURE_REVIEW_REQUIRED` (resuelto con el ADR `url-sin-hash` y el plan v2, ver abajo).
+
+### Fase 2b — URLs sin hash (plan v2, pasos 15–18)
+| Parte | Cubre |
+|---|---|
+| `app.config.ts`: eliminado el provider `HashLocationStrategy` y su import; `<base href="/">` sin cambios | AC-18 |
+| `core/routing/legacy-hash-redirect.ts` (`legacyHashTarget`, `redirectLegacyHash`) invocado en `main.ts` antes de `bootstrapApplication`: `/#/<ruta>` → `/<ruta>` con `history.replaceState`; ignora hashes que no empiezan por `#/` | AC-18, EDGE-07 |
+| `CLAUDE.md`: requisito de despliegue (fallback de SPA para rutas que no sean `/api/*`, `/admin/*` ni archivos estáticos) | AC-19 |
+| `legacy-hash-redirect.spec.ts`: conversión, query, hashes ignorados, `replaceState`, y que la configuración no provee `HashLocationStrategy` | AC-18, EDGE-07 |
+
+**Verificación propia de la Fase 2b (no es el Quality Gate):**
+- `ng lint` OK; `ng build --configuration development` OK.
+- `ng test` (sin `app.component.spec.ts`): **469 OK / 71 FAILED**; los 71 siguen siendo `should create` de la plantilla (sin fallos nuevos; +6 specs respecto a la corrida anterior).
+- Humo en navegador con `ng serve` sobre **URLs reales sin hash**: carga directa de `/pocketbiz/login` (formulario visible, sin `#`); `/#/authentication/signin` → `/pocketbiz/login`; `/authentication/signup` → `/pocketbiz/signup`; `/pocketbiz/sales/orders/abc?x=1` sin sesión → `/pocketbiz/login`; `/` muestra la landing; con sesión simulada en `localStorage` (clave `light_currentUser`, sin backend) los 5 CTA dicen "Ir a mi panel" → `/pocketbiz/dashboard/main` y desaparecen los enlaces a login; el logo de signup enlaza a `/` (AC-10); foco por teclado visible en botones y CTA (`outline` 3 px); sin desborde horizontal a 610 px y a 1440 px; CTA dentro de la primera pantalla a 1440×900.
+- **No verificado:** humo con sesión real y backend (dashboard cargando datos); contraste con herramienta; lectores de pantalla; `npm audit`; despliegue real con fallback de servidor (solo `ng serve`).
+
+### Notas de la Fase 2b
+- **Desviación del plan (paso 16):** el plan sugería `provideAppInitializer` o un servicio; se implementó como una función que corre **antes** de `bootstrapApplication` en `main.ts` (`replaceState` en vez de `navigateByUrl`): evita una carrera con la navegación inicial del router y es una función pura testeable. El comportamiento de AC-18 ("reemplazando la entrada del historial") se mantiene.
 
 ### Qué se hizo
 | Parte | Cubre |
@@ -151,7 +169,7 @@ Implementado según PLAN v1 (COMPLETO) en dos commits (`71ca1a5` rutas, `f3d34b7
 - Humo en navegador (`ng serve`, sin sesión): `/` muestra la landing sin redirigir; `#/authentication/signin`→`#/pocketbiz/login`; `#/dashboard/main` y `#/sales/orders?status=NEW`→`#/pocketbiz/login` (por el guard); `#/pocketbiz`→`#/pocketbiz/login`; `#/ui/tabs`→404; a 375 px (388 de ancho útil) sin desborde horizontal, botón del menú 44×44 y CTA visible.
 - **No verificado:** humo con sesión activa y backend (CTA "Ir a mi panel" solo en spec), 1440 px por captura, foco/teclado en navegador, contraste con herramienta; `npm audit`.
 
-### Hallazgo que bloquea: ARCHITECTURE_REVIEW_REQUIRED
+### Hallazgo ARCHITECTURE_REVIEW_REQUIRED (resuelto por el ADR `url-sin-hash`, plan v2 y Fase 2b)
 - **Hecho:** la aplicación usa `HashLocationStrategy` (`frontend/panel_admin/src/app/app.config.ts:6,23`). Las URLs reales son `http://host/#/pocketbiz/login`, no `/pocketbiz/login`. La investigación afirmó que no había `withHashLocation`/base href por un `grep` incompleto (no buscó `HashLocationStrategy`), y el ADR `esquema-rutas-montaje` dio por hecho `PathLocationStrategy`.
 - **Impacto:** el requisito de usuario Q7 ("`/pocketbiz/login`, `/pocketbiz/signup`, `/pocketbiz/**`") **no se cumple en URL real** con el código actual: en navegador la URL es `/#/pocketbiz/login`. Con `HashLocationStrategy` tampoco existe una "ruta `/pocketbiz`" en el servidor: una URL `/pocketbiz/login` sin hash carga la landing.
 - **Por qué es de arquitectura:** pasar a `PathLocationStrategy` quita el provider (`app.config.ts:23`) pero **exige fallback de SPA en el servidor para `/pocketbiz/**`** (hoy no lo necesita porque el servidor solo ve `/`), cambia todas las URLs ya compartidas (`/#/…`), y afecta al dev server y a cualquier despliegue; es una decisión de infraestructura que no tomé.
