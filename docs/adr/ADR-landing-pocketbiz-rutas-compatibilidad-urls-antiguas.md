@@ -9,6 +9,8 @@ Al mover el producto bajo `/pocketbiz` (ver `ADR-landing-pocketbiz-rutas-esquema
 
 Hechos: el producto está "en construcción" (`CLAUDE.md`), el equipo de usuarios es pequeño y la sesión vive en `localStorage` independiente de la ruta; no hay consumidores externos de las URLs del cliente (la API `/api` no cambia).
 
+**Nota (2026-10-13):** las URLs anteriores eran URLs con hash (`/#/authentication/signin`), porque la aplicación usa `HashLocationStrategy`. El ADR [url-sin-hash](ADR-landing-pocketbiz-rutas-url-sin-hash.md) pasa a URLs limpias y añade un arranque que convierte `/#/<ruta>` en `<ruta>`; las redirecciones de abajo operan sobre esa ruta.
+
 ## Decisión
 Agregar, en `app.routes.ts` y **antes** de `**`, un conjunto **explícito y acotado** de redirecciones de compatibilidad, conservando subruta y parámetros de consulta:
 

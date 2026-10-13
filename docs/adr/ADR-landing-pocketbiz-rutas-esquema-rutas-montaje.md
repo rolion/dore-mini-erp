@@ -8,7 +8,7 @@
 El usuario decidió que `/` cargue la landing y que el producto viva en `/pocketbiz/login`, `/pocketbiz/signup` y `/pocketbiz/**` (Q7). La investigación del task documenta el estado actual:
 
 - Todo el producto cuelga de la raíz del router bajo `MainLayoutComponent` + `AuthGuard` (`app.routes.ts:8-13`), y las pantallas públicas bajo `authentication` (`app.routes.ts:131-136`, `auth.routes.ts:8-38`).
-- `index.html:7` declara `<base href="/">`; `angular.json` no define `baseHref` ni `deployUrl`; no hay SSR (`angular.json`). El router usa `PathLocationStrategy` por defecto (`app.config.ts:20`, sin `withHashLocation`).
+- `index.html:7` declara `<base href="/">`; `angular.json` no define `baseHref` ni `deployUrl`; no hay SSR (`angular.json`). ~~El router usa `PathLocationStrategy` por defecto (`app.config.ts:20`, sin `withHashLocation`).~~ **Corregido (2026-10-13):** `app.config.ts:23` provee `HashLocationStrategy`; ver [ADR url-sin-hash](ADR-landing-pocketbiz-rutas-url-sin-hash.md), que decide pasar a `PathLocationStrategy`.
 - Existen unas 140 navegaciones o enlaces absolutos (`routerLink="/…"`, `navigate(['/…'])`), 9 rutas absolutas en `assets/data/routes.json` y 19 specs con rutas literales.
 - El backend solo expone `admin/` y `api/*` (`backend/config/urls.py:9-17`); no sirve el frontend. El repositorio no tiene configuración de despliegue (sin Docker, nginx ni CI).
 - El DDR `DDR-landing-pocketbiz-rutas-landing-y-entradas` eligió construir la landing con componentes Angular de la plantilla (`ngbAccordion`, `NgbCollapse`, Bootstrap) dentro de `features/landing`.
