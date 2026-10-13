@@ -1,6 +1,6 @@
 # TASK-landing-pocketbiz-rutas: Landing pública de PocketBiz en "/" y aplicación bajo "/pocketbiz"
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-landing-pocketbiz-rutas`
@@ -15,6 +15,7 @@
 | 2026-10-13 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; rama creada desde `origin/main` (1071dc7); PR abierto | delivery-plan |
 | 2026-10-13 | ENGINEERING → ARCHITECTURE | `ARCHITECTURE_REVIEW_REQUIRED`: la app usa `HashLocationStrategy` (`app.config.ts:23`); las URLs reales son `/#/pocketbiz/…`, no `/pocketbiz/…`; pasar a URLs limpias exige fallback de SPA en el servidor. Rutas y landing implementadas y verificadas | delivery-engineer |
 | 2026-10-13 | ARCHITECTURE → PLANNING | ADR `url-sin-hash`: pasar a `PathLocationStrategy` con arranque de compatibilidad para `/#/…`; requisito de fallback de SPA en servidor. Requiere `PLAN_UPDATE_REQUIRED` (v2) | delivery-architect |
+| 2026-10-13 | PLANNING → ENGINEERING | Plan v2 COMPLETO (Fase 2b URLs sin hash; AC-18/AC-19 aprobados por el usuario); Specification READY; mismo PR | delivery-plan |
 
 ## Investigación
 
@@ -126,7 +127,8 @@ Documentos de entrada ya existentes (no se repiten aquí): `docs/design/ux-brief
 
 ## Plan
 - [PLAN-2026-10-13-landing-pocketbiz-rutas](../plans/PLAN-2026-10-13-landing-pocketbiz-rutas.md) — **v1**, Modo COMPLETO, Specification readiness: **READY**. 17 AC (AC-01..AC-17), 6 casos borde; E2E: NO (humo manual obligatorio en 1440 y 390 px). Base verificada en `origin/main` `1071dc7`: **103** archivos no-spec y **20** specs con rutas antiguas (68 de los no-spec son demos de la plantilla). Dos commits de código: rutas y landing. Sin dependencias nuevas.
-- Preguntas abiertas no bloqueantes: F-01 (color/tamaño del texto del CTA), logo y captura reales sustituyen las recreaciones de Stitch, fallback de SPA en el servidor (fuera del repo).
+- **v2 (2026-10-13)** — mismo documento, mismo PR: [Implementation Plan] Fase 2b (URLs sin hash, arranque de compatibilidad, `CLAUDE.md`), tests y riesgos; [Specification] **AC-18, AC-19, EDGE-07, EDGE-08**, aprobados explícitamente por el usuario ("Aprobar todo"). Specification readiness: **READY**. Pasos 1–14 ya implementados (`71ca1a5`, `f3d34b7`); quedan los pasos 15–21.
+- Preguntas abiertas no bloqueantes: F-01 (color/tamaño del texto del CTA), logo y captura reales sustituyen las recreaciones de Stitch, fallback de SPA en el servidor (fuera del repo; requisito documentado en AC-19).
 
 ## Implementación
 Implementado según PLAN v1 (COMPLETO) en dos commits (`71ca1a5` rutas, `f3d34b7` landing). **Detenido por `ARCHITECTURE_REVIEW_REQUIRED`** (ver abajo) antes de dar la implementación por completa.

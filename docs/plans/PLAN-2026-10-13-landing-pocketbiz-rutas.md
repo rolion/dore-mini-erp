@@ -1,10 +1,12 @@
-# PLAN-2026-10-13-landing-pocketbiz-rutas (v1)
+# PLAN-2026-10-13-landing-pocketbiz-rutas (v2)
 
 **Task:** TASK-landing-pocketbiz-rutas
 **Modo:** COMPLETO
 **DDRs relacionados:** [DDR-landing-pocketbiz-rutas-landing-y-entradas](../design/DDR-landing-pocketbiz-rutas-landing-y-entradas.md)
-**ADRs relacionados:** [ADR-landing-pocketbiz-rutas-esquema-rutas-montaje](../adr/ADR-landing-pocketbiz-rutas-esquema-rutas-montaje.md), [ADR-landing-pocketbiz-rutas-compatibilidad-urls-antiguas](../adr/ADR-landing-pocketbiz-rutas-compatibilidad-urls-antiguas.md)
+**ADRs relacionados:** [ADR-landing-pocketbiz-rutas-esquema-rutas-montaje](../adr/ADR-landing-pocketbiz-rutas-esquema-rutas-montaje.md), [ADR-landing-pocketbiz-rutas-compatibilidad-urls-antiguas](../adr/ADR-landing-pocketbiz-rutas-compatibilidad-urls-antiguas.md), [ADR-landing-pocketbiz-rutas-url-sin-hash](../adr/ADR-landing-pocketbiz-rutas-url-sin-hash.md)
 **Specification readiness:** READY
+
+> **v2 (2026-10-13):** incorpora el ADR `url-sin-hash` tras `ARCHITECTURE_REVIEW_REQUIRED` (la app usa `HashLocationStrategy`). Cambios de Specification **aprobados explícitamente por el usuario** en el chat de esta fecha: URLs reales sin hash, AC-18, AC-19, EDGE-07/08 y requisito de despliegue. Ver `## Changelog`.
 
 **Por qué COMPLETO:** eje 3 (decisión arquitectónica con 2 ADR, cambio de rutas de toda la aplicación y DDR con impacto visual relevante). No hay eje 1 ni 2 (sin reglas de dominio, sin bounded contexts de backend).
 
@@ -36,7 +38,11 @@ Inconsistencia a respetar: el componente se llama `SigninComponent` pero la URL 
 - `/` → (con `AuthGuard`) → `/authentication/signin` (`app.routes.ts:13`); login/registro en `/authentication/*`; panel en `/dashboard`, `/catalog`, `/customers`, `/sales`, `/expenses`, `/reports`.
 - Tras login/registro → `/dashboard/main` (`signin.component.ts:10`, `signup.component.ts:15`); 401 → `/authentication/signin` (`error.interceptor.ts:19`).
 
+**Hecho añadido en v2:** la aplicación usa `HashLocationStrategy` (`frontend/panel_admin/src/app/app.config.ts:6,23`); las URLs actuales de producción de cada pantalla son `/#/<ruta>` (por ejemplo `/#/authentication/signin`). La investigación original omitió este provider.
+
 ## Expected behavior
+- Las URLs reales **no llevan hash**: `/`, `/pocketbiz/login`, `/pocketbiz/signup`, `/pocketbiz/dashboard/main` (ADR `url-sin-hash`).
+- Una URL antigua con hash (`/#/authentication/signin`, `/#/dashboard/main`) llega a su equivalente limpio bajo `/pocketbiz` (por el arranque de compatibilidad y las redirecciones).
 - `/` muestra la landing a cualquier visitante, con o sin sesión; no redirige.
 - Login y registro responden en `/pocketbiz/login` y `/pocketbiz/signup`; el panel, bajo `/pocketbiz/**` con los mismos paths relativos (`/pocketbiz/dashboard/main`, `/pocketbiz/sales/orders`, …).
 - `/pocketbiz` sin subruta lleva al dashboard (con sesión) o al login (sin sesión).
@@ -61,6 +67,10 @@ Inconsistencia a respetar: el componente se llama `SigninComponent` pero la URL 
 - **AC-15:** El hero muestra `dashboard-movil-403-positivo.png` dentro de un marco CSS con `alt` descriptivo; el archivo existe en `src/assets/images/`.
 - **AC-16:** Sin desborde horizontal a 390 px; el menú de la cabecera se colapsa; el CTA de la cabecera es visible sin abrir el menú. Foco visible y objetivos táctiles ≥ 44 px.
 - **AC-17:** `CLAUDE.md` y los documentos de diseño citan las rutas nuevas; `npm run lint` y `npm run build` pasan.
+- **AC-18 (v2):** La aplicación usa `PathLocationStrategy`: no hay provider de `HashLocationStrategy`; las URLs de navegador de login, registro y panel no contienen `#`. Al abrir `/#/<ruta>` la aplicación navega a `<ruta>` reemplazando la entrada del historial, y las redirecciones de AC-08 resuelven las rutas antiguas (`/#/authentication/signin` → `/pocketbiz/login`; `/#/dashboard/main` → `/pocketbiz/dashboard/main`, o `/pocketbiz/login` sin sesión).
+- **AC-19 (v2):** `CLAUDE.md` documenta, como requisito de despliegue, que el servidor debe devolver `index.html` para cualquier ruta que no sea `/api/*`, `/admin/*` ni un archivo estático.
+
+Verificación sobre URL real: AC-03, AC-04, AC-05 y AC-08 se comprueban en el navegador con URLs sin hash (carga directa y recarga), no solo en el router de pruebas.
 
 ## Edge cases
 - **EDGE-01:** Recarga profunda de `/pocketbiz/sales/orders/<id>` sin sesión → login; con sesión → la pantalla.
@@ -69,6 +79,8 @@ Inconsistencia a respetar: el componente se llama `SigninComponent` pero la URL 
 - **EDGE-04:** Sesión guardada antes del cambio sigue válida (el token no depende de la ruta).
 - **EDGE-05:** Visitar `/pocketbiz/login` con sesión activa no redirige (comportamiento actual).
 - **EDGE-06:** Ruta inexistente bajo `/pocketbiz/**` → `Page404`.
+- **EDGE-07 (v2):** `/#/` (hash vacío o solo `#/`) abre la landing en `/` sin bucle; un hash que no empieza por `#/` (p. ej. `#seccion`) no se interpreta como ruta.
+- **EDGE-08 (v2):** Carga directa y recarga de `/pocketbiz/sales/orders/<id>` y de `/pocketbiz/login` (sin hash) funcionan con el fallback de SPA (`ng serve` lo provee).
 
 ## Error cases
 - 401 en cualquier llamada → login (AC-06). Sin otros nuevos: la landing no llama a la API.
@@ -107,12 +119,14 @@ Derivado del DDR (no se rediseña): cabecera fija con CTA, secciones en el orden
 - `header.component.spec.ts`, `sidebar.component.spec.ts`, `sidebar-menu.spec.ts`: logout, logo y rutas del menú (AC-06, AC-07).
 - Specs de features (`products`, `customers`, `sales`, `expenses`, `reporting`): sustituir literales por las rutas nuevas sin cambiar lo que verifican.
 - `landing.component.spec.ts` (nuevo): AC-01, AC-02, AC-11, AC-12, AC-13, AC-14, AC-15 (texto, enlaces, ausencia de botón de compra, toggle, FAQ, `h1` único, `alt`).
+- `legacy-hash-redirect.spec.ts` (nuevo, v2): AC-18 y EDGE-07 — con `#/authentication/signin` navega a `/authentication/signin` con `replaceUrl`; con `#/dashboard/main?x=1` conserva la query; con `#/`, hash vacío o `#seccion` no navega.
+- `app.config.spec.ts` o verificación equivalente (v2): AC-18 — la configuración no provee `HashLocationStrategy` (el `LocationStrategy` resuelto es `PathLocationStrategy`).
 
 ## Integration tests
 - No hay API nueva. Verificación de integración manual en navegador (ver E2E).
 
 ## E2E
-**¿Corresponde E2E?** NO — el repo no tiene Playwright ni E2E; el cambio es de enrutamiento del cliente y una pantalla estática, cubierto por specs de router/componentes. Compensación: **humo manual** obligatorio antes de fusionar con `npm start` + backend: recorrido `/` → registro → dashboard → recarga profunda → logout → `/authentication/signin` (redirección) → 404; en 1440 y 390 px.
+**¿Corresponde E2E?** NO — el repo no tiene Playwright ni E2E; el cambio es de enrutamiento del cliente y una pantalla estática, cubierto por specs de router/componentes. Compensación: **humo manual** obligatorio antes de fusionar con `npm start` + backend: recorrido `/` → registro → dashboard → recarga profunda (URL sin hash) → logout → `/authentication/signin` y `/#/authentication/signin` (redirección a `/pocketbiz/login`) → 404; en 1440 y 390 px. En v2 el humo es sobre **URLs reales sin `#`**.
 
 ## Regression tests
 - Suite completa de Angular (con las fallas preexistentes de la plantilla documentadas en tasks anteriores: `app.component.spec.ts` no compila en `main`, 71 "should create" de plantilla fallan); no deben aumentar.
@@ -129,6 +143,8 @@ Derivado del DDR (no se rediseña): cabecera fija con CTA, secciones en el orden
 | AC-10 | `signin`/`signup` specs |
 | AC-16 | Humo manual en 1440 y 390 px (herramienta de navegador) |
 | AC-17 | `npm run lint`, `npm run build`, revisión de diff de docs |
+| AC-18, EDGE-07 | `legacy-hash-redirect.spec.ts`, verificación de la configuración, humo manual con URLs sin `#` |
+| AC-19, EDGE-08 | Revisión de `CLAUDE.md`; humo manual de carga directa y recarga profunda |
 
 ---
 
@@ -169,10 +185,18 @@ Dos commits de código con el PR único (ADR esquema, punto 6), y verificación 
 13. Enlazar el logo de login/registro a `/` (AC-10).
 14. Specs del componente (AC-01, AC-02, AC-11–AC-15).
 
+**Fase 2b — URLs limpias (v2, commit "URLs sin hash")**
+15. Quitar el provider `{ provide: LocationStrategy, useClass: HashLocationStrategy }` y su import de `app.config.ts:6,23` (AC-18). `<base href="/">` no cambia.
+16. Añadir el arranque de compatibilidad (por ejemplo `provideAppInitializer` o un servicio inicializado al arrancar) que, si `location.hash` empieza por `#/`, ejecuta `router.navigateByUrl(hash.slice(1), { replaceUrl: true })`; ignora otros hashes (AC-18, EDGE-07). Documentar en comentario su retiro junto con las redirecciones.
+17. Specs: `legacy-hash-redirect.spec.ts` y comprobación de la estrategia (AC-18).
+18. `CLAUDE.md`: requisito de despliegue (fallback de SPA para rutas que no sean `/api/*`, `/admin/*` ni archivos estáticos) y nota del cambio de URLs (AC-19).
+
 **Fase 3 — Verificación**
-15. `npm run lint`, `npm run build`, `ng test` acotado a los specs afectados y a la suite completa (comparar con la línea base de `main`).
-16. Humo manual en 1440 y 390 px (AC-16) y registro en el TASK.
-17. `/delivery-visual-review` de la landing contra las referencias.
+19. `npm run lint`, `npm run build`, `ng test` acotado a los specs afectados y a la suite completa (comparar con la línea base de `main`).
+20. Humo manual en 1440 y 390 px (AC-16) sobre **URLs sin hash**: `/`, `/pocketbiz/login`, carga directa y recarga de una ruta profunda, y `/#/authentication/signin` (AC-18, EDGE-08); registro en el TASK.
+21. `/delivery-visual-review` de la landing contra las referencias.
+
+**Estado de avance (v2):** los pasos 1–14 ya están implementados en `71ca1a5` y `f3d34b7` y verificados en modo hash (463 OK / 71 FAILED de plantilla, igual que la línea base). Quedan los pasos 15–21.
 
 ## Database / migrations
 No aplica.
@@ -184,9 +208,13 @@ No aplica.
 - **Specs preexistentes que fallan en `main`:** no atribuir a este cambio; comparar contra la línea base.
 - **Sin servidor de despliegue en el repo:** el fallback de SPA para `/pocketbiz/**` queda como requisito documentado.
 - **Referencias de Stitch con desviaciones abiertas (F-01…F-16):** la spec prevalece.
+- **Fallback de SPA (v2):** con URLs limpias, un servidor sin fallback devolvería 404 en recargas profundas (EDGE-08). Mitigación: requisito documentado (AC-19) y orden de despliegue (servidor primero); rollback de una línea (reponer el provider de hash).
+- **URLs con hash ya compartidas (v2):** quedarían apuntando a la landing sin el arranque de compatibilidad. Mitigación: AC-18, con spec.
+- **Bucle de navegación del arranque (v2):** un hash que se reescribe a sí mismo. Mitigación: `replaceUrl`, solo hashes `#/…` y spec de EDGE-07.
 
 ## New dependencies
 Ninguna (usa `@ng-bootstrap/ng-bootstrap` 20.0.0, Bootstrap 5.3 y Font Awesome ya instalados).
 
 ## Changelog
-_(sin cambios desde v1)_
+- **v2** (2026-10-13): [Implementation Plan] Se agrega la Fase 2b y se actualizan Test Specification, riesgos y estado de avance tras `ARCHITECTURE_REVIEW_REQUIRED` de `delivery-engineer` (la app usa `HashLocationStrategy`); ADR `url-sin-hash`.
+- **v2** (2026-10-13): [Specification] Se agregan AC-18 y AC-19, EDGE-07 y EDGE-08, y se fija que AC-03/AC-04/AC-05/AC-08 se verifican sobre URL real sin hash. **Aprobado explícitamente por el usuario** ("Aprobar todo") en el chat del 2026-10-13. Solicitado por `delivery-engineer`/`delivery-architect`.
