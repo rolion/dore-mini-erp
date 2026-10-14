@@ -132,7 +132,7 @@ describe('SignupComponent', () => {
   });
 
   it('links back to the login', () => {
-    const link = el().querySelector<HTMLAnchorElement>('a[href="/authentication/signin"]');
+    const link = el().querySelector<HTMLAnchorElement>('a[href="/pocketbiz/login"]');
     expect(link?.textContent).toContain('Inicia sesión');
   });
 });

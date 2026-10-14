@@ -3,14 +3,26 @@ import { MainLayoutComponent } from './layout/app-layout/main-layout/main-layout
 import { AuthGuard } from './core/guard/auth.guard';
 import { AuthLayoutComponent } from './layout/app-layout/auth-layout/auth-layout.component';
 import { Page404Component } from './authentication/page404/page404.component';
+import { LEGACY_REDIRECTS } from './core/routing/legacy-redirects';
 
 export const APP_ROUTE: Route[] = [
+    // Landing pública (sin AuthGuard ni layout del panel), carga diferida.
+    {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('./features/landing').then((m) => m.LandingComponent),
+    },
+    {
+        path: 'pocketbiz',
+        children: [
+    // El grupo privado va primero: "/pocketbiz" (vacío) debe resolver a su redirect y no al layout
+    // público vacío; "login", "signup", etc. no coinciden con sus hijas y caen al grupo público.
     {
         path: '',
         component: MainLayoutComponent,
         canActivate: [AuthGuard],
         children: [
-            { path: '', redirectTo: '/authentication/signin', pathMatch: 'full' },
+            { path: '', redirectTo: 'dashboard/main', pathMatch: 'full' },
             {
                 path: 'dashboard',
                 loadChildren: () =>
@@ -129,10 +141,14 @@ export const APP_ROUTE: Route[] = [
         ],
     },
     {
-        path: 'authentication',
+        path: '',
         component: AuthLayoutComponent,
         loadChildren: () =>
             import('./authentication/auth.routes').then((m) => m.AUTH_ROUTE),
     },
+        ],
+    },
+    // Compatibilidad temporal con las URLs anteriores a /pocketbiz (ver ADR).
+    ...LEGACY_REDIRECTS,
     { path: '**', component: Page404Component },
 ];

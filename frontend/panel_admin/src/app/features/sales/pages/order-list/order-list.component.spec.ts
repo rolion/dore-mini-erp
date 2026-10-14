@@ -93,7 +93,7 @@ describe('OrderListComponent', () => {
   it('links "+" to the new order form (AC-23)', () => {
     start();
     const link = fixture.debugElement.query(By.css('a[title="Nuevo pedido"]'));
-    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/sales/orders/new');
+    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/pocketbiz/sales/orders/new');
   });
 
   describe('rows (AC-23)', () => {
@@ -108,7 +108,7 @@ describe('OrderListComponent', () => {
       expect(text).toContain('05/10/2026');
       expect(text).toContain('Bs 70.00');
       const link = element.querySelector('a.fw-bold') as HTMLAnchorElement;
-      expect(link.getAttribute('href')).toBe('/sales/orders/a');
+      expect(link.getAttribute('href')).toBe('/pocketbiz/sales/orders/a');
       expect(component.total).toBe(4);
     });
 

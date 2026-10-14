@@ -4,10 +4,10 @@
       <h5 class="page-title m-b-0">Detalle del gasto</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
-      <a routerLink="/dashboard/main">
+      <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item"><a routerLink="/expenses">Gastos</a></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/expenses">Gastos</a></li>
     <li class="breadcrumb-item">Detalle</li>
   </ul>
   <div class="section-body">
@@ -57,10 +57,10 @@
             </dl>
             <div class="m-4">
               @if (!voided) {
-              <a class="btn btn-primary" [routerLink]="['/expenses', e.id, 'edit']">Editar</a>
+              <a class="btn btn-primary" [routerLink]="['/pocketbiz/expenses', e.id, 'edit']">Editar</a>
               <button type="button" class="btn btn-warning ms-2" (click)="voidExpense()">Anular gasto</button>
               }
-              <a class="btn btn-light ms-2" routerLink="/expenses">Volver</a>
+              <a class="btn btn-light ms-2" routerLink="/pocketbiz/expenses">Volver</a>
             </div>
             } @else if (loading) {
             <p class="m-4">Cargando…</p>

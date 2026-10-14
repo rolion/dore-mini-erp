@@ -1,7 +1,7 @@
 {
   "routes": [
     {
-      "path": "/dashboard/main",
+      "path": "/pocketbiz/dashboard/main",
       "title": "MENUITEMS.DASHBOARD.TEXT",
       "iconType": "feather",
       "icon": "monitor",
@@ -22,7 +22,7 @@
       "badgeClass": "",
       "submenu": [
         {
-          "path": "/catalog/products",
+          "path": "/pocketbiz/catalog/products",
           "title": "MENUITEMS.CATALOG.LIST.PRODUCT",
           "iconType": "",
           "icon": "",
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "path": "/customers",
+      "path": "/pocketbiz/customers",
       "title": "MENUITEMS.CUSTOMER.TEXT",
       "iconType": "feather",
       "icon": "users",
@@ -46,7 +46,7 @@
       "submenu": []
     },
     {
-      "path": "/sales/orders",
+      "path": "/pocketbiz/sales/orders",
       "title": "MENUITEMS.ORDERS.TEXT",
       "iconType": "feather",
       "icon": "shopping-cart",
@@ -67,7 +67,7 @@
       "badgeClass": "",
       "submenu": [
         {
-          "path": "/expenses",
+          "path": "/pocketbiz/expenses",
           "title": "MENUITEMS.EXPENSES.LIST.EXPENSE",
           "iconType": "",
           "icon": "",
@@ -78,7 +78,7 @@
           "submenu": []
         },
         {
-          "path": "/expenses/categories",
+          "path": "/pocketbiz/expenses/categories",
           "title": "MENUITEMS.EXPENSES.LIST.CATEGORY",
           "iconType": "",
           "icon": "",
@@ -91,7 +91,7 @@
       ]
     },
     {
-      "path": "/reports",
+      "path": "/pocketbiz/reports",
       "title": "MENUITEMS.REPORTS.TEXT",
       "iconType": "feather",
       "icon": "bar-chart-2",

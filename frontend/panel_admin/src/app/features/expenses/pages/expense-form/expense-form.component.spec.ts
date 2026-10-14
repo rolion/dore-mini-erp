@@ -107,7 +107,7 @@ describe('ExpenseFormComponent', () => {
         notes: '',
       });
       expect(toastr.success).toHaveBeenCalledWith('Gasto registrado');
-      expect(router.navigate).toHaveBeenCalledWith(['/expenses', 'new-1']);
+      expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/expenses', 'new-1']);
     });
 
     it('shows the server errors under their field and clears them on edit (AC-22)', () => {
@@ -139,7 +139,7 @@ describe('ExpenseFormComponent', () => {
     expect(component.noCategories).toBeTrue();
     expect(text()).toContain(NO_CATEGORIES_MESSAGE);
     expect((fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement as HTMLButtonElement).disabled).toBeTrue();
-    expect(fixture.debugElement.query(By.css('a[href="/expenses/categories"]'))).not.toBeNull();
+    expect(fixture.debugElement.query(By.css('a[href="/pocketbiz/expenses/categories"]'))).not.toBeNull();
   });
 
   describe('editing', () => {
@@ -156,7 +156,7 @@ describe('ExpenseFormComponent', () => {
       component.onSubmit();
       expect(api.update).toHaveBeenCalledWith('exp-1', jasmine.objectContaining({ amount: '130.00', categoryId: 'cat-1' }));
       expect(toastr.success).toHaveBeenCalledWith('Gasto actualizado');
-      expect(router.navigate).toHaveBeenCalledWith(['/expenses', 'exp-1']);
+      expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/expenses', 'exp-1']);
     });
 
     it('keeps the current category as "(inactiva)" when it was deactivated (AC-22)', async () => {
@@ -174,7 +174,7 @@ describe('ExpenseFormComponent', () => {
       api.get.and.returnValue(of(makeExpense({ id: 'exp-1', status: 'VOIDED' })));
       fixture.detectChanges();
       expect(toastr.warning).toHaveBeenCalled();
-      expect(router.navigate).toHaveBeenCalledWith(['/expenses', 'exp-1']);
+      expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/expenses', 'exp-1']);
     });
 
     it('goes back to the list when the expense does not exist', async () => {
@@ -182,7 +182,7 @@ describe('ExpenseFormComponent', () => {
       api.get.and.returnValue(throwError(() => new ExpensesApiError('Gasto no encontrado.', 404)));
       fixture.detectChanges();
       expect(toastr.error).toHaveBeenCalledWith('Gasto no encontrado.');
-      expect(router.navigate).toHaveBeenCalledWith(['/expenses']);
+      expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/expenses']);
     });
   });
 });
