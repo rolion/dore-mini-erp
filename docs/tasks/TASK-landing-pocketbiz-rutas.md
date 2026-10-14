@@ -1,6 +1,6 @@
 # TASK-landing-pocketbiz-rutas: Landing pública de PocketBiz en "/" y aplicación bajo "/pocketbiz"
 
-**Etapa actual:** REVIEW
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-landing-pocketbiz-rutas`
@@ -17,6 +17,7 @@
 | 2026-10-13 | ARCHITECTURE → PLANNING | ADR `url-sin-hash`: pasar a `PathLocationStrategy` con arranque de compatibilidad para `/#/…`; requisito de fallback de SPA en servidor. Requiere `PLAN_UPDATE_REQUIRED` (v2) | delivery-architect |
 | 2026-10-13 | PLANNING → ENGINEERING | Plan v2 COMPLETO (Fase 2b URLs sin hash; AC-18/AC-19 aprobados por el usuario); Specification READY; mismo PR | delivery-plan |
 | 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según plan v2 (AC-01..AC-19); pendiente review independiente | delivery-engineer |
+| 2026-10-14 | REVIEW → ENGINEERING | Review FAIL: `npm run build` (producción) falla por presupuesto de estilos de la landing (REV-2026-10-14-landing-pocketbiz-rutas-01) | delivery-review |
 
 ## Investigación
 
@@ -191,7 +192,12 @@ Implementado según PLAN **v2** (COMPLETO) en tres commits de código: `71ca1a5`
 - El texto del login sigue mezclado inglés/español (fuera de alcance).
 
 ## Review
-_Pendiente_
+**Resultado: FAIL** (2026-10-14, delivery-review; aislamiento procedimental, contexto reconstruido solo desde artefactos y diff).
+
+- [REV-2026-10-14-landing-pocketbiz-rutas-01](../reviews/REV-2026-10-14-landing-pocketbiz-rutas-01.md) — High / IMPLEMENTATION: `ng build` de producción falla por presupuesto de `landing.component.scss` (4,96 kB > 4 kB).
+
+Verificado: `ng lint` OK; `ng build --configuration development` OK; `ng test` (sin `app.component.spec.ts`, que no compila en `main`) 469 OK / 71 FAILED, todos `should create` de plantilla; grep AC-09 y AC-14 limpios; `CLAUDE.md` cumple AC-17/AC-19.
+**No verificado:** `npm audit` (no hay lockfile: ENOLOCK), humo manual en navegador con backend, E2E (no aplica), coverage (sin `karma-coverage` revisado).
 
 ## Publicación
 _Pendiente_
