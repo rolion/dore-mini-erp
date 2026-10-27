@@ -18,7 +18,7 @@ Mini ERP. Proyecto nuevo, en construcción.
 ## Reglas
 
 - Aislamiento por empresa: toda consulta de datos de negocio filtra por `company_id` (repositorios `Django…Repository(company_id)`, fachadas con `company_id` como primer argumento). La empresa sale del usuario autenticado (`shared/tenancy.py`), nunca de datos enviados por el cliente; los módulos de negocio no importan `accounts`. Ver `docs/architecture/ddd.md`.
-- Cambios acotados a un objetivo; antes de tocar varios archivos, proponer un plan y esperar confirmación.
+- Cambios acotados a un objetivo; antes de tocar varios archivos, dejar un plan (lo produce `delivery-start` en el PR). Se espera confirmación solo ante decisiones de negocio abiertas o dudas del requerimiento; fuera del flujo `delivery-*`, proponer el plan y esperar confirmación.
 - Dinero siempre en `Decimal` (backend) — nunca `float`.
 - Nunca editar una migración ya aplicada: crear una nueva con `makemigrations`.
 - No leer ni modificar `.env`, credenciales ni secretos; no commitearlos.
@@ -30,4 +30,4 @@ Mini ERP. Proyecto nuevo, en construcción.
 
 ## Flujo de trabajo
 
-Tareas no triviales usan las skills `delivery-*`: investigate → design → architect → plan → engineer → review → publish. Cada task vive en `docs/tasks/TASK-<slug>.md`.
+Tareas no triviales usan las skills `delivery-*`: `delivery-start` (investigación, diseño y arquitectura si aplican, plan y PR) → `delivery-build` (implementación) → `delivery-publish` (review, pruebas y PR listo para aprobación humana; nunca mergea). Se encadenan solas; piden confirmación solo ante decisiones de negocio abiertas o dudas del requerimiento. Cada task vive en `docs/tasks/TASK-<slug>.md`. El lenguaje visual de toda UI está en `docs/design/design-system.md`; las skills `delivery-ux-research/design-system/ui-design/frontend/visual-review` son un flujo aparte, solo de UX/UI con Stitch.
