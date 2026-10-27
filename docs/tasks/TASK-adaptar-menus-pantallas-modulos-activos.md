@@ -95,8 +95,11 @@ No aplica según veredicto.
 
 **Deuda técnica.** Los 71 specs demo rotos y `app.component.spec.ts`; el estilo global de `btn-primary` en el tema oscuro (foco/hover).
 
+**Ciclo 2 (tras el primer FAIL).** REV-01 (High, IMPLEMENTATION): con Clientes habilitado y Ventas deshabilitado, el detalle de cliente pedía `/api/orders/` y el interceptor llevaba a «Módulo no habilitado». Corregido: `CustomerDetailComponent` no pide el historial si Ventas está deshabilitado y el panel usa `*appIfModule="'sales'"`; spec nueva. Desviación respecto al plan: el plan solo listaba los controles de Clientes; el criterio AC-06 («los paneles no muestran errores por módulos ausentes») exigía cubrir también esta integración opcional de Ventas. Verificación propia (no es el Quality Gate): lint y build OK; Karma completo excluyendo `app.component.spec.ts`: 71 fallos preexistentes de pantallas demo y 513 aciertos.
+
 ## Review
-_Pendiente_
+**Ciclo 1: FAIL** (REV-01 High). El resto de la revisión: lint, build y 512 aciertos de Karma sin fallos nuevos; `modularity` 24 tests OK; AC-01..07 cumplidos; `npm audit` no realizado; inspección en navegador no verificada.
+_El ciclo 2 queda pendiente._
 
 ## Publicación
 _Pendiente_
