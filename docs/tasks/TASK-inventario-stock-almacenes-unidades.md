@@ -1,6 +1,6 @@
 # TASK-inventario-stock-almacenes-unidades: Productos que controlan stock, almacenes y unidades de medida (PB-INV-001 y PB-INV-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-stock-almacenes-unidades
@@ -15,6 +15,7 @@
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-27 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 High: specs del sidebar) | delivery-publish |
 | 2026-10-27 | ENGINEERING → REVIEW | REV-01, 02, 04, 05, 06 corregidos; Karma completo = línea base | delivery-build |
+| 2026-10-27 | REVIEW → PUBLISH | Quality Gate PASS (segundo ciclo); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -94,7 +95,13 @@ Los productos no tienen concepto de existencias; no hay unidades ni almacenes; �
 
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-10-27, segundo ciclo; el primero fue FAIL por REV-01 High, ya corregido).
+- Backend: `makemigrations --check` sin cambios; 712 tests; los únicos fallos son intermitentes y preexistentes por orden de UUID/reloj en Windows (sales `test_item_order_is_preserved`, `test_saves_and_loads_the_whole_aggregate`; catalog `test_patch_updates_fields_and_refreshes_updated_at`; modularity `test_changes_are_recorded_with_user_and_values`). Ninguno toca código del diff; no se contrastó contra `main`.
+- Frontend: lint OK, build OK, Karma completo 71 fallos = línea base ("should create" de pantallas demo), 567 OK. Bandit: 0 Medium/High (Low en tests preexistentes).
+- DDD/Specification: AC-01..09, INV, EDGE, API y UI cubiertos; migraciones solo aditivas; sin secretos ni `dist/` versionados.
+- Hallazgos: [REV-01](../reviews/REV-2026-10-27-inventario-stock-almacenes-unidades-01.md) High resuelto; 02, 04, 05, 06 resueltos; abiertos sin bloquear: [03](../reviews/REV-2026-10-27-inventario-stock-almacenes-unidades-03.md) Medium (tests intermitentes preexistentes), [07](../reviews/REV-2026-10-27-inventario-stock-almacenes-unidades-07.md) Low, [08](../reviews/REV-2026-10-27-inventario-stock-almacenes-unidades-08.md) Low.
+- No ejecutado: `npm audit` (sin lockfile), revisión visual en navegador (claro/oscuro, 390/1440 px): **no verificada**.
+
 
 ## Publicación
-_Pendiente_
+PR #20 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migraciones `catalog/0003` e `inventory/0001`, solo aditivas) y **autorización** (APIs de unidades y almacenes exigen administrador y módulo `inventory`). ADR: `ADR-inventario-stock-almacenes-unidades-propiedad-y-fronteras`.
