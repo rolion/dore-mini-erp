@@ -18,6 +18,7 @@ QUANTITY_MAX = 100_000
 UNSET = object()
 
 ZERO = Decimal('0.00')
+MAX_DISCOUNT_PERCENT = Decimal('100')
 OPEN_STATUSES = (OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY)
 
 # Acciones de estado permitidas por estado (nombres de la API).
@@ -282,11 +283,14 @@ class Order:
         self._check_amounts(self.subtotal - item.subtotal)
         self.items.remove(item)
 
-    def apply_discount(self, discount: object) -> None:
+    def apply_discount(self, discount: object, max_percent: Decimal = MAX_DISCOUNT_PERCENT) -> None:
+        """Aplica un descuento nuevo; `max_percent` es el tope configurado por la empresa (% del subtotal)."""
         self.ensure_editable()
         amount = _money(discount, 'discount', 'El descuento')
         if amount > self.subtotal:
             raise _fail('discount', 'El descuento no puede superar el subtotal.')
+        if amount > self.subtotal * max_percent / 100:
+            raise _fail('discount', f'El descuento no puede superar el {max_percent:f} % del subtotal.')
         if self.subtotal - amount < self.paid_total:
             raise OrderRuleViolation('total_below_paid', 'El total no puede quedar por debajo de lo ya pagado.')
         self.discount = amount

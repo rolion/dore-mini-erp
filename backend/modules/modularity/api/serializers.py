@@ -17,3 +17,35 @@ def serialize_module(view: ModuleView) -> dict:
         'optional': _links(view.optional),
         'missing_requires': view.missing_requires,
     }
+
+
+def serialize_settings(module: str, values) -> dict:
+    return {
+        'module': module,
+        'settings': [
+            {
+                'key': item.definition.key,
+                'label': item.definition.label,
+                'description': item.definition.description,
+                'kind': item.definition.kind,
+                'value': item.value,
+                'default': item.definition.default,
+                'choices': [{'value': v, 'label': label} for v, label in item.definition.choices],
+                'minimum': None if item.definition.minimum is None else str(item.definition.minimum),
+                'maximum': None if item.definition.maximum is None else str(item.definition.maximum),
+            }
+            for item in values
+        ],
+    }
+
+
+def serialize_change(row) -> dict:
+    return {
+        'id': str(row.id),
+        'changed_at': row.changed_at.isoformat(),
+        'changed_by': row.changed_by_name,
+        'setting_key': row.setting_key,
+        'setting_label': row.setting_label,
+        'old_value': row.old_value,
+        'new_value': row.new_value,
+    }

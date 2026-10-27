@@ -13,9 +13,11 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'catalog': set(),
     'customers': set(),
     'expenses': set(),
-    'sales': {'catalog', 'customers'},
+    'sales': {'catalog', 'customers', 'modularity'},
     'reporting': {'sales', 'expenses', 'customers'},
 }
+# Módulos no-negocio que un módulo de negocio puede leer (solo por su fachada `services`): la configuración.
+NON_BUSINESS_ALLOWED = {'modularity'}
 # Módulos que consumen a otros: solo desde sus adaptadores de infraestructura.
 CONSUMERS = ('sales', 'reporting')
 
@@ -65,7 +67,8 @@ class ModuleBoundaryTests(SimpleTestCase):
                     if parts[0] != 'modules' or len(parts) < 2 or parts[1] in (owner, ''):
                         continue
                     other = parts[1]
-                    if other in NON_BUSINESS or other not in ALLOWED_DEPENDENCIES.get(owner, set()):
+                    if other not in ALLOWED_DEPENDENCIES.get(owner, set()) or (
+                            other in NON_BUSINESS and other not in NON_BUSINESS_ALLOWED):
                         offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
                     elif not is_facade(other, module, names):
                         offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
@@ -80,6 +83,15 @@ class ModuleBoundaryTests(SimpleTestCase):
                 for module, names in imports(path):
                     if module.startswith('modules.accounts') or (module == 'modules' and 'accounts' in names):
                         offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
+        self.assertEqual(offenders, [])
+
+    def test_modularity_does_not_import_business_modules_or_accounts(self):  # ADR configuración
+        offenders = []
+        for path in source_files(MODULES / 'modularity'):
+            for module, names in imports(path):
+                parts = module.split('.')
+                if parts[0] == 'modules' and len(parts) > 1 and parts[1] not in ('modularity', ''):
+                    offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
         self.assertEqual(offenders, [])
 
     def test_nobody_imports_reporting(self):  # AC-19: Reporting solo lee, nadie depende de él
@@ -99,7 +111,8 @@ class ModuleBoundaryTests(SimpleTestCase):
             for path in source_files(MODULES / owner):
                 for module, _ in imports(path):
                     parts = module.split('.')
-                    if parts[0] == 'modules' and len(parts) > 1 and parts[1] != owner and parts[1] in ALLOWED_DEPENDENCIES:
+                    if parts[0] == 'modules' and len(parts) > 1 and parts[1] != owner and (
+                            parts[1] in ALLOWED_DEPENDENCIES or parts[1] in NON_BUSINESS_ALLOWED):
                         if path.name != 'adapters.py':
                             offenders.append(f'{path.relative_to(BACKEND)} importa {module}')
         self.assertEqual(offenders, [])

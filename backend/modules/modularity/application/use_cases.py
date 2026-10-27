@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from modules.modularity.application.settings_use_cases import MODULES_SCOPE, Actor
 from modules.modularity.domain import modules as domain
 
 
@@ -25,6 +26,15 @@ def _views(enabled: set[str]) -> list[ModuleView]:
     ]
 
 
+def _record(changes, actor: Actor | None, key: str, enabled: bool) -> None:
+    """Deja en el historial el cambio de estado de un módulo (solo si hay actor e historial)."""
+    if changes is None or actor is None:
+        return
+    states = {True: 'Habilitado', False: 'Deshabilitado'}
+    changes.add(scope=MODULES_SCOPE, setting_key=f'module.{key}', setting_label=domain.BY_KEY[key].name,
+                old_value=states[not enabled], new_value=states[enabled], actor_id=actor.id, actor_name=actor.name)
+
+
 class ListModules:
     def __init__(self, repository):
         self.repository = repository
@@ -34,28 +44,32 @@ class ListModules:
 
 
 class EnableModule:
-    def __init__(self, repository):
+    def __init__(self, repository, changes=None):
         self.repository = repository
+        self.changes = changes
 
-    def execute(self, key: str) -> list[ModuleView]:
+    def execute(self, key: str, actor: Actor | None = None) -> list[ModuleView]:
         enabled = domain.effective_enabled(self.repository.enabled_keys())
         domain.definition(key)
         if key not in enabled:
             domain.check_can_enable(key, enabled)
             self.repository.enable(key)
+            _record(self.changes, actor, key, True)
             enabled.add(key)
         return _views(enabled)
 
 
 class DisableModule:
-    def __init__(self, repository):
+    def __init__(self, repository, changes=None):
         self.repository = repository
+        self.changes = changes
 
-    def execute(self, key: str) -> list[ModuleView]:
+    def execute(self, key: str, actor: Actor | None = None) -> list[ModuleView]:
         enabled = domain.effective_enabled(self.repository.enabled_keys())
         domain.definition(key)
         if key in enabled:
             domain.check_can_disable(key, enabled)
             self.repository.disable(key)
+            _record(self.changes, actor, key, False)
             enabled.discard(key)
         return _views(enabled)
