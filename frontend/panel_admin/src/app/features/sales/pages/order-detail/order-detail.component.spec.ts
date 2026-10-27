@@ -4,6 +4,7 @@ import { ToastrService } from 'ngx-toastr';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import Swal, { SweetAlertResult } from 'sweetalert2';
 
+import { ModulesService } from '../../../../core/service/modules.service';
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../../products';
 import { FieldErrors, Order, OrderApiError, OrderItem, OrderRuleError } from '../../models/order';
@@ -18,6 +19,9 @@ interface DialogHooks {
 }
 
 const EMPTY_PRODUCTS: Page<never> = { count: 0, next: null, previous: null, results: [] };
+
+const modulesState = { customersDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
 
 describe('OrderDetailComponent', () => {
   let fixture: ComponentFixture<OrderDetailComponent>;
@@ -65,6 +69,7 @@ describe('OrderDetailComponent', () => {
         { provide: OrdersApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },
         { provide: ToastrService, useValue: toastr },
+        { provide: ModulesService, useValue: modulesFake },
         { provide: ActivatedRoute, useValue: { paramMap: params$.asObservable() } },
       ],
     });
@@ -203,6 +208,17 @@ describe('OrderDetailComponent', () => {
   });
 
   describe('data and amounts', () => {
+    it('shows the customer as plain text, without a link, when Customers is disabled (REV-02)', () => {
+      modulesState.customersDisabled = true;
+      try {
+        const element = setup(makeOrder());
+        expect(text(element, 'customer')).toBe('Ana Pérez');
+        expect(q(element, 'customer')?.querySelector('a')).toBeNull();
+      } finally {
+        modulesState.customersDisabled = false;
+      }
+    });
+
     it('shows customer (linked), channel label, dates and notes (AC-17)', () => {
       const element = setup(makeOrder({ salesChannel: 'STORE', notes: 'Sin picante' }));
       expect(q(element, 'customer')?.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/customers/c-1');

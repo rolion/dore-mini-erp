@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { EMPTY, Observable, catchError, finalize, switchMap, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
@@ -65,6 +66,7 @@ export class OrderDetailComponent implements OnInit {
   fieldErrors: FieldErrors = {};
 
   private api = inject(OrdersApiService);
+  private modules = inject(ModulesService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
@@ -100,6 +102,11 @@ export class OrderDetailComponent implements OnInit {
         this.order = order;
         this.loading = false;
       });
+  }
+
+  /** Con Clientes deshabilitado el nombre del cliente se muestra como texto, sin enlace a una ruta inaccesible. */
+  get customersDisabled(): boolean {
+    return this.modules.isDisabled('customers');
   }
 
   get primaryAction(): PrimaryAction | null {

@@ -105,7 +105,11 @@
           <dt class="col-sm-3">Cliente</dt>
           <dd class="col-sm-9" data-testid="customer">
             @if (o.customer; as customer) {
+            @if (customersDisabled) {
+            {{ customer.name }}
+            } @else {
             <a [routerLink]="['/pocketbiz/customers', customer.id]">{{ customer.name }}</a>
+            }
             } @else {
             Sin cliente
             }

@@ -99,6 +99,8 @@ No aplica según veredicto.
 
 **Ciclo 2 (tras el primer FAIL).** REV-01 (High, IMPLEMENTATION): con Clientes habilitado y Ventas deshabilitado, el detalle de cliente pedía `/api/orders/` y el interceptor llevaba a «Módulo no habilitado». Corregido: `CustomerDetailComponent` no pide el historial si Ventas está deshabilitado y el panel usa `*appIfModule="'sales'"`; spec nueva. Desviación respecto al plan: el plan solo listaba los controles de Clientes; el criterio AC-06 («los paneles no muestran errores por módulos ausentes») exigía cubrir también esta integración opcional de Ventas. Verificación propia (no es el Quality Gate): lint y build OK; Karma completo excluyendo `app.component.spec.ts`: 71 fallos preexistentes de pantallas demo y 513 aciertos.
 
+**Ciclo 3 (corrección de REV-02 tras el PASS del ciclo 2, a pedido del usuario).** REV-02 (Medium, IMPLEMENTATION): en el detalle de pedido el nombre del cliente se muestra como texto, sin enlace, cuando Clientes está deshabilitado (`OrderDetailComponent.customersDisabled`); spec nueva y spec con el módulo falso. Verificación propia (no es el Quality Gate): lint y build OK; Karma completo excluyendo `app.component.spec.ts`: 71 fallos preexistentes de pantallas demo y 514 aciertos.
+
 ## Review
 **Ciclo 1: FAIL** (REV-01 High, IMPLEMENTATION). **Ciclo 2: PASS** (2026-10-27, subagente aislado).
 - Frontend: lint OK, build OK, Karma completo excluyendo `app.component.spec.ts`: 513 aciertos y 71 fallos «should create» de pantallas demo preexistentes, ajenos al diff. Regresión de backend: `modules.modularity` 51 tests OK.

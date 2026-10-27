@@ -1,6 +1,6 @@
 # REV-2026-10-27-adaptar-menus-pantallas-modulos-activos-02: Con Clientes deshabilitado, el detalle de pedido sigue enlazando al cliente
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-adaptar-menus-pantallas-modulos-activos.md (v1)
