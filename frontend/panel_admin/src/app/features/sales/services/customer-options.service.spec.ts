@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
+import { ModulesService } from '../../../core/service/modules.service';
 import { Customer, CustomersApiService } from '../../customers';
 import { CUSTOMER_SEARCH_PAGE_SIZE, CustomerOptionsService } from './customer-options.service';
 
@@ -15,14 +16,31 @@ const CUSTOMER: Customer = {
   updatedAt: '',
 };
 
+const modulesState = { customersDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
+
 describe('CustomerOptionsService', () => {
   let service: CustomerOptionsService;
   let api: jasmine.SpyObj<CustomersApiService>;
 
   beforeEach(() => {
     api = jasmine.createSpyObj<CustomersApiService>('CustomersApiService', ['list']);
-    TestBed.configureTestingModule({ providers: [{ provide: CustomersApiService, useValue: api }] });
+    modulesState.customersDisabled = false;
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CustomersApiService, useValue: api },
+        { provide: ModulesService, useValue: modulesFake },
+      ],
+    });
     service = TestBed.inject(CustomerOptionsService);
+  });
+
+  it('does not call the API when the Customers module is disabled (UI-05)', () => {
+    modulesState.customersDisabled = true;
+    let result: unknown;
+    service.search('ana').subscribe((options) => (result = options));
+    expect(api.list).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 
   it('searches only active customers by the trimmed term and keeps id and name (AC-24)', () => {

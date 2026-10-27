@@ -1,6 +1,6 @@
 # REV-2026-10-27-bloquear-api-modulos-deshabilitados-03: No hay caché por petición; la NFR «una consulta de módulos como máximo» no se cumple
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-27-bloquear-api-modulos-deshabilitados.md (v1)

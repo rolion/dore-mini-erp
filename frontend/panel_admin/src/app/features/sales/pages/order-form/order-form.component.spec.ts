@@ -1,3 +1,4 @@
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -25,6 +26,9 @@ const CUSTOMER: Customer = {
 function page(results: Customer[]): Page<Customer> {
   return { count: results.length, next: null, previous: null, results };
 }
+
+const modulesState = { customersDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
 
 describe('OrderFormComponent', () => {
   let fixture: ComponentFixture<OrderFormComponent>;
@@ -60,6 +64,7 @@ describe('OrderFormComponent', () => {
         provideRouter([]),
         { provide: OrdersApiService, useValue: ordersApi },
         { provide: CustomersApiService, useValue: customersApi },
+        { provide: ModulesService, useValue: modulesFake },
         { provide: ToastrService, useValue: toastr },
         { provide: CustomerQuickCreateService, useValue: quickCreate },
         { provide: ActivatedRoute, useValue: route },
@@ -79,6 +84,21 @@ describe('OrderFormComponent', () => {
         expectedDeliveryDate: '',
         notes: '',
       });
+    });
+
+    it('shows the customer selector while the Customers module is enabled (UI-05)', () => {
+      expect(setup().querySelector('label[for="order-customer"]')).not.toBeNull();
+    });
+
+    it('hides the customer selector when the Customers module is disabled (UI-05)', () => {
+      modulesState.customersDisabled = true;
+      try {
+        const element = setup();
+        expect(element.querySelector('label[for="order-customer"]')).toBeNull();
+        expect(element.querySelector('#order-channel')).not.toBeNull();
+      } finally {
+        modulesState.customersDisabled = false;
+      }
     });
 
     it('offers the six channels with their Spanish labels (AC-08, AC-24)', () => {

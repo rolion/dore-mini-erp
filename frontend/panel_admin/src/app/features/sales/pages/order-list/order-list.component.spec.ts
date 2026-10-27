@@ -1,3 +1,4 @@
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -14,6 +15,9 @@ import { EMPTY_ALL, EMPTY_FILTERED, OrderListComponent } from './order-list.comp
 function page(results: OrderSummary[], count = results.length): Page<OrderSummary> {
   return { count, next: null, previous: null, results };
 }
+
+const modulesState = { customersDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
 
 describe('OrderListComponent', () => {
   let fixture: ComponentFixture<OrderListComponent>;
@@ -74,6 +78,7 @@ describe('OrderListComponent', () => {
         provideRouter([]),
         { provide: OrdersApiService, useValue: api },
         { provide: CustomerOptionsService, useValue: customerOptions },
+        { provide: ModulesService, useValue: modulesFake },
         { provide: ToastrService, useValue: toastr },
         { provide: ActivatedRoute, useValue: { queryParamMap: queryParams } },
       ],
@@ -88,6 +93,21 @@ describe('OrderListComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="ordering-help"]')?.textContent).toContain(
       'fecha de pedido, más recientes primero',
     );
+  });
+
+  it('shows the customer filter while the Customers module is enabled (UI-05)', () => {
+    start();
+    expect((fixture.nativeElement as HTMLElement).querySelector('label[for="filter-customer"]')).not.toBeNull();
+  });
+
+  it('hides the customer filter when the Customers module is disabled (UI-05)', () => {
+    modulesState.customersDisabled = true;
+    try {
+      start();
+      expect((fixture.nativeElement as HTMLElement).querySelector('label[for="filter-customer"]')).toBeNull();
+    } finally {
+      modulesState.customersDisabled = false;
+    }
   });
 
   it('links "+" to the new order form (AC-23)', () => {

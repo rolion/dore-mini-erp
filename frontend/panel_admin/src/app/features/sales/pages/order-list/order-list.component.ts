@@ -23,6 +23,7 @@ import {
   ZERO_AMOUNT,
 } from '../../models/order';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 import {
@@ -100,11 +101,17 @@ export class OrderListComponent implements OnInit {
 
   private api = inject(OrdersApiService);
   private customerOptions = inject(CustomerOptionsService);
+  private modules = inject(ModulesService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<ListState>();
+
+  /** Con Clientes deshabilitado no se ofrece el filtro por cliente (DDR integraciones opcionales). */
+  get customersDisabled(): boolean {
+    return this.modules.isDisabled('customers');
+  }
 
   constructor() {
     this.customers$ = concat(

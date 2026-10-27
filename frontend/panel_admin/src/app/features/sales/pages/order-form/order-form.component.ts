@@ -18,6 +18,7 @@ import {
   todayIso,
 } from '../../models/order';
 import { CustomerQuickCreateService } from '../../../customers';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 
@@ -60,6 +61,7 @@ export class OrderFormComponent implements OnInit {
 
   private ordersApi = inject(OrdersApiService);
   private customerOptions = inject(CustomerOptionsService);
+  private modules = inject(ModulesService);
   private quickCreate = inject(CustomerQuickCreateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -78,6 +80,11 @@ export class OrderFormComponent implements OnInit {
       ),
     );
     this.destroyRef.onDestroy(() => this.customerInput$.complete());
+  }
+
+  /** Con Clientes deshabilitado no se ofrece el selector de cliente (DDR integraciones opcionales). */
+  get customersDisabled(): boolean {
+    return this.modules.isDisabled('customers');
   }
 
   get isEdit(): boolean {

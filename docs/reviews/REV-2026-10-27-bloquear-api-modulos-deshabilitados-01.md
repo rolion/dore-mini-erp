@@ -1,6 +1,6 @@
 # REV-2026-10-27-bloquear-api-modulos-deshabilitados-01: El interceptor 403 expulsa de Pedidos y Reportes cuando Clientes está deshabilitado
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** High
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-10-27-bloquear-api-modulos-deshabilitados.md (v1)

@@ -1,6 +1,6 @@
 # REV-2026-10-27-bloquear-api-modulos-deshabilitados-02: EDGE-05 lanza `GateNotConfigured`, no `ImproperlyConfigured`
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-bloquear-api-modulos-deshabilitados.md (v1)

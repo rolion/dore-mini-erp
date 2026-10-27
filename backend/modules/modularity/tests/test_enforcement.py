@@ -128,6 +128,31 @@ class CompanyIsolationTests(EnforcementTestCase):
         self.assertNotIn('code', response.json())
 
 
+class PermissionOrderTests(EnforcementTestCase):
+    """AC-05: autenticación, empresa activa y rol se evalúan antes que el módulo; también en OPTIONS y HEAD."""
+
+    def test_missing_token_is_401_without_module_code(self):
+        set_enabled(self.company, [])
+        self.client.credentials()
+        response = self.client.get('/api/customers/')
+        self.assertEqual(response.status_code, 401)
+        self.assertNotIn('code', response.json())
+
+    def test_inactive_company_is_rejected_before_the_module(self):
+        set_enabled(self.company, [])
+        self.company.is_active = False
+        self.company.save()
+        response = self.client.get('/api/customers/')
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn('code', response.json())
+
+    def test_head_and_options_are_also_gated(self):
+        set_enabled(self.company, [k for k in DEFAULT_ENABLED_KEYS if k != 'customers'])
+        for method in ('head', 'options'):
+            with self.subTest(method):
+                self.assertEqual(getattr(self.client, method)('/api/customers/').status_code, 403)
+
+
 class ConfigurationChangeTests(EnforcementTestCase):
     def test_toggling_a_module_takes_effect_on_the_next_request(self):  # AC-04
         self.assertEqual(self.client.get('/api/customers/').status_code, 200)

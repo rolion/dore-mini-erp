@@ -110,6 +110,12 @@ Ver `docs/adr/ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo.md`.
 
 **Deuda técnica.** Tests intermitentes de `sales.test_repository`; el enlace «Volver al panel» de `coming-soon` y el destino post-login siguen en `/dashboard/main` (REV-03 de PB-MOD-001, resuelto documentando que `moduleGuard` redirige).
 
+**Ciclo 2 (plan v2, tras el FAIL de REV-01..04).**
+- REV-01 (High, DESIGN → UI-05): con Clientes deshabilitado, `CustomerOptionsService.search` no pide nada a la API; la lista y el formulario de pedidos ocultan el filtro y el selector de cliente, y Reportes oculta (y no pide) «Clientes con mayor compra». El interceptor no cambia. `ModulesService.isDisabled(key)` es solo verdadero con módulos cargados. Cubierto por specs de servicio, lista, formulario y reportes.
+- REV-02 y REV-03 (Low): redacción del plan (`GateNotConfigured`; sin caché entre peticiones, una consulta en el permiso y una por adaptador).
+- REV-04 (Low): `PermissionOrderTests` (401 sin token, empresa inactiva, HEAD y OPTIONS con módulo deshabilitado).
+- Verificación propia (no es el Quality Gate): backend 623 tests OK; frontend lint y build OK y Karma acotado (sales, reporting, settings, core, sidebar) 253/253.
+
 ## Review
 **Veredicto ciclo 1: FAIL** (2026-10-27, subagente aislado).
 - Backend: `modularity` 47 tests OK; suite completa 620 tests OK en 2 corridas. Frontend: lint OK, build OK, Karma acotado 53/53 OK; Karma completo 71 fallos preexistentes (pantallas demo) ajenos al diff. bandit: 1 Low preexistente fuera del diff. `npm audit` no realizado (sin lockfile). Inspección en navegador no verificada.
