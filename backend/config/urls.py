@@ -10,6 +10,8 @@ urlpatterns = [
     path('api/health/', health, name='health'),
     path('api/auth/', include('modules.accounts.api.urls')),
     path('api/products/', include('modules.catalog.api.urls')),
+    path('api/units/', include('modules.catalog.api.unit_urls')),
+    path('api/warehouses/', include('modules.inventory.api.urls')),
     path('api/customers/', include('modules.customers.api.urls')),
     path('api/orders/', include('modules.sales.api.urls')),
     path('api/expenses/', include(expense_urlpatterns)),

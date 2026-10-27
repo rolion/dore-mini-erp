@@ -2,6 +2,7 @@ from typing import Protocol, Sequence
 from uuid import UUID
 
 from .product import Product
+from .unit import UnitOfMeasure
 
 
 class ProductRepository(Protocol):
@@ -13,4 +14,16 @@ class ProductRepository(Protocol):
 
     def list(self, search: str | None = None, active: bool | None = None) -> Sequence[Product]:
         """Productos ordenados por nombre e id; `search` es coincidencia parcial sin distinguir mayúsculas."""
+        ...
+
+
+class UnitRepository(Protocol):
+    def get(self, unit_id: UUID) -> UnitOfMeasure | None: ...
+
+    def save(self, unit: UnitOfMeasure) -> UnitOfMeasure:
+        """Persiste la unidad; lanza `UnitValidationError` si el nombre o la abreviatura ya existen."""
+        ...
+
+    def list(self, search: str | None = None, active: bool | None = None) -> Sequence[UnitOfMeasure]:
+        """Unidades ordenadas por nombre e id; `search` es coincidencia parcial sin distinguir mayúsculas."""
         ...

@@ -4,6 +4,7 @@ from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 
 from .exceptions import ProductValidationError
+from .unit import UnitOfMeasure
 
 NAME_MAX_LENGTH = 150
 PRICE_MAX = Decimal('9999999999.99')
@@ -43,6 +44,13 @@ def validate_price(value: object) -> Decimal:
     return price
 
 
+@dataclass(frozen=True)
+class UnitSummary:
+    id: UUID
+    name: str
+    abbreviation: str
+
+
 @dataclass
 class Product:
     id: UUID
@@ -50,6 +58,10 @@ class Product:
     description: str
     sale_price: Decimal
     active: bool = True
+    tracks_stock: bool = False
+    base_unit_id: UUID | None = None
+    # Resumen de lectura de la unidad base (lo completa la persistencia).
+    base_unit: 'UnitSummary | None' = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -80,6 +92,18 @@ class Product:
 
     def change_price(self, sale_price: object) -> None:
         self.sale_price = validate_price(sale_price)
+
+    def configure_stock(self, tracks_stock: bool, base_unit: 'UnitOfMeasure | None') -> None:
+        """Activa o desactiva el control de stock; al controlarlo exige una unidad base activa."""
+        if not tracks_stock:
+            self.tracks_stock, self.base_unit_id, self.base_unit = False, None, None
+            return
+        if base_unit is None:
+            raise _fail('base_unit_id', 'La unidad base es obligatoria cuando el producto controla stock.')
+        if not base_unit.active and base_unit.id != self.base_unit_id:
+            raise _fail('base_unit_id', 'La unidad base debe estar activa.')
+        self.tracks_stock, self.base_unit_id = True, base_unit.id
+        self.base_unit = UnitSummary(base_unit.id, base_unit.name, base_unit.abbreviation)
 
     def activate(self) -> None:
         self.active = True

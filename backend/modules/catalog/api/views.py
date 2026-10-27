@@ -7,13 +7,16 @@ from modules.catalog.application.commands import (
     ActivateProduct,
     CreateProduct,
     DeactivateProduct,
+    StockControl,
     UpdateProduct,
 )
 from modules.catalog.application.queries import GetProduct, ListProducts
-from modules.catalog.domain.exceptions import ProductNotFound, ProductValidationError
-from modules.catalog.infrastructure.django.repositories import DjangoProductRepository
+from modules.catalog.domain.exceptions import ProductNotFound, ProductValidationError, StockHistoryLocked
+from modules.catalog.infrastructure.django.repositories import DjangoProductRepository, DjangoUnitRepository
+from shared import module_gate, stock_history
 from shared.tenancy import company_id_from
 
+from .errors import Conflict
 from .pagination import ProductPagination
 from .serializers import ProductInputSerializer, ProductSerializer
 
@@ -25,6 +28,15 @@ def _repository(request) -> DjangoProductRepository:
     return DjangoProductRepository(company_id_from(request))
 
 
+def _stock_control(request) -> StockControl:
+    company_id = company_id_from(request)
+    return StockControl(
+        DjangoUnitRepository(company_id),
+        inventory_enabled=module_gate.is_enabled(company_id, 'inventory'),
+        has_history=lambda product_id: stock_history.has_history(company_id, product_id),
+    )
+
+
 def _run(use_case, **kwargs):
     """Ejecuta un caso de uso traduciendo errores de dominio a respuestas HTTP."""
     try:
@@ -33,6 +45,8 @@ def _run(use_case, **kwargs):
         raise ValidationError(exc.errors) from exc
     except ProductNotFound as exc:
         raise NotFound(PRODUCT_NOT_FOUND) from exc
+    except StockHistoryLocked as exc:
+        raise Conflict(str(exc), 'stock_history_locked') from exc
 
 
 def _parse_active(raw: str | None) -> bool | None:
@@ -56,7 +70,7 @@ class ProductListCreateView(APIView):
     def post(self, request):
         serializer = ProductInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        product = _run(CreateProduct(_repository(request)), **serializer.validated_data)
+        product = _run(CreateProduct(_repository(request), _stock_control(request)), **serializer.validated_data)
         return Response(ProductSerializer(product).data, status=status.HTTP_201_CREATED)
 
 
@@ -69,7 +83,7 @@ class ProductDetailView(APIView):
     def patch(self, request, product_id):
         serializer = ProductInputSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        product = _run(UpdateProduct(_repository(request)), product_id=product_id,
+        product = _run(UpdateProduct(_repository(request), _stock_control(request)), product_id=product_id,
                        **serializer.validated_data)
         return Response(ProductSerializer(product).data)
 
