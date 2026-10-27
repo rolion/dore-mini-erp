@@ -44,6 +44,7 @@ def _parse_active(raw: str | None) -> bool | None:
 
 
 class ProductListCreateView(APIView):
+    required_modules = ('catalog',)
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
@@ -60,6 +61,7 @@ class ProductListCreateView(APIView):
 
 
 class ProductDetailView(APIView):
+    required_modules = ('catalog',)
     def get(self, request, product_id):
         product = _run(GetProduct(_repository(request)), product_id=product_id)
         return Response(ProductSerializer(product).data)
@@ -73,12 +75,14 @@ class ProductDetailView(APIView):
 
 
 class ProductActivateView(APIView):
+    required_modules = ('catalog',)
     def post(self, request, product_id):
         product = _run(ActivateProduct(_repository(request)), product_id=product_id)
         return Response(ProductSerializer(product).data)
 
 
 class ProductDeactivateView(APIView):
+    required_modules = ('catalog',)
     def post(self, request, product_id):
         product = _run(DeactivateProduct(_repository(request)), product_id=product_id)
         return Response(ProductSerializer(product).data)

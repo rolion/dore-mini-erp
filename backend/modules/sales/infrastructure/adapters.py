@@ -11,6 +11,9 @@ from django.utils import timezone
 from modules.catalog import services as catalog_services
 from modules.customers import services as customer_services
 from modules.sales.application.ports import CustomerInfo, ProductInfo
+from shared import module_gate
+
+CUSTOMERS_MODULE = 'customers'
 
 
 class ProductCatalogAdapter:
@@ -27,14 +30,25 @@ class ProductCatalogAdapter:
 class CustomerDirectoryAdapter:
     def __init__(self, company_id: UUID):
         self.company_id = company_id
+        self._available: bool | None = None
+
+    def is_available(self) -> bool:
+        """Clientes es una integración opcional: con el módulo deshabilitado Ventas funciona sin clientes."""
+        if self._available is None:  # una consulta por adaptador (por petición)
+            self._available = module_gate.is_enabled(self.company_id, CUSTOMERS_MODULE)
+        return self._available
 
     def get_customer_for_sale(self, customer_id: UUID) -> CustomerInfo | None:
+        if not self.is_available():
+            return None
         customer = customer_services.get_customer_for_sale(self.company_id, customer_id)
         if customer is None:
             return None
         return CustomerInfo(id=customer.id, name=customer.name, active=customer.active)
 
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]:
+        if not self.is_available():
+            return {}
         return customer_services.get_customer_names(self.company_id, customer_ids)
 
 
