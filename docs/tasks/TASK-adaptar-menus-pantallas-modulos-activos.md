@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-adaptar-menus-pantallas-modulos-activos (creada desde `task/TASK-habilitar-modulos-por-empresa`, que contiene PB-MOD-001 y PB-MOD-002; ver PR #17)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/18 (apilado sobre PR 17)
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
