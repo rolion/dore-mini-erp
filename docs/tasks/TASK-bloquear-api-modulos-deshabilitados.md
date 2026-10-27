@@ -1,6 +1,6 @@
 # TASK-bloquear-api-modulos-deshabilitados: Proteger las operaciones de módulos deshabilitados (PB-MOD-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-bloquear-api-modulos-deshabilitados (creada desde `task/TASK-habilitar-modulos-por-empresa`, PR #15 sin mergear)
@@ -13,6 +13,8 @@
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: autorización transversal en toda la API de negocio | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario | delivery-start |
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-27 | REVIEW → DESIGN | Quality Gate FAIL: REV-01 High (DESIGN) | delivery-publish |
+| 2026-10-27 | DESIGN → PLANNING → ENGINEERING | DDR complementario y plan v2 (AC sin cambios) | delivery-start |
 
 ## Investigación
 
@@ -79,7 +81,7 @@ Ver `docs/design/DDR-bloquear-api-modulos-deshabilitados-pantalla-no-habilitado.
 Ver `docs/adr/ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo.md`.
 
 ## Plan
-`docs/plans/PLAN-2026-10-27-bloquear-api-modulos-deshabilitados.md` (v1, COMPLETO, Specification READY).
+`docs/plans/PLAN-2026-10-27-bloquear-api-modulos-deshabilitados.md` (v2, COMPLETO, Specification READY; v2 agrega UI-05, ACs sin cambios).
 
 ## Implementación
 **Resumen.** Permiso por defecto `CompanyModulePermission` (`backend/config/permissions.py`) que, tras autenticación/empresa/rol, exige los módulos declarados en `required_modules` de cada vista (fail-closed si falta) y responde 403 `{detail, code: 'module_disabled', module}`. Puerto neutro `backend/shared/module_gate.py`, registrado por `modularity` en `AppConfig.ready()` (`infrastructure/django/gate.py`). Ventas y Reportes consultan el puerto para la integración opcional con Clientes. Angular: pantalla `/module-disabled`, `moduleGuard` e interceptor 403.
@@ -109,7 +111,11 @@ Ver `docs/adr/ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo.md`.
 **Deuda técnica.** Tests intermitentes de `sales.test_repository`; el enlace «Volver al panel» de `coming-soon` y el destino post-login siguen en `/dashboard/main` (REV-03 de PB-MOD-001, resuelto documentando que `moduleGuard` redirige).
 
 ## Review
-_Pendiente_
+**Veredicto ciclo 1: FAIL** (2026-10-27, subagente aislado).
+- Backend: `modularity` 47 tests OK; suite completa 620 tests OK en 2 corridas. Frontend: lint OK, build OK, Karma acotado 53/53 OK; Karma completo 71 fallos preexistentes (pantallas demo) ajenos al diff. bandit: 1 Low preexistente fuera del diff. `npm audit` no realizado (sin lockfile). Inspección en navegador no verificada.
+- Autorización: sin bypass; las 32 vistas de negocio declaran el módulo correcto y el orden auth → empresa → rol → módulo se conserva.
+- Hallazgos: [REV-01](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-01.md) **High, DESIGN** (el interceptor expulsa a Pedidos/Reportes por peticiones opcionales a Clientes), [REV-02](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-02.md) Low (excepción del puerto vs `ImproperlyConfigured`), [REV-03](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-03.md) Low (no hay caché por petición), [REV-04](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-04.md) Low (tests de AC-05 débiles).
+- Retorno: el High es de categoría DESIGN → `delivery-start` (plan v2 y DDR complementario) → `delivery-build` → nuevo Quality Gate.
 
 ## Publicación
 _Pendiente_

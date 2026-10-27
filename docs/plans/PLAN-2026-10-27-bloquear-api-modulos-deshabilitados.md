@@ -1,7 +1,7 @@
-# PLAN-2026-10-27-bloquear-api-modulos-deshabilitados (v1)
+# PLAN-2026-10-27-bloquear-api-modulos-deshabilitados (v2)
 
 **Task:** TASK-bloquear-api-modulos-deshabilitados · **Modo:** COMPLETO · **Specification readiness:** READY
-**DDRs / ADRs:** DDR-bloquear-api-modulos-deshabilitados-pantalla-no-habilitado · ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo
+**DDRs / ADRs:** DDR-bloquear-api-modulos-deshabilitados-pantalla-no-habilitado · DDR-bloquear-api-modulos-deshabilitados-integraciones-opcionales-ui · ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo
 
 ## Objective
 Que la API de negocio rechace con 403 toda consulta o escritura de un módulo deshabilitado para la empresa del usuario, que Ventas y Reportes sigan funcionando sin Clientes, y que Angular muestre «Módulo no habilitado» en vez de una tabla vacía.
@@ -52,7 +52,7 @@ Con un módulo deshabilitado, todas las rutas de su API responden 403 `module_di
 - EDGE-02: ruta con dos módulos (`top-customers`) → rechaza con el primero que falte.
 - EDGE-03: dos pestañas, una deshabilita y otra opera → la petición siguiente de la otra recibe 403 y su menú se actualiza.
 - EDGE-04: clave inexistente en `required_modules` → error de configuración detectado por la guarda (nunca en producción).
-- EDGE-05: el proveedor de `module_gate` no está registrado → `ImproperlyConfigured`, no se concede acceso.
+- EDGE-05: el proveedor de `module_gate` no está registrado → `GateNotConfigured`, no se concede acceso.
 
 ## Authorization / permissions
 Solo el rol admin existe; el orden de evaluación es autenticación → empresa activa → rol → módulo.
@@ -66,10 +66,11 @@ Solo el rol admin existe; el orden de evaluación es autenticación → empresa 
 - UI-01: ruta `/module-disabled` (query `module` opcional) con la pantalla simple del DDR (`design-system.md` §5, patrón `coming-soon`).
 - UI-02: `moduleGuard` navega a `/module-disabled` en lugar de redirigir en silencio.
 - UI-03: `errorInterceptor` trata el 403 `module_disabled`: recarga módulos, navega a la pantalla y propaga el error.
+- UI-05 (v2, DDR integraciones opcionales): con Clientes deshabilitado, Pedidos y Reportes no muestran el filtro y el selector de cliente, la creación rápida ni «Top clientes», y no piden datos de Clientes; `CustomerOptionsService.search` devuelve vacío sin petición.
 - UI-04: «Volver al inicio» → `/dashboard/main` si Reportes está habilitado; si no, `/catalog/products`.
 
 ## Non-functional requirements
-Una consulta de módulos por petición como máximo (caché por petición); sin dependencias nuevas; sin migración.
+Una consulta de módulos en el permiso y otra por adaptador de integración (memorizada por instancia); sin caché entre peticiones; sin dependencias nuevas; sin migración.
 
 ## Out of scope
 Desactivación segura / validar datos (PB-MOD-004), pantallas de configuración por módulo (PB-CFG-001), otros roles, ocultar tarjetas/campos por módulo (PB-MOD-003).
@@ -107,6 +108,7 @@ Suite completa del backend (`manage.py test`) y Karma de core/settings/sidebar.
 | AC-07, AC-08 | Integración Sales/Reporting con Clientes apagado |
 | AC-09 | `test_guards.py` ampliado |
 | AC-10, AC-12 | Specs de interceptor, guard y componente |
+| UI-05 | Specs de `CustomerOptionsService`, lista/formulario de pedidos y Reportes con Clientes deshabilitado |
 | AC-11 | Integración: deshabilitar, habilitar y releer datos |
 
 # Implementation Plan
@@ -131,15 +133,20 @@ Permiso por defecto `CompanyModulePermission` + `required_modules` por vista + e
 5. Integración opcional con Clientes en Sales y Reporting (AC-07, AC-08).
 6. Tests de integración backend (AC-01..08, AC-11).
 7. Frontend: pantalla, guard, interceptor y specs (AC-10, AC-12, UI-01..04).
-8. Docs vivos y verificación (lint, build, Karma, suite backend).
+8. (v2) UI-05: gating de Clientes en `CustomerOptionsService`, lista y formulario de pedidos y Reportes, con specs (REV-01).
+9. (v2) Tests de AC-05 más estrictos: empresa inactiva, 401 sin token, OPTIONS/HEAD (REV-04).
+10. Docs vivos y verificación (lint, build, Karma, suite backend).
 
 ## Database / migrations
 Ninguna.
 
 ## Risks
 - Una vista nueva sin declarar módulo queda rechazada (fail-closed) y la guarda lo avisa.
-- Consultas extra por petición (caché por petición).
+- Consultas extra por petición (una en el permiso y una por adaptador de integración; ver REV-03).
 - Los datos de otra empresa nunca se mezclan: se mantiene `company_id_from`.
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-10-27): [Implementation Plan] Se agrega UI-05 (DDR complementario), gating de Clientes en el frontend, tests de AC-05 y correcciones de redacción (EDGE-05, caché por petición). Los acceptance criteria no cambian. Solicitado por delivery-publish (REV-01 a REV-04).
