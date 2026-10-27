@@ -2,7 +2,7 @@ import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { defer, of, throwError } from 'rxjs';
 import { ReportingApiService } from '../../services/reporting-api.service';
 import { makeChannels, makeCustomers, makeExpenses, makeProducts, makeSales } from '../../testing/report-fixtures';
 import { CUSTOMER_RANKING_NOTE, PRODUCT_AMOUNT_NOTE, ReportsComponent, percentOf } from './reports.component';
@@ -16,7 +16,10 @@ describe('percentOf', () => {
 });
 
 const modulesState = { customersDisabled: false };
-const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
+const modulesFake = {
+  isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled,
+  enabledKeys$: defer(() => of(new Set(modulesState.customersDisabled ? ['catalog'] : ['catalog', 'customers']))),
+};
 
 describe('ReportsComponent', () => {
   let fixture: ComponentFixture<ReportsComponent>;
@@ -59,6 +62,7 @@ describe('ReportsComponent', () => {
   it('does not show nor request the customer ranking when Customers is disabled (UI-05)', () => {
     modulesState.customersDisabled = true;
     try {
+      fixture = TestBed.createComponent(ReportsComponent); // la directiva lee los módulos al crearse
       render();
       expect(api.topCustomers).not.toHaveBeenCalled();
       expect(text()).not.toContain('Clientes con mayor compra');

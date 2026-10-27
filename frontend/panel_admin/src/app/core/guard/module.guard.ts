@@ -9,7 +9,8 @@ export const MODULE_DISABLED_ROUTE = APP_PATHS.moduleDisabled;
 
 /**
  * Deja pasar la ruta solo si su módulo (`data.module`) está habilitado para la empresa. Es una comodidad de
- * navegación; el bloqueo real lo hace la API (403 `module_disabled`).
+ * navegación; el bloqueo real lo hace la API (403 `module_disabled`). La ruta con `data.home` es la página
+ * inicial: si su módulo no está habilitado redirige a Catálogo (base) sin pantalla de error.
  */
 export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot): Observable<boolean | UrlTree> => {
   const key = route.data['module'] as string | undefined;
@@ -24,6 +25,13 @@ export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot): Obser
   return modules.enabledKeys$.pipe(
     filter((keys): keys is ReadonlySet<string> => keys !== null),
     take(1),
-    map((keys) => (keys.has(key) ? true : router.createUrlTree([MODULE_DISABLED_ROUTE], { queryParams: { module: key } }))),
+    map((keys) => {
+      if (keys.has(key)) {
+        return true;
+      }
+      return route.data['home'] === true
+        ? router.createUrlTree([APP_PATHS.catalog])
+        : router.createUrlTree([MODULE_DISABLED_ROUTE], { queryParams: { module: key } });
+    }),
   );
 };

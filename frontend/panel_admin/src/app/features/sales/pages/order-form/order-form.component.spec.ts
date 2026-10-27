@@ -2,7 +2,7 @@ import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { Subject, of, throwError } from 'rxjs';
+import { defer, Subject, of, throwError } from 'rxjs';
 
 import { Page } from '../../../../shared/models/page';
 import { Customer, CustomerQuickCreateService, CustomersApiService } from '../../../customers';
@@ -28,7 +28,10 @@ function page(results: Customer[]): Page<Customer> {
 }
 
 const modulesState = { customersDisabled: false };
-const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
+const modulesFake = {
+  isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled,
+  enabledKeys$: defer(() => of(new Set(modulesState.customersDisabled ? ['catalog'] : ['catalog', 'customers']))),
+};
 
 describe('OrderFormComponent', () => {
   let fixture: ComponentFixture<OrderFormComponent>;

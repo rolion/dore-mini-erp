@@ -1,6 +1,6 @@
 # TASK-adaptar-menus-pantallas-modulos-activos: Adaptar menús y pantallas a los módulos activos (PB-MOD-003)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-adaptar-menus-pantallas-modulos-activos (creada desde `task/TASK-habilitar-modulos-por-empresa`, que contiene PB-MOD-001 y PB-MOD-002; ver PR #17)
@@ -12,6 +12,7 @@
 | 2026-10-27 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-10-27 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: solo frontend, sin cambio de API ni permisos; un flujo de inicio cambia | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario | delivery-start |
+| 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -76,7 +77,23 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-10-27-adaptar-menus-pantallas-modulos-activos.md` (v1, COMPACTO, Specification READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Frontend únicamente: `filterMenu` (`layout/sidebar/menu-filter.ts`) filtra hijos y oculta grupos vacíos; `moduleGuard` trata la ruta con `data.home` (el dashboard) redirigiendo a Catálogo sin pantalla de error; nueva directiva `*appIfModule` (`shared/directives/if-module.directive.ts`) que reemplaza los getters `customersDisabled` en las plantillas de lista y formulario de pedidos y de Reportes.
+
+**Cobertura.**
+- AC-01: `menu-filter.spec.ts` (módulo propio y heredado, grupo vacío, grupos sin módulo, módulos sin cargar).
+- AC-02: `module.guard.spec.ts` (home deshabilitado → Catálogo, habilitado → pasa).
+- AC-03: specs existentes de `moduleGuard` y `ModuleDisabledComponent`, sin cambios.
+- AC-04: `if-module.directive.spec.ts` (sin cargar, habilitado, deshabilitado, alternancia).
+- AC-05, AC-06: specs de lista y formulario de pedidos y de Reportes con el módulo falso (`enabledKeys$`); no existen campos de almacén ni stock que ocultar.
+- AC-07: specs existentes del sidebar (nombre, empresa, ítem activo) sin cambios.
+
+**Desviaciones respecto al plan.** Ninguna. Los getters `customersDisabled` se conservan en `order-list` y `order-form` porque la lógica (no solo la plantilla) los usa; en `reports` se eliminó.
+
+**Pantalla de referencia / componentes.** Sin pantallas nuevas; se reutiliza el menú del sistema de diseño §6. Componente compartido nuevo: `IfModuleDirective` (anotado en `design-system.md` §6).
+
+**Verificación propia (no es el Quality Gate).** `npm run lint` y `npm run build` OK; Karma completo excluyendo `app.component.spec.ts` (no compila en `main`): 71 fallos «should create» de pantallas demo preexistentes y 512 aciertos. Sin backend. No se hizo inspección en navegador.
+
+**Deuda técnica.** Los 71 specs demo rotos y `app.component.spec.ts`; el estilo global de `btn-primary` en el tema oscuro (foco/hover).
 
 ## Review
 _Pendiente_

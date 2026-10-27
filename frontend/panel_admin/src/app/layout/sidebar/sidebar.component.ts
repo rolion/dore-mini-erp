@@ -26,10 +26,7 @@ import { SidebarService } from './sidebar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, combineLatest } from 'rxjs';
 import { ModulesService } from '../../core/service/modules.service';
-
-function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolean {
-  return !item.module || (enabled !== null && enabled.has(item.module));
-}
+import { filterMenu } from './menu-filter';
 
 @Component({
   selector: 'app-sidebar',
@@ -120,7 +117,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       combineLatest([this.sidebarService.getRouteInfo(), this.modulesService.enabledKeys$])
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(([routes, enabled]) => {
-          this.sidebarItems = routes.filter((sidebarItem) => sidebarItem && isVisible(sidebarItem, enabled));
+          this.sidebarItems = filterMenu(routes, enabled);
         });
     }
     this.initLeftSidebar();
