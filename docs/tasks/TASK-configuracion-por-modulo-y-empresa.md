@@ -1,6 +1,6 @@
 # TASK-configuracion-por-modulo-y-empresa: Administrar configuración por módulo y empresa (PB-CFG-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configuracion-por-modulo-y-empresa
@@ -13,6 +13,7 @@
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nuevo modelo y API por empresa, historial, dependencia Sales→Modularity) | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario (ver Plan) | delivery-start |
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-27 | REVIEW → PUBLISH | Quality Gate PASS (2 Medium y 1 Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -96,7 +97,15 @@ Las reglas de Ventas son fijas y no hay historial de cambios; el admin solo pued
 **Deuda técnica:** aviso de salida con `window.confirm`; sin test concurrente real de EDGE-03; la lectura de configuración en Ventas sigue la conexión de la petición (si la transacción falla, el `except` no restaura el estado); 71 specs demo rotos y `app.component.spec.ts`.
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-10-27, subagente aislado; sin hallazgos Critical/High).
+- Backend: `manage.py test` 639 tests OK; bandit 0 incidencias; `makemigrations --check` sin cambios; la migración 0002 solo tiene 2 `CreateModel` y no se editó ninguna existente.
+- Frontend: `npm run lint` OK, `npm run build` OK, Karma completo 589 specs con 71 fallos, todos «should create» de pantallas demo (línea base). Cobertura de archivos nuevos: 90,9 %–100 %.
+- DDD: `domain/` sin Django, `sales → modularity.services` solo desde su adaptador, `modularity` sin imports de negocio ni `accounts`, consultas con `company_id`, sin `float`, historial solo de inserción.
+- Specification: AC-01..11, INV-01..08, API y UI cubiertos; excepción EDGE-03 (REV-02).
+- Visual (navegador integrado): `/sales/settings`, historial, `/inventory/settings` y `/settings/modules` a 1440 px claro/oscuro y 390 px claro (sin scroll horizontal); no verificados Compras ni móvil oscuro.
+- No ejecutado: ruff/flake8/mypy (no instalados), `npm audit` (sin lockfile), test concurrente real de EDGE-03.
+- Hallazgos abiertos (IMPLEMENTATION): [REV-01](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-01.md) Medium (el fallback de EDGE-06 no cubre un error de BD dentro de `transaction.atomic`: respondería 500), [REV-02](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-02.md) Medium (EDGE-03 sin test concurrente), [REV-03](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-03.md) Low (sin validación de cliente del porcentaje; `apply()` acumula suscripciones).
+- Efecto en entorno local: el gate aplicó la migración 0002 y creó usuarios de prueba (`qagate1`, `qagate2`) en la BD local; quedaron servidores `ng serve`/`runserver` del gate posiblemente activos.
 
 ## Publicación
-_Pendiente_
+PR #19 listo para aprobación humana; no se mergea. Cambio sensible: **base de datos** (migración `modularity/0002`, solo esquema) y **autorización** (ajustes solo para el administrador de la empresa; ADR-configuracion-por-modulo-y-empresa-modelo-y-contrato).
