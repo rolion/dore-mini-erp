@@ -58,6 +58,14 @@ describe('ModulesService', () => {
     expect(error?.message).toContain('Gastos');
   });
 
+  it('shares one request between simultaneous loads (REV-01)', () => {
+    service.load().subscribe();
+    service.loadQuietly().subscribe();
+    http.expectOne(URL).flush([dto('catalog', true)]);
+    service.load().subscribe();
+    http.expectOne(URL).flush([dto('catalog', true)]);
+  });
+
   it('forgets the state on reset', () => {
     service.load().subscribe();
     http.expectOne(URL).flush([dto('catalog', true)]);

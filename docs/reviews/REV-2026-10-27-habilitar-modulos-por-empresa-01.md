@@ -1,6 +1,6 @@
 # REV-2026-10-27-habilitar-modulos-por-empresa-01: Carga duplicada de `GET /api/modules/` al abrir la app
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-habilitar-modulos-por-empresa.md (v1)

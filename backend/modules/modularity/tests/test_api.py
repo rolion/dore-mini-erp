@@ -116,3 +116,18 @@ class EnableDisableTests(ModulesApiTestCase):
         import modules.modularity.migrations as package
         source = (Path(package.__file__).parent / '0001_initial.py').read_text(encoding='utf-8')
         self.assertNotIn('RunPython', source)
+
+
+class SeedingConflictTests(ModulesApiTestCase):
+    """EDGE-03: el sembrado tolera filas que otra lectura ya insertó (carrera entre dos primeras lecturas)."""
+
+    def test_seed_ignores_rows_inserted_by_a_concurrent_read(self):
+        CompanyModuleModel.objects.create(company_id=self.company.id, module_key='sales')
+        self.assertEqual(self.client.get(LIST_URL).status_code, 200)
+        keys = list(CompanyModuleModel.objects.filter(company_id=self.company.id).values_list('module_key', flat=True))
+        self.assertEqual(sorted(keys), ['customers', 'expenses', 'reporting', 'sales'])
+
+    def test_initialized_company_is_not_reseeded(self):
+        self.client.get(LIST_URL)
+        CompanyModuleModel.objects.filter(company_id=self.company.id).delete()
+        self.assertEqual(enabled_keys(self.client), {'access', 'catalog'})

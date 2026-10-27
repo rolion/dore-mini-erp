@@ -135,7 +135,7 @@ Una migración nueva `modularity/0001_initial` con dos `CreateModel` y la restri
 
 ## Risks
 - La API de negocio sigue accesible aunque el módulo esté oculto (aceptado hasta PB-MOD-004).
-- Redirección post-login si Reportes está deshabilitado (EDGE-04).
+- Redirección post-login si Reportes está deshabilitado (EDGE-04). Decisión (REV-03): el destino post-login y los enlaces de inicio siguen en `/dashboard/main`; `moduleGuard` redirige a `/catalog/products` cuando Reportes está deshabilitado. Es el comportamiento intencional; no se duplica la lógica de módulos en el login.
 - Menú dependiente de una llamada de red: manejo de error EDGE-05.
 
 ## New dependencies

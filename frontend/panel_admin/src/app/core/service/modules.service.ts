@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, map, of, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, finalize, map, of, share, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppModule, BASE_MODULE_KEYS, ModuleDto, ModulesApiError, toAppModule } from '../models/module';
 
@@ -16,6 +16,7 @@ export class ModulesService {
   private readonly baseUrl = `${environment.apiUrl}/modules/`;
   private readonly modulesSubject = new BehaviorSubject<AppModule[] | null>(null);
   private readonly enabledSubject = new BehaviorSubject<ReadonlySet<string> | null>(null);
+  private inflight: Observable<AppModule[]> | null = null;
 
   /** `null` mientras no se cargó; con error de carga solo contiene los módulos base. */
   readonly enabledKeys$: Observable<ReadonlySet<string> | null> = this.enabledSubject.asObservable();
@@ -25,8 +26,18 @@ export class ModulesService {
     return this.enabledSubject.value;
   }
 
-  /** Consulta los módulos de la empresa; ante un error deja solo los base y re-emite el error. */
+  /**
+   * Consulta los módulos de la empresa; ante un error deja solo los base y re-emite el error. Las llamadas
+   * simultáneas (guard y menú en una carga en frío) comparten una sola petición.
+   */
   load(): Observable<AppModule[]> {
+    if (!this.inflight) {
+      this.inflight = this.request();
+    }
+    return this.inflight;
+  }
+
+  private request(): Observable<AppModule[]> {
     return this.http.get<ModuleDto[]>(this.baseUrl).pipe(
       map((dtos) => dtos.map(toAppModule)),
       tap((modules) => this.publish(modules)),
@@ -35,6 +46,8 @@ export class ModulesService {
         this.enabledSubject.next(new Set(BASE_MODULE_KEYS));
         return throwError(() => new ModulesApiError(MODULES_ERROR_MESSAGE, err.status));
       }),
+      finalize(() => (this.inflight = null)),
+      share(),
     );
   }
 

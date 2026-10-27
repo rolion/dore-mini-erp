@@ -1,6 +1,6 @@
 # REV-2026-10-27-habilitar-modulos-por-empresa-03: Destino post-login e icono de inicio siguen apuntando a `/dashboard/main` (oculto si Reportes está deshabilitado)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-27-habilitar-modulos-por-empresa.md (v1)

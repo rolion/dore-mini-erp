@@ -1,6 +1,6 @@
 # REV-2026-10-27-habilitar-modulos-por-empresa-02: EDGE-03 se prueba de forma secuencial, no concurrente
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-habilitar-modulos-por-empresa.md (v1)
