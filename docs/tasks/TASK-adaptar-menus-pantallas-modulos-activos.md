@@ -1,6 +1,6 @@
 # TASK-adaptar-menus-pantallas-modulos-activos: Adaptar menús y pantallas a los módulos activos (PB-MOD-003)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-adaptar-menus-pantallas-modulos-activos (creada desde `task/TASK-habilitar-modulos-por-empresa`, que contiene PB-MOD-001 y PB-MOD-002; ver PR #17)
@@ -13,6 +13,8 @@
 | 2026-10-27 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: solo frontend, sin cambio de API ni permisos; un flujo de inicio cambia | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario | delivery-start |
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-27 | REVIEW → ENGINEERING → REVIEW | Quality Gate ciclo 1 FAIL (REV-01 High); corregido | delivery-publish / delivery-build |
+| 2026-10-27 | REVIEW → PUBLISH | Quality Gate ciclo 2 PASS (REV-02 Medium abierto); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -98,8 +100,12 @@ No aplica según veredicto.
 **Ciclo 2 (tras el primer FAIL).** REV-01 (High, IMPLEMENTATION): con Clientes habilitado y Ventas deshabilitado, el detalle de cliente pedía `/api/orders/` y el interceptor llevaba a «Módulo no habilitado». Corregido: `CustomerDetailComponent` no pide el historial si Ventas está deshabilitado y el panel usa `*appIfModule="'sales'"`; spec nueva. Desviación respecto al plan: el plan solo listaba los controles de Clientes; el criterio AC-06 («los paneles no muestran errores por módulos ausentes») exigía cubrir también esta integración opcional de Ventas. Verificación propia (no es el Quality Gate): lint y build OK; Karma completo excluyendo `app.component.spec.ts`: 71 fallos preexistentes de pantallas demo y 513 aciertos.
 
 ## Review
-**Ciclo 1: FAIL** (REV-01 High). El resto de la revisión: lint, build y 512 aciertos de Karma sin fallos nuevos; `modularity` 24 tests OK; AC-01..07 cumplidos; `npm audit` no realizado; inspección en navegador no verificada.
-_El ciclo 2 queda pendiente._
+**Ciclo 1: FAIL** (REV-01 High, IMPLEMENTATION). **Ciclo 2: PASS** (2026-10-27, subagente aislado).
+- Frontend: lint OK, build OK, Karma completo excluyendo `app.component.spec.ts`: 513 aciertos y 71 fallos «should create» de pantallas demo preexistentes, ajenos al diff. Regresión de backend: `modules.modularity` 51 tests OK.
+- REV-01 verificado resuelto (código y spec no vacua, con la rama habilitada cubierta). Barrido exhaustivo de llamadas a la API y enlaces entre módulos sin más casos de petición con 403.
+- AC-01..07 y las decisiones del usuario se cumplen.
+- **REV-02 (Medium, IMPLEMENTATION) abierto:** el detalle de pedido enlaza al cliente con `routerLink` sin comprobar módulos; con Clientes deshabilitado y un pedido que ya tenía cliente, pulsar el nombre lleva a «Módulo no habilitado». No hay petición ni 403 (lo resuelve el guard) y la pantalla permite volver. Se deja como limitación conocida; corrección sugerida: mostrar el nombre como texto (`*appIfModule` o `@else`).
+- No verificado: inspección en navegador (390 px / 1440 px, claro y oscuro) y `npm audit` (sin lockfile).
 
 ## Publicación
-_Pendiente_
+PR #18 listo para aprobación humana; no se mergea. Apilado sobre el PR #17 (reentrega de PB-MOD-002): su base es `task/TASK-habilitar-modulos-por-empresa` y debe retargetearse a `main` cuando el #17 se mergee. Sin cambios sensibles propios (solo frontend, sin autorización ni migraciones).
