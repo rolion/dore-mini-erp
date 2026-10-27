@@ -116,6 +116,12 @@ Ver `docs/adr/ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo.md`.
 - REV-04 (Low): `PermissionOrderTests` (401 sin token, empresa inactiva, HEAD y OPTIONS con módulo deshabilitado).
 - Verificación propia (no es el Quality Gate): backend 623 tests OK; frontend lint y build OK y Karma acotado (sales, reporting, settings, core, sidebar) 253/253.
 
+**Ciclo 3 (tras el segundo FAIL: REV-05..07).**
+- REV-05 (High, IMPLEMENTATION): con Clientes deshabilitado el formulario de pedido ya no envía `customerId` al editar, así que no desvincula el cliente guardado (AC-11). Spec del formulario y test de API (`test_editing_other_fields_keeps_the_stored_customer`).
+- REV-06 (Low): la lista ignora un `?customer=` guardado en la URL cuando Clientes está deshabilitado. Spec nueva.
+- REV-07 (Low, DESIGN): aceptado como limitación conocida. Si otro administrador deshabilita Clientes mientras hay una pantalla abierta con la lista de módulos desactualizada, una petición de búsqueda de clientes recibe 403 `module_disabled` y el interceptor lleva a «Módulo no habilitado»; es una ventana estrecha que se autocorrige al recargar.
+- Verificación propia (no es el Quality Gate): backend `modularity` 51 tests OK; frontend lint y build OK y Karma acotado 255/255.
+
 ## Review
 **Veredicto ciclo 1: FAIL** (2026-10-27, subagente aislado).
 - Backend: `modularity` 47 tests OK; suite completa 620 tests OK en 2 corridas. Frontend: lint OK, build OK, Karma acotado 53/53 OK; Karma completo 71 fallos preexistentes (pantallas demo) ajenos al diff. bandit: 1 Low preexistente fuera del diff. `npm audit` no realizado (sin lockfile). Inspección en navegador no verificada.

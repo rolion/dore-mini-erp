@@ -6,7 +6,7 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { Page } from '../../../../shared/models/page';
 import { Customer, CustomerQuickCreateService, CustomersApiService } from '../../../customers';
-import { Order, OrderApiError, todayIso } from '../../models/order';
+import { Order, OrderApiError, OrderInput, todayIso } from '../../models/order';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { makeOrder } from '../../testing/order-fixtures';
 import { CUSTOMER_SEARCH_PAGE_SIZE } from '../../services/customer-options.service';
@@ -275,6 +275,22 @@ describe('OrderFormComponent', () => {
       });
       expect(toastr.success).toHaveBeenCalledWith('Pedido actualizado');
       expect(navigate).toHaveBeenCalledWith(['/sales/orders', 'o-1']);
+    });
+
+    it('does not send the customer when editing with the Customers module disabled (AC-11, REV-05)', () => {
+      modulesState.customersDisabled = true;
+      try {
+        ordersApi.get.and.returnValue(of(makeOrder({ customer: null })));
+        ordersApi.update.and.returnValue(of(makeOrder()));
+        setup('o-1');
+        component.form.patchValue({ notes: 'Solo notas' });
+        component.onSubmit();
+        const sent: Partial<OrderInput> = ordersApi.update.calls.mostRecent().args[1] ?? {};
+        expect('customerId' in sent).toBeFalse();
+        expect(sent.notes).toBe('Solo notas');
+      } finally {
+        modulesState.customersDisabled = false;
+      }
     });
 
     it('goes back to the list when the order does not exist (EDGE-12)', () => {

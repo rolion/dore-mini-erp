@@ -194,6 +194,12 @@ class CustomersOptionalIntegrationTests(EnforcementTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), {'customer_id': [CUSTOMERS_OFF]})
 
+    def test_editing_other_fields_keeps_the_stored_customer(self):  # AC-11
+        response = self.client.patch(f'/api/orders/{self.order_id}/', {'notes': 'Sin picante'}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.client.post('/api/modules/customers/enable/')
+        self.assertEqual(self.client.get(f'/api/orders/{self.order_id}/').json()['customer']['name'], 'Ana')
+
     def test_filtering_by_customer_is_rejected(self):  # AC-07
         response = self.client.get(f'/api/orders/?customer_id={self.customer.id}')
         self.assertEqual(response.status_code, 400)

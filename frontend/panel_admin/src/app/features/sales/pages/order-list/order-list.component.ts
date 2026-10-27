@@ -160,7 +160,9 @@ export class OrderListComponent implements OnInit {
 
     // La URL manda: cada cambio de filtros navega y esta suscripción aplica el estado y recarga.
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      const state = parseState(params);
+      const parsed = parseState(params);
+      // Una URL guardada con `?customer=` no debe dejar un filtro oculto activo si Clientes está deshabilitado.
+      const state = this.customersDisabled ? { ...parsed, customer: null } : parsed;
       const { page, ...filters } = state;
       this.filterForm.setValue(filters, { emitEvent: false });
       this.pageIndex = page - 1;

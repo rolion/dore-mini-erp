@@ -110,6 +110,16 @@ describe('OrderListComponent', () => {
     }
   });
 
+  it('ignores a saved customer filter in the URL when the Customers module is disabled (REV-06)', () => {
+    modulesState.customersDisabled = true;
+    try {
+      start({ customer: 'c-1', customer_name: 'Ana' });
+      expect(lastListParams()?.customerId).toBeUndefined();
+    } finally {
+      modulesState.customersDisabled = false;
+    }
+  });
+
   it('links "+" to the new order form (AC-23)', () => {
     start();
     const link = fixture.debugElement.query(By.css('a[title="Nuevo pedido"]'));
