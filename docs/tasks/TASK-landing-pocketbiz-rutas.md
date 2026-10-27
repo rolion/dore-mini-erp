@@ -1,6 +1,6 @@
 # TASK-landing-pocketbiz-rutas: Landing pública de PocketBiz en "/" y aplicación bajo "/pocketbiz"
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-landing-pocketbiz-rutas`
@@ -18,6 +18,7 @@
 | 2026-10-13 | PLANNING → ENGINEERING | Plan v2 COMPLETO (Fase 2b URLs sin hash; AC-18/AC-19 aprobados por el usuario); Specification READY; mismo PR | delivery-plan |
 | 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según plan v2 (AC-01..AC-19); pendiente review independiente | delivery-engineer |
 | 2026-10-14 | REVIEW → ENGINEERING | Review FAIL: `npm run build` (producción) falla por presupuesto de estilos de la landing (REV-2026-10-14-landing-pocketbiz-rutas-01) | delivery-review |
+| 2026-10-27 | ENGINEERING → REVIEW | REV-01 corregido: el SCSS de la landing se divide en 3 archivos; `ng build` de producción pasa sin errores ni warnings | delivery-build |
 
 ## Investigación
 
@@ -190,6 +191,10 @@ Implementado según PLAN **v2** (COMPLETO) en tres commits de código: `71ca1a5`
 - El spec de `app.component` sigue sin compilar en `main` (preexistente).
 - Las páginas demo de la plantilla siguen accesibles bajo `/pocketbiz/**`.
 - El texto del login sigue mezclado inglés/español (fuera de alcance).
+
+## Corrección de REV-01 (2026-10-27)
+`landing.component.scss` (4,96 kB compilado > 4 kB) se divide en `landing-header.scss`, `landing-sections.scss` y `landing-plans.scss` (cada uno bajo 2 kB) más el parcial `_landing-tokens.scss` (variables, sin salida CSS); el componente los carga con `styleUrls`. Sin cambios de estilo ni de presupuesto en `angular.json`. Verificación propia: `ng build` (producción) sin errores ni warnings; `ng lint` OK; `ng test` 469 OK / 71 FAILED (mismos `should create` de plantilla). Pendiente: Quality Gate.
+Merge de `origin/main` (PR #14) resuelto aparte: `design-system.md` de `main` se conserva y la propuesta previa queda en `docs/design/design-system-propuesta-landing.md`.
 
 ## Review
 **Resultado: FAIL** (2026-10-14, delivery-review; aislamiento procedimental, contexto reconstruido solo desde artefactos y diff).

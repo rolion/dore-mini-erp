@@ -27,7 +27,11 @@ export type BillingPeriod = 'monthly' | 'annual';
 @Component({
   selector: 'app-landing',
   templateUrl: './landing.component.html',
-  styleUrls: ['./landing.component.scss'],
+  styleUrls: [
+    './landing-header.scss',
+    './landing-sections.scss',
+    './landing-plans.scss',
+  ],
   imports: [RouterLink, NgbAccordionModule, NgbCollapseModule],
 })
 export class LandingComponent {
