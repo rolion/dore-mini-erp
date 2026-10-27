@@ -1,3 +1,4 @@
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -13,6 +14,9 @@ describe('percentOf', () => {
     expect(percentOf('5', '0')).toBe(0);
   });
 });
+
+const modulesState = { customersDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
 
 describe('ReportsComponent', () => {
   let fixture: ComponentFixture<ReportsComponent>;
@@ -34,7 +38,11 @@ describe('ReportsComponent', () => {
     api.topCustomers.and.returnValue(of(makeCustomers()));
     await TestBed.configureTestingModule({
       imports: [ReportsComponent],
-      providers: [provideRouter([]), { provide: ReportingApiService, useValue: api }],
+      providers: [
+        provideRouter([]),
+        { provide: ReportingApiService, useValue: api },
+        { provide: ModulesService, useValue: modulesFake },
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(ReportsComponent);
     component = fixture.componentInstance;
@@ -47,6 +55,18 @@ describe('ReportsComponent', () => {
     fixture.detectChanges();
     fixture.detectChanges();
   };
+
+  it('does not show nor request the customer ranking when Customers is disabled (UI-05)', () => {
+    modulesState.customersDisabled = true;
+    try {
+      render();
+      expect(api.topCustomers).not.toHaveBeenCalled();
+      expect(text()).not.toContain('Clientes con mayor compra');
+      expect(api.sales).toHaveBeenCalled();
+    } finally {
+      modulesState.customersDisabled = false;
+    }
+  });
 
   it('loads the five reports for the current month (AC-26)', () => {
     render();

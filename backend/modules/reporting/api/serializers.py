@@ -79,7 +79,7 @@ def customers_data(report: queries.CustomersReport) -> dict:
 
 
 def _customer(row: queries.PendingRow) -> dict | None:
-    if row.order.customer_id is None:
+    if row.order.customer_id is None or row.customer_name is None:  # None = Clientes deshabilitado
         return None
     return {'id': _id(row.order.customer_id), 'name': row.customer_name}
 

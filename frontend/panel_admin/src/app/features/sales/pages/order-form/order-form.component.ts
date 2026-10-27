@@ -18,6 +18,7 @@ import {
   todayIso,
 } from '../../models/order';
 import { CustomerQuickCreateService } from '../../../customers';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { SalesSettingsService } from '../../services/sales-settings.service';
@@ -62,6 +63,7 @@ export class OrderFormComponent implements OnInit {
   private ordersApi = inject(OrdersApiService);
   private salesSettings = inject(SalesSettingsService);
   private customerOptions = inject(CustomerOptionsService);
+  private modules = inject(ModulesService);
   private quickCreate = inject(CustomerQuickCreateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -80,6 +82,11 @@ export class OrderFormComponent implements OnInit {
       ),
     );
     this.destroyRef.onDestroy(() => this.customerInput$.complete());
+  }
+
+  /** Con Clientes deshabilitado no se ofrece el selector de cliente (DDR integraciones opcionales). */
+  get customersDisabled(): boolean {
+    return this.modules.isDisabled('customers');
   }
 
   get isEdit(): boolean {
@@ -127,7 +134,13 @@ export class OrderFormComponent implements OnInit {
       notes: value.notes.trim(),
     };
     this.saving = true;
-    const request = this.orderId ? this.ordersApi.update(this.orderId, input) : this.ordersApi.create(input);
+    // Con Clientes deshabilitado el formulario no conoce el cliente del pedido (la API lo oculta): no se envía,
+    // para no desvincularlo al editar otros campos.
+    const changes: Partial<OrderInput> = { ...input };
+    if (this.customersDisabled) {
+      delete changes.customerId;
+    }
+    const request = this.orderId ? this.ordersApi.update(this.orderId, changes) : this.ordersApi.create(input);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (order) => {
         this.saving = false;

@@ -10,4 +10,5 @@ export const APP_PATHS = {
   signup: `${APP_BASE}/signup`,
   dashboard: `${APP_BASE}/dashboard/main`,
   catalog: `${APP_BASE}/catalog/products`,
+  moduleDisabled: `${APP_BASE}/module-disabled`,
 } as const;

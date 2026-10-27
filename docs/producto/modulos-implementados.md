@@ -131,7 +131,8 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - **Base**: Acceso/Empresa y Catálogo, siempre activos y sin interruptor.
 - **Dependencias**: Ventas→Catálogo; Reportes→Ventas y Gastos; Compras→Catálogo y Gastos; Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
 - Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Compras e Inventario aún no existen: al habilitarlos su menú abre «Próximamente».
-- **Pendiente (PB-MOD-004)**: la API de negocio no bloquea módulos deshabilitados y la desactivación segura (validar datos existentes) aún no existe.
+- **Pendiente (PB-MOD-002)**: la API de negocio no bloquea módulos deshabilitados.
+- **Pendiente (PB-MOD-004)**: la desactivación segura (validar datos existentes) aún no existe.
 
 ### 3.8 Configuración por módulo y empresa (PB-CFG-001)
 - Cada módulo tiene **Configuración** con pestañas «General» e «Historial de cambios»; solo la ve y guarda el administrador de la empresa y no afecta a otras empresas. Guardar es todo o nada; un valor inválido no se guarda y el error aparece junto al campo. Salir con cambios sin guardar pide confirmación.

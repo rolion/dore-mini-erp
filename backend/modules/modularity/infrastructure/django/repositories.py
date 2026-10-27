@@ -15,6 +15,9 @@ class DjangoCompanyModuleRepository:
 
     def enabled_keys(self) -> set[str]:
         """Claves no base habilitadas; la primera vez siembra los valores por defecto (sin migración por empresa)."""
+        keys = self._stored_keys()
+        if keys:  # camino habitual: una sola consulta
+            return keys
         with transaction.atomic():
             _, created = CompanySettingsModel.objects.get_or_create(company_id=self.company_id)
             if created:
@@ -22,6 +25,9 @@ class DjangoCompanyModuleRepository:
                     [CompanyModuleModel(company_id=self.company_id, module_key=key) for key in DEFAULT_ENABLED_KEYS],
                     ignore_conflicts=True,
                 )
+        return self._stored_keys()
+
+    def _stored_keys(self) -> set[str]:
         return set(CompanyModuleModel.objects.filter(company_id=self.company_id).values_list('module_key', flat=True))
 
     def enable(self, key: str) -> None:

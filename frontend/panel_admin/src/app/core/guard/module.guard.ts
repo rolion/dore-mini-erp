@@ -4,12 +4,12 @@ import { Observable, filter, map, of, take } from 'rxjs';
 import { APP_PATHS } from '../routing/app-paths';
 import { ModulesService } from '../service/modules.service';
 
-/** Destino cuando el módulo de la ruta no está habilitado: Catálogo es base y siempre está disponible. */
-export const MODULE_DISABLED_REDIRECT = APP_PATHS.catalog;
+/** Pantalla «Módulo no habilitado» a la que lleva una ruta de un módulo deshabilitado. */
+export const MODULE_DISABLED_ROUTE = APP_PATHS.moduleDisabled;
 
 /**
  * Deja pasar la ruta solo si su módulo (`data.module`) está habilitado para la empresa. Es una comodidad de
- * navegación, no seguridad: el bloqueo en la API llega con PB-MOD-004.
+ * navegación; el bloqueo real lo hace la API (403 `module_disabled`).
  */
 export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot): Observable<boolean | UrlTree> => {
   const key = route.data['module'] as string | undefined;
@@ -24,6 +24,6 @@ export const moduleGuard: CanActivateFn = (route: ActivatedRouteSnapshot): Obser
   return modules.enabledKeys$.pipe(
     filter((keys): keys is ReadonlySet<string> => keys !== null),
     take(1),
-    map((keys) => (keys.has(key) ? true : router.createUrlTree([MODULE_DISABLED_REDIRECT]))),
+    map((keys) => (keys.has(key) ? true : router.createUrlTree([MODULE_DISABLED_ROUTE], { queryParams: { module: key } }))),
   );
 };

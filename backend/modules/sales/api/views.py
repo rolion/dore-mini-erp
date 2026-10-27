@@ -51,6 +51,7 @@ from .serializers import (
 
 ORDER_NOT_FOUND = 'Pedido no encontrado.'
 ITEM_NOT_FOUND = 'Ítem no encontrado.'
+CUSTOMERS_DISABLED = 'El módulo Clientes no está habilitado.'
 
 
 class RuleConflict(APIException):
@@ -102,9 +103,15 @@ def _products(request) -> ProductCatalogAdapter:
     return ProductCatalogAdapter(company_id_from(request))
 
 
+def _customer_context(request, customer_ids) -> dict:
+    """Nombres de clientes para los serializers; con Clientes deshabilitado `customers_available` es falso."""
+    customers = _customers(request)
+    return {'customer_names': customers.get_customer_names(customer_ids), 'customers_available': customers.is_available()}
+
+
 def _order_response(request, order, http_status: int = status.HTTP_200_OK) -> Response:
-    names = _customers(request).get_customer_names([order.customer_id] if order.customer_id else [])
-    return Response(OrderSerializer(order, context={'customer_names': names}).data, status=http_status)
+    context = _customer_context(request, [order.customer_id] if order.customer_id else [])
+    return Response(OrderSerializer(order, context=context).data, status=http_status)
 
 
 def _validated(serializer_class, data, partial: bool = False) -> dict:
@@ -114,13 +121,16 @@ def _validated(serializer_class, data, partial: bool = False) -> dict:
 
 
 class OrderListCreateView(APIView):
+    required_modules = ('sales',)
     def get(self, request):
         filters = parse_order_filters(request.query_params)
+        if filters.customer_id is not None and not _customers(request).is_available():
+            raise ValidationError({'customer_id': [CUSTOMERS_DISABLED]})
         summaries = _run(ListOrders(_repository(request)), mutates=False, filters=filters)
         paginator = OrderPagination()
         page = paginator.paginate_queryset(summaries, request, view=self)
-        names = _customers(request).get_customer_names({o.customer_id for o in page if o.customer_id})
-        data = OrderSummarySerializer(page, many=True, context={'customer_names': names}).data
+        context = _customer_context(request, {o.customer_id for o in page if o.customer_id})
+        data = OrderSummarySerializer(page, many=True, context=context).data
         return paginator.get_paginated_response(data)
 
     def post(self, request):
@@ -130,6 +140,7 @@ class OrderListCreateView(APIView):
 
 
 class OrderDetailView(APIView):
+    required_modules = ('sales',)
     def get(self, request, order_id):
         order = _run(GetOrder(_repository(request)), mutates=False, order_id=_uuid(order_id, ORDER_NOT_FOUND))
         return _order_response(request, order)
@@ -142,6 +153,7 @@ class OrderDetailView(APIView):
 
 
 class OrderItemListView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(OrderItemCreateSerializer, request.data)
@@ -150,6 +162,7 @@ class OrderItemListView(APIView):
 
 
 class OrderItemDetailView(APIView):
+    required_modules = ('sales',)
     def patch(self, request, order_id, item_id):
         order_id, item_id = _uuid(order_id, ORDER_NOT_FOUND), _uuid(item_id, ITEM_NOT_FOUND)
         data = _validated(OrderItemUpdateSerializer, request.data)
@@ -163,6 +176,7 @@ class OrderItemDetailView(APIView):
 
 
 class OrderDiscountView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DiscountSerializer, request.data)
@@ -171,18 +185,21 @@ class OrderDiscountView(APIView):
 
 
 class OrderPrepareView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         return _order_response(request, _run(StartOrderPreparation(_repository(request)), order_id=order_id))
 
 
 class OrderReadyView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         return _order_response(request, _run(MarkOrderReady(_repository(request)), order_id=order_id))
 
 
 class OrderDeliverView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DeliverSerializer, request.data)
@@ -190,6 +207,7 @@ class OrderDeliverView(APIView):
 
 
 class OrderCancelView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(CancelSerializer, request.data)
@@ -197,6 +215,7 @@ class OrderCancelView(APIView):
 
 
 class OrderPaymentView(APIView):
+    required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(PaymentInputSerializer, request.data)

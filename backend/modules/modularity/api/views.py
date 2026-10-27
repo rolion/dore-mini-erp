@@ -47,6 +47,8 @@ def _run(use_case, *args):
 
 
 class _ConflictAwareView(APIView):
+    required_modules = ()  # configurar los módulos no depende de ningún módulo (solo del admin de la empresa)
+
     def handle_exception(self, exc):
         if isinstance(exc, DependencyConflict):
             return Response({'detail': str(exc.detail), **exc.extra}, status=409)

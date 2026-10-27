@@ -58,6 +58,7 @@ def _duplicate_response(error: DuplicateCustomerPhone) -> Response:
 
 
 class CustomerListCreateView(APIView):
+    required_modules = ('customers',)
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
@@ -78,6 +79,7 @@ class CustomerListCreateView(APIView):
 
 
 class CustomerDetailView(APIView):
+    required_modules = ('customers',)
     def get(self, request, customer_id):
         customer = _run(GetCustomer(_repository(request)), customer_id=customer_id)
         return Response(CustomerSerializer(customer).data)
@@ -92,12 +94,14 @@ class CustomerDetailView(APIView):
 
 
 class CustomerActivateView(APIView):
+    required_modules = ('customers',)
     def post(self, request, customer_id):
         customer = _run(ActivateCustomer(_repository(request)), customer_id=customer_id)
         return Response(CustomerSerializer(customer).data)
 
 
 class CustomerDeactivateView(APIView):
+    required_modules = ('customers',)
     def post(self, request, customer_id):
         customer = _run(DeactivateCustomer(_repository(request)), customer_id=customer_id)
         return Response(CustomerSerializer(customer).data)

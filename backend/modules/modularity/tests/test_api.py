@@ -1,7 +1,10 @@
+from unittest import mock
+
 from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.modularity.infrastructure.django.models import CompanyModuleModel
+from modules.modularity.infrastructure.django.repositories import DjangoCompanyModuleRepository
 
 LIST_URL = '/api/modules/'
 
@@ -123,8 +126,16 @@ class SeedingConflictTests(ModulesApiTestCase):
 
     def test_seed_ignores_rows_inserted_by_a_concurrent_read(self):
         CompanyModuleModel.objects.create(company_id=self.company.id, module_key='sales')
-        self.assertEqual(self.client.get(LIST_URL).status_code, 200)
-        keys = list(CompanyModuleModel.objects.filter(company_id=self.company.id).values_list('module_key', flat=True))
+        real = DjangoCompanyModuleRepository._stored_keys
+        calls = []
+
+        def stale_first_read(repository):
+            calls.append(1)
+            return set() if len(calls) == 1 else real(repository)  # la primera lectura aún no veía la fila
+
+        with mock.patch.object(DjangoCompanyModuleRepository, '_stored_keys', stale_first_read):
+            self.assertEqual(self.client.get(LIST_URL).status_code, 200)
+        keys = CompanyModuleModel.objects.filter(company_id=self.company.id).values_list('module_key', flat=True)
         self.assertEqual(sorted(keys), ['customers', 'expenses', 'reporting', 'sales'])
 
     def test_initialized_company_is_not_reseeded(self):

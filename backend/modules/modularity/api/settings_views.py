@@ -48,6 +48,8 @@ def _date_param(request, name: str) -> date | None:
 
 
 class ModuleSettingsView(APIView):
+    required_modules = ()  # configurar no depende de un módulo habilitado: el 409 de PATCH lo decide el caso de uso
+
     def get(self, request, module: str):
         company_id = company_id_from(request)
         try:
@@ -77,6 +79,8 @@ class ModuleSettingsView(APIView):
 
 
 class SettingChangeListView(APIView):
+    required_modules = ()
+
     def get(self, request, scope: str):
         date_from, date_to = _date_param(request, 'date_from'), _date_param(request, 'date_to')
         if date_from and date_to and date_from > date_to:

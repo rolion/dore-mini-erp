@@ -116,6 +116,13 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'module-disabled',
+                loadComponent: () =>
+                    import('./features/settings/pages/module-disabled/module-disabled.component').then(
+                        (m) => m.ModuleDisabledComponent
+                    ),
+            },
+            {
                 path: 'settings/modules',
                 loadComponent: () =>
                     import('./features/settings/pages/module-list/module-list.component').then(

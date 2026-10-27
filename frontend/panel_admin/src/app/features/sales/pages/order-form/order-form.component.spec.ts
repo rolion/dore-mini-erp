@@ -1,3 +1,4 @@
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -5,7 +6,7 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { Page } from '../../../../shared/models/page';
 import { Customer, CustomerQuickCreateService, CustomersApiService } from '../../../customers';
-import { Order, OrderApiError, todayIso } from '../../models/order';
+import { Order, OrderApiError, OrderInput, todayIso } from '../../models/order';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { NO_SALES_DEFAULTS, SalesDefaults, SalesSettingsService } from '../../services/sales-settings.service';
 import { makeOrder } from '../../testing/order-fixtures';
@@ -26,6 +27,9 @@ const CUSTOMER: Customer = {
 function page(results: Customer[]): Page<Customer> {
   return { count: results.length, next: null, previous: null, results };
 }
+
+const modulesState = { customersDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
 
 describe('OrderFormComponent', () => {
   let fixture: ComponentFixture<OrderFormComponent>;
@@ -63,6 +67,7 @@ describe('OrderFormComponent', () => {
         provideRouter([]),
         { provide: OrdersApiService, useValue: ordersApi },
         { provide: CustomersApiService, useValue: customersApi },
+        { provide: ModulesService, useValue: modulesFake },
         { provide: ToastrService, useValue: toastr },
         { provide: CustomerQuickCreateService, useValue: quickCreate },
         { provide: ActivatedRoute, useValue: route },
@@ -98,6 +103,21 @@ describe('OrderFormComponent', () => {
         expectedDeliveryDate: '',
         notes: '',
       });
+    });
+
+    it('shows the customer selector while the Customers module is enabled (UI-05)', () => {
+      expect(setup().querySelector('label[for="order-customer"]')).not.toBeNull();
+    });
+
+    it('hides the customer selector when the Customers module is disabled (UI-05)', () => {
+      modulesState.customersDisabled = true;
+      try {
+        const element = setup();
+        expect(element.querySelector('label[for="order-customer"]')).toBeNull();
+        expect(element.querySelector('#order-channel')).not.toBeNull();
+      } finally {
+        modulesState.customersDisabled = false;
+      }
     });
 
     it('offers the six channels with their Spanish labels (AC-08, AC-24)', () => {
@@ -274,6 +294,22 @@ describe('OrderFormComponent', () => {
       });
       expect(toastr.success).toHaveBeenCalledWith('Pedido actualizado');
       expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'o-1']);
+    });
+
+    it('does not send the customer when editing with the Customers module disabled (AC-11, REV-05)', () => {
+      modulesState.customersDisabled = true;
+      try {
+        ordersApi.get.and.returnValue(of(makeOrder({ customer: null })));
+        ordersApi.update.and.returnValue(of(makeOrder()));
+        setup('o-1');
+        component.form.patchValue({ notes: 'Solo notas' });
+        component.onSubmit();
+        const sent: Partial<OrderInput> = ordersApi.update.calls.mostRecent().args[1] ?? {};
+        expect('customerId' in sent).toBeFalse();
+        expect(sent.notes).toBe('Solo notas');
+      } finally {
+        modulesState.customersDisabled = false;
+      }
     });
 
     it('goes back to the list when the order does not exist (EDGE-12)', () => {

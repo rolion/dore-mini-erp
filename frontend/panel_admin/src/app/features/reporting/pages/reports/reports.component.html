@@ -125,6 +125,7 @@
         </app-report-card>
       </div>
 
+      @if (!customersDisabled) {
       <div class="col-lg-6">
         <app-report-card title="Clientes con mayor compra" [status]="(customers.state$ | async)?.status ?? 'loading'"
           [error]="(customers.state$ | async)?.error ?? ''" (retry)="customers.reload()">
@@ -149,6 +150,7 @@
           }
         </app-report-card>
       </div>
+      }
     </div>
   </div>
 </section>
