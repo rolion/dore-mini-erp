@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-bloquear-api-modulos-deshabilitados (creada desde `task/TASK-habilitar-modulos-por-empresa`, PR #15 sin mergear)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/16 (apilado sobre PR 15)
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
