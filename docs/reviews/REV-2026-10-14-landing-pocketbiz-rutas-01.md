@@ -1,6 +1,6 @@
 # REV-2026-10-14-landing-pocketbiz-rutas-01: `npm run build` (producción) falla por presupuesto de estilos de la landing
 
-**Status:** Addressed (pendiente de re-review)
+**Status:** Resolved (verificado 2026-10-27)
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-13-landing-pocketbiz-rutas.md (v2)

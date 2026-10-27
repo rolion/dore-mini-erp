@@ -1,6 +1,6 @@
 # TASK-landing-pocketbiz-rutas: Landing pública de PocketBiz en "/" y aplicación bajo "/pocketbiz"
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-landing-pocketbiz-rutas`
@@ -19,6 +19,7 @@
 | 2026-10-13 | ENGINEERING → REVIEW | Implementación completa según plan v2 (AC-01..AC-19); pendiente review independiente | delivery-engineer |
 | 2026-10-14 | REVIEW → ENGINEERING | Review FAIL: `npm run build` (producción) falla por presupuesto de estilos de la landing (REV-2026-10-14-landing-pocketbiz-rutas-01) | delivery-review |
 | 2026-10-27 | ENGINEERING → REVIEW | REV-01 corregido: el SCSS de la landing se divide en 3 archivos; `ng build` de producción pasa sin errores ni warnings | delivery-build |
+| 2026-10-27 | REVIEW → PUBLISH | Quality Gate PASS (subagente aislado); REV 2026-10-14-01 resuelta; 1 hallazgo Low abierto; PR listo para aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -197,12 +198,10 @@ Implementado según PLAN **v2** (COMPLETO) en tres commits de código: `71ca1a5`
 Merge de `origin/main` (PR #14) resuelto aparte: `design-system.md` de `main` se conserva y la propuesta previa queda en `docs/design/design-system-propuesta-landing.md`.
 
 ## Review
-**Resultado: FAIL** (2026-10-14, delivery-review; aislamiento procedimental, contexto reconstruido solo desde artefactos y diff).
-
-- [REV-2026-10-14-landing-pocketbiz-rutas-01](../reviews/REV-2026-10-14-landing-pocketbiz-rutas-01.md) — High / IMPLEMENTATION: `ng build` de producción falla por presupuesto de `landing.component.scss` (4,96 kB > 4 kB).
-
-Verificado: `ng lint` OK; `ng build --configuration development` OK; `ng test` (sin `app.component.spec.ts`, que no compila en `main`) 469 OK / 71 FAILED, todos `should create` de plantilla; grep AC-09 y AC-14 limpios; `CLAUDE.md` cumple AC-17/AC-19.
-**No verificado:** `npm audit` (no hay lockfile: ENOLOCK), humo manual en navegador con backend, E2E (no aplica), coverage (sin `karma-coverage` revisado).
+**PASS** (2026-10-27, delivery-publish, Quality Gate en subagente aislado). Historial: FAIL 2026-10-14 por [REV-2026-10-14-01](../reviews/REV-2026-10-14-landing-pocketbiz-rutas-01.md) (build de producción) → **Resuelta**.
+- Abierto: [REV-2026-10-27-01](../reviews/REV-2026-10-27-landing-pocketbiz-rutas-01.md) — Low / IMPLEMENTATION: docs de diseño con rutas antiguas.
+- Ejecutado: lint, build de producción, `ng test` con cobertura (469 OK / 71 FAILED de plantilla, igual que la línea base), humo en navegador sin backend (1440 y 390 px).
+- No ejecutado: `npm audit` (ENOLOCK), humo con sesión y backend, fallback de SPA en servidor real, `/delivery-visual-review`.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/13 listo para aprobación humana (no se mergea automáticamente). Cambio sensible: 3 ADR; el despliegue exige fallback de SPA (AC-19).
