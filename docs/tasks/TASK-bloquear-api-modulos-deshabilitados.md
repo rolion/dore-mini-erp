@@ -1,6 +1,6 @@
 # TASK-bloquear-api-modulos-deshabilitados: Proteger las operaciones de módulos deshabilitados (PB-MOD-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-bloquear-api-modulos-deshabilitados (creada desde `task/TASK-habilitar-modulos-por-empresa`, PR #15 sin mergear)
@@ -15,6 +15,8 @@
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-27 | REVIEW → DESIGN | Quality Gate FAIL: REV-01 High (DESIGN) | delivery-publish |
 | 2026-10-27 | DESIGN → PLANNING → ENGINEERING | DDR complementario y plan v2 (AC sin cambios) | delivery-start |
+| 2026-10-27 | ENGINEERING → REVIEW | Correcciones de REV-01..04 (plan v2) y segundo FAIL por REV-05..07 | delivery-build |
+| 2026-10-27 | REVIEW → PUBLISH | Quality Gate ciclo 3 PASS; a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -123,11 +125,12 @@ Ver `docs/adr/ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo.md`.
 - Verificación propia (no es el Quality Gate): backend `modularity` 51 tests OK; frontend lint y build OK y Karma acotado 255/255.
 
 ## Review
-**Veredicto ciclo 1: FAIL** (2026-10-27, subagente aislado).
-- Backend: `modularity` 47 tests OK; suite completa 620 tests OK en 2 corridas. Frontend: lint OK, build OK, Karma acotado 53/53 OK; Karma completo 71 fallos preexistentes (pantallas demo) ajenos al diff. bandit: 1 Low preexistente fuera del diff. `npm audit` no realizado (sin lockfile). Inspección en navegador no verificada.
-- Autorización: sin bypass; las 32 vistas de negocio declaran el módulo correcto y el orden auth → empresa → rol → módulo se conserva.
-- Hallazgos: [REV-01](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-01.md) **High, DESIGN** (el interceptor expulsa a Pedidos/Reportes por peticiones opcionales a Clientes), [REV-02](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-02.md) Low (excepción del puerto vs `ImproperlyConfigured`), [REV-03](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-03.md) Low (no hay caché por petición), [REV-04](../reviews/REV-2026-10-27-bloquear-api-modulos-deshabilitados-04.md) Low (tests de AC-05 débiles).
-- Retorno: el High es de categoría DESIGN → `delivery-start` (plan v2 y DDR complementario) → `delivery-build` → nuevo Quality Gate.
+**Ciclo 1: FAIL** (REV-01 High DESIGN; REV-02..04 Low). **Ciclo 2: FAIL** (REV-05 High IMPLEMENTATION; REV-06 Low; REV-07 Low aceptado). **Ciclo 3: PASS** (2026-10-27, subagente aislado).
+- Backend: `modularity` 51 tests OK; suite completa 624 tests, corrida 1 OK; corrida 2 un fallo intermitente preexistente (`modules.sales.tests.test_repository.test_item_order_is_preserved`, no está en el diff). bandit: 0 High/Medium (1 Low preexistente fuera del diff).
+- Frontend: lint OK, build OK, Karma acotado (sales, reporting, settings, core, sidebar) 255/255; Karma completo: 71 fallos preexistentes de pantallas demo, ajenos al diff (no ejecutado en este ciclo).
+- Autorización: sin bypass (orden auth → empresa → rol → módulo, fail-closed, empresa solo de la sesión, 32 vistas cubiertas por guarda y recorrido de rutas).
+- REV-01..06 verificados resueltos; REV-07 aceptado como limitación conocida. Los acceptance criteria no cambiaron entre v1 y v2.
+- No verificado: inspección en navegador (390 px / 1440 px, tema claro y oscuro), `npm audit` (sin lockfile), `ruff`/`flake8`/`mypy` (no instalados).
 
 ## Publicación
-_Pendiente_
+PR #16 listo para aprobación humana; no se mergea. Apilado sobre el PR #15: su base es `task/TASK-habilitar-modulos-por-empresa` y debe retargetearse a `main` cuando #15 se mergee. Cambio sensible: **autorización** (permiso por módulo en toda la API de negocio; ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo). Sin migraciones.
