@@ -1,6 +1,6 @@
 # TASK-inventario-stock-almacenes-unidades: Productos que controlan stock, almacenes y unidades de medida (PB-INV-001 y PB-INV-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-stock-almacenes-unidades
@@ -12,6 +12,7 @@
 | 2026-10-27 | (nuevo) → INVESTIGATION | Task creado; `main` al día. Las dos historias se entregan juntas (misma rama y PR) porque comparten el modelo de unidades | delivery-start |
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nuevo bounded context `inventory`, migraciones sobre productos existentes, nuevo puerto compartido) | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras 3 respuestas del usuario (ver Plan) | delivery-start |
+| 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -80,7 +81,14 @@ Los productos no tienen concepto de existencias; no hay unidades ni almacenes; �
 `docs/plans/PLAN-2026-10-27-inventario-stock-almacenes-unidades.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend.** `shared/stock_history.py` (puerto neutro, INV-02). `catalog`: `domain/unit.py` (`UnitOfMeasure`, INV-03/04), `Product.tracks_stock/base_unit_id/configure_stock` (INV-01), `StockControl` + `CreateProduct/UpdateProduct` (INV-02, 08; AC-01, 03, 04), casos de uso de unidades, `DjangoUnitRepository` (nombre/abreviatura únicos sin distinguir mayúsculas, `in_use`), API `/api/units/` (API-02) con `required_modules=('inventory',)`, API de productos ampliada (API-01) con 409 `stock_history_locked`, migración `catalog/0003` (solo `CreateModel`/`AddField`, `tracks_stock` default False: AC-02). Nuevo `modules/inventory`: `Warehouse` (INV-06), casos de uso, puerto `WarehouseActivity` con adaptador nulo (INV-07), `DjangoWarehouseRepository` (siembra idempotente «Almacén principal», índice único parcial del predeterminado), API `/api/warehouses/` (API-03; AC-08, 09), migración `inventory/0001`, registro en settings/urls y `inventory: set()` en `test_boundaries.py`.
+**Frontend.** `features/inventory/` (modelos, `UnitsApiService`, `WarehousesApiService`, diálogos, pestañas y `InventoryConfigurationComponent`; UI-03, UI-04), ruta `inventory/configuration` con `moduleGuard`, submenú e i18n es/en/de (UI-05). `features/products/`: modelo, servicio, formulario (sección «Inventario»: interruptor + selector, aviso de bloqueo), lista y detalle con datos de inventario solo con el módulo habilitado (UI-01, UI-02; AC-05).
+**Pantallas de referencia:** `product-form`, `product-list`, `product-detail` y `category-list`/`category-dialog` (diálogo), `module-settings` (pestañas). Componentes reutilizados: badges `badge-outline`, botones `btn-tbl-*`, `NgbModal`, `ToastrService`. Se creó el parcial `inventory/components/_inventory-table.scss` (tabla apilada en móvil, copia del de módulos) y se documentó en `design-system.md`.
+**Desviaciones del plan:** (1) Las pestañas de unidades/almacenes piden `page_size=100` y no muestran paginación (pocas filas por empresa). (2) Sin acción «Definir predeterminado» en el diálogo para activar/desactivar: se ofrece también como botón de estrella en la tabla. (3) `UnitOfMeasure.in_use` se calcula con un `Exists` sobre productos, no se guarda.
+**Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 712 tests OK; `makemigrations --check` sin cambios. Frontend: `npm run lint` OK, `ng build` OK, Karma acotado (products + inventory) 74/74 OK (se apartó temporalmente `app.component.spec.ts`, roto en `main`, y se restauró sin modificar).
+**Entorno:** se copió `backend/.env` del checkout principal al worktree (con autorización del usuario; sin leerlo ni versionarlo, está en `.gitignore`), se usó el `.venv` del checkout principal y se enlazó `node_modules` con una unión.
+**Deuda técnica:** los bloqueos por historial, saldo y recepciones no se ejercitan con datos reales hasta las historias de movimientos/recepciones (proveedor de `shared.stock_history` sin registrar; `NoWarehouseActivity`); no hay pantalla de regularización; el menú dice «Almacenes y unidades» y no «Configuración» literal; suite frontend con 71 specs demo preexistentes rotos.
+
 
 ## Review
 _Pendiente_

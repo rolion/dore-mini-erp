@@ -101,7 +101,8 @@
       "TEXT": "Inventario",
       "LIST": {
         "HOME": "Inicio",
-        "SETTINGS": "Configuración"
+        "CONFIGURATION": "Almacenes y unidades",
+        "SETTINGS": "Ajustes"
       }
     },
     "SETTINGS": {

@@ -76,6 +76,22 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
+              @if (inventoryEnabled) {
+              <ngx-datatable-column name="Controla stock" [sortable]="false" [width]="130">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.tracksStock) {
+                  <div class="badge-outline col-green">Sí</div>
+                  } @else {
+                  <div class="badge-outline col-brown">No</div>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Unidad base" [sortable]="false" [width]="130">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row.baseUnit ? row.baseUnit.abbreviation : '—' }}
+                </ng-template>
+              </ngx-datatable-column>
+              }
               <ngx-datatable-column name="Acciones" [sortable]="false" [width]="180">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>

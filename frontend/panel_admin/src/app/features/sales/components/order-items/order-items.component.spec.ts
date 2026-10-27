@@ -14,6 +14,8 @@ const PRODUCT: Product = {
   description: '',
   salePrice: '12.50',
   active: true,
+  tracksStock: false,
+  baseUnit: null,
   createdAt: '',
   updatedAt: '',
 };

@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { Product, ProductApiError } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 
@@ -16,11 +17,17 @@ export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
   loading = true;
 
+  private modules = inject(ModulesService);
   private api = inject(ProductsApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
+
+  /** Los datos de inventario se muestran solo cuando el módulo Inventario está habilitado. */
+  get inventoryEnabled(): boolean {
+    return this.modules.enabledKeysValue?.has('inventory') ?? false;
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id') ?? '';

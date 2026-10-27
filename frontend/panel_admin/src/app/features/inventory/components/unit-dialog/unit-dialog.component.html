@@ -1,0 +1,47 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEdit ? 'Editar unidad' : 'Nueva unidad' }}</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (locked) {
+    <div class="alert alert-info" role="status">
+      Esta unidad ya está asignada a productos; solo se puede activar o desactivar.
+    </div>
+    }
+    <div class="form-group">
+      <label for="unit-name">Nombre <span class="text-danger">*</span></label>
+      <input id="unit-name" type="text" class="form-control" placeholder="Kilogramo" formControlName="name"
+        [attr.maxlength]="nameMaxLength">
+      @if (hasError('name')) {
+      <small class="form-text text-danger">
+        {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+      </small>
+      }
+    </div>
+    <div class="form-group mt-3">
+      <label for="unit-abbreviation">Abreviatura <span class="text-danger">*</span></label>
+      <input id="unit-abbreviation" type="text" class="form-control" placeholder="kg" formControlName="abbreviation"
+        [attr.maxlength]="abbreviationMaxLength">
+      @if (hasError('abbreviation')) {
+      <small class="form-text text-danger">
+        {{ serverErrors.abbreviation || (form.controls.abbreviation.hasError('maxlength') ?
+        'La abreviatura no puede superar ' + abbreviationMaxLength + ' caracteres.' : 'La abreviatura es obligatoria.') }}
+      </small>
+      }
+    </div>
+    <div class="form-check form-switch mt-3">
+      <input id="unit-fractions" type="checkbox" class="form-check-input" role="switch"
+        formControlName="allowsFractions">
+      <label class="form-check-label" for="unit-fractions">Admite fracciones</label>
+      <small class="form-text text-muted d-block">Permite cantidades con decimales, por ejemplo 1,5 kg.</small>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ locked ? 'Cerrar' : 'Cancelar' }}</button>
+    @if (!locked) {
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+    }
+  </div>
+</form>

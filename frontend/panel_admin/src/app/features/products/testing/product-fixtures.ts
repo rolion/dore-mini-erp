@@ -7,6 +7,8 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
     description: 'Tradicional',
     salePrice: '35.00',
     active: true,
+    tracksStock: false,
+    baseUnit: null,
     createdAt: '2026-10-08T10:00:00Z',
     updatedAt: '2026-10-08T11:00:00Z',
     ...overrides,

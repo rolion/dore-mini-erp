@@ -57,6 +57,46 @@
                   }
                 </div>
               </div>
+              @if (inventoryEnabled) {
+              <h5 class="mt-2">Inventario</h5>
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <div class="form-check form-switch">
+                    <input id="product-tracks-stock" type="checkbox" class="form-check-input" role="switch"
+                      formControlName="tracksStock">
+                    <label class="form-check-label" for="product-tracks-stock">Controlar stock</label>
+                  </div>
+                  <small class="form-text text-muted">Actívalo para productos con existencias; los servicios y productos sin stock se venden sin pedir existencias.</small>
+                  @if (serverErrors.tracksStock) {
+                  <small class="form-text text-danger d-block">{{ serverErrors.tracksStock }}</small>
+                  }
+                </div>
+                @if (form.controls.tracksStock.value) {
+                <div class="form-group col-md-6">
+                  <label for="product-base-unit">Unidad base <span class="text-danger">*</span></label>
+                  <select id="product-base-unit" class="form-select form-control" formControlName="baseUnitId">
+                    <option value="">Selecciona una unidad</option>
+                    @for (option of unitOptions; track option.id) {
+                    <option [value]="option.id">{{ option.label }}</option>
+                    }
+                  </select>
+                  @if (!unitOptions.length) {
+                  <small class="form-text text-muted">
+                    Primero crea una unidad en <a routerLink="/pocketbiz/inventory/configuration">Inventario › Almacenes y unidades</a>.
+                  </small>
+                  }
+                  @if (hasError('baseUnitId')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.baseUnitId || 'La unidad base es obligatoria cuando controlas stock.' }}
+                  </small>
+                  }
+                </div>
+                }
+              </div>
+              @if (lockedMessage) {
+              <div class="alert alert-warning" role="alert">{{ lockedMessage }}</div>
+              }
+              }
               <div class="row">
                 <div class="col-md-12">
                   <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">
