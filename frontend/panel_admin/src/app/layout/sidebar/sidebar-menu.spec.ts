@@ -11,10 +11,19 @@ function translate(dictionary: unknown, key: string): unknown {
 describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
-  it('only has Dashboard, Catalog > Product, Customer, Orders, Expenses and Reports (AC-09, AC-20, AC-22)', () => {
-    expect(routes.length).toBe(6);
+  it('has the business menu, Purchases, Inventory and Settings > Modules (AC-09, AC-20, AC-22, UI-01)', () => {
+    expect(routes.length).toBe(9);
 
-    const [dashboard, catalog, customer, orders, expenses, reports] = routes;
+    const [dashboard, catalog, customer, orders, expenses, reports, purchases, inventory, settings] = routes;
+    expect(routes.slice(0, 6).map((route) => route.module)).toEqual([
+      'reporting', 'catalog', 'customers', 'sales', 'expenses', 'reporting',
+    ]);
+    expect(purchases.path).toBe('/pocketbiz/purchases');
+    expect(purchases.module).toBe('purchases');
+    expect(inventory.path).toBe('/pocketbiz/inventory');
+    expect(inventory.module).toBe('inventory');
+    expect(settings.module).toBeUndefined();
+    expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
     expect(dashboard.submenu).toEqual([]);
     expect(dashboard.groupTitle).toBeFalse();
@@ -51,7 +60,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(9);
+    expect(titles.length).toBe(13);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -71,5 +80,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.REPORTS.TEXT')).toBe('Reportes');
     expect(translate(en, 'MENUITEMS.REPORTS.TEXT')).toBe('Reports');
     expect(translate(de, 'MENUITEMS.REPORTS.TEXT')).toBe('Berichte');
+    expect(translate(es, 'MENUITEMS.SETTINGS.LIST.MODULES')).toBe('Módulos');
+    expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
   });
 });

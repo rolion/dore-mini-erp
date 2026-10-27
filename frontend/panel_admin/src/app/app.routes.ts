@@ -2,6 +2,7 @@ import { Route } from '@angular/router';
 import { MainLayoutComponent } from './layout/app-layout/main-layout/main-layout.component';
 import { AuthGuard } from './core/guard/auth.guard';
 import { AuthLayoutComponent } from './layout/app-layout/auth-layout/auth-layout.component';
+import { moduleGuard } from './core/guard/module.guard';
 import { Page404Component } from './authentication/page404/page404.component';
 import { LEGACY_REDIRECTS } from './core/routing/legacy-redirects';
 
@@ -25,33 +26,70 @@ export const APP_ROUTE: Route[] = [
             { path: '', redirectTo: 'dashboard/main', pathMatch: 'full' },
             {
                 path: 'dashboard',
+                canActivate: [moduleGuard],
+                data: { module: 'reporting' },
                 loadChildren: () =>
                     import('./dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTE),
             },
             {
                 path: 'catalog/products',
+                canActivate: [moduleGuard],
+                data: { module: 'catalog' },
                 loadChildren: () =>
                     import('./features/products/products.routes').then((m) => m.PRODUCTS_ROUTE),
             },
             {
                 path: 'customers',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
                 loadChildren: () =>
                     import('./features/customers/customers.routes').then((m) => m.CUSTOMERS_ROUTE),
             },
             {
                 path: 'sales/orders',
+                canActivate: [moduleGuard],
+                data: { module: 'sales' },
                 loadChildren: () =>
                     import('./features/sales/sales.routes').then((m) => m.SALES_ORDERS_ROUTE),
             },
             {
                 path: 'expenses',
+                canActivate: [moduleGuard],
+                data: { module: 'expenses' },
                 loadChildren: () =>
                     import('./features/expenses/expenses.routes').then((m) => m.EXPENSES_ROUTE),
             },
             {
                 path: 'reports',
+                canActivate: [moduleGuard],
+                data: { module: 'reporting' },
                 loadChildren: () =>
                     import('./features/reporting/reporting.routes').then((m) => m.REPORTS_ROUTE),
+            },
+            {
+                path: 'purchases',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases', title: 'Compras' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'inventory',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory', title: 'Inventario' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'settings/modules',
+                loadComponent: () =>
+                    import('./features/settings/pages/module-list/module-list.component').then(
+                        (m) => m.ModuleListComponent
+                    ),
             },
             {
                 path: 'advance-table',

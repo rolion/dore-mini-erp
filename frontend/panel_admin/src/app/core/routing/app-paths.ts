@@ -9,4 +9,5 @@ export const APP_PATHS = {
   login: `${APP_BASE}/login`,
   signup: `${APP_BASE}/signup`,
   dashboard: `${APP_BASE}/dashboard/main`,
+  catalog: `${APP_BASE}/catalog/products`,
 } as const;

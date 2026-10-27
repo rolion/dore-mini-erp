@@ -6,7 +6,7 @@ from django.test import SimpleTestCase
 
 BACKEND = Path(__file__).resolve().parents[3]
 MODULES = BACKEND / 'modules'
-NON_BUSINESS = {'accounts'}
+NON_BUSINESS = {'accounts', 'modularity'}
 
 # Dependencias permitidas entre módulos de negocio, siempre y solo a través de `modules.<otro>.services`.
 ALLOWED_DEPENDENCIES: dict[str, set[str]] = {

@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginResponse, RegisterField, RegisterInput, User } from '../models/user';
+import { ModulesService } from './modules.service';
 import { LocalStorageService } from './storage.service';
 
 export const INVALID_CREDENTIALS_MESSAGE = 'Credenciales inválidas';
@@ -38,6 +39,7 @@ export class RegisterError extends Error {
 export class AuthService {
   private http = inject(HttpClient);
   private storageService = inject(LocalStorageService);
+  private modulesService = inject(ModulesService);
   private currentUserSubject = new BehaviorSubject<User | null>(this.readStoredUser());
   public currentUser: Observable<User | null> = this.currentUserSubject.asObservable();
 
@@ -96,6 +98,7 @@ export class AuthService {
   /** Limpia solo el estado local; no llama al backend. */
   clearSession(): void {
     this.storageService.remove('currentUser');
+    this.modulesService.reset();
     this.currentUserSubject.next(null);
   }
 

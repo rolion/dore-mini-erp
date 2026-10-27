@@ -1,0 +1,75 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { environment } from '../../../environments/environment';
+import { ModuleDto, ModulesApiError } from '../models/module';
+import { ModulesService } from './modules.service';
+
+const URL = `${environment.apiUrl}/modules/`;
+
+function dto(key: string, enabled: boolean, extra: Partial<ModuleDto> = {}): ModuleDto {
+  return {
+    key,
+    name: key,
+    description: '',
+    is_base: key === 'catalog' || key === 'access',
+    enabled,
+    requires: [],
+    optional: [],
+    missing_requires: [],
+    ...extra,
+  };
+}
+
+describe('ModulesService', () => {
+  let service: ModulesService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    service = TestBed.inject(ModulesService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('publishes the enabled keys of the company (AC-04)', () => {
+    service.load().subscribe();
+    http.expectOne(URL).flush([dto('catalog', true), dto('inventory', true), dto('purchases', false)]);
+    expect(Array.from(service.enabledKeysValue ?? [])).toEqual(['catalog', 'inventory']);
+  });
+
+  it('falls back to base modules only when loading fails (EDGE-05)', () => {
+    let error: ModulesApiError | undefined;
+    service.load().subscribe({ error: (err: ModulesApiError) => (error = err) });
+    http.expectOne(URL).flush({}, { status: 500, statusText: 'Server Error' });
+    expect(error?.message).toContain('No se pudieron cargar');
+    expect(Array.from(service.enabledKeysValue ?? []).sort()).toEqual(['access', 'catalog']);
+  });
+
+  it('exposes the missing dependency names of a rejected enable (AC-03)', () => {
+    let error: ModulesApiError | undefined;
+    service.enable('purchases').subscribe({ error: (err: ModulesApiError) => (error = err) });
+    http
+      .expectOne(`${URL}purchases/enable/`)
+      .flush({ detail: 'Faltan módulos por habilitar: Gastos.', missing: ['Gastos'] }, { status: 409, statusText: 'Conflict' });
+    expect(error?.status).toBe(409);
+    expect(error?.names).toEqual(['Gastos']);
+    expect(error?.message).toContain('Gastos');
+  });
+
+  it('shares one request between simultaneous loads (REV-01)', () => {
+    service.load().subscribe();
+    service.loadQuietly().subscribe();
+    http.expectOne(URL).flush([dto('catalog', true)]);
+    service.load().subscribe();
+    http.expectOne(URL).flush([dto('catalog', true)]);
+  });
+
+  it('forgets the state on reset', () => {
+    service.load().subscribe();
+    http.expectOne(URL).flush([dto('catalog', true)]);
+    service.reset();
+    expect(service.enabledKeysValue).toBeNull();
+  });
+});
