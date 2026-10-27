@@ -3,7 +3,6 @@ import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { APP_ROUTE } from './app.routes';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { tokenInterceptor } from '@core/interceptor/jwt.interceptor';
 import { errorInterceptor } from '@core/interceptor/error.interceptor';
 import { DirectionService, LanguageService } from '@core';
@@ -20,7 +19,6 @@ export const appConfig: ApplicationConfig = {
         provideRouter(APP_ROUTE),
         provideToastr(),
         provideAnimations(),
-        { provide: LocationStrategy, useClass: HashLocationStrategy },
         DirectionService, LanguageService,
         provideTranslateService({
             defaultLanguage: 'es',

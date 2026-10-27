@@ -101,13 +101,13 @@ describe('DashboardComponent', () => {
     expect(delivery.textContent).toContain('Ana Pérez');
     expect(delivery.textContent).toContain('20/10/2026');
     expect(delivery.textContent).toContain('En preparación');
-    expect(delivery.querySelector('a')?.getAttribute('href')).toBe('/sales/orders/o1');
+    expect(delivery.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/sales/orders/o1');
     const collection = byTestId('collection-table') as HTMLElement;
     expect(collection.textContent).toContain('Sin cliente');
     expect(collection.textContent).toContain('Bs 50.00');
     expect(collection.textContent).toContain('Parcial');
-    expect(byTestId('delivery-all')?.getAttribute('href')).toBe('/sales/orders?status=PENDING_DELIVERY');
-    expect(byTestId('collection-all')?.getAttribute('href')).toBe('/sales/orders?status=NOT_CANCELLED&pay=WITH_BALANCE');
+    expect(byTestId('delivery-all')?.getAttribute('href')).toBe('/pocketbiz/sales/orders?status=PENDING_DELIVERY');
+    expect(byTestId('collection-all')?.getAttribute('href')).toBe('/pocketbiz/sales/orders?status=NOT_CANCELLED&pay=WITH_BALANCE');
   });
 
   it('says how many are left out when the list is capped', () => {

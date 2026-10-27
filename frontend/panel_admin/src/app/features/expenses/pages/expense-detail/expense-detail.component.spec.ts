@@ -110,6 +110,6 @@ describe('ExpenseDetailComponent', () => {
     api.get.and.returnValue(throwError(() => new ExpensesApiError('Gasto no encontrado.', 404)));
     fixture.detectChanges();
     expect(toastr.error).toHaveBeenCalledWith('Gasto no encontrado.');
-    expect(router.navigate).toHaveBeenCalledWith(['/expenses']);
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/expenses']);
   });
 });

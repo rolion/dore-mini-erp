@@ -4,11 +4,11 @@
       <h5 class="page-title m-b-0">Detalle del producto</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
-      <a routerLink="/dashboard/main">
+      <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item">Catálogo</li>
-    <li class="breadcrumb-item"><a routerLink="/catalog/products">Producto</a></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/products">Producto</a></li>
     <li class="breadcrumb-item">Detalle</li>
   </ul>
   <div class="section-body">
@@ -41,11 +41,11 @@
               <dd class="col-sm-9">{{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
             </dl>
             <div class="m-4">
-              <a class="btn btn-primary" [routerLink]="['/catalog/products', p.id, 'edit']">Editar</a>
+              <a class="btn btn-primary" [routerLink]="['/pocketbiz/catalog/products', p.id, 'edit']">Editar</a>
               <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">
                 {{ p.active ? 'Desactivar' : 'Activar' }}
               </button>
-              <a class="btn btn-light ms-2" routerLink="/catalog/products">Volver</a>
+              <a class="btn btn-light ms-2" routerLink="/pocketbiz/catalog/products">Volver</a>
             </div>
             } @else if (loading) {
             <p class="m-4">Cargando…</p>

@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Router, UrlTree } from '@angular/router';
 
 import { AuthService } from '../service/auth.service';
+import { APP_PATHS } from '../routing/app-paths';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,6 @@ export class AuthGuard {
     if (this.authService.isAuthenticated) {
       return true;
     }
-    return this.router.createUrlTree(['/authentication/signin']);
+    return this.router.createUrlTree([APP_PATHS.login]);
   }
 }

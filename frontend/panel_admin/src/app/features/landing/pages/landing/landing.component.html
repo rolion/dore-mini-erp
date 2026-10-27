@@ -1,0 +1,370 @@
+<div class="landing">
+  <!-- Cabecera fija -->
+  <header class="landing-header">
+    <nav class="container landing-nav" aria-label="Principal">
+      <a class="landing-brand" [routerLink]="paths.landing" aria-label="PocketBiz, inicio">
+        <img src="assets/images/main-logo.png" alt="PocketBiz" width="1000" height="218" />
+      </a>
+
+      <ul class="landing-links d-none d-lg-flex">
+        @for (anchor of anchors; track anchor.id) {
+          <li>
+            <a [href]="'#' + anchor.id" (click)="scrollTo(anchor.id, $event)">{{ anchor.label }}</a>
+          </li>
+        }
+      </ul>
+
+      <div class="landing-actions">
+        @if (!isAuthenticated()) {
+          <a class="landing-login d-none d-sm-inline" [routerLink]="paths.login">Iniciar sesión</a>
+        }
+        <a class="btn btn-primary landing-cta" [routerLink]="primaryCtaPath()" data-testid="cta-header">
+          {{ primaryCtaLabel() }}
+        </a>
+        <button
+          type="button"
+          class="btn landing-toggler d-lg-none"
+          aria-label="Abrir menú"
+          aria-controls="landing-menu"
+          [attr.aria-expanded]="!menuCollapsed()"
+          (click)="toggleMenu()"
+        >
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+      </div>
+    </nav>
+
+    <div id="landing-menu" class="container d-lg-none" [ngbCollapse]="menuCollapsed()">
+      <ul class="landing-menu-list">
+        @for (anchor of anchors; track anchor.id) {
+          <li>
+            <a [href]="'#' + anchor.id" (click)="scrollTo(anchor.id, $event)">{{ anchor.label }}</a>
+          </li>
+        }
+        @if (!isAuthenticated()) {
+          <li><a [routerLink]="paths.login">Iniciar sesión</a></li>
+        }
+      </ul>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="landing-hero">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <h1>Tu negocio en el bolsillo</h1>
+            <p class="landing-lead">
+              Registra tus pedidos, cobros y gastos en un solo lugar y mira de un vistazo cuánto
+              vendiste, qué te deben y qué tienes que entregar.
+            </p>
+            <a
+              class="btn btn-primary btn-lg landing-cta"
+              [routerLink]="primaryCtaPath()"
+              data-testid="cta-hero"
+            >
+              {{ primaryCtaLabel() }}
+            </a>
+            <p class="landing-note" data-testid="free-limits-note">{{ freeLimitsNote }}</p>
+          </div>
+          <div class="col-lg-6">
+            <figure class="landing-phone-wrap">
+              <div class="landing-phone">
+                <img
+                  src="assets/images/landing/dashboard-movil-403-positivo.png"
+                  width="403"
+                  height="850"
+                  alt="Panel de PocketBiz en el celular: ventas, gastos y ganancia estimada del mes"
+                />
+              </div>
+              <figcaption class="landing-note">
+                Captura de la aplicación con datos de ejemplo
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reconocimiento -->
+    <section class="landing-section landing-section--white">
+      <div class="container text-center">
+        <h2>¿Tus ventas viven en chats, cuadernos y de memoria?</h2>
+        <ul class="landing-recognition">
+          @for (item of recognition; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    <!-- Qué puedes controlar -->
+    <section id="que-puedes-controlar" class="landing-section">
+      <div class="container">
+        <h2 class="text-center">Qué puedes controlar</h2>
+        <p class="landing-sub text-center">
+          Pedidos, cobros, gastos, clientes y productos, en un solo lugar.
+        </p>
+        <div class="row g-4">
+          @for (benefit of benefits; track benefit.title) {
+            <div class="col-12 col-md-6 col-lg-3">
+              <article class="landing-card h-100">
+                <span class="landing-icon" aria-hidden="true">
+                  <i class="fas" [class]="benefit.icon"></i>
+                </span>
+                <h3>{{ benefit.title }}</h3>
+                <p>{{ benefit.text }}</p>
+              </article>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Entrega y pago, por separado -->
+    <section class="landing-section landing-section--white">
+      <div class="container">
+        <h2 class="text-center">Entrega y pago, por separado</h2>
+        <p class="landing-sub text-center">
+          Cada pedido guarda su canal de venta, y su entrega y su cobro se siguen por separado.
+        </p>
+        <div class="row g-4">
+          <div class="col-12 col-lg-4">
+            <article class="landing-card h-100">
+              <span class="landing-step-number" aria-hidden="true">1</span>
+              <h3>{{ flowSteps[0].title }}</h3>
+              <p>{{ flowSteps[0].text }}</p>
+              <div class="landing-mock">
+                <span class="landing-mock-label">Canal de venta</span>
+                <span class="landing-mock-field">WhatsApp</span>
+              </div>
+              <p class="landing-note mb-0">{{ channelNote }}</p>
+            </article>
+          </div>
+          <div class="col-12 col-lg-4">
+            <article class="landing-card h-100">
+              <span class="landing-step-number" aria-hidden="true">2</span>
+              <h3>{{ flowSteps[1].title }}</h3>
+              <p>{{ flowSteps[1].text }}</p>
+              <div class="landing-mock">
+                @for (row of readyRows; track row.label) {
+                  <div class="landing-mock-row">
+                    <span>{{ row.label }}</span>
+                    <span class="landing-badge" [class.landing-badge--success]="row.tone === 'success'" [class.landing-badge--warning]="row.tone === 'warning'">
+                      <i class="fas" [class]="row.icon" aria-hidden="true"></i> {{ row.badge }}
+                    </span>
+                  </div>
+                }
+                <p class="landing-balance mb-0">Saldo Bs 28.00</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-12 col-lg-4">
+            <article class="landing-card h-100">
+              <span class="landing-step-number" aria-hidden="true">3</span>
+              <h3>{{ flowSteps[2].title }}</h3>
+              <p>{{ flowSteps[2].text }}</p>
+              <div class="landing-mock">
+                @for (row of deliveredRows; track row.label) {
+                  <div class="landing-mock-row">
+                    <span>{{ row.label }}</span>
+                    <span class="landing-badge" [class.landing-badge--success]="row.tone === 'success'" [class.landing-badge--warning]="row.tone === 'warning'">
+                      <i class="fas" [class]="row.icon" aria-hidden="true"></i> {{ row.badge }}
+                    </span>
+                  </div>
+                }
+                <p class="landing-balance landing-balance--ok mb-0">Sin saldo</p>
+              </div>
+            </article>
+          </div>
+        </div>
+        <p class="landing-note text-center mt-3">Ejemplo con datos ficticios</p>
+      </div>
+    </section>
+
+    <!-- Tu resumen -->
+    <section class="landing-section">
+      <div class="container">
+        <h2 class="text-center">Tu resumen</h2>
+        <p class="landing-sub text-center">
+          Mira cuánto vendiste, cuánto gastaste y cuánto te queda, estimado.
+        </p>
+        <div class="landing-periods" role="group" aria-label="Periodo de ejemplo">
+          @for (label of periods; track label) {
+            <span class="landing-period" [class.landing-period--active]="label === selectedPeriod">{{ label }}</span>
+          }
+        </div>
+        <div class="row g-4 justify-content-center">
+          <div class="col-12 col-md-4">
+            <div class="landing-card h-100">
+              <span class="landing-stat-label">Ventas</span>
+              <strong class="landing-stat">Bs 280.50</strong>
+              <span class="landing-note">Total de los pedidos del periodo</span>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="landing-card h-100">
+              <span class="landing-stat-label">Gastos</span>
+              <strong class="landing-stat">Bs 270.00</strong>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="landing-card landing-card--profit h-100" data-testid="profit-card">
+              <span class="landing-stat-label">Ganancia estimada</span>
+              <strong class="landing-stat landing-stat--profit">Bs 10.50</strong>
+              <span class="landing-note">{{ profitNote }}</span>
+            </div>
+          </div>
+        </div>
+        <p class="landing-note text-center mt-3">Ejemplo con datos ficticios</p>
+      </div>
+    </section>
+
+    <!-- Cómo empezar -->
+    <section id="como-funciona" class="landing-section landing-section--white">
+      <div class="container">
+        <h2 class="text-center">Cómo empezar en tres pasos</h2>
+        <ol class="row g-4 landing-steps">
+          @for (step of getStarted; track step.title; let i = $index) {
+            <li class="col-12 col-md-4">
+              <div class="landing-card h-100">
+                <span class="landing-step-number" aria-hidden="true">{{ i + 1 }}</span>
+                <h3>{{ step.title }}</h3>
+                <p>{{ step.text }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+        <p class="text-center mt-4">
+          <a class="btn btn-primary landing-cta" [routerLink]="primaryCtaPath()" data-testid="cta-steps">
+            {{ primaryCtaLabel() }}
+          </a>
+        </p>
+      </div>
+    </section>
+
+    <!-- Planes (solo informativa) -->
+    <section id="planes" class="landing-section">
+      <div class="container">
+        <h2 class="text-center">Planes</h2>
+        <div class="landing-periods" role="group" aria-label="Facturación del plan Pro">
+          <button
+            type="button"
+            class="landing-period-btn"
+            data-testid="period-monthly"
+            [class.landing-period--active]="period() === 'monthly'"
+            [attr.aria-pressed]="period() === 'monthly'"
+            (click)="setPeriod('monthly')"
+          >
+            Mensual
+          </button>
+          <button
+            type="button"
+            class="landing-period-btn"
+            data-testid="period-annual"
+            [class.landing-period--active]="period() === 'annual'"
+            [attr.aria-pressed]="period() === 'annual'"
+            (click)="setPeriod('annual')"
+          >
+            Anual
+          </button>
+        </div>
+        <div class="row g-4 justify-content-center">
+          <div class="col-12 col-md-6 col-lg-5">
+            <article class="landing-card landing-plan h-100" data-testid="plan-free">
+              <h3>Gratis</h3>
+              <p class="landing-price">Bs 0</p>
+              <ul class="landing-checks">
+                @for (feature of freeFeatures; track feature) {
+                  <li><i class="fas fa-check-circle" aria-hidden="true"></i> {{ feature }}</li>
+                }
+              </ul>
+              <p class="landing-note">{{ freeLimitText }}</p>
+              <a
+                class="btn btn-primary w-100 landing-cta"
+                [routerLink]="primaryCtaPath()"
+                data-testid="cta-plan-free"
+              >
+                {{ primaryCtaLabel() }}
+              </a>
+            </article>
+          </div>
+          <div class="col-12 col-md-6 col-lg-5">
+            <article class="landing-card landing-plan h-100" data-testid="plan-pro">
+              <h3>Pro</h3>
+              @if (period() === 'annual') {
+                <p class="landing-price" data-testid="pro-price">Bs 350 <small>al año</small></p>
+                <p class="landing-note">(Bs 30 al mes)</p>
+              } @else {
+                <p class="landing-price" data-testid="pro-price">Bs 30 <small>al mes</small></p>
+              }
+              <ul class="landing-checks">
+                <li><i class="fas fa-check-circle" aria-hidden="true"></i> {{ proFeature }}</li>
+              </ul>
+              <p class="landing-disabled" data-testid="pro-payment-label">{{ proPaymentLabel }}</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Datos -->
+    <section class="landing-section landing-section--white">
+      <div class="container text-center">
+        <span class="landing-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
+        <h2>Tus datos, tu empresa</h2>
+        <p class="landing-sub">Cada empresa ve solo sus datos.</p>
+      </div>
+    </section>
+
+    <!-- Preguntas -->
+    <section id="preguntas" class="landing-section">
+      <div class="container landing-faq">
+        <h2 class="text-center">Preguntas frecuentes</h2>
+        <div ngbAccordion [closeOthers]="true">
+          @for (item of faq; track item.question; let first = $first) {
+            <div ngbAccordionItem [collapsed]="!first">
+              <h3 ngbAccordionHeader>
+                <button ngbAccordionButton>{{ item.question }}</button>
+              </h3>
+              <div ngbAccordionCollapse>
+                <div ngbAccordionBody>
+                  <ng-template>{{ item.answer }}</ng-template>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Cierre -->
+    <section class="landing-section landing-closing">
+      <div class="container text-center">
+        <h2>Empieza a ver tu negocio con claridad</h2>
+        <p>
+          <a
+            class="btn btn-primary btn-lg landing-cta"
+            [routerLink]="primaryCtaPath()"
+            data-testid="cta-closing"
+          >
+            {{ primaryCtaLabel() }}
+          </a>
+        </p>
+        @if (!isAuthenticated()) {
+          <a class="landing-login" [routerLink]="paths.login">Iniciar sesión</a>
+        }
+      </div>
+    </section>
+  </main>
+
+  <footer class="landing-footer">
+    <div class="container landing-footer-inner">
+      <img src="assets/images/main-logo.png" alt="PocketBiz" width="1000" height="218" />
+      @if (!isAuthenticated()) {
+        <a [routerLink]="paths.login">Iniciar sesión</a>
+      }
+    </div>
+  </footer>
+</div>

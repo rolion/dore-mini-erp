@@ -45,7 +45,7 @@ export class CustomerDetailComponent implements OnInit {
         error: (err: CustomerApiError) => {
           this.loading = false;
           this.toastr.error(err.message);
-          this.router.navigate(['/customers']);
+          this.router.navigate(['/pocketbiz/customers']);
         },
       });
   }

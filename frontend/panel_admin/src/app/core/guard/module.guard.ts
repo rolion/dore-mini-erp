@@ -1,10 +1,11 @@
 import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router, UrlTree } from '@angular/router';
 import { Observable, filter, map, of, take } from 'rxjs';
+import { APP_PATHS } from '../routing/app-paths';
 import { ModulesService } from '../service/modules.service';
 
 /** Destino cuando el módulo de la ruta no está habilitado: Catálogo es base y siempre está disponible. */
-export const MODULE_DISABLED_REDIRECT = '/catalog/products';
+export const MODULE_DISABLED_REDIRECT = APP_PATHS.catalog;
 
 /**
  * Deja pasar la ruta solo si su módulo (`data.module`) está habilitado para la empresa. Es una comodidad de

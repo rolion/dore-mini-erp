@@ -4,10 +4,10 @@
       <h5 class="page-title m-b-0">Pedido</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
-      <a routerLink="/dashboard/main">
+      <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item"><a routerLink="/sales/orders">Pedidos</a></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/sales/orders">Pedidos</a></li>
     <li class="breadcrumb-item">Detalle</li>
   </ul>
   <div class="section-body">
@@ -23,7 +23,7 @@
         <button type="button" class="btn btn-outline-danger" data-testid="cancel-action" [disabled]="busy"
           (click)="cancel()">Cancelar pedido</button>
         }
-        <a class="btn btn-light" routerLink="/sales/orders">Volver a pedidos</a>
+        <a class="btn btn-light" routerLink="/pocketbiz/sales/orders">Volver a pedidos</a>
       </div>
     </div>
 
@@ -96,7 +96,7 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4>Datos del pedido</h4>
         @if (o.editable) {
-        <a class="btn btn-sm btn-primary" data-testid="edit-link" [routerLink]="['/sales/orders', o.id, 'edit']">
+        <a class="btn btn-sm btn-primary" data-testid="edit-link" [routerLink]="['/pocketbiz/sales/orders', o.id, 'edit']">
           Editar datos</a>
         }
       </div>
@@ -105,7 +105,7 @@
           <dt class="col-sm-3">Cliente</dt>
           <dd class="col-sm-9" data-testid="customer">
             @if (o.customer; as customer) {
-            <a [routerLink]="['/customers', customer.id]">{{ customer.name }}</a>
+            <a [routerLink]="['/pocketbiz/customers', customer.id]">{{ customer.name }}</a>
             } @else {
             Sin cliente
             }

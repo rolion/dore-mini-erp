@@ -119,7 +119,7 @@ describe('OrderDetailComponent', () => {
       fixture = TestBed.createComponent(OrderDetailComponent);
       fixture.detectChanges();
       expect(toastr.error).toHaveBeenCalledWith('Pedido no encontrado.');
-      expect(navigate).toHaveBeenCalledWith(['/sales/orders']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders']);
     });
 
     it('shows a loading message until the order arrives', () => {
@@ -205,7 +205,7 @@ describe('OrderDetailComponent', () => {
   describe('data and amounts', () => {
     it('shows customer (linked), channel label, dates and notes (AC-17)', () => {
       const element = setup(makeOrder({ salesChannel: 'STORE', notes: 'Sin picante' }));
-      expect(q(element, 'customer')?.querySelector('a')?.getAttribute('href')).toBe('/customers/c-1');
+      expect(q(element, 'customer')?.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/customers/c-1');
       const text = element.textContent ?? '';
       expect(text).toContain('Venta directa');
       expect(text).toContain('01/10/2026');
@@ -260,7 +260,7 @@ describe('OrderDetailComponent', () => {
 
     it('links "Editar datos" only while the order is editable (AC-24)', () => {
       const editable = setup();
-      expect(q(editable, 'edit-link')?.getAttribute('href')).toBe('/sales/orders/o-1/edit');
+      expect(q(editable, 'edit-link')?.getAttribute('href')).toBe('/pocketbiz/sales/orders/o-1/edit');
       expect(q(setup(makeOrder({ editable: false })), 'edit-link')).toBeNull();
     });
   });

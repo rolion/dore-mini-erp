@@ -1,0 +1,134 @@
+@use 'landing-tokens' as *;
+
+// Secciones
+.landing-section {
+  padding: 3.5rem 0;
+
+  &--white {
+    background: $surface;
+  }
+}
+
+.landing-sub {
+  max-width: 640px;
+  margin: 0 auto 2rem;
+}
+
+.landing-recognition {
+  list-style: none;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  color: $muted;
+  font-size: 1.125rem;
+
+  li {
+    padding: 0.25rem 0;
+  }
+}
+
+.landing-card {
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &--profit {
+    background: $success-bg;
+    border-color: $success-text;
+  }
+}
+
+.landing-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #e6f4ff;
+  color: $primary-text;
+  margin-bottom: 0.75rem;
+}
+
+.landing-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: $primary;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.landing-steps {
+  list-style: none;
+  padding: 0;
+  margin-top: 1.5rem;
+}
+
+// Maquetas de estado
+.landing-mock {
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+}
+
+.landing-mock-label {
+  display: block;
+  font-size: 0.75rem;
+  color: $muted;
+}
+
+.landing-mock-field {
+  display: block;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  background: $surface;
+  border: 1px solid #868e96;
+  border-radius: 8px;
+}
+
+.landing-mock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.375rem 0;
+}
+
+.landing-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &--success {
+    background: $success-bg;
+    color: $success-text;
+  }
+
+  &--warning {
+    background: $warning-bg;
+    color: $warning-text;
+  }
+}
+
+.landing-balance {
+  margin-top: 0.5rem;
+  font-weight: 600;
+  color: $danger-text;
+
+  &--ok {
+    color: $success-text;
+  }
+}
