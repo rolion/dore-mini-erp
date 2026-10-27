@@ -1,6 +1,6 @@
 # TASK-configuracion-por-modulo-y-empresa: Administrar configuración por módulo y empresa (PB-CFG-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configuracion-por-modulo-y-empresa
@@ -12,6 +12,7 @@
 | 2026-10-27 | (nuevo) → INVESTIGATION | Task creado; `main` al día | delivery-start |
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nuevo modelo y API por empresa, historial, dependencia Sales→Modularity) | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario (ver Plan) | delivery-start |
+| 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -86,7 +87,13 @@ Las reglas de Ventas son fijas y no hay historial de cambios; el admin solo pued
 `docs/plans/PLAN-2026-10-27-configuracion-por-modulo-y-empresa.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/modularity/`): `domain/settings.py` (catálogo de 3 ajustes de Ventas con valor inicial, validación `choice`/`percent` con `Decimal`, todo o nada; INV-01, 02, 05, 08), modelos `CompanySettingModel`/`SettingChangeModel` y migración `0002_company_settings_and_history` (solo `CreateModel`), repositorios con `company_id` (bloqueo de la fila de configuración de la empresa en el guardado, EDGE-03), `application/settings_use_cases.py` (`GetModuleSettings`, `UpdateModuleSettings`, `ListSettingChanges`), `EnableModule`/`DisableModule` con actor e historial (AC-05, INV-07), vistas y URLs `api/settings/<modulo>/` y `.../history/` (API-01..03; AC-01..04, 06, 11), fachada `services.py::get_sales_settings`. **Ventas:** `Order.apply_discount(discount, max_percent)`, puerto `SalesSettingsReader`, adaptador `SalesSettingsAdapter` (si falla la lectura usa el 100 % inicial, EDGE-06) y `ApplyOrderDiscount` lo aplica (AC-07, INV-06). `test_boundaries.py` permite `sales → modularity.services` y comprueba que `modularity` no importa módulos de negocio ni `accounts`.
+**Frontend:** `features/settings/` con `ModuleSettingsComponent` (pestañas General/Historial, filas de ajuste, Guardar/Cancelar, errores por campo, aviso de salida; AC-09, AC-10, UI-02, UI-03, UI-05), `SettingsHistoryComponent` (filtros y paginación; UI-04), `SettingsApiService` y modelos; pestañas en `ModuleListComponent` (UI-06); `core/guard/unsaved-changes.guard.ts`; rutas `sales|purchases|inventory/settings` con `moduleGuard`; menú con submenús de Ventas, Compras e Inventario (`routes.json`, i18n es/en/de; UI-01); `SalesSettingsService` que precarga canal en el formulario de pedido y método en el registro de pago (AC-08).
+**Pantallas de referencia:** formulario `product-form` y lista de módulos/`category-list` (tabla Bootstrap simple apilada en móvil); componentes reutilizados: botones `btn-primary`/`btn-light`, `alert`, `ngb-pagination`, `ToastrService`.
+**Desviaciones del plan:** (1) pestañas con `nav-tabs` y `@if` en lugar de `ngbNav` (menos dependencia de imports; mismo aspecto y roles ARIA `tablist`/`tab`/`tabpanel`). (2) El campo de porcentaje es `input type="text" inputmode="decimal"` (para conservar el texto exacto y que el servidor valide decimales; el cliente compara numéricamente «100» = «100.00»). (3) El historial se vuelve a pedir al abrir su pestaña (no se usa `historyVersion`). (4) EDGE-03: el bloqueo de fila está implementado (`select_for_update` sobre `modularity_company_settings`) pero no hay test con hilos concurrentes; solo secuenciales. (5) Los specs existentes de `order-form`, `order-payments` y `order-detail` ahora inyectan un `SalesSettingsService` simulado.
+**Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 639 tests; todo OK salvo `modules.sales.tests.test_repository…test_item_order_is_preserved`, intermitente y preexistente (ya documentado en TASK-habilitar-modulos-por-empresa); `modules.sales` solo corre OK (237). Frontend: `npm run lint` OK, `npm run build` OK; Karma acotado (settings, sales, core, sidebar) 263/263 OK; suite completa 589 specs con 71 fallos, todos «should create» de pantallas demo preexistentes; `app.component.spec.ts` sigue sin compilar en `main` (se apartó temporalmente para correr Karma, no se modificó).
+**Entorno:** se copió `backend/.env` del checkout principal al worktree (con autorización del usuario; sin leerlo ni versionarlo), se creó `backend/.venv` con `requirements/dev.txt` (sin dependencias nuevas) y se enlazó `node_modules` del checkout principal.
+**Deuda técnica:** aviso de salida con `window.confirm`; sin test concurrente real de EDGE-03; la lectura de configuración en Ventas sigue la conexión de la petición (si la transacción falla, el `except` no restaura el estado); 71 specs demo rotos y `app.component.spec.ts`.
 
 ## Review
 _Pendiente_

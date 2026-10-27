@@ -1,13 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
+import { of } from 'rxjs';
 import { FieldErrors, Order, PaymentInput, todayIso } from '../../models/order';
+import { NO_SALES_DEFAULTS, SalesDefaults, SalesSettingsService } from '../../services/sales-settings.service';
 import { makeOrder, makePayment } from '../../testing/order-fixtures';
 import { OrderPaymentsComponent } from './order-payments.component';
 
 describe('OrderPaymentsComponent', () => {
   let fixture: ComponentFixture<OrderPaymentsComponent>;
   let component: OrderPaymentsComponent;
+  let defaults: SalesDefaults;
 
   function render(order: Order, busy = false, errors: FieldErrors = {}): HTMLElement {
     fixture = TestBed.createComponent(OrderPaymentsComponent);
@@ -25,7 +28,27 @@ describe('OrderPaymentsComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  beforeEach(() => TestBed.configureTestingModule({ imports: [OrderPaymentsComponent] }));
+  beforeEach(() => {
+    defaults = NO_SALES_DEFAULTS;
+    TestBed.configureTestingModule({
+      imports: [OrderPaymentsComponent],
+      providers: [{ provide: SalesSettingsService, useValue: { defaults: () => of(defaults) } }],
+    });
+  });
+
+  it('preloads the configured default payment method and keeps it after closing the form (AC-08)', () => {
+    defaults = { salesChannel: '', paymentMethod: 'QR' };
+    render(makeOrder());
+    expect(component.form.controls.paymentMethod.value).toBe('QR');
+    component.form.controls.paymentMethod.setValue('CARD');
+    component.close();
+    expect(component.form.controls.paymentMethod.value).toBe('QR');
+  });
+
+  it('uses cash when there is no default payment method (AC-08)', () => {
+    render(makeOrder());
+    expect(component.form.controls.paymentMethod.value).toBe('CASH');
+  });
 
   it('shows the empty state when there are no payments (AC-25)', () => {
     const element = render(makeOrder());

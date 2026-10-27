@@ -1,0 +1,64 @@
+<form class="row g-2 align-items-end m-4" [formGroup]="filters" (ngSubmit)="apply()">
+  <div class="col-md-3 col-sm-6">
+    <label class="form-label" for="history-date-from">Desde</label>
+    <input id="history-date-from" type="date" class="form-control" formControlName="dateFrom">
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <label class="form-label" for="history-date-to">Hasta</label>
+    <input id="history-date-to" type="date" class="form-control" formControlName="dateTo">
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <label class="form-label" for="history-setting">Ajuste</label>
+    <select id="history-setting" class="form-select" formControlName="setting">
+      <option value="">Todos</option>
+      @for (option of options; track option.key) {
+      <option [value]="option.key">{{ option.label }}</option>
+      }
+    </select>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <button type="submit" class="btn btn-primary" [disabled]="loading">Filtrar</button>
+    <button type="button" class="btn btn-light ms-2" [disabled]="loading" (click)="clear()">Limpiar</button>
+  </div>
+</form>
+
+@if (loading && !rows.length) {
+<p class="m-4">Cargando…</p>
+} @else if (errorMessage) {
+<div class="m-4">
+  <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+  <button type="button" class="btn btn-light" (click)="load()">Reintentar</button>
+</div>
+} @else if (!rows.length) {
+<p class="m-4 text-muted">Sin cambios registrados.</p>
+} @else {
+<div class="table-responsive">
+  <table class="table align-middle history-table">
+    <caption class="visually-hidden">Historial de cambios de configuración</caption>
+    <thead>
+      <tr>
+        <th scope="col">Fecha y hora</th>
+        <th scope="col">Usuario</th>
+        <th scope="col">Ajuste</th>
+        <th scope="col">Valor anterior</th>
+        <th scope="col">Valor nuevo</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows; track row.id) {
+      <tr>
+        <td data-label="Fecha y hora">{{ row.changedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+        <td data-label="Usuario">{{ row.changedBy }}</td>
+        <td data-label="Ajuste">{{ row.settingLabel }}</td>
+        <td data-label="Valor anterior">{{ row.oldValue }}</td>
+        <td data-label="Valor nuevo">{{ row.newValue }}</td>
+      </tr>
+      }
+    </tbody>
+  </table>
+</div>
+@if (count > pageSize) {
+<ngb-pagination class="d-flex justify-content-center" [collectionSize]="count" [pageSize]="pageSize" [page]="page"
+  [maxSize]="5" [boundaryLinks]="true" aria-label="Páginas del historial" (pageChange)="goTo($event)" />
+}
+}

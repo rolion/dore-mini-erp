@@ -4,6 +4,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { AppModule } from '../../../../core/models/module';
 import { ModulesService } from '../../../../core/service/modules.service';
+import { SettingsApiService } from '../../services/settings-api.service';
 import { ModuleListComponent } from './module-list.component';
 
 function mod(key: string, extra: Partial<AppModule> = {}): AppModule {
@@ -91,5 +92,19 @@ describe('ModuleListComponent', () => {
     fixture.detectChanges();
     expect(el().textContent).toContain('No se pudieron cargar los módulos.');
     expect(el().textContent).toContain('Reintentar');
+  });
+
+  it('offers General and Historial de cambios tabs; the history uses the modules scope (AC-05, AC-09, UI-06)', () => {
+    const api = jasmine.createSpyObj<SettingsApiService>('SettingsApiService', ['history']);
+    api.history.and.returnValue(of({ count: 0, results: [], settings: [] }));
+    TestBed.overrideProvider(SettingsApiService, { useValue: api });
+    setup([mod('sales')]);
+    expect(el().textContent).toContain('General');
+    expect(el().querySelector('table.modules-table')).not.toBeNull();
+    Array.from(el().querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Historial de cambios')?.click();
+    fixture.detectChanges();
+    expect(api.history).toHaveBeenCalledWith('modules', jasmine.objectContaining({ page: 1 }));
+    expect(el().querySelector('table.modules-table')).toBeNull();
+    expect(el().textContent).toContain('Sin cambios registrados.');
   });
 });

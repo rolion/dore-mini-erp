@@ -3,6 +3,7 @@ import { MainLayoutComponent } from './layout/app-layout/main-layout/main-layout
 import { AuthGuard } from './core/guard/auth.guard';
 import { AuthLayoutComponent } from './layout/app-layout/auth-layout/auth-layout.component';
 import { moduleGuard } from './core/guard/module.guard';
+import { unsavedChangesGuard } from './core/guard/unsaved-changes.guard';
 import { Page404Component } from './authentication/page404/page404.component';
 import { LEGACY_REDIRECTS } from './core/routing/legacy-redirects';
 
@@ -53,6 +54,16 @@ export const APP_ROUTE: Route[] = [
                     import('./features/sales/sales.routes').then((m) => m.SALES_ORDERS_ROUTE),
             },
             {
+                path: 'sales/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'sales', settingsModule: 'sales' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
+                    ),
+            },
+            {
                 path: 'expenses',
                 canActivate: [moduleGuard],
                 data: { module: 'expenses' },
@@ -82,6 +93,26 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () =>
                     import('./features/settings/pages/coming-soon/coming-soon.component').then(
                         (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'purchases/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'purchases', settingsModule: 'purchases' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
+                    ),
+            },
+            {
+                path: 'inventory/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'inventory', settingsModule: 'inventory' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
                     ),
             },
             {

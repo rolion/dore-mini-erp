@@ -126,6 +126,11 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - Selector de periodo arriba (`app-period-selector`), tarjetas de cifras con `app-report-card` y listas/tablas debajo; los textos de apoyo van en `<small class="text-muted">` y los vacíos dicen "Sin datos para este periodo."
 - Etiquetas de negocio exactas: **"Ganancia estimada"** (nunca "utilidad" o "ganancia real").
 
+### Formulario de configuración con pestañas (referencia: `features/settings/pages/module-settings`)
+- `.card` con `card-header` (`h4` «Configuración de <módulo>») y pestañas «General» / «Historial de cambios» (`nav nav-tabs`, `role="tablist"`).
+- General: una fila por ajuste con `label`, control, descripción del efecto (`small.text-muted`), «Valor predeterminado» con «Restablecer» y error junto al campo (`small.text-danger`). Pie: «Guardar cambios» (primario) y «Cancelar cambios» (`btn-light`), ambos deshabilitados sin cambios; aviso de salida con `unsavedChangesGuard` + `beforeunload`.
+- Historial (`app-settings-history`): filtros Desde/Hasta/Ajuste, tabla apilada en móvil, paginación `ngb-pagination`; vacío «Sin cambios registrados.».
+
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 
@@ -133,7 +138,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 - Sidebar: logo según estado (expandido/contraído), avatar con iniciales, nombre y apellido, nombre de la empresa. Ítems principales: Dashboard, Catálogo (Producto), Cliente, Pedidos, Gastos (Gastos, Categorías), Reportes (textos en `assets/i18n/es.json`).
 - Header: solo el menú de usuario (nombre, empresa y cerrar sesión). Sin búsqueda, mensajes ni notificaciones.
-- El menú es dinámico: cada ítem de `assets/data/routes.json` puede llevar `module` y solo se muestra si la empresa tiene ese módulo habilitado (Dashboard y Reportes → `reporting`). Al final hay «Configuración › Módulos» (`/settings/modules`, pantalla de lista con tabla Bootstrap simple y diálogo de confirmación) y, si están habilitados, «Compras» e «Inventario» (pantalla «Próximamente»).
+- El menú es dinámico: cada ítem de `assets/data/routes.json` puede llevar `module` y solo se muestra si la empresa tiene ese módulo habilitado (Dashboard y Reportes → `reporting`). Ventas, Compras e Inventario son submenús con su «Configuración» (`/sales/settings`, `/purchases/settings`, `/inventory/settings`). Al final hay «Configuración › Módulos» (`/settings/modules`, con pestañas General e Historial, pantalla de lista con tabla Bootstrap simple y diálogo de confirmación) y, si están habilitados, «Compras» e «Inventario» (pantalla «Próximamente»).
 - Rutas por módulo: `catalog/products`, `customers`, `sales/orders`, `expenses`, `reports`; cada una con `''`, `new`, `:id`, `:id/edit`.
 
 ## 7. Accesibilidad mínima

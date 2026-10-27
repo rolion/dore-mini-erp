@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   FieldErrors,
@@ -10,6 +11,7 @@ import {
   todayIso,
 } from '../../models/order';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { SalesSettingsService } from '../../services/sales-settings.service';
 
 /**
  * Pagos del pedido y formulario de registro en la misma tarjeta, para ver el saldo mientras se escribe el
@@ -31,6 +33,8 @@ export class OrderPaymentsComponent {
   readonly methods = PAYMENT_METHODS;
   readonly methodLabels = PAYMENT_METHOD_LABELS;
   readonly formOpen = signal(false);
+  /** Método sugerido por la configuración de Ventas; sin él, Efectivo como siempre. */
+  private defaultMethod: PaymentMethod = 'CASH';
   readonly form = inject(FormBuilder).nonNullable.group({
     amount: ['', Validators.required],
     paymentMethod: ['CASH' as PaymentMethod, Validators.required],
@@ -39,6 +43,17 @@ export class OrderPaymentsComponent {
   });
 
   constructor() {
+    inject(SalesSettingsService)
+      .defaults()
+      .pipe(takeUntilDestroyed())
+      .subscribe((defaults) => {
+        if (defaults.paymentMethod) {
+          this.defaultMethod = defaults.paymentMethod;
+          if (this.form.controls.paymentMethod.pristine) {
+            this.form.controls.paymentMethod.setValue(defaults.paymentMethod);
+          }
+        }
+      });
     // Un pago nuevo (o un pedido que ya no admite pagos) cierra y limpia el formulario.
     effect(() => {
       this.paymentCount();
@@ -57,7 +72,7 @@ export class OrderPaymentsComponent {
 
   close(): void {
     this.formOpen.set(false);
-    this.form.reset({ amount: '', paymentMethod: 'CASH', paymentDate: todayIso(), reference: '' });
+    this.form.reset({ amount: '', paymentMethod: this.defaultMethod, paymentDate: todayIso(), reference: '' });
   }
 
   submit(): void {

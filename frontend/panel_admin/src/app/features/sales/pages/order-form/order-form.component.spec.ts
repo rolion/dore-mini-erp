@@ -7,6 +7,7 @@ import { Page } from '../../../../shared/models/page';
 import { Customer, CustomerQuickCreateService, CustomersApiService } from '../../../customers';
 import { Order, OrderApiError, todayIso } from '../../models/order';
 import { OrdersApiService } from '../../services/orders-api.service';
+import { NO_SALES_DEFAULTS, SalesDefaults, SalesSettingsService } from '../../services/sales-settings.service';
 import { makeOrder } from '../../testing/order-fixtures';
 import { CUSTOMER_SEARCH_PAGE_SIZE } from '../../services/customer-options.service';
 import { NOT_EDITABLE_MESSAGE, OrderFormComponent } from './order-form.component';
@@ -35,6 +36,7 @@ describe('OrderFormComponent', () => {
   let quickCreate: jasmine.SpyObj<CustomerQuickCreateService>;
   let navigate: jasmine.Spy;
   const route = { snapshot: { paramMap: convertToParamMap({}) } };
+  let defaults: SalesDefaults;
 
   function setup(id: string | null = null): HTMLElement {
     route.snapshot.paramMap = convertToParamMap(id ? { id } : {});
@@ -54,6 +56,7 @@ describe('OrderFormComponent', () => {
     customersApi.list.and.returnValue(of(page([CUSTOMER])));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     quickCreate = jasmine.createSpyObj<CustomerQuickCreateService>('CustomerQuickCreateService', ['open']);
+    defaults = NO_SALES_DEFAULTS;
     TestBed.configureTestingModule({
       imports: [OrderFormComponent],
       providers: [
@@ -63,12 +66,28 @@ describe('OrderFormComponent', () => {
         { provide: ToastrService, useValue: toastr },
         { provide: CustomerQuickCreateService, useValue: quickCreate },
         { provide: ActivatedRoute, useValue: route },
+        { provide: SalesSettingsService, useValue: { defaults: () => of(defaults) } },
       ],
     });
     navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
   });
 
   describe('create', () => {
+    it('preloads the configured default channel in a new order without forcing it (AC-08)', () => {
+      defaults = { salesChannel: 'FAIR', paymentMethod: '' };
+      setup();
+      expect(component.form.controls.salesChannel.value).toBe('FAIR');
+      component.form.controls.salesChannel.setValue('STORE');
+      expect(component.form.controls.salesChannel.value).toBe('STORE');
+    });
+
+    it('does not preload the default channel when editing an order (AC-08)', () => {
+      defaults = { salesChannel: 'FAIR', paymentMethod: '' };
+      ordersApi.get.and.returnValue(of(makeOrder({ salesChannel: 'STORE' })));
+      setup('o-1');
+      expect(component.form.controls.salesChannel.value).toBe('STORE');
+    });
+
     it('starts with today as the order date, no customer and no channel (AC-24)', () => {
       setup();
       expect(component.isEdit).toBeFalse();

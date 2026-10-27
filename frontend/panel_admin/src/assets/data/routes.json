@@ -49,15 +49,38 @@
       "module": "customers"
     },
     {
-      "path": "/pocketbiz/sales/orders",
-      "title": "MENUITEMS.ORDERS.TEXT",
+      "path": "",
+      "title": "MENUITEMS.SALES.TEXT",
       "iconType": "feather",
       "icon": "shopping-cart",
-      "class": "",
+      "class": "menu-toggle",
       "groupTitle": false,
       "badge": "",
       "badgeClass": "",
-      "submenu": [],
+      "submenu": [
+        {
+          "path": "/pocketbiz/sales/orders",
+          "title": "MENUITEMS.SALES.LIST.ORDERS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/sales/settings",
+          "title": "MENUITEMS.SALES.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
       "module": "sales"
     },
     {
@@ -108,27 +131,73 @@
       "module": "reporting"
     },
     {
-      "path": "/pocketbiz/purchases",
+      "path": "",
       "title": "MENUITEMS.PURCHASES.TEXT",
       "iconType": "feather",
       "icon": "shopping-bag",
-      "class": "",
+      "class": "menu-toggle",
       "groupTitle": false,
       "badge": "",
       "badgeClass": "",
-      "submenu": [],
+      "submenu": [
+        {
+          "path": "/pocketbiz/purchases",
+          "title": "MENUITEMS.PURCHASES.LIST.HOME",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/purchases/settings",
+          "title": "MENUITEMS.PURCHASES.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
       "module": "purchases"
     },
     {
-      "path": "/pocketbiz/inventory",
+      "path": "",
       "title": "MENUITEMS.INVENTORY.TEXT",
       "iconType": "feather",
       "icon": "archive",
-      "class": "",
+      "class": "menu-toggle",
       "groupTitle": false,
       "badge": "",
       "badgeClass": "",
-      "submenu": [],
+      "submenu": [
+        {
+          "path": "/pocketbiz/inventory",
+          "title": "MENUITEMS.INVENTORY.LIST.HOME",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/inventory/settings",
+          "title": "MENUITEMS.INVENTORY.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
       "module": "inventory"
     },
     {
