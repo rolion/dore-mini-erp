@@ -1,0 +1,40 @@
+// En pantallas estrechas cada módulo pasa a ser un bloque apilado: así «Acción» queda a la vista sin scroll horizontal.
+@media (max-width: 767.98px) {
+  .modules-table {
+    // La plantilla fija un ancho mínimo para tablas; apilado no hace falta.
+    min-width: 0;
+    width: 100%;
+
+    thead {
+      // Se oculta solo visualmente: los lectores de pantalla siguen leyendo las columnas.
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+
+    tr,
+    td {
+      display: block;
+      width: 100%;
+    }
+
+    tr {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    }
+
+    td {
+      border: 0;
+      padding: 0.125rem 0;
+      height: auto !important;
+      line-height: 1.5;
+    }
+
+    td[data-label]::before {
+      content: attr(data-label) ': ';
+      font-weight: 600;
+    }
+  }
+}

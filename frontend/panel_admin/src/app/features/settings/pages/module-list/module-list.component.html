@@ -28,7 +28,7 @@
             </div>
             } @else {
             <div class="table-responsive">
-              <table class="table align-middle">
+              <table class="table align-middle modules-table">
                 <caption class="visually-hidden">Módulos de la empresa</caption>
                 <thead>
                   <tr>
@@ -49,7 +49,7 @@
                       <br><small class="text-danger">Requiere habilitar primero: {{ module.missingRequires.join(', ') }}</small>
                       }
                     </td>
-                    <td>
+                    <td data-label="Estado">
                       @if (module.isBase) {
                       <div class="badge-outline col-blue">Base</div>
                       } @else if (module.enabled) {
@@ -58,14 +58,14 @@
                       <div class="badge-outline col-red">Deshabilitado</div>
                       }
                     </td>
-                    <td>
+                    <td data-label="Requiere">
                       @for (link of module.requires; track link.key; let last = $last) {
                       <span [class.text-danger]="!link.enabled">{{ link.name }}</span>{{ last ? '' : ', ' }}
                       } @empty {
                       <span class="text-muted">—</span>
                       }
                     </td>
-                    <td>
+                    <td data-label="Integra con (opcional)">
                       @for (link of module.optional; track link.key; let last = $last) {
                       <span [class.text-muted]="!link.enabled">{{ link.name }} ({{ link.enabled ? 'disponible' : 'no habilitado' }})</span>{{ last ? '' : ', ' }}
                       } @empty {

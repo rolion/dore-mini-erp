@@ -12,6 +12,7 @@ import {
 @Component({
   selector: 'app-module-list',
   templateUrl: './module-list.component.html',
+  styleUrl: './module-list.component.scss',
   imports: [RouterLink],
 })
 export class ModuleListComponent implements OnInit {
