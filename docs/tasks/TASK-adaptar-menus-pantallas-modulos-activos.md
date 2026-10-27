@@ -15,6 +15,7 @@
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-27 | REVIEW → ENGINEERING → REVIEW | Quality Gate ciclo 1 FAIL (REV-01 High); corregido | delivery-publish / delivery-build |
 | 2026-10-27 | REVIEW → PUBLISH | Quality Gate ciclo 2 PASS (REV-02 Medium abierto); a la espera de aprobación humana | delivery-publish |
+| 2026-10-27 | PUBLISH → REVIEW → PUBLISH | REV-02 corregido a pedido del usuario; Quality Gate ciclo 3 PASS | delivery-build / delivery-publish |
 
 ## Investigación
 
@@ -102,11 +103,10 @@ No aplica según veredicto.
 **Ciclo 3 (corrección de REV-02 tras el PASS del ciclo 2, a pedido del usuario).** REV-02 (Medium, IMPLEMENTATION): en el detalle de pedido el nombre del cliente se muestra como texto, sin enlace, cuando Clientes está deshabilitado (`OrderDetailComponent.customersDisabled`); spec nueva y spec con el módulo falso. Verificación propia (no es el Quality Gate): lint y build OK; Karma completo excluyendo `app.component.spec.ts`: 71 fallos preexistentes de pantallas demo y 514 aciertos.
 
 ## Review
-**Ciclo 1: FAIL** (REV-01 High, IMPLEMENTATION). **Ciclo 2: PASS** (2026-10-27, subagente aislado).
-- Frontend: lint OK, build OK, Karma completo excluyendo `app.component.spec.ts`: 513 aciertos y 71 fallos «should create» de pantallas demo preexistentes, ajenos al diff. Regresión de backend: `modules.modularity` 51 tests OK.
-- REV-01 verificado resuelto (código y spec no vacua, con la rama habilitada cubierta). Barrido exhaustivo de llamadas a la API y enlaces entre módulos sin más casos de petición con 403.
+**Ciclo 1: FAIL** (REV-01 High, IMPLEMENTATION). **Ciclo 2: PASS** (REV-02 Medium abierto). **Ciclo 3: PASS** (2026-10-27, subagente aislado, tras corregir REV-02).
+- Frontend: lint OK, build OK, Karma completo excluyendo `app.component.spec.ts`: 514 aciertos y 71 fallos «should create» de pantallas demo preexistentes (71 de 71), ajenos al diff. Regresión de backend: `modules.modularity` 51 tests OK.
+- REV-01 y REV-02 verificados resueltos (código y specs no vacuos, ambas ramas cubiertas). Barrido de enlaces y llamadas a API entre módulos sin hallazgos nuevos.
 - AC-01..07 y las decisiones del usuario se cumplen.
-- **REV-02 (Medium, IMPLEMENTATION) abierto:** el detalle de pedido enlaza al cliente con `routerLink` sin comprobar módulos; con Clientes deshabilitado y un pedido que ya tenía cliente, pulsar el nombre lleva a «Módulo no habilitado». No hay petición ni 403 (lo resuelve el guard) y la pantalla permite volver. Se deja como limitación conocida; corrección sugerida: mostrar el nombre como texto (`*appIfModule` o `@else`).
 - No verificado: inspección en navegador (390 px / 1440 px, claro y oscuro) y `npm audit` (sin lockfile).
 
 ## Publicación
