@@ -16,6 +16,8 @@ def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
 
 
 def _customer_errors(customers: CustomerDirectory, customer_id: UUID) -> dict[str, list[str]]:
+    if not customers.is_available():
+        return {'customer_id': ['El módulo Clientes no está habilitado.']}
     customer = customers.get_customer_for_sale(customer_id)
     if customer is None:
         return {'customer_id': ['El cliente no existe.']}

@@ -12,6 +12,9 @@ from modules.customers import services as customer_services
 from modules.expenses import services as expense_services
 from modules.reporting.application import ports
 from modules.sales import services as sales_services
+from shared import module_gate
+
+CUSTOMERS_MODULE = 'customers'
 
 
 def _pending(pending: sales_services.PendingOrders) -> ports.PendingOrders:
@@ -68,8 +71,17 @@ class ExpensesReaderAdapter:
 class CustomerNamesAdapter:
     def __init__(self, company_id: UUID):
         self.company_id = company_id
+        self._available: bool | None = None
+
+    def is_available(self) -> bool:
+        """Clientes es una integración opcional: con el módulo deshabilitado no se consultan sus datos."""
+        if self._available is None:  # una consulta por adaptador (por petición)
+            self._available = module_gate.is_enabled(self.company_id, CUSTOMERS_MODULE)
+        return self._available
 
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]:
+        if not self.is_available():
+            return {}
         return customer_services.get_customer_names(self.company_id, customer_ids)
 
 

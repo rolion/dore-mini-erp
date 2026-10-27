@@ -8,6 +8,7 @@ import { PeriodSelectorComponent } from '../../components/period-selector/period
 import { ReportCardComponent } from '../../components/report-card/report-card.component';
 import { RemoteResource } from '../../models/remote';
 import { DEFAULT_SELECTION, ExpensesReport, PeriodSelection } from '../../models/report';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ReportingApiService } from '../../services/reporting-api.service';
 
 export const PRODUCT_AMOUNT_NOTE = 'Importes antes de descuentos del pedido.';
@@ -40,6 +41,12 @@ export class ReportsComponent {
   selection: PeriodSelection = DEFAULT_SELECTION;
 
   private api = inject(ReportingApiService);
+  private modules = inject(ModulesService);
+
+  /** Con Clientes deshabilitado no se muestra (ni se pide) el ranking de clientes. */
+  get customersDisabled(): boolean {
+    return this.modules.isDisabled('customers');
+  }
 
   readonly sales = new RemoteResource(() => this.api.sales(this.selection));
   readonly expenses = new RemoteResource(() => this.api.expenses(this.selection));

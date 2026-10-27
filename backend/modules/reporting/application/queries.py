@@ -110,7 +110,7 @@ class CustomersReport:
 @dataclass(frozen=True)
 class PendingRow:
     order: PendingOrder
-    customer_name: str
+    customer_name: str | None  # None cuando el módulo Clientes está deshabilitado
 
 
 @dataclass(frozen=True)
@@ -229,9 +229,11 @@ class GetPendingOrders:
         collection = self.sales.pending_collection(limit)
         ids = {o.customer_id for o in (*delivery.rows, *collection.rows) if o.customer_id is not None}
         names = self.customers.get_customer_names(ids)
+        available = self.customers.is_available()
 
         def build(pending) -> PendingList:
-            rows = [PendingRow(order=o, customer_name=names.get(o.customer_id, '')) for o in pending.rows]
+            rows = [PendingRow(order=o, customer_name=names.get(o.customer_id, '') if available else None)
+                    for o in pending.rows]
             return PendingList(count=pending.count, balance_total=pending.balance_total, rows=rows)
 
         return PendingReport(delivery=build(delivery), collection=build(collection))

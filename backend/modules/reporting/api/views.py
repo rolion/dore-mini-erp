@@ -27,6 +27,8 @@ def _run(use_case, **kwargs):
 class _CompanyReportView(APIView):
     """Reporte de solo lectura de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
 
+    required_modules = ('reporting',)
+
     def _company_id(self):
         return company_id_from(self.request)
 
@@ -80,6 +82,7 @@ class TopProductsView(_PeriodReportView):
 
 
 class TopCustomersView(_PeriodReportView):
+    required_modules = ('reporting', 'customers')
     present = staticmethod(serializers.customers_data)
 
     def build(self):
