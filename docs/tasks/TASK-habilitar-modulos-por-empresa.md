@@ -1,6 +1,6 @@
 # TASK-habilitar-modulos-por-empresa: Habilitar módulos por empresa (PB-MOD-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-habilitar-modulos-por-empresa
@@ -13,6 +13,7 @@
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nuevo modelo por empresa, contrato API y navegación) | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario (ver Plan) | delivery-start |
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-27 | REVIEW → PUBLISH | Quality Gate PASS (3 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -82,11 +83,15 @@ Todo usuario admin ve y usa todos los módulos; el menú es idéntico para todas
 **Frontend:** `core/service/modules.service.ts` (estado + API), `core/guard/module.guard.ts` (`data.module`), filtrado del menú en `sidebar.component.ts` con campo `module` en `routes.json`, rutas `settings/modules`, `purchases`, `inventory`, i18n es/en/de, `features/settings/` con `ModuleListComponent`, `ModuleConfirmDialogComponent` y `ComingSoonComponent`. AC-04/05/07, UI-01..04, EDGE-04/05.
 **Referencias de diseño:** lista basada en `category-list` (tabla Bootstrap simple, desviación declarada en el DDR), diálogo según `category-dialog`; badges `badge-outline`, botones `btn-primary`/`btn-warning`.
 **Desviaciones:** `ModulesService` y el modelo viven en `core/` (no en `features/settings/`) porque los consumen el menú, el guard y `AuthService` (que limpia el estado al cerrar sesión). El estado `initialized` se guarda en una segunda tabla `modularity_company_settings` (prevista en el ADR).
-**Verificación propia (no es el Quality Gate):** backend `test_domain`, `test_boundaries` y `test_guards` pasan (19 tests). Los tests de integración `modularity/tests/test_api.py` no se pudieron ejecutar en este worktree porque no hay `backend/.env` ni credenciales de PostgreSQL (copiar el `.env` del checkout principal fue denegado por seguridad). Frontend: `ng lint` y `ng build` OK; Karma: los specs nuevos y los de sidebar/core pasan; fallan 71 specs «should create» de pantallas demo de la plantilla (sin proveedor `ActivatedRoute`), y `app.component.spec.ts` no compila en `main` (`title` inexistente), ambos preexistentes y ajenos a esta tarea.
+**Verificación propia (no es el Quality Gate):** backend `test_domain`, `test_boundaries` y `test_guards` pasan (19 tests). Los tests de integración `modularity/tests/test_api.py` no corrieron en esa primera pasada por falta de `backend/.env`; tras la autorización del usuario se copió el `.env` y corrieron en el Quality Gate (ver Review). Frontend: `ng lint` y `ng build` OK; Karma: los specs nuevos y los de sidebar/core pasan; fallan 71 specs «should create» de pantallas demo de la plantilla (sin proveedor `ActivatedRoute`), y `app.component.spec.ts` no compila en `main` (`title` inexistente), ambos preexistentes y ajenos a esta tarea.
 **Deuda técnica:** los 71 specs demo rotos y `app.component.spec.ts`; bloqueo 403 por módulo en la API (PB-MOD-004).
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-10-27, subagente aislado).
+- Backend: `modularity` 22 tests OK; suite completa 593 tests OK en 2 corridas del gate (una corrida previa del implementador mostró fallas intermitentes en `modules.sales.tests.test_repository`: orden de items/pagos y `updated_at` iguales; el diff no toca ese código → preexistente, limitación conocida). bandit sin hallazgos.
+- Frontend: `npm run lint` OK, `npm run build` OK, Karma acotado 25/25 OK; suite completa 71 fallos preexistentes (demo «should create») y `app.component.spec.ts` no compila en `main`.
+- No ejecutado: ruff/flake8/mypy (no instalados), `npm audit` (ENOLOCK, sin lockfile), inspección visual en navegador (móvil, oscuro) y prueba manual con dos empresas.
+- Hallazgos Low abiertos: [REV-01](../reviews/REV-2026-10-27-habilitar-modulos-por-empresa-01.md) (doble GET en carga en frío), [REV-02](../reviews/REV-2026-10-27-habilitar-modulos-por-empresa-02.md) (EDGE-03 sin test de concurrencia), [REV-03](../reviews/REV-2026-10-27-habilitar-modulos-por-empresa-03.md) (redirección post-login con Reportes deshabilitado, texto «Afectados»).
 
 ## Publicación
-_Pendiente_
+PR #15 listo para aprobación humana; no se mergea. Cambio sensible: **base de datos** (migración `modularity/0001_initial`, solo esquema) y **autorización** (módulo por empresa, ADR-habilitar-modulos-por-empresa-modelo-y-contrato).
