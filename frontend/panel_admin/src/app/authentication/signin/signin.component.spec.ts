@@ -63,7 +63,7 @@ describe('SigninComponent', () => {
     component.onSubmit();
     expect(auth.login).toHaveBeenCalledWith('ana', 'secret');
     expect(router.navigate).toHaveBeenCalledWith([DEFAULT_ROUTE_AFTER_LOGIN]);
-    expect(DEFAULT_ROUTE_AFTER_LOGIN).toBe('/dashboard/main');
+    expect(DEFAULT_ROUTE_AFTER_LOGIN).toBe('/pocketbiz/dashboard/main');
   });
 
   it('shows the error and does not navigate on invalid credentials (AC-04)', () => {

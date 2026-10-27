@@ -23,7 +23,7 @@ describe('ProductDetailComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'catalog/products/:id', component: ProductDetailComponent }]),
+        provideRouter([{ path: 'pocketbiz/catalog/products/:id', component: ProductDetailComponent }]),
         { provide: ProductsApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
       ],
@@ -33,7 +33,7 @@ describe('ProductDetailComponent', () => {
 
   async function open(id = 'p-1') {
     const harness = await RouterTestingHarness.create();
-    const component = await harness.navigateByUrl(`/catalog/products/${id}`, ProductDetailComponent);
+    const component = await harness.navigateByUrl(`/pocketbiz/catalog/products/${id}`, ProductDetailComponent);
     harness.detectChanges();
     return { harness, component, el: harness.routeNativeElement as HTMLElement };
   }
@@ -58,8 +58,8 @@ describe('ProductDetailComponent', () => {
     const { el } = await open();
 
     const hrefs = Array.from(el.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toContain('/catalog/products/p-1/edit');
-    expect(hrefs).toContain('/catalog/products');
+    expect(hrefs).toContain('/pocketbiz/catalog/products/p-1/edit');
+    expect(hrefs).toContain('/pocketbiz/catalog/products');
   });
 
   it('shows a placeholder when there is no description (AC-13)', async () => {
@@ -73,7 +73,7 @@ describe('ProductDetailComponent', () => {
     await open('zzz');
 
     expect(toastr.error).toHaveBeenCalledWith('Producto no encontrado.');
-    expect(navigate).toHaveBeenCalledWith(['/catalog/products']);
+    expect(navigate).toHaveBeenCalledWith(['/pocketbiz/catalog/products']);
   });
 
   it('deactivates after confirmation and updates the badge and button (AC-11)', async () => {

@@ -21,7 +21,7 @@
         <tbody>
           @for (order of orders(); track order.id) {
           <tr>
-            <td><a [routerLink]="['/sales/orders', order.id]">{{ order.date | date: 'dd/MM/yyyy' }}</a></td>
+            <td><a [routerLink]="['/pocketbiz/sales/orders', order.id]">{{ order.date | date: 'dd/MM/yyyy' }}</a></td>
             <td>Bs {{ order.total }}</td>
             <td>{{ statusLabel(order.status) }}</td>
             <td>{{ paymentLabel(order.paymentStatus) }}</td>

@@ -5,9 +5,10 @@ import { NonNullableFormBuilder, Validators, ReactiveFormsModule } from '@angula
 import { FeatherModule } from 'angular-feather';
 import { finalize } from 'rxjs';
 import { AuthService } from '@core';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 export const REQUIRED_FIELDS_MESSAGE = 'Usuario y contraseña son obligatorios.';
-export const DEFAULT_ROUTE_AFTER_LOGIN = '/dashboard/main';
+export const DEFAULT_ROUTE_AFTER_LOGIN = APP_PATHS.dashboard;
 
 @Component({
     selector: 'app-signin',

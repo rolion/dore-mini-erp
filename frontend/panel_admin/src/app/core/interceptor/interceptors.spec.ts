@@ -67,6 +67,6 @@ describe('HTTP interceptors', () => {
     http.get('/api/ventas/').subscribe({ error: () => undefined });
     ctrl.expectOne('/api/ventas/').flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(auth.isAuthenticated).toBeFalse();
-    expect(router.navigate).toHaveBeenCalledWith(['/authentication/signin']);
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/login']);
   });
 });

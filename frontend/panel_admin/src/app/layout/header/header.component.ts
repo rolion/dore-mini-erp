@@ -14,6 +14,7 @@ import { AuthService, InConfiguration, LanguageService, LocalStorageService, Rig
 import { ConfigService } from '@config/config.service';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { userFullName, userInitials } from '../../shared/models/user-profile';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
 
 @Component({
@@ -175,7 +176,7 @@ export class HeaderComponent implements OnInit, AfterViewInit {
   logout() {
     this.authService.logout().subscribe((res) => {
       if (!res.success) {
-        this.router.navigate(['/authentication/signin']);
+        this.router.navigate([APP_PATHS.login]);
       }
     });
   }

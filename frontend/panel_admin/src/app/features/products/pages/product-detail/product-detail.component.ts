@@ -35,7 +35,7 @@ export class ProductDetailComponent implements OnInit {
         error: (err: ProductApiError) => {
           this.loading = false;
           this.toastr.error(err.message);
-          this.router.navigate(['/catalog/products']);
+          this.router.navigate(['/pocketbiz/catalog/products']);
         },
       });
   }

@@ -58,7 +58,7 @@ export class ProductFormComponent implements OnInit {
           error: (err: ProductApiError) => {
             this.loading = false;
             this.toastr.error(err.message);
-            this.router.navigate(['/catalog/products']);
+            this.router.navigate(['/pocketbiz/catalog/products']);
           },
         });
     }
@@ -86,7 +86,7 @@ export class ProductFormComponent implements OnInit {
       next: (product) => {
         this.saving = false;
         this.toastr.success(this.isEdit ? 'Producto actualizado' : 'Producto creado');
-        this.router.navigate(this.isEdit ? ['/catalog/products', product.id] : ['/catalog/products']);
+        this.router.navigate(this.isEdit ? ['/pocketbiz/catalog/products', product.id] : ['/pocketbiz/catalog/products']);
       },
       error: (err: ProductApiError) => {
         this.saving = false;
