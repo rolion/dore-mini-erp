@@ -1,0 +1,125 @@
+# PocketBiz (dore-mini-erp): módulos implementados
+
+Documento para Product Management. Describe qué hace hoy el sistema, módulo por módulo, en lenguaje de negocio. Los detalles técnicos están en `docs/architecture/ddd.md`, `docs/adr/` y `docs/tasks/`.
+
+**Estado al 2026-10-27:** los 8 tasks del MVP y el de branding/perfil están publicados y fusionados en `main` (PR #2 a #12).
+
+## 1. Qué es el producto
+
+Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, venta directa). Cubre el ciclo completo: **catálogo → clientes → pedido → entrega → cobro → gastos → reportes**.
+
+- Cada persona se registra y crea su **empresa**. Solo ve los datos de su empresa.
+- Interfaz web (panel Angular, marca PocketBiz) sobre una API Django/PostgreSQL.
+
+## 2. Resumen de módulos
+
+| Módulo | Qué resuelve | Menú / ruta | Estado |
+|---|---|---|---|
+| Acceso y empresas | Registro, login, logout, aislamiento por empresa | `/authentication/signin`, `/signup` | Listo |
+| Catálogo | Productos y precios | `catalog/products` | Listo |
+| Clientes | Agenda de clientes e historial de compras | `customers` | Listo |
+| Ventas | Pedidos, entrega y cobros (pagos parciales) | `sales/orders` | Listo |
+| Gastos | Registro de gastos y categorías | `expenses` | Listo |
+| Reportes | Dashboard y reportes de ventas/gastos | `dashboard`, `reports` | Listo |
+| Marca y perfil | Logos PocketBiz, avatar con iniciales, menú de usuario | Transversal | Listo |
+
+## 3. Detalle por módulo
+
+### 3.1 Acceso y empresas
+- **Registro público**: formulario de sign-up con nombre de empresa obligatorio. Crea la empresa y deja a la persona como **administrador**.
+- **Regla de negocio**: un nombre de empresa ya existente se rechaza. Los usuarios adicionales los agrega el admin (hoy desde Django admin; no hay pantalla propia).
+- **Login/logout** con usuario y contraseña. Credenciales inválidas muestran error y no dejan pasar.
+- **Aislamiento**: cada dato de negocio pertenece a una empresa y solo es visible para sus usuarios. La empresa sale de la sesión, nunca de lo que envía el navegador.
+- **Rol**: hoy solo existe `admin`, con acceso total a los datos de su empresa.
+- El registro público se puede apagar con una variable de configuración (`REGISTRATION_ENABLED`).
+- Un usuario creado por consola (`createsuperuser`) no tiene empresa: entra a Django admin, pero la API de negocio le responde 403 hasta que se le asigne una.
+
+### 3.2 Catálogo (productos)
+- Crear, editar, consultar y listar productos (nombre obligatorio, precio ≥ 0, descripción opcional).
+- Activar / desactivar: un producto inactivo no se puede agregar a pedidos nuevos, pero sigue visible en ventas y reportes históricos.
+- Lista con filtro activo/inactivo y búsqueda por nombre.
+- Editar un producto **no altera pedidos anteriores**: estos guardan una copia (snapshot) del nombre y precio.
+
+### 3.3 Clientes
+- Crear y editar clientes (nombre obligatorio; teléfono, correo y notas opcionales). También se pueden crear **al vuelo desde un pedido**.
+- Búsqueda rápida por nombre y teléfono.
+- **Detección de duplicados**: avisa si el teléfono ya existe (se normaliza con código de país, por defecto Bolivia +591) y pide confirmación.
+- **Historial de compras** en el perfil (fecha, total, estado de cada pedido).
+- Desactivar en lugar de borrar; los pedidos históricos se conservan. La lista muestra solo activos por defecto.
+
+### 3.4 Ventas (pedidos)
+Es el núcleo del sistema.
+
+- **Crear pedido**: cliente opcional, ítems de productos activos, canal de venta, fecha de pedido, fecha de entrega prevista, notas.
+- **Canales**: WhatsApp, Facebook, Instagram, venta directa, feria, otro.
+- **Ítems**: agregar, cambiar cantidad (> 0) y quitar mientras el pedido sea editable. Un pedido necesita al menos un ítem para confirmarse. Se permite precio 0 en ítems (decisión confirmada).
+- **Importes**: subtotal y total se calculan solos. Hay descuento explícito que no puede superar el subtotal. Nadie edita el total a mano.
+- **Estado de entrega** (logístico): `Nuevo → En preparación → Listo → Entregado`, o `Cancelado`. No se permiten saltos inválidos; un cancelado no se entrega. Cancelar exige motivo.
+- **Pagos**: uno o varios por pedido, con monto > 0, método (efectivo, QR, transferencia, tarjeta, otro) y fecha.
+- **Estado de pago**: `Pendiente / Parcial / Pagado` (existe `Reembolsado` en el modelo), calculado a partir de los pagos. Se muestra el saldo pendiente.
+- **Entrega y pago son independientes**: se puede estar "entregado y por cobrar" o "pagado y por entregar".
+- **Lista** con filtros por estado, estado de pago, fecha, cliente y canal. **Detalle** con ítems, importes, estados y pagos.
+
+### 3.5 Gastos
+- **Categorías**: crear, editar, activar/desactivar. Una categoría inactiva no se ofrece para gastos nuevos; los gastos históricos la conservan.
+- **Gastos**: descripción, monto > 0, categoría, fecha, método de pago (mismos que en ventas), proveedor y notas opcionales. Se pueden editar.
+- **Anulación**: lógica, irreversible y sin motivo. Un gasto anulado no suma en reportes. No hay borrado físico.
+- Lista filtrable por rango de fechas y categoría.
+
+### 3.6 Reportes y dashboard
+Solo lectura: consulta Ventas y Gastos, no modifica nada. El periodo es seleccionable (día, semana, mes o rango).
+
+| Reporte | Contenido |
+|---|---|
+| Dashboard | Ventas, gastos, **ganancia estimada**, cantidad de pedidos, pendientes de entrega y de cobro |
+| Ventas | Total y cantidad de pedidos, ticket promedio |
+| Gastos | Total y desglose por categoría (la suma cuadra con el total) |
+| Ventas por canal | Agrupado por canal de venta |
+| Productos más vendidos | Por unidades e importe |
+| Clientes con mayor compra | Por total comprado y número de pedidos |
+| Pendientes | Listas de pedidos por entregar y por cobrar |
+
+**Definiciones que el PM debe conocer** (decididas con el usuario el 2026-10-09):
+- *Ventas/ingresos* = suma del total de pedidos **no cancelados**, por **fecha de pedido** (base devengada, no caja). Un pedido entregado pero impago cuenta como venta.
+- *Ganancia estimada* = ventas − gastos registrados. No incluye costo de producción; la etiqueta lo deja claro.
+- Los pagos de pedidos cancelados se ignoran en el MVP.
+
+### 3.7 Marca y perfil (transversal)
+- Marca **PocketBiz**: logos en login y menú lateral (logo reducido al contraer), favicon, título de pestaña, color principal, fuente Inter.
+- Avatar con **iniciales** (no se guardan fotos), nombre y apellido del usuario y nombre de la empresa en el menú lateral.
+- Menú superior simplificado: se quitó búsqueda, mensajes y notificaciones. El menú de usuario muestra nombre, empresa y cerrar sesión.
+
+## 4. Fuera de alcance / limitaciones conocidas
+
+- Sin inventario ni stock, producción ni costeo de productos.
+- Sin gestión de usuarios ni roles adicionales desde la interfaz (solo `admin`; alta de usuarios por Django admin).
+- Sin reembolsos: el estado "Reembolsado" existe pero no hay flujo que lo use.
+- Sin notificaciones ni mensajería (los iconos se quitaron del header).
+- Sin exportación de reportes ni facturación fiscal.
+- Cancelar un pedido conserva sus pagos pero no genera devolución.
+- Las pantallas de plantilla sobrantes (calendario, tablas avanzadas, etc.) siguen en el código pero no forman parte del producto.
+- La suite de specs del frontend tuvo 71 fallos preexistentes de la plantilla al publicar el registro (task del 2026-10-12); conviene confirmar su estado actual.
+
+## 5. Dependencias entre módulos
+
+```
+Acceso/Empresa ──► (todos los datos llevan empresa)
+Catálogo ─┐
+Clientes ─┼──► Ventas ──► Reportes ◄── Gastos
+```
+
+Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes lee Ventas y Gastos; ningún módulo toca la base de datos de otro.
+
+## 6. Referencias
+
+| Módulo | Task (en `docs/tasks/`) | PR |
+|---|---|---|
+| Backend base | `TASK-inicializar-backend-django` | #2 |
+| Login | `TASK-frontend-login-backend` | #4 |
+| Catálogo | `TASK-catalogo-productos-mvp` | #5 |
+| Clientes | `TASK-clientes-mvp` | #6 |
+| Ventas | `TASK-ciclo-pedido-entrega-cobro` | #7 |
+| Gastos y Reportes | `TASK-gastos-reporting-mvp` | #8 |
+| Marca | `TASK-pocketbiz-branding-logos` | #9 |
+| Registro y empresas | `TASK-registro-usuarios-empresa-multitenant` | #10 |
+| Perfil y menús | `TASK-perfil-usuario-menus-lateral-superior` | #12 |
