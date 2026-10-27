@@ -59,6 +59,19 @@ class DefaultPermissionTests(SimpleTestCase):
                 continue
             view_class = getattr(callback, 'view_class', None) or getattr(callback, 'cls', None)
             permissions = [p.__name__ for p in getattr(view_class, 'permission_classes', [])]
-            if permissions != ['CompanyAdminPermission']:
+            if permissions != ['CompanyModulePermission']:
                 offenders.append(f'{route}: {permissions}')
+        self.assertEqual(offenders, [])
+
+    def test_every_api_view_declares_known_required_modules(self):  # PB-MOD-002 AC-09, INV-02
+        from modules.modularity.domain.modules import BY_KEY
+
+        offenders = []
+        for route, callback in iter_patterns(get_resolver().url_patterns):
+            if not route.startswith('api/') or route.startswith(PUBLIC_PREFIXES):
+                continue
+            view_class = getattr(callback, 'view_class', None) or getattr(callback, 'cls', None)
+            required = getattr(view_class, 'required_modules', None)
+            if not isinstance(required, tuple) or any(key not in BY_KEY for key in required):
+                offenders.append(f'{route}: {required!r}')
         self.assertEqual(offenders, [])

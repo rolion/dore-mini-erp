@@ -740,7 +740,8 @@ class ListTests(SalesApiTestCase):
         self.assertEqual(self.client.get(f'{LIST_URL}?page=9').status_code, 404)
 
     def test_list_does_not_query_per_row(self):  # NFR rendimiento
-        with self.assertNumQueries(5):  # token con usuario + empresa + count + filas + nombres de cliente
+        # token con usuario + empresa + módulos (permiso) + count + filas + módulos (Clientes) + nombres de cliente
+        with self.assertNumQueries(7):
             self.client.get(LIST_URL)
 
 

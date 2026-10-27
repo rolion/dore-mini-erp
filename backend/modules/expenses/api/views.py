@@ -107,6 +107,7 @@ def _parse_active(raw: str | None) -> bool | None:
 
 
 class ExpenseListCreateView(APIView):
+    required_modules = ('expenses',)
     def get(self, request):
         filters = parse_expense_filters(request.query_params)
         repository = _expenses(request)
@@ -126,6 +127,7 @@ class ExpenseListCreateView(APIView):
 
 
 class ExpenseDetailView(APIView):
+    required_modules = ('expenses',)
     # Sin DELETE: los gastos se anulan, no se borran (la ausencia del método da 405).
 
     def get(self, request, expense_id: str):
@@ -141,6 +143,7 @@ class ExpenseDetailView(APIView):
 
 
 class ExpenseVoidView(APIView):
+    required_modules = ('expenses',)
     def post(self, request, expense_id: str):
         use_case = VoidExpense(_expenses(request), SystemClock())
         expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND))
@@ -148,6 +151,7 @@ class ExpenseVoidView(APIView):
 
 
 class CategoryListCreateView(APIView):
+    required_modules = ('expenses',)
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
@@ -164,6 +168,7 @@ class CategoryListCreateView(APIView):
 
 
 class CategoryDetailView(APIView):
+    required_modules = ('expenses',)
     def get(self, request, category_id: str):
         category = _run(GetExpenseCategory(_categories(request)), mutates=False,
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
@@ -177,6 +182,7 @@ class CategoryDetailView(APIView):
 
 
 class CategoryActivateView(APIView):
+    required_modules = ('expenses',)
     def post(self, request, category_id: str):
         category = _run(ActivateExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
@@ -184,6 +190,7 @@ class CategoryActivateView(APIView):
 
 
 class CategoryDeactivateView(APIView):
+    required_modules = ('expenses',)
     def post(self, request, category_id: str):
         category = _run(DeactivateExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))

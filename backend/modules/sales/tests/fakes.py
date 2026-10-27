@@ -57,6 +57,9 @@ class FakeCustomers:
         self.items[customer.id] = customer
         return customer
 
+    def is_available(self):
+        return True
+
     def get_customer_for_sale(self, customer_id):
         return self.items.get(customer_id)
 

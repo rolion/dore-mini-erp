@@ -128,3 +128,11 @@ class PendingOrdersTests(SimpleTestCase):
         self.assertEqual(report.collection.rows[0].customer_name, 'Ana')
         self.assertEqual(report.delivery.rows[0].customer_name, '')
         self.assertIn(('pending_delivery', 10), sales.calls)
+
+    def test_customer_name_is_none_when_customers_is_disabled(self):  # PB-MOD-002 AC-08
+        ana = uuid4()
+        sales = FakeSales()
+        sales.delivery = PendingOrders(count=1, balance_total=D('0.00'), rows=[pending_order(customer_id=ana)])
+        sales.collection = PendingOrders(count=0, balance_total=D('0.00'), rows=[])
+        report = queries.GetPendingOrders(sales, FakeCustomers({ana: 'Ana'}, available=False)).execute()
+        self.assertIsNone(report.delivery.rows[0].customer_name)

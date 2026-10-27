@@ -90,6 +90,8 @@ class ExpensesReader(Protocol):
 
 
 class CustomerNames(Protocol):
+    def is_available(self) -> bool: ...
+
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]: ...
 
 

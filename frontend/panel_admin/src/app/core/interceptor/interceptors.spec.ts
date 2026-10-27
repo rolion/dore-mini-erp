@@ -62,6 +62,27 @@ describe('HTTP interceptors', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
+  it('a 403 module_disabled refreshes the modules and shows the disabled screen (AC-10)', () => {
+    logIn();
+    let failed = false;
+    http.get('/api/customers/').subscribe({ error: () => (failed = true) });
+    ctrl.expectOne('/api/customers/').flush(
+      { detail: 'Módulo no habilitado', code: 'module_disabled', module: 'customers' },
+      { status: 403, statusText: 'Forbidden' }
+    );
+    ctrl.expectOne('/api/modules/').flush([]);
+    expect(failed).toBeTrue();
+    expect(auth.isAuthenticated).toBeTrue();
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/module-disabled'], { queryParams: { module: 'customers' } });
+  });
+
+  it('any other 403 is only propagated', () => {
+    logIn();
+    http.get('/api/customers/').subscribe({ error: () => undefined });
+    ctrl.expectOne('/api/customers/').flush({ detail: 'x' }, { status: 403, statusText: 'Forbidden' });
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
   it('a 401 elsewhere clears the session and goes to signin (EDGE-03)', () => {
     logIn();
     http.get('/api/ventas/').subscribe({ error: () => undefined });

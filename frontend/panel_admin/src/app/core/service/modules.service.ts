@@ -26,6 +26,12 @@ export class ModulesService {
     return this.enabledSubject.value;
   }
 
+  /** Verdadero solo cuando ya se cargaron los módulos y el indicado no está habilitado (sin datos: no se asume). */
+  isDisabled(key: string): boolean {
+    const keys = this.enabledSubject.value;
+    return keys !== null && !keys.has(key);
+  }
+
   /**
    * Consulta los módulos de la empresa; ante un error deja solo los base y re-emite el error. Las llamadas
    * simultáneas (guard y menú en una carga en frío) comparten una sola petición.

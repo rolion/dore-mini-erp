@@ -66,8 +66,12 @@ class FakeExpenses:
 
 
 class FakeCustomers:
-    def __init__(self, names=None):
+    def __init__(self, names=None, available=True):
         self.names = names or {}
+        self.available = available
+
+    def is_available(self):
+        return self.available
 
     def get_customer_names(self, ids):
         return {i: self.names[i] for i in ids if i in self.names}

@@ -85,7 +85,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'modules.accounts.api.permissions.CompanyAdminPermission',
+        'config.permissions.CompanyModulePermission',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',

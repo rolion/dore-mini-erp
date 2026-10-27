@@ -62,7 +62,7 @@ class _CustomerMixin(serializers.Serializer):
         return order_code(obj.id)
 
     def get_customer(self, obj):
-        if obj.customer_id is None:
+        if obj.customer_id is None or not self.context.get('customers_available', True):
             return None
         name = self.context.get('customer_names', {}).get(obj.customer_id, '')
         return {'id': obj.customer_id, 'name': name}
