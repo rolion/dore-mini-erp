@@ -1,6 +1,6 @@
 # TASK-bloquear-api-modulos-deshabilitados: Proteger las operaciones de módulos deshabilitados (PB-MOD-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-bloquear-api-modulos-deshabilitados (creada desde `task/TASK-habilitar-modulos-por-empresa`, PR #15 sin mergear)
@@ -12,6 +12,7 @@
 | 2026-10-27 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: autorización transversal en toda la API de negocio | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario | delivery-start |
+| 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,31 @@ Ver `docs/adr/ADR-bloquear-api-modulos-deshabilitados-permiso-por-modulo.md`.
 `docs/plans/PLAN-2026-10-27-bloquear-api-modulos-deshabilitados.md` (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Permiso por defecto `CompanyModulePermission` (`backend/config/permissions.py`) que, tras autenticación/empresa/rol, exige los módulos declarados en `required_modules` de cada vista (fail-closed si falta) y responde 403 `{detail, code: 'module_disabled', module}`. Puerto neutro `backend/shared/module_gate.py`, registrado por `modularity` en `AppConfig.ready()` (`infrastructure/django/gate.py`). Ventas y Reportes consultan el puerto para la integración opcional con Clientes. Angular: pantalla `/module-disabled`, `moduleGuard` e interceptor 403.
+
+**Cobertura.**
+- AC-01, AC-06, INV-02: `required_modules` en las 32 vistas de negocio y en las de `modularity`; `test_enforcement.DisabledModuleTests` recorre todas las rutas de negocio por método.
+- AC-02: suite completa existente.
+- AC-03, INV-01: `CompanyIsolationTests` (otra empresa, `company_id` enviado por query/cabecera).
+- AC-04, AC-11: `ConfigurationChangeTests`.
+- AC-05: orden auth → empresa → módulo.
+- AC-07, AC-08: `CustomersOptionalIntegrationTests`, `GetPendingOrders` sin nombres y `top-customers` exige también `customers`.
+- AC-09: `accounts/test_guards.py` (permiso por defecto y `required_modules` conocido).
+- AC-10, AC-12: specs de interceptor, guard y `ModuleDisabledComponent` (sin sesión sigue el 401 → login existente).
+- EDGE-01/02/05: tests de `test_api`, `test_enforcement` y `test_gate`.
+
+**Desviaciones respecto al plan.**
+- `ModulesService` y el modelo no cambiaron.
+- `enabled_keys()` ahora lee primero las filas existentes (una consulta en el camino habitual) y solo siembra si no hay ninguna; el plan preveía la lectura previa de PB-MOD-001 (2 consultas). Motivo: reducir el costo por petición.
+- Los adaptadores de Ventas y Reportes memorizan `is_available()` por instancia (una consulta por petición).
+- `test_list_does_not_query_per_row` pasa de 5 a 7 consultas (módulos en el permiso + módulos de Clientes): costo conocido de este diseño.
+- `test_seed_ignores_rows_inserted_by_a_concurrent_read` (PB-MOD-001) se reescribió para simular una primera lectura obsoleta, porque con la lectura previa una fila suelta ya cuenta como empresa inicializada.
+
+**Pantalla de referencia / componentes.** `coming-soon` (pantalla simple); `ModuleDisabledComponent` reutiliza breadcrumb, `.card` y `btn btn-primary`; sin componentes nuevos en `shared/`.
+
+**Verificación propia (no es el Quality Gate).** Backend: 620 tests, pasan salvo los dos tests intermitentes preexistentes de `modules.sales.tests.test_repository` (orden de items/pagos). Frontend: `npm run lint` y `npm run build` OK; Karma acotado (core, settings, sidebar) 53/53. No se hizo inspección visual en navegador.
+
+**Deuda técnica.** Tests intermitentes de `sales.test_repository`; el enlace «Volver al panel» de `coming-soon` y el destino post-login siguen en `/dashboard/main` (REV-03 de PB-MOD-001, resuelto documentando que `moduleGuard` redirige).
 
 ## Review
 _Pendiente_

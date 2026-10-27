@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, UrlTree, provideRouter } from '@angular/router';
 import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { MODULE_DISABLED_REDIRECT, moduleGuard } from './module.guard';
+import { MODULE_DISABLED_ROUTE, moduleGuard } from './module.guard';
 
 function route(module?: string): ActivatedRouteSnapshot {
   return { data: module ? { module } : {} } as unknown as ActivatedRouteSnapshot;
@@ -41,6 +41,6 @@ describe('moduleGuard', () => {
       { key: 'inventory', name: 'Inventario', description: '', is_base: false, enabled: false, requires: [], optional: [], missing_requires: [] },
     ]);
     const redirect = (await result) as UrlTree;
-    expect(TestBed.inject(Router).serializeUrl(redirect)).toBe(MODULE_DISABLED_REDIRECT);
+    expect(TestBed.inject(Router).serializeUrl(redirect)).toBe(`${MODULE_DISABLED_ROUTE}?module=inventory`);
   });
 });
