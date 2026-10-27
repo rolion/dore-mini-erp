@@ -37,6 +37,10 @@ class CustomerDirectory(Protocol):
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]: ...
 
 
+class SalesSettingsReader(Protocol):
+    def max_discount_percent(self) -> Decimal: ...
+
+
 class Clock(Protocol):
     def today(self) -> date: ...
 

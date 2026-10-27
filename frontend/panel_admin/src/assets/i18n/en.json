@@ -91,15 +91,30 @@
       }
     },
     "PURCHASES": {
-      "TEXT": "Purchases"
+      "TEXT": "Purchases",
+      "LIST": {
+        "HOME": "Home",
+        "SETTINGS": "Settings"
+      }
     },
     "INVENTORY": {
-      "TEXT": "Inventory"
+      "TEXT": "Inventory",
+      "LIST": {
+        "HOME": "Home",
+        "SETTINGS": "Settings"
+      }
     },
     "SETTINGS": {
       "TEXT": "Settings",
       "LIST": {
         "MODULES": "Modules"
+      }
+    },
+    "SALES": {
+      "TEXT": "Sales",
+      "LIST": {
+        "ORDERS": "Orders",
+        "SETTINGS": "Settings"
       }
     }
   }

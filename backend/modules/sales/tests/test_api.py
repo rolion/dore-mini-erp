@@ -330,6 +330,45 @@ class DiscountTests(SalesApiTestCase):
             self.assertIn('discount', self.discount(order, value, 400).json(), value)
         self.assertEqual(self.client.post(url(order['id'], 'discount/'), {}, format='json').status_code, 400)
 
+    def test_discount_respects_the_company_max_percent(self):  # AC-07, INV-06
+        order = self.order_with_item('35.00', 2)
+        self.discount(order, '40.00')  # descuento previo, con el tope inicial (100 %)
+        self.client.patch('/api/settings/sales/', {'settings': {'sales.max_discount_percent': '10'}}, format='json')
+        self.assertIn('discount', self.discount(order, '7.01', 400).json())
+        self.assertEqual(self.get(order)['discount'], '40.00')  # lo anterior no se reescribe
+        self.assertEqual(self.discount(order, '7.00').json()['discount'], '7.00')
+
+    def test_max_percent_is_per_company(self):  # AC-07, AC-01
+        self.client.patch('/api/settings/sales/', {'settings': {'sales.max_discount_percent': '0'}}, format='json')
+        order = self.order_with_item('35.00', 2)
+        self.assertIn('discount', self.discount(order, '1.00', 400).json())
+        other = make_company('Empresa B')
+        authenticate(self.client, make_admin(other, username='beto'))
+        product = ProductModel.objects.create(company_id=other.id, name='Otro', description='',
+                                              sale_price=Decimal('10.00'), active=True)
+        mine = self.create()
+        self.add_item(mine, product, 1)
+        self.assertEqual(self.discount(mine, '10.00').json()['total'], '0.00')
+
+    def test_settings_read_failure_falls_back_to_initial_rule(self):  # EDGE-06
+        order = self.order_with_item('35.00', 2)
+        with mock.patch('modules.modularity.services.get_sales_settings', side_effect=RuntimeError('x')):
+            self.assertEqual(self.discount(order, '70.00').json()['total'], '0.00')
+
+    def test_database_error_reading_settings_does_not_break_the_request(self):  # EDGE-06, REV-01
+        from django.db import DatabaseError, connection
+
+        order = self.order_with_item('35.00', 2)
+
+        def broken(company_id):
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT * FROM tabla_que_no_existe')
+            raise DatabaseError()
+
+        with mock.patch('modules.modularity.services.get_sales_settings', side_effect=broken):
+            self.assertEqual(self.discount(order, '70.00').json()['total'], '0.00')
+        self.assertEqual(self.get(order)['discount'], '70.00')
+
     def test_discount_cannot_drop_the_total_below_what_was_paid(self):  # AC-07
         order = self.order_with_item('35.00', 2)
         self.pay(order, '65.00')

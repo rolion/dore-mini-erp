@@ -91,15 +91,30 @@
       }
     },
     "PURCHASES": {
-      "TEXT": "Compras"
+      "TEXT": "Compras",
+      "LIST": {
+        "HOME": "Inicio",
+        "SETTINGS": "Configuración"
+      }
     },
     "INVENTORY": {
-      "TEXT": "Inventario"
+      "TEXT": "Inventario",
+      "LIST": {
+        "HOME": "Inicio",
+        "SETTINGS": "Configuración"
+      }
     },
     "SETTINGS": {
       "TEXT": "Configuración",
       "LIST": {
         "MODULES": "Módulos"
+      }
+    },
+    "SALES": {
+      "TEXT": "Ventas",
+      "LIST": {
+        "ORDERS": "Pedidos",
+        "SETTINGS": "Configuración"
       }
     }
   }

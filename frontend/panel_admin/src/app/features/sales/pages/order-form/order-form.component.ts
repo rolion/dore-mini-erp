@@ -21,6 +21,7 @@ import { CustomerQuickCreateService } from '../../../customers';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
+import { SalesSettingsService } from '../../services/sales-settings.service';
 
 export const NOTES_MAX_LENGTH = 2000;
 export const NOT_EDITABLE_MESSAGE = 'El pedido ya no admite cambios.';
@@ -60,6 +61,7 @@ export class OrderFormComponent implements OnInit {
   readonly customers$: Observable<OrderCustomer[]>;
 
   private ordersApi = inject(OrdersApiService);
+  private salesSettings = inject(SalesSettingsService);
   private customerOptions = inject(CustomerOptionsService);
   private modules = inject(ModulesService);
   private quickCreate = inject(CustomerQuickCreateService);
@@ -94,6 +96,9 @@ export class OrderFormComponent implements OnInit {
   ngOnInit(): void {
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => (this.serverErrors = {}));
     this.orderId = this.route.snapshot.paramMap.get('id');
+    if (!this.orderId) {
+      this.suggestChannel();
+    }
     if (this.orderId) {
       this.loading = true;
       this.ordersApi
@@ -164,6 +169,19 @@ export class OrderFormComponent implements OnInit {
 
   private searchCustomers(term: string | null): Observable<OrderCustomer[]> {
     return this.customerOptions.search(term).pipe(finalize(() => (this.customersLoading = false)));
+  }
+
+  /** Un pedido nuevo parte con el canal predeterminado de la empresa, si lo hay y la persona aún no eligió otro. */
+  private suggestChannel(): void {
+    this.salesSettings
+      .defaults()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((defaults) => {
+        const control = this.form.controls.salesChannel;
+        if (defaults.salesChannel && control.pristine && control.value === '') {
+          control.setValue(defaults.salesChannel);
+        }
+      });
   }
 
   private fill(order: Order): void {

@@ -5,7 +5,7 @@ from modules.sales.domain.exceptions import OrderNotFound, OrderValidationError
 from modules.sales.domain.order import UNSET, Order, validate_quantity
 from modules.sales.domain.repositories import OrderRepository
 
-from .ports import Clock, CustomerDirectory, ProductCatalog
+from .ports import Clock, CustomerDirectory, ProductCatalog, SalesSettingsReader
 
 
 def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
@@ -125,12 +125,16 @@ class RemoveOrderItem:
 
 
 class ApplyOrderDiscount:
-    def __init__(self, repository: OrderRepository):
+    def __init__(self, repository: OrderRepository, settings: SalesSettingsReader | None = None):
         self.repository = repository
+        self.settings = settings
 
     def execute(self, order_id: UUID, discount: object) -> Order:
         order = _load_for_update(self.repository, order_id)
-        order.apply_discount(discount)
+        if self.settings is None:
+            order.apply_discount(discount)
+        else:
+            order.apply_discount(discount, self.settings.max_discount_percent())
         return self.repository.save(order)
 
 

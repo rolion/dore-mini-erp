@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AppModule } from '../../../../core/models/module';
 import { ModulesService } from '../../../../core/service/modules.service';
+import { SettingsHistoryComponent } from '../../components/settings-history/settings-history.component';
 import {
   ModuleAction,
   ModuleConfirmDialogComponent,
@@ -13,9 +14,10 @@ import {
   selector: 'app-module-list',
   templateUrl: './module-list.component.html',
   styleUrl: './module-list.component.scss',
-  imports: [RouterLink],
+  imports: [RouterLink, SettingsHistoryComponent],
 })
 export class ModuleListComponent implements OnInit {
+  tab: 'general' | 'history' = 'general';
   modules: AppModule[] = [];
   loading = false;
   errorMessage = '';
@@ -31,6 +33,10 @@ export class ModuleListComponent implements OnInit {
       }
     });
     this.load();
+  }
+
+  select(tab: 'general' | 'history'): void {
+    this.tab = tab;
   }
 
   load(): void {

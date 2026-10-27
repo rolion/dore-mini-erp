@@ -255,6 +255,23 @@ class DiscountTests(SimpleTestCase):
         self.assertIn('discount', field_errors(self, order.apply_discount, '70.01'))
         self.assertEqual(order.discount, D('0.00'))
 
+    def test_configured_max_percent_limits_new_discounts(self):  # AC-07
+        order = order_with_item('35.00', 2)  # subtotal 70.00
+        order.apply_discount('7.00', D('10'))
+        self.assertEqual(order.discount, D('7.00'))
+        self.assertIn('discount', field_errors(self, order.apply_discount, '7.01', D('10')))
+        self.assertEqual(order.discount, D('7.00'))
+
+    def test_max_percent_zero_forbids_any_discount(self):  # AC-07
+        order = order_with_item()
+        self.assertIn('discount', field_errors(self, order.apply_discount, '0.01', D('0')))
+        order.apply_discount(0, D('0'))
+
+    def test_default_max_percent_keeps_previous_behavior(self):  # AC-07, INV-06
+        order = order_with_item()
+        order.apply_discount('70.00')
+        self.assertEqual(order.total, D('0.00'))
+
     def test_discount_equal_to_subtotal_is_allowed(self):  # EDGE-04
         order = order_with_item()
         order.apply_discount('70.00')

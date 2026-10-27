@@ -14,7 +14,18 @@
     <div class="row clearfix">
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="card">
-          <div class="p-10">
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'general'" role="tab" id="tab-general"
+                [attr.aria-selected]="tab === 'general'" aria-controls="panel-general" (click)="select('general')">General</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'history'" role="tab" id="tab-history"
+                [attr.aria-selected]="tab === 'history'" aria-controls="panel-history" (click)="select('history')">Historial de cambios</button>
+            </li>
+          </ul>
+          @if (tab === 'general') {
+          <div class="p-10" id="panel-general" role="tabpanel" aria-labelledby="tab-general">
             <div class="table-title">
               <h2><strong>Módulos</strong></h2>
               <small class="text-muted">Habilita los módulos que necesita tu empresa.</small>
@@ -95,6 +106,11 @@
             </div>
             }
           </div>
+          } @else {
+          <div id="panel-history" role="tabpanel" aria-labelledby="tab-history">
+            <app-settings-history scope="modules" />
+          </div>
+          }
         </div>
       </div>
     </div>

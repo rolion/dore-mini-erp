@@ -18,10 +18,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(routes.slice(0, 6).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'sales', 'expenses', 'reporting',
     ]);
-    expect(purchases.path).toBe('/pocketbiz/purchases');
     expect(purchases.module).toBe('purchases');
-    expect(inventory.path).toBe('/pocketbiz/inventory');
+    expect(purchases.submenu.map((item) => item.path)).toEqual(['/pocketbiz/purchases', '/pocketbiz/purchases/settings']);
     expect(inventory.module).toBe('inventory');
+    expect(inventory.submenu.map((item) => item.path)).toEqual(['/pocketbiz/inventory', '/pocketbiz/inventory/settings']);
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
@@ -37,11 +37,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(customer.submenu).toEqual([]);
     expect(customer.groupTitle).toBeFalse();
 
-    expect(orders.path).toBe('/pocketbiz/sales/orders');
-    expect(orders.title).toBe('MENUITEMS.ORDERS.TEXT');
+    expect(orders.title).toBe('MENUITEMS.SALES.TEXT');
     expect(orders.icon).toBe('shopping-cart');
-    expect(orders.class).toBe('');
-    expect(orders.submenu).toEqual([]);
+    expect(orders.class).toBe('menu-toggle');
+    expect(orders.submenu.map((item) => item.path)).toEqual(['/pocketbiz/sales/orders', '/pocketbiz/sales/settings']);
     expect(orders.groupTitle).toBeFalse();
 
     expect(expenses.title).toBe('MENUITEMS.EXPENSES.TEXT');
@@ -60,7 +59,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(13);
+    expect(titles.length).toBe(19);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -70,9 +69,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.CATALOG.TEXT')).toBe('Catálogo');
     expect(translate(es, 'MENUITEMS.CATALOG.LIST.PRODUCT')).toBe('Producto');
     expect(translate(es, 'MENUITEMS.CUSTOMER.TEXT')).toBe('Cliente');
-    expect(translate(es, 'MENUITEMS.ORDERS.TEXT')).toBe('Pedidos');
-    expect(translate(en, 'MENUITEMS.ORDERS.TEXT')).toBe('Orders');
-    expect(translate(de, 'MENUITEMS.ORDERS.TEXT')).toBe('Bestellungen');
+    expect(translate(es, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Pedidos');
+    expect(translate(en, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Orders');
+    expect(translate(de, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Bestellungen');
+    expect(translate(es, 'MENUITEMS.SALES.LIST.SETTINGS')).toBe('Configuración');
     expect(translate(es, 'MENUITEMS.EXPENSES.TEXT')).toBe('Gastos');
     expect(translate(es, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Categorías');
     expect(translate(en, 'MENUITEMS.EXPENSES.TEXT')).toBe('Expenses');

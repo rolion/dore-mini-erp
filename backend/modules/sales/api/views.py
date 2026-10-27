@@ -26,7 +26,12 @@ from modules.sales.domain.exceptions import (
     OrderRuleViolation,
     OrderValidationError,
 )
-from modules.sales.infrastructure.adapters import CustomerDirectoryAdapter, ProductCatalogAdapter, SystemClock
+from modules.sales.infrastructure.adapters import (
+    CustomerDirectoryAdapter,
+    ProductCatalogAdapter,
+    SalesSettingsAdapter,
+    SystemClock,
+)
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
 from shared.tenancy import company_id_from
 
@@ -175,7 +180,8 @@ class OrderDiscountView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DiscountSerializer, request.data)
-        return _order_response(request, _run(ApplyOrderDiscount(_repository(request)), order_id=order_id, **data))
+        use_case = ApplyOrderDiscount(_repository(request), SalesSettingsAdapter(company_id_from(request)))
+        return _order_response(request, _run(use_case, order_id=order_id, **data))
 
 
 class OrderPrepareView(APIView):

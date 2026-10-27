@@ -1,19 +1,26 @@
 """Adaptadores de los puertos de Sales sobre las fachadas públicas de otros módulos y el reloj de Django.
 
-Es el único lugar de Sales que conoce a Catalog y Customers, y solo por sus `services.py`.
+Es el único lugar de Sales que conoce a Catalog, Customers y Modularity, y solo por sus `services.py`.
 """
+import logging
 from collections.abc import Iterable
 from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID
 
+from django.db import transaction
 from django.utils import timezone
 
 from modules.catalog import services as catalog_services
 from modules.customers import services as customer_services
+from modules.modularity import services as modularity_services
 from modules.sales.application.ports import CustomerInfo, ProductInfo
+from modules.sales.domain.order import MAX_DISCOUNT_PERCENT
 from shared import module_gate
 
 CUSTOMERS_MODULE = 'customers'
+
+logger = logging.getLogger(__name__)
 
 
 class ProductCatalogAdapter:
@@ -50,6 +57,22 @@ class CustomerDirectoryAdapter:
         if not self.is_available():
             return {}
         return customer_services.get_customer_names(self.company_id, customer_ids)
+
+
+class SalesSettingsAdapter:
+    """Configuración de Ventas de la empresa; si no se puede leer, rige el valor inicial (regla previa)."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def max_discount_percent(self) -> Decimal:
+        try:
+            # Savepoint: un error de BD no debe dejar abortada la transacción de la petición.
+            with transaction.atomic():
+                return modularity_services.get_sales_settings(self.company_id).max_discount_percent
+        except Exception:
+            logger.exception('No se pudo leer la configuración de Ventas; se usa el valor inicial.')
+            return MAX_DISCOUNT_PERCENT
 
 
 class SystemClock:

@@ -22,6 +22,7 @@ Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, 
 | Gastos | Registro de gastos y categorías | `expenses` | Listo |
 | Reportes | Dashboard y reportes de ventas/gastos | `dashboard`, `reports` | Listo |
 | Módulos por empresa | El admin elige qué módulos usa su empresa, con dependencias | `settings/modules` | Listo (PB-MOD-001) |
+| Configuración por módulo | Ajustes de cada módulo por empresa con historial de cambios | `sales/settings`, `purchases/settings`, `inventory/settings`, `settings/modules` | Listo (PB-CFG-001) |
 | Marca y perfil | Logos PocketBiz, avatar con iniciales, menú de usuario | Transversal | Listo |
 
 ## 3. Detalle por módulo
@@ -132,3 +133,13 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Compras e Inventario aún no existen: al habilitarlos su menú abre «Próximamente».
 - **Pendiente (PB-MOD-002)**: la API de negocio no bloquea módulos deshabilitados.
 - **Pendiente (PB-MOD-004)**: la desactivación segura (validar datos existentes) aún no existe.
+
+### 3.8 Configuración por módulo y empresa (PB-CFG-001)
+- Cada módulo tiene **Configuración** con pestañas «General» e «Historial de cambios»; solo la ve y guarda el administrador de la empresa y no afecta a otras empresas. Guardar es todo o nada; un valor inválido no se guarda y el error aparece junto al campo. Salir con cambios sin guardar pide confirmación.
+- **Ventas** — ajustes y valor inicial:
+  - *Canal de venta predeterminado*: ninguno. Precarga el canal al crear un pedido (se puede cambiar).
+  - *Método de pago predeterminado*: ninguno. Precarga el método al registrar un pago (se puede cambiar).
+  - *Descuento máximo (% del subtotal)*: 100 %. La API rechaza un descuento nuevo que lo supere; los pedidos existentes no cambian.
+- **Compras e Inventario**: aún no tienen ajustes (la pantalla lo indica); su historial queda listo.
+- **Historial**: fecha y hora, usuario, ajuste, valor anterior y nuevo, con filtro por fecha y ajuste. «Configuración › Módulos» también registra cada habilitación o deshabilitación. No guarda secretos.
+- Ajustes futuros (P2 y contables P3) se agregarán con sus historias.

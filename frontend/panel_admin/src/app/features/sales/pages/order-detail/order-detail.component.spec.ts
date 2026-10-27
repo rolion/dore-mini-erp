@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/
 import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
+import { NO_SALES_DEFAULTS, SalesSettingsService } from '../../services/sales-settings.service';
 import Swal, { SweetAlertResult } from 'sweetalert2';
 
 import { Page } from '../../../../shared/models/page';
@@ -66,6 +67,7 @@ describe('OrderDetailComponent', () => {
         { provide: ProductsApiService, useValue: products },
         { provide: ToastrService, useValue: toastr },
         { provide: ActivatedRoute, useValue: { paramMap: params$.asObservable() } },
+        { provide: SalesSettingsService, useValue: { defaults: () => of(NO_SALES_DEFAULTS) } },
       ],
     });
     router = TestBed.inject(Router);
