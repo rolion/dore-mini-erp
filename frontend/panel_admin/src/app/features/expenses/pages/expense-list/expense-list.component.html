@@ -4,7 +4,7 @@
       <h5 class="page-title m-b-0">Gastos</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
-      <a routerLink="/dashboard/main">
+      <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item">Gastos</li>
@@ -21,7 +21,7 @@
                     <h2><strong>Gastos</strong></h2>
                   </div>
                   <div class="header-buttons-left">
-                    <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/expenses/new"
+                    <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/expenses/new"
                       title="Nuevo gasto" aria-label="Nuevo gasto">
                       <i class="material-icons">add</i>
                     </a>
@@ -90,7 +90,7 @@
               (page)="onPage($event)">
               <ngx-datatable-column name="Fecha" [sortable]="false" [width]="118">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/expenses', row.id]">{{ row.expenseDate | date: 'dd/MM/yyyy' }}</a>
+                  <a class="fw-bold" [routerLink]="['/pocketbiz/expenses', row.id]">{{ row.expenseDate | date: 'dd/MM/yyyy' }}</a>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Descripción" [sortable]="false" [width]="147">
@@ -128,12 +128,12 @@
               <ngx-datatable-column name="Acciones" [sortable]="false" [width]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
-                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/expenses', row.id]"
+                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/expenses', row.id]"
                       title="Ver detalle" aria-label="Ver detalle">
                       <i class="fas fa-eye"></i>
                     </a>
                     @if (row.status === 'ACTIVE') {
-                    <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/expenses', row.id, 'edit']"
+                    <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/expenses', row.id, 'edit']"
                       title="Editar" aria-label="Editar">
                       <i class="fas fa-pen"></i>
                     </a>

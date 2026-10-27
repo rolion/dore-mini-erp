@@ -1,7 +1,7 @@
 {
   "routes": [
     {
-      "path": "/dashboard/main",
+      "path": "/pocketbiz/dashboard/main",
       "title": "MENUITEMS.DASHBOARD.TEXT",
       "iconType": "feather",
       "icon": "monitor",
@@ -23,7 +23,7 @@
       "badgeClass": "",
       "submenu": [
         {
-          "path": "/catalog/products",
+          "path": "/pocketbiz/catalog/products",
           "title": "MENUITEMS.CATALOG.LIST.PRODUCT",
           "iconType": "",
           "icon": "",
@@ -37,7 +37,7 @@
       "module": "catalog"
     },
     {
-      "path": "/customers",
+      "path": "/pocketbiz/customers",
       "title": "MENUITEMS.CUSTOMER.TEXT",
       "iconType": "feather",
       "icon": "users",
@@ -49,7 +49,7 @@
       "module": "customers"
     },
     {
-      "path": "/sales/orders",
+      "path": "/pocketbiz/sales/orders",
       "title": "MENUITEMS.ORDERS.TEXT",
       "iconType": "feather",
       "icon": "shopping-cart",
@@ -71,7 +71,7 @@
       "badgeClass": "",
       "submenu": [
         {
-          "path": "/expenses",
+          "path": "/pocketbiz/expenses",
           "title": "MENUITEMS.EXPENSES.LIST.EXPENSE",
           "iconType": "",
           "icon": "",
@@ -82,7 +82,7 @@
           "submenu": []
         },
         {
-          "path": "/expenses/categories",
+          "path": "/pocketbiz/expenses/categories",
           "title": "MENUITEMS.EXPENSES.LIST.CATEGORY",
           "iconType": "",
           "icon": "",
@@ -96,7 +96,7 @@
       "module": "expenses"
     },
     {
-      "path": "/reports",
+      "path": "/pocketbiz/reports",
       "title": "MENUITEMS.REPORTS.TEXT",
       "iconType": "feather",
       "icon": "bar-chart-2",
@@ -108,7 +108,7 @@
       "module": "reporting"
     },
     {
-      "path": "/purchases",
+      "path": "/pocketbiz/purchases",
       "title": "MENUITEMS.PURCHASES.TEXT",
       "iconType": "feather",
       "icon": "shopping-bag",
@@ -120,7 +120,7 @@
       "module": "purchases"
     },
     {
-      "path": "/inventory",
+      "path": "/pocketbiz/inventory",
       "title": "MENUITEMS.INVENTORY.TEXT",
       "iconType": "feather",
       "icon": "archive",
@@ -142,7 +142,7 @@
       "badgeClass": "",
       "submenu": [
         {
-          "path": "/settings/modules",
+          "path": "/pocketbiz/settings/modules",
           "title": "MENUITEMS.SETTINGS.LIST.MODULES",
           "iconType": "",
           "icon": "",

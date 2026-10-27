@@ -118,7 +118,7 @@ describe('ReportsComponent', () => {
     expect(byTestId('products-note')?.textContent?.trim()).toBe(PRODUCT_AMOUNT_NOTE);
     const customers = byTestId('customers-table') as HTMLElement;
     expect(customers.textContent).toContain('Ana Pérez');
-    expect(customers.querySelector('a')?.getAttribute('href')).toBe('/customers/k1');
+    expect(customers.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/customers/k1');
     expect(byTestId('customers-note')?.textContent?.trim()).toBe(CUSTOMER_RANKING_NOTE);
   });
 

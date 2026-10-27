@@ -89,7 +89,7 @@ export class OrderDetailComponent implements OnInit {
             catchError((err: OrderApiError) => {
               this.loading = false;
               this.toastr.error(err.message);
-              this.router.navigate(['/sales/orders']);
+              this.router.navigate(['/pocketbiz/sales/orders']);
               return EMPTY;
             }),
           ),

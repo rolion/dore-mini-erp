@@ -5,6 +5,7 @@ import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MODULE_DISABLED_ROUTE } from '../guard/module.guard';
 import { AuthService } from '../service/auth.service';
+import { APP_PATHS } from '../routing/app-paths';
 import { ModulesService } from '../service/modules.service';
 
 const LOGIN_URL = `${environment.apiUrl}/auth/login/`;
@@ -32,7 +33,7 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401 && request.url !== LOGIN_URL) {
         authService.clearSession();
-        router.navigate(['/authentication/signin']);
+        router.navigate([APP_PATHS.login]);
       }
       const module = disabledModule(err);
       if (module !== null) {

@@ -73,7 +73,7 @@ describe('HTTP interceptors', () => {
     ctrl.expectOne('/api/modules/').flush([]);
     expect(failed).toBeTrue();
     expect(auth.isAuthenticated).toBeTrue();
-    expect(router.navigate).toHaveBeenCalledWith(['/module-disabled'], { queryParams: { module: 'customers' } });
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/module-disabled'], { queryParams: { module: 'customers' } });
   });
 
   it('any other 403 is only propagated', () => {
@@ -88,6 +88,6 @@ describe('HTTP interceptors', () => {
     http.get('/api/ventas/').subscribe({ error: () => undefined });
     ctrl.expectOne('/api/ventas/').flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(auth.isAuthenticated).toBeFalse();
-    expect(router.navigate).toHaveBeenCalledWith(['/authentication/signin']);
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/login']);
   });
 });

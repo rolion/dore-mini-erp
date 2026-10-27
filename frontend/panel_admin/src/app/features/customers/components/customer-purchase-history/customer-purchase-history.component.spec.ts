@@ -49,7 +49,7 @@ describe('CustomerPurchaseHistoryComponent', () => {
   it('links each order date to its detail page (AC-26)', () => {
     const el = render({ orders: ORDERS });
     const hrefs = Array.from(el.querySelectorAll('tbody a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(['/sales/orders/o1', '/sales/orders/o2']);
+    expect(hrefs).toEqual(['/pocketbiz/sales/orders/o1', '/pocketbiz/sales/orders/o2']);
   });
 
   it('shows unknown status codes as they come instead of failing (AC-26)', () => {

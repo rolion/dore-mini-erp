@@ -26,8 +26,8 @@ describe('CustomerFormComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
-          { path: 'customers/new', component: CustomerFormComponent },
-          { path: 'customers/:id/edit', component: CustomerFormComponent },
+          { path: 'pocketbiz/customers/new', component: CustomerFormComponent },
+          { path: 'pocketbiz/customers/:id/edit', component: CustomerFormComponent },
         ]),
         { provide: CustomersApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
@@ -51,7 +51,7 @@ describe('CustomerFormComponent', () => {
 
   describe('create mode', () => {
     it('starts empty, without a state field, with Guardar disabled (AC-11)', async () => {
-      const { component, el } = await open('/customers/new');
+      const { component, el } = await open('/pocketbiz/customers/new');
 
       expect(component.isEdit).toBeFalse();
       expect(component.form.getRawValue()).toEqual({ name: '', phone: '', email: '', notes: '' });
@@ -62,7 +62,7 @@ describe('CustomerFormComponent', () => {
     });
 
     it('is valid with only a name; phone and email are optional (AC-01, AC-11)', async () => {
-      const { component, harness, el } = await open('/customers/new');
+      const { component, harness, el } = await open('/pocketbiz/customers/new');
       component.form.patchValue({ name: 'Ana' });
       harness.detectChanges();
       expect(component.form.valid).toBeTrue();
@@ -70,7 +70,7 @@ describe('CustomerFormComponent', () => {
     });
 
     it('validates name, email format and lengths on the client (AC-11)', async () => {
-      const { component } = await open('/customers/new');
+      const { component } = await open('/pocketbiz/customers/new');
       const { controls } = component.form;
 
       controls.name.setValue('   ');
@@ -95,7 +95,7 @@ describe('CustomerFormComponent', () => {
 
     it('creates a customer with trimmed values and goes to its profile (AC-11)', async () => {
       api.create.and.returnValue(of(makeCustomer({ id: 'new-1' })));
-      const { component } = await open('/customers/new');
+      const { component } = await open('/pocketbiz/customers/new');
       component.form.setValue({ name: '  Ana  ', phone: ' 7654 3210 ', email: ' a@x.com ', notes: ' vip ' });
 
       component.onSubmit();
@@ -105,13 +105,13 @@ describe('CustomerFormComponent', () => {
         false,
       );
       expect(toastr.success).toHaveBeenCalledWith('Cliente creado');
-      expect(navigate).toHaveBeenCalledWith(['/customers', 'new-1']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/customers', 'new-1']);
     });
 
     it('does not submit an invalid form or submit twice while saving (AC-11)', async () => {
       const pending = new Subject<ReturnType<typeof makeCustomer>>();
       api.create.and.returnValue(pending);
-      const { component } = await open('/customers/new');
+      const { component } = await open('/pocketbiz/customers/new');
 
       component.onSubmit();
       expect(api.create).not.toHaveBeenCalled();
@@ -127,7 +127,7 @@ describe('CustomerFormComponent', () => {
       api.create.and.returnValue(
         throwError(() => new CustomerApiError('Revisa', 400, { email: ['Ingresa un correo válido.'], notes: ['Muy largas'] })),
       );
-      const { component, harness, el } = await open('/customers/new');
+      const { component, harness, el } = await open('/pocketbiz/customers/new');
       component.form.patchValue({ name: 'Ana' });
 
       component.onSubmit();
@@ -145,7 +145,7 @@ describe('CustomerFormComponent', () => {
 
     it('shows a toast for errors without field details (AC-11)', async () => {
       api.create.and.returnValue(throwError(() => new CustomerApiError('Sin conexión', 0)));
-      const { component } = await open('/customers/new');
+      const { component } = await open('/pocketbiz/customers/new');
       component.form.patchValue({ name: 'Ana' });
 
       component.onSubmit();
@@ -154,9 +154,9 @@ describe('CustomerFormComponent', () => {
     });
 
     it('cancel goes back to the list (AC-11)', async () => {
-      const { el } = await open('/customers/new');
+      const { el } = await open('/pocketbiz/customers/new');
       const cancel = Array.from(el.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Cancelar');
-      expect(cancel?.getAttribute('href')).toBe('/customers');
+      expect(cancel?.getAttribute('href')).toBe('/pocketbiz/customers');
     });
   });
 
@@ -166,7 +166,7 @@ describe('CustomerFormComponent', () => {
         throwError(() => new DuplicateCustomerError('Ya existe', MATCHES)),
         of(makeCustomer({ id: 'new-2' })),
       );
-      const opened = await open('/customers/new');
+      const opened = await open('/pocketbiz/customers/new');
       opened.component.form.patchValue({ name: 'Ana', phone: '76543210' });
       return opened;
     }
@@ -183,7 +183,7 @@ describe('CustomerFormComponent', () => {
         [{ name: 'Ana', phone: '76543210', email: '', notes: '' }, false],
         [{ name: 'Ana', phone: '76543210', email: '', notes: '' }, true],
       ]);
-      expect(navigate).toHaveBeenCalledWith(['/customers', 'new-2']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/customers', 'new-2']);
       expect(toastr.success).toHaveBeenCalledWith('Cliente creado');
     });
 
@@ -208,7 +208,7 @@ describe('CustomerFormComponent', () => {
 
       expect(html).not.toContain('<img');
       expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
-      expect(html).toContain('href="/customers/a%2Fb"');
+      expect(html).toContain('href="/pocketbiz/customers/a%2Fb"');
       expect(html).toContain('target="_blank"');
       expect(html).toContain('rel="noopener"');
       expect(html).toContain('(inactivo)');
@@ -220,7 +220,7 @@ describe('CustomerFormComponent', () => {
     it('loads the customer, fills the form and updates only through update (AC-11)', async () => {
       api.get.and.returnValue(of(makeCustomer()));
       api.update.and.returnValue(of(makeCustomer({ name: 'Ana María' })));
-      const { component, el } = await open('/customers/c-1/edit');
+      const { component, el } = await open('/pocketbiz/customers/c-1/edit');
 
       expect(api.get).toHaveBeenCalledOnceWith('c-1');
       expect(component.isEdit).toBeTrue();
@@ -237,21 +237,21 @@ describe('CustomerFormComponent', () => {
       });
       expect(api.create).not.toHaveBeenCalled();
       expect(toastr.success).toHaveBeenCalledWith('Cliente actualizado');
-      expect(navigate).toHaveBeenCalledWith(['/customers', 'c-1']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/customers', 'c-1']);
     });
 
     it('cancel goes back to the profile (AC-11)', async () => {
       api.get.and.returnValue(of(makeCustomer()));
-      const { el } = await open('/customers/c-1/edit');
+      const { el } = await open('/pocketbiz/customers/c-1/edit');
       const cancel = Array.from(el.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Cancelar');
-      expect(cancel?.getAttribute('href')).toBe('/customers/c-1');
+      expect(cancel?.getAttribute('href')).toBe('/pocketbiz/customers/c-1');
     });
 
     it('warns and goes back to the list when the customer does not exist (AC-11)', async () => {
       api.get.and.returnValue(throwError(() => new CustomerApiError('Cliente no encontrado.', 404)));
-      await open('/customers/nope/edit');
+      await open('/pocketbiz/customers/nope/edit');
       expect(toastr.error).toHaveBeenCalledWith('Cliente no encontrado.');
-      expect(navigate).toHaveBeenCalledWith(['/customers']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/customers']);
     });
   });
 });

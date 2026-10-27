@@ -11,8 +11,9 @@ import {
 import { FeatherModule } from 'angular-feather';
 import { finalize } from 'rxjs';
 import { AuthService, RegisterError, RegisterField } from '@core';
+import { APP_PATHS } from '../../core/routing/app-paths';
 
-export const DEFAULT_ROUTE_AFTER_SIGNUP = '/dashboard/main';
+export const DEFAULT_ROUTE_AFTER_SIGNUP = APP_PATHS.dashboard;
 export const INVALID_FORM_MESSAGE = 'Revisa los campos marcados.';
 export const NAME_MAX_LENGTH = 150;
 

@@ -4,7 +4,7 @@
       <h5 class="page-title m-b-0">Pedidos</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
-      <a routerLink="/dashboard/main">
+      <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item">Pedidos</li>
@@ -21,7 +21,7 @@
                     <h2><strong>Pedidos</strong></h2>
                   </div>
                   <div class="header-buttons-left">
-                    <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/sales/orders/new"
+                    <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/sales/orders/new"
                       title="Nuevo pedido" aria-label="Nuevo pedido">
                       <i class="material-icons">add</i>
                     </a>
@@ -102,7 +102,7 @@
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
               <ngx-datatable-column name="Pedido" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a>
+                  <a class="fw-bold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a>
                   <div><small class="text-muted">{{ row.code }}</small></div>
                 </ng-template>
               </ngx-datatable-column>
@@ -150,7 +150,7 @@
               </ngx-datatable-column>
               <ngx-datatable-column name="Acciones" [sortable]="false" [width]="80">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/sales/orders', row.id]"
+                  <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/sales/orders', row.id]"
                     title="Ver pedido" aria-label="Ver pedido">
                     <i class="fas fa-eye"></i>
                   </a>

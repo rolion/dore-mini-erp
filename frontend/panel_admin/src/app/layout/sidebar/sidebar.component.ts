@@ -92,7 +92,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
   /**
    * Un ítem se marca activo por prefijo de ruta; si un hermano extiende su ruta
-   * (p. ej. `/expenses` y `/expenses/categories`) se exige coincidencia exacta para
+   * (p. ej. `/pocketbiz/expenses` y `/pocketbiz/expenses/categories`) se exige coincidencia exacta para
    * que quede un único ítem resaltado.
    */
   linkActiveOptions(item: RouteInfo, siblings: RouteInfo[]): { exact: boolean } {

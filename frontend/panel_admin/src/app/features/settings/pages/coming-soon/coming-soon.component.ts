@@ -12,7 +12,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
           <h5 class="page-title m-b-0">{{ title }}</h5>
         </li>
         <li class="breadcrumb-item bcrumb-1">
-          <a routerLink="/dashboard/main"><i class="fas fa-home font-17"></i></a>
+          <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
         </li>
         <li class="breadcrumb-item">{{ title }}</li>
       </ul>
@@ -23,7 +23,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
           </div>
           <div class="card-body">
             <p>Próximamente. Este módulo aún no está disponible, pero ya está habilitado para tu empresa.</p>
-            <a routerLink="/dashboard/main" class="btn btn-light">Volver al panel</a>
+            <a routerLink="/pocketbiz/dashboard/main" class="btn btn-light">Volver al panel</a>
           </div>
         </div>
       </div>

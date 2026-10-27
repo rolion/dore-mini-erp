@@ -44,7 +44,7 @@ export class ExpenseDetailComponent implements OnInit {
         error: (err: ExpensesApiError) => {
           this.loading = false;
           this.toastr.error(err.message);
-          this.router.navigate(['/expenses']);
+          this.router.navigate(['/pocketbiz/expenses']);
         },
       });
   }

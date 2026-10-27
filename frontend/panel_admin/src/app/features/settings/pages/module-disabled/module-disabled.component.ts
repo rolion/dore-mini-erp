@@ -2,11 +2,12 @@ import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, combineLatest, map } from 'rxjs';
+import { APP_PATHS } from '../../../../core/routing/app-paths';
 import { ModulesService } from '../../../../core/service/modules.service';
 
 /** Destino cuando se abre un módulo deshabilitado (URL guardada) o la API lo rechaza con `module_disabled`. */
-export const HOME_WITH_REPORTING = '/dashboard/main';
-export const HOME_BASE = '/catalog/products';
+export const HOME_WITH_REPORTING = APP_PATHS.dashboard;
+export const HOME_BASE = APP_PATHS.catalog;
 
 @Component({
   selector: 'app-module-disabled',

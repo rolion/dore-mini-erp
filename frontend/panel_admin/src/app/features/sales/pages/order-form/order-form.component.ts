@@ -104,7 +104,7 @@ export class OrderFormComponent implements OnInit {
           error: (err: OrderApiError) => {
             this.loading = false;
             this.toastr.error(err.message);
-            this.router.navigate(['/sales/orders']);
+            this.router.navigate(['/pocketbiz/sales/orders']);
           },
         });
     }
@@ -140,7 +140,7 @@ export class OrderFormComponent implements OnInit {
       next: (order) => {
         this.saving = false;
         this.toastr.success(this.isEdit ? 'Pedido actualizado' : 'Pedido creado');
-        this.router.navigate(['/sales/orders', order.id]);
+        this.router.navigate(['/pocketbiz/sales/orders', order.id]);
       },
       error: (err: OrderApiError) => {
         this.saving = false;
@@ -169,7 +169,7 @@ export class OrderFormComponent implements OnInit {
   private fill(order: Order): void {
     if (!order.editable) {
       this.toastr.error(NOT_EDITABLE_MESSAGE);
-      this.router.navigate(['/sales/orders', order.id]);
+      this.router.navigate(['/pocketbiz/sales/orders', order.id]);
       return;
     }
     this.form.setValue({

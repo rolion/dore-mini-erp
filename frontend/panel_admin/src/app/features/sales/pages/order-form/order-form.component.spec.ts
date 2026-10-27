@@ -158,7 +158,7 @@ describe('OrderFormComponent', () => {
         notes: 'Sin picante',
       });
       expect(toastr.success).toHaveBeenCalledWith('Pedido creado');
-      expect(navigate).toHaveBeenCalledWith(['/sales/orders', 'o-9']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'o-9']);
     });
 
     it('sends the chosen customer and the expected delivery date (AC-01, AC-18)', () => {
@@ -274,7 +274,7 @@ describe('OrderFormComponent', () => {
         notes: 'Sin picante',
       });
       expect(toastr.success).toHaveBeenCalledWith('Pedido actualizado');
-      expect(navigate).toHaveBeenCalledWith(['/sales/orders', 'o-1']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'o-1']);
     });
 
     it('does not send the customer when editing with the Customers module disabled (AC-11, REV-05)', () => {
@@ -297,14 +297,14 @@ describe('OrderFormComponent', () => {
       ordersApi.get.and.returnValue(throwError(() => new OrderApiError('Pedido no encontrado.', 404)));
       setup('nope');
       expect(toastr.error).toHaveBeenCalledWith('Pedido no encontrado.');
-      expect(navigate).toHaveBeenCalledWith(['/sales/orders']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders']);
     });
 
     it('sends the user to the detail when the order is no longer editable (AC-19, AC-24)', () => {
       ordersApi.get.and.returnValue(of(makeOrder({ editable: false, status: 'DELIVERED' })));
       setup('o-1');
       expect(toastr.error).toHaveBeenCalledWith(NOT_EDITABLE_MESSAGE);
-      expect(navigate).toHaveBeenCalledWith(['/sales/orders', 'o-1']);
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'o-1']);
     });
 
     it('links Cancelar back to the order', () => {
@@ -312,7 +312,7 @@ describe('OrderFormComponent', () => {
       const element = setup('o-1');
       fixture.detectChanges();
       const cancel = Array.from(element.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Cancelar');
-      expect(cancel?.getAttribute('href')).toBe('/sales/orders/o-1');
+      expect(cancel?.getAttribute('href')).toBe('/pocketbiz/sales/orders/o-1');
     });
   });
 });

@@ -6,8 +6,10 @@
           <div class="login-body">
             <div class="text-center">
               <div class="brand-wrapper">
-                <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
-              </div>
+                  <a routerLink="/" aria-label="PocketBiz, volver al inicio">
+                    <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
+                  </a>
+                </div>
             </div>
             <form class="validate-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
               <div class="row">
@@ -98,7 +100,7 @@
                 </div>
                 <div class="col-12 text-center">
                   <p class="mb-0 mt-3"><small class="text-dark msr-2">¿Ya tienes cuenta?</small>
-                    <a routerLink="/authentication/signin" class="text-dark fw-bold">Inicia sesión</a></p>
+                    <a routerLink="/pocketbiz/login" class="text-dark fw-bold">Inicia sesión</a></p>
                 </div>
               </div>
             </form>
