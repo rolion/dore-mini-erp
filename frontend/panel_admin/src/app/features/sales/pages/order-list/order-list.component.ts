@@ -22,6 +22,7 @@ import {
   SalesChannel,
   ZERO_AMOUNT,
 } from '../../models/order';
+import { IfModuleDirective } from '../../../../shared/directives/if-module.directive';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { CustomerOptionsService } from '../../services/customer-options.service';
@@ -50,6 +51,7 @@ export const EMPTY_ALL = 'Aún no hay pedidos.';
   styleUrl: './order-list.component.scss',
   imports: [
     RouterLink,
+    IfModuleDirective,
     DatePipe,
     AsyncPipe,
     NgxDatatableModule,

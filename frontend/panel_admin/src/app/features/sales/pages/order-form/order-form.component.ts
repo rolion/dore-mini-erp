@@ -19,6 +19,7 @@ import {
 } from '../../models/order';
 import { CustomerQuickCreateService } from '../../../customers';
 import { ModulesService } from '../../../../core/service/modules.service';
+import { IfModuleDirective } from '../../../../shared/directives/if-module.directive';
 import { CustomerOptionsService } from '../../services/customer-options.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 
@@ -34,7 +35,7 @@ export type FormField = Extract<
 @Component({
   selector: 'app-order-form',
   templateUrl: './order-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective],
+  imports: [ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective, IfModuleDirective],
 })
 export class OrderFormComponent implements OnInit {
   readonly notesMaxLength = NOTES_MAX_LENGTH;

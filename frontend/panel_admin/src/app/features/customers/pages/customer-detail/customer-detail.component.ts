@@ -6,13 +6,15 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { CustomerPurchaseHistoryComponent } from '../../components/customer-purchase-history/customer-purchase-history.component';
 import { Customer, CustomerApiError, CustomerOrderSummary } from '../../models/customer';
+import { ModulesService } from '../../../../core/service/modules.service';
+import { IfModuleDirective } from '../../../../shared/directives/if-module.directive';
 import { CustomerOrdersApiService } from '../../services/customer-orders-api.service';
 import { CustomersApiService } from '../../services/customers-api.service';
 
 @Component({
   selector: 'app-customer-detail',
   templateUrl: './customer-detail.component.html',
-  imports: [RouterLink, DatePipe, CustomerPurchaseHistoryComponent],
+  imports: [RouterLink, DatePipe, CustomerPurchaseHistoryComponent, IfModuleDirective],
 })
 export class CustomerDetailComponent implements OnInit {
   customer: Customer | null = null;
@@ -26,6 +28,7 @@ export class CustomerDetailComponent implements OnInit {
 
   private api = inject(CustomersApiService);
   private ordersApi = inject(CustomerOrdersApiService);
+  private modules = inject(ModulesService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
@@ -40,7 +43,10 @@ export class CustomerDetailComponent implements OnInit {
         next: (customer) => {
           this.customer = customer;
           this.loading = false;
-          this.loadOrders(customer.id);
+          // El historial de compras es una integración opcional con Ventas: sin el módulo no se pide ni se muestra.
+          if (!this.modules.isDisabled('sales')) {
+            this.loadOrders(customer.id);
+          }
         },
         error: (err: CustomerApiError) => {
           this.loading = false;

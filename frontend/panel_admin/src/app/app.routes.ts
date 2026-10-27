@@ -27,7 +27,7 @@ export const APP_ROUTE: Route[] = [
             {
                 path: 'dashboard',
                 canActivate: [moduleGuard],
-                data: { module: 'reporting' },
+                data: { module: 'reporting', home: true },
                 loadChildren: () =>
                     import('./dashboard/dashboard.routes').then((m) => m.DASHBOARD_ROUTE),
             },

@@ -5,8 +5,9 @@ import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ToastrService } from 'ngx-toastr';
 import Swal, { SweetAlertResult } from 'sweetalert2';
-import { of, throwError } from 'rxjs';
+import { defer, of, throwError } from 'rxjs';
 
+import { ModulesService } from '../../../../core/service/modules.service';
 import { Customer, CustomerApiError } from '../../models/customer';
 import { CustomerOrdersApiService } from '../../services/customer-orders-api.service';
 import { CustomersApiService } from '../../services/customers-api.service';
@@ -16,6 +17,12 @@ import { CustomerDetailComponent } from './customer-detail.component';
 interface ToggleHook {
   confirmToggle(customer: Customer): Promise<boolean>;
 }
+
+const modulesState = { salesDisabled: false };
+const modulesFake = {
+  isDisabled: (key: string) => key === 'sales' && modulesState.salesDisabled,
+  enabledKeys$: defer(() => of(new Set(modulesState.salesDisabled ? ['catalog', 'customers'] : ['catalog', 'customers', 'sales']))),
+};
 
 describe('CustomerDetailComponent', () => {
   let api: jasmine.SpyObj<CustomersApiService>;
@@ -28,9 +35,11 @@ describe('CustomerDetailComponent', () => {
     ordersApi = jasmine.createSpyObj<CustomerOrdersApiService>('CustomerOrdersApiService', ['list']);
     ordersApi.list.and.returnValue(of({ orders: [], total: 0 }));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
+    modulesState.salesDisabled = false;
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
+        { provide: ModulesService, useValue: modulesFake },
         { provide: CustomersApiService, useValue: api },
         { provide: CustomerOrdersApiService, useValue: ordersApi },
         { provide: ToastrService, useValue: toastr },
@@ -97,6 +106,15 @@ describe('CustomerDetailComponent', () => {
     expect(el.textContent).not.toContain('Este cliente aún no tiene pedidos.');
   });
 
+  it('does not ask Sales for the history nor show it when Sales is disabled (AC-06, REV-01)', async () => {
+    modulesState.salesDisabled = true;
+    api.get.and.returnValue(of(makeCustomer()));
+    const { el } = await open();
+    expect(el.textContent).toContain('Ana Pérez');
+    expect(ordersApi.list).not.toHaveBeenCalled();
+    expect(el.querySelector('app-customer-purchase-history')).toBeNull();
+  });
+
   it('keeps the customer visible and explains when the history cannot be loaded (AC-26)', async () => {
     api.get.and.returnValue(of(makeCustomer()));
     ordersApi.list.and.returnValue(throwError(() => new Error('No se pudo cargar el historial de compras.')));
@@ -113,6 +131,7 @@ describe('CustomerDetailComponent', () => {
         provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: ModulesService, useValue: modulesFake },
         { provide: ToastrService, useValue: toastr },
       ],
     });

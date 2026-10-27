@@ -135,6 +135,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - Header: solo el menú de usuario (nombre, empresa y cerrar sesión). Sin búsqueda, mensajes ni notificaciones.
 - El menú es dinámico: cada ítem de `assets/data/routes.json` puede llevar `module` y solo se muestra si la empresa tiene ese módulo habilitado (Dashboard y Reportes → `reporting`). Al final hay «Configuración › Módulos» (`/settings/modules`, pantalla de lista con tabla Bootstrap simple y diálogo de confirmación) y, si están habilitados, «Compras» e «Inventario» (pantalla «Próximamente»).
 - Un módulo deshabilitado (URL guardada o 403 `module_disabled` de la API) lleva a `/module-disabled`: pantalla simple «Módulo no habilitado» con «Volver al inicio» (DDR-bloquear-api-modulos-deshabilitados-pantalla-no-habilitado).
+- Un grupo del menú solo se muestra si tiene hijos visibles. Con Reportes deshabilitado el inicio (`/pocketbiz/dashboard/main`) redirige sin mensaje a Catálogo; los controles que dependen de un módulo opcional usan `*appIfModule` (DDR-adaptar-menus-pantallas-modulos-activos-inicio-y-menu).
 - Rutas por módulo: `catalog/products`, `customers`, `sales/orders`, `expenses`, `reports`; cada una con `''`, `new`, `:id`, `:id/edit`.
 
 ## 7. Accesibilidad mínima

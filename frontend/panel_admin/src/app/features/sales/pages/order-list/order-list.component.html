@@ -66,8 +66,7 @@
                   }
                 </select>
               </div>
-              @if (!customersDisabled) {
-              <div class="col-md-3">
+              <div class="col-md-3" *appIfModule="'customers'">
                 <label for="filter-customer">Cliente</label>
                 <ng-select inputId="filter-customer" [items]="(customers$ | async) ?? []" bindLabel="name"
                   [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
@@ -75,7 +74,6 @@
                   typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
                 </ng-select>
               </div>
-              }
               <div class="col-md-3">
                 <label for="filter-date-field">Fecha de</label>
                 <select id="filter-date-field" class="form-select form-control" formControlName="dateField">

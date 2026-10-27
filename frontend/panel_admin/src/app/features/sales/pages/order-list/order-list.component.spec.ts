@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
+import { defer, BehaviorSubject, Subject, of, throwError } from 'rxjs';
 
 import { Page } from '../../../../shared/models/page';
 import { OrderApiError, OrderSummary } from '../../models/order';
@@ -17,7 +17,10 @@ function page(results: OrderSummary[], count = results.length): Page<OrderSummar
 }
 
 const modulesState = { customersDisabled: false };
-const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
+const modulesFake = {
+  isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled,
+  enabledKeys$: defer(() => of(new Set(modulesState.customersDisabled ? ['catalog'] : ['catalog', 'customers']))),
+};
 
 describe('OrderListComponent', () => {
   let fixture: ComponentFixture<OrderListComponent>;
