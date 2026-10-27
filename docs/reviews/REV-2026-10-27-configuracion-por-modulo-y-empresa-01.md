@@ -1,6 +1,6 @@
 # REV-2026-10-27-configuracion-por-modulo-y-empresa-01: El fallback de SalesSettingsAdapter no funciona ante errores de base de datos dentro de la transaccion
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-configuracion-por-modulo-y-empresa.md (v1)
@@ -19,3 +19,6 @@ Solo cubre errores de Python (el test usa mock.patch con RuntimeError). Si la fa
 
 ## Evidence
 Lectura de adapters.py lineas 47-59 y de sales/api/views.py (_run con atomic). test_settings_read_failure_falls_back_to_initial_rule usa mock (sales/tests/test_api.py). Sugerencia: leer la configuracion fuera de la transaccion/antes de abrirla, o envolver la lectura en un savepoint (transaction.atomic anidado) y acotar la excepcion a DatabaseError; agregar un test con fallo real de BD.
+
+## Resolution
+Corregido: la lectura corre en un savepoint (`transaction.atomic()` en `SalesSettingsAdapter`); test `test_database_error_reading_settings_does_not_break_the_request` (falla sin el savepoint con `InternalError`).

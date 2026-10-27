@@ -1,6 +1,6 @@
 # REV-2026-10-27-configuracion-por-modulo-y-empresa-02: EDGE-03 (concurrencia) sin test pese a estar en la Test Specification
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-configuracion-por-modulo-y-empresa.md (v1)
@@ -19,3 +19,6 @@ Solo hay tests secuenciales; el comportamiento bajo concurrencia real no esta ve
 
 ## Evidence
 grep de def test en modules/modularity/tests/test_settings_api.py: ningun test de hilos/concurrencia. Sugerencia: TransactionTestCase con dos hilos (o verificar que la consulta emitida contiene FOR UPDATE con CaptureQueriesContext) para dejar evidencia.
+
+## Resolution
+Corregido: `modularity/tests/test_concurrency.py` (dos hilos guardan a la vez; el segundo registro lleva como valor anterior el nuevo del primero).

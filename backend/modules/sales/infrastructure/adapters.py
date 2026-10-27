@@ -8,6 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from django.db import transaction
 from django.utils import timezone
 
 from modules.catalog import services as catalog_services
@@ -52,7 +53,9 @@ class SalesSettingsAdapter:
 
     def max_discount_percent(self) -> Decimal:
         try:
-            return modularity_services.get_sales_settings(self.company_id).max_discount_percent
+            # Savepoint: un error de BD no debe dejar abortada la transacción de la petición.
+            with transaction.atomic():
+                return modularity_services.get_sales_settings(self.company_id).max_discount_percent
         except Exception:
             logger.exception('No se pudo leer la configuración de Ventas; se usa el valor inicial.')
             return MAX_DISCOUNT_PERCENT

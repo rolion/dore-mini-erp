@@ -104,7 +104,8 @@ Las reglas de Ventas son fijas y no hay historial de cambios; el admin solo pued
 - Specification: AC-01..11, INV-01..08, API y UI cubiertos; excepción EDGE-03 (REV-02).
 - Visual (navegador integrado): `/sales/settings`, historial, `/inventory/settings` y `/settings/modules` a 1440 px claro/oscuro y 390 px claro (sin scroll horizontal); no verificados Compras ni móvil oscuro.
 - No ejecutado: ruff/flake8/mypy (no instalados), `npm audit` (sin lockfile), test concurrente real de EDGE-03.
-- Hallazgos abiertos (IMPLEMENTATION): [REV-01](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-01.md) Medium (el fallback de EDGE-06 no cubre un error de BD dentro de `transaction.atomic`: respondería 500), [REV-02](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-02.md) Medium (EDGE-03 sin test concurrente), [REV-03](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-03.md) Low (sin validación de cliente del porcentaje; `apply()` acumula suscripciones).
+- Hallazgos (IMPLEMENTATION; REV-01 y REV-02 ya resueltos): [REV-01](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-01.md) Medium (el fallback de EDGE-06 no cubre un error de BD dentro de `transaction.atomic`: respondería 500), [REV-02](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-02.md) Medium (EDGE-03 sin test concurrente), [REV-03](../reviews/REV-2026-10-27-configuracion-por-modulo-y-empresa-03.md) Low (sin validación de cliente del porcentaje; `apply()` acumula suscripciones).
+- **Corrección posterior (2026-10-27, a pedido del usuario):** REV-01 y REV-02 resueltos (savepoint en la lectura de Ventas con test que falla sin él; test concurrente de EDGE-03). Verificado: backend 641 tests OK. Queda abierto solo REV-03 (Low).
 - Efecto en entorno local: el gate aplicó la migración 0002 y creó usuarios de prueba (`qagate1`, `qagate2`) en la BD local; quedaron servidores `ng serve`/`runserver` del gate posiblemente activos.
 
 ## Publicación

@@ -355,6 +355,20 @@ class DiscountTests(SalesApiTestCase):
         with mock.patch('modules.modularity.services.get_sales_settings', side_effect=RuntimeError('x')):
             self.assertEqual(self.discount(order, '70.00').json()['total'], '0.00')
 
+    def test_database_error_reading_settings_does_not_break_the_request(self):  # EDGE-06, REV-01
+        from django.db import DatabaseError, connection
+
+        order = self.order_with_item('35.00', 2)
+
+        def broken(company_id):
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT * FROM tabla_que_no_existe')
+            raise DatabaseError()
+
+        with mock.patch('modules.modularity.services.get_sales_settings', side_effect=broken):
+            self.assertEqual(self.discount(order, '70.00').json()['total'], '0.00')
+        self.assertEqual(self.get(order)['discount'], '70.00')
+
     def test_discount_cannot_drop_the_total_below_what_was_paid(self):  # AC-07
         order = self.order_with_item('35.00', 2)
         self.pay(order, '65.00')
