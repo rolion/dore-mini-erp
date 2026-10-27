@@ -3,7 +3,7 @@ from uuid import UUID
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 
-from modules.inventory.domain.exceptions import WarehouseValidationError
+from modules.inventory.domain.exceptions import WarehouseConflict, WarehouseValidationError
 from modules.inventory.domain.warehouse import DEFAULT_WAREHOUSE_NAME, Warehouse
 
 from .models import WarehouseModel
@@ -61,7 +61,11 @@ class DjangoWarehouseRepository:
                     defaults={'name': warehouse.name, 'description': warehouse.description,
                               'active': warehouse.active, 'is_default': warehouse.is_default})
         except IntegrityError:  # carrera con otra petición: la restricción única manda
-            raise WarehouseValidationError({'name': ['Ya existe un almacén con ese nombre.']}) from None
+            if self._warehouses().exclude(pk=warehouse.id).filter(name__iexact=warehouse.name).exists():
+                raise WarehouseValidationError({'name': ['Ya existe un almacén con ese nombre.']}) from None
+            raise WarehouseConflict(
+                'warehouse_default_changed',
+                'El almacén predeterminado cambió al mismo tiempo; inténtalo de nuevo.') from None
         return to_entity(self._warehouses().get(pk=warehouse.id))
 
     def list(self, search: str | None = None, active: bool | None = None) -> WarehouseList:

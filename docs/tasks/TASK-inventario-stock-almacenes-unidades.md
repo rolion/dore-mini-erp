@@ -13,6 +13,8 @@
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nuevo bounded context `inventory`, migraciones sobre productos existentes, nuevo puerto compartido) | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras 3 respuestas del usuario (ver Plan) | delivery-start |
 | 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-27 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 High: specs del sidebar) | delivery-publish |
+| 2026-10-27 | ENGINEERING → REVIEW | REV-01, 02, 04, 05, 06 corregidos; Karma completo = línea base | delivery-build |
 
 ## Investigación
 
@@ -87,6 +89,7 @@ Los productos no tienen concepto de existencias; no hay unidades ni almacenes; �
 **Desviaciones del plan:** (1) Las pestañas de unidades/almacenes piden `page_size=100` y no muestran paginación (pocas filas por empresa). (2) Sin acción «Definir predeterminado» en el diálogo para activar/desactivar: se ofrece también como botón de estrella en la tabla. (3) `UnitOfMeasure.in_use` se calcula con un `Exists` sobre productos, no se guarda.
 **Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 712 tests OK; `makemigrations --check` sin cambios. Frontend: `npm run lint` OK, `ng build` OK, Karma acotado (products + inventory) 74/74 OK (se apartó temporalmente `app.component.spec.ts`, roto en `main`, y se restauró sin modificar).
 **Entorno:** se copió `backend/.env` del checkout principal al worktree (con autorización del usuario; sin leerlo ni versionarlo, está en `.gitignore`), se usó el `.venv` del checkout principal y se enlazó `node_modules` con una unión.
+**Corrección tras el primer Quality Gate (FAIL):** REV-01 (spec de `sidebar-menu.spec.ts`), REV-04 (`warehouse_default_changed` 409 en la carrera de make-default), REV-06 (`alert-warning`) y REV-05 (desviaciones: menú «Ajustes» en es.json; archivos `catalog/api/errors.py` e `inventory/api/pagination.py` no listados en el plan; fixture de `order-items.component.spec.ts`). Karma completo: 71 fallos = línea base, 567 OK. Backend inventory/catalog/modularity OK (con fallos intermitentes por reloj, REV-03).
 **Deuda técnica:** los bloqueos por historial, saldo y recepciones no se ejercitan con datos reales hasta las historias de movimientos/recepciones (proveedor de `shared.stock_history` sin registrar; `NoWarehouseActivity`); no hay pantalla de regularización; el menú dice «Almacenes y unidades» y no «Configuración» literal; suite frontend con 71 specs demo preexistentes rotos.
 
 
