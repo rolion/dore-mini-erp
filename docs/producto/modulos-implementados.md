@@ -21,6 +21,7 @@ Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, 
 | Ventas | Pedidos, entrega y cobros (pagos parciales) | `sales/orders` | Listo |
 | Gastos | Registro de gastos y categorías | `expenses` | Listo |
 | Reportes | Dashboard y reportes de ventas/gastos | `dashboard`, `reports` | Listo |
+| Módulos por empresa | El admin elige qué módulos usa su empresa, con dependencias | `settings/modules` | Listo (PB-MOD-001) |
 | Marca y perfil | Logos PocketBiz, avatar con iniciales, menú de usuario | Transversal | Listo |
 
 ## 3. Detalle por módulo
@@ -123,3 +124,10 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 | Marca | `TASK-pocketbiz-branding-logos` | #9 |
 | Registro y empresas | `TASK-registro-usuarios-empresa-multitenant` | #10 |
 | Perfil y menús | `TASK-perfil-usuario-menus-lateral-superior` | #12 |
+
+### 3.7 Módulos por empresa (PB-MOD-001)
+- **Configuración › Módulos** (`/settings/modules`, solo admin): lista los módulos con estado, dependencias obligatorias e integraciones opcionales. Habilitar/Deshabilitar abre un diálogo que resume módulo, empresa y módulos afectados.
+- **Base**: Acceso/Empresa y Catálogo, siempre activos y sin interruptor.
+- **Dependencias**: Ventas→Catálogo; Reportes→Ventas y Gastos; Compras→Catálogo y Gastos; Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
+- Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Compras e Inventario aún no existen: al habilitarlos su menú abre «Próximamente».
+- **Pendiente (PB-MOD-004)**: la API de negocio no bloquea módulos deshabilitados y la desactivación segura (validar datos existentes) aún no existe.

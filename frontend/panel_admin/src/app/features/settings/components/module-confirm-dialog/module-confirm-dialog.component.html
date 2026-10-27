@@ -1,0 +1,34 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ isEnable ? 'Habilitar módulo' : 'Deshabilitar módulo' }}</h4>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <dl class="row mb-0">
+    <dt class="col-sm-4">Módulo</dt>
+    <dd class="col-sm-8">{{ module.name }}</dd>
+    <dt class="col-sm-4">Empresa</dt>
+    <dd class="col-sm-8">{{ companyName }}</dd>
+    <dt class="col-sm-4">Requiere</dt>
+    <dd class="col-sm-8">{{ requiredNames.length ? requiredNames.join(', ') : 'Sin dependencias' }}</dd>
+    <dt class="col-sm-4">Afectados</dt>
+    <dd class="col-sm-8">
+      @if (isEnable) {
+      Ninguno
+      } @else {
+      {{ affected.length ? affected.join(', ') : 'Ninguno' }}
+      }
+    </dd>
+  </dl>
+  @if (!isEnable) {
+  <small class="form-text text-muted">
+    Los datos se conservan; la desactivación segura completa llega en una próxima versión.
+  </small>
+  }
+  @if (serverError) {
+  <small class="form-text text-danger d-block mt-2">{{ serverError }}</small>
+  }
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" [disabled]="saving" (click)="confirm()">Confirmar</button>
+</div>

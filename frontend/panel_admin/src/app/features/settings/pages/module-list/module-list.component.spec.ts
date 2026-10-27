@@ -1,0 +1,95 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { BehaviorSubject, of, throwError } from 'rxjs';
+import { AppModule } from '../../../../core/models/module';
+import { ModulesService } from '../../../../core/service/modules.service';
+import { ModuleListComponent } from './module-list.component';
+
+function mod(key: string, extra: Partial<AppModule> = {}): AppModule {
+  return {
+    key,
+    name: key.toUpperCase(),
+    description: `desc ${key}`,
+    isBase: false,
+    enabled: false,
+    requires: [],
+    optional: [],
+    missingRequires: [],
+    ...extra,
+  };
+}
+
+describe('ModuleListComponent', () => {
+  let fixture: ComponentFixture<ModuleListComponent>;
+  let service: jasmine.SpyObj<ModulesService>;
+  let modal: jasmine.SpyObj<NgbModal>;
+  const modules$ = new BehaviorSubject<AppModule[] | null>(null);
+
+  const el = () => fixture.nativeElement as HTMLElement;
+  const button = (name: string) =>
+    Array.from(el().querySelectorAll<HTMLTableRowElement>('tbody tr'))
+      .find((row) => row.textContent?.includes(`desc ${name}`))
+      ?.querySelector<HTMLButtonElement>('button') ?? null;
+
+  const setup = (rows: AppModule[]) => {
+    modules$.next(rows);
+    service.load.and.returnValue(of(rows));
+    fixture = TestBed.createComponent(ModuleListComponent);
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    service = jasmine.createSpyObj<ModulesService>('ModulesService', ['load']);
+    (service as { modules$: unknown }).modules$ = modules$.asObservable();
+    modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
+    await TestBed.configureTestingModule({
+      imports: [ModuleListComponent],
+      providers: [provideRouter([]), { provide: ModulesService, useValue: service }, { provide: NgbModal, useValue: modal }],
+    }).compileComponents();
+  });
+
+  it('shows base modules without a toggle (AC-02)', () => {
+    setup([mod('catalog', { isBase: true, enabled: true })]);
+    expect(button('catalog')).toBeNull();
+    expect(el().textContent).toContain('Siempre activo');
+    expect(el().textContent).toContain('Base');
+  });
+
+  it('blocks enabling and names the missing dependencies (AC-03)', () => {
+    setup([mod('purchases', { missingRequires: ['Gastos'], requires: [{ key: 'expenses', name: 'Gastos', enabled: false }] })]);
+    const enable = button('purchases');
+    expect(enable?.disabled).toBeTrue();
+    expect(el().textContent).toContain('Requiere habilitar primero: Gastos');
+  });
+
+  it('blocks disabling a module required by an enabled one (AC-05)', () => {
+    setup([
+      mod('sales', { enabled: true }),
+      mod('reporting', { enabled: true, requires: [{ key: 'sales', name: 'SALES', enabled: true }] }),
+    ]);
+    expect(button('sales')?.disabled).toBeTrue();
+    expect(el().textContent).toContain('Lo requieren: REPORTING');
+    expect(button('reporting')?.disabled).toBeFalse();
+  });
+
+  it('opens the confirmation dialog with the module and affected modules (AC-07)', () => {
+    const dialog = { module: undefined as unknown, action: '', affected: [] as string[] };
+    modal.open.and.returnValue({ componentInstance: dialog, result: Promise.resolve() } as never);
+    setup([mod('inventory', { optional: [{ key: 'sales', name: 'Ventas', enabled: true }] })]);
+    button('inventory')?.click();
+    expect(modal.open).toHaveBeenCalled();
+    expect((dialog.module as AppModule).key).toBe('inventory');
+    expect(dialog.action).toBe('enable');
+    expect(el().textContent).toContain('Ventas (disponible)');
+  });
+
+  it('shows a retry when loading fails', () => {
+    service.load.and.returnValue(throwError(() => new Error('No se pudieron cargar los módulos.')));
+    modules$.next(null);
+    fixture = TestBed.createComponent(ModuleListComponent);
+    fixture.detectChanges();
+    expect(el().textContent).toContain('No se pudieron cargar los módulos.');
+    expect(el().textContent).toContain('Reintentar');
+  });
+});

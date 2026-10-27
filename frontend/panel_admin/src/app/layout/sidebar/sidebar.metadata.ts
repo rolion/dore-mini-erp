@@ -9,4 +9,6 @@ export interface RouteInfo {
   badge: string;
   badgeClass: string;
   submenu: RouteInfo[];
+  /** Clave del módulo que habilita este ítem; sin clave, el ítem siempre se muestra. */
+  module?: string;
 }

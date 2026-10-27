@@ -1,6 +1,6 @@
 # TASK-habilitar-modulos-por-empresa: Habilitar módulos por empresa (PB-MOD-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-habilitar-modulos-por-empresa
@@ -12,6 +12,7 @@
 | 2026-10-27 | (nuevo) → INVESTIGATION | Task creado; `main` ya estaba al día | delivery-start |
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nuevo modelo por empresa, contrato API y navegación) | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario (ver Plan) | delivery-start |
+| 2026-10-27 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -77,7 +78,12 @@ Todo usuario admin ve y usa todos los módulos; el menú es idéntico para todas
 `docs/plans/PLAN-2026-10-27-habilitar-modulos-por-empresa.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/modularity/`): dominio puro con catálogo y reglas (INV-01..03, INV-06), modelos `CompanyModuleModel`/`CompanySettingsModel` y migración `0001_initial` (solo `CreateModel`, AC-09), repositorio `DjangoCompanyModuleRepository(company_id)` con sembrado idempotente en la primera lectura (AC-08, EDGE-03), casos de uso y API `GET /api/modules/`, `POST .../enable|disable/` (API-01..03; 404, 400 base, 409 con `missing`/`dependents`). Registro en `INSTALLED_APPS` y `config/urls.py`; `modularity` se añadió a `NON_BUSINESS` en `test_boundaries.py`.
+**Frontend:** `core/service/modules.service.ts` (estado + API), `core/guard/module.guard.ts` (`data.module`), filtrado del menú en `sidebar.component.ts` con campo `module` en `routes.json`, rutas `settings/modules`, `purchases`, `inventory`, i18n es/en/de, `features/settings/` con `ModuleListComponent`, `ModuleConfirmDialogComponent` y `ComingSoonComponent`. AC-04/05/07, UI-01..04, EDGE-04/05.
+**Referencias de diseño:** lista basada en `category-list` (tabla Bootstrap simple, desviación declarada en el DDR), diálogo según `category-dialog`; badges `badge-outline`, botones `btn-primary`/`btn-warning`.
+**Desviaciones:** `ModulesService` y el modelo viven en `core/` (no en `features/settings/`) porque los consumen el menú, el guard y `AuthService` (que limpia el estado al cerrar sesión). El estado `initialized` se guarda en una segunda tabla `modularity_company_settings` (prevista en el ADR).
+**Verificación propia (no es el Quality Gate):** backend `test_domain`, `test_boundaries` y `test_guards` pasan (19 tests). Los tests de integración `modularity/tests/test_api.py` no se pudieron ejecutar en este worktree porque no hay `backend/.env` ni credenciales de PostgreSQL (copiar el `.env` del checkout principal fue denegado por seguridad). Frontend: `ng lint` y `ng build` OK; Karma: los specs nuevos y los de sidebar/core pasan; fallan 71 specs «should create» de pantallas demo de la plantilla (sin proveedor `ActivatedRoute`), y `app.component.spec.ts` no compila en `main` (`title` inexistente), ambos preexistentes y ajenos a esta tarea.
+**Deuda técnica:** los 71 specs demo rotos y `app.component.spec.ts`; bloqueo 403 por módulo en la API (PB-MOD-004).
 
 ## Review
 _Pendiente_

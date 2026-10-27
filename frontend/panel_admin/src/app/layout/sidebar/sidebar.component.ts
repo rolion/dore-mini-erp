@@ -7,6 +7,7 @@ import {
 import { NgClass, DOCUMENT } from '@angular/common';
 import {
   Component,
+  DestroyRef,
   ElementRef,
   OnInit,
   Renderer2,
@@ -22,7 +23,13 @@ import { AuthService } from '@core';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { userFullName, userInitials } from '../../shared/models/user-profile';
 import { SidebarService } from './sidebar.service';
-import { Subscription } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subscription, combineLatest } from 'rxjs';
+import { ModulesService } from '../../core/service/modules.service';
+
+function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolean {
+  return !item.module || (enabled !== null && enabled.has(item.module));
+}
 
 @Component({
   selector: 'app-sidebar',
@@ -56,6 +63,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private sidebarService = inject(SidebarService);
+  private modulesService = inject(ModulesService);
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
     this.routerObj = this.router.events.subscribe((event) => {
@@ -106,9 +115,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   }
   ngOnInit() {
     if (this.authService.currentUserValue) {
-      this.sidebarService.getRouteInfo().subscribe((routes: RouteInfo[]) => {
-        this.sidebarItems = routes.filter((sidebarItem) => sidebarItem);
-      });
+      // Mientras no se conocen los módulos solo se ven los ítems sin módulo; ante un error, solo los base.
+      this.modulesService.loadQuietly().pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
+      combineLatest([this.sidebarService.getRouteInfo(), this.modulesService.enabledKeys$])
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(([routes, enabled]) => {
+          this.sidebarItems = routes.filter((sidebarItem) => sidebarItem && isVisible(sidebarItem, enabled));
+        });
     }
     this.initLeftSidebar();
     this.bodyTag = this.document.body;

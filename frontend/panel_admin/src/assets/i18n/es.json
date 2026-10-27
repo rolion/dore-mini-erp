@@ -89,6 +89,18 @@
         "BASIC": "Tablas básicas",
         "ADVANCE": "Tablas avanzadas"
       }
+    },
+    "PURCHASES": {
+      "TEXT": "Compras"
+    },
+    "INVENTORY": {
+      "TEXT": "Inventario"
+    },
+    "SETTINGS": {
+      "TEXT": "Configuración",
+      "LIST": {
+        "MODULES": "Módulos"
+      }
     }
   }
 }

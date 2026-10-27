@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { importProvidersFrom } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -84,6 +84,40 @@ describe('SidebarComponent', () => {
     it('keeps prefix matching for the extending item and for unrelated siblings', () => {
       expect(component.linkActiveOptions(categories, [expenses, categories])).toEqual({ exact: false });
       expect(component.linkActiveOptions(products, [products])).toEqual({ exact: false });
+    });
+  });
+
+  describe('menu by enabled modules (AC-04, AC-05, AC-08)', () => {
+    const base = { iconType: '', icon: '', class: '', groupTitle: false, badge: '', badgeClass: '', submenu: [] };
+    const moduleDto = (key: string, enabled: boolean) => ({
+      key, name: key, description: '', is_base: false, enabled, requires: [], optional: [], missing_requires: [],
+    });
+
+    const flush = (enabled: Record<string, boolean>) => {
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('assets/data/routes.json').flush({
+        routes: [
+          { ...base, path: '/customers', title: 'Clientes', module: 'customers' },
+          { ...base, path: '/inventory', title: 'Inventario', module: 'inventory' },
+          { ...base, path: '/settings/modules', title: 'Módulos' },
+        ],
+      });
+      http.expectOne((req) => req.url.endsWith('/modules/')).flush(
+        Object.entries(enabled).map(([key, on]) => moduleDto(key, on)),
+      );
+      fixture.detectChanges();
+    };
+
+    it('shows only items of enabled modules plus items without module', () => {
+      create({ id: 1, username: 'ana', firstName: '', lastName: '', token: 't' });
+      flush({ customers: true, inventory: true });
+      expect(component.sidebarItems.map((item) => item.path)).toEqual(['/customers', '/inventory', '/settings/modules']);
+    });
+
+    it('hides the menu of a module that is not enabled for the company', () => {
+      create({ id: 1, username: 'ana', firstName: '', lastName: '', token: 't' });
+      flush({ customers: true, inventory: false });
+      expect(component.sidebarItems.map((item) => item.path)).toEqual(['/customers', '/settings/modules']);
     });
   });
 
