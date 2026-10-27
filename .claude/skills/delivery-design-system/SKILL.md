@@ -13,7 +13,7 @@ Lee docs/design/stitch-workflow.md y aplica su protocolo.
 2. Define tokens semánticos: primary, on-primary, background, surface, text, text-muted, border, success, warning, danger y focus. Incluye valores de light/dark cuando corresponda.
 3. Define tipografía, escala de tamaños, espaciados, radios, sombras, densidad y breakpoints. Usa fuentes con licencia adecuada verificada; reutiliza la fuente instalada si es apropiada.
 4. Especifica variantes y estados de botones, inputs, selectores, tablas, cards, navegación, diálogos, badges y notificaciones que requiere el producto.
-5. Escribe docs/design/design-system.md con tabla de tokens y reglas. Incluye un bloque listo para reutilizar en prompts de Stitch con valores explícitos y restricciones.
+5. Escribe docs/design/design-system.md con tabla de tokens y reglas. Si ya existe, actualízalo conservando su contenido: es la fuente de verdad del lenguaje visual que leen delivery-start, delivery-build y delivery-publish. Incluye un bloque listo para reutilizar en prompts de Stitch con valores explícitos y restricciones.
 6. Usa el MCP para generar o actualizar una pantalla de referencia con los componentes principales y los temas requeridos. Aplica los tokens en el prompt; usa capacidades nativas de design system únicamente si están expuestas.
 7. Inspecciona el resultado y anota desviaciones respecto a los tokens. Registra los IDs y exportaciones disponibles.
 

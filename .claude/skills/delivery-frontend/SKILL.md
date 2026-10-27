@@ -11,7 +11,7 @@ Lee docs/design/stitch-workflow.md y aplica su protocolo.
 
 1. Lee la especificación, tokens, screens.md y las instrucciones de implementación del repositorio. Identifica el framework y versiones reales desde sus archivos; no asumas Angular, React ni Tailwind.
 2. Recupera por MCP las pantallas registradas y los assets o código disponibles. Usa exportaciones locales existentes si la conexión está bloqueada y explica su procedencia.
-3. Identifica componentes reutilizables y cambios necesarios. Si delivery-plan o delivery-engineer ya gobierna el proyecto, respeta su alcance y artefactos; no dupliques sus reglas ni cambies contratos por iniciativa propia.
+3. Identifica componentes reutilizables y cambios necesarios. Si delivery-start o delivery-build ya gobierna el proyecto, respeta su alcance y artefactos; no dupliques sus reglas ni cambies contratos por iniciativa propia.
 4. Adapta el diseño a componentes nativos del proyecto. El HTML exportado es referencia: no copies scripts, dependencias externas, CDN, lógica ficticia o estructuras incompatibles.
 5. Implementa responsive, temas requeridos, loading, vacío, error, validación y permisos con datos y servicios existentes. No inventes endpoints. Si falta un contrato, informa y limita mocks al entorno permitido por el proyecto.
 6. Reutiliza tokens semánticos. Conserva labels, foco, teclado y semántica accesible. Gestiona assets en las rutas y pipeline del proyecto.
