@@ -1,6 +1,6 @@
 # TASK-inventario-movimientos-trazables: Registrar movimientos trazables de inventario (PB-INV-004)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-movimientos-trazables
@@ -15,6 +15,7 @@
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend 743 OK, Karma acotado OK | delivery-build |
 | 2026-10-28 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 High: `npm run build` falla con TS7053) | delivery-publish |
 | 2026-10-28 | ENGINEERING → REVIEW | REV-01..04 corregidos; backend 747 OK, build, lint y Karma acotado OK | delivery-build |
+| 2026-10-28 | REVIEW → PUBLISH | Quality Gate PASS (segundo ciclo); REV-05 Low abierto; a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -91,7 +92,7 @@ Ver `docs/adr/ADR-inventario-movimientos-trazables-registro-idempotente-y-saldo.
 **Corrección tras el primer Quality Gate (FAIL):** REV-01 (tipado de etiquetas en la plantilla de la lista: `kindLabel()`/`statusLabel()`), REV-02 (carrera registrar movimiento vs. desactivar almacén: `WarehouseRepository.locked()`; `RecordMovement` valida el almacén bajo el bloqueo y `DeactivateWarehouse` toma el mismo), REV-03 (tests: filtro de fechas en el límite de día con `TIME_ZONE`, reversión concurrente, `cannot_reverse_reversal`, reintento de operación revertida), REV-04 (DDR/ADR actualizados con las desviaciones y la política de reintento; columna Origen muestra clase + id). Verificación propia: backend 747 OK; `npm run build` OK; `npm run lint` OK; Karma acotado 43/43.
 
 ## Review
-_Pendiente_
+**Ciclo 1: FAIL** (REV-01 High: `npm run build` fallaba; REV-02 Medium carrera almacén; REV-03 y REV-04 Low). **Ciclo 2: PASS** (subagente aislado). Backend 747 tests OK, `makemigrations --check` sin cambios, bandit 0 hallazgos, `npm run lint` OK, `npm run build` OK, Karma completo 654 ejecutados / 71 fallos = línea base (todos «should create» de pantallas demo; ninguno en inventory ni sidebar; `app.component.spec.ts` apartado y restaurado). REV-01..04 resueltos y verificados de forma independiente. Abierto: `docs/reviews/REV-2026-10-28-inventario-movimientos-trazables-05.md` (Low: falta una prueba de concurrencia registrar-movimiento vs. desactivar-almacén). Revisión visual en navegador: **no verificada** (checklist §8 revisada por código). `npm audit`: no ejecutable (el repo no tiene lockfile).
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana (no se mergea desde el flujo). Task con arquitectura (ADR), base de datos (migración `inventory/0002`) y conexión de puertos entre módulos: requiere revisión humana atenta.

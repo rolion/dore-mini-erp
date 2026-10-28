@@ -1,6 +1,6 @@
 # REV-2026-10-28-inventario-movimientos-trazables-01: npm run build falla: errores TS7053 en la plantilla de movement-list
 
-**Status:** Resolved (pendiente de re-verificación por delivery-publish)
+**Status:** Resolved (verificado por delivery-publish, ciclo 2)
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-inventario-movimientos-trazables.md (v1)

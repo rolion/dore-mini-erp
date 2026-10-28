@@ -1,6 +1,6 @@
 # REV-2026-10-28-inventario-movimientos-trazables-04: Desviaciones menores respecto al DDR/ADR y semántica de reintento tras reversión
 
-**Status:** Resolved (pendiente de re-verificación por delivery-publish)
+**Status:** Resolved (verificado por delivery-publish, ciclo 2)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-10-28-inventario-movimientos-trazables.md (v1)

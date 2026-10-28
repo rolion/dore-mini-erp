@@ -1,6 +1,6 @@
 # REV-2026-10-28-inventario-movimientos-trazables-02: Carrera entre registrar movimiento y desactivar almacén / validaciones fuera del bloqueo
 
-**Status:** Resolved (pendiente de re-verificación por delivery-publish)
+**Status:** Resolved (verificado por delivery-publish, ciclo 2)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-inventario-movimientos-trazables.md (v1)

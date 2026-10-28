@@ -1,6 +1,6 @@
 # REV-2026-10-28-inventario-movimientos-trazables-03: Huecos de prueba: zona horaria de filtros de fecha, reversión concurrente y puerto del almacén
 
-**Status:** Resolved (pendiente de re-verificación por delivery-publish)
+**Status:** Resolved (verificado por delivery-publish, ciclo 2)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-inventario-movimientos-trazables.md (v1)
