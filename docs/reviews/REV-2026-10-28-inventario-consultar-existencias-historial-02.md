@@ -1,6 +1,6 @@
 # REV-2026-10-28-inventario-consultar-existencias-historial-02: Desviación del plan no documentada (métodos de repositorio no creados)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-10-28-inventario-consultar-existencias-historial.md (v1)

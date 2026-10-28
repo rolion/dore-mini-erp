@@ -149,3 +149,13 @@ class StockDetailTests(StockApiTestCase):
         set_enabled(other, [*DEFAULT_ENABLED_KEYS, 'inventory'])
         self.assertEqual(client.get(STOCK).json()['count'], 0)
         self.assertEqual(client.get(f'{STOCK}{product}/{self.warehouse}/').status_code, 404)
+
+    def test_detail_requires_the_inventory_module_and_an_admin(self):  # Authorization (REV-01)
+        product = self.make_product('Harina')
+        url = f'{STOCK}{product}/{self.warehouse}/'
+        member = make_admin(self.company, username='mario', role='member')
+        other = APIClient()
+        authenticate(other, member)
+        self.assertEqual(other.get(url).status_code, 403)
+        set_enabled(self.company, DEFAULT_ENABLED_KEYS)
+        self.assertEqual(self.client.get(url).status_code, 403)

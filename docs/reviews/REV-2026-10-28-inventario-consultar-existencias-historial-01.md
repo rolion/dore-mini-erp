@@ -1,6 +1,6 @@
 # REV-2026-10-28-inventario-consultar-existencias-historial-01: Sin prueba de 403 para el nuevo detalle GET /api/stock/<product_id>/<warehouse_id>/
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-inventario-consultar-existencias-historial.md (v1)
