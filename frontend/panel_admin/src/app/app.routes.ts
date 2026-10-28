@@ -106,6 +106,34 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'inventory/stock',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/stock-list/stock-list.component').then(
+                        (m) => m.StockListComponent
+                    ),
+            },
+            {
+                path: 'inventory/stock/opening',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/stock-opening/stock-opening.component').then(
+                        (m) => m.StockOpeningComponent
+                    ),
+            },
+            {
+                path: 'inventory/stock/movements',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/stock-movements/stock-movements.component').then(
+                        (m) => m.StockMovementsComponent
+                    ),
+            },
+            {
                 path: 'inventory/configuration',
                 canActivate: [moduleGuard],
                 data: { module: 'inventory' },

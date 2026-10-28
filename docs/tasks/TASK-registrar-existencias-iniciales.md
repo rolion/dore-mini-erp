@@ -1,6 +1,6 @@
 # TASK-registrar-existencias-iniciales: Registrar existencias iniciales (PB-INV-003)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-existencias-iniciales
@@ -12,6 +12,7 @@
 | 2026-10-27 | (nuevo) → INVESTIGATION | Task creado; rama integrada con `origin/main` (PR #20 con PB-INV-001/002 ya publicado) | delivery-start |
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: primeras tablas de movimientos y saldos, conexión de los puertos de historial y actividad de almacén, dependencia `inventory → catalog` | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas; supuestos documentados en el Plan) | delivery-start |
+| 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -80,7 +81,20 @@ No se puede cargar stock: no hay tablas de movimientos/saldos, ni pantalla de ex
 `docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend.** `catalog`: `services.get_stock_products` (DTO `StockProduct`, una consulta por lote), filtro `tracks_stock` en `GET /api/products/` y `allows_fractions` en `base_unit` (API-05). `inventory`: `domain/stock.py` (`StockOpening`, `OpeningLine`, validación de cantidad/fracciones; INV-01, 02), excepciones nuevas, puertos `ProductCatalog` y `StockRepository`, `application/stock_use_cases.py` (`RegisterOpening` transaccional con bloqueo del almacén, réplica por `opening_id`, todo o nada; `CheckOpeningHistory`; INV-03..07, AC-01..03), `infrastructure/django/{models,stock_repository}.py` + migración `0002_stock_movements_balances` (solo `CreateModel`, restricciones únicas y `CHECK`), `catalog_adapter.py`, `DjangoWarehouseActivity` y registro de `shared.stock_history` en `InventoryConfig.ready()` (AC-06), API `api/stock_{views,serializers,urls}.py` bajo `/api/stock/` (API-01..04), `test_boundaries` con `inventory: {'catalog'}`.
+**Frontend.** `features/inventory/`: modelos (`stock.ts`, `api-error.ts` ampliado con errores por línea e historial), `StockApiService`, `OpeningProductsService`, páginas `stock-list` (Existencias, UI-01), `stock-opening` (formulario con líneas, resumen y confirmación de envío único; UI-02..04), `stock-movements` (UI-05); rutas `inventory/stock`, `inventory/stock/opening` (con `unsavedChangesGuard`), `inventory/stock/movements`; submenú «Existencias» con i18n es/en/de (UI-06). Patrón nuevo documentado en `design-system.md`; `ddd.md` y `modulos-implementados.md` actualizados.
+**Pantallas de referencia:** `product-list`/`inventory-configuration` (lista y tabla apilada, parcial `_inventory-table.scss` reutilizado), `order-form` (formulario con `ng-select`), `settings-history` (`ngb-pagination`). Componentes reutilizados: `badge-outline`, `NgbPagination`, `ToastrService`. No se creó ningún componente en `shared/`.
+**Cobertura.** AC-01/02 → `OpeningDomainTests`, `OpeningApiTests`, `ConcurrentOpeningTests`; AC-03 → `test_product_with_movements_is_rejected_and_nothing_is_created`, `test_database_allows_one_opening_per_product_and_warehouse`, specs de `stock-opening`; AC-04/05 → specs de `stock-opening`, `stock-list`, `stock-movements`, `StockReadTests`; AC-06 → `ConnectedPortsTests`; API-05 → `catalog/tests/test_stock_filter.py`.
+**Desviaciones respecto al plan:**
+1. El listado de Existencias se ordena por almacén y última actualización, no por nombre de producto: el nombre vive en `catalog` y no se hace un join entre módulos (el plan decía «orden por producto»).
+2. `index` en las líneas del 409 `stock_history_exists` viaja como texto (DRF convierte los detalles a cadenas); la UI se guía por `product_id`.
+3. La cantidad se valida en el dominio (campo `RawQuantityField`) para que los mensajes sean en español y los errores de línea tengan la misma forma (lista) venga la regla de forma o de dominio.
+4. Archivos no listados en el plan: `application/stock_use_cases.py`, `infrastructure/django/stock_repository.py`, `infrastructure/catalog_adapter.py`, `api/stock_*.py` (el plan los agrupaba bajo `use_cases.py`/`repositories.py`/`views.py`); frontend `opening-products.service.ts` (consulta `/api/products/` desde `inventory` sin importar la feature `products`).
+5. Se actualizó `sidebar-menu.spec.ts` (conteo de títulos y submenú de Inventario) por la nueva entrada de menú.
+6. En el `ng-select` de las líneas se usa `[labelForId]` (en `order-form` `inputId` solo funciona como atributo y no asocia la etiqueta).
+**Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 743 tests OK; `makemigrations --check` sin cambios. Frontend: `npm run lint` OK, `ng build` OK, Karma completo 71 fallos = línea base (specs «should create» de pantallas demo), 595 OK (+28 de este task). Se apartó temporalmente `app.component.spec.ts` (roto en `main`: `Property 'title' does not exist`) y se restauró sin cambios.
+**Entorno:** con autorización del usuario se copió `backend/.env` del checkout principal (sin leerlo; ignorado por git), se usó su `.venv` y se enlazó `node_modules` con una unión.
+**Deuda técnica:** no hay búsqueda por nombre en Existencias ni ajustes (corrección de una apertura errónea); la revisión visual en navegador (claro/oscuro, 390/1440 px) no se hizo; el selector de productos pide hasta 50 resultados (el resto por búsqueda); `NoWarehouseActivity` queda solo para pruebas; las recepciones pendientes siguen sin datos.
 
 ## Review
 _Pendiente_

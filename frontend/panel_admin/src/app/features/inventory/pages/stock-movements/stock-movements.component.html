@@ -1,0 +1,83 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Movimientos</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Inventario</li>
+    <li class="breadcrumb-item"><a [routerLink]="backLink.path" [queryParams]="backLink.params">Existencias</a></li>
+    <li class="breadcrumb-item">Movimientos</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ summary?.productName || 'Movimientos' }}</h4>
+          </div>
+          @if (loading) {
+          <p class="m-4">Cargando…</p>
+          } @else if (errorMessage) {
+          <div class="m-4">
+            <small class="form-text text-danger d-block mb-2" data-testid="movements-error">{{ errorMessage }}</small>
+            <button type="button" class="btn btn-light" (click)="load()">Reintentar</button>
+          </div>
+          } @else {
+          @if (summary) {
+          <dl class="row m-4" data-testid="movements-summary">
+            <dt class="col-sm-3">Almacén</dt>
+            <dd class="col-sm-9">{{ summary.warehouseName }}</dd>
+            <dt class="col-sm-3">Existencia actual</dt>
+            <dd class="col-sm-9">{{ display(summary.quantity) }} {{ summary.unit?.abbreviation }}</dd>
+          </dl>
+          }
+          @if (!rows.length) {
+          <p class="m-4">Sin movimientos.</p>
+          } @else {
+          <div class="table-responsive">
+            <table class="table align-middle inventory-table">
+              <caption class="visually-hidden">Movimientos del producto</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Cantidad</th>
+                  <th scope="col">Referencia</th>
+                  <th scope="col">Registrado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (movement of rows; track movement.id) {
+                <tr>
+                  <td data-label="Fecha">{{ movement.movementDate | date: 'dd/MM/yyyy' }}</td>
+                  <td data-label="Tipo">
+                    <div class="badge-outline col-blue">{{ typeLabel(movement.movementType) }}</div>
+                  </td>
+                  <td data-label="Cantidad">{{ display(movement.quantity) }} {{ summary?.unit?.abbreviation }}</td>
+                  <td data-label="Referencia">{{ movement.reference }}</td>
+                  <td data-label="Registrado">{{ movement.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (count > pageSize) {
+          <ngb-pagination class="d-flex justify-content-center" [collectionSize]="count" [pageSize]="pageSize"
+            [page]="page" [maxSize]="5" [boundaryLinks]="true" aria-label="Páginas de movimientos"
+            (pageChange)="goTo($event)" />
+          }
+          }
+          }
+          <div class="m-4">
+            <a class="btn btn-light" [routerLink]="backLink.path" [queryParams]="backLink.params">
+              Volver a existencias
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

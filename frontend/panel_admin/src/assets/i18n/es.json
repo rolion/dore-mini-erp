@@ -101,6 +101,7 @@
       "TEXT": "Inventario",
       "LIST": {
         "HOME": "Inicio",
+        "STOCK": "Existencias",
         "CONFIGURATION": "Almacenes y unidades",
         "SETTINGS": "Ajustes"
       }
