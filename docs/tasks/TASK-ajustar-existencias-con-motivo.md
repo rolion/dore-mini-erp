@@ -13,6 +13,8 @@
 | 2026-10-28 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: una tabla nueva en `inventory` sobre el libro y la fachada existentes; sin decisión arquitectónica nueva | delivery-start |
 | 2026-10-28 | PLANNING → ENGINEERING | Specification READY (supuestos documentados en el Plan, ninguno bloqueante) | delivery-start |
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-28 | REVIEW → ENGINEERING | Ciclo 1 sin PASS: REV-01 (Medium, cantidades enormes dan 500) y REV-02 (Low, clave de otra empresa da 500) | delivery-publish |
+| 2026-10-28 | ENGINEERING → REVIEW | REV-01 y REV-02 corregidos con tests de regresión (106 tests de inventory OK) | delivery-build |
 
 ## Investigación
 
@@ -94,7 +96,7 @@ No aplica según veredicto (se sigue `ADR-inventario-movimientos-trazables-regis
 **Verificación propia (no es el Quality Gate).** Backend `manage.py test` 802 OK (incluye concurrencia con PostgreSQL), `makemigrations --check` sin cambios. Frontend: Karma acotado (inventory + sidebar) 103/103 OK con `app.component.spec.ts` apartado temporalmente (roto en `main`, restaurado sin cambios), `ng lint` OK, `ng build` OK. Revisión visual en navegador: no verificada. Entorno: `.env` copiado del checkout principal sin abrirlo (no versionado), `.venv` del checkout principal y `node_modules` por enlace.
 
 ## Review
-_Pendiente_
+**Ciclo 1: sin PASS.** Subagente aislado: backend 802 OK, Karma acotado 103/103, suite completa 71 fallos = línea base (ninguno en inventory ni sidebar), lint y build OK, bandit sin hallazgos en inventory, `makemigrations --check` limpio. Hallazgos: `docs/reviews/REV-2026-10-28-ajustar-existencias-con-motivo-01.md` (Medium) y `-02` (Low), ambos corregidos (tope de cantidad antes de `quantize`; `IntegrityError` de clave ajena → 409 `adjustment_id_reused`). Revisión visual en navegador: no verificada (levantar la app habría escrito en la base de desarrollo del usuario). `npm audit`: no realizable (sin lockfile).
 
 ## Publicación
 _Pendiente_

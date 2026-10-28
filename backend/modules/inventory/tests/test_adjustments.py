@@ -51,13 +51,15 @@ class AdjustmentDomainTests(SimpleTestCase):
 
     def test_counted_quantity_rules(self):  # INV-05, EDGE-02
         self.assertEqual(validate_counted_quantity(' 2.5 '), Decimal('2.500'))
-        for bad in ('-1', '1.0005', 'abc', 1.5, True, None, 'NaN', '1e3', '+5', ''):
+        for bad in ('-1', '1.0005', 'abc', 1.5, True, None, 'NaN', '1e3', '+5', '', '1' + '0' * 30, Decimal('1e999999')):
             with self.assertRaises(AdjustmentValidationError, msg=repr(bad)) as ctx:
                 validate_counted_quantity(bad)
             self.assertIn('counted_quantity', ctx.exception.errors)
 
     def test_expected_balance_may_be_negative_but_not_a_float(self):  # EDGE-04
         self.assertEqual(validate_expected_balance('-2.5'), Decimal('-2.5000'))
+        with self.assertRaises(AdjustmentValidationError):
+            validate_expected_balance('1e999999')
         with self.assertRaises(AdjustmentValidationError):
             validate_expected_balance(1.5)
 
@@ -154,6 +156,31 @@ class AdjustmentApiTests(StockApiTestCase):
             self.assertEqual(response.status_code, 400, response.content)
             self.assertIn(field, response.json())
         self.assertEqual(StockAdjustmentModel.objects.count(), 0)
+
+    def test_huge_quantities_answer_400_never_500(self):  # REV-01, EDGE-02
+        product = self.stocked('10')
+        for bad in ('1' + '0' * 30, '1e999999'):
+            for field in ('counted', 'expected'):
+                counted, expected = (bad, '10') if field == 'counted' else ('7', bad)
+                response = self.adjust(product, counted, expected)
+                self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(StockAdjustmentModel.objects.count(), 0)
+
+    def test_a_key_already_used_by_another_company_is_a_controlled_conflict(self):  # REV-02, INV-08, INV-09
+        product = self.stocked('10')
+        key = uuid4()
+        self.assertEqual(self.adjust(product, '7', '10', key=key).status_code, 201)
+        other = make_company('Empresa B')
+        client = APIClient()
+        authenticate(client, make_admin(other, username='beto'))
+        set_enabled(other, [*DEFAULT_ENABLED_KEYS, 'inventory'])
+        unit = client.post('/api/units/', {'name': 'Unidad', 'abbreviation': 'u'}, format='json').json()['id']
+        theirs = self.make_product('Sal', unit=unit, client=client)
+        warehouse = client.get('/api/warehouses/').json()['results'][0]['id']
+        before = StockMovementModel.objects.count()
+        response = self.adjust(theirs, '3', '0', key=key, warehouse=warehouse, client=client)
+        self.assertEqual((response.status_code, response.json()['code']), (409, 'adjustment_id_reused'))
+        self.assertEqual(StockMovementModel.objects.count(), before)  # el movimiento se revirtió
 
     def test_inactive_warehouse_is_rejected(self):  # EDGE-03
         product = self.make_product()

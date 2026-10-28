@@ -39,10 +39,11 @@ def validate_counted_quantity(value: object) -> Decimal:
         raise _error(name, 'La cantidad contada debe ser un número decimal.')
     if quantity < 0:
         raise _error(name, 'La cantidad contada no puede ser negativa.')
-    if quantity != quantity.quantize(COUNTED_DECIMALS):
-        raise _error(name, 'La cantidad contada admite como máximo 3 decimales.')
+    # El tope va antes de `quantize`: un exponente enorme lanzaría `InvalidOperation` (500) en vez de un 400.
     if quantity > COUNTED_MAX:
         raise _error(name, f'La cantidad contada no puede superar {COUNTED_MAX}.')
+    if quantity != quantity.quantize(COUNTED_DECIMALS):
+        raise _error(name, 'La cantidad contada admite como máximo 3 decimales.')
     return quantity.quantize(COUNTED_DECIMALS)
 
 
@@ -55,7 +56,7 @@ def validate_expected_balance(value: object) -> Decimal:
         balance = Decimal(value.strip() if isinstance(value, str) else value)
     except InvalidOperation:
         raise _error(name, 'El saldo del sistema debe ser un número decimal.') from None
-    if not balance.is_finite() or balance != balance.quantize(BALANCE_DECIMALS):
+    if not balance.is_finite() or abs(balance) > COUNTED_MAX or balance != balance.quantize(BALANCE_DECIMALS):
         raise _error(name, 'El saldo del sistema debe ser un decimal de hasta 4 decimales.')
     return balance.quantize(BALANCE_DECIMALS)
 

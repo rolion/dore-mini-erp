@@ -1,8 +1,10 @@
 from uuid import UUID
 
+from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 
 from modules.inventory.domain.adjustment import StockAdjustment
+from modules.inventory.domain.exceptions import AdjustmentIdReused
 from modules.inventory.domain.movement import MovementStatus
 from modules.inventory.domain.repositories import AdjustmentFilters
 
@@ -52,12 +54,18 @@ class DjangoStockAdjustmentRepository:
         return to_entity(model) if model else None
 
     def insert(self, adjustment: StockAdjustment) -> StockAdjustment:
-        StockAdjustmentModel.objects.create(
-            id=adjustment.id, company_id=self.company_id, reference=adjustment.reference,
-            product_id=adjustment.product_id, warehouse_id=adjustment.warehouse_id,
-            system_quantity=adjustment.system_quantity, counted_quantity=adjustment.counted_quantity,
-            difference=adjustment.difference, reason=adjustment.reason, user_id=adjustment.user_id,
-            user_name=adjustment.user_name, movement_id=adjustment.movement_id)
+        try:
+            with transaction.atomic():
+                StockAdjustmentModel.objects.create(
+                    id=adjustment.id, company_id=self.company_id, reference=adjustment.reference,
+                    product_id=adjustment.product_id, warehouse_id=adjustment.warehouse_id,
+                    system_quantity=adjustment.system_quantity, counted_quantity=adjustment.counted_quantity,
+                    difference=adjustment.difference, reason=adjustment.reason, user_id=adjustment.user_id,
+                    user_name=adjustment.user_name, movement_id=adjustment.movement_id)
+        except IntegrityError:
+            # La clave (o la referencia derivada de ella) ya existe en otra empresa: se rechaza sin revelar nada
+            # y el movimiento ya registrado se revierte con la transacción del caso de uso.
+            raise AdjustmentIdReused() from None
         return self.get(adjustment.id)
 
     def list(self, filters: AdjustmentFilters) -> AdjustmentList:
