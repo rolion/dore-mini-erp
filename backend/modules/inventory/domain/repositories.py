@@ -6,6 +6,7 @@ from typing import Protocol, Sequence
 from uuid import UUID
 
 from .movement import MovementKind, StockMovement
+from .stock import StockBalanceEntry
 from .warehouse import Warehouse
 
 
@@ -57,5 +58,17 @@ class StockMovementRepository(Protocol):
     def list(self, filters: MovementFilters) -> Sequence[StockMovement]: ...
 
     def has_history(self, product_id: UUID) -> bool: ...
+
+    def find_by_source_id(self, source_type: str, source_id: str) -> Sequence[StockMovement]:
+        """Todos los movimientos de una operación de origen (p. ej. las líneas de una apertura)."""
+        ...
+
+    def products_with_history(self, warehouse_id: UUID, product_ids: Sequence[UUID]) -> set[UUID]:
+        """Los productos indicados que ya tienen algún movimiento en el almacén."""
+        ...
+
+    def list_balances(self, warehouse_id: UUID | None = None) -> Sequence[StockBalanceEntry]:
+        """Existencias por producto y almacén (entradas menos salidas), con al menos un movimiento."""
+        ...
 
     def has_nonzero_balance(self, warehouse_id: UUID) -> bool: ...

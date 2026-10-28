@@ -23,6 +23,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(inventory.module).toBe('inventory');
     expect(inventory.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/inventory',
+      '/pocketbiz/inventory/stock',
       '/pocketbiz/inventory/configuration',
       '/pocketbiz/inventory/movements',
       '/pocketbiz/inventory/settings',
@@ -64,7 +65,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(21);
+    expect(titles.length).toBe(22);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -87,5 +88,6 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(de, 'MENUITEMS.REPORTS.TEXT')).toBe('Berichte');
     expect(translate(es, 'MENUITEMS.SETTINGS.LIST.MODULES')).toBe('Módulos');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
+    expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
   });
 });

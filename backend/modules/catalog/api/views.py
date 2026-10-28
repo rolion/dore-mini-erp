@@ -49,12 +49,16 @@ def _run(use_case, **kwargs):
         raise Conflict(str(exc), 'stock_history_locked') from exc
 
 
-def _parse_active(raw: str | None) -> bool | None:
+def _parse_flag(raw: str | None, field: str) -> bool | None:
     if raw is None or raw == '':
         return None
     if raw in ('true', 'false'):
         return raw == 'true'
-    raise ValidationError({'active': ['Valor inválido: use "true" o "false".']})
+    raise ValidationError({field: ['Valor inválido: use "true" o "false".']})
+
+
+def _parse_active(raw: str | None) -> bool | None:
+    return _parse_flag(raw, 'active')
 
 
 class ProductListCreateView(APIView):
@@ -62,7 +66,8 @@ class ProductListCreateView(APIView):
     def get(self, request):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
-        products = ListProducts(_repository(request)).execute(search=search, active=active)
+        tracks_stock = _parse_flag(request.query_params.get('tracks_stock'), 'tracks_stock')
+        products = ListProducts(_repository(request)).execute(search=search, active=active, tracks_stock=tracks_stock)
         paginator = ProductPagination()
         page = paginator.paginate_queryset(products, request, view=self)
         return paginator.get_paginated_response(ProductSerializer(page, many=True).data)

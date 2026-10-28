@@ -12,6 +12,7 @@ export const SOURCE_TYPE_OPTIONS: readonly { value: string; label: string }[] = 
   { value: 'sales_order', label: 'Pedido de venta' },
   { value: 'purchase_receipt', label: 'Recepción de compra' },
   { value: 'inventory_adjustment', label: 'Ajuste de inventario' },
+  { value: 'inventory_opening', label: 'Apertura de existencias' },
   { value: 'none', label: 'Sin documento' },
 ];
 

@@ -12,7 +12,8 @@ class ProductRepository(Protocol):
         """Persiste el producto y lo devuelve con los datos que asigna la persistencia (timestamps)."""
         ...
 
-    def list(self, search: str | None = None, active: bool | None = None) -> Sequence[Product]:
+    def list(self, search: str | None = None, active: bool | None = None,
+             tracks_stock: bool | None = None) -> Sequence[Product]:
         """Productos ordenados por nombre e id; `search` es coincidencia parcial sin distinguir mayúsculas."""
         ...
 

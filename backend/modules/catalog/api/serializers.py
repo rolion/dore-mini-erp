@@ -19,6 +19,7 @@ class BaseUnitSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField(read_only=True)
     abbreviation = serializers.CharField(read_only=True)
+    allows_fractions = serializers.BooleanField(read_only=True)
 
 
 class ProductSerializer(serializers.Serializer):

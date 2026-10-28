@@ -49,6 +49,7 @@ class UnitSummary:
     id: UUID
     name: str
     abbreviation: str
+    allows_fractions: bool = False
 
 
 @dataclass
@@ -103,7 +104,8 @@ class Product:
         if not base_unit.active and base_unit.id != self.base_unit_id:
             raise _fail('base_unit_id', 'La unidad base debe estar activa.')
         self.tracks_stock, self.base_unit_id = True, base_unit.id
-        self.base_unit = UnitSummary(base_unit.id, base_unit.name, base_unit.abbreviation)
+        self.base_unit = UnitSummary(
+            base_unit.id, base_unit.name, base_unit.abbreviation, base_unit.allows_fractions)
 
     def activate(self) -> None:
         self.active = True

@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from contextlib import contextmanager
 from decimal import Decimal
 from uuid import UUID
@@ -13,6 +14,7 @@ from modules.inventory.domain.movement import (
     StockMovement,
 )
 from modules.inventory.domain.repositories import MovementFilters
+from modules.inventory.domain.stock import StockBalanceEntry
 
 from .models import StockMovementModel, WarehouseModel
 
@@ -48,6 +50,33 @@ class MovementList:
 
     def __iter__(self):
         return (to_entity(model) for model in self._queryset)
+
+
+class BalanceList:
+    """Existencias agrupadas por producto y almacén (paginable: cuenta y corta sobre la consulta agrupada)."""
+
+    def __init__(self, rows: QuerySet):
+        self._rows = rows
+
+    @staticmethod
+    def _entry(row: dict) -> StockBalanceEntry:
+        return StockBalanceEntry(
+            product_id=row['product_id'], warehouse_id=row['warehouse_id'],
+            warehouse_name=row['warehouse__name'], quantity=row['total'])
+
+    def count(self) -> int:
+        return self._rows.count()
+
+    def __len__(self) -> int:
+        return self.count()
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [self._entry(row) for row in self._rows[index]]
+        return self._entry(self._rows[index])
+
+    def __iter__(self):
+        return (self._entry(row) for row in self._rows)
 
 
 def _signed_sum() -> Sum:
@@ -140,3 +169,19 @@ class DjangoStockMovementRepository:
         rows = (self._movements().filter(warehouse_id=warehouse_id).values('product_id')
                 .annotate(total=_signed_sum()).exclude(total=0))
         return rows.exists()
+
+    def find_by_source_id(self, source_type: str, source_id: str) -> Sequence[StockMovement]:
+        models = self._movements().filter(source_type=source_type, source_id=source_id).order_by('product_id')
+        return [to_entity(model) for model in models]
+
+    def products_with_history(self, warehouse_id: UUID, product_ids) -> set[UUID]:
+        return set(self._movements().filter(warehouse_id=warehouse_id, product_id__in=list(product_ids))
+                   .values_list('product_id', flat=True))
+
+    def list_balances(self, warehouse_id: UUID | None = None) -> BalanceList:
+        queryset = self._movements()
+        if warehouse_id is not None:
+            queryset = queryset.filter(warehouse_id=warehouse_id)
+        rows = (queryset.values('product_id', 'warehouse_id', 'warehouse__name').annotate(total=_signed_sum())
+                .order_by('warehouse__name', 'product_id'))
+        return BalanceList(rows)

@@ -8,6 +8,10 @@ export class InventoryApiError extends Error {
     readonly fieldErrors: FieldErrors = {},
     /** Código estable de una violación de regla (409): `unit_in_use`, `warehouse_is_default`, ... */
     readonly code: string | null = null,
+    /** Errores por línea de una apertura (misma posición que las líneas enviadas). */
+    readonly lineErrors: FieldErrors[] = [],
+    /** Productos de una apertura que ya tienen movimientos en el almacén (409 `stock_history_exists`). */
+    readonly historyProductIds: string[] = [],
   ) {
     super(message);
     this.name = 'InventoryApiError';
@@ -26,6 +30,12 @@ const FIELD_MAP: Record<string, string> = {
   allows_fractions: 'allowsFractions',
   description: 'description',
   is_default: 'isDefault',
+  warehouse_id: 'warehouseId',
+  movement_date: 'movementDate',
+  reference: 'reference',
+  product_id: 'productId',
+  quantity: 'quantity',
+  non_field_errors: 'nonFieldErrors',
 };
 
 function toFieldErrors(body: unknown): FieldErrors {
@@ -41,13 +51,29 @@ function toFieldErrors(body: unknown): FieldErrors {
   return errors;
 }
 
+/** `lines` de un 400: una lista con un objeto de errores por línea (o un error general de la lista). */
+function toLineErrors(body: unknown): FieldErrors[] {
+  const lines = body && typeof body === 'object' ? (body as Record<string, unknown>)['lines'] : undefined;
+  return Array.isArray(lines) ? lines.map((line) => toFieldErrors(line)) : [];
+}
+
+function toHistoryProductIds(body: unknown): string[] {
+  const lines = body && typeof body === 'object' ? (body as Record<string, unknown>)['lines'] : undefined;
+  if (!Array.isArray(lines)) {
+    return [];
+  }
+  return lines
+    .map((line) => (line && typeof line === 'object' ? (line as Record<string, unknown>)['product_id'] : null))
+    .filter((id): id is string => typeof id === 'string');
+}
+
 /** Traduce una respuesta HTTP de error a un error con mensaje listo para mostrar. */
 export function toApiError(status: number, body: unknown): InventoryApiError {
   if (status === 0) {
     return new InventoryApiError(NETWORK_ERROR_MESSAGE, 0);
   }
   if (status === 400) {
-    return new InventoryApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(body));
+    return new InventoryApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(body), null, toLineErrors(body));
   }
   const record = (body && typeof body === 'object' ? body : {}) as { detail?: unknown; code?: unknown };
   const detail = typeof record.detail === 'string' ? record.detail : '';
@@ -56,7 +82,8 @@ export function toApiError(status: number, body: unknown): InventoryApiError {
     return new InventoryApiError(detail || NOT_FOUND_MESSAGE, 404);
   }
   if (status === 409) {
-    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code);
+    const history = code === 'stock_history_exists' ? toHistoryProductIds(body) : [];
+    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code, [], history);
   }
   return new InventoryApiError(GENERIC_ERROR_MESSAGE, status);
 }

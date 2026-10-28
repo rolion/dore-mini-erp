@@ -141,7 +141,7 @@ class ProductStockApiTests(StockApiTestCase):
         kg = self.unit()
         body = self.product(tracks_stock=True, base_unit_id=kg['id'])
         self.assertTrue(body['tracks_stock'])
-        self.assertEqual(body['base_unit'], {'id': kg['id'], 'name': 'Kilogramo', 'abbreviation': 'kg'})
+        self.assertEqual(body['base_unit'], {'id': kg['id'], 'name': 'Kilogramo', 'abbreviation': 'kg', 'allows_fractions': False})
         listed = self.client.get(PRODUCTS).json()['results'][0]
         self.assertEqual(listed['base_unit']['abbreviation'], 'kg')
 

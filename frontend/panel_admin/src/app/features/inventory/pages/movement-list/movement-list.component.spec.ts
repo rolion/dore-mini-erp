@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../../products/services/products-api.service';
@@ -30,7 +30,7 @@ describe('MovementListComponent', () => {
     source: null,
   });
 
-  async function setup(rows: StockMovement[] = [exit, entry]): Promise<void> {
+  async function setup(rows: StockMovement[] = [exit, entry], query: Record<string, string> = {}): Promise<void> {
     api = jasmine.createSpyObj<MovementsApiService>('MovementsApiService', ['list']);
     api.list.and.returnValue(of(page(rows)));
     const products = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['list']);
@@ -46,6 +46,9 @@ describe('MovementListComponent', () => {
         { provide: WarehousesApiService, useValue: warehouses },
       ],
     }).compileComponents();
+    spyOnProperty(TestBed.inject(ActivatedRoute).snapshot, 'queryParamMap', 'get').and.returnValue(
+      convertToParamMap(query),
+    );
     fixture = TestBed.createComponent(MovementListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -60,6 +63,13 @@ describe('MovementListComponent', () => {
     expect(api.list).toHaveBeenCalledTimes(1);
     expect(lastParams()).toEqual(jasmine.objectContaining({ page: 1, pageSize: 10 }));
     expect(component.rows.length).toBe(2);
+  });
+
+  it('starts filtered by the product and warehouse of the link from Existencias (AC-05)', async () => {
+    await setup([entry], { product_id: 'p-1', warehouse_id: 'w-1' });
+    expect(api.list).toHaveBeenCalledTimes(1);
+    expect(lastParams()).toEqual(jasmine.objectContaining({ productId: 'p-1', warehouseId: 'w-1' }));
+    expect(component.filterForm.getRawValue().productId).toBe('p-1');
   });
 
   it('shows entries and exits in separate columns without edit or delete actions (AC-04, AC-08)', async () => {

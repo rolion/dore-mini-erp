@@ -1,0 +1,187 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Registrar apertura</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Inventario</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/stock">Existencias</a></li>
+    <li class="breadcrumb-item">Registrar apertura</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ step === 'edit' ? 'Registrar apertura' : 'Revisar apertura' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (step === 'edit') {
+            <form class="register-form m-4" [formGroup]="form" (ngSubmit)="review()" novalidate>
+              @if (conflictMessage) {
+              <div class="alert alert-warning" role="alert" data-testid="opening-conflict">{{ conflictMessage }}</div>
+              }
+              @if (historyNames.length) {
+              <div class="alert alert-warning" role="alert" data-testid="history-alert">
+                Ya tienen movimientos en este almacén: <strong>{{ historyNames.join(', ') }}</strong>.
+                Quita esas líneas; las correcciones posteriores se hacen con ajustes.
+              </div>
+              }
+              <div class="row">
+                <div class="form-group col-md-4">
+                  <label for="opening-warehouse">Almacén <span class="text-danger">*</span></label>
+                  <select id="opening-warehouse" class="form-select form-control" formControlName="warehouseId">
+                    <option value="" disabled>Seleccione un almacén</option>
+                    @for (warehouse of warehouses; track warehouse.id) {
+                    <option [value]="warehouse.id">{{ warehouse.name }}</option>
+                    }
+                  </select>
+                  @if (headerMessage('warehouseId')) {
+                  <small class="form-text text-danger" data-testid="warehouse-error">
+                    {{ headerMessage('warehouseId') }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="opening-date">Fecha <span class="text-danger">*</span></label>
+                  <input id="opening-date" type="date" class="form-control" formControlName="movementDate"
+                    [max]="today">
+                  @if (headerMessage('movementDate')) {
+                  <small class="form-text text-danger" data-testid="date-error">
+                    {{ headerMessage('movementDate') }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="opening-reference">Referencia de apertura <span class="text-danger">*</span></label>
+                  <input id="opening-reference" type="text" class="form-control" formControlName="reference"
+                    placeholder="Inventario inicial" [attr.maxlength]="referenceMaxLength">
+                  @if (headerMessage('reference')) {
+                  <small class="form-text text-danger" data-testid="reference-error">
+                    {{ headerMessage('reference') }}
+                  </small>
+                  }
+                </div>
+              </div>
+
+              <h5 class="mt-3">Productos</h5>
+              <div class="table-responsive" formArrayName="lines">
+                <table class="table align-middle inventory-table opening-lines">
+                  <caption class="visually-hidden">Líneas de la apertura</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Unidad base</th>
+                      <th scope="col">Cantidad inicial</th>
+                      <th scope="col"><span class="visually-hidden">Quitar</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (line of lines.controls; track line; let i = $index) {
+                    <tr [formGroupName]="i" [class.table-warning]="hasHistory(i) || isDuplicate(i)"
+                      data-testid="opening-line">
+                      <td data-label="Producto">
+                        <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name"
+                          [typeahead]="productInput$" [loading]="productsLoading" [compareWith]="sameProduct"
+                          formControlName="product" placeholder="Buscar producto" notFoundText="Sin resultados"
+                          typeToSearchText="Escriba para buscar" [clearable]="false" appendTo="body"
+                          [attr.aria-label]="'Producto de la línea ' + (i + 1)" (change)="onProductsChanged()">
+                        </ng-select>
+                        @if (productMessage(i)) {
+                        <small class="form-text text-danger d-block" data-testid="product-error">
+                          {{ productMessage(i) }}
+                        </small>
+                        }
+                      </td>
+                      <td data-label="Unidad base" data-testid="line-unit">
+                        {{ productAt(i)?.unit?.abbreviation || '—' }}
+                      </td>
+                      <td data-label="Cantidad inicial">
+                        <input type="text" inputmode="decimal" class="form-control" formControlName="quantity"
+                          placeholder="0" [attr.aria-label]="'Cantidad inicial de la línea ' + (i + 1)">
+                        @if (quantityMessage(i)) {
+                        <small class="form-text text-danger d-block" data-testid="quantity-error">
+                          {{ quantityMessage(i) }}
+                        </small>
+                        }
+                      </td>
+                      <td data-label="Quitar">
+                        <button type="button" class="btn btn-light btn-sm" data-testid="remove-line"
+                          [disabled]="lines.length <= 1" (click)="removeLine(i)"
+                          [attr.aria-label]="'Quitar la línea ' + (i + 1)">
+                          <i class="material-icons">delete</i>
+                        </button>
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <button type="button" class="btn btn-link ps-0" data-testid="add-line" (click)="addLine()">
+                + Agregar línea
+              </button>
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary" data-testid="review" [disabled]="!canReview">
+                    Revisar resumen
+                  </button>
+                  <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/stock">Cancelar</a>
+                </div>
+              </div>
+            </form>
+            } @else {
+            <div class="m-4" data-testid="opening-summary">
+              <dl class="row">
+                <dt class="col-sm-3">Almacén</dt>
+                <dd class="col-sm-9" data-testid="summary-warehouse">{{ warehouseName }}</dd>
+                <dt class="col-sm-3">Fecha</dt>
+                <dd class="col-sm-9" data-testid="summary-date">{{ form.controls.movementDate.value | date: 'dd/MM/yyyy' }}</dd>
+                <dt class="col-sm-3">Referencia</dt>
+                <dd class="col-sm-9">{{ form.controls.reference.value }}</dd>
+                <dt class="col-sm-3">Productos</dt>
+                <dd class="col-sm-9">{{ summaryLines.length }}</dd>
+              </dl>
+              <div class="table-responsive">
+                <table class="table align-middle inventory-table">
+                  <caption class="visually-hidden">Productos y cantidades que ingresarán</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Cantidad que ingresa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of summaryLines; track $index) {
+                    <tr data-testid="summary-line">
+                      <td data-label="Producto"><strong>{{ item.name }}</strong></td>
+                      <td data-label="Cantidad que ingresa">{{ item.quantity }} {{ item.unit }}</td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (hasZeroLines) {
+              <p class="text-muted" data-testid="zero-note">
+                Las líneas con cantidad 0 no registran movimiento: ese producto podrá abrirse más adelante.
+              </p>
+              }
+              <p class="text-muted">
+                Esta carga no se puede editar después; las correcciones se hacen con ajustes.
+              </p>
+              <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="saving"
+                (click)="confirm()">
+                {{ saving ? 'Registrando…' : 'Confirmar apertura' }}
+              </button>
+              <button type="button" class="btn btn-light ms-2" data-testid="back-to-edit" [disabled]="saving"
+                (click)="backToEdit()">Volver a editar</button>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

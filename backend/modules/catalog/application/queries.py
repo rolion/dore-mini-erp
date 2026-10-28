@@ -22,8 +22,9 @@ class ListProducts:
     def __init__(self, repository: ProductRepository):
         self.repository = repository
 
-    def execute(self, search: str | None = None, active: bool | None = None) -> Sequence[Product]:
-        return self.repository.list(search=search, active=active)
+    def execute(self, search: str | None = None, active: bool | None = None,
+                tracks_stock: bool | None = None) -> Sequence[Product]:
+        return self.repository.list(search=search, active=active, tracks_stock=tracks_stock)
 
 
 class GetUnit:
