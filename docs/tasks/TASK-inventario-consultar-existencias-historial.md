@@ -1,6 +1,6 @@
 # TASK-inventario-consultar-existencias-historial: Consultar existencias e historial de movimientos (PB-INV-005)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-consultar-existencias-historial
@@ -13,6 +13,7 @@
 | 2026-10-28 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: extiende lectura existente (sin migraciones, sin persistencia nueva); decisión del usuario sobre ajuste/apertura | delivery-start |
 | 2026-10-28 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend 796 OK, build, lint y Karma acotado OK | delivery-build |
+| 2026-10-28 | REVIEW → PUBLISH | Quality Gate PASS (primer ciclo); REV-01 y REV-02 Low abiertos; a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -87,7 +88,8 @@ No aplica según veredicto.
 **Verificación propia (no es el Quality Gate):** backend `manage.py test` 796 OK; `makemigrations --check` sin cambios; frontend `npm run lint` OK, `ng build` OK, Karma acotado a `features/inventory` 85/85 OK (con `app.component.spec.ts` apartado temporalmente por estar roto en `main`; restaurado). Entorno: con autorización del usuario se copió `backend/.env` del checkout principal (sin abrirlo; ignorado por git), se usó su `.venv` y se enlazó `node_modules`.
 
 ## Review
-_Pendiente_
+**Ciclo 1: PASS** (subagente aislado). Backend 796 tests OK, `makemigrations --check` sin cambios, bandit (inventory, catalog) 0 hallazgos, `test_boundaries` OK. Frontend: lint OK, `ng build` OK, Karma `features/inventory` 85/85 OK; Karma `layout` 19 OK y 1 fallo (`FooterComponent should create`, icono Feather) = línea base rota, fuera del diff. `npm audit` no ejecutable (sin lockfile). Revisión visual en navegador (móvil/escritorio/oscuro): **no verificada** (checklist §8 revisada por código).
+Abiertos (Low, no bloquean): [REV-01](../reviews/REV-2026-10-28-inventario-consultar-existencias-historial-01.md) falta test de 403 (módulo deshabilitado / no administrador) del nuevo detalle; [REV-02](../reviews/REV-2026-10-28-inventario-consultar-existencias-historial-02.md) desviación no documentada: se reutilizaron `list_balances()` y `products_with_history()` en lugar de crear `balances_by_pair()`/`has_history_in()` (el plan los listaba); `list_balances()` agrega todo el libro, riesgo ya anotado.
 
 ## Publicación
-_Pendiente_
+PR 24 listo para aprobación humana; no se mergea desde el flujo. Sin cambios sensibles: no hay ADR, migraciones, ni cambios de autenticación o infraestructura; los endpoints nuevos conservan `CompanyAdminPermission` y módulo `inventory`. Cambio de contrato a validar: las filas de `GET /api/stock/` ahora incluyen todos los productos con control de stock (también sin movimientos).
