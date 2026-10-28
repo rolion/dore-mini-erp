@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-consultar-existencias-historial
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/24
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
