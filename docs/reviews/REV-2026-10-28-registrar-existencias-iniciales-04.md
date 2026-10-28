@@ -1,5 +1,5 @@
 # REV-2026-10-28-registrar-existencias-iniciales-04: El desplegable de productos queda recortado dentro de la tabla de líneas
-**Status:** Resolved (corregido en delivery-build, pendiente de re-verificación del Quality Gate)
+**Status:** Resolved (verificado por el Quality Gate, ciclo 3, 2026-10-28)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md (v1)
@@ -18,3 +18,6 @@ Al abrir el selector de la línea 1 solo se ve una opción y aparece una barra d
 
 ## Evidence
 Revisión visual en el navegador integrado (escritorio 1440 px, claro): al abrir «Buscar producto» el panel queda cortado en el borde inferior de la tabla.
+
+## Verificación
+Re-verificado en el navegador integrado tras el rebase (escritorio 1440 px): selector con las 5 opciones visibles sobre la tabla, fecha del resumen `28/10/2026` y columnas de ancho estable.

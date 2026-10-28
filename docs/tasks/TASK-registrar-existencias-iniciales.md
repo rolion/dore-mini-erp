@@ -1,6 +1,6 @@
 # TASK-registrar-existencias-iniciales: Registrar existencias iniciales (PB-INV-003)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-existencias-iniciales
@@ -17,6 +17,7 @@
 
 | 2026-10-28 | PUBLISH → PLANNING → ENGINEERING | Decisión del usuario: integrar #21 primero (REV-07). ADR reemplazado y PLAN v2 (rebase sobre el libro de movimientos; EDGE-01 cantidad 0 ajustada, AC sin cambios) | delivery-start |
 | 2026-10-28 | ENGINEERING → REVIEW | Rebase sobre `main` con #21, corrige REV-04..06; sin tablas ni migraciones propias | delivery-build |
+| 2026-10-28 | REVIEW → PUBLISH | Quality Gate PASS (ciclo 3, sobre la versión rebasada); revisión visual en navegador OK; a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -105,14 +106,14 @@ No se puede cargar stock: no hay tablas de movimientos/saldos, ni pantalla de ex
 **Deuda técnica:** no hay búsqueda por nombre en Existencias ni ajustes (corrección de una apertura errónea); la revisión visual en navegador (claro/oscuro, 390/1440 px) no se hizo; el selector de productos pide hasta 50 resultados (el resto por búsqueda); `NoWarehouseActivity` queda solo para pruebas; las recepciones pendientes siguen sin datos.
 
 ## Review
-**Veredicto: PASS** (2026-10-28, segundo ciclo, Quality Gate en subagente aislado; el primero fue PASS con REV-01 Medium y REV-02/03 Low, corregidos a pedido del usuario).
-- Backend: `manage.py test` 746 tests OK; `makemigrations --check` sin cambios; bandit (inventory, catalog) sin hallazgos.
-- Frontend: lint OK, `ng build` OK, Karma completo 71 fallos = línea base ("should create" de pantallas demo), 595 OK; sin avisos NG0955.
-- Hallazgos: [REV-01](../reviews/REV-2026-10-28-registrar-existencias-iniciales-01.md), [REV-02](../reviews/REV-2026-10-28-registrar-existencias-iniciales-02.md) y [REV-03](../reviews/REV-2026-10-28-registrar-existencias-iniciales-03.md) **resueltos y re-verificados** (sonda temporal por API: `lines` mal formado → 400 con mensaje; `1e3` → 400; miembro no administrador → 403). Sin hallazgos nuevos ni regresiones. Observaciones menores sin hallazgo: `'-0'` se informa como negativa; para `lines` no lista el error es un dict (el test lo fija; la UI no envía esa forma).
-- DDD/Specification: AC-01..06, INV, EDGE, API y UI cubiertos; migración solo aditiva; sin secretos ni artefactos en el diff.
-- **Revisión visual (a pedido del usuario, 2026-10-28, navegador integrado, base temporal aparte):** flujo de punta a punta verificado (Existencias vacío → apertura de 2 líneas con validación de fracciones → resumen → confirmar → Existencias con saldos → Movimientos; línea con historial marcada y «Revisar resumen» bloqueado; duplicado deshabilitado en el selector). Móvil 375 px sin desborde horizontal; tema oscuro legible. Hallazgos: [REV-04](../reviews/REV-2026-10-28-registrar-existencias-iniciales-04.md) Medium (selector recortado), [REV-05](../reviews/REV-2026-10-28-registrar-existencias-iniciales-05.md) y [REV-06](../reviews/REV-2026-10-28-registrar-existencias-iniciales-06.md) Low.
-- **Conflicto de integración:** [REV-07](../reviews/REV-2026-10-28-registrar-existencias-iniciales-07.md) (High, ARCHITECTURE): el PR #21 (PB-INV-004) define otro `StockMovementModel` y otra `inventory/0002`; requiere decidir el orden de integración antes del merge.
-- No ejecutado: `npm audit` (sin lockfile).
+**Veredicto: PASS** (2026-10-28, ciclo 3, Quality Gate en subagente aislado sobre la versión v2 rebasada en el libro de PB-INV-004). Los ciclos anteriores (v1) dieron PASS con hallazgos que se corrigieron a pedido del usuario; después se detectó el conflicto con el PR #21 (REV-07) y se rebasó el task.
+- Backend: `manage.py test` 780 tests OK (una primera corrida tuvo un fallo intermitente de `modularity` ajeno al diff —esperaba `24.00 %` y recibió `22.00 %`—; aislado y en dos corridas completas posteriores OK); `makemigrations --check` sin cambios; bandit (inventory, catalog) sin hallazgos.
+- Frontend: lint OK, `ng build` OK, Karma completo 71 fallos = línea base («should create» de pantallas demo), 609 OK.
+- Hallazgos resueltos y verificados: [REV-01](../reviews/REV-2026-10-28-registrar-existencias-iniciales-01.md), [02](../reviews/REV-2026-10-28-registrar-existencias-iniciales-02.md), [03](../reviews/REV-2026-10-28-registrar-existencias-iniciales-03.md), [04](../reviews/REV-2026-10-28-registrar-existencias-iniciales-04.md), [05](../reviews/REV-2026-10-28-registrar-existencias-iniciales-05.md), [06](../reviews/REV-2026-10-28-registrar-existencias-iniciales-06.md), [07](../reviews/REV-2026-10-28-registrar-existencias-iniciales-07.md) (conflicto con #21: sin modelo ni migración propios), [10](../reviews/REV-2026-10-28-registrar-existencias-iniciales-10.md) (TASK desactualizado).
+- Abiertos sin bloquear: [REV-08](../reviews/REV-2026-10-28-registrar-existencias-iniciales-08.md) Medium (Existencias ordena por almacén y producto UUID, no por nombre; limitación aceptada) y [REV-09](../reviews/REV-2026-10-28-registrar-existencias-iniciales-09.md) Low (la lista de movimientos de #21 solo carga 100 productos en su filtro; con más, el filtro prellenado podría no verse en el selector).
+- Revisión visual (orquestador, navegador integrado, base temporal aparte; escritorio 1440 px): selector con todas las opciones visibles (REV-04), fecha `dd/MM/yyyy` (REV-05), columnas estables (REV-06), apertura de 2 líneas → resumen → confirmar → Existencias → «Movimientos» abre la lista de #21 con producto y almacén prefiltrados y origen «Apertura de existencias». En la primera ronda (antes del rebase) también se verificaron móvil 375 px sin desborde y tema oscuro; tras el rebase no se repitieron esos dos.
+- No ejecutado: `npm audit` (sin lockfile); reversión de un movimiento de apertura (la API no tiene endpoint); pruebas de carga.
+
 
 ## Publicación
-PR #22 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `inventory/0002`: tablas `inventory_stock_movement` e `inventory_stock_balance`) y **autorización** (las APIs de `/api/stock/` exigen administrador y módulo `inventory`). ADR: `ADR-registrar-existencias-iniciales-movimientos-saldos-idempotencia`.
+PR #22 listo para aprobación humana; no se mergea. Cambios sensibles: **autorización** (las APIs `/api/stock/` exigen administrador y módulo `inventory`). Ya **no hay cambios de base de datos** (sin migraciones: reutiliza `inventory/0002` de PB-INV-004). ADR: `ADR-registrar-existencias-iniciales-apertura-sobre-libro-de-movimientos` (reemplaza al ADR v1). **Cambio de comportamiento a validar:** una línea con cantidad 0 no genera movimiento (EDGE-01 v2; el AC «cantidad inicial no negativa» se mantiene).

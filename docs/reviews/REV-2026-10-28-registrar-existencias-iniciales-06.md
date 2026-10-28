@@ -1,5 +1,5 @@
 # REV-2026-10-28-registrar-existencias-iniciales-06: Las columnas de la tabla de líneas cambian de ancho al elegir producto
-**Status:** Resolved (corregido en delivery-build, pendiente de re-verificación del Quality Gate)
+**Status:** Resolved (verificado por el Quality Gate, ciclo 3, 2026-10-28)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md (v1)
@@ -18,3 +18,6 @@ El selector es estrecho (≈150 px en 1440 px) y las columnas se desplazan al ca
 
 ## Evidence
 Revisión visual en escritorio, capturas antes/después de elegir «Aceite».
+
+## Verificación
+Re-verificado en el navegador integrado tras el rebase (escritorio 1440 px): selector con las 5 opciones visibles sobre la tabla, fecha del resumen `28/10/2026` y columnas de ancho estable.

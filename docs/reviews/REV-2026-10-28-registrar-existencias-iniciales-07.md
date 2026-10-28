@@ -1,5 +1,5 @@
 # REV-2026-10-28-registrar-existencias-iniciales-07: Conflicto con el PR #21 (PB-INV-004): mismo modelo `StockMovementModel` y misma migración `inventory/0002`
-**Status:** Resolved (corregido en delivery-build, pendiente de re-verificación del Quality Gate)
+**Status:** Resolved (verificado por el Quality Gate, ciclo 3, 2026-10-28)
 **Severity:** High
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md (v1)

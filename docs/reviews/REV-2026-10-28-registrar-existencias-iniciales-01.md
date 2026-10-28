@@ -1,5 +1,5 @@
 # REV-2026-10-28-registrar-existencias-iniciales-01: `lines` mal formado produce 500 o un 400 sin mensaje
-**Status:** Resolved (verificado por el Quality Gate, segundo ciclo, 2026-10-28)
+**Status:** Resolved (verificado por el Quality Gate, ciclo 3, 2026-10-28)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md (v1)
