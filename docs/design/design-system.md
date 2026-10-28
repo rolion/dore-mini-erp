@@ -138,6 +138,10 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 ### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
 - `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.
 
+### Formulario con líneas y paso de resumen (referencia: `features/inventory/pages/stock-opening`)
+- Cabecera de campos + tabla de líneas (selector sin repetir elementos ya elegidos, datos de solo lectura derivados, campo numérico, quitar) y «+ Agregar línea». Una línea con problema de negocio se marca con `table-warning` y se explica en un `alert alert-warning`; mientras exista, no se avanza.
+- «Revisar resumen» cambia, en la misma ruta, a un `card` con `dl.row` y tabla de solo lectura; «Confirmar» (primario) y «Volver a editar» (`btn-light`). Confirmar se deshabilita y muestra «Registrando…» mientras envía; el formulario genera una clave de idempotencia al abrirse y la reutiliza en cada reintento. Cancelar vuelve a la lista sin escribir y con cambios pendientes usa `unsavedChangesGuard`.
+
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 
