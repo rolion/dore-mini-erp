@@ -19,6 +19,7 @@ export const SOURCE_TYPE_OPTIONS: readonly { value: string; label: string }[] = 
 /** Pantalla de destino por clase de origen; solo existen las de módulos ya construidos. */
 export const SOURCE_ROUTES: Readonly<Record<string, (id: string) => string[]>> = {
   sales_order: (id) => ['/pocketbiz/sales/orders', id],
+  inventory_adjustment: (id) => ['/pocketbiz/inventory/adjustments', id],
 };
 
 export interface MovementSource {

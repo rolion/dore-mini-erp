@@ -104,6 +104,7 @@
         "STOCK": "Stock",
         "CONFIGURATION": "Warehouses and units",
         "MOVEMENTS": "Movements",
+        "ADJUSTMENTS": "Stock adjustments",
         "SETTINGS": "Settings"
       }
     },

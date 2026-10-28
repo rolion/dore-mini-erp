@@ -104,6 +104,7 @@
         "STOCK": "Existencias",
         "CONFIGURATION": "Almacenes y unidades",
         "MOVEMENTS": "Movimientos",
+        "ADJUSTMENTS": "Ajustes de existencias",
         "SETTINGS": "Ajustes"
       }
     },
