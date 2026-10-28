@@ -115,6 +115,13 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'inventory/movements',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadChildren: () =>
+                    import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_MOVEMENTS_ROUTE),
+            },
+            {
                 path: 'inventory/settings',
                 canActivate: [moduleGuard],
                 canDeactivate: [unsavedChangesGuard],

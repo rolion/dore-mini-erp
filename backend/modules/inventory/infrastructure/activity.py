@@ -1,14 +1,19 @@
 from uuid import UUID
 
+from .django.movement_repository import DjangoStockMovementRepository
 
-class NoWarehouseActivity:
-    """Todavía no existen saldos ni recepciones: ningún almacén tiene actividad que bloquee su desactivación.
 
-    Las historias de movimientos y recepciones sustituyen este adaptador por uno que consulte sus datos.
+class LedgerWarehouseActivity:
+    """Actividad de un almacén de la empresa: el saldo sale del libro de movimientos.
+
+    Las recepciones pendientes llegan con su historia; mientras tanto ningún almacén las tiene.
     """
 
+    def __init__(self, company_id: UUID):
+        self.movements = DjangoStockMovementRepository(company_id)
+
     def has_nonzero_balance(self, warehouse_id: UUID) -> bool:
-        return False
+        return self.movements.has_nonzero_balance(warehouse_id)
 
     def has_pending_receipts(self, warehouse_id: UUID) -> bool:
         return False

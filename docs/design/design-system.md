@@ -138,12 +138,15 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 ### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
 - `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.
 
+### Lista de solo lectura con filtros (referencia: `features/inventory/pages/movement-list`)
+- Misma estructura que Lista, sin botón «+» ni acciones Editar/Eliminar (registros inmutables): breadcrumb, `.card`, formulario de filtros en fila (`label` + `input type=date`/`form-select`, «Limpiar filtros»), `ngx-datatable` con paginación del servidor. Las cantidades de entrada y salida van en columnas separadas, alineadas a la derecha, con «—» en la que no aplica y la unidad en su propia columna. Error de servidor en `alert alert-danger` con «Reintentar». El enlace a un documento de otro módulo solo se muestra si el servidor indica que ese módulo está habilitado y existe su pantalla. El detalle sigue la plantilla Detalle (`dl`) y enlaza registros relacionados (contramovimientos).
+
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 
 ## 6. Menú y layout
 
-- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`) y «Ajustes» (`/inventory/settings`, PB-CFG-001).
+- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`), «Movimientos» (`/inventory/movements`, solo lectura, PB-INV-004) y «Ajustes» (`/inventory/settings`, PB-CFG-001).
 
 - Sidebar: logo según estado (expandido/contraído), avatar con iniciales, nombre y apellido, nombre de la empresa. Ítems principales: Dashboard, Catálogo (Producto), Cliente, Pedidos, Gastos (Gastos, Categorías), Reportes (textos en `assets/i18n/es.json`).
 - Header: solo el menú de usuario (nombre, empresa y cerrar sesión). Sin búsqueda, mensajes ni notificaciones.

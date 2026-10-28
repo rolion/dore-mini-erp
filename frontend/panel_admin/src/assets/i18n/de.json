@@ -102,6 +102,7 @@
       "LIST": {
         "HOME": "Start",
         "CONFIGURATION": "Lager und Einheiten",
+        "MOVEMENTS": "Bewegungen",
         "SETTINGS": "Einstellungen"
       }
     },
