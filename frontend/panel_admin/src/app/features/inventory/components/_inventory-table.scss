@@ -36,5 +36,15 @@
       content: attr(data-label) ': ';
       font-weight: 600;
     }
+
+    // Apilado, la etiqueta va a la izquierda: la alineación a la derecha de las cantidades solo vale en tabla.
+    td.text-end {
+      text-align: left !important;
+    }
   }
+}
+
+// El botón de acción no se parte en dos líneas cuando otra celda ensancha la fila.
+.inventory-table td[data-label='Acciones'] .btn {
+  white-space: nowrap;
 }
