@@ -2,10 +2,12 @@
 
 Es la única vía de entrada entre módulos: devuelve DTO inmutables, nunca entidades ni modelos.
 """
+from collections.abc import Iterable
 from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
+from modules.catalog.infrastructure.django.models import ProductModel
 from modules.catalog.infrastructure.django.repositories import DjangoProductRepository
 
 
@@ -26,3 +28,25 @@ def get_product_for_sale(company_id: UUID, product_id: UUID) -> ProductForSale |
     if product is None:
         return None
     return ProductForSale(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active)
+
+
+@dataclass(frozen=True)
+class ProductForInventory:
+    id: UUID
+    name: str
+    tracks_stock: bool
+    unit_abbreviation: str | None
+    allows_fractions: bool
+
+
+def get_products_for_inventory(company_id: UUID, product_ids: Iterable[UUID]) -> dict[UUID, ProductForInventory]:
+    """Datos de inventario de los productos de la empresa (una sola consulta); los ajenos o inexistentes no aparecen."""
+    models = (ProductModel.objects.filter(company_id=company_id, pk__in=list(product_ids))
+              .select_related('base_unit'))
+    return {
+        model.id: ProductForInventory(
+            id=model.id, name=model.name, tracks_stock=model.tracks_stock,
+            unit_abbreviation=model.base_unit.abbreviation if model.base_unit else None,
+            allows_fractions=bool(model.base_unit and model.base_unit.allows_fractions))
+        for model in models
+    }

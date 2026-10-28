@@ -34,3 +34,22 @@ class GetProductForSaleTests(TestCase):
     def test_product_of_another_company_is_not_visible(self):  # AC-06
         product = ProductModel.objects.create(company_id=uuid4(), name='Ajeno', description='', sale_price=Decimal('1.00'))
         self.assertIsNone(get_product_for_sale(COMPANY_ID, product.id))
+
+
+class GetProductsForInventoryTests(TestCase):
+    def test_returns_tracking_and_unit_of_the_companys_products_only(self):  # PB-INV-004
+        from modules.catalog.infrastructure.django.models import UnitModel
+        from modules.catalog.services import get_products_for_inventory
+
+        unit = UnitModel.objects.create(company_id=COMPANY_ID, name='Kilogramo', abbreviation='kg', allows_fractions=True)
+        tracked = ProductModel.objects.create(
+            company_id=COMPANY_ID, name='Arroz', sale_price=Decimal('1.00'), tracks_stock=True, base_unit=unit)
+        plain = ProductModel.objects.create(company_id=COMPANY_ID, name='Servicio', sale_price=Decimal('1.00'))
+        foreign = ProductModel.objects.create(company_id=uuid4(), name='Ajeno', sale_price=Decimal('1.00'))
+
+        found = get_products_for_inventory(COMPANY_ID, [tracked.id, plain.id, foreign.id, uuid4()])
+
+        self.assertEqual(set(found), {tracked.id, plain.id})
+        self.assertEqual((found[tracked.id].tracks_stock, found[tracked.id].unit_abbreviation,
+                          found[tracked.id].allows_fractions), (True, 'kg', True))
+        self.assertEqual((found[plain.id].tracks_stock, found[plain.id].unit_abbreviation), (False, None))
