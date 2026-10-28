@@ -272,12 +272,12 @@ class StockReadTests(StockApiTestCase):
         product = self.make_product('Harina')
         other = self.client.post('/api/warehouses/', {'name': 'Tienda'}, format='json').json()['id']
         self.open([line(product, '7')])
-        self.open([line(self.make_product('Sal', self.kilo), '1.5')], warehouse=other)
         rows = self.client.get(STOCK, {'warehouse_id': self.warehouse}).json()['results']
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['product_name'], 'Harina')
         self.assertEqual((rows[0]['quantity'], rows[0]['warehouse_name']), ('7.0000', 'Almacén principal'))
         self.assertEqual(rows[0]['unit'], {'abbreviation': 'u', 'allows_fractions': False})
+        self.assertEqual(self.client.get(STOCK, {'warehouse_id': other}).json()['results'][0]['quantity'], '0.0000')
         self.assertEqual(self.client.get(STOCK).json()['count'], 2)
         self.assertEqual(self.client.get(STOCK, {'warehouse_id': 'nope'}).status_code, 400)
 

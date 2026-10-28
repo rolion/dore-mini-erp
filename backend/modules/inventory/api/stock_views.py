@@ -7,13 +7,21 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.inventory.application.movement_ports import ProductInfo
-from modules.inventory.application.stock_use_cases import CheckOpeningHistory, ListStock, RegisterOpening
+from modules.inventory.application.stock_use_cases import (
+    CheckOpeningHistory,
+    GetStockPosition,
+    ListStock,
+    RegisterOpening,
+    StockPosition,
+    StockQuery,
+)
 from modules.inventory.domain.exceptions import (
     MovementConflict,
     MovementValidationError,
     OpeningIdReused,
     OpeningValidationError,
     StockHistoryExists,
+    StockPositionNotFound,
     WarehouseNotFound,
 )
 from modules.inventory.infrastructure.adapters import CatalogProductDirectory
@@ -26,6 +34,7 @@ from .stock_serializers import (
     OpeningInputSerializer,
     OpeningSerializer,
     StockBalanceSerializer,
+    StockPositionSerializer,
 )
 from .views import WAREHOUSE_NOT_FOUND, Conflict
 
@@ -117,23 +126,80 @@ class OpeningCreateView(APIView):
                         status=status.HTTP_200_OK if outcome.replayed else status.HTTP_201_CREATED)
 
 
+BALANCE_FILTERS = ('zero', 'nonzero', 'negative')
+ACTIVE_FILTERS = {'true': True, 'false': False, 'all': None}
+
+
+def _stock_query(request) -> StockQuery:
+    """Convierte los query params de Existencias en una consulta tipada; lo inválido da 400 por parámetro."""
+    params = request.query_params
+    errors: dict[str, list[str]] = {}
+    active = ACTIVE_FILTERS['true']
+    if params.get('active'):
+        if params['active'] in ACTIVE_FILTERS:
+            active = ACTIVE_FILTERS[params['active']]
+        else:
+            errors['active'] = ['Valor inválido: use true, false o all.']
+    balance = params.get('balance') or None
+    if balance is not None and balance not in BALANCE_FILTERS:
+        errors['balance'] = ['Valor inválido: use zero, nonzero o negative.']
+    warehouse_id = None
+    try:
+        warehouse_id = _uuid_param(request, 'warehouse_id', required=False)
+    except ValidationError as exc:
+        errors.update(exc.detail)
+    if errors:
+        raise ValidationError(errors)
+    return StockQuery(search=(params.get('search') or '').strip() or None, warehouse_id=warehouse_id,
+                      active=active, balance=balance)
+
+
+def _position_row(position: StockPosition) -> dict:
+    return {
+        'product_id': position.product.id, 'product_name': position.product.name,
+        'product_active': position.product.active,
+        'warehouse_id': position.warehouse_id, 'warehouse_name': position.warehouse_name,
+        'warehouse_active': position.warehouse_active,
+        'quantity': position.quantity, 'balance_state': position.state.value,
+        'unit': _unit(position.product),
+    }
+
+
 class StockListView(APIView):
+    """Existencias de todos los productos con control de stock por almacén (solo lectura)."""
+
     required_modules = ('inventory',)
 
     def get(self, request):
-        warehouse_id = _uuid_param(request, 'warehouse_id', required=False)
+        query = _stock_query(request)
         company_id = company_id_from(request)
-        balances = ListStock(DjangoStockMovementRepository(company_id)).execute(warehouse_id)
+        try:
+            positions = ListStock(
+                DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
+                CatalogProductDirectory(company_id)).execute(query)
+        except WarehouseNotFound as exc:
+            raise NotFound(WAREHOUSE_NOT_FOUND) from exc
         paginator = WarehousePagination()
-        page = paginator.paginate_queryset(balances, request, view=self)
-        products = CatalogProductDirectory(company_id).get_products([entry.product_id for entry in page])
-        rows = [{
-            'product_id': entry.product_id,
-            'product_name': products[entry.product_id].name if entry.product_id in products else None,
-            'warehouse_id': entry.warehouse_id, 'warehouse_name': entry.warehouse_name,
-            'quantity': entry.quantity, 'unit': _unit(products.get(entry.product_id)),
-        } for entry in page]
-        return paginator.get_paginated_response(StockBalanceSerializer(rows, many=True).data)
+        page = paginator.paginate_queryset(positions, request, view=self)
+        return paginator.get_paginated_response(StockBalanceSerializer([_position_row(p) for p in page], many=True).data)
+
+
+class StockDetailView(APIView):
+    required_modules = ('inventory',)
+
+    def get(self, request, product_id, warehouse_id):
+        company_id = company_id_from(request)
+        try:
+            position = GetStockPosition(
+                DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
+                CatalogProductDirectory(company_id)).execute(product_id, warehouse_id)
+        except WarehouseNotFound as exc:
+            raise NotFound(WAREHOUSE_NOT_FOUND) from exc
+        except StockPositionNotFound as exc:
+            raise NotFound('Existencia no encontrada.') from exc
+        row = {**_position_row(position), 'has_history': position.has_history,
+               'can_register_opening': position.can_register_opening}
+        return Response(StockPositionSerializer(row).data)
 
 
 class OpeningCheckView(APIView):

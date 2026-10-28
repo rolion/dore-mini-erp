@@ -5,7 +5,7 @@ from uuid import uuid4
 from django.test import TestCase
 
 from modules.catalog.infrastructure.django.models import ProductModel
-from modules.catalog.services import ProductForSale, get_product_for_sale
+from modules.catalog.services import ProductForSale, get_product_for_sale, list_products_for_inventory
 
 
 COMPANY_ID = uuid4()
@@ -53,3 +53,26 @@ class GetProductsForInventoryTests(TestCase):
         self.assertEqual((found[tracked.id].tracks_stock, found[tracked.id].unit_abbreviation,
                           found[tracked.id].allows_fractions), (True, 'kg', True))
         self.assertEqual((found[plain.id].tracks_stock, found[plain.id].unit_abbreviation), (False, None))
+
+
+class ListProductsForInventoryTests(TestCase):
+    def make(self, name, company=COMPANY_ID, tracks=True, active=True):
+        return ProductModel.objects.create(
+            company_id=company, name=name, description='', sale_price=Decimal('1.00'), tracks_stock=tracks,
+            active=active)
+
+    def test_lists_only_stock_tracking_products_of_the_company_by_name(self):  # INV-02, INV-03
+        self.make('Sal')
+        self.make('Azúcar')
+        self.make('Servicio', tracks=False)
+        self.make('Ajeno', company=uuid4())
+        self.assertEqual([p.name for p in list_products_for_inventory(COMPANY_ID)], ['Azúcar', 'Sal'])
+
+    def test_filters_by_search_and_state(self):  # AC-02
+        self.make('Harina de trigo')
+        self.make('Harina vieja', active=False)
+        self.make('Sal')
+        names = lambda **kw: [p.name for p in list_products_for_inventory(COMPANY_ID, **kw)]  # noqa: E731
+        self.assertEqual(names(search='harina'), ['Harina de trigo', 'Harina vieja'])
+        self.assertEqual(names(search='harina', active=False), ['Harina vieja'])
+        self.assertEqual(names(active=True), ['Harina de trigo', 'Sal'])
