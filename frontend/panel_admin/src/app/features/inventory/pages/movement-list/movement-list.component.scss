@@ -1,0 +1,10 @@
+// Las celdas se pintan dentro de ngx-datatable (otro componente): hace falta ::ng-deep para alcanzarlas.
+// Encabezado y celda comparten la misma regla para que las cantidades queden alineadas bajo su título.
+:host ::ng-deep .movement-qty-header .datatable-header-cell-label,
+:host ::ng-deep .movement-qty-cell .datatable-body-cell-label {
+  display: block;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

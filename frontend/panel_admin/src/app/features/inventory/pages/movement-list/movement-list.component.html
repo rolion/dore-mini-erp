@@ -117,14 +117,14 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Entrada" [sortable]="false" [width]="90" cellClass="text-end"
-                headerClass="text-end">
+              <ngx-datatable-column name="Entrada" [sortable]="false" [width]="90" cellClass="movement-qty-cell"
+                headerClass="movement-qty-header">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span data-col="in">{{ row.quantityIn ?? '—' }}</span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Salida" [sortable]="false" [width]="90" cellClass="text-end"
-                headerClass="text-end">
+              <ngx-datatable-column name="Salida" [sortable]="false" [width]="90" cellClass="movement-qty-cell"
+                headerClass="movement-qty-header">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span data-col="out">{{ row.quantityOut ?? '—' }}</span>
                 </ng-template>

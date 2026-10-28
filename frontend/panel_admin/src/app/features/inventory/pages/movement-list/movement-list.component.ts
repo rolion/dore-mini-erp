@@ -27,6 +27,7 @@ export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la 
 @Component({
   selector: 'app-movement-list',
   templateUrl: './movement-list.component.html',
+  styleUrl: './movement-list.component.scss',
   imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe],
 })
 export class MovementListComponent implements OnInit {
