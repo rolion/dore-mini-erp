@@ -40,13 +40,14 @@ class RecordMovement:
             raise MovementValidationError({'product_id': ['El producto no controla stock.']})
         if not product.allows_fractions and movement.quantity != movement.quantity.to_integral_value():
             raise MovementValidationError({'quantity': ['La unidad del producto no admite fracciones.']})
-        warehouse = self.warehouses.get(warehouse_id)
-        if warehouse is None:
-            raise MovementValidationError({'warehouse_id': ['El almacén no existe.']})
-        if not warehouse.active:
-            raise MovementValidationError({'warehouse_id': ['El almacén está inactivo.']})
 
         with self.repository.locked(warehouse_id):
+            # Se valida bajo el bloqueo: desactivar un almacén toma el mismo bloqueo.
+            warehouse = self.warehouses.get(warehouse_id)
+            if warehouse is None:
+                raise MovementValidationError({'warehouse_id': ['El almacén no existe.']})
+            if not warehouse.active:
+                raise MovementValidationError({'warehouse_id': ['El almacén está inactivo.']})
             existing = self.repository.find_by_source(movement)
             if existing is not None:  # reintento de la misma operación de origen
                 if existing.quantity != movement.quantity:

@@ -108,12 +108,12 @@
               <ngx-datatable-column name="Tipo" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.kind === 'in') {
-                  <div class="badge-outline col-green d-inline-block">{{ kindLabels[row.kind] }}</div>
+                  <div class="badge-outline col-green d-inline-block">{{ kindLabel(row.kind) }}</div>
                   } @else {
-                  <div class="badge-outline col-orange d-inline-block">{{ kindLabels[row.kind] }}</div>
+                  <div class="badge-outline col-orange d-inline-block">{{ kindLabel(row.kind) }}</div>
                   }
                   @if (row.status === 'reversed') {
-                  <div class="badge-outline col-grey d-inline-block ms-1">{{ statusLabels[row.status] }}</div>
+                  <div class="badge-outline col-grey d-inline-block ms-1">{{ statusLabel(row.status) }}</div>
                   }
                 </ng-template>
               </ngx-datatable-column>
@@ -135,7 +135,7 @@
               <ngx-datatable-column name="Origen" [sortable]="false" [width]="150">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.source; as source) {
-                  <span data-col="source">{{ source.label }}</span>
+                  <span data-col="source">{{ source.label }}@if (source.id) { · {{ source.id }} }</span>
                   } @else {
                   <span class="text-muted">Sin documento</span>
                   }

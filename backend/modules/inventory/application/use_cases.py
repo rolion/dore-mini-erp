@@ -82,15 +82,17 @@ class DeactivateWarehouse:
         self.activity = activity
 
     def execute(self, warehouse_id: UUID) -> Warehouse:
-        warehouse = _get(self.repository, warehouse_id)
-        if self.activity.has_nonzero_balance(warehouse.id):
-            raise WarehouseConflict(
-                'warehouse_has_stock', 'No se puede desactivar: el almacén tiene saldo distinto de cero.')
-        if self.activity.has_pending_receipts(warehouse.id):
-            raise WarehouseConflict(
-                'warehouse_pending_receipts', 'No se puede desactivar: el almacén tiene recepciones pendientes.')
-        warehouse.deactivate()
-        return self.repository.save(warehouse)
+        # Bajo el bloqueo del almacén: un movimiento simultáneo no puede dejar saldo en un almacén que se desactiva.
+        with self.repository.locked(warehouse_id):
+            warehouse = _get(self.repository, warehouse_id)
+            if self.activity.has_nonzero_balance(warehouse.id):
+                raise WarehouseConflict(
+                    'warehouse_has_stock', 'No se puede desactivar: el almacén tiene saldo distinto de cero.')
+            if self.activity.has_pending_receipts(warehouse.id):
+                raise WarehouseConflict(
+                    'warehouse_pending_receipts', 'No se puede desactivar: el almacén tiene recepciones pendientes.')
+            warehouse.deactivate()
+            return self.repository.save(warehouse)
 
 
 class MakeDefaultWarehouse:

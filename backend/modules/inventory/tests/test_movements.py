@@ -5,7 +5,7 @@ from threading import Barrier, Thread
 from uuid import uuid4
 
 from django.db import connection
-from django.test import SimpleTestCase, TestCase, TransactionTestCase
+from django.test import SimpleTestCase, TestCase, TransactionTestCase, override_settings
 from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
@@ -190,6 +190,22 @@ class ReverseMovementTests(LedgerTestCase):
         self.assertEqual(ctx.exception.code, 'insufficient_stock')
 
 
+class ReverseEdgeCaseTests(LedgerTestCase):
+    def test_a_counter_movement_cannot_be_reversed_through_the_facade(self):  # EDGE-03
+        entry, _ = self.record('in', '10')
+        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        with self.assertRaises(MovementConflict) as ctx:
+            inventory.reverse_movement(self.company.id, counter.id, user_id=None, user_name='ana')
+        self.assertEqual(ctx.exception.code, 'cannot_reverse_reversal')
+
+    def test_retrying_a_reversed_source_operation_returns_the_reversed_movement(self):  # ADR: política de reintento
+        entry, _ = self.record('in', '10', source_type='purchase_receipt', source_id='R-1')
+        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        again, created = self.record('in', '10', source_type='purchase_receipt', source_id='R-1')
+        self.assertEqual((again.id, created, again.status), (entry.id, False, 'reversed'))
+        self.assertEqual(self.balance(), Decimal('0'))
+
+
 class PortsTests(LedgerTestCase):
     def setUp(self):
         super().setUp()
@@ -277,6 +293,22 @@ class ConcurrencyTests(TransactionTestCase):
         self.assertEqual(inventory.get_balance(company.id, product.id, warehouse.id), Decimal('0'))
 
 
+    def test_simultaneous_reversals_create_a_single_counter_movement(self):  # EDGE-03
+        company = make_company('Empresa E')
+        product, warehouse = make_product(company), make_warehouse(company)
+        entry, _ = inventory.record_movement(
+            company.id, product_id=product.id, warehouse_id=warehouse.id, kind='in', quantity=Decimal('5'),
+            user_id=None, user_name='ana')
+
+        def work():
+            inventory.reverse_movement(company.id, entry.id, user_id=None, user_name='ana')
+
+        errors = self.run_threads(work, count=2)
+        self.assertEqual([getattr(e, 'code', None) for e in errors], ['already_reversed'])
+        self.assertEqual(StockMovementModel.objects.filter(company_id=company.id, reverses_id=entry.id).count(), 1)
+        self.assertEqual(inventory.get_balance(company.id, product.id, warehouse.id), Decimal('0'))
+
+
 class MovementApiTests(APITestCase):
     def setUp(self):
         self.company = make_company('Empresa A')
@@ -333,6 +365,18 @@ class MovementApiTests(APITestCase):
         self.assertEqual(count(kind='in'), 2)
         self.assertEqual(count(source_type='sales_order'), 1)
         self.assertEqual(count(source_type='none'), 1)
+
+    @override_settings(TIME_ZONE='America/La_Paz')
+    def test_date_filters_use_the_local_day_at_the_boundary(self):  # AC-05
+        # 2026-10-21 02:00 UTC = 2026-10-20 22:00 en La Paz (UTC-4): pertenece al día 20.
+        self.record(occurred_at=datetime(2026, 10, 21, 2, 0, tzinfo=dt_timezone.utc))
+
+        def count(**params):
+            return self.client.get(URL, params).json()['count']
+
+        self.assertEqual(count(date_from='2026-10-20', date_to='2026-10-20'), 1)
+        self.assertEqual(count(date_from='2026-10-21'), 0)
+        self.assertEqual(count(date_to='2026-10-19'), 0)
 
     def test_invalid_filters_are_400_per_parameter(self):  # EDGE-05
         response = self.client.get(URL, {'date_from': 'ayer', 'product_id': 'x', 'kind': 'z', 'source_type': 'q'})

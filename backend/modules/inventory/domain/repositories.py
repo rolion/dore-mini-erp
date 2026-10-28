@@ -18,6 +18,10 @@ class WarehouseRepository(Protocol):
 
     def list(self, search: str | None = None, active: bool | None = None) -> Sequence[Warehouse]: ...
 
+    def locked(self, warehouse_id: UUID) -> ContextManager[None]:
+        """Transacción que bloquea la fila del almacén (la misma que serializa sus movimientos)."""
+        ...
+
     def ensure_default(self) -> None:
         """Si la empresa no tiene almacenes, crea el predeterminado (idempotente y seguro ante concurrencia)."""
         ...

@@ -13,6 +13,7 @@ import {
   MOVEMENT_STATUS_LABELS,
   MovementKind,
   MovementListParams,
+  MovementStatus,
   SOURCE_ROUTES,
   SOURCE_TYPE_OPTIONS,
   StockMovement,
@@ -31,8 +32,6 @@ export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la 
 export class MovementListComponent implements OnInit {
   readonly pageSize = 10;
   readonly messages = { emptyMessage: 'Sin movimientos para los filtros elegidos.', totalMessage: 'en total' };
-  readonly kindLabels = MOVEMENT_KIND_LABELS;
-  readonly statusLabels = MOVEMENT_STATUS_LABELS;
   readonly sourceOptions = SOURCE_TYPE_OPTIONS;
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     dateFrom: [''],
@@ -100,6 +99,14 @@ export class MovementListComponent implements OnInit {
       }
     });
     this.reload$.next();
+  }
+
+  kindLabel(kind: MovementKind): string {
+    return MOVEMENT_KIND_LABELS[kind];
+  }
+
+  statusLabel(status: MovementStatus): string {
+    return MOVEMENT_STATUS_LABELS[status];
   }
 
   reload(): void {

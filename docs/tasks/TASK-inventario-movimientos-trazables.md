@@ -13,6 +13,8 @@
 | 2026-10-28 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: nueva persistencia append-only, idempotencia/concurrencia, primera dependencia `inventory → catalog`, conexión de los puertos dejados por PB-INV-001/002 | delivery-start |
 | 2026-10-28 | PLANNING → ENGINEERING | Specification READY (supuestos documentados en el Plan, ninguno bloqueante) | delivery-start |
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend 743 OK, Karma acotado OK | delivery-build |
+| 2026-10-28 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 High: `npm run build` falla con TS7053) | delivery-publish |
+| 2026-10-28 | ENGINEERING → REVIEW | REV-01..04 corregidos; backend 747 OK, build, lint y Karma acotado OK | delivery-build |
 
 ## Investigación
 
@@ -85,6 +87,8 @@ Ver `docs/adr/ADR-inventario-movimientos-trazables-registro-idempotente-y-saldo.
 - Se añadieron `application/movement_ports.py`, `api/movement_filters.py`, `api/movement_urls.py` (archivos no listados en el plan).
 
 **Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 743 tests OK (incluye idempotencia y salidas concurrentes con PostgreSQL); `makemigrations --check` sin cambios; `manage.py check` OK. Frontend: `tsc` sin errores nuevos, Karma acotado (inventory + sidebar) 43/43 OK (con `app.component.spec.ts` apartado temporalmente, roto en `main`; restaurado), `ng lint` OK. Entorno: se reutilizó el `.venv` y el `.env` del checkout principal (copiado sin abrir, no versionado) y `node_modules` por enlace.
+
+**Corrección tras el primer Quality Gate (FAIL):** REV-01 (tipado de etiquetas en la plantilla de la lista: `kindLabel()`/`statusLabel()`), REV-02 (carrera registrar movimiento vs. desactivar almacén: `WarehouseRepository.locked()`; `RecordMovement` valida el almacén bajo el bloqueo y `DeactivateWarehouse` toma el mismo), REV-03 (tests: filtro de fechas en el límite de día con `TIME_ZONE`, reversión concurrente, `cannot_reverse_reversal`, reintento de operación revertida), REV-04 (DDR/ADR actualizados con las desviaciones y la política de reintento; columna Origen muestra clase + id). Verificación propia: backend 747 OK; `npm run build` OK; `npm run lint` OK; Karma acotado 43/43.
 
 ## Review
 _Pendiente_
