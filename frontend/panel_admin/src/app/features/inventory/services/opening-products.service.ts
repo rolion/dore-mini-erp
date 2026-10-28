@@ -38,7 +38,6 @@ export class OpeningProductsService {
               id: dto.id,
               name: dto.name,
               unit: {
-                name: dto.base_unit?.name ?? '',
                 abbreviation: dto.base_unit?.abbreviation ?? '',
                 allowsFractions: dto.base_unit?.allows_fractions ?? false,
               },

@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -41,7 +42,7 @@ export interface SummaryLine {
   selector: 'app-stock-opening',
   templateUrl: './stock-opening.component.html',
   styleUrl: './stock-opening.component.scss',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent],
+  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, DatePipe],
 })
 export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
   readonly referenceMaxLength = OPENING_REFERENCE_MAX_LENGTH;
@@ -222,6 +223,10 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
         unit: product?.unit.abbreviation ?? '',
       };
     });
+  }
+
+  get hasZeroLines(): boolean {
+    return this.lines.controls.some((group) => Number(group.controls.quantity.value) === 0);
   }
 
   review(): void {

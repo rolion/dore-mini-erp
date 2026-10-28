@@ -42,7 +42,7 @@ describe('StockApiService', () => {
           warehouse_id: 'w-1',
           warehouse_name: 'Principal',
           quantity: '10.000',
-          unit: { name: 'Unidad', abbreviation: 'u', allows_fractions: false },
+          unit: { abbreviation: 'u', allows_fractions: false },
         },
       ],
     });
@@ -52,26 +52,7 @@ describe('StockApiService', () => {
       warehouseId: 'w-1',
       warehouseName: 'Principal',
       quantity: '10.000',
-      unit: { name: 'Unidad', abbreviation: 'u', allowsFractions: false },
-    });
-  });
-
-  it('reads the movements of a product in a warehouse (AC-05)', () => {
-    let page: unknown;
-    service.movements('w-1', 'p-1').subscribe((value) => (page = value));
-    const req = http.expectOne((r) => r.url.endsWith('/stock/movements/'));
-    expect(req.request.params.get('product_id')).toBe('p-1');
-    req.flush({
-      count: 1,
-      results: [
-        { id: 'm-1', movement_type: 'opening', quantity: '10.000', movement_date: '2026-10-27', reference: 'x', created_at: 't' },
-      ],
-      summary: { product_id: 'p-1', product_name: 'Harina', warehouse_id: 'w-1', warehouse_name: 'Principal', quantity: '10.000', unit: null },
-    });
-    expect(page).toEqual({
-      count: 1,
-      results: [{ id: 'm-1', movementType: 'opening', quantity: '10.000', movementDate: '2026-10-27', reference: 'x', createdAt: 't' }],
-      summary: { productId: 'p-1', productName: 'Harina', warehouseId: 'w-1', warehouseName: 'Principal', quantity: '10.000', unit: null },
+      unit: { abbreviation: 'u', allowsFractions: false },
     });
   });
 
@@ -101,14 +82,20 @@ describe('StockApiService', () => {
       warehouse_id: 'w-1',
       movement_date: '2026-10-27',
       reference: 'Inventario inicial',
-      lines: [{ product_id: 'p-1', quantity: '10.000', movement_id: 'm-1' }],
+      lines: [
+        { product_id: 'p-1', quantity: '10.000', movement_id: 'm-1' },
+        { product_id: 'p-2', quantity: '0.000', movement_id: null },
+      ],
     });
     expect(result).toEqual({
       openingId: 'o-1',
       warehouseId: 'w-1',
       movementDate: '2026-10-27',
       reference: 'Inventario inicial',
-      lines: [{ productId: 'p-1', quantity: '10.000', movementId: 'm-1' }],
+      lines: [
+        { productId: 'p-1', quantity: '10.000', movementId: 'm-1' },
+        { productId: 'p-2', quantity: '0.000', movementId: null },
+      ],
     });
   });
 

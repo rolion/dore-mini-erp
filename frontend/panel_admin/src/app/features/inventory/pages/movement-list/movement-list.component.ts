@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Subject, catchError, finalize, switchMap } from 'rxjs';
 import { Product } from '../../../products/models/product';
@@ -56,6 +56,7 @@ export class MovementListComponent implements OnInit {
   private api = inject(MovementsApiService);
   private productsApi = inject(ProductsApiService);
   private warehousesApi = inject(WarehousesApiService);
+  private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
 
@@ -64,6 +65,12 @@ export class MovementListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Existencias enlaza aquí con ?product_id=&warehouse_id= para ver los movimientos de una fila.
+    const query = this.route.snapshot.queryParamMap;
+    this.filterForm.patchValue(
+      { productId: query.get('product_id') ?? '', warehouseId: query.get('warehouse_id') ?? '' },
+      { emitEvent: false },
+    );
     this.reload$
       .pipe(
         switchMap(() => {

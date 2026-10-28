@@ -25,6 +25,11 @@ La historia pide un formulario de apertura accesible desde Inventario → Existe
 - **Movimientos — plantilla Lista simplificada:** cabecera con producto, almacén y existencia actual; tabla Fecha, Tipo («Apertura»), Cantidad, Referencia, Registrado por/fecha; botón «Volver a existencias».
 - Nuevo patrón reutilizable (se agrega a `docs/design/design-system.md`): **Formulario con líneas y paso de resumen** (editar → resumen → confirmar con envío único).
 
+## Actualización v2 (2026-10-28)
+- **Movimientos:** no hay pantalla propia; «Movimientos» de cada fila abre la lista de PB-INV-004 (`/pocketbiz/inventory/movements`) con `?product_id=&warehouse_id=` (la lista toma esos filtros al iniciar). Se elimina la ruta `inventory/stock/movements`.
+- **Revisión visual (REV-04..06):** el selector de producto usa `appendTo="body"` para no recortarse dentro de `.table-responsive`; la fecha del resumen se muestra `dd/MM/yyyy`; la tabla de líneas usa anchos fijos desde 768 px.
+- **Cantidad 0:** el resumen avisa «Las líneas con cantidad 0 no registran movimiento» (el libro exige cantidad > 0).
+
 ## Alternativas consideradas
 - **Asistente en pasos con rutas distintas:** más navegación y pérdida de estado; se prefiere un solo componente con dos vistas (menos esfuerzo, mantiene el borrador).
 - **Diálogo modal para la apertura:** inadecuado para tablas de varias líneas en móvil.

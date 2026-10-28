@@ -1,5 +1,5 @@
 # REV-2026-10-28-registrar-existencias-iniciales-06: Las columnas de la tabla de líneas cambian de ancho al elegir producto
-**Status:** Open
+**Status:** Resolved (corregido en delivery-build, pendiente de re-verificación del Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md (v1)

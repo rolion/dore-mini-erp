@@ -1,1 +1,13 @@
 @use '../../components/inventory-table';
+
+// Anchos estables de la tabla de líneas (sin saltos al elegir producto o mostrar errores).
+@media (min-width: 768px) {
+  .opening-lines {
+    table-layout: fixed;
+
+    th:nth-child(1) { width: 42%; }
+    th:nth-child(2) { width: 14%; }
+    th:nth-child(3) { width: 34%; }
+    th:nth-child(4) { width: 10%; }
+  }
+}

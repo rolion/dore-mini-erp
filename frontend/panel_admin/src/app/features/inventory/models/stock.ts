@@ -3,7 +3,6 @@ export const QUANTITY_MAX_DECIMALS = 3;
 
 /** Unidad base de un producto, tal como la necesita el stock (siempre de solo lectura en la apertura). */
 export interface StockUnit {
-  name: string;
   abbreviation: string;
   allowsFractions: boolean;
 }
@@ -16,34 +15,6 @@ export interface StockBalance {
   warehouseName: string;
   quantity: string;
   unit: StockUnit | null;
-}
-
-export interface StockMovement {
-  id: string;
-  movementType: string;
-  quantity: string;
-  movementDate: string;
-  reference: string;
-  createdAt: string;
-}
-
-export const MOVEMENT_TYPE_LABELS: Record<string, string> = {
-  opening: 'Apertura',
-};
-
-export interface MovementsSummary {
-  productId: string;
-  productName: string | null;
-  warehouseId: string;
-  warehouseName: string;
-  quantity: string;
-  unit: StockUnit | null;
-}
-
-export interface MovementsPage {
-  count: number;
-  results: StockMovement[];
-  summary: MovementsSummary;
 }
 
 export interface StockListParams {
@@ -80,11 +51,11 @@ export interface OpeningResult {
   warehouseId: string;
   movementDate: string;
   reference: string;
-  lines: { productId: string; quantity: string; movementId: string }[];
+  /** `movementId` es nulo en las líneas con cantidad 0: no generan movimiento. */
+  lines: { productId: string; quantity: string; movementId: string | null }[];
 }
 
 export interface StockUnitDto {
-  name: string;
   abbreviation: string;
   allows_fractions: boolean;
 }
@@ -98,34 +69,12 @@ export interface StockBalanceDto {
   unit: StockUnitDto | null;
 }
 
-export interface StockMovementDto {
-  id: string;
-  movement_type: string;
-  quantity: string;
-  movement_date: string;
-  reference: string;
-  created_at: string;
-}
-
-export interface MovementsPageDto {
-  count: number;
-  results: StockMovementDto[];
-  summary: {
-    product_id: string;
-    product_name: string | null;
-    warehouse_id: string;
-    warehouse_name: string;
-    quantity: string;
-    unit: StockUnitDto | null;
-  };
-}
-
 export interface OpeningResultDto {
   opening_id: string;
   warehouse_id: string;
   movement_date: string;
   reference: string;
-  lines: { product_id: string; quantity: string; movement_id: string }[];
+  lines: { product_id: string; quantity: string; movement_id: string | null }[];
 }
 
 /** Fecha de hoy en formato ISO (yyyy-MM-dd) en la zona horaria local. */

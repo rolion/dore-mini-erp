@@ -1,6 +1,6 @@
 # TASK-registrar-existencias-iniciales: Registrar existencias iniciales (PB-INV-003)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-existencias-iniciales
@@ -14,6 +14,9 @@
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas; supuestos documentados en el Plan) | delivery-start |
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-28 | REVIEW → PUBLISH | Quality Gate PASS (primer ciclo); a la espera de aprobación humana | delivery-publish |
+
+| 2026-10-28 | PUBLISH → PLANNING → ENGINEERING | Decisión del usuario: integrar #21 primero (REV-07). ADR reemplazado y PLAN v2 (rebase sobre el libro de movimientos; EDGE-01 cantidad 0 ajustada, AC sin cambios) | delivery-start |
+| 2026-10-28 | ENGINEERING → REVIEW | Rebase sobre `main` con #21, corrige REV-04..06; sin tablas ni migraciones propias | delivery-build |
 
 ## Investigación
 
@@ -73,15 +76,18 @@ No se puede cargar stock: no hay tablas de movimientos/saldos, ni pantalla de ex
 **SI** — pantalla nueva de Existencias, formulario con líneas y paso de resumen/confirmación, estados de bloqueo por historial.
 
 ## Diseño
-`docs/design/DDR-registrar-existencias-iniciales-pantallas-existencias-apertura.md`
+`docs/design/DDR-registrar-existencias-iniciales-pantallas-existencias-apertura.md` (con «Actualización v2»)
 
 ## Arquitectura
-`docs/adr/ADR-registrar-existencias-iniciales-movimientos-saldos-idempotencia.md`
+`docs/adr/ADR-registrar-existencias-iniciales-apertura-sobre-libro-de-movimientos.md` (reemplaza a `...-movimientos-saldos-idempotencia`)
 
 ## Plan
-`docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md` (v1, COMPLETO) · Specification readiness: READY
+`docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md` (v2, COMPLETO) · Specification readiness: READY
 
 ## Implementación
+**Rebase sobre PB-INV-004 (v2, 2026-10-28).** Con el PR #21 ya en `main`, la implementación descrita abajo (v1: tablas y migración propias) se reemplazó: se eliminaron `StockBalance`, el `StockMovementModel` propio, la migración y el adaptador de catálogo; la apertura usa `RecordMovement` y el libro de #21. Lo vigente: backend `inventory/domain/stock.py` (`StockOpening`, `SOURCE_TYPE`), `domain/movement.py` (origen `inventory_opening`), `application/stock_use_cases.py` (`RegisterOpening`, `CheckOpeningHistory`, `ListStock`), métodos nuevos en `DjangoStockMovementRepository` (`find_by_source_id`, `products_with_history`, `list_balances`), `api/stock_{views,serializers,urls}.py`; `catalog` (filtro `tracks_stock`, `allows_fractions`); frontend `stock-list` (Existencias), `stock-opening`, `OpeningProductsService`, `StockApiService`, la lista de movimientos de #21 acepta `?product_id=&warehouse_id=`, sin pantalla de movimientos propia. Correcciones REV-04 (selector `appendTo="body"`), REV-05 (fecha `dd/MM/yyyy`) y REV-06 (anchos fijos). Verificación propia: backend `manage.py test` 780 OK, `makemigrations --check` sin cambios; frontend lint OK, `ng build` OK, Karma completo 71 fallos = línea base, 609 OK. **Desviaciones nuevas respecto al plan v2:** ninguna conocida. **Cambios de comportamiento a validar:** cantidad 0 no genera movimiento (EDGE-01 v2).
+
+### Implementación v1 (histórica, ya reemplazada)
 **Backend.** `catalog`: `services.get_stock_products` (DTO `StockProduct`, una consulta por lote), filtro `tracks_stock` en `GET /api/products/` y `allows_fractions` en `base_unit` (API-05). `inventory`: `domain/stock.py` (`StockOpening`, `OpeningLine`, validación de cantidad/fracciones; INV-01, 02), excepciones nuevas, puertos `ProductCatalog` y `StockRepository`, `application/stock_use_cases.py` (`RegisterOpening` transaccional con bloqueo del almacén, réplica por `opening_id`, todo o nada; `CheckOpeningHistory`; INV-03..07, AC-01..03), `infrastructure/django/{models,stock_repository}.py` + migración `0002_stock_movements_balances` (solo `CreateModel`, restricciones únicas y `CHECK`), `catalog_adapter.py`, `DjangoWarehouseActivity` y registro de `shared.stock_history` en `InventoryConfig.ready()` (AC-06), API `api/stock_{views,serializers,urls}.py` bajo `/api/stock/` (API-01..04), `test_boundaries` con `inventory: {'catalog'}`.
 **Frontend.** `features/inventory/`: modelos (`stock.ts`, `api-error.ts` ampliado con errores por línea e historial), `StockApiService`, `OpeningProductsService`, páginas `stock-list` (Existencias, UI-01), `stock-opening` (formulario con líneas, resumen y confirmación de envío único; UI-02..04), `stock-movements` (UI-05); rutas `inventory/stock`, `inventory/stock/opening` (con `unsavedChangesGuard`), `inventory/stock/movements`; submenú «Existencias» con i18n es/en/de (UI-06). Patrón nuevo documentado en `design-system.md`; `ddd.md` y `modulos-implementados.md` actualizados.
 **Pantallas de referencia:** `product-list`/`inventory-configuration` (lista y tabla apilada, parcial `_inventory-table.scss` reutilizado), `order-form` (formulario con `ng-select`), `settings-history` (`ngb-pagination`). Componentes reutilizados: `badge-outline`, `NgbPagination`, `ToastrService`. No se creó ningún componente en `shared/`.

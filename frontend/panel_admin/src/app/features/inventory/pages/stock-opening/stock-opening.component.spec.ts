@@ -10,8 +10,8 @@ import { WarehousesApiService } from '../../services/warehouses-api.service';
 import { makeWarehouse } from '../../testing/inventory-fixtures';
 import { HISTORY_MESSAGE, StockOpeningComponent } from './stock-opening.component';
 
-const PIECE: OpeningProduct = { id: 'p-1', name: 'Harina', unit: { name: 'Unidad', abbreviation: 'u', allowsFractions: false } };
-const KILO: OpeningProduct = { id: 'p-2', name: 'Azúcar', unit: { name: 'Kilogramo', abbreviation: 'kg', allowsFractions: true } };
+const PIECE: OpeningProduct = { id: 'p-1', name: 'Harina', unit: { abbreviation: 'u', allowsFractions: false } };
+const KILO: OpeningProduct = { id: 'p-2', name: 'Azúcar', unit: { abbreviation: 'kg', allowsFractions: true } };
 
 const RESULT: OpeningResult = {
   openingId: 'o-1',
@@ -146,6 +146,9 @@ describe('StockOpeningComponent', () => {
     fixture.detectChanges();
     expect(component.step).toBe('review');
     expect(el().querySelector('[data-testid="summary-warehouse"]')?.textContent).toContain('Almacén principal');
+    const [year, month, day] = component.form.controls.movementDate.value.split('-');
+    expect(el().querySelector('[data-testid="summary-date"]')?.textContent?.trim()).toBe(`${day}/${month}/${year}`);
+    expect(el().querySelector('[data-testid="zero-note"]')).toBeNull();
     expect(el().querySelector('[data-testid="summary-line"]')?.textContent).toContain('Azúcar');
     expect(el().querySelector('[data-testid="summary-line"]')?.textContent).toContain('2.5 kg');
     expect(stockApi.register).not.toHaveBeenCalled();
@@ -153,6 +156,14 @@ describe('StockOpeningComponent', () => {
     fixture.detectChanges();
     expect(component.step).toBe('edit');
     expect(stockApi.register).not.toHaveBeenCalled();
+  });
+
+  it('warns in the summary that zero-quantity lines register no movement (EDGE-01)', () => {
+    fillHeader();
+    fill(0, PIECE, '0');
+    component.review();
+    fixture.detectChanges();
+    expect(el().querySelector('[data-testid="zero-note"]')?.textContent).toContain('no registran movimiento');
   });
 
   it('confirms once: a second click while pending sends nothing, then goes to stock (AC-02, AC-05)', () => {

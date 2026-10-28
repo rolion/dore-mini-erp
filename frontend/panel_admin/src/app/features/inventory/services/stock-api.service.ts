@@ -5,22 +5,18 @@ import { environment } from '../../../../environments/environment';
 import { Page } from '../../../shared/models/page';
 import { toApiError } from '../models/api-error';
 import {
-  MovementsPage,
-  MovementsPageDto,
   OpeningInput,
   OpeningResult,
   OpeningResultDto,
   StockBalance,
   StockBalanceDto,
   StockListParams,
-  StockMovement,
-  StockMovementDto,
   StockUnit,
   StockUnitDto,
 } from '../models/stock';
 
 function toUnit(dto: StockUnitDto | null): StockUnit | null {
-  return dto ? { name: dto.name, abbreviation: dto.abbreviation, allowsFractions: dto.allows_fractions } : null;
+  return dto ? { abbreviation: dto.abbreviation, allowsFractions: dto.allows_fractions } : null;
 }
 
 export function toBalance(dto: StockBalanceDto): StockBalance {
@@ -31,17 +27,6 @@ export function toBalance(dto: StockBalanceDto): StockBalance {
     warehouseName: dto.warehouse_name,
     quantity: dto.quantity,
     unit: toUnit(dto.unit),
-  };
-}
-
-function toMovement(dto: StockMovementDto): StockMovement {
-  return {
-    id: dto.id,
-    movementType: dto.movement_type,
-    quantity: dto.quantity,
-    movementDate: dto.movement_date,
-    reference: dto.reference,
-    createdAt: dto.created_at,
   };
 }
 
@@ -74,31 +59,6 @@ export class StockApiService {
     if (params.pageSize !== undefined) httpParams = httpParams.set('page_size', String(params.pageSize));
     return this.http.get<Page<StockBalanceDto>>(this.baseUrl, { params: httpParams }).pipe(
       map((page): Page<StockBalance> => ({ ...page, results: page.results.map(toBalance) })),
-      catchError((err: HttpErrorResponse) => throwError(() => toApiError(err.status, err.error))),
-    );
-  }
-
-  movements(warehouseId: string, productId: string, page = 1, pageSize = 20): Observable<MovementsPage> {
-    const params = new HttpParams()
-      .set('warehouse_id', warehouseId)
-      .set('product_id', productId)
-      .set('page', String(page))
-      .set('page_size', String(pageSize));
-    return this.http.get<MovementsPageDto>(`${this.baseUrl}movements/`, { params }).pipe(
-      map(
-        (body): MovementsPage => ({
-          count: body.count,
-          results: body.results.map(toMovement),
-          summary: {
-            productId: body.summary.product_id,
-            productName: body.summary.product_name,
-            warehouseId: body.summary.warehouse_id,
-            warehouseName: body.summary.warehouse_name,
-            quantity: body.summary.quantity,
-            unit: toUnit(body.summary.unit),
-          },
-        }),
-      ),
       catchError((err: HttpErrorResponse) => throwError(() => toApiError(err.status, err.error))),
     );
   }

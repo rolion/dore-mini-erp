@@ -1,5 +1,5 @@
 # REV-2026-10-28-registrar-existencias-iniciales-04: El desplegable de productos queda recortado dentro de la tabla de líneas
-**Status:** Open
+**Status:** Resolved (corregido en delivery-build, pendiente de re-verificación del Quality Gate)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-27-registrar-existencias-iniciales.md (v1)

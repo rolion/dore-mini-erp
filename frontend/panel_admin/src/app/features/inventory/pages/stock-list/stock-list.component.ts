@@ -102,7 +102,7 @@ export class StockListComponent implements OnInit {
   }
 
   openMovements(row: StockBalance): void {
-    this.router.navigate(['/pocketbiz/inventory/stock/movements'], {
+    this.router.navigate(['/pocketbiz/inventory/movements'], {
       queryParams: { warehouse_id: row.warehouseId, product_id: row.productId },
     });
   }

@@ -14,7 +14,7 @@ const ROW: StockBalance = {
   warehouseId: 'w-1',
   warehouseName: 'Almacén principal',
   quantity: '10.000',
-  unit: { name: 'Unidad', abbreviation: 'u', allowsFractions: false },
+  unit: { abbreviation: 'u', allowsFractions: false },
 };
 
 describe('StockListComponent', () => {
@@ -63,7 +63,7 @@ describe('StockListComponent', () => {
   it('opens the movements of a row (AC-05)', async () => {
     await setup();
     (el().querySelector('[data-testid="open-movements"]') as HTMLButtonElement).click();
-    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/inventory/stock/movements'], {
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/inventory/movements'], {
       queryParams: { warehouse_id: 'w-1', product_id: 'p-1' },
     });
   });

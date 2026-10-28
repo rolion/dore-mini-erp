@@ -69,7 +69,7 @@
 
               <h5 class="mt-3">Productos</h5>
               <div class="table-responsive" formArrayName="lines">
-                <table class="table align-middle inventory-table">
+                <table class="table align-middle inventory-table opening-lines">
                   <caption class="visually-hidden">Líneas de la apertura</caption>
                   <thead>
                     <tr>
@@ -87,7 +87,7 @@
                         <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name"
                           [typeahead]="productInput$" [loading]="productsLoading" [compareWith]="sameProduct"
                           formControlName="product" placeholder="Buscar producto" notFoundText="Sin resultados"
-                          typeToSearchText="Escriba para buscar" [clearable]="false"
+                          typeToSearchText="Escriba para buscar" [clearable]="false" appendTo="body"
                           [attr.aria-label]="'Producto de la línea ' + (i + 1)" (change)="onProductsChanged()">
                         </ng-select>
                         @if (productMessage(i)) {
@@ -138,7 +138,7 @@
                 <dt class="col-sm-3">Almacén</dt>
                 <dd class="col-sm-9" data-testid="summary-warehouse">{{ warehouseName }}</dd>
                 <dt class="col-sm-3">Fecha</dt>
-                <dd class="col-sm-9">{{ form.controls.movementDate.value }}</dd>
+                <dd class="col-sm-9" data-testid="summary-date">{{ form.controls.movementDate.value | date: 'dd/MM/yyyy' }}</dd>
                 <dt class="col-sm-3">Referencia</dt>
                 <dd class="col-sm-9">{{ form.controls.reference.value }}</dd>
                 <dt class="col-sm-3">Productos</dt>
@@ -163,6 +163,11 @@
                   </tbody>
                 </table>
               </div>
+              @if (hasZeroLines) {
+              <p class="text-muted" data-testid="zero-note">
+                Las líneas con cantidad 0 no registran movimiento: ese producto podrá abrirse más adelante.
+              </p>
+              }
               <p class="text-muted">
                 Esta carga no se puede editar después; las correcciones se hacen con ajustes.
               </p>
