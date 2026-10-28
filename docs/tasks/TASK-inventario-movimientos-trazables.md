@@ -1,6 +1,6 @@
 # TASK-inventario-movimientos-trazables: Registrar movimientos trazables de inventario (PB-INV-004)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-movimientos-trazables
@@ -12,6 +12,7 @@
 | 2026-10-28 | (nuevo) → INVESTIGATION | Task creado desde `origin/main` (incluye PR #20) | delivery-start |
 | 2026-10-28 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: nueva persistencia append-only, idempotencia/concurrencia, primera dependencia `inventory → catalog`, conexión de los puertos dejados por PB-INV-001/002 | delivery-start |
 | 2026-10-28 | PLANNING → ENGINEERING | Specification READY (supuestos documentados en el Plan, ninguno bloqueante) | delivery-start |
+| 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend 743 OK, Karma acotado OK | delivery-build |
 
 ## Investigación
 
@@ -83,7 +84,7 @@ Ver `docs/adr/ADR-inventario-movimientos-trazables-registro-idempotente-y-saldo.
 - El contramovimiento no repite el `source` (se vincula por `reverses_id`) para no chocar con la idempotencia; el plan no lo especificaba.
 - Se añadieron `application/movement_ports.py`, `api/movement_filters.py`, `api/movement_urls.py` (archivos no listados en el plan).
 
-**Verificación propia (no es el Quality Gate):** `manage.py check` OK; migración generada con `makemigrations`; tests sin BD (dominio + fronteras, 12) OK. Frontend: `tsc` sin errores nuevos, Karma acotado (inventory + sidebar) 43/43 OK (con `app.component.spec.ts` apartado temporalmente, roto en `main`; restaurado), `ng lint` OK. **Pendiente:** los tests de backend con PostgreSQL (fachada, concurrencia, API, puertos, catálogo) **no se pudieron ejecutar**: este worktree no tiene `backend/.env` ni `DATABASE_URL`, y no se leen credenciales. Hay que correr `python manage.py test` con una BD de pruebas antes del Quality Gate.
+**Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 743 tests OK (incluye idempotencia y salidas concurrentes con PostgreSQL); `makemigrations --check` sin cambios; `manage.py check` OK. Frontend: `tsc` sin errores nuevos, Karma acotado (inventory + sidebar) 43/43 OK (con `app.component.spec.ts` apartado temporalmente, roto en `main`; restaurado), `ng lint` OK. Entorno: se reutilizó el `.venv` y el `.env` del checkout principal (copiado sin abrir, no versionado) y `node_modules` por enlace.
 
 ## Review
 _Pendiente_

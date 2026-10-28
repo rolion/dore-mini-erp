@@ -23,9 +23,9 @@ WHEN = datetime(2026, 10, 20, 15, 30, tzinfo=dt_timezone.utc)
 
 
 def make_product(company, name='Arroz', tracks_stock=True, allows_fractions=True, abbreviation='kg'):
-    unit = UnitModel.objects.create(
-        company_id=company.id, name=f'Unidad {abbreviation}', abbreviation=abbreviation,
-        allows_fractions=allows_fractions)
+    unit, _ = UnitModel.objects.get_or_create(
+        company_id=company.id, abbreviation=abbreviation,
+        defaults={'name': f'Unidad {abbreviation}', 'allows_fractions': allows_fractions})
     return ProductModel.objects.create(
         company_id=company.id, name=name, sale_price=Decimal('10.00'), tracks_stock=tracks_stock,
         base_unit=unit if tracks_stock else None)
