@@ -71,7 +71,19 @@ Ver `docs/adr/ADR-inventario-movimientos-trazables-registro-idempotente-y-saldo.
 `docs/plans/PLAN-2026-10-28-inventario-movimientos-trazables.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+
+**Backend** (`backend/modules/inventory/`): dominio `movement.py` (StockMovement, MovementSource, catálogo `SOURCE_TYPES`; INV-01, 02, 07), casos de uso `movement_use_cases.py` (RecordMovement idempotente + control de saldo bajo bloqueo del almacén, ReverseMovement; INV-03..06), repositorio `movement_repository.py`, adaptador de catálogo `infrastructure/adapters.py`, fachada `services.py` (`record_movement`, `reverse_movement`, `get_balance`, `has_history`), migración `0002_stock_movements` (restricciones únicas parciales, check `quantity > 0`, índices), API de solo lectura `GET /api/stock-movements/[<id>/]` con filtros y `source.available` (AC-04..07), conexión de puertos (`apps.py` registra `stock_history`; `LedgerWarehouseActivity` reemplaza el adaptador nulo; INV-09, AC-09). `catalog.services.get_products_for_inventory` (nueva fachada). Test de fronteras: `inventory: {'catalog'}` y `inventory` en `CONSUMERS`.
+
+**Frontend** (`features/inventory`): `MovementsApiService`, modelos, `MovementListComponent` (filtros, columnas Entrada/Salida separadas) y `MovementDetailComponent`, `inventory.routes.ts`, ruta `inventory/movements`, ítem de menú (`routes.json`, i18n es/en/de). Pantallas de referencia: `expense-list` y `expense-detail`; patrón nuevo documentado en `design-system.md` («Lista de solo lectura con filtros»). Componentes reutilizados: `ngx-datatable`, badges, `AuthService` (nombre de empresa de la sesión).
+
+**Pruebas escritas:** `inventory/tests/test_movements.py` (dominio, fachada, idempotencia secuencial y concurrente, saldo, reversión, puertos, API, aislamiento), `catalog/tests/test_services.py`, specs Karma (servicio, lista, detalle, menú).
+
+**Desviaciones respecto al plan v1:**
+- Filtro de producto con `form-select` (primeros 100 productos) en lugar de `ng-select` del DDR; evita una dependencia de UI para esta pantalla. Deuda: productos > 100.
+- El contramovimiento no repite el `source` (se vincula por `reverses_id`) para no chocar con la idempotencia; el plan no lo especificaba.
+- Se añadieron `application/movement_ports.py`, `api/movement_filters.py`, `api/movement_urls.py` (archivos no listados en el plan).
+
+**Verificación propia (no es el Quality Gate):** `manage.py check` OK; migración generada con `makemigrations`; tests sin BD (dominio + fronteras, 12) OK. Frontend: `tsc` sin errores nuevos, Karma acotado (inventory + sidebar) 43/43 OK (con `app.component.spec.ts` apartado temporalmente, roto en `main`; restaurado), `ng lint` OK. **Pendiente:** los tests de backend con PostgreSQL (fachada, concurrencia, API, puertos, catálogo) **no se pudieron ejecutar**: este worktree no tiene `backend/.env` ni `DATABASE_URL`, y no se leen credenciales. Hay que correr `python manage.py test` con una BD de pruebas antes del Quality Gate.
 
 ## Review
 _Pendiente_

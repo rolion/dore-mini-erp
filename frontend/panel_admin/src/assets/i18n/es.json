@@ -102,6 +102,7 @@
       "LIST": {
         "HOME": "Inicio",
         "CONFIGURATION": "Almacenes y unidades",
+        "MOVEMENTS": "Movimientos",
         "SETTINGS": "Ajustes"
       }
     },

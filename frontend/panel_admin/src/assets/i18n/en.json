@@ -102,6 +102,7 @@
       "LIST": {
         "HOME": "Home",
         "CONFIGURATION": "Warehouses and units",
+        "MOVEMENTS": "Movements",
         "SETTINGS": "Settings"
       }
     },

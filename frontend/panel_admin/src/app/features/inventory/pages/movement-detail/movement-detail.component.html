@@ -1,0 +1,92 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Detalle del movimiento</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/movements">Movimientos</a></li>
+    <li class="breadcrumb-item">Detalle</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ movement ? kindLabels[movement.kind] + ': ' + movement.product.name : 'Movimiento' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (movement; as m) {
+            <dl class="row m-4">
+              <dt class="col-sm-3">Identificador</dt>
+              <dd class="col-sm-9" data-testid="id">{{ m.id }}</dd>
+              <dt class="col-sm-3">Estado</dt>
+              <dd class="col-sm-9" data-testid="status">
+                @if (m.status === 'confirmed') {
+                <div class="badge-outline col-green d-inline-block">{{ statusLabels[m.status] }}</div>
+                } @else {
+                <div class="badge-outline col-grey d-inline-block">{{ statusLabels[m.status] }}</div>
+                }
+              </dd>
+              <dt class="col-sm-3">Empresa</dt>
+              <dd class="col-sm-9">{{ companyName }}</dd>
+              <dt class="col-sm-3">Producto</dt>
+              <dd class="col-sm-9">{{ m.product.name }}</dd>
+              <dt class="col-sm-3">Almacén</dt>
+              <dd class="col-sm-9">{{ m.warehouse.name }}</dd>
+              <dt class="col-sm-3">Tipo</dt>
+              <dd class="col-sm-9" data-testid="kind">{{ kindLabels[m.kind] }}</dd>
+              <dt class="col-sm-3">Cantidad</dt>
+              <dd class="col-sm-9" data-testid="quantity">{{ m.quantity }} {{ m.unitAbbreviation }}</dd>
+              <dt class="col-sm-3">Fecha y hora</dt>
+              <dd class="col-sm-9">{{ m.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Usuario</dt>
+              <dd class="col-sm-9">{{ m.user.name || '—' }}</dd>
+              <dt class="col-sm-3">Referencia</dt>
+              <dd class="col-sm-9">{{ m.reference || '—' }}</dd>
+              <dt class="col-sm-3">Motivo</dt>
+              <dd class="col-sm-9">{{ m.reason || '—' }}</dd>
+              <dt class="col-sm-3">Origen</dt>
+              <dd class="col-sm-9" data-testid="source">
+                @if (m.source; as source) {
+                {{ source.label }} · {{ source.id }}@if (source.line) { (línea {{ source.line }}) }
+                @if (sourceLink; as link) {
+                <a class="ms-2" [routerLink]="link" data-testid="source-link">Abrir documento de origen</a>
+                }
+                } @else {
+                Sin documento de origen
+                }
+              </dd>
+              <dt class="col-sm-3">Contramovimientos</dt>
+              <dd class="col-sm-9" data-testid="counter">
+                @if (m.reversedById) {
+                Revertido por <a [routerLink]="['/pocketbiz/inventory/movements', m.reversedById]">este contramovimiento</a>
+                } @else if (m.reversesId) {
+                Revierte a <a [routerLink]="['/pocketbiz/inventory/movements', m.reversesId]">este movimiento</a>
+                } @else {
+                Ninguno
+                }
+              </dd>
+            </dl>
+            <div class="m-4">
+              <a class="btn btn-light" routerLink="/pocketbiz/inventory/movements">Volver</a>
+            </div>
+            } @else if (loading) {
+            <p class="m-4">Cargando…</p>
+            } @else if (errorMessage) {
+            <div class="m-4">
+              <div class="alert alert-danger" role="alert" data-testid="error">{{ notFound ? 'Movimiento no encontrado.' : errorMessage }}</div>
+              @if (!notFound) {
+              <button type="button" class="btn btn-light me-2" (click)="load()">Reintentar</button>
+              }
+              <a class="btn btn-light" routerLink="/pocketbiz/inventory/movements">Volver a movimientos</a>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
