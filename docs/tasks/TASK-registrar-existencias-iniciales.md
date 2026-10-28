@@ -1,6 +1,6 @@
 # TASK-registrar-existencias-iniciales: Registrar existencias iniciales (PB-INV-003)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-existencias-iniciales
@@ -13,6 +13,7 @@
 | 2026-10-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: primeras tablas de movimientos y saldos, conexión de los puertos de historial y actividad de almacén, dependencia `inventory → catalog` | delivery-start |
 | 2026-10-27 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas; supuestos documentados en el Plan) | delivery-start |
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-28 | REVIEW → PUBLISH | Quality Gate PASS (primer ciclo); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -97,7 +98,12 @@ No se puede cargar stock: no hay tablas de movimientos/saldos, ni pantalla de ex
 **Deuda técnica:** no hay búsqueda por nombre en Existencias ni ajustes (corrección de una apertura errónea); la revisión visual en navegador (claro/oscuro, 390/1440 px) no se hizo; el selector de productos pide hasta 50 resultados (el resto por búsqueda); `NoWarehouseActivity` queda solo para pruebas; las recepciones pendientes siguen sin datos.
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-10-28, primer ciclo, Quality Gate en subagente aislado).
+- Backend: `manage.py test` 743 tests OK; `makemigrations --check` sin cambios; bandit (inventory, catalog) sin hallazgos.
+- Frontend: lint OK, `ng build` OK, Karma completo 71 fallos = línea base ("should create" de pantallas demo), 595 OK (28 specs nuevos, todos OK).
+- DDD/Specification: AC-01..06, INV, EDGE, API y UI cubiertos y verificados salvo lo señalado en REV-03; migración solo aditiva; sin secretos ni artefactos en el diff.
+- Hallazgos abiertos sin bloquear: [REV-01](../reviews/REV-2026-10-28-registrar-existencias-iniciales-01.md) Medium (`lines` con tipo inválido responde 500 / 400 sin mensaje), [REV-02](../reviews/REV-2026-10-28-registrar-existencias-iniciales-02.md) Low (el backend acepta notación exponencial `1e3`), [REV-03](../reviews/REV-2026-10-28-registrar-existencias-iniciales-03.md) Low (EDGE-06 sin test propio; `track item.name` en el resumen).
+- No ejecutado: revisión visual en navegador (claro/oscuro, 390/1440 px) y flujo de punta a punta con backend + frontend levantados: **no verificadas**; `npm audit` (sin lockfile); prueba con usuario no administrador.
 
 ## Publicación
-_Pendiente_
+PR #22 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `inventory/0002`: tablas `inventory_stock_movement` e `inventory_stock_balance`) y **autorización** (las APIs de `/api/stock/` exigen administrador y módulo `inventory`). ADR: `ADR-registrar-existencias-iniciales-movimientos-saldos-idempotencia`.
