@@ -1,6 +1,6 @@
 # TASK-registrar-existencias-iniciales: Registrar existencias iniciales (PB-INV-003)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-existencias-iniciales
@@ -95,6 +95,7 @@ No se puede cargar stock: no hay tablas de movimientos/saldos, ni pantalla de ex
 6. En el `ng-select` de las líneas se usa `[labelForId]` (en `order-form` `inputId` solo funciona como atributo y no asocia la etiqueta).
 **Verificación propia (no es el Quality Gate):** backend `python manage.py test` → 743 tests OK; `makemigrations --check` sin cambios. Frontend: `npm run lint` OK, `ng build` OK, Karma completo 71 fallos = línea base (specs «should create» de pantallas demo), 595 OK (+28 de este task). Se apartó temporalmente `app.component.spec.ts` (roto en `main`: `Property 'title' does not exist`) y se restauró sin cambios.
 **Entorno:** con autorización del usuario se copió `backend/.env` del checkout principal (sin leerlo; ignorado por git), se usó su `.venv` y se enlazó `node_modules` con una unión.
+**Corrección tras el primer Quality Gate (PASS con hallazgos):** REV-01 (`_by_position` solo indexa errores cuando `lines` es una lista; si no, 400 con el mensaje de DRF), REV-02 (el dominio acepta solo texto decimal simple `\d+(\.\d+)?` ASCII, sin `1e3`, `+5` ni dígitos Unicode) y REV-03 (test de miembro no administrador → 403 y `track $index` en el resumen). Backend: 746 tests OK, `makemigrations --check` sin cambios.
 **Deuda técnica:** no hay búsqueda por nombre en Existencias ni ajustes (corrección de una apertura errónea); la revisión visual en navegador (claro/oscuro, 390/1440 px) no se hizo; el selector de productos pide hasta 50 resultados (el resto por búsqueda); `NoWarehouseActivity` queda solo para pruebas; las recepciones pendientes siguen sin datos.
 
 ## Review

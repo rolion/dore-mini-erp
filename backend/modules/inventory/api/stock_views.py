@@ -61,9 +61,10 @@ def _uuid_param(request, name: str, required: bool = True) -> UUID | None:
 def _by_position(errors: dict, data) -> dict:
     """Los errores de líneas siempre viajan como lista (un dict por línea), igual que los del dominio."""
     lines = errors.get('lines')
-    if isinstance(lines, dict):
-        total = len(data.get('lines') or []) if isinstance(data, dict) else 0
-        errors = {**errors, 'lines': [lines.get(index, {}) for index in range(total)]}
+    sent = data.get('lines') if hasattr(data, 'get') else None
+    # DRF indexa por posición solo cuando se envió una lista; si `lines` no es una lista, su mensaje se deja tal cual.
+    if isinstance(lines, dict) and isinstance(sent, list) and all(str(key).isdigit() for key in lines):
+        errors = {**errors, 'lines': [lines.get(index, {}) for index in range(len(sent))]}
     return errors
 
 

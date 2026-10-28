@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime
+import re
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
@@ -9,6 +10,8 @@ OPENING = 'opening'
 REFERENCE_MAX_LENGTH = 100
 QUANTITY_DECIMALS = Decimal('0.001')
 QUANTITY_MAX = Decimal('99999999999.999')
+# Solo texto decimal simple: sin signo, exponente ni dígitos no ASCII (igual que la validación de la interfaz).
+_PLAIN_DECIMAL = re.compile(r'\d+(\.\d+)?', re.ASCII)
 
 
 def _quantity_error(message: str) -> OpeningValidationError:
@@ -18,6 +21,10 @@ def _quantity_error(message: str) -> OpeningValidationError:
 def validate_quantity(value: object) -> Decimal:
     """Cantidad inicial: decimal no negativo con hasta 3 decimales. Nunca `float` (ni `bool`)."""
     if isinstance(value, bool) or not isinstance(value, (Decimal, int, str)):
+        raise _quantity_error('La cantidad debe ser un número decimal.')
+    if isinstance(value, str) and not _PLAIN_DECIMAL.fullmatch(value.strip()):
+        if value.strip().startswith('-') and _PLAIN_DECIMAL.fullmatch(value.strip()[1:]):
+            raise _quantity_error('La cantidad inicial no puede ser negativa.')
         raise _quantity_error('La cantidad debe ser un número decimal.')
     try:
         quantity = Decimal(value.strip() if isinstance(value, str) else value)

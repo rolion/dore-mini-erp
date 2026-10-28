@@ -66,7 +66,7 @@ class OpeningDomainTests(SimpleTestCase):
         self.assertIn('product_id', errors['lines'][1])
 
     def test_quantity_must_be_a_non_negative_decimal_with_three_places(self):  # EDGE-02
-        for bad in ('-1', '1.0005', 'abc', 1.5, True, None, 'NaN', '100000000000'):
+        for bad in ('-1', '1.0005', 'abc', 1.5, True, None, 'NaN', '100000000000', '1e3', '+5', ' ', '٣'):
             self.assertIn('quantity', self.errors(lines=[(uuid4(), bad)])['lines'][0], bad)
 
     def test_same_content_ignores_line_order(self):  # INV-07
@@ -228,6 +228,35 @@ class OpeningApiTests(StockApiTestCase):
         set_enabled(self.company, DEFAULT_ENABLED_KEYS)
         self.assertEqual(self.open([line(product)]).status_code, 403)
         self.assertEqual(self.client.get(STOCK).status_code, 403)
+
+    def test_malformed_lines_answer_400_with_a_message_never_500(self):  # API-01, EDGE-05
+        body = {'opening_id': str(uuid4()), 'warehouse_id': self.warehouse, 'movement_date': TODAY.isoformat(),
+                'reference': 'x'}
+        for bad in (5, 'abc', {'a': 1}, None, [5], [{'product_id': str(uuid4())}]):
+            response = self.client.post(OPENINGS, {**body, 'lines': bad}, format='json')
+            self.assertEqual(response.status_code, 400, bad)
+            self.assertIn('lines', response.json(), bad)
+        detail = self.client.post(OPENINGS, {**body, 'lines': 5}, format='json').json()['lines']
+        self.assertEqual(list(detail), ['non_field_errors'])
+        self.assertIn('lista', detail['non_field_errors'][0])
+        self.assertEqual(self.counts(), (0, 0))
+
+    def test_exponent_notation_is_rejected_like_the_ui_does(self):  # EDGE-02
+        product = self.make_product()
+        response = self.open([line(product, '1e3')])
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('quantity', response.json()['lines'][0])
+
+    def test_non_admin_members_get_403(self):  # EDGE-06
+        product = self.make_product()
+        member = make_admin(self.company, username='mario', role='member')
+        other = APIClient()
+        authenticate(other, member)
+        body = {'opening_id': str(uuid4()), 'warehouse_id': self.warehouse, 'movement_date': TODAY.isoformat(),
+                'reference': 'x', 'lines': [line(product)]}
+        self.assertEqual(other.post(OPENINGS, body, format='json').status_code, 403)
+        self.assertEqual(other.get(STOCK).status_code, 403)
+        self.assertEqual(self.counts(), (0, 0))
 
     def test_database_allows_one_opening_per_product_and_warehouse(self):  # INV-04 (defensa final)
         product = self.make_product()
