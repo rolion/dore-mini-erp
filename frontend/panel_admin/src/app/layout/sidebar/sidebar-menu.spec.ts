@@ -25,6 +25,7 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/inventory',
       '/pocketbiz/inventory/stock',
       '/pocketbiz/inventory/configuration',
+      '/pocketbiz/inventory/movements',
       '/pocketbiz/inventory/settings',
     ]);
     expect(settings.module).toBeUndefined();

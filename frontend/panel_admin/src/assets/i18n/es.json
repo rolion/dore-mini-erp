@@ -103,6 +103,7 @@
         "HOME": "Inicio",
         "STOCK": "Existencias",
         "CONFIGURATION": "Almacenes y unidades",
+        "MOVEMENTS": "Movimientos",
         "SETTINGS": "Ajustes"
       }
     },

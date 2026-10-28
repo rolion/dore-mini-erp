@@ -1,7 +1,12 @@
+from contextlib import AbstractContextManager as ContextManager
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from typing import Protocol, Sequence
 from uuid import UUID
 
-from .stock import RegisteredOpening, StockBalanceEntry, StockMovementEntry, StockOpening
+from .movement import MovementKind, StockMovement
+from .stock import StockBalanceEntry
 from .warehouse import Warehouse
 
 
@@ -14,30 +19,56 @@ class WarehouseRepository(Protocol):
 
     def list(self, search: str | None = None, active: bool | None = None) -> Sequence[Warehouse]: ...
 
+    def locked(self, warehouse_id: UUID) -> ContextManager[None]:
+        """Transacción que bloquea la fila del almacén (la misma que serializa sus movimientos)."""
+        ...
+
     def ensure_default(self) -> None:
         """Si la empresa no tiene almacenes, crea el predeterminado (idempotente y seguro ante concurrencia)."""
         ...
 
 
-class StockRepository(Protocol):
-    """Movimientos y saldos de la empresa."""
+@dataclass(frozen=True)
+class MovementFilters:
+    date_from: date | None = None
+    date_to: date | None = None
+    product_id: UUID | None = None
+    warehouse_id: UUID | None = None
+    kind: MovementKind | None = None
+    source_type: str | None = None  # clase de origen, o 'none' para movimientos sin documento
 
-    def atomic(self):
-        """Gestor de contexto: todo lo que ocurra dentro es una sola transacción."""
+
+class StockMovementRepository(Protocol):
+    def locked(self, warehouse_id: UUID) -> ContextManager[None]:
+        """Transacción que serializa los movimientos del almacén (bloquea su fila)."""
         ...
 
-    def lock_warehouse(self, warehouse_id: UUID) -> Warehouse | None:
-        """El almacén bloqueado hasta el fin de la transacción (serializa aperturas), o `None`."""
+    def get(self, movement_id: UUID) -> StockMovement | None: ...
+
+    def find_by_source(self, movement: StockMovement) -> StockMovement | None:
+        """El movimiento equivalente (misma operación de origen, producto, almacén y tipo), si existe."""
         ...
 
-    def find_opening(self, opening_id: UUID) -> RegisteredOpening | None: ...
+    def balance(self, product_id: UUID, warehouse_id: UUID) -> Decimal: ...
 
-    def products_with_history(self, warehouse_id: UUID, product_ids: list[UUID]) -> set[UUID]: ...
+    def insert(self, movement: StockMovement) -> StockMovement: ...
 
-    def save_opening(self, opening: StockOpening, created_by_id: int | None) -> None: ...
+    def mark_reversed(self, movement_id: UUID) -> None: ...
 
-    def list_balances(self, warehouse_id: UUID | None = None) -> Sequence[StockBalanceEntry]: ...
+    def list(self, filters: MovementFilters) -> Sequence[StockMovement]: ...
 
-    def get_balance(self, warehouse_id: UUID, product_id: UUID) -> StockBalanceEntry | None: ...
+    def has_history(self, product_id: UUID) -> bool: ...
 
-    def list_movements(self, warehouse_id: UUID, product_id: UUID) -> Sequence[StockMovementEntry]: ...
+    def find_by_source_id(self, source_type: str, source_id: str) -> Sequence[StockMovement]:
+        """Todos los movimientos de una operación de origen (p. ej. las líneas de una apertura)."""
+        ...
+
+    def products_with_history(self, warehouse_id: UUID, product_ids: Sequence[UUID]) -> set[UUID]:
+        """Los productos indicados que ya tienen algún movimiento en el almacén."""
+        ...
+
+    def list_balances(self, warehouse_id: UUID | None = None) -> Sequence[StockBalanceEntry]:
+        """Existencias por producto y almacén (entradas menos salidas), con al menos un movimiento."""
+        ...
+
+    def has_nonzero_balance(self, warehouse_id: UUID) -> bool: ...

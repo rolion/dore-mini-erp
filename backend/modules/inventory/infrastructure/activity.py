@@ -1,27 +1,19 @@
 from uuid import UUID
 
-from modules.inventory.infrastructure.django.models import StockBalanceModel
+from .django.movement_repository import DjangoStockMovementRepository
 
 
-class NoWarehouseActivity:
-    """Adaptador nulo (sin saldos ni recepciones); queda para pruebas y entornos sin datos de existencias."""
+class LedgerWarehouseActivity:
+    """Actividad de un almacén de la empresa: el saldo sale del libro de movimientos.
 
-    def has_nonzero_balance(self, warehouse_id: UUID) -> bool:
-        return False
-
-    def has_pending_receipts(self, warehouse_id: UUID) -> bool:
-        return False
-
-
-class DjangoWarehouseActivity:
-    """Saldos reales de la empresa. Las recepciones pendientes no existen todavía: siempre «no»."""
+    Las recepciones pendientes llegan con su historia; mientras tanto ningún almacén las tiene.
+    """
 
     def __init__(self, company_id: UUID):
-        self.company_id = company_id
+        self.movements = DjangoStockMovementRepository(company_id)
 
     def has_nonzero_balance(self, warehouse_id: UUID) -> bool:
-        return StockBalanceModel.objects.filter(
-            company_id=self.company_id, warehouse_id=warehouse_id).exclude(quantity=0).exists()
+        return self.movements.has_nonzero_balance(warehouse_id)
 
     def has_pending_receipts(self, warehouse_id: UUID) -> bool:
         return False

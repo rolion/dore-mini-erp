@@ -26,58 +26,40 @@ class WarehouseModel(models.Model):
 
 
 class StockMovementModel(models.Model):
-    """Movimiento de existencias: inmutable (solo se agregan filas). `quantity` lleva signo; la apertura es >= 0."""
-
-    OPENING = 'opening'
+    """Libro de movimientos: solo se inserta; lo único que se actualiza es `status` al revertir."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company_id = models.UUIDField()
-    warehouse = models.ForeignKey(WarehouseModel, on_delete=models.PROTECT, related_name='movements')
-    # Producto de Catálogo: solo UUID, sin FK entre módulos.
+    # Sin FK al producto (es de otro módulo); el almacén sí es de este módulo.
     product_id = models.UUIDField()
-    movement_type = models.CharField(max_length=20, choices=[(OPENING, 'Apertura')])
-    quantity = models.DecimalField(max_digits=14, decimal_places=3)
-    movement_date = models.DateField()
-    reference = models.CharField(max_length=100)
-    # Clave de idempotencia de la apertura que lo originó (todas sus líneas la comparten).
-    opening_id = models.UUIDField(null=True, blank=True)
-    created_by_id = models.BigIntegerField(null=True, blank=True)
+    warehouse = models.ForeignKey(WarehouseModel, on_delete=models.PROTECT, related_name='+')
+    kind = models.CharField(max_length=3)
+    quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    occurred_at = models.DateTimeField()
+    user_id = models.UUIDField(null=True, blank=True)
+    user_name = models.CharField(max_length=200, blank=True, default='')
+    reference = models.CharField(max_length=200, blank=True, default='')
+    reason = models.CharField(max_length=200, blank=True, default='')
+    source_type = models.CharField(max_length=40, null=True, blank=True)
+    source_id = models.CharField(max_length=100, blank=True, default='')
+    source_line = models.CharField(max_length=100, blank=True, default='')
+    status = models.CharField(max_length=10, default='confirmed')
+    reverses_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'inventory_stock_movement'
-        ordering = ['-movement_date', '-created_at', '-id']
+        ordering = ['-occurred_at', '-created_at', 'id']
         indexes = [
-            models.Index(fields=['company_id', 'product_id'], name='inventory_mov_company_product'),
-            models.Index(fields=['company_id', 'warehouse', 'product_id'], name='inventory_mov_company_wh_prod'),
+            models.Index(fields=['company_id', 'occurred_at'], name='inv_mov_company_date_idx'),
+            models.Index(fields=['company_id', 'product_id', 'warehouse'], name='inv_mov_company_prod_wh_idx'),
         ]
         constraints = [
+            models.CheckConstraint(condition=models.Q(quantity__gt=0), name='inv_mov_quantity_positive'),
             models.UniqueConstraint(
-                fields=['company_id', 'opening_id', 'product_id'], condition=models.Q(opening_id__isnull=False),
-                name='inventory_movement_opening_product_uniq'),
+                fields=['company_id', 'source_type', 'source_id', 'source_line', 'product_id', 'warehouse', 'kind'],
+                condition=models.Q(source_type__isnull=False), name='inv_mov_source_operation_uniq'),
             models.UniqueConstraint(
-                fields=['company_id', 'warehouse', 'product_id'], condition=models.Q(movement_type='opening'),
-                name='inventory_movement_one_opening'),
-            models.CheckConstraint(
-                condition=~models.Q(movement_type='opening') | models.Q(quantity__gte=0),
-                name='inventory_movement_opening_qty_gte_0'),
-        ]
-
-
-class StockBalanceModel(models.Model):
-    """Existencia actual de un producto en un almacén; cambia solo junto con un movimiento."""
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company_id = models.UUIDField()
-    warehouse = models.ForeignKey(WarehouseModel, on_delete=models.PROTECT, related_name='balances')
-    product_id = models.UUIDField()
-    quantity = models.DecimalField(max_digits=14, decimal_places=3)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'inventory_stock_balance'
-        ordering = ['warehouse__name', '-updated_at', 'product_id']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['company_id', 'warehouse', 'product_id'], name='inventory_balance_company_wh_prod_uniq'),
+                fields=['reverses_id'], condition=models.Q(reverses_id__isnull=False),
+                name='inv_mov_one_reversal_uniq'),
         ]

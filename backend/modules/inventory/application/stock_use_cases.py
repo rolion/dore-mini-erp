@@ -1,64 +1,91 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time
 from uuid import UUID
 
+from django.utils import timezone
+
 from modules.inventory.domain.exceptions import (
-    OpeningConflict,
     OpeningIdReused,
     OpeningValidationError,
     StockHistoryExists,
     WarehouseNotFound,
 )
-from modules.inventory.domain.repositories import StockRepository
-from modules.inventory.domain.stock import RegisteredOpening, StockOpening, check_quantity_for_unit
+from modules.inventory.domain.movement import MovementKind, MovementSource, StockMovement
+from modules.inventory.domain.repositories import StockMovementRepository, WarehouseRepository
+from modules.inventory.domain.stock import SOURCE_TYPE, StockBalanceEntry, StockOpening, check_quantity_for_unit
 
-from .ports import ProductCatalog
+from .movement_ports import ProductDirectory
+from .movement_use_cases import RecordMovement
+
+OPENING_REASON = 'Apertura de existencias'
+NOON = time(12, 0)
 
 
 @dataclass(frozen=True)
 class OpeningOutcome:
-    registered: RegisteredOpening
+    opening: StockOpening
+    #: Movimiento de cada producto; las líneas con cantidad 0 no generan movimiento y no aparecen.
+    movement_ids: dict[UUID, UUID]
     replayed: bool
 
 
-class RegisterOpening:
-    """Registra la apertura de existencias de un almacén (AC-01..03): todo o nada e idempotente por `opening_id`."""
+def _occurred_at(movement_date: date, today: date) -> datetime:
+    """Hoy: el momento actual; otro día: mediodía local de esa fecha (queda dentro del día aunque cambie la zona)."""
+    if movement_date == today:
+        return timezone.now()
+    return timezone.make_aware(datetime.combine(movement_date, NOON))
 
-    def __init__(self, stock: StockRepository, products: ProductCatalog):
+
+def _matches(opening: StockOpening, movements: list[StockMovement]) -> bool:
+    """Los movimientos ya registrados con esta clave tienen el mismo almacén, fecha, referencia y líneas."""
+    first = movements[0]
+    stored = (first.warehouse_id, timezone.localtime(first.occurred_at).date(), first.reference,
+              frozenset((m.product_id, m.quantity) for m in movements))
+    sent = (opening.warehouse_id, opening.movement_date, opening.reference,
+            frozenset((line.product_id, line.quantity) for line in opening.recorded_lines))
+    return stored == sent
+
+
+class RegisterOpening:
+    """Registra la apertura de existencias de un almacén sobre el libro de movimientos (AC-01..03).
+
+    Una entrada por línea con cantidad > 0, con origen `(inventory_opening, opening_id)`: repetir la clave con el
+    mismo contenido devuelve lo ya registrado. Todo o nada: se hace bajo el bloqueo del almacén y en una transacción.
+    """
+
+    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory):
         self.stock = stock
+        self.warehouses = warehouses
         self.products = products
+        self.recorder = RecordMovement(stock, warehouses, products)
 
     def execute(self, opening_id: UUID, warehouse_id: UUID, movement_date: date, reference: object,
-                lines: list[tuple[UUID, object]], today: date, created_by_id: int | None = None) -> OpeningOutcome:
+                lines: list[tuple[UUID, object]], today: date, user_name: str,
+                user_id: UUID | None = None) -> OpeningOutcome:
         opening = StockOpening.create(opening_id, warehouse_id, movement_date, reference, lines, today)
-        with self.stock.atomic():
-            warehouse = self.stock.lock_warehouse(warehouse_id)
+        with self.stock.locked(warehouse_id):
+            warehouse = self.warehouses.get(warehouse_id)
             if warehouse is None:
                 raise WarehouseNotFound(warehouse_id)
-            existing = self.stock.find_opening(opening_id)
-            if existing is not None:
-                return self._replay(existing, opening)
+            existing = self.stock.find_by_source_id(SOURCE_TYPE, str(opening_id))
+            if existing:
+                if not _matches(opening, existing):
+                    raise OpeningIdReused()
+                return OpeningOutcome(opening, {m.product_id: m.id for m in existing}, replayed=True)
             if not warehouse.active:
                 raise OpeningValidationError({'warehouse_id': ['El almacén debe estar activo.']})
             self._validate_products(opening)
             self._reject_history(opening)
-            try:
-                self.stock.save_opening(opening, created_by_id)
-            except OpeningConflict:
-                # Otra escritura se adelantó pese al bloqueo: se reinterpreta con lo que ya existe.
-                existing = self.stock.find_opening(opening_id)
-                if existing is not None:
-                    return self._replay(existing, opening)
-                self._reject_history(opening)
-                raise
-            registered = self.stock.find_opening(opening_id)
-        return OpeningOutcome(registered, replayed=False)
-
-    @staticmethod
-    def _replay(existing: RegisteredOpening, opening: StockOpening) -> OpeningOutcome:
-        if not existing.opening.same_content_as(opening):
-            raise OpeningIdReused()
-        return OpeningOutcome(existing, replayed=True)
+            source = MovementSource(SOURCE_TYPE, str(opening_id))
+            occurred_at = _occurred_at(movement_date, today)
+            movement_ids: dict[UUID, UUID] = {}
+            for line in opening.recorded_lines:
+                movement, _ = self.recorder.execute(
+                    product_id=line.product_id, warehouse_id=warehouse_id, kind=MovementKind.IN,
+                    quantity=line.quantity, user_id=user_id, user_name=user_name, reference=opening.reference,
+                    reason=OPENING_REASON, source=source, occurred_at=occurred_at)
+                movement_ids[line.product_id] = movement.id
+            return OpeningOutcome(opening, movement_ids, replayed=False)
 
     def _validate_products(self, opening: StockOpening) -> None:
         found = self.products.get_products([line.product_id for line in opening.lines])
@@ -89,9 +116,19 @@ class RegisterOpening:
 class CheckOpeningHistory:
     """Productos que ya tienen movimientos en el almacén (para señalar líneas antes de confirmar)."""
 
-    def __init__(self, stock: StockRepository):
+    def __init__(self, stock: StockMovementRepository):
         self.stock = stock
 
     def execute(self, warehouse_id: UUID, product_ids: list[UUID]) -> list[UUID]:
         found = self.stock.products_with_history(warehouse_id, product_ids)
         return [product_id for product_id in product_ids if product_id in found]
+
+
+class ListStock:
+    """Existencias por producto y almacén, calculadas del libro."""
+
+    def __init__(self, stock: StockMovementRepository):
+        self.stock = stock
+
+    def execute(self, warehouse_id: UUID | None = None) -> list[StockBalanceEntry]:
+        return self.stock.list_balances(warehouse_id)

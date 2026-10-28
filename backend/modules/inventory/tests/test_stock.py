@@ -4,7 +4,7 @@ from decimal import Decimal
 from threading import Barrier, Thread
 from uuid import UUID, uuid4
 
-from django.db import IntegrityError, connection, transaction
+from django.db import connection
 from django.test import SimpleTestCase, TransactionTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient, APITestCase
@@ -13,9 +13,11 @@ from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.inventory.application.stock_use_cases import RegisterOpening
 from modules.inventory.domain.exceptions import OpeningValidationError
 from modules.inventory.domain.stock import StockOpening
-from modules.inventory.infrastructure.catalog_adapter import CatalogProducts
-from modules.inventory.infrastructure.django.models import StockBalanceModel, StockMovementModel, WarehouseModel
-from modules.inventory.infrastructure.django.stock_repository import DjangoStockRepository, has_movements
+from modules.inventory.infrastructure.adapters import CatalogProductDirectory
+from modules.inventory.infrastructure.django.models import StockMovementModel
+from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
+from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
+from modules.inventory.services import get_balance, has_history
 from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.tests.test_enforcement import set_enabled
 from shared import stock_history
@@ -45,8 +47,11 @@ class OpeningDomainTests(SimpleTestCase):
         self.assertEqual(opening.reference, 'Inventario inicial')
         self.assertEqual([line.quantity for line in opening.lines], [Decimal('5.000'), Decimal('0.500')])
 
-    def test_zero_quantity_is_allowed(self):  # EDGE-01
-        self.assertEqual(self.create(lines=[(uuid4(), '0')]).lines[0].quantity, Decimal('0.000'))
+    def test_zero_quantity_is_accepted_but_not_recorded(self):  # EDGE-01
+        product = uuid4()
+        opening = self.create(lines=[(uuid4(), '0'), (product, '3')])
+        self.assertEqual(opening.lines[0].quantity, Decimal('0.000'))
+        self.assertEqual([line.product_id for line in opening.recorded_lines], [product])
 
     def test_reference_is_required_and_limited(self):  # INV-01
         self.assertIn('reference', self.errors(reference='  '))
@@ -68,15 +73,6 @@ class OpeningDomainTests(SimpleTestCase):
     def test_quantity_must_be_a_non_negative_decimal_with_three_places(self):  # EDGE-02
         for bad in ('-1', '1.0005', 'abc', 1.5, True, None, 'NaN', '100000000000', '1e3', '+5', ' ', '٣'):
             self.assertIn('quantity', self.errors(lines=[(uuid4(), bad)])['lines'][0], bad)
-
-    def test_same_content_ignores_line_order(self):  # INV-07
-        a, b = uuid4(), uuid4()
-        base = {'opening_id': uuid4(), 'warehouse_id': uuid4(), 'movement_date': TODAY}
-        one = self.create(**base, lines=[(a, '1'), (b, '2')])
-        two = self.create(**base, lines=[(b, '2'), (a, '1')])
-        other = self.create(**base, lines=[(a, '1'), (b, '3')])
-        self.assertTrue(one.same_content_as(two))
-        self.assertFalse(one.same_content_as(other))
 
 
 class StockApiTestCase(APITestCase):
@@ -109,31 +105,43 @@ class StockApiTestCase(APITestCase):
         return self.client.post(OPENINGS, body, format='json')
 
     def counts(self):
-        return StockMovementModel.objects.count(), StockBalanceModel.objects.count()
+        """(movimientos del libro, 0): la segunda cifra se conserva para comparar antes/después con una tupla."""
+        return StockMovementModel.objects.count(), 0
+
+    def balance(self, product):
+        return get_balance(self.company.id, UUID(product), UUID(self.warehouse))
 
 
 class OpeningApiTests(StockApiTestCase):
-    def test_confirming_creates_movements_and_balances(self):  # AC-01, AC-02
+    def test_confirming_creates_one_entry_per_line_and_the_balance(self):  # AC-01, AC-02
         flour, sugar = self.make_product('Harina'), self.make_product('Azúcar', self.kilo)
         response = self.open([line(flour, '10'), line(sugar, '2.5')])
         self.assertEqual(response.status_code, 201, response.content)
         body = response.json()
         self.assertEqual(body['reference'], 'Apertura 2026')
         self.assertEqual({entry['product_id']: entry['quantity'] for entry in body['lines']},
-                         {flour: '10.000', sugar: '2.500'})
+                         {flour: '10.0000', sugar: '2.5000'})
         movements = StockMovementModel.objects.filter(company_id=self.company.id)
         self.assertEqual(movements.count(), 2)
-        self.assertEqual({m.movement_type for m in movements}, {'opening'})
-        self.assertEqual({m.created_by_id for m in movements}, {self.admin.pk})
-        self.assertEqual(
-            {str(b.product_id): b.quantity for b in StockBalanceModel.objects.filter(company_id=self.company.id)},
-            {flour: Decimal('10.000'), sugar: Decimal('2.500')})
+        self.assertEqual({(m.kind, m.source_type, m.reason, m.reference) for m in movements},
+                         {('in', 'inventory_opening', 'Apertura de existencias', 'Apertura 2026')})
+        self.assertEqual({m.user_name for m in movements}, {'ana'})
+        self.assertEqual({m.source_id for m in movements}, {body['opening_id']})
+        self.assertEqual((self.balance(flour), self.balance(sugar)), (Decimal('10'), Decimal('2.5')))
 
-    def test_zero_quantity_creates_a_movement_and_a_zero_balance(self):  # EDGE-01
-        product = self.make_product()
-        self.assertEqual(self.open([line(product, '0')]).status_code, 201)
-        self.assertEqual(StockBalanceModel.objects.get(product_id=product).quantity, Decimal('0.000'))
-        self.assertEqual(self.open([line(product, '5')]).status_code, 409)  # ya consumió su apertura
+    def test_zero_quantity_creates_no_movement_and_does_not_consume_the_opening(self):  # EDGE-01
+        product, other = self.make_product(), self.make_product('Sal')
+        response = self.open([line(product, '0'), line(other, '3')])
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual([entry['movement_id'] is None for entry in response.json()['lines']], [True, False])
+        self.assertEqual(self.counts(), (1, 0))
+        self.assertEqual(self.balance(product), Decimal('0'))
+        self.assertFalse(has_history(self.company.id, UUID(product)))
+        self.assertEqual(self.open([line(product, '5')]).status_code, 201)  # aún puede abrirse
+
+    def test_an_opening_with_only_zero_lines_registers_nothing(self):  # EDGE-01
+        response = self.open([line(self.make_product(), '0')])
+        self.assertEqual((response.status_code, self.counts()), (201, (0, 0)))
 
     def test_retrying_with_the_same_key_returns_the_original_without_duplicating(self):  # AC-02, INV-07
         product = self.make_product()
@@ -151,7 +159,7 @@ class OpeningApiTests(StockApiTestCase):
         self.open([line(product, '10')], opening_id=key)
         response = self.open([line(product, '11')], opening_id=key)
         self.assertEqual((response.status_code, response.json()['code']), (409, 'opening_id_reused'))
-        self.assertEqual(StockBalanceModel.objects.get(product_id=product).quantity, Decimal('10.000'))
+        self.assertEqual(self.balance(product), Decimal('10'))
 
     def test_product_with_movements_is_rejected_and_nothing_is_created(self):  # AC-03, INV-04, INV-06
         taken, free = self.make_product('Harina'), self.make_product('Sal')
@@ -258,19 +266,6 @@ class OpeningApiTests(StockApiTestCase):
         self.assertEqual(other.get(STOCK).status_code, 403)
         self.assertEqual(self.counts(), (0, 0))
 
-    def test_database_allows_one_opening_per_product_and_warehouse(self):  # INV-04 (defensa final)
-        product = self.make_product()
-        self.open([line(product)])
-        warehouse = WarehouseModel.objects.get(pk=self.warehouse)
-        with self.assertRaises(IntegrityError), transaction.atomic():
-            StockMovementModel.objects.create(
-                company_id=self.company.id, warehouse=warehouse, product_id=product, movement_type='opening',
-                quantity=Decimal('1'), movement_date=TODAY, reference='x', opening_id=uuid4())
-        with self.assertRaises(IntegrityError), transaction.atomic():
-            StockMovementModel.objects.create(
-                company_id=self.company.id, warehouse=warehouse, product_id=uuid4(), movement_type='opening',
-                quantity=Decimal('-1'), movement_date=TODAY, reference='x', opening_id=uuid4())
-
 
 class StockReadTests(StockApiTestCase):
     def test_stock_list_is_enriched_and_filterable_by_warehouse(self):  # AC-05, API-02
@@ -281,8 +276,8 @@ class StockReadTests(StockApiTestCase):
         rows = self.client.get(STOCK, {'warehouse_id': self.warehouse}).json()['results']
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]['product_name'], 'Harina')
-        self.assertEqual((rows[0]['quantity'], rows[0]['warehouse_name']), ('7.000', 'Almacén principal'))
-        self.assertEqual(rows[0]['unit'], {'name': 'Unidad', 'abbreviation': 'u', 'allows_fractions': False})
+        self.assertEqual((rows[0]['quantity'], rows[0]['warehouse_name']), ('7.0000', 'Almacén principal'))
+        self.assertEqual(rows[0]['unit'], {'abbreviation': 'u', 'allows_fractions': False})
         self.assertEqual(self.client.get(STOCK).json()['count'], 2)
         self.assertEqual(self.client.get(STOCK, {'warehouse_id': 'nope'}).status_code, 400)
 
@@ -293,19 +288,15 @@ class StockReadTests(StockApiTestCase):
         authenticate(client, make_admin(other, username='beto'))
         set_enabled(other, [*DEFAULT_ENABLED_KEYS, 'inventory'])
         self.assertEqual(client.get(STOCK).json()['count'], 0)
-        response = client.get(f'{STOCK}movements/', {'warehouse_id': self.warehouse, 'product_id': uuid4()})
-        self.assertEqual(response.status_code, 404)
 
-    def test_movements_of_a_product_in_a_warehouse(self):  # AC-05, API-03
+    def test_movements_of_the_opening_are_in_the_ledger_list(self):  # AC-05
         product = self.make_product()
         self.open([line(product, '4')], reference='Cierre de año')
-        response = self.client.get(f'{STOCK}movements/', {'warehouse_id': self.warehouse, 'product_id': product})
+        response = self.client.get('/api/stock-movements/', {'warehouse_id': self.warehouse, 'product_id': product})
         self.assertEqual(response.status_code, 200)
-        body = response.json()
-        self.assertEqual([(m['movement_type'], m['quantity'], m['reference']) for m in body['results']],
-                         [('opening', '4.000', 'Cierre de año')])
-        self.assertEqual((body['summary']['product_name'], body['summary']['quantity']), ('Harina', '4.000'))
-        self.assertEqual(self.client.get(f'{STOCK}movements/').status_code, 400)
+        rows = response.json()['results']
+        self.assertEqual([(m['kind'], m['quantity_in'], m['reference']) for m in rows], [('in', '4.0000', 'Cierre de año')])
+        self.assertEqual(rows[0]['source']['type'], 'inventory_opening')
 
     def test_opening_check_lists_products_with_history(self):  # AC-03, API-04
         taken, free = self.make_product('Harina'), self.make_product('Sal')
@@ -323,7 +314,7 @@ class ConnectedPortsTests(StockApiTestCase):
         # `InventoryConfig.ready()` registra el proveedor real; otras pruebas lo reemplazan por dobles, así que
         # se restablece aquí y se devuelve el anterior al terminar.
         previous = stock_history._provider
-        stock_history.register(has_movements)
+        stock_history.register(has_history)
         self.addCleanup(stock_history.register, previous)
 
     def test_opening_locks_unit_and_stock_control_in_catalog(self):  # AC-06
@@ -366,11 +357,13 @@ class ConcurrentOpeningTests(TransactionTestCase):
         def attempt(key):
             try:
                 barrier.wait()
-                use_case = RegisterOpening(DjangoStockRepository(self.company.id), CatalogProducts(self.company.id))
+                use_case = RegisterOpening(
+                    DjangoStockMovementRepository(self.company.id), DjangoWarehouseRepository(self.company.id),
+                    CatalogProductDirectory(self.company.id))
                 try:
                     outcome = use_case.execute(
                         opening_id=key, warehouse_id=UUID(self.warehouse), movement_date=TODAY, reference='Apertura',
-                        lines=[(UUID(self.product), '5')], today=TODAY)
+                        lines=[(UUID(self.product), '5')], today=TODAY, user_name='carla')
                     outcomes.append('replayed' if outcome.replayed else 'created')
                 except Exception as exc:  # noqa: BLE001 - se reporta el tipo para la aserción
                     outcomes.append(type(exc).__name__)
@@ -388,7 +381,6 @@ class ConcurrentOpeningTests(TransactionTestCase):
         key = uuid4()
         self.assertEqual(self.run_parallel([key, key]), ['created', 'replayed'])
         self.assertEqual(StockMovementModel.objects.filter(company_id=self.company.id).count(), 1)
-        self.assertEqual(StockBalanceModel.objects.filter(company_id=self.company.id).count(), 1)
 
     def test_two_keys_for_the_same_product_create_only_one(self):  # EDGE-03, INV-04
         self.assertEqual(self.run_parallel([uuid4(), uuid4()]), ['StockHistoryExists', 'created'])

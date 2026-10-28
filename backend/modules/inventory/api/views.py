@@ -13,7 +13,7 @@ from modules.inventory.application.use_cases import (
     UpdateWarehouse,
 )
 from modules.inventory.domain.exceptions import WarehouseConflict, WarehouseNotFound, WarehouseValidationError
-from modules.inventory.infrastructure.activity import DjangoWarehouseActivity
+from modules.inventory.infrastructure.activity import LedgerWarehouseActivity
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 from shared.tenancy import company_id_from
 
@@ -101,7 +101,7 @@ class WarehouseDeactivateView(APIView):
     required_modules = ('inventory',)
 
     def post(self, request, warehouse_id):
-        use_case = DeactivateWarehouse(_repository(request), DjangoWarehouseActivity(company_id_from(request)))
+        use_case = DeactivateWarehouse(_repository(request), LedgerWarehouseActivity(company_id_from(request)))
         return Response(WarehouseSerializer(_run(use_case, warehouse_id=warehouse_id)).data)
 
 

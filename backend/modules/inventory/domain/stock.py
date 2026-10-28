@@ -1,12 +1,12 @@
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 import re
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
 from .exceptions import OpeningValidationError
 
-OPENING = 'opening'
+SOURCE_TYPE = 'inventory_opening'
 REFERENCE_MAX_LENGTH = 100
 QUANTITY_DECIMALS = Decimal('0.001')
 QUANTITY_MAX = Decimal('99999999999.999')
@@ -102,20 +102,10 @@ class StockOpening:
             raise OpeningValidationError(errors)
         return cls(opening_id, warehouse_id, movement_date, reference.strip(), tuple(validated))
 
-    def same_content_as(self, other: 'StockOpening') -> bool:
-        """Mismo almacén, fecha, referencia y líneas (sin importar el orden): INV-07."""
-        return (self.warehouse_id, self.movement_date, self.reference,
-                frozenset((line.product_id, line.quantity) for line in self.lines)) == (
-            other.warehouse_id, other.movement_date, other.reference,
-            frozenset((line.product_id, line.quantity) for line in other.lines))
-
-
-@dataclass(frozen=True)
-class RegisteredOpening:
-    """Una apertura ya guardada: sus datos y el movimiento de cada producto."""
-
-    opening: StockOpening
-    movement_ids: dict[UUID, UUID]
+    @property
+    def recorded_lines(self) -> tuple[OpeningLine, ...]:
+        """Líneas que generan movimiento: el libro exige cantidad > 0, así que las de cantidad 0 no se registran."""
+        return tuple(line for line in self.lines if line.quantity > 0)
 
 
 @dataclass(frozen=True)
@@ -124,15 +114,3 @@ class StockBalanceEntry:
     warehouse_id: UUID
     warehouse_name: str
     quantity: Decimal
-
-
-@dataclass(frozen=True)
-class StockMovementEntry:
-    id: UUID
-    product_id: UUID
-    warehouse_id: UUID
-    movement_type: str
-    quantity: Decimal
-    movement_date: date
-    reference: str
-    created_at: datetime

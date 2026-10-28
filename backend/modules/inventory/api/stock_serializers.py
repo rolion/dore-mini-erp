@@ -33,8 +33,8 @@ class OpeningInputSerializer(serializers.Serializer):
 
 class OpeningLineSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
-    quantity = serializers.DecimalField(max_digits=14, decimal_places=3)
-    movement_id = serializers.UUIDField()
+    quantity = serializers.DecimalField(max_digits=16, decimal_places=4)
+    movement_id = serializers.UUIDField(allow_null=True)
 
 
 class OpeningSerializer(serializers.Serializer):
@@ -46,7 +46,6 @@ class OpeningSerializer(serializers.Serializer):
 
 
 class UnitSerializer(serializers.Serializer):
-    name = serializers.CharField()
     abbreviation = serializers.CharField()
     allows_fractions = serializers.BooleanField()
 
@@ -56,14 +55,5 @@ class StockBalanceSerializer(serializers.Serializer):
     product_name = serializers.CharField(allow_null=True)
     warehouse_id = serializers.UUIDField()
     warehouse_name = serializers.CharField()
-    quantity = serializers.DecimalField(max_digits=14, decimal_places=3)
+    quantity = serializers.DecimalField(max_digits=16, decimal_places=4)
     unit = UnitSerializer(allow_null=True)
-
-
-class StockMovementSerializer(serializers.Serializer):
-    id = serializers.UUIDField()
-    movement_type = serializers.CharField()
-    quantity = serializers.DecimalField(max_digits=14, decimal_places=3)
-    movement_date = serializers.DateField()
-    reference = serializers.CharField()
-    created_at = serializers.DateTimeField()

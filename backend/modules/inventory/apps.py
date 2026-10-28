@@ -5,10 +5,10 @@ class InventoryConfig(AppConfig):
     name = 'modules.inventory'
     label = 'inventory'
 
-    def ready(self) -> None:
+    def ready(self):
         from shared import stock_history
 
-        from .infrastructure.django.stock_repository import has_movements
+        from .services import has_history
 
-        # Catálogo consulta este puerto para bloquear cambios de unidad/control de stock con historial.
-        stock_history.register(has_movements)
+        # Con movimientos registrados, Catálogo deja de permitir cambiar el control de stock o la unidad base.
+        stock_history.register(has_history)

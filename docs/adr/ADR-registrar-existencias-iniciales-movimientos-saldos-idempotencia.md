@@ -1,6 +1,6 @@
 # ADR-registrar-existencias-iniciales-movimientos-saldos-idempotencia: Movimientos, saldos y apertura idempotente
 
-**Estado:** Propuesto
+**Estado:** Reemplazado por `ADR-registrar-existencias-iniciales-apertura-sobre-libro-de-movimientos` (2026-10-28: el PR #21 integró el libro de movimientos)
 **Task relacionado:** TASK-registrar-existencias-iniciales
 **Fecha:** 2026-10-27
 

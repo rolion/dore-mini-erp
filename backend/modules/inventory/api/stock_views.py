@@ -6,17 +6,19 @@ from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.inventory.application.ports import ProductInfo
-from modules.inventory.application.stock_use_cases import CheckOpeningHistory, RegisterOpening
+from modules.inventory.application.movement_ports import ProductInfo
+from modules.inventory.application.stock_use_cases import CheckOpeningHistory, ListStock, RegisterOpening
 from modules.inventory.domain.exceptions import (
-    OpeningConflict,
+    MovementConflict,
+    MovementValidationError,
     OpeningIdReused,
     OpeningValidationError,
     StockHistoryExists,
     WarehouseNotFound,
 )
-from modules.inventory.infrastructure.catalog_adapter import CatalogProducts
-from modules.inventory.infrastructure.django.stock_repository import DjangoStockRepository
+from modules.inventory.infrastructure.adapters import CatalogProductDirectory
+from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
+from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 from shared.tenancy import company_id_from
 
 from .pagination import WarehousePagination
@@ -24,7 +26,6 @@ from .stock_serializers import (
     OpeningInputSerializer,
     OpeningSerializer,
     StockBalanceSerializer,
-    StockMovementSerializer,
 )
 from .views import WAREHOUSE_NOT_FOUND, Conflict
 
@@ -71,7 +72,7 @@ def _by_position(errors: dict, data) -> dict:
 def _unit(info: ProductInfo | None) -> dict | None:
     if info is None or info.unit_abbreviation is None:
         return None
-    return {'name': info.unit_name, 'abbreviation': info.unit_abbreviation, 'allows_fractions': info.allows_fractions}
+    return {'abbreviation': info.unit_abbreviation, 'allows_fractions': info.allows_fractions}
 
 
 class OpeningCreateView(APIView):
@@ -83,14 +84,19 @@ class OpeningCreateView(APIView):
             raise ValidationError(_by_position(serializer.errors, request.data))
         data = serializer.validated_data
         company_id = company_id_from(request)
-        use_case = RegisterOpening(DjangoStockRepository(company_id), CatalogProducts(company_id))
+        use_case = RegisterOpening(
+            DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
+            CatalogProductDirectory(company_id))
+        user = request.user
         try:
             outcome = use_case.execute(
                 opening_id=data['opening_id'], warehouse_id=data['warehouse_id'],
                 movement_date=data['movement_date'], reference=data['reference'],
                 lines=[(line['product_id'], line['quantity']) for line in data['lines']],
-                today=timezone.localdate(), created_by_id=request.user.pk)
+                today=timezone.localdate(), user_name=user.get_full_name().strip() or user.get_username())
         except OpeningValidationError as exc:
+            raise ValidationError(exc.errors) from exc
+        except MovementValidationError as exc:
             raise ValidationError(exc.errors) from exc
         except WarehouseNotFound as exc:
             raise NotFound(WAREHOUSE_NOT_FOUND) from exc
@@ -98,14 +104,14 @@ class OpeningCreateView(APIView):
             raise StockHistoryConflict(exc) from exc
         except OpeningIdReused as exc:
             raise Conflict(str(exc), 'opening_id_reused') from exc
-        except OpeningConflict as exc:
-            raise Conflict('La apertura chocó con otra operación; inténtalo de nuevo.', 'opening_conflict') from exc
-        opening = outcome.registered.opening
+        except MovementConflict as exc:
+            raise Conflict(str(exc), exc.code) from exc
+        opening = outcome.opening
         body = {
             'opening_id': opening.opening_id, 'warehouse_id': opening.warehouse_id,
             'movement_date': opening.movement_date, 'reference': opening.reference,
             'lines': [{'product_id': line.product_id, 'quantity': line.quantity,
-                       'movement_id': outcome.registered.movement_ids[line.product_id]} for line in opening.lines],
+                       'movement_id': outcome.movement_ids.get(line.product_id)} for line in opening.lines],
         }
         return Response(OpeningSerializer(body).data,
                         status=status.HTTP_200_OK if outcome.replayed else status.HTTP_201_CREATED)
@@ -117,10 +123,10 @@ class StockListView(APIView):
     def get(self, request):
         warehouse_id = _uuid_param(request, 'warehouse_id', required=False)
         company_id = company_id_from(request)
-        balances = DjangoStockRepository(company_id).list_balances(warehouse_id)
+        balances = ListStock(DjangoStockMovementRepository(company_id)).execute(warehouse_id)
         paginator = WarehousePagination()
         page = paginator.paginate_queryset(balances, request, view=self)
-        products = CatalogProducts(company_id).get_products([entry.product_id for entry in page])
+        products = CatalogProductDirectory(company_id).get_products([entry.product_id for entry in page])
         rows = [{
             'product_id': entry.product_id,
             'product_name': products[entry.product_id].name if entry.product_id in products else None,
@@ -130,35 +136,12 @@ class StockListView(APIView):
         return paginator.get_paginated_response(StockBalanceSerializer(rows, many=True).data)
 
 
-class StockMovementListView(APIView):
-    required_modules = ('inventory',)
-
-    def get(self, request):
-        warehouse_id = _uuid_param(request, 'warehouse_id')
-        product_id = _uuid_param(request, 'product_id')
-        company_id = company_id_from(request)
-        stock = DjangoStockRepository(company_id)
-        balance = stock.get_balance(warehouse_id, product_id)
-        if balance is None:
-            raise NotFound('No hay existencias para ese producto en ese almacén.')
-        paginator = WarehousePagination()
-        page = paginator.paginate_queryset(stock.list_movements(warehouse_id, product_id), request, view=self)
-        product = CatalogProducts(company_id).get_products([product_id]).get(product_id)
-        response = paginator.get_paginated_response(StockMovementSerializer(page, many=True).data)
-        response.data['summary'] = {
-            'product_id': str(product_id), 'product_name': product.name if product else None,
-            'warehouse_id': str(warehouse_id), 'warehouse_name': balance.warehouse_name,
-            'quantity': str(balance.quantity), 'unit': _unit(product),
-        }
-        return response
-
-
 class OpeningCheckView(APIView):
     required_modules = ('inventory',)
 
     def get(self, request):
         warehouse_id = _uuid_param(request, 'warehouse_id')
         product_ids = [_parse_uuid(raw, 'product_id') for raw in request.query_params.getlist('product_id')]
-        found = CheckOpeningHistory(DjangoStockRepository(company_id_from(request))).execute(
+        found = CheckOpeningHistory(DjangoStockMovementRepository(company_id_from(request))).execute(
             warehouse_id, product_ids)
         return Response({'products_with_history': [str(product_id) for product_id in found]})

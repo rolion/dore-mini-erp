@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from uuid import UUID
 
 from django.db import IntegrityError, transaction
@@ -75,6 +76,12 @@ class DjangoWarehouseRepository:
         if active is not None:
             queryset = queryset.filter(active=active)
         return WarehouseList(queryset)
+
+    @contextmanager
+    def locked(self, warehouse_id: UUID):
+        with transaction.atomic():
+            list(self._warehouses().select_for_update().filter(pk=warehouse_id))
+            yield
 
     def ensure_default(self) -> None:
         if self._warehouses().exists():

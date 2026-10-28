@@ -209,6 +209,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/inventory/movements",
+          "title": "MENUITEMS.INVENTORY.LIST.MOVEMENTS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/inventory/settings",
           "title": "MENUITEMS.INVENTORY.LIST.SETTINGS",
           "iconType": "",

@@ -103,6 +103,7 @@
         "HOME": "Home",
         "STOCK": "Stock",
         "CONFIGURATION": "Warehouses and units",
+        "MOVEMENTS": "Movements",
         "SETTINGS": "Settings"
       }
     },
