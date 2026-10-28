@@ -51,12 +51,15 @@ class DjangoProductRepository:
             id=product.id, company_id=self.company_id, defaults=to_model_values(product))
         return to_entity(self._products().get(pk=product.id))
 
-    def list(self, search: str | None = None, active: bool | None = None) -> ProductList:
+    def list(self, search: str | None = None, active: bool | None = None,
+             tracks_stock: bool | None = None) -> ProductList:
         queryset = self._products().order_by('name', 'id')
         if search:
             queryset = queryset.filter(name__icontains=search)
         if active is not None:
             queryset = queryset.filter(active=active)
+        if tracks_stock is not None:
+            queryset = queryset.filter(tracks_stock=tracks_stock)
         return ProductList(queryset)
 
 

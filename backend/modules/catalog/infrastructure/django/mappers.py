@@ -14,7 +14,7 @@ def to_entity(model: ProductModel) -> Product:
         active=model.active,
         tracks_stock=model.tracks_stock,
         base_unit_id=model.base_unit_id,
-        base_unit=UnitSummary(unit.id, unit.name, unit.abbreviation) if unit else None,
+        base_unit=UnitSummary(unit.id, unit.name, unit.abbreviation, unit.allows_fractions) if unit else None,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )

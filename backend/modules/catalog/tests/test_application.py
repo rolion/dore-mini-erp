@@ -26,12 +26,14 @@ class InMemoryProductRepository:
         self.items[product.id] = product
         return product
 
-    def list(self, search=None, active=None):
+    def list(self, search=None, active=None, tracks_stock=None):
         products = sorted(self.items.values(), key=lambda p: (p.name, str(p.id)))
         if search:
             products = [p for p in products if search.lower() in p.name.lower()]
         if active is not None:
             products = [p for p in products if p.active is active]
+        if tracks_stock is not None:
+            products = [p for p in products if p.tracks_stock is tracks_stock]
         return products
 
 
