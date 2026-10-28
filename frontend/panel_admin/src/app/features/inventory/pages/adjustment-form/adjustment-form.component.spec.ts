@@ -165,6 +165,20 @@ describe('AdjustmentFormComponent', () => {
     expect(second.adjustmentId).toBe(firstKey);
   });
 
+  it('keeps the warning and info notices readable with dark text (REV-03)', () => {
+    api.confirm.and.returnValue(
+      throwError(() => new InventoryApiError('El saldo cambió', 409, {}, 'balance_changed', [], [], '8.0000')),
+    );
+    goToReview('7');
+    component.confirm();
+    fixture.detectChanges();
+    expect(el().querySelector('[data-testid="balance-notice"]')?.classList).toContain('text-dark');
+    component.form.controls.countedQuantity.setValue('8'); // igual al saldo vigente (8)
+    component.step = 'edit';
+    fixture.detectChanges();
+    expect(el().querySelector('[data-testid="no-difference"]')?.classList).toContain('text-dark');
+  });
+
   it('reports «Sin diferencia» when the new balance equals the count and blocks confirming (AC-03, AC-04)', () => {
     api.confirm.and.returnValue(
       throwError(() => new InventoryApiError('El saldo cambió', 409, {}, 'balance_changed', [], [], '7.0000')),

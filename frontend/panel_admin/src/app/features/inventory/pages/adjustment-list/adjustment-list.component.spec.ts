@@ -63,6 +63,13 @@ describe('AdjustmentListComponent', () => {
     expect(link.getAttribute('href')).toBe('/pocketbiz/inventory/adjustments/a-1');
   });
 
+  it('aligns the numeric columns to the right only from md up, so stacked rows stay aligned (REV-03)', async () => {
+    await setup();
+    const cells = root().querySelectorAll('[data-testid="adjustment-row"] td.text-md-end');
+    expect(cells.length).toBe(6);
+    expect(root().querySelector('.text-end')).toBeNull();
+  });
+
   it('offers «Nuevo ajuste» and no edit or delete actions', async () => {
     await setup();
     expect(root().querySelector('[data-testid="new-adjustment"]')?.getAttribute('href')).toBe('/pocketbiz/inventory/adjustments/new');

@@ -22,7 +22,7 @@
             @if (step === 'edit') {
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="review()" novalidate>
               @if (conflictMessage) {
-              <div class="alert alert-warning" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
+              <div class="alert alert-warning text-dark" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
               }
               <div class="row">
                 <div class="form-group col-md-6">
@@ -78,7 +78,7 @@
               </div>
 
               @if (noDifference) {
-              <div class="alert alert-info" role="status" data-testid="no-difference">
+              <div class="alert alert-info text-dark" role="status" data-testid="no-difference">
                 Sin diferencia: no se registrará ningún movimiento.
               </div>
               } @else if (difference !== null) {
@@ -100,10 +100,10 @@
             } @else {
             <div class="m-4" data-testid="adjustment-summary">
               @if (balanceNotice) {
-              <div class="alert alert-warning" role="alert" data-testid="balance-notice">{{ balanceNotice }}</div>
+              <div class="alert alert-warning text-dark" role="alert" data-testid="balance-notice">{{ balanceNotice }}</div>
               }
               @if (conflictMessage) {
-              <div class="alert alert-warning" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
+              <div class="alert alert-warning text-dark" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
               }
               <dl class="row">
                 <dt class="col-sm-3">Producto</dt>
@@ -126,7 +126,7 @@
                 <dd class="col-sm-9">{{ form.controls.reason.value.trim() }}</dd>
               </dl>
               @if (noDifference) {
-              <div class="alert alert-info" role="status" data-testid="no-difference">
+              <div class="alert alert-info text-dark" role="status" data-testid="no-difference">
                 Sin diferencia: no se registrará ningún movimiento.
               </div>
               }

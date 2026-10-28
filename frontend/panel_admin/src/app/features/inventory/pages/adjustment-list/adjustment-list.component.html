@@ -86,9 +86,9 @@
                     <th scope="col">Fecha</th>
                     <th scope="col">Producto</th>
                     <th scope="col">Almacén</th>
-                    <th scope="col" class="text-end">Sistema</th>
-                    <th scope="col" class="text-end">Contado</th>
-                    <th scope="col" class="text-end">Diferencia</th>
+                    <th scope="col" class="text-md-end">Sistema</th>
+                    <th scope="col" class="text-md-end">Contado</th>
+                    <th scope="col" class="text-md-end">Diferencia</th>
                     <th scope="col">Usuario</th>
                     <th scope="col">Estado</th>
                   </tr>
@@ -102,9 +102,9 @@
                     <td data-label="Fecha">{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
                     <td data-label="Producto">{{ row.product.name }}</td>
                     <td data-label="Almacén">{{ row.warehouse.name }}</td>
-                    <td data-label="Sistema" class="text-end">{{ display(row.systemQuantity) }} {{ row.unitAbbreviation }}</td>
-                    <td data-label="Contado" class="text-end">{{ display(row.countedQuantity) }} {{ row.unitAbbreviation }}</td>
-                    <td data-label="Diferencia" class="text-end" data-testid="difference">
+                    <td data-label="Sistema" class="text-md-end">{{ display(row.systemQuantity) }} {{ row.unitAbbreviation }}</td>
+                    <td data-label="Contado" class="text-md-end">{{ display(row.countedQuantity) }} {{ row.unitAbbreviation }}</td>
+                    <td data-label="Diferencia" class="text-md-end" data-testid="difference">
                       <span [class.text-success]="row.kind === 'in'" [class.text-danger]="row.kind === 'out'">
                         {{ signed(row.difference) }} {{ row.unitAbbreviation }}
                         <span class="visually-hidden">({{ row.kind === 'in' ? 'entrada' : 'salida' }})</span>
