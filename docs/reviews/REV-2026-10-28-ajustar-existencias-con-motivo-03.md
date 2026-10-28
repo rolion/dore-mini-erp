@@ -1,6 +1,6 @@
 # REV-2026-10-28-ajustar-existencias-con-motivo-03: Detalles visuales leves en la lista móvil y en los avisos
 
-**Status:** Fixed (pendiente de verificación en el ciclo 3)
+**Status:** Resolved (verificado en el ciclo 3)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-ajustar-existencias-con-motivo.md (v1)
