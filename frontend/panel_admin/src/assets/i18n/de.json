@@ -101,6 +101,7 @@
       "TEXT": "Inventar",
       "LIST": {
         "HOME": "Start",
+        "CONFIGURATION": "Lager und Einheiten",
         "SETTINGS": "Einstellungen"
       }
     },

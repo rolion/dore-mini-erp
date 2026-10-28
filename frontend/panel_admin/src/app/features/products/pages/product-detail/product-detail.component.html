@@ -27,6 +27,12 @@
               <dd class="col-sm-9">{{ p.description || 'Sin descripción' }}</dd>
               <dt class="col-sm-3">Precio de venta</dt>
               <dd class="col-sm-9">{{ p.salePrice }}</dd>
+              @if (inventoryEnabled) {
+              <dt class="col-sm-3">Controla stock</dt>
+              <dd class="col-sm-9">{{ p.tracksStock ? 'Sí' : 'No' }}</dd>
+              <dt class="col-sm-3">Unidad base</dt>
+              <dd class="col-sm-9">{{ p.baseUnit ? p.baseUnit.name + ' (' + p.baseUnit.abbreviation + ')' : 'Sin unidad' }}</dd>
+              }
               <dt class="col-sm-3">Estado</dt>
               <dd class="col-sm-9">
                 @if (p.active) {

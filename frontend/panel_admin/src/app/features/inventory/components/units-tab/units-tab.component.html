@@ -1,0 +1,79 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>Unidades</strong></h2>
+      <small class="text-muted">Unidad base de los productos que controlan stock. Sin conversiones.</small>
+    </div>
+    <div class="table-search-area">
+      <div>
+        <label for="unit-search"><i class="material-icons search-icon">search</i></label>
+        <input id="unit-search" placeholder="Buscar por nombre" type="text" class="browser-default search-field"
+          [formControl]="searchControl" aria-label="Buscar por nombre">
+      </div>
+    </div>
+    <div class="header-buttons-left">
+      <div class="d-flex align-items-center gap-2 ms-3">
+        <select class="form-select form-control w-auto" [formControl]="statusControl" aria-label="Filtrar por estado">
+          <option value="active">Activas</option>
+          <option value="inactive">Inactivas</option>
+          <option value="all">Todas</option>
+        </select>
+        <button type="button" class="btn btn-icon icon-left btn-primary rounded-button" (click)="openDialog()"
+          title="Nueva unidad" aria-label="Nueva unidad">
+          <i class="material-icons">add</i>
+        </button>
+      </div>
+    </div>
+  </div>
+  @if (loading && !rows.length) {
+  <p class="m-4">Cargando…</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="reload()">Reintentar</button>
+  </div>
+  } @else if (!rows.length) {
+  <p class="m-4">Sin unidades. Crea la primera con +.</p>
+  } @else {
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table">
+      <caption class="visually-hidden">Unidades de medida</caption>
+      <thead>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Abreviatura</th>
+          <th scope="col">Admite fracciones</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (unit of rows; track unit.id) {
+        <tr>
+          <td data-label="Nombre"><strong>{{ unit.name }}</strong></td>
+          <td data-label="Abreviatura">{{ unit.abbreviation }}</td>
+          <td data-label="Admite fracciones">{{ unit.allowsFractions ? 'Sí' : 'No' }}</td>
+          <td data-label="Estado">
+            @if (unit.active) {
+            <div class="badge-outline col-green">Activa</div>
+            } @else {
+            <div class="badge-outline col-red">Inactiva</div>
+            }
+          </td>
+          <td>
+            <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto" (click)="openDialog(unit)"
+              title="Editar" aria-label="Editar">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(unit)"
+              [title]="unit.active ? 'Desactivar' : 'Activar'" [attr.aria-label]="unit.active ? 'Desactivar' : 'Activar'">
+              <i class="fas" [class.fa-ban]="unit.active" [class.fa-check]="!unit.active"></i>
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

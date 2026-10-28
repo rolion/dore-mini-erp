@@ -4,6 +4,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 
+import { ModulesService } from '../../../../core/service/modules.service';
 import { Product, ProductApiError } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 import { makeProduct } from '../../testing/product-fixtures';
@@ -113,5 +114,32 @@ describe('ProductDetailComponent', () => {
 
     expect(api.deactivate).not.toHaveBeenCalled();
     expect(component.product?.active).toBeTrue();
+  });
+
+  describe('inventory data (PB-INV-001)', () => {
+    const stocked = makeProduct({
+      tracksStock: true, baseUnit: { id: 'u-1', name: 'Kilogramo', abbreviation: 'kg' },
+    });
+
+    it('hides stock data while Inventario is disabled (AC-05)', async () => {
+      api.get.and.returnValue(of(stocked));
+      const { el } = await open();
+      expect(el.textContent).not.toContain('Controla stock');
+    });
+
+    it('shows «Controla stock» and the base unit when enabled (AC-05)', async () => {
+      spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
+      api.get.and.returnValue(of(stocked));
+      const { el } = await open();
+      expect(el.textContent).toContain('Controla stock');
+      expect(el.textContent).toContain('Kilogramo (kg)');
+    });
+
+    it('shows «Sin unidad» for products that do not track stock (AC-02)', async () => {
+      spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
+      api.get.and.returnValue(of(makeProduct()));
+      const { el } = await open();
+      expect(el.textContent).toContain('Sin unidad');
+    });
   });
 });

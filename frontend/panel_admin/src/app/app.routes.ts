@@ -106,6 +106,15 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'inventory/configuration',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/inventory-configuration/inventory-configuration.component').then(
+                        (m) => m.InventoryConfigurationComponent
+                    ),
+            },
+            {
                 path: 'inventory/settings',
                 canActivate: [moduleGuard],
                 canDeactivate: [unsavedChangesGuard],

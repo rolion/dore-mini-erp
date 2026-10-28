@@ -16,6 +16,8 @@ const DTO: ProductDto = {
   description: 'Tradicional',
   sale_price: '35.00',
   active: true,
+  tracks_stock: false,
+  base_unit: null,
   created_at: '2026-10-08T10:00:00Z',
   updated_at: '2026-10-08T11:00:00Z',
 };
@@ -26,6 +28,8 @@ const PRODUCT: Product = {
   description: 'Tradicional',
   salePrice: '35.00',
   active: true,
+  tracksStock: false,
+  baseUnit: null,
   createdAt: '2026-10-08T10:00:00Z',
   updatedAt: '2026-10-08T11:00:00Z',
 };

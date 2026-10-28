@@ -6,6 +6,7 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs';
 import Swal from 'sweetalert2';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { Product, ProductApiError } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 
@@ -29,10 +30,16 @@ export class ProductListComponent implements OnInit {
   pageIndex = 0;
   loading = false;
 
+  private modules = inject(ModulesService);
   private api = inject(ProductsApiService);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
+
+  /** Los datos de inventario se muestran solo cuando el módulo Inventario está habilitado. */
+  get inventoryEnabled(): boolean {
+    return this.modules.enabledKeysValue?.has('inventory') ?? false;
+  }
 
   ngOnInit(): void {
     this.reload$

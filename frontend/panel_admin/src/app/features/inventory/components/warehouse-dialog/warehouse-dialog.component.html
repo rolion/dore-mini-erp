@@ -1,0 +1,45 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ isEdit ? 'Editar almacén' : 'Nuevo almacén' }}</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group">
+      <label for="warehouse-name">Nombre <span class="text-danger">*</span></label>
+      <input id="warehouse-name" type="text" class="form-control" placeholder="Nombre del almacén"
+        formControlName="name" [attr.maxlength]="nameMaxLength">
+      @if (hasError('name')) {
+      <small class="form-text text-danger">
+        {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+      </small>
+      }
+    </div>
+    <div class="form-group mt-3">
+      <label for="warehouse-description">Descripción</label>
+      <textarea id="warehouse-description" class="form-control" rows="2" placeholder="Descripción"
+        formControlName="description"></textarea>
+      @if (serverErrors.description) {
+      <small class="form-text text-danger">{{ serverErrors.description }}</small>
+      }
+    </div>
+    <div class="form-check form-switch mt-3">
+      <input id="warehouse-default" type="checkbox" class="form-check-input" role="switch" formControlName="isDefault">
+      <label class="form-check-label" for="warehouse-default">Predeterminado</label>
+      @if (defaultLocked) {
+      <small class="form-text text-muted d-block">
+        Para cambiar el predeterminado, define otro almacén como predeterminado.
+      </small>
+      } @else if (!canBeDefault) {
+      <small class="form-text text-muted d-block">Activa el almacén para poder definirlo como predeterminado.</small>
+      }
+      @if (serverErrors.isDefault) {
+      <small class="form-text text-danger d-block">{{ serverErrors.isDefault }}</small>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">Cancelar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+  </div>
+</form>

@@ -187,6 +187,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/inventory/configuration",
+          "title": "MENUITEMS.INVENTORY.LIST.CONFIGURATION",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/inventory/settings",
           "title": "MENUITEMS.INVENTORY.LIST.SETTINGS",
           "iconType": "",

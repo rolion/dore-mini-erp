@@ -101,6 +101,7 @@
       "TEXT": "Inventory",
       "LIST": {
         "HOME": "Home",
+        "CONFIGURATION": "Warehouses and units",
         "SETTINGS": "Settings"
       }
     },

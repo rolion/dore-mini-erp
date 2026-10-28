@@ -1303,6 +1303,9 @@ Costo por producto
 
 Reporting podrá consumir esa información para obtener margen real.
 
+
+> **Nota (inventario base, PB-INV-001/002):** `backend/modules/inventory/` ya existe como bounded context con el `Warehouse` (almacén por empresa, uno predeterminado sembrado en la primera lectura, nombres únicos) y sin dependencias de otros módulos de negocio. La `UnitOfMeasure` (unidad de medida) y los campos `tracks_stock` / `base_unit` del producto viven en `catalog` (la pantalla está bajo Inventario, y la API de unidades exige el módulo `inventory` habilitado). El bloqueo por historial de movimientos se consulta por el puerto neutro `shared/stock_history.py` (sin proveedor registrado no hay historial) y la desactivación de almacenes por el puerto `WarehouseActivity` (adaptador nulo hoy). Los movimientos, saldos y recepciones llegan con sus historias y deben registrar esos proveedores. Ver `docs/adr/ADR-inventario-stock-almacenes-unidades-propiedad-y-fronteras.md`.
+
 ---
 
 # 26. Evolución futura: Inventory

@@ -4,6 +4,7 @@ import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 
+import { ModulesService } from '../../../../core/service/modules.service';
 import { Product, ProductApiError } from '../../models/product';
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../services/products-api.service';
@@ -176,5 +177,32 @@ describe('ProductListComponent', () => {
 
     expect(toastr.error).toHaveBeenCalledWith('Producto no encontrado.');
     expect(toastr.success).not.toHaveBeenCalled();
+  });
+
+  describe('inventory columns (PB-INV-001)', () => {
+    const stocked = makeProduct({
+      id: 'c', name: 'Harina', tracksStock: true, baseUnit: { id: 'u-1', name: 'Kilogramo', abbreviation: 'kg' },
+    });
+
+    it('does not show stock columns while Inventario is disabled (AC-05)', () => {
+      api.list.and.returnValue(of(page([stocked])));
+      fixture.detectChanges();
+      const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+      expect(text).not.toContain('Controla stock');
+      expect(text).not.toContain('Unidad base');
+    });
+
+    it('shows «Controla stock» and the base unit when Inventario is enabled (AC-05)', () => {
+      spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
+      api.list.and.returnValue(of(page([stocked, active])));
+      fixture.detectChanges();
+      const el = fixture.nativeElement as HTMLElement;
+      const headers = Array.from(el.querySelectorAll('datatable-header-cell')).map((h) => h.textContent?.trim());
+      expect(headers).toEqual(jasmine.arrayContaining(['Controla stock', 'Unidad base']));
+      const rows = Array.from(el.querySelectorAll('datatable-body-row')).map((r) => r.textContent ?? '');
+      expect(rows[0]).toContain('Sí');
+      expect(rows[0]).toContain('kg');
+      expect(rows[1]).toContain('No');
+    });
   });
 });

@@ -131,10 +131,19 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - General: una fila por ajuste con `label`, control, descripción del efecto (`small.text-muted`), «Valor predeterminado» con «Restablecer» y error junto al campo (`small.text-danger`). Pie: «Guardar cambios» (primario) y «Cancelar cambios» (`btn-light`), ambos deshabilitados sin cambios; aviso de salida con `unsavedChangesGuard` + `beforeunload`.
 - Historial (`app-settings-history`): filtros Desde/Hasta/Ajuste, tabla apilada en móvil, paginación `ngb-pagination`; vacío «Sin cambios registrados.».
 
+### Configuración con listados en pestañas y diálogo (referencia: `features/inventory/pages/inventory-configuration`)
+- `.card` con `h4` y `nav-tabs` (`role="tablist"`); cada pestaña es un listado con buscador por nombre, filtro de estado (por defecto **Activos/Activas**) y botón «+», en tabla Bootstrap simple apilada en móvil (`inventory/components/_inventory-table.scss`).
+- Alta/edición en diálogo (`NgbModal`, patrón de `category-dialog`); sin eliminar: los registros usados se desactivan. Los bloqueos del servidor (409) se muestran en `alert alert-warning` sobre la tabla con el motivo, y un registro bloqueado deshabilita sus campos con `small.text-muted` que explica por qué.
+
+### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
+- `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.
+
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 
 ## 6. Menú y layout
+
+- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`) y «Ajustes» (`/inventory/settings`, PB-CFG-001).
 
 - Sidebar: logo según estado (expandido/contraído), avatar con iniciales, nombre y apellido, nombre de la empresa. Ítems principales: Dashboard, Catálogo (Producto), Cliente, Pedidos, Gastos (Gastos, Categorías), Reportes (textos en `assets/i18n/es.json`).
 - Header: solo el menú de usuario (nombre, empresa y cerrar sesión). Sin búsqueda, mensajes ni notificaciones.

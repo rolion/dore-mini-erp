@@ -30,7 +30,10 @@ class CreateProductTests(ProductApiTestCase):
         self.assertEqual(body['sale_price'], '35.00')
         self.assertEqual(body['description'], 'Tradicional')
         self.assertTrue(body['active'])
-        self.assertEqual(set(body), {'id', 'name', 'description', 'sale_price', 'active', 'created_at', 'updated_at'})
+        self.assertEqual(set(body), {'id', 'name', 'description', 'sale_price', 'active', 'tracks_stock', 'base_unit_id',
+                                    'base_unit', 'created_at', 'updated_at'})
+        self.assertFalse(body['tracks_stock'])
+        self.assertIsNone(body['base_unit'])
         listed = self.client.get(LIST_URL).json()['results']
         self.assertEqual([p['id'] for p in listed], [body['id']])
 

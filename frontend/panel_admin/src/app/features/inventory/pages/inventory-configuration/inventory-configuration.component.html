@@ -1,0 +1,45 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Almacenes y unidades</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Inventario</li>
+    <li class="breadcrumb-item">Almacenes y unidades</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>Inventario › Almacenes y unidades</h4>
+          </div>
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'warehouses'" role="tab"
+                id="tab-warehouses" [attr.aria-selected]="tab === 'warehouses'" aria-controls="panel-warehouses"
+                (click)="select('warehouses')">Almacenes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'units'" role="tab" id="tab-units"
+                [attr.aria-selected]="tab === 'units'" aria-controls="panel-units"
+                (click)="select('units')">Unidades</button>
+            </li>
+          </ul>
+          @if (tab === 'warehouses') {
+          <div id="panel-warehouses" role="tabpanel" aria-labelledby="tab-warehouses">
+            <app-warehouses-tab />
+          </div>
+          } @else {
+          <div id="panel-units" role="tabpanel" aria-labelledby="tab-units">
+            <app-units-tab />
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

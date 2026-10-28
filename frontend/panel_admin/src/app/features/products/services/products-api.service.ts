@@ -21,6 +21,8 @@ const API_FIELDS: Record<string, keyof ProductInput> = {
   name: 'name',
   description: 'description',
   sale_price: 'salePrice',
+  tracks_stock: 'tracksStock',
+  base_unit_id: 'baseUnitId',
 };
 
 function toProduct(dto: ProductDto): Product {
@@ -30,16 +32,20 @@ function toProduct(dto: ProductDto): Product {
     description: dto.description,
     salePrice: dto.sale_price,
     active: dto.active,
+    tracksStock: dto.tracks_stock,
+    baseUnit: dto.base_unit,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };
 }
 
-function toBody(input: Partial<ProductInput>): Record<string, string> {
-  const body: Record<string, string> = {};
+function toBody(input: Partial<ProductInput>): Record<string, string | boolean | null> {
+  const body: Record<string, string | boolean | null> = {};
   if (input.name !== undefined) body['name'] = input.name;
   if (input.description !== undefined) body['description'] = input.description;
   if (input.salePrice !== undefined) body['sale_price'] = input.salePrice;
+  if (input.tracksStock !== undefined) body['tracks_stock'] = input.tracksStock;
+  if (input.baseUnitId !== undefined) body['base_unit_id'] = input.baseUnitId;
   return body;
 }
 
@@ -65,6 +71,11 @@ function toApiError(err: HttpErrorResponse): ProductApiError {
   }
   if (err.status === 404) {
     return new ProductApiError(NOT_FOUND_MESSAGE, 404);
+  }
+  if (err.status === 409) {
+    const body = (err.error && typeof err.error === 'object' ? err.error : {}) as { detail?: unknown; code?: unknown };
+    const detail = typeof body.detail === 'string' ? body.detail : GENERIC_ERROR_MESSAGE;
+    return new ProductApiError(detail, 409, {}, typeof body.code === 'string' ? body.code : null);
   }
   return new ProductApiError(GENERIC_ERROR_MESSAGE, err.status);
 }
