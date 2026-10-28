@@ -39,9 +39,12 @@ describe('StockApiService', () => {
         {
           product_id: 'p-1',
           product_name: 'Harina',
+          product_active: true,
           warehouse_id: 'w-1',
           warehouse_name: 'Principal',
+          warehouse_active: true,
           quantity: '10.000',
+          balance_state: 'positive',
           unit: { abbreviation: 'u', allows_fractions: false },
         },
       ],
@@ -49,11 +52,52 @@ describe('StockApiService', () => {
     expect(first).toEqual({
       productId: 'p-1',
       productName: 'Harina',
+      productActive: true,
       warehouseId: 'w-1',
       warehouseName: 'Principal',
+      warehouseActive: true,
       quantity: '10.000',
+      balanceState: 'positive',
       unit: { abbreviation: 'u', allowsFractions: false },
     });
+  });
+
+  it('sends search, state and balance filters (AC-02)', () => {
+    service.list({ search: 'har', active: 'all', balance: 'negative' }).subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/stock/'));
+    expect(req.request.params.get('search')).toBe('har');
+    expect(req.request.params.get('active')).toBe('all');
+    expect(req.request.params.get('balance')).toBe('negative');
+    req.flush({ count: 0, next: null, previous: null, results: [] });
+  });
+
+  it('reads the position of a product in a warehouse (AC-04)', () => {
+    let position: unknown;
+    service.get('p-1', 'w-1').subscribe((p) => (position = p));
+    const req = http.expectOne((r) => r.url.endsWith('/stock/p-1/w-1/'));
+    req.flush({
+      product_id: 'p-1',
+      product_name: 'Harina',
+      product_active: false,
+      warehouse_id: 'w-1',
+      warehouse_name: 'Principal',
+      warehouse_active: true,
+      quantity: '0.0000',
+      balance_state: 'zero',
+      unit: null,
+      has_history: false,
+      can_register_opening: false,
+    });
+    expect(position).toEqual(
+      jasmine.objectContaining({ productActive: false, balanceState: 'zero', hasHistory: false, canRegisterOpening: false }),
+    );
+  });
+
+  it('maps a 404 of the position to an API error (EDGE-01)', () => {
+    let error: InventoryApiError | undefined;
+    service.get('p-1', 'w-1').subscribe({ error: (e: InventoryApiError) => (error = e) });
+    http.expectOne((r) => r.url.endsWith('/stock/p-1/w-1/')).flush({ detail: 'Existencia no encontrada.' }, { status: 404, statusText: 'Not Found' });
+    expect(error?.status).toBe(404);
   });
 
   it('asks which products already have history, repeating product_id (AC-03)', () => {

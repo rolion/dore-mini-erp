@@ -1,11 +1,18 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
-import { EMPTY, Subject, catchError, finalize, switchMap, tap } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, finalize, switchMap, tap } from 'rxjs';
 import { InventoryApiError } from '../../models/api-error';
-import { StockBalance, formatQuantity } from '../../models/stock';
+import {
+  ACTIVE_FILTER_OPTIONS,
+  ActiveFilter,
+  BALANCE_FILTER_OPTIONS,
+  BalanceFilter,
+  StockBalance,
+  formatQuantity,
+} from '../../models/stock';
 import { Warehouse } from '../../models/warehouse';
 import { StockApiService } from '../../services/stock-api.service';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
@@ -21,7 +28,14 @@ export const ALL_WAREHOUSES = '';
 })
 export class StockListComponent implements OnInit {
   readonly pageSize = 20;
-  readonly warehouseControl = new FormControl<string>(ALL_WAREHOUSES, { nonNullable: true });
+  readonly activeOptions = ACTIVE_FILTER_OPTIONS;
+  readonly balanceOptions = BALANCE_FILTER_OPTIONS;
+  readonly filterForm = inject(FormBuilder).nonNullable.group({
+    search: [''],
+    warehouseId: [ALL_WAREHOUSES],
+    active: ['true' as ActiveFilter],
+    balance: ['' as BalanceFilter],
+  });
 
   warehouses: Warehouse[] = [];
   rows: StockBalance[] = [];
@@ -47,7 +61,10 @@ export class StockListComponent implements OnInit {
         switchMap(() =>
           this.stockApi
             .list({
-              warehouseId: this.warehouseControl.value || undefined,
+              search: this.filterForm.controls.search.value.trim() || undefined,
+              warehouseId: this.filterForm.controls.warehouseId.value || undefined,
+              active: this.filterForm.controls.active.value,
+              balance: this.filterForm.controls.balance.value || undefined,
               page: this.page,
               pageSize: this.pageSize,
             })
@@ -68,24 +85,35 @@ export class StockListComponent implements OnInit {
         this.count = page.count;
       });
 
-    // Almacenes activos para el filtro; si viene `warehouse_id` (tras una apertura) se conserva, si no, «Todos».
+    // Almacenes para el filtro (también los inactivos); si viene `warehouse_id` (tras una apertura) se conserva.
     const requested = this.route.snapshot.queryParamMap.get('warehouse_id');
     this.warehousesApi
-      .list({ active: true, pageSize: 100 })
+      .list({ pageSize: 100 })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (page) => {
           this.warehouses = page.results;
           const known = page.results.some((warehouse) => warehouse.id === requested);
-          this.warehouseControl.setValue(requested && known ? requested : ALL_WAREHOUSES, { emitEvent: false });
+          this.filterForm.controls.warehouseId.setValue(requested && known ? requested : ALL_WAREHOUSES, {
+            emitEvent: false,
+          });
           this.reload();
         },
         error: () => this.reload(),
       });
-    this.warehouseControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.filterForm.valueChanges.pipe(debounceTime(250), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.page = 1;
       this.reload();
     });
+  }
+
+  get filtersActive(): boolean {
+    const { search, warehouseId, active, balance } = this.filterForm.getRawValue();
+    return search !== '' || warehouseId !== ALL_WAREHOUSES || active !== 'true' || balance !== '';
+  }
+
+  clearFilters(): void {
+    this.filterForm.setValue({ search: '', warehouseId: ALL_WAREHOUSES, active: 'true', balance: '' });
   }
 
   reload(): void {
@@ -99,6 +127,10 @@ export class StockListComponent implements OnInit {
 
   openingLink(): string[] {
     return ['/pocketbiz/inventory/stock/opening'];
+  }
+
+  detailLink(row: StockBalance): string[] {
+    return ['/pocketbiz/inventory/stock', row.productId, row.warehouseId];
   }
 
   openMovements(row: StockBalance): void {

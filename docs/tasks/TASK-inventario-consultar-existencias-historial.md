@@ -1,6 +1,6 @@
 # TASK-inventario-consultar-existencias-historial: Consultar existencias e historial de movimientos (PB-INV-005)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-consultar-existencias-historial
@@ -12,6 +12,7 @@
 | 2026-10-28 | (nuevo) → INVESTIGATION | Task creado desde `origin/main` (incluye PR #21 PB-INV-004 y #22 PB-INV-003) | delivery-start |
 | 2026-10-28 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: extiende lectura existente (sin migraciones, sin persistencia nueva); decisión del usuario sobre ajuste/apertura | delivery-start |
 | 2026-10-28 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend 796 OK, build, lint y Karma acotado OK | delivery-build |
 
 ## Investigación
 
@@ -77,7 +78,13 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-10-28-inventario-consultar-existencias-historial.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend.** `catalog.services.list_products_for_inventory` (+`active` en `ProductForInventory`; INV-02, INV-03). `inventory`: `domain/stock.py` (`BalanceState`, `balance_state`; INV-04), `StockPositionNotFound`, puerto `ProductDirectory.list_stock_products` y su adaptador, `application/stock_use_cases.py` (`ListStock` recompone productos × almacenes con los saldos del libro y filtra; `GetStockPosition`, `can_register_opening`; INV-01, INV-05), `api/stock_views.py` (`GET /api/stock/` con `search`, `warehouse_id`, `active`, `balance`, 400 por parámetro; `GET /api/stock/<product_id>/<warehouse_id>/`; API-01, API-02), serializers y URL. Sin migraciones.
+**Frontend** (`features/inventory`). `stock.ts`/`stock-api.service.ts` (filtros, `get`, `balanceState`), `stock-list` (buscador, almacén, estado del producto, saldo, «Limpiar», columna Unidad base, «Negativo» con texto, badge «Inactivo», enlace al detalle; UI-01, UI-03), `stock-detail` nueva (datos, «Ver movimientos», «Registrar apertura» condicionada con nota, historial de 10 por página con enlace al movimiento y al documento de origen; UI-02), ruta `inventory/stock/:productId/:warehouseId`, y `movement-list` incluye siempre el producto prefiltrado en el selector (REV-09; AC-06). Docs: `design-system.md` (patrón «Detalle con historial embebido» y menú), `ddd.md`, `modulos-implementados.md`.
+**Pruebas.** Backend: `inventory/tests/test_stock_query.py` (AC-01, 02, 04, 05, 07, 08, EDGE-01..06, INV-04, INV-05), `catalog/tests/test_services.py` (listado), `test_stock.py` adaptado al nuevo contrato. Frontend: specs de `stock-api.service`, `stock-list`, `stock-detail` (nueva) y `movement-list`.
+**Pantallas de referencia:** `product-detail` (Detalle) y `stock-list`/`movement-list` (Lista); componentes reutilizados: `badge-outline`, `NgbPagination`, `_inventory-table.scss`; no se creó nada en `shared/`.
+**Desviaciones respecto al plan:** (1) el filtro «Estado del producto» y «Saldo» se aplican en memoria sobre la composición, como indicaba el riesgo del plan; (2) «Registrar apertura» del detalle enlaza con `?warehouse_id=` (el formulario ya lo lee). Ninguna otra.
+**Deuda técnica:** composición en memoria productos × almacenes (migrar a consulta en BD si crece el volumen); el filtro de producto de movimientos sigue siendo un `form-select` de 100 productos más el prefiltrado; revisión visual en navegador pendiente.
+**Verificación propia (no es el Quality Gate):** backend `manage.py test` 796 OK; `makemigrations --check` sin cambios; frontend `npm run lint` OK, `ng build` OK, Karma acotado a `features/inventory` 85/85 OK (con `app.component.spec.ts` apartado temporalmente por estar roto en `main`; restaurado). Entorno: con autorización del usuario se copió `backend/.env` del checkout principal (sin abrirlo; ignorado por git), se usó su `.venv` y se enlazó `node_modules`.
 
 ## Review
 _Pendiente_

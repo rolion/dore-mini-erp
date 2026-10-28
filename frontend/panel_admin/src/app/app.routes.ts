@@ -115,6 +115,15 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'inventory/stock/:productId/:warehouseId',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/stock-detail/stock-detail.component').then(
+                        (m) => m.StockDetailComponent
+                    ),
+            },
+            {
                 path: 'inventory/stock/opening',
                 canActivate: [moduleGuard],
                 canDeactivate: [unsavedChangesGuard],

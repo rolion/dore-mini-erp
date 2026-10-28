@@ -23,6 +23,7 @@ Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, 
 | Reportes | Dashboard y reportes de ventas/gastos | `dashboard`, `reports` | Listo |
 | Módulos por empresa | El admin elige qué módulos usa su empresa, con dependencias | `settings/modules` | Listo (PB-MOD-001) |
 | Configuración por módulo | Ajustes de cada módulo por empresa con historial de cambios | `sales/settings`, `purchases/settings`, `inventory/settings`, `settings/modules` | Listo (PB-CFG-001) |
+| Consulta de existencias | Existencias por producto y almacén con búsqueda, filtros (almacén, activo/inactivo, saldo cero / distinto de cero / negativo) y detalle con historial; sin disponible, reservado ni valoración | `inventory/stock`, `inventory/stock/:productId/:warehouseId` | Listo (PB-INV-005) |
 | Existencias iniciales | Apertura de stock por almacén (movimiento + saldo), consulta de existencias y movimientos | `inventory/stock`, `inventory/stock/opening` | Listo (PB-INV-003) |
 | Marca y perfil | Logos PocketBiz, avatar con iniciales, menú de usuario | Transversal | Listo |
 
