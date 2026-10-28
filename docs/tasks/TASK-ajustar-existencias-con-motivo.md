@@ -1,6 +1,6 @@
 # TASK-ajustar-existencias-con-motivo: Ajustar existencias con motivo (PB-INV-006)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-ajustar-existencias-con-motivo
@@ -12,6 +12,7 @@
 | 2026-10-28 | (nuevo) → INVESTIGATION | Task creado sobre `origin/main` (PB-INV-003 y PB-INV-004 ya integrados) | delivery-start |
 | 2026-10-28 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: una tabla nueva en `inventory` sobre el libro y la fachada existentes; sin decisión arquitectónica nueva | delivery-start |
 | 2026-10-28 | PLANNING → ENGINEERING | Specification READY (supuestos documentados en el Plan, ninguno bloqueante) | delivery-start |
+| 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -79,7 +80,18 @@ No aplica según veredicto (se sigue `ADR-inventario-movimientos-trazables-regis
 `docs/plans/PLAN-2026-10-28-ajustar-existencias-con-motivo.md` (v1, COMPLETO)
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Backend en `inventory`: dominio `StockAdjustment` (`domain/adjustment.py`: diferencia, validaciones, referencia `AJ-xxxxxxxx`), caso de uso `ConfirmAdjustment` (`application/adjustment_use_cases.py`: bloqueo del almacén, réplica antes de comparar saldo, `BalanceChanged`, movimiento con `RecordMovement`), modelo y migración `0003_stock_adjustments`, repositorio `DjangoStockAdjustmentRepository(company_id)`, API `api/adjustment_{views,urls}.py` registrada en `config/urls.py`. Frontend en `features/inventory`: `adjustments-api.service`, `adjustment-list`, `adjustment-form` (dos pasos, «Sin diferencia», reconfirmación), `adjustment-detail`, rutas con `moduleGuard`, entrada de menú «Ajustes de existencias» (+ i18n es/en/de y `routes.json`), botón «Ajustar» en Existencias y enlace de origen `inventory_adjustment` en el detalle de movimiento.
+
+**Cobertura.** AC-01/INV-03/INV-05: tests de dominio y API (400 por campo) + spec del formulario. AC-02/INV-07: `test_confirming_*`. AC-03/INV-06: `test_changed_balance_*`, concurrencia `test_two_counts_*` y spec de reconfirmación. AC-04/INV-04: dominio, API y spec. AC-05/AC-06: lista, filtros, detalle, 405 y specs. AC-07/INV-08: idempotencia secuencial y concurrente + doble clic. INV-09: aislamiento por empresa, 403 de miembros y módulo deshabilitado.
+
+**Desviaciones respecto al plan.** (1) No se creó la fachada `adjust_stock` en `services.py` (el plan la dejaba opcional); la usará PB-INV-008 si hace falta. (2) La validación del producto ajeno responde 400 `product_id` antes que el 404 de almacén (el 404 se da con producto propio y almacén inexistente). (3) Fixtures de ajustes en `testing/adjustment-fixtures.ts` (archivo nuevo) en vez de ampliar `inventory-fixtures.ts`.
+
+**UI.** Pantallas de referencia: lista = `stock-list` (tabla `inventory-table` + `ngb-pagination`) con filtros de `movement-list`; formulario = `stock-opening` (editar → resumen → confirmar con clave de idempotencia, `appendTo="body"`); detalle = `movement-detail`. Componentes compartidos reutilizados: `OpeningProductsService`, `WarehousesApiService`, `ProductsApiService`, `unsavedChangesGuard`, `ToastrService`. No se creó ningún componente compartido nuevo.
+
+**Deuda técnica.** Dos entradas parecidas en el menú de Inventario («Ajustes» y «Ajustes de existencias») hasta unificar nombres; la UI no ofrece «Revertir» hasta PB-INV-008; `OpeningProduct` se reutiliza como tipo de producto del formulario de ajuste.
+
+**Verificación propia (no es el Quality Gate).** Backend `manage.py test` 802 OK (incluye concurrencia con PostgreSQL), `makemigrations --check` sin cambios. Frontend: Karma acotado (inventory + sidebar) 103/103 OK con `app.component.spec.ts` apartado temporalmente (roto en `main`, restaurado sin cambios), `ng lint` OK, `ng build` OK. Revisión visual en navegador: no verificada. Entorno: `.env` copiado del checkout principal sin abrirlo (no versionado), `.venv` del checkout principal y `node_modules` por enlace.
 
 ## Review
 _Pendiente_
