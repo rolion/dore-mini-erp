@@ -65,3 +65,43 @@ class StockHistoryExists(Exception):
 class OpeningIdReused(Exception):
     def __init__(self):
         super().__init__('Esa clave de apertura ya se usó con otros datos.')
+
+
+class AdjustmentValidationError(Exception):
+    """El ajuste no cumple una regla; `errors` mapea campo -> mensajes."""
+
+    def __init__(self, errors: dict[str, list[str]]):
+        super().__init__(errors)
+        self.errors = errors
+
+
+class AdjustmentNotFound(Exception):
+    def __init__(self, adjustment_id: UUID):
+        super().__init__(f'Ajuste {adjustment_id} no encontrado.')
+        self.adjustment_id = adjustment_id
+
+
+class AdjustmentConflict(Exception):
+    """El ajuste choca con el estado actual; `code` identifica el motivo y el mensaje se muestra tal cual."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
+class NoDifference(AdjustmentConflict):
+    def __init__(self):
+        super().__init__('no_difference', 'Sin diferencia: la cantidad contada coincide con el saldo.')
+
+
+class BalanceChanged(AdjustmentConflict):
+    """El saldo cambió desde el conteo: hay que revisar la diferencia con el saldo vigente."""
+
+    def __init__(self, current_balance):
+        super().__init__('balance_changed', 'El saldo cambió desde el conteo; revisa la diferencia y confirma de nuevo.')
+        self.current_balance = current_balance
+
+
+class AdjustmentIdReused(AdjustmentConflict):
+    def __init__(self):
+        super().__init__('adjustment_id_reused', 'Esa clave de ajuste ya se usó con otros datos.')
