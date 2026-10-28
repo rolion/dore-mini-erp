@@ -1,6 +1,6 @@
 # TASK-ajustar-existencias-con-motivo: Ajustar existencias con motivo (PB-INV-006)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-ajustar-existencias-con-motivo
@@ -15,6 +15,7 @@
 | 2026-10-28 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-28 | REVIEW → ENGINEERING | Ciclo 1 sin PASS: REV-01 (Medium, cantidades enormes dan 500) y REV-02 (Low, clave de otra empresa da 500) | delivery-publish |
 | 2026-10-28 | ENGINEERING → REVIEW | REV-01 y REV-02 corregidos con tests de regresión (106 tests de inventory OK) | delivery-build |
+| 2026-10-28 | REVIEW → PUBLISH | Quality Gate PASS (ciclo 2); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -99,4 +100,6 @@ No aplica según veredicto (se sigue `ADR-inventario-movimientos-trazables-regis
 **Ciclo 1: sin PASS.** Subagente aislado: backend 802 OK, Karma acotado 103/103, suite completa 71 fallos = línea base (ninguno en inventory ni sidebar), lint y build OK, bandit sin hallazgos en inventory, `makemigrations --check` limpio. Hallazgos: `docs/reviews/REV-2026-10-28-ajustar-existencias-con-motivo-01.md` (Medium) y `-02` (Low), ambos corregidos (tope de cantidad antes de `quantize`; `IntegrityError` de clave ajena → 409 `adjustment_id_reused`). Revisión visual en navegador: no verificada (levantar la app habría escrito en la base de desarrollo del usuario). `npm audit`: no realizable (sin lockfile).
 
 ## Publicación
-_Pendiente_
+**Ciclo 2: PASS** (subagente aislado, sin hallazgos Critical/High; REV-01 y REV-02 verificados como resueltos). Backend: 804 tests OK (suite completa; en 1 de 5 ejecuciones falló `sales…test_item_order_is_preserved`, test intermitente de otro módulo que este diff no toca), `makemigrations --check` limpio, `check` OK, bandit 0 hallazgos en `inventory`. Frontend: Karma completo 71 fallos = línea base («should create» de pantallas demo, ninguno en inventory/sidebar) y 635 OK; acotado 103/103; `ng lint` y `ng build` OK. Revisión visual en navegador: **no verificada** (checklist §8 revisada por código). `npm audit`: no realizable (sin lockfile).
+
+**Cambio sensible:** incluye una migración nueva (`inventory/0003_stock_adjustments`, tabla nueva, sin tocar datos existentes). Sin ADR nuevo, sin cambios de autenticación ni infraestructura. Solo un humano aprueba el merge.

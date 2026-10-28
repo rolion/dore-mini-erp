@@ -1,6 +1,6 @@
 # REV-2026-10-28-ajustar-existencias-con-motivo-02: Clave de ajuste ya usada por otra empresa produce IntegrityError (500)
 
-**Status:** Fixed (pendiente de verificación en el ciclo 2)
+**Status:** Resolved (verificado en el ciclo 2)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-ajustar-existencias-con-motivo.md (v1)

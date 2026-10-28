@@ -1,6 +1,6 @@
 # REV-2026-10-28-ajustar-existencias-con-motivo-01: Cantidad contada o saldo esperado enormes provocan 500 en lugar de 400
 
-**Status:** Fixed (pendiente de verificación en el ciclo 2)
+**Status:** Resolved (verificado en el ciclo 2)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-28-ajustar-existencias-con-motivo.md (v1)
