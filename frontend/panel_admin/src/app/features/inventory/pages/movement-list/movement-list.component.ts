@@ -94,7 +94,7 @@ export class MovementListComponent implements OnInit {
     this.productsApi
       .list({ pageSize: 100 })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (page) => (this.products = page.results), error: () => (this.products = []) });
+      .subscribe({ next: (page) => this.setProducts(page.results), error: () => this.setProducts([]) });
     this.warehousesApi
       .list({ pageSize: 100 })
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -107,6 +107,18 @@ export class MovementListComponent implements OnInit {
       }
     });
     this.reload$.next();
+  }
+
+  /** El producto del filtro (p. ej. el que llega desde Existencias, activo o no) siempre debe poder elegirse. */
+  private setProducts(products: Product[]): void {
+    this.products = products;
+    const selected = this.filterForm.getRawValue().productId;
+    if (selected && !products.some((product) => product.id === selected)) {
+      this.productsApi
+        .get(selected)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({ next: (product) => (this.products = [...this.products, product]), error: () => undefined });
+    }
   }
 
   kindLabel(kind: MovementKind): string {

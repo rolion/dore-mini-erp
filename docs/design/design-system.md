@@ -145,12 +145,15 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 ### Lista de solo lectura con filtros (referencia: `features/inventory/pages/movement-list`)
 - Misma estructura que Lista, sin botón «+» ni acciones Editar/Eliminar (registros inmutables): breadcrumb, `.card`, formulario de filtros en fila (`label` + `input type=date`/`form-select`, «Limpiar filtros»), `ngx-datatable` con paginación del servidor. Las cantidades de entrada y salida van en columnas separadas, alineadas a la derecha, con «—» en la que no aplica y la unidad en su propia columna. Error de servidor en `alert alert-danger` con «Reintentar». El enlace a un documento de otro módulo solo se muestra si el servidor indica que ese módulo está habilitado y existe su pantalla. El detalle sigue la plantilla Detalle (`dl`) y enlaza registros relacionados (contramovimientos).
 
+### Detalle con historial embebido (referencia: `features/inventory/pages/stock-detail`)
+- Plantilla Detalle (`.card`, `h4` = nombre, `dl.row`) más acciones bajo los datos (la principal en `btn-primary`, una acción condicionada por regla de negocio que, si no aplica, se oculta y se explica con `small.text-muted`) y una sección `h5` con el historial: tabla Bootstrap apilada (`_inventory-table.scss`), 10 filas por página con `ngb-pagination`, vacío con mensaje (nunca error), y enlace «Ver detalle» a cada registro. Un saldo negativo se marca con texto («Negativo», `badge-outline col-red`) además del color `text-danger`.
+
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 
 ## 6. Menú y layout
 
-- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`), «Movimientos» (`/inventory/movements`, solo lectura, PB-INV-004) y «Ajustes» (`/inventory/settings`, PB-CFG-001).
+- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`), «Existencias» (`/inventory/stock`, con detalle `/inventory/stock/:productId/:warehouseId`, PB-INV-005), «Movimientos» (`/inventory/movements`, solo lectura, PB-INV-004) y «Ajustes» (`/inventory/settings`, PB-CFG-001).
 
 - Sidebar: logo según estado (expandido/contraído), avatar con iniciales, nombre y apellido, nombre de la empresa. Ítems principales: Dashboard, Catálogo (Producto), Cliente, Pedidos, Gastos (Gastos, Categorías), Reportes (textos en `assets/i18n/es.json`).
 - Header: solo el menú de usuario (nombre, empresa y cerrar sesión). Sin búsqueda, mensajes ni notificaciones.
