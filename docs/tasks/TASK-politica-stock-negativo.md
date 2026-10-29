@@ -1,6 +1,6 @@
 # TASK-politica-stock-negativo: Aplicar la política de stock negativo (PB-INV-007)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-politica-stock-negativo
@@ -12,6 +12,7 @@
 | 2026-10-29 | (nuevo) → INVESTIGATION | Task creado; rama desde `main` al día | delivery-start |
 | 2026-10-29 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Nuevo ajuste por empresa, nueva dependencia inventory → modularity y contrato 409 | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario (ver Plan) | delivery-start |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -83,7 +84,22 @@ Ver `docs/adr/ADR-politica-stock-negativo-lectura-y-aplicacion-de-la-politica.md
 `docs/plans/PLAN-2026-10-29-politica-stock-negativo.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Ajuste `inventory.allow_negative_stock` (tipo nuevo `boolean`, defecto `false`) en el catálogo de `modularity`; fachada `get_inventory_settings`; en `inventory`, puerto `InventoryPolicy` + adaptador `ModularityInventoryPolicy` consultado dentro de `locked()` por `RecordMovement`/`ReverseMovement`/`ConfirmAdjustment` (se elimina `allow_negative`); `InsufficientStock` → 409 `insufficient_stock` con producto, almacén, `requested`, `available` y unidad. Frontend: interruptor + diálogo de confirmación en `module-settings`, componente `insufficient-stock-alert` usado en el formulario de ajuste.
+
+**Cobertura.** INV-01/AC-01: dominio, fachada y API de configuración (`test_negative_policy.py`). INV-02/AC-02, INV-04, AC-03, EDGE-01/05/06: casos de uso vía fachada. AC-04/INV-03: `locked()` existente; las pruebas `ConcurrencyTests` de `test_movements.py` (salidas simultáneas) lo cubren. API-02: `InsufficientStockBodyTests`. AC-05/UI-01/02: specs de `module-settings` y `setting-confirm-dialog`. AC-06/UI-03: specs de `insufficient-stock-alert` y `adjustment-form`.
+
+**Desviaciones respecto al plan.**
+1. La opción por defecto de «Valor predeterminado» muestra «Desactivado» (genérico para cualquier ajuste booleano) en lugar de «Bloqueado» del DDR; el historial sí dice Bloqueado/Permitido.
+2. `insufficient-stock-alert` se integró solo en `adjustment-form`: la apertura de existencias solo registra entradas y no puede producir `insufficient_stock` (el 409 sí está cableado en su vista).
+3. No se añadió prueba de concurrencia nueva: la existente `test_simultaneous_exits_cannot_overdraw_the_balance` ya cubre AC-04 y ejercita el mismo código que ahora lee la política.
+4. `RegisterOpening` no recibe la política (solo entradas); `RecordMovement` usa `BlockNegativeStock` si no se inyecta una.
+
+**Verificación propia (no es el Quality Gate).** Backend con el venv del checkout principal y SQLite temporal (no hay PostgreSQL ni `.env` en este worktree): `inventory`, `modularity` y `test_boundaries` pasan salvo 8 pruebas de concurrencia/orden que dependen de bloqueo real de PostgreSQL (SQLite) — deben correrse en PostgreSQL. Frontend (`ng test` sobre `features/settings` e `inventory`, 155 specs) y `ng lint`: verdes; `app.component.spec.ts` preexistente no compila (`title`) y se excluyó temporalmente al correr.
+
+**Deuda técnica.** La confirmación al activar está definida por clave en `ENABLE_CONFIRMATIONS` del componente (no en el contrato de la API); el tipo de control por `kind` no tiene registro de controles.
+
+**Pantalla de referencia / componentes.** Plantilla Formulario de `module-settings` (interruptor `form-switch` de Bootstrap); nuevos `setting-confirm-dialog` y `insufficient-stock-alert` (reutilizables).
 
 ## Review
 _Pendiente_

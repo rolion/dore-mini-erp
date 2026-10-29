@@ -190,6 +190,26 @@ describe('AdjustmentFormComponent', () => {
     expect((el().querySelector('[data-testid="confirm"]') as HTMLButtonElement).disabled).toBeTrue();
   });
 
+  it('shows product, warehouse, requested and available on insufficient stock and keeps the form (AC-06)', () => {
+    const info = { productName: 'Harina', warehouseName: 'Central', requested: '3.000', available: '2.000', unit: 'u' };
+    api.confirm.and.returnValue(
+      throwError(() => new InventoryApiError('Sin saldo', 409, {}, 'insufficient_stock', [], [], null, info)),
+    );
+    goToReview('7');
+    component.confirm();
+    fixture.detectChanges();
+    expect(component.step).toBe('edit');
+    expect(text('stock-product')).toBe('Harina');
+    expect(text('stock-warehouse')).toBe('Central');
+    expect(text('stock-requested')).toBe('3.000 u');
+    expect(text('stock-available')).toBe('2.000 u');
+    expect(component.form.controls.countedQuantity.value).toBe('7');
+    expect(component.form.controls.reason.value).toBe('Conteo físico');
+    component.form.controls.countedQuantity.setValue('6');
+    fixture.detectChanges();
+    expect(el().querySelector('[data-testid="insufficient-stock"]')).toBeNull();
+  });
+
   it('returns to edit with the server message on a validation error (AC-01)', () => {
     api.confirm.and.returnValue(
       throwError(() => new InventoryApiError('Revisa', 400, { reason: ['El motivo es obligatorio.'] })),

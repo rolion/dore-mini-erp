@@ -11,6 +11,7 @@ from modules.inventory.services import get_balance, record_movement, reverse_mov
 from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.tests.test_enforcement import set_enabled
 
+from .policy import set_negative_stock
 from .test_stock import STOCK, StockApiTestCase, line
 
 
@@ -22,10 +23,10 @@ class BalanceStateTests(SimpleTestCase):
 
 
 class StockQueryTests(StockApiTestCase):
-    def move(self, product, kind, quantity, allow_negative=False):
+    def move(self, product, kind, quantity):
         return record_movement(
             self.company.id, product_id=UUID(product), warehouse_id=UUID(self.warehouse), kind=kind,
-            quantity=Decimal(quantity), user_id=None, user_name='ana', allow_negative=allow_negative)[0]
+            quantity=Decimal(quantity), user_id=None, user_name='ana')[0]
 
     def rows(self, **params):
         response = self.client.get(STOCK, params)
@@ -70,7 +71,8 @@ class StockQueryTests(StockApiTestCase):
     def test_balance_filters_zero_nonzero_and_negative(self):  # AC-02, EDGE-06
         positive, zero, negative = (self.make_product(n) for n in ('Positivo', 'Cero', 'Negativo'))
         self.open([line(positive, '5')])
-        self.move(negative, 'out', '2', allow_negative=True)
+        set_negative_stock(self.company, True)
+        self.move(negative, 'out', '2')
         names = lambda **kw: [r['product_name'] for r in self.rows(**kw)]  # noqa: E731
         self.assertEqual(names(balance='zero'), ['Cero'])
         self.assertEqual(names(balance='nonzero'), ['Negativo', 'Positivo'])

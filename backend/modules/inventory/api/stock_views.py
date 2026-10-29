@@ -16,6 +16,7 @@ from modules.inventory.application.stock_use_cases import (
     StockQuery,
 )
 from modules.inventory.domain.exceptions import (
+    InsufficientStock,
     MovementConflict,
     MovementValidationError,
     OpeningIdReused,
@@ -29,6 +30,7 @@ from modules.inventory.infrastructure.django.movement_repository import DjangoSt
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 from shared.tenancy import company_id_from
 
+from .insufficient_stock import InsufficientStockConflict
 from .pagination import WarehousePagination
 from .stock_serializers import (
     OpeningInputSerializer,
@@ -113,6 +115,8 @@ class OpeningCreateView(APIView):
             raise StockHistoryConflict(exc) from exc
         except OpeningIdReused as exc:
             raise Conflict(str(exc), 'opening_id_reused') from exc
+        except InsufficientStock as exc:
+            raise InsufficientStockConflict(exc, company_id) from exc
         except MovementConflict as exc:
             raise Conflict(str(exc), exc.code) from exc
         opening = outcome.opening

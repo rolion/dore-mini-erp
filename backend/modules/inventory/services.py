@@ -9,12 +9,13 @@ from uuid import UUID
 
 from modules.inventory.application.movement_use_cases import GetBalance, RecordMovement, ReverseMovement
 from modules.inventory.domain.exceptions import (  # noqa: F401  (se reexportan para quien llama a la fachada)
+    InsufficientStock,
     MovementConflict,
     MovementNotFound,
     MovementValidationError,
 )
 from modules.inventory.domain.movement import MovementSource, StockMovement
-from modules.inventory.infrastructure.adapters import CatalogProductDirectory
+from modules.inventory.infrastructure.adapters import CatalogProductDirectory, ModularityInventoryPolicy
 from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 
@@ -40,7 +41,7 @@ def _record(movement: StockMovement) -> MovementRecord:
 def record_movement(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, kind: str, quantity: Decimal,
                     user_id: UUID | None, user_name: str, reference: str = '', reason: str = '',
                     source_type: str | None = None, source_id: str = '', source_line: str = '',
-                    occurred_at: datetime | None = None, allow_negative: bool = False) -> tuple[MovementRecord, bool]:
+                    occurred_at: datetime | None = None) -> tuple[MovementRecord, bool]:
     """Registra una entrada (`in`) o salida (`out`); devuelve `(movimiento, creado)`.
 
     Es idempotente por operación de origen: repetir la misma `(source_type, source_id, source_line)` con el mismo
@@ -49,19 +50,19 @@ def record_movement(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, k
     source = MovementSource(source_type, source_id, source_line) if source_type else None
     use_case = RecordMovement(
         DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
-        CatalogProductDirectory(company_id))
+        CatalogProductDirectory(company_id), ModularityInventoryPolicy(company_id))
     movement, created = use_case.execute(
         product_id=product_id, warehouse_id=warehouse_id, kind=kind, quantity=quantity, user_id=user_id,
-        user_name=user_name, reference=reference, reason=reason, source=source, occurred_at=occurred_at,
-        allow_negative=allow_negative)
+        user_name=user_name, reference=reference, reason=reason, source=source, occurred_at=occurred_at)
     return _record(movement), created
 
 
 def reverse_movement(company_id: UUID, movement_id: UUID, *, user_id: UUID | None, user_name: str,
-                     reason: str = '', allow_negative: bool = False) -> MovementRecord:
+                     reason: str = '') -> MovementRecord:
     """Revierte un movimiento con un contramovimiento; el original queda «revertido»."""
-    counter = ReverseMovement(DjangoStockMovementRepository(company_id)).execute(
-        movement_id, user_id=user_id, user_name=user_name, reason=reason, allow_negative=allow_negative)
+    counter = ReverseMovement(
+        DjangoStockMovementRepository(company_id), ModularityInventoryPolicy(company_id)).execute(
+        movement_id, user_id=user_id, user_name=user_name, reason=reason)
     return _record(counter)
 
 

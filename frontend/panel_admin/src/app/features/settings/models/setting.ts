@@ -1,4 +1,4 @@
-export type SettingKind = 'choice' | 'percent';
+export type SettingKind = 'choice' | 'percent' | 'boolean';
 
 export interface SettingChoice {
   value: string;

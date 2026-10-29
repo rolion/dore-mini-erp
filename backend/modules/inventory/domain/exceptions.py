@@ -45,6 +45,17 @@ class MovementConflict(Exception):
         self.code = code
 
 
+class InsufficientStock(MovementConflict):
+    """Salida mayor que el saldo con la política de stock negativo bloqueada; lleva los datos para explicarla."""
+
+    def __init__(self, message: str, *, product_id: UUID, warehouse_id: UUID, requested, available):
+        super().__init__('insufficient_stock', message)
+        self.product_id = product_id
+        self.warehouse_id = warehouse_id
+        self.requested = requested
+        self.available = available
+
+
 class OpeningValidationError(Exception):
     """La apertura no cumple una regla; `errors` mapea campo -> mensajes (y `lines` -> un dict por línea)."""
 

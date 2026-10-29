@@ -50,7 +50,7 @@ class GetSettingsTests(SettingsApiTestCase):
         self.assertEqual(self.values(), {CHANNEL: '', METHOD: '', PERCENT: '100.00'})
 
     def test_modules_without_settings_return_empty_list(self):  # AC-09
-        for module in ('purchases', 'inventory', 'customers'):
+        for module in ('purchases', 'customers'):
             self.assertEqual(self.client.get(settings_url(module)).json()['settings'], [])
 
     def test_unknown_or_base_module_is_404(self):  # EDGE-01

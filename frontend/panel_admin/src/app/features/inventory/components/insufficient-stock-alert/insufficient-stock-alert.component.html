@@ -1,0 +1,13 @@
+<div class="alert alert-danger" role="alert" data-testid="insufficient-stock">
+  <p class="fw-bold mb-2">No hay existencia suficiente.</p>
+  <dl class="row mb-0">
+    <dt class="col-sm-4">Producto</dt>
+    <dd class="col-sm-8" data-testid="stock-product">{{ info().productName }}</dd>
+    <dt class="col-sm-4">Almacén</dt>
+    <dd class="col-sm-8" data-testid="stock-warehouse">{{ info().warehouseName }}</dd>
+    <dt class="col-sm-4">Cantidad solicitada</dt>
+    <dd class="col-sm-8" data-testid="stock-requested">{{ info().requested }} {{ info().unit }}</dd>
+    <dt class="col-sm-4">Existencia actual</dt>
+    <dd class="col-sm-8" data-testid="stock-available">{{ info().available }} {{ info().unit }}</dd>
+  </dl>
+</div>

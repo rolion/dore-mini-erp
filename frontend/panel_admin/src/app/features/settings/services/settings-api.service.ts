@@ -14,7 +14,7 @@ interface SettingDto {
   key: string;
   label: string;
   description: string;
-  kind: 'choice' | 'percent';
+  kind: 'choice' | 'percent' | 'boolean';
   value: string;
   default: string;
   choices: { value: string; label: string }[];

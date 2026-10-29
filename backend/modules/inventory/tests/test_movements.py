@@ -18,6 +18,8 @@ from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.tests.test_enforcement import set_enabled
 from shared import stock_history
 
+from .policy import set_negative_stock
+
 URL = '/api/stock-movements/'
 WHEN = datetime(2026, 10, 20, 15, 30, tzinfo=dt_timezone.utc)
 
@@ -108,7 +110,8 @@ class RecordMovementTests(LedgerTestCase):
         with self.assertRaises(MovementConflict) as ctx:
             self.record('out', '3')
         self.assertEqual(ctx.exception.code, 'insufficient_stock')
-        self.record('out', '3', allow_negative=True)
+        set_negative_stock(self.company, True)
+        self.record('out', '3')
         self.assertEqual(self.balance(), Decimal('-1'))
 
     def test_same_source_operation_is_recorded_once(self):  # AC-03
