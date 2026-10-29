@@ -1,6 +1,6 @@
 # TASK-compras-borrador-crear-editar: Crear y editar compras en borrador (PB-COM-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-borrador-crear-editar
@@ -17,6 +17,7 @@
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 | 2026-10-29 | REVIEW → ENGINEERING | Quality Gate ciclo 1: FAIL (REV-01 High: `select_for_update` fuera de transacción) | delivery-publish |
 | 2026-10-29 | ENGINEERING → REVIEW | Corrección de REV-01..04 | delivery-build |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 2: PASS condicionado (sin PostgreSQL ni revisión visual) | delivery-publish |
 
 ## Investigación
 
@@ -128,5 +129,13 @@ Evidencia del ciclo 1: sin PostgreSQL utilizable; sobre SQLite desechable la sui
 
 **Correcciones (delivery-build):** REV-01: `_run` de `purchase_views.py` ejecuta el caso de uso dentro de `transaction.atomic()` (prueba `RowLockTransactionTests` comprueba que el bloqueo se toma en una transacción, independiente del motor); REV-02: guarda de máximo antes de `quantize` y captura de `InvalidOperation` en precio (pruebas de dominio y API); REV-03: `tests/test_adapters.py`; REV-04: `optionsFor(i)` elimina el aviso. Quedan como limitaciones conocidas de REV-04 (Low): al editar la UI no anticipa «entero» (el servidor lo rechaza), un fallo de red al buscar proveedores muestra «No hay proveedores activos.» y el detalle vuelve a la lista ante cualquier error.
 
+**Quality Gate (ciclo 2, subagente aislado): PASS condicionado.** Sin hallazgos Critical/High abiertos; ninguna prueba falla por el diff.
+
+Ejecutado con evidencia (SQLite desechable; no hay PostgreSQL): `purchases` 109 tests OK; `purchases + catalog + modularity + accounts + test_boundaries` 331 tests con 4 fallos ajenos a `purchases` (collation, unicidad sin distinguir mayúsculas, migración, concurrencia en SQLite), los mismos que `origin/main` en SQLite (más 2 intermitentes); `makemigrations --check` sin cambios; `bandit` 0 issues; `ng lint` OK; `ng build` OK (sin NG8102); Karma acotado a purchases, products y sidebar 154/154.
+
+Reverificación: REV-01 corregido y reproducido de forma independiente (sin el `atomic`, `PATCH` lanza `TransactionManagementError` y `RowLockTransactionTests` falla; con él, `create` 201 y `patch` 200); REV-02 corregido (cantidades y precios enormes → 400 por línea); REV-03 corregido; REV-04 corregido en parte (limitaciones Low declaradas). Un `PATCH` inválido deja el borrador intacto. Hallazgo nuevo [REV-05](../reviews/REV-2026-10-29-compras-borrador-crear-editar-05.md) (Low): los errores de **forma** de `items` (falta `product_id`, línea que no es objeto) salen de DRF como `{"items": {"0": {...}}}` y no como lista por línea; el formulario nunca los envía, afecta a otros clientes de la API.
+
+**No realizado:** PostgreSQL real (el `FOR UPDATE` y la concurrencia entre sesiones solo se simularon), suite completa de Karma (`app.component.spec.ts` no compila, preexistente), `npm audit` (sin lockfile) y **revisión visual en navegador** (móvil, escritorio y tema oscuro): no verificada.
+
 ## Publicación
-_Pendiente_
+PR #28 completo y listo para aprobación humana (no se mergea). **Cambio sensible:** nuevo agregado con **migración** (`purchases.0002_purchase`, dos tablas) respaldado por `ADR-compras-borrador-crear-editar-modelo-compra-borrador` y `ADR-compras-borrador-crear-editar-contrato-api-e-integracion-catalogo`; además una dependencia nueva `purchases → catalog` (por puerto y adaptador). Rollback: revertir el PR; con la migración aplicada, `migrate purchases 0001` elimina las tablas. Antes de mergear, un humano debería correr `manage.py test` contra PostgreSQL y mirar las pantallas en el navegador.
