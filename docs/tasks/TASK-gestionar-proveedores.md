@@ -1,6 +1,6 @@
 # TASK-gestionar-proveedores: Gestionar proveedores (PB-COM-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-proveedores
@@ -15,6 +15,7 @@
 | 2026-10-29 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 2: PASS | delivery-publish |
 
 ## Investigación
 
@@ -121,7 +122,9 @@ Ejecutado con evidencia:
 
 Hallazgos (Low, sin REV): validación de correo duplicada entre dominio y formulario (deuda declarada, mismo patrón que clientes).
 
-Siguiente paso: correr `python manage.py test` (settings de test, PostgreSQL real) y, si pasa, repetir `delivery-publish` para pasar a PUBLISH.
+**Quality Gate (ciclo 2, subagente aislado): PASS.** Con `backend/.env` y PostgreSQL reales: `manage.py test --noinput` → 865 tests OK (86 s); subconjunto `purchases` + `test_enforcement` + `test_guards` + `test_boundaries` → 78 OK; `makemigrations --check` sin cambios; `bandit` sin issues; `git status` limpio; sin secretos en el diff. Cada AC-01..AC-08 tiene tests que corrieron (nombrados en el informe); AC-09..AC-12 verificados en el ciclo 1 (Karma 121/121). Sigue **sin realizarse**: `npm audit` (sin lockfile) y la revisión visual en navegador.
+
+Nota: en una corrida previa de la suite completa falló una vez `sales.tests.test_repository…test_item_order_is_preserved` (orden `created_at`/UUID no determinista, archivo ajeno al diff); pasó 3/3 aislado y en el ciclo 2. Se arreglará en otra tarea.
 
 ## Publicación
-_Pendiente_
+PR #25 completo y listo para aprobación humana (no se mergea). Cambio sensible: **nuevo bounded context con migración (`purchases.0001_initial`)** respaldado por `ADR-gestionar-proveedores-modulo-proveedores`; rollback: revertir el PR o `migrate purchases zero`.
