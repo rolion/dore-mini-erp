@@ -1,6 +1,6 @@
 # TASK-compras-borrador-crear-editar: Crear y editar compras en borrador (PB-COM-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-borrador-crear-editar
@@ -14,6 +14,7 @@
 | 2026-10-29 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-29 | ARCHITECTURE → PLANNING | ADR escritos | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -87,7 +88,35 @@ Ver `docs/design/DDR-compras-borrador-crear-editar-pantallas-compras.md`.
 `docs/plans/PLAN-2026-10-29-compras-borrador-crear-editar.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Agregado `Purchase`/`PurchaseItem` en `backend/modules/purchases/`, API `/api/purchases/`, lectura de Catálogo por puerto + adaptador y feature Angular de lista, formulario con líneas, detalle y diálogo de creación rápida de proveedor, con el menú «Compras» y las rutas reordenadas.
+
+| Parte | Cubre |
+|---|---|
+| `domain/purchase.py`, `domain/enums.py`, `domain/exceptions.py`, `domain/repositories.py` | INV-01…09, INV-12, AC-01…05, EDGE-01…03, 08 |
+| `application/{purchase_commands,purchase_queries,ports}.py` | INV-01, INV-04 (producto activo solo si es nuevo), INV-08, AC-03, AC-07, AC-08 |
+| `infrastructure/django/{models,mappers,purchase_repository}.py`, `migrations/0002_purchase.py`, `infrastructure/adapters.py` | INV-10, INV-11, AC-09 |
+| `api/purchase_{serializers,views,urls}.py`, `config/urls.py` | AC-01…AC-11 (`required_modules = ('purchases',)`) |
+| `catalog/services.py` (`ProductForPurchase`, `get_products_for_purchase`) | INV-04, INV-11 |
+| `features/purchases/{models,services,pages,components}` | AC-13…AC-18, UI-02…UI-05 |
+| `app.routes.ts`, `routes.json`, `i18n/{es,en,de}.json` | AC-12, UI-01 |
+| `features/products` (`BaseUnit.allowsFractions`) | AC-15 (cantidad entera según unidad) |
+
+**Pruebas escritas:** backend `purchases/tests/{test_purchase_domain,test_purchase_application,test_purchase_api,test_purchase_repository}.py` y `GetProductsForPurchaseTests` en `catalog/tests/test_services.py`; guardas actualizadas (`sales/tests/test_boundaries.py`, `accounts/test_guards.py` con `PurchaseItemModel` como tabla hija, `modularity/tests/test_enforcement.py` con las rutas nuevas). Frontend: specs de importes, servicio, formulario, lista, detalle, diálogo y orden de rutas; `sidebar-menu.spec.ts` actualizado.
+
+**Verificación propia (no es el Quality Gate):**
+- Backend: `test_purchase_domain` + `test_purchase_application` + `test_boundaries` + `test_guards` sin BD → OK. Los tests con BD (`test_purchase_api`, `test_purchase_repository`, `catalog.test_services`, `test_enforcement`) se ejecutaron **solo contra una base SQLite desechable** (`purchases` + `catalog.test_services` + `test_enforcement` + `test_boundaries` + `test_guards`: 149 tests OK) porque este worktree no tiene `DATABASE_URL`/credenciales de PostgreSQL y no se leyó el `.env`. **No se corrieron contra PostgreSQL ni la suite completa de `manage.py test`:** `delivery-publish` debe hacerlo (en SQLite `select_for_update` no bloquea).
+- `makemigrations --check` sin cambios pendientes tras generar `0002_purchase`.
+- Frontend: `ng lint` OK; `ng build` OK; Karma (Chrome headless, con un tsconfig temporal ya eliminado que excluye `app.component.spec.ts` por su fallo de compilación preexistente) sobre `features/purchases`, `features/products` y `layout/sidebar`: 154/154. No se corrió el Karma completo.
+- Se creó una *junction* local `frontend/panel_admin/node_modules` → checkout principal (ignorada por git, sin instalar dependencias) para poder compilar.
+
+**Desviaciones respecto al plan:** ninguna de alcance. Detalles: (a) el índice por proveedor se llama `purch_purch_company_supplier` (el nombre del plan superaba los 30 caracteres de Django); (b) los archivos nuevos del backend usan el prefijo `purchase_` (`purchase_views.py`, `purchase_urls.py`, `purchase_repository.py`, `purchase_commands.py`, `purchase_queries.py`) junto a los de proveedores en vez de ampliarlos; (c) `quantity` y `unit_price` en texto aceptan solo decimales simples (sin exponente, `NaN` ni separadores) además de lo que ya excluía el plan; (d) el `4xx` por «demasiadas líneas» llega como `items: ["…"]` (lista de textos) y la interfaz lo muestra como aviso general.
+
+**UI:** pantallas de referencia: Lista → `purchases/pages/supplier-list`; Formulario con líneas → `inventory/pages/stock-opening` y `sales/pages/order-form` (selector con pie «+ Nuevo …»); Detalle → `supplier-detail`. Reutiliza `MoneyPipe`, `Page<T>`, `table-actions`, `unsavedChangesGuard`, `ProductsApiService` y `SuppliersApiService`. Componente nuevo propio de la feature: `SupplierQuickCreateComponent` (+ servicio), no compartido. Sin HEX ni estilos sueltos.
+
+**Deuda técnica:** validación de correo duplicada entre diálogo, formulario de proveedor y dominio (patrón de clientes); el selector de producto repite el de `order-items`; sin control optimista de concurrencia (declarado en el plan); `BaseUnit.allowsFractions` es opcional porque algunas fixtures no lo traen.
+
+**Documentación actualizada:** `docs/architecture/ddd.md`, `docs/design/design-system.md` (variante de un paso), `docs/producto/modulos-implementados.md`.
 
 ## Review
 _Pendiente_
