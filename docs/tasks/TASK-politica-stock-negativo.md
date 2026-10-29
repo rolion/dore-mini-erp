@@ -93,6 +93,7 @@ Ver `docs/adr/ADR-politica-stock-negativo-lectura-y-aplicacion-de-la-politica.md
 1. La opción por defecto de «Valor predeterminado» muestra «Desactivado» (genérico para cualquier ajuste booleano) en lugar de «Bloqueado» del DDR; el historial sí dice Bloqueado/Permitido.
 2. `insufficient-stock-alert` se integró solo en `adjustment-form`: la apertura de existencias solo registra entradas y no puede producir `insufficient_stock` (el 409 sí está cableado en su vista).
 3. No se añadió prueba de concurrencia nueva: la existente `test_simultaneous_exits_cannot_overdraw_the_balance` ya cubre AC-04 y ejercita el mismo código que ahora lee la política.
+5. Se creó `SettingConfirmDialogComponent` en lugar de reutilizar `ModuleConfirmDialogComponent` (acoplado a módulos).
 4. `RegisterOpening` no recibe la política (solo entradas); `RecordMovement` usa `BlockNegativeStock` si no se inyecta una.
 
 **Verificación propia (no es el Quality Gate).** Backend con el venv del checkout principal y SQLite temporal (no hay PostgreSQL ni `.env` en este worktree): `inventory`, `modularity` y `test_boundaries` pasan salvo 8 pruebas de concurrencia/orden que dependen de bloqueo real de PostgreSQL (SQLite) — deben correrse en PostgreSQL. Frontend (`ng test` sobre `features/settings` e `inventory`, 155 specs) y `ng lint`: verdes; `app.component.spec.ts` preexistente no compila (`title`) y se excluyó temporalmente al correr.
@@ -102,7 +103,15 @@ Ver `docs/adr/ADR-politica-stock-negativo-lectura-y-aplicacion-de-la-politica.md
 **Pantalla de referencia / componentes.** Plantilla Formulario de `module-settings` (interruptor `form-switch` de Bootstrap); nuevos `setting-confirm-dialog` y `insufficient-stock-alert` (reutilizables).
 
 ## Review
-_Pendiente_
+
+**Ciclo 1 — Quality Gate: FAIL** (2026-10-29, subagente aislado). Sin hallazgos Critical/High y sin fallos atribuibles al cambio (backend 837 tests con SQLite: mismos 12 fallos de concurrencia/orden que `main`; frontend: mismos 71 fallos preexistentes que `main`, +8 specs verdes; lint y build OK; bandit sin hallazgos). El veredicto queda en FAIL porque **AC-04/INV-03 no se pueden verificar sin PostgreSQL** (no hay PostgreSQL ni `.env` en el entorno) y no se ejecutaron `npm audit` (sin lockfile), ruff/flake8/mypy (no disponibles) ni la revisión visual en navegador.
+
+| REV | Severidad | Categoría | Estado |
+|---|---|---|---|
+| REV-01 (AC-04/INV-03 sin prueba) | Medium | IMPLEMENTATION | Parcial: se añadió `PolicyReadInsideLockTests` (la política se lee con el bloqueo tomado, en alta y reversión); la prueba de concurrencia en PostgreSQL sigue pendiente de correr por una persona con BD |
+| REV-02 (ningún endpoint devuelve aún el 409) | Low | SPECIFICATION | Abierto: consecuencia aceptada del alcance acordado (Ventas/reversión llegan después) |
+| REV-03 («Desactivado» vs «Bloqueado») | Low | DESIGN | Abierto: desviación documentada |
+| REV-04 (diálogo propio en vez de reutilizar `ModuleConfirmDialogComponent`) | Low | IMPLEMENTATION | Aclarado: el diálogo de módulos está acoplado a `AppModule`/`ModulesService`; se creó uno genérico y reutilizable (desviación 5) |
 
 ## Publicación
 _Pendiente_

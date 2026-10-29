@@ -144,3 +144,77 @@ class PolicySettingApiTests(APITestCase):
         set_enabled(self.company, list(DEFAULT_ENABLED_KEYS))
         response = self.client.patch('/api/settings/inventory/', {'settings': {KEY: 'true'}}, format='json')
         self.assertEqual(response.status_code, 409)
+
+
+class PolicyReadInsideLockTests(SimpleTestCase):
+    """INV-03: la política se consulta con el bloqueo del almacén ya tomado (misma sección crítica que el saldo)."""
+
+    def setUp(self):
+        from contextlib import contextmanager
+
+        from modules.inventory.application.movement_use_cases import RecordMovement, ReverseMovement
+        from modules.inventory.application.movement_ports import ProductInfo
+        from modules.inventory.domain.movement import MovementKind, StockMovement
+        from modules.inventory.domain.warehouse import Warehouse
+
+        test = self
+        self.locked_now = False
+        self.reads: list[bool] = []
+        product_id, warehouse_id = uuid4(), uuid4()
+        self.entry = StockMovement.record(
+            product_id=product_id, warehouse_id=warehouse_id, kind=MovementKind.IN, quantity='5',
+            occurred_at=__import__('django.utils.timezone', fromlist=['now']).now(), user_id=None, user_name='ana')
+
+        class Repo:
+            @contextmanager
+            def locked(self, _warehouse_id):
+                test.locked_now = True
+                try:
+                    yield
+                finally:
+                    test.locked_now = False
+
+            def find_by_source(self, _movement):
+                return None
+
+            def balance(self, *_):
+                return Decimal('0')
+
+            def get(self, _movement_id):
+                return test.entry
+
+            def insert(self, movement):
+                return movement
+
+            def mark_reversed(self, _movement_id):
+                return None
+
+        class Warehouses:
+            def get(self, _warehouse_id):
+                return Warehouse(id=warehouse_id, name='Central') if 'id' in Warehouse.__dataclass_fields__ else None
+
+        class Products:
+            def get_products(self, ids):
+                return {i: ProductInfo(id=i, name='Arroz', tracks_stock=True, unit_abbreviation='kg',
+                                       allows_fractions=True) for i in ids}
+
+        class Policy:
+            def allow_negative_stock(self):
+                test.reads.append(test.locked_now)
+                return False
+
+        self.product_id, self.warehouse_id = product_id, warehouse_id
+        self.record = RecordMovement(Repo(), Warehouses(), Products(), Policy())
+        self.reverse = ReverseMovement(Repo(), Policy())
+        self.kind = MovementKind
+
+    def test_record_reads_the_policy_while_locked(self):  # INV-03, EDGE-05
+        with self.assertRaises(InsufficientStock):
+            self.record.execute(product_id=self.product_id, warehouse_id=self.warehouse_id, kind=self.kind.OUT,
+                                quantity='1', user_id=None, user_name='ana')
+        self.assertEqual(self.reads, [True])
+
+    def test_reverse_reads_the_policy_while_locked(self):  # INV-03
+        with self.assertRaises(InsufficientStock):
+            self.reverse.execute(self.entry.id, user_id=None, user_name='ana')
+        self.assertEqual(self.reads, [True])
