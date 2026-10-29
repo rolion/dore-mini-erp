@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Protocol, Sequence
 from uuid import UUID
 
+from .adjustment import StockAdjustment
 from .movement import MovementKind, StockMovement
 from .stock import StockBalanceEntry
 from .warehouse import Warehouse
@@ -72,3 +73,19 @@ class StockMovementRepository(Protocol):
         ...
 
     def has_nonzero_balance(self, warehouse_id: UUID) -> bool: ...
+
+
+@dataclass(frozen=True)
+class AdjustmentFilters:
+    date_from: date | None = None
+    date_to: date | None = None
+    product_id: UUID | None = None
+    warehouse_id: UUID | None = None
+
+
+class StockAdjustmentRepository(Protocol):
+    def get(self, adjustment_id: UUID) -> StockAdjustment | None: ...
+
+    def insert(self, adjustment: StockAdjustment) -> StockAdjustment: ...
+
+    def list(self, filters: AdjustmentFilters) -> Sequence[StockAdjustment]: ...

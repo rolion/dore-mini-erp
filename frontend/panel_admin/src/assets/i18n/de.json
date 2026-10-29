@@ -104,6 +104,7 @@
         "STOCK": "Bestand",
         "CONFIGURATION": "Lager und Einheiten",
         "MOVEMENTS": "Bewegungen",
+        "ADJUSTMENTS": "Bestandskorrekturen",
         "SETTINGS": "Einstellungen"
       }
     },

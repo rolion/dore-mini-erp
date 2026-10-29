@@ -153,7 +153,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 ## 6. Menú y layout
 
-- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`), «Existencias» (`/inventory/stock`, con detalle `/inventory/stock/:productId/:warehouseId`, PB-INV-005), «Movimientos» (`/inventory/movements`, solo lectura, PB-INV-004) y «Ajustes» (`/inventory/settings`, PB-CFG-001).
+- Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`), «Existencias» (`/inventory/stock`, con detalle `/inventory/stock/:productId/:warehouseId`, PB-INV-005), «Movimientos» (`/inventory/movements`, solo lectura, PB-INV-004), «Ajustes de existencias» (`/inventory/adjustments`, lista, `/new` y detalle de solo lectura, PB-INV-006) y «Ajustes» (`/inventory/settings`, PB-CFG-001). El formulario de ajuste sigue el patrón «formulario con revisión y confirmación de envío único» con la variante de reconfirmación: si el saldo cambió (409 `balance_changed`) vuelve al resumen con el saldo nuevo y la acción de confirmar queda explícita.
 
 - Sidebar: logo según estado (expandido/contraído), avatar con iniciales, nombre y apellido, nombre de la empresa. Ítems principales: Dashboard, Catálogo (Producto), Cliente, Pedidos, Gastos (Gastos, Categorías), Reportes (textos en `assets/i18n/es.json`).
 - Header: solo el menú de usuario (nombre, empresa y cerrar sesión). Sin búsqueda, mensajes ni notificaciones.

@@ -109,6 +109,9 @@
                     <td data-label="Acciones">
                       <button type="button" class="btn btn-light btn-sm" data-testid="open-movements"
                         (click)="openMovements(row)">Movimientos</button>
+                      <a class="btn btn-light btn-sm ms-1" data-testid="adjust-stock"
+                        [routerLink]="['/pocketbiz/inventory/adjustments/new']"
+                        [queryParams]="{ warehouse_id: row.warehouseId, product_id: row.productId }">Ajustar</a>
                     </td>
                   </tr>
                   }

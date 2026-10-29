@@ -1,0 +1,147 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Nuevo ajuste</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Inventario</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/adjustments">Ajustes de existencias</a></li>
+    <li class="breadcrumb-item">Nuevo ajuste</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ step === 'edit' ? 'Nuevo ajuste' : 'Revisar y confirmar ajuste' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (step === 'edit') {
+            <form class="register-form m-4" [formGroup]="form" (ngSubmit)="review()" novalidate>
+              @if (conflictMessage) {
+              <div class="alert alert-warning text-dark" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
+              }
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="adjustment-warehouse">Almacén <span class="text-danger">*</span></label>
+                  <select id="adjustment-warehouse" class="form-select form-control" formControlName="warehouseId">
+                    <option value="" disabled>Seleccione un almacén</option>
+                    @for (warehouse of warehouses; track warehouse.id) {
+                    <option [value]="warehouse.id">{{ warehouse.name }}</option>
+                    }
+                  </select>
+                  @if (message('warehouseId')) {
+                  <small class="form-text text-danger" data-testid="warehouse-error">{{ message('warehouseId') }}</small>
+                  }
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="adjustment-product">Producto <span class="text-danger">*</span></label>
+                  <ng-select labelForId="adjustment-product" [items]="productOptions" bindLabel="name"
+                    [typeahead]="productInput$" [loading]="productsLoading" [compareWith]="sameProduct"
+                    formControlName="product" placeholder="Buscar producto" notFoundText="Sin resultados"
+                    typeToSearchText="Escriba para buscar" [clearable]="false" appendTo="body">
+                  </ng-select>
+                  @if (message('productId')) {
+                  <small class="form-text text-danger" data-testid="product-error">{{ message('productId') }}</small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-4">
+                  <label for="adjustment-balance">Saldo actual</label>
+                  <input id="adjustment-balance" type="text" class="form-control" readonly
+                    [value]="balanceLoading ? 'Cargando…' : (balance ? balanceText + ' ' + unitLabel : '—')"
+                    data-testid="balance">
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="adjustment-counted">Cantidad contada <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input id="adjustment-counted" type="text" inputmode="decimal" class="form-control"
+                      formControlName="countedQuantity" placeholder="0">
+                    <span class="input-group-text" data-testid="unit">{{ unitLabel || 'unidad' }}</span>
+                  </div>
+                  @if (countedMessage) {
+                  <small class="form-text text-danger" data-testid="counted-error">{{ countedMessage }}</small>
+                  }
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="adjustment-reason">Motivo <span class="text-danger">*</span></label>
+                  <input id="adjustment-reason" type="text" class="form-control" formControlName="reason"
+                    placeholder="Conteo físico, rotura, merma…" [attr.maxlength]="reasonMaxLength">
+                  @if (reasonMessage) {
+                  <small class="form-text text-danger" data-testid="reason-error">{{ reasonMessage }}</small>
+                  }
+                </div>
+              </div>
+
+              @if (noDifference) {
+              <div class="alert alert-info text-dark" role="status" data-testid="no-difference">
+                Sin diferencia: no se registrará ningún movimiento.
+              </div>
+              } @else if (difference !== null) {
+              <p data-testid="difference-preview">
+                Diferencia: <strong>{{ differenceText }} {{ unitLabel }}</strong> ·
+                {{ direction === 'in' ? 'Entrada de ajuste' : 'Salida de ajuste' }}
+              </p>
+              }
+
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary" data-testid="review" [disabled]="!canReview">
+                    Revisar y confirmar
+                  </button>
+                  <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/adjustments">Cancelar</a>
+                </div>
+              </div>
+            </form>
+            } @else {
+            <div class="m-4" data-testid="adjustment-summary">
+              @if (balanceNotice) {
+              <div class="alert alert-warning text-dark" role="alert" data-testid="balance-notice">{{ balanceNotice }}</div>
+              }
+              @if (conflictMessage) {
+              <div class="alert alert-warning text-dark" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
+              }
+              <dl class="row">
+                <dt class="col-sm-3">Producto</dt>
+                <dd class="col-sm-9" data-testid="summary-product">{{ product?.name }}</dd>
+                <dt class="col-sm-3">Almacén</dt>
+                <dd class="col-sm-9" data-testid="summary-warehouse">{{ warehouseName }}</dd>
+                <dt class="col-sm-3">Saldo del sistema</dt>
+                <dd class="col-sm-9" data-testid="summary-balance">{{ balanceText }} {{ unitLabel }}</dd>
+                <dt class="col-sm-3">Cantidad contada</dt>
+                <dd class="col-sm-9" data-testid="summary-counted">{{ countedText }} {{ unitLabel }}</dd>
+                <dt class="col-sm-3">Diferencia</dt>
+                <dd class="col-sm-9" data-testid="summary-difference">
+                  @if (noDifference) {
+                  Sin diferencia
+                  } @else {
+                  {{ differenceText }} {{ unitLabel }} · {{ direction === 'in' ? 'Entrada de ajuste' : 'Salida de ajuste' }}
+                  }
+                </dd>
+                <dt class="col-sm-3">Motivo</dt>
+                <dd class="col-sm-9">{{ form.controls.reason.value.trim() }}</dd>
+              </dl>
+              @if (noDifference) {
+              <div class="alert alert-info text-dark" role="status" data-testid="no-difference">
+                Sin diferencia: no se registrará ningún movimiento.
+              </div>
+              }
+              <p class="text-muted">Un ajuste confirmado no se puede editar; solo podrá revertirse.</p>
+              <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="saving || !canConfirm"
+                (click)="confirm()">
+                {{ saving ? 'Registrando…' : 'Confirmar ajuste' }}
+              </button>
+              <button type="button" class="btn btn-light ms-2" data-testid="back-to-edit" [disabled]="saving"
+                (click)="backToEdit()">Volver a editar</button>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

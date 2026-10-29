@@ -63,3 +63,33 @@ class StockMovementModel(models.Model):
                 fields=['reverses_id'], condition=models.Q(reverses_id__isnull=False),
                 name='inv_mov_one_reversal_uniq'),
         ]
+
+
+class StockAdjustmentModel(models.Model):
+    """Ajuste confirmado: solo se inserta. Su estado sale del movimiento vinculado."""
+
+    id = models.UUIDField(primary_key=True, editable=False)  # clave de idempotencia del cliente
+    company_id = models.UUIDField()
+    reference = models.CharField(max_length=20)
+    product_id = models.UUIDField()
+    warehouse = models.ForeignKey(WarehouseModel, on_delete=models.PROTECT, related_name='+')
+    system_quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    counted_quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    difference = models.DecimalField(max_digits=16, decimal_places=4)
+    reason = models.CharField(max_length=200)
+    user_id = models.UUIDField(null=True, blank=True)
+    user_name = models.CharField(max_length=200, blank=True, default='')
+    movement = models.OneToOneField(StockMovementModel, on_delete=models.PROTECT, related_name='adjustment')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'inventory_stock_adjustment'
+        ordering = ['-created_at', 'id']
+        indexes = [
+            models.Index(fields=['company_id', 'created_at'], name='inv_adj_company_date_idx'),
+            models.Index(fields=['company_id', 'product_id', 'warehouse'], name='inv_adj_company_prod_wh_idx'),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=~models.Q(difference=0), name='inv_adj_difference_nonzero'),
+            models.UniqueConstraint(fields=['company_id', 'reference'], name='inv_adj_reference_uniq'),
+        ]

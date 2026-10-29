@@ -150,6 +150,34 @@ export const APP_ROUTE: Route[] = [
                     import('./features/inventory/inventory.routes').then((m) => m.INVENTORY_MOVEMENTS_ROUTE),
             },
             {
+                path: 'inventory/adjustments',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/adjustment-list/adjustment-list.component').then(
+                        (m) => m.AdjustmentListComponent
+                    ),
+            },
+            {
+                path: 'inventory/adjustments/new',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/adjustment-form/adjustment-form.component').then(
+                        (m) => m.AdjustmentFormComponent
+                    ),
+            },
+            {
+                path: 'inventory/adjustments/:id',
+                canActivate: [moduleGuard],
+                data: { module: 'inventory' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/adjustment-detail/adjustment-detail.component').then(
+                        (m) => m.AdjustmentDetailComponent
+                    ),
+            },
+            {
                 path: 'inventory/settings',
                 canActivate: [moduleGuard],
                 canDeactivate: [unsavedChangesGuard],

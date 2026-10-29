@@ -12,6 +12,8 @@ export class InventoryApiError extends Error {
     readonly lineErrors: FieldErrors[] = [],
     /** Productos de una apertura que ya tienen movimientos en el almacén (409 `stock_history_exists`). */
     readonly historyProductIds: string[] = [],
+    /** Saldo vigente de un ajuste cuyo saldo cambió desde el conteo (409 `balance_changed`). */
+    readonly currentBalance: string | null = null,
   ) {
     super(message);
     this.name = 'InventoryApiError';
@@ -35,6 +37,9 @@ const FIELD_MAP: Record<string, string> = {
   reference: 'reference',
   product_id: 'productId',
   quantity: 'quantity',
+  counted_quantity: 'countedQuantity',
+  expected_system_quantity: 'expectedSystemQuantity',
+  reason: 'reason',
   non_field_errors: 'nonFieldErrors',
 };
 
@@ -83,7 +88,9 @@ export function toApiError(status: number, body: unknown): InventoryApiError {
   }
   if (status === 409) {
     const history = code === 'stock_history_exists' ? toHistoryProductIds(body) : [];
-    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code, [], history);
+    const balance = (body as { current_balance?: unknown } | null)?.current_balance;
+    const current = code === 'balance_changed' && typeof balance === 'string' ? balance : null;
+    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code, [], history, current);
   }
   return new InventoryApiError(GENERIC_ERROR_MESSAGE, status);
 }
