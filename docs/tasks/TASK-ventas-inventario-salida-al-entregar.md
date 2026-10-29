@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-ventas-inventario-salida-al-entregar
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/27
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
