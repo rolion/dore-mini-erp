@@ -129,5 +129,10 @@ Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 - No realizado: `npm audit` (sin lockfile en el worktree) y revisión visual en navegador.
 - Hallazgos abiertos: [REV-01](../reviews/REV-2026-10-29-ventas-inventario-salida-al-entregar-01.md) (Low: `delivery-preview` puede sembrar el almacén predeterminado), [REV-02](../reviews/REV-2026-10-29-ventas-inventario-salida-al-entregar-02.md) (Medium, cobertura: falta prueba de dos empresas con nombres homónimos, AC-15).
 
+## Seguimiento tras el Quality Gate (2026-10-29)
+- **Conflictos**: `origin/main` fusionado en la rama; único conflicto en `test_boundaries.py` (se conservan `purchases` de main y `sales → inventory`).
+- **REV-01 resuelto**: el preview ya no escribe (`list_active_warehouses` no siembra el almacén predeterminado). **REV-02 resuelto**: prueba de dos empresas homónimas.
+- **PostgreSQL**: `.env` copiado del checkout principal sin abrirlo (ignorado por git) y `.venv` del checkout principal. `ConcurrentDeliveryTests` (AC-02 y AC-04 concurrentes): **2/2 OK** (la prueba tenía un error propio —`client` chocaba con el del `TestCase`— corregido). Suite completa en PostgreSQL: 933 pruebas; solo fallan 2 por corrida, distintas cada vez (`test_repository` orden/ida y vuelta, `modularity` historial): son intermitentes por empates de marca de tiempo y también fallan de forma intermitente en `origin/main` limpio (4 corridas, 3 con fallas). `makemigrations --check`: sin cambios. Frontend tras la fusión: Karma 315/315, `ng lint` OK.
+
 ## Publicación
 PR listo para aprobación humana (nunca se mergea automáticamente). Cambio sensible: **arquitectura** (nueva dependencia `sales → inventory`, ADR `ADR-ventas-inventario-salida-al-entregar-orquestacion-y-contrato`) y escritura transaccional sobre el libro de inventario; sin migraciones. Antes del merge, correr en PostgreSQL `modules.sales.tests.test_delivery_inventory.ConcurrentDeliveryTests` y la suite completa, y hacer la revisión visual con la guía `docs/tests/MANUAL-ventas-inventario-salida-al-entregar.md`.

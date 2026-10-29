@@ -148,10 +148,9 @@ def allow_negative_stock(company_id: UUID) -> bool:
 
 
 def list_active_warehouses(company_id: UUID) -> list[WarehouseInfo]:
-    """Almacenes activos de la empresa por nombre; siembra el predeterminado si la empresa aún no tiene ninguno."""
-    repository = DjangoWarehouseRepository(company_id)
-    repository.ensure_default()
-    return [WarehouseInfo(w.id, w.name, w.is_default) for w in repository.list(active=True)]
+    """Almacenes activos de la empresa por nombre. Solo lectura: no siembra el predeterminado."""
+    return [WarehouseInfo(w.id, w.name, w.is_default)
+            for w in DjangoWarehouseRepository(company_id).list(active=True)]
 
 
 def get_stock_products(company_id: UUID, product_ids) -> dict[UUID, StockProduct]:

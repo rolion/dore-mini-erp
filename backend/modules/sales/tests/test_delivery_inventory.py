@@ -278,6 +278,13 @@ class DeliveryPreviewTests(DeliveryTestCase):
         set_enabled(self.company, DEFAULT_ENABLED_KEYS)
         self.assertEqual(self.preview(order)['inventory_enabled'], False)
 
+    def test_preview_writes_nothing_even_without_warehouses(self):  # AC-11, REV-01
+        order = self.order((self.bags, 1))
+        WarehouseModel.objects.filter(company_id=self.company.id).delete()
+        body = self.preview(order)
+        self.assertEqual((body['warehouses'], body['warehouse_id']), ([], None))
+        self.assertEqual(WarehouseModel.objects.filter(company_id=self.company.id).count(), 0)
+
     def test_preview_requires_a_ready_order_of_the_company(self):  # AC-11, AC-15
         draft = self.order((self.bags, 1), ready=False)
         self.assertEqual(self.preview(draft, expected_status=409)['code'], 'invalid_transition')
@@ -290,6 +297,40 @@ class DeliveryPreviewTests(DeliveryTestCase):
         self.assertEqual(response.status_code, 404)
         response = other_client.post(url(ready, 'deliver/'), {'warehouse_id': str(self.warehouse.id)}, format='json')
         self.assertEqual(response.status_code, 404)
+
+
+class TwoCompaniesTests(DeliveryTestCase):
+    def test_same_names_in_two_companies_never_mix_stock_or_movements(self):  # AC-15, REV-02
+        other_company = make_company('Empresa B')
+        other_client = APIClient()
+        authenticate(other_client, make_admin(other_company, username='luis'))
+        set_enabled(other_company, ENABLED)
+        other_warehouse = make_warehouse(other_company, 'Central')  # mismo nombre que el de la empresa A
+        other_bags = make_product(other_company, 'Bolsas', allows_fractions=False, abbreviation='u')
+        inventory.record_movement(
+            other_company.id, product_id=other_bags.id, warehouse_id=other_warehouse.id, kind='in',
+            quantity=Decimal('5'), user_id=None, user_name='luis')
+        self.stock(self.bags, 5)
+        mine = self.order((self.bags, 4))
+        theirs = self.order((other_bags, 4), client=other_client)
+        self.deliver(mine)
+        # La entrega de A no tocó el saldo de B ni sus movimientos.
+        self.assertEqual(inventory.get_balance(other_company.id, other_bags.id, other_warehouse.id), Decimal('5'))
+        self.assertEqual(StockMovementModel.objects.filter(company_id=other_company.id, kind='out').count(), 0)
+        self.assertEqual(self.balance(self.bags), Decimal('1'))
+        # La empresa B entrega la suya con su propio almacén homónimo: su saldo baja y el de A no cambia.
+        response = other_client.post(
+            url(theirs, 'deliver/'), {'warehouse_id': str(other_warehouse.id)}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(inventory.get_balance(other_company.id, other_bags.id, other_warehouse.id), Decimal('1'))
+        self.assertEqual(self.balance(self.bags), Decimal('1'))
+        self.assertEqual(self.exits().count(), 1)
+        # Cada empresa ve solo sus movimientos y el almacén de la otra no se acepta aunque se llame igual.
+        other_rows = other_client.get('/api/stock-movements/', {'kind': 'out'}).json()['results']
+        self.assertEqual([r['source']['id'] for r in other_rows], [theirs['id']])
+        another = self.order((self.bags, 1))
+        response = self.client.post(url(another, 'deliver/'), {'warehouse_id': str(other_warehouse.id)}, format='json')
+        self.assertEqual(response.status_code, 400, response.content)
 
 
 class MovementsByOrderTests(DeliveryTestCase):
@@ -324,13 +365,13 @@ class ConcurrentDeliveryTests(TransactionTestCase):
             self.company.id, product_id=self.bags.id, warehouse_id=self.warehouse.id, kind='in',
             quantity=Decimal('5'), user_id=None, user_name='ana')
 
-    def client(self):
+    def api_client(self):
         client = APIClient()
         authenticate(client, self.user)
         return client
 
     def ready_order(self, quantity):
-        client = self.client()
+        client = self.api_client()
         order = client.post('/api/orders/', {'sales_channel': 'WHATSAPP'}, format='json').json()
         client.post(url(order, 'items/'), {'product_id': str(self.bags.id), 'quantity': quantity}, format='json')
         client.post(url(order, 'prepare/'), {}, format='json')
@@ -342,7 +383,7 @@ class ConcurrentDeliveryTests(TransactionTestCase):
         statuses: list[int] = []
 
         def target(order):
-            client = self.client()
+            client = self.api_client()
             try:
                 barrier.wait()
                 response = client.post(url(order, 'deliver/'), {'warehouse_id': str(self.warehouse.id)},

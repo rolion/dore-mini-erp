@@ -1,6 +1,6 @@
 # REV-2026-10-29-ventas-inventario-salida-al-entregar-02: Falta prueba de aislamiento entre empresas con mismos nombres (AC-15)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-ventas-inventario-salida-al-entregar.md (v1)
@@ -19,3 +19,6 @@ Una prueba que entregue pedidos en dos empresas con productos y almacenes homoni
 
 ## Evidence
 `grep -n "make_company\|Empresa" backend/modules/sales/tests/test_delivery_inventory.py` -> solo `Empresa A` (base), `Empresa B` (almacen ajeno x2), `Empresa C` (otro usuario / concurrencia); ningun test crea productos o almacenes con el mismo nombre en dos empresas ni compara saldos entre ellas.
+
+## Resolution
+Prueba nueva `TwoCompaniesTests.test_same_names_in_two_companies_never_mix_stock_or_movements`: dos empresas con producto y almacén homónimos; la entrega de A no toca el saldo ni los movimientos de B, B entrega la suya con su almacén, cada una ve solo sus movimientos y el almacén homónimo de la otra se rechaza (400).

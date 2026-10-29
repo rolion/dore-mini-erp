@@ -1,6 +1,6 @@
 # REV-2026-10-29-ventas-inventario-salida-al-entregar-01: La vista previa (GET) puede escribir al sembrar el almacén predeterminado
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-ventas-inventario-salida-al-entregar.md (v1)
@@ -26,3 +26,6 @@ def list_active_warehouses(company_id):
     return [... repository.list(active=True)]
 ```
 Invocado desde `PreviewOrderDelivery.execute` (`sales/application/delivery.py`) vía `self.stock.active_warehouses()`. Verificado por lectura de código; no se ejecutó un caso dedicado.
+
+## Resolution
+`inventory.services.list_active_warehouses` ya no llama a `ensure_default()`: el preview (y la entrega) solo leen. Una empresa sin almacenes ve «No hay un almacén activo…» y el almacén predeterminado se siembra al abrir Inventario → Almacenes, como siempre. Prueba nueva: `DeliveryPreviewTests.test_preview_writes_nothing_even_without_warehouses`.
