@@ -22,20 +22,48 @@
               </div>
               <div class="header-buttons-left">
                 <div class="d-flex align-items-center gap-2 ms-3">
-                  <label for="stock-warehouse" class="visually-hidden">Almacén</label>
-                  <select id="stock-warehouse" class="form-select form-control w-auto" [formControl]="warehouseControl"
-                    aria-label="Filtrar por almacén">
-                    <option value="">Todos los almacenes</option>
-                    @for (warehouse of warehouses; track warehouse.id) {
-                    <option [value]="warehouse.id">{{ warehouse.name }}</option>
-                    }
-                  </select>
                   <a class="btn btn-primary" [routerLink]="openingLink()" data-testid="register-opening">
                     Registrar apertura
                   </a>
                 </div>
               </div>
             </div>
+            <form class="row g-2 m-2 align-items-end" [formGroup]="filterForm" aria-label="Filtros de existencias">
+              <div class="col-md-3">
+                <label for="stock-search">Producto</label>
+                <input id="stock-search" type="search" class="form-control" formControlName="search"
+                  placeholder="Buscar por nombre" aria-label="Buscar producto por nombre" />
+              </div>
+              <div class="col-md-3">
+                <label for="stock-warehouse">Almacén</label>
+                <select id="stock-warehouse" class="form-select form-control" formControlName="warehouseId">
+                  <option value="">Todos los almacenes activos</option>
+                  @for (warehouse of warehouses; track warehouse.id) {
+                  <option [value]="warehouse.id">{{ warehouse.name }}@if (!warehouse.active) { (inactivo) }</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label for="stock-active">Estado del producto</label>
+                <select id="stock-active" class="form-select form-control" formControlName="active">
+                  @for (option of activeOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="stock-balance">Saldo</label>
+                <select id="stock-balance" class="form-select form-control" formControlName="balance">
+                  @for (option of balanceOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-1">
+                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
+                  (click)="clearFilters()">Limpiar</button>
+              </div>
+            </form>
             @if (loading && !rows.length) {
             <p class="m-4">Cargando…</p>
             } @else if (errorMessage) {
@@ -45,7 +73,8 @@
             </div>
             } @else if (!rows.length) {
             <p class="m-4" data-testid="stock-empty">
-              Aún no hay existencias registradas. Usa «Registrar apertura» para cargar el stock inicial.
+              No hay productos que coincidan con los filtros. Aquí aparecen los productos que controlan stock; usa
+              «Registrar apertura» para cargar el stock inicial.
             </p>
             } @else {
             <div class="table-responsive">
@@ -55,17 +84,27 @@
                   <tr>
                     <th scope="col">Producto</th>
                     <th scope="col">Almacén</th>
-                    <th scope="col">Existencia</th>
+                    <th scope="col">Unidad base</th>
+                    <th scope="col" class="text-end">Existencia</th>
                     <th scope="col">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (row of rows; track row.productId + row.warehouseId) {
                   <tr>
-                    <td data-label="Producto"><strong>{{ row.productName || 'Producto no disponible' }}</strong></td>
+                    <td data-label="Producto">
+                      <a class="fw-bold" [routerLink]="detailLink(row)" data-testid="detail-link">{{ row.productName }}</a>
+                      @if (!row.productActive) {
+                      <div class="badge-outline col-grey d-inline-block ms-1">Inactivo</div>
+                      }
+                    </td>
                     <td data-label="Almacén">{{ row.warehouseName }}</td>
-                    <td data-label="Existencia">
-                      {{ display(row.quantity) }} {{ row.unit?.abbreviation }}
+                    <td data-label="Unidad base">{{ row.unit?.abbreviation ?? '—' }}</td>
+                    <td data-label="Existencia" class="text-end" data-testid="quantity">
+                      <span [class.text-danger]="row.balanceState === 'negative'">{{ display(row.quantity) }}</span>
+                      @if (row.balanceState === 'negative') {
+                      <div class="badge-outline col-red d-inline-block ms-1" data-testid="negative-badge">Negativo</div>
+                      }
                     </td>
                     <td data-label="Acciones">
                       <button type="button" class="btn btn-light btn-sm" data-testid="open-movements"

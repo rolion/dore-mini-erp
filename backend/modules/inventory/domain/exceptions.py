@@ -105,3 +105,11 @@ class BalanceChanged(AdjustmentConflict):
 class AdjustmentIdReused(AdjustmentConflict):
     def __init__(self):
         super().__init__('adjustment_id_reused', 'Esa clave de ajuste ya se usó con otros datos.')
+
+
+class StockPositionNotFound(Exception):
+    """El producto no existe, es de otra empresa o no controla stock."""
+
+    def __init__(self, product_id: UUID):
+        super().__init__(f'Producto {product_id} sin control de stock o inexistente.')
+        self.product_id = product_id

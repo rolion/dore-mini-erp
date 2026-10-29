@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 import re
 from decimal import Decimal, InvalidOperation
+from enum import Enum
 from uuid import UUID
 
 from .exceptions import OpeningValidationError
@@ -40,6 +41,19 @@ def validate_quantity(value: object) -> Decimal:
     if quantity > QUANTITY_MAX:
         raise _quantity_error(f'La cantidad no puede superar {QUANTITY_MAX}.')
     return quantity
+
+
+class BalanceState(str, Enum):
+    ZERO = 'zero'
+    POSITIVE = 'positive'
+    NEGATIVE = 'negative'
+
+
+def balance_state(quantity: Decimal) -> BalanceState:
+    """Estado derivado del saldo; nunca se almacena."""
+    if quantity < 0:
+        return BalanceState.NEGATIVE
+    return BalanceState.POSITIVE if quantity > 0 else BalanceState.ZERO
 
 
 def check_quantity_for_unit(quantity: Decimal, allows_fractions: bool) -> str | None:

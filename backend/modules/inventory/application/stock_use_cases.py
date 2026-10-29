@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal
 from datetime import date, datetime, time
 from uuid import UUID
 
@@ -8,17 +9,25 @@ from modules.inventory.domain.exceptions import (
     OpeningIdReused,
     OpeningValidationError,
     StockHistoryExists,
+    StockPositionNotFound,
     WarehouseNotFound,
 )
 from modules.inventory.domain.movement import MovementKind, MovementSource, StockMovement
 from modules.inventory.domain.repositories import StockMovementRepository, WarehouseRepository
-from modules.inventory.domain.stock import SOURCE_TYPE, StockBalanceEntry, StockOpening, check_quantity_for_unit
+from modules.inventory.domain.stock import (
+    SOURCE_TYPE,
+    BalanceState,
+    StockOpening,
+    balance_state,
+    check_quantity_for_unit,
+)
 
-from .movement_ports import ProductDirectory
+from .movement_ports import ProductDirectory, ProductInfo
 from .movement_use_cases import RecordMovement
 
 OPENING_REASON = 'Apertura de existencias'
 NOON = time(12, 0)
+ZERO = Decimal('0')
 
 
 @dataclass(frozen=True)
@@ -124,11 +133,85 @@ class CheckOpeningHistory:
         return [product_id for product_id in product_ids if product_id in found]
 
 
+@dataclass(frozen=True)
+class StockPosition:
+    """Existencia de un producto en un almacén, calculada del libro (un par sin movimientos vale 0)."""
+
+    product: ProductInfo
+    warehouse_id: UUID
+    warehouse_name: str
+    warehouse_active: bool
+    quantity: Decimal
+    has_history: bool = False
+
+    @property
+    def state(self) -> BalanceState:
+        return balance_state(self.quantity)
+
+    @property
+    def can_register_opening(self) -> bool:
+        return self.product.active and self.warehouse_active and not self.has_history
+
+
+@dataclass(frozen=True)
+class StockQuery:
+    search: str | None = None
+    warehouse_id: UUID | None = None
+    #: `True` solo activos, `False` solo inactivos, `None` todos.
+    active: bool | None = True
+    #: Estado de saldo pedido; `nonzero` = positivo o negativo.
+    balance: str | None = None
+
+
 class ListStock:
-    """Existencias por producto y almacén, calculadas del libro."""
+    """Existencias: todos los productos con control de stock por cada almacén, ordenadas por producto y almacén."""
 
-    def __init__(self, stock: StockMovementRepository):
+    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory):
         self.stock = stock
+        self.warehouses = warehouses
+        self.products = products
 
-    def execute(self, warehouse_id: UUID | None = None) -> list[StockBalanceEntry]:
-        return self.stock.list_balances(warehouse_id)
+    def execute(self, query: StockQuery) -> list[StockPosition]:
+        if query.warehouse_id is not None:
+            warehouse = self.warehouses.get(query.warehouse_id)
+            if warehouse is None:
+                raise WarehouseNotFound(query.warehouse_id)
+            warehouses = [warehouse]
+        else:  # sin almacén elegido solo los activos: los inactivos no pueden tener saldo
+            warehouses = list(self.warehouses.list(active=True))
+        products = self.products.list_stock_products(query.search, query.active)
+        balances = {(e.product_id, e.warehouse_id): e.quantity for e in self.stock.list_balances()}
+        positions = [
+            StockPosition(product, warehouse.id, warehouse.name, warehouse.active,
+                          balances.get((product.id, warehouse.id), ZERO))
+            for product in products for warehouse in sorted(warehouses, key=lambda w: (w.name.lower(), str(w.id)))
+        ]
+        return [p for p in positions if _matches_balance(p, query.balance)]
+
+
+def _matches_balance(position: StockPosition, wanted: str | None) -> bool:
+    if wanted is None:
+        return True
+    if wanted == 'nonzero':
+        return position.state is not BalanceState.ZERO
+    return position.state.value == wanted
+
+
+class GetStockPosition:
+    """Detalle de un par producto/almacén; el producto puede estar inactivo."""
+
+    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory):
+        self.stock = stock
+        self.warehouses = warehouses
+        self.products = products
+
+    def execute(self, product_id: UUID, warehouse_id: UUID) -> StockPosition:
+        product = self.products.get_products([product_id]).get(product_id)
+        if product is None or not product.tracks_stock:
+            raise StockPositionNotFound(product_id)
+        warehouse = self.warehouses.get(warehouse_id)
+        if warehouse is None:
+            raise WarehouseNotFound(warehouse_id)
+        return StockPosition(
+            product, warehouse.id, warehouse.name, warehouse.active, self.stock.balance(product_id, warehouse_id),
+            has_history=bool(self.stock.products_with_history(warehouse_id, [product_id])))

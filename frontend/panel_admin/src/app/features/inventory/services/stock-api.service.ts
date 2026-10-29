@@ -11,6 +11,8 @@ import {
   StockBalance,
   StockBalanceDto,
   StockListParams,
+  StockPosition,
+  StockPositionDto,
   StockUnit,
   StockUnitDto,
 } from '../models/stock';
@@ -23,11 +25,18 @@ export function toBalance(dto: StockBalanceDto): StockBalance {
   return {
     productId: dto.product_id,
     productName: dto.product_name,
+    productActive: dto.product_active,
     warehouseId: dto.warehouse_id,
     warehouseName: dto.warehouse_name,
+    warehouseActive: dto.warehouse_active,
     quantity: dto.quantity,
+    balanceState: dto.balance_state,
     unit: toUnit(dto.unit),
   };
+}
+
+export function toPosition(dto: StockPositionDto): StockPosition {
+  return { ...toBalance(dto), hasHistory: dto.has_history, canRegisterOpening: dto.can_register_opening };
 }
 
 function toResult(dto: OpeningResultDto): OpeningResult {
@@ -54,11 +63,22 @@ export class StockApiService {
 
   list(params: StockListParams = {}): Observable<Page<StockBalance>> {
     let httpParams = new HttpParams();
+    if (params.search) httpParams = httpParams.set('search', params.search);
+    if (params.active) httpParams = httpParams.set('active', params.active);
+    if (params.balance) httpParams = httpParams.set('balance', params.balance);
     if (params.warehouseId) httpParams = httpParams.set('warehouse_id', params.warehouseId);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.pageSize !== undefined) httpParams = httpParams.set('page_size', String(params.pageSize));
     return this.http.get<Page<StockBalanceDto>>(this.baseUrl, { params: httpParams }).pipe(
       map((page): Page<StockBalance> => ({ ...page, results: page.results.map(toBalance) })),
+      catchError((err: HttpErrorResponse) => throwError(() => toApiError(err.status, err.error))),
+    );
+  }
+
+  /** Existencia de un producto en un almacén (saldo 0 si no tiene movimientos). */
+  get(productId: string, warehouseId: string): Observable<StockPosition> {
+    return this.http.get<StockPositionDto>(`${this.baseUrl}${productId}/${warehouseId}/`).pipe(
+      map(toPosition),
       catchError((err: HttpErrorResponse) => throwError(() => toApiError(err.status, err.error))),
     );
   }

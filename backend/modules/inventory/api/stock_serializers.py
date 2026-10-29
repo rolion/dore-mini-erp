@@ -52,8 +52,16 @@ class UnitSerializer(serializers.Serializer):
 
 class StockBalanceSerializer(serializers.Serializer):
     product_id = serializers.UUIDField()
-    product_name = serializers.CharField(allow_null=True)
+    product_name = serializers.CharField()
+    product_active = serializers.BooleanField()
     warehouse_id = serializers.UUIDField()
     warehouse_name = serializers.CharField()
+    warehouse_active = serializers.BooleanField()
     quantity = serializers.DecimalField(max_digits=16, decimal_places=4)
+    balance_state = serializers.ChoiceField(choices=['zero', 'positive', 'negative'])
     unit = UnitSerializer(allow_null=True)
+
+
+class StockPositionSerializer(StockBalanceSerializer):
+    has_history = serializers.BooleanField()
+    can_register_opening = serializers.BooleanField()

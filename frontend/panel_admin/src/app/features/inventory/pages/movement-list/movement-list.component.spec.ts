@@ -3,6 +3,7 @@ import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Page } from '../../../../shared/models/page';
+import { Product } from '../../../products/models/product';
 import { ProductsApiService } from '../../../products/services/products-api.service';
 import { InventoryApiError } from '../../models/api-error';
 import { MovementListParams, StockMovement } from '../../models/movement';
@@ -30,11 +31,15 @@ describe('MovementListComponent', () => {
     source: null,
   });
 
+  let productsApi: jasmine.SpyObj<ProductsApiService>;
+
   async function setup(rows: StockMovement[] = [exit, entry], query: Record<string, string> = {}): Promise<void> {
     api = jasmine.createSpyObj<MovementsApiService>('MovementsApiService', ['list']);
     api.list.and.returnValue(of(page(rows)));
-    const products = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['list']);
+    const products = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['list', 'get']);
     products.list.and.returnValue(of(page([])));
+    products.get.and.returnValue(of({ id: 'p-9', name: 'Producto inactivo', active: false } as Product));
+    productsApi = products;
     const warehouses = jasmine.createSpyObj<WarehousesApiService>('WarehousesApiService', ['list']);
     warehouses.list.and.returnValue(of(page([makeWarehouse()])));
     await TestBed.configureTestingModule({
@@ -70,6 +75,12 @@ describe('MovementListComponent', () => {
     expect(api.list).toHaveBeenCalledTimes(1);
     expect(lastParams()).toEqual(jasmine.objectContaining({ productId: 'p-1', warehouseId: 'w-1' }));
     expect(component.filterForm.getRawValue().productId).toBe('p-1');
+  });
+
+  it('keeps the prefiltered product selectable even when it is not in the first 100 (REV-09, AC-06)', async () => {
+    await setup([entry], { product_id: 'p-9' });
+    expect(productsApi.get).toHaveBeenCalledWith('p-9');
+    expect(component.products.map((product) => product.id)).toContain('p-9');
   });
 
   it('shows entries and exits in separate columns without edit or delete actions (AC-04, AC-08)', async () => {

@@ -10,14 +10,44 @@ export interface StockUnit {
 /** Existencia de un producto en un almacén. `quantity` viaja como texto decimal ("10.000") para no perder precisión. */
 export interface StockBalance {
   productId: string;
-  productName: string | null;
+  productName: string;
+  productActive: boolean;
   warehouseId: string;
   warehouseName: string;
+  warehouseActive: boolean;
   quantity: string;
+  /** Derivado por el servidor del signo del saldo. */
+  balanceState: BalanceState;
   unit: StockUnit | null;
 }
 
+/** Existencia de un producto en un almacén, con lo necesario para decidir las acciones del detalle. */
+export interface StockPosition extends StockBalance {
+  hasHistory: boolean;
+  canRegisterOpening: boolean;
+}
+
+export type BalanceState = 'zero' | 'positive' | 'negative';
+export type BalanceFilter = '' | 'zero' | 'nonzero' | 'negative';
+export type ActiveFilter = 'true' | 'false' | 'all';
+
+export const BALANCE_FILTER_OPTIONS: readonly { value: BalanceFilter; label: string }[] = [
+  { value: '', label: 'Todos los saldos' },
+  { value: 'zero', label: 'Con saldo cero' },
+  { value: 'nonzero', label: 'Con saldo distinto de cero' },
+  { value: 'negative', label: 'Con saldo negativo' },
+];
+
+export const ACTIVE_FILTER_OPTIONS: readonly { value: ActiveFilter; label: string }[] = [
+  { value: 'true', label: 'Activos' },
+  { value: 'false', label: 'Inactivos' },
+  { value: 'all', label: 'Todos' },
+];
+
 export interface StockListParams {
+  search?: string;
+  active?: ActiveFilter;
+  balance?: BalanceFilter;
   warehouseId?: string;
   page?: number;
   pageSize?: number;
@@ -62,11 +92,19 @@ export interface StockUnitDto {
 
 export interface StockBalanceDto {
   product_id: string;
-  product_name: string | null;
+  product_name: string;
+  product_active: boolean;
   warehouse_id: string;
   warehouse_name: string;
+  warehouse_active: boolean;
   quantity: string;
+  balance_state: BalanceState;
   unit: StockUnitDto | null;
+}
+
+export interface StockPositionDto extends StockBalanceDto {
+  has_history: boolean;
+  can_register_opening: boolean;
 }
 
 export interface OpeningResultDto {
