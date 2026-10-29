@@ -106,7 +106,22 @@ Ver `docs/adr/ADR-gestionar-proveedores-modulo-proveedores.md`.
 **Documentación actualizada:** `docs/architecture/ddd.md`, `docs/design/design-system.md`, `docs/producto/modulos-implementados.md`.
 
 ## Review
-_Pendiente_
+
+**Quality Gate (ciclo 1, subagente aislado, 2026-10-29): PASS CONDICIONADO — no se declara PASS.** Sin hallazgos Critical/High/Medium; faltan verificaciones aplicables sin ejecutar.
+
+Ejecutado con evidencia:
+- Backend sin BD: `test_domain`, `test_application`, `test_boundaries`, `test_guards` → 33 tests OK; `makemigrations --check` → sin cambios; `bandit -r modules/purchases` → sin issues; `py_compile` OK de los tests con BD.
+- Frontend: `npm run lint` OK; `ng build` OK; Karma completo (sin `app.component.spec.ts`): 764 tests, 693 OK y 71 fallos, todos «should create» de componentes demo de la plantilla (`NG0201`), preexistentes y fuera del diff; `features/purchases` + sidebar + customers: 121/121 OK; cobertura de sentencias 82,63 %.
+- Revisión de límites DDD, aislamiento por `company_id`, alcance (sin scope creep) y checklist visual por lectura de código: conforme.
+
+**No ejecutado (bloquea el PASS):**
+1. Tests con base de datos: `modules.purchases.tests.test_api`, `test_services`, `modules.modularity.tests.test_enforcement` y la regresión de `manage.py test` completo (sin `DATABASE_URL` real: `password authentication failed`). Cubren AC-01..AC-08 a nivel API/fachada.
+2. `npm audit` (no hay lockfile).
+3. Revisión visual en navegador (requiere backend con BD): no verificada.
+
+Hallazgos (Low, sin REV): validación de correo duplicada entre dominio y formulario (deuda declarada, mismo patrón que clientes).
+
+Siguiente paso: correr `python manage.py test` (settings de test, PostgreSQL real) y, si pasa, repetir `delivery-publish` para pasar a PUBLISH.
 
 ## Publicación
 _Pendiente_
