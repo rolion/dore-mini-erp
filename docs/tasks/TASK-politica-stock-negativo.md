@@ -1,6 +1,6 @@
 # TASK-politica-stock-negativo: Aplicar la política de stock negativo (PB-INV-007)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-politica-stock-negativo
@@ -13,6 +13,8 @@
 | 2026-10-29 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Nuevo ajuste por empresa, nueva dependencia inventory → modularity y contrato 409 | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY tras respuestas del usuario (ver Plan) | delivery-start |
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-29 | REVIEW → ENGINEERING → REVIEW | Quality Gate ciclo 1 FAIL (AC-04 sin PostgreSQL); se añadió prueba de lock | delivery-publish |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 2 PASS con reservas; a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -113,5 +115,7 @@ Ver `docs/adr/ADR-politica-stock-negativo-lectura-y-aplicacion-de-la-politica.md
 | REV-03 («Desactivado» vs «Bloqueado») | Low | DESIGN | Abierto: desviación documentada |
 | REV-04 (diálogo propio en vez de reutilizar `ModuleConfirmDialogComponent`) | Low | IMPLEMENTATION | Aclarado: el diálogo de módulos está acoplado a `AppModule`/`ModulesService`; se creó uno genérico y reutilizable (desviación 5) |
 
+**Ciclo 2 — Quality Gate: PASS con reservas** (2026-10-29, subagente aislado, con PostgreSQL). Backend: suite completa `Ran 839 tests ... OK`; concurrencia y política (21 tests) OK en 3 corridas; bandit sin hallazgos en inventory/modularity. Frontend: 663 OK / 71 fallos idénticos a `main`; `ng lint` y `ng build` OK. Visual: interruptor y diálogo verificados a ≈1440 px y ≈390 px en tema claro; oscuro solo forzado por atributo. REV-01 y REV-04 cerrados; REV-02 y REV-03 siguen abiertos (Low, aceptados). **No realizado:** `npm audit` (sin lockfile), ruff/flake8/mypy (no disponibles), modo oscuro nativo de la plantilla.
+
 ## Publicación
-_Pendiente_
+PASS con reservas; PR #26 listo para aprobación humana (no se mergea desde el flujo). Cambio sensible: nueva dependencia `inventory → modularity` respaldada por ADR-politica-stock-negativo-lectura-y-aplicacion-de-la-politica.

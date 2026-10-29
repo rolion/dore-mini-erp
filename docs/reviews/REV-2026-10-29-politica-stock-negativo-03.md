@@ -19,3 +19,6 @@ Se muestra 'Valor predeterminado: Desactivado'; el historial sí usa Bloqueado/P
 
 ## Evidence
 `module-settings.component.ts` (`defaultLabel`, rama boolean) y TASK > Desviaciones #1.
+
+## Revisión (Quality Gate ciclo 2)
+Sigue abierto: desviación 1 documentada en el TASK; Low, no bloquea. Visto en pantalla: «Valor predeterminado: Desactivado».

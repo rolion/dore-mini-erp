@@ -19,3 +19,6 @@ Contrato API-02 verificado solo por unit sobre la clase de excepción (`status_c
 
 ## Evidence
 `backend/modules/inventory/tests/test_negative_policy.py::InsufficientStockBodyTests` (únicos tests del cuerpo); `git diff` muestra los `except InsufficientStock` en `api/adjustment_views.py` y `api/stock_views.py` sin test que los alcance.
+
+## Revisión (Quality Gate ciclo 2)
+Sigue abierto: consecuencia aceptada del alcance (Ventas/reversión llegan después); Low, no bloquea.

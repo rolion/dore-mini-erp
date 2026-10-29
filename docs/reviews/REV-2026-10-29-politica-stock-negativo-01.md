@@ -1,6 +1,6 @@
 # REV-2026-10-29-politica-stock-negativo-01: AC-04/INV-03 sin prueba nueva ni verificación: la atomicidad de la política no está demostrada
 
-**Status:** Partially addressed (falta correr concurrencia en PostgreSQL)
+**Status:** Closed
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-politica-stock-negativo.md (v1)
@@ -19,3 +19,6 @@ La lectura dentro del bloqueo es correcta por inspección de código (`movement_
 
 ## Evidence
 SQLite (sin bloqueo de filas): `ConcurrencyTests.test_simultaneous_exits_cannot_overdraw_the_balance` FALLA tanto en la rama como en origin/main (mismo conjunto de fallos de concurrencia en ambas) => no verificable sin PostgreSQL, no es PASS. Grep: ningún test referencia el orden política/bloqueo.
+
+## Resolución (Quality Gate ciclo 2)
+Con PostgreSQL real: suite completa 839 tests OK; `ConcurrencyTests` + `test_negative_policy` (21 tests) pasan 3/3 corridas sin flakiness; `PolicyReadInsideLockTests` protege la lectura de la política dentro de `locked()` (INV-03/AC-04/EDGE-05).

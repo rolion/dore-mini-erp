@@ -1,6 +1,6 @@
 # REV-2026-10-29-politica-stock-negativo-04: UI-02: se creó SettingConfirmDialogComponent en vez de reutilizar ModuleConfirmDialogComponent y la desviación no está documentada
 
-**Status:** Clarified (ver TASK, desviación 5)
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-politica-stock-negativo.md (v1)
@@ -19,3 +19,6 @@ Componente nuevo `features/settings/components/setting-confirm-dialog/*` con tí
 
 ## Evidence
 `git diff origin/main...HEAD --stat` lista los 3 archivos nuevos; TASK > Desviaciones enumera 4 puntos y ninguno lo menciona.
+
+## Resolución (Quality Gate ciclo 2)
+Desviación 5 registrada en el TASK (`SettingConfirmDialogComponent` genérico; el diálogo de módulos está acoplado a `ModulesService`). Verificado visualmente: el diálogo muestra título, mensaje y botones del DDR en 390 px y 1440 px.
