@@ -1,6 +1,6 @@
 # TASK-ventas-inventario-salida-al-entregar: Conectar Ventas con Inventario y generar salidas al entregar (PB-INT-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-ventas-inventario-salida-al-entregar
@@ -13,6 +13,7 @@
 | 2026-10-29 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Nueva dependencia sales → inventory, contrato API nuevo y atomicidad entre módulos | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas; ver Plan) | delivery-start |
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS con reservas (sin Critical/High); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -120,7 +121,13 @@ Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 **Verificación propia (no es el Quality Gate).** Backend con el venv del checkout principal y SQLite temporal (no hay PostgreSQL ni `.env` en este worktree): `manage.py test` 887 pruebas; fallan 14 solo por depender de PostgreSQL (orden/bloqueo/concurrencia/mayúsculas, preexistentes) y las 2 pruebas de concurrencia nuevas (`ConcurrentDeliveryTests`) se saltan sin PostgreSQL — **deben correrse en PostgreSQL**. Pruebas nuevas verdes: `test_delivery_inventory` (22), `test_delivery_application`, `test_outputs`. Frontend: Karma acotado a `features/sales` + `features/inventory` 315/315 OK, `ng lint` OK, `ng build` OK. Revisión visual en navegador: no verificada.
 
 ## Review
-_Pendiente_
+**Quality Gate ciclo 1 (subagente aislado): PASS con reservas.** Sin hallazgos Critical/High.
+- Backend `manage.py test` (SQLite, sin PostgreSQL): 887 pruebas, solo fallan pruebas preexistentes que dependen de PostgreSQL (concurrencia, bloqueo, orden, mayúsculas); `makemigrations --check` sin cambios; `bandit` sin hallazgos en `sales` e `inventory`.
+- Frontend: Karma acotado a ventas + inventario 315/315, `ng lint` y `ng build` OK.
+- Límites DDD, atomicidad (pedido → almacén, excepción antes del `save`), idempotencia, aislamiento por empresa y ausencia de N+1 verificados por lectura de código.
+- AC-01..AC-15 cubiertos; AC-02 y AC-04 en concurrencia real **no ejecutados** (exigen PostgreSQL).
+- No realizado: `npm audit` (sin lockfile en el worktree) y revisión visual en navegador.
+- Hallazgos abiertos: [REV-01](../reviews/REV-2026-10-29-ventas-inventario-salida-al-entregar-01.md) (Low: `delivery-preview` puede sembrar el almacén predeterminado), [REV-02](../reviews/REV-2026-10-29-ventas-inventario-salida-al-entregar-02.md) (Medium, cobertura: falta prueba de dos empresas con nombres homónimos, AC-15).
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana (nunca se mergea automáticamente). Cambio sensible: **arquitectura** (nueva dependencia `sales → inventory`, ADR `ADR-ventas-inventario-salida-al-entregar-orquestacion-y-contrato`) y escritura transaccional sobre el libro de inventario; sin migraciones. Antes del merge, correr en PostgreSQL `modules.sales.tests.test_delivery_inventory.ConcurrentDeliveryTests` y la suite completa, y hacer la revisión visual con la guía `docs/tests/MANUAL-ventas-inventario-salida-al-entregar.md`.
