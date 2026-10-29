@@ -2,8 +2,10 @@ import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/co
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { HasUnsavedChanges } from '../../../../core/guard/unsaved-changes.guard';
+import { SettingConfirmDialogComponent } from '../../components/setting-confirm-dialog/setting-confirm-dialog.component';
 import { SettingsHistoryComponent } from '../../components/settings-history/settings-history.component';
 import { Setting, SettingsApiError } from '../../models/setting';
 import { SettingsApiService } from '../../services/settings-api.service';
@@ -17,6 +19,17 @@ export const MODULE_TITLES: Record<string, string> = {
 export const SAVED_MESSAGE = 'Configuración guardada';
 export const NO_SETTINGS_MESSAGE =
   'Este módulo aún no tiene ajustes configurables. Cuando haya reglas disponibles aparecerán aquí.';
+
+/** Ajustes que piden confirmar una explicación antes de guardarse activados. */
+export const ENABLE_CONFIRMATIONS: Record<string, { title: string; message: string; confirmLabel: string }> = {
+  'inventory.allow_negative_stock': {
+    title: 'Permitir stock negativo',
+    message:
+      'Podrán existir saldos negativos: las salidas se registrarán aunque no haya existencias suficientes. ' +
+      'Podrá volver a bloquearlo, pero los saldos negativos ya creados no se corrigen solos.',
+    confirmLabel: 'Permitir',
+  },
+};
 
 type Tab = 'general' | 'history';
 
@@ -45,6 +58,7 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
   private saved: Record<string, string> = {};
   private api = inject(SettingsApiService);
   private toastr = inject(ToastrService);
+  private modal = inject(NgbModal);
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
@@ -115,7 +129,19 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
     if (setting.kind === 'percent') {
       return `${setting.default} %`;
     }
+    if (setting.kind === 'boolean') {
+      return setting.default === 'true' ? 'Activado' : 'Desactivado';
+    }
     return setting.choices.find((c) => c.value === setting.default)?.label ?? 'Sin predeterminado';
+  }
+
+  isOn(setting: Setting): boolean {
+    return this.control(setting).value === 'true';
+  }
+
+  toggle(setting: Setting, event: Event): void {
+    this.control(setting).setValue((event.target as HTMLInputElement).checked ? 'true' : 'false');
+    this.control(setting).markAsDirty();
   }
 
   restoreDefault(setting: Setting): void {
@@ -133,9 +159,6 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
     if (!this.dirty || this.saving) {
       return;
     }
-    this.saving = true;
-    this.serverErrors = {};
-    this.formError = '';
     const changed: Record<string, string> = {};
     for (const setting of this.settings) {
       const value = this.control(setting).value;
@@ -143,6 +166,27 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
         changed[setting.key] = value;
       }
     }
+    const confirmation = Object.entries(changed)
+      .filter(([, value]) => value === 'true')
+      .map(([key]) => ENABLE_CONFIRMATIONS[key])
+      .find((entry) => !!entry);
+    if (!confirmation) {
+      this.send(changed);
+      return;
+    }
+    // Cancelar el diálogo no guarda ni toca el formulario.
+    const ref = this.modal.open(SettingConfirmDialogComponent);
+    Object.assign(ref.componentInstance, confirmation);
+    ref.result.then(
+      () => this.send(changed),
+      () => undefined,
+    );
+  }
+
+  private send(changed: Record<string, string>): void {
+    this.saving = true;
+    this.serverErrors = {};
+    this.formError = '';
     this.api
       .save(this.module, changed)
       .pipe(takeUntilDestroyed(this.destroyRef))

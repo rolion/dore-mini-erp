@@ -28,3 +28,14 @@ def get_sales_settings(company_id: UUID) -> SalesSettings:
         default_payment_method=value('sales.default_payment_method'),
         max_discount_percent=Decimal(value('sales.max_discount_percent')),
     )
+
+
+@dataclass(frozen=True)
+class InventorySettings:
+    allow_negative_stock: bool
+
+
+def get_inventory_settings(company_id: UUID) -> InventorySettings:
+    stored = DjangoCompanySettingRepository(company_id).values()
+    key = 'inventory.allow_negative_stock'
+    return InventorySettings(allow_negative_stock=stored.get(key, domain.BY_SETTING_KEY[key].default) == 'true')

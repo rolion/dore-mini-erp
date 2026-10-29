@@ -26,7 +26,7 @@ from modules.inventory.domain.repositories import (
 )
 from modules.inventory.domain.stock import check_quantity_for_unit
 
-from .movement_ports import ProductDirectory
+from .movement_ports import InventoryPolicy, ProductDirectory
 from .movement_use_cases import RecordMovement
 
 
@@ -38,12 +38,12 @@ class ConfirmAdjustment:
     """
 
     def __init__(self, stock: StockMovementRepository, adjustments: StockAdjustmentRepository,
-                 warehouses: WarehouseRepository, products: ProductDirectory):
+                 warehouses: WarehouseRepository, products: ProductDirectory, policy: InventoryPolicy | None = None):
         self.stock = stock
         self.adjustments = adjustments
         self.warehouses = warehouses
         self.products = products
-        self.recorder = RecordMovement(stock, warehouses, products)
+        self.recorder = RecordMovement(stock, warehouses, products, policy)
 
     def execute(self, *, adjustment_id: UUID, product_id: UUID, warehouse_id: UUID, counted_quantity: object,
                 expected_system_quantity: object, reason: object, user_id: UUID | None,

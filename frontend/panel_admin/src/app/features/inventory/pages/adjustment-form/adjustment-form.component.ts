@@ -14,7 +14,8 @@ import {
   directionOf,
   signedDifference,
 } from '../../models/adjustment';
-import { FieldErrors, InventoryApiError } from '../../models/api-error';
+import { FieldErrors, InsufficientStockInfo, InventoryApiError } from '../../models/api-error';
+import { InsufficientStockAlertComponent } from '../../components/insufficient-stock-alert/insufficient-stock-alert.component';
 import { MovementKind } from '../../models/movement';
 import { OpeningProduct, formatQuantity, newUuid, quantityError } from '../../models/stock';
 import { Warehouse } from '../../models/warehouse';
@@ -32,7 +33,7 @@ export const NO_DIFFERENCE_MESSAGE = 'Sin diferencia: no se registrará ningún 
 @Component({
   selector: 'app-adjustment-form',
   templateUrl: './adjustment-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent],
+  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, InsufficientStockAlertComponent],
 })
 export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
   readonly reasonMaxLength = ADJUSTMENT_REASON_MAX_LENGTH;
@@ -57,6 +58,8 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
   /** Aviso de un saldo que cambió desde el conteo (409 `balance_changed`). */
   balanceNotice = '';
   conflictMessage = '';
+  /** Salida rechazada por saldo insuficiente (409 `insufficient_stock`); el formulario conserva sus datos. */
+  insufficientStock: InsufficientStockInfo | null = null;
   serverErrors: Partial<Record<AdjustmentField, string>> = {};
   /** Una vez confirmado no hay nada que perder al salir. */
   completed = false;
@@ -81,6 +84,7 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.serverErrors = {};
       this.conflictMessage = '';
+      this.insufficientStock = null;
     });
   }
 
@@ -210,6 +214,7 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
     }
     this.saving = true;
     this.balanceNotice = '';
+    this.insufficientStock = null;
     this.api
       .confirm(this.buildInput())
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -253,6 +258,10 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
       return;
     }
     this.step = 'edit';
+    if (err.status === 409 && err.code === 'insufficient_stock' && err.insufficientStock) {
+      this.insufficientStock = err.insufficientStock;
+      return;
+    }
     if (err.status === 400) {
       this.serverErrors = this.toFieldMessages(err.fieldErrors);
       if (!Object.keys(this.serverErrors).length) {

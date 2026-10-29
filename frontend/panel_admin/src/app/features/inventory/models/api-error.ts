@@ -1,6 +1,15 @@
 /** Errores de validación por campo devueltos por el servidor (clave = campo del formulario). */
 export type FieldErrors = Partial<Record<string, string[]>>;
 
+/** Datos de un 409 `insufficient_stock`: qué se pidió y cuánto hay (cantidades como texto decimal). */
+export interface InsufficientStockInfo {
+  productName: string;
+  warehouseName: string;
+  requested: string;
+  available: string;
+  unit: string;
+}
+
 export class InventoryApiError extends Error {
   constructor(
     message: string,
@@ -14,6 +23,8 @@ export class InventoryApiError extends Error {
     readonly historyProductIds: string[] = [],
     /** Saldo vigente de un ajuste cuyo saldo cambió desde el conteo (409 `balance_changed`). */
     readonly currentBalance: string | null = null,
+    /** Detalle de una salida rechazada por saldo insuficiente (409 `insufficient_stock`). */
+    readonly insufficientStock: InsufficientStockInfo | null = null,
   ) {
     super(message);
     this.name = 'InventoryApiError';
@@ -72,6 +83,27 @@ function toHistoryProductIds(body: unknown): string[] {
     .filter((id): id is string => typeof id === 'string');
 }
 
+function toInsufficientStock(body: unknown): InsufficientStockInfo | null {
+  const record = (body && typeof body === 'object' ? body : {}) as {
+    product?: { name?: unknown };
+    warehouse?: { name?: unknown };
+    unit?: { abbreviation?: unknown } | null;
+    requested?: unknown;
+    available?: unknown;
+  };
+  if (typeof record.requested !== 'string' || typeof record.available !== 'string') {
+    return null;
+  }
+  const text = (value: unknown): string => (typeof value === 'string' ? value : '');
+  return {
+    productName: text(record.product?.name),
+    warehouseName: text(record.warehouse?.name),
+    requested: record.requested,
+    available: record.available,
+    unit: text(record.unit?.abbreviation),
+  };
+}
+
 /** Traduce una respuesta HTTP de error a un error con mensaje listo para mostrar. */
 export function toApiError(status: number, body: unknown): InventoryApiError {
   if (status === 0) {
@@ -90,7 +122,8 @@ export function toApiError(status: number, body: unknown): InventoryApiError {
     const history = code === 'stock_history_exists' ? toHistoryProductIds(body) : [];
     const balance = (body as { current_balance?: unknown } | null)?.current_balance;
     const current = code === 'balance_changed' && typeof balance === 'string' ? balance : null;
-    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code, [], history, current);
+    const stock = code === 'insufficient_stock' ? toInsufficientStock(body) : null;
+    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code, [], history, current, stock);
   }
   return new InventoryApiError(GENERIC_ERROR_MESSAGE, status);
 }

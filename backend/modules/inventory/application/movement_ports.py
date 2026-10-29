@@ -22,3 +22,16 @@ class ProductDirectory(Protocol):
     def list_stock_products(self, search: str | None = None, active: bool | None = None) -> list[ProductInfo]:
         """Productos que controlan stock, por nombre."""
         ...
+
+
+class InventoryPolicy(Protocol):
+    """Política de inventario de la empresa."""
+
+    def allow_negative_stock(self) -> bool: ...
+
+
+class BlockNegativeStock:
+    """Política por defecto: nunca se permite stock negativo."""
+
+    def allow_negative_stock(self) -> bool:
+        return False

@@ -18,15 +18,17 @@ from modules.inventory.domain.exceptions import (
     AdjustmentNotFound,
     AdjustmentValidationError,
     BalanceChanged,
+    InsufficientStock,
     WarehouseNotFound,
 )
 from modules.inventory.domain.repositories import AdjustmentFilters
-from modules.inventory.infrastructure.adapters import CatalogProductDirectory
+from modules.inventory.infrastructure.adapters import CatalogProductDirectory, ModularityInventoryPolicy
 from modules.inventory.infrastructure.django.adjustment_repository import DjangoStockAdjustmentRepository
 from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 from shared.tenancy import company_id_from
 
+from .insufficient_stock import InsufficientStockConflict
 from .movement_filters import parse_movement_filters
 from .pagination import WarehousePagination
 from .stock_serializers import RawQuantityField
@@ -127,7 +129,8 @@ class StockAdjustmentListCreateView(APIView):
         company_id = company_id_from(request)
         use_case = ConfirmAdjustment(
             DjangoStockMovementRepository(company_id), DjangoStockAdjustmentRepository(company_id),
-            DjangoWarehouseRepository(company_id), CatalogProductDirectory(company_id))
+            DjangoWarehouseRepository(company_id), CatalogProductDirectory(company_id),
+            ModularityInventoryPolicy(company_id))
         user = request.user
         try:
             adjustment, created = use_case.execute(
@@ -139,6 +142,8 @@ class StockAdjustmentListCreateView(APIView):
             raise ValidationError(exc.errors) from exc
         except WarehouseNotFound as exc:
             raise NotFound(WAREHOUSE_NOT_FOUND) from exc
+        except InsufficientStock as exc:
+            raise InsufficientStockConflict(exc, company_id) from exc
         except BalanceChanged as exc:
             raise BalanceChangedConflict(exc) from exc
         except AdjustmentConflict as exc:

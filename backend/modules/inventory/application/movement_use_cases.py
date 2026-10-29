@@ -5,7 +5,12 @@ from uuid import UUID
 
 from django.utils import timezone
 
-from modules.inventory.domain.exceptions import MovementConflict, MovementNotFound, MovementValidationError
+from modules.inventory.domain.exceptions import (
+    InsufficientStock,
+    MovementConflict,
+    MovementNotFound,
+    MovementValidationError,
+)
 from modules.inventory.domain.movement import MovementKind, MovementSource, StockMovement
 from modules.inventory.domain.repositories import (
     MovementFilters,
@@ -13,22 +18,22 @@ from modules.inventory.domain.repositories import (
     WarehouseRepository,
 )
 
-from .movement_ports import ProductDirectory
+from .movement_ports import BlockNegativeStock, InventoryPolicy, ProductDirectory
 
 
 class RecordMovement:
     """Registra una entrada o salida. Repetir la misma operación de origen devuelve el movimiento ya registrado."""
 
     def __init__(self, repository: StockMovementRepository, warehouses: WarehouseRepository,
-                 products: ProductDirectory):
+                 products: ProductDirectory, policy: InventoryPolicy | None = None):
         self.repository = repository
         self.warehouses = warehouses
         self.products = products
+        self.policy = policy or BlockNegativeStock()
 
     def execute(self, *, product_id: UUID, warehouse_id: UUID, kind: MovementKind | str, quantity: object,
                 user_id: UUID | None, user_name: str, reference: str = '', reason: str = '',
-                source: MovementSource | None = None, occurred_at: datetime | None = None,
-                allow_negative: bool = False) -> tuple[StockMovement, bool]:
+                source: MovementSource | None = None, occurred_at: datetime | None = None) -> tuple[StockMovement, bool]:
         movement = StockMovement.record(
             product_id=product_id, warehouse_id=warehouse_id, kind=MovementKind(kind), quantity=quantity,
             occurred_at=occurred_at or timezone.now(), user_id=user_id, user_name=user_name,
@@ -55,22 +60,26 @@ class RecordMovement:
                         'source_operation_mismatch',
                         'Esa operación de origen ya registró un movimiento con otra cantidad.')
                 return existing, False
-            self._check_balance(movement, allow_negative)
+            self._check_balance(movement)
             return self.repository.insert(movement), True
 
-    def _check_balance(self, movement: StockMovement, allow_negative: bool) -> None:
-        if movement.kind is MovementKind.OUT and not allow_negative:
+    def _check_balance(self, movement: StockMovement) -> None:
+        # La política se lee ya bajo el bloqueo del almacén: la misma sección crítica valida y registra.
+        if movement.kind is MovementKind.OUT and not self.policy.allow_negative_stock():
             available = self.repository.balance(movement.product_id, movement.warehouse_id)
             if available < movement.quantity:
-                raise MovementConflict('insufficient_stock', 'No hay saldo suficiente para registrar la salida.')
+                raise InsufficientStock(
+                    'No hay saldo suficiente para registrar la salida.', product_id=movement.product_id,
+                    warehouse_id=movement.warehouse_id, requested=movement.quantity, available=available)
 
 
 class ReverseMovement:
-    def __init__(self, repository: StockMovementRepository):
+    def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None):
         self.repository = repository
+        self.policy = policy or BlockNegativeStock()
 
-    def execute(self, movement_id: UUID, *, user_id: UUID | None, user_name: str, reason: str = '',
-                allow_negative: bool = False) -> StockMovement:
+    def execute(self, movement_id: UUID, *, user_id: UUID | None, user_name: str,
+                reason: str = '') -> StockMovement:
         original = self.repository.get(movement_id)
         if original is None:
             raise MovementNotFound(movement_id)
@@ -78,10 +87,12 @@ class ReverseMovement:
             original = self.repository.get(movement_id)  # estado vigente, ya bajo el bloqueo
             counter = original.reverse(
                 occurred_at=timezone.now(), user_id=user_id, user_name=user_name, reason=reason)
-            if counter.kind is MovementKind.OUT and not allow_negative:
-                if self.repository.balance(counter.product_id, counter.warehouse_id) < counter.quantity:
-                    raise MovementConflict(
-                        'insufficient_stock', 'No hay saldo suficiente para revertir esta entrada.')
+            if counter.kind is MovementKind.OUT and not self.policy.allow_negative_stock():
+                available = self.repository.balance(counter.product_id, counter.warehouse_id)
+                if available < counter.quantity:
+                    raise InsufficientStock(
+                        'No hay saldo suficiente para revertir esta entrada.', product_id=counter.product_id,
+                        warehouse_id=counter.warehouse_id, requested=counter.quantity, available=available)
             created = self.repository.insert(counter)
             self.repository.mark_reversed(original.id)
             return created

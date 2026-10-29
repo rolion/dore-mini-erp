@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 import { ModuleSettings, Setting, SettingHistoryPage, SettingsApiError } from '../../models/setting';
@@ -29,6 +30,22 @@ const SALES: ModuleSettings = {
   settings: [
     setting({ key: CHANNEL, label: 'Canal de venta predeterminado', kind: 'choice', value: '', default: '', choices: [{ value: 'FAIR', label: 'Feria' }] }),
     setting({}),
+  ],
+};
+const NEGATIVE = 'inventory.allow_negative_stock';
+const INVENTORY: ModuleSettings = {
+  module: 'inventory',
+  settings: [
+    setting({
+      key: NEGATIVE,
+      label: 'Permitir stock negativo',
+      description: 'Afecta entregas, ajustes y reversión de recepciones.',
+      kind: 'boolean',
+      value: 'false',
+      default: 'false',
+      minimum: null,
+      maximum: null,
+    }),
   ],
 };
 const EMPTY_HISTORY: SettingHistoryPage = { count: 0, results: [], settings: [] };
@@ -174,5 +191,65 @@ describe('ModuleSettingsComponent', () => {
     fixture.detectChanges();
     expect(el().textContent).toContain('Falló.');
     expect(button('Reintentar')).not.toBeNull();
+  });
+
+  describe('boolean setting «Permitir stock negativo» (AC-05)', () => {
+    let modal: jasmine.SpyObj<NgbModal>;
+    const toggle = () => el().querySelector('input[type="checkbox"]') as HTMLInputElement;
+    const flipOn = () => {
+      toggle().checked = true;
+      toggle().dispatchEvent(new Event('change'));
+      fixture.detectChanges();
+    };
+    const dialog = (result: Promise<unknown>) => {
+      modal.open.and.returnValue({ componentInstance: {}, result } as never);
+    };
+
+    beforeEach(() => {
+      modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
+      TestBed.overrideProvider(NgbModal, { useValue: modal });
+    });
+
+    it('renders a switch off by default with description and default value', () => {
+      setup('inventory', INVENTORY);
+      expect(toggle().checked).toBeFalse();
+      expect(toggle().getAttribute('role')).toBe('switch');
+      expect(el().textContent).toContain('Permitir stock negativo');
+      expect(el().textContent).toContain('Afecta entregas, ajustes y reversión de recepciones.');
+      expect(el().textContent).toContain('Valor predeterminado: Desactivado');
+    });
+
+    it('asks for confirmation before saving it enabled and saves on accept', async () => {
+      setup('inventory', INVENTORY);
+      dialog(Promise.resolve(true));
+      api.save.and.returnValue(of({ module: 'inventory', settings: [{ ...INVENTORY.settings[0], value: 'true' }] }));
+      flipOn();
+      component.save();
+      await fixture.whenStable();
+      expect(modal.open).toHaveBeenCalledTimes(1);
+      expect(api.save).toHaveBeenCalledOnceWith('inventory', { [NEGATIVE]: 'true' });
+      expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE);
+    });
+
+    it('does not save and keeps the switch when the confirmation is cancelled', async () => {
+      setup('inventory', INVENTORY);
+      dialog(Promise.reject(new Error('dismissed')));
+      flipOn();
+      component.save();
+      await fixture.whenStable();
+      expect(api.save).not.toHaveBeenCalled();
+      expect(component.control(INVENTORY.settings[0]).value).toBe('true');
+      expect(component.hasUnsavedChanges()).toBeTrue();
+    });
+
+    it('saves it disabled without asking', () => {
+      setup('inventory', { module: 'inventory', settings: [{ ...INVENTORY.settings[0], value: 'true' }] });
+      api.save.and.returnValue(of(INVENTORY));
+      toggle().checked = false;
+      toggle().dispatchEvent(new Event('change'));
+      component.save();
+      expect(modal.open).not.toHaveBeenCalled();
+      expect(api.save).toHaveBeenCalledOnceWith('inventory', { [NEGATIVE]: 'false' });
+    });
   });
 });

@@ -15,18 +15,18 @@ class CatalogTests(SimpleTestCase):
             self.assertTrue(definition.key.startswith(f'{definition.module}.'))
             self.assertFalse(module_domain.definition(definition.module).is_base)
             self.assertTrue(definition.label and definition.description)
-            self.assertIn(definition.kind, (s.CHOICE, s.PERCENT))  # sin tipos secretos (INV-08)
+            self.assertIn(definition.kind, (s.CHOICE, s.PERCENT, s.BOOLEAN))  # sin tipos secretos (INV-08)
             # el valor inicial documentado es válido según su propia regla
             self.assertEqual(s.validate(definition, definition.default), definition.default)
 
     def test_documented_initial_values(self):  # AC-02
         initial = {d.key: d.default for d in s.SETTINGS_CATALOG}
         self.assertEqual(initial, {'sales.default_sales_channel': '', 'sales.default_payment_method': '',
-                                   'sales.max_discount_percent': '100.00'})
+                                   'sales.max_discount_percent': '100.00',
+                                   'inventory.allow_negative_stock': 'false'})
 
     def test_modules_without_settings(self):
         self.assertEqual(s.settings_for('purchases'), [])
-        self.assertEqual(s.settings_for('inventory'), [])
 
     def test_choices_match_sales_enums(self):
         self.assertEqual([v for v, _ in s.SALES_CHANNELS], [c.value for c in SalesChannel])

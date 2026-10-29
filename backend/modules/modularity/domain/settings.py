@@ -1,13 +1,15 @@
 """Catálogo de ajustes por módulo y su validación (puro: sin Django).
 
 Cada ajuste tiene un valor inicial documentado; sin valor guardado por la empresa rige ese valor. Solo existen
-tipos `choice` y `percent`: no hay lugar para secretos ni credenciales.
+tipos `choice`, `percent` y `boolean`: no hay lugar para secretos ni credenciales.
 """
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 CHOICE = 'choice'
 PERCENT = 'percent'
+BOOLEAN = 'boolean'
+BOOLEAN_LABELS = {'true': 'Permitido', 'false': 'Bloqueado'}
 PERCENT_STEP = Decimal('0.01')
 PERCENT_MIN = Decimal('0')
 PERCENT_MAX = Decimal('100')
@@ -50,6 +52,12 @@ SETTINGS_CATALOG: tuple[SettingDefinition, ...] = (
         'Porcentaje máximo del subtotal que admite el descuento de un pedido. Aplica a los descuentos que se '
         'registren desde ahora; los pedidos existentes no cambian.',
         PERCENT, '100.00', minimum=PERCENT_MIN, maximum=PERCENT_MAX),
+    SettingDefinition(
+        'inventory.allow_negative_stock', 'inventory', 'Permitir stock negativo',
+        'Si está desactivado (recomendado), no se confirman entregas, ajustes ni reversiones de recepciones que '
+        'dejen la existencia de un producto por debajo de cero. Si lo activa, esas operaciones se permiten y pueden '
+        'existir saldos negativos.',
+        BOOLEAN, 'false'),
 )
 BY_SETTING_KEY: dict[str, SettingDefinition] = {s.key: s for s in SETTINGS_CATALOG}
 
@@ -74,6 +82,8 @@ def validate(definition: SettingDefinition, raw: object) -> str:
     """Devuelve el valor normalizado (texto) o lanza `ValueError` con el mensaje para el campo."""
     if definition.kind == CHOICE:
         return _validate_choice(definition, raw)
+    if definition.kind == BOOLEAN:
+        return _validate_boolean(raw)
     return _validate_percent(definition, raw)
 
 
@@ -83,6 +93,14 @@ def _validate_choice(definition: SettingDefinition, raw: object) -> str:
     if not isinstance(raw, str) or raw not in dict(definition.choices):
         raise ValueError('El valor elegido no es válido.')
     return raw
+
+
+def _validate_boolean(raw: object) -> str:
+    if isinstance(raw, bool):
+        return 'true' if raw else 'false'
+    if isinstance(raw, str) and raw in BOOLEAN_LABELS:
+        return raw
+    raise ValueError('Elija una opción válida.')
 
 
 def _validate_percent(definition: SettingDefinition, raw: object) -> str:
@@ -124,4 +142,6 @@ def display(definition: SettingDefinition, stored: str) -> str:
     """Texto presentable del valor guardado (el que se escribe en el historial)."""
     if definition.kind == CHOICE:
         return dict(definition.choices).get(stored, EMPTY_LABEL if stored == '' else stored)
+    if definition.kind == BOOLEAN:
+        return BOOLEAN_LABELS.get(stored, stored)
     return f'{stored} %'

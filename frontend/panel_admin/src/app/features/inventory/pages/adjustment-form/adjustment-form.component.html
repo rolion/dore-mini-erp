@@ -21,6 +21,9 @@
           <div class="card-body">
             @if (step === 'edit') {
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="review()" novalidate>
+              @if (insufficientStock) {
+              <app-insufficient-stock-alert [info]="insufficientStock" />
+              }
               @if (conflictMessage) {
               <div class="alert alert-warning text-dark" role="alert" data-testid="adjustment-conflict">{{ conflictMessage }}</div>
               }

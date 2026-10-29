@@ -52,6 +52,15 @@
                   <option [value]="choice.value">{{ choice.label }}</option>
                   }
                 </select>
+                } @else if (setting.kind === 'boolean') {
+                <div class="form-check form-switch">
+                  <input type="checkbox" role="switch" class="form-check-input" [id]="'setting-' + setting.key"
+                    [checked]="isOn(setting)" (change)="toggle(setting, $event)"
+                    [attr.aria-describedby]="'help-' + setting.key">
+                  <label class="form-check-label" [for]="'setting-' + setting.key">
+                    {{ isOn(setting) ? 'Activado' : 'Desactivado' }}
+                  </label>
+                </div>
                 } @else {
                 <div class="input-group">
                   <input type="text" class="form-control" inputmode="decimal" autocomplete="off"
