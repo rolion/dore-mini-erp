@@ -1,0 +1,95 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar proveedor' : 'Nuevo proveedor' }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Compras</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases/suppliers">Proveedores</a></li>
+    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ isEdit ? 'Editar proveedor' : 'Nuevo proveedor' }}</h4>
+          </div>
+          <div class="card-body">
+            <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+              <div class="row">
+                <div class="form-group col-md-8">
+                  <label for="supplier-name">Nombre <span class="text-danger">*</span></label>
+                  <input id="supplier-name" type="text" class="form-control" placeholder="Nombre del proveedor"
+                    formControlName="name" [attr.maxlength]="nameMaxLength">
+                  @if (hasError('name')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+                    'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-4">
+                  <label for="supplier-tax-id">Identificación</label>
+                  <input id="supplier-tax-id" type="text" class="form-control" placeholder="NIT, CI o RUC"
+                    formControlName="taxId" [attr.maxlength]="taxIdMaxLength">
+                  @if (hasError('taxId')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.taxId || 'La identificación no puede superar ' + taxIdMaxLength + ' caracteres.' }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="supplier-phone">Teléfono</label>
+                  <input id="supplier-phone" type="text" inputmode="tel" class="form-control"
+                    placeholder="+591 7xxxxxxx" formControlName="phone" [attr.maxlength]="phoneMaxLength">
+                  @if (hasError('phone')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="supplier-email">Correo</label>
+                  <input id="supplier-email" type="email" class="form-control" placeholder="correo@ejemplo.com"
+                    formControlName="email" [attr.maxlength]="emailMaxLength">
+                  @if (hasError('email')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.email || 'Ingresa un correo válido.' }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-12">
+                  <label for="supplier-notes">Notas</label>
+                  <textarea id="supplier-notes" class="form-control" rows="3" placeholder="Notas"
+                    formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
+                  @if (hasError('notes')) {
+                  <small class="form-text text-danger">
+                    {{ serverErrors.notes || 'Las notas no pueden superar ' + notesMaxLength + ' caracteres.' }}
+                  </small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">
+                    Guardar
+                  </button>
+                  <a class="btn btn-light ms-2"
+                    [routerLink]="isEdit ? ['/pocketbiz/purchases/suppliers', supplierId] : ['/pocketbiz/purchases/suppliers']">Cancelar</a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

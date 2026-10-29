@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/stock/', include('modules.inventory.api.stock_urls')),
     path('api/stock-adjustments/', include('modules.inventory.api.adjustment_urls')),
     path('api/customers/', include('modules.customers.api.urls')),
+    path('api/suppliers/', include('modules.purchases.api.urls')),
     path('api/orders/', include('modules.sales.api.urls')),
     path('api/expenses/', include(expense_urlpatterns)),
     path('api/expense-categories/', include(category_urlpatterns)),

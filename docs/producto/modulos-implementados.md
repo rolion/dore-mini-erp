@@ -147,3 +147,9 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - **Compras e Inventario**: aún no tienen ajustes (la pantalla lo indica); su historial queda listo.
 - **Historial**: fecha y hora, usuario, ajuste, valor anterior y nuevo, con filtro por fecha y ajuste. «Configuración › Módulos» también registra cada habilitación o deshabilitación. No guarda secretos.
 - Ajustes futuros (P2 y contables P3) se agregarán con sus historias.
+
+### 3.9 Compras › Proveedores (PB-COM-001)
+- **Compras › Proveedores** (`/purchases/suppliers`, solo con el módulo Compras habilitado): lista con nombre, identificación, teléfono, correo y estado; búsqueda por nombre o identificación y filtro Activos (por defecto) / Inactivos / Todos.
+- Crear y editar: nombre obligatorio; identificación, teléfono, correo y notas opcionales. El correo se valida si se informa y los errores aparecen junto a cada campo. No se avisa de identificaciones repetidas.
+- Activar/desactivar con confirmación; nunca se borra. Desactivar no toca compras históricas.
+- «Ver compras» abre `/purchases?supplierId=<id>` (hoy «Próximamente»: el listado de Compras y el selector de nueva compra llegan con la historia de Compras, que usará la fachada de proveedores para ofrecer solo activos y seguir mostrando los desactivados en el histórico).

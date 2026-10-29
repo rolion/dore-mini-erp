@@ -94,6 +94,7 @@
       "TEXT": "Purchases",
       "LIST": {
         "HOME": "Home",
+        "SUPPLIERS": "Suppliers",
         "SETTINGS": "Settings"
       }
     },

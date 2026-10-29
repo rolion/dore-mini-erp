@@ -1492,3 +1492,5 @@ Accounting
 ```
 
 El sistema debe comenzar resolviendo las necesidades reales del emprendimiento y evolucionar gradualmente hacia un SaaS genérico para pequeños negocios.
+
+> **Nota (Compras › Proveedores, PB-COM-001):** `backend/modules/purchases/` es el bounded context de Compras; hoy solo contiene el agregado `Supplier` (tabla `purchases_supplier`, `company_id` sin FK, `required_modules = ('purchases',)`, API `/api/suppliers/`). No depende de otros módulos de negocio. Expone la fachada `services.py` (`get_supplier_for_purchase`, `list_active_suppliers`) para las compras futuras, que aplicarán la regla «solo proveedores activos en compras nuevas» y conservarán el proveedor de las históricas. Ver `docs/adr/ADR-gestionar-proveedores-modulo-proveedores.md`.
