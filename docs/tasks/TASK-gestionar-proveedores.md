@@ -1,6 +1,6 @@
 # TASK-gestionar-proveedores: Gestionar proveedores (PB-COM-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-proveedores
@@ -14,6 +14,7 @@
 | 2026-10-29 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-29 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -76,7 +77,33 @@ Ver `docs/adr/ADR-gestionar-proveedores-modulo-proveedores.md`.
 `docs/plans/PLAN-2026-10-29-gestionar-proveedores.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Nuevo bounded context `backend/modules/purchases/` con el agregado `Supplier`, API `/api/suppliers/`, fachada para Compras y feature Angular `features/purchases` (lista, formulario, detalle), más entrada de menú «Proveedores».
+
+| Parte | Cubre |
+|---|---|
+| `domain/supplier.py`, `domain/exceptions.py`, `domain/repositories.py` | INV-01..06, AC-02, AC-05 |
+| `application/commands.py`, `queries.py` | AC-01, AC-03, AC-04, AC-05 |
+| `infrastructure/django/*` + `migrations/0001_initial.py` | INV-07, AC-06 |
+| `api/*` + `config/urls.py` + `settings/base.py` | AC-01..AC-07 (`required_modules = ('purchases',)`) |
+| `services.py` | AC-08 |
+| `features/purchases/*`, `app.routes.ts` | AC-10, AC-11, AC-12 |
+| `routes.json`, `i18n/{es,en,de}.json` | AC-09 |
+
+**Pruebas escritas:** backend `purchases/tests/{test_domain,test_application,test_api,test_services}.py`; rutas de Compras añadidas a `modularity/tests/test_enforcement.py`; módulo registrado en `sales/tests/test_boundaries.py` y `accounts/test_guards.py`; frontend specs de servicio, lista, formulario y detalle, y `sidebar-menu.spec.ts` actualizado.
+
+**Verificación propia (no es el Quality Gate):**
+- Backend sin base de datos: `test_domain`, `test_application`, `test_boundaries`, `test_guards` → 33 tests OK; `makemigrations --check` sin cambios pendientes.
+- **No se pudieron ejecutar los tests con base de datos** (`test_api`, `test_services`, `test_enforcement`): el entorno del worktree no tiene `DATABASE_URL`/credenciales y cargar el `.env` del repositorio principal fue denegado por política. `delivery-publish` debe correrlos.
+- Frontend: `ng lint` OK; `ng build` OK; Karma (Chrome headless) sobre `features/purchases` y `sidebar-menu.spec.ts` → 40/40 (se excluyó `app.component.spec.ts` con un tsconfig temporal ya eliminado, por su fallo de compilación preexistente documentado en TASK-catalogo-productos-mvp).
+
+**Desviaciones respecto al plan:** ninguna de alcance. El modelo añade el índice `purch_supplier_company_active` (ADR). La ruta `purchases/suppliers` se declara antes de `purchases/settings` en `app.routes.ts`.
+
+**UI:** pantallas de referencia `features/customers/pages/{customer-list,customer-form,customer-detail}` (plantillas Lista/Formulario/Detalle del sistema de diseño). Sin componentes compartidos nuevos; se reutiliza `shared/models/page` y `shared/styles/table-actions`. Duplicación de patrón con clientes aceptada en el DDR.
+
+**Deuda técnica:** `Page<T>`/estilos ya compartidos; la validación de correo está duplicada en dominio y formulario (como en clientes). Sin aviso de identificación duplicada (fuera de alcance).
+
+**Documentación actualizada:** `docs/architecture/ddd.md`, `docs/design/design-system.md`, `docs/producto/modulos-implementados.md`.
 
 ## Review
 _Pendiente_

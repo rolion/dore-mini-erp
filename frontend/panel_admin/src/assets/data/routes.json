@@ -152,6 +152,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/purchases/suppliers",
+          "title": "MENUITEMS.PURCHASES.LIST.SUPPLIERS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/purchases/settings",
           "title": "MENUITEMS.PURCHASES.LIST.SETTINGS",
           "iconType": "",

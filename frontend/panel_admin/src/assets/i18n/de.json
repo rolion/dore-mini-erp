@@ -94,6 +94,7 @@
       "TEXT": "Einkäufe",
       "LIST": {
         "HOME": "Start",
+        "SUPPLIERS": "Lieferanten",
         "SETTINGS": "Einstellungen"
       }
     },

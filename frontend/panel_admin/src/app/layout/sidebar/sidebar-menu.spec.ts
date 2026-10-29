@@ -19,7 +19,12 @@ describe('Sidebar menu (routes.json)', () => {
       'reporting', 'catalog', 'customers', 'sales', 'expenses', 'reporting',
     ]);
     expect(purchases.module).toBe('purchases');
-    expect(purchases.submenu.map((item) => item.path)).toEqual(['/pocketbiz/purchases', '/pocketbiz/purchases/settings']);
+    expect(purchases.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/purchases',
+      '/pocketbiz/purchases/suppliers',
+      '/pocketbiz/purchases/settings',
+    ]);
+    expect(purchases.submenu[1].title).toBe('MENUITEMS.PURCHASES.LIST.SUPPLIERS');
     expect(inventory.module).toBe('inventory');
     expect(inventory.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/inventory',
@@ -66,7 +71,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(23);
+    expect(titles.length).toBe(24);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -88,6 +93,9 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(en, 'MENUITEMS.REPORTS.TEXT')).toBe('Reports');
     expect(translate(de, 'MENUITEMS.REPORTS.TEXT')).toBe('Berichte');
     expect(translate(es, 'MENUITEMS.SETTINGS.LIST.MODULES')).toBe('Módulos');
+    expect(translate(es, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Proveedores');
+    expect(translate(en, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Suppliers');
+    expect(translate(de, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Lieferanten');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
     expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
   });

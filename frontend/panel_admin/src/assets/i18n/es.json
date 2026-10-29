@@ -94,6 +94,7 @@
       "TEXT": "Compras",
       "LIST": {
         "HOME": "Inicio",
+        "SUPPLIERS": "Proveedores",
         "SETTINGS": "Configuración"
       }
     },

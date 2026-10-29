@@ -96,6 +96,13 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'purchases/suppliers',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases' },
+                loadChildren: () =>
+                    import('./features/purchases/purchases.routes').then((m) => m.SUPPLIERS_ROUTE),
+            },
+            {
                 path: 'purchases/settings',
                 canActivate: [moduleGuard],
                 canDeactivate: [unsavedChangesGuard],
