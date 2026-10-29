@@ -198,6 +198,10 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
     line.controls.quantity.updateValueAndValidity();
   }
 
+  optionsFor(index: number): LineProduct[] {
+    return this.lineOptions[index] ?? this.productOptions;
+  }
+
   unit(line: LineGroup): string {
     return line.controls.product.value?.unit || '—';
   }

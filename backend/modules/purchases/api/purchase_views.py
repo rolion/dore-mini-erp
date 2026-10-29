@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from django.db import transaction
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.response import Response
@@ -43,9 +44,10 @@ def _items(validated: dict) -> dict:
 
 
 def _run(callable_, **kwargs):
-    """Ejecuta un caso de uso traduciendo errores de dominio a respuestas HTTP."""
+    """Ejecuta un caso de uso en una transacción (el bloqueo de fila de la edición la exige) traduciendo errores."""
     try:
-        return callable_(**kwargs)
+        with transaction.atomic():
+            return callable_(**kwargs)
     except PurchaseValidationError as exc:
         raise ValidationError(exc.errors) from exc
     except PurchaseNotFound as exc:

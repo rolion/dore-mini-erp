@@ -74,6 +74,12 @@ class CreatePurchaseTests(TestCase):
                 make([draft(unit_price=price)])
             self.assertIn('unit_price', ctx.exception.errors['items'][0], repr(price))
 
+    def test_huge_numbers_are_a_line_error_not_a_crash(self):  # AC-03, AC-04, EDGE-06 (REV-02)
+        for quantity, price in (('1' * 40, '1'), (10 ** 40, '1'), ('1', '1' * 40), ('1', 10 ** 40)):
+            with self.assertRaises(PurchaseValidationError, msg=repr((quantity, price))) as ctx:
+                make([draft(quantity=quantity, unit_price=price)])
+            self.assertTrue({'quantity', 'unit_price'} & set(ctx.exception.errors['items'][0]))
+
     def test_fractions_rejected_when_the_unit_does_not_allow_them(self):  # INV-04
         with self.assertRaises(PurchaseValidationError) as ctx:
             make([draft('1.5', allows_fractions=False)])

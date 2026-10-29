@@ -72,6 +72,8 @@ def validate_quantity(value: object, allows_fractions: bool = True) -> Decimal:
         raise _fail('quantity', 'La cantidad debe ser un número decimal.')
     if quantity <= 0:
         raise _fail('quantity', 'La cantidad debe ser mayor a cero.')
+    if quantity > QUANTITY_MAX:  # antes de `quantize`, que falla con demasiados dígitos
+        raise _fail('quantity', f'La cantidad no puede superar {QUANTITY_MAX}.')
     if quantity != quantity.quantize(_QUANTITY_STEP):
         raise _fail('quantity', 'La cantidad admite como máximo 3 decimales.')
     quantity = quantity.quantize(_QUANTITY_STEP)
@@ -87,6 +89,8 @@ def validate_unit_price(value: object) -> Decimal:
         raise _fail('unit_price', 'El precio unitario debe ser un número decimal.')
     try:
         return parse_money(value)
+    except InvalidOperation:  # demasiados dígitos para cuantizar
+        raise _fail('unit_price', _MONEY_MESSAGES[TOO_LARGE]) from None
     except InvalidMoney as exc:
         message = _MONEY_MESSAGES.get(exc.code, 'El precio unitario debe ser un número decimal.')
         raise _fail('unit_price', message) from None

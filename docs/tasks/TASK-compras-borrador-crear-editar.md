@@ -15,6 +15,8 @@
 | 2026-10-29 | ARCHITECTURE → PLANNING | ADR escritos | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-29 | REVIEW → ENGINEERING | Quality Gate ciclo 1: FAIL (REV-01 High: `select_for_update` fuera de transacción) | delivery-publish |
+| 2026-10-29 | ENGINEERING → REVIEW | Corrección de REV-01..04 | delivery-build |
 
 ## Investigación
 
@@ -119,7 +121,12 @@ Ver `docs/design/DDR-compras-borrador-crear-editar-pantallas-compras.md`.
 **Documentación actualizada:** `docs/architecture/ddd.md`, `docs/design/design-system.md` (variante de un paso), `docs/producto/modulos-implementados.md`.
 
 ## Review
-_Pendiente_
+
+**Quality Gate (ciclo 1, subagente aislado, 2026-10-29): FAIL.** Hallazgos: [REV-01](../reviews/REV-2026-10-29-compras-borrador-crear-editar-01.md) **High** (`PATCH` llama a `get(for_update=True)` sin transacción: en PostgreSQL toda edición daría 500; SQLite y `TestCase` lo ocultaban), [REV-02](../reviews/REV-2026-10-29-compras-borrador-crear-editar-02.md) Medium (cantidad o precio con más de 28 dígitos → `InvalidOperation`, 500 en vez de 400), [REV-03](../reviews/REV-2026-10-29-compras-borrador-crear-editar-03.md) Low (falta `test_adapters.py` del plan), [REV-04](../reviews/REV-2026-10-29-compras-borrador-crear-editar-04.md) Low (NG8102; límites de la UI al editar).
+
+Evidencia del ciclo 1: sin PostgreSQL utilizable; sobre SQLite desechable la suite completa dio 13 fallos y 1 error, todos fuera de `purchases` y los mismos tipos (concurrencia, `select_for_update`, collation, orden) que `origin/main` en SQLite (16 y 1); `makemigrations --check` sin cambios; `bandit` sin issues; lint y build OK; Karma completo 829 con 71 fallos NG0201 de componentes demo de la plantilla, ajenos al diff; cobertura de sentencias 83,57 %. No realizado: PostgreSQL, `npm audit` (sin lockfile) y revisión visual en navegador.
+
+**Correcciones (delivery-build):** REV-01: `_run` de `purchase_views.py` ejecuta el caso de uso dentro de `transaction.atomic()` (prueba `RowLockTransactionTests` comprueba que el bloqueo se toma en una transacción, independiente del motor); REV-02: guarda de máximo antes de `quantize` y captura de `InvalidOperation` en precio (pruebas de dominio y API); REV-03: `tests/test_adapters.py`; REV-04: `optionsFor(i)` elimina el aviso. Quedan como limitaciones conocidas de REV-04 (Low): al editar la UI no anticipa «entero» (el servidor lo rechaza), un fallo de red al buscar proveedores muestra «No hay proveedores activos.» y el detalle vuelve a la lista ante cualquier error.
 
 ## Publicación
 _Pendiente_

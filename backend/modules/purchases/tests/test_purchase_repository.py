@@ -3,10 +3,7 @@ from uuid import uuid4
 
 from django.test import TestCase
 
-from modules.catalog.infrastructure.django.models import ProductModel
-from modules.purchases.application.ports import ProductInfo
 from modules.purchases.domain.purchase import ItemDraft, Purchase
-from modules.purchases.infrastructure.adapters import ProductCatalogAdapter
 from modules.purchases.infrastructure.django.models import SupplierModel
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
 
@@ -55,12 +52,3 @@ class PurchaseRepositoryTests(TestCase):
         self.assertEqual((rows[0].supplier_name, rows[0].items_count, rows[0].total), ('Sur', 1, new.total))
         self.assertEqual([r.id for r in self.repo.list(supplier_id=other_supplier.id)], [mine.id])
         self.assertEqual(len(self.repo.list()[0:2]), 2)
-
-
-class ProductCatalogAdapterTests(TestCase):
-    def test_adapts_the_catalog_facade(self):  # AC-01
-        company_id = uuid4()
-        product = ProductModel.objects.create(company_id=company_id, name='Harina', sale_price='1.00')
-        found = ProductCatalogAdapter(company_id).get_products([product.id, uuid4()])
-        self.assertEqual(found, {product.id: ProductInfo(product.id, 'Harina', True, None, False)})
-        self.assertEqual(ProductCatalogAdapter(uuid4()).get_products([product.id]), {})

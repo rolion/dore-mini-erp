@@ -2,7 +2,10 @@ from decimal import Decimal
 from uuid import uuid4
 
 from django.apps import apps
-from rest_framework.test import APITestCase
+from unittest import mock
+
+from django.db import connection
+from rest_framework.test import APITestCase, APITransactionTestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.catalog.infrastructure.django.models import ProductModel, UnitModel
@@ -118,6 +121,13 @@ class CreatePurchaseTests(PurchaseApiTestCase):
         response = self.client.post(LIST_URL, self.payload(items=[item]), format='json')
         self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(response.json()['total'], '21.00')
+
+    def test_huge_numbers_are_400_not_500(self):  # AC-04, EDGE-06 (REV-02)
+        for field, value in (('quantity', '1' * 40), ('unit_price', 10 ** 40)):
+            item = {'product_id': str(self.flour.id), 'quantity': '1', 'unit_price': '1', field: value}
+            response = self.client.post(LIST_URL, self.payload(items=[item]), format='json')
+            self.assertEqual(response.status_code, 400, field)
+            self.assertIn(field, response.json()['items'][0])
 
     def test_total_status_discount_and_tax_are_ignored(self):  # AC-05, INV-07
         item = {'product_id': str(self.flour.id), 'quantity': '2', 'unit_price': '10', 'subtotal': '1.00',
@@ -235,3 +245,29 @@ class AccessTests(PurchaseApiTestCase):
         CompanyModuleModel.objects.filter(company_id=self.company.id, module_key='purchases').delete()
         self.assertEqual(self.client.get(LIST_URL).status_code, 403)
         self.assertEqual(self.client.post(LIST_URL, self.payload(), format='json').status_code, 403)
+
+
+class RowLockTransactionTests(APITransactionTestCase):
+    """REV-01: el bloqueo de fila de la edición (`select_for_update`) exige una transacción abierta."""
+
+    def test_update_takes_the_row_lock_inside_a_transaction(self):
+        from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
+
+        company = make_company('Empresa L')
+        authenticate(self.client, make_admin(company, username='luis'))
+        enable_purchases(company)
+        supplier = SupplierModel.objects.create(company_id=company.id, name='Sur')
+        created = self.client.post(LIST_URL, {'supplier_id': str(supplier.id), 'purchase_date': '2026-10-29'},
+                                   format='json').json()
+        original = DjangoPurchaseRepository.get
+        seen = []
+
+        def spy(repo, purchase_id, for_update=False):
+            seen.append((for_update, connection.in_atomic_block))
+            return original(repo, purchase_id, for_update)
+
+        with mock.patch.object(DjangoPurchaseRepository, 'get', spy):
+            response = self.client.patch(detail_url(created['id']), {'notes': 'x'}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIn((True, True), seen)
+        self.assertNotIn((True, False), seen)

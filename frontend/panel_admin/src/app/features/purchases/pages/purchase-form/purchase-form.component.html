@@ -105,7 +105,7 @@
                     <tr [formGroupName]="i" [class.table-warning]="serverItems[i] && (serverItems[i].quantity || serverItems[i].unitPrice || serverItems[i].productId)"
                       data-testid="line">
                       <td>
-                        <ng-select [items]="lineOptions[i] ?? []" bindLabel="name" [typeahead]="productInput$"
+                        <ng-select [items]="optionsFor(i)" bindLabel="name" [typeahead]="productInput$"
                           [loading]="productsLoading" formControlName="product" placeholder="Buscar producto"
                           notFoundText="Sin resultados" typeToSearchText="Escriba para buscar" appendTo="body"
                           [clearable]="false" [attr.aria-label]="'Producto de la línea ' + (i + 1)"
