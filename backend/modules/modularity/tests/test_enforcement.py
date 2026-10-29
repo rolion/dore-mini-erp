@@ -23,6 +23,9 @@ ROUTES = [
     ('sales', 'post', f'/api/orders/{ID}/discount/'), ('sales', 'post', f'/api/orders/{ID}/prepare/'),
     ('sales', 'post', f'/api/orders/{ID}/ready/'), ('sales', 'post', f'/api/orders/{ID}/deliver/'),
     ('sales', 'post', f'/api/orders/{ID}/cancel/'), ('sales', 'post', f'/api/orders/{ID}/payments/'),
+    ('purchases', 'get', '/api/suppliers/'), ('purchases', 'post', '/api/suppliers/'),
+    ('purchases', 'get', f'/api/suppliers/{ID}/'), ('purchases', 'patch', f'/api/suppliers/{ID}/'),
+    ('purchases', 'post', f'/api/suppliers/{ID}/activate/'), ('purchases', 'post', f'/api/suppliers/{ID}/deactivate/'),
     ('expenses', 'get', '/api/expenses/'), ('expenses', 'post', '/api/expenses/'),
     ('expenses', 'get', f'/api/expenses/{ID}/'), ('expenses', 'patch', f'/api/expenses/{ID}/'),
     ('expenses', 'post', f'/api/expenses/{ID}/void/'),
@@ -64,7 +67,7 @@ class EnforcementTestCase(APITestCase):
 
 class DisabledModuleTests(EnforcementTestCase):
     def test_every_route_of_a_disabled_module_is_rejected(self):  # AC-01
-        for module in ('customers', 'sales', 'expenses', 'reporting'):
+        for module in ('customers', 'sales', 'expenses', 'reporting', 'purchases'):
             set_enabled(self.company, [k for k in DEFAULT_ENABLED_KEYS if k != module])
             for _, method, path in (r for r in ROUTES if r[0] == module):
                 with self.subTest(f'{method.upper()} {path}'):

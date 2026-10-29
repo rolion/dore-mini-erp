@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'modules.customers',
     'modules.sales',
     'modules.expenses',
+    'modules.purchases',
     'modules.reporting',
     'modules.modularity',
 ]
