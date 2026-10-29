@@ -64,3 +64,28 @@ def list_products_for_inventory(company_id: UUID, *, search: str | None = None,
     if active is not None:
         queryset = queryset.filter(active=active)
     return [_for_inventory(model) for model in queryset]
+
+
+@dataclass(frozen=True)
+class ProductForPurchase:
+    id: UUID
+    name: str
+    active: bool
+    unit_abbreviation: str | None
+    allows_fractions: bool
+
+
+def get_products_for_purchase(company_id: UUID, product_ids: Iterable[UUID]) -> dict[UUID, ProductForPurchase]:
+    """Datos de compra de los productos de la empresa (una sola consulta); los ajenos o inexistentes no aparecen.
+
+    La regla de "producto activo" la aplica quien compra, no la fachada.
+    """
+    models = (ProductModel.objects.filter(company_id=company_id, pk__in=list(product_ids))
+              .select_related('base_unit'))
+    return {
+        model.id: ProductForPurchase(
+            id=model.id, name=model.name, active=model.active,
+            unit_abbreviation=model.base_unit.abbreviation if model.base_unit else None,
+            allows_fractions=bool(model.base_unit and model.base_unit.allows_fractions))
+        for model in models
+    }

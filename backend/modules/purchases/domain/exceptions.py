@@ -9,6 +9,24 @@ class SupplierValidationError(Exception):
         self.errors = errors
 
 
+class PurchaseValidationError(Exception):
+    """Reglas de la compra incumplidas; `errors` mapea campo -> mensajes y `items` -> un dict por línea."""
+
+    def __init__(self, errors: dict[str, object]):
+        super().__init__(errors)
+        self.errors = errors
+
+
+class PurchaseNotFound(Exception):
+    def __init__(self, purchase_id: UUID):
+        super().__init__(f'Compra {purchase_id} no encontrada.')
+        self.purchase_id = purchase_id
+
+
+class PurchaseNotEditable(Exception):
+    """La compra ya no está en borrador."""
+
+
 class SupplierNotFound(Exception):
     def __init__(self, supplier_id: UUID):
         super().__init__(f'Proveedor {supplier_id} no encontrado.')
