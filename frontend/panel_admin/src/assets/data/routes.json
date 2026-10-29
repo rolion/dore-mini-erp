@@ -142,7 +142,7 @@
       "submenu": [
         {
           "path": "/pocketbiz/purchases",
-          "title": "MENUITEMS.PURCHASES.LIST.HOME",
+          "title": "MENUITEMS.PURCHASES.LIST.PURCHASES",
           "iconType": "",
           "icon": "",
           "class": "ml-menu",

@@ -1,0 +1,96 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Detalle de la compra</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Compras</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">Compras</a></li>
+    <li class="breadcrumb-item">Detalle</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ purchase ? 'Compra del ' + (purchase.purchaseDate | date: 'dd/MM/yyyy') : 'Compra' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (loading) {
+            <p class="m-4" data-testid="loading">Cargando…</p>
+            }
+            @if (purchase; as p) {
+            <dl class="row m-4">
+              <dt class="col-sm-3">Proveedor</dt>
+              <dd class="col-sm-9" data-testid="supplier">
+                {{ p.supplier.name }}
+                @if (!p.supplier.active) {
+                <span class="badge-outline col-red d-inline-block ms-2">Inactivo</span>
+                }
+              </dd>
+              <dt class="col-sm-3">Fecha de compra</dt>
+              <dd class="col-sm-9">{{ p.purchaseDate | date: 'dd/MM/yyyy' }}</dd>
+              <dt class="col-sm-3">Referencia externa</dt>
+              <dd class="col-sm-9">{{ p.externalReference || 'Sin referencia' }}</dd>
+              <dt class="col-sm-3">Notas</dt>
+              <dd class="col-sm-9">{{ p.notes || 'Sin notas' }}</dd>
+              <dt class="col-sm-3">Estado</dt>
+              <dd class="col-sm-9"><div class="badge-outline col-orange d-inline-block">{{ statusLabels[p.status] }}</div></dd>
+              <dt class="col-sm-3">Moneda</dt>
+              <dd class="col-sm-9">{{ p.currency }}</dd>
+              <dt class="col-sm-3">Creada</dt>
+              <dd class="col-sm-9">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Actualizada</dt>
+              <dd class="col-sm-9">{{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            </dl>
+            <h5 class="mx-4">Productos</h5>
+            <div class="table-responsive mx-4">
+              <table class="table table-bordered align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Unidad base</th>
+                    <th scope="col" class="text-end">Cantidad</th>
+                    <th scope="col" class="text-end">Precio unitario</th>
+                    <th scope="col" class="text-end">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of p.items; track item.id) {
+                  <tr data-testid="item">
+                    <td>{{ item.productName }}</td>
+                    <td>{{ item.unitAbbreviation || '—' }}</td>
+                    <td class="text-end">{{ item.quantity }}</td>
+                    <td class="text-end">{{ item.unitPrice | money }}</td>
+                    <td class="text-end">{{ item.subtotal | money }}</td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="5" class="text-center text-muted" data-testid="no-items">Esta compra aún no tiene productos.</td>
+                  </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <th scope="row" colspan="4" class="text-end">Total ({{ p.currency }})</th>
+                    <td class="text-end fw-bold" data-testid="total">{{ p.total | money }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="m-4">
+              @if (p.editable) {
+              <a class="btn btn-primary" [routerLink]="['/pocketbiz/purchases', p.id, 'edit']">Editar</a>
+              }
+              <a class="btn btn-light ms-2" routerLink="/pocketbiz/purchases">Volver</a>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

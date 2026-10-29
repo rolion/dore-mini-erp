@@ -1,0 +1,102 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Compras</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Compras</li>
+    <li class="breadcrumb-item">Compras</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="row">
+              <div class="col-lg-8">
+                <div class="row m-0">
+                  <div class="col-auto p-0">
+                    <div class="ngxTableHeader">
+                      <div class="table-title">
+                        <h2><strong>Compras</strong></h2>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col p-0">
+                    <div class="ngxTableHeader">
+                      <div class="header-buttons-left">
+                        <div class="d-flex align-items-center gap-2 ms-3">
+                          @if (supplierId) {
+                          <span class="badge-outline col-blue" data-testid="supplier-filter">
+                            Proveedor: {{ supplierName || '…' }}
+                          </span>
+                          <button type="button" class="btn btn-link p-0" data-testid="clear-filter"
+                            (click)="clearSupplierFilter()">Quitar filtro</button>
+                          }
+                          <a class="btn btn-icon icon-left btn-primary rounded-button"
+                            routerLink="/pocketbiz/purchases/new" title="Nueva compra" aria-label="Nueva compra">
+                            <i class="material-icons">add</i>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            @if (errorMessage) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">Reintentar</button>
+            </div>
+            }
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              <ngx-datatable-column name="Fecha" [sortable]="false" [width]="120">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a class="fw-bold" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.purchaseDate | date: 'dd/MM/yyyy' }}</a>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Proveedor" [sortable]="false" [width]="220">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.supplier.name || '—' }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Referencia" [sortable]="false" [width]="160">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.externalReference || '—' }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Total" [sortable]="false" [width]="140">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span class="d-block text-end">{{ row.total | money }}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Estado" [sortable]="false" [width]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="badge-outline col-orange">{{ statusLabel(row.status) }}</div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="140">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span>
+                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/purchases', row.id]"
+                      title="Ver compra" aria-label="Ver compra">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    @if (row.status === 'draft') {
+                    <a class="btn btn-tbl-edit btn-tbl-update h-auto"
+                      [routerLink]="['/pocketbiz/purchases', row.id, 'edit']" title="Editar" aria-label="Editar">
+                      <i class="fas fa-pen"></i>
+                    </a>
+                    }
+                  </span>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

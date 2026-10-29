@@ -133,7 +133,7 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - **Configuración › Módulos** (`/settings/modules`, solo admin): lista los módulos con estado, dependencias obligatorias e integraciones opcionales. Habilitar/Deshabilitar abre un diálogo que resume módulo, empresa y módulos afectados.
 - **Base**: Acceso/Empresa y Catálogo, siempre activos y sin interruptor.
 - **Dependencias**: Ventas→Catálogo; Reportes→Ventas y Gastos; Compras→Catálogo y Gastos; Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
-- Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Compras e Inventario aún no existen: al habilitarlos su menú abre «Próximamente».
+- Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Inventario aún no tiene pantallas propias: al habilitarlo su menú abre «Próximamente». Compras ya tiene Proveedores y Compras en borrador.
 - **Pendiente (PB-MOD-002)**: la API de negocio no bloquea módulos deshabilitados.
 - **Pendiente (PB-MOD-004)**: la desactivación segura (validar datos existentes) aún no existe.
 
@@ -151,4 +151,12 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - **Compras › Proveedores** (`/purchases/suppliers`, solo con el módulo Compras habilitado): lista con nombre, identificación, teléfono, correo y estado; búsqueda por nombre o identificación y filtro Activos (por defecto) / Inactivos / Todos.
 - Crear y editar: nombre obligatorio; identificación, teléfono, correo y notas opcionales. El correo se valida si se informa y los errores aparecen junto a cada campo. No se avisa de identificaciones repetidas.
 - Activar/desactivar con confirmación; nunca se borra. Desactivar no toca compras históricas.
-- «Ver compras» abre `/purchases?supplierId=<id>` (hoy «Próximamente»: el listado de Compras y el selector de nueva compra llegan con la historia de Compras, que usará la fachada de proveedores para ofrecer solo activos y seguir mostrando los desactivados en el histórico).
+- «Ver compras» abre `/purchases?supplierId=<id>`, la lista de Compras filtrada a ese proveedor.
+
+### 3.10 Compras › Compras en borrador (PB-COM-002)
+- **Compras › Compras** (`/purchases`, solo con Compras habilitado): lista con fecha, proveedor, referencia, total y estado, paginada; con `?supplierId=` muestra solo las de ese proveedor (chip «Proveedor: X» con «Quitar filtro»).
+- **Nueva compra / Editar compra** (`/purchases/new`, `/purchases/:id/edit`): formulario único con proveedor activo (obligatorio, búsqueda por nombre), fecha de compra (obligatoria, hoy por defecto), referencia externa y notas opcionales, y líneas: producto activo (búsqueda por nombre, sin repetir), unidad base («—» si no tiene), cantidad (> 0, hasta 3 decimales; entera si la unidad no admite fracciones), precio unitario (≥ 0, 2 decimales) y subtotal calculado. El total es de solo lectura, en BOB. Cantidad o precio inválidos se marcan junto a su línea y las entradas se conservan ante cualquier error.
+- Sin proveedores activos aparece «Crear proveedor» (y «+ Nuevo proveedor» en el selector): se crea en un diálogo y queda seleccionado sin perder lo escrito.
+- Guardar crea o actualiza el **borrador**: no mueve stock ni crea gastos. No existen impuestos, descuentos ni costos adicionales. Un producto aparece una vez por compra; un borrador puede guardarse sin líneas (Confirmar, en otra historia, exigirá al menos una).
+- El nombre y la unidad del producto se copian al agregarlo y se conservan al editar el borrador aunque el catálogo cambie; un proveedor desactivado después debe reemplazarse para guardar.
+- **Detalle** (`/purchases/:id`): solo lectura, con «Editar» mientras sea borrador. Aún no hay Confirmar, Cancelar compra ni eliminar.

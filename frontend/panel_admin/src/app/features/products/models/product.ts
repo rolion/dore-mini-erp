@@ -3,6 +3,16 @@ export interface BaseUnit {
   id: string;
   name: string;
   abbreviation: string;
+  /** Si la unidad admite cantidades fraccionarias; ausente cuando el dato no se conoce. */
+  allowsFractions?: boolean;
+}
+
+/** Unidad base tal como la devuelve la API (snake_case). */
+export interface BaseUnitDto {
+  id: string;
+  name: string;
+  abbreviation: string;
+  allows_fractions?: boolean;
 }
 
 export interface Product {
@@ -36,7 +46,7 @@ export interface ProductDto {
   sale_price: string;
   active: boolean;
   tracks_stock: boolean;
-  base_unit: BaseUnit | null;
+  base_unit: BaseUnitDto | null;
   created_at: string;
   updated_at: string;
 }
