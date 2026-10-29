@@ -129,6 +129,34 @@ describe('MovementListComponent', () => {
     expect(component.filtersActive).toBeFalse();
   });
 
+  it('labels the exits caused by a sales order as "Salida por venta" (UI-06, AC-12)', async () => {
+    await setup();
+    const types = fixture.debugElement.queryAll(By.css('.badge-outline')).map((b) => b.nativeElement.textContent.trim());
+    expect(types).toContain('Salida por venta');
+    expect(types).toContain('Entrada');
+    expect(component.typeLabel(makeMovement({ source: null }))).toBe('Salida');
+  });
+
+  it('starts filtered by the order that links here and keeps the other filters when it is removed (UI-06, AC-12)', async () => {
+    await setup([exit], { source_type: 'sales_order', source_id: 'o-42' });
+    expect(lastParams()).toEqual(jasmine.objectContaining({ sourceType: 'sales_order', sourceId: 'o-42', page: 1 }));
+    const chip = fixture.nativeElement.querySelector('[data-testid="order-filter"]') as HTMLElement;
+    expect(chip.textContent).toContain('Pedido PV-1');
+    expect(component.filtersActive).toBeTrue();
+    component.filterForm.patchValue({ productId: 'p-1' });
+    (fixture.nativeElement.querySelector('[data-testid="clear-order-filter"]') as HTMLElement).click();
+    expect(lastParams().sourceId).toBeUndefined();
+    expect(lastParams().sourceType).toBeUndefined();
+    expect(lastParams().productId).toBe('p-1');
+  });
+
+  it('stops filtering by the order when the source class is changed by hand (UI-06)', async () => {
+    await setup([exit], { source_type: 'sales_order', source_id: 'o-42' });
+    component.filterForm.patchValue({ sourceType: 'none' });
+    expect(component.sourceId).toBe('');
+    expect(lastParams().sourceId).toBeUndefined();
+  });
+
   it('does not query with an inverted date range (EDGE-05)', async () => {
     await setup();
     api.list.calls.reset();

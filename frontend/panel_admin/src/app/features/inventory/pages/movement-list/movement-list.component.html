@@ -80,6 +80,16 @@
               </div>
             </form>
 
+            @if (sourceId) {
+            <div class="m-2" data-testid="order-filter">
+              <span class="badge-outline col-blue d-inline-block">
+                Pedido {{ orderFilterLabel }}
+                <button type="button" class="btn-close ms-2" aria-label="Quitar filtro por pedido"
+                  data-testid="clear-order-filter" (click)="clearOrderFilter()"></button>
+              </span>
+            </div>
+            }
+
             @if (errorMessage) {
             <div class="alert alert-danger m-2 d-flex justify-content-between align-items-center" role="alert"
               data-testid="error">
@@ -108,9 +118,9 @@
               <ngx-datatable-column name="Tipo" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.kind === 'in') {
-                  <div class="badge-outline col-green d-inline-block">{{ kindLabel(row.kind) }}</div>
+                  <div class="badge-outline col-green d-inline-block">{{ typeLabel(row) }}</div>
                   } @else {
-                  <div class="badge-outline col-orange d-inline-block">{{ kindLabel(row.kind) }}</div>
+                  <div class="badge-outline col-orange d-inline-block">{{ typeLabel(row) }}</div>
                   }
                   @if (row.status === 'reversed') {
                   <div class="badge-outline col-grey d-inline-block ms-1">{{ statusLabel(row.status) }}</div>

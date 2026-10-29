@@ -95,4 +95,16 @@ describe('MovementsApiService', () => {
       .flush({ detail: 'Movimiento no encontrado.' }, { status: 404, statusText: 'Not Found' });
     expect(error?.status).toBe(404);
   });
+
+  it('sends the source document id only together with its class (API-04)', () => {
+    service.list({ sourceType: 'sales_order', sourceId: 'o-42' }).subscribe();
+    const req = http.expectOne((r) => r.url === '/api/stock-movements/');
+    expect(req.request.params.get('source_type')).toBe('sales_order');
+    expect(req.request.params.get('source_id')).toBe('o-42');
+    req.flush({ count: 0, next: null, previous: null, results: [] });
+    service.list({ sourceId: 'o-42' }).subscribe();
+    const bare = http.expectOne((r) => r.url === '/api/stock-movements/');
+    expect(bare.request.params.has('source_id')).toBeFalse();
+    bare.flush({ count: 0, next: null, previous: null, results: [] });
+  });
 });

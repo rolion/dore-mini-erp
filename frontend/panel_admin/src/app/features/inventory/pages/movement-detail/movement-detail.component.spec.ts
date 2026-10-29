@@ -32,7 +32,7 @@ describe('MovementDetailComponent', () => {
   it('shows the data needed to reconstruct the operation (AC-06)', async () => {
     const el = await setup(makeMovementDetail());
     const text = el.textContent ?? '';
-    const expected = ['m-1', 'Confirmado', 'Empresa Demo', 'Arroz', 'Almacén principal', 'Salida', '2.5000 kg', 'ana', 'PV-1', 'Venta', 'Pedido de venta · 42'];
+    const expected = ['m-1', 'Confirmado', 'Empresa Demo', 'Arroz', 'Almacén principal', 'Salida por venta', '2.5000 kg', 'ana', 'PV-1', 'Venta', 'Pedido de venta · 42'];
     for (const value of expected) {
       expect(text).withContext(value).toContain(value);
     }

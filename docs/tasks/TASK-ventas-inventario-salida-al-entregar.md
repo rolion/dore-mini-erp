@@ -1,6 +1,6 @@
 # TASK-ventas-inventario-salida-al-entregar: Conectar Ventas con Inventario y generar salidas al entregar (PB-INT-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-ventas-inventario-salida-al-entregar
@@ -12,6 +12,7 @@
 | 2026-10-29 | (nuevo) → INVESTIGATION | Task creado desde `main` al día (incluye PB-INV-007, PR #26) | delivery-start |
 | 2026-10-29 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Nueva dependencia sales → inventory, contrato API nuevo y atomicidad entre módulos | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas; ver Plan) | delivery-start |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -88,7 +89,35 @@ Ver `docs/adr/ADR-ventas-inventario-salida-al-entregar-orquestacion-y-contrato.m
 Ver `docs/plans/PLAN-2026-10-29-ventas-inventario-salida-al-entregar.md` (v1 · COMPLETO · Specification READY).
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (sin cambios de Specification ni de plan).
+
+**Inventario (backend)**
+- `RecordOutputs` / `inventory.services.record_outputs`: salida en lote bajo un único bloqueo del almacén; valida todas las líneas, lee la política una vez, informa todas las líneas faltantes (`InsufficientStock.shortages`) y registra todo o nada; idempotente por línea (INV-02, INV-04, INV-05; AC-02..AC-05, AC-10).
+- Lecturas de fachada: `list_active_warehouses`, `get_balances` (una consulta), `get_stock_products`, `allow_negative_stock`, `list_movements_for_source`; `MovementRecord` gana `occurred_at/reference/user_name` (AC-11, AC-12).
+- Filtro `source_id` en `GET /api/stock-movements/` (requiere `source_type`) y 409 `insufficient_stock` con `lines[]` conservando los campos de primer nivel (compatible con ajustes/apertura) (API-04).
+
+**Ventas (backend)**
+- Puerto `StockOutput` + `StockOutputAdapter` (única conexión con Inventario, vía `services`; `test_boundaries` actualizado `sales → inventory`); `DeliverOrder` entrega primero (valida estado/fecha) y luego registra las salidas; cualquier excepción revierte todo en la transacción de `_run` (INV-01, INV-02, INV-03; AC-01, AC-05..AC-08).
+- `PreviewOrderDelivery` + `GET /api/orders/<id>/delivery-preview/`; `deliver` acepta `warehouse_id` (400 de campo, 409 `insufficient_stock` con `warehouse` y `lines`, 409 `no_active_warehouse`); `stock_output` en el detalle del pedido, leído del libro (sin migraciones) (API-01..03; AC-07, AC-11, AC-12).
+- `Order.code`/`order_code` movido al dominio; `Order.ensure_deliverable()`.
+
+**Frontend**
+- `features/sales`: `delivery-dialog` (NgbModal; almacén, tabla, avisos de bloqueo/negativo/sin almacén, envío deshabilitado, datos conservados, 409 relee existencias, `invalid_transition` recarga), `stock-output-card`, flujo en `order-detail` (diálogo si hay ítems controlados; SweetAlert habitual si no), servicio/modelos/fixtures (UI-01..05; AC-14).
+- `features/inventory`: «Salida por venta» (lista y detalle), chip de filtro por pedido y `source_id` en el servicio (UI-06; AC-12).
+- Docs: nota en `ddd.md`, fila en `modulos-implementados.md`, guía `docs/tests/MANUAL-ventas-inventario-salida-al-entregar.md`.
+
+**Pantallas de referencia / componentes**: detalle (`order-detail`, tarjetas `.card` con `dl.row`) y lista con filtros (`movement-list`); diálogo siguiendo `warehouse-dialog`; se reutilizaron badges y `.badge-outline`, `table table-sm`, `alert` de Bootstrap. No se crearon componentes en `shared/`.
+
+**Desviaciones respecto al plan**
+- Cantidades de Ventas se serializan siempre con 4 decimales (precisión del libro) también en el 409 de entrega; Inventario conserva 3 en su propio 409. Motivo: un único formato dentro de la API de Ventas.
+- Con varios almacenes sin predeterminado la preselección queda vacía y la persona debe elegir (caso límite no previsto; el plan solo cubría único/predeterminado).
+- `formatQuantity` vive en `sales/models/order.ts` (no en `shared/`) porque solo Ventas lo usa hoy.
+
+**Deuda técnica / notas**
+- Cuando exista PB-CFG-003 el almacén predeterminado configurado sustituye al `is_default` en `suggested_warehouse`.
+- `app.component.spec.ts` no compila en `main` (preexistente); se apartó temporalmente para correr Karma y se restauró sin cambios.
+
+**Verificación propia (no es el Quality Gate).** Backend con el venv del checkout principal y SQLite temporal (no hay PostgreSQL ni `.env` en este worktree): `manage.py test` 887 pruebas; fallan 14 solo por depender de PostgreSQL (orden/bloqueo/concurrencia/mayúsculas, preexistentes) y las 2 pruebas de concurrencia nuevas (`ConcurrentDeliveryTests`) se saltan sin PostgreSQL — **deben correrse en PostgreSQL**. Pruebas nuevas verdes: `test_delivery_inventory` (22), `test_delivery_application`, `test_outputs`. Frontend: Karma acotado a `features/sales` + `features/inventory` 315/315 OK, `ng lint` OK, `ng build` OK. Revisión visual en navegador: no verificada.
 
 ## Review
 _Pendiente_

@@ -15,7 +15,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ movement ? kindLabels[movement.kind] + ': ' + movement.product.name : 'Movimiento' }}</h4>
+            <h4>{{ movement ? typeLabel(movement) + ': ' + movement.product.name : 'Movimiento' }}</h4>
           </div>
           <div class="card-body">
             @if (movement; as m) {
@@ -37,7 +37,7 @@
               <dt class="col-sm-3">Almacén</dt>
               <dd class="col-sm-9">{{ m.warehouse.name }}</dd>
               <dt class="col-sm-3">Tipo</dt>
-              <dd class="col-sm-9" data-testid="kind">{{ kindLabels[m.kind] }}</dd>
+              <dd class="col-sm-9" data-testid="kind">{{ typeLabel(m) }}</dd>
               <dt class="col-sm-3">Cantidad</dt>
               <dd class="col-sm-9" data-testid="quantity">{{ m.quantity }} {{ m.unitAbbreviation }}</dd>
               <dt class="col-sm-3">Fecha y hora</dt>

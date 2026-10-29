@@ -56,6 +56,7 @@ export class MovementsApiService {
     if (params.warehouseId) httpParams = httpParams.set('warehouse_id', params.warehouseId);
     if (params.kind) httpParams = httpParams.set('kind', params.kind);
     if (params.sourceType) httpParams = httpParams.set('source_type', params.sourceType);
+    if (params.sourceType && params.sourceId) httpParams = httpParams.set('source_id', params.sourceId);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.pageSize !== undefined) httpParams = httpParams.set('page_size', String(params.pageSize));
     return this.http.get<Page<StockMovementDto>>(this.baseUrl, { params: httpParams }).pipe(

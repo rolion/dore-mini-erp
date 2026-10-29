@@ -1,4 +1,4 @@
-import { Order, OrderDto, OrderItem, OrderSummary, Payment } from '../models/order';
+import { DeliveryLine, DeliveryPreview, Order, OrderDto, OrderItem, OrderSummary, Payment } from '../models/order';
 
 export function makeItem(overrides: Partial<OrderItem> = {}): OrderItem {
   return {
@@ -49,6 +49,7 @@ export function makeOrder(overrides: Partial<Order> = {}): Order {
     editable: true,
     allowedTransitions: ['prepare', 'cancel'],
     canRegisterPayment: true,
+    stockOutput: null,
     createdAt: '2026-10-01T10:00:00Z',
     updatedAt: '2026-10-01T11:00:00Z',
     ...overrides,
@@ -106,8 +107,45 @@ export function makeOrderDto(overrides: Partial<OrderDto> = {}): OrderDto {
     editable: true,
     allowed_transitions: ['prepare', 'cancel'],
     can_register_payment: true,
+    stock_output: null,
     created_at: '2026-10-01T10:00:00Z',
     updated_at: '2026-10-01T11:00:00Z',
     ...overrides,
   };
 }
+
+export function makeDeliveryLine(overrides: Partial<DeliveryLine> = {}): DeliveryLine {
+  return {
+    productId: 'p-1',
+    productName: 'Bolsas',
+    quantity: '4.0000',
+    unit: 'u',
+    available: '5.0000',
+    projected: '1.0000',
+    insufficient: false,
+    ...overrides,
+  };
+}
+
+/** Vista previa con un almacén y una línea controlada, política de bloqueo. */
+export function makePreview(overrides: Partial<DeliveryPreview> = {}): DeliveryPreview {
+  return {
+    inventoryEnabled: true,
+    requiresStockOutput: true,
+    allowNegativeStock: false,
+    warehouses: [{ id: 'w-1', name: 'Central', isDefault: true }],
+    warehouseId: 'w-1',
+    lines: [makeDeliveryLine()],
+    ...overrides,
+  };
+}
+
+/** Pedido sin salida de inventario (Inventario deshabilitado o sin productos controlados). */
+export const NO_STOCK_PREVIEW: DeliveryPreview = {
+  inventoryEnabled: false,
+  requiresStockOutput: false,
+  allowNegativeStock: false,
+  warehouses: [],
+  warehouseId: null,
+  lines: [],
+};

@@ -4,6 +4,8 @@ import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Page } from '../../../shared/models/page';
 import {
+  DeliveryPreview,
+  DeliveryPreviewDto,
   FieldErrors,
   Order,
   OrderApiError,
@@ -19,6 +21,9 @@ import {
   Payment,
   PaymentDto,
   PaymentInput,
+  StockOutput,
+  StockOutputDto,
+  StockShortage,
 } from '../models/order';
 
 export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
@@ -36,6 +41,7 @@ const FIELD_NAMES: Record<string, OrderErrorField> = {
   quantity: 'quantity',
   discount: 'discount',
   delivered_date: 'deliveredDate',
+  warehouse_id: 'warehouseId',
   reason: 'reason',
   amount: 'amount',
   payment_method: 'paymentMethod',
@@ -65,6 +71,62 @@ function toPayment(dto: PaymentDto): Payment {
   };
 }
 
+function toStockOutput(dto: StockOutputDto | null | undefined): StockOutput | null {
+  if (!dto) return null;
+  return {
+    reference: dto.reference,
+    warehouseId: dto.warehouse.id,
+    warehouseName: dto.warehouse.name,
+    occurredAt: dto.occurred_at,
+    userName: dto.user_name,
+    movements: dto.movements.map((m) => ({
+      id: m.id,
+      productId: m.product.id,
+      productName: m.product.name,
+      quantity: m.quantity,
+      unit: m.unit.abbreviation,
+    })),
+  };
+}
+
+function toPreview(dto: DeliveryPreviewDto): DeliveryPreview {
+  return {
+    inventoryEnabled: dto.inventory_enabled,
+    requiresStockOutput: dto.requires_stock_output,
+    allowNegativeStock: dto.allow_negative_stock,
+    warehouses: dto.warehouses.map((w) => ({ id: w.id, name: w.name, isDefault: w.is_default })),
+    warehouseId: dto.warehouse_id,
+    lines: dto.lines.map((line) => ({
+      productId: line.product.id,
+      productName: line.product.name,
+      quantity: line.quantity,
+      unit: line.unit.abbreviation,
+      available: line.available,
+      projected: line.projected,
+      insufficient: line.insufficient,
+    })),
+  };
+}
+
+function toShortages(body: unknown): StockShortage[] {
+  const lines = (body as { lines?: unknown } | null)?.lines;
+  if (!Array.isArray(lines)) return [];
+  return lines.map((raw) => {
+    const line = raw as {
+      product?: { name?: unknown };
+      unit?: { abbreviation?: unknown } | null;
+      requested?: unknown;
+      available?: unknown;
+    };
+    return {
+      productName: String(line.product?.name ?? ''),
+      unit: typeof line.unit?.abbreviation === 'string' ? line.unit.abbreviation : null,
+      requested: String(line.requested ?? ''),
+      available: String(line.available ?? ''),
+    };
+  });
+}
+
 function toOrder(dto: OrderDto): Order {
   return {
     id: dto.id,
@@ -89,6 +151,7 @@ function toOrder(dto: OrderDto): Order {
     editable: dto.editable,
     allowedTransitions: dto.allowed_transitions,
     canRegisterPayment: dto.can_register_payment,
+    stockOutput: toStockOutput(dto.stock_output),
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };
@@ -146,7 +209,13 @@ function toApiError(err: HttpErrorResponse): OrderApiError {
   }
   const rule = err.status === 409 ? ruleMessage(err.error) : null;
   if (rule) {
-    return new OrderRuleError(rule.detail, rule.code);
+    const warehouse = (err.error as { warehouse?: { name?: unknown } }).warehouse;
+    return new OrderRuleError(
+      rule.detail,
+      rule.code,
+      rule.code === 'insufficient_stock' ? toShortages(err.error) : [],
+      typeof warehouse?.name === 'string' ? warehouse.name : '',
+    );
   }
   return new OrderApiError(GENERIC_ERROR_MESSAGE, err.status);
 }
@@ -225,8 +294,20 @@ export class OrdersApiService {
     return this.request(this.http.post<OrderDto>(`${this.baseUrl}${orderId}/ready/`, {}));
   }
 
-  deliver(orderId: string, deliveredDate?: string): Observable<Order> {
-    const body = deliveredDate ? { delivered_date: deliveredDate } : {};
+  /** Qué pasaría al entregar (informativo): almacenes, existencias y saldo proyectado por producto. */
+  deliveryPreview(orderId: string, warehouseId?: string): Observable<DeliveryPreview> {
+    const params = warehouseId ? new HttpParams().set('warehouse_id', warehouseId) : new HttpParams();
+    return this.http.get<DeliveryPreviewDto>(`${this.baseUrl}${orderId}/delivery-preview/`, { params }).pipe(
+      map(toPreview),
+      catchError((err: HttpErrorResponse) => throwError(() => toApiError(err))),
+    );
+  }
+
+  /** `warehouseId` solo se envía cuando el pedido tiene productos que controlan stock. */
+  deliver(orderId: string, deliveredDate?: string, warehouseId?: string): Observable<Order> {
+    const body: Record<string, string> = {};
+    if (deliveredDate) body['delivered_date'] = deliveredDate;
+    if (warehouseId) body['warehouse_id'] = warehouseId;
     return this.request(this.http.post<OrderDto>(`${this.baseUrl}${orderId}/deliver/`, body));
   }
 
