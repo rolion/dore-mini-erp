@@ -1,4 +1,10 @@
+from decimal import Decimal
+
 from rest_framework import serializers
+
+from modules.sales.domain.order import order_code
+
+QUANTITY_PLACES = Decimal('0.0001')
 
 # --- Entrada: solo forma y tipos. Las reglas (obligatoriedad, rangos, estados) las aplica el dominio, que junta ---
 # --- los errores de todos los campos. Los campos derivados y de estado no se aceptan y se ignoran. -------------
@@ -27,6 +33,11 @@ class DiscountSerializer(serializers.Serializer):
 
 class DeliverSerializer(serializers.Serializer):
     delivered_date = serializers.DateField(required=False, allow_null=True)
+    warehouse_id = serializers.UUIDField(required=False, allow_null=True)
+
+
+class DeliveryPreviewQuerySerializer(serializers.Serializer):
+    warehouse_id = serializers.UUIDField(required=False, allow_null=True)
 
 
 class CancelSerializer(serializers.Serializer):
@@ -41,11 +52,6 @@ class PaymentInputSerializer(serializers.Serializer):
 
 
 # --- Salida ---------------------------------------------------------------------------------------------------
-
-
-def order_code(order_id) -> str:
-    """Etiqueta corta para mostrar; no se persiste ni identifica al pedido (el identificador es el UUID)."""
-    return 'P-' + str(order_id).replace('-', '')[:8].upper()
 
 
 def _money(**extra) -> serializers.DecimalField:
@@ -107,8 +113,53 @@ class OrderSerializer(_CustomerMixin):
     editable = serializers.BooleanField(read_only=True)
     allowed_transitions = serializers.ListField(child=serializers.CharField(), read_only=True)
     can_register_payment = serializers.BooleanField(read_only=True)
+    stock_output = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
+
+    def get_stock_output(self, obj):
+        """Salida de inventario del pedido entregado (`null` si no hubo o Inventario está deshabilitado)."""
+        return stock_output_data(self.context.get('stock_output'))
+
+
+def quantity_text(value) -> str:
+    """Cantidad con la precisión del libro de movimientos (4 decimales)."""
+    return format(value.quantize(QUANTITY_PLACES), 'f')
+
+
+def stock_output_data(record) -> dict | None:
+    if record is None:
+        return None
+    return {
+        'reference': record.reference,
+        'warehouse': {'id': str(record.warehouse_id), 'name': record.warehouse_name},
+        'occurred_at': serializers.DateTimeField().to_representation(record.occurred_at),
+        'user_name': record.user_name,
+        'movements': [{
+            'id': str(m.id),
+            'product': {'id': str(m.product_id), 'name': m.product_name},
+            'quantity': quantity_text(m.quantity),
+            'unit': {'abbreviation': m.unit},
+        } for m in record.movements],
+    }
+
+
+def delivery_preview_data(preview) -> dict:
+    return {
+        'inventory_enabled': preview.inventory_enabled,
+        'requires_stock_output': preview.requires_stock_output,
+        'allow_negative_stock': preview.allow_negative_stock,
+        'warehouses': [{'id': str(w.id), 'name': w.name, 'is_default': w.is_default} for w in preview.warehouses],
+        'warehouse_id': str(preview.warehouse_id) if preview.warehouse_id else None,
+        'lines': [{
+            'product': {'id': str(line.product.id), 'name': line.product.name},
+            'quantity': quantity_text(line.quantity),
+            'unit': {'abbreviation': line.product.unit},
+            'available': None if line.available is None else quantity_text(line.available),
+            'projected': None if line.projected is None else quantity_text(line.projected),
+            'insufficient': line.insufficient,
+        } for line in preview.lines],
+    }
 
 
 class OrderSummarySerializer(_CustomerMixin):

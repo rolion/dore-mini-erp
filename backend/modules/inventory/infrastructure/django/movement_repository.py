@@ -160,7 +160,16 @@ class DjangoStockMovementRepository:
             queryset = queryset.filter(source_type__isnull=True)
         elif filters.source_type:
             queryset = queryset.filter(source_type=filters.source_type)
+            if filters.source_id:
+                queryset = queryset.filter(source_id=filters.source_id)
         return MovementList(queryset)
+
+    def balances_for(self, warehouse_id: UUID, product_ids) -> dict[UUID, Decimal]:
+        rows = (self._movements().filter(warehouse_id=warehouse_id, product_id__in=list(product_ids))
+                .values('product_id').annotate(total=_signed_sum()))
+        balances = {product_id: ZERO for product_id in product_ids}
+        balances.update({row['product_id']: row['total'] or ZERO for row in rows})
+        return balances
 
     def has_history(self, product_id: UUID) -> bool:
         return self._movements().filter(product_id=product_id).exists()

@@ -37,6 +37,7 @@ class MovementFilters:
     warehouse_id: UUID | None = None
     kind: MovementKind | None = None
     source_type: str | None = None  # clase de origen, o 'none' para movimientos sin documento
+    source_id: str | None = None  # documento de origen concreto (con `source_type`)
 
 
 class StockMovementRepository(Protocol):
@@ -73,6 +74,10 @@ class StockMovementRepository(Protocol):
         ...
 
     def has_nonzero_balance(self, warehouse_id: UUID) -> bool: ...
+
+    def balances_for(self, warehouse_id: UUID, product_ids: Sequence[UUID]) -> dict[UUID, Decimal]:
+        """Existencia de cada producto indicado en el almacén (0 si no tiene movimientos), en una consulta."""
+        ...
 
 
 @dataclass(frozen=True)

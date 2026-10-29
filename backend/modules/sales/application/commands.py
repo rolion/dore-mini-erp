@@ -1,11 +1,12 @@
 from datetime import date
 from uuid import UUID
 
-from modules.sales.domain.exceptions import OrderNotFound, OrderValidationError
+from modules.sales.domain.exceptions import OrderNotFound, OrderRuleViolation, OrderValidationError
 from modules.sales.domain.order import UNSET, Order, validate_quantity
 from modules.sales.domain.repositories import OrderRepository
 
-from .ports import Clock, CustomerDirectory, ProductCatalog, SalesSettingsReader
+from .delivery import controlled_lines
+from .ports import Actor, Clock, CustomerDirectory, ProductCatalog, SalesSettingsReader, StockOutput
 
 
 def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
@@ -161,14 +162,37 @@ class MarkOrderReady:
 
 
 class DeliverOrder:
-    def __init__(self, repository: OrderRepository, clock: Clock):
+    """Entrega el pedido (READY -> DELIVERED) y, con Inventario habilitado, registra la salida de sus productos
+    controlados en el almacén elegido. Todo ocurre en la transacción de quien llama: si algo falla, no se entrega
+    el pedido ni se registra ninguna salida."""
+
+    def __init__(self, repository: OrderRepository, clock: Clock, stock: StockOutput | None = None):
         self.repository = repository
         self.clock = clock
+        self.stock = stock
 
-    def execute(self, order_id: UUID, delivered_date: date | None = None) -> Order:
+    def execute(self, order_id: UUID, delivered_date: date | None = None, warehouse_id: UUID | None = None,
+                actor: Actor | None = None) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.deliver(delivered_date, self.clock.today())
+        self._register_outputs(order, warehouse_id, actor)
         return self.repository.save(order)
+
+    def _register_outputs(self, order: Order, warehouse_id: UUID | None, actor: Actor | None) -> None:
+        if self.stock is None or not self.stock.is_available():
+            return
+        planned = controlled_lines(order, self.stock)
+        if not planned:
+            return
+        if not self.stock.active_warehouses():
+            raise OrderRuleViolation(
+                'no_active_warehouse',
+                'No hay un almacén activo para registrar la salida: crea o activa uno en Inventario.')
+        if warehouse_id is None:
+            raise OrderValidationError({'warehouse_id': ['Elige el almacén de salida.']})
+        self.stock.register_outputs(
+            warehouse_id, [(product.id, quantity) for product, quantity in planned], order.id, order.code,
+            actor or Actor(None, ''))
 
 
 class CancelOrder:
