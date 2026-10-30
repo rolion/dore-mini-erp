@@ -1,6 +1,6 @@
 # TASK-compras-registrar-pagos-saldo: Registrar pagos y saldo de compras (PB-COM-005)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-registrar-pagos-saldo
@@ -15,6 +15,7 @@
 | 2026-10-30 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -90,7 +91,13 @@ No se puede registrar un pago. El detalle de una compra confirmada muestra «Sin
 `docs/plans/PLAN-2026-10-30-compras-registrar-pagos-saldo.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/purchases/`): `domain/payment.py`, `PaymentMethod`/`PaymentRecordStatus`, `Purchase.register_payment`/`can_pay`/`pay` en `allowed_actions`, `PurchaseNotPayable`, `PaymentConflict` (INV-01…07, 11; AC-01…06, 09); `infrastructure/django/{models,mappers,payment_repository}.py` y migración `0006_payments` con `CheckConstraint(amount > 0)` (AC-14); `application/payment_commands.py` (`RegisterPayment`: bloqueo de la compra, acumulado tras el bloqueo, idempotencia por `payment_id`; INV-08, 09; AC-08, 13), `payment_queries.py` (`ListPayments`) y `GetPurchase` con `paid_total`/`balance` (AC-10, 11); `api/payment_{views,serializers}.py`, ruta `payments/` y campos nuevos del detalle (AC-01…AC-12). Sin dependencias nuevas entre módulos (INV-10, AC-07).
+**Frontend** (`features/purchases/`): `models/payment.ts`, `services/{payments-api.service,payment-amounts}.ts`, componentes `purchase-payments-tab` y `payment-dialog` (el diálogo hace la llamada y conserva lo escrito ante errores), pestaña «Pagos» en `purchase-detail` con `?tab=payments`, Total pagado/Saldo y badge en el Resumen, botón «Registrar pago» según `pay` (AC-15…AC-20). Pantalla de referencia: «Detalle con pestañas y acciones de ciclo de vida» (`purchase-detail`, `purchase-receipts-tab`) y `purchase-cancel-dialog`; sin componente compartido nuevo.
+**Docs:** `modulos-implementados.md` (§3.12), `ddd.md` (nota de pagos), `design-system.md` (patrón «pestaña con resumen y alta por diálogo»).
+**Pruebas escritas:** `test_payment_{domain,application,api,repository,concurrency}.py`; specs Karma de servicio, importes, diálogo, pestaña y detalle. Se ajustaron aserciones existentes de `allowed_actions` (ahora incluyen `pay`) y `DETAIL_FIELDS` (`paid_total`, `balance`).
+**Verificación local (no es el Quality Gate):** dominio/aplicación/API/repositorio de Compras y guardas pasan con SQLite en memoria (sin credenciales de PostgreSQL); `makemigrations --check` sin cambios; `ng lint` OK; `ng build` OK; Karma de `features/purchases` + `features/inventory` (321) OK con `app.component.spec.ts` apartado temporalmente (falla al compilar en `main` por `title`, ajeno a esta task; restaurado). **No ejecutado:** pruebas con PostgreSQL real (incluye `test_payment_concurrency`, AC-13) ni revisión visual. Con SQLite fallan 5 pruebas de concurrencia ya existentes que requieren PostgreSQL.
+**Desviaciones del plan:** ninguna de alcance. Detalle menor: el botón «Registrar pago» de la barra de acciones del Resumen cambia a la pestaña «Pagos» (el alta vive en la pestaña, según el DDR). Se añadió la clase `col-grey` para «Sin pagar» (badge sin color de estado fuerte).
+**Deuda:** anular/reembolsar pagos (estado `voided` reservado, sin acción, H-05); numeración correlativa de `PAG-`; la fecha futura se valida con la hora local del servidor.
 
 ## Review
 _Pendiente_
