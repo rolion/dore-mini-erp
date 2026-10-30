@@ -1,6 +1,6 @@
 # TASK-catalogo-usos-del-producto: Distinguir insumos, intermedios y productos vendibles (PB-CAT-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-catalogo-usos-del-producto
@@ -12,7 +12,8 @@
 | 2026-10-29 | (nuevo) → INVESTIGATION | Task creado; rama desde `origin/main` al día | delivery-start |
 | 2026-10-29 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Cambia el modelo del producto (migración de datos), el contrato API y la frontera Catalog → Sales/Purchases | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas) | delivery-start |
-| 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1; pruebas con PostgreSQL pendientes de correr (ver Implementación) | delivery-build |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS con reservas (2 hallazgos Low); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -91,7 +92,12 @@ Ver `docs/adr/ADR-catalogo-usos-del-producto-modelo-migracion-y-contrato.md`.
 **Deuda técnica.** `app.component.spec.ts` roto en `main` (preexistente). No hay endpoint de compras que aplique `can_buy` (fuera de alcance).
 
 ## Review
-_Pendiente_
+**Quality Gate ciclo 1 (subagente aislado): PASS con reservas.** Sin hallazgos Critical/High.
+- Backend: 962 pruebas; fallos intermitentes preexistentes (también en `origin/main`) en `sales.test_repository` y `modularity.test_concurrency`; ninguna prueba del PR falla. `makemigrations --check`: sin cambios; `bandit`: sin incidencias. ruff/flake8/mypy no disponibles.
+- Frontend: `npm run lint` y `npm run build` OK. Karma: 738 OK / 71 FALLIDAS, todas `should create` de pantallas demo de la plantilla (NG0201 ActivatedRoute), ninguna en `features/`; cobertura sentencias 82.8 %, ramas 76.2 %. `app.component.spec.ts` roto en `main`.
+- `npm audit`: no ejecutable (sin `package-lock.json`). Revisión visual: **no verificada**.
+- Conformidad: AC-01..AC-10, INV, EDGE, API y UI verificados con pruebas ejecutadas; sin scope creep; límites DDD respetados.
+- Hallazgos abiertos (Low, IMPLEMENTATION): `docs/reviews/REV-2026-10-29-catalogo-usos-del-producto-01.md` (precio conservado visible en lista/detalle de un producto no vendible), `...-02.md` (precio oculto con patrón inválido bloquea Guardar sin mensaje al apagar «Se puede vender»).
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana (no se mergea desde el flujo). Involucra ADR y migración de base de datos: requiere aprobación humana explícita. Reservas y hallazgos Low en `## Review`.
