@@ -1,0 +1,53 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">Nuevo proveedor</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss('cerrar')"></button>
+  </div>
+  <div class="modal-body">
+    <div class="form-group mb-3">
+      <label for="quick-supplier-name">Nombre <span class="text-danger">*</span></label>
+      <input id="quick-supplier-name" type="text" class="form-control" placeholder="Nombre del proveedor"
+        formControlName="name" [attr.maxlength]="nameMaxLength">
+      @if (hasError('name')) {
+      <small class="form-text text-danger" data-testid="name-error">
+        {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+      </small>
+      }
+    </div>
+    <div class="form-group mb-3">
+      <label for="quick-supplier-tax-id">Identificación</label>
+      <input id="quick-supplier-tax-id" type="text" class="form-control" placeholder="NIT, CI o RUC"
+        formControlName="taxId" [attr.maxlength]="taxIdMaxLength">
+      @if (hasError('taxId')) {
+      <small class="form-text text-danger" data-testid="tax-id-error">
+        {{ serverErrors.taxId || 'La identificación no puede superar ' + taxIdMaxLength + ' caracteres.' }}
+      </small>
+      }
+    </div>
+    <div class="form-group mb-3">
+      <label for="quick-supplier-phone">Teléfono</label>
+      <input id="quick-supplier-phone" type="text" inputmode="tel" class="form-control" formControlName="phone"
+        [attr.maxlength]="phoneMaxLength">
+      @if (hasError('phone')) {
+      <small class="form-text text-danger" data-testid="phone-error">
+        {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
+      </small>
+      }
+    </div>
+    <div class="form-group">
+      <label for="quick-supplier-email">Correo</label>
+      <input id="quick-supplier-email" type="email" class="form-control" formControlName="email"
+        [attr.maxlength]="emailMaxLength">
+      @if (hasError('email')) {
+      <small class="form-text text-danger" data-testid="email-error">
+        {{ serverErrors.email || 'Ingresa un correo válido.' }}
+      </small>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss('cancelar')">Cancelar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+  </div>
+</form>

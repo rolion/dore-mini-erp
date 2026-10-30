@@ -40,7 +40,12 @@ function toProduct(dto: ProductDto): Product {
     needsReview: dto.needs_review,
     active: dto.active,
     tracksStock: dto.tracks_stock,
-    baseUnit: dto.base_unit,
+    baseUnit: dto.base_unit && {
+      id: dto.base_unit.id,
+      name: dto.base_unit.name,
+      abbreviation: dto.base_unit.abbreviation,
+      allowsFractions: dto.base_unit.allows_fractions,
+    },
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };

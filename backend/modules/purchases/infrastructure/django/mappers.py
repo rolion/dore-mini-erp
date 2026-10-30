@@ -1,6 +1,10 @@
+from collections.abc import Iterable
+
+from modules.purchases.domain.enums import PurchaseStatus
+from modules.purchases.domain.purchase import Purchase, PurchaseItem
 from modules.purchases.domain.supplier import Supplier
 
-from .models import SupplierModel
+from .models import PurchaseItemModel, PurchaseModel, SupplierModel
 
 
 def to_entity(model: SupplierModel) -> Supplier:
@@ -25,4 +29,31 @@ def to_model_values(supplier: Supplier) -> dict[str, object]:
         'email': supplier.email,
         'notes': supplier.notes,
         'active': supplier.active,
+    }
+
+
+def purchase_to_entity(model: PurchaseModel, items: Iterable[PurchaseItemModel]) -> Purchase:
+    return Purchase(
+        id=model.id,
+        supplier_id=model.supplier_id,
+        purchase_date=model.purchase_date,
+        external_reference=model.external_reference,
+        notes=model.notes,
+        status=PurchaseStatus(model.status),
+        items=[PurchaseItem(id=i.id, product_id=i.product_id, product_name=i.product_name,
+                            unit_abbreviation=i.unit_abbreviation, quantity=i.quantity, unit_price=i.unit_price)
+               for i in items],
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def purchase_to_model_values(purchase: Purchase) -> dict[str, object]:
+    return {
+        'supplier_id': purchase.supplier_id,
+        'purchase_date': purchase.purchase_date,
+        'external_reference': purchase.external_reference,
+        'notes': purchase.notes,
+        'status': purchase.status.value,
+        'total': purchase.total,
     }

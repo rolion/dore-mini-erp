@@ -93,7 +93,7 @@
     "PURCHASES": {
       "TEXT": "Einkäufe",
       "LIST": {
-        "HOME": "Start",
+        "PURCHASES": "Einkäufe",
         "SUPPLIERS": "Lieferanten",
         "SETTINGS": "Einstellungen"
       }
