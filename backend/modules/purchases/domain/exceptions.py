@@ -35,6 +35,20 @@ class PurchaseCancellationBlocked(Exception):
     """La compra ya tiene recepciones o pagos: no puede cancelarse."""
 
 
+class PurchaseNotReceivable(Exception):
+    """Solo una compra confirmada admite recepciones."""
+
+
+class ReceiptNotFound(Exception):
+    def __init__(self, receipt_id: UUID):
+        super().__init__(f'Recepción {receipt_id} no encontrada.')
+        self.receipt_id = receipt_id
+
+
+class ReceiptConflict(Exception):
+    """El identificador de la recepción ya pertenece a otra compra."""
+
+
 class SupplierNotFound(Exception):
     def __init__(self, supplier_id: UUID):
         super().__init__(f'Proveedor {supplier_id} no encontrado.')

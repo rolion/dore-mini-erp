@@ -1,10 +1,16 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Sequence
 from uuid import UUID
 
 from modules.purchases.domain.exceptions import PurchaseNotFound
 from modules.purchases.domain.purchase import Purchase
-from modules.purchases.domain.repositories import PurchaseRepository, PurchaseSummary, SupplierRepository
+from modules.purchases.domain.repositories import (
+    PurchaseRepository,
+    PurchaseSummary,
+    ReceiptRepository,
+    SupplierRepository,
+)
 from modules.purchases.domain.supplier import Supplier
 
 
@@ -14,12 +20,15 @@ class PurchaseDetail:
 
     purchase: Purchase
     supplier: Supplier | None
+    received: dict[UUID, Decimal] = field(default_factory=dict)  # acumulado confirmado por línea
 
 
 class GetPurchase:
-    def __init__(self, purchases: PurchaseRepository, suppliers: SupplierRepository):
+    def __init__(self, purchases: PurchaseRepository, suppliers: SupplierRepository,
+                 receipts: ReceiptRepository | None = None):
         self.purchases = purchases
         self.suppliers = suppliers
+        self.receipts = receipts
 
     def execute(self, purchase_id: UUID) -> PurchaseDetail:
         purchase = self.purchases.get(purchase_id)
@@ -28,7 +37,9 @@ class GetPurchase:
         return self.detail(purchase)
 
     def detail(self, purchase: Purchase) -> PurchaseDetail:
-        return PurchaseDetail(purchase, self.suppliers.get(purchase.supplier_id))
+        totals = self.receipts.received_totals(purchase.id) if self.receipts is not None else {}
+        received = {item.id: totals.get(item.id, Decimal('0')) for item in purchase.items}
+        return PurchaseDetail(purchase, self.suppliers.get(purchase.supplier_id), received)
 
 
 class ListPurchases:

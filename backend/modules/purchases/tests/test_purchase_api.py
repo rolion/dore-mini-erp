@@ -17,7 +17,8 @@ LIST_URL = '/api/purchases/'
 DETAIL_FIELDS = {'id', 'supplier', 'purchase_date', 'external_reference', 'notes', 'status', 'currency', 'editable',
                  'items', 'total', 'created_at', 'updated_at', 'reference', 'reception_status', 'payment_status',
                  'confirmed_at', 'cancelled_at', 'cancellation_reason', 'allowed_actions'}
-ITEM_FIELDS = {'id', 'product_id', 'product_name', 'unit_abbreviation', 'quantity', 'unit_price', 'subtotal'}
+ITEM_FIELDS = {'id', 'product_id', 'product_name', 'unit_abbreviation', 'quantity', 'unit_price', 'subtotal',
+               'received_quantity', 'pending_quantity'}
 
 
 def detail_url(purchase_id):

@@ -1,10 +1,11 @@
 from collections.abc import Iterable
 
-from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
+from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceiptStatus, ReceptionStatus
 from modules.purchases.domain.purchase import Purchase, PurchaseItem
+from modules.purchases.domain.receipt import Receipt, ReceiptLine
 from modules.purchases.domain.supplier import Supplier
 
-from .models import PurchaseItemModel, PurchaseModel, SupplierModel
+from .models import PurchaseItemModel, PurchaseModel, ReceiptItemModel, ReceiptModel, SupplierModel
 
 
 def to_entity(model: SupplierModel) -> Supplier:
@@ -67,3 +68,13 @@ def purchase_to_model_values(purchase: Purchase) -> dict[str, object]:
         'reception_status': purchase.reception_status.value,
         'payment_status': purchase.payment_status.value,
     }
+
+
+def receipt_to_entity(model: ReceiptModel, items: Iterable[ReceiptItemModel]) -> Receipt:
+    return Receipt(
+        id=model.id, purchase_id=model.purchase_id, receipt_date=model.receipt_date, user_id=model.user_id,
+        user_name=model.user_name, status=ReceiptStatus(model.status), warehouse_id=model.warehouse_id,
+        created_at=model.created_at,
+        lines=[ReceiptLine(purchase_item_id=i.purchase_item_id, product_id=i.product_id,
+                           product_name=i.product_name, unit_abbreviation=i.unit_abbreviation, quantity=i.quantity)
+               for i in items])

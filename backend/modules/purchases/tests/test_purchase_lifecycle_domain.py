@@ -19,7 +19,7 @@ class LifecycleTests(TestCase):
         purchase.confirm(NOW)
         self.assertEqual((purchase.status, purchase.confirmed_at, purchase.editable),
                          (PurchaseStatus.CONFIRMED, NOW, False))
-        self.assertEqual(purchase.allowed_actions, ['cancel'])
+        self.assertEqual(purchase.allowed_actions, ['receive', 'cancel'])
         with self.assertRaises(PurchaseNotEditable):
             purchase.update(notes='x')
 
@@ -60,7 +60,7 @@ class LifecycleTests(TestCase):
             purchase = make([draft()])
             purchase.confirm(NOW)
             setattr(purchase, field, value)
-            self.assertEqual(purchase.allowed_actions, [])
+            self.assertEqual(purchase.allowed_actions, ['receive'])
             with self.assertRaises(PurchaseCancellationBlocked):
                 purchase.cancel('x', NOW)
             self.assertEqual(purchase.status, PurchaseStatus.CONFIRMED)
