@@ -72,7 +72,7 @@ Consulta: usuario autenticado con empresa y módulo `costing` habilitado (permis
 ## API contract
 - API-01 `GET /api/valuation/movements/?product_id&source_type&source_id&movement_id&date_from&date_to&page` → paginado `{id, movement_id, product_id, product_name, unit_abbreviation, kind, quantity, unit_cost, value, average_before, average_after, cost_origin, source_type, source_id, source_label, occurred_at, status}`.
 - API-02 `GET /api/valuation/costs/` → `[{product_id, product_name, unit_abbreviation, quantity, total_value, average_cost}]`.
-- API-03 `POST /api/inventory/adjustments/` admite `total_value` (cadena decimal) y `declared_zero` opcionales; errores nuevos 400 `valuation_required`/`valuation_invalid` (campo `total_value`) y 409 `valuation_blocked`.
+- API-03 `POST /api/stock-adjustments/` admite `total_value` (cadena decimal) y `declared_zero` opcionales; errores nuevos 400 `valuation_required`/`valuation_invalid` (campo `total_value`) y 409 `valuation_blocked`.
 - API-04 Recepciones, entregas y reversiones devuelven 409 `valuation_blocked` / 400 `valuation_required` con mensaje accionable cuando corresponda. Sin cambios en respuestas actuales de éxito.
 
 ## UI behavior

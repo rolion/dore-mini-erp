@@ -7,7 +7,9 @@ from uuid import UUID
 
 from modules.catalog import services as catalog_services
 from modules.inventory.application.movement_ports import ProductInfo
+from modules.inventory.domain.exceptions import MovementConflict, MovementValidationError
 from modules.modularity import services as modularity_services
+from shared import stock_valuation
 
 
 def _info(p) -> ProductInfo:
@@ -39,4 +41,22 @@ class ModularityInventoryPolicy:
         self.company_id = company_id
 
     def allow_negative_stock(self) -> bool:
+        if stock_valuation.is_valued(self.company_id):  # inventario valorado: nunca hay saldos negativos
+            return False
         return modularity_services.get_inventory_settings(self.company_id).allow_negative_stock
+
+    def value_movement(self, movement, value: stock_valuation.MovementValue | None = None) -> None:
+        """Valora el movimiento con Costeo (si la empresa tiene inventario valorado) o lo rechaza con un motivo."""
+        if not stock_valuation.is_valued(self.company_id):
+            return
+        source = movement.source
+        try:
+            stock_valuation.value_movement(self.company_id, stock_valuation.MovementToValue(
+                movement_id=movement.id, product_id=movement.product_id, warehouse_id=movement.warehouse_id,
+                kind=movement.kind.value, quantity=movement.quantity, occurred_at=movement.occurred_at,
+                source_type=source.type if source else None, source_id=source.id if source else '',
+                reverses_id=movement.reverses_id, value=value))
+        except stock_valuation.ValuationRejected as exc:
+            if exc.code == 'valuation_blocked':
+                raise MovementConflict(exc.code, exc.message) from exc
+            raise MovementValidationError({exc.field: [exc.message]}) from exc
