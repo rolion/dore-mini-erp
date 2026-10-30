@@ -92,7 +92,7 @@ class StockApiTestCase(APITestCase):
         return response.json()['id']
 
     def make_product(self, name='Harina', unit=None, tracks=True, client=None):
-        body = {'name': name, 'sale_price': '10.00'}
+        body = {'name': name, 'sale_price': '10.00', 'category': 'finished'}
         if tracks:
             body.update(tracks_stock=True, base_unit_id=unit or self.unit)
         response = (client or self.client).post('/api/products/', body, format='json')
@@ -347,7 +347,7 @@ class ConcurrentOpeningTests(TransactionTestCase):
         set_enabled(self.company, [*DEFAULT_ENABLED_KEYS, 'inventory'])
         unit = client.post('/api/units/', {'name': 'Unidad', 'abbreviation': 'u'}, format='json').json()['id']
         self.product = client.post('/api/products/', {
-            'name': 'Harina', 'sale_price': '1.00', 'tracks_stock': True, 'base_unit_id': unit}, format='json').json()['id']
+            'name': 'Harina', 'sale_price': '1.00', 'category': 'raw_material', 'tracks_stock': True, 'base_unit_id': unit}, format='json').json()['id']
         self.warehouse = client.get('/api/warehouses/').json()['results'][0]['id']
 
     def run_parallel(self, keys):

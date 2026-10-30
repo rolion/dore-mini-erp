@@ -22,9 +22,11 @@ class ListProducts:
     def __init__(self, repository: ProductRepository):
         self.repository = repository
 
-    def execute(self, search: str | None = None, active: bool | None = None,
-                tracks_stock: bool | None = None) -> Sequence[Product]:
-        return self.repository.list(search=search, active=active, tracks_stock=tracks_stock)
+    def execute(self, search: str | None = None, active: bool | None = None, tracks_stock: bool | None = None,
+                can_buy: bool | None = None, can_sell: bool | None = None,
+                category: str | None = None) -> Sequence[Product]:
+        return self.repository.list(search=search, active=active, tracks_stock=tracks_stock,
+                                    can_buy=can_buy, can_sell=can_sell, category=category)
 
 
 class GetUnit:

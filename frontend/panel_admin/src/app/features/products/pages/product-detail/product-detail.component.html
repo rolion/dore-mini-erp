@@ -25,8 +25,19 @@
               <dd class="col-sm-9">{{ p.name }}</dd>
               <dt class="col-sm-3">Descripción</dt>
               <dd class="col-sm-9">{{ p.description || 'Sin descripción' }}</dd>
+              <dt class="col-sm-3">Categoría</dt>
+              <dd class="col-sm-9">
+                {{ categoryName(p) }}
+                @if (p.needsReview) {
+                <div class="badge-outline col-orange d-inline-block ms-2">Por revisar</div>
+                }
+              </dd>
+              <dt class="col-sm-3">Se compra</dt>
+              <dd class="col-sm-9">{{ p.canBuy ? 'Sí' : 'No' }}</dd>
+              <dt class="col-sm-3">Se vende</dt>
+              <dd class="col-sm-9">{{ p.canSell ? 'Sí' : 'No' }}</dd>
               <dt class="col-sm-3">Precio de venta</dt>
-              <dd class="col-sm-9">{{ p.salePrice }}</dd>
+              <dd class="col-sm-9">{{ p.salePrice ?? 'No se vende' }}</dd>
               @if (inventoryEnabled) {
               <dt class="col-sm-3">Controla stock</dt>
               <dd class="col-sm-9">{{ p.tracksStock ? 'Sí' : 'No' }}</dd>

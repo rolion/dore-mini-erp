@@ -18,7 +18,7 @@ class ProductApiTestCase(APITestCase):
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def create(self, name='Cuñapé', sale_price='10.00', **extra):
-        response = self.client.post(LIST_URL, {'name': name, 'sale_price': sale_price, **extra}, format='json')
+        response = self.client.post(LIST_URL, {'name': name, 'sale_price': sale_price, 'category': 'finished', **extra}, format='json')
         self.assertEqual(response.status_code, 201, response.content)
         return response.json()
 
@@ -30,7 +30,8 @@ class CreateProductTests(ProductApiTestCase):
         self.assertEqual(body['sale_price'], '35.00')
         self.assertEqual(body['description'], 'Tradicional')
         self.assertTrue(body['active'])
-        self.assertEqual(set(body), {'id', 'name', 'description', 'sale_price', 'active', 'tracks_stock', 'base_unit_id',
+        self.assertEqual(set(body), {'id', 'name', 'description', 'sale_price', 'category', 'can_buy', 'can_sell', 'needs_review', 'active',
+                                    'tracks_stock', 'base_unit_id',
                                     'base_unit', 'created_at', 'updated_at'})
         self.assertFalse(body['tracks_stock'])
         self.assertIsNone(body['base_unit'])

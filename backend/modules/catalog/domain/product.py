@@ -8,6 +8,7 @@ from .unit import UnitOfMeasure
 
 NAME_MAX_LENGTH = 150
 PRICE_MAX = Decimal('9999999999.99')
+CATEGORIES = ('raw_material', 'packaging', 'intermediate', 'finished', 'merchandise')
 _CENTS = Decimal('0.01')
 
 
@@ -44,6 +45,12 @@ def validate_price(value: object) -> Decimal:
     return price
 
 
+def validate_category(category: object) -> str:
+    if not isinstance(category, str) or category not in CATEGORIES:
+        raise _fail('category', 'La categoría debe ser una de: ' + ', '.join(CATEGORIES) + '.')
+    return category
+
+
 @dataclass(frozen=True)
 class UnitSummary:
     id: UUID
@@ -57,33 +64,38 @@ class Product:
     id: UUID
     name: str
     description: str
-    sale_price: Decimal
+    # Solo obligatorio si el producto se puede vender (INV-02).
+    sale_price: Decimal | None
     active: bool = True
     tracks_stock: bool = False
     base_unit_id: UUID | None = None
     # Resumen de lectura de la unidad base (lo completa la persistencia).
     base_unit: 'UnitSummary | None' = None
+    # None solo en productos migrados sin clasificar (INV-01); la categoría no restringe los usos.
+    category: str | None = None
+    can_buy: bool = False
+    can_sell: bool = True
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
+    @property
+    def needs_review(self) -> bool:
+        return self.category is None
+
     @classmethod
-    def create(cls, name: object, sale_price: object, description: str | None = '') -> 'Product':
+    def create(cls, name: object, sale_price: object = None, description: str | None = '', *,
+               category: object = None, can_buy: object = False, can_sell: object = True) -> 'Product':
         errors: dict[str, list[str]] = {}
-        validated: dict[str, object] = {}
-        for field, validator, raw in (('name', validate_name, name), ('sale_price', validate_price, sale_price)):
+        product = cls(id=uuid4(), name='', description=(description or '').strip(), sale_price=None, active=True)
+        for action in (lambda: product.rename(name), lambda: product.classify(category),
+                       lambda: product.set_uses(can_buy, can_sell, sale_price)):
             try:
-                validated[field] = validator(raw)
+                action()
             except ProductValidationError as exc:
                 errors.update(exc.errors)
         if errors:
             raise ProductValidationError(errors)
-        return cls(
-            id=uuid4(),
-            name=validated['name'],
-            description=(description or '').strip(),
-            sale_price=validated['sale_price'],
-            active=True,
-        )
+        return product
 
     def rename(self, name: object) -> None:
         self.name = validate_name(name)
@@ -92,7 +104,29 @@ class Product:
         self.description = (description or '').strip()
 
     def change_price(self, sale_price: object) -> None:
-        self.sale_price = validate_price(sale_price)
+        self.set_uses(self.can_buy, self.can_sell, sale_price)
+
+    def classify(self, category: object) -> None:
+        """Fija la categoría operativa; solo organiza y filtra, no cambia los usos."""
+        self.category = validate_category(category)
+
+    def set_uses(self, can_buy: object, can_sell: object, sale_price: object) -> None:
+        """Fija si se compra y/o se vende junto con el precio resultante (obligatorio solo si se vende)."""
+        errors: dict[str, list[str]] = {}
+        for field, value in (('can_buy', can_buy), ('can_sell', can_sell)):
+            if not isinstance(value, bool):
+                errors[field] = ['Debe ser verdadero o falso.']
+        price = None
+        if sale_price is not None:
+            try:
+                price = validate_price(sale_price)
+            except ProductValidationError as exc:
+                errors.update(exc.errors)
+        elif can_sell is True:
+            errors['sale_price'] = ['El precio de venta es obligatorio para productos que se venden.']
+        if errors:
+            raise ProductValidationError(errors)
+        self.can_buy, self.can_sell, self.sale_price = can_buy, can_sell, price
 
     def configure_stock(self, tracks_stock: bool, base_unit: 'UnitOfMeasure | None') -> None:
         """Activa o desactiva el control de stock; al controlarlo exige una unidad base activa."""

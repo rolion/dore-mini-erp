@@ -16,7 +16,7 @@ class GetProductForSaleTests(TestCase):
         product = ProductModel.objects.create(company_id=COMPANY_ID, name='Pack cuñapé', description='', sale_price=Decimal('35.00'))
         self.assertEqual(
             get_product_for_sale(COMPANY_ID, product.id),
-            ProductForSale(id=product.id, name='Pack cuñapé', sale_price=Decimal('35.00'), active=True),
+            ProductForSale(id=product.id, name='Pack cuñapé', sale_price=Decimal('35.00'), active=True, can_sell=True),
         )
 
     def test_inactive_products_are_returned_with_their_state(self):  # AC-21

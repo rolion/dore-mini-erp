@@ -5,11 +5,32 @@ export interface BaseUnit {
   abbreviation: string;
 }
 
+/** Categoría operativa: organiza y filtra, no limita los usos del producto. */
+export type ProductCategory = 'raw_material' | 'packaging' | 'intermediate' | 'finished' | 'merchandise';
+
+export const PRODUCT_CATEGORIES: readonly { value: ProductCategory; label: string }[] = [
+  { value: 'raw_material', label: 'Materia prima' },
+  { value: 'packaging', label: 'Empaque' },
+  { value: 'intermediate', label: 'Intermedio' },
+  { value: 'finished', label: 'Terminado' },
+  { value: 'merchandise', label: 'Mercadería' },
+];
+
+export function categoryLabel(category: ProductCategory | null): string {
+  return PRODUCT_CATEGORIES.find((c) => c.value === category)?.label ?? 'Sin clasificar';
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
-  salePrice: string;
+  /** `null` cuando el producto no se vende. */
+  salePrice: string | null;
+  /** `null` en productos migrados que aún no se clasifican (por revisar). */
+  category: ProductCategory | null;
+  canBuy: boolean;
+  canSell: boolean;
+  needsReview: boolean;
   active: boolean;
   /** Controla existencias; sin Inventario habilitado la API lo devuelve igual, la UI lo oculta. */
   tracksStock: boolean;
@@ -22,7 +43,11 @@ export interface Product {
 export interface ProductInput {
   name: string;
   description: string;
-  salePrice: string;
+  /** Obligatorio solo si `canSell`; sin precio se envía `null`. */
+  salePrice: string | null;
+  category: ProductCategory;
+  canBuy: boolean;
+  canSell: boolean;
   /** Solo se envían con Inventario habilitado. */
   tracksStock?: boolean;
   baseUnitId?: string | null;
@@ -33,7 +58,11 @@ export interface ProductDto {
   id: string;
   name: string;
   description: string;
-  sale_price: string;
+  sale_price: string | null;
+  category: ProductCategory | null;
+  can_buy: boolean;
+  can_sell: boolean;
+  needs_review: boolean;
   active: boolean;
   tracks_stock: boolean;
   base_unit: BaseUnit | null;
@@ -44,6 +73,10 @@ export interface ProductDto {
 export interface ProductListParams {
   search?: string;
   active?: boolean;
+  canBuy?: boolean;
+  canSell?: boolean;
+  /** Una categoría, o `unclassified` para los productos por revisar. */
+  category?: ProductCategory | 'unclassified';
   /** Página base 1. */
   page?: number;
   pageSize?: number;

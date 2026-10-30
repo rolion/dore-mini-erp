@@ -14,8 +14,8 @@ class ProductStockFilterTests(APITestCase):
         unit = self.client.post(
             '/api/units/', {'name': 'Kilogramo', 'abbreviation': 'kg', 'allows_fractions': True}, format='json').json()
         self.client.post('/api/products/', {
-            'name': 'Harina', 'sale_price': '1.00', 'tracks_stock': True, 'base_unit_id': unit['id']}, format='json')
-        self.client.post('/api/products/', {'name': 'Servicio', 'sale_price': '5.00'}, format='json')
+            'name': 'Harina', 'sale_price': '1.00', 'category': 'raw_material', 'tracks_stock': True, 'base_unit_id': unit['id']}, format='json')
+        self.client.post('/api/products/', {'name': 'Servicio', 'sale_price': '5.00', 'category': 'finished'}, format='json')
 
     def names(self, **params):
         return [p['name'] for p in self.client.get('/api/products/', params).json()['results']]

@@ -60,9 +60,11 @@ class CreateProduct:
         self.repository = repository
         self.stock = stock
 
-    def execute(self, name: object, sale_price: object, description: str = '',
+    def execute(self, name: object, sale_price: object = None, description: str = '', category: object = None,
+                can_buy: object = False, can_sell: object = True,
                 tracks_stock: object = UNSET, base_unit_id: object = UNSET) -> Product:
-        product = Product.create(name=name, sale_price=sale_price, description=description)
+        product = Product.create(name=name, sale_price=sale_price, description=description,
+                                 category=category, can_buy=can_buy, can_sell=can_sell)
         if self.stock is not None:
             self.stock.apply(product, tracks_stock, base_unit_id, is_new=True)
         return self.repository.save(product)
@@ -76,7 +78,8 @@ class UpdateProduct:
         self.stock = stock
 
     def execute(self, product_id: UUID, name: object = UNSET, description: object = UNSET,
-                sale_price: object = UNSET, tracks_stock: object = UNSET, base_unit_id: object = UNSET) -> Product:
+                sale_price: object = UNSET, tracks_stock: object = UNSET, base_unit_id: object = UNSET,
+                category: object = UNSET, can_buy: object = UNSET, can_sell: object = UNSET) -> Product:
         product = self.repository.get(product_id)
         if product is None:
             raise ProductNotFound(product_id)
@@ -84,7 +87,7 @@ class UpdateProduct:
         changes = (
             (name, product.rename),
             (description, product.describe),
-            (sale_price, product.change_price),
+            (category, product.classify),
         )
         changed = False
         for value, apply in changes:
@@ -92,6 +95,15 @@ class UpdateProduct:
                 continue
             try:
                 apply(value)
+                changed = True
+            except ProductValidationError as exc:
+                errors.update(exc.errors)
+        if any(value is not UNSET for value in (can_buy, can_sell, sale_price)):
+            try:
+                product.set_uses(
+                    product.can_buy if can_buy is UNSET else can_buy,
+                    product.can_sell if can_sell is UNSET else can_sell,
+                    product.sale_price if sale_price is UNSET else sale_price)
                 changed = True
             except ProductValidationError as exc:
                 errors.update(exc.errors)

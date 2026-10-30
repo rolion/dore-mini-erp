@@ -53,7 +53,9 @@ describe('ProductListComponent', () => {
   it('loads the first page with 10 rows, no filters, and shows the products (AC-10)', () => {
     fixture.detectChanges();
 
-    expect(api.list).toHaveBeenCalledOnceWith({ search: '', active: undefined, page: 1, pageSize: 10 });
+    expect(api.list).toHaveBeenCalledOnceWith({
+      search: '', active: undefined, canBuy: undefined, canSell: undefined, category: undefined, page: 1, pageSize: 10,
+    });
     expect(component.rows).toEqual([active, inactive]);
     expect(component.total).toBe(2);
     fixture.detectChanges();
@@ -62,6 +64,37 @@ describe('ProductListComponent', () => {
     expect(text).toContain('5.50');
     expect(text).toContain('Activo');
     expect(text).toContain('Inactivo');
+  });
+
+  it('filters by use and category and goes back to the first page (AC-08, UI-03)', () => {
+    fixture.detectChanges();
+    component.onPage({ offset: 2 });
+
+    component.useControl.setValue('buy');
+    expect(lastListParams()).toEqual(jasmine.objectContaining({ canBuy: true, canSell: undefined, page: 1 }));
+
+    component.useControl.setValue('sell');
+    expect(lastListParams()).toEqual(jasmine.objectContaining({ canBuy: undefined, canSell: true }));
+
+    component.categoryControl.setValue('unclassified');
+    expect(lastListParams()).toEqual(jasmine.objectContaining({ category: 'unclassified' }));
+    component.categoryControl.setValue('all');
+    expect(lastListParams()?.category).toBeUndefined();
+  });
+
+  it('shows the category, uses and the pending-review badge (UI-03)', () => {
+    api.list.and.returnValue(of(page([
+      makeProduct({ id: 'a', name: 'Queso', category: 'raw_material', canBuy: true, canSell: false, salePrice: null }),
+      makeProduct({ id: 'b', name: 'Viejo', category: null, needsReview: true }),
+    ])));
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Materia prima');
+    expect(text).toContain('Compra');
+    expect(text).toContain('Por revisar');
+    expect(text).toContain('—');
   });
 
   it('links the "+" button to the new product form (AC-10)', () => {
@@ -81,7 +114,9 @@ describe('ProductListComponent', () => {
     tick(1);
 
     expect(api.list).toHaveBeenCalledTimes(3);
-    expect(lastListParams()).toEqual({ search: 'cu', active: undefined, page: 1, pageSize: 10 });
+    expect(lastListParams()).toEqual({
+      search: 'cu', active: undefined, canBuy: undefined, canSell: undefined, category: undefined, page: 1, pageSize: 10,
+    });
   }));
 
   it('filters by state Activos / Inactivos / Todos (AC-10)', () => {

@@ -38,7 +38,7 @@ class UnitDomainTests(SimpleTestCase):
 
 class ProductStockDomainTests(SimpleTestCase):
     def product(self):
-        return Product.create('Harina', '10')
+        return Product.create('Harina', '10', category='raw_material')
 
     def test_default_product_does_not_track_stock(self):  # AC-02
         product = self.product()
@@ -73,7 +73,7 @@ class StockApiTestCase(APITestCase):
         return response.json()
 
     def product(self, **extra):
-        response = self.client.post(PRODUCTS, {'name': 'Harina', 'sale_price': '10', **extra}, format='json')
+        response = self.client.post(PRODUCTS, {'name': 'Harina', 'sale_price': '10', 'category': 'raw_material', **extra}, format='json')
         self.assertEqual(response.status_code, 201, response.content)
         return response.json()
 

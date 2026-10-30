@@ -63,7 +63,9 @@ describe('ProductFormComponent', () => {
 
       expect(component.isEdit).toBeFalse();
       expect(api.get).not.toHaveBeenCalled();
-      expect(component.form.getRawValue()).toEqual({ name: '', description: '', salePrice: '', tracksStock: false, baseUnitId: '' });
+      expect(component.form.getRawValue()).toEqual({
+        name: '', description: '', category: '', canBuy: false, canSell: true, salePrice: '', tracksStock: false, baseUnitId: '',
+      });
       expect(submitButton(el).disabled).toBeTrue();
       expect(el.querySelector('[formControlName="active"]')).toBeNull();
     });
@@ -106,20 +108,20 @@ describe('ProductFormComponent', () => {
     it('creates the product sending trimmed values and a dot decimal, then goes to the list (AC-01, AC-12)', async () => {
       const { harness, component, el } = await open('/pocketbiz/catalog/products/new');
       api.create.and.returnValue(of(makeProduct()));
-      component.form.setValue({ name: '  Cuñapé  ', description: ' Tradicional ', salePrice: '35,5', tracksStock: false, baseUnitId: '' });
+      component.form.setValue({ name: '  Cuñapé  ', description: ' Tradicional ', category: 'finished', canBuy: false, canSell: true, salePrice: '35,5', tracksStock: false, baseUnitId: '' });
       harness.detectChanges();
       expect(submitButton(el).disabled).toBeFalse();
 
       component.onSubmit();
 
-      expect(api.create).toHaveBeenCalledOnceWith({ name: 'Cuñapé', description: 'Tradicional', salePrice: '35.5' });
+      expect(api.create).toHaveBeenCalledOnceWith({ name: 'Cuñapé', description: 'Tradicional', category: 'finished', canBuy: false, canSell: true, salePrice: '35.5' });
       expect(toastr.success).toHaveBeenCalledWith('Producto creado');
       expect(navigate).toHaveBeenCalledWith(['/pocketbiz/catalog/products']);
     });
 
     it('does not call the API when the form is invalid (AC-02, AC-03)', async () => {
       const { component } = await open('/pocketbiz/catalog/products/new');
-      component.form.setValue({ name: '', description: '', salePrice: '-1', tracksStock: false, baseUnitId: '' });
+      component.form.setValue({ name: '', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '-1', tracksStock: false, baseUnitId: '' });
 
       component.onSubmit();
 
@@ -129,7 +131,7 @@ describe('ProductFormComponent', () => {
 
     it('shows server validation errors under each field and clears them on edit (AC-12)', async () => {
       const { harness, component, el } = await open('/pocketbiz/catalog/products/new');
-      component.form.setValue({ name: 'x', description: '', salePrice: '1', tracksStock: false, baseUnitId: '' });
+      component.form.setValue({ name: 'x', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '1', tracksStock: false, baseUnitId: '' });
       api.create.and.returnValue(
         throwError(() => new ProductApiError('Revisa los datos ingresados.', 400, {
           name: ['Ya existe.'],
@@ -153,20 +155,20 @@ describe('ProductFormComponent', () => {
 
     it('toasts non-validation errors and keeps the typed values (AC-12)', async () => {
       const { component } = await open('/pocketbiz/catalog/products/new');
-      component.form.setValue({ name: 'x', description: 'd', salePrice: '1', tracksStock: false, baseUnitId: '' });
+      component.form.setValue({ name: 'x', description: 'd', category: 'finished', canBuy: false, canSell: true, salePrice: '1', tracksStock: false, baseUnitId: '' });
       api.create.and.returnValue(throwError(() => new ProductApiError('Sin conexión', 0)));
 
       component.onSubmit();
 
       expect(toastr.error).toHaveBeenCalledWith('Sin conexión');
-      expect(component.form.getRawValue()).toEqual({ name: 'x', description: 'd', salePrice: '1', tracksStock: false, baseUnitId: '' });
+      expect(component.form.getRawValue()).toEqual({ name: 'x', description: 'd', category: 'finished', canBuy: false, canSell: true, salePrice: '1', tracksStock: false, baseUnitId: '' });
     });
 
     it('ignores a second submit while saving (AC-12)', async () => {
       const { component } = await open('/pocketbiz/catalog/products/new');
       const pending = new Subject<Product>();
       api.create.and.returnValue(pending);
-      component.form.setValue({ name: 'x', description: '', salePrice: '1', tracksStock: false, baseUnitId: '' });
+      component.form.setValue({ name: 'x', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '1', tracksStock: false, baseUnitId: '' });
 
       component.onSubmit();
       component.onSubmit();
@@ -176,14 +178,50 @@ describe('ProductFormComponent', () => {
     });
   });
 
+  describe('usos del producto (PB-CAT-001)', () => {
+    it('requires a category and hides the price when the product is not sold (AC-05, AC-09)', async () => {
+      const { harness, component, el } = await open('/pocketbiz/catalog/products/new');
+      expect(component.form.controls.category.valid).toBeFalse();
+      expect(el.querySelector('#product-price')).not.toBeNull();
+
+      component.form.controls.canSell.setValue(false);
+      harness.detectChanges();
+
+      expect(el.querySelector('#product-price')).toBeNull();
+      expect(component.form.controls.salePrice.valid).toBeTrue();
+    });
+
+    it('creates an unsellable supply without price, buyable (AC-03)', async () => {
+      const { component } = await open('/pocketbiz/catalog/products/new');
+      api.create.and.returnValue(of(makeProduct()));
+      component.form.patchValue({ name: 'Queso', category: 'raw_material', canBuy: true, canSell: false });
+
+      component.onSubmit();
+
+      expect(api.create).toHaveBeenCalledOnceWith({
+        name: 'Queso', description: '', salePrice: null, category: 'raw_material', canBuy: true, canSell: false,
+      });
+    });
+
+    it('warns about products pending review and asks to classify them (UI-02)', async () => {
+      api.get.and.returnValue(of(makeProduct({ id: 'p-9', category: null, needsReview: true })));
+      const { harness, component, el } = await open('/pocketbiz/catalog/products/p-9/edit');
+      harness.detectChanges();
+
+      expect(el.textContent).toContain('por revisar');
+      expect(component.form.controls.category.valid).toBeFalse();
+      expect(submitButton(el).disabled).toBeTrue();
+    });
+  });
+
   describe('edit mode', () => {
     it('loads the product and fills the form (AC-12)', async () => {
-      api.get.and.returnValue(of(makeProduct({ id: 'p-9', name: 'Chipa', description: '', salePrice: '5.50' })));
+      api.get.and.returnValue(of(makeProduct({ id: 'p-9', name: 'Chipa', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '5.50' })));
       const { component } = await open('/pocketbiz/catalog/products/p-9/edit');
 
       expect(component.isEdit).toBeTrue();
       expect(api.get).toHaveBeenCalledOnceWith('p-9');
-      expect(component.form.getRawValue()).toEqual({ name: 'Chipa', description: '', salePrice: '5.50', tracksStock: false, baseUnitId: '' });
+      expect(component.form.getRawValue()).toEqual({ name: 'Chipa', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '5.50', tracksStock: false, baseUnitId: '' });
     });
 
     it('updates the product and goes to its detail (AC-04, AC-12)', async () => {
@@ -198,6 +236,9 @@ describe('ProductFormComponent', () => {
         name: 'Nuevo',
         description: 'Tradicional',
         salePrice: '35.00',
+        category: 'finished',
+        canBuy: false,
+        canSell: true,
       });
       expect(toastr.success).toHaveBeenCalledWith('Producto actualizado');
       expect(navigate).toHaveBeenCalledWith(['/pocketbiz/catalog/products', 'p-9']);
@@ -217,9 +258,9 @@ describe('ProductFormComponent', () => {
       api.create.and.returnValue(of(makeProduct()));
       const { component, el } = await open('/pocketbiz/catalog/products/new');
       expect(el.querySelector('#product-tracks-stock')).toBeNull();
-      component.form.patchValue({ name: 'x', salePrice: '1' });
+      component.form.patchValue({ name: 'x', category: 'finished', salePrice: '1' });
       component.onSubmit();
-      expect(api.create).toHaveBeenCalledOnceWith({ name: 'x', description: '', salePrice: '1' });
+      expect(api.create).toHaveBeenCalledOnceWith({ name: 'x', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '1' });
     });
 
     it('shows «Controlar stock» off by default and asks for a unit when turned on (AC-01, AC-04)', async () => {
@@ -229,7 +270,7 @@ describe('ProductFormComponent', () => {
       const toggle = el.querySelector('#product-tracks-stock') as HTMLInputElement;
       expect(toggle.checked).toBeFalse();
       expect(el.querySelector('#product-base-unit')).toBeNull();
-      component.form.patchValue({ name: 'x', salePrice: '1', tracksStock: true });
+      component.form.patchValue({ name: 'x', category: 'finished', salePrice: '1', tracksStock: true });
       harness.detectChanges();
       expect(el.querySelector('#product-base-unit')).not.toBeNull();
       expect(component.form.invalid).toBeTrue();
@@ -241,14 +282,14 @@ describe('ProductFormComponent', () => {
       enabled.next(new Set(['catalog', 'inventory']));
       api.create.and.returnValue(of(makeProduct()));
       const { component } = await open('/pocketbiz/catalog/products/new');
-      component.form.patchValue({ name: 'x', salePrice: '1', tracksStock: true, baseUnitId: 'u-1' });
+      component.form.patchValue({ name: 'x', category: 'finished', salePrice: '1', tracksStock: true, baseUnitId: 'u-1' });
       component.onSubmit();
       expect(api.create.calls.mostRecent().args[0]).toEqual(
-        { name: 'x', description: '', salePrice: '1', tracksStock: true, baseUnitId: 'u-1' });
+        { name: 'x', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '1', tracksStock: true, baseUnitId: 'u-1' });
       component.form.controls.tracksStock.setValue(false);
       component.onSubmit();
       expect(api.create.calls.mostRecent().args[0]).toEqual(
-        { name: 'x', description: '', salePrice: '1', tracksStock: false, baseUnitId: null });
+        { name: 'x', description: '', category: 'finished', canBuy: false, canSell: true, salePrice: '1', tracksStock: false, baseUnitId: null });
     });
 
     it('keeps an inactive current unit selectable when editing (EDGE-03)', async () => {
