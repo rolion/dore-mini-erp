@@ -1,0 +1,52 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">Registrar pago</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <div class="alert alert-info" data-testid="balance">Saldo actual: <strong>{{ balance | money }}</strong></div>
+    @if (generalError) {
+    <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }}</div>
+    }
+    <div class="form-group mb-3">
+      <label for="payment-date">Fecha <span class="text-danger">*</span></label>
+      <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today"
+        [attr.aria-invalid]="dateError ? true : null" [attr.aria-describedby]="dateError ? 'payment-date-error' : null" />
+      @if (dateError; as message) {
+      <small id="payment-date-error" class="text-danger" role="alert" data-testid="date-error">{{ message }}</small>
+      }
+    </div>
+    <div class="form-group mb-3">
+      <label for="payment-amount">Monto (Bs) <span class="text-danger">*</span></label>
+      <div class="input-group">
+        <input id="payment-amount" type="text" inputmode="decimal" class="form-control" formControlName="amount"
+          autocomplete="off" (blur)="touched = true" [attr.aria-invalid]="amountFieldError ? true : null"
+          [attr.aria-describedby]="amountFieldError ? 'payment-amount-error' : null" />
+        <button type="button" class="btn btn-light" data-testid="pay-in-full" (click)="payInFull()">Pagar el saldo completo</button>
+      </div>
+      <small class="form-text text-muted">Saldo: {{ balance | money }}</small>
+      @if (amountFieldError; as message) {
+      <small id="payment-amount-error" class="text-danger d-block" role="alert" data-testid="amount-error">{{ message }}</small>
+      }
+    </div>
+    <div class="form-group mb-3">
+      <label for="payment-method">Método de pago <span class="text-danger">*</span></label>
+      <select id="payment-method" class="form-select" formControlName="paymentMethod"
+        [attr.aria-invalid]="methodError ? true : null" [attr.aria-describedby]="methodError ? 'payment-method-error' : null">
+        <option value="">Selecciona un método</option>
+        @for (method of methods; track method) {
+        <option [value]="method">{{ methodLabels[method] }}</option>
+        }
+      </select>
+      @if (methodError; as message) {
+      <small id="payment-method-error" class="text-danger" role="alert" data-testid="method-error">{{ message }}</small>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || (touched && !canSubmit)">
+      {{ submitting ? 'Registrando…' : 'Registrar pago' }}
+    </button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Cancelar</button>
+  </div>
+</form>

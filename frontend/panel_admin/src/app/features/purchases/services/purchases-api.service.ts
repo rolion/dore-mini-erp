@@ -70,6 +70,8 @@ function toPurchase(dto: PurchaseDto): Purchase {
     allowedActions: dto.allowed_actions,
     items: dto.items.map(toItem),
     total: dto.total,
+    paidTotal: dto.paid_total,
+    balance: dto.balance,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };

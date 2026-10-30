@@ -6,10 +6,12 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, finalize } from 'rxjs';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { PurchasePaymentsTabComponent } from '../../components/purchase-payments-tab/purchase-payments-tab.component';
 import { PurchaseReceiptsTabComponent } from '../../components/purchase-receipts-tab/purchase-receipts-tab.component';
 import { PurchaseCancelDialogComponent } from '../../components/purchase-cancel-dialog/purchase-cancel-dialog.component';
 import { PurchaseConfirmDialogComponent } from '../../components/purchase-confirm-dialog/purchase-confirm-dialog.component';
 import {
+  PAYMENT_STATUS_CLASSES,
   PAYMENT_STATUS_LABELS,
   PURCHASE_STATUS_CLASSES,
   PURCHASE_STATUS_LABELS,
@@ -25,16 +27,17 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-purchase-detail',
   templateUrl: './purchase-detail.component.html',
-  imports: [RouterLink, DatePipe, MoneyPipe, PurchaseReceiptsTabComponent],
+  imports: [RouterLink, DatePipe, MoneyPipe, PurchaseReceiptsTabComponent, PurchasePaymentsTabComponent],
 })
 export class PurchaseDetailComponent implements OnInit {
   readonly statusLabels = PURCHASE_STATUS_LABELS;
   readonly receptionLabels = RECEPTION_STATUS_LABELS;
   readonly paymentLabels = PAYMENT_STATUS_LABELS;
+  readonly paymentClasses = PAYMENT_STATUS_CLASSES;
   purchase: Purchase | null = null;
   loading = true;
-  /** Pestaña activa; `?tab=receptions` abre «Recepciones» (p. ej. al volver del formulario). */
-  tab: 'summary' | 'receptions' = 'summary';
+  /** Pestaña activa; `?tab=receptions` o `?tab=payments` abren esa pestaña (p. ej. al volver del formulario). */
+  tab: 'summary' | 'receptions' | 'payments' = 'summary';
   /** Hay una acción de ciclo de vida en curso. */
   busy = false;
 
@@ -46,7 +49,8 @@ export class PurchaseDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    if (this.route.snapshot.queryParamMap.get('tab') === 'receptions') this.tab = 'receptions';
+    const requested = this.route.snapshot.queryParamMap.get('tab');
+    if (requested === 'receptions' || requested === 'payments') this.tab = requested;
     this.load();
   }
 
@@ -104,7 +108,8 @@ export class PurchaseDetailComponent implements OnInit {
       });
   }
 
-  private reload(): void {
+  /** Tras registrar un pago: relee la compra para reflejar saldo, estado y acciones permitidas. */
+  reload(): void {
     this.api
       .get(this.purchase?.id ?? '')
       .pipe(takeUntilDestroyed(this.destroyRef))

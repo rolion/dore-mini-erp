@@ -43,6 +43,14 @@ class PurchaseNotReceivable(Exception):
     """Solo una compra confirmada admite recepciones."""
 
 
+class PurchaseNotPayable(Exception):
+    """Solo una compra confirmada admite pagos."""
+
+
+class PaymentConflict(Exception):
+    """El identificador del pago ya pertenece a otra compra."""
+
+
 class ReceiptNotFound(Exception):
     def __init__(self, receipt_id: UUID):
         super().__init__(f'Recepción {receipt_id} no encontrada.')

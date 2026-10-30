@@ -18,14 +18,17 @@ from modules.purchases.application.purchase_queries import GetPurchase, ListPurc
 from modules.purchases.domain.exceptions import (
     PurchaseCancellationBlocked,
     PurchaseInvalidTransition,
+    PaymentConflict,
     PurchaseNotEditable,
     PurchaseNotFound,
+    PurchaseNotPayable,
     PurchaseNotReceivable,
     PurchaseValidationError,
     ReceiptConflict,
     ReceiptNotFound,
 )
 from modules.purchases.infrastructure.adapters import ProductCatalogAdapter
+from modules.purchases.infrastructure.django.payment_repository import DjangoPaymentRepository
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
 from modules.purchases.infrastructure.django.receipt_repository import DjangoReceiptRepository
 from modules.purchases.infrastructure.django.repositories import DjangoSupplierRepository
@@ -44,6 +47,8 @@ NOT_EDITABLE = 'La compra ya no admite cambios.'
 CANCELLATION_BLOCKED = 'No se puede cancelar: la compra ya tiene recepciones o pagos registrados.'
 CANCELLED_NOT_CONFIRMABLE = 'Una compra cancelada no puede confirmarse.'
 NOT_RECEIVABLE = 'Solo una compra confirmada admite recepciones.'
+NOT_PAYABLE = 'Solo una compra confirmada admite pagos.'
+PAYMENT_CONFLICT = 'Ese identificador de pago ya pertenece a otra compra.'
 RECEIPT_NOT_FOUND = 'Recepción no encontrada.'
 RECEIPT_CONFLICT = 'Ese identificador de recepción ya pertenece a otra compra.'
 REQUIRED_MODULES = ('purchases',)
@@ -89,6 +94,10 @@ def _run(callable_, **kwargs):
         raise Conflict(CANCELLATION_BLOCKED) from exc
     except PurchaseNotReceivable as exc:
         raise Conflict(NOT_RECEIVABLE) from exc
+    except PurchaseNotPayable as exc:
+        raise Conflict(NOT_PAYABLE) from exc
+    except PaymentConflict as exc:
+        raise Conflict({'code': 'payment_conflict', 'detail': PAYMENT_CONFLICT}) from exc
     except ReceiptNotFound as exc:
         raise NotFound(RECEIPT_NOT_FOUND) from exc
     except ReceiptConflict as exc:
@@ -101,8 +110,12 @@ def _receipts(request) -> DjangoReceiptRepository:
     return DjangoReceiptRepository(company_id_from(request))
 
 
+def _payments(request) -> DjangoPaymentRepository:
+    return DjangoPaymentRepository(company_id_from(request))
+
+
 def _get_purchase(request) -> GetPurchase:
-    return GetPurchase(_purchases(request), _suppliers(request), _receipts(request))
+    return GetPurchase(_purchases(request), _suppliers(request), _receipts(request), _payments(request))
 
 
 def _detail(request, purchase):

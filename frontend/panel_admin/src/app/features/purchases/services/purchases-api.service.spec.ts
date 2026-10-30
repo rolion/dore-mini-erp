@@ -44,6 +44,8 @@ const DTO: PurchaseDto = {
     },
   ],
   total: '25.00',
+  paid_total: '0.00',
+  balance: '25.00',
   created_at: '2026-10-29T10:00:00Z',
   updated_at: '2026-10-29T11:00:00Z',
 };

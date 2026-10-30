@@ -19,7 +19,7 @@ class LifecycleTests(TestCase):
         purchase.confirm(NOW)
         self.assertEqual((purchase.status, purchase.confirmed_at, purchase.editable),
                          (PurchaseStatus.CONFIRMED, NOW, False))
-        self.assertEqual(purchase.allowed_actions, ['receive', 'cancel'])
+        self.assertEqual(purchase.allowed_actions, ['receive', 'pay', 'cancel'])
         with self.assertRaises(PurchaseNotEditable):
             purchase.update(notes='x')
 
@@ -56,11 +56,13 @@ class LifecycleTests(TestCase):
         self.assertEqual(purchase.status, PurchaseStatus.CANCELLED)
 
     def test_cancel_is_blocked_by_receptions_or_payments(self):  # INV-05
-        for field, value in (('reception_status', ReceptionStatus.PARTIAL), ('payment_status', PaymentStatus.PAID)):
+        cases = ((('reception_status', ReceptionStatus.PARTIAL), ['receive', 'pay']),
+                 (('payment_status', PaymentStatus.PAID), ['receive']))
+        for (field, value), actions in cases:
             purchase = make([draft()])
             purchase.confirm(NOW)
             setattr(purchase, field, value)
-            self.assertEqual(purchase.allowed_actions, ['receive'])
+            self.assertEqual(purchase.allowed_actions, actions)
             with self.assertRaises(PurchaseCancellationBlocked):
                 purchase.cancel('x', NOW)
             self.assertEqual(purchase.status, PurchaseStatus.CONFIRMED)

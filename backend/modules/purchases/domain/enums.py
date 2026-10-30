@@ -29,3 +29,18 @@ class InventoryMode(str, Enum):
 class ReceiptStatus(str, Enum):
     CONFIRMED = 'confirmed'
     REVERTED = 'reverted'
+
+
+class PaymentMethod(str, Enum):
+    """Cómo se pagó la compra (mismos códigos que en Ventas y Gastos, pero propios de este módulo)."""
+
+    CASH = 'CASH'
+    QR = 'QR'
+    BANK_TRANSFER = 'BANK_TRANSFER'
+    CARD = 'CARD'
+    OTHER = 'OTHER'
+
+
+class PaymentRecordStatus(str, Enum):
+    CONFIRMED = 'confirmed'
+    VOIDED = 'voided'
