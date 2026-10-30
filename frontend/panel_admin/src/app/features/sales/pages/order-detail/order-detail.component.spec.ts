@@ -7,15 +7,16 @@ import Swal, { SweetAlertResult } from 'sweetalert2';
 
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../../products';
-import { FieldErrors, Order, OrderApiError, OrderItem, OrderRuleError } from '../../models/order';
+import { DeliveryPreview, FieldErrors, Order, OrderApiError, OrderItem, OrderRuleError } from '../../models/order';
 import { OrdersApiService } from '../../services/orders-api.service';
-import { makeItem, makeOrder, makePayment } from '../../testing/order-fixtures';
+import { NO_STOCK_PREVIEW, makeItem, makeOrder, makePayment, makePreview } from '../../testing/order-fixtures';
 import { OrderDetailComponent } from './order-detail.component';
 
 interface DialogHooks {
   askDeliveryDate(order: Order): Promise<string | null>;
   askCancelReason(order: Order): Promise<string | null>;
   confirmRemove(item: OrderItem): Promise<boolean>;
+  deliverWithStock(order: Order, preview: DeliveryPreview): Promise<void>;
 }
 
 const EMPTY_PRODUCTS: Page<never> = { count: 0, next: null, previous: null, results: [] };
@@ -52,8 +53,9 @@ describe('OrderDetailComponent', () => {
   beforeEach(() => {
     api = jasmine.createSpyObj<OrdersApiService>('OrdersApiService', [
       'get', 'prepare', 'ready', 'deliver', 'cancel', 'addItem', 'changeItemQuantity', 'removeItem',
-      'applyDiscount', 'registerPayment',
+      'applyDiscount', 'registerPayment', 'deliveryPreview',
     ]);
+    api.deliveryPreview.and.returnValue(of(NO_STOCK_PREVIEW));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     params$ = new BehaviorSubject<ParamMap>(convertToParamMap({ id: 'o-1' }));
     const products = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['list']);
@@ -298,6 +300,58 @@ describe('OrderDetailComponent', () => {
       expect(api.deliver).toHaveBeenCalledOnceWith('o-1', '2026-10-03');
       expect(component.order?.status).toBe('DELIVERED');
     }));
+
+    it('opens the stock dialog instead of the date prompt when the order has controlled items (UI-01, AC-14)', fakeAsync(() => {
+      const preview = makePreview();
+      api.deliveryPreview.and.returnValue(of(preview));
+      setup(makeOrder({ status: 'READY', allowedTransitions: ['deliver', 'cancel'] }));
+      const ask = spyOn(dialogs(), 'askDeliveryDate');
+      const withStock = spyOn(dialogs(), 'deliverWithStock').and.resolveTo();
+      component.runPrimary();
+      flushMicrotasks();
+      expect(api.deliveryPreview).toHaveBeenCalledOnceWith('o-1');
+      expect(withStock).toHaveBeenCalledOnceWith(jasmine.objectContaining({ id: 'o-1' }), preview);
+      expect(ask).not.toHaveBeenCalled();
+      expect(api.deliver).not.toHaveBeenCalled();
+    }));
+
+    it('uses the usual confirmation without asking for a warehouse when nothing controls stock (UI-01, AC-08)', fakeAsync(() => {
+      api.deliver.and.returnValue(of(makeOrder({ status: 'DELIVERED', editable: false, allowedTransitions: [] })));
+      setup(makeOrder({ status: 'READY', allowedTransitions: ['deliver', 'cancel'] }));
+      spyOn(dialogs(), 'askDeliveryDate').and.resolveTo('2026-10-03');
+      const withStock = spyOn(dialogs(), 'deliverWithStock');
+      component.runPrimary();
+      flushMicrotasks();
+      expect(withStock).not.toHaveBeenCalled();
+      expect(api.deliver).toHaveBeenCalledOnceWith('o-1', '2026-10-03');
+    }));
+
+    it('reports a preview failure and reloads the order on a rule conflict', fakeAsync(() => {
+      api.deliveryPreview.and.returnValue(throwError(() => new OrderRuleError('Esa acción no está permitida.', 'invalid_transition')));
+      setup(makeOrder({ status: 'READY', allowedTransitions: ['deliver', 'cancel'] }));
+      component.runPrimary();
+      flushMicrotasks();
+      expect(toastr.error).toHaveBeenCalledWith('Esa acción no está permitida.');
+      expect(api.get).toHaveBeenCalledTimes(2);
+      expect(component.busy).toBeFalse();
+    }));
+
+    it('shows the stock output card only for an order that generated one (UI-05)', () => {
+      const element = setup(makeOrder({ status: 'DELIVERED', editable: false, allowedTransitions: [] }));
+      expect(q(element, 'stock-output-card')).toBeNull();
+      const withOutput = makeOrder({
+        status: 'DELIVERED', editable: false, allowedTransitions: [],
+        stockOutput: {
+          reference: 'P-1A2B3C4D', warehouseId: 'w-1', warehouseName: 'Central', occurredAt: '2026-10-03T15:30:00Z',
+          userName: 'ana', movements: [{ id: 'm-1', productId: 'p-1', productName: 'Bolsas', quantity: '4.0000', unit: 'u' }],
+        },
+      });
+      component.order = withOutput;
+      fixture.detectChanges();
+      expect(text(element, 'output-warehouse')).toBe('Central');
+      expect(text(element, 'delivery-panel')).toContain('Entregado');
+      expect(text(element, 'payment-panel')).toContain('Cobro');
+    });
 
     it('does not deliver when the dialog is dismissed', fakeAsync(() => {
       setup(makeOrder({ status: 'READY', allowedTransitions: ['deliver', 'cancel'] }));

@@ -2,6 +2,16 @@ export type MovementKind = 'in' | 'out';
 export type MovementStatus = 'confirmed' | 'reversed';
 
 export const MOVEMENT_KIND_LABELS: Record<MovementKind, string> = { in: 'Entrada', out: 'Salida' };
+/** Clase de origen cuyas salidas se muestran como «Salida por venta». */
+export const SALES_ORDER_SOURCE = 'sales_order';
+
+/** Etiqueta del tipo de movimiento: una salida originada en un pedido de venta es «Salida por venta». */
+export function movementTypeLabel(movement: { kind: MovementKind; source: { type: string } | null }): string {
+  return movement.kind === 'out' && movement.source?.type === SALES_ORDER_SOURCE
+    ? 'Salida por venta'
+    : MOVEMENT_KIND_LABELS[movement.kind];
+}
+
 export const MOVEMENT_STATUS_LABELS: Record<MovementStatus, string> = {
   confirmed: 'Confirmado',
   reversed: 'Revertido',
@@ -63,6 +73,8 @@ export interface MovementListParams {
   warehouseId?: string;
   kind?: MovementKind;
   sourceType?: string;
+  /** Documento de origen concreto (con `sourceType`), p. ej. el pedido de una venta. */
+  sourceId?: string;
   /** Página base 1. */
   page?: number;
   pageSize?: number;

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import Sequence
@@ -10,6 +11,7 @@ from modules.inventory.domain.exceptions import (
     MovementConflict,
     MovementNotFound,
     MovementValidationError,
+    Shortage,
 )
 from modules.inventory.domain.movement import MovementKind, MovementSource, StockMovement
 from modules.inventory.domain.repositories import (
@@ -71,6 +73,91 @@ class RecordMovement:
                 raise InsufficientStock(
                     'No hay saldo suficiente para registrar la salida.', product_id=movement.product_id,
                     warehouse_id=movement.warehouse_id, requested=movement.quantity, available=available)
+
+
+@dataclass(frozen=True)
+class OutputLine:
+    """Una salida de un documento de origen: producto, cantidad y clave de línea (parte de la identidad)."""
+
+    product_id: UUID
+    quantity: object
+    line: str = ''
+
+
+class RecordOutputs:
+    """Registra las salidas de un documento (varias líneas) en un almacén, todas o ninguna.
+
+    Un solo bloqueo del almacén cubre la validación de todas las líneas, la política de negativo y las inserciones.
+    Las líneas ya registradas por la misma operación de origen se devuelven con `created=False` (reintento).
+    """
+
+    def __init__(self, repository: StockMovementRepository, warehouses: WarehouseRepository,
+                 products: ProductDirectory, policy: InventoryPolicy | None = None):
+        self.repository = repository
+        self.warehouses = warehouses
+        self.products = products
+        self.policy = policy or BlockNegativeStock()
+
+    def execute(self, *, warehouse_id: UUID, lines: Sequence[OutputLine], source_type: str, source_id: str,
+                user_id: UUID | None, user_name: str, reference: str = '',
+                occurred_at: datetime | None = None) -> list[tuple[StockMovement, bool]]:
+        when = occurred_at or timezone.now()
+        movements = [
+            StockMovement.record(
+                product_id=line.product_id, warehouse_id=warehouse_id, kind=MovementKind.OUT,
+                quantity=line.quantity, occurred_at=when, user_id=user_id, user_name=user_name,
+                reference=reference, source=MovementSource(source_type, source_id, line.line))
+            for line in lines]
+        found = self.products.get_products([m.product_id for m in movements])
+        for movement in movements:
+            product = found.get(movement.product_id)
+            if product is None:
+                raise MovementValidationError({'product_id': ['El producto no existe.']})
+            if not product.tracks_stock:
+                raise MovementValidationError({'product_id': ['El producto no controla stock.']})
+            if not product.allows_fractions and movement.quantity != movement.quantity.to_integral_value():
+                raise MovementValidationError({'quantity': ['La unidad del producto no admite fracciones.']})
+
+        with self.repository.locked(warehouse_id):
+            warehouse = self.warehouses.get(warehouse_id)
+            if warehouse is None:
+                raise MovementValidationError({'warehouse_id': ['El almacén no existe.']})
+            if not warehouse.active:
+                raise MovementValidationError({'warehouse_id': ['El almacén está inactivo.']})
+            results: list[tuple[StockMovement, bool] | None] = []
+            pending: list[tuple[int, StockMovement]] = []
+            for index, movement in enumerate(movements):
+                existing = self.repository.find_by_source(movement)
+                if existing is None:
+                    results.append(None)
+                    pending.append((index, movement))
+                elif existing.quantity != movement.quantity:
+                    raise MovementConflict(
+                        'source_operation_mismatch',
+                        'Esa operación de origen ya registró un movimiento con otra cantidad.')
+                else:
+                    results.append((existing, False))
+            self._check_balances(warehouse_id, [m for _, m in pending])
+            for index, movement in pending:
+                results[index] = (self.repository.insert(movement), True)
+            return results  # type: ignore[return-value]
+
+    def _check_balances(self, warehouse_id: UUID, pending: list[StockMovement]) -> None:
+        # La política se lee ya bajo el bloqueo del almacén, igual que en RecordMovement.
+        if not pending or self.policy.allow_negative_stock():
+            return
+        balances = self.repository.balances_for(warehouse_id, [m.product_id for m in pending])
+        shortages: list[Shortage] = []
+        for movement in pending:
+            available = balances.get(movement.product_id, Decimal('0'))
+            if available < movement.quantity:
+                shortages.append(Shortage(movement.product_id, movement.quantity, available))
+        if shortages:
+            first = shortages[0]
+            raise InsufficientStock(
+                'No hay saldo suficiente para registrar la salida.', product_id=first.product_id,
+                warehouse_id=warehouse_id, requested=first.requested, available=first.available,
+                shortages=shortages)
 
 
 class ReverseMovement:

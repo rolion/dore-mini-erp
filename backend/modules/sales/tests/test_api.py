@@ -18,7 +18,7 @@ LIST_URL = '/api/orders/'
 DETAIL_KEYS = {
     'id', 'code', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date', 'delivered_date', 'notes',
     'status', 'payment_status', 'items', 'subtotal', 'discount', 'total', 'paid_total', 'balance', 'payments',
-    'cancellation_reason', 'cancelled_at', 'editable', 'allowed_transitions', 'can_register_payment',
+    'cancellation_reason', 'cancelled_at', 'editable', 'allowed_transitions', 'can_register_payment', 'stock_output',
     'created_at', 'updated_at',
 }
 SUMMARY_KEYS = {

@@ -14,9 +14,11 @@ import {
   MovementKind,
   MovementListParams,
   MovementStatus,
+  SALES_ORDER_SOURCE,
   SOURCE_ROUTES,
   SOURCE_TYPE_OPTIONS,
   StockMovement,
+  movementTypeLabel,
 } from '../../models/movement';
 import { Warehouse } from '../../models/warehouse';
 import { MovementsApiService } from '../../services/movements-api.service';
@@ -60,15 +62,29 @@ export class MovementListComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
 
+  /** Pedido de venta cuyas salidas se están viendo (llega desde el detalle del pedido); vacío = sin filtrar. */
+  sourceId = '';
+
   get filtersActive(): boolean {
-    return Object.values(this.filterForm.getRawValue()).some((value) => value !== '');
+    return !!this.sourceId || Object.values(this.filterForm.getRawValue()).some((value) => value !== '');
+  }
+
+  /** Código visible del pedido filtrado, tomado de los movimientos cargados. */
+  get orderFilterLabel(): string {
+    return this.rows.find((row) => row.reference)?.reference || 'seleccionado';
   }
 
   ngOnInit(): void {
     // Existencias enlaza aquí con ?product_id=&warehouse_id= para ver los movimientos de una fila.
     const query = this.route.snapshot.queryParamMap;
+    const fromOrder = query.get('source_type') === SALES_ORDER_SOURCE && !!query.get('source_id');
+    this.sourceId = fromOrder ? (query.get('source_id') ?? '') : '';
     this.filterForm.patchValue(
-      { productId: query.get('product_id') ?? '', warehouseId: query.get('warehouse_id') ?? '' },
+      {
+        productId: query.get('product_id') ?? '',
+        warehouseId: query.get('warehouse_id') ?? '',
+        sourceType: fromOrder ? SALES_ORDER_SOURCE : '',
+      },
       { emitEvent: false },
     );
     this.reload$
@@ -101,6 +117,9 @@ export class MovementListComponent implements OnInit {
       .subscribe({ next: (page) => (this.warehouses = page.results), error: () => (this.warehouses = []) });
 
     this.filterForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (this.sourceId && this.filterForm.getRawValue().sourceType !== SALES_ORDER_SOURCE) {
+        this.sourceId = ''; // cambiar la clase de origen deja de filtrar por ese pedido
+      }
       this.pageIndex = 0;
       if (this.validateRange()) {
         this.reload$.next();
@@ -125,6 +144,16 @@ export class MovementListComponent implements OnInit {
     return MOVEMENT_KIND_LABELS[kind];
   }
 
+  typeLabel(movement: StockMovement): string {
+    return movementTypeLabel(movement);
+  }
+
+  /** Quita el filtro por pedido y vuelve a cargar (los demás filtros se conservan). */
+  clearOrderFilter(): void {
+    this.sourceId = '';
+    this.filterForm.patchValue({ sourceType: '' });
+  }
+
   statusLabel(status: MovementStatus): string {
     return MOVEMENT_STATUS_LABELS[status];
   }
@@ -134,6 +163,7 @@ export class MovementListComponent implements OnInit {
   }
 
   clearFilters(): void {
+    this.sourceId = '';
     this.filterForm.setValue({ dateFrom: '', dateTo: '', productId: '', warehouseId: '', kind: '', sourceType: '' });
   }
 
@@ -168,6 +198,7 @@ export class MovementListComponent implements OnInit {
       warehouseId: warehouseId || undefined,
       kind: kind || undefined,
       sourceType: sourceType || undefined,
+      sourceId: sourceType && this.sourceId ? this.sourceId : undefined,
       page: this.pageIndex + 1,
       pageSize: this.pageSize,
     };

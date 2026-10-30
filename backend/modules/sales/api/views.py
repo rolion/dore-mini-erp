@@ -19,8 +19,11 @@ from modules.sales.application.commands import (
     StartOrderPreparation,
     UpdateOrder,
 )
+from modules.sales.application.delivery import PreviewOrderDelivery
+from modules.sales.application.ports import Actor
 from modules.sales.application.queries import GetOrder, ListOrders
 from modules.sales.domain.exceptions import (
+    InsufficientStockForDelivery,
     OrderItemNotFound,
     OrderNotFound,
     OrderRuleViolation,
@@ -30,6 +33,7 @@ from modules.sales.infrastructure.adapters import (
     CustomerDirectoryAdapter,
     ProductCatalogAdapter,
     SalesSettingsAdapter,
+    StockOutputAdapter,
     SystemClock,
 )
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
@@ -40,6 +44,7 @@ from .pagination import OrderPagination
 from .serializers import (
     CancelSerializer,
     DeliverSerializer,
+    DeliveryPreviewQuerySerializer,
     DiscountSerializer,
     OrderInputSerializer,
     OrderItemCreateSerializer,
@@ -47,6 +52,8 @@ from .serializers import (
     OrderSerializer,
     OrderSummarySerializer,
     PaymentInputSerializer,
+    delivery_preview_data,
+    quantity_text,
 )
 
 ORDER_NOT_FOUND = 'Pedido no encontrado.'
@@ -82,12 +89,26 @@ def _run(use_case, mutates: bool = True, **kwargs):
         return use_case.execute(**kwargs)
     except OrderValidationError as exc:
         raise ValidationError(exc.errors) from exc
+    except InsufficientStockForDelivery as exc:
+        raise RuleConflict(_insufficient_stock_body(exc)) from exc
     except OrderRuleViolation as exc:
         raise RuleConflict({'code': exc.code, 'detail': exc.message}) from exc
     except OrderNotFound as exc:
         raise NotFound(ORDER_NOT_FOUND) from exc
     except OrderItemNotFound as exc:
         raise NotFound(ITEM_NOT_FOUND) from exc
+
+
+def _insufficient_stock_body(exc: InsufficientStockForDelivery) -> dict:
+    """409 `insufficient_stock`: almacén y todas las líneas sin saldo (misma forma que el 409 de Inventario)."""
+    lines = [{
+        'product': {'id': str(line.product_id), 'name': line.product_name},
+        'unit': {'abbreviation': line.unit},
+        'requested': quantity_text(line.requested),
+        'available': quantity_text(line.available),
+    } for line in exc.lines]
+    return {'code': exc.code, 'detail': exc.message,
+            'warehouse': {'id': str(exc.warehouse_id), 'name': exc.warehouse_name}, 'lines': lines}
 
 
 def _repository(request) -> DjangoOrderRepository:
@@ -103,6 +124,15 @@ def _products(request) -> ProductCatalogAdapter:
     return ProductCatalogAdapter(company_id_from(request))
 
 
+def _stock(request) -> StockOutputAdapter:
+    return StockOutputAdapter(company_id_from(request))
+
+
+def _actor(request) -> Actor:
+    user = request.user
+    return Actor(user.pk, user.get_full_name().strip() or user.get_username())
+
+
 def _customer_context(request, customer_ids) -> dict:
     """Nombres de clientes para los serializers; con Clientes deshabilitado `customers_available` es falso."""
     customers = _customers(request)
@@ -111,6 +141,8 @@ def _customer_context(request, customer_ids) -> dict:
 
 def _order_response(request, order, http_status: int = status.HTTP_200_OK) -> Response:
     context = _customer_context(request, [order.customer_id] if order.customer_id else [])
+    if order.status.value == 'DELIVERED':
+        context['stock_output'] = _stock(request).output_for(order.id)
     return Response(OrderSerializer(order, context=context).data, status=http_status)
 
 
@@ -203,7 +235,21 @@ class OrderDeliverView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DeliverSerializer, request.data)
-        return _order_response(request, _run(DeliverOrder(_repository(request), SystemClock()), order_id=order_id, **data))
+        use_case = DeliverOrder(_repository(request), SystemClock(), _stock(request))
+        return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request), **data))
+
+
+class OrderDeliveryPreviewView(APIView):
+    """Vista previa informativa de la entrega: almacenes, existencias y saldo proyectado. No escribe nada."""
+
+    required_modules = ('sales',)
+
+    def get(self, request, order_id):
+        order_id = _uuid(order_id, ORDER_NOT_FOUND)
+        query = _validated(DeliveryPreviewQuerySerializer, request.query_params)
+        use_case = PreviewOrderDelivery(_repository(request), _stock(request))
+        preview = _run(use_case, mutates=False, order_id=order_id, warehouse_id=query.get('warehouse_id'))
+        return Response(delivery_preview_data(preview))
 
 
 class OrderCancelView(APIView):

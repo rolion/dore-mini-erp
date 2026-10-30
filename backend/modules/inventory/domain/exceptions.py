@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from dataclasses import dataclass
+from decimal import Decimal
 from uuid import UUID
 
 
@@ -45,15 +48,30 @@ class MovementConflict(Exception):
         self.code = code
 
 
-class InsufficientStock(MovementConflict):
-    """Salida mayor que el saldo con la política de stock negativo bloqueada; lleva los datos para explicarla."""
+@dataclass(frozen=True)
+class Shortage:
+    """Una línea sin saldo suficiente: producto, cantidad pedida y existencia vigente."""
 
-    def __init__(self, message: str, *, product_id: UUID, warehouse_id: UUID, requested, available):
+    product_id: UUID
+    requested: Decimal
+    available: Decimal
+
+
+class InsufficientStock(MovementConflict):
+    """Salida mayor que el saldo con la política de stock negativo bloqueada; lleva los datos para explicarla.
+
+    `product_id`/`requested`/`available` describen la primera línea faltante; `shortages` las lista todas
+    (una salida en lote informa todas las líneas sin saldo).
+    """
+
+    def __init__(self, message: str, *, product_id: UUID, warehouse_id: UUID, requested, available,
+                 shortages: Sequence[Shortage] | None = None):
         super().__init__('insufficient_stock', message)
         self.product_id = product_id
         self.warehouse_id = warehouse_id
         self.requested = requested
         self.available = available
+        self.shortages = tuple(shortages) if shortages else (Shortage(product_id, requested, available),)
 
 
 class OpeningValidationError(Exception):

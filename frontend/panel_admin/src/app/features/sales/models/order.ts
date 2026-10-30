@@ -77,6 +77,25 @@ export interface Payment {
   createdAt: string;
 }
 
+/** Movimiento de la salida de inventario generada al entregar (cantidad como texto decimal). */
+export interface StockOutputMovement {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: string;
+  unit: string | null;
+}
+
+/** Salida de inventario del pedido entregado; `null` si no hubo o Inventario está deshabilitado. */
+export interface StockOutput {
+  reference: string;
+  warehouseId: string;
+  warehouseName: string;
+  occurredAt: string;
+  userName: string;
+  movements: StockOutputMovement[];
+}
+
 export interface Order {
   id: string;
   /** Etiqueta corta para mostrar; el identificador es `id`. */
@@ -102,8 +121,45 @@ export interface Order {
   editable: boolean;
   allowedTransitions: OrderAction[];
   canRegisterPayment: boolean;
+  stockOutput: StockOutput | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Almacén activo que puede recibir la salida. */
+export interface DeliveryWarehouse {
+  id: string;
+  name: string;
+  isDefault: boolean;
+}
+
+/** Línea de la vista previa: cantidades como texto decimal; `available`/`projected` son `null` sin almacén. */
+export interface DeliveryLine {
+  productId: string;
+  productName: string;
+  quantity: string;
+  unit: string | null;
+  available: string | null;
+  projected: string | null;
+  insufficient: boolean;
+}
+
+/** Foto informativa de la entrega: el servidor vuelve a validar al confirmar. */
+export interface DeliveryPreview {
+  inventoryEnabled: boolean;
+  requiresStockOutput: boolean;
+  allowNegativeStock: boolean;
+  warehouses: DeliveryWarehouse[];
+  warehouseId: string | null;
+  lines: DeliveryLine[];
+}
+
+/** Línea sin existencia suficiente de un 409 `insufficient_stock`. */
+export interface StockShortage {
+  productName: string;
+  unit: string | null;
+  requested: string;
+  available: string;
 }
 
 /** Fila de la lista de pedidos. */
@@ -197,8 +253,38 @@ export interface OrderDto {
   editable: boolean;
   allowed_transitions: OrderAction[];
   can_register_payment: boolean;
+  stock_output: StockOutputDto | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface StockOutputDto {
+  reference: string;
+  warehouse: { id: string; name: string };
+  occurred_at: string;
+  user_name: string;
+  movements: {
+    id: string;
+    product: { id: string; name: string };
+    quantity: string;
+    unit: { abbreviation: string | null };
+  }[];
+}
+
+export interface DeliveryPreviewDto {
+  inventory_enabled: boolean;
+  requires_stock_output: boolean;
+  allow_negative_stock: boolean;
+  warehouses: { id: string; name: string; is_default: boolean }[];
+  warehouse_id: string | null;
+  lines: {
+    product: { id: string; name: string };
+    quantity: string;
+    unit: { abbreviation: string | null };
+    available: string | null;
+    projected: string | null;
+    insufficient: boolean;
+  }[];
 }
 
 export interface OrderSummaryDto {
@@ -226,6 +312,7 @@ export type OrderErrorField =
   | 'quantity'
   | 'discount'
   | 'deliveredDate'
+  | 'warehouseId'
   | 'reason'
   | 'amount'
   | 'paymentMethod'
@@ -250,6 +337,9 @@ export class OrderRuleError extends OrderApiError {
   constructor(
     message: string,
     readonly code: string,
+    /** Líneas sin existencia de un 409 `insufficient_stock` (vacío en otros conflictos). */
+    readonly shortages: StockShortage[] = [],
+    readonly warehouseName: string = '',
   ) {
     super(message, 409);
     this.name = 'OrderRuleError';
@@ -268,4 +358,9 @@ export const ZERO_AMOUNT = '0.00';
 
 export function hasBalance(order: { balance: string }): boolean {
   return order.balance !== ZERO_AMOUNT;
+}
+
+/** Cantidad del servidor ("4.0000") sin ceros decimales sobrantes ("4", "2.5"). */
+export function formatQuantity(value: string): string {
+  return value.includes('.') ? value.replace(/\.?0+$/, '') : value;
 }

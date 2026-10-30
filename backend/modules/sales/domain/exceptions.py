@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from decimal import Decimal
 from uuid import UUID
 
 
@@ -28,3 +30,24 @@ class OrderItemNotFound(Exception):
     def __init__(self, item_id: UUID):
         super().__init__(f'Ítem {item_id} no encontrado.')
         self.item_id = item_id
+
+
+@dataclass(frozen=True)
+class ShortLine:
+    """Una línea de la entrega sin existencia suficiente en el almacén."""
+
+    product_id: UUID
+    product_name: str
+    unit: str | None
+    requested: Decimal
+    available: Decimal
+
+
+class InsufficientStockForDelivery(OrderRuleViolation):
+    """La política de la empresa bloquea el stock negativo y alguna línea no alcanza; no se entrega nada."""
+
+    def __init__(self, message: str, warehouse_id: UUID, warehouse_name: str, lines: list[ShortLine]):
+        super().__init__('insufficient_stock', message)
+        self.warehouse_id = warehouse_id
+        self.warehouse_name = warehouse_name
+        self.lines = lines
