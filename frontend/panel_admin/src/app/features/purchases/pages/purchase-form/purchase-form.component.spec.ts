@@ -77,9 +77,9 @@ describe('PurchaseFormComponent', () => {
       fixture.detectChanges();
     });
 
-    it('offers only active suppliers and products, and starts with today (AC-14, AC-15)', () => {
+    it('offers only active suppliers and active products enabled for purchase, and starts with today (AC-14, AC-15, AC-19)', () => {
       expect(suppliers.list).toHaveBeenCalledWith(jasmine.objectContaining({ active: true }));
-      expect(products.list).toHaveBeenCalledWith(jasmine.objectContaining({ active: true }));
+      expect(products.list).toHaveBeenCalledWith(jasmine.objectContaining({ active: true, canBuy: true }));
       expect(component.form.controls.purchaseDate.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(component.supplierOptions.map((s) => s.name)).toEqual(['Distribuidora Sur']);
     });

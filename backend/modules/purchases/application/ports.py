@@ -10,6 +10,7 @@ class ProductInfo:
     id: UUID
     name: str
     active: bool
+    can_buy: bool
     unit_abbreviation: str | None
     allows_fractions: bool
 

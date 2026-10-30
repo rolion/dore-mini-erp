@@ -38,6 +38,17 @@ class ProductForPurchase:
     name: str
     active: bool
     can_buy: bool
+    # Unidad base (opcional): el producto puede no tenerla; sin unidad se tratan cantidades con fracciones.
+    unit_abbreviation: str | None = None
+    allows_fractions: bool = False
+
+
+def _for_purchase(model: ProductModel) -> ProductForPurchase:
+    unit = model.base_unit
+    return ProductForPurchase(
+        id=model.id, name=model.name, active=model.active, can_buy=model.can_buy,
+        unit_abbreviation=unit.abbreviation if unit else None,
+        allows_fractions=bool(unit and unit.allows_fractions))
 
 
 def get_product_for_purchase(company_id: UUID, product_id: UUID) -> ProductForPurchase | None:
@@ -45,10 +56,8 @@ def get_product_for_purchase(company_id: UUID, product_id: UUID) -> ProductForPu
 
     Una compra solo debe aceptar productos activos y comprables; esa regla la aplica quien compra.
     """
-    product = DjangoProductRepository(company_id).get(product_id)
-    if product is None:
-        return None
-    return ProductForPurchase(id=product.id, name=product.name, active=product.active, can_buy=product.can_buy)
+    model = ProductModel.objects.filter(company_id=company_id, pk=product_id).select_related('base_unit').first()
+    return _for_purchase(model) if model else None
 
 
 @dataclass(frozen=True)
@@ -87,26 +96,11 @@ def list_products_for_inventory(company_id: UUID, *, search: str | None = None,
     return [_for_inventory(model) for model in queryset]
 
 
-@dataclass(frozen=True)
-class ProductForPurchase:
-    id: UUID
-    name: str
-    active: bool
-    unit_abbreviation: str | None
-    allows_fractions: bool
-
-
 def get_products_for_purchase(company_id: UUID, product_ids: Iterable[UUID]) -> dict[UUID, ProductForPurchase]:
     """Datos de compra de los productos de la empresa (una sola consulta); los ajenos o inexistentes no aparecen.
 
-    La regla de "producto activo" la aplica quien compra, no la fachada.
+    Las reglas de "producto activo" y "comprable" las aplica quien compra, no la fachada.
     """
     models = (ProductModel.objects.filter(company_id=company_id, pk__in=list(product_ids))
               .select_related('base_unit'))
-    return {
-        model.id: ProductForPurchase(
-            id=model.id, name=model.name, active=model.active,
-            unit_abbreviation=model.base_unit.abbreviation if model.base_unit else None,
-            allows_fractions=bool(model.base_unit and model.base_unit.allows_fractions))
-        for model in models
-    }
+    return {model.id: _for_purchase(model) for model in models}

@@ -40,3 +40,6 @@ Aditivo: nuevas rutas y una función nueva en la fachada de Catálogo (sin tocar
 - Compras queda acoplada a Catálogo solo por un puerto y su adaptador, igual que Ventas.
 - Si Catálogo cambia `ProductForPurchase`, el único punto de ajuste es el adaptador.
 - La task de confirmación reutilizará los snapshots y el puerto para validar de nuevo los productos.
+
+## Actualización (PB-CAT-001, 2026-10-30)
+PB-CAT-001 añadió a Catálogo el indicador `can_buy` y su propio `ProductForPurchase(id, name, active, can_buy)` con `get_product_for_purchase`. Se unifica en un único DTO inmutable `ProductForPurchase(id, name, active, can_buy, unit_abbreviation=None, allows_fractions=False)` usado por `get_product_for_purchase` (uno) y `get_products_for_purchase` (varios, una consulta). El puerto `ProductCatalog` de Compras (`ProductInfo`) incorpora `can_buy`, y la regla «producto activo y comprable» la aplican `CreatePurchase`/`UpdatePurchase` solo a los productos **nuevos** del borrador (línea con error en `product_id`). El frontend filtra el selector con `can_buy=true` (ya soportado por `GET /api/products/`). Contrato de `/api/purchases/` sin cambios; solo aparece un mensaje de validación más.

@@ -422,7 +422,7 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
 
   private searchProducts(term: string | null | undefined): Observable<LineProduct[]> {
     return defer(() =>
-      this.productsApi.list({ search: (term ?? '').trim(), active: true, pageSize: SEARCH_PAGE_SIZE }),
+      this.productsApi.list({ search: (term ?? '').trim(), active: true, canBuy: true, pageSize: SEARCH_PAGE_SIZE }),
     ).pipe(
       map((page) => page.results.map(toLineProduct)),
       catchError(() => of([] as LineProduct[])),

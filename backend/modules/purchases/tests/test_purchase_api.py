@@ -36,10 +36,10 @@ class PurchaseApiTestCase(APITestCase):
         self.boxes = self.product('Cajas', unit=self.unit)
         self.bag = self.product('Bolsa')
 
-    def product(self, name, unit=None, company_id=None, active=True):
+    def product(self, name, unit=None, company_id=None, active=True, can_buy=True):
         return ProductModel.objects.create(
             company_id=company_id or self.company.id, name=name, sale_price=Decimal('1.00'), base_unit=unit,
-            tracks_stock=unit is not None, active=active)
+            tracks_stock=unit is not None, active=active, can_buy=can_buy)
 
     def payload(self, **extra):
         return {'supplier_id': str(self.supplier.id), 'purchase_date': '2026-10-29',
@@ -111,6 +111,17 @@ class CreatePurchaseTests(PurchaseApiTestCase):
         self.assertIn('quantity', lines[4])
         self.assertEqual((PurchaseModel.objects.count(), PurchaseItemModel.objects.count()), (0, 0))
 
+    def test_product_not_enabled_for_purchase_is_a_line_error(self):  # AC-19 (PB-CAT-001)
+        sellable_only = self.product('Cuñapé', can_buy=False)
+        items = [{'product_id': str(self.flour.id), 'quantity': '1', 'unit_price': '1.00'},
+                 {'product_id': str(sellable_only.id), 'quantity': '1', 'unit_price': '1.00'}]
+        response = self.client.post(LIST_URL, self.payload(items=items), format='json')
+        self.assertEqual(response.status_code, 400)
+        lines = response.json()['items']
+        self.assertEqual(lines[0], {})
+        self.assertEqual(lines[1]['product_id'], ['El producto no está habilitado para compra.'])
+        self.assertEqual(PurchaseModel.objects.count(), 0)
+
     def test_numbers_must_be_text_or_integers_never_float(self):  # AC-04
         for field, value in (('quantity', 1.5), ('unit_price', 10.5), ('quantity', 'NaN'), ('quantity', '1e3'),
                              ('unit_price', 'abc'), ('unit_price', True)):
@@ -172,7 +183,7 @@ class UpdatePurchaseTests(PurchaseApiTestCase):
 
     def test_patch_items_replaces_the_lines_and_keeps_the_snapshot(self):  # AC-07, INV-08
         purchase = self.create()
-        ProductModel.objects.filter(pk=self.flour.id).update(name='Harina RENOMBRADA', active=False)
+        ProductModel.objects.filter(pk=self.flour.id).update(name='Harina RENOMBRADA', active=False, can_buy=False)
         items = [{'product_id': str(self.flour.id), 'quantity': '4', 'unit_price': '3.00'},
                  {'product_id': str(self.bag.id), 'quantity': '1.25', 'unit_price': '2.00'}]
         response = self.client.patch(detail_url(purchase['id']), {'items': items}, format='json')

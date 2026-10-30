@@ -1,4 +1,4 @@
-# PLAN-2026-10-29-compras-borrador-crear-editar (v1)
+# PLAN-2026-10-29-compras-borrador-crear-editar (v2)
 
 **Task:** TASK-compras-borrador-crear-editar · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** [DDR pantallas-compras](../design/DDR-compras-borrador-crear-editar-pantallas-compras.md) · [ADR modelo-compra-borrador](../adr/ADR-compras-borrador-crear-editar-modelo-compra-borrador.md) · [ADR contrato-api-e-integracion-catalogo](../adr/ADR-compras-borrador-crear-editar-contrato-api-e-integracion-catalogo.md)
@@ -40,7 +40,7 @@ Con el módulo `purchases` habilitado, la persona entra a Compras → Compras, v
 - INV-01: `supplier_id` obligatorio y debe ser un proveedor **activo** de la empresa al guardar (crear o editar).
 - INV-02: `purchase_date` obligatoria, fecha válida.
 - INV-03: `external_reference` opcional ≤ 100; `notes` opcional ≤ 2000; ambos recortados; `null`/ausente equivale a vacío.
-- INV-04: cada línea: producto existente de la empresa; **activo si es nuevo en el borrador**; `quantity` > 0, ≤ 99 999 999.999, hasta 3 decimales; entera si la unidad base del producto no admite fracciones; `unit_price` ≥ 0, 2 decimales, ≤ `MONEY_MAX`; nunca `float`.
+- INV-04: cada línea: producto existente de la empresa; **activo y habilitado para compra (`can_buy`, PB-CAT-001) si es nuevo en el borrador**; `quantity` > 0, ≤ 99 999 999.999, hasta 3 decimales; entera si la unidad base del producto no admite fracciones; `unit_price` ≥ 0, 2 decimales, ≤ `MONEY_MAX`; nunca `float`.
 - INV-05: un producto aparece una sola vez por compra; máximo 200 líneas; cero líneas permitido en un borrador.
 - INV-06: `subtotal = round_half_up(quantity × unit_price, 2)`; `total = Σ subtotales`; ambos derivados (no asignables, no aceptados del cliente) y ≤ `MONEY_MAX`.
 - INV-07: no existen impuestos, descuentos ni costos adicionales (ni campos ni efecto si se envían).
@@ -69,6 +69,7 @@ Con el módulo `purchases` habilitado, la persona entra a Compras → Compras, v
 - AC-16 (formulario, guardado): «Guardar borrador» deshabilitado si es inválido o mientras guarda; en éxito, toast y navegación al detalle; ante error del servidor se conservan todas las entradas y los errores se muestran por campo y por línea; «Cancelar» vuelve a la lista (alta) o al detalle (edición) con aviso si hay cambios sin guardar.
 - AC-17 (detalle): muestra proveedor (aunque inactivo), fecha, referencia («Sin referencia»), notas («Sin notas»), estado «Borrador», moneda BOB, líneas con subtotal y total; «Editar» solo si `editable`; no hay botón «Confirmar»; inexistente → aviso y retorno a la lista.
 - AC-18 (edición): `/purchases/:id/edit` precarga cabecera y líneas del borrador y guarda con `PATCH`; si la compra no es editable redirige al detalle con aviso.
+- AC-19 (PB-CAT-001, v2): solo se pueden agregar líneas con productos **activos y habilitados para compra**. Un producto nuevo no comprable → 400 con error en `product_id` de su línea («El producto no está habilitado para compra.»), sin persistir nada; el selector del formulario ofrece únicamente productos activos con `can_buy`. Un producto que ya estaba en el borrador conserva su línea aunque luego deje de ser comprable (igual que con «activo»). El precio de compra sigue siendo el informado en la línea, nunca el precio de venta del catálogo.
 
 ## Edge cases / Error cases
 - EDGE-01: redondeo de subtotal: `0.333 × 10.00 = 3.33`; `1.005 × 1.00 = 1.01` (mitad hacia arriba); `0.001 × 0.01 = 0.00`.
@@ -176,3 +177,6 @@ Migración nueva `purchases/migrations/0002_purchase.py` generada con `makemigra
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-10-30): [Specification] La historia PB-COM-002 se amplió (comunicado por el usuario en el chat) con la dependencia PB-CAT-001: las líneas solo admiten productos activos y comprables (INV-04 ampliado, AC-19 nuevo; ningún otro criterio cambia). [Implementation Plan] La fachada `catalog.services` unifica `ProductForPurchase` (campos de PB-CAT-001 `can_buy` más la unidad base y `allows_fractions`), `get_products_for_purchase` informa `can_buy`, `CreatePurchase`/`UpdatePurchase` aplican la regla a los productos nuevos y el formulario pide `can_buy=true` a la API de productos. Sin migración nueva.

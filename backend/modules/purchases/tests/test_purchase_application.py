@@ -5,6 +5,7 @@ from uuid import uuid4
 from modules.purchases.application.ports import ProductInfo
 from modules.purchases.application.purchase_commands import (
     PRODUCT_INACTIVE,
+    PRODUCT_NOT_BUYABLE,
     PRODUCT_MISSING,
     SUPPLIER_NOT_ACTIVE,
     CreatePurchase,
@@ -47,8 +48,9 @@ class FakeProducts:
         return {pid: self.rows[pid] for pid in product_ids if pid in self.rows}
 
 
-def product(name='Harina', active=True, unit='kg', fractions=True):
-    return ProductInfo(id=uuid4(), name=name, active=active, unit_abbreviation=unit, allows_fractions=fractions)
+def product(name='Harina', active=True, unit='kg', fractions=True, can_buy=True):
+    return ProductInfo(id=uuid4(), name=name, active=active, can_buy=can_buy, unit_abbreviation=unit,
+                       allows_fractions=fractions)
 
 
 class PurchaseApplicationCase(TestCase):
@@ -110,6 +112,20 @@ class CreatePurchaseTests(PurchaseApplicationCase):
         self.assertEqual(lines[1]['product_id'], [PRODUCT_MISSING])
         self.assertEqual(lines[2]['product_id'], [PRODUCT_INACTIVE])
 
+    def test_product_not_enabled_for_purchase_is_rejected_per_line(self):  # AC-19 (PB-CAT-001)
+        sellable_only = product(name='Cuñapé', can_buy=False)
+        inactive_and_not_buyable = product(name='Viejo', active=False, can_buy=False)
+        self.products.rows[sellable_only.id] = sellable_only
+        self.products.rows[inactive_and_not_buyable.id] = inactive_and_not_buyable
+        with self.assertRaises(PurchaseValidationError) as ctx:
+            self.create(items=[ItemInput(self.flour.id, '1', '1'), ItemInput(sellable_only.id, '1', '1'),
+                               ItemInput(inactive_and_not_buyable.id, '1', '1')])
+        lines = ctx.exception.errors['items']
+        self.assertEqual(lines[0], {})
+        self.assertEqual(lines[1]['product_id'], [PRODUCT_NOT_BUYABLE])
+        self.assertEqual(lines[2]['product_id'], [PRODUCT_INACTIVE])
+        self.assertEqual(self.purchases.saved, 0)
+
     def test_integer_unit_rejects_fractions(self):  # INV-04
         units = product(name='Caja', unit='u', fractions=False)
         self.products.rows[units.id] = units
@@ -136,7 +152,7 @@ class UpdatePurchaseTests(PurchaseApplicationCase):
 
     def test_kept_product_may_be_inactive_or_renamed_new_must_be_active(self):  # INV-08, EDGE-04
         purchase = self.create()
-        self.products.rows[self.flour.id] = ProductInfo(self.flour.id, 'Harina RENOMBRADA', False, 'kg', True)
+        self.products.rows[self.flour.id] = ProductInfo(self.flour.id, 'Harina RENOMBRADA', False, False, 'kg', True)
         updated = self.update_use_case().execute(purchase.id, items=[ItemInput(self.flour.id, '5', '9.00')])
         self.assertEqual((updated.items[0].product_name, str(updated.items[0].quantity)), ('Harina', '5.000'))
         inactive = product(name='Viejo', active=False)
@@ -144,6 +160,17 @@ class UpdatePurchaseTests(PurchaseApplicationCase):
         with self.assertRaises(PurchaseValidationError) as ctx:
             self.update_use_case().execute(purchase.id, items=[ItemInput(inactive.id, '1', '1')])
         self.assertEqual(ctx.exception.errors['items'][0]['product_id'], [PRODUCT_INACTIVE])
+
+    def test_kept_product_may_stop_being_buyable_but_a_new_one_must_be_buyable(self):  # AC-19, INV-08
+        purchase = self.create()
+        self.products.rows[self.flour.id] = ProductInfo(self.flour.id, 'Harina', True, False, 'kg', True)
+        updated = self.update_use_case().execute(purchase.id, items=[ItemInput(self.flour.id, '5', '9.00')])
+        self.assertEqual(updated.items[0].product_name, 'Harina')
+        not_buyable = product(name='Cuñapé', can_buy=False)
+        self.products.rows[not_buyable.id] = not_buyable
+        with self.assertRaises(PurchaseValidationError) as ctx:
+            self.update_use_case().execute(purchase.id, items=[ItemInput(not_buyable.id, '1', '1')])
+        self.assertEqual(ctx.exception.errors['items'][0]['product_id'], [PRODUCT_NOT_BUYABLE])
 
     def test_deactivated_supplier_must_be_replaced(self):  # AC-08, EDGE-05
         purchase = self.create()

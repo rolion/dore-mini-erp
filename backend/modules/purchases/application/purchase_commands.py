@@ -10,6 +10,7 @@ from .ports import ProductCatalog
 
 PRODUCT_MISSING = 'El producto no existe.'
 PRODUCT_INACTIVE = 'El producto está inactivo.'
+PRODUCT_NOT_BUYABLE = 'El producto no está habilitado para compra.'
 SUPPLIER_NOT_ACTIVE = 'Selecciona un proveedor activo.'
 
 
@@ -31,7 +32,7 @@ def _supplier_errors(suppliers: SupplierRepository, supplier_id: object) -> dict
 
 
 def _drafts(products: ProductCatalog, items: Sequence[ItemInput], kept_product_ids: set[UUID]) -> list[ItemDraft]:
-    """Líneas con los datos del catálogo: un producto nuevo debe estar activo; uno que ya estaba en el borrador, no."""
+    """Líneas con los datos del catálogo: un producto nuevo debe estar activo y ser comprable; uno que ya estaba en el borrador, no."""
     info = products.get_products([item.product_id for item in items])
     drafts = []
     for item in items:
@@ -39,8 +40,12 @@ def _drafts(products: ProductCatalog, items: Sequence[ItemInput], kept_product_i
         error = None
         if product is None:
             error = PRODUCT_MISSING
-        elif not product.active and item.product_id not in kept_product_ids:
-            error = PRODUCT_INACTIVE
+        elif item.product_id not in kept_product_ids:
+            # Un producto nuevo en el borrador debe estar activo y habilitado para compra (PB-CAT-001).
+            if not product.active:
+                error = PRODUCT_INACTIVE
+            elif not product.can_buy:
+                error = PRODUCT_NOT_BUYABLE
         drafts.append(ItemDraft(
             product_id=item.product_id, quantity=item.quantity, unit_price=item.unit_price,
             product_name=product.name if product else '',

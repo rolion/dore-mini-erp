@@ -84,11 +84,11 @@ class GetProductsForPurchaseTests(TestCase):
         from modules.catalog.services import ProductForPurchase, get_products_for_purchase
         unit = UnitModel.objects.create(company_id=COMPANY_ID, name='Kilogramo', abbreviation='kg', allows_fractions=True)
         with_unit = ProductModel.objects.create(company_id=COMPANY_ID, name='Arroz', sale_price=Decimal('1.00'),
-                                                tracks_stock=True, base_unit=unit)
+                                                tracks_stock=True, base_unit=unit, can_buy=True)
         bare = ProductModel.objects.create(company_id=COMPANY_ID, name='Bolsa', sale_price=Decimal('1.00'), active=False)
         foreign = ProductModel.objects.create(company_id=uuid4(), name='Ajeno', sale_price=Decimal('1.00'))
         result = get_products_for_purchase(COMPANY_ID, [with_unit.id, bare.id, foreign.id, uuid4()])
         self.assertEqual(result, {
-            with_unit.id: ProductForPurchase(with_unit.id, 'Arroz', True, 'kg', True),
-            bare.id: ProductForPurchase(bare.id, 'Bolsa', False, None, False),
+            with_unit.id: ProductForPurchase(with_unit.id, 'Arroz', True, True, 'kg', True),
+            bare.id: ProductForPurchase(bare.id, 'Bolsa', False, False, None, False),
         })

@@ -16,7 +16,7 @@ class ProductCatalogAdapter:
     def get_products(self, product_ids: Iterable[UUID]) -> dict[UUID, ProductInfo]:
         products = catalog_services.get_products_for_purchase(self.company_id, product_ids)
         return {
-            pid: ProductInfo(id=p.id, name=p.name, active=p.active, unit_abbreviation=p.unit_abbreviation,
+            pid: ProductInfo(id=p.id, name=p.name, active=p.active, can_buy=p.can_buy, unit_abbreviation=p.unit_abbreviation,
                              allows_fractions=p.allows_fractions)
             for pid, p in products.items()
         }
