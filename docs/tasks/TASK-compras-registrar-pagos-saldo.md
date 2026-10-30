@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-registrar-pagos-saldo
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/38
 **Fuente:** https://trello.com/c/B13dklNF/19-pb-com-005-registrar-pagos-y-saldo-de-compras
 
 ## Historial de transiciones
