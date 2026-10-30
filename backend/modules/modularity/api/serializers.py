@@ -16,6 +16,12 @@ def serialize_module(view: ModuleView) -> dict:
         'requires': _links(view.requires),
         'optional': _links(view.optional),
         'missing_requires': view.missing_requires,
+        'capabilities': [{'key': k, 'label': label, 'available': ok} for k, label, ok in view.capabilities],
+        'missing_capabilities': view.missing_capabilities,
+        'adopted_at': view.adopted_at.isoformat() if view.adopted_at else None,
+        'disable_blockers': [
+            {'code': b.code, 'message': b.message, 'resolution': b.resolution} for b in view.blockers
+        ],
     }
 
 
