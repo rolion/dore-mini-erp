@@ -29,13 +29,6 @@
                     <div class="ngxTableHeader">
                       <div class="header-buttons-left">
                         <div class="d-flex align-items-center gap-2 ms-3">
-                          @if (supplierId) {
-                          <span class="badge-outline col-blue" data-testid="supplier-filter">
-                            Proveedor: {{ supplierName || '…' }}
-                          </span>
-                          <button type="button" class="btn btn-link p-0" data-testid="clear-filter"
-                            (click)="clearSupplierFilter()">Quitar filtro</button>
-                          }
                           <a class="btn btn-icon icon-left btn-primary rounded-button"
                             routerLink="/pocketbiz/purchases/new" title="Nueva compra" aria-label="Nueva compra">
                             <i class="material-icons">add</i>
@@ -47,37 +40,140 @@
                 </div>
               </div>
             </div>
+            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters" (ngSubmit)="applyForm()">
+              <div class="col-md-4">
+                <label for="filter-search">Buscar</label>
+                <input id="filter-search" type="search" class="form-control search-field" formControlName="search"
+                  placeholder="Referencia interna o externa" aria-label="Buscar por referencia interna o externa">
+              </div>
+              <div class="col-md-4">
+                <label for="filter-supplier">Proveedor</label>
+                <ng-select inputId="filter-supplier" [items]="(suppliers$ | async) ?? []" bindLabel="name"
+                  [typeahead]="supplierInput$" formControlName="supplier" placeholder="Todos los proveedores"
+                  notFoundText="Sin resultados" typeToSearchText="Escriba para buscar" [clearable]="true"
+                  ariaLabel="Proveedor">
+                </ng-select>
+              </div>
+              <div class="col-md-2 col-6">
+                <label for="filter-from">Desde</label>
+                <input id="filter-from" type="date" class="form-control" formControlName="dateFrom"
+                  [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-md-2 col-6">
+                <label for="filter-to">Hasta</label>
+                <input id="filter-to" type="date" class="form-control" formControlName="dateTo"
+                  [class.is-invalid]="rangeInvalid">
+              </div>
+              @if (rangeInvalid) {
+              <div class="col-12">
+                <small class="form-text text-danger" data-testid="range-error">La fecha «Hasta» no puede ser anterior a «Desde».</small>
+              </div>
+              }
+              <div class="col-md-3 col-6">
+                <label for="filter-status">Estado</label>
+                <select id="filter-status" class="form-select form-control" formControlName="status">
+                  @for (option of statusOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label for="filter-reception">Recepción</label>
+                <select id="filter-reception" class="form-select form-control" formControlName="receptionStatus">
+                  @for (option of receptionOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3 col-6">
+                <label for="filter-payment">Pago</label>
+                <select id="filter-payment" class="form-select form-control" formControlName="paymentStatus">
+                  @for (option of paymentOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3 col-6 d-flex align-items-end">
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">Limpiar filtros</button>
+              </div>
+              <div class="col-12">
+                <small class="form-text text-muted">Recepción y pago aplican solo a compras confirmadas.</small>
+              </div>
+            </form>
             @if (errorMessage) {
             <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
               {{ errorMessage }}
               <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">Reintentar</button>
             </div>
             }
-            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+            @if (emptyWithFilters) {
+            <div class="text-center p-4" data-testid="empty-filtered">
+              <p class="mb-2">No hay compras que coincidan con los filtros aplicados.</p>
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-light me-2" data-testid="empty-clear" (click)="clearFilters()">Limpiar filtros</button>
+              <a class="btn btn-primary" routerLink="/pocketbiz/purchases/new" data-testid="empty-new">Nueva compra</a>
+            </div>
+            } @else {
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
-              <ngx-datatable-column name="Fecha" [sortable]="false" [width]="120">
+              <ngx-datatable-column name="Referencia" [sortable]="false" [flexGrow]="1.2" [minWidth]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.purchaseDate | date: 'dd/MM/yyyy' }}</a>
+                  <a class="fw-bold text-nowrap" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
+                  @if (row.externalReference) {
+                  <small class="d-block text-muted">{{ row.externalReference }}</small>
+                  }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Proveedor" [sortable]="false" [width]="220">
+              <ngx-datatable-column name="Fecha" [sortable]="false" [flexGrow]="1" [minWidth]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.purchaseDate | date: 'dd/MM/yyyy' }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Proveedor" [sortable]="false" [flexGrow]="1.5" [minWidth]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.supplier.name || '—' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Referencia" [sortable]="false" [width]="160">
-                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.externalReference || '—' }}</ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column name="Total" [sortable]="false" [width]="140" headerClass="text-end" cellClass="text-end">
+              <ngx-datatable-column name="Total" [sortable]="false" [flexGrow]="1" [minWidth]="105" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span class="d-block text-end text-nowrap">{{ row.total | money }}</span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [width]="110">
+              <ngx-datatable-column name="Recepción" [sortable]="false" [flexGrow]="1.4" [minWidth]="165">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.receptionStatus; as reception) {
+                  <div class="badge-outline" data-testid="reception-badge" [class]="receptionClass(reception)">{{ receptionLabel(reception) }}</div>
+                  } @else {
+                  <span data-testid="reception-none">—</span>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Estado" [sortable]="false" [flexGrow]="1" [minWidth]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <div class="badge-outline" [class]="statusClass(row.status)">{{ statusLabel(row.status) }}</div>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="140">
+              <ngx-datatable-column name="Pago" [sortable]="false" [flexGrow]="1" [minWidth]="128">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.paymentStatus; as payment) {
+                  <div class="badge-outline" data-testid="payment-badge" [class]="paymentClass(payment)">{{ paymentLabel(payment) }}</div>
+                  } @else {
+                  <span data-testid="payment-none">—</span>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Saldo" [sortable]="false" [flexGrow]="1" [minWidth]="100" headerClass="text-end" cellClass="text-end">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.balance !== null) {
+                  <span class="d-block text-end text-nowrap" data-testid="balance">{{ row.balance | money }}</span>
+                  } @else {
+                  <span class="d-block text-end" data-testid="balance-none">—</span>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Acciones" [sortable]="false" [flexGrow]="0.6" [minWidth]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
                     <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/purchases', row.id]"
@@ -94,6 +190,7 @@
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
+            }
           </div>
         </div>
       </div>

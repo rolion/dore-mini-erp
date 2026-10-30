@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Protocol, Sequence
 from uuid import UUID
 
-from .enums import PurchaseStatus
+from .enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from .payment import Payment
 from .purchase import Purchase
 from .receipt import Receipt
@@ -23,6 +23,30 @@ class PurchaseSummary:
     total: Decimal
     status: PurchaseStatus
     items_count: int
+    reference: str = ''
+    # Seguimiento: solo para compras confirmadas; en borrador o cancelada son `None`.
+    reception_status: ReceptionStatus | None = None
+    payment_status: PaymentStatus | None = None
+    paid_total: Decimal | None = None
+    balance: Decimal | None = None
+
+
+@dataclass(frozen=True)
+class PurchaseFilters:
+    """Filtros combinables (AND) de la lista de compras.
+
+    Recepción y pago solo existen en compras confirmadas: filtrar por ellos excluye borradores y canceladas.
+    `pending_payment` es «pago pendiente»: `unpaid` o `partial`.
+    """
+
+    supplier_id: UUID | None = None
+    date_from: date | None = None
+    date_to: date | None = None
+    status: PurchaseStatus | None = None
+    reception_status: ReceptionStatus | None = None
+    payment_status: PaymentStatus | None = None
+    pending_payment: bool = False
+    search: str = ''
 
 
 class PurchaseRepository(Protocol):
@@ -32,8 +56,9 @@ class PurchaseRepository(Protocol):
         """Persiste la compra con sus líneas (las reemplaza) y la devuelve con los datos que asigna la persistencia."""
         ...
 
-    def list(self, supplier_id: UUID | None = None) -> Sequence[PurchaseSummary]:
-        """Compras de la empresa: fecha desc, creación desc, id; opcionalmente de un proveedor."""
+    def list(self, supplier_id: UUID | None = None,
+             filters: PurchaseFilters | None = None) -> Sequence[PurchaseSummary]:
+        """Compras de la empresa: fecha desc, creación desc, id; opcionalmente de un proveedor y con filtros."""
         ...
 
 

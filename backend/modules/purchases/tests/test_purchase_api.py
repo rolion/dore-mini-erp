@@ -236,7 +236,8 @@ class ListPurchaseTests(PurchaseApiTestCase):
         self.assertEqual([r['id'] for r in body['results']], [new['id'], mine['id'], old['id']])
         first = body['results'][0]
         self.assertEqual(set(first), {'id', 'purchase_date', 'supplier', 'external_reference', 'total', 'currency',
-                                      'status', 'items_count'})
+                                      'status', 'items_count', 'reference', 'reception_status',
+                                      'payment_status', 'paid_total', 'balance'})
         self.assertEqual((first['supplier']['name'], first['total'], first['items_count']),
                          ('Distribuidora Sur', '25.00', 1))
         filtered = self.client.get(LIST_URL, {'supplier_id': str(other_supplier.id)}).json()

@@ -6,6 +6,7 @@ from uuid import UUID
 from modules.purchases.domain.exceptions import PurchaseNotFound
 from modules.purchases.domain.purchase import Purchase
 from modules.purchases.domain.repositories import (
+    PurchaseFilters,
     PurchaseRepository,
     PaymentRepository,
     PurchaseSummary,
@@ -54,5 +55,6 @@ class ListPurchases:
     def __init__(self, purchases: PurchaseRepository):
         self.purchases = purchases
 
-    def execute(self, supplier_id: UUID | None = None) -> Sequence[PurchaseSummary]:
-        return self.purchases.list(supplier_id=supplier_id)
+    def execute(self, supplier_id: UUID | None = None,
+                filters: PurchaseFilters | None = None) -> Sequence[PurchaseSummary]:
+        return self.purchases.list(supplier_id=supplier_id, filters=filters)
