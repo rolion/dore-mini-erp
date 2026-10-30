@@ -100,6 +100,13 @@ class DjangoStockMovementRepository:
             list(WarehouseModel.objects.select_for_update().filter(pk=warehouse_id, company_id=self.company_id))
             yield
 
+    @contextmanager
+    def locked_company(self):
+        with transaction.atomic():
+            # Todos los almacenes de la empresa, en orden estable, para no provocar interbloqueos entre operaciones.
+            list(WarehouseModel.objects.select_for_update().filter(company_id=self.company_id).order_by('id'))
+            yield
+
     def get(self, movement_id: UUID) -> StockMovement | None:
         model = self._movements().filter(pk=movement_id).first()
         if model is None:
