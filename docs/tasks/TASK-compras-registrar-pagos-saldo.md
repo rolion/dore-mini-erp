@@ -1,6 +1,6 @@
 # TASK-compras-registrar-pagos-saldo: Registrar pagos y saldo de compras (PB-COM-005)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-registrar-pagos-saldo
@@ -16,6 +16,7 @@
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS con PostgreSQL real y revisión visual; 3 hallazgos Low abiertos (REV-01…03) | delivery-publish |
 
 ## Investigación
 
@@ -100,7 +101,14 @@ No se puede registrar un pago. El detalle de una compra confirmada muestra «Sin
 **Deuda:** anular/reembolsar pagos (estado `voided` reservado, sin acción, H-05); numeración correlativa de `PAG-`; la fecha futura se valida con la hora local del servidor.
 
 ## Review
-_Pendiente_
+**Quality Gate ciclo 1: PASS** (sin Critical/High abiertos ni pruebas fallando; 3 hallazgos Low abiertos).
+- [REV-01](../reviews/REV-2026-10-30-compras-registrar-pagos-saldo-01.md) (Low, IMPLEMENTATION): errores de forma del serializer (fecha mal formada, `payment_id` faltante) no se devuelven junto con los de dominio (AC-04 parcial).
+- [REV-02](../reviews/REV-2026-10-30-compras-registrar-pagos-saldo-02.md) (Low, IMPLEMENTATION): tras un 400 por saldo desactualizado el diálogo no recarga el saldo ni el resumen (el DDR lo pide).
+- [REV-03](../reviews/REV-2026-10-30-compras-registrar-pagos-saldo-03.md) (Low, SPECIFICATION): EDGE-07/EDGE-08 y montos exponenciales sin prueba; errores del diálogo sin `aria-describedby`.
+- Límites DDD verificados (dominio sin Django, `company_id` en todo, `Decimal`, sin imports de infraestructura entre módulos, migración `0006` nueva sin editar anteriores, sin scope creep).
+- **Consistencia visual: verificada** en escritorio (1440) y móvil (390, sin overflow horizontal), tema claro y oscuro: pestaña «Pagos», diálogo con saldo, error de cliente y de servidor conservando lo escrito, «Pago parcial» → «Pagada», botón oculto con saldo cero, cancelación bloqueada tras pagar, estados de borrador/cancelada/total 0. Observación: poco contraste del `alert-info` (estilo de la plantilla).
+
+**Evidencia de pruebas:** ver PR #38, sección Testing.
 
 ## Publicación
-_Pendiente_
+PR #38 con descripción completa. Cambio sensible: **base de datos** (migración `0006_payments`, respaldada por el ADR de modelo, saldo y contrato). Falta de parte humana: aprobar el merge (decidir si los Low REV-01…03 se corrigen antes o después). No se mergea.
