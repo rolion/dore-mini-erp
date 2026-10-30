@@ -58,13 +58,17 @@ class StockEntryAdapter:
                 for w in inventory_services.list_active_warehouses(self.company_id)]
 
     def register_entries(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
-                         reference: str, actor: Actor) -> None:
+                         reference: str, actor: Actor, unit_costs: dict[UUID, Decimal] | None = None) -> None:
         for product_id, quantity in lines:
+            price = (unit_costs or {}).get(product_id)
+            valuation = None if price is None else inventory_services.MovementValue(
+                cost_origin='purchase_price', unit_cost=price)
             try:
                 inventory_services.record_movement(
                     self.company_id, product_id=product_id, warehouse_id=warehouse_id, kind='in', quantity=quantity,
                     user_id=actor.user_id, user_name=actor.user_name, reference=reference,
-                    source_type=self.SOURCE_TYPE, source_id=str(receipt_id), source_line=str(product_id))
+                    source_type=self.SOURCE_TYPE, source_id=str(receipt_id), source_line=str(product_id),
+                    valuation=valuation)
             except inventory_services.MovementValidationError as exc:
                 # Solo el almacén es atribuible a la persona; lo demás se informa sin campo.
                 raise PurchaseValidationError({

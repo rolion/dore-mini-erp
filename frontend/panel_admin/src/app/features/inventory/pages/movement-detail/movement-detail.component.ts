@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from '../../../../core/service/auth.service';
+import { MovementValuationSectionComponent } from '../../../costing/components/movement-valuation-section/movement-valuation-section.component';
 import { InventoryApiError } from '../../models/api-error';
 import {
   MOVEMENT_STATUS_LABELS,
@@ -20,7 +21,7 @@ import { MovementsApiService } from '../../services/movements-api.service';
 @Component({
   selector: 'app-movement-detail',
   templateUrl: './movement-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, MovementValuationSectionComponent],
 })
 export class MovementDetailComponent implements OnInit {
   readonly typeLabel = movementTypeLabel;

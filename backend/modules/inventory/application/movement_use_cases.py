@@ -27,7 +27,7 @@ from modules.inventory.domain.repositories import (
     WarehouseRepository,
 )
 
-from .movement_ports import BlockNegativeStock, InventoryPolicy, ProductDirectory
+from .movement_ports import BlockNegativeStock, InventoryPolicy, ProductDirectory, apply_valuation
 
 
 class RecordMovement:
@@ -42,7 +42,8 @@ class RecordMovement:
 
     def execute(self, *, product_id: UUID, warehouse_id: UUID, kind: MovementKind | str, quantity: object,
                 user_id: UUID | None, user_name: str, reference: str = '', reason: str = '',
-                source: MovementSource | None = None, occurred_at: datetime | None = None) -> tuple[StockMovement, bool]:
+                source: MovementSource | None = None, occurred_at: datetime | None = None,
+                valuation: object | None = None) -> tuple[StockMovement, bool]:
         movement = StockMovement.record(
             product_id=product_id, warehouse_id=warehouse_id, kind=MovementKind(kind), quantity=quantity,
             occurred_at=occurred_at or timezone.now(), user_id=user_id, user_name=user_name,
@@ -70,6 +71,7 @@ class RecordMovement:
                         'Esa operación de origen ya registró un movimiento con otra cantidad.')
                 return existing, False
             self._check_balance(movement)
+            apply_valuation(self.policy, movement, valuation)
             return self.repository.insert(movement), True
 
     def _check_balance(self, movement: StockMovement) -> None:
@@ -145,7 +147,8 @@ class RecordOutputs:
                 else:
                     results.append((existing, False))
             self._check_balances(warehouse_id, [m for _, m in pending])
-            for index, movement in pending:
+            for index, movement in sorted(pending, key=lambda item: str(item[1].product_id)):
+                apply_valuation(self.policy, movement)
                 results[index] = (self.repository.insert(movement), True)
             return results  # type: ignore[return-value]
 
@@ -193,6 +196,7 @@ class ReverseMovement:
                     raise InsufficientStock(
                         'No hay saldo suficiente para revertir esta entrada.', product_id=counter.product_id,
                         warehouse_id=counter.warehouse_id, requested=counter.quantity, available=available)
+            apply_valuation(self.policy, counter)
             created = self.repository.insert(counter)
             self.repository.mark_reversed(original.id)
             return created
@@ -222,6 +226,8 @@ class ReverseSourceMovements:
             counters = [m.reverse(occurred_at=when, user_id=user_id, user_name=user_name, reason=reason)
                         for m in pending]
             self._check_balances(counters)
+            for counter in counters:
+                apply_valuation(self.policy, counter)
             created = [self.repository.insert(c) for c in counters]
             for original in pending:
                 self.repository.mark_reversed(original.id)

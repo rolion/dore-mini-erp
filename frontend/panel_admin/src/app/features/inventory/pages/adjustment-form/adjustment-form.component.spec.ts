@@ -1,12 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { AdjustmentBalance, StockAdjustmentDetail } from '../../models/adjustment';
 import { InventoryApiError } from '../../models/api-error';
 import { OpeningProduct } from '../../models/stock';
 import { AdjustmentsApiService } from '../../services/adjustments-api.service';
 import { OpeningProductsService } from '../../services/opening-products.service';
+import { ValuationApiService } from '../../services/valuation-api.service';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
 import { makeAdjustmentDetail } from '../../testing/adjustment-fixtures';
 import { makeWarehouse } from '../../testing/inventory-fixtures';
@@ -21,6 +23,8 @@ describe('AdjustmentFormComponent', () => {
   let api: jasmine.SpyObj<AdjustmentsApiService>;
   let toastr: jasmine.SpyObj<ToastrService>;
   let router: Router;
+  let valuation: jasmine.SpyObj<ValuationApiService>;
+  let enabled: BehaviorSubject<ReadonlySet<string> | null>;
 
   beforeEach(async () => {
     api = jasmine.createSpyObj<AdjustmentsApiService>('AdjustmentsApiService', ['balance', 'confirm']);
@@ -30,6 +34,9 @@ describe('AdjustmentFormComponent', () => {
     const products = jasmine.createSpyObj<OpeningProductsService>('OpeningProductsService', ['search']);
     products.search.and.returnValue(of([PIECE]));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
+    valuation = jasmine.createSpyObj<ValuationApiService>('ValuationApiService', ['get']);
+    valuation.get.and.returnValue(of({ status: 'not_adopted', adoption: null }));
+    enabled = new BehaviorSubject<ReadonlySet<string> | null>(new Set(['inventory']));
     await TestBed.configureTestingModule({
       imports: [AdjustmentFormComponent],
       providers: [
@@ -38,6 +45,8 @@ describe('AdjustmentFormComponent', () => {
         { provide: WarehousesApiService, useValue: warehouses },
         { provide: OpeningProductsService, useValue: products },
         { provide: ToastrService, useValue: toastr },
+        { provide: ValuationApiService, useValue: valuation },
+        { provide: ModulesService, useValue: { enabledKeys$: enabled.asObservable() } },
       ],
     }).compileComponents();
     router = TestBed.inject(Router);
@@ -220,6 +229,89 @@ describe('AdjustmentFormComponent', () => {
     expect(component.step).toBe('edit');
     expect(text('reason-error')).toBe('El motivo es obligatorio.');
     expect(component.saving).toBeFalse();
+  });
+
+  describe('inventario valorado (AC-19)', () => {
+    function adoptValuation(): void {
+      enabled.next(new Set(['inventory', 'costing']));
+      valuation.get.and.returnValue(
+        of({ status: 'adopted', adoption: { id: 'a', cutoffAt: '', method: '', userName: '', lines: [] } }),
+      );
+      component.ngOnInit();
+    }
+
+    it('does not ask for a value without valuation', () => {
+      fill('12');
+      expect(component.needsValue).toBeFalse();
+      expect(el().querySelector('[data-testid="value-input"]')).toBeNull();
+    });
+
+    it('asks for a value only on a positive difference and blocks reviewing without it', () => {
+      adoptValuation();
+      fill('7');
+      expect(el().querySelector('[data-testid="value-input"]')).toBeNull(); // salida: usa el costo vigente
+      fill('12');
+      expect(text('value-notice')).toContain('necesita un valor');
+      expect(component.canReview).toBeFalse();
+      component.form.controls.totalValue.setValue('11.5');
+      component.form.controls.totalValue.markAsDirty();
+      fixture.detectChanges();
+      expect(component.canReview).toBeTrue();
+    });
+
+    it('validates the amount format and the explicit zero cost', () => {
+      adoptValuation();
+      fill('12');
+      const control = component.form.controls.totalValue;
+      control.markAsDirty();
+      for (const bad of ['', 'abc', '1.234', '0']) {
+        control.setValue(bad);
+        expect(component.valueMessage).withContext(bad).not.toBeNull();
+        expect(component.canReview).withContext(bad).toBeFalse();
+      }
+      component.form.controls.declaredZero.setValue(true);
+      control.setValue('');
+      expect(component.valueMessage).toBeNull();
+      expect(component.canReview).toBeTrue();
+      control.setValue('3');
+      expect(component.valueMessage).toContain('costo cero declarado');
+    });
+
+    it('sends the value with the confirmation and shows it in the summary', () => {
+      adoptValuation();
+      api.confirm.and.returnValue(of(makeAdjustmentDetail()));
+      fill('12');
+      component.form.controls.totalValue.setValue('11.50');
+      component.review();
+      fixture.detectChanges();
+      expect(text('summary-value')).toBe('Bs 11.50');
+      component.confirm();
+      expect(api.confirm.calls.mostRecent().args[0].totalValue).toBe('11.50');
+      expect(api.confirm.calls.mostRecent().args[0].declaredZero).toBeFalse();
+    });
+
+    it('sends a declared zero cost as 0', () => {
+      adoptValuation();
+      api.confirm.and.returnValue(of(makeAdjustmentDetail()));
+      fill('12');
+      component.form.controls.declaredZero.setValue(true);
+      component.review();
+      component.confirm();
+      expect(api.confirm.calls.mostRecent().args[0].totalValue).toBe('0');
+      expect(api.confirm.calls.mostRecent().args[0].declaredZero).toBeTrue();
+    });
+
+    it('reveals the value field when the server asks for it even with Costeo disabled', () => {
+      api.confirm.and.returnValue(
+        throwError(() => new InventoryApiError('Revisa los datos ingresados.', 400, { totalValue: ['Indique el valor total de la entrada: el inventario está valorado.'] })),
+      );
+      fill('12');
+      component.review();
+      component.confirm();
+      fixture.detectChanges();
+      expect(component.valuedInventory).toBeTrue();
+      expect(text('value-error')).toContain('inventario está valorado');
+    });
   });
 });
 
