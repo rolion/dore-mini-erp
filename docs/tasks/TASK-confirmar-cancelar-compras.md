@@ -1,6 +1,6 @@
 # TASK-confirmar-cancelar-compras: Confirmar o cancelar compras con reglas explícitas (PB-COM-003)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-confirmar-cancelar-compras
@@ -15,6 +15,7 @@
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS condicionado (sin PostgreSQL ni revisión visual); REV-01 (Medium) y REV-02 (Low) abiertos | delivery-publish |
 
 ## Investigación
 
@@ -109,3 +110,12 @@ _Pendiente_
 
 ## Publicación
 _Pendiente_
+
+---
+_Detalle de las secciones finales (Quality Gate ciclo 1, 2026-10-30):_
+
+### Review (resultado)
+**PASS condicionado.** Ejecutado por un subagente aislado: 58 pruebas de dominio/aplicación OK, `makemigrations --check` sin cambios, `bandit` sin hallazgos, `npm run lint` OK, `ng build` OK, Karma de `features/purchases` 114/114 OK. **No ejecutado:** todas las pruebas con BD (API, repositorio, adaptadores, `test_enforcement`, `test_boundaries`, concurrencia de `select_for_update`) por falta de PostgreSQL/`DATABASE_URL`; `npm audit` (sin lockfile); revisión visual. Hallazgos: [REV-01](../reviews/REV-2026-10-30-confirmar-cancelar-compras-01.md) (Medium, falta prueba de repositorio de los campos nuevos) y [REV-02](../reviews/REV-2026-10-30-confirmar-cancelar-compras-02.md) (Low, guarda de módulos para `confirm/` y `cancel/`).
+
+### Publicación
+PR #31 listo para aprobación humana; no se mergea. Cambio sensible: base de datos (migración aditiva `0003`) y arquitectura (ADR `ADR-confirmar-cancelar-compras-ciclo-de-vida-y-contrato`). Antes de aprobar: ejecutar `python manage.py test` con PostgreSQL y revisar visualmente el detalle.
