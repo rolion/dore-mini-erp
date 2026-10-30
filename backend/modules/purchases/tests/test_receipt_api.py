@@ -122,9 +122,9 @@ class RegisterReceiptTests(ReceiptApiTestCase):
 
     def test_receiving_blocks_the_cancellation(self):  # AC-12
         purchase = self.confirmed_purchase()
-        self.assertEqual(purchase['allowed_actions'], ['receive', 'cancel'])
+        self.assertEqual(purchase['allowed_actions'], ['receive', 'pay', 'cancel'])
         self.receive(purchase, [(self.item_id(purchase, self.flour), '1')])
-        self.assertEqual(self.purchase_detail(purchase)['allowed_actions'], ['receive'])
+        self.assertEqual(self.purchase_detail(purchase)['allowed_actions'], ['receive', 'pay'])
         response = self.client.post(purchase_url(purchase['id'], 'cancel/'), {'reason': 'x'}, format='json')
         self.assertEqual(response.status_code, 409)
 

@@ -126,11 +126,11 @@ class ReceiveTests(TestCase):
 
     def test_allowed_actions_follow_the_reception(self):  # AC-12
         purchase = confirmed('2')
-        self.assertEqual(purchase.allowed_actions, ['receive', 'cancel'])
+        self.assertEqual(purchase.allowed_actions, ['receive', 'pay', 'cancel'])
         receive(purchase, [(purchase.items[0].id, '1')])
-        self.assertEqual(purchase.allowed_actions, ['receive'])
+        self.assertEqual(purchase.allowed_actions, ['receive', 'pay'])
         receive(purchase, [(purchase.items[0].id, '1')], before={purchase.items[0].id: Decimal('1')})
-        self.assertEqual(purchase.allowed_actions, [])
+        self.assertEqual(purchase.allowed_actions, ['pay'])
         self.assertEqual(make([draft('1')]).allowed_actions, ['edit', 'confirm', 'cancel'])
 
     def test_the_reference_is_derived_from_the_id(self):  # H-01

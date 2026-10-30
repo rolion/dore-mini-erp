@@ -104,3 +104,23 @@ class ReceiptItemModel(models.Model):
     class Meta:
         db_table = 'purchases_receipt_item'
         ordering = ['position']
+
+
+class PaymentModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    # Compra del mismo contexto: por UUID, sin FK (igual que las recepciones).
+    purchase_id = models.UUIDField()
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_method = models.CharField(max_length=20)
+    payment_date = models.DateField()
+    status = models.CharField(max_length=20, default='confirmed')
+    user_id = models.UUIDField(null=True, blank=True)
+    user_name = models.CharField(max_length=200, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'purchases_payment'
+        ordering = ['-payment_date', '-created_at', 'id']
+        indexes = [models.Index(fields=['company_id', 'purchase_id'], name='purch_payment_company_purch')]
+        constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='purchases_payment_amount_gt_0')]

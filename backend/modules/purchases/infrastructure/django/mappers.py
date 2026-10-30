@@ -1,11 +1,20 @@
 from collections.abc import Iterable
 
-from modules.purchases.domain.enums import InventoryMode, PaymentStatus, PurchaseStatus, ReceiptStatus, ReceptionStatus
+from modules.purchases.domain.enums import (
+    InventoryMode,
+    PaymentMethod,
+    PaymentRecordStatus,
+    PaymentStatus,
+    PurchaseStatus,
+    ReceiptStatus,
+    ReceptionStatus,
+)
+from modules.purchases.domain.payment import Payment
 from modules.purchases.domain.purchase import Purchase, PurchaseItem
 from modules.purchases.domain.receipt import Receipt, ReceiptLine
 from modules.purchases.domain.supplier import Supplier
 
-from .models import PurchaseItemModel, PurchaseModel, ReceiptItemModel, ReceiptModel, SupplierModel
+from .models import PaymentModel, PurchaseItemModel, PurchaseModel, ReceiptItemModel, ReceiptModel, SupplierModel
 
 
 def to_entity(model: SupplierModel) -> Supplier:
@@ -79,3 +88,11 @@ def receipt_to_entity(model: ReceiptModel, items: Iterable[ReceiptItemModel]) ->
         lines=[ReceiptLine(purchase_item_id=i.purchase_item_id, product_id=i.product_id,
                            product_name=i.product_name, unit_abbreviation=i.unit_abbreviation, quantity=i.quantity)
                for i in items])
+
+
+def payment_to_entity(model: PaymentModel) -> Payment:
+    return Payment(
+        id=model.id, purchase_id=model.purchase_id, amount=model.amount,
+        payment_method=PaymentMethod(model.payment_method), payment_date=model.payment_date,
+        user_id=model.user_id, user_name=model.user_name, status=PaymentRecordStatus(model.status),
+        created_at=model.created_at)

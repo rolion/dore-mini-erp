@@ -26,7 +26,7 @@ class ConfirmPurchaseApiTests(PurchaseApiTestCase):
         response = self.confirm(purchase['id'])
         self.assertEqual(response.status_code, 200, response.content)
         body = response.json()
-        self.assertEqual((body['status'], body['editable'], body['allowed_actions']), ('confirmed', False, ['receive', 'cancel']))
+        self.assertEqual((body['status'], body['editable'], body['allowed_actions']), ('confirmed', False, ['receive', 'pay', 'cancel']))
         self.assertEqual((body['reception_status'], body['payment_status']), ('not_received', 'unpaid'))
         self.assertIsNotNone(body['confirmed_at'])
         self.assertRegex(body['reference'], r'^COM-[0-9A-F]{8}$')
@@ -95,7 +95,7 @@ class CancelPurchaseApiTests(PurchaseApiTestCase):
         self.assertEqual(response.status_code, 409)
         self.assertIn('recepciones o pagos', response.json()['detail'])
         body = self.client.get(detail_url(purchase['id'])).json()
-        self.assertEqual((body['status'], body['allowed_actions']), ('confirmed', ['receive']))
+        self.assertEqual((body['status'], body['allowed_actions']), ('confirmed', ['receive', 'pay']))
 
     def test_repeating_keeps_the_original_reason(self):  # AC-09
         purchase = self.create()

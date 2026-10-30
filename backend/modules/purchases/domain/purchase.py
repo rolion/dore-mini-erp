@@ -7,14 +7,16 @@ from uuid import UUID, uuid4
 
 from shared.domain.money import DECIMALS, MONEY_MAX, NEGATIVE, TOO_LARGE, InvalidMoney, parse_money
 
-from .enums import PaymentStatus, PurchaseStatus, ReceptionStatus
+from .enums import PaymentMethod, PaymentStatus, PurchaseStatus, ReceptionStatus
 from .exceptions import (
     PurchaseCancellationBlocked,
     PurchaseInvalidTransition,
     PurchaseNotEditable,
+    PurchaseNotPayable,
     PurchaseNotReceivable,
     PurchaseValidationError,
 )
+from .payment import Payment
 from .receipt import Receipt, ReceiptLine
 
 CURRENCY = 'BOB'
@@ -157,6 +159,51 @@ def compute_reception_status(items: list[PurchaseItem], received: Mapping[UUID, 
     return ReceptionStatus.NOT_RECEIVED
 
 
+_PAYMENT_AMOUNT_MESSAGES = {
+    NEGATIVE: 'El monto debe ser mayor a cero.',
+    DECIMALS: 'El monto admite como máximo 2 decimales.',
+    TOO_LARGE: f'El monto no puede superar {MONEY_MAX}.',
+}
+
+
+def _payment_amount(value: object, balance: Decimal) -> Decimal:
+    fail = 'El monto debe ser un número decimal.'
+    if isinstance(value, str) and not _PLAIN_DECIMAL.fullmatch(value.strip()):
+        raise _fail('amount', fail)
+    try:
+        amount = parse_money(value)
+    except InvalidOperation:
+        raise _fail('amount', _PAYMENT_AMOUNT_MESSAGES[TOO_LARGE]) from None
+    except InvalidMoney as exc:
+        raise _fail('amount', _PAYMENT_AMOUNT_MESSAGES.get(exc.code, fail)) from None
+    if amount <= 0:
+        raise _fail('amount', _PAYMENT_AMOUNT_MESSAGES[NEGATIVE])
+    if balance <= 0:
+        raise _fail('amount', 'La compra no tiene saldo pendiente de pago.')
+    if amount > balance:
+        raise _fail('amount', f'El monto no puede superar el saldo pendiente ({balance:.2f}).')
+    return amount
+
+
+def _payment_method(value: object) -> PaymentMethod:
+    if value is None or value == '':
+        raise _fail('payment_method', 'El método de pago es obligatorio.')
+    try:
+        return PaymentMethod(value)
+    except ValueError:
+        raise _fail('payment_method', 'El método de pago no es válido.') from None
+
+
+def _payment_date(value: object, today: date) -> date:
+    if value is None:
+        raise _fail('payment_date', 'La fecha del pago es obligatoria.')
+    if isinstance(value, datetime) or not isinstance(value, date):
+        raise _fail('payment_date', 'La fecha del pago debe ser una fecha válida.')
+    if value > today:
+        raise _fail('payment_date', 'La fecha del pago no puede ser futura.')
+    return value
+
+
 def _collect(checks) -> tuple[dict[str, object], dict[str, object]]:
     values: dict[str, object] = {}
     errors: dict[str, object] = {}
@@ -288,10 +335,18 @@ class Purchase:
         return self.status is PurchaseStatus.CONFIRMED and self.reception_status is not ReceptionStatus.RECEIVED
 
     @property
+    def can_pay(self) -> bool:
+        """Confirmada y con saldo: una compra pagada o de total 0 no admite pagos (el estado se recalcula al pagar)."""
+        return (self.status is PurchaseStatus.CONFIRMED and self.payment_status is not PaymentStatus.PAID
+                and self.total > 0)
+
+    @property
     def allowed_actions(self) -> list[str]:
         if self.status is PurchaseStatus.DRAFT:
             return ['edit', 'confirm', 'cancel']
         actions = ['receive'] if self.can_receive else []
+        if self.can_pay:
+            actions.append('pay')
         return actions + ['cancel'] if self.can_cancel else actions
 
     # --- ciclo de vida ----------------------------------------------------------------------------------------
@@ -380,6 +435,29 @@ class Purchase:
         self.reception_status = compute_reception_status(self.items, received)
         return Receipt(id=receipt_id, purchase_id=self.id, receipt_date=when, user_id=user_id, user_name=user_name,
                        lines=lines)
+
+    def register_payment(self, payment_id: UUID, amount: object, payment_method: object, payment_date: object,
+                         today: date, paid_before: Decimal, user_id: UUID | None, user_name: str) -> Payment:
+        """Registra un pago y recalcula `payment_status`.
+
+        `paid_before` es el total de pagos confirmados, leído por quien llama bajo el bloqueo de la compra.
+        Valida todo junto; si algo falla no cambia nada.
+        """
+        if self.status is not PurchaseStatus.CONFIRMED:
+            raise PurchaseNotPayable()
+        balance = self.total - paid_before
+        values, errors = _collect((
+            ('amount', lambda: _payment_amount(amount, balance)),
+            ('payment_method', lambda: _payment_method(payment_method)),
+            ('payment_date', lambda: _payment_date(payment_date, today)),
+        ))
+        if errors:
+            raise PurchaseValidationError(errors)
+        paid = paid_before + values['amount']
+        self.payment_status = PaymentStatus.PAID if paid >= self.total else PaymentStatus.PARTIAL
+        return Payment(id=payment_id, purchase_id=self.id, amount=values['amount'],
+                       payment_method=values['payment_method'], payment_date=values['payment_date'],
+                       user_id=user_id, user_name=user_name)
 
     # --- edición ----------------------------------------------------------------------------------------------
 

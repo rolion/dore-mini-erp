@@ -5,6 +5,7 @@ from typing import Protocol, Sequence
 from uuid import UUID
 
 from .enums import PurchaseStatus
+from .payment import Payment
 from .purchase import Purchase
 from .receipt import Receipt
 from .supplier import Supplier
@@ -49,6 +50,22 @@ class ReceiptRepository(Protocol):
 
     def received_totals(self, purchase_id: UUID) -> dict[UUID, Decimal]:
         """Acumulado de recepciones confirmadas por línea de la compra."""
+        ...
+
+
+class PaymentRepository(Protocol):
+    def get(self, payment_id: UUID) -> Payment | None:
+        """Pago de la empresa por id (de cualquier compra)."""
+        ...
+
+    def save(self, payment: Payment) -> Payment: ...
+
+    def list_for_purchase(self, purchase_id: UUID) -> Sequence[Payment]:
+        """Pagos de la compra: fecha desc, creación desc, id."""
+        ...
+
+    def paid_total(self, purchase_id: UUID) -> Decimal:
+        """Suma de los pagos confirmados de la compra."""
         ...
 
 

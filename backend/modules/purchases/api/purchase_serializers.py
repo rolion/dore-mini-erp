@@ -84,6 +84,8 @@ def purchase_representation(detail) -> dict:
             'pending_quantity': quantity(max(item.quantity - detail.received.get(item.id, ZERO), ZERO)),
         } for item in purchase.items],
         'total': money(purchase.total),
+        'paid_total': money(detail.paid_total),
+        'balance': money(detail.balance),
         'created_at': purchase.created_at,
         'updated_at': purchase.updated_at,
     }
