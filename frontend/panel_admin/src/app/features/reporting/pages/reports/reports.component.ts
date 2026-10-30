@@ -1,5 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { EMPTY, Observable } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { ApexChart, ApexLegend, NgApexchartsModule } from 'ng-apexcharts';
 import { SALES_CHANNEL_LABELS, SalesChannel } from '../../../../shared/models/sales-channel';
@@ -48,11 +49,26 @@ export class ReportsComponent {
     return this.modules.isDisabled('customers');
   }
 
-  readonly sales = new RemoteResource(() => this.api.sales(this.selection));
-  readonly expenses = new RemoteResource(() => this.api.expenses(this.selection));
-  readonly channels = new RemoteResource(() => this.api.salesByChannel(this.selection));
-  readonly products = new RemoteResource(() => this.api.topProducts(this.selection));
-  readonly customers = new RemoteResource(() => this.api.topCustomers(this.selection));
+  /** Ventas y Gastos son fuentes opcionales: sus tarjetas explican la ausencia y no piden datos. */
+  get salesDisabled(): boolean {
+    return this.modules.isDisabled('sales');
+  }
+
+  get expensesDisabled(): boolean {
+    return this.modules.isDisabled('expenses');
+  }
+
+  readonly sales = new RemoteResource(() => this.fromSales(() => this.api.sales(this.selection)));
+  readonly expenses = new RemoteResource(() => (this.expensesDisabled ? EMPTY : this.api.expenses(this.selection)));
+  readonly channels = new RemoteResource(() => this.fromSales(() => this.api.salesByChannel(this.selection)));
+  readonly products = new RemoteResource(() => this.fromSales(() => this.api.topProducts(this.selection)));
+  readonly customers = new RemoteResource(() =>
+    this.salesDisabled || this.customersDisabled ? EMPTY : this.api.topCustomers(this.selection),
+  );
+
+  private fromSales<T>(request: () => Observable<T>): Observable<T> {
+    return this.salesDisabled ? EMPTY : request();
+  }
 
   private readonly all = [this.sales, this.expenses, this.channels, this.products, this.customers];
 
@@ -72,6 +88,12 @@ export class ReportsComponent {
 
   percent(part: string, total: string): number {
     return percentOf(part, total);
+  }
+
+  /** Periodo efectivo del servidor, como `dd/MM/aaaa – dd/MM/aaaa`. */
+  periodLabel(period: { dateFrom: string; dateTo: string }): string {
+    const format = (iso: string) => iso.split('-').reverse().join('/');
+    return `${format(period.dateFrom)} – ${format(period.dateTo)}`;
   }
 
   categoryLabel(category: { name: string; active: boolean }): string {

@@ -18,6 +18,7 @@ from .fakes import (
     FakeCustomers,
     FakeExpenses,
     FakeSales,
+    FakeSources,
     PendingOrders,
     ProductSales,
     pending_order,
@@ -37,8 +38,8 @@ class AverageTicketTests(SimpleTestCase):
 
 
 class DashboardSummaryTests(SimpleTestCase):
-    def summary(self, sales, expenses, params=MONTH):
-        return queries.GetDashboardSummary(sales, expenses, FakeClock()).execute(params)
+    def summary(self, sales, expenses, params=MONTH, sources=None):
+        return queries.GetDashboardSummary(sales, expenses, sources or FakeSources(), FakeClock()).execute(params)
 
     def test_profit_is_sales_minus_expenses(self):  # AC-12, INV-09
         summary = self.summary(FakeSales('1200.00', 4), FakeExpenses('450.00'))
@@ -78,6 +79,29 @@ class DashboardSummaryTests(SimpleTestCase):
     def test_invalid_period_raises(self):  # AC-14
         with self.assertRaises(PeriodError):
             self.summary(FakeSales(), FakeExpenses(), PeriodParams(kind='year'))
+
+    def test_without_sales_its_indicators_and_the_profit_are_unavailable(self):  # AC-02, INV-02, INV-03
+        sales, expenses = FakeSales('900.00', 3), FakeExpenses('40.00')
+        summary = self.summary(sales, expenses, sources=FakeSources(sales=False))
+        self.assertEqual((summary.sales_enabled, summary.expenses_enabled), (False, True))
+        self.assertEqual(summary.expenses_total, D('40.00'))
+        for field in ('sales_total', 'orders_count', 'average_ticket', 'estimated_profit', 'pending_delivery_count',
+                      'pending_collection_count', 'pending_collection_balance', 'sales_criteria'):
+            self.assertIsNone(getattr(summary, field), field)
+        self.assertEqual(sales.calls, [])
+
+    def test_without_expenses_the_total_and_the_profit_are_unavailable(self):  # AC-03, INV-02, INV-03
+        sales, expenses = FakeSales('900.00', 3), FakeExpenses('40.00')
+        summary = self.summary(sales, expenses, sources=FakeSources(expenses=False))
+        self.assertEqual((summary.expenses_total, summary.estimated_profit), (None, None))
+        self.assertEqual((summary.sales_total, summary.orders_count), (D('900.00'), 3))
+        self.assertEqual(expenses.calls, [])
+
+    def test_without_any_source_nothing_is_read(self):  # AC-04
+        sales, expenses = FakeSales('900.00', 3), FakeExpenses('40.00')
+        summary = self.summary(sales, expenses, sources=FakeSources(sales=False, expenses=False))
+        self.assertIsNone(summary.estimated_profit)
+        self.assertEqual((sales.calls, expenses.calls), ([], []))
 
 
 class ReportsTests(SimpleTestCase):

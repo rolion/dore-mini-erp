@@ -245,5 +245,7 @@ class HistoryTests(SettingsApiTestCase):
         self.assertEqual(self.client.get(history_url('modules'), {'setting': 'module.sales'}).json()['count'], 0)
 
     def test_rejected_module_change_leaves_no_record(self):  # AC-05
-        self.client.post('/api/modules/sales/disable/')  # lo requiere Reportes: 409
-        self.assertEqual(self.client.get(history_url('modules')).json()['count'], 0)
+        self.client.post('/api/modules/purchases/enable/')
+        before = self.client.get(history_url('modules')).json()['count']
+        self.assertEqual(self.client.post('/api/modules/expenses/disable/').status_code, 409)  # lo requiere Compras
+        self.assertEqual(self.client.get(history_url('modules')).json()['count'], before)

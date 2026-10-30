@@ -29,15 +29,16 @@ interface PeriodDto {
 
 interface DashboardDto {
   period: PeriodDto;
-  sales_total: string;
-  orders_count: number;
+  sources: { sales: boolean; expenses: boolean };
+  sales_total: string | null;
+  orders_count: number | null;
   average_ticket: string | null;
-  expenses_total: string;
-  estimated_profit: string;
-  pending_delivery_count: number;
-  pending_collection_count: number;
-  pending_collection_balance: string;
-  sales_criteria: string;
+  expenses_total: string | null;
+  estimated_profit: string | null;
+  pending_delivery_count: number | null;
+  pending_collection_count: number | null;
+  pending_collection_balance: string | null;
+  sales_criteria: string | null;
 }
 
 interface SalesDto {
@@ -121,6 +122,7 @@ export class ReportingApiService {
   dashboard(selection: PeriodSelection): Observable<DashboardSummary> {
     return this.get<DashboardDto, DashboardSummary>('dashboard/', selection, (dto) => ({
       period: toPeriod(dto.period),
+      sources: { sales: dto.sources.sales, expenses: dto.sources.expenses },
       salesTotal: dto.sales_total,
       ordersCount: dto.orders_count,
       averageTicket: dto.average_ticket,

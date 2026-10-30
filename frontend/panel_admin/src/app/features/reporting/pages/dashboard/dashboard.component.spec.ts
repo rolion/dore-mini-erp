@@ -2,9 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ReportingApiService } from '../../services/reporting-api.service';
 import { makePending, makeSummary } from '../../testing/report-fixtures';
 import { DashboardComponent, ESTIMATE_NOTE, PENDING_NOTE } from './dashboard.component';
+
+const modulesState = { salesDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'sales' && modulesState.salesDisabled };
 
 describe('DashboardComponent', () => {
   let fixture: ComponentFixture<DashboardComponent>;
@@ -12,12 +16,17 @@ describe('DashboardComponent', () => {
   let api: jasmine.SpyObj<ReportingApiService>;
 
   beforeEach(async () => {
+    modulesState.salesDisabled = false;
     api = jasmine.createSpyObj<ReportingApiService>('ReportingApiService', ['dashboard', 'pending']);
     api.dashboard.and.returnValue(of(makeSummary()));
     api.pending.and.returnValue(of(makePending()));
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
-      providers: [provideRouter([]), { provide: ReportingApiService, useValue: api }],
+      providers: [
+        provideRouter([]),
+        { provide: ReportingApiService, useValue: api },
+        { provide: ModulesService, useValue: modulesFake },
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;
@@ -55,6 +64,91 @@ describe('DashboardComponent', () => {
     expect(text().toLowerCase()).not.toContain('utilidad neta');
   });
 
+  it('shows the exact profit rule on the card (AC-06)', () => {
+    render();
+    expect(ESTIMATE_NOTE).toBe('Ventas menos gastos registrados; no incluye costo de producción ni costo de ventas.');
+    expect(byTestId('profit-unavailable')).toBeNull();
+  });
+
+  it('shows label, period and unit on each indicator (AC-07)', () => {
+    render();
+    expect(text()).toContain('01/10/2026 – 31/10/2026');
+    expect(byTestId('orders-count')?.parentElement?.textContent).toContain('pedidos');
+    expect(byTestId('pending-delivery-count')?.parentElement?.textContent).toContain('Estado actual');
+  });
+
+  it('explains Sales indicators and the profit as unavailable without Sales and never shows zero (AC-02, AC-06)', () => {
+    modulesState.salesDisabled = true;
+    api.dashboard.and.returnValue(
+      of(
+        makeSummary({
+          sources: { sales: false, expenses: true },
+          salesTotal: null,
+          ordersCount: null,
+          averageTicket: null,
+          estimatedProfit: null,
+          pendingDeliveryCount: null,
+          pendingCollectionCount: null,
+          pendingCollectionBalance: null,
+          salesCriteria: null,
+        }),
+      ),
+    );
+    render();
+    for (const id of ['sales-unavailable', 'orders-unavailable', 'pending-delivery-unavailable', 'pending-collection-unavailable', 'profit-unavailable']) {
+      expect(byTestId(id)?.textContent).toContain('No disponible: módulo deshabilitado');
+    }
+    expect(byTestId('expenses-total')?.textContent).toContain('Bs 450.00');
+    expect(byTestId('estimated-profit')).toBeNull();
+    expect(byTestId('estimate-note')).not.toBeNull();
+    expect(api.pending).not.toHaveBeenCalled();
+    expect(root().querySelectorAll('[data-testid="unavailable"]').length).toBe(2);
+    expect(root().querySelector('[data-testid="indicators-error"]')).toBeNull();
+  });
+
+  it('explains Expenses and the profit as unavailable without Expenses (AC-03)', () => {
+    api.dashboard.and.returnValue(
+      of(makeSummary({ sources: { sales: true, expenses: false }, expensesTotal: null, estimatedProfit: null })),
+    );
+    render();
+    expect(byTestId('expenses-unavailable')?.textContent).toContain('No disponible: módulo deshabilitado');
+    expect(byTestId('profit-unavailable')).not.toBeNull();
+    expect(byTestId('profit-requires')?.textContent).toContain('Requiere Ventas y Gastos');
+    expect(byTestId('sales-total')?.textContent).toContain('Bs 1200.00');
+  });
+
+  it('loads without errors with both sources disabled (AC-04)', () => {
+    modulesState.salesDisabled = true;
+    api.dashboard.and.returnValue(
+      of(
+        makeSummary({
+          sources: { sales: false, expenses: false },
+          salesTotal: null,
+          ordersCount: null,
+          averageTicket: null,
+          expensesTotal: null,
+          estimatedProfit: null,
+          pendingDeliveryCount: null,
+          pendingCollectionCount: null,
+          pendingCollectionBalance: null,
+          salesCriteria: null,
+        }),
+      ),
+    );
+    render();
+    expect(byTestId('expenses-unavailable')).not.toBeNull();
+    expect(byTestId('sales-unavailable')).not.toBeNull();
+    expect(text()).not.toContain('No se pudo');
+  });
+
+  it('shows «Sin registros» for the average ticket without orders and keeps totals at zero (AC-05)', () => {
+    api.dashboard.and.returnValue(of(makeSummary({ salesTotal: '0.00', ordersCount: 0, averageTicket: null })));
+    render();
+    expect(byTestId('sales-total')?.textContent).toContain('Bs 0.00');
+    expect(byTestId('orders-count')?.textContent?.trim()).toBe('0');
+    expect(byTestId('average-ticket')?.textContent).toContain('Sin registros');
+  });
+
   it('builds the reproducible formula for the tooltip (AC-25)', () => {
     expect(component.profitFormula(makeSummary())).toBe('Bs 1200.00 − Bs 450.00');
   });
@@ -74,7 +168,7 @@ describe('DashboardComponent', () => {
   it('shows a dash for the average ticket when there are no orders (AC-25)', () => {
     api.dashboard.and.returnValue(of(makeSummary({ ordersCount: 0, averageTicket: null, salesTotal: '0.00' })));
     render();
-    expect(byTestId('average-ticket')?.textContent).toContain('—');
+    expect(byTestId('average-ticket')?.textContent).toContain('Sin registros');
     expect(text()).not.toContain('NaN');
   });
 
@@ -119,8 +213,8 @@ describe('DashboardComponent', () => {
   it('shows empty states for the pending lists', () => {
     api.pending.and.returnValue(of({ delivery: { count: 0, rows: [] }, collection: { count: 0, balanceTotal: '0.00', rows: [] } }));
     render();
-    expect(byTestId('delivery-empty')?.textContent).toContain('No hay pedidos pendientes de entrega.');
-    expect(byTestId('collection-empty')?.textContent).toContain('No hay pedidos pendientes de cobro.');
+    expect(byTestId('delivery-empty')?.textContent).toContain('Sin registros.');
+    expect(byTestId('collection-empty')?.textContent).toContain('Sin registros.');
   });
 
   it('keeps the rest of the dashboard when one query fails and retries only that one (AC-25)', () => {

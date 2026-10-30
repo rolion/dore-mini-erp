@@ -17,19 +17,29 @@ export interface Period {
   dateTo: string;
 }
 
-/** Los importes llegan como texto decimal ("1200.00"); el navegador no opera con ellos. */
+/** Fuentes opcionales del dashboard: `false` = módulo deshabilitado (sus indicadores llegan en `null`). */
+export interface DashboardSources {
+  sales: boolean;
+  expenses: boolean;
+}
+
+/**
+ * Los importes llegan como texto decimal ("1200.00"); el navegador no opera con ellos. Un indicador de una fuente
+ * deshabilitada es `null` (no disponible, nunca cero); la ganancia es `null` si falta Ventas o Gastos.
+ */
 export interface DashboardSummary {
   period: Period;
-  salesTotal: string;
-  ordersCount: number;
-  /** `null` si no hay pedidos en el periodo. */
+  sources: DashboardSources;
+  salesTotal: string | null;
+  ordersCount: number | null;
+  /** `null` si no hay pedidos en el periodo o Ventas está deshabilitado. */
   averageTicket: string | null;
-  expensesTotal: string;
-  estimatedProfit: string;
-  pendingDeliveryCount: number;
-  pendingCollectionCount: number;
-  pendingCollectionBalance: string;
-  salesCriteria: string;
+  expensesTotal: string | null;
+  estimatedProfit: string | null;
+  pendingDeliveryCount: number | null;
+  pendingCollectionCount: number | null;
+  pendingCollectionBalance: string | null;
+  salesCriteria: string | null;
 }
 
 export interface SalesReport {

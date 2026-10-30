@@ -94,10 +94,21 @@ class EnableDisableTests(ModulesApiTestCase):
         self.assertEqual(self.client.post(action_url('customers', 'disable')).status_code, 200)  # EDGE-02
 
     def test_disable_blocked_by_dependents(self):  # INV-03, AC-05
-        response = self.client.post(action_url('sales', 'disable'))
+        self.client.post(action_url('purchases', 'enable'))
+        response = self.client.post(action_url('expenses', 'disable'))
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json()['dependents'], ['Reportes'])
-        self.assertIn('sales', enabled_keys(self.client))
+        self.assertEqual(response.json()['dependents'], ['Compras'])
+        self.assertIn('expenses', enabled_keys(self.client))
+
+    def test_reporting_sources_can_be_disabled_with_reporting_enabled(self):  # PB-REP-001 AC-11
+        for key in ('sales', 'expenses'):
+            self.assertEqual(self.client.post(action_url(key, 'disable')).status_code, 200)
+        keys = enabled_keys(self.client)
+        self.assertIn('reporting', keys)
+        self.assertNotIn('sales', keys)
+        reporting = next(m for m in self.client.get(LIST_URL).json() if m['key'] == 'reporting')
+        self.assertEqual(reporting['requires'], [])
+        self.assertEqual([o['key'] for o in reporting['optional']], ['sales', 'expenses', 'customers'])
 
     def test_base_module_cannot_be_disabled(self):  # AC-02
         response = self.client.post(action_url('catalog', 'disable'))

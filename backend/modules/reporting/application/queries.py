@@ -16,6 +16,7 @@ from .ports import (
     PendingOrder,
     ProductSales,
     SalesReader,
+    SourceAvailability,
 )
 
 LIST_LIMIT = 10
@@ -67,16 +68,20 @@ class ExpensesReport:
 
 @dataclass(frozen=True)
 class DashboardSummary:
+    """Indicadores del periodo. `None` = fuente deshabilitada (no disponible), nunca cero."""
+
     period: Period
-    sales_total: Decimal
-    orders_count: int
-    average_ticket: Decimal | None
-    expenses_total: Decimal
-    estimated_profit: Decimal
-    pending_delivery_count: int
-    pending_collection_count: int
-    pending_collection_balance: Decimal
-    sales_criteria: str
+    sales_enabled: bool
+    expenses_enabled: bool
+    sales_total: Decimal | None
+    orders_count: int | None
+    average_ticket: Decimal | None  # None también cuando no hay pedidos
+    expenses_total: Decimal | None
+    estimated_profit: Decimal | None
+    pending_delivery_count: int | None
+    pending_collection_count: int | None
+    pending_collection_balance: Decimal | None
+    sales_criteria: str | None
 
 
 @dataclass(frozen=True)
@@ -154,30 +159,39 @@ class GetExpenseReport(_PeriodQuery):
 
 
 class GetDashboardSummary(_PeriodQuery):
-    """Ganancia estimada = ventas − gastos vigentes del periodo (puede ser negativa); los cobros no intervienen."""
+    """Ganancia estimada = ventas − gastos vigentes del periodo (puede ser negativa); los cobros no intervienen.
 
-    def __init__(self, sales: SalesReader, expenses: ExpensesReader, clock: Clock):
+    Solo se consultan las fuentes habilitadas; si falta Ventas o Gastos la ganancia no se calcula.
+    """
+
+    def __init__(self, sales: SalesReader, expenses: ExpensesReader, sources: SourceAvailability, clock: Clock):
         super().__init__(clock)
         self.sales = sales
         self.expenses = expenses
+        self.sources = sources
 
     def execute(self, params: PeriodParams) -> DashboardSummary:
         period = self._period(params)
-        totals = self.sales.totals(period.date_from, period.date_to)
-        expenses = self.expenses.report(period.date_from, period.date_to)
-        delivery = self.sales.pending_delivery(0)
-        collection = self.sales.pending_collection(0)
+        sales_on, expenses_on = self.sources.sales_enabled(), self.sources.expenses_enabled()
+        sales_total = orders_count = ticket = None
+        delivery_count = collection_count = collection_balance = criteria = None
+        if sales_on:
+            totals = self.sales.totals(period.date_from, period.date_to)
+            sales_total, orders_count = totals.total, totals.orders_count
+            ticket = average_ticket(totals.total, totals.orders_count)
+            delivery = self.sales.pending_delivery(0)
+            collection = self.sales.pending_collection(0)
+            delivery_count, collection_count = delivery.count, collection.count
+            collection_balance = collection.balance_total
+            criteria = SALES_CRITERIA
+        expenses_total = self.expenses.report(period.date_from, period.date_to).total if expenses_on else None
+        profit = sales_total - expenses_total if sales_on and expenses_on else None
         return DashboardSummary(
-            period=period,
-            sales_total=totals.total,
-            orders_count=totals.orders_count,
-            average_ticket=average_ticket(totals.total, totals.orders_count),
-            expenses_total=expenses.total,
-            estimated_profit=totals.total - expenses.total,
-            pending_delivery_count=delivery.count,
-            pending_collection_count=collection.count,
-            pending_collection_balance=collection.balance_total,
-            sales_criteria=SALES_CRITERIA,
+            period=period, sales_enabled=sales_on, expenses_enabled=expenses_on,
+            sales_total=sales_total, orders_count=orders_count, average_ticket=ticket,
+            expenses_total=expenses_total, estimated_profit=profit,
+            pending_delivery_count=delivery_count, pending_collection_count=collection_count,
+            pending_collection_balance=collection_balance, sales_criteria=criteria,
         )
 
 

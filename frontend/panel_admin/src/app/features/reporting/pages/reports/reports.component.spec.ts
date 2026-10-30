@@ -15,8 +15,13 @@ describe('percentOf', () => {
   });
 });
 
-const modulesState = { customersDisabled: false };
-const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
+const modulesState = { customersDisabled: false, salesDisabled: false, expensesDisabled: false };
+const modulesFake = {
+  isDisabled: (key: string) =>
+    (key === 'customers' && modulesState.customersDisabled) ||
+    (key === 'sales' && modulesState.salesDisabled) ||
+    (key === 'expenses' && modulesState.expensesDisabled),
+};
 
 describe('ReportsComponent', () => {
   let fixture: ComponentFixture<ReportsComponent>;
@@ -66,6 +71,41 @@ describe('ReportsComponent', () => {
     } finally {
       modulesState.customersDisabled = false;
     }
+  });
+
+  afterEach(() => {
+    modulesState.salesDisabled = false;
+    modulesState.expensesDisabled = false;
+  });
+
+  it('explains the Sales cards as unavailable and requests nothing from Sales when it is disabled (AC-09, AC-08)', () => {
+    modulesState.salesDisabled = true;
+    render();
+    expect(root().querySelectorAll('[data-testid="unavailable"]').length).toBe(4);
+    for (const spy of [api.sales, api.salesByChannel, api.topProducts, api.topCustomers]) {
+      expect(spy).not.toHaveBeenCalled();
+    }
+    expect(api.expenses).toHaveBeenCalled();
+    expect(byTestId('expenses-total')?.textContent).toContain('Bs 170.50');
+    component.onSelection({ kind: 'week' });
+    expect(api.sales).not.toHaveBeenCalled();
+  });
+
+  it('explains the Expenses cards as unavailable and keeps Sales when Expenses is disabled (AC-09)', () => {
+    modulesState.expensesDisabled = true;
+    render();
+    expect(root().querySelectorAll('[data-testid="unavailable"]').length).toBe(2);
+    expect(api.expenses).not.toHaveBeenCalled();
+    expect(byTestId('sales-total')?.textContent).toContain('Bs 1200.00');
+    expect(byTestId('sales-period')?.textContent).toContain('01/10/2026 – 31/10/2026');
+  });
+
+  it('shows no broken cards when both sources are disabled (AC-04)', () => {
+    modulesState.salesDisabled = true;
+    modulesState.expensesDisabled = true;
+    render();
+    expect(root().querySelectorAll('[data-testid="unavailable"]').length).toBe(6);
+    expect(root().querySelector('[data-testid="card-error"]')).toBeNull();
   });
 
   it('loads the five reports for the current month (AC-26)', () => {
@@ -130,9 +170,9 @@ describe('ReportsComponent', () => {
     api.topCustomers.and.returnValue(of(makeCustomers({ customers: [] })));
     render();
     for (const id of ['channels-empty', 'categories-empty', 'products-empty', 'customers-empty']) {
-      expect(byTestId(id)?.textContent).toContain('Sin datos para este periodo.');
+      expect(byTestId(id)?.textContent).toContain('Sin registros');
     }
-    expect(byTestId('sales-orders')?.textContent).toContain('—');
+    expect(byTestId('sales-orders')?.textContent).toContain('Sin registros');
     expect(text()).not.toContain('NaN');
   });
 

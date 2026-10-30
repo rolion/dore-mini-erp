@@ -19,7 +19,7 @@ MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
     ModuleDefinition('sales', 'Ventas', 'Pedidos, entrega y cobros.', requires=('catalog',), optional=('customers',)),
     ModuleDefinition('expenses', 'Gastos', 'Registro de gastos y categorías.'),
     ModuleDefinition('reporting', 'Reportes', 'Dashboard y reportes de ventas y gastos.',
-                     requires=('sales', 'expenses'), optional=('customers',)),
+                     optional=('sales', 'expenses', 'customers')),
     ModuleDefinition('purchases', 'Compras', 'Compras a proveedores.', requires=('catalog', 'expenses')),
     ModuleDefinition('inventory', 'Inventario', 'Existencias de productos.',
                      requires=('catalog',), optional=('sales', 'purchases')),

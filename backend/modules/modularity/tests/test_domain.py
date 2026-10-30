@@ -23,7 +23,8 @@ class CatalogTests(SimpleTestCase):
         self.assertEqual(requires['sales'], {'catalog'})
         self.assertEqual(requires['customers'], set())
         self.assertEqual(requires['expenses'], set())
-        self.assertEqual(requires['reporting'], {'sales', 'expenses'})
+        self.assertEqual(requires['reporting'], set())  # PB-REP-001: fuentes opcionales
+        self.assertEqual(set(d.BY_KEY['reporting'].optional), {'sales', 'expenses', 'customers'})
         self.assertEqual(requires['purchases'], {'catalog', 'expenses'})
         self.assertEqual(requires['inventory'], {'catalog'})
         self.assertEqual(requires['costing'], {'inventory'})
@@ -47,11 +48,17 @@ class RuleTests(SimpleTestCase):
             d.check_can_disable('catalog', d.effective_enabled(set()))
 
     def test_cannot_disable_required_module(self):  # INV-03, AC-05
-        enabled = d.effective_enabled({'sales', 'expenses', 'reporting'})
+        enabled = d.effective_enabled({'expenses', 'purchases'})
         with self.assertRaises(d.DependencyError) as ctx:
-            d.check_can_disable('sales', enabled)
-        self.assertEqual(ctx.exception.names, ['Reportes'])
+            d.check_can_disable('expenses', enabled)
+        self.assertEqual(ctx.exception.names, ['Compras'])
         self.assertEqual(ctx.exception.kind, 'dependents')
+
+    def test_reporting_sources_can_be_disabled_while_it_is_enabled(self):  # PB-REP-001 AC-11
+        enabled = d.effective_enabled({'sales', 'expenses', 'reporting'})
+        d.check_can_disable('sales', enabled)
+        d.check_can_disable('expenses', enabled)
+        d.check_can_enable('reporting', d.effective_enabled(set()))
 
     def test_unknown_key(self):  # EDGE-01
         with self.assertRaises(d.UnknownModule):

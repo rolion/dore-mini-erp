@@ -20,7 +20,7 @@ Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, 
 | Clientes | Agenda de clientes e historial de compras | `customers` | Listo |
 | Ventas | Pedidos, entrega y cobros (pagos parciales) | `sales/orders` | Listo |
 | Gastos | Registro de gastos y categorías | `expenses` | Listo |
-| Reportes | Dashboard y reportes de ventas/gastos | `dashboard`, `reports` | Listo |
+| Reportes | Dashboard y reportes de ventas/gastos; se adaptan a los módulos activos | `dashboard`, `reports` | Listo (PB-REP-001) |
 | Módulos por empresa | El admin elige qué módulos usa su empresa, con dependencias | `settings/modules` | Listo (PB-MOD-001) |
 | Configuración por módulo | Ajustes de cada módulo por empresa con historial de cambios | `sales/settings`, `purchases/settings`, `inventory/settings`, `settings/modules` | Listo (PB-CFG-001) |
 | Consulta de existencias | Existencias por producto y almacén con búsqueda, filtros (almacén, activo/inactivo, saldo cero / distinto de cero / negativo) y detalle con historial; sin disponible, reservado ni valoración | `inventory/stock`, `inventory/stock/:productId/:warehouseId` | Listo (PB-INV-005) |
@@ -88,6 +88,8 @@ Solo lectura: consulta Ventas y Gastos, no modifica nada. El periodo es seleccio
 | Clientes con mayor compra | Por total comprado y número de pedidos |
 | Pendientes | Listas de pedidos por entregar y por cobrar |
 
+**Módulos activos (PB-REP-001):** Reportes ya no exige Ventas ni Gastos; usa solo las fuentes habilitadas. Una fuente deshabilitada muestra «No disponible: módulo deshabilitado» (nunca cero); una fuente activa sin datos muestra 0 en totales y conteos y «Sin registros» en listas, desgloses, rankings y ticket promedio. Con Ventas o Gastos deshabilitado la ganancia estimada no se calcula y la tarjeta lo explica; con ambas habilitadas se conserva «Ventas menos gastos registrados; no incluye costo de producción ni costo de ventas». Compras, sus pagos y las entradas de stock no se suman a Gastos ni a la ganancia. Cada indicador muestra etiqueta, periodo (o «Estado actual» en pendientes) y unidad. Reportes puede quedar activo sin ninguna fuente.
+
 **Definiciones que el PM debe conocer** (decididas con el usuario el 2026-10-09):
 - *Ventas/ingresos* = suma del total de pedidos **no cancelados**, por **fecha de pedido** (base devengada, no caja). Un pedido entregado pero impago cuenta como venta.
 - *Ganancia estimada* = ventas − gastos registrados. No incluye costo de producción; la etiqueta lo deja claro.
@@ -136,7 +138,7 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 ### 3.7 Módulos por empresa (PB-MOD-001)
 - **Configuración › Módulos** (`/settings/modules`, solo admin): lista los módulos con estado, dependencias obligatorias e integraciones opcionales. Habilitar/Deshabilitar abre un diálogo que resume módulo, empresa y módulos afectados.
 - **Base**: Acceso/Empresa y Catálogo, siempre activos y sin interruptor.
-- **Dependencias**: Ventas→Catálogo; Reportes→Ventas y Gastos; Compras→Catálogo y Gastos (Inventario opcional al recibir); Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
+- **Dependencias**: Ventas→Catálogo; Reportes (Ventas, Gastos y Clientes son fuentes opcionales; PB-REP-001); Compras→Catálogo y Gastos (Inventario opcional al recibir); Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
 - Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Inventario aún no tiene pantallas propias: al habilitarlo su menú abre «Próximamente». Compras ya tiene Proveedores y Compras en borrador.
 - **Pendiente (PB-MOD-002)**: la API de negocio no bloquea módulos deshabilitados.
 - **Pendiente (PB-MOD-004)**: la desactivación segura (validar datos existentes) aún no existe.
