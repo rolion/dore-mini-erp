@@ -1,6 +1,6 @@
 # TASK-consultar-compras-pendientes: Consultar compras y sus pendientes (PB-COM-006)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-compras-pendientes
@@ -15,6 +15,7 @@
 | 2026-10-30 | DESIGN → PLANNING | DDR escrito; no hay decisión arquitectónica nueva | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Revisión sin hallazgos Critical/High; PostgreSQL y revisión visual no ejecutadas | delivery-publish |
 
 ## Investigación
 
@@ -107,7 +108,7 @@ No aplica según veredicto.
 **Deuda técnica.** `app.component.spec.ts` roto en `main` (impide `npm test` completo). La búsqueda por referencia interna no usa índice (`id::text`).
 
 ## Review
-_Pendiente_
+Revisión inline (aislamiento procedimental). Sin hallazgos Critical/High/Medium; Low sin REV: colores de badge distintos del DDR. No ejecutado: PostgreSQL, npm audit, revisión visual. Detalle en el PR #39.
 
 ## Publicación
-_Pendiente_
+PR #39 listo para revisión humana; falta correr la suite con PostgreSQL y la revisión visual. No se mergea.
