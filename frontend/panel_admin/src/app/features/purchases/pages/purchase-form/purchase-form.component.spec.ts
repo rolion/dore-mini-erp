@@ -111,6 +111,16 @@ describe('PurchaseFormComponent', () => {
       expect(q('[data-testid="total"]')?.textContent?.trim()).toBe('Bs 46.00');
     });
 
+    it('does not count a line with an invalid quantity or price in the subtotal or the total (REV-06)', () => {
+      component.addLine(FLOUR, '2', '10');
+      component.addLine(BOXES, '1.5', '4.50');
+      component.addLine(FLOUR, '1', '-3');
+      fixture.detectChanges();
+      const subtotals = fixture.debugElement.queryAll(By.css('[data-testid="line-subtotal"]')).map((e) => (e.nativeElement as HTMLElement).textContent?.trim());
+      expect(subtotals).toEqual(['Bs 20.00', '—', '—']);
+      expect(q('[data-testid="total"]')?.textContent?.trim()).toBe('Bs 20.00');
+    });
+
     it('shows the unit of the product or a dash (AC-15)', () => {
       component.addLine(FLOUR, '1', '1');
       component.addLine({ id: 'p-3', name: 'Bolsa', unit: '', allowsFractions: true }, '1', '1');

@@ -65,7 +65,7 @@
                     <td>{{ item.unitAbbreviation || '—' }}</td>
                     <td class="text-end">{{ item.quantity }}</td>
                     <td class="text-end">{{ item.unitPrice | money }}</td>
-                    <td class="text-end">{{ item.subtotal | money }}</td>
+                    <td class="text-end text-nowrap">{{ item.subtotal | money }}</td>
                   </tr>
                   } @empty {
                   <tr>
@@ -76,7 +76,7 @@
                 <tfoot>
                   <tr>
                     <th scope="row" colspan="4" class="text-end">Total ({{ p.currency }})</th>
-                    <td class="text-end fw-bold" data-testid="total">{{ p.total | money }}</td>
+                    <td class="text-end fw-bold text-nowrap" data-testid="total">{{ p.total | money }}</td>
                   </tr>
                 </tfoot>
               </table>

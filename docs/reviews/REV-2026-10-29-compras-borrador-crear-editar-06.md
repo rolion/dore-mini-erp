@@ -1,6 +1,6 @@
 # REV-2026-10-29-compras-borrador-crear-editar-06: detalles visuales menores en el formulario y la lista de compras
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificar en el ciclo 3)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-compras-borrador-crear-editar.md (v1)

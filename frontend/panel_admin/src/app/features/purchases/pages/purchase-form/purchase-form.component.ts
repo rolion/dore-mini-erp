@@ -178,13 +178,14 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
 
   addLine(product: LineProduct | null = null, quantity = '', unitPrice = ''): void {
     if (this.items.length >= MAX_ITEMS) return;
-    this.items.push(
-      this.fb.group({
-        product: [product, Validators.required],
-        quantity: [quantity, [notBlank, quantityRule]],
-        unitPrice: [unitPrice, [notBlank, priceRule]],
-      }),
-    );
+    const line = this.fb.group({
+      product: [product, Validators.required],
+      quantity: [quantity, [notBlank, quantityRule]],
+      unitPrice: [unitPrice, [notBlank, priceRule]],
+    });
+    this.items.push(line);
+    // Al construirse la línea aún no tiene padre: la cantidad se revalida para que vea la unidad del producto.
+    line.controls.quantity.updateValueAndValidity();
     this.items.markAsDirty();
   }
 
@@ -206,15 +207,17 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
     return line.controls.product.value?.unit || '—';
   }
 
+  /** Subtotal informativo; una línea con cantidad o precio inválidos no aporta importe. */
   subtotal(line: LineGroup): string | null {
+    if (line.controls.quantity.invalid || line.controls.unitPrice.invalid) return null;
     return lineSubtotal(line.controls.quantity.value, line.controls.unitPrice.value);
   }
 
   total(): string {
     return purchaseTotal(
       this.items.controls.map((line) => ({
-        quantity: line.controls.quantity.value,
-        unitPrice: line.controls.unitPrice.value,
+        quantity: line.controls.quantity.invalid ? '' : line.controls.quantity.value,
+        unitPrice: line.controls.unitPrice.invalid ? '' : line.controls.unitPrice.value,
       })),
     );
   }

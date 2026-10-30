@@ -1,6 +1,6 @@
 # TASK-compras-borrador-crear-editar: Crear y editar compras en borrador (PB-COM-002)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-borrador-crear-editar
@@ -18,6 +18,7 @@
 | 2026-10-29 | REVIEW → ENGINEERING | Quality Gate ciclo 1: FAIL (REV-01 High: `select_for_update` fuera de transacción) | delivery-publish |
 | 2026-10-29 | ENGINEERING → REVIEW | Corrección de REV-01..04 | delivery-build |
 | 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 2: PASS condicionado (sin PostgreSQL ni revisión visual) | delivery-publish |
+| 2026-10-30 | PUBLISH → REVIEW | Corrección de REV-06 tras la revisión visual; se repite el Quality Gate | delivery-publish |
 
 ## Investigación
 
@@ -138,6 +139,8 @@ Reverificación: REV-01 corregido y reproducido de forma independiente (sin el `
 **No realizado:** PostgreSQL real (el `FOR UPDATE` y la concurrencia entre sesiones solo se simularon), suite completa de Karma (`app.component.spec.ts` no compila, preexistente), `npm audit` (sin lockfile) y **revisión visual en navegador** (móvil, escritorio y tema oscuro): no verificada.
 
 **Revisión visual (navegador integrado, 2026-10-29):** realizada sobre una instancia local aislada (backend con SQLite desechable y Angular con proxy temporal), en escritorio, ≈1024 px, móvil (375 px) y tema oscuro de la plantilla. Verificado: lista con filtro y estado vacío/datos; formulario con proveedor activo (búsqueda por nombre), líneas con unidad base, productos ya elegidos que no se repiten, errores de cantidad/precio junto a su línea («La cantidad debe ser un entero mayor a cero.»), subtotales y total en BOB de solo lectura, «Guardar borrador» con toast «Compra guardada» y paso al detalle; detalle de solo lectura con «Editar»; edición que precarga cabecera y líneas; en móvil la tabla de líneas se desplaza dentro de su contenedor; el tema oscuro se lee bien. Hallazgos menores en [REV-06](../reviews/REV-2026-10-29-compras-borrador-crear-editar-06.md) (Low: importes que se parten a ≈1024 px, subtotal de líneas inválidas, alineación de «Total» en la lista). No revisado visualmente: el diálogo «Nuevo proveedor», los errores del servidor por línea y el aviso de proveedor inactivo (cubiertos por pruebas de componente).
+
+**Corrección de REV-06 (2026-10-30):** importes con `text-nowrap` en formulario, detalle y lista; la columna «Total» de la lista se alinea a la derecha; el subtotal y el total mostrados ignoran las líneas con cantidad o precio inválidos. Al probarlo apareció una fragilidad real: el validador de cantidad de una línea creada por código corría sin padre y no veía la unidad del producto (`ExpressionChangedAfterItHasBeenChecked` en la prueba); ahora `addLine` revalida la cantidad tras agregar la línea. Verificación propia: `ng lint` y `ng build` OK; Karma de purchases, products y sidebar 155/155. Pendiente: Quality Gate ciclo 3.
 
 ## Publicación
 PR #28 completo y listo para aprobación humana (no se mergea). **Cambio sensible:** nuevo agregado con **migración** (`purchases.0002_purchase`, dos tablas) respaldado por `ADR-compras-borrador-crear-editar-modelo-compra-borrador` y `ADR-compras-borrador-crear-editar-contrato-api-e-integracion-catalogo`; además una dependencia nueva `purchases → catalog` (por puerto y adaptador). Rollback: revertir el PR; con la migración aplicada, `migrate purchases 0001` elimina las tablas. Antes de mergear, un humano debería correr `manage.py test` contra PostgreSQL y mirar las pantallas en el navegador.
