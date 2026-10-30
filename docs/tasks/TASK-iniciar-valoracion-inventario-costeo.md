@@ -1,6 +1,6 @@
 # TASK-iniciar-valoracion-inventario-costeo: Iniciar valoración de inventario para costeo (PB-VAL-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-iniciar-valoracion-inventario-costeo
@@ -13,6 +13,7 @@
 | 2026-10-30 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Módulo nuevo `costing`, tablas nuevas, pantalla nueva | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según el PLAN v1 | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -98,7 +99,15 @@ No hay costos ni valoración; Inventario solo conoce cantidades.
 **Deuda técnica.** `app.component.spec.ts` roto en `main` y specs de plantilla fallando (preexistente). Sin elemento de menú lateral propio para Valoración. Una prueba intermitente por orden en `accounts.test_migrations` (preexistente, pasa aislada).
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (revisor en subagente aislado, 2026-10-30). Sin hallazgos Critical/High.
+
+- Backend `manage.py test`: 1159 OK; `makemigrations --check`: sin cambios.
+- Frontend: `ng lint` OK, `ng build` OK, Karma acotado (inventory + layout) 176 OK / 1 fallo preexistente (`FooterComponent should create`); cobertura del subconjunto: sentencias 77,2 %, ramas 68,1 %, funciones 74,2 %, líneas 77,9 %.
+- bandit sobre el código nuevo: 0 Medium/High (1 Low, falso positivo en un docstring).
+- Límites DDD, `company_id`, `Decimal` y migración: conformes. Todos los AC/INV/API/UI del PLAN tienen verificación; sin scope creep.
+- No realizado: ruff, mypy y `npm audit` (no disponibles), cobertura por archivo, Karma completo del repo, revisión visual en navegador (**no verificada**).
+
+Hallazgos abiertos (Low, no bloquean): [REV-01](../reviews/REV-2026-10-30-iniciar-valoracion-inventario-costeo-01.md) enlace «Valoración» dentro de un `tablist` sin rol de pestaña; [REV-02](../reviews/REV-2026-10-30-iniciar-valoracion-inventario-costeo-02.md) el DDR pide `alert-success` y la implementación usa un toast (patrón de `stock-opening`).
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/36 listo para aprobación humana (no se mergea desde el flujo). Cambio sensible: **base de datos** (migración nueva `costing/0001`, solo tablas nuevas) y **catálogo de módulos/autorización por módulo**; respaldado por el ADR `ADR-iniciar-valoracion-inventario-costeo-modulo-costeo-y-adopcion`.
