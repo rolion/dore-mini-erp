@@ -257,7 +257,7 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
         productName: line.productName,
         quantity: this.quantity(line),
         unit: line.unitAbbreviation ?? '',
-        totalValue: row.declaredZero ? '0.00' : row.totalValue.trim(),
+        totalValue: row.declaredZero ? '0.00' : this.twoDecimals(row.totalValue.trim()),
         unitCost: this.unitCost(index) ?? '',
         declaredZero: row.declaredZero,
         source: row.source.trim() || DEFAULT_SOURCE,
@@ -269,6 +269,12 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
     const cents = this.reviewRows.reduce((sum, row) => sum + this.toCents(row.totalValue), BigInt(0));
     const digits = cents.toString().padStart(3, '0');
     return `${digits.slice(0, -2)}.${digits.slice(-2)}`;
+  }
+
+  /** `"100.5"` → `"100.50"`: el resumen muestra el importe como lo guardará el servidor. */
+  private twoDecimals(value: string): string {
+    const cents = this.toCents(value).toString().padStart(3, '0');
+    return `${cents.slice(0, -2)}.${cents.slice(-2)}`;
   }
 
   private toCents(value: string): bigint {

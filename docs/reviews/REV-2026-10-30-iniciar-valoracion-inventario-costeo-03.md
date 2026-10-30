@@ -1,6 +1,6 @@
 # REV-2026-10-30-iniciar-valoracion-inventario-costeo-03: El encabezado muestra «1. Conciliar» mientras carga
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-iniciar-valoracion-inventario-costeo.md (v1)

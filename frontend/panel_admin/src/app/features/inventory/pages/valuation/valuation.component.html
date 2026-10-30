@@ -19,6 +19,8 @@
             <h4>
               @switch (phase) {
               @case ('adopted') { Valoración inicial adoptada }
+              @case ('loading') { Valoración inicial }
+              @case ('error') { Valoración inicial }
               @default {
               @switch (step) {
               @case ('reconcile') { Valoración inicial › 1. Conciliar }

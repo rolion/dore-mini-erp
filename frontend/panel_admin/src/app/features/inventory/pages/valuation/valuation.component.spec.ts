@@ -122,6 +122,7 @@ describe('ValuationComponent', () => {
     click('review');
     expect(q('summary-count')?.textContent).toContain('1');
     expect(q('summary-total')?.textContent).toContain('Bs 10.00');
+    expect(q('summary-line')?.textContent).toContain('Bs 10.00');
     click('confirm');
     const input = api.adopt.calls.mostRecent().args[0];
     expect(input.lines).toEqual([
@@ -184,6 +185,31 @@ describe('ValuationComponent', () => {
     expect(el.querySelector('button[data-testid="confirm"]')).toBeNull();
     type(el.querySelector('#valuation-search') as HTMLInputElement, 'zzz');
     expect(q('adopted-empty')?.textContent).toContain('Sin resultados');
+  });
+
+  it('shows summary amounts with two decimals, as the server will store them', () => {
+    const { q, click, type, fixture } = create();
+    click('to-values');
+    type(fixture.nativeElement.querySelector('input[inputmode="decimal"]'), '10.5');
+    click('review');
+    expect(q('summary-line')?.textContent).toContain('Bs 10.50');
+  });
+
+  it('keeps a neutral title while loading (no wizard step shown)', () => {
+    const api = jasmine.createSpyObj<ValuationApiService>('ValuationApiService', ['get', 'proposal', 'adopt']);
+    api.get.and.returnValue(new Observable<Valuation>());
+    TestBed.configureTestingModule({
+      imports: [ValuationComponent],
+      providers: [
+        provideRouter([]),
+        { provide: ValuationApiService, useValue: api },
+        { provide: ToastrService, useValue: jasmine.createSpyObj<ToastrService>('ToastrService', ['success']) },
+      ],
+    });
+    const fixture = TestBed.createComponent(ValuationComponent);
+    fixture.detectChanges();
+    const title = (fixture.nativeElement as HTMLElement).querySelector('.card-header h4')?.textContent?.trim();
+    expect(title).toBe('Valoración inicial');
   });
 
   it('allows adopting with no stock (empty state, AC-07)', () => {

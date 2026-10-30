@@ -1,6 +1,6 @@
 # REV-2026-10-30-iniciar-valoracion-inventario-costeo-04: El resumen muestra el valor tal como se escribió
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-iniciar-valoracion-inventario-costeo.md (v1)
