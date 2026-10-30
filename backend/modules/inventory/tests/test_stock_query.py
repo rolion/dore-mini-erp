@@ -95,6 +95,51 @@ class StockQueryTests(StockApiTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(set(response.json()), {'active', 'balance', 'warehouse_id'})
 
+    def make_classified(self, name, category, can_buy, can_sell):
+        body = {'name': name, 'category': category, 'can_buy': can_buy, 'can_sell': can_sell,
+                'tracks_stock': True, 'base_unit_id': self.unit}
+        if can_sell:
+            body['sale_price'] = '10.00'
+        response = self.client.post('/api/products/', body, format='json')
+        self.assertEqual(response.status_code, 201, response.content)
+        return response.json()['id']
+
+    def test_rows_expose_category_and_uses_from_catalog(self):  # AC-02, AC-03, EDGE-01, EDGE-02
+        self.make_classified('Cuñapé', 'intermediate', False, False)
+        row = self.rows()[0]
+        self.assertEqual((row['category'], row['can_buy'], row['can_sell']), ('intermediate', False, False))
+        old = self.make_product('Heredado')
+        from modules.catalog.infrastructure.django.models import ProductModel
+        ProductModel.objects.filter(pk=old).update(category=None)
+        self.assertIsNone(next(r for r in self.rows() if r['product_id'] == old)['category'])
+
+    def test_category_and_use_filters_combine_with_each_other_and_with_search(self):  # AC-02
+        self.make_classified('Cuñapé congelado', 'intermediate', False, False)
+        self.make_classified('Cuñapé', 'finished', False, True)
+        self.make_classified('Bolsa vacía', 'packaging', True, False)
+        self.make_classified('Cuaderno', 'merchandise', True, True)
+        names = lambda **kw: [r['product_name'] for r in self.rows(**kw)]  # noqa: E731
+        self.assertEqual(names(category='intermediate', can_sell='false'), ['Cuñapé congelado'])
+        self.assertEqual(names(category='packaging', can_buy='true'), ['Bolsa vacía'])
+        self.assertEqual(names(can_buy='true', can_sell='true'), ['Cuaderno'])
+        self.assertEqual(names(can_sell='true', search='cuñapé'), ['Cuñapé'])
+        self.assertEqual(names(can_buy='false', can_sell='false'), ['Cuñapé congelado'])
+
+    def test_unclassified_filter_and_company_isolation(self):  # EDGE-01, AC-02
+        from modules.catalog.infrastructure.django.models import ProductModel
+        old = self.make_product('Heredado')
+        ProductModel.objects.filter(pk=old).update(category=None)
+        self.make_classified('Clasificado', 'finished', False, True)
+        self.assertEqual([r['product_name'] for r in self.rows(category='none')], ['Heredado'])
+        ProductModel.objects.create(company_id=uuid4(), name='Ajeno', sale_price=Decimal('1'), tracks_stock=True,
+                                    category=None)
+        self.assertEqual([r['product_name'] for r in self.rows(category='none')], ['Heredado'])
+
+    def test_invalid_classification_parameters_return_400(self):  # EDGE-03
+        response = self.client.get(STOCK, {'category': 'x', 'can_buy': 'maybe', 'can_sell': '1'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(set(response.json()), {'category', 'can_buy', 'can_sell'})
+
     def test_empty_company_returns_empty_list(self):  # EDGE-05
         self.assertEqual(self.client.get(STOCK).json()['count'], 0)
 
@@ -124,6 +169,15 @@ class StockDetailTests(StockApiTestCase):
         body = response.json()
         self.assertEqual((body['quantity'], body['balance_state'], body['has_history']), ('0.0000', 'zero', False))
         self.assertTrue(body['can_register_opening'])
+        self.assertEqual((body['category'], body['can_buy'], body['can_sell']), ('finished', False, True))
+
+    def test_adjustment_is_offered_only_for_an_active_warehouse(self):  # INV-04, EDGE-06
+        product = self.make_product('Harina')
+        self.assertTrue(self.client.get(f'{STOCK}{product}/{self.warehouse}/').json()['can_register_adjustment'])
+        other = self.client.post('/api/warehouses/', {'name': 'Tienda'}, format='json').json()['id']
+        self.assertEqual(self.client.post(f'/api/warehouses/{other}/deactivate/').status_code, 200)
+        detail = self.client.get(f'{STOCK}{product}/{other}/').json()
+        self.assertFalse(detail['can_register_adjustment'])
 
     def test_opening_is_not_offered_with_history_or_inactive_product(self):  # INV-05
         used, retired = self.make_product('Usado'), self.make_product('Retirado')

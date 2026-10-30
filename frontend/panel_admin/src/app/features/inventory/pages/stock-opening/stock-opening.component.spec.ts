@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Subject, of, throwError } from 'rxjs';
 import { InventoryApiError } from '../../models/api-error';
@@ -248,5 +248,59 @@ describe('StockOpeningComponent', () => {
     expect(component.hasUnsavedChanges()).toBeTrue();
     component.completed = true;
     expect(component.hasUnsavedChanges()).toBeFalse();
+  });
+});
+
+describe('StockOpeningComponent coming from the stock detail', () => {
+  const P = '11111111-1111-4111-8111-111111111111';
+  const W = '22222222-2222-4222-8222-222222222222';
+  let fixture: ComponentFixture<StockOpeningComponent>;
+  let component: StockOpeningComponent;
+  let stockApi: jasmine.SpyObj<StockApiService>;
+  let router: Router;
+
+  beforeEach(async () => {
+    stockApi = jasmine.createSpyObj<StockApiService>('StockApiService', ['register', 'productsWithHistory']);
+    stockApi.productsWithHistory.and.returnValue(of([]));
+    stockApi.register.and.returnValue(of({ ...RESULT, warehouseId: W }));
+    const warehouses = jasmine.createSpyObj<WarehousesApiService>('WarehousesApiService', ['list']);
+    warehouses.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [makeWarehouse({ id: W })] }));
+    const products = jasmine.createSpyObj<OpeningProductsService>('OpeningProductsService', ['search']);
+    products.search.and.returnValue(of([{ ...PIECE, id: P }, KILO]));
+    await TestBed.configureTestingModule({
+      imports: [StockOpeningComponent],
+      providers: [
+        provideRouter([]),
+        { provide: StockApiService, useValue: stockApi },
+        { provide: WarehousesApiService, useValue: warehouses },
+        { provide: OpeningProductsService, useValue: products },
+        { provide: ToastrService, useValue: jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']) },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap({ return: 'stock', product_id: P, warehouse_id: W }) } },
+        },
+      ],
+    }).compileComponents();
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
+    fixture = TestBed.createComponent(StockOpeningComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('preselects product and warehouse without marking the form as changed (AC-05)', () => {
+    expect(component.lines.at(0).controls.product.value?.id).toBe(P);
+    expect(component.form.controls.warehouseId.value).toBe(W);
+    expect(component.hasUnsavedChanges()).toBeFalse();
+  });
+
+  it('cancels and returns to the same detail after confirming (AC-06)', () => {
+    const cancel = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a')).find((a) => a.textContent?.includes('Cancelar'));
+    expect(cancel?.getAttribute('href')).toBe(`/pocketbiz/inventory/stock/${P}/${W}`);
+    component.lines.at(0).controls.quantity.setValue('4');
+    component.form.controls.reference.setValue('Inventario inicial');
+    component.review();
+    component.confirm();
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/inventory/stock', P, W]);
   });
 });

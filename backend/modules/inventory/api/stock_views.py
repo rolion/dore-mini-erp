@@ -132,6 +132,8 @@ class OpeningCreateView(APIView):
 
 BALANCE_FILTERS = ('zero', 'nonzero', 'negative')
 ACTIVE_FILTERS = {'true': True, 'false': False, 'all': None}
+CATEGORY_FILTERS = ('raw_material', 'packaging', 'intermediate', 'finished', 'merchandise', 'none')
+FLAG_FILTERS = {'true': True, 'false': False}
 
 
 def _stock_query(request) -> StockQuery:
@@ -147,6 +149,18 @@ def _stock_query(request) -> StockQuery:
     balance = params.get('balance') or None
     if balance is not None and balance not in BALANCE_FILTERS:
         errors['balance'] = ['Valor inválido: use zero, nonzero o negative.']
+    category = params.get('category') or None
+    if category is not None and category not in CATEGORY_FILTERS:
+        errors['category'] = ['Valor inválido: use una categoría del catálogo o none.']
+    flags: dict[str, bool | None] = {}
+    for name in ('can_buy', 'can_sell'):
+        raw = params.get(name)
+        if not raw:
+            flags[name] = None
+        elif raw in FLAG_FILTERS:
+            flags[name] = FLAG_FILTERS[raw]
+        else:
+            errors[name] = ['Valor inválido: use true o false.']
     warehouse_id = None
     try:
         warehouse_id = _uuid_param(request, 'warehouse_id', required=False)
@@ -155,7 +169,8 @@ def _stock_query(request) -> StockQuery:
     if errors:
         raise ValidationError(errors)
     return StockQuery(search=(params.get('search') or '').strip() or None, warehouse_id=warehouse_id,
-                      active=active, balance=balance)
+                      active=active, balance=balance, category=category,
+                      can_buy=flags.get('can_buy'), can_sell=flags.get('can_sell'))
 
 
 def _position_row(position: StockPosition) -> dict:
@@ -164,6 +179,8 @@ def _position_row(position: StockPosition) -> dict:
         'product_active': position.product.active,
         'warehouse_id': position.warehouse_id, 'warehouse_name': position.warehouse_name,
         'warehouse_active': position.warehouse_active,
+        'category': position.product.category, 'can_buy': position.product.can_buy,
+        'can_sell': position.product.can_sell,
         'quantity': position.quantity, 'balance_state': position.state.value,
         'unit': _unit(position.product),
     }
@@ -202,7 +219,8 @@ class StockDetailView(APIView):
         except StockPositionNotFound as exc:
             raise NotFound('Existencia no encontrada.') from exc
         row = {**_position_row(position), 'has_history': position.has_history,
-               'can_register_opening': position.can_register_opening}
+               'can_register_opening': position.can_register_opening,
+               'can_register_adjustment': position.can_register_adjustment}
         return Response(StockPositionSerializer(row).data)
 
 

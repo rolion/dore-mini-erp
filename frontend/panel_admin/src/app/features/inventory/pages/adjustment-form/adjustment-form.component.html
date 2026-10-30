@@ -96,7 +96,7 @@
                   <button type="submit" class="btn btn-primary" data-testid="review" [disabled]="!canReview">
                     Revisar y confirmar
                   </button>
-                  <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/adjustments">Cancelar</a>
+                  <a class="btn btn-light ms-2" [routerLink]="returnLink ?? ['/pocketbiz/inventory/adjustments']">Cancelar</a>
                 </div>
               </div>
             </form>

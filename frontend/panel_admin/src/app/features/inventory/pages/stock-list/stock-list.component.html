@@ -52,6 +52,30 @@
                 </select>
               </div>
               <div class="col-md-3">
+                <label for="stock-category">Clasificación</label>
+                <select id="stock-category" class="form-select form-control" formControlName="category">
+                  @for (option of categoryOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label for="stock-can-buy">Comprable</label>
+                <select id="stock-can-buy" class="form-select form-control" formControlName="canBuy">
+                  @for (option of useOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label for="stock-can-sell">Vendible</label>
+                <select id="stock-can-sell" class="form-select form-control" formControlName="canSell">
+                  @for (option of useOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
                 <label for="stock-balance">Saldo</label>
                 <select id="stock-balance" class="form-select form-control" formControlName="balance">
                   @for (option of balanceOptions; track option.value) {
@@ -59,9 +83,9 @@
                   }
                 </select>
               </div>
-              <div class="col-md-1">
+              <div class="col-md-2">
                 <button type="button" class="btn btn-light" [disabled]="!filtersActive"
-                  (click)="clearFilters()">Limpiar</button>
+                  (click)="clearFilters()" data-testid="clear-filters">Limpiar filtros</button>
               </div>
             </form>
             @if (loading && !rows.length) {
@@ -71,10 +95,15 @@
               <small class="form-text text-danger d-block mb-2" data-testid="stock-error">{{ errorMessage }}</small>
               <button type="button" class="btn btn-light" (click)="reload()">Reintentar</button>
             </div>
+            } @else if (!rows.length && filtersActive) {
+            <div class="m-4" data-testid="stock-no-results">
+              <p class="mb-2">Ninguna existencia coincide con los filtros.</p>
+              <button type="button" class="btn btn-light" (click)="clearFilters()">Limpiar filtros</button>
+            </div>
             } @else if (!rows.length) {
             <p class="m-4" data-testid="stock-empty">
-              No hay productos que coincidan con los filtros. Aquí aparecen los productos que controlan stock; usa
-              «Registrar apertura» para cargar el stock inicial.
+              Aún no hay productos que controlen stock. Aquí aparecerán; usa «Registrar apertura» para cargar el
+              stock inicial.
             </p>
             } @else {
             <div class="table-responsive">
@@ -84,6 +113,8 @@
                   <tr>
                     <th scope="col">Producto</th>
                     <th scope="col">Almacén</th>
+                    <th scope="col">Clasificación</th>
+                    <th scope="col">Usos</th>
                     <th scope="col">Unidad base</th>
                     <th scope="col" class="text-end">Existencia</th>
                     <th scope="col">Acciones</th>
@@ -99,6 +130,24 @@
                       }
                     </td>
                     <td data-label="Almacén">{{ row.warehouseName }}</td>
+                    <td data-label="Clasificación" data-testid="category">
+                      @if (row.category) {
+                      {{ categoryText(row) }}
+                      } @else {
+                      <div class="badge-outline col-grey d-inline-block">Sin clasificar</div>
+                      }
+                    </td>
+                    <td data-label="Usos" data-testid="uses">
+                      @if (row.canBuy) {
+                      <div class="badge-outline col-blue d-inline-block">Comprable</div>
+                      }
+                      @if (row.canSell) {
+                      <div class="badge-outline col-green d-inline-block ms-1">Vendible</div>
+                      }
+                      @if (!row.canBuy && !row.canSell) {
+                      <div class="badge-outline col-grey d-inline-block">Sin usos</div>
+                      }
+                    </td>
                     <td data-label="Unidad base">{{ row.unit?.abbreviation ?? '—' }}</td>
                     <td data-label="Existencia" class="text-end" data-testid="quantity">
                       <span [class.text-danger]="row.balanceState === 'negative'">{{ display(row.quantity) }}</span>

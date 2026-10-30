@@ -29,6 +29,9 @@ export function toBalance(dto: StockBalanceDto): StockBalance {
     warehouseId: dto.warehouse_id,
     warehouseName: dto.warehouse_name,
     warehouseActive: dto.warehouse_active,
+    category: dto.category,
+    canBuy: dto.can_buy,
+    canSell: dto.can_sell,
     quantity: dto.quantity,
     balanceState: dto.balance_state,
     unit: toUnit(dto.unit),
@@ -36,7 +39,12 @@ export function toBalance(dto: StockBalanceDto): StockBalance {
 }
 
 export function toPosition(dto: StockPositionDto): StockPosition {
-  return { ...toBalance(dto), hasHistory: dto.has_history, canRegisterOpening: dto.can_register_opening };
+  return {
+    ...toBalance(dto),
+    hasHistory: dto.has_history,
+    canRegisterOpening: dto.can_register_opening,
+    canRegisterAdjustment: dto.can_register_adjustment,
+  };
 }
 
 function toResult(dto: OpeningResultDto): OpeningResult {
@@ -66,6 +74,9 @@ export class StockApiService {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.active) httpParams = httpParams.set('active', params.active);
     if (params.balance) httpParams = httpParams.set('balance', params.balance);
+    if (params.category) httpParams = httpParams.set('category', params.category);
+    if (params.canBuy) httpParams = httpParams.set('can_buy', params.canBuy);
+    if (params.canSell) httpParams = httpParams.set('can_sell', params.canSell);
     if (params.warehouseId) httpParams = httpParams.set('warehouse_id', params.warehouseId);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.pageSize !== undefined) httpParams = httpParams.set('page_size', String(params.pageSize));

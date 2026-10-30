@@ -18,6 +18,7 @@ import {
   todayIso,
 } from '../../models/stock';
 import { Warehouse } from '../../models/warehouse';
+import { stockReturnLink } from '../../services/stock-return';
 import { OpeningProductsService } from '../../services/opening-products.service';
 import { StockApiService } from '../../services/stock-api.service';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
@@ -79,6 +80,10 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
 
   private stockApi = inject(StockApiService);
   private warehousesApi = inject(WarehousesApiService);
+  /** Detalle de existencia al que volver (si se llegó desde él) y producto a preseleccionar. */
+  readonly returnLink = stockReturnLink(inject(ActivatedRoute).snapshot.queryParamMap);
+  private preselectedProductId: string | null = null;
+
   private productsApi = inject(OpeningProductsService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -90,6 +95,7 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
   }
 
   ngOnInit(): void {
+    this.preselectedProductId = this.route.snapshot.queryParamMap.get('product_id');
     this.addLine();
     this.loadWarehouses();
     this.watchProducts();
@@ -255,7 +261,11 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
         next: (result) => {
           this.completed = true;
           this.toastr.success(OPENING_SUCCESS_MESSAGE);
-          this.router.navigate(['/pocketbiz/inventory/stock'], { queryParams: { warehouse_id: result.warehouseId } });
+          if (this.returnLink) {
+            this.router.navigate(this.returnLink);
+          } else {
+            this.router.navigate(['/pocketbiz/inventory/stock'], { queryParams: { warehouse_id: result.warehouseId } });
+          }
         },
         error: (err: InventoryApiError) => {
           this.saving = false;
@@ -334,6 +344,14 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
       .subscribe((products) => {
         this.baseOptions = products;
         this.productsLoading = false;
+        const match = this.preselectedProductId ? products.find((p) => p.id === this.preselectedProductId) : undefined;
+        const first = this.lines.at(0);
+        if (match && first && !first.controls.product.value) {
+          this.preselectedProductId = null;
+          first.controls.product.setValue(match);
+          this.form.markAsPristine();
+          this.onProductsChanged();
+        }
         this.refreshOptions();
       });
   }

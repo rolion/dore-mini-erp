@@ -21,6 +21,7 @@ import { OpeningProduct, formatQuantity, newUuid, quantityError } from '../../mo
 import { Warehouse } from '../../models/warehouse';
 import { AdjustmentsApiService } from '../../services/adjustments-api.service';
 import { OpeningProductsService } from '../../services/opening-products.service';
+import { stockReturnLink } from '../../services/stock-return';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
 
 export type AdjustmentStep = 'edit' | 'review';
@@ -67,6 +68,8 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
   /** Clave de idempotencia: se genera al abrir el formulario y se reenvía en cada intento de confirmación. */
   private readonly adjustmentId = newUuid();
   private preselectedProductId: string | null = null;
+  /** Detalle de existencia al que volver (si se llegó desde él). */
+  readonly returnLink = stockReturnLink(inject(ActivatedRoute).snapshot.queryParamMap);
 
   private api = inject(AdjustmentsApiService);
   private warehousesApi = inject(WarehousesApiService);
@@ -222,7 +225,11 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
         next: (adjustment) => {
           this.completed = true;
           this.toastr.success(ADJUSTMENT_SUCCESS_MESSAGE);
-          this.router.navigate(['/pocketbiz/inventory/adjustments', adjustment.id]);
+          if (this.returnLink) {
+            this.router.navigate(this.returnLink);
+          } else {
+            this.router.navigate(['/pocketbiz/inventory/adjustments', adjustment.id]);
+          }
         },
         error: (err: InventoryApiError) => {
           this.saving = false;

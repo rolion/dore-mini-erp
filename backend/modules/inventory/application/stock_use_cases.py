@@ -152,6 +152,10 @@ class StockPosition:
     def can_register_opening(self) -> bool:
         return self.product.active and self.warehouse_active and not self.has_history
 
+    @property
+    def can_register_adjustment(self) -> bool:
+        return self.warehouse_active
+
 
 @dataclass(frozen=True)
 class StockQuery:
@@ -161,6 +165,10 @@ class StockQuery:
     active: bool | None = True
     #: Estado de saldo pedido; `nonzero` = positivo o negativo.
     balance: str | None = None
+    #: Categoría del producto; `none` = sin clasificar.
+    category: str | None = None
+    can_buy: bool | None = None
+    can_sell: bool | None = None
 
 
 class ListStock:
@@ -179,7 +187,8 @@ class ListStock:
             warehouses = [warehouse]
         else:  # sin almacén elegido solo los activos: los inactivos no pueden tener saldo
             warehouses = list(self.warehouses.list(active=True))
-        products = self.products.list_stock_products(query.search, query.active)
+        products = self.products.list_stock_products(
+            query.search, query.active, category=query.category, can_buy=query.can_buy, can_sell=query.can_sell)
         balances = {(e.product_id, e.warehouse_id): e.quantity for e in self.stock.list_balances()}
         positions = [
             StockPosition(product, warehouse.id, warehouse.name, warehouse.active,

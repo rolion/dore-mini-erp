@@ -13,7 +13,8 @@ from modules.modularity import services as modularity_services
 def _info(p) -> ProductInfo:
     return ProductInfo(
         id=p.id, name=p.name, tracks_stock=p.tracks_stock, unit_abbreviation=p.unit_abbreviation,
-        allows_fractions=p.allows_fractions, active=p.active)
+        allows_fractions=p.allows_fractions, active=p.active,
+        category=p.category, can_buy=p.can_buy, can_sell=p.can_sell)
 
 
 class CatalogProductDirectory:
@@ -24,9 +25,11 @@ class CatalogProductDirectory:
         found = catalog_services.get_products_for_inventory(self.company_id, product_ids)
         return {product_id: _info(p) for product_id, p in found.items()}
 
-    def list_stock_products(self, search: str | None = None, active: bool | None = None) -> list[ProductInfo]:
+    def list_stock_products(self, search: str | None = None, active: bool | None = None,
+                            category: str | None = None, can_buy: bool | None = None,
+                            can_sell: bool | None = None) -> list[ProductInfo]:
         return [_info(p) for p in catalog_services.list_products_for_inventory(
-            self.company_id, search=search, active=active)]
+            self.company_id, search=search, active=active, category=category, can_buy=can_buy, can_sell=can_sell)]
 
 
 class ModularityInventoryPolicy:
