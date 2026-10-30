@@ -1,6 +1,6 @@
 # TASK-pruebas-intermitentes — Pruebas de backend intermitentes
 
-Estado: arreglo aplicado y verificado en SQLite; **pendiente verificar en PostgreSQL** (sin `backend/.env` en este worktree).
+Estado: arreglo aplicado y verificado en SQLite y en PostgreSQL 16.
 
 ## Causa raíz (grupo A: empates de reloj) — fragilidad de las pruebas, no bug de la API
 En Windows `datetime.now()` avanza de a ~15,6 ms (`time.get_clock_info('time').resolution = 0.015625`; medido: 13 valores distintos en 200 000 lecturas). Filas creadas seguidas reciben el mismo `auto_now_add`/`auto_now` y los `order_by(..., 'created_at', 'id')` desempatan por UUID aleatorio.
@@ -19,6 +19,11 @@ Después del arreglo: 0/20 en las cuatro.
 Con SQLite fallan siempre: `test_orders_by_name_and_filters` (collation binaria: mayúsculas antes que minúsculas), `test_company_name_is_normalized_and_unique_ignoring_case` (`LOWER()` de SQLite no maneja `ñ/É`), y las pruebas de concurrencia (`select_for_update` no existe en SQLite; tabla bloqueada: `ConcurrentSaveTests`, `inventory` Concurrent*, `LockingOutsideTransactionTests`). La regla del proyecto es PostgreSQL para pruebas; no se tocan.
 Nota: `test_orders_by_name_and_filters` en PostgreSQL depende de la collation de la base (con `C`/`POSIX` fallaría igual); a confirmar.
 
-## Pendiente (requiere PostgreSQL)
-- Suite completa varias veces en PostgreSQL.
-- `accounts.test_migrations…test_empty_database_gets_the_default_company_and_nothing_else`: solo se vio en PostgreSQL con la suite completa; no se pudo reproducir en SQLite. Hipótesis: `TransactionTestCase` (flush/estado) deja o borra la empresa por defecto según el orden. Sin evidencia aún.
+## Grupo C: corridas simultáneas sobre la misma base `test_<base>` (hallado al verificar en PostgreSQL)
+Dos sesiones/terminales corriendo `manage.py test` a la vez comparten `test_<base>`: una destruye o recrea la base mientras la otra corre. Síntomas: `duplicate key ... pg_class_relname_nsp_index`, `setUpClass` en cascada, número de pruebas distinto entre corridas (1003, 1015, 455). Es la explicación más probable de los fallos de `accounts` (`test_empty_database_gets_the_default_company…`) y de los fallos «distintos cada vez» del Quality Gate de PB-COM-002 (no reproducido de forma aislada; con base propia la suite pasa).
+Arreglo: `config/settings/test.py` acepta `TEST_DATABASE_NAME` (opcional) para que cada sesión use su base de pruebas. Uso: `TEST_DATABASE_NAME=test_dore_<sesion> python manage.py test --noinput`.
+
+## Evidencia en PostgreSQL (base de pruebas propia)
+- Sin el arreglo del reloj (`DiscoverRunner`): `sales.tests.test_repository` + `HistoryTests` + `UpdateProductTests` fallan 13/15 corridas.
+- Con `StrictClockRunner`: 0/15.
+- Suite completa (1034 pruebas) con el arreglo: 6/6 corridas OK en PostgreSQL, incluidos collation de nombres, unicidad de empresa con acentos, concurrencia y la migración de accounts. Los «fallos solo SQLite» pasan en PostgreSQL.
