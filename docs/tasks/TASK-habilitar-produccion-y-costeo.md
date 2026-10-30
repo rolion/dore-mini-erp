@@ -1,6 +1,6 @@
 # TASK-habilitar-produccion-y-costeo: Habilitar Producción y Costeo con sus dependencias (PB-MOD-005)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-habilitar-produccion-y-costeo
@@ -14,6 +14,7 @@
 | 2026-10-30 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, plan v1 y PR abierto | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,19 @@ Solo 6 módulos no base habilitables; ninguna noción de capacidad, de bloqueo p
 `docs/plans/PLAN-2026-10-30-habilitar-produccion-y-costeo.md` (v1, COMPLETO). Specification readiness: **READY**.
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend: `production` y `costing` en el catálogo (`domain/modules.py`, con `requires_capabilities`/`records_adoption`, `CAPABILITIES`, `DisableBlocked`), puerto `shared/module_extensions.py` (capacidades, guardas, ganchos), adaptador `SharedModuleExtensions` (`infrastructure/django/gate.py`), casos de uso con extensiones (`application/use_cases.py`), repositorio `enabled_at()`, serializer y 409 ampliados (`api/`). Frontend: modelo/servicio con campos nuevos, lista de módulos (capacidades, adopción, motivos de bloqueo), diálogo (adopción y bloqueos), menú `routes.json` + i18n es/en/de y rutas `production/*`, `costing/*` (placeholders y Configuración). Docs: nota en `ddd.md`, `modulos-implementados.md` §3.11, `design-system.md` §6.
+
+**Cobertura.** AC-01/INV-07: dominio + `test_extensions`/`test_production_costing_api`; AC-02/INV-01/02: idem; AC-03: spec de sidebar y capacidad ausente; AC-04/INV-03/04: dominio, casos de uso y API (dependientes y `blockers`); AC-05/INV-05/06: casos de uso (adopción, gancho único, nueva fecha al rehabilitar, fallo del gancho); AC-06/UI-01..04: specs de `module-list`, diálogo, `sidebar-menu`, `sidebar`.
+
+**Verificación propia (no es el Quality Gate).**
+- Backend: `test_domain` + `test_extensions` (31 pruebas, sin BD) OK con el `.venv` del checkout principal y una `DATABASE_URL` ficticia. **No se ejecutaron las pruebas con BD** (`test_api`, `test_production_costing_api` y el resto de la suite): el `.env` no se pudo copiar al worktree (denegado por política de credenciales). Tampoco se corrió `makemigrations --check` (no hay modelos nuevos).
+- Frontend: Karma acotado (settings + core + sidebar) 121/121 OK con `app.component.spec.ts` apartado temporalmente (roto en `main`, restaurado sin cambios); `ng lint` OK. `node_modules` por enlace al checkout principal. Revisión visual: no verificada.
+
+**Desviaciones respecto al plan.** Las pruebas de API de PB-MOD-005 viven en `test_production_costing_api.py` (archivo nuevo) en vez de en `test_api.py`; `test_api.py` solo se ajustó al catálogo y a la forma nueva. La excepción del gancho de adopción se propaga como 500 controlado por la transacción (sin manejo propio). No se creó prueba de `test_guards` nueva: el existente ya valida claves contra el catálogo y no hay vistas de negocio nuevas.
+
+**Deuda técnica.** Las guardas de órdenes abiertas/costos sin cerrar y la capacidad `inventory.valuation` las registrarán Producción, Costeo e Inventario en sus historias; hasta entonces Costeo no es habilitable. `app.component.spec.ts` roto en `main` (preexistente). El diálogo de desactivación sigue sin validar datos existentes más allá de las guardas (PB-MOD-004).
+
+**UI.** Pantalla de referencia: Configuración › Módulos existente (DDR vigente) y `module-settings`/`ComingSoon` para destinos; sin componentes compartidos nuevos.
 
 ## Review
 _Pendiente_

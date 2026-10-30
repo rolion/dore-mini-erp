@@ -16,6 +16,10 @@ const MODULE: AppModule = {
   requires: [{ key: 'catalog', name: 'Catálogo', enabled: true }],
   optional: [],
   missingRequires: [],
+  capabilities: [],
+  missingCapabilities: [],
+  adoptedAt: null,
+  disableBlockers: [],
 };
 
 describe('ModuleConfirmDialogComponent', () => {
@@ -75,5 +79,31 @@ describe('ModuleConfirmDialogComponent', () => {
     expect(text()).toContain('Faltan módulos por habilitar: Gastos.');
     expect(activeModal.close).not.toHaveBeenCalled();
     expect(component.saving).toBeFalse();
+  });
+
+  it('announces the adoption date and no retroactive costing when enabling Costeo (AC-05)', () => {
+    component.module = {
+      ...MODULE,
+      key: 'costing',
+      name: 'Costeo',
+      enabled: false,
+      capabilities: [{ key: 'inventory.valuation', label: 'Valoración de Inventario', available: true }],
+    };
+    component.action = 'enable';
+    fixture.detectChanges();
+    expect(text()).toContain('Fecha de adopción');
+    expect(text()).toContain('No se recalculan lotes anteriores; se valoran las existencias actuales.');
+    expect(text()).toContain('Valoración de Inventario');
+  });
+
+  it('lists the blockers instead of the reassurance when disabling with open data (AC-04)', () => {
+    component.module = {
+      ...MODULE,
+      disableBlockers: [{ code: 'open_orders', message: '3 órdenes abiertas', resolution: 'Ciérralas' }],
+    };
+    component.action = 'disable';
+    fixture.detectChanges();
+    expect(text()).toContain('3 órdenes abiertas. Ciérralas');
+    expect(text()).not.toContain('Tus datos e historial se conservan');
   });
 });

@@ -18,10 +18,25 @@
       {{ affected.length ? affected.join(', ') : 'Ninguno' }}
       }
     </dd>
+    @if (isEnable && recordsAdoption) {
+    <dt class="col-sm-4">Fecha de adopción</dt>
+    <dd class="col-sm-8">Hoy ({{ today | date: 'dd/MM/yyyy' }})</dd>
+    }
   </dl>
-  @if (!isEnable) {
+  @if (isEnable && recordsAdoption) {
   <small class="form-text text-muted">
-    Los datos se conservan; la desactivación segura completa llega en una próxima versión.
+    No se recalculan lotes anteriores; se valoran las existencias actuales.
+  </small>
+  }
+  @if (!isEnable && hasBlockers) {
+  <ul class="text-danger mb-0">
+    @for (blocker of module.disableBlockers; track blocker.code) {
+    <li>{{ blocker.message }}. {{ blocker.resolution }}</li>
+    }
+  </ul>
+  } @else if (!isEnable) {
+  <small class="form-text text-muted">
+    Tus datos e historial se conservan; los otros módulos no cambian.
   </small>
   }
   @if (serverError) {

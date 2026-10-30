@@ -99,6 +99,8 @@ describe('SidebarComponent', () => {
         routes: [
           { ...base, path: '/customers', title: 'Clientes', module: 'customers' },
           { ...base, path: '/inventory', title: 'Inventario', module: 'inventory' },
+          { ...base, path: '/production', title: 'Producción', module: 'production' },
+          { ...base, path: '/costing', title: 'Costeo', module: 'costing' },
           { ...base, path: '/settings/modules', title: 'Módulos' },
         ],
       });
@@ -118,6 +120,14 @@ describe('SidebarComponent', () => {
       create({ id: 1, username: 'ana', firstName: '', lastName: '', token: 't' });
       flush({ customers: true, inventory: false });
       expect(component.sidebarItems.map((item) => item.path)).toEqual(['/customers', '/settings/modules']);
+    });
+
+    it('shows Producción without Costeo when only Producción is enabled (AC-01, AC-03)', () => {
+      create({ id: 1, username: 'ana', firstName: '', lastName: '', token: 't' });
+      flush({ customers: true, inventory: true, production: true, costing: false });
+      expect(component.sidebarItems.map((item) => item.path)).toEqual([
+        '/customers', '/inventory', '/production', '/settings/modules',
+      ]);
     });
   });
 

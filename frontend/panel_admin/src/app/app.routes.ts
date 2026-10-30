@@ -87,6 +87,89 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'production',
+                canActivate: [moduleGuard],
+                data: { module: 'production', title: 'Producción' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'production/recipes',
+                canActivate: [moduleGuard],
+                data: { module: 'production', title: 'Recetas' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'production/batches',
+                canActivate: [moduleGuard],
+                data: { module: 'production', title: 'Elaboraciones' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'production/packaging',
+                canActivate: [moduleGuard],
+                data: { module: 'production', title: 'Envasados' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'production/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'production', settingsModule: 'production' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
+                    ),
+            },
+            {
+                path: 'costing',
+                canActivate: [moduleGuard],
+                data: { module: 'costing', title: 'Costeo' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'costing/batches',
+                canActivate: [moduleGuard],
+                data: { module: 'costing', title: 'Costos por lote' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'costing/analysis',
+                canActivate: [moduleGuard],
+                data: { module: 'costing', title: 'Análisis' },
+                loadComponent: () =>
+                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
+                        (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'costing/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'costing', settingsModule: 'costing' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
+                    ),
+            },
+            {
                 path: 'purchases/suppliers',
                 canActivate: [moduleGuard],
                 data: { module: 'purchases' },

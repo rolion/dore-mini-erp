@@ -17,6 +17,10 @@ function mod(key: string, extra: Partial<AppModule> = {}): AppModule {
     requires: [],
     optional: [],
     missingRequires: [],
+    capabilities: [],
+    missingCapabilities: [],
+    adoptedAt: null,
+    disableBlockers: [],
     ...extra,
   };
 }
@@ -106,5 +110,34 @@ describe('ModuleListComponent', () => {
     expect(api.history).toHaveBeenCalledWith('modules', jasmine.objectContaining({ page: 1 }));
     expect(el().querySelector('table.modules-table')).toBeNull();
     expect(el().textContent).toContain('Sin cambios registrados.');
+  });
+
+  it('blocks enabling Costeo without valuation and names the missing capability (AC-02, AC-06)', () => {
+    const valuation = { key: 'inventory.valuation', label: 'Valoración de Inventario', available: false };
+    setup([mod('costing', { capabilities: [valuation], missingCapabilities: ['Valoración de Inventario'] })]);
+    expect(button('costing')?.disabled).toBeTrue();
+    expect(el().textContent).toContain('Falta la capacidad: Valoración de Inventario');
+    expect(el().textContent).toContain('Valoración de Inventario (capacidad)');
+  });
+
+  it('shows the adoption date of an enabled Costeo (AC-05, AC-06)', () => {
+    setup([mod('costing', { enabled: true, adoptedAt: '2026-10-30T12:00:00+00:00' })]);
+    expect(el().textContent).toContain('Adopción: 30/10/2026');
+  });
+
+  it('warns that costs are not shown when the capability is lost (EDGE-04)', () => {
+    setup([mod('costing', { enabled: true, missingCapabilities: ['Valoración de Inventario'] })]);
+    expect(el().textContent).toContain('no se muestran costos');
+  });
+
+  it('blocks disabling with open orders and explains how to resolve (AC-04, AC-06)', () => {
+    setup([
+      mod('production', {
+        enabled: true,
+        disableBlockers: [{ code: 'open_orders', message: '3 órdenes abiertas', resolution: 'Ciérralas en Elaboraciones' }],
+      }),
+    ]);
+    expect(button('production')?.disabled).toBeTrue();
+    expect(el().textContent).toContain('3 órdenes abiertas. Ciérralas en Elaboraciones');
   });
 });

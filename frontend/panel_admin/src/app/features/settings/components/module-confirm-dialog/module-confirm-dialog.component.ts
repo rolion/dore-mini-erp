@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -15,6 +16,7 @@ export type ModuleAction = 'enable' | 'disable';
 @Component({
   selector: 'app-module-confirm-dialog',
   templateUrl: './module-confirm-dialog.component.html',
+  imports: [DatePipe],
 })
 export class ModuleConfirmDialogComponent {
   module!: AppModule;
@@ -39,7 +41,20 @@ export class ModuleConfirmDialogComponent {
   }
 
   get requiredNames(): string[] {
-    return this.module.requires.map((link) => link.name);
+    return [...this.module.requires.map((link) => link.name), ...this.module.capabilities.map((c) => c.label)];
+  }
+
+  /** Costeo (y todo módulo que fija fecha de adopción) avisa que no recalcula lo anterior. */
+  get recordsAdoption(): boolean {
+    return this.module.key === 'costing';
+  }
+
+  get today(): Date {
+    return new Date();
+  }
+
+  get hasBlockers(): boolean {
+    return this.module.disableBlockers.length > 0;
   }
 
   confirm(): void {

@@ -121,6 +121,23 @@
         "ORDERS": "Bestellungen",
         "SETTINGS": "Einstellungen"
       }
+    },
+    "PRODUCTION": {
+      "TEXT": "Produktion",
+      "LIST": {
+        "RECIPES": "Rezepte",
+        "BATCHES": "Chargen",
+        "PACKAGING": "Abfüllung",
+        "SETTINGS": "Einstellungen"
+      }
+    },
+    "COSTING": {
+      "TEXT": "Kalkulation",
+      "LIST": {
+        "BATCHES": "Chargenkosten",
+        "ANALYSIS": "Analyse",
+        "SETTINGS": "Einstellungen"
+      }
     }
   }
 }

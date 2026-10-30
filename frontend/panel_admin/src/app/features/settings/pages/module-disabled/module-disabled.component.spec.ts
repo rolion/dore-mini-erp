@@ -14,6 +14,10 @@ const INVENTORY: AppModule = {
   requires: [],
   optional: [],
   missingRequires: [],
+  capabilities: [],
+  missingCapabilities: [],
+  adoptedAt: null,
+  disableBlockers: [],
 };
 
 describe('ModuleDisabledComponent', () => {
