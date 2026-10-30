@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-delivery-start-url-trello
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/35
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
