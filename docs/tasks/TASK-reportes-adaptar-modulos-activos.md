@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reportes-adaptar-modulos-activos
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/41
 **Fuente:** https://trello.com/c/WkIaIpdz/ (PB-REP-001)
 
 ## Historial de transiciones
