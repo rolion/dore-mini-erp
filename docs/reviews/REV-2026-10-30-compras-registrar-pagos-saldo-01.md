@@ -1,6 +1,6 @@
 # REV-2026-10-30-compras-registrar-pagos-saldo-01: Los errores de forma (payment_id, payment_date) no se devuelven junto con los errores de dominio
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-compras-registrar-pagos-saldo.md (v1)
@@ -26,3 +26,6 @@ body {}
 -> {"payment_id":["Este campo es requerido."]} [400]
 ```
 Impacto bajo: la interfaz envía fechas de `input type=date` y valida en cliente.
+
+## Resolución
+Corregido: `PaymentInputSerializer` solo valida `payment_id`; `amount` y `payment_method` pasan sin validar al dominio (`RawField`) y la fecha mal formada llega como valor inválido (`LenientDateField`), de modo que el dominio devuelve juntos los errores de monto, método y fecha. `payment_id` faltante o no UUID sigue respondiendo solo por ese campo: es la clave de idempotencia, no un campo del formulario. Prueba: `test_malformed_shapes_are_reported_together_with_domain_errors`.

@@ -73,7 +73,13 @@ export class PurchasePaymentsTabComponent implements OnInit {
 
   async register(): Promise<void> {
     const ref = this.modal.open(PaymentDialogComponent, { backdrop: 'static' });
-    (ref.componentInstance as PaymentDialogComponent).init(this.purchase());
+    const dialog = ref.componentInstance as PaymentDialogComponent;
+    dialog.init(this.purchase());
+    // Un rechazo por saldo desactualizado relee la compra: se refresca el fondo mientras el diálogo sigue abierto.
+    dialog.purchaseRefreshed.subscribe(() => {
+      this.load();
+      this.paid.emit();
+    });
     try {
       await ref.result;
     } catch {

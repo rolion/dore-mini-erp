@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -15,6 +15,7 @@ import {
 import { Purchase, todayIso } from '../../models/purchase';
 import { amountError } from '../../services/payment-amounts';
 import { PaymentsApiService } from '../../services/payments-api.service';
+import { PurchasesApiService } from '../../services/purchases-api.service';
 
 /**
  * Alta de un pago. El diálogo hace la llamada: si el servidor rechaza, se queda abierto con lo escrito y muestra el
@@ -44,7 +45,11 @@ export class PaymentDialogComponent {
   generalError = '';
 
   private paymentId: string = crypto.randomUUID();
+  /** Se emite cuando se relee la compra tras un rechazo (saldo desactualizado), para refrescar el fondo. */
+  readonly purchaseRefreshed = output<Purchase>();
+
   private api = inject(PaymentsApiService);
+  private purchasesApi = inject(PurchasesApiService);
   private destroyRef = inject(DestroyRef);
 
   init(purchase: Purchase): void {
@@ -71,6 +76,34 @@ export class PaymentDialogComponent {
 
   get canSubmit(): boolean {
     return !this.submitting && !this.amountMessage && !this.dateMessage && !this.methodMessage;
+  }
+
+  /** Mensajes visibles por campo (los del servidor tienen prioridad); vacíos hasta que se intenta enviar o se toca. */
+  get dateError(): string | null {
+    return this.touched ? (this.serverErrors.paymentDate ?? this.dateMessage) : null;
+  }
+
+  get amountFieldError(): string | null {
+    return this.touched ? (this.serverErrors.amount ?? this.amountMessage) : null;
+  }
+
+  get methodError(): string | null {
+    return this.touched ? (this.serverErrors.paymentMethod ?? this.methodMessage) : null;
+  }
+
+  private refreshPurchase(): void {
+    const id = this.purchase?.id;
+    if (!id) return;
+    this.purchasesApi
+      .get(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (fresh) => {
+          this.purchase = fresh;
+          this.purchaseRefreshed.emit(fresh);
+        },
+        error: () => undefined,
+      });
   }
 
   /** Rellena el monto con todo el saldo. */
@@ -103,6 +136,8 @@ export class PaymentDialogComponent {
           this.serverErrors = err.fieldErrors;
           const hasField = !!(err.fieldErrors.amount || err.fieldErrors.paymentMethod || err.fieldErrors.paymentDate);
           this.generalError = hasField ? '' : err.message;
+          // El saldo pudo cambiar en otra parte: se relee la compra para mostrar el vigente, sin tocar lo escrito.
+          if (err.status === 400 || err.status === 409) this.refreshPurchase();
         },
       });
   }

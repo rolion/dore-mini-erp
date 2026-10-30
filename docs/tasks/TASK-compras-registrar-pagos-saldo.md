@@ -17,6 +17,7 @@
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 | 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS con PostgreSQL real y revisión visual; 3 hallazgos Low abiertos (REV-01…03) | delivery-publish |
+| 2026-10-30 | PUBLISH → PUBLISH | REV-01…03 (Low) corregidos a pedido del usuario; reverificación automatizada | delivery-build |
 
 ## Investigación
 
@@ -101,7 +102,7 @@ No se puede registrar un pago. El detalle de una compra confirmada muestra «Sin
 **Deuda:** anular/reembolsar pagos (estado `voided` reservado, sin acción, H-05); numeración correlativa de `PAG-`; la fecha futura se valida con la hora local del servidor.
 
 ## Review
-**Quality Gate ciclo 1: PASS** (sin Critical/High abiertos ni pruebas fallando; 3 hallazgos Low abiertos).
+**Quality Gate ciclo 1: PASS** (sin Critical/High abiertos ni pruebas fallando; 3 hallazgos Low, **corregidos después** a pedido del usuario, ver abajo).
 - [REV-01](../reviews/REV-2026-10-30-compras-registrar-pagos-saldo-01.md) (Low, IMPLEMENTATION): errores de forma del serializer (fecha mal formada, `payment_id` faltante) no se devuelven junto con los de dominio (AC-04 parcial).
 - [REV-02](../reviews/REV-2026-10-30-compras-registrar-pagos-saldo-02.md) (Low, IMPLEMENTATION): tras un 400 por saldo desactualizado el diálogo no recarga el saldo ni el resumen (el DDR lo pide).
 - [REV-03](../reviews/REV-2026-10-30-compras-registrar-pagos-saldo-03.md) (Low, SPECIFICATION): EDGE-07/EDGE-08 y montos exponenciales sin prueba; errores del diálogo sin `aria-describedby`.
@@ -110,5 +111,7 @@ No se puede registrar un pago. El detalle de una compra confirmada muestra «Sin
 
 **Evidencia de pruebas:** ver PR #38, sección Testing.
 
+**Reverificación tras corregir REV-01…03** (sin nuevo subagente; verificación propia): `manage.py test` completo con PostgreSQL → 1193 OK; `makemigrations --check` sin cambios; `bandit` sin hallazgos; `ng lint` OK; `ng build` OK; Karma `features/purchases` + `features/inventory` → 325 SUCCESS. No se repitió la prueba visual en navegador.
+
 ## Publicación
-PR #38 con descripción completa. Cambio sensible: **base de datos** (migración `0006_payments`, respaldada por el ADR de modelo, saldo y contrato). Falta de parte humana: aprobar el merge (decidir si los Low REV-01…03 se corrigen antes o después). No se mergea.
+PR #38 con descripción completa. Cambio sensible: **base de datos** (migración `0006_payments`, respaldada por el ADR de modelo, saldo y contrato). Falta de parte humana: aprobar el merge (REV-01…03 ya corregidos; el Quality Gate completo con aislamiento no se repitió tras esas correcciones). No se mergea.

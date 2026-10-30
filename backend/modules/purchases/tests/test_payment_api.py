@@ -63,7 +63,7 @@ class RegisterPaymentTests(PaymentApiTestCase):
 
     def test_invalid_amounts_are_rejected(self):  # AC-03, EDGE-04
         purchase = self.confirmed_purchase()
-        for bad in (None, '', 'abc', '0', '-5', '10.005', 1.5, True):
+        for bad in (None, '', 'abc', '0', '-5', '10.005', 1.5, True, '1e3', 'NaN', 'Infinity', [1], {'a': 1}):
             body = {'payment_id': str(uuid4()), 'amount': bad, 'payment_method': 'CASH',
                     'payment_date': timezone.localdate().isoformat()}
             response = self.client.post(purchase_url(purchase['id'], 'payments/'), body, format='json')
@@ -86,6 +86,32 @@ class RegisterPaymentTests(PaymentApiTestCase):
         body = self.pay(purchase, '1.00', expected=400, payment_method=None, payment_date=None)
         self.assertEqual(set(body), {'payment_method', 'payment_date'})
         self.assertEqual(self.pay(purchase, '1.00', expected=400, payment_id='no-uuid').keys(), {'payment_id'})
+
+    def test_malformed_shapes_are_reported_together_with_domain_errors(self):  # AC-04, REV-01
+        purchase = self.confirmed_purchase()
+        for bad_date in ('abc', '30/10/2026', 20261030, ['2026-10-30']):
+            body = self.pay(purchase, '0', expected=400, payment_method=['CASH'], payment_date=bad_date)
+            self.assertEqual(set(body), {'amount', 'payment_method', 'payment_date'}, bad_date)
+        self.assertEqual(PaymentModel.objects.count(), 0)
+        self.pay(purchase, '1.00', payment_date=f' {timezone.localdate().isoformat()} ')
+
+    def test_a_deactivated_supplier_or_product_does_not_block_payment(self):  # EDGE-07
+        purchase = self.confirmed_purchase()
+        self.supplier.active = False
+        self.supplier.save()
+        self.flour.active = False
+        self.flour.can_buy = False
+        self.flour.save()
+        self.pay(purchase, '10.00')
+        self.assertEqual(self.detail(purchase)['payment_status'], 'partial')
+
+    def test_a_purchase_confirmed_before_payments_existed_starts_unpaid(self):  # EDGE-08
+        purchase = self.confirmed_purchase()
+        self.assertEqual(PaymentModel.objects.count(), 0)
+        detail = self.detail(purchase)
+        self.assertEqual((detail['paid_total'], detail['balance'], detail['payment_status']),
+                         ('0.00', detail['total'], 'unpaid'))
+        self.assertEqual(self.client.get(purchase_url(purchase['id'], 'payments/')).json()['count'], 0)
 
     def test_only_a_confirmed_purchase_admits_payments(self):  # AC-05
         draft = self.create()

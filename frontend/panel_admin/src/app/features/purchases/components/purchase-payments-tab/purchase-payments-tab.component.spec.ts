@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, Subject, of, throwError } from 'rxjs';
 
 import { Page } from '../../../../shared/models/page';
 import { Payment, PaymentApiError } from '../../models/payment';
@@ -100,9 +100,23 @@ describe('PurchasePaymentsTabComponent', () => {
     for (const forbidden of ['Eliminar', 'Borrar', 'Reembolso', 'Anular']) expect(text).not.toContain(forbidden);
   });
 
+  it('refreshes the background while the dialog stays open after a stale-balance rejection (REV-02)', async () => {
+    await setup();
+    const refreshed = new Subject<void>();
+    const instance = { init: jasmine.createSpy('init'), purchaseRefreshed: refreshed };
+    modal.open.and.returnValue({ componentInstance: instance, result: new Promise(() => undefined) } as never);
+    let emitted = 0;
+    fixture.componentInstance.paid.subscribe(() => emitted++);
+    byId('register')?.click();
+    refreshed.next();
+    expect(api.list).toHaveBeenCalledTimes(2);
+    expect(emitted).toBe(1);
+    expect(toastr.success).not.toHaveBeenCalled();
+  });
+
   it('registers through the dialog, then reloads the list and tells the detail (AC-19)', async () => {
     await setup();
-    const instance = jasmine.createSpyObj<{ init: (p: unknown) => void }>('dialog', ['init']);
+    const instance = { init: jasmine.createSpy('init'), purchaseRefreshed: new Subject<void>() };
     modal.open.and.returnValue({ componentInstance: instance, result: Promise.resolve(makePayment()) } as never);
     let emitted = 0;
     fixture.componentInstance.paid.subscribe(() => emitted++);
@@ -116,7 +130,7 @@ describe('PurchasePaymentsTabComponent', () => {
 
   it('does nothing when the dialog is cancelled', async () => {
     await setup();
-    const instance = jasmine.createSpyObj<{ init: (p: unknown) => void }>('dialog', ['init']);
+    const instance = { init: jasmine.createSpy('init'), purchaseRefreshed: new Subject<void>() };
     modal.open.and.returnValue({ componentInstance: instance, result: Promise.reject(new Error('dismissed')) } as never);
     byId('register')?.click();
     await flush();

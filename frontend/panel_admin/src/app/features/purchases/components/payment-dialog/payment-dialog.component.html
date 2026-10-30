@@ -10,33 +10,36 @@
     }
     <div class="form-group mb-3">
       <label for="payment-date">Fecha <span class="text-danger">*</span></label>
-      <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today" />
-      @if (touched && (dateMessage || serverErrors.paymentDate)) {
-      <small class="text-danger" data-testid="date-error">{{ serverErrors.paymentDate || dateMessage }}</small>
+      <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today"
+        [attr.aria-invalid]="dateError ? true : null" [attr.aria-describedby]="dateError ? 'payment-date-error' : null" />
+      @if (dateError; as message) {
+      <small id="payment-date-error" class="text-danger" role="alert" data-testid="date-error">{{ message }}</small>
       }
     </div>
     <div class="form-group mb-3">
       <label for="payment-amount">Monto (Bs) <span class="text-danger">*</span></label>
       <div class="input-group">
         <input id="payment-amount" type="text" inputmode="decimal" class="form-control" formControlName="amount"
-          autocomplete="off" (blur)="touched = true" />
+          autocomplete="off" (blur)="touched = true" [attr.aria-invalid]="amountFieldError ? true : null"
+          [attr.aria-describedby]="amountFieldError ? 'payment-amount-error' : null" />
         <button type="button" class="btn btn-light" data-testid="pay-in-full" (click)="payInFull()">Pagar el saldo completo</button>
       </div>
       <small class="form-text text-muted">Saldo: {{ balance | money }}</small>
-      @if (touched && (amountMessage || serverErrors.amount)) {
-      <small class="text-danger d-block" data-testid="amount-error">{{ serverErrors.amount || amountMessage }}</small>
+      @if (amountFieldError; as message) {
+      <small id="payment-amount-error" class="text-danger d-block" role="alert" data-testid="amount-error">{{ message }}</small>
       }
     </div>
     <div class="form-group mb-3">
       <label for="payment-method">Método de pago <span class="text-danger">*</span></label>
-      <select id="payment-method" class="form-select" formControlName="paymentMethod">
+      <select id="payment-method" class="form-select" formControlName="paymentMethod"
+        [attr.aria-invalid]="methodError ? true : null" [attr.aria-describedby]="methodError ? 'payment-method-error' : null">
         <option value="">Selecciona un método</option>
         @for (method of methods; track method) {
         <option [value]="method">{{ methodLabels[method] }}</option>
         }
       </select>
-      @if (touched && (methodMessage || serverErrors.paymentMethod)) {
-      <small class="text-danger" data-testid="method-error">{{ serverErrors.paymentMethod || methodMessage }}</small>
+      @if (methodError; as message) {
+      <small id="payment-method-error" class="text-danger" role="alert" data-testid="method-error">{{ message }}</small>
       }
     </div>
   </div>

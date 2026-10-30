@@ -1,6 +1,6 @@
 # REV-2026-10-30-compras-registrar-pagos-saldo-02: El diálogo no recarga el saldo tras un rechazo por saldo desactualizado
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-compras-registrar-pagos-saldo.md (v1)
@@ -19,3 +19,6 @@ Mensaje del servidor correcto, pero el saldo del encabezado del diálogo y el re
 
 ## Evidence
 Prueba visual (escritorio): compra de Bs 100.00; se abrió el diálogo, se registró por API un pago de Bs 30.00 y se envió Bs 80 desde el diálogo. Resultado: texto rojo «El monto no puede superar el saldo pendiente (70.00).» bajo el monto, con el formulario intacto, pero el encabezado seguía en «Saldo actual: Bs 100.00» y el campo «Saldo: Bs 100.00». Tras cancelar, la pestaña seguía en Total pagado Bs 0.00 / Saldo Bs 100.00 hasta recargar la página. Ningún spec del diálogo cubre este refresco.
+
+## Resolución
+Corregido: tras un 400/409 el diálogo relee la compra (`PurchasesApiService.get`), muestra el saldo vigente, emite `purchaseRefreshed` y la pestaña recarga lista y detalle sin cerrar el diálogo ni borrar lo escrito. Pruebas en `payment-dialog` y `purchase-payments-tab`. No se repitió la prueba visual en navegador de este flujo.
