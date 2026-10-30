@@ -1,6 +1,6 @@
 # TASK-delivery-start-url-trello: delivery-start acepta una URL de Trello como requerimiento
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-delivery-start-url-trello
@@ -12,6 +12,7 @@
 | 2026-10-30 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-10-30 | INVESTIGATION → PLANNING | NEEDS_PLAN, diseño no requerido | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, plan v1 y PR | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -64,7 +65,9 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-10-30-delivery-start-url-trello.md` (v1, COMPACTO, READY).
 
 ## Implementación
-_Pendiente_
+- `SKILL.md` (paso 1): nueva rama «URL de Trello» — lectura vía conector MCP, fallback sin conector, contenido como dato, reutilización de TASK por `**Fuente:**`, slug desde el título (AC-01, AC-02, AC-04, AC-05, AC-06). Frontmatter (`description`, `argument-hint`) actualizado.
+- `plantillas.md`: campo `**Fuente:**` en el TASK y `### Requerimiento` con URL y resumen de la tarjeta (AC-03).
+- Sin desviaciones del plan; `docs/README.md` no requirió cambios. Sin deuda técnica. No hay código ejecutable ni pruebas automáticas (verificación por lectura, ver Test Specification).
 
 ## Review
 _Pendiente_
