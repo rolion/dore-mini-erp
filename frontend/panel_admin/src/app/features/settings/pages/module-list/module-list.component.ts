@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -14,7 +15,7 @@ import {
   selector: 'app-module-list',
   templateUrl: './module-list.component.html',
   styleUrl: './module-list.component.scss',
-  imports: [RouterLink, SettingsHistoryComponent],
+  imports: [RouterLink, DatePipe, SettingsHistoryComponent],
 })
 export class ModuleListComponent implements OnInit {
   tab: 'general' | 'history' = 'general';
@@ -65,10 +66,31 @@ export class ModuleListComponent implements OnInit {
 
   blockedReason(module: AppModule): string {
     if (module.enabled) {
+      const reasons: string[] = [];
       const dependents = this.disableBlockedBy(module);
-      return dependents.length ? `Lo requieren: ${dependents.join(', ')}` : '';
+      if (dependents.length) {
+        reasons.push(`Lo requieren: ${dependents.join(', ')}`);
+      }
+      return [...reasons, ...module.disableBlockers.map((b) => `${b.message}. ${b.resolution}`)].join(' ');
     }
-    return module.missingRequires.length ? `Requiere habilitar primero: ${module.missingRequires.join(', ')}` : '';
+    return this.missingReasons(module).join(' ');
+  }
+
+  /** Motivos por los que un módulo deshabilitado aún no se puede habilitar: módulos y capacidades que faltan. */
+  missingReasons(module: AppModule): string[] {
+    const reasons: string[] = [];
+    if (module.missingRequires.length) {
+      reasons.push(`Requiere habilitar primero: ${module.missingRequires.join(', ')}`);
+    }
+    if (module.missingCapabilities.length) {
+      reasons.push(`Falta la capacidad: ${module.missingCapabilities.join(', ')}. Inventario aún no la ofrece.`);
+    }
+    return reasons;
+  }
+
+  /** Costeo habilitado cuya capacidad dejó de estar disponible: no debe mostrar costos. */
+  capabilityLost(module: AppModule): boolean {
+    return module.enabled && module.missingCapabilities.length > 0;
   }
 
   open(module: AppModule): void {

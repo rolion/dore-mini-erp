@@ -121,6 +121,23 @@
         "ORDERS": "Orders",
         "SETTINGS": "Settings"
       }
+    },
+    "PRODUCTION": {
+      "TEXT": "Production",
+      "LIST": {
+        "RECIPES": "Recipes",
+        "BATCHES": "Batches",
+        "PACKAGING": "Packaging",
+        "SETTINGS": "Settings"
+      }
+    },
+    "COSTING": {
+      "TEXT": "Costing",
+      "LIST": {
+        "BATCHES": "Batch costs",
+        "ANALYSIS": "Analysis",
+        "SETTINGS": "Settings"
+      }
     }
   }
 }

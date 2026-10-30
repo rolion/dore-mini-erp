@@ -1,4 +1,4 @@
-import routesFile from '../../../assets/data/routes.json';
+﻿import routesFile from '../../../assets/data/routes.json';
 import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 import es from '../../../assets/i18n/es.json';
@@ -12,9 +12,10 @@ describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
   it('has the business menu, Purchases, Inventory and Settings > Modules (AC-09, AC-20, AC-22, UI-01)', () => {
-    expect(routes.length).toBe(9);
+    expect(routes.length).toBe(11);
 
-    const [dashboard, catalog, customer, orders, expenses, reports, purchases, inventory, settings] = routes;
+    const [dashboard, catalog, customer, orders, expenses, reports, purchases, inventory, production, costing, settings] =
+      routes;
     expect(routes.slice(0, 6).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'sales', 'expenses', 'reporting',
     ]);
@@ -34,6 +35,19 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/inventory/movements',
       '/pocketbiz/inventory/adjustments',
       '/pocketbiz/inventory/settings',
+    ]);
+    expect(production.module).toBe('production');
+    expect(production.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/production/recipes',
+      '/pocketbiz/production/batches',
+      '/pocketbiz/production/packaging',
+      '/pocketbiz/production/settings',
+    ]);
+    expect(costing.module).toBe('costing');
+    expect(costing.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/costing/batches',
+      '/pocketbiz/costing/analysis',
+      '/pocketbiz/costing/settings',
     ]);
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
@@ -72,7 +86,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(24);
+    expect(titles.length).toBe(33);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -99,5 +113,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(de, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Lieferanten');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
     expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
+    expect(translate(es, 'MENUITEMS.PRODUCTION.LIST.PACKAGING')).toBe('Envasados');
+    expect(translate(es, 'MENUITEMS.COSTING.LIST.BATCHES')).toBe('Costos por lote');
   });
 });

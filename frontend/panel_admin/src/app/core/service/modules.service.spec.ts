@@ -72,4 +72,37 @@ describe('ModulesService', () => {
     service.reset();
     expect(service.enabledKeysValue).toBeNull();
   });
+
+  it('maps capabilities, adoption date and blockers, defaulting when absent (API-01)', () => {
+    service.load().subscribe();
+    http.expectOne(URL).flush([
+      dto('catalog', true),
+      dto('costing', true, {
+        capabilities: [{ key: 'inventory.valuation', label: 'Valoración de Inventario', available: true }],
+        adopted_at: '2026-10-30T12:00:00+00:00',
+        disable_blockers: [{ code: 'open_costs', message: 'Costos sin cerrar', resolution: 'Ciérralos' }],
+      }),
+    ]);
+    let costing;
+    service.modules$.subscribe((m) => (costing = m?.find((x) => x.key === 'costing')));
+    expect(costing).toEqual(
+      jasmine.objectContaining({
+        adoptedAt: '2026-10-30T12:00:00+00:00',
+        missingCapabilities: [],
+        disableBlockers: [{ code: 'open_costs', message: 'Costos sin cerrar', resolution: 'Ciérralos' }],
+      }),
+    );
+  });
+
+  it('exposes the missing capability labels of a rejected enable (API-02)', () => {
+    let error: ModulesApiError | undefined;
+    service.enable('costing').subscribe({ error: (err: ModulesApiError) => (error = err) });
+    http
+      .expectOne(`${URL}costing/enable/`)
+      .flush(
+        { detail: 'Falta la capacidad: Valoración de Inventario.', missing_capabilities: ['Valoración de Inventario'] },
+        { status: 409, statusText: 'Conflict' },
+      );
+    expect(error?.names).toEqual(['Valoración de Inventario']);
+  });
 });

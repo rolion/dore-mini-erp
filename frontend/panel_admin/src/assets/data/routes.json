@@ -257,6 +257,109 @@
     },
     {
       "path": "",
+      "title": "MENUITEMS.PRODUCTION.TEXT",
+      "iconType": "feather",
+      "icon": "tool",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/pocketbiz/production/recipes",
+          "title": "MENUITEMS.PRODUCTION.LIST.RECIPES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/production/batches",
+          "title": "MENUITEMS.PRODUCTION.LIST.BATCHES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/production/packaging",
+          "title": "MENUITEMS.PRODUCTION.LIST.PACKAGING",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/production/settings",
+          "title": "MENUITEMS.PRODUCTION.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
+      "module": "production"
+    },
+    {
+      "path": "",
+      "title": "MENUITEMS.COSTING.TEXT",
+      "iconType": "feather",
+      "icon": "dollar-sign",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/pocketbiz/costing/batches",
+          "title": "MENUITEMS.COSTING.LIST.BATCHES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/costing/analysis",
+          "title": "MENUITEMS.COSTING.LIST.ANALYSIS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/costing/settings",
+          "title": "MENUITEMS.COSTING.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
+      "module": "costing"
+    },
+    {
+      "path": "",
       "title": "MENUITEMS.SETTINGS.TEXT",
       "iconType": "feather",
       "icon": "settings",

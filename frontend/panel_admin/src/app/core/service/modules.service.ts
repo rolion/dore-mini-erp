@@ -101,9 +101,10 @@ export class ModulesService {
       detail?: unknown;
       missing?: unknown;
       dependents?: unknown;
+      missing_capabilities?: unknown;
     };
     const detail = typeof body.detail === 'string' ? body.detail : '';
-    const names = [body.missing, body.dependents].find(Array.isArray);
+    const names = [body.missing, body.missing_capabilities, body.dependents].find(Array.isArray);
     return new ModulesApiError(
       err.status === 0 ? MODULES_ERROR_MESSAGE : detail || GENERIC_MESSAGE,
       err.status,

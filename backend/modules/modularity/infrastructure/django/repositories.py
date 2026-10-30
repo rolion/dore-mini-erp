@@ -33,6 +33,10 @@ class DjangoCompanyModuleRepository:
     def enable(self, key: str) -> None:
         CompanyModuleModel.objects.get_or_create(company_id=self.company_id, module_key=key)
 
+    def enabled_at(self) -> dict:
+        """Fecha de habilitación de cada módulo guardado (deshabilitar borra la fila: rehabilitar fija una nueva)."""
+        return dict(CompanyModuleModel.objects.filter(company_id=self.company_id).values_list('module_key', 'enabled_at'))
+
     def disable(self, key: str) -> None:
         CompanyModuleModel.objects.filter(company_id=self.company_id, module_key=key).delete()
 

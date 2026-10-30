@@ -56,8 +56,16 @@
                     <td>
                       <strong>{{ module.name }}</strong><br>
                       <small class="text-muted">{{ module.description }}</small>
-                      @if (!module.enabled && module.missingRequires.length) {
-                      <br><small class="text-danger">Requiere habilitar primero: {{ module.missingRequires.join(', ') }}</small>
+                      @if (!module.enabled) {
+                      @for (reason of missingReasons(module); track reason) {
+                      <br><small class="text-danger">{{ reason }}</small>
+                      }
+                      }
+                      @if (module.enabled && module.adoptedAt) {
+                      <br><small class="text-muted">Adopción: {{ module.adoptedAt | date: 'dd/MM/yyyy' }}</small>
+                      }
+                      @if (capabilityLost(module)) {
+                      <br><small class="text-danger">{{ module.missingCapabilities.join(', ') }} no disponible: no se muestran costos.</small>
                       }
                     </td>
                     <td data-label="Estado">
@@ -71,8 +79,12 @@
                     </td>
                     <td data-label="Requiere">
                       @for (link of module.requires; track link.key; let last = $last) {
-                      <span [class.text-danger]="!link.enabled">{{ link.name }}</span>{{ last ? '' : ', ' }}
-                      } @empty {
+                      <span [class.text-danger]="!link.enabled">{{ link.name }}</span>{{ last && !module.capabilities.length ? '' : ', ' }}
+                      }
+                      @for (cap of module.capabilities; track cap.key; let last = $last) {
+                      <span [class.text-danger]="!cap.available">{{ cap.label }} (capacidad)</span>{{ last ? '' : ', ' }}
+                      }
+                      @if (!module.requires.length && !module.capabilities.length) {
                       <span class="text-muted">—</span>
                       }
                     </td>

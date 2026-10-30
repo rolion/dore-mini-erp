@@ -22,6 +22,7 @@ Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, 
 | Gastos | Registro de gastos y categorías | `expenses` | Listo |
 | Reportes | Dashboard y reportes de ventas/gastos | `dashboard`, `reports` | Listo |
 | Módulos por empresa | El admin elige qué módulos usa su empresa, con dependencias | `settings/modules` | Listo (PB-MOD-001) |
+| Producción y Costeo (habilitación) | Se habilitan por empresa con sus dependencias; Costeo exige la capacidad de valoración de Inventario y fija una fecha de adopción; desactivar explica bloqueos. Las pantallas de Recetas, Elaboraciones, Envasados, Costos por lote y Análisis son «Próximamente» | `settings/modules`, `production/*`, `costing/*` | En revisión (PB-MOD-005) |
 | Configuración por módulo | Ajustes de cada módulo por empresa con historial de cambios | `sales/settings`, `purchases/settings`, `inventory/settings`, `settings/modules` | Listo (PB-CFG-001) |
 | Consulta de existencias | Existencias por producto y almacén con búsqueda, filtros (almacén, activo/inactivo, saldo cero / distinto de cero / negativo) y detalle con historial; sin disponible, reservado ni valoración | `inventory/stock`, `inventory/stock/:productId/:warehouseId` | Listo (PB-INV-005) |
 | Existencias por clasificación y uso | Clasificación y usos Comprable/Vendible (de Catálogo) en lista y detalle; filtros combinables por clasificación, comprable y vendible; «Registrar apertura» y «Registrar ajuste» desde el detalle con producto/almacén preseleccionados y retorno al detalle | `inventory/stock`, `inventory/stock/:productId/:warehouseId` | En revisión (PB-INV-009) |
@@ -164,4 +165,9 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - El nombre y la unidad del producto se copian al agregarlo y se conservan al editar el borrador aunque el catálogo cambie; un proveedor desactivado después debe reemplazarse para guardar.
 - **Detalle** (`/purchases/:id`): pestaña «Resumen» con referencia interna, proveedor, fechas, estado documental, de recepción y de pago, productos, total y notas. Un borrador ofrece Editar, Confirmar y Cancelar compra.
 
-
+### 3.11 Producción y Costeo por empresa (PB-MOD-005)
+- **Configuración › Módulos** suma **Producción** (requiere Catálogo e Inventario; Compras es solo opcional) y **Costeo** (requiere Producción y la capacidad **Valoración de Inventario**). Ambos vienen deshabilitados: una librería sin producción no cambia; una empresa como Dore puede activar Producción sin Costeo para llevar cantidades.
+- **Habilitar** muestra qué falta (módulos y capacidades). Hoy Inventario aún no ofrece valoración (PB-VAL-001/002), por lo que Costeo no se puede habilitar en ninguna empresa hasta entonces; no se muestran costos sin ella.
+- **Costeo** fija una **fecha de adopción** al habilitarse (visible en la lista) y no recalcula lotes anteriores; las existencias actuales se valoran con la capacidad de Inventario cuando exista. Rehabilitarlo fija una fecha nueva.
+- **Deshabilitar** se bloquea si otro módulo lo requiere (Inventario con Producción activo; Producción con Costeo activo) o si hay datos abiertos (órdenes abiertas, costos sin cerrar), explicando cómo resolverlos; no apaga otros módulos ni borra historial. Los bloqueos por datos los informarán Producción y Costeo cuando existan.
+- Menú: «Producción» (Recetas, Elaboraciones, Envasados, Configuración) y «Costeo» (Costos por lote, Análisis, Configuración) solo con el módulo habilitado; las pantallas funcionales llegan en sus historias.

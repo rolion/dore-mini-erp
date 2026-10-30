@@ -121,6 +121,23 @@
         "ORDERS": "Pedidos",
         "SETTINGS": "Configuración"
       }
+    },
+    "PRODUCTION": {
+      "TEXT": "Producción",
+      "LIST": {
+        "RECIPES": "Recetas",
+        "BATCHES": "Elaboraciones",
+        "PACKAGING": "Envasados",
+        "SETTINGS": "Configuración"
+      }
+    },
+    "COSTING": {
+      "TEXT": "Costeo",
+      "LIST": {
+        "BATCHES": "Costos por lote",
+        "ANALYSIS": "Análisis",
+        "SETTINGS": "Configuración"
+      }
     }
   }
 }

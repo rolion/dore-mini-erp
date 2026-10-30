@@ -27,7 +27,7 @@ class ListModulesTests(ModulesApiTestCase):
     def test_defaults_on_first_access(self):  # AC-08, AC-09
         body = self.client.get(LIST_URL).json()
         self.assertEqual([m['key'] for m in body], ['access', 'catalog', 'customers', 'sales', 'expenses',
-                                                    'reporting', 'purchases', 'inventory'])
+                                                    'reporting', 'purchases', 'inventory', 'production', 'costing'])
         self.assertEqual(enabled_keys(self.client),
                          {'access', 'catalog', 'customers', 'sales', 'expenses', 'reporting'})
 
@@ -37,7 +37,8 @@ class ListModulesTests(ModulesApiTestCase):
         self.assertTrue(by_key['catalog']['enabled'])
         inventory = by_key['inventory']
         self.assertEqual(set(inventory), {'key', 'name', 'description', 'is_base', 'enabled', 'requires',
-                                          'optional', 'missing_requires'})
+                                          'optional', 'missing_requires', 'capabilities', 'missing_capabilities',
+                                          'adopted_at', 'disable_blockers'})
         self.assertEqual(inventory['requires'], [{'key': 'catalog', 'name': 'Catálogo', 'enabled': True}])
         self.assertEqual([o['key'] for o in inventory['optional']], ['sales', 'purchases'])
 
