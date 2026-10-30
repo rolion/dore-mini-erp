@@ -26,7 +26,7 @@ class InMemoryProductRepository:
         self.items[product.id] = product
         return product
 
-    def list(self, search=None, active=None, tracks_stock=None):
+    def list(self, search=None, active=None, tracks_stock=None, can_buy=None, can_sell=None, category=None):
         products = sorted(self.items.values(), key=lambda p: (p.name, str(p.id)))
         if search:
             products = [p for p in products if search.lower() in p.name.lower()]
@@ -34,6 +34,14 @@ class InMemoryProductRepository:
             products = [p for p in products if p.active is active]
         if tracks_stock is not None:
             products = [p for p in products if p.tracks_stock is tracks_stock]
+        if can_buy is not None:
+            products = [p for p in products if p.can_buy is can_buy]
+        if can_sell is not None:
+            products = [p for p in products if p.can_sell is can_sell]
+        if category == 'unclassified':
+            products = [p for p in products if p.category is None]
+        elif category:
+            products = [p for p in products if p.category == category]
         return products
 
 
@@ -42,7 +50,7 @@ class CatalogUseCaseTests(SimpleTestCase):
         self.repo = InMemoryProductRepository()
 
     def create(self, name='Cuñapé', price='10', **extra):
-        return CreateProduct(self.repo).execute(name=name, sale_price=price, **extra)
+        return CreateProduct(self.repo).execute(name=name, sale_price=price, **{'category': 'finished', **extra})
 
     def test_create_saves_active_product(self):  # AC-01
         product = self.create()

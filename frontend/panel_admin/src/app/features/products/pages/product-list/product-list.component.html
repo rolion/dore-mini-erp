@@ -43,6 +43,20 @@
                             <option value="active">Activos</option>
                             <option value="inactive">Inactivos</option>
                           </select>
+                          <select class="form-select form-control w-auto" [formControl]="useControl"
+                            aria-label="Filtrar por uso">
+                            <option value="all">Todos los usos</option>
+                            <option value="buy">Se compra</option>
+                            <option value="sell">Se vende</option>
+                          </select>
+                          <select class="form-select form-control w-auto" [formControl]="categoryControl"
+                            aria-label="Filtrar por categoría">
+                            <option value="all">Todas las categorías</option>
+                            @for (option of categories; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                            }
+                            <option value="unclassified">Por revisar</option>
+                          </select>
                           <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/catalog/products/new"
                             title="Nuevo producto" aria-label="Nuevo producto">
                             <i class="material-icons">add</i>
@@ -62,9 +76,31 @@
                   <a class="fw-bold" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{row.name}}</a>
                 </ng-template>
               </ngx-datatable-column>
+              <ngx-datatable-column name="Categoría" [sortable]="false" [width]="150">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.needsReview) {
+                  <div class="badge-outline col-orange">Por revisar</div>
+                  } @else {
+                  {{ categoryName(row) }}
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Uso" [sortable]="false" [width]="150">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.canBuy) {
+                  <div class="badge-outline col-blue me-1">Compra</div>
+                  }
+                  @if (row.canSell) {
+                  <div class="badge-outline col-green">Venta</div>
+                  }
+                  @if (!row.canBuy && !row.canSell) {
+                  —
+                  }
+                </ng-template>
+              </ngx-datatable-column>
               <ngx-datatable-column name="Precio" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{row.salePrice}}
+                  {{ row.canSell ? (row.salePrice ?? '—') : '—' }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Estado" [sortable]="false" [width]="120">

@@ -13,6 +13,10 @@ const PRODUCT: Product = {
   name: 'Chipa',
   description: '',
   salePrice: '12.50',
+  category: 'finished',
+  canBuy: false,
+  canSell: true,
+  needsReview: false,
   active: true,
   tracksStock: false,
   baseUnit: null,
@@ -60,7 +64,7 @@ describe('OrderItemsComponent', () => {
 
   it('only offers active products, starting with an initial list (AC-03, AC-25)', () => {
     render(makeOrder());
-    expect(api.list).toHaveBeenCalledWith({ search: '', active: true, pageSize: 20 });
+    expect(api.list).toHaveBeenCalledWith({ search: '', active: true, canSell: true, pageSize: 20 });
   });
 
   it('keeps searching products after an option is chosen and ng-select emits null (EDGE-14, REV-02)', fakeAsync(() => {
@@ -68,11 +72,11 @@ describe('OrderItemsComponent', () => {
     api.list.calls.reset();
     component.productInput$.next(null as unknown as string);
     tick(300);
-    expect(api.list).toHaveBeenCalledOnceWith({ search: '', active: true, pageSize: 20 });
+    expect(api.list).toHaveBeenCalledOnceWith({ search: '', active: true, canSell: true, pageSize: 20 });
     expect(component.productsLoading).toBeFalse();
     component.productInput$.next('chi');
     tick(300);
-    expect(api.list.calls.mostRecent().args[0]).toEqual({ search: 'chi', active: true, pageSize: 20 });
+    expect(api.list.calls.mostRecent().args[0]).toEqual({ search: 'chi', active: true, canSell: true, pageSize: 20 });
     expect(component.productsLoading).toBeFalse();
   }));
 

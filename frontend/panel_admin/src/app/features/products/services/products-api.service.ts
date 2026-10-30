@@ -21,6 +21,9 @@ const API_FIELDS: Record<string, keyof ProductInput> = {
   name: 'name',
   description: 'description',
   sale_price: 'salePrice',
+  category: 'category',
+  can_buy: 'canBuy',
+  can_sell: 'canSell',
   tracks_stock: 'tracksStock',
   base_unit_id: 'baseUnitId',
 };
@@ -31,6 +34,10 @@ function toProduct(dto: ProductDto): Product {
     name: dto.name,
     description: dto.description,
     salePrice: dto.sale_price,
+    category: dto.category,
+    canBuy: dto.can_buy,
+    canSell: dto.can_sell,
+    needsReview: dto.needs_review,
     active: dto.active,
     tracksStock: dto.tracks_stock,
     baseUnit: dto.base_unit && {
@@ -49,6 +56,9 @@ function toBody(input: Partial<ProductInput>): Record<string, string | boolean |
   if (input.name !== undefined) body['name'] = input.name;
   if (input.description !== undefined) body['description'] = input.description;
   if (input.salePrice !== undefined) body['sale_price'] = input.salePrice;
+  if (input.category !== undefined) body['category'] = input.category;
+  if (input.canBuy !== undefined) body['can_buy'] = input.canBuy;
+  if (input.canSell !== undefined) body['can_sell'] = input.canSell;
   if (input.tracksStock !== undefined) body['tracks_stock'] = input.tracksStock;
   if (input.baseUnitId !== undefined) body['base_unit_id'] = input.baseUnitId;
   return body;
@@ -96,6 +106,9 @@ export class ProductsApiService {
     let httpParams = new HttpParams();
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.active !== undefined) httpParams = httpParams.set('active', String(params.active));
+    if (params.canBuy !== undefined) httpParams = httpParams.set('can_buy', String(params.canBuy));
+    if (params.canSell !== undefined) httpParams = httpParams.set('can_sell', String(params.canSell));
+    if (params.category) httpParams = httpParams.set('category', params.category);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.pageSize !== undefined) httpParams = httpParams.set('page_size', String(params.pageSize));
     return this.http.get<Page<ProductDto>>(this.baseUrl, { params: httpParams }).pipe(

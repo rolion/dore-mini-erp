@@ -54,6 +54,21 @@ describe('ProductDetailComponent', () => {
     expect(el.querySelector('input, textarea')).toBeNull();
   });
 
+  it('shows category and uses, flagging products pending review (AC-09)', async () => {
+    api.get.and.returnValue(of(makeProduct({ category: 'raw_material', canBuy: true, canSell: false, salePrice: '9.00' })));
+    const first = await open();
+    expect(first.el.textContent).toContain('Materia prima');
+    expect(first.el.textContent).toContain('No se vende');
+    expect(first.el.textContent).not.toContain('9.00'); // REV-01
+  });
+
+  it('flags products pending review as unclassified (AC-06, AC-09)', async () => {
+    api.get.and.returnValue(of(makeProduct({ category: null, needsReview: true })));
+    const { el } = await open();
+    expect(el.textContent).toContain('Sin clasificar');
+    expect(el.textContent).toContain('Por revisar');
+  });
+
   it('links to edit and back to the list (AC-13)', async () => {
     api.get.and.returnValue(of(makeProduct()));
     const { el } = await open();

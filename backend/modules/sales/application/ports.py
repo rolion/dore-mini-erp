@@ -14,8 +14,9 @@ from uuid import UUID
 class ProductInfo:
     id: UUID
     name: str
-    sale_price: Decimal
+    sale_price: Decimal | None
     active: bool
+    can_sell: bool = True
 
 
 @dataclass(frozen=True)

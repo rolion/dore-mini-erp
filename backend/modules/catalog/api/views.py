@@ -12,7 +12,12 @@ from modules.catalog.application.commands import (
 )
 from modules.catalog.application.queries import GetProduct, ListProducts
 from modules.catalog.domain.exceptions import ProductNotFound, ProductValidationError, StockHistoryLocked
-from modules.catalog.infrastructure.django.repositories import DjangoProductRepository, DjangoUnitRepository
+from modules.catalog.domain.product import CATEGORIES
+from modules.catalog.infrastructure.django.repositories import (
+    UNCLASSIFIED,
+    DjangoProductRepository,
+    DjangoUnitRepository,
+)
 from shared import module_gate, stock_history
 from shared.tenancy import company_id_from
 
@@ -57,6 +62,14 @@ def _parse_flag(raw: str | None, field: str) -> bool | None:
     raise ValidationError({field: ['Valor inválido: use "true" o "false".']})
 
 
+def _parse_category(raw: str | None) -> str | None:
+    if raw is None or raw == '':
+        return None
+    if raw == UNCLASSIFIED or raw in CATEGORIES:
+        return raw
+    raise ValidationError({'category': ['Categoría inválida.']})
+
+
 def _parse_active(raw: str | None) -> bool | None:
     return _parse_flag(raw, 'active')
 
@@ -67,7 +80,12 @@ class ProductListCreateView(APIView):
         active = _parse_active(request.query_params.get('active'))
         search = request.query_params.get('search', '').strip() or None
         tracks_stock = _parse_flag(request.query_params.get('tracks_stock'), 'tracks_stock')
-        products = ListProducts(_repository(request)).execute(search=search, active=active, tracks_stock=tracks_stock)
+        can_buy = _parse_flag(request.query_params.get('can_buy'), 'can_buy')
+        can_sell = _parse_flag(request.query_params.get('can_sell'), 'can_sell')
+        category = _parse_category(request.query_params.get('category'))
+        products = ListProducts(_repository(request)).execute(
+            search=search, active=active, tracks_stock=tracks_stock, can_buy=can_buy, can_sell=can_sell,
+            category=category)
         paginator = ProductPagination()
         page = paginator.paginate_queryset(products, request, view=self)
         return paginator.get_paginated_response(ProductSerializer(page, many=True).data)

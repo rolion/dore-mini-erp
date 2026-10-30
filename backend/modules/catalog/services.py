@@ -15,19 +15,40 @@ from modules.catalog.infrastructure.django.repositories import DjangoProductRepo
 class ProductForSale:
     id: UUID
     name: str
-    sale_price: Decimal
+    sale_price: Decimal | None
     active: bool
+    can_sell: bool = True
 
 
 def get_product_for_sale(company_id: UUID, product_id: UUID) -> ProductForSale | None:
     """El producto de la empresa con su nombre y precio vigentes, o `None` si no existe (o es de otra empresa).
 
-    La regla de "producto activo" la aplica quien vende, no la fachada.
+    Las reglas de "activo" y "se puede vender" las aplica quien vende, no la fachada.
     """
     product = DjangoProductRepository(company_id).get(product_id)
     if product is None:
         return None
-    return ProductForSale(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active)
+    return ProductForSale(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active,
+                          can_sell=product.can_sell)
+
+
+@dataclass(frozen=True)
+class ProductForPurchase:
+    id: UUID
+    name: str
+    active: bool
+    can_buy: bool
+
+
+def get_product_for_purchase(company_id: UUID, product_id: UUID) -> ProductForPurchase | None:
+    """El producto de la empresa con sus usos, o `None` si no existe (o es de otra empresa).
+
+    Una compra solo debe aceptar productos activos y comprables; esa regla la aplica quien compra.
+    """
+    product = DjangoProductRepository(company_id).get(product_id)
+    if product is None:
+        return None
+    return ProductForPurchase(id=product.id, name=product.name, active=product.active, can_buy=product.can_buy)
 
 
 @dataclass(frozen=True)

@@ -266,7 +266,7 @@ class ConcurrentAdjustmentTests(TransactionTestCase):
         set_enabled(self.company, [*DEFAULT_ENABLED_KEYS, 'inventory'])
         unit = client.post('/api/units/', {'name': 'Unidad', 'abbreviation': 'u'}, format='json').json()['id']
         self.product = UUID(client.post('/api/products/', {
-            'name': 'Harina', 'sale_price': '1.00', 'tracks_stock': True, 'base_unit_id': unit},
+            'name': 'Harina', 'sale_price': '1.00', 'category': 'raw_material', 'tracks_stock': True, 'base_unit_id': unit},
             format='json').json()['id'])
         self.warehouse = UUID(client.get('/api/warehouses/').json()['results'][0]['id'])
         client.post('/api/stock/openings/', {

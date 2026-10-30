@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { ModulesService } from '../../../../core/service/modules.service';
-import { Product, ProductApiError } from '../../models/product';
+import { Product, ProductApiError, categoryLabel } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 
 @Component({
@@ -27,6 +27,10 @@ export class ProductDetailComponent implements OnInit {
   /** Los datos de inventario se muestran solo cuando el módulo Inventario está habilitado. */
   get inventoryEnabled(): boolean {
     return this.modules.enabledKeysValue?.has('inventory') ?? false;
+  }
+
+  categoryName(product: Product): string {
+    return categoryLabel(product.category);
   }
 
   ngOnInit(): void {

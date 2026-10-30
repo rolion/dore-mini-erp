@@ -30,7 +30,12 @@ class ProductModel(models.Model):
     company_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=150)
     description = models.TextField(blank=True, default='')
-    sale_price = models.DecimalField(max_digits=12, decimal_places=2)
+    # Solo obligatorio si el producto se puede vender.
+    sale_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    # Productos existentes: vendibles, no comprables y sin clasificar hasta que se revisen.
+    category = models.CharField(max_length=20, null=True, blank=True)
+    can_buy = models.BooleanField(default=False)
+    can_sell = models.BooleanField(default=True)
     active = models.BooleanField(default=True)
     # Los productos existentes no controlan stock hasta configurarlos expresamente.
     tracks_stock = models.BooleanField(default=False)

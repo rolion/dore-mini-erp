@@ -4,13 +4,15 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ToastrService } from 'ngx-toastr';
-import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, merge, switchMap } from 'rxjs';
 import Swal from 'sweetalert2';
 import { ModulesService } from '../../../../core/service/modules.service';
-import { Product, ProductApiError } from '../../models/product';
+import { PRODUCT_CATEGORIES, Product, ProductApiError, ProductCategory, categoryLabel } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 
 export type StatusFilter = 'all' | 'active' | 'inactive';
+export type UseFilter = 'all' | 'buy' | 'sell';
+export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
 
 @Component({
   selector: 'app-product-list',
@@ -23,6 +25,9 @@ export class ProductListComponent implements OnInit {
   readonly messages = { emptyMessage: 'No hay productos', totalMessage: 'en total' };
   readonly searchControl = new FormControl('', { nonNullable: true });
   readonly statusControl = new FormControl<StatusFilter>('all', { nonNullable: true });
+  readonly useControl = new FormControl<UseFilter>('all', { nonNullable: true });
+  readonly categoryControl = new FormControl<CategoryFilter>('all', { nonNullable: true });
+  readonly categories = PRODUCT_CATEGORIES;
 
   rows: Product[] = [];
   total = 0;
@@ -50,6 +55,9 @@ export class ProductListComponent implements OnInit {
             .list({
               search: this.searchControl.value.trim(),
               active: this.activeFilter(),
+              canBuy: this.useControl.value === 'buy' ? true : undefined,
+              canSell: this.useControl.value === 'sell' ? true : undefined,
+              category: this.categoryControl.value === 'all' ? undefined : this.categoryControl.value,
               page: this.pageIndex + 1,
               pageSize: this.pageSize,
             })
@@ -71,11 +79,15 @@ export class ProductListComponent implements OnInit {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.goToFirstPageAndReload());
-    this.statusControl.valueChanges
+    merge(this.statusControl.valueChanges, this.useControl.valueChanges, this.categoryControl.valueChanges)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.goToFirstPageAndReload());
 
     this.reload$.next();
+  }
+
+  categoryName(product: Product): string {
+    return categoryLabel(product.category);
   }
 
   onPage(event: { offset: number }): void {
