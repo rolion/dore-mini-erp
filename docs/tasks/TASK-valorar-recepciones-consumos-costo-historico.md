@@ -1,10 +1,10 @@
 # TASK-valorar-recepciones-consumos-costo-historico: Valorar recepciones y consumos con costo histórico (PB-VAL-002)
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-valorar-recepciones-consumos-costo-historico
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/42
 **Fuente:** https://trello.com/c/vlUMdnzZ
 
 ## Historial de transiciones
@@ -12,6 +12,7 @@
 |---|---|---|---|
 | 2026-10-30 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta Trello PB-VAL-002 | delivery-start |
 | 2026-10-30 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Cruza Inventario, Compras, Ventas y Costeo; tablas nuevas; pantallas nuevas | delivery-start |
+| 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
 
 ## Investigación
 
