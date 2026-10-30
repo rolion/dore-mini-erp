@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import uuid4
 
 from django.test import TestCase
 
+from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from modules.purchases.domain.purchase import ItemDraft, Purchase
 from modules.purchases.infrastructure.django.models import SupplierModel
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
@@ -27,6 +28,25 @@ class PurchaseRepositoryTests(TestCase):
         self.assertEqual([i.product_id for i in loaded.items], [i.product_id for i in purchase.items])
         self.assertEqual((loaded.external_reference, loaded.notes, loaded.total), ('F-1', 'n', purchase.total))
         self.assertIsNotNone(saved.created_at)
+
+    def test_lifecycle_fields_round_trip(self):  # INV-08, EDGE-07, AC-10
+        now = datetime(2026, 10, 30, 12, 0, tzinfo=timezone.utc)
+        fresh = self.repo.get(self.repo.save(build(self.supplier.id)).id)
+        self.assertEqual((fresh.status, fresh.confirmed_at, fresh.cancelled_at, fresh.cancellation_reason),
+                         (PurchaseStatus.DRAFT, None, None, ''))
+        self.assertEqual((fresh.reception_status, fresh.payment_status),
+                         (ReceptionStatus.NOT_RECEIVED, PaymentStatus.UNPAID))
+        confirmed = build(self.supplier.id)
+        confirmed.confirm(now)
+        self.repo.save(confirmed)
+        loaded = self.repo.get(confirmed.id)
+        self.assertEqual((loaded.status, loaded.confirmed_at, loaded.editable), (PurchaseStatus.CONFIRMED, now, False))
+        loaded.cancel('Pedido duplicado', now)
+        self.repo.save(loaded)
+        cancelled = self.repo.get(confirmed.id)
+        self.assertEqual((cancelled.status, cancelled.cancelled_at, cancelled.cancellation_reason),
+                         (PurchaseStatus.CANCELLED, now, 'Pedido duplicado'))
+        self.assertEqual(cancelled.confirmed_at, now)
 
     def test_save_replaces_the_lines(self):  # AC-07
         purchase = build(self.supplier.id)

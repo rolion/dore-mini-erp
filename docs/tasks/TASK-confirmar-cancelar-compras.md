@@ -122,3 +122,6 @@ PR #31 listo para aprobación humana; no se mergea. Cambio sensible: base de dat
 
 ### Verificación con PostgreSQL (2026-10-30, tras el Quality Gate)
 `python manage.py test` completo con PostgreSQL real y una base de pruebas propia (`test_doredb_pbcom003`, para no chocar con otras sesiones que usan `test_doredb`): **1061 pruebas OK**, incluidas las de API de ciclo de vida, repositorio, adaptadores, `test_enforcement` y las guardas de límites. Cierra las verificaciones con BD que el Quality Gate dejó pendientes (excepto la concurrencia real de `select_for_update`, la revisión visual y `npm audit`). Observaciones: `sales.tests.test_repository::test_item_order_is_preserved` es intermitente (orden de líneas, módulo no tocado; falló 2 de 4 corridas aisladas y pasó en la completa); y ejecutar varias sesiones contra la misma `test_doredb` produce errores espurios. REV-01 y REV-02 siguen abiertos.
+
+### Resolución de hallazgos (2026-10-30)
+REV-01 y REV-02 resueltos (`Resolved`): prueba de ida y vuelta de los campos de ciclo de vida en `test_purchase_repository.py` y rutas `confirm/`/`cancel/` en `test_enforcement.py`. `manage.py test modules.purchases modules.modularity` con PostgreSQL: 232 OK. Solo se añadieron pruebas; sin cambios de código de producto. Pendiente: revisión visual, concurrencia real y `npm audit`.

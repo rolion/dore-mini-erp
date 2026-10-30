@@ -1,6 +1,6 @@
 # REV-2026-10-30-confirmar-cancelar-compras-01: Falta la prueba de ida y vuelta de los campos de ciclo de vida
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-confirmar-cancelar-compras.md (v1)
@@ -19,3 +19,6 @@ Una prueba con BD guarda y relee una compra confirmada y una cancelada y comprue
 
 ## Evidence
 Informe del Quality Gate (grep vacío). No bloquea: el mapper se revisó por lectura y la API lo ejercita.
+
+## Resolution
+Corregido por delivery-build (2026-10-30): prueba `test_lifecycle_fields_round_trip` en `test_purchase_repository.py`.

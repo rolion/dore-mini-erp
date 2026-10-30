@@ -28,6 +28,7 @@ ROUTES = [
     ('purchases', 'post', f'/api/suppliers/{ID}/activate/'), ('purchases', 'post', f'/api/suppliers/{ID}/deactivate/'),
     ('purchases', 'get', '/api/purchases/'), ('purchases', 'post', '/api/purchases/'),
     ('purchases', 'get', f'/api/purchases/{ID}/'), ('purchases', 'patch', f'/api/purchases/{ID}/'),
+    ('purchases', 'post', f'/api/purchases/{ID}/confirm/'), ('purchases', 'post', f'/api/purchases/{ID}/cancel/'),
     ('expenses', 'get', '/api/expenses/'), ('expenses', 'post', '/api/expenses/'),
     ('expenses', 'get', f'/api/expenses/{ID}/'), ('expenses', 'patch', f'/api/expenses/{ID}/'),
     ('expenses', 'post', f'/api/expenses/{ID}/void/'),
