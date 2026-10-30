@@ -84,7 +84,7 @@ describe('ProductListComponent', () => {
 
   it('shows the category, uses and the pending-review badge (UI-03)', () => {
     api.list.and.returnValue(of(page([
-      makeProduct({ id: 'a', name: 'Queso', category: 'raw_material', canBuy: true, canSell: false, salePrice: null }),
+      makeProduct({ id: 'a', name: 'Queso', category: 'raw_material', canBuy: true, canSell: false, salePrice: '9.99' }),
       makeProduct({ id: 'b', name: 'Viejo', category: null, needsReview: true }),
     ])));
     fixture.detectChanges();
@@ -95,6 +95,7 @@ describe('ProductListComponent', () => {
     expect(text).toContain('Compra');
     expect(text).toContain('Por revisar');
     expect(text).toContain('—');
+    expect(text).not.toContain('9.99'); // REV-01
   });
 
   it('links the "+" button to the new product form (AC-10)', () => {

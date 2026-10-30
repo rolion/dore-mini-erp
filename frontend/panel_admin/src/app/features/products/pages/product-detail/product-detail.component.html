@@ -37,7 +37,7 @@
               <dt class="col-sm-3">Se vende</dt>
               <dd class="col-sm-9">{{ p.canSell ? 'Sí' : 'No' }}</dd>
               <dt class="col-sm-3">Precio de venta</dt>
-              <dd class="col-sm-9">{{ p.salePrice ?? 'No se vende' }}</dd>
+              <dd class="col-sm-9">{{ p.canSell ? p.salePrice : 'No se vende' }}</dd>
               @if (inventoryEnabled) {
               <dt class="col-sm-3">Controla stock</dt>
               <dd class="col-sm-9">{{ p.tracksStock ? 'Sí' : 'No' }}</dd>

@@ -75,11 +75,8 @@ export class ProductFormComponent implements OnInit {
     });
     this.form.controls.canSell.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((sells) => {
       const price = this.form.controls.salePrice;
-      if (sells) {
-        price.addValidators(Validators.required);
-      } else {
-        price.removeValidators(Validators.required);
-      }
+      // Oculto y sin venta, el precio no debe bloquear el guardado (REV-02).
+      price.setValidators(sells ? [Validators.required, Validators.pattern(PRICE_PATTERN)] : []);
       price.updateValueAndValidity({ emitEvent: false });
     });
     this.form.controls.tracksStock.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((tracks) => {
@@ -131,7 +128,7 @@ export class ProductFormComponent implements OnInit {
       name: value.name.trim(),
       description: value.description.trim(),
       // Un producto que no se vende conserva el precio que ya tenía; sin precio se envía null.
-      salePrice: value.salePrice.trim() ? value.salePrice.trim().replace(',', '.') : null,
+      salePrice: this.priceToSend(value.salePrice, value.canSell),
       category: value.category as ProductCategory,
       canBuy: value.canBuy,
       canSell: value.canSell,
@@ -153,6 +150,14 @@ export class ProductFormComponent implements OnInit {
         this.showServerError(err);
       },
     });
+  }
+
+  private priceToSend(raw: string, sells: boolean): string | null {
+    const price = raw.trim();
+    if (!price || (!sells && !PRICE_PATTERN.test(price))) {
+      return null;
+    }
+    return price.replace(',', '.');
   }
 
   private fill(product: Product): void {

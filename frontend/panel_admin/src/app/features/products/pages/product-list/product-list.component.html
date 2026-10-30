@@ -100,7 +100,7 @@
               </ngx-datatable-column>
               <ngx-datatable-column name="Precio" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.salePrice ?? '—' }}
+                  {{ row.canSell ? (row.salePrice ?? '—') : '—' }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column name="Estado" [sortable]="false" [width]="120">

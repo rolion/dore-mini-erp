@@ -1,6 +1,6 @@
 # TASK-catalogo-usos-del-producto: Distinguir insumos, intermedios y productos vendibles (PB-CAT-001)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-catalogo-usos-del-producto
@@ -14,6 +14,7 @@
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas) | delivery-start |
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS con reservas (2 hallazgos Low); a la espera de aprobación humana | delivery-publish |
+| 2026-10-29 | PUBLISH → ENGINEERING → REVIEW | El usuario pidió corregir REV-01 y REV-02; corregidos | delivery-build |
 
 ## Investigación
 
@@ -86,6 +87,8 @@ Ver `docs/adr/ADR-catalogo-usos-del-producto-modelo-migracion-y-contrato.md`.
 **Estado de las pruebas (corrida propia, no es el Quality Gate).**
 - Backend con PostgreSQL: `python manage.py test` → 962 pruebas OK (incluye migración 0003→0004 y reversa). Se observó una intermitencia preexistente en `sales.tests.test_repository.test_item_order_is_preserved` (orden de ítems), reproducida también sin estos cambios; y dos pruebas de `modularity` fallaron una vez por orden/concurrencia y no se repitieron.
 - Frontend: Karma de `features/products` + `order-items` → 70 pruebas OK (se excluyó `app.component.spec.ts`, roto en `main` por `app.title`).
+
+**Correcciones tras Quality Gate ciclo 1.** REV-01: lista y detalle muestran «—» / «No se vende» cuando `canSell` es falso aunque se conserve el precio. REV-02: al apagar «Se puede vender» se quitan los validadores del precio oculto y un valor inválido se envía como `null`. Pruebas añadidas en los specs de `product-form`, `product-list` y `product-detail` (Karma productos + pedidos: 72 OK; lint OK).
 
 **Desviaciones respecto al plan.** Ninguna de alcance. Detalles: `Product.change_price` delega en `set_uses`; los fakes y fixtures de tests existentes recibieron `category`.
 

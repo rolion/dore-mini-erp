@@ -191,6 +191,18 @@ describe('ProductFormComponent', () => {
       expect(component.form.controls.salePrice.valid).toBeTrue();
     });
 
+    it('does not block saving when the hidden price is invalid and the product is not sold (REV-02)', async () => {
+      const { component } = await open('/pocketbiz/catalog/products/new');
+      api.create.and.returnValue(of(makeProduct()));
+      component.form.patchValue({ name: 'Queso', category: 'raw_material', salePrice: 'abc' });
+      component.form.controls.canSell.setValue(false);
+
+      expect(component.form.valid).toBeTrue();
+      component.onSubmit();
+
+      expect(api.create).toHaveBeenCalledOnceWith(jasmine.objectContaining({ salePrice: null, canSell: false }));
+    });
+
     it('creates an unsellable supply without price, buyable (AC-03)', async () => {
       const { component } = await open('/pocketbiz/catalog/products/new');
       api.create.and.returnValue(of(makeProduct()));
