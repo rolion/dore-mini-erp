@@ -1,6 +1,6 @@
 # TASK-compras-recepciones-parciales-completas: Registrar recepciones parciales o completas de compras (PB-COM-004)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-recepciones-parciales-completas
@@ -15,6 +15,7 @@
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escritos | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS condicionado (sin PostgreSQL ni revisión visual); REV-01 (Low) abierto | delivery-publish |
 
 ## Investigación
 
@@ -97,7 +98,7 @@ No se puede registrar ninguna recepción. Una compra confirmada solo muestra «S
 **Desviaciones del plan:** la lista de recepciones no incluye `warehouse` (solo el detalle); `GetPurchase` recibe opcionalmente el repositorio de recepciones. **Deuda:** revertir recepciones (H-03); `ListReceipts` no pagina en BD (pocas por compra).
 
 ## Review
-_Pendiente_
+Ciclo 1 (subagente aislado): **PASS condicionado**. Ejecutado: 95 pruebas de dominio/aplicación/límites OK, `check`, `makemigrations --check`, `bandit` sin hallazgos, `ng lint`, `ng build`, Karma 274 OK. No ejecutado: pruebas con PostgreSQL y revisión visual. Hallazgo: [REV-01](../reviews/REV-2026-10-30-compras-recepciones-parciales-completas-01.md) (Low, IMPLEMENTATION, abierto): falta `skipUnless` de PostgreSQL en `test_receipt_concurrency.py`.
 
 ## Publicación
-_Pendiente_
+PR #33 con descripción completa. Cambios sensibles: base de datos (migración `0004`) y dependencia `purchases → inventory` (ADR de integración). Falta de parte humana: correr las pruebas con PostgreSQL, revisión visual y aprobar el merge. No se mergea.
