@@ -5,7 +5,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Subject, catchError, finalize, switchMap } from 'rxjs';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
-import { PURCHASE_STATUS_LABELS, PurchaseApiError, PurchaseStatus, PurchaseSummary } from '../../models/purchase';
+import {
+  PURCHASE_STATUS_CLASSES,
+  PURCHASE_STATUS_LABELS,
+  PurchaseApiError,
+  PurchaseStatus,
+  PurchaseSummary,
+} from '../../models/purchase';
 import { PurchasesApiService } from '../../services/purchases-api.service';
 import { SuppliersApiService } from '../../services/suppliers-api.service';
 
@@ -85,6 +91,10 @@ export class PurchaseListComponent implements OnInit {
     }
     this.pageIndex = event.offset;
     this.reload$.next();
+  }
+
+  statusClass(status: PurchaseStatus): string {
+    return PURCHASE_STATUS_CLASSES[status];
   }
 
   statusLabel(status: PurchaseStatus): string {

@@ -1,6 +1,6 @@
 # TASK-confirmar-cancelar-compras: Confirmar o cancelar compras con reglas explícitas (PB-COM-003)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-confirmar-cancelar-compras
@@ -14,6 +14,7 @@
 | 2026-10-30 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,27 @@ Ver [ADR](../adr/ADR-confirmar-cancelar-compras-ciclo-de-vida-y-contrato.md).
 [PLAN-2026-10-30-confirmar-cancelar-compras](../plans/PLAN-2026-10-30-confirmar-cancelar-compras.md) (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Se implementó el plan v1 sin cambios de Specification.
+
+- **Dominio** (INV-01…08, 10): `PurchaseStatus` (`draft/confirmed/cancelled`), `ReceptionStatus`, `PaymentStatus`; `Purchase.confirm`, `Purchase.cancel`, `has_activity`, `can_cancel`, `allowed_actions`, `reference`; excepciones `PurchaseInvalidTransition` y `PurchaseCancellationBlocked`.
+- **Aplicación** (AC-01, 02, 04–09, 12): `ConfirmPurchase` (proveedor activo, bloqueo de fila, idempotente sin guardar) y `CancelPurchase`.
+- **Infraestructura**: campos nuevos en `PurchaseModel`, mapper y migración `0003_purchase_lifecycle` (aditiva, generada con `makemigrations`).
+- **API** (AC-01…AC-11): `POST /api/purchases/{id}/confirm/` y `/cancel/`; el detalle suma `reference`, estados, fechas, motivo y `allowed_actions`; 409 para cancelada→confirmar y cancelación bloqueada.
+- **Frontend** (AC-13…AC-18): modelos y servicio (`confirm`, `cancel`), `PurchaseConfirmDialogComponent` y `PurchaseCancelDialogComponent` (NgbModal, botón habilitado por motivo), detalle con pestaña «Resumen» y acciones según `allowed_actions`, badges por estado en lista y detalle, «editar» solo en borradores.
+- **Pantalla de referencia**: `product-detail` / `DeliveryDialogComponent`. Sin componentes compartidos nuevos; nota agregada a `design-system.md`.
+- **Documentación**: `modulos-implementados.md`, nota en `ddd.md`, `design-system.md`.
+
+**Pruebas escritas.** Backend: `test_purchase_lifecycle_domain.py`, `test_purchase_lifecycle_application.py`, `test_purchase_lifecycle_api.py` (+ `DETAIL_FIELDS` ampliado en `test_purchase_api.py`). Frontend: specs de servicio, detalle, lista y de los dos diálogos.
+
+**Verificación propia (no es el Quality Gate).** Dominio y aplicación del backend: 58 pruebas OK con `unittest`. `makemigrations --check`: sin cambios pendientes. Frontend: `npm run lint` OK, `ng build` OK, Karma de `features/purchases` 114/114 OK. **No se ejecutaron** las pruebas de API/repositorio con BD ni las guardas (`test_guards`, `test_enforcement`, `test_boundaries`): requieren PostgreSQL con `DATABASE_URL`, que está en `backend/.env` (no se lee por regla del proyecto) y no existe en el worktree.
+
+**Desviaciones respecto al plan.** Ninguna de alcance. Detalles: las pruebas de ciclo de vida están en archivos nuevos `test_purchase_lifecycle_*` (no en los existentes); no se añadió una prueba de migración propia, solo `makemigrations --check`.
+
+**Deuda técnica / notas.**
+- `app.component.spec.ts` (plantilla) no compila (`title` inexistente) y rompe `ng test` completo; se ejecutó Karma con un tsconfig temporal acotado al feature (eliminado). No se tocó por estar fuera de alcance.
+- Referencia interna derivada (H-01) y estados de recepción/pago preparatorios (H-02) quedan documentados en el ADR.
+- Para ejecutar el frontend en el worktree se enlazó temporalmente `node_modules` del repositorio principal (junction ignorado por git, ya retirado).
 
 ## Review
 _Pendiente_

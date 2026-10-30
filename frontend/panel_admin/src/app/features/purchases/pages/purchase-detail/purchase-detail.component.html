@@ -16,14 +16,27 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ purchase ? 'Compra del ' + (purchase.purchaseDate | date: 'dd/MM/yyyy') : 'Compra' }}</h4>
+            <h4>
+              {{ purchase ? 'Compra ' + purchase.reference : 'Compra' }}
+              @if (purchase; as p) {
+              <span class="badge-outline d-inline-block ms-2" [class]="statusClass(p.status)" data-testid="status-badge">{{ statusLabels[p.status] }}</span>
+              }
+            </h4>
           </div>
-          <div class="card-body">
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link active" role="tab" id="tab-summary" aria-selected="true"
+                aria-controls="panel-summary">Resumen</button>
+            </li>
+          </ul>
+          <div class="card-body" role="tabpanel" id="panel-summary" aria-labelledby="tab-summary">
             @if (loading) {
             <p class="m-4" data-testid="loading">Cargando…</p>
             }
             @if (purchase; as p) {
             <dl class="row m-4">
+              <dt class="col-sm-3">Referencia interna</dt>
+              <dd class="col-sm-9" data-testid="reference">{{ p.reference }}</dd>
               <dt class="col-sm-3">Proveedor</dt>
               <dd class="col-sm-9" data-testid="supplier">
                 {{ p.supplier.name }}
@@ -35,16 +48,30 @@
               <dd class="col-sm-9">{{ p.purchaseDate | date: 'dd/MM/yyyy' }}</dd>
               <dt class="col-sm-3">Referencia externa</dt>
               <dd class="col-sm-9">{{ p.externalReference || 'Sin referencia' }}</dd>
-              <dt class="col-sm-3">Notas</dt>
-              <dd class="col-sm-9">{{ p.notes || 'Sin notas' }}</dd>
               <dt class="col-sm-3">Estado</dt>
-              <dd class="col-sm-9"><div class="badge-outline col-orange d-inline-block">{{ statusLabels[p.status] }}</div></dd>
+              <dd class="col-sm-9" data-testid="status">{{ statusLabels[p.status] }}</dd>
+              <dt class="col-sm-3">Estado de recepción</dt>
+              <dd class="col-sm-9" data-testid="reception-status">{{ receptionLabels[p.receptionStatus] }}</dd>
+              <dt class="col-sm-3">Estado de pago</dt>
+              <dd class="col-sm-9" data-testid="payment-status">{{ paymentLabels[p.paymentStatus] }}</dd>
               <dt class="col-sm-3">Moneda</dt>
               <dd class="col-sm-9">{{ p.currency }}</dd>
+              <dt class="col-sm-3">Notas</dt>
+              <dd class="col-sm-9">{{ p.notes || 'Sin notas' }}</dd>
               <dt class="col-sm-3">Creada</dt>
               <dd class="col-sm-9">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
               <dt class="col-sm-3">Actualizada</dt>
               <dd class="col-sm-9">{{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              @if (p.status === 'confirmed' && p.confirmedAt) {
+              <dt class="col-sm-3">Confirmada el</dt>
+              <dd class="col-sm-9" data-testid="confirmed-at">{{ p.confirmedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              }
+              @if (p.status === 'cancelled') {
+              <dt class="col-sm-3">Cancelada el</dt>
+              <dd class="col-sm-9" data-testid="cancelled-at">{{ p.cancelledAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Motivo de cancelación</dt>
+              <dd class="col-sm-9" data-testid="cancel-reason">{{ p.cancellationReason }}</dd>
+              }
             </dl>
             <h5 class="mx-4">Productos</h5>
             <div class="table-responsive mx-4">
@@ -81,11 +108,31 @@
                 </tfoot>
               </table>
             </div>
-            <div class="m-4">
-              @if (p.editable) {
-              <a class="btn btn-primary" [routerLink]="['/pocketbiz/purchases', p.id, 'edit']">Editar</a>
+            <div class="m-4" data-testid="actions">
+              @if (can('edit')) {
+              <a class="btn btn-primary" data-testid="edit" [routerLink]="['/pocketbiz/purchases', p.id, 'edit']">Editar</a>
+              }
+              @if (can('confirm')) {
+              <button type="button" class="btn btn-success ms-2" data-testid="confirm" [disabled]="busy"
+                (click)="confirm()">{{ busy ? 'Procesando…' : 'Confirmar' }}</button>
+              }
+              @if (p.status === 'confirmed') {
+              <button type="button" class="btn btn-primary ms-2" data-testid="receive" disabled>Registrar recepción</button>
+              <button type="button" class="btn btn-primary ms-2" data-testid="pay" disabled>Registrar pago</button>
+              }
+              @if (can('cancel')) {
+              <button type="button" class="btn btn-outline-danger ms-2" data-testid="cancel" [disabled]="busy"
+                (click)="cancel()">Cancelar compra</button>
               }
               <a class="btn btn-light ms-2" routerLink="/pocketbiz/purchases">Volver</a>
+              @if (p.status === 'confirmed') {
+              <small class="form-text text-muted d-block mt-2" data-testid="confirmed-note">
+                Registrar recepción y pago: disponible próximamente. Confirmar no modifica las existencias; el stock cambia al recibir la mercadería.
+              </small>
+              @if (!can('cancel')) {
+              <small class="form-text text-muted d-block" data-testid="cancel-blocked">No se puede cancelar: ya tiene recepciones o pagos.</small>
+              }
+              }
             </div>
             }
           </div>

@@ -27,6 +27,14 @@ class PurchaseNotEditable(Exception):
     """La compra ya no está en borrador."""
 
 
+class PurchaseInvalidTransition(Exception):
+    """La transición pedida no es posible desde el estado actual (p. ej. confirmar una compra cancelada)."""
+
+
+class PurchaseCancellationBlocked(Exception):
+    """La compra ya tiene recepciones o pagos: no puede cancelarse."""
+
+
 class SupplierNotFound(Exception):
     def __init__(self, supplier_id: UUID):
         super().__init__(f'Proveedor {supplier_id} no encontrado.')

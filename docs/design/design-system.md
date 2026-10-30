@@ -152,6 +152,9 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 ### Detalle con historial embebido (referencia: `features/inventory/pages/stock-detail`)
 - Plantilla Detalle (`.card`, `h4` = nombre, `dl.row`) más acciones bajo los datos (la principal en `btn-primary`, una acción condicionada por regla de negocio que, si no aplica, se oculta y se explica con `small.text-muted`) y una sección `h5` con el historial: tabla Bootstrap apilada (`_inventory-table.scss`), 10 filas por página con `ngb-pagination`, vacío con mensaje (nunca error), y enlace «Ver detalle» a cada registro. Un saldo negativo se marca con texto («Negativo», `badge-outline col-red`) además del color `text-danger`.
 
+### Detalle con pestañas y acciones de ciclo de vida (referencia: `features/purchases/pages/purchase-detail`)
+- Plantilla Detalle con `nav-tabs` de Bootstrap simple bajo el `card-header` (pestaña «Resumen» y, más adelante, las de documentos relacionados) y badge de estado junto al título (`col-orange` borrador, `col-green` confirmada, `col-red` cancelada, siempre con texto). Las acciones salen de `allowed_actions` del servidor; una acción que aún no existe se muestra deshabilitada con `small.text-muted`. Confirmar y Cancelar abren diálogos `NgbModal` (`backdrop: 'static'`): el de confirmar resume el documento y avisa del bloqueo; el de cancelar mantiene el botón `btn-danger` deshabilitado hasta que el motivo recortado no esté vacío (máx. 500). Sin componente compartido nuevo.
+
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 

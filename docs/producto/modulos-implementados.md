@@ -161,4 +161,6 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - Sin proveedores activos aparece «Crear proveedor» (y «+ Nuevo proveedor» en el selector): se crea en un diálogo y queda seleccionado sin perder lo escrito.
 - Guardar crea o actualiza el **borrador**: no mueve stock ni crea gastos. No existen impuestos, descuentos ni costos adicionales. Un producto aparece una vez por compra; un borrador puede guardarse sin líneas (Confirmar, en otra historia, exigirá al menos una).
 - El nombre y la unidad del producto se copian al agregarlo y se conservan al editar el borrador aunque el catálogo cambie; un proveedor desactivado después debe reemplazarse para guardar.
-- **Detalle** (`/purchases/:id`): solo lectura, con «Editar» mientras sea borrador. Aún no hay Confirmar, Cancelar compra ni eliminar.
+- **Detalle** (`/purchases/:id`): pestaña «Resumen» con referencia interna, proveedor, fechas, estado documental, de recepción y de pago, productos, total y notas. Un borrador ofrece Editar, Confirmar y Cancelar compra.
+
+

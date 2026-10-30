@@ -1,8 +1,10 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from modules.purchases.domain.exceptions import PurchaseNotFound, PurchaseValidationError
+from modules.purchases.domain.enums import PurchaseStatus
 from modules.purchases.domain.purchase import UNSET, ItemDraft, Purchase
 from modules.purchases.domain.repositories import PurchaseRepository, SupplierRepository
 
@@ -106,4 +108,41 @@ class UpdatePurchase:
             raise PurchaseValidationError(_merge(exc.errors, extra)) from exc
         if extra:
             raise PurchaseValidationError(extra)
+        return self.purchases.save(purchase)
+
+
+def _load_locked(purchases: PurchaseRepository, purchase_id: UUID) -> Purchase:
+    purchase = purchases.get(purchase_id, for_update=True)
+    if purchase is None:
+        raise PurchaseNotFound(purchase_id)
+    return purchase
+
+
+class ConfirmPurchase:
+    """`draft -> confirmed`. Repetir la acción sobre una confirmada no cambia nada (idempotente)."""
+
+    def __init__(self, purchases: PurchaseRepository, suppliers: SupplierRepository):
+        self.purchases = purchases
+        self.suppliers = suppliers
+
+    def execute(self, purchase_id: UUID, now: datetime) -> Purchase:
+        purchase = _load_locked(self.purchases, purchase_id)
+        if purchase.status is PurchaseStatus.CONFIRMED:
+            return purchase
+        supplier = self.suppliers.get(purchase.supplier_id)
+        purchase.confirm(now, supplier_active=supplier is not None and supplier.active)
+        return self.purchases.save(purchase)
+
+
+class CancelPurchase:
+    """`draft|confirmed -> cancelled` con motivo. Repetir sobre una cancelada conserva motivo y fecha."""
+
+    def __init__(self, purchases: PurchaseRepository):
+        self.purchases = purchases
+
+    def execute(self, purchase_id: UUID, reason: object, now: datetime) -> Purchase:
+        purchase = _load_locked(self.purchases, purchase_id)
+        if purchase.status is PurchaseStatus.CANCELLED:
+            return purchase
+        purchase.cancel(reason, now)
         return self.purchases.save(purchase)
