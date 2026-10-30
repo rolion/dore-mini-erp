@@ -2,10 +2,10 @@ import threading
 import time
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from unittest import mock
+from unittest import mock, skipUnless
 from uuid import uuid4
 
-from django.db import close_old_connections, transaction
+from django.db import close_old_connections, connection, transaction
 from django.test import TransactionTestCase
 
 from modules.purchases.application.ports import Actor, StockEntryMovement  # noqa: F401
@@ -23,6 +23,7 @@ TODAY = date(2026, 10, 30)
 SLOW_SAVE = 0.6
 
 
+@skipUnless(connection.vendor == 'postgresql', 'El bloqueo de fila requiere PostgreSQL.')
 class ReceiptRowLockTests(TransactionTestCase):
     """AC-17 con conexiones reales: el bloqueo de la compra serializa dos recepciones que juntas excederían lo comprado."""
 

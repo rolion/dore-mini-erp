@@ -1,6 +1,6 @@
 # REV-2026-10-30-compras-recepciones-parciales-completas-01: La prueba de concurrencia no se omite fuera de PostgreSQL
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-compras-recepciones-parciales-completas.md (v1)
