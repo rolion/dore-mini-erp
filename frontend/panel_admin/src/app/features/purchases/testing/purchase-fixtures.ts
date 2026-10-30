@@ -23,6 +23,13 @@ export function makePurchase(overrides: Partial<Purchase> = {}): Purchase {
     status: 'draft',
     currency: 'BOB',
     editable: true,
+    reference: 'COM-1A2B3C4D',
+    receptionStatus: 'not_received',
+    paymentStatus: 'unpaid',
+    confirmedAt: null,
+    cancelledAt: null,
+    cancellationReason: '',
+    allowedActions: ['edit', 'confirm', 'cancel'],
     items: [makePurchaseItem()],
     total: '25.00',
     createdAt: '2026-10-29T10:00:00Z',
@@ -43,4 +50,25 @@ export function makePurchaseSummary(overrides: Partial<PurchaseSummary> = {}): P
     itemsCount: 1,
     ...overrides,
   };
+}
+
+export function makeConfirmedPurchase(overrides: Partial<Purchase> = {}): Purchase {
+  return makePurchase({
+    status: 'confirmed',
+    editable: false,
+    confirmedAt: '2026-10-30T12:00:00Z',
+    allowedActions: ['cancel'],
+    ...overrides,
+  });
+}
+
+export function makeCancelledPurchase(overrides: Partial<Purchase> = {}): Purchase {
+  return makePurchase({
+    status: 'cancelled',
+    editable: false,
+    cancelledAt: '2026-10-31T09:30:00Z',
+    cancellationReason: 'Pedido duplicado',
+    allowedActions: [],
+    ...overrides,
+  });
 }

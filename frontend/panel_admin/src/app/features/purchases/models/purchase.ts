@@ -4,10 +4,36 @@ export const MAX_ITEMS = 200;
 export const REFERENCE_MAX_LENGTH = 100;
 export const NOTES_MAX_LENGTH = 2000;
 
-export type PurchaseStatus = 'draft';
+export const CANCEL_REASON_MAX_LENGTH = 500;
+
+export type PurchaseStatus = 'draft' | 'confirmed' | 'cancelled';
+export type ReceptionStatus = 'not_received' | 'partial' | 'received';
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
+/** Acciones que el servidor permite sobre la compra; la interfaz solo las refleja. */
+export type PurchaseAction = 'edit' | 'confirm' | 'cancel';
 
 export const PURCHASE_STATUS_LABELS: Readonly<Record<PurchaseStatus, string>> = {
   draft: 'Borrador',
+  confirmed: 'Confirmada',
+  cancelled: 'Cancelada',
+};
+
+export const PURCHASE_STATUS_CLASSES: Readonly<Record<PurchaseStatus, string>> = {
+  draft: 'col-orange',
+  confirmed: 'col-green',
+  cancelled: 'col-red',
+};
+
+export const RECEPTION_STATUS_LABELS: Readonly<Record<ReceptionStatus, string>> = {
+  not_received: 'Sin recibir',
+  partial: 'Recibida parcialmente',
+  received: 'Recibida',
+};
+
+export const PAYMENT_STATUS_LABELS: Readonly<Record<PaymentStatus, string>> = {
+  unpaid: 'Sin pagar',
+  partial: 'Pago parcial',
+  paid: 'Pagada',
 };
 
 export interface PurchaseSupplier {
@@ -39,6 +65,14 @@ export interface Purchase {
   status: PurchaseStatus;
   currency: string;
   editable: boolean;
+  /** Referencia interna provisional (`COM-XXXXXXXX`). */
+  reference: string;
+  receptionStatus: ReceptionStatus;
+  paymentStatus: PaymentStatus;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
+  cancellationReason: string;
+  allowedActions: PurchaseAction[];
   items: PurchaseItem[];
   total: string;
   createdAt: string;
@@ -98,6 +132,13 @@ export interface PurchaseDto {
   status: PurchaseStatus;
   currency: string;
   editable: boolean;
+  reference: string;
+  reception_status: ReceptionStatus;
+  payment_status: PaymentStatus;
+  confirmed_at: string | null;
+  cancelled_at: string | null;
+  cancellation_reason: string;
+  allowed_actions: PurchaseAction[];
   items: PurchaseItemDto[];
   total: string;
   created_at: string;

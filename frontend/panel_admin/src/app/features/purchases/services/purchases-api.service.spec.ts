@@ -23,6 +23,13 @@ const DTO: PurchaseDto = {
   status: 'draft',
   currency: 'BOB',
   editable: true,
+  reference: 'COM-1A2B3C4D',
+  reception_status: 'not_received',
+  payment_status: 'unpaid',
+  confirmed_at: null,
+  cancelled_at: null,
+  cancellation_reason: '',
+  allowed_actions: ['edit', 'confirm', 'cancel'],
   items: [
     {
       id: 'i-1',
@@ -155,5 +162,41 @@ describe('PurchasesApiService', () => {
       expect(error?.message).withContext(String(status)).toBe(message);
       expect(error?.status).toBe(status);
     }
+  });
+
+  it('confirms with a POST and maps the lifecycle fields', () => {
+    let result = makePurchase();
+    service.confirm('c-1').subscribe((purchase) => (result = purchase));
+    const req = http.expectOne((r) => r.url.endsWith('/purchases/c-1/confirm/'));
+    expect(req.request.method).toBe('POST');
+    req.flush({ ...DTO, status: 'confirmed', editable: false, confirmed_at: '2026-10-30T12:00:00Z', allowed_actions: ['cancel'] });
+    expect(result.status).toBe('confirmed');
+    expect(result.confirmedAt).toBe('2026-10-30T12:00:00Z');
+    expect(result.allowedActions).toEqual(['cancel']);
+  });
+
+  it('cancels sending the reason', () => {
+    service.cancel('c-1', 'Pedido duplicado').subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/purchases/c-1/cancel/'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ reason: 'Pedido duplicado' });
+    req.flush(DTO);
+  });
+
+  it('turns lifecycle 400 and 409 responses into readable messages', () => {
+    const errors: PurchaseApiError[] = [];
+    service.confirm('c-1').subscribe({ error: (e: PurchaseApiError) => errors.push(e) });
+    http.expectOne((r) => r.url.endsWith('/confirm/')).flush(
+      { items: ['La compra necesita al menos un producto.'], supplier_id: ['Selecciona un proveedor activo.'] },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    service.cancel('c-1', 'x').subscribe({ error: (e: PurchaseApiError) => errors.push(e) });
+    http.expectOne((r) => r.url.endsWith('/cancel/')).flush(
+      { detail: 'No se puede cancelar: la compra ya tiene recepciones o pagos registrados.' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    expect(errors[0].message).toBe('La compra necesita al menos un producto. Selecciona un proveedor activo.');
+    expect(errors[1].status).toBe(409);
+    expect(errors[1].message).toContain('recepciones o pagos');
   });
 });

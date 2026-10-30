@@ -64,6 +64,21 @@ describe('PurchaseListComponent', () => {
     expect(hrefs).toContain('/pocketbiz/purchases/c-1/edit');
   });
 
+  it('shows confirmed and cancelled purchases with their badge and without an edit link (AC-18)', async () => {
+    await setup({}, page([
+      makePurchaseSummary({ id: 'c-2', status: 'confirmed' }),
+      makePurchaseSummary({ id: 'c-3', status: 'cancelled' }),
+    ]));
+    expect(text()).toContain('Confirmada');
+    expect(text()).toContain('Cancelada');
+    const badges = fixture.debugElement.queryAll(By.css('.badge-outline')).map((b) => (b.nativeElement as HTMLElement).className);
+    expect(badges.some((c) => c.includes('col-green'))).toBeTrue();
+    expect(badges.some((c) => c.includes('col-red'))).toBeTrue();
+    const hrefs = fixture.debugElement.queryAll(By.css('a')).map((a) => (a.nativeElement as HTMLAnchorElement).getAttribute('href'));
+    expect(hrefs).not.toContain('/pocketbiz/purchases/c-2/edit');
+    expect(hrefs).not.toContain('/pocketbiz/purchases/c-3/edit');
+  });
+
   it('shows the empty message (AC-13)', async () => {
     await setup({}, page([]));
     expect(text()).toContain('Aún no hay compras');

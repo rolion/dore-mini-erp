@@ -6,12 +6,18 @@ from uuid import UUID, uuid4
 
 from shared.domain.money import DECIMALS, MONEY_MAX, NEGATIVE, TOO_LARGE, InvalidMoney, parse_money
 
-from .enums import PurchaseStatus
-from .exceptions import PurchaseNotEditable, PurchaseValidationError
+from .enums import PaymentStatus, PurchaseStatus, ReceptionStatus
+from .exceptions import (
+    PurchaseCancellationBlocked,
+    PurchaseInvalidTransition,
+    PurchaseNotEditable,
+    PurchaseValidationError,
+)
 
 CURRENCY = 'BOB'
 REFERENCE_MAX_LENGTH = 100
 NOTES_MAX_LENGTH = 2000
+REASON_MAX_LENGTH = 500
 MAX_ITEMS = 200
 QUANTITY_MAX = Decimal('99999999.999')
 _QUANTITY_STEP = Decimal('0.001')
@@ -205,6 +211,12 @@ class Purchase:
     items: list[PurchaseItem] = field(default_factory=list)
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    confirmed_at: datetime | None = None
+    cancelled_at: datetime | None = None
+    cancellation_reason: str = ''
+    # Los mueven las tasks de recepción y pago; hoy nada los cambia (ADR confirmar-cancelar-compras).
+    reception_status: ReceptionStatus = ReceptionStatus.NOT_RECEIVED
+    payment_status: PaymentStatus = PaymentStatus.UNPAID
 
     @classmethod
     def create(cls, supplier_id: object, purchase_date: object, external_reference: object = '',
@@ -233,6 +245,57 @@ class Purchase:
     def ensure_editable(self) -> None:
         if not self.editable:
             raise PurchaseNotEditable()
+
+    @property
+    def reference(self) -> str:
+        """Referencia interna provisional derivada del id (la numeración correlativa es otra task)."""
+        return f'COM-{self.id.hex[:8].upper()}'
+
+    @property
+    def has_activity(self) -> bool:
+        return (self.reception_status is not ReceptionStatus.NOT_RECEIVED
+                or self.payment_status is not PaymentStatus.UNPAID)
+
+    @property
+    def can_cancel(self) -> bool:
+        if self.status is PurchaseStatus.DRAFT:
+            return True
+        return self.status is PurchaseStatus.CONFIRMED and not self.has_activity
+
+    @property
+    def allowed_actions(self) -> list[str]:
+        if self.status is PurchaseStatus.DRAFT:
+            return ['edit', 'confirm', 'cancel']
+        return ['cancel'] if self.can_cancel else []
+
+    # --- ciclo de vida ----------------------------------------------------------------------------------------
+
+    def confirm(self, now: datetime, supplier_active: bool = True) -> None:
+        """`draft -> confirmed`. El proveedor activo lo informa quien lo conoce (capa de aplicación)."""
+        if self.status is not PurchaseStatus.DRAFT:
+            raise PurchaseInvalidTransition('Solo un borrador puede confirmarse.')
+        errors: dict[str, object] = {}
+        if not supplier_active:
+            errors['supplier_id'] = ['Selecciona un proveedor activo.']
+        if not self.items:
+            errors['items'] = ['La compra necesita al menos un producto.']
+        if errors:
+            raise PurchaseValidationError(errors)
+        self.status = PurchaseStatus.CONFIRMED
+        self.confirmed_at = now
+
+    def cancel(self, reason: object, now: datetime) -> None:
+        """`draft|confirmed -> cancelled`, con motivo y sin recepciones ni pagos."""
+        if self.status is PurchaseStatus.CANCELLED:
+            raise PurchaseInvalidTransition('La compra ya está cancelada.')
+        text = _text(reason, 'reason', 'El motivo de cancelación', REASON_MAX_LENGTH)
+        if not text:
+            raise _fail('reason', 'El motivo de cancelación es obligatorio.')
+        if self.has_activity:
+            raise PurchaseCancellationBlocked()
+        self.status = PurchaseStatus.CANCELLED
+        self.cancelled_at = now
+        self.cancellation_reason = text
 
     # --- edición ----------------------------------------------------------------------------------------------
 

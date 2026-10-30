@@ -1,0 +1,21 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">Cancelar compra</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    <p class="mb-3" data-testid="cancel-info">
+      La compra quedará cancelada y en solo lectura.
+      @if (purchase?.status === 'confirmed') { Se cancela sin recepciones ni pagos registrados. }
+    </p>
+    <div class="form-group">
+      <label for="cancel-reason">Motivo de la cancelación <span class="text-danger">*</span></label>
+      <textarea id="cancel-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="maxLength"></textarea>
+      <small class="form-text text-muted" data-testid="counter">{{ form.controls.reason.value.length }} / {{ maxLength }}</small>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-danger" data-testid="cancel-purchase" [disabled]="!canSubmit">Cancelar compra</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Volver</button>
+  </div>
+</form>

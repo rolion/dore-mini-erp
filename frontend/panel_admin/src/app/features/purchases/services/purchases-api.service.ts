@@ -59,6 +59,13 @@ function toPurchase(dto: PurchaseDto): Purchase {
     status: dto.status,
     currency: dto.currency,
     editable: dto.editable,
+    reference: dto.reference,
+    receptionStatus: dto.reception_status,
+    paymentStatus: dto.payment_status,
+    confirmedAt: dto.confirmed_at,
+    cancelledAt: dto.cancelled_at,
+    cancellationReason: dto.cancellation_reason,
+    allowedActions: dto.allowed_actions,
     items: dto.items.map(toItem),
     total: dto.total,
     createdAt: dto.created_at,
@@ -136,6 +143,25 @@ function toApiError(err: HttpErrorResponse): PurchaseApiError {
   return new PurchaseApiError(GENERIC_ERROR_MESSAGE, err.status);
 }
 
+/** Texto legible de un 400 de confirmar/cancelar: une todos los mensajes (`reason`, `items`, `supplier_id`). */
+function actionValidationMessage(body: unknown): string {
+  if (!body || typeof body !== 'object') return VALIDATION_ERROR_MESSAGE;
+  const parts = Object.values(body as Record<string, unknown>).flatMap((value) =>
+    Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [],
+  );
+  return parts.length ? parts.join(' ') : VALIDATION_ERROR_MESSAGE;
+}
+
+/** Errores de las acciones de ciclo de vida: el 409 trae el motivo en `detail`. */
+function toActionError(err: HttpErrorResponse): PurchaseApiError {
+  if (err.status === 400) return new PurchaseApiError(actionValidationMessage(err.error), 400);
+  if (err.status === 409) {
+    const detail = (err.error as { detail?: unknown } | null)?.detail;
+    return new PurchaseApiError(typeof detail === 'string' ? detail : NOT_EDITABLE_MESSAGE, 409);
+  }
+  return toApiError(err);
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -166,10 +192,22 @@ export class PurchasesApiService {
     return this.request(this.http.patch<PurchaseDto>(`${this.baseUrl}${id}/`, toBody(input)));
   }
 
-  private request(source: Observable<PurchaseDto>): Observable<Purchase> {
+  /** Confirma el borrador: lo bloquea; repetirlo devuelve la compra sin cambios. */
+  confirm(id: string): Observable<Purchase> {
+    return this.request(this.http.post<PurchaseDto>(`${this.baseUrl}${id}/confirm/`, {}), toActionError);
+  }
+
+  cancel(id: string, reason: string): Observable<Purchase> {
+    return this.request(this.http.post<PurchaseDto>(`${this.baseUrl}${id}/cancel/`, { reason }), toActionError);
+  }
+
+  private request(
+    source: Observable<PurchaseDto>,
+    toError: (err: HttpErrorResponse) => PurchaseApiError = toApiError,
+  ): Observable<Purchase> {
     return source.pipe(
       map(toPurchase),
-      catchError((err: HttpErrorResponse) => throwError(() => toApiError(err))),
+      catchError((err: HttpErrorResponse) => throwError(() => toError(err))),
     );
   }
 }

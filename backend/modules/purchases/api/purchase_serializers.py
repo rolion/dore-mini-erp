@@ -36,6 +36,12 @@ class PurchaseInputSerializer(serializers.Serializer):
     items = PurchaseItemInputSerializer(many=True, required=False)
 
 
+class CancelPurchaseSerializer(serializers.Serializer):
+    """Valida forma y tipos; la regla del motivo (obligatorio, ≤ 500) la aplica el dominio."""
+
+    reason = serializers.CharField(allow_blank=True, allow_null=True, required=False)
+
+
 def money(value) -> str:
     return f'{value:.2f}'
 
@@ -59,6 +65,13 @@ def purchase_representation(detail) -> dict:
         'status': purchase.status.value,
         'currency': CURRENCY,
         'editable': purchase.editable,
+        'reference': purchase.reference,
+        'reception_status': purchase.reception_status.value,
+        'payment_status': purchase.payment_status.value,
+        'confirmed_at': purchase.confirmed_at,
+        'cancelled_at': purchase.cancelled_at,
+        'cancellation_reason': purchase.cancellation_reason,
+        'allowed_actions': purchase.allowed_actions,
         'items': [{
             'id': item.id,
             'product_id': item.product_id,

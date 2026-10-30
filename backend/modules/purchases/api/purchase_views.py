@@ -1,30 +1,54 @@
 from uuid import UUID
 
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.purchases.application.purchase_commands import CreatePurchase, ItemInput, UpdatePurchase
+from modules.purchases.application.purchase_commands import (
+    CancelPurchase,
+    ConfirmPurchase,
+    CreatePurchase,
+    ItemInput,
+    UpdatePurchase,
+)
 from modules.purchases.application.purchase_queries import GetPurchase, ListPurchases
-from modules.purchases.domain.exceptions import PurchaseNotEditable, PurchaseNotFound, PurchaseValidationError
+from modules.purchases.domain.exceptions import (
+    PurchaseCancellationBlocked,
+    PurchaseInvalidTransition,
+    PurchaseNotEditable,
+    PurchaseNotFound,
+    PurchaseValidationError,
+)
 from modules.purchases.infrastructure.adapters import ProductCatalogAdapter
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
 from modules.purchases.infrastructure.django.repositories import DjangoSupplierRepository
 from shared.tenancy import company_id_from
 
 from .pagination import SupplierPagination
-from .purchase_serializers import PurchaseInputSerializer, purchase_representation, summary_representation
+from .purchase_serializers import (
+    CancelPurchaseSerializer,
+    PurchaseInputSerializer,
+    purchase_representation,
+    summary_representation,
+)
 
 PURCHASE_NOT_FOUND = 'Compra no encontrada.'
 NOT_EDITABLE = 'La compra ya no admite cambios.'
+CANCELLATION_BLOCKED = 'No se puede cancelar: la compra ya tiene recepciones o pagos registrados.'
+CANCELLED_NOT_CONFIRMABLE = 'Una compra cancelada no puede confirmarse.'
 REQUIRED_MODULES = ('purchases',)
 
 
 class NotEditable(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = NOT_EDITABLE
+
+
+class Conflict(APIException):
+    status_code = status.HTTP_409_CONFLICT
 
 
 def _purchases(request) -> DjangoPurchaseRepository:
@@ -54,6 +78,10 @@ def _run(callable_, **kwargs):
         raise NotFound(PURCHASE_NOT_FOUND) from exc
     except PurchaseNotEditable as exc:
         raise NotEditable() from exc
+    except PurchaseCancellationBlocked as exc:
+        raise Conflict(CANCELLATION_BLOCKED) from exc
+    except PurchaseInvalidTransition as exc:
+        raise Conflict(CANCELLED_NOT_CONFIRMABLE) from exc
 
 
 def _detail(request, purchase):
@@ -98,4 +126,24 @@ class PurchaseDetailView(APIView):
                                   ProductCatalogAdapter(company_id_from(request)))
         data = {k: v for k, v in serializer.validated_data.items() if k != 'items'}
         purchase = _run(use_case.execute, purchase_id=purchase_id, **data, **_items(serializer.validated_data))
+        return Response(_detail(request, purchase))
+
+
+class PurchaseConfirmView(APIView):
+    required_modules = REQUIRED_MODULES
+
+    def post(self, request, purchase_id):
+        use_case = ConfirmPurchase(_purchases(request), _suppliers(request))
+        purchase = _run(use_case.execute, purchase_id=purchase_id, now=timezone.now())
+        return Response(_detail(request, purchase))
+
+
+class PurchaseCancelView(APIView):
+    required_modules = REQUIRED_MODULES
+
+    def post(self, request, purchase_id):
+        serializer = CancelPurchaseSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        purchase = _run(CancelPurchase(_purchases(request)).execute, purchase_id=purchase_id,
+                        reason=serializer.validated_data.get('reason'), now=timezone.now())
         return Response(_detail(request, purchase))
