@@ -108,7 +108,7 @@ No aplica según veredicto.
 **Deuda técnica.** `app.component.spec.ts` roto en `main` (impide `npm test` completo). La búsqueda por referencia interna no usa índice (`id::text`).
 
 ## Review
-Revisión inline (aislamiento procedimental). Sin hallazgos Critical/High/Medium; Low sin REV: colores de badge distintos del DDR. No ejecutado: PostgreSQL, npm audit, revisión visual. Detalle en el PR #39.
+Revisión inline (aislamiento procedimental). Sin hallazgos Critical/High/Medium. **Pruebas con PostgreSQL: suite completa 1200 OK.** **Revisión visual en navegador integrado** (BD desechable, ya eliminada): se encontró y corrigió un defecto propio (columnas recortadas con `columnMode="force"`; ahora `flex` con anchos mínimos). Verificado: tabla con badges y saldo, filtros combinados por URL (recibida + pago pendiente = 2 compras), búsqueda, vacío con filtros aplicados, móvil 375 px sin desbordamiento de página (la tabla se desplaza dentro de su contenedor), tema oscuro por clases de la plantilla. Low sin REV: colores de badge distintos del DDR. No ejecutado: npm audit, contraste con herramienta.
 
 ## Publicación
-PR #39 listo para revisión humana; falta correr la suite con PostgreSQL y la revisión visual. No se mergea.
+PR #39 listo para revisión humana. No se mergea.

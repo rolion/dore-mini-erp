@@ -119,29 +119,29 @@
               <a class="btn btn-primary" routerLink="/pocketbiz/purchases/new" data-testid="empty-new">Nueva compra</a>
             </div>
             } @else {
-            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
-              <ngx-datatable-column name="Referencia" [sortable]="false" [width]="160">
+              <ngx-datatable-column name="Referencia" [sortable]="false" [flexGrow]="1.2" [minWidth]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
+                  <a class="fw-bold text-nowrap" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
                   @if (row.externalReference) {
                   <small class="d-block text-muted">{{ row.externalReference }}</small>
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Fecha" [sortable]="false" [width]="110">
+              <ngx-datatable-column name="Fecha" [sortable]="false" [flexGrow]="1" [minWidth]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.purchaseDate | date: 'dd/MM/yyyy' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Proveedor" [sortable]="false" [width]="200">
+              <ngx-datatable-column name="Proveedor" [sortable]="false" [flexGrow]="1.5" [minWidth]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.supplier.name || '—' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Total" [sortable]="false" [width]="120" headerClass="text-end" cellClass="text-end">
+              <ngx-datatable-column name="Total" [sortable]="false" [flexGrow]="1" [minWidth]="105" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span class="d-block text-end text-nowrap">{{ row.total | money }}</span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Recepción" [sortable]="false" [width]="170">
+              <ngx-datatable-column name="Recepción" [sortable]="false" [flexGrow]="1.4" [minWidth]="165">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.receptionStatus; as reception) {
                   <div class="badge-outline" data-testid="reception-badge" [class]="receptionClass(reception)">{{ receptionLabel(reception) }}</div>
@@ -150,12 +150,12 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [width]="110">
+              <ngx-datatable-column name="Estado" [sortable]="false" [flexGrow]="1" [minWidth]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <div class="badge-outline" [class]="statusClass(row.status)">{{ statusLabel(row.status) }}</div>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Pago" [sortable]="false" [width]="130">
+              <ngx-datatable-column name="Pago" [sortable]="false" [flexGrow]="1" [minWidth]="128">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.paymentStatus; as payment) {
                   <div class="badge-outline" data-testid="payment-badge" [class]="paymentClass(payment)">{{ paymentLabel(payment) }}</div>
@@ -164,7 +164,7 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Saldo" [sortable]="false" [width]="120" headerClass="text-end" cellClass="text-end">
+              <ngx-datatable-column name="Saldo" [sortable]="false" [flexGrow]="1" [minWidth]="100" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.balance !== null) {
                   <span class="d-block text-end text-nowrap" data-testid="balance">{{ row.balance | money }}</span>
@@ -173,7 +173,7 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="140">
+              <ngx-datatable-column name="Acciones" [sortable]="false" [flexGrow]="0.6" [minWidth]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
                     <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/purchases', row.id]"
