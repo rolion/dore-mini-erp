@@ -1,6 +1,6 @@
 # REV-2026-10-29-catalogo-usos-del-producto-02: Precio inválido oculto bloquea el guardado sin mensaje visible
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-catalogo-usos-del-producto.md (v1)

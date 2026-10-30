@@ -1,6 +1,6 @@
 # REV-2026-10-29-catalogo-usos-del-producto-01: La lista y el detalle muestran el precio de productos no vendibles
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-29-catalogo-usos-del-producto.md (v1)

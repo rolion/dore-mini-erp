@@ -1,6 +1,6 @@
 # TASK-catalogo-usos-del-producto: Distinguir insumos, intermedios y productos vendibles (PB-CAT-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-catalogo-usos-del-producto
@@ -15,6 +15,7 @@
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS con reservas (2 hallazgos Low); a la espera de aprobación humana | delivery-publish |
 | 2026-10-29 | PUBLISH → ENGINEERING → REVIEW | El usuario pidió corregir REV-01 y REV-02; corregidos | delivery-build |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 2: PASS; REV-01 y REV-02 resueltos; a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -101,6 +102,8 @@ Ver `docs/adr/ADR-catalogo-usos-del-producto-modelo-migracion-y-contrato.md`.
 - `npm audit`: no ejecutable (sin `package-lock.json`). Revisión visual: **no verificada**.
 - Conformidad: AC-01..AC-10, INV, EDGE, API y UI verificados con pruebas ejecutadas; sin scope creep; límites DDD respetados.
 - Hallazgos abiertos (Low, IMPLEMENTATION): `docs/reviews/REV-2026-10-29-catalogo-usos-del-producto-01.md` (precio conservado visible en lista/detalle de un producto no vendible), `...-02.md` (precio oculto con patrón inválido bloquea Guardar sin mensaje al apagar «Se puede vender»).
+
+**Quality Gate ciclo 2 (subagente aislado): PASS.** REV-01 y REV-02 verificados y marcados Resolved; sin hallazgos nuevos. Backend 962 pruebas (solo intermitencias preexistentes de `sales.test_repository` y `modularity`), `makemigrations --check` sin cambios; lint y build OK; Karma `features/` 633 OK. Revisión visual en navegador: no verificada.
 
 ## Publicación
 PR listo para aprobación humana (no se mergea desde el flujo). Involucra ADR y migración de base de datos: requiere aprobación humana explícita. Reservas y hallazgos Low en `## Review`.
