@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-catalogo-usos-del-producto
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/29
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
