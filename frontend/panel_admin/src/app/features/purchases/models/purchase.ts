@@ -10,7 +10,7 @@ export type PurchaseStatus = 'draft' | 'confirmed' | 'cancelled';
 export type ReceptionStatus = 'not_received' | 'partial' | 'received';
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 /** Acciones que el servidor permite sobre la compra; la interfaz solo las refleja. */
-export type PurchaseAction = 'edit' | 'confirm' | 'cancel' | 'receive';
+export type PurchaseAction = 'edit' | 'confirm' | 'cancel' | 'receive' | 'pay';
 
 export const PURCHASE_STATUS_LABELS: Readonly<Record<PurchaseStatus, string>> = {
   draft: 'Borrador',
@@ -28,6 +28,12 @@ export const RECEPTION_STATUS_LABELS: Readonly<Record<ReceptionStatus, string>> 
   not_received: 'Sin recibir',
   partial: 'Recibida parcialmente',
   received: 'Recibida',
+};
+
+export const PAYMENT_STATUS_CLASSES: Readonly<Record<PaymentStatus, string>> = {
+  unpaid: 'col-grey',
+  partial: 'col-orange',
+  paid: 'col-green',
 };
 
 export const PAYMENT_STATUS_LABELS: Readonly<Record<PaymentStatus, string>> = {
@@ -78,6 +84,9 @@ export interface Purchase {
   allowedActions: PurchaseAction[];
   items: PurchaseItem[];
   total: string;
+  /** Suma de pagos confirmados y saldo pendiente (texto decimal; el servidor los calcula). */
+  paidTotal: string;
+  balance: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -146,6 +155,8 @@ export interface PurchaseDto {
   allowed_actions: PurchaseAction[];
   items: PurchaseItemDto[];
   total: string;
+  paid_total: string;
+  balance: string;
   created_at: string;
   updated_at: string;
 }

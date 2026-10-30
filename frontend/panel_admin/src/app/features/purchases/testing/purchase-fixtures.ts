@@ -34,6 +34,8 @@ export function makePurchase(overrides: Partial<Purchase> = {}): Purchase {
     allowedActions: ['edit', 'confirm', 'cancel'],
     items: [makePurchaseItem()],
     total: '25.00',
+    paidTotal: '0.00',
+    balance: '25.00',
     createdAt: '2026-10-29T10:00:00Z',
     updatedAt: '2026-10-29T11:00:00Z',
     ...overrides,
@@ -59,7 +61,7 @@ export function makeConfirmedPurchase(overrides: Partial<Purchase> = {}): Purcha
     status: 'confirmed',
     editable: false,
     confirmedAt: '2026-10-30T12:00:00Z',
-    allowedActions: ['receive', 'cancel'],
+    allowedActions: ['receive', 'pay', 'cancel'],
     ...overrides,
   });
 }

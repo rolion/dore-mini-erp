@@ -7,6 +7,7 @@ import { of, throwError } from 'rxjs';
 
 import { PurchaseApiError } from '../../models/purchase';
 import { PurchasesApiService } from '../../services/purchases-api.service';
+import { PaymentsApiService } from '../../services/payments-api.service';
 import { ReceiptsApiService } from '../../services/receipts-api.service';
 import { makeCancelledPurchase, makeConfirmedPurchase, makePurchase, makePurchaseItem } from '../../testing/purchase-fixtures';
 import { PurchaseDetailComponent } from './purchase-detail.component';
@@ -18,12 +19,15 @@ describe('PurchaseDetailComponent', () => {
   let router: Router;
   let modal: jasmine.SpyObj<NgbModal>;
   let receiptsApi: jasmine.SpyObj<ReceiptsApiService>;
+  let paymentsApi: jasmine.SpyObj<PaymentsApiService>;
 
   async function setup(purchase: ReturnType<typeof makePurchase> | PurchaseApiError, tab = ''): Promise<void> {
     api = jasmine.createSpyObj<PurchasesApiService>('PurchasesApiService', ['get', 'confirm', 'cancel']);
     api.get.and.returnValue(purchase instanceof PurchaseApiError ? throwError(() => purchase) : of(purchase));
     receiptsApi = jasmine.createSpyObj<ReceiptsApiService>('ReceiptsApiService', ['list']);
     receiptsApi.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
+    paymentsApi = jasmine.createSpyObj<PaymentsApiService>('PaymentsApiService', ['list']);
+    paymentsApi.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     await TestBed.configureTestingModule({
@@ -34,6 +38,7 @@ describe('PurchaseDetailComponent', () => {
         { provide: ToastrService, useValue: toastr },
         { provide: NgbModal, useValue: modal },
         { provide: ReceiptsApiService, useValue: receiptsApi },
+        { provide: PaymentsApiService, useValue: paymentsApi },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -94,12 +99,14 @@ describe('PurchaseDetailComponent', () => {
     expect(byId('receive')).toBeNull();
   });
 
-  it('offers no editing of a confirmed purchase, links to the reception and keeps payment as coming soon (AC-14, AC-19)', async () => {
+  it('offers no editing of a confirmed purchase, links to the reception and offers payment from the server action (AC-14, AC-16, AC-19)', async () => {
     await setup(makeConfirmedPurchase());
     expect(hrefs()).not.toContain('/pocketbiz/purchases/c-1/edit');
     expect(byId('confirm')).toBeNull();
     expect(byId('receive')?.getAttribute('href')).toBe('/pocketbiz/purchases/c-1/receipts/new');
-    expect(byId('pay')?.disabled).toBeTrue();
+    expect(byId('pay')).not.toBeNull();
+    expect(byId('paid-total')?.textContent).toContain('Bs 0.00');
+    expect(byId('balance')?.textContent).toContain('Bs 25.00');
     expect(byId('cancel')).not.toBeNull();
     expect(byId('confirmed-at')).not.toBeNull();
     expect(text()).toContain('Sin recibir');
@@ -136,6 +143,32 @@ describe('PurchaseDetailComponent', () => {
     TestBed.resetTestingModule();
     await setup(makeConfirmedPurchase(), 'receptions');
     expect(byId('receipts-tab')).not.toBeNull();
+  });
+
+  it('has a Payments tab, opens it with ?tab=payments and the Pay button jumps to it (AC-15, AC-16)', async () => {
+    await setup(makeConfirmedPurchase());
+    expect(byId('payments-tab')).toBeNull();
+    byId('tab-payments')?.click();
+    fixture.detectChanges();
+    expect(byId('payments-tab')).not.toBeNull();
+    expect(paymentsApi.list).toHaveBeenCalledWith('c-1');
+    TestBed.resetTestingModule();
+    await setup(makeConfirmedPurchase(), 'payments');
+    expect(byId('payments-tab')).not.toBeNull();
+    TestBed.resetTestingModule();
+    await setup(makeConfirmedPurchase());
+    byId('pay')?.click();
+    fixture.detectChanges();
+    expect(byId('payments-tab')).not.toBeNull();
+  });
+
+  it('hides Pay and explains when the server does not offer it (AC-16, AC-20)', async () => {
+    await setup(makeConfirmedPurchase({ allowedActions: ['receive'], paymentStatus: 'paid', paidTotal: '25.00', balance: '0.00' }));
+    expect(byId('pay')).toBeNull();
+    expect(byId('no-balance')?.textContent).toContain('pagada por completo');
+    expect(byId('payment-status')?.textContent).toContain('Pagada');
+    expect(byId('payment-status')?.innerHTML).toContain('col-green');
+    expect(byId('balance')?.textContent).toContain('Bs 0.00');
   });
 
   it('is read-only when cancelled and shows the reason and date (AC-13, AC-14)', async () => {

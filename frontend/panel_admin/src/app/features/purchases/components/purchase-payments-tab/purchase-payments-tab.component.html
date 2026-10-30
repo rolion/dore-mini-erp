@@ -1,0 +1,63 @@
+@if (purchase(); as p) {
+<div data-testid="payments-tab">
+  <div class="d-flex justify-content-between align-items-center mx-4 mt-4">
+    <h5 class="mb-0">Resumen de pagos</h5>
+    <span class="badge-outline d-inline-block" [class]="statusClasses[p.paymentStatus]" data-testid="payment-status">{{ statusLabels[p.paymentStatus] }}</span>
+  </div>
+  <dl class="row mx-4 mt-2" data-testid="summary">
+    <dt class="col-sm-3">Total de la compra</dt>
+    <dd class="col-sm-9" data-testid="total">{{ p.total | money }}</dd>
+    <dt class="col-sm-3">Total pagado</dt>
+    <dd class="col-sm-9" data-testid="paid-total">{{ p.paidTotal | money }}</dd>
+    <dt class="col-sm-3">Saldo</dt>
+    <dd class="col-sm-9 fw-bold" data-testid="balance">{{ p.balance | money }}</dd>
+  </dl>
+
+  <div class="d-flex justify-content-between align-items-center mx-4">
+    <h5 class="mb-0">Pagos registrados</h5>
+    @if (canPay) {
+    <button type="button" class="btn btn-primary" data-testid="register" (click)="register()">Registrar pago</button>
+    }
+  </div>
+  @if (blockedReason) {
+  <small class="form-text text-muted d-block mx-4 mt-1" data-testid="blocked-reason">{{ blockedReason }}</small>
+  }
+  @if (loading) {
+  <p class="m-4" data-testid="loading">Cargando…</p>
+  } @else if (errorMessage) {
+  <div class="alert alert-danger m-4" role="alert" data-testid="error">
+    {{ errorMessage }}
+    <button type="button" class="btn btn-sm btn-light ms-2" data-testid="retry" (click)="load()">Reintentar</button>
+  </div>
+  } @else if (!payments.length) {
+  <p class="m-4 text-muted" data-testid="empty">
+    {{ isConfirmed ? 'Aún no hay pagos registrados para esta compra.' : 'Los pagos se registran cuando la compra está confirmada.' }}
+  </p>
+  } @else {
+  <div class="table-responsive m-4 mt-2">
+    <table class="table table-bordered align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Fecha</th>
+          <th scope="col">Referencia</th>
+          <th scope="col" class="text-end">Monto</th>
+          <th scope="col">Método</th>
+          <th scope="col">Registrado por</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (payment of payments; track payment.id) {
+        <tr data-testid="payment-row">
+          <td>{{ payment.paymentDate | date: 'dd/MM/yyyy' }}</td>
+          <td>{{ payment.reference }}</td>
+          <td class="text-end text-nowrap">{{ payment.amount | money }}</td>
+          <td>{{ methodLabels[payment.paymentMethod] }}</td>
+          <td>{{ payment.userName || '—' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>
+}

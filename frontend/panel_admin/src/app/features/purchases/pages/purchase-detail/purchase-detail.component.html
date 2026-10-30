@@ -34,8 +34,20 @@
                 [attr.aria-selected]="tab === 'receptions'" aria-controls="panel-receptions" data-testid="tab-receptions"
                 (click)="tab = 'receptions'">Recepciones</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'payments'" role="tab" id="tab-payments"
+                [attr.aria-selected]="tab === 'payments'" aria-controls="panel-payments" data-testid="tab-payments"
+                (click)="tab = 'payments'">Pagos</button>
+            </li>
           </ul>
-          @if (tab === 'receptions' && purchase) {
+          @if (tab === 'payments' && purchase) {
+          <div class="card-body" role="tabpanel" id="panel-payments" aria-labelledby="tab-payments">
+            <app-purchase-payments-tab [purchase]="purchase" (paid)="reload()" />
+            <div class="m-4">
+              <a class="btn btn-light" routerLink="/pocketbiz/purchases">Volver</a>
+            </div>
+          </div>
+          } @else if (tab === 'receptions' && purchase) {
           <div class="card-body" role="tabpanel" id="panel-receptions" aria-labelledby="tab-receptions">
             <app-purchase-receipts-tab [purchase]="purchase" />
             <div class="m-4">
@@ -67,7 +79,15 @@
               <dt class="col-sm-3">Estado de recepción</dt>
               <dd class="col-sm-9" data-testid="reception-status">{{ receptionLabels[p.receptionStatus] }}</dd>
               <dt class="col-sm-3">Estado de pago</dt>
-              <dd class="col-sm-9" data-testid="payment-status">{{ paymentLabels[p.paymentStatus] }}</dd>
+              <dd class="col-sm-9" data-testid="payment-status">
+                <span class="badge-outline d-inline-block" [class]="paymentClasses[p.paymentStatus]">{{ paymentLabels[p.paymentStatus] }}</span>
+              </dd>
+              @if (p.status === 'confirmed') {
+              <dt class="col-sm-3">Total pagado</dt>
+              <dd class="col-sm-9" data-testid="paid-total">{{ p.paidTotal | money }}</dd>
+              <dt class="col-sm-3">Saldo</dt>
+              <dd class="col-sm-9" data-testid="balance">{{ p.balance | money }}</dd>
+              }
               <dt class="col-sm-3">Moneda</dt>
               <dd class="col-sm-9">{{ p.currency }}</dd>
               <dt class="col-sm-3">Notas</dt>
@@ -141,8 +161,8 @@
               @if (can('receive')) {
               <a class="btn btn-primary ms-2" data-testid="receive" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', 'new']">Registrar recepción</a>
               }
-              @if (p.status === 'confirmed') {
-              <button type="button" class="btn btn-primary ms-2" data-testid="pay" disabled>Registrar pago</button>
+              @if (can('pay')) {
+              <button type="button" class="btn btn-primary ms-2" data-testid="pay" (click)="tab = 'payments'">Registrar pago</button>
               }
               @if (can('cancel')) {
               <button type="button" class="btn btn-outline-danger ms-2" data-testid="cancel" [disabled]="busy"
@@ -151,8 +171,11 @@
               <a class="btn btn-light ms-2" routerLink="/pocketbiz/purchases">Volver</a>
               @if (p.status === 'confirmed') {
               <small class="form-text text-muted d-block mt-2" data-testid="confirmed-note">
-                Registrar pago: disponible próximamente. Confirmar no modifica las existencias; el stock cambia al registrar la recepción.
+                Confirmar no modifica las existencias; el stock cambia al registrar la recepción. Los pagos se registran en la pestaña «Pagos».
               </small>
+              @if (!can('pay')) {
+              <small class="form-text text-muted d-block" data-testid="no-balance">{{ p.paymentStatus === 'paid' ? 'Compra pagada por completo.' : 'Sin saldo por pagar.' }}</small>
+              }
               @if (!can('receive')) {
               <small class="form-text text-muted d-block" data-testid="fully-received">Compra recibida por completo.</small>
               }
