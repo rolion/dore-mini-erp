@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AuthService } from '../../../../core/service/auth.service';
 import { InventoryApiError } from '../../models/api-error';
 import {
@@ -10,6 +11,10 @@ import {
   StockMovementDetail,
   movementTypeLabel,
 } from '../../models/movement';
+import {
+  MovementReverseDialogComponent,
+  ReversibleMovement,
+} from '../../components/movement-reverse-dialog/movement-reverse-dialog.component';
 import { MovementsApiService } from '../../services/movements-api.service';
 
 @Component({
@@ -25,10 +30,12 @@ export class MovementDetailComponent implements OnInit {
   loading = true;
   errorMessage = '';
   notFound = false;
+  successMessage = '';
 
   private api = inject(MovementsApiService);
   private route = inject(ActivatedRoute);
   private auth = inject(AuthService);
+  private modal = inject(NgbModal);
   private destroyRef = inject(DestroyRef);
 
   /** Empresa de la sesión: el movimiento pertenece siempre a ella (la API filtra por empresa). */
@@ -40,6 +47,45 @@ export class MovementDetailComponent implements OnInit {
     const source = this.movement?.source;
     const route = source ? SOURCE_ROUTES[source.type] : undefined;
     return source && source.available && route ? route(source.id) : null;
+  }
+
+  /** Datos para el diálogo de reversión (cantidad sin signo y almacén ya nombrados). */
+  private reversible(movement: StockMovementDetail): ReversibleMovement {
+    return {
+      id: movement.id,
+      reference: movement.reference,
+      typeLabel: movementTypeLabel(movement),
+      productName: movement.product.name,
+      warehouseName: movement.warehouse.name,
+      quantity: movement.quantity,
+      unitAbbreviation: movement.unitAbbreviation,
+      kind: movement.kind,
+    };
+  }
+
+  /** «Revertir» solo se ofrece si el servidor lo permite; la barrera real es el backend. */
+  get canReverse(): boolean {
+    return this.movement?.status === 'confirmed' && this.movement.reversal.allowed;
+  }
+
+  /** Por qué un movimiento confirmado no se puede revertir desde aquí (venta o compra). */
+  get reverseBlockedMessage(): string {
+    const movement = this.movement;
+    return movement?.status === 'confirmed' && !movement.reversal.allowed ? (movement.reversal.message ?? '') : '';
+  }
+
+  async reverse(): Promise<void> {
+    const movement = this.movement;
+    if (!movement || !this.canReverse) return;
+    const ref = this.modal.open(MovementReverseDialogComponent, { backdrop: 'static' });
+    (ref.componentInstance as MovementReverseDialogComponent).init(this.reversible(movement));
+    try {
+      await ref.result;
+    } catch {
+      return; // «Volver»: no cambia nada.
+    }
+    this.successMessage = 'Movimiento revertido';
+    this.load();
   }
 
   ngOnInit(): void {

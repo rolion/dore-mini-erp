@@ -34,13 +34,23 @@ export function toMovementDetail(dto: StockMovementDetailDto): StockMovementDeta
     quantity: dto.quantity,
     reason: dto.reason,
     user: dto.user,
+    reversal: dto.reversal ?? { allowed: false, code: null, message: null },
+    reversedBy: dto.reversed_by
+      ? {
+          id: dto.reversed_by.id,
+          reference: dto.reversed_by.reference ?? '',
+          occurredAt: dto.reversed_by.occurred_at ?? null,
+          reason: dto.reversed_by.reason ?? '',
+          userName: dto.reversed_by.user?.name ?? '',
+        }
+      : null,
     reversedById: dto.reversed_by?.id ?? null,
     reversesId: dto.reverses?.id ?? null,
     createdAt: dto.created_at,
   };
 }
 
-/** Libro de movimientos: solo lectura (no hay alta, edición ni baja). */
+/** Libro de movimientos: se consulta y solo se corrige con una reversión (no hay alta, edición ni baja). */
 @Injectable({
   providedIn: 'root',
 })
@@ -67,6 +77,14 @@ export class MovementsApiService {
 
   get(id: string): Observable<StockMovementDetail> {
     return this.http.get<StockMovementDetailDto>(`${this.baseUrl}${id}/`).pipe(
+      map(toMovementDetail),
+      catchError((err: HttpErrorResponse) => throwError(() => toApiError(err.status, err.error))),
+    );
+  }
+
+  /** Revierte un movimiento manual con motivo; devuelve el contramovimiento creado. */
+  reverse(id: string, reason: string): Observable<StockMovementDetail> {
+    return this.http.post<StockMovementDetailDto>(`${this.baseUrl}${id}/reverse/`, { reason }).pipe(
       map(toMovementDetail),
       catchError((err: HttpErrorResponse) => throwError(() => toApiError(err.status, err.error))),
     );

@@ -18,6 +18,9 @@
             <h4>{{ movement ? typeLabel(movement) + ': ' + movement.product.name : 'Movimiento' }}</h4>
           </div>
           <div class="card-body">
+            @if (successMessage) {
+            <div class="alert alert-success m-4" role="status" data-testid="success">{{ successMessage }}</div>
+            }
             @if (movement; as m) {
             <dl class="row m-4">
               <dt class="col-sm-3">Identificador</dt>
@@ -70,8 +73,27 @@
                 }
               </dd>
             </dl>
+            @if (m.reversedBy; as r) {
+            <h5 class="mx-4">Reversión</h5>
+            <dl class="row mx-4" data-testid="reversal">
+              <dt class="col-sm-3">Contramovimiento</dt>
+              <dd class="col-sm-9"><a [routerLink]="['/pocketbiz/inventory/movements', r.id]" data-testid="reversal-link">Contramovimiento{{ r.reference ? ' · ' + r.reference : '' }}</a></dd>
+              <dt class="col-sm-3">Revertido por</dt>
+              <dd class="col-sm-9" data-testid="reversal-user">{{ r.userName || '—' }}</dd>
+              <dt class="col-sm-3">Fecha y hora</dt>
+              <dd class="col-sm-9" data-testid="reversal-date">{{ r.occurredAt ? (r.occurredAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd>
+              <dt class="col-sm-3">Motivo</dt>
+              <dd class="col-sm-9" data-testid="reversal-reason">{{ r.reason || '—' }}</dd>
+            </dl>
+            }
             <div class="m-4">
+              @if (canReverse) {
+              <button type="button" class="btn btn-warning me-2" data-testid="reverse" (click)="reverse()">Revertir</button>
+              }
               <a class="btn btn-light" routerLink="/pocketbiz/inventory/movements">Volver</a>
+              @if (reverseBlockedMessage) {
+              <small class="form-text text-muted d-block mt-2" data-testid="reverse-blocked">{{ reverseBlockedMessage }}</small>
+              }
             </div>
             } @else if (loading) {
             <p class="m-4">Cargando…</p>

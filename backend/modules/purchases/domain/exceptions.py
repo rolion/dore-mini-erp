@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 
@@ -49,6 +50,23 @@ class PurchaseNotPayable(Exception):
 
 class PaymentConflict(Exception):
     """El identificador del pago ya pertenece a otra compra."""
+
+
+class ReceiptAlreadyReverted(Exception):
+    """La recepción ya fue revertida: no se puede revertir otra vez."""
+
+
+class ReceiptInventoryUnavailable(Exception):
+    """La recepción movió stock y el módulo Inventario está deshabilitado: no hay libro que corregir."""
+
+
+class StockShortage(Exception):
+    """Revertir las entradas dejaría stock negativo bloqueado; `shortages` es `(producto, solicitado, saldo)`."""
+
+    def __init__(self, warehouse_id: UUID, shortages: list[tuple[UUID, Decimal, Decimal]]):
+        super().__init__('No hay saldo suficiente para revertir la recepción.')
+        self.warehouse_id = warehouse_id
+        self.shortages = shortages
 
 
 class ReceiptNotFound(Exception):

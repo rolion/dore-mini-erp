@@ -165,6 +165,11 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
 
+### Diálogo de acción irreversible con motivo (referencia: `features/inventory/components/movement-reverse-dialog`, `features/purchases/components/receipt-revert-dialog`)
+- Acción destructiva de un documento (revertir un movimiento o una recepción) desde su detalle: botón `btn btn-warning` bajo los datos, visible solo si el servidor lo permite (`reversal.allowed` / `can_revert`); si el documento está confirmado pero no es revertible por su origen, se oculta y se explica con `small.text-muted` con el mensaje del servidor. Nunca se ofrece una segunda reversión.
+- Diálogo `NgbModal` (`backdrop: 'static'`) como el de cancelar compra: `dl` o tabla con lo que se revierte (todas las líneas del documento, sin reversión parcial), `alert alert-info` con el efecto y lo que **no** hace (p. ej. no devuelve pagos), motivo obligatorio (`textarea`, contador, `maxlength`), `btn btn-danger` deshabilitado hasta que el motivo recortado no esté vacío («Revirtiendo…» al enviar) y «Volver» `btn-light`. Los errores del servidor (400 del motivo bajo el campo; 409 de stock con producto y saldo en `app-insufficient-stock-alert` o `alert alert-warning` con todas las líneas) quedan dentro del diálogo sin perder el motivo escrito.
+- Al terminar se recarga el detalle con `alert alert-success` y un bloque «Reversión» (`h5` + `dl`) con contramovimiento enlazado, usuario, fecha y motivo; el estado se muestra con badge «Revertido»/«Revertida» y texto.
+
 ## 6. Menú y layout
 
 - Submenú de Compras: «Inicio» (`/purchases`, «Próximamente»), «Proveedores» (`/purchases/suppliers`, lista, `/new`, `/:id/edit` y detalle `/:id`, PB-COM-001; plantillas Lista, Formulario y Detalle de clientes, con «Ver compras» hacia `/purchases?supplierId=<id>`) y «Configuración» (`/purchases/settings`). Ver `DDR-gestionar-proveedores-pantallas-proveedores`.

@@ -2,7 +2,7 @@ from django.urls import path
 
 from .purchase_views import PurchaseCancelView, PurchaseConfirmView, PurchaseDetailView, PurchaseListCreateView
 from .payment_views import PaymentListCreateView
-from .receipt_views import ReceiptDetailView, ReceiptListCreateView, ReceptionFormView
+from .receipt_views import ReceiptDetailView, ReceiptListCreateView, ReceiptRevertView, ReceptionFormView
 
 urlpatterns = [
     path('', PurchaseListCreateView.as_view(), name='purchase-list'),
@@ -13,4 +13,6 @@ urlpatterns = [
     path('<uuid:purchase_id>/reception-form/', ReceptionFormView.as_view(), name='purchase-reception-form'),
     path('<uuid:purchase_id>/receipts/', ReceiptListCreateView.as_view(), name='purchase-receipts'),
     path('<uuid:purchase_id>/receipts/<uuid:receipt_id>/', ReceiptDetailView.as_view(), name='purchase-receipt'),
+    path('<uuid:purchase_id>/receipts/<uuid:receipt_id>/revert/', ReceiptRevertView.as_view(),
+         name='purchase-receipt-revert'),
 ]

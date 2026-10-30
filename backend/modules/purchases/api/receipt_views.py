@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.purchases.application.ports import Actor
-from modules.purchases.application.receipt_commands import ReceiptLineInput, RegisterReception
+from modules.purchases.application.receipt_commands import ReceiptLineInput, RegisterReception, RevertReception
 from modules.purchases.application.receipt_queries import GetReceipt, GetReceptionForm, ListReceipts
 from modules.purchases.infrastructure.adapters import ProductCatalogAdapter, StockEntryAdapter
 from shared.tenancy import company_id_from
@@ -13,6 +13,7 @@ from .pagination import SupplierPagination
 from .purchase_views import REQUIRED_MODULES, _purchases, _receipts, _run
 from .receipt_serializers import (
     ReceiptInputSerializer,
+    ReceiptRevertSerializer,
     receipt_representation,
     receipt_summary,
     reception_form_representation,
@@ -70,3 +71,19 @@ class ReceiptDetailView(APIView):
         use_case = GetReceipt(_purchases(request), _receipts(request), _stock(request))
         return Response(receipt_representation(
             _run(use_case.execute, purchase_id=purchase_id, receipt_id=receipt_id)))
+
+
+class ReceiptRevertView(APIView):
+    """Revierte la recepción completa (sin reversión parcial): contramovimientos, estado y pendientes de la compra."""
+
+    required_modules = REQUIRED_MODULES
+
+    def post(self, request, purchase_id, receipt_id):
+        serializer = ReceiptRevertSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        _run(RevertReception(_purchases(request), _receipts(request), _stock(request)).execute,
+             purchase_id=purchase_id, receipt_id=receipt_id, reason=serializer.validated_data.get('reason', ''),
+             actor=_actor(request), now=timezone.now())
+        detail = _run(GetReceipt(_purchases(request), _receipts(request), _stock(request)).execute,
+                      purchase_id=purchase_id, receipt_id=receipt_id)
+        return Response(receipt_representation(detail))

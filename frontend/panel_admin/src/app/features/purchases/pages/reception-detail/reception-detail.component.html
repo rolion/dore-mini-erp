@@ -36,6 +36,9 @@
               <button type="button" class="btn btn-sm btn-light ms-2" data-testid="retry" (click)="load()">Reintentar</button>
             </div>
             }
+            @if (successMessage) {
+            <div class="alert alert-success m-4" role="status" data-testid="success">{{ successMessage }}</div>
+            }
             @if (receipt; as r) {
             <dl class="row m-4">
               <dt class="col-sm-3">Compra</dt>
@@ -48,6 +51,14 @@
               <dd class="col-sm-9" data-testid="user">{{ r.userName || '—' }}</dd>
               <dt class="col-sm-3">Registrada el</dt>
               <dd class="col-sm-9">{{ r.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              @if (r.reversal; as reversal) {
+              <dt class="col-sm-3">Revertida el</dt>
+              <dd class="col-sm-9" data-testid="reversal-date">{{ reversal.revertedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Revertida por</dt>
+              <dd class="col-sm-9" data-testid="reversal-user">{{ reversal.userName || '—' }}</dd>
+              <dt class="col-sm-3">Motivo de la reversión</dt>
+              <dd class="col-sm-9" data-testid="reversal-reason">{{ reversal.reason }}</dd>
+              }
               @if (r.warehouse) {
               <dt class="col-sm-3">Almacén</dt>
               <dd class="col-sm-9" data-testid="warehouse">{{ r.warehouse.name || '—' }}</dd>
@@ -100,6 +111,7 @@
                     <th scope="col">Almacén</th>
                     <th scope="col" class="text-end">Cantidad</th>
                     <th scope="col">Unidad</th>
+                    <th scope="col">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -110,6 +122,12 @@
                     <td>{{ movement.warehouseName }}</td>
                     <td class="text-end">{{ movement.quantity }}</td>
                     <td>{{ movement.unitAbbreviation || '—' }}</td>
+                    <td data-testid="movement-status">
+                      {{ movement.status === 'reversed' ? 'Revertido' : 'Confirmado' }}
+                      @if (movement.reversedBy && r.inventoryAvailable) {
+                      <a class="ms-1" data-testid="counter-link" [routerLink]="['/pocketbiz/inventory/movements', movement.reversedBy.id]">Ver contramovimiento</a>
+                      }
+                    </td>
                   </tr>
                   }
                 </tbody>
@@ -123,8 +141,14 @@
             }
             }
             <div class="m-4">
+              @if (r.canRevert) {
+              <button type="button" class="btn btn-warning me-2" data-testid="revert" (click)="revert()">Revertir recepción</button>
+              }
               <a class="btn btn-light" data-testid="back" [routerLink]="['/pocketbiz/purchases', r.purchase.id]"
                 [queryParams]="{ tab: 'receptions' }">Volver a la compra</a>
+              @if (revertBlockedMessage) {
+              <small class="form-text text-muted d-block mt-2" data-testid="revert-blocked">{{ revertBlockedMessage }}</small>
+              }
             </div>
             }
           </div>

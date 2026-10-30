@@ -1,3 +1,4 @@
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -53,7 +54,7 @@ describe('ReceptionDetailComponent', () => {
   it('shows the warehouse, the linked movements and the link to Movements (AC-24)', async () => {
     await setup(makeReceipt({
       warehouse: { id: 'w-1', name: 'Central' },
-      movements: [{ id: 'm-1', reference: 'REC-1A2B3C4D', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' }],
+      movements: [{ id: 'm-1', reference: 'REC-1A2B3C4D', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg', status: 'confirmed', reversedBy: null }],
       inventoryMode: 'inventory',
       inventoryAvailable: true,
     }));
@@ -74,7 +75,7 @@ describe('ReceptionDetailComponent', () => {
       warehouse: { id: 'w-1', name: 'Central' },
       inventoryMode: 'inventory',
       inventoryAvailable: false,
-      movements: [{ id: 'm-1', reference: 'REC-1A2B3C4D', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' }],
+      movements: [{ id: 'm-1', reference: 'REC-1A2B3C4D', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg', status: 'confirmed', reversedBy: null }],
     }));
     expect(all('movement').length).toBe(1);
     expect(byId('view-movements')).toBeNull();
@@ -112,5 +113,59 @@ describe('ReceptionDetailComponent', () => {
     fixture.detectChanges();
     expect(byId('error')).toBeNull();
     expect(root().textContent).toContain('REC-1A2B3C4D');
+  });
+
+  it('offers «Revertir recepción» only when the server allows it (AC-16)', async () => {
+    await setup(makeReceipt({ canRevert: true }));
+    expect(byId('revert')).not.toBeNull();
+    expect(byId('revert-blocked')).toBeNull();
+  });
+
+  it('offers no reversal for a reverted receipt and shows the reversal data (AC-11, AC-16)', async () => {
+    await setup(makeReceipt({ status: 'reverted', canRevert: false, reversal: { revertedAt: '2026-10-31T10:00:00Z', userName: 'bea', reason: 'Error de conteo' } }));
+    expect(byId('revert')).toBeNull();
+    expect(byId('revert-blocked')).toBeNull();
+    expect(byId('status-badge')?.textContent).toContain('Revertida');
+    expect(byId('reversal-user')?.textContent).toContain('bea');
+    expect(byId('reversal-reason')?.textContent).toContain('Error de conteo');
+    expect(byId('reversal-date')?.textContent).toContain('31/10/2026');
+  });
+
+  it('explains why a receipt that moved stock cannot be reverted while Inventory is off (AC-10)', async () => {
+    await setup(makeReceipt({ canRevert: false, inventoryMode: 'inventory', inventoryAvailable: false }));
+    expect(byId('revert')).toBeNull();
+    expect(byId('revert-blocked')?.textContent).toContain('Inventario está deshabilitado');
+  });
+
+  it('shows the state of each movement and links its counter-movement (AC-11)', async () => {
+    const base = { id: 'm-1', reference: 'REC-1', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' };
+    await setup(makeReceipt({
+      inventoryMode: 'inventory', inventoryAvailable: true,
+      movements: [{ ...base, status: 'reversed', reversedBy: { id: 'm-2', reference: 'REC-1' } }, { ...base, id: 'm-3', status: 'confirmed', reversedBy: null }],
+    }));
+    const statuses = all('movement-status').map((s) => s.textContent?.replace(/\s+/g, ' ').trim());
+    expect(statuses[0]).toContain('Revertido');
+    expect(statuses[1]).toBe('Confirmado');
+    expect(byId('counter-link')?.getAttribute('href')).toBe('/pocketbiz/inventory/movements/m-2');
+  });
+
+  it('opens the dialog with the receipt, reloads and confirms after reverting (AC-16)', async () => {
+    await setup(makeReceipt());
+    const dialog = { init: jasmine.createSpy('init') };
+    spyOn(TestBed.inject(NgbModal), 'open').and.returnValue({ componentInstance: dialog, result: Promise.resolve(makeReceipt()) } as unknown as NgbModalRef);
+    (byId('revert') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(dialog.init).toHaveBeenCalledWith(jasmine.objectContaining({ id: 'r-1' }));
+    expect(api.get).toHaveBeenCalledTimes(2);
+    expect(byId('success')?.textContent).toContain('Recepción revertida');
+  });
+
+  it('does not reload when the dialog is dismissed', async () => {
+    await setup(makeReceipt());
+    spyOn(TestBed.inject(NgbModal), 'open').and.returnValue({ componentInstance: { init: () => undefined }, result: Promise.reject(undefined) } as unknown as NgbModalRef);
+    (byId('revert') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(api.get).toHaveBeenCalledTimes(1);
   });
 });

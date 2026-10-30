@@ -68,7 +68,7 @@ describe('ReceiptsApiService', () => {
     http.expectOne((r) => r.url.endsWith('/purchases/c-1/receipts/r-1/')).flush(RECEIPT_DTO);
     expect(receipt?.warehouse).toEqual({ id: 'w-1', name: 'Central' });
     expect(receipt?.lines[0].productName).toBe('Harina');
-    expect(receipt?.movements?.[0]).toEqual({ id: 'm-1', reference: '', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' });
+    expect(receipt?.movements?.[0]).toEqual({ id: 'm-1', reference: '', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg', status: 'confirmed', reversedBy: null });
     expect(receipt?.inventoryMode).toBeNull();
     expect(receipt?.lines[0].stockEntry).toBeNull();
     service.get('c-1', 'r-1').subscribe((result) => (receipt = result));
@@ -110,5 +110,58 @@ describe('ReceiptsApiService', () => {
     service.create('c-1', { receiptId: 'x', receiptDate: '2026-10-30', warehouseId: null, lines: [] }).subscribe({ error: (err: ReceiptApiError) => results.push(err) });
     http.expectOne((r) => r.url.endsWith('/receipts/')).flush({ lines: [{ quantity: ['No puede superar el pendiente (1.000).'] }] }, { status: 400, statusText: 'x' });
     expect(results[4].fieldErrors.lines[0].quantity).toContain('pendiente');
+  });
+
+  it('posts the reason to revert a receipt and maps the reversal data (API-03, API-04)', () => {
+    let receipt: Receipt | undefined;
+    service.revert('c-1', 'r-1', 'Error de conteo').subscribe((result) => (receipt = result));
+    const req = http.expectOne((r) => r.url.endsWith('/purchases/c-1/receipts/r-1/revert/'));
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ reason: 'Error de conteo' });
+    req.flush({
+      ...RECEIPT_DTO,
+      status: 'reverted',
+      can_revert: false,
+      reversal: { reverted_at: '2026-10-31T10:00:00Z', user_name: 'ana', reason: 'Error de conteo' },
+      movements: [{ ...RECEIPT_DTO.movements[0], status: 'reversed', reversed_by: { id: 'm-2', reference: 'REC-1' } }],
+    });
+    expect(receipt?.status).toBe('reverted');
+    expect(receipt?.canRevert).toBeFalse();
+    expect(receipt?.reversal).toEqual({ revertedAt: '2026-10-31T10:00:00Z', userName: 'ana', reason: 'Error de conteo' });
+    expect(receipt?.movements?.[0].status).toBe('reversed');
+    expect(receipt?.movements?.[0].reversedBy).toEqual({ id: 'm-2', reference: 'REC-1' });
+  });
+
+  it('defaults the new fields for responses without reversal data', () => {
+    let receipt: Receipt | undefined;
+    service.get('c-1', 'r-1').subscribe((result) => (receipt = result));
+    http.expectOne((r) => r.url.endsWith('/purchases/c-1/receipts/r-1/')).flush(RECEIPT_DTO);
+    expect(receipt?.canRevert).toBeFalse();
+    expect(receipt?.reversal).toBeNull();
+    expect(receipt?.movements?.[0].status).toBe('confirmed');
+  });
+
+  it('maps the reversal errors: reason (400), insufficient stock with every line and other conflicts (409)', () => {
+    const errors: ReceiptApiError[] = [];
+    const revert = (body: object, status: number): void => {
+      service.revert('c-1', 'r-1', 'x').subscribe({ error: (err: ReceiptApiError) => errors.push(err) });
+      http.expectOne((r) => r.url.endsWith('/revert/')).flush(body, { status, statusText: 'x' });
+    };
+    revert({ reason: ['El motivo es obligatorio.'] }, 400);
+    revert({
+      code: 'insufficient_stock', detail: 'No hay saldo.', warehouse: { id: 'w', name: 'Central' },
+      lines: [
+        { product: { id: 'p-1', name: 'Harina' }, unit: { abbreviation: 'kg' }, requested: '10.000', available: '2.000' },
+        { product: { id: 'p-2', name: 'Azúcar' }, unit: { abbreviation: 'kg' }, requested: '5.000', available: '0.000' },
+      ],
+    }, 409);
+    revert({ code: 'already_reverted', detail: 'La recepción ya fue revertida.' }, 409);
+    expect(errors[0].fieldErrors.reason).toBe('El motivo es obligatorio.');
+    expect(errors[1].code).toBe('insufficient_stock');
+    expect(errors[1].shortage?.warehouseName).toBe('Central');
+    expect(errors[1].shortage?.lines.map((l) => [l.productName, l.available])).toEqual([['Harina', '2.000'], ['Azúcar', '0.000']]);
+    expect(errors[2].code).toBe('already_reverted');
+    expect(errors[2].shortage).toBeNull();
+    expect(errors[2].message).toBe('La recepción ya fue revertida.');
   });
 });

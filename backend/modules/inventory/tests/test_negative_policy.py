@@ -62,7 +62,7 @@ class PolicyFacadeTests(LedgerTestCase):
         entry, _ = self.record('in', '10')
         self.record('out', '8')
         with self.assertRaises(InsufficientStock) as ctx:
-            inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+            inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual((ctx.exception.requested, ctx.exception.available), (Decimal('10'), Decimal('2')))
         self.assertEqual(StockMovementModel.objects.get(pk=entry.id).status, 'confirmed')
         self.assertEqual(StockMovementModel.objects.count(), 2)
@@ -73,7 +73,7 @@ class PolicyFacadeTests(LedgerTestCase):
         set_negative_stock(self.company, True)
         self.record('out', '5')
         self.assertEqual(self.balance(), Decimal('-3'))
-        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(self.balance(), Decimal('-13'))
 
     def test_exact_balance_is_allowed_and_entries_never_blocked(self):  # EDGE-01, INV-04, EDGE-06
@@ -216,5 +216,5 @@ class PolicyReadInsideLockTests(SimpleTestCase):
 
     def test_reverse_reads_the_policy_while_locked(self):  # INV-03
         with self.assertRaises(InsufficientStock):
-            self.reverse.execute(self.entry.id, user_id=None, user_name='ana')
+            self.reverse.execute(self.entry.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(self.reads, [True])

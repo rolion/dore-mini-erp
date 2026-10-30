@@ -56,7 +56,7 @@ class MovementDomainTests(SimpleTestCase):
 
     def test_reverse_returns_opposite_linked_counter_movement(self):  # INV-07
         original = self.record()
-        counter = original.reverse(occurred_at=WHEN, user_id=None, user_name='ana')
+        counter = original.reverse(occurred_at=WHEN, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(original.status, MovementStatus.REVERSED)
         self.assertEqual((counter.kind, counter.quantity, counter.reverses_id),
                          (MovementKind.OUT, original.quantity, original.id))
@@ -64,12 +64,12 @@ class MovementDomainTests(SimpleTestCase):
 
     def test_reverse_twice_or_a_counter_movement_fails(self):  # INV-07
         original = self.record()
-        counter = original.reverse(occurred_at=WHEN, user_id=None, user_name='ana')
+        counter = original.reverse(occurred_at=WHEN, user_id=None, user_name='ana', reason='Corrección')
         with self.assertRaises(MovementConflict) as ctx:
-            original.reverse(occurred_at=WHEN, user_id=None, user_name='ana')
+            original.reverse(occurred_at=WHEN, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(ctx.exception.code, 'already_reversed')
         with self.assertRaises(MovementConflict):
-            counter.reverse(occurred_at=WHEN, user_id=None, user_name='ana')
+            counter.reverse(occurred_at=WHEN, user_id=None, user_name='ana', reason='Corrección')
 
 
 class LedgerTestCase(TestCase):
@@ -173,37 +173,37 @@ class RecordMovementTests(LedgerTestCase):
 class ReverseMovementTests(LedgerTestCase):
     def test_reverse_marks_original_and_balance_returns(self):  # INV-07
         entry, _ = self.record('in', '10')
-        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual((counter.kind, counter.reverses_id), ('out', entry.id))
         self.assertEqual(StockMovementModel.objects.get(pk=entry.id).status, 'reversed')
         self.assertEqual(self.balance(), Decimal('0'))
 
     def test_reverse_twice_is_409(self):  # EDGE-03
         entry, _ = self.record('in', '10')
-        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         with self.assertRaises(MovementConflict) as ctx:
-            inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+            inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(ctx.exception.code, 'already_reversed')
 
     def test_reverse_an_entry_already_consumed_needs_balance(self):  # INV-05
         entry, _ = self.record('in', '10')
         self.record('out', '8')
         with self.assertRaises(MovementConflict) as ctx:
-            inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+            inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(ctx.exception.code, 'insufficient_stock')
 
 
 class ReverseEdgeCaseTests(LedgerTestCase):
     def test_a_counter_movement_cannot_be_reversed_through_the_facade(self):  # EDGE-03
         entry, _ = self.record('in', '10')
-        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         with self.assertRaises(MovementConflict) as ctx:
-            inventory.reverse_movement(self.company.id, counter.id, user_id=None, user_name='ana')
+            inventory.reverse_movement(self.company.id, counter.id, user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(ctx.exception.code, 'cannot_reverse_reversal')
 
     def test_retrying_a_reversed_source_operation_returns_the_reversed_movement(self):  # ADR: política de reintento
         entry, _ = self.record('in', '10', source_type='purchase_receipt', source_id='R-1')
-        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana')
+        inventory.reverse_movement(self.company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
         again, created = self.record('in', '10', source_type='purchase_receipt', source_id='R-1')
         self.assertEqual((again.id, created, again.status), (entry.id, False, 'reversed'))
         self.assertEqual(self.balance(), Decimal('0'))
@@ -304,7 +304,7 @@ class ConcurrencyTests(TransactionTestCase):
             user_id=None, user_name='ana')
 
         def work():
-            inventory.reverse_movement(company.id, entry.id, user_id=None, user_name='ana')
+            inventory.reverse_movement(company.id, entry.id, user_id=None, user_name='ana', reason='Corrección')
 
         errors = self.run_threads(work, count=2)
         self.assertEqual([getattr(e, 'code', None) for e in errors], ['already_reversed'])
@@ -391,10 +391,10 @@ class MovementApiTests(APITestCase):
     def test_detail_reconstructs_the_operation_and_counter_movement(self):  # AC-06
         entry = self.record('in', '10', reference='Compra 1', reason='Recepción', source_type='purchase_receipt',
                             source_id='R-1')
-        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=self.admin.id, user_name='ana')
+        counter = inventory.reverse_movement(self.company.id, entry.id, user_id=self.admin.id, user_name='ana', reason='Corrección')
         detail = self.client.get(f'{URL}{entry.id}/').json()
         self.assertEqual(detail['status'], 'reversed')
-        self.assertEqual(detail['reversed_by'], {'id': str(counter.id)})
+        self.assertEqual(detail['reversed_by']['id'], str(counter.id))
         self.assertEqual((detail['user']['name'], detail['reason'], detail['quantity']), ('ana', 'Recepción', '10.0000'))
         counter_detail = self.client.get(f'{URL}{counter.id}/').json()
         self.assertEqual((counter_detail['status'], counter_detail['kind'], counter_detail['reverses']),

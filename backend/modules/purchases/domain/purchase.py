@@ -436,6 +436,10 @@ class Purchase:
         return Receipt(id=receipt_id, purchase_id=self.id, receipt_date=when, user_id=user_id, user_name=user_name,
                        lines=lines)
 
+    def recompute_reception(self, received: Mapping[UUID, Decimal]) -> None:
+        """Recalcula `reception_status` con lo recibido por las recepciones que siguen confirmadas."""
+        self.reception_status = compute_reception_status(self.items, received)
+
     def register_payment(self, payment_id: UUID, amount: object, payment_method: object, payment_date: object,
                          today: date, paid_before: Decimal, user_id: UUID | None, user_name: str) -> Payment:
         """Registra un pago y recalcula `payment_status`.

@@ -33,6 +33,8 @@ export function makeMovementDetail(overrides: Partial<StockMovementDetail> = {})
     quantity: '2.5000',
     reason: 'Venta',
     user: { id: 'u-1', name: 'ana' },
+    reversal: { allowed: true, code: null, message: null },
+    reversedBy: null,
     reversedById: null,
     reversesId: null,
     createdAt: '2026-10-20T15:30:01Z',

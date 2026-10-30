@@ -147,7 +147,7 @@ class StockQueryTests(StockApiTestCase):
         product = self.make_product('Harina')
         self.open([line(product, '10')])
         out = self.move(product, 'out', '4')
-        reverse_movement(self.company.id, out.id, user_id=None, user_name='ana')
+        reverse_movement(self.company.id, out.id, user_id=None, user_name='ana', reason='Corrección')
         self.move(product, 'out', '3')
         expected = '7.0000'
         self.assertEqual(self.rows()[0]['quantity'], expected)

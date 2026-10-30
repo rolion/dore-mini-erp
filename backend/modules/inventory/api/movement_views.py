@@ -1,20 +1,28 @@
 from uuid import UUID
 
-from rest_framework.exceptions import NotFound
+from rest_framework import serializers
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.inventory.application.movement_use_cases import GetMovement, ListMovements
-from modules.inventory.domain.exceptions import MovementNotFound
-from modules.inventory.domain.movement import SOURCE_TYPES, MovementKind, StockMovement
-from modules.inventory.infrastructure.adapters import CatalogProductDirectory
+from modules.inventory.application.movement_use_cases import GetMovement, ListMovements, ReverseMovement
+from modules.inventory.domain.exceptions import (
+    InsufficientStock,
+    MovementConflict,
+    MovementNotFound,
+    MovementValidationError,
+)
+from modules.inventory.domain.movement import SOURCE_TYPES, MovementKind, StockMovement, reversal_block
+from modules.inventory.infrastructure.adapters import CatalogProductDirectory, ModularityInventoryPolicy
 from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 from shared import module_gate
 from shared.tenancy import company_id_from
 
+from .insufficient_stock import InsufficientStockConflict
 from .movement_filters import parse_movement_filters
 from .pagination import WarehousePagination
+from .views import Conflict
 
 MOVEMENT_NOT_FOUND = 'Movimiento no encontrado.'
 
@@ -40,7 +48,8 @@ class MovementPresenter:
         ids = {m.product_id for m in movements}
         self._products = CatalogProductDirectory(self.company_id).get_products(ids)
 
-    def present(self, movement: StockMovement, *, detail: bool = False) -> dict:
+    def present(self, movement: StockMovement, *, detail: bool = False,
+                counter: StockMovement | None = None) -> dict:
         product = self._products.get(movement.product_id)
         data = {
             'id': movement.id,
@@ -60,11 +69,30 @@ class MovementPresenter:
                 'quantity': _decimal(movement.quantity),
                 'reason': movement.reason,
                 'user': {'id': movement.user_id, 'name': movement.user_name},
-                'reversed_by': {'id': movement.reversed_by_id} if movement.reversed_by_id else None,
+                'reversed_by': self._reversed_by(movement, counter),
+                'reversal': self._reversal(movement),
                 'reverses': {'id': movement.reverses_id} if movement.reverses_id else None,
                 'created_at': movement.created_at,
             })
         return data
+
+    @staticmethod
+    def _reversed_by(movement: StockMovement, counter: StockMovement | None) -> dict | None:
+        if not movement.reversed_by_id:
+            return None
+        data: dict = {'id': movement.reversed_by_id}
+        if counter is not None:
+            data.update({
+                'reference': counter.reference, 'occurred_at': counter.occurred_at, 'reason': counter.reason,
+                'user': {'id': counter.user_id, 'name': counter.user_name},
+            })
+        return data
+
+    @staticmethod
+    def _reversal(movement: StockMovement) -> dict:
+        block = reversal_block(movement)
+        return {'allowed': block is None, 'code': block[0] if block else None,
+                'message': block[1] if block else None}
 
     def _source(self, movement: StockMovement) -> dict | None:
         if movement.source is None:
@@ -93,6 +121,15 @@ class StockMovementListView(APIView):
         return paginator.get_paginated_response([presenter.present(m) for m in page])
 
 
+def _detail_response(company_id: UUID, movement: StockMovement) -> dict:
+    counter = None
+    if movement.reversed_by_id:
+        counter = DjangoStockMovementRepository(company_id).get(movement.reversed_by_id)
+    presenter = MovementPresenter(company_id)
+    presenter.load_products([movement])
+    return presenter.present(movement, detail=True, counter=counter)
+
+
 class StockMovementDetailView(APIView):
     required_modules = ('inventory',)
 
@@ -102,6 +139,36 @@ class StockMovementDetailView(APIView):
             movement = GetMovement(DjangoStockMovementRepository(company_id)).execute(movement_id)
         except MovementNotFound as exc:
             raise NotFound(MOVEMENT_NOT_FOUND) from exc
-        presenter = MovementPresenter(company_id)
-        presenter.load_products([movement])
-        return Response(presenter.present(movement, detail=True))
+        return Response(_detail_response(company_id, movement))
+
+
+class ReverseInputSerializer(serializers.Serializer):
+    """Valida forma y tipos; el motivo obligatorio y su largo los aplica el dominio."""
+
+    reason = serializers.CharField(required=False, allow_blank=True, trim_whitespace=False, max_length=2000)
+
+
+class StockMovementReverseView(APIView):
+    """Revierte un movimiento manual (sin origen, ajuste o apertura) con un contramovimiento vinculado."""
+
+    required_modules = ('inventory',)
+
+    def post(self, request, movement_id):
+        serializer = ReverseInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        company_id = company_id_from(request)
+        user = request.user
+        use_case = ReverseMovement(DjangoStockMovementRepository(company_id), ModularityInventoryPolicy(company_id))
+        try:
+            counter = use_case.execute(
+                movement_id, user_id=user.pk, user_name=user.get_full_name().strip() or user.get_username(),
+                reason=serializer.validated_data.get('reason', ''), manual_only=True)
+        except MovementNotFound as exc:
+            raise NotFound(MOVEMENT_NOT_FOUND) from exc
+        except MovementValidationError as exc:
+            raise ValidationError(exc.errors) from exc
+        except InsufficientStock as exc:
+            raise InsufficientStockConflict(exc, company_id) from exc
+        except MovementConflict as exc:
+            raise Conflict(str(exc), exc.code) from exc
+        return Response(_detail_response(company_id, counter))

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
-from modules.purchases.domain.enums import InventoryMode, PurchaseStatus
+from modules.purchases.domain.enums import InventoryMode, PurchaseStatus, ReceiptStatus
 from modules.purchases.domain.exceptions import PurchaseNotFound, PurchaseNotReceivable, ReceiptNotFound
 from modules.purchases.domain.purchase import Purchase
 from modules.purchases.domain.receipt import Receipt
@@ -41,6 +41,13 @@ class ReceiptDetail:
     # Según el modo guardado al confirmar: None si fue documental (o modo desconocido sin Inventario hoy).
     movements: list[StockEntryMovement] | None
     inventory_available: bool  # estado actual del módulo (solo para decidir enlaces)
+
+    @property
+    def can_revert(self) -> bool:
+        """Confirmada y, si movió stock, con Inventario habilitado (si no, no hay libro que corregir)."""
+        if self.receipt.status is not ReceiptStatus.CONFIRMED:
+            return False
+        return self.inventory_available or not self.receipt.moved_stock
 
     def stock_entry(self, product_id: UUID) -> bool | None:
         """¿El producto generó una entrada de stock? Solo se sabe en modo `inventory` (se lee del libro)."""

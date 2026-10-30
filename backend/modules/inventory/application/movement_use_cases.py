@@ -1,3 +1,4 @@
+from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -13,7 +14,13 @@ from modules.inventory.domain.exceptions import (
     MovementValidationError,
     Shortage,
 )
-from modules.inventory.domain.movement import MovementKind, MovementSource, StockMovement
+from modules.inventory.domain.movement import (
+    MovementKind,
+    MovementSource,
+    MovementStatus,
+    StockMovement,
+    reversal_block,
+)
 from modules.inventory.domain.repositories import (
     MovementFilters,
     StockMovementRepository,
@@ -161,17 +168,23 @@ class RecordOutputs:
 
 
 class ReverseMovement:
+    """Revierte un movimiento desde Inventario; con `manual_only` rechaza los que se corrigen desde su documento."""
+
     def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None):
         self.repository = repository
         self.policy = policy or BlockNegativeStock()
 
     def execute(self, movement_id: UUID, *, user_id: UUID | None, user_name: str,
-                reason: str = '') -> StockMovement:
+                reason: str, manual_only: bool = False) -> StockMovement:
         original = self.repository.get(movement_id)
         if original is None:
             raise MovementNotFound(movement_id)
         with self.repository.locked(original.warehouse_id):
             original = self.repository.get(movement_id)  # estado vigente, ya bajo el bloqueo
+            if manual_only:
+                block = reversal_block(original)
+                if block is not None:
+                    raise MovementConflict(*block)
             counter = original.reverse(
                 occurred_at=timezone.now(), user_id=user_id, user_name=user_name, reason=reason)
             if counter.kind is MovementKind.OUT and not self.policy.allow_negative_stock():
@@ -183,6 +196,60 @@ class ReverseMovement:
             created = self.repository.insert(counter)
             self.repository.mark_reversed(original.id)
             return created
+
+
+class ReverseSourceMovements:
+    """Revierte todos los movimientos confirmados de un documento de origen, todos o ninguno.
+
+    Lo usa el módulo dueño del documento (Compras): un bloqueo por almacén (en orden de id) cubre la validación del
+    conjunto y las inserciones. Sin movimientos confirmados pendientes no hace nada.
+    """
+
+    def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None):
+        self.repository = repository
+        self.policy = policy or BlockNegativeStock()
+
+    def execute(self, source_type: str, source_id: str, *, user_id: UUID | None, user_name: str,
+                reason: str) -> list[StockMovement]:
+        pending = self._confirmed(source_type, source_id)
+        if not pending:
+            return []
+        with ExitStack() as stack:
+            for warehouse_id in sorted({m.warehouse_id for m in pending}, key=str):
+                stack.enter_context(self.repository.locked(warehouse_id))
+            pending = self._confirmed(source_type, source_id)  # estado vigente, ya bajo el bloqueo
+            when = timezone.now()
+            counters = [m.reverse(occurred_at=when, user_id=user_id, user_name=user_name, reason=reason)
+                        for m in pending]
+            self._check_balances(counters)
+            created = [self.repository.insert(c) for c in counters]
+            for original in pending:
+                self.repository.mark_reversed(original.id)
+            return created
+
+    def _confirmed(self, source_type: str, source_id: str) -> list[StockMovement]:
+        return [m for m in self.repository.find_by_source_id(source_type, source_id)
+                if m.status is MovementStatus.CONFIRMED]
+
+    def _check_balances(self, counters: list[StockMovement]) -> None:
+        if self.policy.allow_negative_stock():
+            return
+        outputs: dict[tuple[UUID, UUID], Decimal] = {}
+        for counter in counters:
+            if counter.kind is MovementKind.OUT:
+                key = (counter.warehouse_id, counter.product_id)
+                outputs[key] = outputs.get(key, Decimal('0')) + counter.quantity
+        shortages: list[tuple[UUID, Shortage]] = []
+        for (warehouse_id, product_id), requested in outputs.items():
+            available = self.repository.balance(product_id, warehouse_id)
+            if available < requested:
+                shortages.append((warehouse_id, Shortage(product_id, requested, available)))
+        if shortages:
+            warehouse_id, first = shortages[0]
+            raise InsufficientStock(
+                'No hay saldo suficiente para revertir esta entrada.', product_id=first.product_id,
+                warehouse_id=warehouse_id, requested=first.requested, available=first.available,
+                shortages=[s for _, s in shortages])
 
 
 class GetBalance:
