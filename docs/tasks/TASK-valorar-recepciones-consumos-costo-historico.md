@@ -1,6 +1,6 @@
 # TASK-valorar-recepciones-consumos-costo-historico: Valorar recepciones y consumos con costo histórico (PB-VAL-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-valorar-recepciones-consumos-costo-historico
@@ -13,6 +13,7 @@
 | 2026-10-30 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta Trello PB-VAL-002 | delivery-start |
 | 2026-10-30 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Cruza Inventario, Compras, Ventas y Costeo; tablas nuevas; pantallas nuevas | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según el PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -87,7 +88,33 @@ Ver `docs/adr/ADR-valorar-recepciones-consumos-costo-historico-puerto-modelo-y-c
 Ver `docs/plans/PLAN-2026-10-30-valorar-recepciones-consumos-costo-historico.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Con la valoración adoptada, Inventario invoca el puerto neutro `shared/stock_valuation.py` dentro de la sección crítica de `RecordMovement`, `RecordOutputs`, `ReverseMovement` y `ReverseSourceMovements`; Costeo (proveedor registrado en `CostingConfig.ready`) calcula el promedio móvil, guarda el snapshot inmutable y actualiza el estado corriente por producto.
+
+**Backend.**
+- Dominio puro `costing/domain/costing.py` (entrada, salida, vaciado sin residuo, redondeo): INV-01..03, AC-01/03/04/05.
+- Modelos `ProductCostModel` y `MovementValuationModel` y migración `costing/0002` con `RunPython` idempotente para adopciones existentes: AC-15/16. La adopción ahora también inicializa el estado corriente (`DjangoAdoptionRepository.save`).
+- Caso de uso `ValueMovement` (retroactividad, reversión, origen del costo): INV-05, AC-08/09. Proveedor `CostingValuationProvider`.
+- Inventario: `apply_valuation` en los cuatro casos de uso, `ModularityInventoryPolicy.value_movement` y `allow_negative_stock()` en `False` con inventario valorado (INV-04, AC-07/11/12); `valuation` en `inventory.services.record_movement`; ajustes con `total_value`/`declared_zero` (AC-05/06).
+- Compras: el precio unitario de la línea de compra viaja a la entrada (`purchase_price`): AC-01/02.
+- API de lectura `/api/valuation/movements/` y `/costs/` con módulo `costing` y aislamiento por empresa: AC-13/14.
+
+**Frontend** (pantallas de referencia: `movement-list` para la consulta, `product-form` «sección condicionada por módulo», `adjustment-form`; sin componentes nuevos en `shared/`): feature nueva `features/costing` con el componente `app-movement-valuation-section` (usado en detalle de recepción y de movimiento), la página `valuation-movements` (ruta `inventory/valuation/movements`, guardia `costing`) y el servicio; enlace en la página de valoración; campo «Valor total del ajuste (BOB)» y «Costo cero» en el formulario de ajuste: AC-17/18/19.
+
+**Desviaciones del plan.**
+- La URL del ajuste es `/api/stock-adjustments/` (el PLAN decía `/api/inventory/adjustments/`); PLAN y ADR corregidos, no cambia la Specification.
+- El caso de uso `ReverseSourceMovements` (reversión de recepciones, posterior al diseño del ADR) también pasa por el puerto; el ADR lo cubría como «ReverseMovement» y ahora son cuatro puntos de inserción.
+- La sección de recepción solo aparece si la recepción generó movimientos (`r.movements?.length`).
+- El campo de valor del ajuste se muestra con Costeo habilitado y adopción, o cuando el servidor lo exige (400 `total_value`) aunque Costeo esté deshabilitado (decisión del usuario: la valoración sigue aplicándose).
+
+**Pruebas.** Backend (PostgreSQL local): suite completa `python manage.py test`, 1313 pruebas (OK), incluidas 28 nuevas en `modules/costing/tests/test_movement_valuation.py` (dominio, recepciones, consumos, ajustes, saldo negativo con política activa, retroactividad, reversiones, atomicidad, idempotencia, aislamiento, 403 con valoración activa, migración de datos). Frontend: Karma de `features/**` (con un tsconfig temporal porque `app.component.spec.ts` ya no compila en `main`: `title` inexistente, preexistente) 983/984 — falla `FooterComponent should create` (angular-feather), preexistente y ajeno; `ng build` OK. `npm run lint` no es utilizable (no hay `eslint.config.js`). Esto es verificación propia, no el Quality Gate.
+
+**Deuda técnica / no cubierto.**
+- Falta una prueba de concurrencia de dos almacenes sobre el mismo producto (EDGE-04, prevista en el plan); el bloqueo es `select_for_update` de la fila de costo más el del almacén.
+- Entradas de producción (PB-CST-002) quedan fuera; el punto de extensión es `cost_origin` en `MovementValue`.
+- `app.component.spec.ts` y `FooterComponent` rotos en `main`.
+- La apertura de existencias (`inventory_opening`) con inventario valorado se rechaza por falta de valor (EDGE-05); no se agregó campo de valor en esa pantalla.
+- Sin revisión visual en navegador (corresponde a `delivery-publish`).
 
 ## Review
 _Pendiente_
