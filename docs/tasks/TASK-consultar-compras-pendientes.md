@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-compras-pendientes
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/39
 **Fuente:** https://trello.com/c/NsnM22Wj/20-pb-com-006-consultar-compras-y-sus-pendientes
 
 ## Historial de transiciones
