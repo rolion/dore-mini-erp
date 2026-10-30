@@ -47,7 +47,8 @@ class ProductCatalogAdapter:
         product = catalog_services.get_product_for_sale(self.company_id, product_id)
         if product is None:
             return None
-        return ProductInfo(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active)
+        return ProductInfo(id=product.id, name=product.name, sale_price=product.sale_price, active=product.active,
+                           can_sell=product.can_sell)
 
 
 class CustomerDirectoryAdapter:

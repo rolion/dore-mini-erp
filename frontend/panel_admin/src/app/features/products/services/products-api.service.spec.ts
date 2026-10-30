@@ -15,6 +15,10 @@ const DTO: ProductDto = {
   name: 'Cuñapé',
   description: 'Tradicional',
   sale_price: '35.00',
+  category: 'finished',
+  can_buy: false,
+  can_sell: true,
+  needs_review: false,
   active: true,
   tracks_stock: false,
   base_unit: null,
@@ -27,6 +31,10 @@ const PRODUCT: Product = {
   name: 'Cuñapé',
   description: 'Tradicional',
   salePrice: '35.00',
+  category: 'finished',
+  canBuy: false,
+  canSell: true,
+  needsReview: false,
   active: true,
   tracksStock: false,
   baseUnit: null,
@@ -89,11 +97,13 @@ describe('ProductsApiService', () => {
   it('creates a product posting snake_case body with the price as text (AC-01, AC-12)', () => {
     let result: unknown;
     service
-      .create({ name: 'Cuñapé', description: 'Tradicional', salePrice: '35.00' })
+      .create({ name: 'Cuñapé', description: 'Tradicional', salePrice: '35.00', category: 'finished', canBuy: false, canSell: true })
       .subscribe((p) => (result = p));
     const req = http.expectOne('/api/products/');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual({ name: 'Cuñapé', description: 'Tradicional', sale_price: '35.00' });
+    expect(req.request.body).toEqual({
+      name: 'Cuñapé', description: 'Tradicional', sale_price: '35.00', category: 'finished', can_buy: false, can_sell: true,
+    });
     req.flush(DTO);
     expect(result).toEqual(PRODUCT);
   });
@@ -123,7 +133,7 @@ describe('ProductsApiService', () => {
   });
 
   it('maps 400 responses to per-field errors using form field names (AC-12)', () => {
-    const watched = watchError(service.create({ name: '', description: '', salePrice: '-1' }));
+    const watched = watchError(service.create({ name: '', description: '', salePrice: '-1', category: 'finished', canBuy: false, canSell: true }));
     const req = http.expectOne('/api/products/');
     req.flush(
       { name: ['El nombre es obligatorio.'], sale_price: ['No negativo.'], other: ['ignorado'] },

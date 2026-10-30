@@ -13,8 +13,12 @@ class ProductRepository(Protocol):
         ...
 
     def list(self, search: str | None = None, active: bool | None = None,
-             tracks_stock: bool | None = None) -> Sequence[Product]:
-        """Productos ordenados por nombre e id; `search` es coincidencia parcial sin distinguir mayúsculas."""
+             tracks_stock: bool | None = None, can_buy: bool | None = None, can_sell: bool | None = None,
+             category: str | None = None) -> Sequence[Product]:
+        """Productos ordenados por nombre e id; `search` es coincidencia parcial sin distinguir mayúsculas.
+
+        `category` es una categoría o `unclassified` (productos sin categoría).
+        """
         ...
 
 

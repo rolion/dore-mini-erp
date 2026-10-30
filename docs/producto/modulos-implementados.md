@@ -44,6 +44,7 @@ Mini ERP para pequeños negocios que venden por pedido (WhatsApp, redes, feria, 
 - Crear, editar, consultar y listar productos (nombre obligatorio, precio ≥ 0, descripción opcional).
 - Activar / desactivar: un producto inactivo no se puede agregar a pedidos nuevos, pero sigue visible en ventas y reportes históricos.
 - Lista con filtro activo/inactivo y búsqueda por nombre.
+- **Usos del producto (PB-CAT-001)**: cada producto tiene categoría operativa (materia prima, empaque, intermedio, terminado, mercadería) y dos usos independientes, «se puede comprar» y «se puede vender». El precio de venta solo es obligatorio si se vende; el precio de compra se captura en cada compra. Ventas solo acepta productos activos y vendibles (también en la API); la fachada de Catálogo informa los comprables para Compras. La categoría organiza y filtra, no restringe usos. Los productos existentes quedan vendibles, no comprables y «por revisar» (sin categoría) hasta que se clasifiquen; sus pedidos históricos conservan snapshots. La lista filtra por uso, categoría y estado.
 - Editar un producto **no altera pedidos anteriores**: estos guardan una copia (snapshot) del nombre y precio.
 
 ### 3.3 Clientes

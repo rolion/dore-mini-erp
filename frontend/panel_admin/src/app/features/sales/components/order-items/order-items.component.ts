@@ -106,7 +106,7 @@ export class OrderItemsComponent {
   /** `ng-select` emite `null` por el typeahead al elegir o limpiar; un fallo deja la lista vacía sin romper el stream. */
   private searchProducts(term: string | null | undefined): Observable<Product[]> {
     return defer(() =>
-      this.api.list({ search: (term ?? '').trim(), active: true, pageSize: PRODUCT_SEARCH_PAGE_SIZE }),
+      this.api.list({ search: (term ?? '').trim(), active: true, canSell: true, pageSize: PRODUCT_SEARCH_PAGE_SIZE }),
     ).pipe(
       map((page) => page.results),
       catchError(() => of([] as Product[])),

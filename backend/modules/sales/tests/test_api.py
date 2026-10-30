@@ -41,9 +41,9 @@ class SalesApiTestCase(APITestCase):
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     # --- fixtures ---
-    def product(self, name='Pack cuñapé', price='35.00', active=True):
+    def product(self, name='Pack cuñapé', price='35.00', active=True, can_sell=True):
         return ProductModel.objects.create(company_id=self.company.id, name=name, description='',
-                                           sale_price=Decimal(price), active=active)
+                                           sale_price=Decimal(price), active=active, can_sell=can_sell)
 
     def customer(self, name='Ana Pérez', active=True):
         return CustomerModel.objects.create(company_id=self.company.id, name=name, active=active)
@@ -195,6 +195,25 @@ class ItemTests(SalesApiTestCase):
             'product_id': str(product.id), 'quantity': 1, 'unit_price': '0.01', 'product_name': 'Falso'}, format='json')
         item = response.json()['items'][0]
         self.assertEqual((item['unit_price'], item['product_name']), ('35.00', product.name))
+
+    def test_unsellable_product_cannot_be_added(self):  # AC-01 (PB-CAT-001), API-04
+        order = self.create()
+        insumo = self.product(name='Queso', can_sell=False)
+        response = self.client.post(url(order['id'], 'items/'), {'product_id': str(insumo.id), 'quantity': 1},
+                                    format='json')
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json(), {'product_id': ['El producto no se puede vender.']})
+        self.assertEqual(self.get(order)['items'], [])
+
+    def test_order_keeps_and_delivers_a_product_that_stopped_being_sellable(self):  # AC-07, EDGE-06
+        product = self.product(price='35.00')
+        order = self.add_item(self.create(), product, 2)
+        ProductModel.objects.filter(pk=product.id).update(can_sell=False, active=False)
+        item = self.get(order)['items'][0]
+        self.assertEqual((item['product_name'], item['unit_price'], item['subtotal']), ('Pack cuñapé', '35.00', '70.00'))
+        for action in ('prepare', 'ready'):
+            self.act(order, action)
+        self.assertEqual(self.act(order, 'deliver')['status'], 'DELIVERED')
 
     def test_snapshot_survives_catalog_changes(self):  # EDGE-02
         product = self.product(price='35.00')

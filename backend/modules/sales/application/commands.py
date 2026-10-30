@@ -95,6 +95,8 @@ class AddOrderItem:
             errors['product_id'] = ['El producto no existe.']
         elif not product.active:
             errors['product_id'] = ['El producto está inactivo y no puede agregarse al pedido.']
+        elif not product.can_sell:
+            errors['product_id'] = ['El producto no se puede vender.']
         try:
             validate_quantity(quantity)
         except OrderValidationError as exc:

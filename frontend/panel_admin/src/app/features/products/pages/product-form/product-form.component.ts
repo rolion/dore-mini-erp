@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { UnitsApiService } from '../../../inventory';
-import { Product, ProductApiError, ProductInput } from '../../models/product';
+import { PRODUCT_CATEGORIES, Product, ProductApiError, ProductCategory, ProductInput } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 
 export const NAME_MAX_LENGTH = 150;
@@ -31,15 +31,21 @@ export interface UnitOption {
 })
 export class ProductFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;
+  readonly categories = PRODUCT_CATEGORIES;
   readonly form = inject(FormBuilder).nonNullable.group({
     name: ['', [notBlank, Validators.maxLength(NAME_MAX_LENGTH)]],
     description: [''],
+    category: ['', Validators.required],
+    canBuy: [false],
+    canSell: [true],
     salePrice: ['', [Validators.required, Validators.pattern(PRICE_PATTERN)]],
     tracksStock: [false],
     baseUnitId: [''],
   });
 
   productId: string | null = null;
+  /** Producto migrado sin categoría: se avisa para que lo clasifique. */
+  needsReview = false;
   saving = false;
   loading = false;
   /** Errores de validación devueltos por el servidor, por campo; se limpian al editar. */
@@ -66,6 +72,12 @@ export class ProductFormComponent implements OnInit {
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.serverErrors = {};
       this.lockedMessage = '';
+    });
+    this.form.controls.canSell.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((sells) => {
+      const price = this.form.controls.salePrice;
+      // Oculto y sin venta, el precio no debe bloquear el guardado (REV-02).
+      price.setValidators(sells ? [Validators.required, Validators.pattern(PRICE_PATTERN)] : []);
+      price.updateValueAndValidity({ emitEvent: false });
     });
     this.form.controls.tracksStock.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((tracks) => {
       const unit = this.form.controls.baseUnitId;
@@ -115,7 +127,11 @@ export class ProductFormComponent implements OnInit {
     const input: ProductInput = {
       name: value.name.trim(),
       description: value.description.trim(),
-      salePrice: value.salePrice.replace(',', '.'),
+      // Un producto que no se vende conserva el precio que ya tenía; sin precio se envía null.
+      salePrice: this.priceToSend(value.salePrice, value.canSell),
+      category: value.category as ProductCategory,
+      canBuy: value.canBuy,
+      canSell: value.canSell,
     };
     if (this.inventoryEnabled) {
       input.tracksStock = value.tracksStock;
@@ -136,14 +152,26 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
+  private priceToSend(raw: string, sells: boolean): string | null {
+    const price = raw.trim();
+    if (!price || (!sells && !PRICE_PATTERN.test(price))) {
+      return null;
+    }
+    return price.replace(',', '.');
+  }
+
   private fill(product: Product): void {
     this.form.setValue({
       name: product.name,
       description: product.description,
-      salePrice: product.salePrice,
+      category: product.category ?? '',
+      canBuy: product.canBuy,
+      canSell: product.canSell,
+      salePrice: product.salePrice ?? '',
       tracksStock: product.tracksStock,
       baseUnitId: product.baseUnit?.id ?? '',
     });
+    this.needsReview = product.needsReview;
     this.currentUnit = product.baseUnit;
     this.addCurrentUnit();
     this.serverErrors = {};
@@ -179,7 +207,7 @@ export class ProductFormComponent implements OnInit {
       return;
     }
     const errors: Partial<Record<FormField, string>> = {};
-    for (const field of ['name', 'description', 'salePrice', 'tracksStock', 'baseUnitId'] as const) {
+    for (const field of ['name', 'description', 'category', 'canBuy', 'canSell', 'salePrice', 'tracksStock', 'baseUnitId'] as const) {
       const messages = err.fieldErrors[field];
       if (messages?.length) {
         errors[field] = messages.join(' ');

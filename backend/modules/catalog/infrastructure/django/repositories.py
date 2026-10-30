@@ -11,6 +11,9 @@ from .mappers import to_entity, to_model_values, unit_to_entity, unit_to_model_v
 from .models import ProductModel, UnitModel
 
 
+UNCLASSIFIED = 'unclassified'
+
+
 class ProductList:
     """Vista perezosa de entidades sobre un queryset: permite paginar sin cargar todos los productos."""
 
@@ -51,8 +54,9 @@ class DjangoProductRepository:
             id=product.id, company_id=self.company_id, defaults=to_model_values(product))
         return to_entity(self._products().get(pk=product.id))
 
-    def list(self, search: str | None = None, active: bool | None = None,
-             tracks_stock: bool | None = None) -> ProductList:
+    def list(self, search: str | None = None, active: bool | None = None, tracks_stock: bool | None = None,
+             can_buy: bool | None = None, can_sell: bool | None = None,
+             category: str | None = None) -> ProductList:
         queryset = self._products().order_by('name', 'id')
         if search:
             queryset = queryset.filter(name__icontains=search)
@@ -60,6 +64,14 @@ class DjangoProductRepository:
             queryset = queryset.filter(active=active)
         if tracks_stock is not None:
             queryset = queryset.filter(tracks_stock=tracks_stock)
+        if can_buy is not None:
+            queryset = queryset.filter(can_buy=can_buy)
+        if can_sell is not None:
+            queryset = queryset.filter(can_sell=can_sell)
+        if category == UNCLASSIFIED:
+            queryset = queryset.filter(category__isnull=True)
+        elif category:
+            queryset = queryset.filter(category=category)
         return ProductList(queryset)
 
 
