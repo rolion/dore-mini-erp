@@ -18,19 +18,21 @@
     <div class="row">
       <div class="col-md-6">
         <app-report-card title="Total de ventas" [status]="(sales.state$ | async)?.status ?? 'loading'"
-          [error]="(sales.state$ | async)?.error ?? ''" (retry)="sales.reload()">
+          [error]="(sales.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="sales.reload()">
           @if ((sales.state$ | async)?.data; as d) {
           <h2 class="mb-1" data-testid="sales-total">{{ d.total | money }}</h2>
-          <p class="mb-1" data-testid="sales-orders">{{ d.ordersCount }} pedidos · Ticket promedio {{ d.averageTicket | money }}</p>
+          <p class="mb-1" data-testid="sales-orders">{{ d.ordersCount }} pedidos · Ticket promedio {{ d.averageTicket ? (d.averageTicket | money) : 'Sin registros' }}</p>
+          <small class="text-muted d-block" data-testid="sales-period">{{ periodLabel(d.period) }}</small>
           <small class="text-muted" data-testid="sales-criteria">{{ d.criteria }}</small>
           }
         </app-report-card>
       </div>
       <div class="col-md-6">
         <app-report-card title="Total de gastos" [status]="(expenses.state$ | async)?.status ?? 'loading'"
-          [error]="(expenses.state$ | async)?.error ?? ''" (retry)="expenses.reload()">
+          [error]="(expenses.state$ | async)?.error ?? ''" [unavailable]="expensesDisabled" (retry)="expenses.reload()">
           @if ((expenses.state$ | async)?.data; as d) {
           <h2 class="mb-1" data-testid="expenses-total">{{ d.total | money }}</h2>
+          <small class="text-muted d-block" data-testid="expenses-period">{{ periodLabel(d.period) }}</small>
           <small class="text-muted">Gastos vigentes del periodo; los anulados no se incluyen.</small>
           }
         </app-report-card>
@@ -40,7 +42,7 @@
     <div class="row">
       <div class="col-lg-6">
         <app-report-card title="Ventas por canal" [status]="(channels.state$ | async)?.status ?? 'loading'"
-          [error]="(channels.state$ | async)?.error ?? ''" (retry)="channels.reload()">
+          [error]="(channels.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="channels.reload()">
           @if ((channels.state$ | async)?.data; as d) {
           @if (d.channels.length) {
           <table class="table table-sm" data-testid="channels-table">
@@ -63,7 +65,7 @@
             </tbody>
           </table>
           } @else {
-          <p class="mb-0" data-testid="channels-empty">Sin datos para este periodo.</p>
+          <p class="mb-0" data-testid="channels-empty">Sin registros</p>
           }
           }
         </app-report-card>
@@ -71,7 +73,7 @@
 
       <div class="col-lg-6">
         <app-report-card title="Gastos por categoría" [status]="(expenses.state$ | async)?.status ?? 'loading'"
-          [error]="(expenses.state$ | async)?.error ?? ''" (retry)="expenses.reload()">
+          [error]="(expenses.state$ | async)?.error ?? ''" [unavailable]="expensesDisabled" (retry)="expenses.reload()">
           @if ((expenses.state$ | async)?.data; as d) {
           @if (d.categories.length) {
           <apx-chart [series]="chartSeries(d)" [chart]="chart" [labels]="chartLabels(d)" [legend]="legend"
@@ -92,7 +94,7 @@
             </tfoot>
           </table>
           } @else {
-          <p class="mb-0" data-testid="categories-empty">Sin datos para este periodo.</p>
+          <p class="mb-0" data-testid="categories-empty">Sin registros</p>
           }
           }
         </app-report-card>
@@ -102,7 +104,7 @@
     <div class="row">
       <div class="col-lg-6">
         <app-report-card title="Productos más vendidos" [status]="(products.state$ | async)?.status ?? 'loading'"
-          [error]="(products.state$ | async)?.error ?? ''" (retry)="products.reload()">
+          [error]="(products.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="products.reload()">
           @if ((products.state$ | async)?.data; as d) {
           @if (d.products.length) {
           <table class="table table-sm" data-testid="products-table">
@@ -119,7 +121,7 @@
           </table>
           <small class="text-muted" data-testid="products-note">{{ productAmountNote }}</small>
           } @else {
-          <p class="mb-0" data-testid="products-empty">Sin datos para este periodo.</p>
+          <p class="mb-0" data-testid="products-empty">Sin registros</p>
           }
           }
         </app-report-card>
@@ -128,7 +130,7 @@
       @if (!customersDisabled) {
       <div class="col-lg-6">
         <app-report-card title="Clientes con mayor compra" [status]="(customers.state$ | async)?.status ?? 'loading'"
-          [error]="(customers.state$ | async)?.error ?? ''" (retry)="customers.reload()">
+          [error]="(customers.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="customers.reload()">
           @if ((customers.state$ | async)?.data; as d) {
           @if (d.customers.length) {
           <table class="table table-sm" data-testid="customers-table">
@@ -145,7 +147,7 @@
           </table>
           <small class="text-muted" data-testid="customers-note">{{ customerRankingNote }}</small>
           } @else {
-          <p class="mb-0" data-testid="customers-empty">Sin datos para este periodo.</p>
+          <p class="mb-0" data-testid="customers-empty">Sin registros</p>
           }
           }
         </app-report-card>

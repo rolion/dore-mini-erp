@@ -65,6 +65,17 @@ class FakeExpenses:
         return ExpenseTotals(total=self.total, categories=self.categories)
 
 
+class FakeSources:
+    def __init__(self, sales=True, expenses=True):
+        self.sales, self.expenses = sales, expenses
+
+    def sales_enabled(self):
+        return self.sales
+
+    def expenses_enabled(self):
+        return self.expenses
+
+
 class FakeCustomers:
     def __init__(self, names=None, available=True):
         self.names = names or {}
@@ -83,5 +94,5 @@ def pending_order(customer_id=None, total='100.00', balance='40.00', status='DEL
                         total=D(total), balance=D(balance))
 
 
-__all__ = ['FakeClock', 'FakeSales', 'FakeExpenses', 'FakeCustomers', 'pending_order', 'TODAY', 'D',
+__all__ = ['FakeClock', 'FakeSales', 'FakeExpenses', 'FakeCustomers', 'FakeSources', 'pending_order', 'TODAY', 'D',
            'CategoryExpense', 'ChannelSales', 'CustomerSales', 'ProductSales', 'PendingOrders']

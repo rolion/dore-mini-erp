@@ -8,6 +8,7 @@ from rest_framework.test import APIClient, APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.customers.infrastructure.django.models import CustomerModel
+from modules.modularity.tests.test_enforcement import set_enabled
 from modules.expenses.domain.category import ExpenseCategory
 from modules.expenses.domain.expense import Expense
 from modules.expenses.infrastructure.django.repositories import (
@@ -198,6 +199,80 @@ class DashboardApiTests(ReportingApiTestCase):
         for params in ({}, {'period': 'day'}, {'date_from': '2026-01-01', 'date_to': '2026-01-02'}):
             data = self.get('dashboard', **params)
             self.assertEqual((data['pending_delivery_count'], data['pending_collection_count']), (1, 1))
+
+
+class ActiveSourcesApiTests(ReportingApiTestCase):
+    """PB-REP-001: el dashboard y los reportes usan solo las fuentes habilitadas de la empresa."""
+
+    def set_modules(self, *keys):
+        set_enabled(self.company, keys)
+
+    def seed(self):
+        self.order(items=(('Pack', '100.00', 1),), status='READY')
+        self.expense(self.category(), '40.00')
+
+    def test_both_sources_enabled_keeps_the_current_values(self):  # AC-01, API-01
+        self.set_modules('sales', 'expenses', 'reporting')
+        self.seed()
+        data = self.get('dashboard')
+        self.assertEqual(data['sources'], {'sales': True, 'expenses': True})
+        self.assertEqual((data['sales_total'], data['expenses_total'], data['estimated_profit']),
+                         ('100.00', '40.00', '60.00'))
+
+    def test_sales_disabled_dashboard_keeps_expenses_and_does_not_compute_profit(self):  # AC-02, API-01
+        self.set_modules('expenses', 'reporting')
+        self.seed()
+        data = self.get('dashboard')
+        self.assertEqual(data['sources'], {'sales': False, 'expenses': True})
+        self.assertEqual(data['expenses_total'], '40.00')
+        for field in ('sales_total', 'orders_count', 'average_ticket', 'estimated_profit', 'pending_delivery_count',
+                      'pending_collection_count', 'pending_collection_balance', 'sales_criteria'):
+            self.assertIsNone(data[field], field)
+
+    def test_expenses_disabled_dashboard_keeps_sales_and_does_not_compute_profit(self):  # AC-03, API-01
+        self.set_modules('sales', 'reporting')
+        self.seed()
+        data = self.get('dashboard')
+        self.assertEqual(data['sources'], {'sales': True, 'expenses': False})
+        self.assertEqual((data['sales_total'], data['pending_delivery_count']), ('100.00', 1))
+        self.assertEqual((data['expenses_total'], data['estimated_profit']), (None, None))
+
+    def test_reporting_without_any_source_still_answers(self):  # AC-04
+        self.set_modules('reporting')
+        self.seed()
+        data = self.get('dashboard')
+        self.assertEqual(data['sources'], {'sales': False, 'expenses': False})
+        self.assertTrue(all(v is None for k, v in data.items() if k not in ('sources', 'period')))
+
+    def test_sales_only_reports_are_rejected_without_sales(self):  # AC-12, API-02
+        self.set_modules('expenses', 'customers', 'reporting')
+        for route in ('sales', 'sales-by-channel', 'top-products', 'top-customers', 'pending'):
+            with self.subTest(route=route):
+                response = self.client.get(f'{BASE}{route}/')
+                self.assertEqual(response.status_code, 403)
+                self.assertEqual(response.json()['module'], 'sales')
+        self.assertEqual(self.client.get(f'{BASE}expenses/').status_code, 200)
+
+    def test_expenses_report_is_rejected_without_expenses(self):  # AC-12, API-02
+        self.set_modules('sales', 'reporting')
+        response = self.client.get(f'{BASE}expenses/')
+        self.assertEqual((response.status_code, response.json()['module']), (403, 'expenses'))
+        for route in ('sales', 'sales-by-channel', 'top-products', 'pending'):
+            self.assertEqual(self.client.get(f'{BASE}{route}/').status_code, 200, route)
+
+    def test_a_module_change_applies_on_the_next_request(self):  # AC-12
+        self.set_modules('sales', 'expenses', 'reporting')
+        self.assertTrue(self.get('dashboard')['sources']['sales'])
+        self.set_modules('expenses', 'reporting')
+        self.assertFalse(self.get('dashboard')['sources']['sales'])
+
+    def test_sources_are_those_of_the_users_company(self):  # AC-13
+        self.set_modules('sales', 'expenses', 'reporting')
+        other = make_company('Empresa B')
+        set_enabled(other, ('reporting',))
+        self.assertEqual(self.get('dashboard')['sources'], {'sales': True, 'expenses': True})
+        authenticate(self.client, make_admin(other, username='beto'))
+        self.assertEqual(self.get('dashboard')['sources'], {'sales': False, 'expenses': False})
 
 
 class SalesBreakdownApiTests(ReportingApiTestCase):

@@ -95,5 +95,13 @@ class CustomerNames(Protocol):
     def get_customer_names(self, customer_ids: Iterable[UUID]) -> dict[UUID, str]: ...
 
 
+class SourceAvailability(Protocol):
+    """Qué fuentes opcionales tiene habilitadas la empresa; una fuente apagada no se consulta."""
+
+    def sales_enabled(self) -> bool: ...
+
+    def expenses_enabled(self) -> bool: ...
+
+
 class Clock(Protocol):
     def today(self) -> date: ...

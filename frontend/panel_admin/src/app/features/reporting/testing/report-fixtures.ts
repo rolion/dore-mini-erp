@@ -14,6 +14,7 @@ export const MONTH: Period = { kind: 'month', dateFrom: '2026-10-01', dateTo: '2
 export function makeSummary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
   return {
     period: MONTH,
+    sources: { sales: true, expenses: true },
     salesTotal: '1200.00',
     ordersCount: 4,
     averageTicket: '300.00',

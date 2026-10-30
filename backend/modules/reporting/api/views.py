@@ -8,6 +8,7 @@ from modules.reporting.infrastructure.adapters import (
     CustomerNamesAdapter,
     ExpensesReaderAdapter,
     SalesReaderAdapter,
+    SourceAvailabilityAdapter,
     SystemClock,
 )
 
@@ -50,10 +51,12 @@ class DashboardView(_PeriodReportView):
     present = staticmethod(serializers.dashboard_data)
 
     def build(self):
-        return queries.GetDashboardSummary(SalesReaderAdapter(self._company_id()), ExpensesReaderAdapter(self._company_id()), SystemClock())
+        return queries.GetDashboardSummary(SalesReaderAdapter(self._company_id()), ExpensesReaderAdapter(self._company_id()),
+                                           SourceAvailabilityAdapter(self._company_id()), SystemClock())
 
 
 class SalesReportView(_PeriodReportView):
+    required_modules = ('reporting', 'sales')
     present = staticmethod(serializers.sales_data)
 
     def build(self):
@@ -61,6 +64,7 @@ class SalesReportView(_PeriodReportView):
 
 
 class ExpensesReportView(_PeriodReportView):
+    required_modules = ('reporting', 'expenses')
     present = staticmethod(serializers.expenses_data)
 
     def build(self):
@@ -68,6 +72,7 @@ class ExpensesReportView(_PeriodReportView):
 
 
 class SalesByChannelView(_PeriodReportView):
+    required_modules = ('reporting', 'sales')
     present = staticmethod(serializers.channels_data)
 
     def build(self):
@@ -75,6 +80,7 @@ class SalesByChannelView(_PeriodReportView):
 
 
 class TopProductsView(_PeriodReportView):
+    required_modules = ('reporting', 'sales')
     present = staticmethod(serializers.products_data)
 
     def build(self):
@@ -82,7 +88,7 @@ class TopProductsView(_PeriodReportView):
 
 
 class TopCustomersView(_PeriodReportView):
-    required_modules = ('reporting', 'customers')
+    required_modules = ('reporting', 'sales', 'customers')
     present = staticmethod(serializers.customers_data)
 
     def build(self):
@@ -91,6 +97,8 @@ class TopCustomersView(_PeriodReportView):
 
 class PendingView(_CompanyReportView):
     """Estado actual de los pedidos pendientes; no recibe periodo."""
+
+    required_modules = ('reporting', 'sales')
 
     def get(self, request):
         report = queries.GetPendingOrders(SalesReaderAdapter(self._company_id()), CustomerNamesAdapter(self._company_id())).execute()

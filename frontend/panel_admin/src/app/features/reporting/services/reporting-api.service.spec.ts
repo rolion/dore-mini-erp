@@ -18,7 +18,7 @@ describe('ReportingApiService', () => {
   afterEach(() => http.verify());
 
   it('asks for a named period with `period` and maps the dashboard (AC-25)', () => {
-    let profit = '';
+    let profit: string | null = '';
     let from = '';
     service.dashboard({ kind: 'week' }).subscribe((s) => {
       profit = s.estimatedProfit;
@@ -29,6 +29,7 @@ describe('ReportingApiService', () => {
     expect(req.request.params.has('date_from')).toBeFalse();
     req.flush({
       period: { ...PERIOD, kind: 'week', date_from: '2026-10-12' },
+      sources: { sales: true, expenses: true },
       sales_total: '1200.00',
       orders_count: 4,
       average_ticket: null,
@@ -40,6 +41,25 @@ describe('ReportingApiService', () => {
       sales_criteria: 'criterio',
     });
     expect([profit, from]).toEqual(['750.00', '2026-10-12']);
+  });
+
+  it('maps a dashboard with disabled sources as nulls, never zero (API-01)', () => {
+    let result: { sources: { sales: boolean }; salesTotal: string | null; estimatedProfit: string | null } | null = null;
+    service.dashboard({ kind: 'month' }).subscribe((s) => (result = s));
+    http.expectOne((r) => r.url === '/api/reports/dashboard/').flush({
+      period: PERIOD,
+      sources: { sales: false, expenses: true },
+      sales_total: null,
+      orders_count: null,
+      average_ticket: null,
+      expenses_total: '10.00',
+      estimated_profit: null,
+      pending_delivery_count: null,
+      pending_collection_count: null,
+      pending_collection_balance: null,
+      sales_criteria: null,
+    });
+    expect(result).toEqual(jasmine.objectContaining({ sources: { sales: false, expenses: true }, salesTotal: null, estimatedProfit: null }));
   });
 
   it('asks for a range with date_from and date_to and no `period`', () => {

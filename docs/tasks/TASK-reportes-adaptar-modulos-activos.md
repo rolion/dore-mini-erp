@@ -1,6 +1,6 @@
 # TASK-reportes-adaptar-modulos-activos: Adaptar dashboard y reportes a los módulos activos
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reportes-adaptar-modulos-activos
@@ -14,6 +14,7 @@
 | 2026-10-30 | INVESTIGATION → DESIGN | NEEDS_ARCHITECTURE, diseño requerido | delivery-start |
 | 2026-10-30 | DESIGN → ARCHITECTURE → PLANNING | DDR y ADR escritos | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -82,7 +83,15 @@ Ver `docs/adr/ADR-reportes-adaptar-modulos-activos-fuentes-opcionales.md`.
 `docs/plans/PLAN-2026-10-30-reportes-adaptar-modulos-activos.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend.** `modularity/domain/modules.py`: Reportes sin `requires`, con `optional` Ventas/Gastos/Clientes (AC-11, API-03). `reporting`: puerto `SourceAvailability` + `SourceAvailabilityAdapter` sobre `module_gate` (una consulta por petición), `GetDashboardSummary` que solo lee fuentes habilitadas y no calcula la ganancia si falta una (INV-02/03, AC-02..04), serializer con `sources` y nulos (API-01), `required_modules` por vista (API-02, AC-12).
+**Frontend** (`features/reporting`): modelo/servicio con `sources` y campos anulables; `app-report-card` con `unavailable` y `UNAVAILABLE_MESSAGE`; dashboard con estado por tarjeta, periodo y unidad, nota de ganancia exacta, «Sin registros» y sin pedir pendientes con Ventas apagado (AC-02..08); reportes con tarjetas por fuente y sin peticiones a fuentes apagadas (AC-08, AC-09). Referencia seguida: plantilla «Dashboard y reportes» (`features/reporting`); componentes reutilizados: `app-report-card`, `app-period-selector`, pipe `money`.
+**Docs:** `modulos-implementados.md`, `design-system.md` §5.
+**Pruebas:** unit y API de Reporting y Modularity, specs de dashboard, reportes, tarjeta y servicio. AC-10 queda cubierto por `purchases/tests/test_payment_api.py:144-155` y `test_receipt_api.py:145-151` (pagar/recibir no crea gastos) y porque Reporting solo lee Gastos; no se añadió prueba nueva.
+
+**Verificación propia (no es el Quality Gate):** backend `modules.modularity.tests.test_domain` y `modules.reporting.tests.{test_application,test_domain}` OK (37). **Las pruebas de API con base de datos (reporting `test_api`, modularity `test_api`/`test_enforcement`) NO se ejecutaron** por falta de `DATABASE_URL` en el worktree (no se lee `.env`). Frontend: specs de `features/reporting` 49/49 OK y `ng build` OK; la suite completa no corre por un error previo en `app.component.spec.ts` (deuda conocida).
+
+**Desviaciones respecto al plan:** `top-customers` exige también `sales` (ya estaba en el ADR); «Gastos por categoría» y la tarjeta de clientes usan `ModulesService.isDisabled` además de `sources` del dashboard. Sin cambio de alcance.
+**Deuda técnica:** `app.component.spec.ts` no compila (previo).
 
 ## Review
 _Pendiente_

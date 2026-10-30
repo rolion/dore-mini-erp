@@ -1,6 +1,6 @@
 # DDR-reportes-adaptar-modulos-activos-estados-de-fuente: Estados por fuente en Dashboard y Reportes
 
-**Estado:** Propuesto
+**Estado:** Propuesto (implementado en PR #41)
 **Task relacionado:** TASK-reportes-adaptar-modulos-activos
 **Fecha:** 2026-10-30
 

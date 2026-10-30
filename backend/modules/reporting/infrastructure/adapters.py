@@ -15,6 +15,8 @@ from modules.sales import services as sales_services
 from shared import module_gate
 
 CUSTOMERS_MODULE = 'customers'
+SALES_MODULE = 'sales'
+EXPENSES_MODULE = 'expenses'
 
 
 def _pending(pending: sales_services.PendingOrders) -> ports.PendingOrders:
@@ -83,6 +85,25 @@ class CustomerNamesAdapter:
         if not self.is_available():
             return {}
         return customer_services.get_customer_names(self.company_id, customer_ids)
+
+
+class SourceAvailabilityAdapter:
+    """Ventas y Gastos son fuentes opcionales de Reportes: se consultan los módulos habilitados una vez por petición."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+        self._enabled: frozenset[str] | None = None
+
+    def _keys(self) -> frozenset[str]:
+        if self._enabled is None:
+            self._enabled = module_gate.enabled_keys(self.company_id)
+        return self._enabled
+
+    def sales_enabled(self) -> bool:
+        return SALES_MODULE in self._keys()
+
+    def expenses_enabled(self) -> bool:
+        return EXPENSES_MODULE in self._keys()
 
 
 class SystemClock:

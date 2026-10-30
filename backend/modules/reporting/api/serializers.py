@@ -19,8 +19,10 @@ def period_data(period: Period) -> dict:
 
 
 def dashboard_data(summary: queries.DashboardSummary) -> dict:
+    """Con una fuente deshabilitada sus indicadores (y la ganancia) viajan como `null`, nunca como cero."""
     return {
         'period': period_data(summary.period),
+        'sources': {'sales': summary.sales_enabled, 'expenses': summary.expenses_enabled},
         'sales_total': money(summary.sales_total),
         'orders_count': summary.orders_count,
         'average_ticket': money(summary.average_ticket),
