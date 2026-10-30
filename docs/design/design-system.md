@@ -123,7 +123,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - Acciones bajo los datos: Editar (primario), Activar/Desactivar (`btn-warning`), Volver (`btn-light`).
 
 ### Dashboard y reportes (referencia: `features/reporting`)
-- Selector de periodo arriba (`app-period-selector`), tarjetas de cifras con `app-report-card` y listas/tablas debajo; los textos de apoyo van en `<small class="text-muted">` y los vacíos dicen "Sin datos para este periodo."
+- Selector de periodo arriba (`app-period-selector`), tarjetas de cifras con `app-report-card` y listas/tablas debajo; los textos de apoyo van en `<small class="text-muted">` y los vacíos dicen «Sin registros»
 - Fuente deshabilitada: la tarjeta conserva su título y dice **«No disponible: módulo deshabilitado»** (nunca 0 ni error). Fuente activa sin datos: totales y conteos en 0; listas, desgloses, rankings y promedios dicen **«Sin registros»** (DDR-reportes-adaptar-modulos-activos-estados-de-fuente).
 - Etiquetas de negocio exactas: **"Ganancia estimada"** (nunca "utilidad" o "ganancia real").
 

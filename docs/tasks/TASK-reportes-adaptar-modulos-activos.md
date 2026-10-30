@@ -15,6 +15,8 @@
 | 2026-10-30 | DESIGN → ARCHITECTURE → PLANNING | DDR y ADR escritos | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-10-30 | REVIEW → ENGINEERING | Quality Gate ciclo 1 FAIL (REV-01 High) | delivery-publish |
+| 2026-10-30 | ENGINEERING → REVIEW | Corrección de REV-01, 02 y 04 | delivery-build |
 
 ## Investigación
 
@@ -94,7 +96,9 @@ Ver `docs/adr/ADR-reportes-adaptar-modulos-activos-fuentes-opcionales.md`.
 **Deuda técnica:** `app.component.spec.ts` no compila (previo).
 
 ## Review
-_Pendiente_
+**Ciclo 1: FAIL.** REV-01 (High, IMPLEMENTATION): `test_settings_api` asumía que Reportes bloquea deshabilitar Ventas. Low: REV-02 (docs desactualizadas), REV-03 (fallo de carga de módulos sin spec), REV-04 (periodo del selector en Reportes), REV-05 (sin test de regresión de Compras en reporting; dos consultas de módulos por petición).
+Corregidos en el ciclo 2: REV-01, REV-02, REV-04. REV-03 y REV-05 quedan abiertos como Low (limitaciones conocidas).
+Detalle en `docs/reviews/REV-2026-10-30-reportes-adaptar-modulos-activos-0[1-5].md`.
 
 ## Publicación
 _Pendiente_

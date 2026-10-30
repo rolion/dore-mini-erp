@@ -11,7 +11,7 @@
   </ul>
   <div class="section-body">
     <div class="mb-3">
-      <app-period-selector [effective]="(sales.state$ | async)?.data?.period ?? null"
+      <app-period-selector [effective]="(sales.state$ | async)?.data?.period ?? (expenses.state$ | async)?.data?.period ?? null"
         (selectionChange)="onSelection($event)" />
     </div>
 
