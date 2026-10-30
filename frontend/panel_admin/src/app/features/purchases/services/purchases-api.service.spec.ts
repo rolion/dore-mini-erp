@@ -80,20 +80,47 @@ describe('PurchasesApiService', () => {
       currency: 'BOB',
       status: 'draft',
       items_count: 2,
+      reference: 'COM-1A2B3C4D',
+      reception_status: 'partial',
+      payment_status: 'unpaid',
+      paid_total: '0.00',
+      balance: '25.00',
     };
     let count = -1;
     let first = '';
-    service.list({ supplierId: 's-1', page: 2, pageSize: 10 }).subscribe((page) => {
-      count = page.count;
-      first = `${page.results[0].supplier.name}/${page.results[0].itemsCount}/${page.results[0].purchaseDate}`;
-    });
+    let tracking = '';
+    service
+      .list({
+        supplierId: 's-1',
+        dateFrom: '2026-10-01',
+        dateTo: '2026-10-31',
+        status: 'confirmed',
+        receptionStatus: 'received',
+        paymentStatus: 'pending',
+        search: 'FAC',
+        page: 2,
+        pageSize: 10,
+      })
+      .subscribe((page) => {
+        count = page.count;
+        first = `${page.results[0].supplier.name}/${page.results[0].itemsCount}/${page.results[0].purchaseDate}`;
+        const r = page.results[0];
+        tracking = `${r.reference}/${r.receptionStatus}/${r.paymentStatus}/${r.paidTotal}/${r.balance}`;
+      });
     const req = http.expectOne((r) => r.url.endsWith('/purchases/'));
+    expect(req.request.params.get('date_from')).toBe('2026-10-01');
+    expect(req.request.params.get('date_to')).toBe('2026-10-31');
+    expect(req.request.params.get('status')).toBe('confirmed');
+    expect(req.request.params.get('reception_status')).toBe('received');
+    expect(req.request.params.get('payment_status')).toBe('pending');
+    expect(req.request.params.get('q')).toBe('FAC');
     expect(req.request.params.get('supplier_id')).toBe('s-1');
     expect(req.request.params.get('page')).toBe('2');
     expect(req.request.params.get('page_size')).toBe('10');
     req.flush({ count: 1, next: null, previous: null, results: [row] });
     expect(count).toBe(1);
     expect(first).toBe('Sur/2/2026-10-29');
+    expect(tracking).toBe('COM-1A2B3C4D/partial/unpaid/0.00/25.00');
   });
 
   it('maps the detail from snake_case', () => {

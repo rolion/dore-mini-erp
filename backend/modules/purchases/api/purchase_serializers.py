@@ -101,4 +101,10 @@ def summary_representation(summary) -> dict:
         'currency': CURRENCY,
         'status': summary.status.value,
         'items_count': summary.items_count,
+        'reference': summary.reference,
+        # Solo las compras confirmadas tienen recepción, pago y saldo; el resto va en `null`.
+        'reception_status': summary.reception_status.value if summary.reception_status else None,
+        'payment_status': summary.payment_status.value if summary.payment_status else None,
+        'paid_total': money(summary.paid_total) if summary.paid_total is not None else None,
+        'balance': money(summary.balance) if summary.balance is not None else None,
     }

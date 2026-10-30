@@ -35,6 +35,7 @@ from modules.purchases.infrastructure.django.repositories import DjangoSupplierR
 from shared.tenancy import company_id_from
 
 from .pagination import SupplierPagination
+from .purchase_filters import parse_purchase_filters
 from .purchase_serializers import (
     CancelPurchaseSerializer,
     PurchaseInputSerializer,
@@ -126,12 +127,8 @@ class PurchaseListCreateView(APIView):
     required_modules = REQUIRED_MODULES
 
     def get(self, request):
-        raw = request.query_params.get('supplier_id')
-        try:
-            supplier_id = UUID(raw) if raw else None
-        except ValueError:
-            raise ValidationError({'supplier_id': ['Valor inválido: use un identificador de proveedor.']}) from None
-        summaries = ListPurchases(_purchases(request)).execute(supplier_id=supplier_id)
+        filters = parse_purchase_filters(request.query_params)
+        summaries = ListPurchases(_purchases(request)).execute(filters=filters)
         paginator = SupplierPagination()
         page = paginator.paginate_queryset(summaries, request, view=self)
         return paginator.get_paginated_response([summary_representation(s) for s in page])

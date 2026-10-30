@@ -1,6 +1,6 @@
 # TASK-consultar-compras-pendientes: Consultar compras y sus pendientes (PB-COM-006)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-compras-pendientes
@@ -14,6 +14,7 @@
 | 2026-10-30 | INVESTIGATION → DESIGN | Veredicto NEEDS_PLAN; diseño requerido (lista con filtros) | delivery-start |
 | 2026-10-30 | DESIGN → PLANNING | DDR escrito; no hay decisión arquitectónica nueva | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -84,7 +85,26 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-10-30-consultar-compras-pendientes.md` (v1, COMPLETO por tocar el contrato API). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+**Resumen.** La lista de compras ahora muestra referencia interna, estado de recepción, estado de pago y saldo, y se filtra por proveedor, rango de fechas, estado documental, recepción, pago («Pago pendiente» incluido) y búsqueda por referencia. Sin migraciones ni dependencias nuevas.
+
+**Backend** (`backend/modules/purchases/`)
+- `domain/repositories.py`: `PurchaseFilters` y campos de seguimiento en `PurchaseSummary` (INV-01, API-02). `api/purchase_filters.py`: parser con 400 por parámetro y rango invertido (AC-05, API-01/03).
+- `infrastructure/django/purchase_repository.py`: filtros, saldo como subconsulta de pagos confirmados acotada por `company_id` (INV-03/04), búsqueda externa `icontains` y referencia interna por prefijo del id en texto (AC-02…AC-04, INV-02). Serializer y vista emiten/leen los campos (AC-01).
+- Pruebas: `tests/test_purchase_list_filters.py` (AC-01…AC-06, aislamiento por empresa, conteo con filtros) y ajuste del conjunto de campos en `test_purchase_api.py`.
+
+**Frontend** (`features/purchases/`)
+- `models/purchase.ts`, `services/purchases-api.service.ts` (+spec), `testing/purchase-fixtures.ts`: campos y parámetros nuevos.
+- `pages/purchase-list/purchase-list-filters.ts` (+spec): funciones puras URL ↔ formulario ↔ API (AC-08, AC-11). `purchase-list.component.*` (+spec): buscador, filtros, columnas, badges, saldo, vacío con filtros aplicados, error y rango inválido (AC-07…AC-09, AC-11).
+- Pantalla de referencia seguida: «Lista de solo lectura con filtros» (`order-list` / `movement-list`); reutiliza `MoneyPipe`, `ng-select`, `badge-outline` y `btn-tbl-*`.
+
+**Desviaciones respecto al plan**
+- **AC-10 / UI-03 sin cambios de código**: el Resumen del detalle ya mostraba «Total pagado» y «Saldo» desde PB-COM-005 (`purchase-detail.component.html:87-89`); queda cubierto por las pruebas existentes del detalle.
+- Colores de badge: se reutilizó `PAYMENT_STATUS_CLASSES` ya existente (Sin pagar gris, Pago parcial naranja, Pagada verde) y se añadió `RECEPTION_STATUS_CLASSES` con la misma lógica, en vez de los colores del DDR (naranja/cian); siempre con texto. Hay que alinear el DDR o los colores en una revisión de diseño.
+- El patrón «vacío con filtros aplicados» y la nota en `design-system.md` ya están en el PR de planificación.
+
+**Verificación propia (no es el Quality Gate).** `python manage.py test modules.purchases` con SQLite en memoria (este worktree no tiene `backend/.env`; no se leyó el del checkout principal): 272 pruebas, las nuevas pasan; fallan 3 pruebas de concurrencia de `test_purchase_concurrency` que requieren bloqueo de fila de PostgreSQL. **No se corrió contra PostgreSQL.** Frontend: `npm run lint` OK, `ng build` OK, Karma de `features/purchases` 200/200 (con un tsconfig temporal porque `app.component.spec.ts` ya no compila en `main`: `title` inexistente, preexistente y fuera de alcance).
+
+**Deuda técnica.** `app.component.spec.ts` roto en `main` (impide `npm test` completo). La búsqueda por referencia interna no usa índice (`id::text`).
 
 ## Review
 _Pendiente_

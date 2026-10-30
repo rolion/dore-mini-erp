@@ -1,14 +1,18 @@
+from decimal import Decimal
 from uuid import UUID
 
 from django.db import transaction
-from django.db.models import Count, QuerySet
+from django.db.models import CharField, Count, DecimalField, OuterRef, Q, QuerySet, Subquery, Sum
+from django.db.models.functions import Cast, Coalesce
 
-from modules.purchases.domain.enums import PurchaseStatus
+from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from modules.purchases.domain.purchase import Purchase
-from modules.purchases.domain.repositories import PurchaseSummary
+from modules.purchases.domain.repositories import PurchaseFilters, PurchaseSummary
 
 from .mappers import purchase_to_entity, purchase_to_model_values
-from .models import PurchaseItemModel, PurchaseModel, SupplierModel
+from .models import PaymentModel, PurchaseItemModel, PurchaseModel, SupplierModel
+
+HEX_DIGITS = frozenset('0123456789abcdef')
 
 
 class PurchaseList:
@@ -28,10 +32,20 @@ class PurchaseList:
         models = list(models)
         names = dict(SupplierModel.objects.filter(
             company_id=self._company_id, pk__in={m.supplier_id for m in models}).values_list('id', 'name'))
-        return [PurchaseSummary(
-            id=m.id, purchase_date=m.purchase_date, supplier_id=m.supplier_id,
-            supplier_name=names.get(m.supplier_id, ''), external_reference=m.external_reference, total=m.total,
-            status=PurchaseStatus(m.status), items_count=m.items_count) for m in models]
+        return [self._summary(m, names.get(m.supplier_id, '')) for m in models]
+
+    @staticmethod
+    def _summary(m, supplier_name: str) -> PurchaseSummary:
+        status = PurchaseStatus(m.status)
+        confirmed = status is PurchaseStatus.CONFIRMED
+        return PurchaseSummary(
+            id=m.id, purchase_date=m.purchase_date, supplier_id=m.supplier_id, supplier_name=supplier_name,
+            external_reference=m.external_reference, total=m.total, status=status, items_count=m.items_count,
+            reference=f'COM-{m.id.hex[:8].upper()}',
+            reception_status=ReceptionStatus(m.reception_status) if confirmed else None,
+            payment_status=PaymentStatus(m.payment_status) if confirmed else None,
+            paid_total=m.paid_total if confirmed else None,
+            balance=m.total - m.paid_total if confirmed else None)
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -73,9 +87,50 @@ class DjangoPurchaseRepository:
             for position, item in enumerate(purchase.items)])
         return purchase_to_entity(model, model.items.all())
 
-    def list(self, supplier_id: UUID | None = None) -> PurchaseList:
-        queryset = self._purchases().annotate(items_count=Count('items')).order_by(
-            '-purchase_date', '-created_at', 'id')
+    def _paid_total(self):
+        """Suma de pagos confirmados de la compra, solo de esta empresa."""
+        money = DecimalField(max_digits=12, decimal_places=2)
+        paid = PaymentModel.objects.filter(
+            company_id=self.company_id, purchase_id=OuterRef('pk'), status='confirmed',
+        ).order_by().values('purchase_id').annotate(total=Sum('amount')).values('total')
+        return Coalesce(Subquery(paid, output_field=money), Decimal('0.00'), output_field=money)
+
+    def list(self, supplier_id: UUID | None = None, filters: PurchaseFilters | None = None) -> PurchaseList:
+        queryset = self._purchases().annotate(
+            items_count=Count('items'), paid_total=self._paid_total(),
+        ).order_by('-purchase_date', '-created_at', 'id')
         if supplier_id is not None:
             queryset = queryset.filter(supplier_id=supplier_id)
+        if filters is not None:
+            queryset = self._apply(queryset, filters)
         return PurchaseList(self.company_id, queryset)
+
+    @staticmethod
+    def _apply(queryset: QuerySet, f: PurchaseFilters) -> QuerySet:
+        if f.supplier_id is not None:
+            queryset = queryset.filter(supplier_id=f.supplier_id)
+        if f.date_from is not None:
+            queryset = queryset.filter(purchase_date__gte=f.date_from)
+        if f.date_to is not None:
+            queryset = queryset.filter(purchase_date__lte=f.date_to)
+        if f.status is not None:
+            queryset = queryset.filter(status=f.status.value)
+        # Recepción y pago solo existen en compras confirmadas.
+        if f.reception_status or f.payment_status or f.pending_payment:
+            queryset = queryset.filter(status=PurchaseStatus.CONFIRMED.value)
+        if f.reception_status is not None:
+            queryset = queryset.filter(reception_status=f.reception_status.value)
+        if f.payment_status is not None:
+            queryset = queryset.filter(payment_status=f.payment_status.value)
+        if f.pending_payment:
+            queryset = queryset.filter(payment_status__in=[PaymentStatus.UNPAID.value, PaymentStatus.PARTIAL.value])
+        if f.search:
+            match = Q(external_reference__icontains=f.search)
+            prefix = f.search.lower().removeprefix('com-')
+            # La referencia interna es COM- + los 8 primeros hex del id: se busca por prefijo del id en texto.
+            if 1 <= len(prefix) <= 8 and set(prefix) <= HEX_DIGITS:
+                queryset = queryset.annotate(id_text=Cast('id', CharField())).filter(
+                    match | Q(id_text__startswith=prefix))
+            else:
+                queryset = queryset.filter(match)
+        return queryset

@@ -52,6 +52,11 @@ export function makePurchaseSummary(overrides: Partial<PurchaseSummary> = {}): P
     currency: 'BOB',
     status: 'draft',
     itemsCount: 1,
+    reference: 'COM-1A2B3C4D',
+    receptionStatus: null,
+    paymentStatus: null,
+    paidTotal: null,
+    balance: null,
     ...overrides,
   };
 }

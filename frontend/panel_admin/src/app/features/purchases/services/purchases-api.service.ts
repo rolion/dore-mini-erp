@@ -87,6 +87,11 @@ function toSummary(dto: PurchaseSummaryDto): PurchaseSummary {
     currency: dto.currency,
     status: dto.status,
     itemsCount: dto.items_count,
+    reference: dto.reference,
+    receptionStatus: dto.reception_status,
+    paymentStatus: dto.payment_status,
+    paidTotal: dto.paid_total,
+    balance: dto.balance,
   };
 }
 
@@ -176,6 +181,12 @@ export class PurchasesApiService {
   list(params: PurchaseListParams = {}): Observable<Page<PurchaseSummary>> {
     let httpParams = new HttpParams();
     if (params.supplierId) httpParams = httpParams.set('supplier_id', params.supplierId);
+    if (params.dateFrom) httpParams = httpParams.set('date_from', params.dateFrom);
+    if (params.dateTo) httpParams = httpParams.set('date_to', params.dateTo);
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.receptionStatus) httpParams = httpParams.set('reception_status', params.receptionStatus);
+    if (params.paymentStatus) httpParams = httpParams.set('payment_status', params.paymentStatus);
+    if (params.search) httpParams = httpParams.set('q', params.search);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.pageSize !== undefined) httpParams = httpParams.set('page_size', String(params.pageSize));
     return this.http.get<Page<PurchaseSummaryDto>>(this.baseUrl, { params: httpParams }).pipe(

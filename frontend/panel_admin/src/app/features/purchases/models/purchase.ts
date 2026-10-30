@@ -30,6 +30,12 @@ export const RECEPTION_STATUS_LABELS: Readonly<Record<ReceptionStatus, string>> 
   received: 'Recibida',
 };
 
+export const RECEPTION_STATUS_CLASSES: Readonly<Record<ReceptionStatus, string>> = {
+  not_received: 'col-grey',
+  partial: 'col-orange',
+  received: 'col-green',
+};
+
 export const PAYMENT_STATUS_CLASSES: Readonly<Record<PaymentStatus, string>> = {
   unpaid: 'col-grey',
   partial: 'col-orange',
@@ -100,6 +106,13 @@ export interface PurchaseSummary {
   currency: string;
   status: PurchaseStatus;
   itemsCount: number;
+  /** Referencia interna provisional (`COM-XXXXXXXX`). */
+  reference: string;
+  /** Seguimiento: solo las compras confirmadas lo tienen; borrador y cancelada vienen en `null`. */
+  receptionStatus: ReceptionStatus | null;
+  paymentStatus: PaymentStatus | null;
+  paidTotal: string | null;
+  balance: string | null;
 }
 
 /** Línea que se envía al guardar (el servidor aporta nombre, unidad y subtotal). */
@@ -117,8 +130,19 @@ export interface PurchaseInput {
   items: PurchaseItemInput[];
 }
 
+/** Filtro de pago de la lista: un estado, o `pending` (sin pagar o con pago parcial). */
+export type PaymentFilter = PaymentStatus | 'pending';
+
 export interface PurchaseListParams {
   supplierId?: string;
+  /** Fechas de compra `YYYY-MM-DD`, ambas inclusivas. */
+  dateFrom?: string;
+  dateTo?: string;
+  status?: PurchaseStatus;
+  receptionStatus?: ReceptionStatus;
+  paymentStatus?: PaymentFilter;
+  /** Referencia interna o externa. */
+  search?: string;
   /** Página base 1. */
   page?: number;
   pageSize?: number;
@@ -170,6 +194,11 @@ export interface PurchaseSummaryDto {
   currency: string;
   status: PurchaseStatus;
   items_count: number;
+  reference: string;
+  reception_status: ReceptionStatus | null;
+  payment_status: PaymentStatus | null;
+  paid_total: string | null;
+  balance: string | null;
 }
 
 export type HeaderField = 'supplierId' | 'purchaseDate' | 'externalReference' | 'notes';
