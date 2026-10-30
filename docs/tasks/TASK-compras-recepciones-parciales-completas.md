@@ -1,6 +1,6 @@
 # TASK-compras-recepciones-parciales-completas: Registrar recepciones parciales o completas de compras (PB-COM-004)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-recepciones-parciales-completas
@@ -14,6 +14,7 @@
 | 2026-10-30 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escritos | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -89,7 +90,11 @@ No se puede registrar ninguna recepción. Una compra confirmada solo muestra «S
 `docs/plans/PLAN-2026-10-30-compras-recepciones-parciales-completas.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/purchases/`): `domain/receipt.py`, `Purchase.receive`/`can_receive`/`compute_reception_status`, `ReceiptStatus` y excepciones (INV-01…07, 12; AC-01…06, 12); `infrastructure/django/{models,mappers,receipt_repository}.py` y migración `0004_receipts` (INV-02, 07); `application/receipt_commands.py` (`RegisterReception`: bloqueo, entradas de stock, idempotencia; INV-08…11), `receipt_queries.py` (formulario, lista, detalle) y puertos; `infrastructure/adapters.py` (`StockEntryAdapter` sobre `inventory.services`); `api/receipt_{views,serializers}.py` y rutas (AC-13…16). Detalle de compra con `received_quantity`/`pending_quantity`. `test_boundaries` (`purchases → inventory`) y `test_enforcement` actualizados.
+**Frontend** (`features/purchases/`): `models/receipt.ts`, `receipts-api.service.ts`, `reception-quantities.ts`, componente `purchase-receipts-tab`, páginas `reception-form` (dos pasos) y `reception-detail`, pestañas y columnas Recibida/Pendiente en `purchase-detail`, rutas; en `features/inventory` la etiqueta «Entrada por compra» y el filtro por recepción (AC-18…25). Pantallas de referencia: Formulario con líneas y paso de resumen, Detalle con pestañas, `stock-output-card`; sin componente compartido nuevo.
+**Docs:** `ddd.md`, `modulos-implementados.md` y notas en `design-system.md`.
+**Verificación local:** pruebas de dominio/aplicación de Compras y `test_boundaries` pasan; Karma de `features/purchases` y `features/inventory` (274) pasa; `ng lint` y `ng build` pasan. **No ejecutado:** pruebas de backend con BD (API, repositorio, concurrencia, `test_enforcement`): no había credenciales de PostgreSQL. `app.component.spec.ts` falla al compilar en `main` (`title`), ajeno a esta task; se excluyó temporalmente para correr Karma.
+**Desviaciones del plan:** la lista de recepciones no incluye `warehouse` (solo el detalle); `GetPurchase` recibe opcionalmente el repositorio de recepciones. **Deuda:** revertir recepciones (H-03); `ListReceipts` no pagina en BD (pocas por compra).
 
 ## Review
 _Pendiente_

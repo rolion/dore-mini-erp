@@ -6,6 +6,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, finalize } from 'rxjs';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { PurchaseReceiptsTabComponent } from '../../components/purchase-receipts-tab/purchase-receipts-tab.component';
 import { PurchaseCancelDialogComponent } from '../../components/purchase-cancel-dialog/purchase-cancel-dialog.component';
 import { PurchaseConfirmDialogComponent } from '../../components/purchase-confirm-dialog/purchase-confirm-dialog.component';
 import {
@@ -24,7 +25,7 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-purchase-detail',
   templateUrl: './purchase-detail.component.html',
-  imports: [RouterLink, DatePipe, MoneyPipe],
+  imports: [RouterLink, DatePipe, MoneyPipe, PurchaseReceiptsTabComponent],
 })
 export class PurchaseDetailComponent implements OnInit {
   readonly statusLabels = PURCHASE_STATUS_LABELS;
@@ -32,6 +33,8 @@ export class PurchaseDetailComponent implements OnInit {
   readonly paymentLabels = PAYMENT_STATUS_LABELS;
   purchase: Purchase | null = null;
   loading = true;
+  /** Pestaña activa; `?tab=receptions` abre «Recepciones» (p. ej. al volver del formulario). */
+  tab: 'summary' | 'receptions' = 'summary';
   /** Hay una acción de ciclo de vida en curso. */
   busy = false;
 
@@ -43,6 +46,7 @@ export class PurchaseDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('tab') === 'receptions') this.tab = 'receptions';
     this.load();
   }
 

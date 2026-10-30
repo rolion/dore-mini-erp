@@ -39,6 +39,8 @@ const DTO: PurchaseDto = {
       quantity: '2.500',
       unit_price: '10.00',
       subtotal: '25.00',
+      received_quantity: '0.000',
+      pending_quantity: '2.500',
     },
   ],
   total: '25.00',

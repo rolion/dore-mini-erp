@@ -134,7 +134,7 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 ### 3.7 Módulos por empresa (PB-MOD-001)
 - **Configuración › Módulos** (`/settings/modules`, solo admin): lista los módulos con estado, dependencias obligatorias e integraciones opcionales. Habilitar/Deshabilitar abre un diálogo que resume módulo, empresa y módulos afectados.
 - **Base**: Acceso/Empresa y Catálogo, siempre activos y sin interruptor.
-- **Dependencias**: Ventas→Catálogo; Reportes→Ventas y Gastos; Compras→Catálogo y Gastos; Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
+- **Dependencias**: Ventas→Catálogo; Reportes→Ventas y Gastos; Compras→Catálogo y Gastos (Inventario opcional al recibir); Inventario→Catálogo. Clientes y Gastos no dependen de otros. Si faltan, se muestran sus nombres y la acción queda bloqueada; tampoco se puede deshabilitar un módulo que otro habilitado requiere.
 - Cada empresa conserva su selección. Por defecto: Clientes, Ventas, Gastos y Reportes habilitados; Compras e Inventario apagados. Inventario aún no tiene pantallas propias: al habilitarlo su menú abre «Próximamente». Compras ya tiene Proveedores y Compras en borrador.
 - **Pendiente (PB-MOD-002)**: la API de negocio no bloquea módulos deshabilitados.
 - **Pendiente (PB-MOD-004)**: la desactivación segura (validar datos existentes) aún no existe.
@@ -163,4 +163,8 @@ Ventas lee Catálogo y Clientes para validar producto/cliente activo; Reportes l
 - El nombre y la unidad del producto se copian al agregarlo y se conservan al editar el borrador aunque el catálogo cambie; un proveedor desactivado después debe reemplazarse para guardar.
 - **Detalle** (`/purchases/:id`): pestaña «Resumen» con referencia interna, proveedor, fechas, estado documental, de recepción y de pago, productos, total y notas. Un borrador ofrece Editar, Confirmar y Cancelar compra.
 
-
+### 3.11 Compras › Recepciones (PB-COM-004)
+- En el detalle de una compra **confirmada** hay una pestaña **«Recepciones»**: avance por producto (comprada, recibida, pendiente) y la tabla de recepciones (referencia `REC-…`, fecha, estado confirmada/revertida, usuario). El Resumen también muestra Recibida y Pendiente. No hay entrada nueva en el menú.
+- **Registrar recepción** (`/purchases/:id/receipts/new`): fecha (hoy por defecto, no futura) y todas las líneas con la cantidad a recibir; no deja superar el pendiente ni valores inválidos, omite las líneas en cero y exige al menos una positiva. Se revisa en un resumen y se confirma. Puede ser parcial: la compra pasa a «Recibida parcialmente» y a «Recibida» al completarse, sin depender del pago. Tras la primera recepción la compra ya no se puede cancelar.
+- Con **Inventario** habilitado, si hay productos que controlan stock se elige un almacén activo (un almacén por recepción) y se crea una entrada de stock por producto en la misma operación; sin Inventario la recepción es solo documental y no se pide almacén. Activar Inventario después no genera entradas de recepciones anteriores.
+- **Detalle de recepción** (`/purchases/:id/receipts/:receiptId`): productos y cantidades, almacén y movimientos vinculados (con enlace a Movimientos, donde se ven como «Entrada por compra»). Revertir una recepción no está disponible todavía.

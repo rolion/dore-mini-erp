@@ -25,10 +25,24 @@
           </div>
           <ul class="nav nav-tabs px-3 pt-2" role="tablist">
             <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link active" role="tab" id="tab-summary" aria-selected="true"
-                aria-controls="panel-summary">Resumen</button>
+              <button type="button" class="nav-link" [class.active]="tab === 'summary'" role="tab" id="tab-summary"
+                [attr.aria-selected]="tab === 'summary'" aria-controls="panel-summary" data-testid="tab-summary"
+                (click)="tab = 'summary'">Resumen</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'receptions'" role="tab" id="tab-receptions"
+                [attr.aria-selected]="tab === 'receptions'" aria-controls="panel-receptions" data-testid="tab-receptions"
+                (click)="tab = 'receptions'">Recepciones</button>
             </li>
           </ul>
+          @if (tab === 'receptions' && purchase) {
+          <div class="card-body" role="tabpanel" id="panel-receptions" aria-labelledby="tab-receptions">
+            <app-purchase-receipts-tab [purchase]="purchase" />
+            <div class="m-4">
+              <a class="btn btn-light" routerLink="/pocketbiz/purchases">Volver</a>
+            </div>
+          </div>
+          } @else {
           <div class="card-body" role="tabpanel" id="panel-summary" aria-labelledby="tab-summary">
             @if (loading) {
             <p class="m-4" data-testid="loading">Cargando…</p>
@@ -81,6 +95,10 @@
                     <th scope="col">Producto</th>
                     <th scope="col">Unidad base</th>
                     <th scope="col" class="text-end">Cantidad</th>
+                    @if (p.status === 'confirmed') {
+                    <th scope="col" class="text-end">Recibida</th>
+                    <th scope="col" class="text-end">Pendiente</th>
+                    }
                     <th scope="col" class="text-end">Precio unitario</th>
                     <th scope="col" class="text-end">Subtotal</th>
                   </tr>
@@ -91,18 +109,22 @@
                     <td>{{ item.productName }}</td>
                     <td>{{ item.unitAbbreviation || '—' }}</td>
                     <td class="text-end">{{ item.quantity }}</td>
+                    @if (p.status === 'confirmed') {
+                    <td class="text-end" data-testid="received">{{ item.receivedQuantity }}</td>
+                    <td class="text-end" data-testid="pending">{{ item.pendingQuantity }}</td>
+                    }
                     <td class="text-end">{{ item.unitPrice | money }}</td>
                     <td class="text-end text-nowrap">{{ item.subtotal | money }}</td>
                   </tr>
                   } @empty {
                   <tr>
-                    <td colspan="5" class="text-center text-muted" data-testid="no-items">Esta compra aún no tiene productos.</td>
+                    <td [attr.colspan]="p.status === 'confirmed' ? 7 : 5" class="text-center text-muted" data-testid="no-items">Esta compra aún no tiene productos.</td>
                   </tr>
                   }
                 </tbody>
                 <tfoot>
                   <tr>
-                    <th scope="row" colspan="4" class="text-end">Total ({{ p.currency }})</th>
+                    <th scope="row" [attr.colspan]="p.status === 'confirmed' ? 6 : 4" class="text-end">Total ({{ p.currency }})</th>
                     <td class="text-end fw-bold text-nowrap" data-testid="total">{{ p.total | money }}</td>
                   </tr>
                 </tfoot>
@@ -116,8 +138,10 @@
               <button type="button" class="btn btn-success ms-2" data-testid="confirm" [disabled]="busy"
                 (click)="confirm()">{{ busy ? 'Procesando…' : 'Confirmar' }}</button>
               }
+              @if (can('receive')) {
+              <a class="btn btn-primary ms-2" data-testid="receive" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', 'new']">Registrar recepción</a>
+              }
               @if (p.status === 'confirmed') {
-              <button type="button" class="btn btn-primary ms-2" data-testid="receive" disabled>Registrar recepción</button>
               <button type="button" class="btn btn-primary ms-2" data-testid="pay" disabled>Registrar pago</button>
               }
               @if (can('cancel')) {
@@ -127,8 +151,11 @@
               <a class="btn btn-light ms-2" routerLink="/pocketbiz/purchases">Volver</a>
               @if (p.status === 'confirmed') {
               <small class="form-text text-muted d-block mt-2" data-testid="confirmed-note">
-                Registrar recepción y pago: disponible próximamente. Confirmar no modifica las existencias; el stock cambia al recibir la mercadería.
+                Registrar pago: disponible próximamente. Confirmar no modifica las existencias; el stock cambia al registrar la recepción.
               </small>
+              @if (!can('receive')) {
+              <small class="form-text text-muted d-block" data-testid="fully-received">Compra recibida por completo.</small>
+              }
               @if (!can('cancel')) {
               <small class="form-text text-muted d-block" data-testid="cancel-blocked">No se puede cancelar: ya tiene recepciones o pagos.</small>
               }
@@ -136,6 +163,7 @@
             </div>
             }
           </div>
+          }
         </div>
       </div>
     </div>

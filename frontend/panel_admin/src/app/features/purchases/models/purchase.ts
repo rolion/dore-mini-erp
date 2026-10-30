@@ -10,7 +10,7 @@ export type PurchaseStatus = 'draft' | 'confirmed' | 'cancelled';
 export type ReceptionStatus = 'not_received' | 'partial' | 'received';
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 /** Acciones que el servidor permite sobre la compra; la interfaz solo las refleja. */
-export type PurchaseAction = 'edit' | 'confirm' | 'cancel';
+export type PurchaseAction = 'edit' | 'confirm' | 'cancel' | 'receive';
 
 export const PURCHASE_STATUS_LABELS: Readonly<Record<PurchaseStatus, string>> = {
   draft: 'Borrador',
@@ -54,6 +54,9 @@ export interface PurchaseItem {
   quantity: string;
   unitPrice: string;
   subtotal: string;
+  /** Acumulado de recepciones confirmadas y lo que falta recibir (texto decimal). */
+  receivedQuantity: string;
+  pendingQuantity: string;
 }
 
 export interface Purchase {
@@ -121,6 +124,8 @@ export interface PurchaseItemDto {
   quantity: string;
   unit_price: string;
   subtotal: string;
+  received_quantity: string;
+  pending_quantity: string;
 }
 
 export interface PurchaseDto {

@@ -1,0 +1,192 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Registrar recepción</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Compras</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">Compras</a></li>
+    <li class="breadcrumb-item">
+      <a [routerLink]="['/pocketbiz/purchases', purchaseId]" [queryParams]="{ tab: 'receptions' }">{{ purchase?.reference || 'Compra' }}</a>
+    </li>
+    <li class="breadcrumb-item">Registrar recepción</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        @if (loading) {
+        <div class="card"><div class="card-body"><p class="m-4" data-testid="loading">Cargando…</p></div></div>
+        } @else if (loadError) {
+        <div class="card">
+          <div class="card-body">
+            <div class="alert alert-danger m-4" role="alert" data-testid="load-error">{{ loadError }}</div>
+            <a class="btn btn-light m-4" [routerLink]="['/pocketbiz/purchases', purchaseId]">Volver a la compra</a>
+          </div>
+        </div>
+        } @else if (reception && purchase) {
+
+        @if (step === 'edit') {
+        <div class="card" data-testid="edit-step">
+          <div class="card-header">
+            <h4>Recepción de la compra {{ purchase.reference }}</h4>
+          </div>
+          <div class="card-body">
+            @if (conflictMessage) {
+            <div class="alert alert-warning mx-4" role="alert" data-testid="conflict">{{ conflictMessage }}</div>
+            }
+            <form [formGroup]="form" class="m-4" (ngSubmit)="review()" novalidate>
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label" for="receipt-date">Fecha de recepción*</label>
+                  <input id="receipt-date" type="date" class="form-control" formControlName="receiptDate" [max]="today"
+                    (input)="onChange()" data-testid="receipt-date" />
+                  @if (dateError) {
+                  <small class="form-text text-danger" data-testid="date-error">{{ dateError }}</small>
+                  }
+                </div>
+                @if (showWarehouse) {
+                <div class="col-md-4 mb-3" data-testid="warehouse-block">
+                  <label class="form-label" for="warehouse">Almacén*</label>
+                  <select id="warehouse" class="form-select" formControlName="warehouseId" (change)="onChange()"
+                    data-testid="warehouse">
+                    <option value="">Selecciona un almacén</option>
+                    @for (warehouse of reception.warehouses; track warehouse.id) {
+                    <option [value]="warehouse.id">{{ warehouse.name }}</option>
+                    }
+                  </select>
+                  @if (warehouseError) {
+                  <small class="form-text text-danger" data-testid="warehouse-error">{{ warehouseError }}</small>
+                  }
+                </div>
+                }
+              </div>
+              @if (noWarehouses) {
+              <div class="alert alert-warning" role="alert" data-testid="no-warehouses">
+                No hay almacenes activos. Crea uno en Inventario › Configuración para recibir productos con control de stock.
+              </div>
+              }
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="mb-0">Productos</h5>
+                <button type="button" class="btn btn-link p-0" data-testid="fill-all" (click)="fillAll()">Recibir todo lo pendiente</button>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Unidad</th>
+                      <th scope="col" class="text-end">Comprada</th>
+                      <th scope="col" class="text-end">Recibida</th>
+                      <th scope="col" class="text-end">Pendiente</th>
+                      <th scope="col" class="text-end">A recibir</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="quantities">
+                    @for (line of reception.lines; track line.itemId; let row = $index) {
+                    <tr data-testid="line" [class.table-warning]="!!lineError(row)">
+                      <td>
+                        {{ line.productName }}
+                        @if (line.tracksStock) {
+                        <small class="text-muted d-block">Controla stock</small>
+                        }
+                      </td>
+                      <td>{{ line.unitAbbreviation || '—' }}</td>
+                      <td class="text-end">{{ line.ordered }}</td>
+                      <td class="text-end">{{ line.received }}</td>
+                      <td class="text-end" data-testid="pending">{{ line.pending }}</td>
+                      <td class="text-end">
+                        @if (isComplete(line)) {
+                        <span class="text-muted" data-testid="complete">Completa</span>
+                        <input type="hidden" [formControlName]="row" />
+                        } @else {
+                        <input type="text" inputmode="decimal" class="form-control text-end" data-testid="quantity"
+                          [formControlName]="row" [attr.aria-label]="'Cantidad a recibir de ' + line.productName"
+                          (input)="onChange()" />
+                        @if (lineError(row)) {
+                        <small class="form-text text-danger" data-testid="line-error">{{ lineError(row) }}</small>
+                        }
+                        }
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (serverErrors.linesMessage) {
+              <small class="form-text text-danger d-block" data-testid="lines-message">{{ serverErrors.linesMessage }}</small>
+              } @else if (!hasPositive) {
+              <small class="form-text text-muted d-block" data-testid="positive-hint">Indica una cantidad mayor a cero en al menos un producto.</small>
+              }
+              <div class="mt-4">
+                <button type="submit" class="btn btn-primary" data-testid="review" [disabled]="!canReview">Revisar recepción</button>
+                <a class="btn btn-light ms-2" [routerLink]="['/pocketbiz/purchases', purchaseId]"
+                  [queryParams]="{ tab: 'receptions' }">Cancelar</a>
+              </div>
+            </form>
+          </div>
+        </div>
+        } @else {
+        <div class="card" data-testid="review-step">
+          <div class="card-header">
+            <h4>Revisar recepción</h4>
+          </div>
+          <div class="card-body">
+            <dl class="row m-4">
+              <dt class="col-sm-3">Compra</dt>
+              <dd class="col-sm-9" data-testid="summary-purchase">{{ purchase.reference }}</dd>
+              <dt class="col-sm-3">Proveedor</dt>
+              <dd class="col-sm-9">{{ purchase.supplier.name }}</dd>
+              <dt class="col-sm-3">Fecha de recepción</dt>
+              <dd class="col-sm-9" data-testid="summary-date">{{ form.controls.receiptDate.value | date: 'dd/MM/yyyy' }}</dd>
+              @if (requiresWarehouse) {
+              <dt class="col-sm-3">Almacén</dt>
+              <dd class="col-sm-9" data-testid="summary-warehouse">{{ selectedWarehouseName }}</dd>
+              }
+              <dt class="col-sm-3">Productos que se reciben</dt>
+              <dd class="col-sm-9" data-testid="summary-count">{{ reviewLines.length }}</dd>
+            </dl>
+            <div class="table-responsive mx-4">
+              <table class="table table-bordered align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">A recibir</th>
+                    <th scope="col" class="text-end">Pendiente después</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of reviewLines; track item.line.itemId) {
+                  <tr data-testid="review-line">
+                    <td>{{ item.line.productName }}</td>
+                    <td>{{ item.line.unitAbbreviation || '—' }}</td>
+                    <td class="text-end">{{ item.quantity }}</td>
+                    <td class="text-end">{{ item.pendingAfter }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (requiresWarehouse) {
+            <div class="alert alert-info mx-4" role="status" data-testid="stock-notice">
+              Se registrará una entrada de existencias en {{ selectedWarehouseName }} por cada producto con control de stock ({{ stockEntryCount }}).
+            </div>
+            }
+            <div class="m-4">
+              <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="submitting"
+                (click)="confirm()">{{ submitting ? 'Registrando…' : 'Confirmar recepción' }}</button>
+              <button type="button" class="btn btn-light ms-2" data-testid="back" [disabled]="submitting"
+                (click)="backToEdit()">Volver a editar</button>
+            </div>
+          </div>
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+</section>

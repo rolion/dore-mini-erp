@@ -9,6 +9,8 @@ export function makePurchaseItem(overrides: Partial<PurchaseItem> = {}): Purchas
     quantity: '2.500',
     unitPrice: '10.00',
     subtotal: '25.00',
+    receivedQuantity: '0.000',
+    pendingQuantity: '2.500',
     ...overrides,
   };
 }
@@ -57,7 +59,7 @@ export function makeConfirmedPurchase(overrides: Partial<Purchase> = {}): Purcha
     status: 'confirmed',
     editable: false,
     confirmedAt: '2026-10-30T12:00:00Z',
-    allowedActions: ['cancel'],
+    allowedActions: ['receive', 'cancel'],
     ...overrides,
   });
 }

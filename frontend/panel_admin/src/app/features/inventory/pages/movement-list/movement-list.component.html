@@ -83,7 +83,7 @@
             @if (sourceId) {
             <div class="m-2" data-testid="order-filter">
               <span class="badge-outline col-blue d-inline-block">
-                Pedido {{ orderFilterLabel }}
+                {{ documentFilterTitle }} {{ orderFilterLabel }}
                 <button type="button" class="btn-close ms-2" aria-label="Quitar filtro por pedido"
                   data-testid="clear-order-filter" (click)="clearOrderFilter()"></button>
               </span>

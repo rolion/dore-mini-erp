@@ -14,6 +14,7 @@ import {
   MovementKind,
   MovementListParams,
   MovementStatus,
+  PURCHASE_RECEIPT_SOURCE,
   SALES_ORDER_SOURCE,
   SOURCE_ROUTES,
   SOURCE_TYPE_OPTIONS,
@@ -64,9 +65,15 @@ export class MovementListComponent implements OnInit {
 
   /** Pedido de venta cuyas salidas se están viendo (llega desde el detalle del pedido); vacío = sin filtrar. */
   sourceId = '';
+  /** Clase del documento por el que se filtra (pedido o recepción), si llegó por enlace. */
+  private documentSource = '';
 
   get filtersActive(): boolean {
     return !!this.sourceId || Object.values(this.filterForm.getRawValue()).some((value) => value !== '');
+  }
+
+  get documentFilterTitle(): string {
+    return this.documentSource === PURCHASE_RECEIPT_SOURCE ? 'Recepción' : 'Pedido';
   }
 
   /** Código visible del pedido filtrado, tomado de los movimientos cargados. */
@@ -77,13 +84,15 @@ export class MovementListComponent implements OnInit {
   ngOnInit(): void {
     // Existencias enlaza aquí con ?product_id=&warehouse_id= para ver los movimientos de una fila.
     const query = this.route.snapshot.queryParamMap;
-    const fromOrder = query.get('source_type') === SALES_ORDER_SOURCE && !!query.get('source_id');
-    this.sourceId = fromOrder ? (query.get('source_id') ?? '') : '';
+    const queryType = query.get('source_type') ?? '';
+    const fromDocument = [SALES_ORDER_SOURCE, PURCHASE_RECEIPT_SOURCE].includes(queryType) && !!query.get('source_id');
+    this.documentSource = fromDocument ? queryType : '';
+    this.sourceId = fromDocument ? (query.get('source_id') ?? '') : '';
     this.filterForm.patchValue(
       {
         productId: query.get('product_id') ?? '',
         warehouseId: query.get('warehouse_id') ?? '',
-        sourceType: fromOrder ? SALES_ORDER_SOURCE : '',
+        sourceType: this.documentSource,
       },
       { emitEvent: false },
     );
@@ -117,7 +126,7 @@ export class MovementListComponent implements OnInit {
       .subscribe({ next: (page) => (this.warehouses = page.results), error: () => (this.warehouses = []) });
 
     this.filterForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      if (this.sourceId && this.filterForm.getRawValue().sourceType !== SALES_ORDER_SOURCE) {
+      if (this.sourceId && this.filterForm.getRawValue().sourceType !== this.documentSource) {
         this.sourceId = ''; // cambiar la clase de origen deja de filtrar por ese pedido
       }
       this.pageIndex = 0;

@@ -5,11 +5,14 @@ export const MOVEMENT_KIND_LABELS: Record<MovementKind, string> = { in: 'Entrada
 /** Clase de origen cuyas salidas se muestran como «Salida por venta». */
 export const SALES_ORDER_SOURCE = 'sales_order';
 
-/** Etiqueta del tipo de movimiento: una salida originada en un pedido de venta es «Salida por venta». */
+/** Clase de origen cuyas entradas se muestran como «Entrada por compra». */
+export const PURCHASE_RECEIPT_SOURCE = 'purchase_receipt';
+
+/** Etiqueta del tipo de movimiento: «Salida por venta» (pedido) y «Entrada por compra» (recepción). */
 export function movementTypeLabel(movement: { kind: MovementKind; source: { type: string } | null }): string {
-  return movement.kind === 'out' && movement.source?.type === SALES_ORDER_SOURCE
-    ? 'Salida por venta'
-    : MOVEMENT_KIND_LABELS[movement.kind];
+  if (movement.kind === 'out' && movement.source?.type === SALES_ORDER_SOURCE) return 'Salida por venta';
+  if (movement.kind === 'in' && movement.source?.type === PURCHASE_RECEIPT_SOURCE) return 'Entrada por compra';
+  return MOVEMENT_KIND_LABELS[movement.kind];
 }
 
 export const MOVEMENT_STATUS_LABELS: Record<MovementStatus, string> = {
