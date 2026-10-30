@@ -1,0 +1,186 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar compra' : 'Nueva compra' }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">Compras</a></li>
+    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nueva' }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ isEdit ? 'Editar compra' : 'Nueva compra' }}</h4>
+          </div>
+          <div class="card-body">
+            @if (loading) {
+            <p class="m-4" data-testid="loading">Cargando…</p>
+            }
+            <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+              @if (generalError) {
+              <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }}</div>
+              }
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="purchase-supplier">Proveedor <span class="text-danger">*</span></label>
+                  <ng-select inputId="purchase-supplier" [items]="supplierOptions" bindLabel="name"
+                    [typeahead]="supplierInput$" [loading]="suppliersLoading" formControlName="supplier"
+                    placeholder="Seleccione un proveedor" notFoundText="Sin resultados"
+                    typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Proveedor">
+                    <ng-template ng-footer-tmp>
+                      <button type="button" class="btn btn-link w-100 text-start" data-testid="new-supplier"
+                        (click)="createSupplier()">+ Nuevo proveedor</button>
+                    </ng-template>
+                  </ng-select>
+                  @if (noSuppliers) {
+                  <small class="form-text text-muted d-block" data-testid="no-suppliers">
+                    No hay proveedores activos.
+                    <button type="button" class="btn btn-link btn-sm p-0 align-baseline"
+                      data-testid="create-supplier" (click)="createSupplier()">Crear proveedor</button>
+                  </small>
+                  }
+                  @if (supplierInactive && !headerError('supplierId')) {
+                  <small class="form-text text-muted d-block" data-testid="supplier-inactive">
+                    Este proveedor está inactivo; elige otro para guardar.
+                  </small>
+                  }
+                  @if (headerError('supplierId')) {
+                  <small class="form-text text-danger d-block" data-testid="supplier-error">
+                    {{ headerError('supplierId') }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="purchase-date">Fecha de compra <span class="text-danger">*</span></label>
+                  <input id="purchase-date" type="date" class="form-control" formControlName="purchaseDate">
+                  @if (headerError('purchaseDate')) {
+                  <small class="form-text text-danger" data-testid="date-error">{{ headerError('purchaseDate') }}</small>
+                  }
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <label for="purchase-reference">Referencia externa</label>
+                  <input id="purchase-reference" type="text" class="form-control" formControlName="externalReference"
+                    placeholder="N.º de factura o nota del proveedor" [attr.maxlength]="referenceMaxLength">
+                  @if (headerError('externalReference')) {
+                  <small class="form-text text-danger" data-testid="reference-error">
+                    {{ headerError('externalReference') }}
+                  </small>
+                  }
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="purchase-notes">Notas</label>
+                  <textarea id="purchase-notes" class="form-control" rows="2" formControlName="notes"
+                    [attr.maxlength]="notesMaxLength"></textarea>
+                  @if (headerError('notes')) {
+                  <small class="form-text text-danger" data-testid="notes-error">{{ headerError('notes') }}</small>
+                  }
+                </div>
+              </div>
+
+              <h5 class="mt-4">Productos</h5>
+              @if (serverItemsMessage) {
+              <div class="alert alert-warning" role="alert" data-testid="items-message">{{ serverItemsMessage }}</div>
+              }
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle" formArrayName="items">
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Unidad base</th>
+                      <th scope="col">Cantidad</th>
+                      <th scope="col">Precio unitario ({{ currency }})</th>
+                      <th scope="col" class="text-end">Subtotal</th>
+                      <th scope="col"><span class="visually-hidden">Quitar</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (line of itemRows; track line; let i = $index) {
+                    <tr [formGroupName]="i" [class.table-warning]="serverItems[i] && (serverItems[i].quantity || serverItems[i].unitPrice || serverItems[i].productId)"
+                      data-testid="line">
+                      <td>
+                        <ng-select [items]="optionsFor(i)" bindLabel="name" [typeahead]="productInput$"
+                          [loading]="productsLoading" formControlName="product" placeholder="Buscar producto"
+                          notFoundText="Sin resultados" typeToSearchText="Escriba para buscar" appendTo="body"
+                          [clearable]="false" [attr.aria-label]="'Producto de la línea ' + (i + 1)"
+                          (change)="onProductChange(line)"></ng-select>
+                        @if (lineError(i, 'productId')) {
+                        <small class="form-text text-danger d-block" data-testid="line-product-error">
+                          {{ lineError(i, 'productId') }}
+                        </small>
+                        }
+                      </td>
+                      <td data-testid="line-unit">{{ unit(line) }}</td>
+                      <td>
+                        <input type="text" inputmode="decimal" class="form-control" formControlName="quantity"
+                          [attr.aria-label]="'Cantidad de la línea ' + (i + 1)" data-testid="line-quantity"
+                          [class.is-invalid]="lineError(i, 'quantity')">
+                        @if (lineError(i, 'quantity')) {
+                        <small class="form-text text-danger d-block" data-testid="line-quantity-error">
+                          {{ lineError(i, 'quantity') }}
+                        </small>
+                        }
+                      </td>
+                      <td>
+                        <input type="text" inputmode="decimal" class="form-control" formControlName="unitPrice"
+                          [attr.aria-label]="'Precio unitario de la línea ' + (i + 1)" data-testid="line-price"
+                          [class.is-invalid]="lineError(i, 'unitPrice')">
+                        @if (lineError(i, 'unitPrice')) {
+                        <small class="form-text text-danger d-block" data-testid="line-price-error">
+                          {{ lineError(i, 'unitPrice') }}
+                        </small>
+                        }
+                      </td>
+                      <td class="text-end text-nowrap" data-testid="line-subtotal">{{ subtotal(line) | money }}</td>
+                      <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-testid="remove-line"
+                          [attr.aria-label]="'Quitar la línea ' + (i + 1)" (click)="removeLine(i)">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                      <td colspan="6" class="text-center text-muted" data-testid="no-lines">
+                        Aún no agregaste productos.
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <th scope="row" colspan="4" class="text-end">Total ({{ currency }})</th>
+                      <td class="text-end fw-bold text-nowrap" data-testid="total">{{ total() | money }}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <button type="button" class="btn btn-link p-0 mb-3" data-testid="add-line"
+                [disabled]="itemRows.length >= maxItems" (click)="addLine()">+ Agregar línea</button>
+              <small class="form-text text-muted d-block mb-3">
+                El total se calcula con las líneas. Esta compra no incluye impuestos ni descuentos.
+              </small>
+
+              <div class="row">
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-primary" data-testid="save" [disabled]="form.invalid || saving || loading">
+                    {{ saving ? 'Guardando…' : 'Guardar borrador' }}
+                  </button>
+                  <a class="btn btn-light ms-2"
+                    [routerLink]="isEdit ? ['/pocketbiz/purchases', purchaseId] : ['/pocketbiz/purchases']">Cancelar</a>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

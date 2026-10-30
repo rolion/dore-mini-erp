@@ -78,15 +78,6 @@ export const APP_ROUTE: Route[] = [
                     import('./features/reporting/reporting.routes').then((m) => m.REPORTS_ROUTE),
             },
             {
-                path: 'purchases',
-                canActivate: [moduleGuard],
-                data: { module: 'purchases', title: 'Compras' },
-                loadComponent: () =>
-                    import('./features/settings/pages/coming-soon/coming-soon.component').then(
-                        (m) => m.ComingSoonComponent
-                    ),
-            },
-            {
                 path: 'inventory',
                 canActivate: [moduleGuard],
                 data: { module: 'inventory', title: 'Inventario' },
@@ -111,6 +102,13 @@ export const APP_ROUTE: Route[] = [
                     import('./features/settings/pages/module-settings/module-settings.component').then(
                         (m) => m.ModuleSettingsComponent
                     ),
+            },
+            {
+                path: 'purchases',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases' },
+                loadChildren: () =>
+                    import('./features/purchases/purchases.routes').then((m) => m.PURCHASES_ROUTE),
             },
             {
                 path: 'inventory/stock',

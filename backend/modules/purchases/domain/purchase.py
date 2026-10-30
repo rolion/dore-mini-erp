@@ -1,0 +1,261 @@
+import re
+from dataclasses import dataclass, field
+from datetime import date, datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from uuid import UUID, uuid4
+
+from shared.domain.money import DECIMALS, MONEY_MAX, NEGATIVE, TOO_LARGE, InvalidMoney, parse_money
+
+from .enums import PurchaseStatus
+from .exceptions import PurchaseNotEditable, PurchaseValidationError
+
+CURRENCY = 'BOB'
+REFERENCE_MAX_LENGTH = 100
+NOTES_MAX_LENGTH = 2000
+MAX_ITEMS = 200
+QUANTITY_MAX = Decimal('99999999.999')
+_QUANTITY_STEP = Decimal('0.001')
+_CENTS = Decimal('0.01')
+ZERO = Decimal('0.00')
+# Solo texto decimal simple: sin exponente, separadores ni dígitos no ASCII (igual que la interfaz).
+_PLAIN_DECIMAL = re.compile(r'-?\d+(\.\d+)?', re.ASCII)
+
+# Marca "no enviado" para ediciones parciales (distinta de `None`, que es un valor válido).
+UNSET = object()
+
+_MONEY_MESSAGES = {
+    NEGATIVE: 'El precio unitario no puede ser negativo.',
+    DECIMALS: 'El precio unitario admite como máximo 2 decimales.',
+    TOO_LARGE: f'El precio unitario no puede superar {MONEY_MAX}.',
+}
+
+
+def _fail(field_name: str, message: str) -> PurchaseValidationError:
+    return PurchaseValidationError({field_name: [message]})
+
+
+def _text(value: object, field_name: str, label: str, max_length: int) -> str:
+    if value is None:
+        return ''
+    if not isinstance(value, str):
+        raise _fail(field_name, f'{label} debe ser texto.')
+    value = value.strip()
+    if len(value) > max_length:
+        raise _fail(field_name, f'{label} no puede superar {max_length} caracteres.')
+    return value
+
+
+def _supplier(value: object) -> UUID:
+    if not isinstance(value, UUID):
+        raise _fail('supplier_id', 'El proveedor es obligatorio.')
+    return value
+
+
+def _date(value: object) -> date:
+    if value is None:
+        raise _fail('purchase_date', 'La fecha de compra es obligatoria.')
+    if isinstance(value, datetime) or not isinstance(value, date):
+        raise _fail('purchase_date', 'La fecha de compra debe ser una fecha válida.')
+    return value
+
+
+def validate_quantity(value: object, allows_fractions: bool = True) -> Decimal:
+    if isinstance(value, bool) or not isinstance(value, (Decimal, int, str)):
+        raise _fail('quantity', 'La cantidad debe ser un número decimal.')
+    if isinstance(value, str) and not _PLAIN_DECIMAL.fullmatch(value.strip()):
+        raise _fail('quantity', 'La cantidad debe ser un número decimal.')
+    try:
+        quantity = Decimal(value.strip() if isinstance(value, str) else value)
+    except InvalidOperation:
+        raise _fail('quantity', 'La cantidad debe ser un número decimal.') from None
+    if not quantity.is_finite():
+        raise _fail('quantity', 'La cantidad debe ser un número decimal.')
+    if quantity <= 0:
+        raise _fail('quantity', 'La cantidad debe ser mayor a cero.')
+    if quantity > QUANTITY_MAX:  # antes de `quantize`, que falla con demasiados dígitos
+        raise _fail('quantity', f'La cantidad no puede superar {QUANTITY_MAX}.')
+    if quantity != quantity.quantize(_QUANTITY_STEP):
+        raise _fail('quantity', 'La cantidad admite como máximo 3 decimales.')
+    quantity = quantity.quantize(_QUANTITY_STEP)
+    if quantity > QUANTITY_MAX:
+        raise _fail('quantity', f'La cantidad no puede superar {QUANTITY_MAX}.')
+    if not allows_fractions and quantity != quantity.to_integral_value():
+        raise _fail('quantity', 'La unidad del producto no admite fracciones: use una cantidad entera.')
+    return quantity
+
+
+def validate_unit_price(value: object) -> Decimal:
+    if isinstance(value, str) and not _PLAIN_DECIMAL.fullmatch(value.strip()):
+        raise _fail('unit_price', 'El precio unitario debe ser un número decimal.')
+    try:
+        return parse_money(value)
+    except InvalidOperation:  # demasiados dígitos para cuantizar
+        raise _fail('unit_price', _MONEY_MESSAGES[TOO_LARGE]) from None
+    except InvalidMoney as exc:
+        message = _MONEY_MESSAGES.get(exc.code, 'El precio unitario debe ser un número decimal.')
+        raise _fail('unit_price', message) from None
+
+
+def compute_subtotal(quantity: Decimal, unit_price: Decimal) -> Decimal:
+    return (quantity * unit_price).quantize(_CENTS, rounding=ROUND_HALF_UP)
+
+
+@dataclass(frozen=True)
+class ItemDraft:
+    """Línea tal como la pide quien guarda; el snapshot y `allows_fractions` los aporta la capa de aplicación."""
+
+    product_id: UUID
+    quantity: object
+    unit_price: object
+    product_name: str = ''
+    unit_abbreviation: str = ''
+    allows_fractions: bool = True
+    # Problema detectado fuera del dominio (p. ej. producto inexistente o inactivo), asociado a `product_id`.
+    product_error: str | None = None
+
+
+@dataclass
+class PurchaseItem:
+    """Línea con snapshot del nombre y la unidad del producto; el precio es el acordado con el proveedor."""
+
+    id: UUID
+    product_id: UUID
+    product_name: str
+    unit_abbreviation: str
+    quantity: Decimal
+    unit_price: Decimal
+
+    @property
+    def subtotal(self) -> Decimal:
+        return compute_subtotal(self.quantity, self.unit_price)
+
+
+def _collect(checks) -> tuple[dict[str, object], dict[str, object]]:
+    values: dict[str, object] = {}
+    errors: dict[str, object] = {}
+    for name, check in checks:
+        try:
+            values[name] = check()
+        except PurchaseValidationError as exc:
+            errors.update(exc.errors)
+    return values, errors
+
+
+def _validate_header(supplier_id: object, purchase_date: object, external_reference: object,
+                     notes: object) -> tuple[dict[str, object], dict[str, object]]:
+    return _collect((
+        ('supplier_id', lambda: _supplier(supplier_id)),
+        ('purchase_date', lambda: _date(purchase_date)),
+        ('external_reference', lambda: _text(external_reference, 'external_reference', 'La referencia externa',
+                                             REFERENCE_MAX_LENGTH)),
+        ('notes', lambda: _text(notes, 'notes', 'Las notas', NOTES_MAX_LENGTH)),
+    ))
+
+
+def build_items(drafts: list[ItemDraft], existing: list[PurchaseItem] | None = None) -> list[PurchaseItem]:
+    """Valida todas las líneas y devuelve los ítems; junta los errores por posición y no deja nada a medias.
+
+    Un producto que ya estaba en la compra conserva su snapshot (nombre y unidad).
+    """
+    if len(drafts) > MAX_ITEMS:
+        raise PurchaseValidationError({'items': [f'Una compra admite como máximo {MAX_ITEMS} líneas.']})
+    kept = {item.product_id: item for item in existing or []}
+    line_errors: list[dict[str, list[str]]] = []
+    items: list[PurchaseItem] = []
+    seen: set[UUID] = set()
+    total = ZERO
+    for draft in drafts:
+        values, errors = _collect((
+            ('quantity', lambda: validate_quantity(draft.quantity, draft.allows_fractions)),
+            ('unit_price', lambda: validate_unit_price(draft.unit_price)),
+        ))
+        if draft.product_error:
+            errors['product_id'] = [draft.product_error]
+        elif draft.product_id in seen:
+            errors['product_id'] = ['El producto ya está en la compra; modifique su cantidad.']
+        seen.add(draft.product_id)
+        if not errors:
+            subtotal = compute_subtotal(values['quantity'], values['unit_price'])
+            total += subtotal
+            if subtotal > MONEY_MAX or total > MONEY_MAX:
+                errors['quantity'] = ['El importe de la compra supera el máximo permitido.']
+        line_errors.append(errors)
+        if not errors:
+            previous = kept.get(draft.product_id)
+            items.append(PurchaseItem(
+                id=uuid4(), product_id=draft.product_id,
+                product_name=previous.product_name if previous else draft.product_name,
+                unit_abbreviation=previous.unit_abbreviation if previous else draft.unit_abbreviation,
+                quantity=values['quantity'], unit_price=values['unit_price']))
+    if any(line_errors):
+        raise PurchaseValidationError({'items': line_errors})
+    return items
+
+
+@dataclass
+class Purchase:
+    """Agregado raíz de las compras. Cabecera e ítems solo cambian por sus métodos; los importes se derivan."""
+
+    id: UUID
+    supplier_id: UUID
+    purchase_date: date
+    external_reference: str = ''
+    notes: str = ''
+    status: PurchaseStatus = PurchaseStatus.DRAFT
+    items: list[PurchaseItem] = field(default_factory=list)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    @classmethod
+    def create(cls, supplier_id: object, purchase_date: object, external_reference: object = '',
+               notes: object = '', items: list[ItemDraft] | None = None) -> 'Purchase':
+        values, errors = _validate_header(supplier_id, purchase_date, external_reference, notes)
+        built: list[PurchaseItem] = []
+        try:
+            built = build_items(items or [])
+        except PurchaseValidationError as exc:
+            errors.update(exc.errors)
+        if errors:
+            raise PurchaseValidationError(errors)
+        return cls(id=uuid4(), supplier_id=values['supplier_id'], purchase_date=values['purchase_date'],
+                   external_reference=values['external_reference'], notes=values['notes'], items=built)
+
+    # --- derivados y estado -----------------------------------------------------------------------------------
+
+    @property
+    def total(self) -> Decimal:
+        return sum((item.subtotal for item in self.items), ZERO)
+
+    @property
+    def editable(self) -> bool:
+        return self.status is PurchaseStatus.DRAFT
+
+    def ensure_editable(self) -> None:
+        if not self.editable:
+            raise PurchaseNotEditable()
+
+    # --- edición ----------------------------------------------------------------------------------------------
+
+    def update(self, supplier_id: object = UNSET, purchase_date: object = UNSET, external_reference: object = UNSET,
+               notes: object = UNSET, items: object = UNSET) -> None:
+        """Cambia solo lo enviado; valida todo junto y no modifica nada si algo falla."""
+        self.ensure_editable()
+        values, errors = _validate_header(
+            self.supplier_id if supplier_id is UNSET else supplier_id,
+            self.purchase_date if purchase_date is UNSET else purchase_date,
+            self.external_reference if external_reference is UNSET else external_reference,
+            self.notes if notes is UNSET else notes)
+        built = None
+        if items is not UNSET:
+            try:
+                built = build_items(items, self.items)
+            except PurchaseValidationError as exc:
+                errors.update(exc.errors)
+        if errors:
+            raise PurchaseValidationError(errors)
+        self.supplier_id = values['supplier_id']
+        self.purchase_date = values['purchase_date']
+        self.external_reference = values['external_reference']
+        self.notes = values['notes']
+        if built is not None:
+            self.items = built

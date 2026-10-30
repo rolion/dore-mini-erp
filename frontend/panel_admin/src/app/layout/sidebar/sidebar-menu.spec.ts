@@ -24,6 +24,7 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/purchases/suppliers',
       '/pocketbiz/purchases/settings',
     ]);
+    expect(purchases.submenu[0].title).toBe('MENUITEMS.PURCHASES.LIST.PURCHASES');
     expect(purchases.submenu[1].title).toBe('MENUITEMS.PURCHASES.LIST.SUPPLIERS');
     expect(inventory.module).toBe('inventory');
     expect(inventory.submenu.map((item) => item.path)).toEqual([

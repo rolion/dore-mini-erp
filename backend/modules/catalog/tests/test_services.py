@@ -95,3 +95,19 @@ class ListProductsForInventoryTests(TestCase):
         self.assertEqual(names(can_buy=False, can_sell=False), ['Cuñapé'])
         bolsa = next(p for p in list_products_for_inventory(COMPANY_ID) if p.name == 'Bolsa')
         self.assertEqual((bolsa.category, bolsa.can_buy, bolsa.can_sell), ('packaging', True, False))
+
+
+class GetProductsForPurchaseTests(TestCase):
+    def test_returns_name_state_and_unit_of_the_companys_products_only(self):  # PB-COM-002 INV-04, INV-11
+        from modules.catalog.infrastructure.django.models import UnitModel
+        from modules.catalog.services import ProductForPurchase, get_products_for_purchase
+        unit = UnitModel.objects.create(company_id=COMPANY_ID, name='Kilogramo', abbreviation='kg', allows_fractions=True)
+        with_unit = ProductModel.objects.create(company_id=COMPANY_ID, name='Arroz', sale_price=Decimal('1.00'),
+                                                tracks_stock=True, base_unit=unit, can_buy=True)
+        bare = ProductModel.objects.create(company_id=COMPANY_ID, name='Bolsa', sale_price=Decimal('1.00'), active=False)
+        foreign = ProductModel.objects.create(company_id=uuid4(), name='Ajeno', sale_price=Decimal('1.00'))
+        result = get_products_for_purchase(COMPANY_ID, [with_unit.id, bare.id, foreign.id, uuid4()])
+        self.assertEqual(result, {
+            with_unit.id: ProductForPurchase(with_unit.id, 'Arroz', True, True, 'kg', True),
+            bare.id: ProductForPurchase(bare.id, 'Bolsa', False, False, None, False),
+        })
