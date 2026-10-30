@@ -5,7 +5,8 @@ from django.urls import URLPattern, URLResolver, get_resolver
 
 BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases')
 # Tablas hijas: heredan la empresa de su pedido por la FK interna de Sales y se consultan siempre a través de él.
-CHILD_MODELS = {'sales.OrderItemModel', 'sales.PaymentModel', 'purchases.PurchaseItemModel'}
+CHILD_MODELS = {'sales.OrderItemModel', 'sales.PaymentModel', 'purchases.PurchaseItemModel',
+                'purchases.ReceiptItemModel'}
 PUBLIC_PREFIXES = ('api/auth/', 'api/health/')
 
 
@@ -36,7 +37,8 @@ class CompanyColumnTests(SimpleTestCase):
 
     def test_child_tables_are_reached_through_their_order(self):  # AC-16 (a)
         parents = {'sales.OrderItemModel': ('order', 'sales.OrderModel'), 'sales.PaymentModel': ('order', 'sales.OrderModel'),
-                   'purchases.PurchaseItemModel': ('purchase', 'purchases.PurchaseModel')}
+                   'purchases.PurchaseItemModel': ('purchase', 'purchases.PurchaseModel'),
+                   'purchases.ReceiptItemModel': ('receipt', 'purchases.ReceiptModel')}
         for label in CHILD_MODELS:
             model = apps.get_model(label)
             self.assertEqual([f.name for f in model._meta.get_fields() if f.name == 'company_id'], [], label)
