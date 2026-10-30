@@ -1,6 +1,6 @@
 # TASK-integracion-recepciones-entradas-inventario: Generar entradas de inventario desde recepciones (PB-INT-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-integracion-recepciones-entradas-inventario
@@ -14,6 +14,7 @@
 | 2026-10-30 | INVESTIGATION → PLANNING | NEEDS_PLAN; diseño no requerido (pantallas existentes, sin patrón nuevo) | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS con reservas (sin Critical/High; 1 Medium y 3 Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -92,7 +93,13 @@ Implementado según PLAN v1, sin cambios de Specification.
 **Verificación propia (no es el Quality Gate)**: no hay `.env` ni PostgreSQL en este worktree (copiar el `.env` fue denegado); backend con SQLite temporal vía variables de entorno: `modules.purchases` 207 pruebas, fallan solo las 3 de concurrencia de filas que exigen PostgreSQL (preexistentes) y las de recepciones/repositorio/aplicación pasan; `makemigrations --check` sin cambios. Frontend: `ng lint` OK, `ng build` OK, Karma `features/purchases` + `features/inventory` 293/293 (se apartó temporalmente `app.component.spec.ts`, que no compila en `main`, y se restauró). Pendiente: PostgreSQL (concurrencia, AC-10) y revisión visual.
 
 ## Review
-_Pendiente_
+**Quality Gate ciclo 1 (subagente aislado): PASS con reservas.** Sin hallazgos Critical/High.
+- Backend (SQLite temporal, sin PostgreSQL): `manage.py test modules.purchases inventory sales modularity accounts` 779 pruebas; 15 fallas, todas de SQLite o preexistentes y ninguna en recepciones (concurrencia de bloqueo de filas, unicidad sin distinguir mayúsculas, orden); las pruebas nuevas de recepciones pasan. `makemigrations --check` sin cambios; `bandit` sin hallazgos en `purchases`.
+- Frontend: `ng lint` OK, `ng build` OK, Karma `features/purchases` + `features/inventory` 293/293.
+- Límites DDD, migración `0005` nueva con backfill, contrato aditivo y textos de la tarjeta verificados por lectura de código.
+- AC-01…AC-09, AC-11…AC-14 y AC-16 con verificación; AC-15 cubierto solo parcialmente (REV-01); AC-10 no ejecutado (exige PostgreSQL).
+- No realizado: PostgreSQL, revisión visual en navegador, `npm audit`.
+- Hallazgos abiertos: [REV-01](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-01.md) (Medium, IMPLEMENTATION: falta prueba de reintento con el mismo `receiptId` sin éxito parcial, AC-15), [REV-02](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-02.md) (Low, ARCHITECTURE: `stock_entry` se calcula en el serializer), [REV-03](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-03.md) (Low, DESIGN: doble mensaje en modo documental y marca de resumen atenuada en vez de badge), [REV-04](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-04.md) (Low, IMPLEMENTATION: `test_receipt_domain` sin tocar e `inventory_mode` asignado sin método del agregado).
 
 ## Publicación
-_Pendiente_
+PR [#37](https://github.com/rolion/dore-mini-erp/pull/37) listo para aprobación humana (no se mergea automáticamente). Cambio sensible: **base de datos** (migración aditiva `0005` con `RunPython` de backfill, sin ADR). Antes del merge: correr en PostgreSQL la suite de `purchases` (incluye `test_receipt_concurrency`, AC-10), hacer la revisión visual del resumen y el detalle de recepción, y decidir si REV-01 (Medium) se corrige antes del merge.
