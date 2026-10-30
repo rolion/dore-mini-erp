@@ -76,3 +76,22 @@ class ListProductsForInventoryTests(TestCase):
         self.assertEqual(names(search='harina'), ['Harina de trigo', 'Harina vieja'])
         self.assertEqual(names(search='harina', active=False), ['Harina vieja'])
         self.assertEqual(names(active=True), ['Harina de trigo', 'Sal'])
+
+    def test_returns_category_and_uses_and_filters_by_them(self):  # AC-02, AC-03
+        def make(name, category, buy, sell, company=COMPANY_ID):
+            ProductModel.objects.create(
+                company_id=company, name=name, sale_price=Decimal('1.00') if sell else None, tracks_stock=True,
+                category=category, can_buy=buy, can_sell=sell)
+        make('Cuñapé', 'intermediate', False, False)
+        make('Bolsa', 'packaging', True, False)
+        make('Cuaderno', 'merchandise', True, True)
+        make('Viejo', None, False, True)
+        make('Ajeno', 'packaging', True, False, company=uuid4())
+        names = lambda **kw: [p.name for p in list_products_for_inventory(COMPANY_ID, **kw)]  # noqa: E731
+        self.assertEqual(names(category='intermediate', can_sell=False), ['Cuñapé'])
+        self.assertEqual(names(category='packaging', can_buy=True), ['Bolsa'])
+        self.assertEqual(names(can_buy=True, can_sell=True), ['Cuaderno'])
+        self.assertEqual(names(category='none'), ['Viejo'])
+        self.assertEqual(names(can_buy=False, can_sell=False), ['Cuñapé'])
+        bolsa = next(p for p in list_products_for_inventory(COMPANY_ID) if p.name == 'Bolsa')
+        self.assertEqual((bolsa.category, bolsa.can_buy, bolsa.can_sell), ('packaging', True, False))

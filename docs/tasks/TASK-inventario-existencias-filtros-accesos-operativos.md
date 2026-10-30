@@ -1,6 +1,6 @@
 # TASK-inventario-existencias-filtros-accesos-operativos: Ampliar consulta de existencias con filtros y accesos operativos (PB-INV-009)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-existencias-filtros-accesos-operativos
@@ -13,6 +13,7 @@
 | 2026-10-29 | INVESTIGATION → PLANNING | Specification **BLOCKED**: la dependencia PB-CAT-001 no existía en el repo; decisión del usuario: detener hasta que se entregue | delivery-start |
 | 2026-10-29 | PLANNING → DESIGN → PLANNING | PB-CAT-001 mergeado (PR #29, `a9dd1d4`); se actualiza `main`, se completa la investigación y se escribe el DDR | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend (inventory + catalog) 260 OK, frontend lint, build y Karma `features/inventory` 135/135 OK | delivery-build |
 
 ## Investigación
 
@@ -83,7 +84,13 @@ _No aplica según veredicto_
 `docs/plans/PLAN-2026-10-29-inventario-existencias-filtros-accesos-operativos.md` (v1, COMPLETO, READY). Pregunta abierta anterior resuelta: PB-CAT-001 ya está en `main`.
 
 ## Implementación
-_Pendiente_
+**Backend.** `catalog.services`: `ProductForInventory` con `category`, `can_buy`, `can_sell` y `list_products_for_inventory(category, can_buy, can_sell)` (`category='none'` = sin clasificar) (INV-05, AC-02, AC-03). `inventory`: `ProductInfo`/`ProductDirectory.list_stock_products` y adaptador; `StockQuery` y `ListStock` pasan los filtros a Catálogo; `StockPosition.can_register_adjustment` = almacén activo (INV-04); `api/stock_views.py` valida `category`, `can_buy`, `can_sell` (400 por parámetro, EDGE-03) y expone `category`, `can_buy`, `can_sell` en filas y detalle, y `can_register_adjustment` en el detalle (API-01, API-02). Sin migraciones ni endpoints nuevos; apertura y ajuste conservan sus endpoints y reglas (AC-04, AC-05; la revalidación de apertura al confirmar ya existía en `RegisterOpening`).
+**Frontend** (`features/inventory`). `models/stock.ts` y `stock-api.service.ts` (campos y filtros); `services/stock-filters-state.ts` (filtros y página en memoria, AC-08); `services/stock-return.ts` (`return=stock` + ids UUID válidos → enlace al detalle, nunca una URL libre; EDGE-05). `stock-list`: columnas Clasificación y Usos, filtros Clasificación / Comprable / Vendible, «Limpiar filtros», estados vacío inicial, sin resultados con filtros, cargando y error con Reintentar (UI-01, AC-07). `stock-detail`: filas Clasificación y Usos, «Registrar apertura» y «Registrar ajuste» con producto, almacén y `return=stock`, notas de apertura/ajuste no disponibles (UI-02, AC-04, EDGE-06). `stock-opening` y `adjustment-form`: preselección de producto y retorno al detalle al guardar y al cancelar (UI-03, AC-05, AC-06). Docs: `design-system.md`, `modulos-implementados.md`.
+**Pruebas.** Backend: `inventory/tests/test_stock_query.py` (filtros combinados, sin clasificar, aislamiento por empresa, 400, detalle con categoría/usos y `can_register_adjustment`), `catalog/tests/test_services.py` (DTO y filtros). Frontend: specs de `stock-api.service`, `stock-list`, `stock-detail`, `stock-return` (nueva) y bloques nuevos en `stock-opening` y `adjustment-form`. El 409 por historial en la apertura queda cubierto por la suite existente (`test_stock.py`).
+**Pantallas de referencia:** `movement-list` / `stock-list` (Lista de solo lectura con filtros) y `stock-detail` (Detalle con historial embebido); reutiliza `badge-outline`, `categoryLabel` y `PRODUCT_CATEGORIES` de `features/products`; no se creó nada en `shared/`.
+**Desviaciones respecto al plan:** (0) la preselección de producto en la apertura usa `product_id` aunque no venga `return=stock` (igual que el ajuste), para no atar la preselección al retorno; (1) el texto de la nota de apertura se amplió a «La apertura solo procede sin movimientos previos; …» según la historia. Ninguna otra.
+**Deuda técnica:** la preselección depende de que el producto esté entre las primeras 50 opciones que carga `OpeningProductsService` (limitación heredada, REV-09 de PB-INV-005); el estado de filtros vive en memoria y se pierde al recargar (aceptado en el DDR); filtros de clasificación/uso en BD, pero saldo y almacén siguen en memoria (deuda de PB-INV-005); revisión visual en navegador pendiente.
+**Verificación propia (no es el Quality Gate):** `manage.py test modules.inventory modules.catalog` 260 OK; `npm run lint` OK; `ng build` OK; Karma `features/inventory` 135/135 OK (con `app.component.spec.ts` apartado temporalmente por estar roto en `main`; restaurado). Entorno: con autorización del usuario se copió `backend/.env` del checkout principal (sin abrirlo; ignorado por git), se usó su `.venv` y se enlazó `node_modules`.
 
 ## Review
 _Pendiente_

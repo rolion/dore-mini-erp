@@ -41,6 +41,26 @@
                 <div class="badge-outline col-grey d-inline-block">Inactivo</div>
                 }
               </dd>
+              <dt class="col-sm-3">Clasificación</dt>
+              <dd class="col-sm-9" data-testid="category">
+                @if (p.category) {
+                {{ categoryText }}
+                } @else {
+                <div class="badge-outline col-grey d-inline-block">Sin clasificar</div>
+                }
+              </dd>
+              <dt class="col-sm-3">Usos</dt>
+              <dd class="col-sm-9" data-testid="uses">
+                @if (p.canBuy) {
+                <div class="badge-outline col-blue d-inline-block">Comprable</div>
+                }
+                @if (p.canSell) {
+                <div class="badge-outline col-green d-inline-block ms-1">Vendible</div>
+                }
+                @if (!p.canBuy && !p.canSell) {
+                <div class="badge-outline col-grey d-inline-block">Sin usos</div>
+                }
+              </dd>
               <dt class="col-sm-3">Almacén</dt>
               <dd class="col-sm-9">
                 {{ p.warehouseName }}
@@ -64,11 +84,18 @@
                 (click)="openMovements()">Ver movimientos</button>
               @if (p.canRegisterOpening) {
               <a class="btn btn-outline-primary ms-2" routerLink="/pocketbiz/inventory/stock/opening"
-                [queryParams]="{ warehouse_id: p.warehouseId }" data-testid="register-opening">Registrar apertura</a>
+                [queryParams]="operationParams" data-testid="register-opening">Registrar apertura</a>
+              }
+              @if (p.canRegisterAdjustment) {
+              <a class="btn btn-outline-primary ms-2" routerLink="/pocketbiz/inventory/adjustments/new"
+                [queryParams]="operationParams" data-testid="register-adjustment">Registrar ajuste</a>
               }
               <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/stock">Volver</a>
               @if (openingNote) {
               <small class="form-text text-muted d-block mt-2" data-testid="opening-note">{{ openingNote }}</small>
+              }
+              @if (adjustmentNote) {
+              <small class="form-text text-muted d-block mt-2" data-testid="adjustment-note">{{ adjustmentNote }}</small>
               }
             </div>
 

@@ -128,7 +128,7 @@
                   <button type="submit" class="btn btn-primary" data-testid="review" [disabled]="!canReview">
                     Revisar resumen
                   </button>
-                  <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/stock">Cancelar</a>
+                  <a class="btn btn-light ms-2" [routerLink]="returnLink ?? ['/pocketbiz/inventory/stock']">Cancelar</a>
                 </div>
               </div>
             </form>

@@ -10,11 +10,17 @@ import {
   ActiveFilter,
   BALANCE_FILTER_OPTIONS,
   BalanceFilter,
+  CATEGORY_FILTER_OPTIONS,
+  CategoryFilter,
   StockBalance,
+  USE_FILTER_OPTIONS,
+  UseFilter,
   formatQuantity,
 } from '../../models/stock';
+import { categoryLabel } from '../../../products/models/product';
 import { Warehouse } from '../../models/warehouse';
 import { StockApiService } from '../../services/stock-api.service';
+import { DEFAULT_STOCK_FILTERS, StockFiltersState } from '../../services/stock-filters-state';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
 
 export const ALL_WAREHOUSES = '';
@@ -30,11 +36,16 @@ export class StockListComponent implements OnInit {
   readonly pageSize = 20;
   readonly activeOptions = ACTIVE_FILTER_OPTIONS;
   readonly balanceOptions = BALANCE_FILTER_OPTIONS;
+  readonly categoryOptions = CATEGORY_FILTER_OPTIONS;
+  readonly useOptions = USE_FILTER_OPTIONS;
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     search: [''],
     warehouseId: [ALL_WAREHOUSES],
     active: ['true' as ActiveFilter],
     balance: ['' as BalanceFilter],
+    category: ['' as CategoryFilter],
+    canBuy: ['' as UseFilter],
+    canSell: ['' as UseFilter],
   });
 
   warehouses: Warehouse[] = [];
@@ -48,13 +59,18 @@ export class StockListComponent implements OnInit {
   private warehousesApi = inject(WarehousesApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private filtersState = inject(StockFiltersState);
   private destroyRef = inject(DestroyRef);
   private load$ = new Subject<void>();
 
   ngOnInit(): void {
+    // Al volver del detalle se restauran los filtros y la página de la última consulta.
+    this.filterForm.setValue(this.filtersState.filters, { emitEvent: false });
+    this.page = this.filtersState.page;
     this.load$
       .pipe(
         tap(() => {
+          this.filtersState.save(this.filterForm.getRawValue(), this.page);
           this.loading = true;
           this.errorMessage = '';
         }),
@@ -65,6 +81,9 @@ export class StockListComponent implements OnInit {
               warehouseId: this.filterForm.controls.warehouseId.value || undefined,
               active: this.filterForm.controls.active.value,
               balance: this.filterForm.controls.balance.value || undefined,
+              category: this.filterForm.controls.category.value || undefined,
+              canBuy: this.filterForm.controls.canBuy.value || undefined,
+              canSell: this.filterForm.controls.canSell.value || undefined,
               page: this.page,
               pageSize: this.pageSize,
             })
@@ -94,9 +113,12 @@ export class StockListComponent implements OnInit {
         next: (page) => {
           this.warehouses = page.results;
           const known = page.results.some((warehouse) => warehouse.id === requested);
-          this.filterForm.controls.warehouseId.setValue(requested && known ? requested : ALL_WAREHOUSES, {
-            emitEvent: false,
-          });
+          const saved = this.filterForm.controls.warehouseId.value;
+          const wanted = requested && known ? requested : page.results.some((w) => w.id === saved) ? saved : ALL_WAREHOUSES;
+          if (requested && known) {
+            this.page = 1;
+          }
+          this.filterForm.controls.warehouseId.setValue(wanted, { emitEvent: false });
           this.reload();
         },
         error: () => this.reload(),
@@ -108,12 +130,14 @@ export class StockListComponent implements OnInit {
   }
 
   get filtersActive(): boolean {
-    const { search, warehouseId, active, balance } = this.filterForm.getRawValue();
-    return search !== '' || warehouseId !== ALL_WAREHOUSES || active !== 'true' || balance !== '';
+    const current = this.filterForm.getRawValue();
+    return (Object.keys(DEFAULT_STOCK_FILTERS) as (keyof typeof DEFAULT_STOCK_FILTERS)[]).some(
+      (key) => current[key] !== DEFAULT_STOCK_FILTERS[key],
+    );
   }
 
   clearFilters(): void {
-    this.filterForm.setValue({ search: '', warehouseId: ALL_WAREHOUSES, active: 'true', balance: '' });
+    this.filterForm.setValue({ ...DEFAULT_STOCK_FILTERS });
   }
 
   reload(): void {
@@ -137,6 +161,10 @@ export class StockListComponent implements OnInit {
     this.router.navigate(['/pocketbiz/inventory/movements'], {
       queryParams: { warehouse_id: row.warehouseId, product_id: row.productId },
     });
+  }
+
+  categoryText(row: StockBalance): string {
+    return categoryLabel(row.category);
   }
 
   display(quantity: string): string {

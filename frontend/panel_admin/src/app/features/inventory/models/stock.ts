@@ -1,3 +1,5 @@
+import { ProductCategory } from '../../products/models/product';
+
 export const OPENING_REFERENCE_MAX_LENGTH = 100;
 export const QUANTITY_MAX_DECIMALS = 3;
 
@@ -15,6 +17,10 @@ export interface StockBalance {
   warehouseId: string;
   warehouseName: string;
   warehouseActive: boolean;
+  /** Clasificación del producto en Catálogo; `null` si aún no se clasifica. */
+  category: ProductCategory | null;
+  canBuy: boolean;
+  canSell: boolean;
   quantity: string;
   /** Derivado por el servidor del signo del saldo. */
   balanceState: BalanceState;
@@ -25,11 +31,32 @@ export interface StockBalance {
 export interface StockPosition extends StockBalance {
   hasHistory: boolean;
   canRegisterOpening: boolean;
+  canRegisterAdjustment: boolean;
 }
 
 export type BalanceState = 'zero' | 'positive' | 'negative';
 export type BalanceFilter = '' | 'zero' | 'nonzero' | 'negative';
 export type ActiveFilter = 'true' | 'false' | 'all';
+/** Categoría del producto o `none` (sin clasificar); vacío = todas. */
+export type CategoryFilter = '' | ProductCategory | 'none';
+/** Filtro de un uso (comprable/vendible): vacío = todos. */
+export type UseFilter = '' | 'true' | 'false';
+
+export const CATEGORY_FILTER_OPTIONS: readonly { value: CategoryFilter; label: string }[] = [
+  { value: '', label: 'Todas las clasificaciones' },
+  { value: 'raw_material', label: 'Materia prima' },
+  { value: 'packaging', label: 'Empaque' },
+  { value: 'intermediate', label: 'Intermedio' },
+  { value: 'finished', label: 'Terminado' },
+  { value: 'merchandise', label: 'Mercadería' },
+  { value: 'none', label: 'Sin clasificar' },
+];
+
+export const USE_FILTER_OPTIONS: readonly { value: UseFilter; label: string }[] = [
+  { value: '', label: 'Todos' },
+  { value: 'true', label: 'Sí' },
+  { value: 'false', label: 'No' },
+];
 
 export const BALANCE_FILTER_OPTIONS: readonly { value: BalanceFilter; label: string }[] = [
   { value: '', label: 'Todos los saldos' },
@@ -48,6 +75,9 @@ export interface StockListParams {
   search?: string;
   active?: ActiveFilter;
   balance?: BalanceFilter;
+  category?: CategoryFilter;
+  canBuy?: UseFilter;
+  canSell?: UseFilter;
   warehouseId?: string;
   page?: number;
   pageSize?: number;
@@ -97,6 +127,9 @@ export interface StockBalanceDto {
   warehouse_id: string;
   warehouse_name: string;
   warehouse_active: boolean;
+  category: ProductCategory | null;
+  can_buy: boolean;
+  can_sell: boolean;
   quantity: string;
   balance_state: BalanceState;
   unit: StockUnitDto | null;
@@ -105,6 +138,7 @@ export interface StockBalanceDto {
 export interface StockPositionDto extends StockBalanceDto {
   has_history: boolean;
   can_register_opening: boolean;
+  can_register_adjustment: boolean;
 }
 
 export interface OpeningResultDto {

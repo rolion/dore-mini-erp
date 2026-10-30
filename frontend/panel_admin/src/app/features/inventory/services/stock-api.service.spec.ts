@@ -43,6 +43,9 @@ describe('StockApiService', () => {
           warehouse_id: 'w-1',
           warehouse_name: 'Principal',
           warehouse_active: true,
+          category: 'packaging',
+          can_buy: true,
+          can_sell: false,
           quantity: '10.000',
           balance_state: 'positive',
           unit: { abbreviation: 'u', allows_fractions: false },
@@ -56,6 +59,9 @@ describe('StockApiService', () => {
       warehouseId: 'w-1',
       warehouseName: 'Principal',
       warehouseActive: true,
+      category: 'packaging',
+      canBuy: true,
+      canSell: false,
       quantity: '10.000',
       balanceState: 'positive',
       unit: { abbreviation: 'u', allowsFractions: false },
@@ -71,6 +77,23 @@ describe('StockApiService', () => {
     req.flush({ count: 0, next: null, previous: null, results: [] });
   });
 
+  it('sends classification and use filters (AC-02)', () => {
+    service.list({ category: 'none', canBuy: 'true', canSell: 'false' }).subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/stock/'));
+    expect(req.request.params.get('category')).toBe('none');
+    expect(req.request.params.get('can_buy')).toBe('true');
+    expect(req.request.params.get('can_sell')).toBe('false');
+    req.flush({ count: 0, next: null, previous: null, results: [] });
+  });
+
+  it('omits unset classification and use filters', () => {
+    service.list({ category: '', canBuy: '', canSell: '' }).subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/stock/'));
+    const keys = req.request.params.keys();
+    expect(keys.includes('category') || keys.includes('can_buy') || keys.includes('can_sell')).toBeFalse();
+    req.flush({ count: 0, next: null, previous: null, results: [] });
+  });
+
   it('reads the position of a product in a warehouse (AC-04)', () => {
     let position: unknown;
     service.get('p-1', 'w-1').subscribe((p) => (position = p));
@@ -82,14 +105,26 @@ describe('StockApiService', () => {
       warehouse_id: 'w-1',
       warehouse_name: 'Principal',
       warehouse_active: true,
+      category: null,
+      can_buy: false,
+      can_sell: true,
       quantity: '0.0000',
       balance_state: 'zero',
       unit: null,
       has_history: false,
       can_register_opening: false,
+      can_register_adjustment: true,
     });
     expect(position).toEqual(
-      jasmine.objectContaining({ productActive: false, balanceState: 'zero', hasHistory: false, canRegisterOpening: false }),
+      jasmine.objectContaining({
+        productActive: false,
+        balanceState: 'zero',
+        hasHistory: false,
+        canRegisterOpening: false,
+        canRegisterAdjustment: true,
+        category: null,
+        canSell: true,
+      }),
     );
   });
 

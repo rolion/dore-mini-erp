@@ -17,11 +17,15 @@ const POSITION: StockPosition = {
   warehouseId: 'w-1',
   warehouseName: 'Almacén principal',
   warehouseActive: true,
+  category: 'merchandise',
+  canBuy: true,
+  canSell: true,
   quantity: '7.0000',
   balanceState: 'positive',
   unit: { abbreviation: 'kg', allowsFractions: true },
   hasHistory: true,
   canRegisterOpening: false,
+  canRegisterAdjustment: true,
 };
 
 function page(results: StockMovement[]): Page<StockMovement> {
@@ -80,18 +84,46 @@ describe('StockDetailComponent', () => {
     expect(el().querySelector('[data-testid="detail-error"]')).toBeNull();
   });
 
-  it('offers «Ver movimientos» always and «Registrar apertura» only when it applies, never «ajuste» (AC-05)', async () => {
+  it('shows classification and uses from the catalog (UI-02)', async () => {
+    await setup();
+    expect(text('category')).toContain('Mercadería');
+    expect(text('uses')).toContain('Comprable');
+    expect(text('uses')).toContain('Vendible');
+  });
+
+  it('shows «Sin clasificar» and «Sin usos» when the product has neither (EDGE-01, EDGE-02)', async () => {
+    await setup({ ...POSITION, category: null, canBuy: false, canSell: false });
+    expect(text('category')).toContain('Sin clasificar');
+    expect(text('uses')).toContain('Sin usos');
+  });
+
+  it('offers «Ver movimientos» always and «Registrar apertura» only when it applies (AC-04)', async () => {
     await setup();
     expect(el().querySelector('[data-testid="view-movements"]')).not.toBeNull();
     expect(el().querySelector('[data-testid="register-opening"]')).toBeNull();
-    expect(text('opening-note')).toContain('Ya tiene movimientos');
-    expect(el().textContent).not.toContain('Registrar ajuste');
+    expect(text('opening-note')).toContain('solo procede sin movimientos');
+  });
+
+  it('offers «Registrar ajuste» with the pair preselected and the return context (AC-05, AC-06)', async () => {
+    await setup();
+    const link = el().querySelector('[data-testid="register-adjustment"]') as HTMLAnchorElement;
+    const url = new URL(link.href, 'http://localhost');
+    expect(url.pathname).toBe('/pocketbiz/inventory/adjustments/new');
+    expect(Object.fromEntries(url.searchParams)).toEqual({ warehouse_id: 'w-1', product_id: 'p-1', return: 'stock' });
+  });
+
+  it('hides «Registrar ajuste» and explains it when the warehouse is inactive (EDGE-06)', async () => {
+    await setup({ ...POSITION, warehouseActive: false, canRegisterAdjustment: false });
+    expect(el().querySelector('[data-testid="register-adjustment"]')).toBeNull();
+    expect(text('adjustment-note')).toContain('Almacén inactivo');
   });
 
   it('shows «Registrar apertura» for a pair without history (INV-05)', async () => {
     await setup({ ...POSITION, hasHistory: false, canRegisterOpening: true });
     const link = el().querySelector('[data-testid="register-opening"]') as HTMLAnchorElement;
-    expect(link.getAttribute('href')).toBe('/pocketbiz/inventory/stock/opening?warehouse_id=w-1');
+    const url = new URL(link.href, 'http://localhost');
+    expect(url.pathname).toBe('/pocketbiz/inventory/stock/opening');
+    expect(Object.fromEntries(url.searchParams)).toEqual({ warehouse_id: 'w-1', product_id: 'p-1', return: 'stock' });
   });
 
   it('explains why the opening is not offered for an inactive product (INV-05)', async () => {

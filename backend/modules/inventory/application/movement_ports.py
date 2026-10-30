@@ -12,6 +12,9 @@ class ProductInfo:
     unit_abbreviation: str | None
     allows_fractions: bool
     active: bool = True
+    category: str | None = None
+    can_buy: bool = False
+    can_sell: bool = True
 
 
 class ProductDirectory(Protocol):
@@ -19,8 +22,10 @@ class ProductDirectory(Protocol):
 
     def get_products(self, product_ids: Iterable[UUID]) -> Mapping[UUID, ProductInfo]: ...
 
-    def list_stock_products(self, search: str | None = None, active: bool | None = None) -> list[ProductInfo]:
-        """Productos que controlan stock, por nombre."""
+    def list_stock_products(self, search: str | None = None, active: bool | None = None,
+                            category: str | None = None, can_buy: bool | None = None,
+                            can_sell: bool | None = None) -> list[ProductInfo]:
+        """Productos que controlan stock, por nombre (`category='none'` = sin clasificar)."""
         ...
 
 

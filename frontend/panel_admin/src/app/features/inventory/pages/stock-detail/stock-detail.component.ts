@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { EMPTY, Subject, catchError, finalize, switchMap, tap } from 'rxjs';
+import { categoryLabel } from '../../../products/models/product';
 import { InventoryApiError } from '../../models/api-error';
 import {
   MOVEMENT_KIND_LABELS,
@@ -143,8 +144,26 @@ export class StockDetailComponent implements OnInit {
       return '';
     }
     if (position.hasHistory) {
-      return 'Ya tiene movimientos; las correcciones se hacen con un ajuste.';
+      return 'La apertura solo procede sin movimientos previos; las correcciones se hacen con un ajuste.';
     }
     return 'Producto o almacén inactivo.';
+  }
+
+  /** Por qué no se ofrece «Registrar ajuste» (solo cuando el almacén está inactivo). */
+  get adjustmentNote(): string {
+    return this.position && !this.position.canRegisterAdjustment ? 'Almacén inactivo: no se pueden registrar ajustes.' : '';
+  }
+
+  /** Contexto con el que los flujos de apertura y ajuste preseleccionan el par y vuelven a este detalle. */
+  get operationParams(): Record<string, string> {
+    return {
+      warehouse_id: this.position?.warehouseId ?? '',
+      product_id: this.position?.productId ?? '',
+      return: 'stock',
+    };
+  }
+
+  get categoryText(): string {
+    return categoryLabel(this.position?.category ?? null);
   }
 }
