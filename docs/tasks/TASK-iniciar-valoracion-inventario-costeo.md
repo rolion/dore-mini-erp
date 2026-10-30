@@ -107,7 +107,7 @@ No hay costos ni valoración; Inventario solo conoce cantidades.
 - Límites DDD, `company_id`, `Decimal` y migración: conformes. Todos los AC/INV/API/UI del PLAN tienen verificación; sin scope creep.
 - No realizado: ruff, mypy y `npm audit` (no disponibles), cobertura por archivo, Karma completo del repo, revisión visual en navegador (**no verificada**).
 
-Hallazgos abiertos (Low, no bloquean): [REV-01](../reviews/REV-2026-10-30-iniciar-valoracion-inventario-costeo-01.md) enlace «Valoración» dentro de un `tablist` sin rol de pestaña; [REV-02](../reviews/REV-2026-10-30-iniciar-valoracion-inventario-costeo-02.md) el DDR pide `alert-success` y la implementación usa un toast (patrón de `stock-opening`).
+Hallazgos Low (**resueltos después del PASS**: REV-01 movió el enlace «Valoración» fuera del `tablist` al encabezado de la tarjeta; REV-02 agregó el `alert-success` del DDR tras adoptar; Karma de `features/inventory` 157 OK y `ng lint` OK tras el cambio): [REV-01](../reviews/REV-2026-10-30-iniciar-valoracion-inventario-costeo-01.md) enlace «Valoración» dentro de un `tablist` sin rol de pestaña; [REV-02](../reviews/REV-2026-10-30-iniciar-valoracion-inventario-costeo-02.md) el DDR pide `alert-success` y la implementación usa un toast (patrón de `stock-opening`).
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/36 listo para aprobación humana (no se mergea desde el flujo). Cambio sensible: **base de datos** (migración nueva `costing/0001`, solo tablas nuevas) y **catálogo de módulos/autorización por módulo**; respaldado por el ADR `ADR-iniciar-valoracion-inventario-costeo-modulo-costeo-y-adopcion`.

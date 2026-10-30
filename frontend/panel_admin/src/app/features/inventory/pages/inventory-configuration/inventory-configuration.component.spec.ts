@@ -51,5 +51,6 @@ describe('InventoryConfigurationComponent', () => {
     const link = el.querySelector('[data-testid="valuation-link"]') as HTMLAnchorElement;
     expect(link.textContent?.trim()).toBe('Valoración');
     expect(link.getAttribute('href')).toBe('/pocketbiz/inventory/valuation');
+    expect(link.closest('[role="tablist"]')).toBeNull();
   });
 });

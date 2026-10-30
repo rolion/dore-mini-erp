@@ -68,6 +68,8 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
   adoption: Adoption | null = null;
   search = '';
   saving = false;
+  /** Verdadero solo en la consulta que sigue a una adopción recién confirmada (aviso de éxito). */
+  justAdopted = false;
   /** Rechazo de regla del servidor (409) o error general al confirmar. */
   conflictMessage = '';
   serverBlockers: ProposalBlocker[] = [];
@@ -304,6 +306,7 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
           this.saving = false;
           this.rows.markAsPristine();
           this.adoption = adoption;
+          this.justAdopted = true;
           this.phase = 'adopted';
           this.toastr.success(ADOPTION_SUCCESS_MESSAGE);
         },

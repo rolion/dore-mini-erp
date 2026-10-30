@@ -1,6 +1,6 @@
 # REV-2026-10-30-iniciar-valoracion-inventario-costeo-01: Enlace «Valoración» dentro de un tablist sin rol de pestaña
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-10-30-iniciar-valoracion-inventario-costeo.md (v1)

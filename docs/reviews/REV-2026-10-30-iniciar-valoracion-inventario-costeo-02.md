@@ -1,6 +1,6 @@
 # REV-2026-10-30-iniciar-valoracion-inventario-costeo-02: Confirmación de la adopción sin alert-success (el DDR lo indica)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-10-30-iniciar-valoracion-inventario-costeo.md (v1)

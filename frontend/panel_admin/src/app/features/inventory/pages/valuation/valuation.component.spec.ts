@@ -129,6 +129,7 @@ describe('ValuationComponent', () => {
     ]);
     expect(input.adoptionId).toMatch(/^[0-9a-f-]{36}$/);
     expect(toastr.success).toHaveBeenCalled();
+    expect(q('adopted-success')?.textContent).toContain('Valoración adoptada');
     expect(q('adoption-summary')).not.toBeNull();
     expect(q('adopted-line')?.textContent).toContain('3.333333');
   });
@@ -177,6 +178,7 @@ describe('ValuationComponent', () => {
   it('shows the read-only cut when already adopted, with search by name (UI-05)', () => {
     const { q, el, type, api } = create({ valuation: { status: 'adopted', adoption: ADOPTION } });
     expect(api.proposal).not.toHaveBeenCalled();
+    expect(q('adopted-success')).toBeNull();
     expect(q('adoption-summary')?.textContent).toContain('Promedio ponderado móvil');
     expect(q('adopted-line')?.textContent).toContain('Bs 10.00');
     expect(el.querySelector('button[data-testid="confirm"]')).toBeNull();

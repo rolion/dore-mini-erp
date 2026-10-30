@@ -16,6 +16,10 @@
         <div class="card">
           <div class="card-header">
             <h4>Inventario › Almacenes y unidades</h4>
+            @if ((enabledKeys$ | async)?.has('costing')) {
+            <a class="btn btn-light btn-sm ms-auto" routerLink="/pocketbiz/inventory/valuation"
+              data-testid="valuation-link">Valoración</a>
+            }
           </div>
           <ul class="nav nav-tabs px-3 pt-2" role="tablist">
             <li class="nav-item" role="presentation">
@@ -28,11 +32,6 @@
                 [attr.aria-selected]="tab === 'units'" aria-controls="panel-units"
                 (click)="select('units')">Unidades</button>
             </li>
-            @if ((enabledKeys$ | async)?.has('costing')) {
-            <li class="nav-item">
-              <a class="nav-link" routerLink="/pocketbiz/inventory/valuation" data-testid="valuation-link">Valoración</a>
-            </li>
-            }
           </ul>
           @if (tab === 'warehouses') {
           <div id="panel-warehouses" role="tabpanel" aria-labelledby="tab-warehouses">

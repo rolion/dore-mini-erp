@@ -45,6 +45,11 @@
               </button>
             </div>
             } @else if (phase === 'adopted' && adoption) {
+            @if (justAdopted) {
+            <div class="alert alert-success" role="status" data-testid="adopted-success">
+              Valoración adoptada. Los valores quedan como base del costeo y no se editan.
+            </div>
+            }
             <dl class="row" data-testid="adoption-summary">
               <dt class="col-sm-3">Fecha de corte</dt>
               <dd class="col-sm-9" data-testid="cutoff">{{ adoption.cutoffAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
