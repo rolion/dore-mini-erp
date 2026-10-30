@@ -1,6 +1,6 @@
 # TASK-inventario-revertir-movimientos: Revertir movimientos mediante contramovimientos (PB-INV-008)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-revertir-movimientos
@@ -16,6 +16,7 @@
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS; 3 hallazgos Low abiertos (REV-01..03); revisión visual en navegador no verificada | delivery-publish |
 
 ## Investigación
 
@@ -109,7 +110,13 @@ Decisiones tomadas sin consultar (constan en el PLAN/ADR, ninguna cambia un crit
 **Deuda técnica.** Sin enlace desde un movimiento de compra a su recepción (falta el id de compra). Suites de plantilla y `app.component.spec.ts` rotas de antes. Para correr tests en este worktree se copió `backend/.env` (ignorado por git, con autorización de la persona) y se enlazó `node_modules` del checkout principal; ninguno se versiona.
 
 ## Review
-_Pendiente_
+
+**Quality Gate ciclo 1 (subagente aislado): PASS.** Sin Critical/High/Medium. Evidencia: backend `manage.py test` 1233 tests OK; `makemigrations --check` sin cambios; `npm run lint` limpio; `npm run build` OK; Karma 940 OK / 71 FAILED, todos "should create" de la plantilla Oreva ajenos al diff (preexistentes); bandit sin hallazgos. No realizados: ruff (no instalado), `npm audit` (sin lockfile), **revisión visual en navegador (no verificada)**. Límites DDD, orden de bloqueos y atomicidad revisados sin hallazgos.
+
+Hallazgos Low abiertos (no bloquean):
+- [REV-01](../reviews/REV-2026-10-30-inventario-revertir-movimientos-01.md) SPECIFICATION: el PLAN cita `/api/inventory/movements/...` pero la ruta real es `/api/stock-movements/...`.
+- [REV-02](../reviews/REV-2026-10-30-inventario-revertir-movimientos-02.md) IMPLEMENTATION: la concurrencia de `RevertReception` se prueba solo con stock documental y falta prueba de 403 por rol.
+- [REV-03](../reviews/REV-2026-10-30-inventario-revertir-movimientos-03.md) DESIGN: el contramovimiento hereda la referencia del original.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/40 listo para aprobación humana (no se mergea automáticamente). Cambio sensible: toca base de datos (migración `purchases/0007_receipt_reversal`, aditiva) y lógica de stock/finanzas respaldada por el ADR `ADR-inventario-revertir-movimientos-contramovimientos`; requiere aprobación humana del merge.
