@@ -1,6 +1,6 @@
 # TASK-inventario-existencias-filtros-accesos-operativos: Ampliar consulta de existencias con filtros y accesos operativos (PB-INV-009)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-existencias-filtros-accesos-operativos
@@ -14,6 +14,7 @@
 | 2026-10-29 | PLANNING → DESIGN → PLANNING | PB-CAT-001 mergeado (PR #29, `a9dd1d4`); se actualiza `main`, se completa la investigación y se escribe el DDR | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1; backend (inventory + catalog) 260 OK, frontend lint, build y Karma `features/inventory` 135/135 OK | delivery-build |
+| 2026-10-29 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS con reservas (REV-01 Medium, REV-02 Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -93,7 +94,8 @@ _No aplica según veredicto_
 **Verificación propia (no es el Quality Gate):** `manage.py test modules.inventory modules.catalog` 260 OK; `npm run lint` OK; `ng build` OK; Karma `features/inventory` 135/135 OK (con `app.component.spec.ts` apartado temporalmente por estar roto en `main`; restaurado). Entorno: con autorización del usuario se copió `backend/.env` del checkout principal (sin abrirlo; ignorado por git), se usó su `.venv` y se enlazó `node_modules`.
 
 ## Review
-_Pendiente_
+**Ciclo 1: PASS con reservas** (subagente aislado). Backend: `modules.inventory modules.catalog` sin fallos; `modules.accounts modules.modularity modules.purchases` 176 OK; `makemigrations --check` sin cambios; bandit (inventory, catalog) 0 hallazgos. Frontend: lint OK, `ng build` OK, Karma `features/inventory` 135/135, `features/products` 57/57, `features/sales` 196/196. `modules.sales` (543 tests en total con inventory y catalog): fallan de forma intermitente comparaciones de orden de ítems en `sales/tests/test_repository.py`; el diff `origin/main...HEAD` no toca `sales`, se trata como deuda preexistente (comprobado: `git diff origin/main...HEAD -- backend/modules/sales` vacío; no se comparó la misma prueba sobre `main`). No ejecutado: `npm audit` (sin lockfile) y revisión visual en navegador (**no verificada**; checklist §8 revisada por lectura de código/HTML).
+Hallazgos abiertos: [REV-01](../reviews/REV-2026-10-29-inventario-existencias-filtros-accesos-operativos-01.md) (Medium, IMPLEMENTATION) la preselección de producto en apertura/ajuste solo funciona si el producto está entre las 50 primeras opciones; [REV-02](../reviews/REV-2026-10-29-inventario-existencias-filtros-accesos-operativos-02.md) (Low, IMPLEMENTATION) `StockFiltersState` no se reinicia al cerrar sesión, por lo que otra persona en la misma pestaña hereda filtros (sin datos de negocio).
 
 ## Publicación
-_Pendiente_
+PR 30 listo para aprobación humana; no se mergea desde el flujo. Sin cambios sensibles: no hay ADR, migraciones, ni cambios de autenticación o infraestructura; no hay endpoints nuevos y se conservan `CompanyAdminPermission` y el gate del módulo `inventory`. Cambio de contrato (aditivo): filas y detalle de `GET /api/stock/` incluyen `category`, `can_buy`, `can_sell` (y `can_register_adjustment` en el detalle); parámetros opcionales `category`, `can_buy`, `can_sell`.
