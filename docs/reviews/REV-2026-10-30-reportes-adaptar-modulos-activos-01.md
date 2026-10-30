@@ -1,6 +1,6 @@
 # REV-2026-10-30-reportes-adaptar-modulos-activos-01: La prueba test_rejected_module_change_leaves_no_record sigue suponiendo que Reportes requiere Ventas y falla
 
-**Status:** Resolved (corregido en delivery-build, ciclo 2)
+**Status:** Closed (re-review ciclo 2, ea68dc4: verificado)
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-reportes-adaptar-modulos-activos.md (v1)

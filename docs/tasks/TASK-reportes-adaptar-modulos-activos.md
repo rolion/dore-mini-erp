@@ -1,6 +1,6 @@
 # TASK-reportes-adaptar-modulos-activos: Adaptar dashboard y reportes a los módulos activos
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reportes-adaptar-modulos-activos
@@ -17,6 +17,7 @@
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-10-30 | REVIEW → ENGINEERING | Quality Gate ciclo 1 FAIL (REV-01 High) | delivery-publish |
 | 2026-10-30 | ENGINEERING → REVIEW | Corrección de REV-01, 02 y 04 | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 2: PASS con limitaciones | delivery-publish |
 
 ## Investigación
 
@@ -98,7 +99,8 @@ Ver `docs/adr/ADR-reportes-adaptar-modulos-activos-fuentes-opcionales.md`.
 ## Review
 **Ciclo 1: FAIL.** REV-01 (High, IMPLEMENTATION): `test_settings_api` asumía que Reportes bloquea deshabilitar Ventas. Low: REV-02 (docs desactualizadas), REV-03 (fallo de carga de módulos sin spec), REV-04 (periodo del selector en Reportes), REV-05 (sin test de regresión de Compras en reporting; dos consultas de módulos por petición).
 Corregidos en el ciclo 2: REV-01, REV-02, REV-04. REV-03 y REV-05 quedan abiertos como Low (limitaciones conocidas).
+**Ciclo 2: PASS con limitaciones** (REV-01/02/04 cerrados; REV-03 y REV-05 Low abiertos).
 Detalle en `docs/reviews/REV-2026-10-30-reportes-adaptar-modulos-activos-0[1-5].md`.
 
 ## Publicación
-_Pendiente_
+PR #41 listo para aprobación humana (no se mergea). Cambio sensible: contrato API del dashboard y regla de dependencias del catálogo de módulos (ADR-reportes-adaptar-modulos-activos-fuentes-opcionales). Limitaciones: tests de API sin PostgreSQL (solo SQLite informativo), revisión visual no verificada.

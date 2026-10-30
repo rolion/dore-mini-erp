@@ -1,6 +1,6 @@
 # REV-2026-10-30-reportes-adaptar-modulos-activos-04: Reportes: el periodo efectivo del selector depende solo de la tarjeta de Ventas
 
-**Status:** Resolved (corregido en delivery-build, ciclo 2)
+**Status:** Closed (re-review ciclo 2, ea68dc4: verificado)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-reportes-adaptar-modulos-activos.md (v1)
