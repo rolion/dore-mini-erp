@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-iniciar-valoracion-inventario-costeo
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/36
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
