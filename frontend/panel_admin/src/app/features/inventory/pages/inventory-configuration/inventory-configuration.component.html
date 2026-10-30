@@ -16,6 +16,10 @@
         <div class="card">
           <div class="card-header">
             <h4>Inventario › Almacenes y unidades</h4>
+            @if ((enabledKeys$ | async)?.has('costing')) {
+            <a class="btn btn-light btn-sm ms-auto" routerLink="/pocketbiz/inventory/valuation"
+              data-testid="valuation-link">Valoración</a>
+            }
           </div>
           <ul class="nav nav-tabs px-3 pt-2" role="tablist">
             <li class="nav-item" role="presentation">

@@ -23,6 +23,7 @@ MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
     ModuleDefinition('purchases', 'Compras', 'Compras a proveedores.', requires=('catalog', 'expenses')),
     ModuleDefinition('inventory', 'Inventario', 'Existencias de productos.',
                      requires=('catalog',), optional=('sales', 'purchases')),
+    ModuleDefinition('costing', 'Costeo', 'Valoración y costo de las existencias.', requires=('inventory',)),
 )
 
 BY_KEY: dict[str, ModuleDefinition] = {module.key: module for module in MODULE_CATALOG}

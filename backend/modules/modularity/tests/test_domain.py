@@ -26,6 +26,8 @@ class CatalogTests(SimpleTestCase):
         self.assertEqual(requires['reporting'], {'sales', 'expenses'})
         self.assertEqual(requires['purchases'], {'catalog', 'expenses'})
         self.assertEqual(requires['inventory'], {'catalog'})
+        self.assertEqual(requires['costing'], {'inventory'})
+        self.assertNotIn('costing', d.DEFAULT_ENABLED_KEYS)
         self.assertEqual(set(d.BY_KEY['inventory'].optional), {'sales', 'purchases'})
 
 
