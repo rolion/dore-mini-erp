@@ -3,8 +3,12 @@ from decimal import Decimal
 from unittest import TestCase
 from uuid import uuid4
 
-from modules.purchases.domain.enums import PaymentStatus, ReceiptStatus, ReceptionStatus
-from modules.purchases.domain.exceptions import PurchaseNotReceivable, PurchaseValidationError
+from modules.purchases.domain.enums import InventoryMode, PaymentStatus, ReceiptStatus, ReceptionStatus
+from modules.purchases.domain.exceptions import (
+    PurchaseNotReceivable,
+    PurchaseValidationError,
+    ReceiptInventoryModeAlreadySet,
+)
 from modules.purchases.domain.purchase import ReceiptLineDraft
 from modules.purchases.tests.test_purchase_domain import draft, make
 
@@ -22,6 +26,23 @@ def confirmed(*quantities):
 def receive(purchase, lines, before=None, receipt_date=TODAY):
     drafts = [ReceiptLineDraft(item_id, quantity) for item_id, quantity in lines]
     return purchase.receive(uuid4(), receipt_date, TODAY, before or {}, drafts, USER, 'Ana')
+
+
+class InventoryModeTests(TestCase):
+    def test_a_new_receipt_has_no_mode_until_it_is_set(self):  # INV-01
+        purchase = confirmed('3')
+        receipt = receive(purchase, [(purchase.items[0].id, '3')])
+        self.assertIsNone(receipt.inventory_mode)
+        receipt.set_inventory_mode(InventoryMode.INVENTORY)
+        self.assertEqual(receipt.inventory_mode, InventoryMode.INVENTORY)
+
+    def test_the_mode_cannot_change_once_set(self):  # INV-01, INV-02
+        purchase = confirmed('3')
+        receipt = receive(purchase, [(purchase.items[0].id, '3')])
+        receipt.set_inventory_mode(InventoryMode.DOCUMENTAL)
+        with self.assertRaises(ReceiptInventoryModeAlreadySet):
+            receipt.set_inventory_mode(InventoryMode.INVENTORY)
+        self.assertEqual(receipt.inventory_mode, InventoryMode.DOCUMENTAL)
 
 
 class ReceiveTests(TestCase):

@@ -74,10 +74,14 @@ function toReceipt(dto: ReceiptDto): Receipt {
       productName: line.product.name,
       unitAbbreviation: line.unit.abbreviation,
       quantity: line.quantity,
+      stockEntry: line.stock_entry ?? null,
     })),
+    inventoryMode: dto.inventory_mode ?? null,
+    inventoryAvailable: dto.inventory_available ?? false,
     movements: dto.movements
       ? dto.movements.map((m) => ({
           id: m.id,
+          reference: m.reference ?? '',
           productName: m.product.name,
           warehouseName: m.warehouse.name,
           quantity: m.quantity,

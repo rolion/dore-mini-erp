@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
+from modules.purchases.domain.enums import InventoryMode
 from modules.purchases.domain.exceptions import (
     PurchaseNotFound,
     PurchaseValidationError,
@@ -83,7 +84,9 @@ class RegisterReception:
 
     def _enter_stock(self, receipt: Receipt, warehouse_id: UUID | None, actor: Actor) -> None:
         if not self.stock.is_available():
+            receipt.set_inventory_mode(InventoryMode.DOCUMENTAL)
             return
+        receipt.set_inventory_mode(InventoryMode.INVENTORY)
         controlled = self.stock.controlled_products([line.product_id for line in receipt.lines])
         entries = [(line.product_id, line.quantity) for line in receipt.lines if line.product_id in controlled]
         if not entries:

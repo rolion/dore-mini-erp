@@ -53,10 +53,13 @@ describe('ReceptionDetailComponent', () => {
   it('shows the warehouse, the linked movements and the link to Movements (AC-24)', async () => {
     await setup(makeReceipt({
       warehouse: { id: 'w-1', name: 'Central' },
-      movements: [{ id: 'm-1', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' }],
+      movements: [{ id: 'm-1', reference: 'REC-1A2B3C4D', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' }],
+      inventoryMode: 'inventory',
+      inventoryAvailable: true,
     }));
     expect(byId('warehouse')?.textContent).toContain('Central');
     expect(all('movement')[0].textContent).toContain('4.000');
+    expect(all('movement')[0].textContent).toContain('REC-1A2B3C4D');
     expect(byId('view-movements')?.getAttribute('href')).toBe('/pocketbiz/inventory/movements?source_type=purchase_receipt&source_id=r-1');
   });
 
@@ -64,6 +67,36 @@ describe('ReceptionDetailComponent', () => {
     await setup(makeReceipt({ movements: [] }));
     expect(byId('no-movements')?.textContent).toContain('no movió existencias');
     expect(byId('view-movements')).toBeNull();
+  });
+
+  it('keeps the movements without a link when Inventory was turned off later (AC-13)', async () => {
+    await setup(makeReceipt({
+      warehouse: { id: 'w-1', name: 'Central' },
+      inventoryMode: 'inventory',
+      inventoryAvailable: false,
+      movements: [{ id: 'm-1', reference: 'REC-1A2B3C4D', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' }],
+    }));
+    expect(all('movement').length).toBe(1);
+    expect(byId('view-movements')).toBeNull();
+    expect(byId('movements-disabled')?.textContent).toContain('deshabilitado');
+  });
+
+  it('says a documentary receipt had no inventory movement, and keeps saying it (AC-14)', async () => {
+    await setup(makeReceipt({ inventoryMode: 'documental', inventoryAvailable: true, movements: null }));
+    expect(byId('documental-note')?.textContent).toContain('Recepción documental, sin movimiento de inventario');
+    expect(byId('no-movements')).toBeNull(); // un solo mensaje
+    expect(byId('view-movements')).toBeNull();
+  });
+
+  it('says an inventory-mode receipt generated no entries, and flags lines without stock control (AC-13, AC-14)', async () => {
+    await setup(makeReceipt({
+      inventoryMode: 'inventory',
+      inventoryAvailable: true,
+      movements: [],
+      lines: [{ itemId: 'i-1', productId: 'p-1', productName: 'Bolsa', unitAbbreviation: 'u', quantity: '2.000', stockEntry: false }],
+    }));
+    expect(byId('no-movements')?.textContent).toContain('no generó entradas de inventario');
+    expect(byId('no-entry')?.textContent).toContain('Sin control de stock · sin entrada');
   });
 
   it('shows a reverted receipt with its status', async () => {

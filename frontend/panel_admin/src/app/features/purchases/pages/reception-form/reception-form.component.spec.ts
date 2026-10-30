@@ -130,6 +130,7 @@ describe('ReceptionFormComponent', () => {
     for (const expected of ['Harina', '4.000', '2.000']) expect(row).toContain(expected);
     expect(byId('summary-count')?.textContent).toContain('1');
     expect(byId('stock-notice')).toBeNull();
+    expect(byId('documental-notice')?.textContent).toContain('Recepción documental, sin movimiento de inventario');
     (byId('confirm') as HTMLButtonElement).click();
     expect(receiptsApi.create).toHaveBeenCalledTimes(1);
     const [purchaseId, input] = receiptsApi.create.calls.mostRecent().args;
@@ -182,7 +183,9 @@ describe('ReceptionFormComponent', () => {
     reviewButton().click();
     fixture.detectChanges();
     expect(byId('summary-warehouse')?.textContent).toContain('Central');
+    expect(byId('stock-notice')?.textContent).toContain('Esta recepción generará entradas de inventario');
     expect(byId('stock-notice')?.textContent).toContain('Central');
+    expect(byId('line-entry')?.textContent).toContain('Entrada de stock');
     (byId('confirm') as HTMLButtonElement).click();
     expect(receiptsApi.create.calls.mostRecent().args[1].warehouseId).toBe('w-1');
   });
@@ -197,6 +200,8 @@ describe('ReceptionFormComponent', () => {
     reviewButton().click();
     fixture.detectChanges();
     expect(byId('summary-warehouse')).toBeNull();
+    expect(byId('no-entries-notice')?.textContent).toContain('no generará entradas');
+    expect(byId('line-no-entry')?.textContent).toContain('Sin control de stock · sin entrada');
     (byId('confirm') as HTMLButtonElement).click();
     expect(receiptsApi.create.calls.mostRecent().args[1].warehouseId).toBeNull();
   });
@@ -232,6 +237,32 @@ describe('ReceptionFormComponent', () => {
     expect(all('line')[1].className).toContain('table-warning');
     expect(component.quantities.at(0).value).toBe('4');
     expect(component.submitting).toBeFalse();
+  });
+
+  it('shows no success after a failed confirmation and retries with the same receipt id (AC-15)', async () => {
+    await setup(inventoryForm());
+    type(0, '2');
+    reviewButton().click();
+    fixture.detectChanges();
+    receiptsApi.create.and.returnValue(
+      throwError(() => new ReceiptApiError('Revisa los datos ingresados.', 400, { warehouseId: 'El almacén no existe o está inactivo.', lines: [] })),
+    );
+    (byId('confirm') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(toastr.success).not.toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(byId('edit-step')).not.toBeNull();
+    expect(component.quantities.at(0).value).toBe('2');
+    receiptsApi.create.and.returnValue(of(makeReceipt()));
+    component.onChange(); // la persona corrige el almacén: se limpian los errores del servidor
+    fixture.detectChanges();
+    reviewButton().click();
+    fixture.detectChanges();
+    (byId('confirm') as HTMLButtonElement).click();
+    expect(receiptsApi.create).toHaveBeenCalledTimes(2);
+    const [first, second] = receiptsApi.create.calls.allArgs().map((args) => args[1].receiptId);
+    expect(second).toBe(first);
+    expect(toastr.success).toHaveBeenCalledTimes(1);
   });
 
   it('keeps what was typed on a 409 and re-reads the pending quantities (AC-22)', async () => {

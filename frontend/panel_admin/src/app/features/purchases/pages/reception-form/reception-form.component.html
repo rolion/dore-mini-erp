@@ -162,7 +162,16 @@
                 <tbody>
                   @for (item of reviewLines; track item.line.itemId) {
                   <tr data-testid="review-line">
-                    <td>{{ item.line.productName }}</td>
+                    <td>
+                      {{ item.line.productName }}
+                      @if (inventoryEnabled) {
+                      @if (item.line.tracksStock) {
+                      <span class="badge-outline col-green d-inline-block mt-1" data-testid="line-entry">Entrada de stock</span>
+                      } @else {
+                      <small class="text-muted d-block" data-testid="line-no-entry">{{ noEntryLabel }}</small>
+                      }
+                      }
+                    </td>
                     <td>{{ item.line.unitAbbreviation || '—' }}</td>
                     <td class="text-end">{{ item.quantity }}</td>
                     <td class="text-end">{{ item.pendingAfter }}</td>
@@ -173,8 +182,14 @@
             </div>
             @if (requiresWarehouse) {
             <div class="alert alert-info mx-4" role="status" data-testid="stock-notice">
-              Se registrará una entrada de existencias en {{ selectedWarehouseName }} por cada producto con control de stock ({{ stockEntryCount }}).
+              Esta recepción generará entradas de inventario. Se registrará una entrada de existencias en {{ selectedWarehouseName }} por cada producto con control de stock ({{ stockEntryCount }}).
             </div>
+            } @else if (inventoryEnabled) {
+            <div class="alert alert-info mx-4" role="status" data-testid="no-entries-notice">
+              Esta recepción no generará entradas de inventario: ningún producto recibido controla stock.
+            </div>
+            } @else {
+            <div class="alert alert-info mx-4" role="status" data-testid="documental-notice">{{ documentalLabel }}</div>
             }
             <div class="m-4">
               <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="submitting"

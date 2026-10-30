@@ -42,6 +42,7 @@ def receipt_representation(detail) -> dict:
             'warehouse': {'id': m.warehouse_id, 'name': m.warehouse_name},
             'quantity': quantity(m.quantity),
             'unit': _unit(m.unit_abbreviation),
+            'reference': m.reference,
         } for m in detail.movements]
     return {
         'id': receipt.id,
@@ -52,12 +53,15 @@ def receipt_representation(detail) -> dict:
         'user_name': receipt.user_name,
         'created_at': receipt.created_at,
         'warehouse': ({'id': receipt.warehouse_id, 'name': detail.warehouse_name}
-                      if receipt.warehouse_id is not None else None),
+                      if receipt.warehouse_id is not None and detail.movements is not None else None),
+        'inventory_mode': receipt.inventory_mode.value if receipt.inventory_mode else None,
+        'inventory_available': detail.inventory_available,
         'lines': [{
             'item_id': line.purchase_item_id,
             'product': {'id': line.product_id, 'name': line.product_name},
             'unit': _unit(line.unit_abbreviation),
             'quantity': quantity(line.quantity),
+            'stock_entry': detail.stock_entry(line.product_id),
         } for line in receipt.lines],
         'movements': movements,
     }

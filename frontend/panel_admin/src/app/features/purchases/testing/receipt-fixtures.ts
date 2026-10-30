@@ -47,7 +47,9 @@ export function makeReceipt(overrides: Partial<Receipt> = {}): Receipt {
     userName: 'ana',
     createdAt: '2026-10-30T12:00:00Z',
     warehouse: null,
-    lines: [{ itemId: 'i-1', productId: 'p-1', productName: 'Harina', unitAbbreviation: 'kg', quantity: '4.000' }],
+    lines: [{ itemId: 'i-1', productId: 'p-1', productName: 'Harina', unitAbbreviation: 'kg', quantity: '4.000', stockEntry: null }],
+    inventoryMode: null,
+    inventoryAvailable: false,
     movements: null,
     ...overrides,
   };

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
-from modules.purchases.domain.enums import PurchaseStatus
+from modules.purchases.domain.enums import InventoryMode, PurchaseStatus
 from modules.purchases.domain.exceptions import PurchaseNotFound, PurchaseNotReceivable, ReceiptNotFound
 from modules.purchases.domain.purchase import Purchase
 from modules.purchases.domain.receipt import Receipt
@@ -38,7 +38,15 @@ class ReceiptDetail:
     receipt: Receipt
     purchase: Purchase
     warehouse_name: str
-    movements: list[StockEntryMovement] | None  # None con Inventario deshabilitado
+    # Según el modo guardado al confirmar: None si fue documental (o modo desconocido sin Inventario hoy).
+    movements: list[StockEntryMovement] | None
+    inventory_available: bool  # estado actual del módulo (solo para decidir enlaces)
+
+    def stock_entry(self, product_id: UUID) -> bool | None:
+        """¿El producto generó una entrada de stock? Solo se sabe en modo `inventory` (se lee del libro)."""
+        if self.receipt.inventory_mode is not InventoryMode.INVENTORY or self.movements is None:
+            return None
+        return any(m.product_id == product_id for m in self.movements)
 
 
 def _purchase(purchases: PurchaseRepository, purchase_id: UUID) -> Purchase:
@@ -101,10 +109,15 @@ class GetReceipt:
 
     def detail(self, purchase: Purchase, receipt: Receipt) -> ReceiptDetail:
         available = self.stock.is_available()
-        movements = self.stock.movements_for(receipt.id) if available else None
+        mode = receipt.inventory_mode
+        if mode is None:  # recepción anterior al modo guardado y sin almacén: comportamiento previo
+            reads_ledger = available
+        else:
+            reads_ledger = mode is InventoryMode.INVENTORY
+        movements = self.stock.movements_for(receipt.id) if reads_ledger else None
         name = ''
-        if receipt.warehouse_id is not None:
+        if receipt.warehouse_id is not None and reads_ledger:
             name = next((m.warehouse_name for m in movements or [] if m.warehouse_id == receipt.warehouse_id), '')
             if not name and available:
                 name = next((w.name for w in self.stock.active_warehouses() if w.id == receipt.warehouse_id), '')
-        return ReceiptDetail(receipt, purchase, name, movements)
+        return ReceiptDetail(receipt, purchase, name, movements, available)

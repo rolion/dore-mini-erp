@@ -19,6 +19,13 @@ class PaymentStatus(str, Enum):
     PAID = 'paid'
 
 
+class InventoryMode(str, Enum):
+    """Modo con que se confirmó una recepción: con Inventario habilitado o documental."""
+
+    INVENTORY = 'inventory'
+    DOCUMENTAL = 'documental'
+
+
 class ReceiptStatus(str, Enum):
     CONFIRMED = 'confirmed'
     REVERTED = 'reverted'

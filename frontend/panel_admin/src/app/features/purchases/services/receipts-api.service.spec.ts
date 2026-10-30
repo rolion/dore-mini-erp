@@ -68,7 +68,9 @@ describe('ReceiptsApiService', () => {
     http.expectOne((r) => r.url.endsWith('/purchases/c-1/receipts/r-1/')).flush(RECEIPT_DTO);
     expect(receipt?.warehouse).toEqual({ id: 'w-1', name: 'Central' });
     expect(receipt?.lines[0].productName).toBe('Harina');
-    expect(receipt?.movements?.[0]).toEqual({ id: 'm-1', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' });
+    expect(receipt?.movements?.[0]).toEqual({ id: 'm-1', reference: '', productName: 'Harina', warehouseName: 'Central', quantity: '4.000', unitAbbreviation: 'kg' });
+    expect(receipt?.inventoryMode).toBeNull();
+    expect(receipt?.lines[0].stockEntry).toBeNull();
     service.get('c-1', 'r-1').subscribe((result) => (receipt = result));
     http.expectOne((r) => r.url.endsWith('/receipts/r-1/')).flush({ ...RECEIPT_DTO, warehouse: null, movements: null });
     expect(receipt?.movements).toBeNull();

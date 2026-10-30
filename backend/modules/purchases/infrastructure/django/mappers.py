@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceiptStatus, ReceptionStatus
+from modules.purchases.domain.enums import InventoryMode, PaymentStatus, PurchaseStatus, ReceiptStatus, ReceptionStatus
 from modules.purchases.domain.purchase import Purchase, PurchaseItem
 from modules.purchases.domain.receipt import Receipt, ReceiptLine
 from modules.purchases.domain.supplier import Supplier
@@ -75,6 +75,7 @@ def receipt_to_entity(model: ReceiptModel, items: Iterable[ReceiptItemModel]) ->
         id=model.id, purchase_id=model.purchase_id, receipt_date=model.receipt_date, user_id=model.user_id,
         user_name=model.user_name, status=ReceiptStatus(model.status), warehouse_id=model.warehouse_id,
         created_at=model.created_at,
+        inventory_mode=InventoryMode(model.inventory_mode) if model.inventory_mode else None,
         lines=[ReceiptLine(purchase_item_id=i.purchase_item_id, product_id=i.product_id,
                            product_name=i.product_name, unit_abbreviation=i.unit_abbreviation, quantity=i.quantity)
                for i in items])

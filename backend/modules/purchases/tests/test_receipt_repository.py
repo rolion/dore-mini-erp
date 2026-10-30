@@ -4,7 +4,11 @@ from uuid import uuid4
 
 from django.test import TestCase
 
-from modules.purchases.domain.enums import ReceiptStatus
+import importlib
+
+from django.apps import apps
+
+from modules.purchases.domain.enums import InventoryMode, ReceiptStatus
 from modules.purchases.domain.exceptions import ReceiptConflict
 from modules.purchases.domain.purchase import ItemDraft, Purchase, ReceiptLineDraft
 from modules.purchases.infrastructure.django.models import ReceiptModel, SupplierModel
@@ -43,6 +47,22 @@ class ReceiptRepositoryTests(TestCase):
         self.assertEqual([(l.product_name, l.unit_abbreviation, l.quantity) for l in loaded.lines],
                          [('Harina', 'kg', Decimal('4.000'))])
         self.assertIsNotNone(saved.created_at)
+
+    def test_inventory_mode_round_trip(self):  # INV-01
+        for mode in (InventoryMode.INVENTORY, InventoryMode.DOCUMENTAL, None):
+            receipt = self.purchase.receive(uuid4(), TODAY, TODAY, {}, [ReceiptLineDraft(self.purchase.items[0].id, '1')],
+                                            None, 'Ana')
+            receipt.inventory_mode = mode
+            self.assertEqual(self.receipts.get(self.receipts.save(receipt).id).inventory_mode, mode)
+
+    def test_migration_backfills_only_receipts_with_a_warehouse(self):  # AC-07, INV-04
+        with_warehouse = self.receive(['1', None], uuid4())
+        without = self.receive(['1', None])
+        ReceiptModel.objects.update(inventory_mode=None)
+        migration = importlib.import_module('modules.purchases.migrations.0005_receipt_inventory_mode')
+        migration.backfill_inventory_mode(apps, None)
+        self.assertEqual(self.receipts.get(with_warehouse.id).inventory_mode, InventoryMode.INVENTORY)
+        self.assertIsNone(self.receipts.get(without.id).inventory_mode)
 
     def test_received_totals_add_confirmed_receipts_per_line(self):  # INV-02
         self.receive(['4', '1'])
