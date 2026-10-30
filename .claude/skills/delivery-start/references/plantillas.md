@@ -12,6 +12,7 @@ Usadas por `delivery-start`, `delivery-build` y `delivery-publish`. Cada skill e
 **Diseño requerido:** <SI | NO>
 **Rama:** _sin asignar todavía_
 **Pull Request:** _sin abrir todavía_
+**Fuente:** <URL de la tarjeta de Trello, si el requerimiento vino de una; omitir la línea si no>
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -21,7 +22,7 @@ Usadas por `delivery-start`, `delivery-build` y `delivery-publish`. Cada skill e
 ## Investigación
 
 ### Requerimiento
-<tal como se recibió, más las aclaraciones del usuario>
+<tal como se recibió, más las aclaraciones del usuario. Si vino de Trello: URL de origen y resumen fiel de la tarjeta (historia, criterios de aceptación, checklists, comentarios relevantes), marcado como insumo y no como Specification aprobada>
 
 ### Hechos encontrados
 - `archivo:línea` — ...
