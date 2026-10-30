@@ -102,10 +102,21 @@ Implementado según PLAN v1, sin cambios de Specification.
 - Hallazgos: [REV-01](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-01.md) (Medium, IMPLEMENTATION: falta prueba de reintento con el mismo `receiptId` sin éxito parcial, AC-15; **resuelto** con una prueba nueva, Karma 294/294), [REV-02](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-02.md) (Low, ARCHITECTURE: `stock_entry` se calcula en el serializer), [REV-03](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-03.md) (Low, DESIGN: doble mensaje en modo documental y marca de resumen atenuada en vez de badge), [REV-04](../reviews/REV-2026-10-30-integracion-recepciones-entradas-inventario-04.md) (Low, IMPLEMENTATION: `test_receipt_domain` sin tocar e `inventory_mode` asignado sin método del agregado).
 
 ## Verificación posterior (PostgreSQL)
-Con el `.env` del checkout principal copiado al worktree (por indicación del usuario; ignorado por git): suite completa del backend con PostgreSQL real, `config.settings.test`: **1141 pruebas OK** (incluye `test_receipt_concurrency`, AC-10, y las pruebas de bloqueo que fallaban en SQLite); `makemigrations --check`: sin cambios. Con esto quedan cerradas las fallas atribuidas a SQLite. Sigue pendiente la revisión visual en navegador.
+Con el `.env` del checkout principal copiado al worktree (por indicación del usuario; ignorado por git): suite completa del backend con PostgreSQL real, `config.settings.test`: **1141 pruebas OK** (incluye `test_receipt_concurrency`, AC-10, y las pruebas de bloqueo que fallaban en SQLite); `makemigrations --check`: sin cambios. Con esto quedan cerradas las fallas atribuidas a SQLite. La revisión visual se hizo después (sección siguiente).
 
 ## Seguimiento tras el Quality Gate (hallazgos Low)
 REV-02 (`stock_entry` a `ReceiptDetail`), REV-03 (badge; el doble mensaje no se reproducía, se fijó con una prueba) y REV-04 (`Receipt.set_inventory_mode` + pruebas de dominio) resueltos. Backend `modules.purchases` con PostgreSQL: 216 OK; Karma purchases+inventory 294/294; `ng lint` y `ng build` OK.
 
+## Revisión visual (navegador, 2026-10-30)
+Backend y frontend de este worktree contra PostgreSQL local (migración `0005` aplicada), empresa de prueba «Visual PB-INT-001» con Inventario y Compras habilitados, un producto controlado (Harina) y uno sin control (Bolsa). Escritorio 1440 px y móvil 375 px.
+- **Resumen (con Inventario):** «Esta recepción generará entradas de inventario…», badge verde «Entrada de stock» en Harina y «Sin control de stock · sin entrada» en Bolsa, almacén destino. OK.
+- **Confirmar:** toast «Recepción REC-… registrada», vuelta a la pestaña Recepciones con Recibida/Pendiente y estado «Recibida parcialmente». OK.
+- **Detalle (con Inventario):** almacén, productos, «Sin control de stock · sin entrada» en la línea sin stock, tabla de movimientos con Referencia, botón «Ver movimientos». OK.
+- **Inventario deshabilitado después:** el mismo detalle conserva almacén y movimientos, sin botón «Ver movimientos» y con «Inventario está deshabilitado; los movimientos se muestran sin enlace». OK (INV-02/03).
+- **Recepción documental (Inventario apagado):** el resumen muestra «Recepción documental, sin movimiento de inventario»; en BD `inventory_mode = documental`, sin almacén.
+- **Detalle documental con Inventario reactivado, móvil:** un único mensaje «Recepción documental, sin movimiento de inventario», sin movimientos ni scroll horizontal de página. OK.
+- **No verificado:** tema oscuro de la plantilla (la emulación `prefers-color-scheme` no activa el tema de Oreva, que usa su propio interruptor); la columna Origen de Movimientos (deuda previa) y el filtro por recepción solo por pruebas.
+Los datos de prueba quedaron en la base local (empresa «Visual PB-INT-001», usuario `visual_pbint`) y el almacén predeterminado se creó al listar almacenes.
+
 ## Publicación
-PR [#37](https://github.com/rolion/dore-mini-erp/pull/37) listo para aprobación humana (no se mergea automáticamente). Cambio sensible: **base de datos** (migración aditiva `0005` con `RunPython` de backfill, sin ADR). Antes del merge: hacer la revisión visual del resumen y el detalle de recepción.
+PR [#37](https://github.com/rolion/dore-mini-erp/pull/37) listo para aprobación humana (no se mergea automáticamente). Cambio sensible: **base de datos** (migración aditiva `0005` con `RunPython` de backfill, sin ADR). Verificado en PostgreSQL y en navegador; solo falta la aprobación humana del merge.
