@@ -1,6 +1,6 @@
 # TASK-valorar-recepciones-consumos-costo-historico: Valorar recepciones y consumos con costo histórico (PB-VAL-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-valorar-recepciones-consumos-costo-historico
@@ -14,6 +14,7 @@
 | 2026-10-30 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Cruza Inventario, Compras, Ventas y Costeo; tablas nuevas; pantallas nuevas | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según el PLAN v1 | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate PASS con reservas (2 Medium y 1 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -117,7 +118,16 @@ Ver `docs/plans/PLAN-2026-10-30-valorar-recepciones-consumos-costo-historico.md`
 - Sin revisión visual en navegador (corresponde a `delivery-publish`).
 
 ## Review
-_Pendiente_
+
+**Quality Gate (2026-10-30, subagente aislado): PASS con reservas.** Backend 1313/1313 OK (PostgreSQL); Karma 988/989 (único fallo preexistente: `FooterComponent should create`); `ng build` OK; bandit sin Medium/High. No realizado: lint, `npm audit`, ruff, mypy, E2E (el plan dice NO), prueba de concurrencia real. Consistencia visual: **no verificada** (solo revisión estática).
+
+Hallazgos abiertos (ninguno Critical/High):
+- [REV-01](../reviews/REV-2026-10-30-valorar-recepciones-consumos-costo-historico-01.md) · Medium · IMPLEMENTATION: retroactividad evaluada con un `occurred_at` fijado antes del bloqueo (409 espurio en concurrencia).
+- [REV-02](../reviews/REV-2026-10-30-valorar-recepciones-consumos-costo-historico-02.md) · Medium · IMPLEMENTATION: bloqueo de filas de costo sin orden por `product_id` en recepciones multilínea; falta prueba de concurrencia (EDGE-04).
+- [REV-03](../reviews/REV-2026-10-30-valorar-recepciones-consumos-costo-historico-03.md) · Low · IMPLEMENTATION: pruebas laxas.
+
+Las desviaciones declaradas en «Implementación» fueron verificadas como ciertas; sin scope creep.
 
 ## Publicación
-_Pendiente_
+
+PR [#42](https://github.com/rolion/dore-mini-erp/pull/42) con la descripción completa, listo para aprobación humana (no se mergea desde el flujo). Es un cambio **sensible** (base de datos: migración `costing/0002`; contrato entre módulos: ADR `puerto-modelo-y-contrato`): requiere aprobación humana explícita. Reservas abiertas: REV-01/02 (Medium), REV-03 (Low) y revisión visual en navegador pendiente.
