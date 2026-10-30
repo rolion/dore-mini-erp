@@ -149,6 +149,15 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'inventory/valuation/movements',
+                canActivate: [moduleGuard],
+                data: { module: 'costing' },
+                loadComponent: () =>
+                    import('./features/costing/pages/valuation-movements/valuation-movements.component').then(
+                        (m) => m.ValuationMovementsComponent
+                    ),
+            },
+            {
                 path: 'inventory/configuration',
                 canActivate: [moduleGuard],
                 data: { module: 'inventory' },

@@ -42,6 +42,9 @@ export interface AdjustmentInput {
   /** Saldo que la persona vio al contar; el servidor lo compara con el vigente. */
   expectedSystemQuantity: string;
   reason: string;
+  /** Valor total en BOB del ajuste positivo; solo con inventario valorado (Costeo). */
+  totalValue?: string;
+  declaredZero?: boolean;
 }
 
 export interface AdjustmentBalance {

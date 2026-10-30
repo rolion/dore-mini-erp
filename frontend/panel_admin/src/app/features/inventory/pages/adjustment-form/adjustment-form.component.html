@@ -91,6 +91,29 @@
               </p>
               }
 
+              @if (needsValue) {
+              <div class="alert alert-info text-dark" role="status" data-testid="value-notice">
+                El inventario está valorado: el ajuste positivo necesita un valor; el negativo usa el costo vigente.
+              </div>
+              <div class="row">
+                <div class="form-group col-md-4">
+                  <label for="adjustment-value">Valor total del ajuste (BOB) <span class="text-danger">*</span></label>
+                  <input id="adjustment-value" type="text" inputmode="decimal" class="form-control"
+                    formControlName="totalValue" placeholder="0.00" data-testid="value-input">
+                  @if (valueMessage) {
+                  <small class="form-text text-danger" data-testid="value-error">{{ valueMessage }}</small>
+                  }
+                </div>
+                <div class="form-group col-md-4 d-flex align-items-end">
+                  <div class="form-check">
+                    <input id="adjustment-zero" type="checkbox" class="form-check-input" formControlName="declaredZero"
+                      data-testid="zero-input">
+                    <label class="form-check-label" for="adjustment-zero">Costo cero</label>
+                  </div>
+                </div>
+              </div>
+              }
+
               <div class="row mt-3">
                 <div class="col-md-12">
                   <button type="submit" class="btn btn-primary" data-testid="review" [disabled]="!canReview">
@@ -127,6 +150,12 @@
                 </dd>
                 <dt class="col-sm-3">Motivo</dt>
                 <dd class="col-sm-9">{{ form.controls.reason.value.trim() }}</dd>
+                @if (needsValue) {
+                <dt class="col-sm-3">Valor total</dt>
+                <dd class="col-sm-9" data-testid="summary-value">
+                  {{ form.controls.declaredZero.value ? 'Bs 0.00 (costo cero)' : 'Bs ' + form.controls.totalValue.value.trim() }}
+                </dd>
+                }
               </dl>
               @if (noDifference) {
               <div class="alert alert-info text-dark" role="status" data-testid="no-difference">
