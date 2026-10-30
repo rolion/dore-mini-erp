@@ -130,6 +130,7 @@ describe('ReceptionFormComponent', () => {
     for (const expected of ['Harina', '4.000', '2.000']) expect(row).toContain(expected);
     expect(byId('summary-count')?.textContent).toContain('1');
     expect(byId('stock-notice')).toBeNull();
+    expect(byId('documental-notice')?.textContent).toContain('Recepción documental, sin movimiento de inventario');
     (byId('confirm') as HTMLButtonElement).click();
     expect(receiptsApi.create).toHaveBeenCalledTimes(1);
     const [purchaseId, input] = receiptsApi.create.calls.mostRecent().args;
@@ -182,7 +183,9 @@ describe('ReceptionFormComponent', () => {
     reviewButton().click();
     fixture.detectChanges();
     expect(byId('summary-warehouse')?.textContent).toContain('Central');
+    expect(byId('stock-notice')?.textContent).toContain('Esta recepción generará entradas de inventario');
     expect(byId('stock-notice')?.textContent).toContain('Central');
+    expect(byId('line-entry')?.textContent).toContain('Entrada de stock');
     (byId('confirm') as HTMLButtonElement).click();
     expect(receiptsApi.create.calls.mostRecent().args[1].warehouseId).toBe('w-1');
   });
@@ -197,6 +200,8 @@ describe('ReceptionFormComponent', () => {
     reviewButton().click();
     fixture.detectChanges();
     expect(byId('summary-warehouse')).toBeNull();
+    expect(byId('no-entries-notice')?.textContent).toContain('no generará entradas');
+    expect(byId('line-no-entry')?.textContent).toContain('Sin control de stock · sin entrada');
     (byId('confirm') as HTMLButtonElement).click();
     expect(receiptsApi.create.calls.mostRecent().args[1].warehouseId).toBeNull();
   });

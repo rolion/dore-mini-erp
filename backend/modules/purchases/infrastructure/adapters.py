@@ -75,6 +75,6 @@ class StockEntryAdapter:
 
     def movements_for(self, receipt_id: UUID) -> list[StockEntryMovement]:
         return [StockEntryMovement(m.id, m.product_id, m.product_name, m.unit_abbreviation, m.warehouse_id,
-                                   m.warehouse_name, m.quantity)
+                                   m.warehouse_name, m.quantity, m.reference)
                 for m in inventory_services.list_movements_for_source(
                     self.company_id, self.SOURCE_TYPE, str(receipt_id))]

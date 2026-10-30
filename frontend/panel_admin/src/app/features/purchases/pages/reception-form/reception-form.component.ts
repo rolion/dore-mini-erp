@@ -13,6 +13,8 @@ import {
   ReceiptLineInput,
   ReceptionForm,
   ReceptionFormLine,
+  DOCUMENTAL_LABEL,
+  SIN_ENTRADA_LABEL,
 } from '../../models/receipt';
 import { PurchasesApiService } from '../../services/purchases-api.service';
 import {
@@ -52,6 +54,8 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
   private destroyRef = inject(DestroyRef);
 
   readonly today = todayIso();
+  readonly noEntryLabel = SIN_ENTRADA_LABEL;
+  readonly documentalLabel = DOCUMENTAL_LABEL;
   /** Identificador de la recepción: se reutiliza en cada reintento para no duplicarla. */
   private readonly receiptId = crypto.randomUUID();
   purchaseId = '';
@@ -93,6 +97,10 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
   get showWarehouse(): boolean {
     const form = this.reception;
     return !!form && form.inventoryEnabled && form.lines.some((l) => l.tracksStock && isPositive(l.pending));
+  }
+
+  get inventoryEnabled(): boolean {
+    return this.reception?.inventoryEnabled ?? false;
   }
 
   get noWarehouses(): boolean {

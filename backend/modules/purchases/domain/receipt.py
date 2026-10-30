@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from .enums import ReceiptStatus
+from .enums import InventoryMode, ReceiptStatus
 
 
 @dataclass
@@ -30,6 +30,8 @@ class Receipt:
     status: ReceiptStatus = ReceiptStatus.CONFIRMED
     warehouse_id: UUID | None = None
     created_at: datetime | None = None
+    # Se fija al confirmar y no cambia; None solo en recepciones anteriores sin almacén (modo desconocido).
+    inventory_mode: InventoryMode | None = None
 
     @property
     def reference(self) -> str:

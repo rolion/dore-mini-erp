@@ -49,6 +49,7 @@ class StockEntryMovement:
     warehouse_id: UUID
     warehouse_name: str
     quantity: Decimal
+    reference: str = ''
 
 
 class StockEntry(Protocol):

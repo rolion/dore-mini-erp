@@ -1,6 +1,6 @@
 # TASK-integracion-recepciones-entradas-inventario: Generar entradas de inventario desde recepciones (PB-INT-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-integracion-recepciones-entradas-inventario
@@ -13,6 +13,7 @@
 | 2026-10-30 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello | delivery-start |
 | 2026-10-30 | INVESTIGATION → PLANNING | NEEDS_PLAN; diseño no requerido (pantallas existentes, sin patrón nuevo) | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -77,7 +78,18 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-10-30-integracion-recepciones-entradas-inventario.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1, sin cambios de Specification.
+
+**Backend (`purchases`)**: `InventoryMode` y `Receipt.inventory_mode` (INV-01); `RegisterReception` lo fija al registrar (`inventory` si el módulo está habilitado, aun sin líneas controladas; si no `documental`); migración `0005_receipt_inventory_mode` con backfill (con almacén → `inventory`, resto nulo; INV-04, AC-07); `GetReceipt` decide por el modo guardado y no por la configuración actual (INV-02, INV-03, AC-04, AC-05); `StockEntryMovement.reference`; el serializer expone `inventory_mode`, `inventory_available`, `lines[].stock_entry` y `movements[].reference` (API-01/02, AC-06). La idempotencia (INV-05, AC-09) y la atomicidad (AC-08) ya existían y se cubren con regresiones.
+
+**Frontend (`features/purchases`)**: modelos/servicio/fixtures; resumen del formulario con «Esta recepción generará entradas de inventario», rótulo por línea («Entrada de stock» / «Sin control de stock · sin entrada»), aviso documental y aviso sin líneas controladas (UI-01, UI-02; AC-12); detalle con referencia por movimiento, enlace «Ver movimientos» solo con Inventario habilitado hoy, nota si está deshabilitado, nota documental y «no generó entradas» (UI-03, UI-04; AC-13, AC-14). Pantallas de referencia: las existentes de recepción (plantillas «Formulario con líneas y paso de resumen» y «Detalle»); sin componentes compartidos nuevos.
+
+**Pruebas**: `test_receipt_application` (modo, reintento tras cambiar disponibilidad, modo desconocido), `test_receipt_api` (AC-01…AC-06, AC-09; la prueba EDGE-08 anterior se reemplazó por la nueva semántica), `test_receipt_repository` (ida y vuelta del modo y backfill) y specs Karma de formulario, detalle y servicio.
+
+**Desviaciones**: ninguna de alcance. El enlace «Ver movimientos» de modo desconocido (`null`) sigue el comportamiento previo. Texto del resumen cuando Inventario está habilitado pero ningún producto recibido controla stock: «Esta recepción no generará entradas de inventario…» (caso no cubierto literalmente por la tarjeta).
+**Deuda**: la columna Origen de Movimientos sigue sin enlace a la recepción (observación de PB-COM-004).
+
+**Verificación propia (no es el Quality Gate)**: no hay `.env` ni PostgreSQL en este worktree (copiar el `.env` fue denegado); backend con SQLite temporal vía variables de entorno: `modules.purchases` 207 pruebas, fallan solo las 3 de concurrencia de filas que exigen PostgreSQL (preexistentes) y las de recepciones/repositorio/aplicación pasan; `makemigrations --check` sin cambios. Frontend: `ng lint` OK, `ng build` OK, Karma `features/purchases` + `features/inventory` 293/293 (se apartó temporalmente `app.component.spec.ts`, que no compila en `main`, y se restauró). Pendiente: PostgreSQL (concurrencia, AC-10) y revisión visual.
 
 ## Review
 _Pendiente_

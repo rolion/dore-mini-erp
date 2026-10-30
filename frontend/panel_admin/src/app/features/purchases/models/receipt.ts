@@ -19,16 +19,25 @@ export interface ReceiptSummary {
   linesCount: number;
 }
 
+/** Modo con que se confirmó la recepción; `null` en recepciones antiguas sin almacén (modo desconocido). */
+export type ReceiptInventoryMode = 'inventory' | 'documental';
+
+export const SIN_ENTRADA_LABEL = 'Sin control de stock · sin entrada';
+export const DOCUMENTAL_LABEL = 'Recepción documental, sin movimiento de inventario';
+
 export interface ReceiptLine {
   itemId: string;
   productId: string;
   productName: string;
   unitAbbreviation: string;
   quantity: string;
+  /** `null` salvo en modo `inventory`: si la línea generó una entrada de stock. */
+  stockEntry: boolean | null;
 }
 
 export interface ReceiptMovement {
   id: string;
+  reference: string;
   productName: string;
   warehouseName: string;
   quantity: string;
@@ -50,7 +59,10 @@ export interface Receipt {
   createdAt: string;
   warehouse: ReceiptWarehouse | null;
   lines: ReceiptLine[];
-  /** `null` con Inventario deshabilitado; `[]` si la recepción no movió existencias. */
+  inventoryMode: ReceiptInventoryMode | null;
+  /** Estado actual del módulo Inventario (solo para decidir si hay enlace a Movimientos). */
+  inventoryAvailable: boolean;
+  /** `null` si la recepción fue documental; `[]` si no generó entradas. */
   movements: ReceiptMovement[] | null;
 }
 
@@ -137,7 +149,10 @@ export interface ReceiptDto {
     product: { id: string; name: string };
     unit: { abbreviation: string };
     quantity: string;
+    stock_entry?: boolean | null;
   }[];
+  inventory_mode?: ReceiptInventoryMode | null;
+  inventory_available?: boolean;
   movements:
     | {
         id: string;
@@ -145,6 +160,7 @@ export interface ReceiptDto {
         warehouse: { id: string; name: string };
         quantity: string;
         unit: { abbreviation: string };
+        reference?: string;
       }[]
     | null;
 }

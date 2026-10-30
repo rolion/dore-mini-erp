@@ -202,12 +202,52 @@ class ReceiptWithInventoryTests(ReceiptApiTestCase):
         self.assertEqual((ReceiptModel.objects.count(), ReceiptItemModel.objects.count()), (0, 0))
         self.assertEqual(self.purchase_detail(purchase)['reception_status'], 'not_received')
 
-    def test_disabling_inventory_hides_movements(self):  # EDGE-08
+    def detail(self, purchase, body):
+        return self.client.get(purchase_url(purchase['id'], f'receipts/{body["id"]}/')).json()
+
+    def test_inventory_mode_is_saved_and_lines_flag_their_entries(self):  # AC-01, AC-06
+        purchase = self.confirmed_purchase()
+        body = self.receive(purchase, [(self.item_id(purchase, self.flour), '4'), (self.item_id(purchase, self.bag), '2')],
+                            warehouse_id=str(self.warehouse.id))
+        self.assertEqual((body['inventory_mode'], body['inventory_available']), ('inventory', True))
+        self.assertEqual([line['stock_entry'] for line in body['lines']], [True, False])
+        self.assertEqual(body['movements'][0]['reference'], body['reference'])
+
+    def test_inventory_enabled_without_controlled_lines_is_inventory_mode(self):  # AC-03
+        purchase = self.confirmed_purchase()
+        body = self.receive(purchase, [(self.item_id(purchase, self.bag), '2')])
+        self.assertEqual((body['inventory_mode'], body['movements'], body['lines'][0]['stock_entry']),
+                         ('inventory', [], False))
+
+    def test_disabling_inventory_keeps_the_saved_mode_and_movements(self):  # AC-04, EDGE-01
         purchase = self.confirmed_purchase()
         body = self.receive(purchase, [(self.item_id(purchase, self.flour), '4')], warehouse_id=str(self.warehouse.id))
         set_enabled(self.company, DEFAULT_ENABLED_KEYS + ('purchases',))
-        detail = self.client.get(purchase_url(purchase['id'], f'receipts/{body["id"]}/')).json()
-        self.assertIsNone(detail['movements'])
+        detail = self.detail(purchase, body)
+        self.assertEqual((detail['inventory_mode'], detail['inventory_available']), ('inventory', False))
+        self.assertEqual(detail['movements'], body['movements'])
+        self.assertEqual(detail['warehouse'], body['warehouse'])
+
+    def test_retry_after_disabling_inventory_returns_the_original_receipt(self):  # AC-09, INV-05
+        purchase = self.confirmed_purchase()
+        lines = [(self.item_id(purchase, self.flour), '4')]
+        rid = uuid4()
+        first = self.receive(purchase, lines, receipt_id=rid, warehouse_id=str(self.warehouse.id))
+        set_enabled(self.company, DEFAULT_ENABLED_KEYS + ('purchases',))
+        again = self.receive(purchase, lines, expected=200, receipt_id=rid, warehouse_id=str(self.warehouse.id))
+        self.assertEqual((again['id'], again['inventory_mode']), (first['id'], 'inventory'))
+        self.assertEqual(self.movements().count(), 1)
+
+    def test_documentary_receipt_never_shows_movements_after_enabling_inventory(self):  # AC-02, AC-05, EDGE-02
+        set_enabled(self.company, DEFAULT_ENABLED_KEYS + ('purchases',))
+        purchase = self.confirmed_purchase()
+        body = self.receive(purchase, [(self.item_id(purchase, self.flour), '4')])
+        self.assertEqual((body['inventory_mode'], body['movements'], body['warehouse']), ('documental', None, None))
+        self.inventory_on()
+        detail = self.detail(purchase, body)
+        self.assertEqual((detail['inventory_mode'], detail['movements'], detail['warehouse'],
+                          detail['lines'][0]['stock_entry']), ('documental', None, None, None))
+        self.assertEqual(self.movements().count(), 0)
 
 
 class ReceptionFormAndQueriesTests(ReceiptApiTestCase):

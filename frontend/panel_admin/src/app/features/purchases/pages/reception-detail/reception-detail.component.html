@@ -66,7 +66,12 @@
                 <tbody>
                   @for (line of r.lines; track line.itemId) {
                   <tr data-testid="line">
-                    <td>{{ line.productName }}</td>
+                    <td>
+                      {{ line.productName }}
+                      @if (line.stockEntry === false) {
+                      <small class="text-muted d-block" data-testid="no-entry">{{ noEntryLabel }}</small>
+                      }
+                    </td>
                     <td>{{ line.unitAbbreviation || '—' }}</td>
                     <td class="text-end">{{ line.quantity }}</td>
                   </tr>
@@ -74,10 +79,13 @@
                 </tbody>
               </table>
             </div>
+            @if (r.inventoryMode === 'documental') {
+            <div class="alert alert-secondary mx-4 mt-4" role="status" data-testid="documental-note">{{ documentalLabel }}</div>
+            }
             @if (r.movements !== null) {
             <div class="d-flex justify-content-between align-items-center mx-4 mt-4">
               <h5 class="mb-0">Movimientos de inventario</h5>
-              @if (r.movements.length) {
+              @if (r.movements.length && r.inventoryAvailable) {
               <a class="btn btn-sm btn-primary" data-testid="view-movements" routerLink="/pocketbiz/inventory/movements"
                 [queryParams]="{ source_type: 'purchase_receipt', source_id: r.id }">Ver movimientos</a>
               }
@@ -87,6 +95,7 @@
               <table class="table table-sm mb-0">
                 <thead>
                   <tr>
+                    <th scope="col">Referencia</th>
                     <th scope="col">Producto</th>
                     <th scope="col">Almacén</th>
                     <th scope="col" class="text-end">Cantidad</th>
@@ -96,6 +105,7 @@
                 <tbody>
                   @for (movement of r.movements; track movement.id) {
                   <tr data-testid="movement">
+                    <td>{{ movement.reference || '—' }}</td>
                     <td>{{ movement.productName }}</td>
                     <td>{{ movement.warehouseName }}</td>
                     <td class="text-end">{{ movement.quantity }}</td>
@@ -105,8 +115,11 @@
                 </tbody>
               </table>
             </div>
+            @if (!r.inventoryAvailable) {
+            <small class="form-text text-muted d-block mx-4" data-testid="movements-disabled">Inventario está deshabilitado; los movimientos se muestran sin enlace.</small>
+            }
             } @else {
-            <small class="form-text text-muted d-block mx-4" data-testid="no-movements">Esta recepción no movió existencias.</small>
+            <small class="form-text text-muted d-block mx-4" data-testid="no-movements">{{ r.inventoryMode === 'inventory' ? 'Esta recepción no generó entradas de inventario.' : 'Esta recepción no movió existencias.' }}</small>
             }
             }
             <div class="m-4">

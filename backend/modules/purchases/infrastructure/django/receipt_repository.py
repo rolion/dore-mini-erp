@@ -36,6 +36,7 @@ class DjangoReceiptRepository:
         model = ReceiptModel.objects.create(
             id=receipt.id, company_id=self.company_id, purchase_id=receipt.purchase_id,
             receipt_date=receipt.receipt_date, status=receipt.status.value, warehouse_id=receipt.warehouse_id,
+            inventory_mode=receipt.inventory_mode.value if receipt.inventory_mode else None,
             user_id=receipt.user_id, user_name=receipt.user_name)
         ReceiptItemModel.objects.bulk_create([
             ReceiptItemModel(receipt=model, position=position, purchase_item_id=line.purchase_item_id,

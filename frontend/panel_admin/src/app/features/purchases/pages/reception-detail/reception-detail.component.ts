@@ -2,7 +2,14 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { RECEIPT_STATUS_CLASSES, RECEIPT_STATUS_LABELS, Receipt, ReceiptApiError } from '../../models/receipt';
+import {
+  DOCUMENTAL_LABEL,
+  RECEIPT_STATUS_CLASSES,
+  RECEIPT_STATUS_LABELS,
+  Receipt,
+  ReceiptApiError,
+  SIN_ENTRADA_LABEL,
+} from '../../models/receipt';
 import { ReceiptsApiService } from '../../services/receipts-api.service';
 
 /** Detalle de una recepción: productos recibidos, almacén y movimientos de inventario vinculados. */
@@ -14,6 +21,8 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 export class ReceptionDetailComponent implements OnInit {
   readonly statusLabels = RECEIPT_STATUS_LABELS;
   readonly statusClasses = RECEIPT_STATUS_CLASSES;
+  readonly documentalLabel = DOCUMENTAL_LABEL;
+  readonly noEntryLabel = SIN_ENTRADA_LABEL;
   purchaseId = '';
   receipt: Receipt | null = null;
   loading = true;

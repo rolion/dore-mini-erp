@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from modules.purchases.domain.enums import InventoryMode
+
 from .purchase_serializers import DecimalInputField, quantity
 
 
@@ -42,7 +44,10 @@ def receipt_representation(detail) -> dict:
             'warehouse': {'id': m.warehouse_id, 'name': m.warehouse_name},
             'quantity': quantity(m.quantity),
             'unit': _unit(m.unit_abbreviation),
+            'reference': m.reference,
         } for m in detail.movements]
+    entered = {m.product_id for m in detail.movements or []}
+    stock_entry_known = receipt.inventory_mode is InventoryMode.INVENTORY and detail.movements is not None
     return {
         'id': receipt.id,
         'reference': receipt.reference,
@@ -52,12 +57,16 @@ def receipt_representation(detail) -> dict:
         'user_name': receipt.user_name,
         'created_at': receipt.created_at,
         'warehouse': ({'id': receipt.warehouse_id, 'name': detail.warehouse_name}
-                      if receipt.warehouse_id is not None else None),
+                      if receipt.warehouse_id is not None and detail.movements is not None else None),
+        'inventory_mode': receipt.inventory_mode.value if receipt.inventory_mode else None,
+        'inventory_available': detail.inventory_available,
         'lines': [{
             'item_id': line.purchase_item_id,
             'product': {'id': line.product_id, 'name': line.product_name},
             'unit': _unit(line.unit_abbreviation),
             'quantity': quantity(line.quantity),
+            # Solo con modo guardado 'inventory': si el libro tiene una entrada de ese producto.
+            'stock_entry': (line.product_id in entered) if stock_entry_known else None,
         } for line in receipt.lines],
         'movements': movements,
     }

@@ -78,6 +78,8 @@ class ReceiptModel(models.Model):
     status = models.CharField(max_length=20, default='confirmed')
     # Almacén de Inventario (solo UUID): únicamente si la recepción generó entradas de stock.
     warehouse_id = models.UUIDField(null=True, blank=True)
+    # Modo con que se confirmó ('inventory' | 'documental'); nulo en recepciones anteriores sin almacén.
+    inventory_mode = models.CharField(max_length=20, null=True, blank=True)
     user_id = models.UUIDField(null=True, blank=True)
     user_name = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)

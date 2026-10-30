@@ -10,7 +10,7 @@ from modules.purchases.application.receipt_commands import (
     RegisterReception,
 )
 from modules.purchases.application.receipt_queries import GetReceipt, GetReceptionForm, ListReceipts
-from modules.purchases.domain.enums import ReceptionStatus
+from modules.purchases.domain.enums import InventoryMode, ReceptionStatus
 from modules.purchases.domain.exceptions import (
     PurchaseNotFound,
     PurchaseNotReceivable,
@@ -107,6 +107,7 @@ class RegisterReceptionTests(ReceptionCase):
         receipt, created = self.register('4', warehouse_id=uuid4())
         self.assertTrue(created)
         self.assertEqual((receipt.warehouse_id, self.stock.entries), (None, []))
+        self.assertEqual(receipt.inventory_mode, InventoryMode.DOCUMENTAL)  # INV-01
         self.assertEqual(self.purchases.rows[self.purchase.id].reception_status, ReceptionStatus.PARTIAL)
         self.assertEqual((receipt.user_name, receipt.receipt_date), ('Ana', TODAY))
 
@@ -228,9 +229,46 @@ class ReceptionQueriesTests(ReceptionCase):
                          [receipt.id])
         detail = GetReceipt(self.purchases, self.receipts, self.stock).execute(self.purchase.id, receipt.id)
         self.assertEqual((detail.warehouse_name, len(detail.movements)), ('Central', 1))
+        self.assertTrue(detail.inventory_available)
+
+    def detail(self, receipt):
+        return GetReceipt(self.purchases, self.receipts, self.stock).execute(self.purchase.id, receipt.id)
+
+    def test_detail_keeps_the_mode_when_inventory_is_turned_off_later(self):  # AC-04, INV-02, INV-03
+        self.with_inventory()
+        receipt, _ = self.register('4', warehouse_id=self.warehouse.id)
         self.stock.enabled = False
-        detail = GetReceipt(self.purchases, self.receipts, self.stock).execute(self.purchase.id, receipt.id)
-        self.assertIsNone(detail.movements)
+        detail = self.detail(receipt)
+        self.assertEqual((detail.receipt.inventory_mode, detail.inventory_available), (InventoryMode.INVENTORY, False))
+        self.assertEqual((detail.warehouse_name, len(detail.movements)), ('Central', 1))
+
+    def test_documentary_detail_never_shows_movements_when_inventory_is_turned_on_later(self):  # AC-05, EDGE-02
+        receipt, _ = self.register('4')
+        self.with_inventory()
+        detail = self.detail(receipt)
+        self.assertEqual((detail.receipt.inventory_mode, detail.movements, detail.warehouse_name),
+                         (InventoryMode.DOCUMENTAL, None, ''))
+
+    def test_unknown_mode_keeps_the_previous_behaviour(self):  # AC-07, EDGE-03
+        receipt, _ = self.register('4')
+        self.receipts.rows[receipt.id].inventory_mode = None
+        self.assertIsNone(self.detail(receipt).movements)
+        self.with_inventory()
+        self.assertEqual(self.detail(receipt).movements, [])
+
+    def test_inventory_mode_without_controlled_lines_has_empty_movements(self):  # AC-03
+        self.with_inventory(controlled=False)
+        receipt, _ = self.register('4')
+        self.assertEqual(receipt.inventory_mode, InventoryMode.INVENTORY)
+        self.assertEqual(self.detail(receipt).movements, [])
+
+    def test_retry_after_inventory_changes_returns_the_original_receipt(self):  # AC-09, INV-05
+        self.with_inventory()
+        rid = uuid4()
+        first, _ = self.register('4', receipt_id=rid, warehouse_id=self.warehouse.id)
+        self.stock.enabled = False
+        again, created = self.register('4', receipt_id=rid, warehouse_id=self.warehouse.id)
+        self.assertEqual((created, again.inventory_mode, len(self.stock.entries)), (False, InventoryMode.INVENTORY, 1))
 
     def test_receipt_of_another_purchase_is_not_found(self):  # AC-13
         receipt, _ = self.register('4')
