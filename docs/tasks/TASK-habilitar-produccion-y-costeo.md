@@ -97,7 +97,15 @@ Solo 6 módulos no base habilitables; ninguna noción de capacidad, de bloqueo p
 **UI.** Pantalla de referencia: Configuración › Módulos existente (DDR vigente) y `module-settings`/`ComingSoon` para destinos; sin componentes compartidos nuevos.
 
 ## Review
-_Pendiente_
+**Quality Gate (subagente aislado, 2026-10-30): PASS CONDICIONADO — no es PASS pleno.** Sin hallazgos Critical/High ni pruebas fallando.
+
+Ejecutado: backend sin BD `test_domain` + `test_extensions` + `test_settings_domain` 40/40 OK; `makemigrations --check` sin cambios; `bandit` sin hallazgos; Karma acotado (settings, core, sidebar) 121/121 OK (cobertura de líneas 56,1 % de lo ejecutado); `ng lint` OK; `ng build` OK.
+
+**No realizado:** pruebas de backend con BD (`test_api`, `test_production_costing_api`, enforcement, guards, resto de la suite; no hay `.env`/BD en el entorno, revisadas solo por lectura y se estiman coherentes); `npm audit` (sin lockfile); revisión visual en navegador (no verificada).
+
+Hallazgos abiertos: REV-01 (Medium, IMPLEMENTATION): falta la prueba 403 `module_disabled` de `production`/`costing` prevista en AC-03 y no consta como desviación; REV-02 (Low): carrera al habilitar Costeo podría ejecutar el gancho dos veces; REV-03 (Low): el diálogo decide la adopción por `key === 'costing'` y muestra la fecha del cliente.
+
+**Condición para PASS pleno:** ejecutar la suite de backend con BD y resolver o documentar REV-01. La etapa se mantiene en REVIEW.
 
 ## Publicación
 _Pendiente_
