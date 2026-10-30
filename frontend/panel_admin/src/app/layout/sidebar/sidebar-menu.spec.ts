@@ -3,6 +3,7 @@ import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 import es from '../../../assets/i18n/es.json';
 import { RouteInfo } from './sidebar.metadata';
+import { visibleRoutes } from './sidebar.component';
 
 function translate(dictionary: unknown, key: string): unknown {
   return key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], dictionary);
@@ -33,6 +34,7 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/inventory/configuration',
       '/pocketbiz/inventory/movements',
       '/pocketbiz/inventory/adjustments',
+      '/pocketbiz/inventory/valuation',
       '/pocketbiz/inventory/settings',
     ]);
     expect(settings.module).toBeUndefined();
@@ -72,7 +74,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(24);
+    expect(titles.length).toBe(25);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {
@@ -99,5 +101,17 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(de, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Lieferanten');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
     expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
+  });
+
+  it('shows «Valoración» in the Inventory submenu only when Costeo is enabled (UI-01)', () => {
+    const valuationPaths = (enabled: string[]) =>
+      visibleRoutes(routes, new Set(enabled))
+        .find((route) => route.module === 'inventory')
+        ?.submenu.map((item) => item.path) ?? [];
+    expect(valuationPaths(['inventory'])).not.toContain('/pocketbiz/inventory/valuation');
+    expect(valuationPaths(['inventory', 'costing'])).toContain('/pocketbiz/inventory/valuation');
+    expect(visibleRoutes(routes, new Set(['inventory', 'costing'])).find((r) => r.module === 'inventory')?.submenu.length)
+      .toBe(7);
+    expect(es.MENUITEMS.INVENTORY.LIST.VALUATION).toBe('Valoración');
   });
 });

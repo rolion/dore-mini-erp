@@ -94,9 +94,9 @@ No hay costos ni valoración; Inventario solo conoce cantidades.
 
 **Verificación propia (no es el Quality Gate).** Backend `manage.py test` completo 1159 OK; `makemigrations` sin cambios pendientes tras la migración. Frontend: `ng lint` OK, `ng build` OK, Karma acotado (inventory + layout) 176 OK / 1 fallo preexistente (`FooterComponent should create`, plantilla), con `app.component.spec.ts` apartado temporalmente (roto en `main`, restaurado sin cambios). Revisión visual en navegador: no verificada. Entorno: `.env` copiado del checkout principal sin abrirlo (no versionado) y `node_modules` por enlace; sin dependencias nuevas.
 
-**Desviaciones respecto al plan.** Ninguna de Specification. Detalles de implementación: el enlace a «Valoración» está en la pantalla Almacenes y unidades (el menú lateral no filtra subítems por módulo); el bloqueo por stock negativo se evalúa por par producto-almacén y el total (EDGE-01, como aclara el plan); `ENABLED`/E2E: NO según plan.
+**Desviaciones respecto al plan.** Ninguna de Specification. Detalles de implementación: el enlace a «Valoración» está en la pantalla Almacenes y unidades y, tras un reporte de uso (no se encontraba cómo iniciar la valoración con Costeo habilitado), también como ítem del menú Inventario visible solo con Costeo (el menú ahora filtra subítems por módulo: `visibleRoutes` en `sidebar.component.ts`, `routes.json`, i18n es/en/de); el bloqueo por stock negativo se evalúa por par producto-almacén y el total (EDGE-01, como aclara el plan); `ENABLED`/E2E: NO según plan.
 
-**Deuda técnica.** `app.component.spec.ts` roto en `main` y specs de plantilla fallando (preexistente). Sin elemento de menú lateral propio para Valoración. Una prueba intermitente por orden en `accounts.test_migrations` (preexistente, pasa aislada).
+**Deuda técnica.** `app.component.spec.ts` roto en `main` y specs de plantilla fallando (preexistente). Una prueba intermitente por orden en `accounts.test_migrations` (preexistente, pasa aislada).
 
 ## Review
 **Veredicto: PASS** (revisor en subagente aislado, 2026-10-30). Sin hallazgos Critical/High.
