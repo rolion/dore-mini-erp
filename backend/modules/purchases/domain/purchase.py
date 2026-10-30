@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass, field
+from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from uuid import UUID, uuid4
@@ -11,8 +12,10 @@ from .exceptions import (
     PurchaseCancellationBlocked,
     PurchaseInvalidTransition,
     PurchaseNotEditable,
+    PurchaseNotReceivable,
     PurchaseValidationError,
 )
+from .receipt import Receipt, ReceiptLine
 
 CURRENCY = 'BOB'
 REFERENCE_MAX_LENGTH = 100
@@ -134,6 +137,24 @@ class PurchaseItem:
     @property
     def subtotal(self) -> Decimal:
         return compute_subtotal(self.quantity, self.unit_price)
+
+
+@dataclass(frozen=True)
+class ReceiptLineDraft:
+    """Línea de recepción tal como la pide quien registra; `allows_fractions` lo aporta la capa de aplicación."""
+
+    item_id: object
+    quantity: object
+    allows_fractions: bool = True
+
+
+def compute_reception_status(items: list[PurchaseItem], received: Mapping[UUID, Decimal]) -> ReceptionStatus:
+    """`received` si todas las líneas están completas, `partial` si alguna recibió algo, si no `not_received`."""
+    if items and all(received.get(item.id, ZERO) >= item.quantity for item in items):
+        return ReceptionStatus.RECEIVED
+    if any(received.get(item.id, ZERO) > 0 for item in items):
+        return ReceptionStatus.PARTIAL
+    return ReceptionStatus.NOT_RECEIVED
 
 
 def _collect(checks) -> tuple[dict[str, object], dict[str, object]]:
@@ -263,10 +284,15 @@ class Purchase:
         return self.status is PurchaseStatus.CONFIRMED and not self.has_activity
 
     @property
+    def can_receive(self) -> bool:
+        return self.status is PurchaseStatus.CONFIRMED and self.reception_status is not ReceptionStatus.RECEIVED
+
+    @property
     def allowed_actions(self) -> list[str]:
         if self.status is PurchaseStatus.DRAFT:
             return ['edit', 'confirm', 'cancel']
-        return ['cancel'] if self.can_cancel else []
+        actions = ['receive'] if self.can_receive else []
+        return actions + ['cancel'] if self.can_cancel else actions
 
     # --- ciclo de vida ----------------------------------------------------------------------------------------
 
@@ -296,6 +322,64 @@ class Purchase:
         self.status = PurchaseStatus.CANCELLED
         self.cancelled_at = now
         self.cancellation_reason = text
+
+    def receive(self, receipt_id: UUID, receipt_date: object, today: date, received_before: Mapping[UUID, Decimal],
+                drafts: list[ReceiptLineDraft], user_id: UUID | None, user_name: str) -> Receipt:
+        """Registra una recepción parcial o completa y recalcula `reception_status`.
+
+        `received_before` es el acumulado confirmado por línea, leído por quien llama bajo el bloqueo de la compra.
+        Valida todo junto; si algo falla no cambia nada.
+        """
+        if self.status is not PurchaseStatus.CONFIRMED:
+            raise PurchaseNotReceivable()
+        errors: dict[str, object] = {}
+        when = None
+        if receipt_date is None:
+            errors['receipt_date'] = ['La fecha de recepción es obligatoria.']
+        elif isinstance(receipt_date, datetime) or not isinstance(receipt_date, date):
+            errors['receipt_date'] = ['La fecha de recepción debe ser una fecha válida.']
+        elif receipt_date > today:
+            errors['receipt_date'] = ['La fecha de recepción no puede ser futura.']
+        else:
+            when = receipt_date
+        lines: list[ReceiptLine] = []
+        if not drafts:
+            errors['lines'] = ['Indica al menos un producto recibido.']
+        else:
+            by_id = {item.id: item for item in self.items}
+            seen: set[UUID] = set()
+            line_errors: list[dict[str, list[str]]] = []
+            for draft in drafts:
+                item = by_id.get(draft.item_id) if isinstance(draft.item_id, UUID) else None
+                problems: dict[str, list[str]] = {}
+                if item is None:
+                    problems['item_id'] = ['La línea no pertenece a la compra.']
+                elif item.id in seen:
+                    problems['item_id'] = ['El producto ya está en la recepción.']
+                else:
+                    seen.add(item.id)
+                    try:
+                        quantity = validate_quantity(draft.quantity, draft.allows_fractions)
+                    except PurchaseValidationError as exc:
+                        problems.update(exc.errors)
+                    else:
+                        pending = item.quantity - received_before.get(item.id, ZERO)
+                        if quantity > pending:
+                            problems['quantity'] = [f'No puede superar el pendiente ({max(pending, ZERO):f}).']
+                        else:
+                            lines.append(ReceiptLine(item.id, item.product_id, item.product_name,
+                                                     item.unit_abbreviation, quantity))
+                line_errors.append(problems)
+            if any(line_errors):
+                errors['lines'] = line_errors
+        if errors:
+            raise PurchaseValidationError(errors)
+        received = dict(received_before)
+        for line in lines:
+            received[line.purchase_item_id] = received.get(line.purchase_item_id, ZERO) + line.quantity
+        self.reception_status = compute_reception_status(self.items, received)
+        return Receipt(id=receipt_id, purchase_id=self.id, receipt_date=when, user_id=user_id, user_name=user_name,
+                       lines=lines)
 
     # --- edición ----------------------------------------------------------------------------------------------
 

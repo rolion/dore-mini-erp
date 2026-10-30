@@ -46,6 +46,8 @@ function toItem(dto: PurchaseItemDto): PurchaseItem {
     quantity: dto.quantity,
     unitPrice: dto.unit_price,
     subtotal: dto.subtotal,
+    receivedQuantity: dto.received_quantity,
+    pendingQuantity: dto.pending_quantity,
   };
 }
 

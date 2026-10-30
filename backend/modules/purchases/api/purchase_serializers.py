@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from modules.purchases.domain.purchase import CURRENCY
+from modules.purchases.domain.purchase import CURRENCY, ZERO
 
 
 class DecimalInputField(serializers.Field):
@@ -80,6 +80,8 @@ def purchase_representation(detail) -> dict:
             'quantity': quantity(item.quantity),
             'unit_price': money(item.unit_price),
             'subtotal': money(item.subtotal),
+            'received_quantity': quantity(detail.received.get(item.id, ZERO)),
+            'pending_quantity': quantity(max(item.quantity - detail.received.get(item.id, ZERO), ZERO)),
         } for item in purchase.items],
         'total': money(purchase.total),
         'created_at': purchase.created_at,

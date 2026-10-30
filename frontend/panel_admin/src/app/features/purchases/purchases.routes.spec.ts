@@ -27,11 +27,11 @@ describe('rutas de Compras (AC-12)', () => {
 
   it('puts new and :id/edit before :id', () => {
     const paths = PURCHASES_ROUTE.map((r) => r.path);
-    expect(paths).toEqual(['', 'new', ':id/edit', ':id']);
+    expect(paths).toEqual(['', 'new', ':id/edit', ':id/receipts/new', ':id/receipts/:receiptId', ':id']);
   });
 
   it('asks for confirmation when leaving the form with unsaved changes', () => {
-    const forms = PURCHASES_ROUTE.filter((r) => r.path === 'new' || r.path === ':id/edit');
+    const forms = PURCHASES_ROUTE.filter((r) => ['new', ':id/edit', ':id/receipts/new'].includes(r.path ?? ''));
     expect(forms.every((r) => r.canDeactivate?.length === 1)).toBeTrue();
   });
 });

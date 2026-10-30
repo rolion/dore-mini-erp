@@ -20,10 +20,14 @@ from modules.purchases.domain.exceptions import (
     PurchaseInvalidTransition,
     PurchaseNotEditable,
     PurchaseNotFound,
+    PurchaseNotReceivable,
     PurchaseValidationError,
+    ReceiptConflict,
+    ReceiptNotFound,
 )
 from modules.purchases.infrastructure.adapters import ProductCatalogAdapter
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
+from modules.purchases.infrastructure.django.receipt_repository import DjangoReceiptRepository
 from modules.purchases.infrastructure.django.repositories import DjangoSupplierRepository
 from shared.tenancy import company_id_from
 
@@ -39,6 +43,9 @@ PURCHASE_NOT_FOUND = 'Compra no encontrada.'
 NOT_EDITABLE = 'La compra ya no admite cambios.'
 CANCELLATION_BLOCKED = 'No se puede cancelar: la compra ya tiene recepciones o pagos registrados.'
 CANCELLED_NOT_CONFIRMABLE = 'Una compra cancelada no puede confirmarse.'
+NOT_RECEIVABLE = 'Solo una compra confirmada admite recepciones.'
+RECEIPT_NOT_FOUND = 'Recepción no encontrada.'
+RECEIPT_CONFLICT = 'Ese identificador de recepción ya pertenece a otra compra.'
 REQUIRED_MODULES = ('purchases',)
 
 
@@ -80,12 +87,26 @@ def _run(callable_, **kwargs):
         raise NotEditable() from exc
     except PurchaseCancellationBlocked as exc:
         raise Conflict(CANCELLATION_BLOCKED) from exc
+    except PurchaseNotReceivable as exc:
+        raise Conflict(NOT_RECEIVABLE) from exc
+    except ReceiptNotFound as exc:
+        raise NotFound(RECEIPT_NOT_FOUND) from exc
+    except ReceiptConflict as exc:
+        raise Conflict({'code': 'receipt_conflict', 'detail': RECEIPT_CONFLICT}) from exc
     except PurchaseInvalidTransition as exc:
         raise Conflict(CANCELLED_NOT_CONFIRMABLE) from exc
 
 
+def _receipts(request) -> DjangoReceiptRepository:
+    return DjangoReceiptRepository(company_id_from(request))
+
+
+def _get_purchase(request) -> GetPurchase:
+    return GetPurchase(_purchases(request), _suppliers(request), _receipts(request))
+
+
 def _detail(request, purchase):
-    return purchase_representation(GetPurchase(_purchases(request), _suppliers(request)).detail(purchase))
+    return purchase_representation(_get_purchase(request).detail(purchase))
 
 
 class PurchaseListCreateView(APIView):
@@ -116,7 +137,7 @@ class PurchaseDetailView(APIView):
     required_modules = REQUIRED_MODULES
 
     def get(self, request, purchase_id):
-        detail = _run(GetPurchase(_purchases(request), _suppliers(request)).execute, purchase_id=purchase_id)
+        detail = _run(_get_purchase(request).execute, purchase_id=purchase_id)
         return Response(purchase_representation(detail))
 
     def patch(self, request, purchase_id):

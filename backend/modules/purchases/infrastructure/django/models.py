@@ -67,3 +67,38 @@ class PurchaseItemModel(models.Model):
     class Meta:
         db_table = 'purchases_purchase_item'
         ordering = ['position']
+
+
+class ReceiptModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    # Compra del mismo contexto: por UUID, sin FK (la compra recrea sus líneas al guardar).
+    purchase_id = models.UUIDField()
+    receipt_date = models.DateField()
+    status = models.CharField(max_length=20, default='confirmed')
+    # Almacén de Inventario (solo UUID): únicamente si la recepción generó entradas de stock.
+    warehouse_id = models.UUIDField(null=True, blank=True)
+    user_id = models.UUIDField(null=True, blank=True)
+    user_name = models.CharField(max_length=200, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'purchases_receipt'
+        ordering = ['-receipt_date', '-created_at', 'id']
+        indexes = [models.Index(fields=['company_id', 'purchase_id'], name='purch_receipt_company_purch')]
+
+
+class ReceiptItemModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    receipt = models.ForeignKey(ReceiptModel, on_delete=models.CASCADE, related_name='items')
+    position = models.PositiveIntegerField()
+    # Línea de la compra y producto: solo UUID, sin FK.
+    purchase_item_id = models.UUIDField()
+    product_id = models.UUIDField()
+    product_name = models.CharField(max_length=150)
+    unit_abbreviation = models.CharField(max_length=10, blank=True, default='')
+    quantity = models.DecimalField(max_digits=12, decimal_places=3)
+
+    class Meta:
+        db_table = 'purchases_receipt_item'
+        ordering = ['position']

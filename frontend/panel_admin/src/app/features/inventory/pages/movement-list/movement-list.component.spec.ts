@@ -137,6 +137,13 @@ describe('MovementListComponent', () => {
     expect(component.typeLabel(makeMovement({ source: null }))).toBe('Salida');
   });
 
+  it('labels the entries caused by a purchase receipt as "Entrada por compra" (AC-25)', async () => {
+    await setup();
+    const source = { type: 'purchase_receipt', label: 'Recepción de compra', id: 'r-1', line: '', reference: 'REC-1', available: true };
+    expect(component.typeLabel(makeMovement({ kind: 'in', source }))).toBe('Entrada por compra');
+    expect(component.typeLabel(makeMovement({ kind: 'out', source }))).toBe('Salida');
+  });
+
   it('starts filtered by the order that links here and keeps the other filters when it is removed (UI-06, AC-12)', async () => {
     await setup([exit], { source_type: 'sales_order', source_id: 'o-42' });
     expect(lastParams()).toEqual(jasmine.objectContaining({ sourceType: 'sales_order', sourceId: 'o-42', page: 1 }));

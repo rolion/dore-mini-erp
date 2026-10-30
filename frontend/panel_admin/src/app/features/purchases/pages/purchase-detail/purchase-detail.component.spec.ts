@@ -7,7 +7,8 @@ import { of, throwError } from 'rxjs';
 
 import { PurchaseApiError } from '../../models/purchase';
 import { PurchasesApiService } from '../../services/purchases-api.service';
-import { makeCancelledPurchase, makeConfirmedPurchase, makePurchase } from '../../testing/purchase-fixtures';
+import { ReceiptsApiService } from '../../services/receipts-api.service';
+import { makeCancelledPurchase, makeConfirmedPurchase, makePurchase, makePurchaseItem } from '../../testing/purchase-fixtures';
 import { PurchaseDetailComponent } from './purchase-detail.component';
 
 describe('PurchaseDetailComponent', () => {
@@ -16,10 +17,13 @@ describe('PurchaseDetailComponent', () => {
   let toastr: jasmine.SpyObj<ToastrService>;
   let router: Router;
   let modal: jasmine.SpyObj<NgbModal>;
+  let receiptsApi: jasmine.SpyObj<ReceiptsApiService>;
 
-  async function setup(purchase: ReturnType<typeof makePurchase> | PurchaseApiError): Promise<void> {
+  async function setup(purchase: ReturnType<typeof makePurchase> | PurchaseApiError, tab = ''): Promise<void> {
     api = jasmine.createSpyObj<PurchasesApiService>('PurchasesApiService', ['get', 'confirm', 'cancel']);
     api.get.and.returnValue(purchase instanceof PurchaseApiError ? throwError(() => purchase) : of(purchase));
+    receiptsApi = jasmine.createSpyObj<ReceiptsApiService>('ReceiptsApiService', ['list']);
+    receiptsApi.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     await TestBed.configureTestingModule({
@@ -29,7 +33,16 @@ describe('PurchaseDetailComponent', () => {
         { provide: PurchasesApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
         { provide: NgbModal, useValue: modal },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }) } } },
+        { provide: ReceiptsApiService, useValue: receiptsApi },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: convertToParamMap({ id: 'c-1' }),
+              queryParamMap: convertToParamMap(tab ? { tab } : {}),
+            },
+          },
+        },
       ],
     }).compileComponents();
     router = TestBed.inject(Router);
@@ -81,11 +94,11 @@ describe('PurchaseDetailComponent', () => {
     expect(byId('receive')).toBeNull();
   });
 
-  it('offers no editing of a confirmed purchase and shows reception/payment as coming soon (AC-14, AC-17)', async () => {
+  it('offers no editing of a confirmed purchase, links to the reception and keeps payment as coming soon (AC-14, AC-19)', async () => {
     await setup(makeConfirmedPurchase());
     expect(hrefs()).not.toContain('/pocketbiz/purchases/c-1/edit');
     expect(byId('confirm')).toBeNull();
-    expect(byId('receive')?.disabled).toBeTrue();
+    expect(byId('receive')?.getAttribute('href')).toBe('/pocketbiz/purchases/c-1/receipts/new');
     expect(byId('pay')?.disabled).toBeTrue();
     expect(byId('cancel')).not.toBeNull();
     expect(byId('confirmed-at')).not.toBeNull();
@@ -98,6 +111,31 @@ describe('PurchaseDetailComponent', () => {
     await setup(makeConfirmedPurchase({ allowedActions: [], receptionStatus: 'partial' }));
     expect(byId('cancel')).toBeNull();
     expect(byId('cancel-blocked')).not.toBeNull();
+    expect(byId('receive')).toBeNull();
+    expect(byId('fully-received')).not.toBeNull();
+  });
+
+  it('shows the received and pending quantities of a confirmed purchase only (AC-18)', async () => {
+    await setup(makeConfirmedPurchase({ items: [makePurchaseItem({ receivedQuantity: '1.000', pendingQuantity: '1.500' })] }));
+    expect(byId('received')?.textContent).toContain('1.000');
+    expect(byId('pending')?.textContent).toContain('1.500');
+    TestBed.resetTestingModule();
+    await setup(makePurchase());
+    expect(byId('received')).toBeNull();
+    expect(byId('pending')).toBeNull();
+  });
+
+  it('has the Summary and Receptions tabs and opens the second one with ?tab=receptions (AC-18)', async () => {
+    await setup(makeConfirmedPurchase());
+    expect(byId('tab-summary')).not.toBeNull();
+    expect(byId('receipts-tab')).toBeNull();
+    byId('tab-receptions')?.click();
+    fixture.detectChanges();
+    expect(byId('receipts-tab')).not.toBeNull();
+    expect(receiptsApi.list).toHaveBeenCalledWith('c-1');
+    TestBed.resetTestingModule();
+    await setup(makeConfirmedPurchase(), 'receptions');
+    expect(byId('receipts-tab')).not.toBeNull();
   });
 
   it('is read-only when cancelled and shows the reason and date (AC-13, AC-14)', async () => {

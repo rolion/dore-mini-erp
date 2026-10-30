@@ -1,0 +1,79 @@
+@if (purchase(); as p) {
+<div data-testid="receipts-tab">
+  @if (isConfirmed) {
+  <div class="d-flex justify-content-between align-items-center mx-4 mt-4">
+    <h5 class="mb-0">Avance de la recepción</h5>
+    <span class="badge-outline d-inline-block" data-testid="reception-status">{{ receptionLabels[p.receptionStatus] }}</span>
+  </div>
+  <div class="table-responsive m-4 mt-2">
+    <table class="table table-bordered align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Producto</th>
+          <th scope="col">Unidad</th>
+          <th scope="col" class="text-end">Comprada</th>
+          <th scope="col" class="text-end">Recibida</th>
+          <th scope="col" class="text-end">Pendiente</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of p.items; track item.id) {
+        <tr data-testid="progress-row">
+          <td>{{ item.productName }}</td>
+          <td>{{ item.unitAbbreviation || '—' }}</td>
+          <td class="text-end">{{ item.quantity }}</td>
+          <td class="text-end">{{ item.receivedQuantity }}</td>
+          <td class="text-end">{{ item.pendingQuantity }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <div class="d-flex justify-content-between align-items-center mx-4">
+    <h5 class="mb-0">Recepciones registradas</h5>
+    @if (canReceive) {
+    <a class="btn btn-primary" data-testid="register" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', 'new']">Registrar recepción</a>
+    }
+  </div>
+  @if (loading) {
+  <p class="m-4" data-testid="loading">Cargando…</p>
+  } @else if (errorMessage) {
+  <div class="alert alert-danger m-4" role="alert" data-testid="error">
+    {{ errorMessage }}
+    <button type="button" class="btn btn-sm btn-light ms-2" data-testid="retry" (click)="load()">Reintentar</button>
+  </div>
+  } @else if (!receipts.length) {
+  <p class="m-4 text-muted" data-testid="empty">
+    {{ isConfirmed ? 'Aún no hay recepciones registradas para esta compra.' : 'Las recepciones se registran cuando la compra está confirmada.' }}
+  </p>
+  } @else {
+  <div class="table-responsive m-4 mt-2">
+    <table class="table table-bordered align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Referencia</th>
+          <th scope="col">Fecha</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Usuario</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (receipt of receipts; track receipt.id) {
+        <tr data-testid="receipt-row">
+          <td><a data-testid="receipt-link" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', receipt.id]">{{ receipt.reference }}</a></td>
+          <td>{{ receipt.receiptDate | date: 'dd/MM/yyyy' }}</td>
+          <td><span class="badge-outline d-inline-block" [class]="statusClasses[receipt.status]">{{ statusLabels[receipt.status] }}</span></td>
+          <td>{{ receipt.userName || '—' }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  @if (isConfirmed && !canReceive && p.receptionStatus === 'received') {
+  <small class="form-text text-muted d-block mx-4 mb-4" data-testid="fully-received">Compra recibida por completo.</small>
+  }
+</div>
+}

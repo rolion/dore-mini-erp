@@ -17,3 +17,8 @@ class PaymentStatus(str, Enum):
     UNPAID = 'unpaid'
     PARTIAL = 'partial'
     PAID = 'paid'
+
+
+class ReceiptStatus(str, Enum):
+    CONFIRMED = 'confirmed'
+    REVERTED = 'reverted'

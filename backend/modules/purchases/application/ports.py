@@ -1,6 +1,7 @@
 """Puertos que Purchases necesita de otros módulos. Su implementación vive en `infrastructure/adapters.py`."""
 from collections.abc import Iterable
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
@@ -17,3 +18,51 @@ class ProductInfo:
 
 class ProductCatalog(Protocol):
     def get_products(self, product_ids: Iterable[UUID]) -> dict[UUID, ProductInfo]: ...
+
+
+@dataclass(frozen=True)
+class Actor:
+    user_id: UUID | None
+    user_name: str
+
+
+@dataclass(frozen=True)
+class StockProductInfo:
+    id: UUID
+    name: str
+    unit_abbreviation: str | None
+
+
+@dataclass(frozen=True)
+class StockWarehouse:
+    id: UUID
+    name: str
+    is_default: bool
+
+
+@dataclass(frozen=True)
+class StockEntryMovement:
+    id: UUID
+    product_id: UUID
+    product_name: str
+    unit_abbreviation: str | None
+    warehouse_id: UUID
+    warehouse_name: str
+    quantity: Decimal
+
+
+class StockEntry(Protocol):
+    """Entradas de inventario al recibir; integración opcional (solo con el módulo Inventario habilitado)."""
+
+    def is_available(self) -> bool: ...
+
+    def controlled_products(self, product_ids: Iterable[UUID]) -> dict[UUID, StockProductInfo]: ...
+
+    def active_warehouses(self) -> list[StockWarehouse]: ...
+
+    def register_entries(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
+                         reference: str, actor: Actor) -> None:
+        """Una entrada por línea; lanza `PurchaseValidationError` con `warehouse_id` si el almacén no sirve."""
+        ...
+
+    def movements_for(self, receipt_id: UUID) -> list[StockEntryMovement]: ...

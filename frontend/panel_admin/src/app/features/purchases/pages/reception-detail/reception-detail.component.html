@@ -1,0 +1,122 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Detalle de la recepción</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Compras</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">Compras</a></li>
+    <li class="breadcrumb-item">
+      <a [routerLink]="['/pocketbiz/purchases', purchaseId]" [queryParams]="{ tab: 'receptions' }">{{ receipt?.purchase?.reference || 'Compra' }}</a>
+    </li>
+    <li class="breadcrumb-item">Recepción</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>
+              {{ receipt ? 'Recepción ' + receipt.reference : 'Recepción' }}
+              @if (receipt; as r) {
+              <span class="badge-outline d-inline-block ms-2" [class]="statusClasses[r.status]" data-testid="status-badge">{{ statusLabels[r.status] }}</span>
+              }
+            </h4>
+          </div>
+          <div class="card-body">
+            @if (loading) {
+            <p class="m-4" data-testid="loading">Cargando…</p>
+            }
+            @if (errorMessage) {
+            <div class="alert alert-danger m-4" role="alert" data-testid="error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-sm btn-light ms-2" data-testid="retry" (click)="load()">Reintentar</button>
+            </div>
+            }
+            @if (receipt; as r) {
+            <dl class="row m-4">
+              <dt class="col-sm-3">Compra</dt>
+              <dd class="col-sm-9"><a data-testid="purchase-link" [routerLink]="['/pocketbiz/purchases', r.purchase.id]">{{ r.purchase.reference }}</a></dd>
+              <dt class="col-sm-3">Fecha de recepción</dt>
+              <dd class="col-sm-9" data-testid="receipt-date">{{ r.receiptDate | date: 'dd/MM/yyyy' }}</dd>
+              <dt class="col-sm-3">Estado</dt>
+              <dd class="col-sm-9">{{ statusLabels[r.status] }}</dd>
+              <dt class="col-sm-3">Registrada por</dt>
+              <dd class="col-sm-9" data-testid="user">{{ r.userName || '—' }}</dd>
+              <dt class="col-sm-3">Registrada el</dt>
+              <dd class="col-sm-9">{{ r.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              @if (r.warehouse) {
+              <dt class="col-sm-3">Almacén</dt>
+              <dd class="col-sm-9" data-testid="warehouse">{{ r.warehouse.name || '—' }}</dd>
+              }
+            </dl>
+            <h5 class="mx-4">Productos recibidos</h5>
+            <div class="table-responsive mx-4">
+              <table class="table table-bordered align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col" class="text-end">Cantidad recibida</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of r.lines; track line.itemId) {
+                  <tr data-testid="line">
+                    <td>{{ line.productName }}</td>
+                    <td>{{ line.unitAbbreviation || '—' }}</td>
+                    <td class="text-end">{{ line.quantity }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (r.movements !== null) {
+            <div class="d-flex justify-content-between align-items-center mx-4 mt-4">
+              <h5 class="mb-0">Movimientos de inventario</h5>
+              @if (r.movements.length) {
+              <a class="btn btn-sm btn-primary" data-testid="view-movements" routerLink="/pocketbiz/inventory/movements"
+                [queryParams]="{ source_type: 'purchase_receipt', source_id: r.id }">Ver movimientos</a>
+              }
+            </div>
+            @if (r.movements.length) {
+            <div class="table-responsive m-4 mt-2">
+              <table class="table table-sm mb-0">
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Almacén</th>
+                    <th scope="col" class="text-end">Cantidad</th>
+                    <th scope="col">Unidad</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (movement of r.movements; track movement.id) {
+                  <tr data-testid="movement">
+                    <td>{{ movement.productName }}</td>
+                    <td>{{ movement.warehouseName }}</td>
+                    <td class="text-end">{{ movement.quantity }}</td>
+                    <td>{{ movement.unitAbbreviation || '—' }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            } @else {
+            <small class="form-text text-muted d-block mx-4" data-testid="no-movements">Esta recepción no movió existencias.</small>
+            }
+            }
+            <div class="m-4">
+              <a class="btn btn-light" data-testid="back" [routerLink]="['/pocketbiz/purchases', r.purchase.id]"
+                [queryParams]="{ tab: 'receptions' }">Volver a la compra</a>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
