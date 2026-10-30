@@ -1,6 +1,6 @@
 # TASK-compras-borrador-crear-editar: Crear y editar compras en borrador (PB-COM-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-compras-borrador-crear-editar
@@ -21,6 +21,7 @@
 | 2026-10-30 | PUBLISH → REVIEW | Corrección de REV-06 tras la revisión visual; se repite el Quality Gate | delivery-publish |
 | 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 3: PASS condicionado | delivery-publish |
 | 2026-10-30 | PUBLISH → ENGINEERING → REVIEW | PB-CAT-001 llegó a `main`: PLAN v2 (AC-19, solo productos comprables) implementado; se repite el Quality Gate | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 4: PASS condicionado (primer ciclo con PostgreSQL real) | delivery-publish |
 
 ## Investigación
 
@@ -149,5 +150,7 @@ Reverificación: REV-01 corregido y reproducido de forma independiente (sin el `
 
 **PB-CAT-001 integrado (2026-10-30):** con PB-CAT-001 en `main` se aplicó el ajuste (PLAN v2, AC-19). `main` ya traía su propio `ProductForPurchase(id, name, active, can_buy)` y el merge dejó **dos definiciones** de la clase en `catalog/services.py` (sin conflicto de texto, la segunda ocultaba a la primera); se unificó en un DTO con `can_buy`, unidad y `allows_fractions`. `CreatePurchase`/`UpdatePurchase` rechazan productos **nuevos** no comprables (línea con error) y el selector del formulario pide `can_buy=true`. Verificación propia: `purchases` + `catalog.test_services` + `catalog.test_uses_api` 135 OK en PostgreSQL; `makemigrations --check` sin cambios; `ng lint` y `ng build` OK; Karma de purchases, products, sales y sidebar 359/359. Pendiente: Quality Gate ciclo 4.
 
+**Quality Gate (ciclo 4, subagente aislado, sobre PostgreSQL real): PASS condicionado.** Sin hallazgos nuevos ni Critical/High abiertos. Motor confirmado con `connection.vendor` (`postgresql`), sin leer el `.env`. Ejecutado: suite completa de backend 1031 tests con 1 fallo (`sales RoundTripTests.test_saves_and_loads_the_whole_aggregate`, orden de ítems por empate de `created_at`: intermitente, 1 fallo en 6 corridas aisladas, y el código de `sales` es idéntico a `main`); `modules.purchases` 112 OK (estable en 4 corridas más); `catalog.test_uses_api/test_uses/test_services`, `test_boundaries`, `test_guards` y `test_enforcement` 70 OK; `makemigrations --check` sin cambios; `bandit` 0 issues; `ng lint` y `ng build` OK; Karma completo 868 con 71 fallos, todos componentes demo de la plantilla (NG0201 y similares), ninguno de Compras, Productos, Ventas ni del menú. Intermitentes conocidos y ajenos al diff, también en PostgreSQL: `catalog UpdateProductTests.test_patch_updates_fields_and_refreshes_updated_at` (2 de 6 corridas) y `modularity` (1 de 3). **Concurrencia real:** dos `PATCH` simultáneos al mismo borrador con retardo dentro del bloqueo: ambos 200, la segunda sesión esperó 1,58 s al bloqueo de fila, líneas finales sin duplicados ni mezcla, una sola compra; seis hilos sin retardo: seis 200 y sin duplicados. Verificado que la fachada tiene una sola `ProductForPurchase` coherente con la de PB-CAT-001 y que AC-19 está cubierto de punta a punta. **No realizado:** `npm audit` (sin lockfile) y la revisión visual del cambio de AC-19 en navegador (la revisión visual anterior fue sobre el estado previo).
+
 ## Publicación
-PR #28 completo y listo para aprobación humana (no se mergea). **Cambio sensible:** nuevo agregado con **migración** (`purchases.0002_purchase`, dos tablas) respaldado por `ADR-compras-borrador-crear-editar-modelo-compra-borrador` y `ADR-compras-borrador-crear-editar-contrato-api-e-integracion-catalogo`; además una dependencia nueva `purchases → catalog` (por puerto y adaptador). Rollback: revertir el PR; con la migración aplicada, `migrate purchases 0001` elimina las tablas. Antes de mergear, un humano debería correr `manage.py test` contra PostgreSQL y mirar las pantallas en el navegador.
+PR #28 completo y listo para aprobación humana (no se mergea). **Cambio sensible:** nuevo agregado con **migración** (`purchases.0002_purchase`, dos tablas) respaldado por `ADR-compras-borrador-crear-editar-modelo-compra-borrador` y `ADR-compras-borrador-crear-editar-contrato-api-e-integracion-catalogo`; además una dependencia nueva `purchases → catalog` (por puerto y adaptador). Rollback: revertir el PR; con la migración aplicada, `migrate purchases 0001` elimina las tablas. `manage.py test` ya se corrió contra PostgreSQL (ciclo 4). Antes de mergear, un humano debería mirar las pantallas en el navegador, sobre todo el selector de productos comprables (AC-19).
