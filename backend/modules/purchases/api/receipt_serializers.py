@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from modules.purchases.domain.enums import InventoryMode
-
 from .purchase_serializers import DecimalInputField, quantity
 
 
@@ -46,8 +44,6 @@ def receipt_representation(detail) -> dict:
             'unit': _unit(m.unit_abbreviation),
             'reference': m.reference,
         } for m in detail.movements]
-    entered = {m.product_id for m in detail.movements or []}
-    stock_entry_known = receipt.inventory_mode is InventoryMode.INVENTORY and detail.movements is not None
     return {
         'id': receipt.id,
         'reference': receipt.reference,
@@ -65,8 +61,7 @@ def receipt_representation(detail) -> dict:
             'product': {'id': line.product_id, 'name': line.product_name},
             'unit': _unit(line.unit_abbreviation),
             'quantity': quantity(line.quantity),
-            # Solo con modo guardado 'inventory': si el libro tiene una entrada de ese producto.
-            'stock_entry': (line.product_id in entered) if stock_entry_known else None,
+            'stock_entry': detail.stock_entry(line.product_id),
         } for line in receipt.lines],
         'movements': movements,
     }

@@ -4,6 +4,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from .enums import InventoryMode, ReceiptStatus
+from .exceptions import ReceiptInventoryModeAlreadySet
 
 
 @dataclass
@@ -37,6 +38,12 @@ class Receipt:
     def reference(self) -> str:
         """Referencia interna provisional derivada del id (la numeración correlativa es otra task)."""
         return f'REC-{self.id.hex[:8].upper()}'
+
+    def set_inventory_mode(self, mode: InventoryMode) -> None:
+        """Fija el modo con que se confirmó la recepción; no se puede cambiar después."""
+        if self.inventory_mode is not None:
+            raise ReceiptInventoryModeAlreadySet()
+        self.inventory_mode = mode
 
     def assign_warehouse(self, warehouse_id: UUID | None) -> None:
         self.warehouse_id = warehouse_id

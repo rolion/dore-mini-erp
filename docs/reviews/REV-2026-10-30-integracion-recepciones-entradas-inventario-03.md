@@ -1,6 +1,6 @@
 # REV-2026-10-30-integracion-recepciones-entradas-inventario-03: Detalle documental muestra dos mensajes y la marca de entrada no es badge
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-10-30-integracion-recepciones-entradas-inventario.md (v1)
@@ -16,6 +16,9 @@ Un único mensaje en modo documental; badge según UI-01.
 
 ## Actual behavior
 Mensaje redundante en modo documental; texto atenuado en lugar de badge. Los textos exactos pedidos sí están presentes.
+
+## Resolution
+Badge: «Entrada de stock» del resumen es ahora un `badge-outline col-green`. El doble mensaje en modo documental no se reproduce (con `movements = null` el bloque exterior no se pinta): se fijó con la aserción `no-movements` nulo en `reception-detail.component.spec.ts`.
 
 ## Evidence
 reception-detail.component.html (documental-note + no-movements); reception-form.component.html (data-testid=line-entry). Revisión visual no verificada.

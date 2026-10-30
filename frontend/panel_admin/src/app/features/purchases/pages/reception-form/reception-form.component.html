@@ -166,7 +166,7 @@
                       {{ item.line.productName }}
                       @if (inventoryEnabled) {
                       @if (item.line.tracksStock) {
-                      <small class="text-muted d-block" data-testid="line-entry">Entrada de stock</small>
+                      <span class="badge-outline col-green d-inline-block mt-1" data-testid="line-entry">Entrada de stock</span>
                       } @else {
                       <small class="text-muted d-block" data-testid="line-no-entry">{{ noEntryLabel }}</small>
                       }

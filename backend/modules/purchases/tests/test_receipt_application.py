@@ -249,6 +249,16 @@ class ReceptionQueriesTests(ReceptionCase):
         self.assertEqual((detail.receipt.inventory_mode, detail.movements, detail.warehouse_name),
                          (InventoryMode.DOCUMENTAL, None, ''))
 
+    def test_stock_entry_is_known_only_in_inventory_mode(self):  # AC-06
+        self.with_inventory()
+        receipt, _ = self.register('4', warehouse_id=self.warehouse.id)
+        detail = self.detail(receipt)
+        self.assertEqual((detail.stock_entry(self.flour.id), detail.stock_entry(uuid4())), (True, False))
+        self.stock.enabled = False
+        self.assertEqual(self.detail(receipt).stock_entry(self.flour.id), True)  # sigue leyendo el libro
+        documentary, _ = self.register('1')
+        self.assertIsNone(self.detail(documentary).stock_entry(self.flour.id))
+
     def test_unknown_mode_keeps_the_previous_behaviour(self):  # AC-07, EDGE-03
         receipt, _ = self.register('4')
         self.receipts.rows[receipt.id].inventory_mode = None

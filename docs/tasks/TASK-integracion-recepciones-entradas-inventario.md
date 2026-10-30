@@ -104,5 +104,8 @@ Implementado según PLAN v1, sin cambios de Specification.
 ## Verificación posterior (PostgreSQL)
 Con el `.env` del checkout principal copiado al worktree (por indicación del usuario; ignorado por git): suite completa del backend con PostgreSQL real, `config.settings.test`: **1141 pruebas OK** (incluye `test_receipt_concurrency`, AC-10, y las pruebas de bloqueo que fallaban en SQLite); `makemigrations --check`: sin cambios. Con esto quedan cerradas las fallas atribuidas a SQLite. Sigue pendiente la revisión visual en navegador.
 
+## Seguimiento tras el Quality Gate (hallazgos Low)
+REV-02 (`stock_entry` a `ReceiptDetail`), REV-03 (badge; el doble mensaje no se reproducía, se fijó con una prueba) y REV-04 (`Receipt.set_inventory_mode` + pruebas de dominio) resueltos. Backend `modules.purchases` con PostgreSQL: 216 OK; Karma purchases+inventory 294/294; `ng lint` y `ng build` OK.
+
 ## Publicación
 PR [#37](https://github.com/rolion/dore-mini-erp/pull/37) listo para aprobación humana (no se mergea automáticamente). Cambio sensible: **base de datos** (migración aditiva `0005` con `RunPython` de backfill, sin ADR). Antes del merge: hacer la revisión visual del resumen y el detalle de recepción.

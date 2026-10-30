@@ -42,6 +42,12 @@ class ReceiptDetail:
     movements: list[StockEntryMovement] | None
     inventory_available: bool  # estado actual del módulo (solo para decidir enlaces)
 
+    def stock_entry(self, product_id: UUID) -> bool | None:
+        """¿El producto generó una entrada de stock? Solo se sabe en modo `inventory` (se lee del libro)."""
+        if self.receipt.inventory_mode is not InventoryMode.INVENTORY or self.movements is None:
+            return None
+        return any(m.product_id == product_id for m in self.movements)
+
 
 def _purchase(purchases: PurchaseRepository, purchase_id: UUID) -> Purchase:
     purchase = purchases.get(purchase_id)

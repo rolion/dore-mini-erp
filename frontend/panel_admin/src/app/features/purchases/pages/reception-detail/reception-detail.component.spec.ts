@@ -84,6 +84,7 @@ describe('ReceptionDetailComponent', () => {
   it('says a documentary receipt had no inventory movement, and keeps saying it (AC-14)', async () => {
     await setup(makeReceipt({ inventoryMode: 'documental', inventoryAvailable: true, movements: null }));
     expect(byId('documental-note')?.textContent).toContain('Recepción documental, sin movimiento de inventario');
+    expect(byId('no-movements')).toBeNull(); // un solo mensaje
     expect(byId('view-movements')).toBeNull();
   });
 

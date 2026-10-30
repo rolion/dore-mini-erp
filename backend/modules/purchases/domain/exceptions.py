@@ -17,6 +17,10 @@ class PurchaseValidationError(Exception):
         self.errors = errors
 
 
+class ReceiptInventoryModeAlreadySet(Exception):
+    """El modo de inventario de una recepción se fija una sola vez, al confirmarla."""
+
+
 class PurchaseNotFound(Exception):
     def __init__(self, purchase_id: UUID):
         super().__init__(f'Compra {purchase_id} no encontrada.')
