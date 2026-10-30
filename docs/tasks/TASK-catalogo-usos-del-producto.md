@@ -1,6 +1,6 @@
 # TASK-catalogo-usos-del-producto: Distinguir insumos, intermedios y productos vendibles (PB-CAT-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-catalogo-usos-del-producto
@@ -12,6 +12,7 @@
 | 2026-10-29 | (nuevo) → INVESTIGATION | Task creado; rama desde `origin/main` al día | delivery-start |
 | 2026-10-29 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Cambia el modelo del producto (migración de datos), el contrato API y la frontera Catalog → Sales/Purchases | delivery-start |
 | 2026-10-29 | PLANNING → ENGINEERING | Specification READY (sin decisiones de negocio abiertas) | delivery-start |
+| 2026-10-29 | ENGINEERING → REVIEW | Implementación completa según plan v1; pruebas con PostgreSQL pendientes de correr (ver Implementación) | delivery-build |
 
 ## Investigación
 
@@ -74,7 +75,20 @@ Ver `docs/adr/ADR-catalogo-usos-del-producto-modelo-migracion-y-contrato.md`.
 `docs/plans/PLAN-2026-10-29-catalogo-usos-del-producto.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** `Product` gana `category`, `can_buy`, `can_sell` y `sale_price` opcional (métodos `classify`/`set_uses`, INV-01..05); migración `0004_product_uses` (reversible); filtros `can_buy`/`can_sell`/`category` en repositorio y API (API-01..03); fachada `ProductForSale.can_sell` y `get_product_for_purchase` (API-05); `AddOrderItem` rechaza productos no vendibles (AC-01, API-04); UI según el DDR (UI-01..06).
+
+**Cobertura.** AC-01: `sales/tests/test_api.py` · AC-02/EDGE-05: `catalog/tests/test_uses_api.py::ProductFacadeTests` · AC-03/04/05: `test_uses.py` + `test_uses_api.py` · AC-06: `ProductUsesMigrationTests` · AC-07/EDGE-06: `sales/tests/test_api.py` · AC-08: `test_uses.py`, `test_uses_api.py`, specs de `product-list` y `products-api.service` · AC-09: specs de `product-form` y `product-detail` · AC-10: spec de `order-items`.
+
+**Pantalla de referencia / compartidos.** Se siguió `product-form` (sección condicionada) y `product-list` del sistema de diseño; no se crearon componentes compartidos nuevos (badges `badge-outline`).
+
+**Estado de las pruebas (no es el Quality Gate).**
+- Corridas OK: dominio y casos de uso (34 pruebas, `SimpleTestCase`) y Karma de `features/products` + `order-items` (70 pruebas; se excluyó `app.component.spec.ts`, que ya fallaba en `main` por `app.title`).
+- **NO ejecutadas:** pruebas con PostgreSQL (`test_uses_api.py`, `test_api.py` de catalog/ventas, inventario, migración): el worktree no tiene `backend/.env` y no se leyó el de `main`; Docker no estaba disponible. Deben correrse con `python manage.py test` antes de aprobar.
+
+**Desviaciones respecto al plan.** Ninguna de alcance. Detalles: `Product.change_price` delega en `set_uses`; los fakes y fixtures de tests existentes recibieron `category`.
+
+**Deuda técnica.** `app.component.spec.ts` roto en `main` (preexistente). No hay endpoint de compras que aplique `can_buy` (fuera de alcance).
 
 ## Review
 _Pendiente_
