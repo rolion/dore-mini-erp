@@ -7,3 +7,4 @@ SECRET_KEY = env('SECRET_KEY', default='insecure-test-key-not-for-production')
 ALLOWED_HOSTS = ['testserver', 'localhost']
 DATABASES = {'default': env.db('DATABASE_URL')}
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+TEST_RUNNER = 'shared.test_runner.StrictClockRunner'
