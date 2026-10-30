@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-revertir-movimientos
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/40
 **Fuente:** https://trello.com/c/94lEuUD5/21-pb-inv-008-revertir-movimientos-mediante-contramovimientos
 
 ## Historial de transiciones
