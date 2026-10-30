@@ -2,8 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { OrderApiError, OrderRuleError } from '../models/order';
-import { makeOrder, makeOrderDto, makeSummary } from '../testing/order-fixtures';
+import { Order, OrderApiError, OrderRuleError } from '../models/order';
+import { makeOrder, makeOrderDto, makePreview, makeSummary } from '../testing/order-fixtures';
 import {
   GENERIC_ERROR_MESSAGE,
   NETWORK_ERROR_MESSAGE,
@@ -149,6 +149,7 @@ describe('OrdersApiService', () => {
       ['ready', () => service.ready('o-1').subscribe(), 'POST', '/api/orders/o-1/ready/', {}],
       ['deliver', () => service.deliver('o-1').subscribe(), 'POST', '/api/orders/o-1/deliver/', {}],
       ['deliver with date', () => service.deliver('o-1', '2026-10-03').subscribe(), 'POST', '/api/orders/o-1/deliver/', { delivered_date: '2026-10-03' }],
+    ['deliver with date and warehouse', () => service.deliver('o-1', '2026-10-03', 'w-1').subscribe(), 'POST', '/api/orders/o-1/deliver/', { delivered_date: '2026-10-03', warehouse_id: 'w-1' }],
       ['cancel', () => service.cancel('o-1', 'No lo quiere').subscribe(), 'POST', '/api/orders/o-1/cancel/', { reason: 'No lo quiere' }],
       [
         'registerPayment',
@@ -214,6 +215,74 @@ describe('OrdersApiService', () => {
       expect(error?.status).toBe(0);
       expect(error?.message).toBe(NETWORK_ERROR_MESSAGE);
       expect(failWith(500, {}).message).toBe(GENERIC_ERROR_MESSAGE);
+    });
+  });
+
+  describe('delivery with stock output', () => {
+    it('maps the delivery preview and sends the chosen warehouse (API-01)', () => {
+      let result: unknown;
+      service.deliveryPreview('o-1', 'w-1').subscribe((preview) => (result = preview));
+      const req = http.expectOne((r) => r.url === '/api/orders/o-1/delivery-preview/');
+      expect(req.request.params.get('warehouse_id')).toBe('w-1');
+      req.flush({
+        inventory_enabled: true,
+        requires_stock_output: true,
+        allow_negative_stock: false,
+        warehouses: [{ id: 'w-1', name: 'Central', is_default: true }],
+        warehouse_id: 'w-1',
+        lines: [{
+          product: { id: 'p-1', name: 'Bolsas' }, quantity: '4.0000', unit: { abbreviation: 'u' },
+          available: '5.0000', projected: '1.0000', insufficient: false,
+        }],
+      });
+      expect(result).toEqual(makePreview());
+    });
+
+    it('asks for the preview without warehouse by default', () => {
+      service.deliveryPreview('o-1').subscribe();
+      const req = http.expectOne((r) => r.url === '/api/orders/o-1/delivery-preview/');
+      expect(req.request.params.has('warehouse_id')).toBeFalse();
+      req.flush({ inventory_enabled: false, requires_stock_output: false, allow_negative_stock: false, warehouses: [], warehouse_id: null, lines: [] });
+    });
+
+    it('maps the stock output of a delivered order (API-03)', () => {
+      let order: Order | undefined;
+      service.get('o-1').subscribe((o) => (order = o));
+      http.expectOne('/api/orders/o-1/').flush(makeOrderDto({
+        status: 'DELIVERED',
+        stock_output: {
+          reference: 'P-1A2B3C4D', warehouse: { id: 'w-1', name: 'Central' }, occurred_at: '2026-10-03T15:30:00Z',
+          user_name: 'ana',
+          movements: [{ id: 'm-1', product: { id: 'p-1', name: 'Bolsas' }, quantity: '4.0000', unit: { abbreviation: 'u' } }],
+        },
+      }));
+      expect(order?.stockOutput).toEqual({
+        reference: 'P-1A2B3C4D', warehouseId: 'w-1', warehouseName: 'Central', occurredAt: '2026-10-03T15:30:00Z',
+        userName: 'ana',
+        movements: [{ id: 'm-1', productId: 'p-1', productName: 'Bolsas', quantity: '4.0000', unit: 'u' }],
+      });
+    });
+
+    it('exposes the short lines of a 409 insufficient_stock (API-02)', () => {
+      let error: unknown;
+      service.deliver('o-1', undefined, 'w-1').subscribe({ error: (e) => (error = e) });
+      http.expectOne('/api/orders/o-1/deliver/').flush({
+        code: 'insufficient_stock', detail: 'No hay saldo suficiente para registrar la salida.',
+        warehouse: { id: 'w-1', name: 'Central' },
+        lines: [{ product: { id: 'p-1', name: 'Bolsas' }, unit: { abbreviation: 'u' }, requested: '4.0000', available: '1.0000' }],
+      }, { status: 409, statusText: 'Conflict' });
+      expect(error instanceof OrderRuleError).toBeTrue();
+      const rule = error as OrderRuleError;
+      expect(rule.code).toBe('insufficient_stock');
+      expect(rule.warehouseName).toBe('Central');
+      expect(rule.shortages).toEqual([{ productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' }]);
+    });
+
+    it('maps a warehouse validation error to its field (AC-07)', () => {
+      let error: unknown;
+      service.deliver('o-1', undefined, 'w-9').subscribe({ error: (e) => (error = e) });
+      http.expectOne('/api/orders/o-1/deliver/').flush({ warehouse_id: ['El almacén no existe.'] }, { status: 400, statusText: 'Bad Request' });
+      expect((error as OrderApiError).fieldErrors.warehouseId).toEqual(['El almacén no existe.']);
     });
   });
 });

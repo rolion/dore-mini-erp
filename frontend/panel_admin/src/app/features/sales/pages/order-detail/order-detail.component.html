@@ -124,6 +124,10 @@
       </div>
     </div>
 
+    @if (o.stockOutput; as output) {
+    <app-stock-output-card [orderId]="o.id" [output]="output" />
+    }
+
     <app-order-items [order]="o" [busy]="busy" [errors]="fieldErrors" (itemAdd)="addItem($event)"
       (quantityChange)="changeQuantity($event)" (itemRemove)="removeItem($event)" />
     <app-order-summary [order]="o" [busy]="busy" [errors]="fieldErrors" (discountSubmit)="applyDiscount($event)" />

@@ -1,0 +1,113 @@
+<form [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">Marcar como entregado</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" [disabled]="saving"
+      (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (order && preview) {
+    <p class="mb-3" data-testid="order-reference">
+      Pedido <strong>{{ order.code }}</strong>@if (order.customer) { · {{ order.customer.name }}}
+    </p>
+
+    <div class="row g-3">
+      <div class="col-md-5">
+        <label for="delivery-date">Fecha de entrega <span class="text-danger">*</span></label>
+        <input id="delivery-date" type="date" class="form-control" formControlName="deliveredDate" [max]="today">
+        @if (serverErrors.deliveredDate) {
+        <small class="form-text text-danger" data-testid="date-error">{{ serverErrors.deliveredDate }}</small>
+        }
+      </div>
+      <div class="col-md-7">
+        <label for="delivery-warehouse">Almacén de salida <span class="text-danger">*</span></label>
+        @if (singleWarehouse) {
+        <p class="form-control-plaintext mb-0" data-testid="warehouse-fixed">{{ preview.warehouses[0].name }}</p>
+        } @else {
+        <select id="delivery-warehouse" class="form-select" formControlName="warehouseId" data-testid="warehouse-select">
+          @if (!form.controls.warehouseId.value) {
+          <option value="" disabled>Elige un almacén</option>
+          }
+          @for (warehouse of preview.warehouses; track warehouse.id) {
+          <option [value]="warehouse.id">{{ warehouse.name }}{{ warehouse.isDefault ? ' (predeterminado)' : '' }}</option>
+          }
+        </select>
+        }
+        @if (serverErrors.warehouseId) {
+        <small class="form-text text-danger" data-testid="warehouse-error">{{ serverErrors.warehouseId }}</small>
+        }
+      </div>
+    </div>
+
+    @if (noWarehouse) {
+    <div class="alert alert-warning mt-3 mb-0" role="alert" data-testid="alert-no-warehouse">
+      <strong>No hay un almacén activo.</strong> Crea o activa uno en Inventario → Configuración → Almacenes para
+      poder entregar este pedido.
+    </div>
+    } @else {
+    <div class="table-responsive mt-3">
+      <table class="table table-sm align-middle mb-0" data-testid="lines-table">
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            <th scope="col" class="text-end">Cantidad a entregar</th>
+            <th scope="col">Unidad</th>
+            <th scope="col" class="text-end">Existencia actual</th>
+            <th scope="col" class="text-end">Saldo proyectado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of preview.lines; track line.productId) {
+          <tr data-testid="line-row">
+            <td>{{ line.productName }}</td>
+            <td class="text-end">{{ format(line.quantity) }}</td>
+            <td>{{ line.unit || '—' }}</td>
+            <td class="text-end">{{ loadingLines || line.available === null ? '…' : format(line.available) }}</td>
+            <td class="text-end" [class.text-danger]="line.insufficient">
+              @if (loadingLines || line.projected === null) {
+              …
+              } @else {
+              {{ format(line.projected) }}
+              @if (line.insufficient) {
+              <i class="fas fa-exclamation-circle" aria-hidden="true"></i> <span class="visually-hidden">negativo</span>
+              }
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    @if (blocked) {
+    <div class="alert alert-danger mt-3 mb-0" role="alert" data-testid="alert-insufficient">
+      <strong>Existencia insuficiente en {{ warehouseName }}.</strong>
+      <ul class="mb-0">
+        @for (line of shortLines; track line.productId) {
+        <li>
+          {{ line.productName }}: solicitado {{ format(line.quantity) }} {{ line.unit }}, existencia
+          {{ format(line.available ?? '0') }} {{ line.unit }}
+        </li>
+        }
+      </ul>
+      La política de inventario no permite saldos negativos: no se puede confirmar esta entrega.
+    </div>
+    } @else if (warnsNegative) {
+    <div class="alert alert-warning mt-3 mb-0" role="alert" data-testid="alert-negative">
+      Esta entrega dejará saldo negativo en {{ shortLines.length }} producto(s). Es la política de inventario
+      configurada para la empresa.
+    </div>
+    }
+    @if (errorMessage) {
+    <div class="alert alert-danger mt-3 mb-0" role="alert" data-testid="alert-error">{{ errorMessage }}</div>
+    }
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" data-testid="cancel" [disabled]="saving"
+      (click)="activeModal.dismiss()">Cancelar</button>
+    <button type="submit" class="btn btn-primary" data-testid="confirm" [disabled]="!canConfirm">
+      {{ saving ? 'Confirmando…' : 'Confirmar entrega' }}
+    </button>
+  </div>
+</form>

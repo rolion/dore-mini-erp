@@ -34,6 +34,13 @@ def _parse_source_type(raw: str) -> str:
     return raw
 
 
+def _parse_source_id(raw: str) -> str:
+    text = raw.strip()
+    if not text or len(text) > 64:
+        raise ValueError('Valor inválido: use el identificador del documento de origen.')
+    return text
+
+
 def parse_movement_filters(params) -> MovementFilters:
     """Convierte los query params de la lista en filtros tipados; los valores inválidos dan 400 por parámetro."""
     errors: dict[str, list[str]] = {}
@@ -54,6 +61,9 @@ def parse_movement_filters(params) -> MovementFilters:
     read('warehouse_id', _parse_uuid)
     read('kind', _parse_kind)
     read('source_type', _parse_source_type)
+    read('source_id', _parse_source_id)
+    if 'source_id' in values and values.get('source_type') in (None, 'none'):
+        errors['source_id'] = ['Indique también source_type con una clase de origen.']
 
     if 'date_from' in values and 'date_to' in values and values['date_from'] > values['date_to']:
         errors['date_to'] = ['La fecha final no puede ser anterior a la inicial.']

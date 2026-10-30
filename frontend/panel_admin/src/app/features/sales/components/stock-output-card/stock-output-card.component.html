@@ -1,0 +1,37 @@
+<div class="card" data-testid="stock-output-card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h4>Salida de inventario</h4>
+    <a class="btn btn-sm btn-primary" data-testid="view-movements" routerLink="/pocketbiz/inventory/movements"
+      [queryParams]="{ source_type: 'sales_order', source_id: orderId() }">Ver movimientos</a>
+  </div>
+  <div class="card-body">
+    <dl class="row m-4 mb-2">
+      <dt class="col-sm-3">Referencia</dt>
+      <dd class="col-sm-9" data-testid="output-reference">{{ output().reference }}</dd>
+      <dt class="col-sm-3">Almacén</dt>
+      <dd class="col-sm-9" data-testid="output-warehouse">{{ output().warehouseName }}</dd>
+      <dt class="col-sm-3">Fecha</dt>
+      <dd class="col-sm-9" data-testid="output-date">{{ output().occurredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+    </dl>
+    <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            <th scope="col" class="text-end">Cantidad</th>
+            <th scope="col">Unidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (movement of output().movements; track movement.id) {
+          <tr data-testid="output-row">
+            <td>{{ movement.productName }}</td>
+            <td class="text-end">{{ format(movement.quantity) }}</td>
+            <td>{{ movement.unit || '—' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -19,6 +19,13 @@ UNSET = object()
 
 ZERO = Decimal('0.00')
 MAX_DISCOUNT_PERCENT = Decimal('100')
+
+
+def order_code(order_id: UUID) -> str:
+    """Etiqueta corta para mostrar; no se persiste ni identifica al pedido (el identificador es el UUID)."""
+    return 'P-' + str(order_id).replace('-', '')[:8].upper()
+
+
 OPEN_STATUSES = (OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY)
 
 # Acciones de estado permitidas por estado (nombres de la API).
@@ -240,6 +247,10 @@ class Order:
     # --- consultas de acciones disponibles --------------------------------------------------------------------
 
     @property
+    def code(self) -> str:
+        return order_code(self.id)
+
+    @property
     def editable(self) -> bool:
         return self.status in OPEN_STATUSES
 
@@ -307,6 +318,10 @@ class Order:
     def mark_ready(self) -> None:
         self._require_status(OrderStatus.IN_PREPARATION)
         self.status = OrderStatus.READY
+
+    def ensure_deliverable(self) -> None:
+        """Lanza `invalid_transition` si el pedido no está listo para entregarse (no cambia nada)."""
+        self._require_status(OrderStatus.READY)
 
     def deliver(self, delivered_date: object, today: date) -> None:
         self._require_status(OrderStatus.READY)

@@ -5,10 +5,10 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/service/auth.service';
 import { InventoryApiError } from '../../models/api-error';
 import {
-  MOVEMENT_KIND_LABELS,
   MOVEMENT_STATUS_LABELS,
   SOURCE_ROUTES,
   StockMovementDetail,
+  movementTypeLabel,
 } from '../../models/movement';
 import { MovementsApiService } from '../../services/movements-api.service';
 
@@ -18,7 +18,7 @@ import { MovementsApiService } from '../../services/movements-api.service';
   imports: [RouterLink, DatePipe],
 })
 export class MovementDetailComponent implements OnInit {
-  readonly kindLabels = MOVEMENT_KIND_LABELS;
+  readonly typeLabel = movementTypeLabel;
   readonly statusLabels = MOVEMENT_STATUS_LABELS;
 
   movement: StockMovementDetail | null = null;

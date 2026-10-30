@@ -2,19 +2,26 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
-import { EMPTY, Observable, catchError, finalize, switchMap, tap } from 'rxjs';
+import { EMPTY, Observable, catchError, finalize, firstValueFrom, switchMap, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
   AddItemEvent,
   OrderItemsComponent,
   QuantityChangeEvent,
 } from '../../components/order-items/order-items.component';
+import {
+  DeliveryDialogComponent,
+  STALE_ORDER,
+} from '../../components/delivery-dialog/delivery-dialog.component';
 import { OrderPaymentsComponent } from '../../components/order-payments/order-payments.component';
 import { OrderStatusBadgeComponent } from '../../components/order-status-badge/order-status-badge.component';
 import { OrderSummaryComponent } from '../../components/order-summary/order-summary.component';
 import { PaymentStatusBadgeComponent } from '../../components/payment-status-badge/payment-status-badge.component';
+import { StockOutputCardComponent } from '../../components/stock-output-card/stock-output-card.component';
 import {
+  DeliveryPreview,
   FieldErrors,
   Order,
   OrderApiError,
@@ -51,6 +58,7 @@ const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
     OrderItemsComponent,
     OrderSummaryComponent,
     OrderPaymentsComponent,
+    StockOutputCardComponent,
   ],
 })
 export class OrderDetailComponent implements OnInit {
@@ -68,6 +76,7 @@ export class OrderDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private toastr = inject(ToastrService);
+  private modal = inject(NgbModal);
   private destroyRef = inject(DestroyRef);
 
   /** Id del pedido de la URL; cambia si se navega a otro pedido sin salir de esta pantalla. */
@@ -144,7 +153,21 @@ export class OrderDetailComponent implements OnInit {
 
   async deliver(): Promise<void> {
     const order = this.order;
-    if (!order) return;
+    if (!order || this.busy) return;
+    this.busy = true;
+    let preview: DeliveryPreview;
+    try {
+      preview = await firstValueFrom(this.api.deliveryPreview(order.id));
+    } catch (err) {
+      this.busy = false;
+      this.onError(err as OrderApiError);
+      return;
+    }
+    this.busy = false;
+    if (preview.requiresStockOutput) {
+      await this.deliverWithStock(order, preview);
+      return;
+    }
     const deliveredDate = await this.askDeliveryDate(order);
     if (deliveredDate !== null) {
       this.run(() => this.api.deliver(order.id, deliveredDate), 'Pedido entregado');
@@ -180,6 +203,22 @@ export class OrderDetailComponent implements OnInit {
 
   registerPayment(input: PaymentInput): void {
     this.run(() => this.api.registerPayment(this.order!.id, input), 'Pago registrado');
+  }
+
+  /** Entrega con salida de inventario: el diálogo elige almacén y confirma; devuelve el pedido entregado. */
+  protected async deliverWithStock(order: Order, preview: DeliveryPreview): Promise<void> {
+    const ref = this.modal.open(DeliveryDialogComponent, { size: 'lg', backdrop: 'static', keyboard: false });
+    (ref.componentInstance as DeliveryDialogComponent).init(order, preview);
+    try {
+      this.order = (await ref.result) as Order;
+      this.toastr.success('Pedido entregado');
+    } catch (reason) {
+      // Cancelar no cambia nada; si el pedido cambió en otra parte, se vuelve a leer.
+      if (reason === STALE_ORDER) {
+        this.toastr.error('El pedido cambió desde que se abrió la entrega. Se actualizó con los datos vigentes.');
+        this.reload();
+      }
+    }
   }
 
   /** Diálogo de entrega: fecha real (hoy por defecto) y aviso de saldo que no bloquea. `null` = cancelado. */
