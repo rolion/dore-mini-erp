@@ -16,7 +16,7 @@ from modules.purchases.application.ports import (
     StockProductInfo,
     StockWarehouse,
 )
-from modules.purchases.domain.exceptions import PurchaseValidationError
+from modules.purchases.domain.exceptions import PurchaseValidationError, StockShortage
 from shared import module_gate
 
 INVENTORY_MODULE = 'inventory'
@@ -73,8 +73,22 @@ class StockEntryAdapter:
             except inventory_services.MovementConflict as exc:
                 raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
 
+    def reverse_entries(self, receipt_id: UUID, reason: str, actor: Actor) -> None:
+        try:
+            inventory_services.reverse_source_movements(
+                self.company_id, self.SOURCE_TYPE, str(receipt_id), user_id=actor.user_id,
+                user_name=actor.user_name, reason=reason)
+        except inventory_services.InsufficientStock as exc:
+            raise StockShortage(exc.warehouse_id, [(s.product_id, s.requested, s.available)
+                                                   for s in exc.shortages]) from exc
+        except inventory_services.MovementValidationError as exc:
+            raise PurchaseValidationError({'non_field_errors': [m for ms in exc.errors.values() for m in ms]}) from exc
+        except inventory_services.MovementConflict as exc:
+            raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
+
     def movements_for(self, receipt_id: UUID) -> list[StockEntryMovement]:
         return [StockEntryMovement(m.id, m.product_id, m.product_name, m.unit_abbreviation, m.warehouse_id,
-                                   m.warehouse_name, m.quantity, m.reference)
+                                   m.warehouse_name, m.quantity, m.reference, m.status, m.reversed_by_id,
+                                   m.reversed_by_reference)
                 for m in inventory_services.list_movements_for_source(
                     self.company_id, self.SOURCE_TYPE, str(receipt_id))]

@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
   DOCUMENTAL_LABEL,
   RECEIPT_STATUS_CLASSES,
@@ -10,6 +11,7 @@ import {
   ReceiptApiError,
   SIN_ENTRADA_LABEL,
 } from '../../models/receipt';
+import { ReceiptRevertDialogComponent } from '../../components/receipt-revert-dialog/receipt-revert-dialog.component';
 import { ReceiptsApiService } from '../../services/receipts-api.service';
 
 /** Detalle de una recepción: productos recibidos, almacén y movimientos de inventario vinculados. */
@@ -27,10 +29,34 @@ export class ReceptionDetailComponent implements OnInit {
   receipt: Receipt | null = null;
   loading = true;
   errorMessage = '';
+  successMessage = '';
 
   private api = inject(ReceiptsApiService);
   private route = inject(ActivatedRoute);
+  private modal = inject(NgbModal);
   private destroyRef = inject(DestroyRef);
+
+  /** Por qué una recepción confirmada no se puede revertir (Inventario deshabilitado tras mover stock). */
+  get revertBlockedMessage(): string {
+    const receipt = this.receipt;
+    return receipt?.status === 'confirmed' && !receipt.canRevert
+      ? 'Inventario está deshabilitado: habilítalo para revertir una recepción que movió existencias.'
+      : '';
+  }
+
+  async revert(): Promise<void> {
+    const receipt = this.receipt;
+    if (!receipt?.canRevert) return;
+    const ref = this.modal.open(ReceiptRevertDialogComponent, { backdrop: 'static' });
+    (ref.componentInstance as ReceiptRevertDialogComponent).init(receipt);
+    try {
+      await ref.result;
+    } catch {
+      return; // «Volver»: no cambia nada.
+    }
+    this.successMessage = 'Recepción revertida';
+    this.load();
+  }
 
   ngOnInit(): void {
     this.load();

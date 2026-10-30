@@ -10,6 +10,7 @@ import {
   ReceiptFieldErrors,
   ReceiptInput,
   ReceiptSummary,
+  ReceiptShortage,
   ReceiptSummaryDto,
   ReceptionForm,
   ReceptionFormDto,
@@ -32,6 +33,7 @@ export function toReceiptFieldErrors(body: unknown): ReceiptFieldErrors {
   const record = body as Record<string, unknown>;
   errors.receiptDate = messages(record['receipt_date']);
   errors.warehouseId = messages(record['warehouse_id']);
+  errors.reason = messages(record['reason']);
   const lines = record['lines'];
   if (Array.isArray(lines) && lines.some((line) => typeof line === 'string')) {
     errors.linesMessage = lines.map(String).join(' ');
@@ -44,6 +46,24 @@ export function toReceiptFieldErrors(body: unknown): ReceiptFieldErrors {
   return errors;
 }
 
+function toShortage(body: unknown): ReceiptShortage | null {
+  const record = (body ?? {}) as {
+    warehouse?: { name?: unknown };
+    lines?: { product?: { name?: unknown }; unit?: { abbreviation?: unknown }; requested?: unknown; available?: unknown }[];
+  };
+  if (!Array.isArray(record.lines)) return null;
+  const text = (value: unknown): string => (typeof value === 'string' ? value : '');
+  return {
+    warehouseName: text(record.warehouse?.name),
+    lines: record.lines.map((line) => ({
+      productName: text(line.product?.name),
+      unit: text(line.unit?.abbreviation),
+      requested: text(line.requested),
+      available: text(line.available),
+    })),
+  };
+}
+
 function toError(err: HttpErrorResponse): ReceiptApiError {
   if (err.status === 0) return new ReceiptApiError(RECEIPT_NETWORK_ERROR_MESSAGE, 0);
   if (err.status === 400) {
@@ -52,8 +72,15 @@ function toError(err: HttpErrorResponse): ReceiptApiError {
   }
   if (err.status === 404) return new ReceiptApiError(RECEIPT_NOT_FOUND_MESSAGE, 404);
   if (err.status === 409) {
-    const detail = (err.error as { detail?: unknown } | null)?.detail;
-    return new ReceiptApiError(typeof detail === 'string' ? detail : RECEIPT_NOT_RECEIVABLE_MESSAGE, 409);
+    const body = (err.error ?? {}) as { detail?: unknown; code?: unknown };
+    const code = typeof body.code === 'string' ? body.code : null;
+    return new ReceiptApiError(
+      typeof body.detail === 'string' ? body.detail : RECEIPT_NOT_RECEIVABLE_MESSAGE,
+      409,
+      { lines: [] },
+      code,
+      code === 'insufficient_stock' ? toShortage(err.error) : null,
+    );
   }
   return new ReceiptApiError(RECEIPT_GENERIC_ERROR_MESSAGE, err.status);
 }
@@ -86,7 +113,13 @@ function toReceipt(dto: ReceiptDto): Receipt {
           warehouseName: m.warehouse.name,
           quantity: m.quantity,
           unitAbbreviation: m.unit.abbreviation,
+          status: m.status ?? 'confirmed',
+          reversedBy: m.reversed_by ? { id: m.reversed_by.id, reference: m.reversed_by.reference ?? '' } : null,
         }))
+      : null,
+    canRevert: dto.can_revert ?? false,
+    reversal: dto.reversal
+      ? { revertedAt: dto.reversal.reverted_at, userName: dto.reversal.user_name, reason: dto.reversal.reason }
       : null,
   };
 }
@@ -158,6 +191,14 @@ export class ReceiptsApiService {
     };
     if (input.warehouseId) body['warehouse_id'] = input.warehouseId;
     return this.http.post<ReceiptDto>(`${this.baseUrl}${purchaseId}/receipts/`, body).pipe(
+      map(toReceipt),
+      catchError((err: HttpErrorResponse) => throwError(() => toError(err))),
+    );
+  }
+
+  /** Revierte la recepción completa con motivo; devuelve la recepción ya revertida. */
+  revert(purchaseId: string, receiptId: string, reason: string): Observable<Receipt> {
+    return this.http.post<ReceiptDto>(`${this.baseUrl}${purchaseId}/receipts/${receiptId}/revert/`, { reason }).pipe(
       map(toReceipt),
       catchError((err: HttpErrorResponse) => throwError(() => toError(err))),
     );

@@ -18,6 +18,9 @@
             <h4>{{ adjustment ? adjustment.reference + ': ' + adjustment.product.name : 'Ajuste' }}</h4>
           </div>
           <div class="card-body">
+            @if (successMessage) {
+            <div class="alert alert-success m-4" role="status" data-testid="success">{{ successMessage }}</div>
+            }
             @if (adjustment; as a) {
             <dl class="row m-4">
               <dt class="col-sm-3">Referencia</dt>
@@ -54,6 +57,9 @@
               </dd>
             </dl>
             <div class="m-4">
+              @if (a.status === 'confirmed') {
+              <button type="button" class="btn btn-warning me-2" data-testid="reverse" (click)="reverse()">Revertir</button>
+              }
               <a class="btn btn-light" routerLink="/pocketbiz/inventory/adjustments">Volver</a>
             </div>
             } @else if (loading) {

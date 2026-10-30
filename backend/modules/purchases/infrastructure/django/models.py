@@ -83,6 +83,11 @@ class ReceiptModel(models.Model):
     user_id = models.UUIDField(null=True, blank=True)
     user_name = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+    # Reversión (nulos mientras la recepción está confirmada).
+    reverted_at = models.DateTimeField(null=True, blank=True)
+    reverted_by_user_id = models.UUIDField(null=True, blank=True)
+    reverted_by_name = models.CharField(max_length=200, blank=True, default='')
+    revert_reason = models.CharField(max_length=200, blank=True, default='')
 
     class Meta:
         db_table = 'purchases_receipt'

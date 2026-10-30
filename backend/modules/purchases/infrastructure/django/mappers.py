@@ -85,6 +85,8 @@ def receipt_to_entity(model: ReceiptModel, items: Iterable[ReceiptItemModel]) ->
         user_name=model.user_name, status=ReceiptStatus(model.status), warehouse_id=model.warehouse_id,
         created_at=model.created_at,
         inventory_mode=InventoryMode(model.inventory_mode) if model.inventory_mode else None,
+        reverted_at=model.reverted_at, reverted_by_user_id=model.reverted_by_user_id,
+        reverted_by_name=model.reverted_by_name, revert_reason=model.revert_reason,
         lines=[ReceiptLine(purchase_item_id=i.purchase_item_id, product_id=i.product_id,
                            product_name=i.product_name, unit_abbreviation=i.unit_abbreviation, quantity=i.quantity)
                for i in items])

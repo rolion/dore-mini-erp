@@ -45,6 +45,12 @@ class DjangoReceiptRepository:
             for position, line in enumerate(receipt.lines)])
         return receipt_to_entity(model, model.items.all())
 
+    def mark_reverted(self, receipt: Receipt) -> None:
+        self._receipts().filter(pk=receipt.id).update(
+            status=receipt.status.value, reverted_at=receipt.reverted_at,
+            reverted_by_user_id=receipt.reverted_by_user_id, reverted_by_name=receipt.reverted_by_name,
+            revert_reason=receipt.revert_reason)
+
     def list_for_purchase(self, purchase_id: UUID) -> list[Receipt]:
         models = list(self._receipts().filter(purchase_id=purchase_id).prefetch_related('items'))
         return [receipt_to_entity(m, m.items.all()) for m in models]

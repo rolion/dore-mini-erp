@@ -1,3 +1,4 @@
+import { StockMovementDetail } from '../models/movement';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -106,5 +107,58 @@ describe('MovementsApiService', () => {
     const bare = http.expectOne((r) => r.url === '/api/stock-movements/');
     expect(bare.request.params.has('source_id')).toBeFalse();
     bare.flush({ count: 0, next: null, previous: null, results: [] });
+  });
+
+  it('posts the reason to reverse a movement and maps the counter-movement (API-01)', () => {
+    let counter: StockMovementDetail | undefined;
+    service.reverse('m-1', 'Error de carga').subscribe((result) => (counter = result));
+    const req = http.expectOne('/api/stock-movements/m-1/reverse/');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ reason: 'Error de carga' });
+    req.flush({
+      ...DTO,
+      id: 'm-2',
+      kind: 'in',
+      quantity: '2.5000',
+      reason: 'Error de carga',
+      user: { id: 'u-1', name: 'ana' },
+      reverses: { id: 'm-1' },
+      reversed_by: null,
+      created_at: '2026-10-20T15:31:00Z',
+    });
+    expect(counter?.id).toBe('m-2');
+    expect(counter?.reversesId).toBe('m-1');
+  });
+
+  it('maps reversal info and the expanded counter-movement in the detail (API-02)', () => {
+    let detail: StockMovementDetail | undefined;
+    service.get('m-1').subscribe((result) => (detail = result));
+    http.expectOne('/api/stock-movements/m-1/').flush({
+      ...DTO,
+      quantity: '2.5000',
+      reason: 'Venta',
+      user: { id: 'u-1', name: 'ana' },
+      reverses: null,
+      created_at: '2026-10-20T15:30:01Z',
+      reversal: { allowed: false, code: 'requires_return', message: 'Requiere devolución.' },
+      reversed_by: { id: 'm-2', reference: 'PV-1', occurred_at: '2026-10-21T10:00:00Z', reason: 'Error', user: { name: 'bea' } },
+    });
+    expect(detail?.reversal).toEqual({ allowed: false, code: 'requires_return', message: 'Requiere devolución.' });
+    expect(detail?.reversedBy).toEqual({ id: 'm-2', reference: 'PV-1', occurredAt: '2026-10-21T10:00:00Z', reason: 'Error', userName: 'bea' });
+    expect(detail?.reversedById).toBe('m-2');
+  });
+
+  it('maps the 409 insufficient_stock and the 400 reason errors of a reversal (AC-01, AC-05)', () => {
+    const errors: InventoryApiError[] = [];
+    service.reverse('m-1', '').subscribe({ error: (err: InventoryApiError) => errors.push(err) });
+    http.expectOne('/api/stock-movements/m-1/reverse/').flush({ reason: ['El motivo es obligatorio.'] }, { status: 400, statusText: 'x' });
+    service.reverse('m-1', 'x').subscribe({ error: (err: InventoryApiError) => errors.push(err) });
+    http.expectOne('/api/stock-movements/m-1/reverse/').flush(
+      { detail: 'No hay saldo.', code: 'insufficient_stock', product: { name: 'Arroz' }, warehouse: { name: 'Central' }, unit: { abbreviation: 'kg' }, requested: '10.000', available: '2.000' },
+      { status: 409, statusText: 'x' },
+    );
+    expect(errors[0].fieldErrors['reason']).toEqual(['El motivo es obligatorio.']);
+    expect(errors[1].code).toBe('insufficient_stock');
+    expect(errors[1].insufficientStock?.available).toBe('2.000');
   });
 });

@@ -77,6 +77,14 @@ def _text(value: str | None, field_name: str) -> str:
     return text
 
 
+def _reversal_reason(value: str | None) -> str:
+    """El motivo de una reversión es obligatorio (no vacío tras recortar, hasta 200 caracteres)."""
+    reason = _text(value, 'reason')
+    if not reason:
+        raise MovementValidationError({'reason': ['El motivo es obligatorio.']})
+    return reason
+
+
 @dataclass
 class StockMovement:
     """Registro inmutable de una entrada o salida. Lo único que cambia tras crearlo es `confirmed → reversed`."""
@@ -112,7 +120,7 @@ class StockMovement:
         return self.quantity if self.kind is MovementKind.IN else -self.quantity
 
     def reverse(self, *, occurred_at: datetime, user_id: UUID | None, user_name: str,
-                reason: str = '') -> 'StockMovement':
+                reason: str) -> 'StockMovement':
         """Marca este movimiento como revertido y devuelve el contramovimiento (opuesto, vinculado).
 
         El contramovimiento no repite el origen: se vincula por `reverses_id` y no choca con la idempotencia.
@@ -121,9 +129,29 @@ class StockMovement:
             raise MovementConflict('already_reversed', 'El movimiento ya fue revertido.')
         if self.reverses_id is not None:
             raise MovementConflict('cannot_reverse_reversal', 'Un contramovimiento no se puede revertir.')
+        reason = _reversal_reason(reason)
         self.status = MovementStatus.REVERSED
         return StockMovement(
             id=uuid4(), product_id=self.product_id, warehouse_id=self.warehouse_id, kind=self.kind.opposite,
             quantity=self.quantity, occurred_at=occurred_at, user_id=user_id, user_name=_text(user_name, 'user_name'),
-            reference=self.reference, reason=_text(reason, 'reason') or 'Reversión de movimiento',
+            reference=self.reference, reason=reason,
             source=None, reverses_id=self.id)
+
+
+_BLOCKED_SOURCES = {
+    'sales_order': ('requires_return',
+                    'Las salidas por venta requieren una devolución, que aún no está disponible.'),
+    'purchase_receipt': ('reverse_from_origin',
+                         'Este movimiento proviene de una recepción: corrígelo desde la recepción en Compras.'),
+}
+
+
+def reversal_block(movement: StockMovement) -> tuple[str, str] | None:
+    """`(código, mensaje)` si el movimiento no se puede revertir desde Inventario; `None` si se puede."""
+    if movement.status is MovementStatus.REVERSED:
+        return 'already_reversed', 'El movimiento ya fue revertido.'
+    if movement.reverses_id is not None:
+        return 'cannot_reverse_reversal', 'Un contramovimiento no se puede revertir.'
+    if movement.source is not None and movement.source.type in _BLOCKED_SOURCES:
+        return _BLOCKED_SOURCES[movement.source.type]
+    return None

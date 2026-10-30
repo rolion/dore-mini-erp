@@ -183,6 +183,11 @@ class DjangoStockMovementRepository:
         models = self._movements().filter(source_type=source_type, source_id=source_id).order_by('product_id')
         return [to_entity(model) for model in models]
 
+    def counters_of(self, movement_ids) -> dict[UUID, StockMovement]:
+        """Contramovimiento de cada movimiento revertido, por id del original."""
+        models = self._movements().filter(reverses_id__in=list(movement_ids))
+        return {model.reverses_id: to_entity(model) for model in models}
+
     def products_with_history(self, warehouse_id: UUID, product_ids) -> set[UUID]:
         return set(self._movements().filter(warehouse_id=warehouse_id, product_id__in=list(product_ids))
                    .values_list('product_id', flat=True))

@@ -17,6 +17,12 @@ class ReceiptInputSerializer(serializers.Serializer):
     lines = ReceiptLineInputSerializer(many=True, required=False)
 
 
+class ReceiptRevertSerializer(serializers.Serializer):
+    """Valida forma y tipos; el motivo obligatorio y su largo los aplica el dominio."""
+
+    reason = serializers.CharField(required=False, allow_blank=True, trim_whitespace=False, max_length=2000)
+
+
 def _unit(abbreviation) -> dict:
     return {'abbreviation': abbreviation}
 
@@ -43,6 +49,9 @@ def receipt_representation(detail) -> dict:
             'quantity': quantity(m.quantity),
             'unit': _unit(m.unit_abbreviation),
             'reference': m.reference,
+            'status': m.status,
+            'reversed_by': ({'id': m.reversed_by_id, 'reference': m.reversed_by_reference}
+                            if m.reversed_by_id else None),
         } for m in detail.movements]
     return {
         'id': receipt.id,
@@ -56,6 +65,9 @@ def receipt_representation(detail) -> dict:
                       if receipt.warehouse_id is not None and detail.movements is not None else None),
         'inventory_mode': receipt.inventory_mode.value if receipt.inventory_mode else None,
         'inventory_available': detail.inventory_available,
+        'can_revert': detail.can_revert,
+        'reversal': ({'reverted_at': receipt.reverted_at, 'user_name': receipt.reverted_by_name,
+                      'reason': receipt.revert_reason} if receipt.reverted_at else None),
         'lines': [{
             'item_id': line.purchase_item_id,
             'product': {'id': line.product_id, 'name': line.product_name},

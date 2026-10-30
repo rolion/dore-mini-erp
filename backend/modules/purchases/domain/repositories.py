@@ -44,6 +44,10 @@ class ReceiptRepository(Protocol):
 
     def save(self, receipt: Receipt) -> Receipt: ...
 
+    def mark_reverted(self, receipt: Receipt) -> None:
+        """Persiste el estado y los datos de la reversión de una recepción ya guardada."""
+        ...
+
     def list_for_purchase(self, purchase_id: UUID) -> Sequence[Receipt]:
         """Recepciones de la compra: fecha desc, creación desc, id."""
         ...

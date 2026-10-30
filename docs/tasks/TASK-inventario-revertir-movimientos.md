@@ -1,6 +1,6 @@
 # TASK-inventario-revertir-movimientos: Revertir movimientos mediante contramovimientos (PB-INV-008)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-inventario-revertir-movimientos
@@ -15,6 +15,7 @@
 | 2026-10-30 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-10-30 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 
 ## Investigación
 
@@ -92,7 +93,20 @@ Ver [PLAN-2026-10-30-inventario-revertir-movimientos](../plans/PLAN-2026-10-30-i
 Decisiones tomadas sin consultar (constan en el PLAN/ADR, ninguna cambia un criterio de la tarjeta): apertura de existencias y movimientos sin origen son revertibles; recepción documental revertible sin efecto de stock; recepción en modo inventario con Inventario deshabilitado no es revertible (409 `inventory_unavailable`); sin permisos nuevos (solo existe el rol admin).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Reversión de movimientos manuales en Inventario y reversión completa de recepciones en Compras, según PLAN v1.
+
+**Backend Inventario** (INV-01..04, AC-01..05, AC-11..14): `StockMovement.reverse` exige motivo (≤200); `reversal_block` decide por origen/estado; `ReverseMovement(manual_only)`; nuevo `ReverseSourceMovements` (todo-o-nada, bloqueo por almacén en orden, política de stock sumada por producto/almacén); fachada `reverse_source_movements`; `POST /api/stock-movements/<id>/reverse/`; el detalle añade `reversal` y expande `reversed_by` (id, referencia, fecha, usuario, motivo). Tests: `inventory/tests/test_reversal.py` (+ ajustes a tests existentes para el motivo obligatorio).
+
+**Backend Compras** (INV-05..07, AC-06..10, AC-13, AC-14): migración `0007_receipt_reversal` (aditiva); `Receipt.revert`/`moved_stock`; `Purchase.recompute_reception`; puerto `StockEntry.reverse_entries` y adaptador; caso de uso `RevertReception` (compra bloqueada → almacén bloqueado; documental sin stock; `inventory_unavailable`; 409 `insufficient_stock` con todas las líneas); `POST /api/purchases/<id>/receipts/<rid>/revert/`; el detalle añade `can_revert`, `reversal` y estado/contramovimiento por movimiento. Tests: `purchases/tests/test_receipt_revert.py` (dominio, aplicación, API, concurrencia, rollback entre módulos).
+
+**Frontend** (AC-15, AC-16, UI-01..05): `MovementReverseDialogComponent` (movimiento y ajuste) y `ReceiptRevertDialogComponent`; botón «Revertir»/«Revertir recepción» según `reversal.allowed`/`can_revert`; bloque «Reversión»; columna «Estado» de movimientos en la recepción. Pantalla de referencia: detalle (`product-detail`) y diálogo de `purchase-cancel-dialog`; se reutilizó `app-insufficient-stock-alert`. `docs/design/design-system.md` documenta el patrón «Diálogo de acción irreversible con motivo».
+
+**Verificación propia (no es el Quality Gate).** Backend `manage.py test`: 1233 tests OK con PostgreSQL. Karma (`features/`): mis specs pasan; 71 fallos `should create` de la plantilla Oreva (sin `ActivatedRoute`) y `app.component.spec.ts` (`title`) ya existían y no se tocaron (este último impide compilar `ng test` completo; se movió temporalmente para ejecutar). `ng lint` sin hallazgos en archivos del cambio.
+
+**Desviaciones del plan.** (1) Motivo obligatorio también en la fachada `reverse_movement` (se actualizaron llamadas de tests). (2) El diálogo ejecuta la llamada a la API y se cierra con el resultado, para mostrar errores dentro del diálogo sin perder el motivo. (3) El detalle de ajuste ofrece «Revertir» siempre que esté confirmado; el servidor es la barrera. (4) Se eligió `RevertStockShortage` en Compras para llevar las líneas ya nombradas (nombre/unidad salen de las líneas de la recepción).
+
+**Deuda técnica.** Sin enlace desde un movimiento de compra a su recepción (falta el id de compra). Suites de plantilla y `app.component.spec.ts` rotas de antes. Para correr tests en este worktree se copió `backend/.env` (ignorado por git, con autorización de la persona) y se enlazó `node_modules` del checkout principal; ninguno se versiona.
 
 ## Review
 _Pendiente_

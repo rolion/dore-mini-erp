@@ -50,6 +50,9 @@ class StockEntryMovement:
     warehouse_name: str
     quantity: Decimal
     reference: str = ''
+    status: str = 'confirmed'
+    reversed_by_id: UUID | None = None
+    reversed_by_reference: str = ''
 
 
 class StockEntry(Protocol):
@@ -67,3 +70,7 @@ class StockEntry(Protocol):
         ...
 
     def movements_for(self, receipt_id: UUID) -> list[StockEntryMovement]: ...
+
+    def reverse_entries(self, receipt_id: UUID, reason: str, actor: Actor) -> None:
+        """Revierte todas las entradas de la recepción, todas o ninguna; lanza `StockShortage` si falta saldo."""
+        ...

@@ -1,0 +1,41 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">Revertir movimiento</h4>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (movement; as m) {
+    <dl class="row mb-3">
+      <dt class="col-sm-4">Referencia</dt>
+      <dd class="col-sm-8" data-testid="reference">{{ m.reference || '—' }}</dd>
+      <dt class="col-sm-4">Tipo</dt>
+      <dd class="col-sm-8" data-testid="type">{{ m.typeLabel }}</dd>
+      <dt class="col-sm-4">Producto</dt>
+      <dd class="col-sm-8" data-testid="product">{{ m.productName }}</dd>
+      <dt class="col-sm-4">Almacén</dt>
+      <dd class="col-sm-8" data-testid="warehouse">{{ m.warehouseName }}</dd>
+      <dt class="col-sm-4">Cantidad</dt>
+      <dd class="col-sm-8" data-testid="quantity">{{ m.quantity }} {{ m.unitAbbreviation }}</dd>
+    </dl>
+    <p class="alert alert-info" role="status" data-testid="effect">{{ effect }} El movimiento original se conserva como «Revertido» y no se podrá revertir otra vez.</p>
+    }
+    @if (stockShortage; as shortage) {
+    <app-insufficient-stock-alert [info]="shortage" />
+    }
+    @if (errorMessage) {
+    <div class="alert alert-warning" role="alert" data-testid="error">{{ errorMessage }}</div>
+    }
+    <div class="form-group">
+      <label for="reverse-reason">Motivo de la reversión <span class="text-danger">*</span></label>
+      <textarea id="reverse-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="maxLength"></textarea>
+      <small class="form-text text-muted" data-testid="counter">{{ form.controls.reason.value.length }} / {{ maxLength }}</small>
+      @if (reasonError) {
+      <small class="form-text text-danger d-block" data-testid="reason-error">{{ reasonError }}</small>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-danger" data-testid="reverse-movement" [disabled]="!canSubmit">{{ saving ? 'Revirtiendo…' : 'Revertir movimiento' }}</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Volver</button>
+  </div>
+</form>

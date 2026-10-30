@@ -35,9 +35,21 @@ export interface ReceiptLine {
   stockEntry: boolean | null;
 }
 
+/** Longitud máxima del motivo de una reversión (la misma que valida el servidor). */
+export const REVERT_REASON_MAX_LENGTH = 200;
+
+export interface ReceiptReversal {
+  revertedAt: string;
+  userName: string;
+  reason: string;
+}
+
 export interface ReceiptMovement {
   id: string;
   reference: string;
+  /** `confirmed` o `reversed` (el contramovimiento se enlaza en `reversedBy`). */
+  status: string;
+  reversedBy: { id: string; reference: string } | null;
   productName: string;
   warehouseName: string;
   quantity: string;
@@ -64,6 +76,9 @@ export interface Receipt {
   inventoryAvailable: boolean;
   /** `null` si la recepción fue documental; `[]` si no generó entradas. */
   movements: ReceiptMovement[] | null;
+  /** El servidor permite revertirla (confirmada y, si movió stock, con Inventario habilitado). */
+  canRevert: boolean;
+  reversal: ReceiptReversal | null;
 }
 
 export interface ReceptionWarehouse {
@@ -111,7 +126,22 @@ export interface ReceiptFieldErrors {
   warehouseId?: string;
   /** Mensaje general de `lines` (p. ej. «Indica al menos un producto recibido.»). */
   linesMessage?: string;
+  /** Error del motivo al revertir. */
+  reason?: string;
   lines: { itemId?: string; quantity?: string }[];
+}
+
+/** Línea sin saldo de un 409 `insufficient_stock` al revertir (cantidades como texto decimal). */
+export interface ReceiptShortageLine {
+  productName: string;
+  unit: string;
+  requested: string;
+  available: string;
+}
+
+export interface ReceiptShortage {
+  warehouseName: string;
+  lines: ReceiptShortageLine[];
 }
 
 export class ReceiptApiError extends Error {
@@ -119,6 +149,9 @@ export class ReceiptApiError extends Error {
     message: string,
     readonly status: number,
     readonly fieldErrors: ReceiptFieldErrors = { lines: [] },
+    /** Código estable de un 409: `insufficient_stock`, `already_reverted`, `inventory_unavailable`... */
+    readonly code: string | null = null,
+    readonly shortage: ReceiptShortage | null = null,
   ) {
     super(message);
     this.name = 'ReceiptApiError';
@@ -161,8 +194,12 @@ export interface ReceiptDto {
         quantity: string;
         unit: { abbreviation: string };
         reference?: string;
+        status?: string;
+        reversed_by?: { id: string; reference?: string } | null;
       }[]
     | null;
+  can_revert?: boolean;
+  reversal?: { reverted_at: string; user_name: string; reason: string } | null;
 }
 
 export interface ReceptionFormDto {

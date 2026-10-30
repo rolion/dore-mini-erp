@@ -51,6 +51,8 @@ export function makeReceipt(overrides: Partial<Receipt> = {}): Receipt {
     inventoryMode: null,
     inventoryAvailable: false,
     movements: null,
+    canRevert: true,
+    reversal: null,
     ...overrides,
   };
 }

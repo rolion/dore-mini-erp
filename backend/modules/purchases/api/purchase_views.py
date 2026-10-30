@@ -1,3 +1,4 @@
+from decimal import Decimal
 from uuid import UUID
 
 from django.db import transaction
@@ -24,9 +25,12 @@ from modules.purchases.domain.exceptions import (
     PurchaseNotPayable,
     PurchaseNotReceivable,
     PurchaseValidationError,
+    ReceiptAlreadyReverted,
     ReceiptConflict,
+    ReceiptInventoryUnavailable,
     ReceiptNotFound,
 )
+from modules.purchases.application.receipt_commands import RevertStockShortage
 from modules.purchases.infrastructure.adapters import ProductCatalogAdapter
 from modules.purchases.infrastructure.django.payment_repository import DjangoPaymentRepository
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
@@ -51,6 +55,9 @@ NOT_PAYABLE = 'Solo una compra confirmada admite pagos.'
 PAYMENT_CONFLICT = 'Ese identificador de pago ya pertenece a otra compra.'
 RECEIPT_NOT_FOUND = 'Recepción no encontrada.'
 RECEIPT_CONFLICT = 'Ese identificador de recepción ya pertenece a otra compra.'
+RECEIPT_ALREADY_REVERTED = 'La recepción ya fue revertida.'
+INVENTORY_UNAVAILABLE = ('La recepción movió stock y el módulo Inventario está deshabilitado: '
+                         'habilítalo para revertirla.')
 REQUIRED_MODULES = ('purchases',)
 
 
@@ -79,6 +86,22 @@ def _items(validated: dict) -> dict:
     return {'items': [ItemInput(i['product_id'], i['quantity'], i['unit_price']) for i in validated['items']]}
 
 
+def _quantity(value) -> str:
+    return format(value.quantize(Decimal('0.001')), 'f')
+
+
+def _shortage_payload(exc: RevertStockShortage) -> dict:
+    """409 `insufficient_stock`: almacén y todas las líneas sin saldo (producto, solicitado, disponible)."""
+    return {
+        'code': 'insufficient_stock', 'detail': str(exc),
+        'warehouse': {'id': str(exc.warehouse_id), 'name': exc.warehouse_name},
+        'lines': [{'product': {'id': str(line.product_id), 'name': line.product_name},
+                   'unit': {'abbreviation': line.unit_abbreviation},
+                   'requested': _quantity(line.requested), 'available': _quantity(line.available)}
+                  for line in exc.lines],
+    }
+
+
 def _run(callable_, **kwargs):
     """Ejecuta un caso de uso en una transacción (el bloqueo de fila de la edición la exige) traduciendo errores."""
     try:
@@ -104,6 +127,12 @@ def _run(callable_, **kwargs):
         raise Conflict({'code': 'receipt_conflict', 'detail': RECEIPT_CONFLICT}) from exc
     except PurchaseInvalidTransition as exc:
         raise Conflict(CANCELLED_NOT_CONFIRMABLE) from exc
+    except ReceiptAlreadyReverted as exc:
+        raise Conflict({'code': 'already_reverted', 'detail': RECEIPT_ALREADY_REVERTED}) from exc
+    except ReceiptInventoryUnavailable as exc:
+        raise Conflict({'code': 'inventory_unavailable', 'detail': INVENTORY_UNAVAILABLE}) from exc
+    except RevertStockShortage as exc:
+        raise Conflict(_shortage_payload(exc)) from exc
 
 
 def _receipts(request) -> DjangoReceiptRepository:

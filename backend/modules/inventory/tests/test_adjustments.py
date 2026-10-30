@@ -215,7 +215,7 @@ class AdjustmentApiTests(StockApiTestCase):
         from modules.inventory.services import reverse_movement
         product = self.stocked('10')
         body = self.adjust(product, '7', '10').json()
-        reverse_movement(self.company.id, UUID(body['movement']['id']), user_id=None, user_name='ana')
+        reverse_movement(self.company.id, UUID(body['movement']['id']), user_id=None, user_name='ana', reason='Corrección')
         self.assertEqual(self.client.get(f'{ADJUSTMENTS}{body["id"]}/').json()['status'], 'reversed')
         self.assertEqual(self.client.get(ADJUSTMENTS).json()['results'][0]['status'], 'reversed')
 

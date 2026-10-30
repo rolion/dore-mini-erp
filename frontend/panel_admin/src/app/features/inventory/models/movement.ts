@@ -60,10 +60,31 @@ export interface StockMovement {
   source: MovementSource | null;
 }
 
+/** Longitud máxima del motivo de una reversión (la misma que valida el servidor). */
+export const REVERSAL_REASON_MAX_LENGTH = 200;
+
+/** Si el movimiento se puede revertir desde Inventario; `message` explica la restricción cuando no. */
+export interface MovementReversalInfo {
+  allowed: boolean;
+  code: string | null;
+  message: string | null;
+}
+
+/** Contramovimiento que revirtió al movimiento. */
+export interface MovementReversedBy {
+  id: string;
+  reference: string;
+  occurredAt: string | null;
+  reason: string;
+  userName: string;
+}
+
 export interface StockMovementDetail extends StockMovement {
   quantity: string;
   reason: string;
   user: { id: string | null; name: string };
+  reversal: MovementReversalInfo;
+  reversedBy: MovementReversedBy | null;
   reversedById: string | null;
   reversesId: string | null;
   createdAt: string;
@@ -101,7 +122,14 @@ export interface StockMovementDetailDto extends StockMovementDto {
   quantity: string;
   reason: string;
   user: { id: string | null; name: string };
-  reversed_by: { id: string } | null;
+  reversed_by: {
+    id: string;
+    reference?: string;
+    occurred_at?: string;
+    reason?: string;
+    user?: { name: string };
+  } | null;
   reverses: { id: string } | null;
+  reversal?: MovementReversalInfo;
   created_at: string;
 }
