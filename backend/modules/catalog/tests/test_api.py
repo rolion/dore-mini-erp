@@ -59,10 +59,10 @@ class CreateProductTests(ProductApiTestCase):
 
     def test_invalid_price_is_rejected(self):  # AC-03 / EDGE-02
         for price in (None, '', 'abc', '-1', '35.555', '10000000000.00'):
-            response = self.client.post(LIST_URL, {'name': 'x', 'sale_price': price}, format='json')
+            response = self.client.post(LIST_URL, {'name': 'x', 'category': 'finished', 'sale_price': price}, format='json')
             self.assertEqual(response.status_code, 400, price)
             self.assertIn('sale_price', response.json())
-        response = self.client.post(LIST_URL, {'name': 'x'}, format='json')
+        response = self.client.post(LIST_URL, {'name': 'x', 'category': 'finished'}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn('sale_price', response.json())
         self.assertEqual(ProductModel.objects.count(), 0)

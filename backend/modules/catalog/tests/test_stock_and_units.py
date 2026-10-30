@@ -151,7 +151,7 @@ class ProductStockApiTests(StockApiTestCase):
         self.assertIsNone(body['base_unit_id'])
 
     def test_stock_without_unit_is_rejected(self):  # AC-04
-        response = self.client.post(PRODUCTS, {'name': 'x', 'sale_price': '1', 'tracks_stock': True}, format='json')
+        response = self.client.post(PRODUCTS, {'name': 'x', 'sale_price': '1', 'category': 'finished', 'tracks_stock': True}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn('base_unit_id', response.json())
         self.assertEqual(ProductModel.objects.count(), 0)
@@ -165,7 +165,7 @@ class ProductStockApiTests(StockApiTestCase):
         self.client.post(f"{UNITS}{kg['id']}/deactivate/")
         for unit_id in (kg['id'], str(uuid4())):
             response = self.client.post(
-                PRODUCTS, {'name': 'x', 'sale_price': '1', 'tracks_stock': True, 'base_unit_id': unit_id}, format='json')
+                PRODUCTS, {'name': 'x', 'sale_price': '1', 'category': 'finished', 'tracks_stock': True, 'base_unit_id': unit_id}, format='json')
             self.assertEqual(response.status_code, 400, unit_id)
             self.assertIn('base_unit_id', response.json())
 
@@ -176,7 +176,7 @@ class ProductStockApiTests(StockApiTestCase):
         foreign = self.unit('Litro', 'l')
         authenticate(self.client, make_admin(self.company, username='ana2'))
         response = self.client.post(
-            PRODUCTS, {'name': 'x', 'sale_price': '1', 'tracks_stock': True, 'base_unit_id': foreign['id']},
+            PRODUCTS, {'name': 'x', 'sale_price': '1', 'category': 'finished', 'tracks_stock': True, 'base_unit_id': foreign['id']},
             format='json')
         self.assertEqual(response.status_code, 400)
 
@@ -215,7 +215,7 @@ class ProductStockApiTests(StockApiTestCase):
         set_enabled(self.company, DEFAULT_ENABLED_KEYS)
         detail = f"{PRODUCTS}{created['id']}/"
         self.assertEqual(self.client.get(detail).json()['base_unit']['abbreviation'], 'kg')
-        response = self.client.post(PRODUCTS, {'name': 'x', 'sale_price': '1', 'tracks_stock': True,
+        response = self.client.post(PRODUCTS, {'name': 'x', 'sale_price': '1', 'category': 'finished', 'tracks_stock': True,
                                                'base_unit_id': kg['id']}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn('tracks_stock', response.json())

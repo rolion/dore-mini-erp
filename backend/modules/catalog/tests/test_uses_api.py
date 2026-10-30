@@ -8,6 +8,8 @@ from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.catalog.infrastructure.django.models import ProductModel
+from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
+from modules.modularity.tests.test_enforcement import set_enabled
 from modules.catalog.services import ProductForPurchase, get_product_for_purchase, get_product_for_sale
 
 LIST_URL = '/api/products/'
@@ -51,6 +53,7 @@ class ProductUsesApiTests(APITestCase):
         self.post({'name': 'Insumo', 'category': 'raw_material', 'can_sell': False})
 
     def test_patch_uses_and_category_keeps_stock_unit_and_price(self):  # AC-04, AC-07, INV-04
+        set_enabled(self.company, [*DEFAULT_ENABLED_KEYS, 'inventory'])
         unit = self.client.post('/api/units/', {'name': 'Unidad', 'abbreviation': 'u'}, format='json').json()
         product = self.post({'name': 'Cuaderno', 'category': 'finished', 'sale_price': '5',
                              'tracks_stock': True, 'base_unit_id': unit['id']})

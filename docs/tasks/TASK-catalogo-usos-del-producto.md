@@ -82,9 +82,9 @@ Ver `docs/adr/ADR-catalogo-usos-del-producto-modelo-migracion-y-contrato.md`.
 
 **Pantalla de referencia / compartidos.** Se siguió `product-form` (sección condicionada) y `product-list` del sistema de diseño; no se crearon componentes compartidos nuevos (badges `badge-outline`).
 
-**Estado de las pruebas (no es el Quality Gate).**
-- Corridas OK: dominio y casos de uso (34 pruebas, `SimpleTestCase`) y Karma de `features/products` + `order-items` (70 pruebas; se excluyó `app.component.spec.ts`, que ya fallaba en `main` por `app.title`).
-- **NO ejecutadas:** pruebas con PostgreSQL (`test_uses_api.py`, `test_api.py` de catalog/ventas, inventario, migración): el worktree no tiene `backend/.env` y no se leyó el de `main`; Docker no estaba disponible. Deben correrse con `python manage.py test` antes de aprobar.
+**Estado de las pruebas (corrida propia, no es el Quality Gate).**
+- Backend con PostgreSQL: `python manage.py test` → 962 pruebas OK (incluye migración 0003→0004 y reversa). Se observó una intermitencia preexistente en `sales.tests.test_repository.test_item_order_is_preserved` (orden de ítems), reproducida también sin estos cambios; y dos pruebas de `modularity` fallaron una vez por orden/concurrencia y no se repitieron.
+- Frontend: Karma de `features/products` + `order-items` → 70 pruebas OK (se excluyó `app.component.spec.ts`, roto en `main` por `app.title`).
 
 **Desviaciones respecto al plan.** Ninguna de alcance. Detalles: `Product.change_price` delega en `set_uses`; los fakes y fixtures de tests existentes recibieron `category`.
 
