@@ -1,6 +1,6 @@
 # REV-2026-10-30-inventario-revertir-movimientos-02: Cobertura incompleta de concurrencia y de «sin rol» en la reversión de recepciones
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-30-inventario-revertir-movimientos.md (v1)

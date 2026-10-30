@@ -31,6 +31,13 @@ function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolea
   return !item.module || (enabled !== null && enabled.has(item.module));
 }
 
+/** Ítems visibles según los módulos habilitados, también dentro de los submenús (p. ej. «Valoración» con Costeo). */
+export function visibleRoutes(routes: RouteInfo[], enabled: ReadonlySet<string> | null): RouteInfo[] {
+  return routes
+    .filter((item) => item && isVisible(item, enabled))
+    .map((item) => ({ ...item, submenu: item.submenu.filter((sub) => isVisible(sub, enabled)) }));
+}
+
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
@@ -120,7 +127,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       combineLatest([this.sidebarService.getRouteInfo(), this.modulesService.enabledKeys$])
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(([routes, enabled]) => {
-          this.sidebarItems = routes.filter((sidebarItem) => sidebarItem && isVisible(sidebarItem, enabled));
+          this.sidebarItems = visibleRoutes(routes, enabled);
         });
     }
     this.initLeftSidebar();

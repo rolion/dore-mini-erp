@@ -1,6 +1,6 @@
 # REV-2026-10-30-inventario-revertir-movimientos-01: Rutas de API del plan no coinciden con las implementadas y no se documenta la desviación
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-10-30-inventario-revertir-movimientos.md (v1)

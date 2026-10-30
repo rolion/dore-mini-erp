@@ -2,6 +2,7 @@
 
 Es la única vía de entrada entre módulos: recibe `company_id` como primer argumento y devuelve DTO inmutables.
 """
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -201,3 +202,55 @@ def list_movements_for_source(company_id: UUID, source_type: str, source_id: str
         occurred_at=m.occurred_at, reference=m.reference, user_name=m.user_name, status=m.status.value,
         reversed_by_id=counters[m.id].id if m.id in counters else None,
         reversed_by_reference=counters[m.id].reference if m.id in counters else '') for m in movements]
+
+
+# --- Existencias de toda la empresa (Costeo) -------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class WarehouseQuantity:
+    warehouse_id: UUID
+    warehouse_name: str
+    quantity: Decimal
+
+
+@dataclass(frozen=True)
+class ProductStock:
+    """Existencia de un producto en toda la empresa: total y desglose por almacén (solo almacenes con saldo)."""
+
+    product_id: UUID
+    product_name: str
+    unit_abbreviation: str | None
+    quantity: Decimal
+    warehouses: tuple[WarehouseQuantity, ...]
+
+
+def lock_company_stock(company_id: UUID) -> AbstractContextManager[None]:
+    """Transacción que serializa los movimientos de todos los almacenes de la empresa mientras dura."""
+    return DjangoStockMovementRepository(company_id).locked_company()
+
+
+def get_company_stock(company_id: UUID) -> list[ProductStock]:
+    """Productos con saldo distinto de cero en algún almacén, con su total y desglose, por nombre."""
+    entries = [e for e in DjangoStockMovementRepository(company_id).list_balances()[:] if e.quantity != 0]
+    if not entries:
+        return []
+    products = CatalogProductDirectory(company_id).get_products({e.product_id for e in entries})
+    grouped: dict[UUID, list[WarehouseQuantity]] = {}
+    for entry in entries:
+        grouped.setdefault(entry.product_id, []).append(
+            WarehouseQuantity(entry.warehouse_id, entry.warehouse_name, entry.quantity))
+    result = []
+    for product_id, warehouses in grouped.items():
+        info = products.get(product_id)
+        result.append(ProductStock(
+            product_id=product_id, product_name=info.name if info else '',
+            unit_abbreviation=info.unit_abbreviation if info else None,
+            quantity=sum((w.quantity for w in warehouses), Decimal('0')), warehouses=tuple(warehouses)))
+    return sorted(result, key=lambda p: (p.product_name.lower(), str(p.product_id)))
+
+
+def get_product_names(company_id: UUID, product_ids) -> dict[UUID, tuple[str, str | None]]:
+    """Nombre y unidad base de los productos indicados (para mostrar datos ya registrados por otros módulos)."""
+    found = CatalogProductDirectory(company_id).get_products(product_ids)
+    return {pid: (p.name, p.unit_abbreviation) for pid, p in found.items()}

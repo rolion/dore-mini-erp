@@ -10,7 +10,7 @@ El libro de movimientos es inmutable: lo único que cambia es `confirmed → rev
 ## Decisión
 
 **1. Inventario: reversión manual por movimiento.**
-- `POST /api/inventory/movements/<id>/reverse/` con `{ "reason": "<1..200 caracteres>" }` → `200` con el contramovimiento (misma representación de detalle). Módulo requerido: `inventory`.
+- `POST /api/stock-movements/<id>/reverse/` con `{ "reason": "<1..200 caracteres>" }` → `200` con el contramovimiento (misma representación de detalle). Módulo requerido: `inventory`.
 - Orígenes permitidos: sin origen (manual), `inventory_adjustment` y `inventory_opening`. Rechazos `409` con `code`: `requires_return` (`sales_order`: «requiere una devolución, fuera de alcance»), `reverse_from_origin` (`purchase_receipt`: «corrígelo desde la recepción en Compras»), `already_reversed`, `cannot_reverse_reversal`, `insufficient_stock` (con producto, almacén y saldo vía `InsufficientStockConflict`). `404` si el movimiento no es de la empresa. `400` por motivo vacío o largo.
 - La restricción por origen vive en el caso de uso (`ReverseMovement` recibe el conjunto de orígenes permitidos; el endpoint pasa los manuales), no en el agregado: el agregado sigue sabiendo revertir cualquier movimiento, y la regla «de dónde se corrige» es política de aplicación.
 - `StockMovement.reverse` exige motivo no vacío (≤200). El texto por defecto desaparece.

@@ -17,6 +17,7 @@
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación y pruebas escritas | delivery-build |
 | 2026-10-30 | REVIEW → PUBLISH | Quality Gate ciclo 1: PASS; 3 hallazgos Low abiertos (REV-01..03); revisión visual en navegador no verificada | delivery-publish |
+| 2026-10-30 | PUBLISH → PUBLISH | REV-01..03 (Low) corregidos a pedido del usuario; main fusionada (conflicto en `inventory/services.py`) | delivery-build |
 
 ## Investigación
 
@@ -89,7 +90,7 @@ Ver [DDR-inventario-revertir-movimientos-dialogo-reversion](../design/DDR-invent
 Ver [ADR-inventario-revertir-movimientos-contramovimientos](../adr/ADR-inventario-revertir-movimientos-contramovimientos.md).
 
 ## Plan
-Ver [PLAN-2026-10-30-inventario-revertir-movimientos](../plans/PLAN-2026-10-30-inventario-revertir-movimientos.md) (v1, COMPLETO). **Specification readiness: READY.**
+Ver [PLAN-2026-10-30-inventario-revertir-movimientos](../plans/PLAN-2026-10-30-inventario-revertir-movimientos.md) (v2, COMPLETO). **Specification readiness: READY.**
 
 Decisiones tomadas sin consultar (constan en el PLAN/ADR, ninguna cambia un criterio de la tarjeta): apertura de existencias y movimientos sin origen son revertibles; recepción documental revertible sin efecto de stock; recepción en modo inventario con Inventario deshabilitado no es revertible (409 `inventory_unavailable`); sin permisos nuevos (solo existe el rol admin).
 
@@ -113,7 +114,7 @@ Decisiones tomadas sin consultar (constan en el PLAN/ADR, ninguna cambia un crit
 
 **Quality Gate ciclo 1 (subagente aislado): PASS.** Sin Critical/High/Medium. Evidencia: backend `manage.py test` 1233 tests OK; `makemigrations --check` sin cambios; `npm run lint` limpio; `npm run build` OK; Karma 940 OK / 71 FAILED, todos "should create" de la plantilla Oreva ajenos al diff (preexistentes); bandit sin hallazgos. No realizados: ruff (no instalado), `npm audit` (sin lockfile), **revisión visual en navegador (no verificada)**. Límites DDD, orden de bloqueos y atomicidad revisados sin hallazgos.
 
-Hallazgos Low abiertos (no bloquean):
+Hallazgos Low (corregidos después a pedido del usuario: rutas del PLAN v2, pruebas de concurrencia con libro real y de 403, rótulo «Contramovimiento · referencia»):
 - [REV-01](../reviews/REV-2026-10-30-inventario-revertir-movimientos-01.md) SPECIFICATION: el PLAN cita `/api/inventory/movements/...` pero la ruta real es `/api/stock-movements/...`.
 - [REV-02](../reviews/REV-2026-10-30-inventario-revertir-movimientos-02.md) IMPLEMENTATION: la concurrencia de `RevertReception` se prueba solo con stock documental y falta prueba de 403 por rol.
 - [REV-03](../reviews/REV-2026-10-30-inventario-revertir-movimientos-03.md) DESIGN: el contramovimiento hereda la referencia del original.

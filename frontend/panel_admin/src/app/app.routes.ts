@@ -139,6 +139,16 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'inventory/valuation',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'costing' },
+                loadComponent: () =>
+                    import('./features/inventory/pages/valuation/valuation.component').then(
+                        (m) => m.ValuationComponent
+                    ),
+            },
+            {
                 path: 'inventory/configuration',
                 canActivate: [moduleGuard],
                 data: { module: 'inventory' },

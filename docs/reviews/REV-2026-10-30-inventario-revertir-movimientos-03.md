@@ -1,6 +1,6 @@
 # REV-2026-10-30-inventario-revertir-movimientos-03: La «referencia del contramovimiento» repite la del movimiento original
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-10-30-inventario-revertir-movimientos.md (v1)

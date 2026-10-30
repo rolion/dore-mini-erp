@@ -1,4 +1,4 @@
-# PLAN-2026-10-30-inventario-revertir-movimientos (v1)
+# PLAN-2026-10-30-inventario-revertir-movimientos (v2)
 
 **Task:** TASK-inventario-revertir-movimientos · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** [DDR-inventario-revertir-movimientos-dialogo-reversion](../design/DDR-inventario-revertir-movimientos-dialogo-reversion.md) · [ADR-inventario-revertir-movimientos-contramovimientos](../adr/ADR-inventario-revertir-movimientos-contramovimientos.md)
@@ -43,7 +43,7 @@ Inconsistencia declarada: el estado de la recepción se llama `reverted` y el de
 - **INV-07** (nueva) Revertir una recepción documental no genera movimientos; una de modo `inventory` exige Inventario habilitado.
 
 ## Acceptance criteria
-- **AC-01** `POST /api/inventory/movements/<id>/reverse/` sin motivo, en blanco o de más de 200 caracteres → 400 con error en `reason`; no cambia nada.
+- **AC-01** `POST /api/stock-movements/<id>/reverse/` sin motivo, en blanco o de más de 200 caracteres → 400 con error en `reason`; no cambia nada.
 - **AC-02** Con motivo válido sobre un movimiento manual confirmado → 200; el original queda `reversed`; existe un contramovimiento de tipo opuesto, misma cantidad/producto/almacén, `reverses_id` al original, motivo, usuario y fecha; el saldo se restituye; el original sigue consultable.
 - **AC-03** Una segunda reversión del mismo movimiento → 409 `already_reversed`; revertir un contramovimiento → 409 `cannot_reverse_reversal`; dos reversiones simultáneas producen exactamente un contramovimiento.
 - **AC-04** Un movimiento de origen `sales_order` → 409 `requires_return`; de origen `purchase_receipt` → 409 `reverse_from_origin`; no cambia nada.
@@ -72,8 +72,8 @@ Inconsistencia declarada: el estado de la recepción se llama `reverted` y el de
 Sin permisos nuevos: usuario admin de empresa activa (permiso por defecto). `company_id` del usuario autenticado en repositorios y fachadas; módulos requeridos `inventory` (movimientos) y `purchases` (recepciones).
 
 ## API contract
-- **API-01** `POST /api/inventory/movements/<id>/reverse/` `{reason}` → 200 detalle del contramovimiento; 400/404/409 (códigos en AC).
-- **API-02** `GET /api/inventory/movements/<id>/` amplía el detalle: `reversal` y `reversed_by` expandido (retrocompatible: conserva `id`).
+- **API-01** `POST /api/stock-movements/<id>/reverse/` `{reason}` → 200 detalle del contramovimiento; 400/404/409 (códigos en AC).
+- **API-02** `GET /api/stock-movements/<id>/` amplía el detalle: `reversal` y `reversed_by` expandido (retrocompatible: conserva `id`).
 - **API-03** `POST /api/purchases/<pid>/receipts/<rid>/revert/` `{reason}` → 200 detalle de recepción; 400/404/409.
 - **API-04** `GET .../receipts/<rid>/` amplía: `reversal`, `can_revert`, por movimiento `status` y `reversed_by`.
 - 409 `insufficient_stock` usa el contrato existente (`product`, `warehouse`, `requested`, `available`, `lines`).
@@ -174,3 +174,6 @@ Nueva `purchases/0007_receipt_reversal` (aditiva, nullable/blank; no edita migra
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-10-30): [Implementation Plan] Corrige las rutas citadas a `/api/stock-movements/...` (las reales del proyecto; sin cambio de comportamiento ni de AC) y registra que el enlace del bloque «Reversión» se rotula «Contramovimiento · <referencia>». Solicitado por delivery-publish, REV-01 y REV-03.

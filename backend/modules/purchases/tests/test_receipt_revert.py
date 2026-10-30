@@ -350,3 +350,85 @@ class ReceiptRevertConcurrencyTests(TransactionTestCase):
         self.assertEqual(results.count('ok'), 1, results)
         self.assertEqual(sum(isinstance(r, ReceiptAlreadyReverted) for r in results), 1, results)
         self.assertEqual(ReceiptModel.objects.get(pk=self.receipt_id).status, 'reverted')
+
+
+@skipUnless(connection.vendor == 'postgresql', 'El bloqueo de fila requiere PostgreSQL.')
+class InventoryReceiptRevertConcurrencyTests(TransactionTestCase):
+    """AC-09 / INV-05 con el libro real: compra → almacén, un único ganador y un único juego de contramovimientos."""
+
+    def setUp(self):
+        from modules.accounts.testing import make_company
+        from modules.inventory.infrastructure.django.models import WarehouseModel
+        from modules.inventory.tests.test_movements import make_product
+        from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
+        from modules.modularity.tests.test_enforcement import set_enabled
+        from modules.purchases.infrastructure.adapters import ProductCatalogAdapter, StockEntryAdapter
+        company = make_company('Empresa Q')
+        self.company_id = company.id
+        set_enabled(company, DEFAULT_ENABLED_KEYS + ('purchases', 'inventory'))
+        product = make_product(company)
+        self.warehouse = WarehouseModel.objects.create(company_id=company.id, name='Central', is_default=True)
+        supplier = SupplierModel.objects.create(company_id=company.id, name='Sur')
+        purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY,
+                                   items=[ItemDraft(product.id, '10', '5.00', product_name='Arroz')])
+        purchase.confirm(NOW)
+        self.purchase = DjangoPurchaseRepository(company.id).save(purchase)
+        self.adapter = StockEntryAdapter
+        with transaction.atomic():
+            receipt = RegisterReception(
+                DjangoPurchaseRepository(company.id), DjangoReceiptRepository(company.id),
+                ProductCatalogAdapter(company.id), StockEntryAdapter(company.id)).execute(
+                self.purchase.id, uuid4(), TODAY, [ReceiptLineInput(self.purchase.items[0].id, '4')],
+                self.warehouse.id, ACTOR, TODAY)[0]
+        self.receipt_id = receipt.id
+
+    def test_two_simultaneous_reversals_with_the_real_ledger_have_a_single_winner(self):
+        barrier = threading.Barrier(2)
+        results = []
+
+        def run():
+            try:
+                barrier.wait()
+                with transaction.atomic():
+                    RevertReception(DjangoPurchaseRepository(self.company_id),
+                                    DjangoReceiptRepository(self.company_id),
+                                    self.adapter(self.company_id)).execute(
+                        self.purchase.id, self.receipt_id, 'Error', ACTOR, NOW)
+                results.append('ok')
+            except Exception as exc:  # noqa: BLE001 - se informa al test
+                results.append(exc)
+            finally:
+                close_old_connections()
+
+        threads = [threading.Thread(target=run) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(15)
+        self.assertEqual(results.count('ok'), 1, results)
+        self.assertEqual(sum(isinstance(r, ReceiptAlreadyReverted) for r in results), 1, results)
+        self.assertEqual(StockMovementModel.objects.filter(reverses_id__isnull=False).count(), 1)
+        self.assertEqual(StockMovementModel.objects.filter(status='reversed').count(), 1)
+        balance = inventory.get_balance(self.company_id, self.purchase.items[0].product_id, self.warehouse.id)
+        self.assertEqual(balance, Decimal('0'))
+
+
+class RevertAuthorizationTests(ReceiptApiTestCase):
+    """AC-13: un usuario sin empresa (p. ej. `createsuperuser`) no accede a los endpoints de reversión."""
+
+    def test_user_without_company_gets_403(self):
+        from django.contrib.auth import get_user_model
+        from modules.accounts.testing import PASSWORD, authenticate
+        self.inventory_on()
+        purchase = self.confirmed_purchase()
+        receipt = self.receive(purchase, [(self.item_id(purchase, self.bag), '1')])
+        outsider = get_user_model().objects.create_user(username='sinempresa', password=PASSWORD)
+        authenticate(self.client, outsider)
+        for url in (purchase_url(purchase['id'], f'receipts/{receipt["id"]}/revert/'),
+                    f'/api/stock-movements/{uuid4()}/reverse/'):
+            self.assertEqual(self.client.post(url, {'reason': 'x'}, format='json').status_code, 403, url)
+
+    def test_anonymous_gets_401(self):
+        self.client.credentials()
+        self.assertEqual(self.client.post(f'/api/stock-movements/{uuid4()}/reverse/', {'reason': 'x'},
+                                          format='json').status_code, 401)

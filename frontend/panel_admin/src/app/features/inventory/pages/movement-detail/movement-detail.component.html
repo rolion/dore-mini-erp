@@ -77,7 +77,7 @@
             <h5 class="mx-4">Reversión</h5>
             <dl class="row mx-4" data-testid="reversal">
               <dt class="col-sm-3">Contramovimiento</dt>
-              <dd class="col-sm-9"><a [routerLink]="['/pocketbiz/inventory/movements', r.id]" data-testid="reversal-link">{{ r.reference || 'Ver contramovimiento' }}</a></dd>
+              <dd class="col-sm-9"><a [routerLink]="['/pocketbiz/inventory/movements', r.id]" data-testid="reversal-link">Contramovimiento{{ r.reference ? ' · ' + r.reference : '' }}</a></dd>
               <dt class="col-sm-3">Revertido por</dt>
               <dd class="col-sm-9" data-testid="reversal-user">{{ r.userName || '—' }}</dd>
               <dt class="col-sm-3">Fecha y hora</dt>

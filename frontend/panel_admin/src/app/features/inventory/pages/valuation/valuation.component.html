@@ -1,0 +1,284 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Valoración</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">Inventario</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/configuration">Configuración</a></li>
+    <li class="breadcrumb-item">Valoración</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12 col-md-12 col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>
+              @switch (phase) {
+              @case ('adopted') { Valoración inicial adoptada }
+              @case ('loading') { Valoración inicial }
+              @case ('error') { Valoración inicial }
+              @default {
+              @switch (step) {
+              @case ('reconcile') { Valoración inicial › 1. Conciliar }
+              @case ('values') { Valoración inicial › 2. Valores }
+              @default { Valoración inicial › 3. Confirmar }
+              }
+              }
+              }
+            </h4>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info" role="note" data-testid="method-note">
+              Costo de gestión con promedio ponderado móvil; no es una política fiscal ni contable. No modifica las
+              cantidades ni los movimientos de inventario.
+            </div>
+
+            @if (phase === 'loading') {
+            <p class="text-muted" data-testid="loading" role="status">Cargando…</p>
+            } @else if (phase === 'error') {
+            <div class="alert alert-danger" role="alert" data-testid="load-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-light btn-sm ms-2" data-testid="retry" (click)="load()">
+                Reintentar
+              </button>
+            </div>
+            } @else if (phase === 'adopted' && adoption) {
+            @if (justAdopted) {
+            <div class="alert alert-success" role="status" data-testid="adopted-success">
+              Valoración adoptada. Los valores quedan como base del costeo y no se editan.
+            </div>
+            }
+            <dl class="row" data-testid="adoption-summary">
+              <dt class="col-sm-3">Fecha de corte</dt>
+              <dd class="col-sm-9" data-testid="cutoff">{{ adoption.cutoffAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">Adoptada por</dt>
+              <dd class="col-sm-9">{{ adoption.userName }}</dd>
+              <dt class="col-sm-3">Método</dt>
+              <dd class="col-sm-9">{{ methodLabel }}</dd>
+              <dt class="col-sm-3">Productos valorados</dt>
+              <dd class="col-sm-9">{{ adoption.lines.length }}</dd>
+            </dl>
+            <div class="form-group col-md-4 ps-0">
+              <label for="valuation-search">Buscar producto</label>
+              <input id="valuation-search" type="search" class="form-control" [value]="search" (input)="onSearch($event)"
+                placeholder="Nombre del producto">
+            </div>
+            <div class="table-responsive">
+              <table class="table align-middle inventory-table">
+                <caption class="visually-hidden">Valores adoptados por producto</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Cantidad conciliada</th>
+                    <th scope="col">Valor total</th>
+                    <th scope="col">Costo unitario</th>
+                    <th scope="col">Fuente</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of filteredLines; track line.productId) {
+                  <tr data-testid="adopted-line">
+                    <td data-label="Producto"><strong>{{ line.productName }}</strong></td>
+                    <td data-label="Cantidad conciliada">{{ amount(line.reconciledQuantity) }} {{ line.unitAbbreviation }}</td>
+                    <td data-label="Valor total">{{ line.totalValue | money }}
+                      @if (line.declaredZero) { <span class="badge badge-outline col-grey ms-1">Costo cero</span> }
+                    </td>
+                    <td data-label="Costo unitario">{{ line.unitCost | money }}</td>
+                    <td data-label="Fuente">{{ line.source }}</td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="5" class="text-muted" data-testid="adopted-empty">
+                      {{ adoption.lines.length ? 'Sin resultados.' : 'No había existencias que valorar al momento del corte.' }}
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <p class="text-muted">Los valores adoptados no se editan; el corte queda como base del costeo.</p>
+            } @else {
+
+            @if (conflictMessage) {
+            <div class="alert alert-warning" role="alert" data-testid="valuation-conflict">{{ conflictMessage }}</div>
+            }
+
+            @if (step === 'reconcile') {
+            <div data-testid="step-reconcile">
+              @if (blockers.length) {
+              <div class="alert alert-warning" role="alert" data-testid="blockers">
+                No se puede adoptar con stock negativo. Corrige estos saldos con un ajuste y vuelve a conciliar:
+                <ul class="mb-0">
+                  @for (blocker of blockers; track $index) {
+                  <li data-testid="blocker">{{ blocker.productName }} en {{ blocker.warehouseName }}:
+                    <strong>{{ amount(blocker.quantity) }}</strong></li>
+                  }
+                </ul>
+              </div>
+              }
+              <div class="table-responsive">
+                <table class="table align-middle inventory-table">
+                  <caption class="visually-hidden">Cantidades conciliadas por producto</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Cantidad conciliada</th>
+                      <th scope="col">Por almacén</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (line of proposal.lines; track line.productId) {
+                    <tr data-testid="reconcile-line">
+                      <td data-label="Producto"><strong>{{ line.productName }}</strong></td>
+                      <td data-label="Cantidad conciliada">{{ quantity(line) }} {{ line.unitAbbreviation }}</td>
+                      <td data-label="Por almacén">
+                        @for (w of line.warehouses; track w.warehouseId) {
+                        <div>{{ w.warehouseName }}: {{ amount(w.quantity) }}</div>
+                        }
+                      </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                      <td colspan="3" class="text-muted" data-testid="reconcile-empty">
+                        No hay existencias que valorar. Puedes confirmar la adopción sin valores.
+                      </td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <button type="button" class="btn btn-primary" data-testid="to-values" [disabled]="!canContinue"
+                (click)="goToValues()">Continuar</button>
+              <button type="button" class="btn btn-light ms-2" data-testid="reconcile-again"
+                (click)="reconcileAgain()">Volver a conciliar</button>
+              <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/configuration">Cancelar</a>
+            </div>
+            } @else if (step === 'values') {
+            <div data-testid="step-values">
+              <div class="table-responsive" [formGroup]="rowsForm">
+                <table class="table align-middle inventory-table valuation-lines">
+                  <caption class="visually-hidden">Valor total inicial por producto</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Cantidad</th>
+                      <th scope="col">Valor total (BOB)</th>
+                      <th scope="col">Costo cero</th>
+                      <th scope="col">Fuente</th>
+                      <th scope="col">Costo unitario</th>
+                    </tr>
+                  </thead>
+                  <tbody formArrayName="rows">
+                    @for (line of proposal.lines; track line.productId; let i = $index) {
+                    <tr [formGroupName]="i" [class.table-warning]="rowMessage(i) && serverLineErrors[i]"
+                      data-testid="value-line">
+                      <td data-label="Producto"><strong>{{ line.productName }}</strong></td>
+                      <td data-label="Cantidad">{{ quantity(line) }} {{ line.unitAbbreviation }}</td>
+                      <td data-label="Valor total (BOB)">
+                        <input type="text" inputmode="decimal" class="form-control" formControlName="totalValue"
+                          placeholder="0.00" [attr.aria-label]="'Valor total de ' + line.productName"
+                          (input)="onValueEdited(i)">
+                        @if (rowMessage(i)) {
+                        <small class="form-text text-danger d-block" data-testid="value-error">{{ rowMessage(i) }}</small>
+                        }
+                      </td>
+                      <td data-label="Costo cero">
+                        <div class="form-check">
+                          <input type="checkbox" class="form-check-input" formControlName="declaredZero"
+                            [id]="'zero-' + i" (change)="onZeroToggled(i)">
+                          <label class="form-check-label" [for]="'zero-' + i">Declarar costo cero</label>
+                        </div>
+                      </td>
+                      <td data-label="Fuente">
+                        <input type="text" class="form-control" formControlName="source" [placeholder]="defaultSource"
+                          [attr.maxlength]="sourceMaxLength" [attr.aria-label]="'Fuente de ' + line.productName">
+                        @if (sourceMessage(i)) {
+                        <small class="form-text text-danger d-block">{{ sourceMessage(i) }}</small>
+                        }
+                      </td>
+                      <td data-label="Costo unitario" data-testid="unit-cost">
+                        @if (isPending(i)) {
+                        <span class="badge badge-outline col-orange" data-testid="pending-badge">{{ pendingLabel }}</span>
+                        } @else {
+                        {{ unitCost(i) ? (unitCost(i) | money) : '—' }}
+                        }
+                      </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                      <td colspan="6" class="text-muted">No hay existencias que valorar.</td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (pendingCount) {
+              <p class="text-muted" data-testid="pending-note">
+                {{ pendingCount }} {{ pendingCount === 1 ? 'producto está' : 'productos están' }} Pendiente(s): un costo
+                ausente nunca se toma como cero.
+              </p>
+              }
+              <button type="button" class="btn btn-primary" data-testid="review" [disabled]="!canReview"
+                (click)="review()">Revisar resumen</button>
+              <button type="button" class="btn btn-light ms-2" data-testid="back-to-reconcile"
+                (click)="backToReconcile()">Volver</button>
+            </div>
+            } @else {
+            <div data-testid="step-review">
+              <dl class="row">
+                <dt class="col-sm-3">Fecha de corte</dt>
+                <dd class="col-sm-9">Al confirmar (hoy)</dd>
+                <dt class="col-sm-3">Método</dt>
+                <dd class="col-sm-9">{{ methodLabel }}</dd>
+                <dt class="col-sm-3">Productos</dt>
+                <dd class="col-sm-9" data-testid="summary-count">{{ reviewRows.length }}</dd>
+                <dt class="col-sm-3">Valor total</dt>
+                <dd class="col-sm-9" data-testid="summary-total">{{ totalValue | money }}</dd>
+              </dl>
+              <div class="table-responsive">
+                <table class="table align-middle inventory-table">
+                  <caption class="visually-hidden">Resumen de la valoración</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Producto</th>
+                      <th scope="col">Cantidad</th>
+                      <th scope="col">Valor total</th>
+                      <th scope="col">Costo unitario</th>
+                      <th scope="col">Fuente</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of reviewRows; track $index) {
+                    <tr data-testid="summary-line">
+                      <td data-label="Producto"><strong>{{ item.productName }}</strong></td>
+                      <td data-label="Cantidad">{{ item.quantity }} {{ item.unit }}</td>
+                      <td data-label="Valor total">{{ item.totalValue | money }}
+                        @if (item.declaredZero) { <span class="badge badge-outline col-grey ms-1">Costo cero</span> }
+                      </td>
+                      <td data-label="Costo unitario">{{ item.unitCost | money }}</td>
+                      <td data-label="Fuente">{{ item.source }}</td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <p class="text-muted">
+                Esta adopción no se puede editar después y no se recalcula el pasado automáticamente.
+              </p>
+              <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="saving"
+                (click)="confirm()">{{ saving ? 'Registrando…' : 'Confirmar adopción' }}</button>
+              <button type="button" class="btn btn-light ms-2" data-testid="back-to-values" [disabled]="saving"
+                (click)="backToValues()">Volver a editar</button>
+            </div>
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

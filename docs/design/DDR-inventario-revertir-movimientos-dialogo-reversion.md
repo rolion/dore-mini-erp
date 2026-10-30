@@ -23,7 +23,7 @@ Base: plantilla **Detalle** (sección 5) con acciones bajo los datos y el patró
 - Detalle de recepción: `btn btn-warning` «Revertir recepción» solo si `can_revert`; revertida: sin botón.
 
 **Resultado (detalle posterior)**
-- Movimiento original: badge «Revertido» (`badge-outline col-grey`, ya existe) y bloque «Reversión» con `dl`: contramovimiento (enlace a su detalle, con su referencia), usuario, fecha `dd/MM/yyyy HH:mm` y motivo. El contramovimiento muestra «Revierte a» el original (ya existe) y su propio motivo.
+- Movimiento original: badge «Revertido» (`badge-outline col-grey`, ya existe) y bloque «Reversión» con `dl`: contramovimiento (enlace a su detalle rotulado «Contramovimiento · <referencia>», porque hereda la referencia del original), usuario, fecha `dd/MM/yyyy HH:mm` y motivo. El contramovimiento muestra «Revierte a» el original (ya existe) y su propio motivo.
 - Recepción: badge «Revertida» (`col-orange`, ya existe) y bloque «Reversión» con fecha, usuario y motivo; la tabla de movimientos de la recepción añade columna «Estado» (Confirmado/Revertido con texto) y enlace al contramovimiento. El resumen de la compra recarga los estados «Recepción»/«Pendiente».
 - Éxito: tras cerrar el diálogo se recarga el detalle y se muestra `alert alert-success` («Movimiento revertido» / «Recepción revertida») con el patrón de confirmación visible.
 
