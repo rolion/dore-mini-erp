@@ -100,5 +100,8 @@ No se puede registrar ninguna recepción. Una compra confirmada solo muestra «S
 ## Review
 Ciclo 1 (subagente aislado): **PASS condicionado**. Ejecutado: 95 pruebas de dominio/aplicación/límites OK, `check`, `makemigrations --check`, `bandit` sin hallazgos, `ng lint`, `ng build`, Karma 274 OK. No ejecutado: pruebas con PostgreSQL y revisión visual. Hallazgo: [REV-01](../reviews/REV-2026-10-30-compras-recepciones-parciales-completas-01.md) (Low, IMPLEMENTATION, corregido con `skipUnless`): falta `skipUnless` de PostgreSQL en `test_receipt_concurrency.py`.
 
+## Verificación posterior (PostgreSQL y visual)
+Suite completa del backend con PostgreSQL real: 1124 pruebas OK (incluye concurrencia AC-17). Destapó un fallo real: `accounts/test_guards.py` no conocía `ReceiptItemModel` como tabla hija; corregido. Revisión visual en el navegador (escritorio y móvil) del flujo completo con Inventario: sin hallazgos; observación menor: la columna Origen en Movimientos muestra el id de la recepción sin enlace.
+
 ## Publicación
 PR #33 con descripción completa. Cambios sensibles: base de datos (migración `0004`) y dependencia `purchases → inventory` (ADR de integración). Falta de parte humana: correr las pruebas con PostgreSQL, revisión visual y aprobar el merge. No se mergea.
