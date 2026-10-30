@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-confirmar-cancelar-compras
-**Pull Request:** _se asigna al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/31
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
