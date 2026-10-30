@@ -1,0 +1,15 @@
+@use '../../components/inventory-table';
+
+// Anchos estables de la tabla de valores (sin saltos al escribir o mostrar errores).
+@media (min-width: 768px) {
+  .valuation-lines {
+    table-layout: fixed;
+
+    th:nth-child(1) { width: 24%; }
+    th:nth-child(2) { width: 12%; }
+    th:nth-child(3) { width: 18%; }
+    th:nth-child(4) { width: 12%; }
+    th:nth-child(5) { width: 18%; }
+    th:nth-child(6) { width: 16%; }
+  }
+}

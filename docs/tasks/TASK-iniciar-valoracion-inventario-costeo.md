@@ -1,6 +1,6 @@
 # TASK-iniciar-valoracion-inventario-costeo: Iniciar valoración de inventario para costeo (PB-VAL-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-iniciar-valoracion-inventario-costeo
@@ -12,6 +12,7 @@
 | 2026-10-30 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta Trello PB-VAL-001 | delivery-start |
 | 2026-10-30 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Módulo nuevo `costing`, tablas nuevas, pantalla nueva | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
+| 2026-10-30 | ENGINEERING → REVIEW | Implementación completa según el PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,23 @@ No hay costos ni valoración; Inventario solo conoce cantidades.
 `docs/plans/PLAN-2026-10-30-iniciar-valoracion-inventario-costeo.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Módulo nuevo `costing` y adopción de valoración inicial según ADR/PLAN v1, sin desviaciones de la Specification.
+
+- **Catálogo de módulos** (`modularity/domain/modules.py`): `costing` («Costeo», requiere `inventory`, no predeterminado) — AC-08. Tests de modularity actualizados.
+- **Fachada de Inventario** (`inventory/services.py`, `movement_repository.py`): `get_company_stock`, `lock_company_stock` (bloquea todos los almacenes de la empresa por id), `get_product_names` — AC-04/05/INV-04.
+- **Backend `costing`** (`backend/modules/costing/`): dominio (`valuation.py`: redondeo 6 decimales `ROUND_HALF_UP`, Pendiente/costo cero declarado, adopción inmutable; INV-01..05, AC-02/03), caso de uso `AdoptValuation` (409 `negative_stock`/`stock_changed`/`valuation_already_adopted`/`adoption_id_reused`, réplica 200; AC-01/04/05/06/07), repositorio por `company_id` (INV-06, AC-09), migración `costing/0001`, API `/api/valuation/` (`GET`, `GET proposal/`, `POST adopt/`) con permiso por módulo `costing` (AC-08).
+- **Frontend** (`features/inventory`): `models/valuation.ts` (estado de línea y costo unitario en aritmética entera), `valuation-api.service.ts`, `pages/valuation` (asistente Conciliar → Valores → Confirmar y consulta de solo lectura), ruta `inventory/valuation` con `moduleGuard` (`costing`) y `unsavedChangesGuard`, enlace «Valoración» en Almacenes y unidades solo con Costeo habilitado — AC-10, UI-01..07.
+- **Pantalla de referencia:** `stock-opening` («Formulario con líneas y paso de resumen») y `inventory-configuration`; reutiliza `MoneyPipe`, `_inventory-table.scss`, badges y `alert-*`. No se crearon componentes compartidos ni se modificó `design-system.md`.
+- **Docs:** `docs/producto/modulos-implementados.md`.
+
+**Tests añadidos.** Backend `costing/tests/test_valuation.py` (29: dominio, API, módulo, aislamiento, concurrencia); guardas existentes ampliadas con `costing` (`accounts/test_guards.py`, `sales/tests/test_boundaries.py`). Frontend: `valuation-api.service.spec.ts`, `valuation.component.spec.ts`, spec de `inventory-configuration` ampliado.
+
+**Verificación propia (no es el Quality Gate).** Backend `manage.py test` completo 1159 OK; `makemigrations` sin cambios pendientes tras la migración. Frontend: `ng lint` OK, `ng build` OK, Karma acotado (inventory + layout) 176 OK / 1 fallo preexistente (`FooterComponent should create`, plantilla), con `app.component.spec.ts` apartado temporalmente (roto en `main`, restaurado sin cambios). Revisión visual en navegador: no verificada. Entorno: `.env` copiado del checkout principal sin abrirlo (no versionado) y `node_modules` por enlace; sin dependencias nuevas.
+
+**Desviaciones respecto al plan.** Ninguna de Specification. Detalles de implementación: el enlace a «Valoración» está en la pantalla Almacenes y unidades (el menú lateral no filtra subítems por módulo); el bloqueo por stock negativo se evalúa por par producto-almacén y el total (EDGE-01, como aclara el plan); `ENABLED`/E2E: NO según plan.
+
+**Deuda técnica.** `app.component.spec.ts` roto en `main` y specs de plantilla fallando (preexistente). Sin elemento de menú lateral propio para Valoración. Una prueba intermitente por orden en `accounts.test_migrations` (preexistente, pasa aislada).
 
 ## Review
 _Pendiente_
