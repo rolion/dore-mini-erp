@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-integracion-recepciones-entradas-inventario
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/37
 **Fuente:** https://trello.com/c/y5fFL3le/17-pb-int-001-generar-entradas-de-inventario-desde-recepciones
 
 ## Historial de transiciones
