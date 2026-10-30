@@ -1,6 +1,6 @@
 # TASK-delivery-start-url-trello: delivery-start acepta una URL de Trello como requerimiento
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-delivery-start-url-trello
@@ -13,6 +13,7 @@
 | 2026-10-30 | INVESTIGATION → PLANNING | NEEDS_PLAN, diseño no requerido | delivery-start |
 | 2026-10-30 | PLANNING → ENGINEERING | Specification READY, plan v1 y PR | delivery-start |
 | 2026-10-30 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-10-30 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -70,7 +71,7 @@ No aplica según veredicto.
 - Sin desviaciones del plan; `docs/README.md` no requirió cambios. Sin deuda técnica. No hay código ejecutable ni pruebas automáticas (verificación por lectura, ver Test Specification).
 
 ## Review
-_Pendiente_
+**PASS** (subagente aislado). AC-01..AC-06 verificados contra el diff; tests, lint, build, bandit y npm audit no aplican (cambio solo documental). Hallazgos Low abiertos, no bloqueantes: `docs/reviews/REV-2026-10-30-delivery-start-url-trello-01.md` (edge case de tarjeta sin descripción) y `-02` (sin recorrido en seco real; el conector de Trello no estaba conectado).
 
 ## Publicación
-_Pendiente_
+PR #35 listo para aprobación humana. No mergeado. No es un cambio sensible (sin ADR, auth, BD ni infraestructura).
