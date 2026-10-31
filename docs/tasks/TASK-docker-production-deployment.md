@@ -1,14 +1,15 @@
 # TASK-docker-production-deployment: Production Docker deployment
 
-**Etapa actual:** PLANNING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-docker-production-deployment
-**Pull Request:** Pending creation
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/44
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
 |---|---|---|---|
+| 2026-10-31 | ENGINEERING → REVIEW | Implementation complete; independent gate pending | delivery-build |
 | 2026-10-31 | (nuevo) → INVESTIGATION → ARCHITECTURE → PLANNING | Investigation, ADR and READY specification | delivery-start |
 
 ## Investigación
@@ -49,7 +50,9 @@ docs/adr/ADR-docker-production-deployment-proxy-and-database.md
 ## Plan
 docs/plans/PLAN-2026-10-31-docker-production-deployment.md (v1), COMPLETO, Specification readiness: READY.
 ## Implementación
-Pending.
+Two production images and Compose implement AC-01/02/03/05. Nginx SPA/API/admin/static routing and production proxy/static settings implement AC-04. Added five isolated settings tests without reading dotenv or requiring PostgreSQL; deployment guide covers all operator steps.
+Existing npm lockfile included unchanged. Added backend/.gitattributes to ensure the Linux entrypoint keeps LF line endings after Windows checkout (implementation detail). Gunicorn pinned to 26.2.0, verified on PyPI; no local package installation. No domain/UI/schema changes.
+Developer checks: five settings tests pass; Compose valid configuration and all three required-variable rejection checks pass; frontend lint passes. Production build retry running after sandbox blocked Google Fonts. Docker engine unavailable despite Desktop application being present.
 ## Review
 Pending.
 ## Publicación

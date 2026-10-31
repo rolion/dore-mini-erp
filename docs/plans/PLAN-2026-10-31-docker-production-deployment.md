@@ -47,7 +47,7 @@ Relevant backend configuration tests, frontend build/lint. Publisher records una
 ## Architecture considerations
 Follow linked ADR and modular monolith. No domain/contract changes.
 ## Files/components affected
-Root compose.yaml; backend Dockerfile/.dockerignore/docker-entrypoint.sh/requirements/production.txt/config/settings/production.py and targeted configuration tests; frontend/panel_admin Dockerfile/.dockerignore/nginx.conf and existing package-lock.json; docs/deployment/docker.md and delivery artifacts.
+Root compose.yaml; backend Dockerfile/.dockerignore/.gitattributes/docker-entrypoint.sh/requirements/production.txt/config/settings/production.py and targeted configuration tests; frontend/panel_admin Dockerfile/.dockerignore/nginx.conf and existing package-lock.json; docs/deployment/docker.md and delivery artifacts.
 ## Implementation steps
 1. Backend production image/startup/static/proxy settings (AC-01/03/04).
 2. Locked Angular image and Nginx routing (AC-01/04).

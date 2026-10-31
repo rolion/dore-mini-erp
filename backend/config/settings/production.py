@@ -11,3 +11,8 @@ SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
+
+# HTTPS terminates at nginx-proxy; only trusted Docker peers reach this backend.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
