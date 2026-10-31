@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BasicFormComponent } from './basic-form.component';
@@ -8,6 +9,7 @@ describe('BasicFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [BasicFormComponent]
 })
     .compileComponents();

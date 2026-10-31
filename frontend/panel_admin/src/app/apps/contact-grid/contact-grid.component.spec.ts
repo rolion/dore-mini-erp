@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ContactGridComponent } from './contact-grid.component';
@@ -8,6 +9,7 @@ describe('ContactGridComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [ContactGridComponent]
 })
     .compileComponents();

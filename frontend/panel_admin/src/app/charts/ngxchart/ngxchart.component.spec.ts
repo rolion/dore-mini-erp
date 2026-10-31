@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NgxchartComponent } from './ngxchart.component';
@@ -8,6 +9,7 @@ describe('NgxchartComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [NgxchartComponent]
 })
     .compileComponents();

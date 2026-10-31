@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AdvanceTableComponent } from './advance-table.component';
@@ -8,6 +9,7 @@ describe('AdvanceTableComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [AdvanceTableComponent]
 })
     .compileComponents();

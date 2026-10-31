@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MediaObjectComponent } from './media-object.component';
@@ -8,7 +9,8 @@ describe('MediaObjectComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    declarations: [MediaObjectComponent]
+      providers: [provideTemplateTestServices()],
+    imports: [MediaObjectComponent]
 })
     .compileComponents();
   });

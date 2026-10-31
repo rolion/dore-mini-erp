@@ -1,0 +1,74 @@
+name: pocketbiz
+
+services:
+  backend:
+    image: pocketbiz-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY for production}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL for the existing PostgreSQL container}
+      ALLOWED_HOSTS: www.pocketbiz.website,app.pocketbiz.website
+      TIME_ZONE: ${TIME_ZONE:-America/La_Paz}
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-True}
+    expose:
+      - "8000"
+    networks:
+      - app
+      - database
+    volumes:
+      - django-static:/app/staticfiles
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import os, urllib.request;
+          req = urllib.request.Request('http://127.0.0.1:8000/api/health/',
+          headers={'Host': os.environ['ALLOWED_HOSTS'].split(',')[0], 'X-Forwarded-Proto': 'https'});
+          urllib.request.urlopen(req, timeout=5)
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+  frontend:
+    image: pocketbiz-frontend:${IMAGE_TAG:-latest}
+    build:
+      context: ./frontend/panel_admin
+    restart: unless-stopped
+    environment:
+      VIRTUAL_HOST: www.pocketbiz.website,app.pocketbiz.website
+      LETSENCRYPT_HOST: www.pocketbiz.website,app.pocketbiz.website
+      LETSENCRYPT_EMAIL: joe.doe@pocketbiz.com
+      VIRTUAL_PORT: "80"
+    expose:
+      - "80"
+    networks:
+      - app
+      - proxy
+    volumes:
+      - django-static:/usr/share/nginx/django-static:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  app:
+  proxy:
+    external: true
+    name: proxy
+  database:
+    external: true
+    name: ${DATABASE_NETWORK:?Set DATABASE_NETWORK to an existing network attached to db_v2}
+
+volumes:
+  django-static:

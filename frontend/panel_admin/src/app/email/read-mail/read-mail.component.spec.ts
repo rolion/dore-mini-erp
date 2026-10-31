@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ReadMailComponent } from './read-mail.component';
@@ -8,6 +9,7 @@ describe('ReadMailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [ReadMailComponent]
 })
     .compileComponents();
