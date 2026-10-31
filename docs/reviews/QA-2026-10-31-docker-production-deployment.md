@@ -1,3 +1,5 @@
+> Historical round1 report. Superseded by [remediation PASS](QA-2026-10-31-docker-production-deployment-remediation.md); original failure evidence retained.
+
 # Docker deployment Quality Gate — 2026-10-31
 
 **Task:** TASK-docker-production-deployment

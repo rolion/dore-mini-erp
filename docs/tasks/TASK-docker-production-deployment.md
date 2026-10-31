@@ -1,6 +1,6 @@
 # TASK-docker-production-deployment: Production Docker deployment
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-docker-production-deployment
@@ -55,11 +55,10 @@ Two production images and Compose implement AC-01/02/03/05. Nginx SPA/API/admin/
 Existing npm lockfile included unchanged. Added backend/.gitattributes to ensure the Linux entrypoint keeps LF line endings after Windows checkout (implementation detail). Gunicorn pinned to 26.2.0, verified on PyPI; no local package installation. No domain/UI/schema changes.
 Developer checks: five settings tests pass; Compose valid configuration and all three required-variable rejection checks pass; frontend lint passes. Production build passed after network-enabled retry (existing Sass/selector warnings). Docker now available; independent image/runtime validation resumed. User requested README.md manual production instructions; added under plan v2 with unchanged acceptance criteria.
 ## Review
-FAIL — independent quality_gate reviewer found no remaining deployment defect, but existing Angular template tests fail compilation (TS2339 app.title), and existing dependency advisories remain. See docs/reviews/QA-2026-10-31-docker-production-deployment.md and REV-01/02.
-Both Docker images built; backend/frontend healthy; migrations/static collection, nginx syntax,8 PostgreSQL-backed config tests,5 isolated tests, lint, production Bandit and all container HTTP smoke checks passed. No visual changes.
-Uncommon-extension missing-asset fallback fixed during review and verified404. No unrelated frontend test/dependency remediation included. Returned to ENGINEERING for follow-up on existing regression failures; PR stays draft.
+PASS — independent review_remediation subagent at63bd4a7, plan v5. REV-01 and REV-02 resolved.1060frontend tests,4tooling tests,5isolated settings tests,8PostgreSQL config tests pass. Lint clean; full/production npm audits zero; production Docker rebuild and all HTTP/admin/CSRF/static checks pass. Evidence: docs/reviews/QA-2026-10-31-docker-production-deployment-remediation.md. Functional-only radio bindings preserve styles/layout; screenshots not claimed.
+
 ## Publicación
-PR #44 remains draft (not merged/deployed). README.md contains manual production instructions. Quality gate evidence and existing-debt findings recorded.
+PR #44 prepared for human review after PASS; no merge or droplet deployment. README contains manual production steps. Infrastructure ADR requires human merge approval. Unrelated existing workspace changes preserved.
 
 ### Review remediation authorized 2026-10-31
 User requested resolution of REV-01 and REV-02, with application title PocketBiz and npm audit remediation. delivery-start return: plan v3 records this explicit specification expansion; READY and same PR/branch retained. delivery-build resumed. No new local dependencies are required beyond updating existing packages; installation notice given before execution.
@@ -68,3 +67,4 @@ AC-06: root browser title explicitly set to PocketBiz and standalone shell/title
 AC-07: removed unused xlsx/browser-sync/CKEditor type dependencies; updated ECharts and Angular21 tooling and compatible transitives. Private dev-only matcher adapter uses the patched nonrecursive minimatch11.0.3 engine, preserving callable/Glob7 segment/Windows path APIs; glob>=9 patched14.0.3. Clean lockfile/npm ci with no vulnerable nested matcher. Four adapter checks pass, lint passes, full/production audit zero, all1060 Karma tests pass (lines87.41%, branches80.20%). These are engineering checks; independent gate pending.
 No business assertions skipped or weakened;71 inherited smoke tests received only missing setup providers, one external SDK test explicitly tests the local page shell, and an extra native-radio interaction check was added. Plan v3 records explicit user scope approval; v4/v5 record implementation refinements.
 | 2026-10-31 | ENGINEERING → REVIEW | REV-01/02 remediation implemented; independent gate retry | delivery-build |
+| 2026-10-31 | REVIEW → PUBLISH | Independent PASS; REV-01/02 resolved; ready for human approval | delivery-publish |

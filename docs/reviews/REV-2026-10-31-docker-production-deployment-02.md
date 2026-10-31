@@ -1,6 +1,6 @@
 # REV-2026-10-31-docker-production-deployment-02: Existing npm dependency advisories
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-10-31-docker-production-deployment.md (v2)
@@ -36,3 +36,5 @@ Advisory references returned by audit:
 - https://github.com/advisories/GHSA-4r6h-8v6p-xvw6
 - https://github.com/advisories/GHSA-5pgg-2g8v-p4x9
 - https://github.com/advisories/GHSA-fgmj-fm8m-jvvx
+## Resolution (2026-10-31)
+Explicit user-authorized remediation reviewed independently at commit63bd4a7: PASS. See QA-2026-10-31-docker-production-deployment-remediation.md. Full frontend suite1060SUCCESS; full and production npm audit zero vulnerabilities; locked production build and runtime smoke pass. Original evidence above retained as history.
