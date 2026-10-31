@@ -51,6 +51,7 @@ const FIELD_MAP: Record<string, string> = {
   counted_quantity: 'countedQuantity',
   expected_system_quantity: 'expectedSystemQuantity',
   reason: 'reason',
+  total_value: 'totalValue',
   non_field_errors: 'nonFieldErrors',
 };
 

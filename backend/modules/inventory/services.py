@@ -27,6 +27,7 @@ from modules.inventory.domain.movement import MovementSource, StockMovement
 from modules.inventory.infrastructure.adapters import CatalogProductDirectory, ModularityInventoryPolicy
 from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
+from shared.stock_valuation import MovementValue  # noqa: F401  (se reexporta para quien llama a la fachada)
 
 
 @dataclass(frozen=True)
@@ -54,11 +55,15 @@ def _record(movement: StockMovement) -> MovementRecord:
 def record_movement(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, kind: str, quantity: Decimal,
                     user_id: UUID | None, user_name: str, reference: str = '', reason: str = '',
                     source_type: str | None = None, source_id: str = '', source_line: str = '',
-                    occurred_at: datetime | None = None) -> tuple[MovementRecord, bool]:
+                    occurred_at: datetime | None = None,
+                    valuation: MovementValue | None = None) -> tuple[MovementRecord, bool]:
     """Registra una entrada (`in`) o salida (`out`); devuelve `(movimiento, creado)`.
 
     Es idempotente por operación de origen: repetir la misma `(source_type, source_id, source_line)` con el mismo
     producto, almacén y tipo devuelve el movimiento existente con `creado=False`.
+
+    Con inventario valorado (Costeo) la entrada se valora con `valuation` (costo unitario o valor total) y la salida
+    al promedio vigente; si la valoración no es válida lanza `MovementValidationError` o `MovementConflict`.
     """
     source = MovementSource(source_type, source_id, source_line) if source_type else None
     use_case = RecordMovement(
@@ -66,7 +71,8 @@ def record_movement(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, k
         CatalogProductDirectory(company_id), ModularityInventoryPolicy(company_id))
     movement, created = use_case.execute(
         product_id=product_id, warehouse_id=warehouse_id, kind=kind, quantity=quantity, user_id=user_id,
-        user_name=user_name, reference=reference, reason=reason, source=source, occurred_at=occurred_at)
+        user_name=user_name, reference=reference, reason=reason, source=source, occurred_at=occurred_at,
+        valuation=valuation)
     return _record(movement), created
 
 

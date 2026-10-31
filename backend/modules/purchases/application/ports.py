@@ -65,8 +65,11 @@ class StockEntry(Protocol):
     def active_warehouses(self) -> list[StockWarehouse]: ...
 
     def register_entries(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
-                         reference: str, actor: Actor) -> None:
-        """Una entrada por línea; lanza `PurchaseValidationError` con `warehouse_id` si el almacén no sirve."""
+                         reference: str, actor: Actor, unit_costs: dict[UUID, Decimal] | None = None) -> None:
+        """Una entrada por línea; lanza `PurchaseValidationError` con `warehouse_id` si el almacén no sirve.
+
+        `unit_costs` (precio unitario de compra por producto) valora la entrada si la empresa tiene inventario valorado.
+        """
         ...
 
     def movements_for(self, receipt_id: UUID) -> list[StockEntryMovement]: ...

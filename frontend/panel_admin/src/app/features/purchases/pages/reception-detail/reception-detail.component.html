@@ -140,6 +140,9 @@
             <small class="form-text text-muted d-block mx-4" data-testid="no-movements">{{ r.inventoryMode === 'inventory' ? 'Esta recepción no generó entradas de inventario.' : 'Esta recepción no movió existencias.' }}</small>
             }
             }
+            @if (r.movements?.length) {
+            <app-movement-valuation-section sourceType="purchase_receipt" [sourceId]="r.id" />
+            }
             <div class="m-4">
               @if (r.canRevert) {
               <button type="button" class="btn btn-warning me-2" data-testid="revert" (click)="revert()">Revertir recepción</button>

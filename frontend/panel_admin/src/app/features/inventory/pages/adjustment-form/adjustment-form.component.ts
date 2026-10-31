@@ -4,8 +4,23 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgSelectComponent } from '@ng-select/ng-select';
 import { ToastrService } from 'ngx-toastr';
-import { Subject, catchError, combineLatest, debounceTime, distinctUntilChanged, merge, of, startWith, switchMap, tap } from 'rxjs';
+import {
+  EMPTY,
+  Subject,
+  catchError,
+  combineLatest,
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  merge,
+  of,
+  startWith,
+  switchMap,
+  take,
+  tap,
+} from 'rxjs';
 import { HasUnsavedChanges } from '../../../../core/guard/unsaved-changes.guard';
+import { ModulesService } from '../../../../core/service/modules.service';
 import {
   ADJUSTMENT_REASON_MAX_LENGTH,
   AdjustmentBalance,
@@ -22,10 +37,11 @@ import { Warehouse } from '../../models/warehouse';
 import { AdjustmentsApiService } from '../../services/adjustments-api.service';
 import { OpeningProductsService } from '../../services/opening-products.service';
 import { stockReturnLink } from '../../services/stock-return';
+import { ValuationApiService } from '../../services/valuation-api.service';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
 
 export type AdjustmentStep = 'edit' | 'review';
-export type AdjustmentField = 'warehouseId' | 'productId' | 'countedQuantity' | 'reason';
+export type AdjustmentField = 'warehouseId' | 'productId' | 'countedQuantity' | 'reason' | 'totalValue';
 
 export const ADJUSTMENT_SUCCESS_MESSAGE = 'Ajuste registrado';
 export const NO_DIFFERENCE_MESSAGE = 'Sin diferencia: no se registrará ningún movimiento.';
@@ -45,7 +61,12 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
     product: this.fb.control<OpeningProduct | null>(null, Validators.required),
     countedQuantity: [''],
     reason: ['', [Validators.required, Validators.maxLength(ADJUSTMENT_REASON_MAX_LENGTH)]],
+    totalValue: [''],
+    declaredZero: [false],
   });
+
+  /** Inventario valorado: el ajuste positivo necesita un valor. Se sabe con Costeo habilitado o al exigirlo el servidor. */
+  valuedInventory = false;
 
   step: AdjustmentStep = 'edit';
   warehouses: Warehouse[] = [];
@@ -73,6 +94,8 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
 
   private api = inject(AdjustmentsApiService);
   private warehousesApi = inject(WarehousesApiService);
+  private modules = inject(ModulesService);
+  private valuationApi = inject(ValuationApiService);
   private productsApi = inject(OpeningProductsService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -82,6 +105,7 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
   ngOnInit(): void {
     this.preselectedProductId = this.route.snapshot.queryParamMap.get('product_id');
     this.loadWarehouses();
+    this.detectValuedInventory();
     this.watchProducts();
     this.watchBalance();
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
@@ -177,9 +201,43 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
     return this.difference !== null && this.direction === null;
   }
 
+  /** El valor se pide solo con inventario valorado y una diferencia positiva (entrada de ajuste). */
+  get needsValue(): boolean {
+    return this.valuedInventory && this.direction === 'in';
+  }
+
+  get valueMessage(): string | null {
+    const server = this.serverErrors.totalValue;
+    if (server) {
+      return server;
+    }
+    const control = this.form.controls.totalValue;
+    if (!this.needsValue || !(control.touched || control.dirty)) {
+      return null;
+    }
+    return this.valueProblem;
+  }
+
+  /** Problema del valor ingresado (importe en BOB con hasta 2 decimales, o costo cero declarado), o `null`. */
+  private get valueProblem(): string | null {
+    const { totalValue, declaredZero } = this.form.getRawValue();
+    const text = totalValue.trim();
+    if (declaredZero) {
+      return text && Number(text) !== 0 ? 'Un costo cero declarado no admite un valor distinto de cero.' : null;
+    }
+    if (!text) {
+      return 'Ingresa el valor total del ajuste en BOB o declara costo cero.';
+    }
+    if (!/^\d+(\.\d{1,2})?$/.test(text)) {
+      return 'El valor debe ser un importe en BOB con hasta 2 decimales.';
+    }
+    return Number(text) === 0 ? 'Un costo cero debe declararse explícitamente.' : null;
+  }
+
   get canReview(): boolean {
     return (
       this.form.valid &&
+      !(this.needsValue && this.valueProblem !== null) &&
       !!this.form.controls.reason.value.trim() &&
       this.balance !== null &&
       this.difference !== null &&
@@ -247,7 +305,22 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
       countedQuantity: value.countedQuantity.trim(),
       expectedSystemQuantity: this.balance?.systemQuantity ?? '0',
       reason: value.reason.trim(),
+      ...(this.needsValue
+        ? { totalValue: value.declaredZero ? '0' : value.totalValue.trim(), declaredZero: value.declaredZero }
+        : {}),
     };
+  }
+
+  /** Costeo habilitado y con valoración adoptada: los ajustes positivos se valoran. */
+  private detectValuedInventory(): void {
+    this.modules.enabledKeys$
+      .pipe(
+        filter((keys): keys is ReadonlySet<string> => keys !== null),
+        take(1),
+        switchMap((keys) => (keys.has('costing') ? this.valuationApi.get() : EMPTY)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({ next: (valuation) => (this.valuedInventory = valuation.status === 'adopted'), error: () => undefined });
   }
 
   private showServerError(err: InventoryApiError): void {
@@ -271,6 +344,9 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
     }
     if (err.status === 400) {
       this.serverErrors = this.toFieldMessages(err.fieldErrors);
+      if (this.serverErrors.totalValue) {
+        this.valuedInventory = true; // el servidor exige un valor: se muestra el campo aunque Costeo esté deshabilitado
+      }
       if (!Object.keys(this.serverErrors).length) {
         this.conflictMessage = err.message;
       }
@@ -281,7 +357,7 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
 
   private toFieldMessages(errors: FieldErrors): Partial<Record<AdjustmentField, string>> {
     const result: Partial<Record<AdjustmentField, string>> = {};
-    for (const field of ['warehouseId', 'productId', 'countedQuantity', 'reason'] as const) {
+    for (const field of ['warehouseId', 'productId', 'countedQuantity', 'reason', 'totalValue'] as const) {
       const messages = errors[field];
       if (messages?.length) {
         result[field] = messages.join(' ');
