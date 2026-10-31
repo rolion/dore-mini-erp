@@ -1,6 +1,6 @@
 # TASK-docker-production-deployment: Production Docker deployment
 
-**Etapa actual:** REVIEW
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-docker-production-deployment
@@ -9,6 +9,7 @@
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
 |---|---|---|---|
+| 2026-10-31 | REVIEW → ENGINEERING | Gate FAIL: baseline frontend test/dependency findings; deployment checks passed | delivery-publish |
 | 2026-10-31 | ENGINEERING → REVIEW | Implementation complete; independent gate pending | delivery-build |
 | 2026-10-31 | (nuevo) → INVESTIGATION → ARCHITECTURE → PLANNING | Investigation, ADR and READY specification | delivery-start |
 
@@ -54,6 +55,8 @@ Two production images and Compose implement AC-01/02/03/05. Nginx SPA/API/admin/
 Existing npm lockfile included unchanged. Added backend/.gitattributes to ensure the Linux entrypoint keeps LF line endings after Windows checkout (implementation detail). Gunicorn pinned to 26.2.0, verified on PyPI; no local package installation. No domain/UI/schema changes.
 Developer checks: five settings tests pass; Compose valid configuration and all three required-variable rejection checks pass; frontend lint passes. Production build passed after network-enabled retry (existing Sass/selector warnings). Docker now available; independent image/runtime validation resumed. User requested README.md manual production instructions; added under plan v2 with unchanged acceptance criteria.
 ## Review
-Pending.
+FAIL — independent quality_gate reviewer found no remaining deployment defect, but existing Angular template tests fail compilation (TS2339 app.title), and existing dependency advisories remain. See docs/reviews/QA-2026-10-31-docker-production-deployment.md and REV-01/02.
+Both Docker images built; backend/frontend healthy; migrations/static collection, nginx syntax,8 PostgreSQL-backed config tests,5 isolated tests, lint, production Bandit and all container HTTP smoke checks passed. No visual changes.
+Uncommon-extension missing-asset fallback fixed during review and verified404. No unrelated frontend test/dependency remediation included. Returned to ENGINEERING for follow-up on existing regression failures; PR stays draft.
 ## Publicación
-Pending.
+PR #44 remains draft (not merged/deployed). README.md contains manual production instructions. Quality gate evidence and existing-debt findings recorded.
