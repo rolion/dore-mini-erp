@@ -1,9 +1,9 @@
 # TASK-limit-frontend-build-memory: Bound Angular production build memory
-**Etapa actual:** PLANNING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-limit-frontend-build-memory
-**Pull Request:** Pending
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/45
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -34,7 +34,7 @@ Existing ADR-docker-production-deployment-proxy-and-database remains valid; no n
 ## Plan
 PLAN-2026-10-31-limit-frontend-build-memory.md v1, COMPACTO, READY.
 ## Implementación
-Pending.
+Dockerfile ARG defaults NG_BUILD_MAX_WORKERS=1 and NODE_OPTIONS=--max-old-space-size=1536 applied only to compile RUN. README/runbook document serial builds, override, heap/total memory distinction and actual host limitations. Developer frontend Docker build passed; compilation step34.2s, final image b8b7835d912f. No application/package/backend changes. Independent review pending.
 ## Review
 Pending.
 ## Publicación
