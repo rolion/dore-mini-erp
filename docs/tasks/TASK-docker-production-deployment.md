@@ -1,6 +1,6 @@
 # TASK-docker-production-deployment: Production Docker deployment
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-docker-production-deployment
@@ -49,7 +49,7 @@ Not applicable.
 ## Arquitectura
 docs/adr/ADR-docker-production-deployment-proxy-and-database.md
 ## Plan
-docs/plans/PLAN-2026-10-31-docker-production-deployment.md (v2), COMPLETO, Specification readiness: READY.
+docs/plans/PLAN-2026-10-31-docker-production-deployment.md (v5), COMPLETO, Specification readiness: READY.
 ## Implementación
 Two production images and Compose implement AC-01/02/03/05. Nginx SPA/API/admin/static routing and production proxy/static settings implement AC-04. Added five isolated settings tests without reading dotenv or requiring PostgreSQL; deployment guide covers all operator steps.
 Existing npm lockfile included unchanged. Added backend/.gitattributes to ensure the Linux entrypoint keeps LF line endings after Windows checkout (implementation detail). Gunicorn pinned to 26.2.0, verified on PyPI; no local package installation. No domain/UI/schema changes.
@@ -60,3 +60,11 @@ Both Docker images built; backend/frontend healthy; migrations/static collection
 Uncommon-extension missing-asset fallback fixed during review and verified404. No unrelated frontend test/dependency remediation included. Returned to ENGINEERING for follow-up on existing regression failures; PR stays draft.
 ## Publicación
 PR #44 remains draft (not merged/deployed). README.md contains manual production instructions. Quality gate evidence and existing-debt findings recorded.
+
+### Review remediation authorized 2026-10-31
+User requested resolution of REV-01 and REV-02, with application title PocketBiz and npm audit remediation. delivery-start return: plan v3 records this explicit specification expansion; READY and same PR/branch retained. delivery-build resumed. No new local dependencies are required beyond updating existing packages; installation notice given before execution.
+### Review remediation implementation
+AC-06: root browser title explicitly set to PocketBiz and standalone shell/title tests replace stale Oreva demo expectations. Fixed inherited template test setup via scoped router/toast/icon/chart/animation providers, correct standalone import and test localize initializer. External Google Maps widget is shallowly isolated without requiring live SDK credentials. Native radio bindings replace removed ng-bootstrap group accessor in the demo with an interaction regression test; existing CSS/layout retained.
+AC-07: removed unused xlsx/browser-sync/CKEditor type dependencies; updated ECharts and Angular21 tooling and compatible transitives. Private dev-only matcher adapter uses the patched nonrecursive minimatch11.0.3 engine, preserving callable/Glob7 segment/Windows path APIs; glob>=9 patched14.0.3. Clean lockfile/npm ci with no vulnerable nested matcher. Four adapter checks pass, lint passes, full/production audit zero, all1060 Karma tests pass (lines87.41%, branches80.20%). These are engineering checks; independent gate pending.
+No business assertions skipped or weakened;71 inherited smoke tests received only missing setup providers, one external SDK test explicitly tests the local page shell, and an extra native-radio interaction check was added. Plan v3 records explicit user scope approval; v4/v5 record implementation refinements.
+| 2026-10-31 | ENGINEERING → REVIEW | REV-01/02 remediation implemented; independent gate retry | delivery-build |

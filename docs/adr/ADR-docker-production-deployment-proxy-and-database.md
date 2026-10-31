@@ -30,3 +30,8 @@ Two images, same-origin routing, shared static volume populated before frontend 
 - [nginx-proxy](https://github.com/nginx-proxy/nginx-proxy/blob/main/docs/README.md)
 - [acme-companion](https://github.com/nginx-proxy/acme-companion/wiki/Basic-usage)
 - [Django HTTPS headers](https://docs.djangoproject.com/en/5.2/ref/settings/#secure-proxy-ssl-header)
+
+## Development-tool security remediation (2026-10-31)
+User authorized npm audit remediation in the same PR. Remove unused xlsx/browser-sync/CKEditor type packages; update compatible Angular21 tooling/ECharts. Karma6 and ESLint9 consumers still call minimatch as a function, while patched minimatch11 exports it by name and no longer exposes the old regex compiler. A private dev-only local adapter exposes the existing patched function and its existing helpers/classes as a callable CommonJS export. It does not implement pattern matching or restore removed regex compilation. The alias dependency minimatch-patched resolves to the actual registry minimatch11.0.3 and stays visible in audits.
+Use root override to this adapter for all matcher consumers and glob>=9 to14.0.3. Preserve Glob7 for Karma's callback contract; its matcher is patched through the adapter. No dependencies are shipped as node_modules in final Nginx image.
+Alternatives: blind major override breaks callable consumers; disabling advisories leaves vulnerabilities; changing the test runner requires rewriting Jasmine suites. This adapter is the smallest compatible bridge. Removal condition: legacy tooling supports the current matcher export natively. Verify npm ci, adapter contracts, full audit, lint, complete Jasmine/Karma suite, production Docker build and HTTP smoke. Roll back manifest/lock/adapter together if needed.

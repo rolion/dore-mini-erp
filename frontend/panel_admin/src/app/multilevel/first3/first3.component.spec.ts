@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { First3Component } from './first3.component';
@@ -8,6 +9,7 @@ describe('First3Component', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [First3Component]
 })
     .compileComponents();

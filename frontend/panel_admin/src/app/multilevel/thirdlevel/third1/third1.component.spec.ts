@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { Third1Component } from './third1.component';
@@ -8,6 +9,7 @@ describe('Third1Component', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [Third1Component]
 })
     .compileComponents();

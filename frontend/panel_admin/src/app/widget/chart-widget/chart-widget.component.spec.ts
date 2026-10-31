@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ChartWidgetComponent } from './chart-widget.component';
@@ -8,6 +9,7 @@ describe('ChartWidgetComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [ChartWidgetComponent]
 })
     .compileComponents();

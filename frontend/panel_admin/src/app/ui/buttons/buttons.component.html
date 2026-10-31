@@ -231,15 +231,15 @@
             <div class="row">
               <div class="col-12 col-md-6 col-lg-6">
                 <h6>Radio buttons</h6>
-                <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic" [(ngModel)]="modelRadio">
+                <div class="btn-group btn-group-toggle">
                   <label ngbButtonLabel class="btn-raised btn-primary">
-                    <input ngbButton type="radio" [value]="1"> Left (pre-checked)
+                    <input ngbButton type="radio" name="radioBasic" [(ngModel)]="modelRadio" [value]="1"> Left (pre-checked)
                   </label>
                   <label ngbButtonLabel class="btn-raised btn-primary">
-                    <input ngbButton type="radio" value="2"> Middle
+                    <input ngbButton type="radio" name="radioBasic" [(ngModel)]="modelRadio" [value]="2"> Middle
                   </label>
                   <label ngbButtonLabel class="btn-raised btn-primary">
-                    <input ngbButton type="radio" [value]="3"> Right
+                    <input ngbButton type="radio" name="radioBasic" [(ngModel)]="modelRadio" [value]="3"> Right
                   </label>
                 </div>
                 <hr>
@@ -249,16 +249,15 @@
               <div class="col-12 col-md-6 col-lg-6">
                 <h6>Radio buttons (Reactive Forms)</h6>
                 <form [formGroup]="radioGroupForm">
-                  <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic"
-                    formControlName="modelRadioForm">
+                  <div class="btn-group btn-group-toggle">
                     <label ngbButtonLabel class="btn-raised btn-primary">
-                      <input ngbButton type="radio" value="Left"> Left (pre-checked)
+                      <input ngbButton type="radio" formControlName="modelRadioForm" value="Left"> Left (pre-checked)
                     </label>
                     <label ngbButtonLabel class="btn-raised btn-primary">
-                      <input ngbButton type="radio" value="Middle"> Middle
+                      <input ngbButton type="radio" formControlName="modelRadioForm" value="Middle"> Middle
                     </label>
                     <label ngbButtonLabel class="btn-raised btn-primary">
-                      <input ngbButton type="radio" value="Right"> Right
+                      <input ngbButton type="radio" formControlName="modelRadioForm" value="Right"> Right
                     </label>
                   </div>
                 </form>

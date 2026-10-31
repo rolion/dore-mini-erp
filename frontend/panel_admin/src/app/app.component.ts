@@ -1,5 +1,6 @@
 
 import { Component, inject } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { Event, Router, NavigationStart, NavigationEnd, RouterModule } from '@angular/router';
 import { PageLoaderComponent } from './layout/page-loader/page-loader.component';
 @Component({
@@ -15,6 +16,7 @@ export class AppComponent {
   currentUrl!: string;
   public _router = inject(Router);
   constructor() {
+    inject(Title).setTitle('PocketBiz');
     this._router.events.subscribe((routerEvent: Event) => {
       if (routerEvent instanceof NavigationStart) {
         this.currentUrl = routerEvent.url.substring(

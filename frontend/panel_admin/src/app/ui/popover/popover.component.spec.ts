@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PopoverComponent } from './popover.component';
@@ -8,6 +9,7 @@ describe('PopoverComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [PopoverComponent]
 })
     .compileComponents();

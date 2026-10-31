@@ -1,33 +1,31 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { Title } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    imports: [
-        RouterTestingModule
-    ],
-    declarations: [AppComponent],
-}).compileComponents();
+      imports: [AppComponent],
+      providers: [provideRouter([])],
+    }).compileComponents();
   });
 
-  it('should create the app', () => {
+  it('creates the application shell', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
+    expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it(`should have as title 'oreva'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('oreva');
+  it('sets the browser title to PocketBiz', () => {
+    TestBed.createComponent(AppComponent);
+    expect(TestBed.inject(Title).getTitle()).toBe('PocketBiz');
   });
 
-  it('should render title', () => {
+  it('renders the page loader and route outlet', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('oreva app is running!');
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('app-page-loader')).not.toBeNull();
+    expect(element.querySelector('router-outlet')).not.toBeNull();
   });
 });

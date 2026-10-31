@@ -1,3 +1,6 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { GoogleMapsModule } from '@angular/google-maps';
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { GoogleComponent } from './google.component';
@@ -8,8 +11,13 @@ describe('GoogleComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [GoogleComponent]
 })
+    .overrideComponent(GoogleComponent, {
+      remove: { imports: [GoogleMapsModule] },
+      add: { schemas: [CUSTOM_ELEMENTS_SCHEMA] },
+    })
     .compileComponents();
   });
 
@@ -19,7 +27,8 @@ describe('GoogleComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('creates the page shell without loading the external Google Maps SDK', () => {
     expect(component).toBeTruthy();
+    expect((fixture.nativeElement as HTMLElement).querySelector('google-map')).not.toBeNull();
   });
 });

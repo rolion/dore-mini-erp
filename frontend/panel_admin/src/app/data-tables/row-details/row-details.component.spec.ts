@@ -1,3 +1,4 @@
+import { provideTemplateTestServices } from '../../../testing/template-test.providers';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RowDetailsComponent } from './row-details.component';
@@ -8,6 +9,7 @@ describe('RowDetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [provideTemplateTestServices()],
     imports: [RowDetailsComponent]
 })
     .compileComponents();
