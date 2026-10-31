@@ -1,4 +1,4 @@
-# PLAN-2026-10-31-docker-production-deployment (v1)
+# PLAN-2026-10-31-docker-production-deployment (v2)
 
 **Task:** TASK-docker-production-deployment · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** ADR-docker-production-deployment-proxy-and-database
@@ -47,7 +47,7 @@ Relevant backend configuration tests, frontend build/lint. Publisher records una
 ## Architecture considerations
 Follow linked ADR and modular monolith. No domain/contract changes.
 ## Files/components affected
-Root compose.yaml; backend Dockerfile/.dockerignore/.gitattributes/docker-entrypoint.sh/requirements/production.txt/config/settings/production.py and targeted configuration tests; frontend/panel_admin Dockerfile/.dockerignore/nginx.conf and existing package-lock.json; docs/deployment/docker.md and delivery artifacts.
+Root compose.yaml; backend Dockerfile/.dockerignore/.gitattributes/docker-entrypoint.sh/requirements/production.txt/config/settings/production.py and targeted configuration tests; frontend/panel_admin Dockerfile/.dockerignore/nginx.conf and existing package-lock.json; README.md, docs/deployment/docker.md and delivery artifacts.
 ## Implementation steps
 1. Backend production image/startup/static/proxy settings (AC-01/03/04).
 2. Locked Angular image and Nginx routing (AC-01/04).
@@ -60,3 +60,6 @@ No schema changes; existing migrations run manually after backup.
 Unknown host DB network; require discovery. Docker stopped locally prevents image/runtime checks.
 ## New dependencies
 Gunicorn production image only. No local install planned. Notify before image builds install declared Python/npm packages; no testing dependency added.
+
+## Changelog
+- **v2** (2026-10-31): [Implementation Plan] Add root README.md with manual production instructions, explicitly requested by user. Acceptance criteria unchanged; expands AC-05 documentation.
