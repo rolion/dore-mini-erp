@@ -1,5 +1,5 @@
 # TASK-limit-frontend-build-memory: Bound Angular production build memory
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-limit-frontend-build-memory
@@ -36,6 +36,6 @@ PLAN-2026-10-31-limit-frontend-build-memory.md v1, COMPACTO, READY.
 ## Implementación
 Dockerfile ARG defaults NG_BUILD_MAX_WORKERS=1 and NODE_OPTIONS=--max-old-space-size=1536 applied only to compile RUN. README/runbook document serial builds, override, heap/total memory distinction and actual host limitations. Developer frontend Docker build passed; compilation step34.2s, final image b8b7835d912f. No application/package/backend changes. Independent review pending.
 ## Review
-Pending.
+PASS — independent memory_build_review, commit00f657f, no findings. Production build succeeded; final image has no build-only flags; Nginx syntax/index valid. See docs/reviews/QA-2026-10-31-limit-frontend-build-memory.md. Actual1GiB droplet remains unverified.
 ## Publicación
-Pending.
+PR45 ready for human review; no merge or deployment.
