@@ -62,6 +62,38 @@ docker compose build --pull
 
 Builds install Python/npm dependencies inside Docker. The frontend runs `npm ci` and `ng build --configuration production`, then copies the compiled files into Nginx. No local Python or Node installation is needed on the droplet. The build needs access to image/package registries and the Google Fonts URLs referenced by the existing frontend.
 
+
+### Build memory on small droplets
+
+The Angular build defaults to one worker and a 1536 MiB V8 old-space heap, matching the low-memory deployment configuration:
+
+```dockerfile
+RUN NG_BUILD_MAX_WORKERS="$NG_BUILD_MAX_WORKERS" NODE_OPTIONS="$NODE_OPTIONS" \
+    npm run build -- --configuration production
+```
+
+These defaults are Docker build ARGs and apply only to production compilation. They are not Nginx runtime environment variables. The heap cap is not total process memory and does not allocate more physical RAM. A 1 GiB droplet with 2 GiB swap may build slowly and can still run out of memory alongside existing services.
+
+Build services sequentially to avoid overlapping build workloads:
+
+```sh
+docker compose build backend
+docker compose build frontend
+```
+
+The default is equivalent to the user's suggested NG_BUILD_MAX_WORKERS=1 NODE_OPTIONS=--max-old-space-size=1536. For a larger build host, override explicitly:
+
+```sh
+docker compose build \
+  --build-arg NG_BUILD_MAX_WORKERS=1 \
+  --build-arg NODE_OPTIONS="--max-old-space-size=3072" \
+  frontend
+```
+
+Do not use a larger heap on the 1 GiB droplet without sufficient available RAM/swap. Shell exports alone are not forwarded automatically into Docker build steps; use --build-arg. If the default still fails, build on a larger compatible Linux builder/CI runner and transfer both tagged images to the droplet, rather than repeatedly increasing the heap. Exit 137 or an OS-killed process points to a total-memory limit, which differs from V8's JS heap error. Sass deprecation warnings are not the cause of the heap failure.
+
+Reference: [Node heap sizing](https://nodejs.org/api/cli.html#--max-old-space-sizesize-in-mib).
+
 ### 4. Apply migrations and start
 
 Back up the application database using the host's existing backup procedure. Confirm `DATABASE_URL` targets the correct application database, then run:
