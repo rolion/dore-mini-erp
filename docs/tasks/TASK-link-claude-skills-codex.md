@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Dise?o requerido:** NO
 **Rama:** task/TASK-link-claude-skills-codex
-**Pull Request:** Pending creation
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/43
 
 ## Historial de transiciones
 | Fecha (UTC) | Transici?n | Motivo | Origen |
