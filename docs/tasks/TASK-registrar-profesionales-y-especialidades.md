@@ -15,6 +15,9 @@
 | 2026-11-02 | DESIGN → ARCHITECTURE | Propuesta de pantallas conforme al sistema de diseño | delivery-start |
 | 2026-11-02 | ARCHITECTURE → PLANNING | Alcance actualizado; pendiente cardinalidad del vínculo de usuario | delivery-start |
 
+| 2026-11-02 | PLANNING → ENGINEERING | Specification READY; vínculo uno a uno confirmado; PR #46 | delivery-start |
+| 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas preparadas | delivery-build |
+
 ## Investigación
 
 ### Requerimiento
@@ -61,7 +64,7 @@ No se registran profesionales ni especialidades. No existen consultas de citas. 
 DDD pragmático; dominio sin Django; referencias entre contextos por identificador y contratos de aplicación; company_id de sesión; dinero Decimal cuando aplique; migraciones nuevas; no leer/modificar .env o secretos; ninguna dependencia nueva sin avisar. Un task, una rama task/TASK-registrar-profesionales-y-especialidades y un PR cuando READY; nunca merge automático.
 
 ### Riesgos identificados
-Vínculos ajenos; pérdida de autoría al desvincular; cambios accidentales de permisos; N+1 de especialidades/usuarios; acoplamiento prematuro a Agenda; unicidad no acordada. No tratar almacenes como sucursales.
+Vínculos ajenos; pérdida de autoría al desvincular; cambios accidentales de permisos; N+1 de especialidades/usuarios; acoplamiento prematuro a Agenda; carreras de asignación del usuario único. No tratar almacenes como sucursales.
 
 ### Veredicto de complejidad
 **NEEDS_ARCHITECTURE** — Nuevo bounded context, tablas y contratos, validación de referencias de identidad e integración con habilitación por empresa. Requiere una decisión explícita de fronteras y rollback.
@@ -76,7 +79,7 @@ Vínculos ajenos; pérdida de autoría al desvincular; cambios accidentales de p
 [ADR-registrar-profesionales-y-especialidades-contexto-personal](../adr/ADR-registrar-profesionales-y-especialidades-contexto-personal.md), propuesto. Vínculo opcional uno a uno, confirmado por el usuario.
 
 ## Plan
-[PLAN-2026-11-02-registrar-profesionales-y-especialidades](../plans/PLAN-2026-11-02-registrar-profesionales-y-especialidades.md) (v2), COMPLETO, **Specification readiness: READY**. El usuario confirmó «solo a uno». Se continúa con PR único y delivery-build.
+[PLAN-2026-11-02-registrar-profesionales-y-especialidades](../plans/PLAN-2026-11-02-registrar-profesionales-y-especialidades.md) (v3), COMPLETO, **Specification readiness: READY**. El usuario confirmó «solo a uno». Se continúa con PR único y delivery-build.
 
 ## Implementación
 Dominio, casos de uso y repositorio Personal con empresa obligatoria; migración aditiva; user_id único no nulo y manejo de carrera concurrente (AC-01/02/03/05/08). Especialidades opcionales, selección por nombre y asociaciones conservadas. No se consulta Agenda ni se cambia ningún permiso al vincular/desvincular/desactivar.
@@ -87,7 +90,7 @@ Pruebas de ingeniería: 157 pruebas backend y 2 migraciones de Acceso aisladas; 
 
 Desviaciones de implementación: selector `id` opcional para resolver nombre del usuario seleccionado fuera de la primera página; misma empresa y autorización. Tests de migración de Acceso ejecutados separados porque un TransactionTestCase previo vacía el dato sembrado; pasan aislados. Build local con preserve-symlinks por enlace de dependencias entre unidades; no cambia configuración de producto.
 
-Deuda: citas futuras se integrarán con Agenda según tarjeta. Sin nómina ni Sucursales. Revisión visual y gate independientes pendientes.
+Deuda: citas futuras se integrarán con Agenda según tarjeta. Sin nómina ni Sucursales. Inspección visual real documentada en docs/reviews/VIS-2026-11-02-registrar-profesionales-y-especialidades.md; gate independiente en curso.
 
 
 ## Review
@@ -98,5 +101,5 @@ _Pendiente_
 
 Decisión de negocio recibida el 2026-11-02: usuario opcional, vinculado a un solo profesional.
 
-| 2026-11-02 | PLANNING → ENGINEERING | Specification READY; vínculo uno a uno confirmado; PR #46 | delivery-start |
-| 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas preparadas | delivery-build |
+
+Revisión visual: retorno puntual a delivery-build por contraste del chip ng-select en tema oscuro; se aplica color de texto existente exclusivamente al formulario de Personal. PLAN v3 cambia solo implementación. Continúa revisión sobre el commit corregido.

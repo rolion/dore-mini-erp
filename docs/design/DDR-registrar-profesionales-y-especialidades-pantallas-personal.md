@@ -24,3 +24,5 @@ Usar el permiso admin actual; ocultar acciones administrativas sin autorización
 
 ## Consecuencias
 Sin componente compartido nuevo ni desviación del sistema de diseño. El futuro diálogo de citas afectadas pertenece a la integración de Agenda; no mostrar una consulta ficticia en este alcance.
+
+Refinamiento de implementación visual: en móvil ngx-datatable mantiene anchos mínimos de columnas y scroll horizontal nativo del contenedor Bootstrap table-responsive (mínimo de lectura 45rem), con aviso textual y foco de teclado; evita truncar el nombre/estado al forzar cuatro columnas en 390 px. Mantiene plantilla Lista y paginación; acciones importan shared/styles/table-actions con btn-tbl-edit + view/update/toggle. Sin componente nuevo.

@@ -1,8 +1,8 @@
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { DatatableComponent, NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs';
 import { Profile, ProfileKind } from '../models/profile';
 import { PersonnelApiService, profileError } from '../services/personnel-api.service';
@@ -10,9 +10,10 @@ import { confirmProfileState } from '../services/profile-confirmation';
 
 @Component({
   selector: 'app-personnel-list', templateUrl: './profile-list.component.html',
+  styleUrl: './profile-list.component.scss',
   imports: [RouterLink, ReactiveFormsModule, NgxDatatableModule],
 })
-export class ProfileListComponent implements OnInit {
+export class ProfileListComponent implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);
   private api = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
@@ -32,6 +33,20 @@ export class ProfileListComponent implements OnInit {
   error = '';
   message = '';
   saving = false;
+  @ViewChild(DatatableComponent) table?: DatatableComponent;
+  @ViewChild('tableContainer') tableContainer?: ElementRef<HTMLElement>;
+
+  ngAfterViewInit(): void {
+    // El sidebar anima su ancho después de window.resize. Recalcular con el ancho real
+    // evita que ngx-datatable conserve un viewport casi nulo al cambiar de breakpoint.
+    let lastWidth = 0;
+    const observer = new ResizeObserver(entries => {
+      const width = entries[0]?.contentRect.width || 0;
+      if (width > 0 && width !== lastWidth) { lastWidth = width; this.table?.recalculate(); }
+    });
+    if (this.tableContainer) observer.observe(this.tableContainer.nativeElement);
+    this.destroyRef.onDestroy(() => observer.disconnect());
+  }
 
   ngOnInit(): void {
     this.reload$.pipe(switchMap(() => {

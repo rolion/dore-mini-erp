@@ -951,6 +951,10 @@ $color-font: #96a2b4;
       background-color: #16192a;
     }
   }
+  // Personal: el tema base de ng-select fija texto oscuro en chips de multiselección.
+  app-personnel-form .ng-select.ng-select-multiple .ng-select-container .ng-value-container .ng-value {
+    color: $color-font;
+  }
   .ng-select {
     .ng-select-container {
       background-color: #16192a;

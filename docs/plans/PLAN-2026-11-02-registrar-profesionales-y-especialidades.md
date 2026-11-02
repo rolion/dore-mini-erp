@@ -1,4 +1,4 @@
-# PLAN-2026-11-02-registrar-profesionales-y-especialidades (v2)
+# PLAN-2026-11-02-registrar-profesionales-y-especialidades (v3)
 
 **Task:** TASK-registrar-profesionales-y-especialidades · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-registrar-profesionales-y-especialidades-pantallas-personal; ADR-registrar-profesionales-y-especialidades-contexto-personal (propuestos).
@@ -119,3 +119,11 @@ Ninguna prevista; no se instaló ninguna.
 - **v2** (2026-11-02): [Specification] AC-08 uno a uno tras respuesta explícita del usuario «solo a uno»; contrato final y readiness READY. [Implementation Plan] constraint único y composición del adaptador de identidad.
 
 - **v2 implementation detail:** Selector de usuarios admite filtro opcional `id` validado y acotado a empresa para mostrar el nombre del usuario actualmente vinculado, aunque no esté en la primera página; no modifica permisos ni cardinalidad. Se reutilizan dependencias existentes mediante junction local; PostgreSQL temporal con colación ICU.
+
+- **v3** (2026-11-02): [Implementation Plan] Inspección visual detecta chip de ng-select ilegible en oscuro. Ampliar archivos afectados a `frontend/panel_admin/src/assets/scss/skins/_dark.scss`, con selector exclusivo de app-personnel-form y token existente $color-font. No cambia Specification ni patrón visual; corrige UI-03/AC-07.
+
+- **v3** (2026-11-02): [Implementation Plan] Conformidad visual: importar table-actions en lista, corregir clases compartidas y habilitar scroll horizontal nativo con mínimos de columna para no truncar nombre/estado en móvil; título con table-title existente. DDR aclara comportamiento responsive sin alterar alcance.
+
+- **v3** (2026-11-02): [Implementation Plan] Observar el ancho real del contenedor con ResizeObserver y recalcular ngx-datatable cuando termina la animación del sidebar; evita un viewport residual de 11 px al cruzar breakpoints. Desconectar observador al destruir. API nativa, sin dependencias.
+
+- **v3** (2026-11-02): [Implementation Plan] El scroll móvil se aplica al wrapper Bootstrap table-responsive con mínimo de lectura 45rem; se conserva columnMode force sin scrollbar interno, evitando que ngx-datatable retenga anchos transitorios del sidebar.
