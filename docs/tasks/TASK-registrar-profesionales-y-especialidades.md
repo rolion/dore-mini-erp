@@ -1,10 +1,10 @@
 # TASK-registrar-profesionales-y-especialidades: PB-PER-001
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-profesionales-y-especialidades
-**Pull Request:** _pendiente de registrar URL_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/46
 **Fuente:** https://trello.com/c/GrXrs3YA
 
 ## Historial de transiciones
@@ -79,12 +79,24 @@ Vínculos ajenos; pérdida de autoría al desvincular; cambios accidentales de p
 [PLAN-2026-11-02-registrar-profesionales-y-especialidades](../plans/PLAN-2026-11-02-registrar-profesionales-y-especialidades.md) (v2), COMPLETO, **Specification readiness: READY**. El usuario confirmó «solo a uno». Se continúa con PR único y delivery-build.
 
 ## Implementación
-_Pendiente_
+Dominio, casos de uso y repositorio Personal con empresa obligatoria; migración aditiva; user_id único no nulo y manejo de carrera concurrente (AC-01/02/03/05/08). Especialidades opcionales, selección por nombre y asociaciones conservadas. No se consulta Agenda ni se cambia ningún permiso al vincular/desvincular/desactivar.
+
+API CRUD/estado y selector de usuarios acotado mediante adaptador shared.identity sin imports accounts desde negocio. Gate `personnel`, registro de módulo opcional, mapa de fronteras y DDD (AC-04/06). Frontend con 3 plantillas parametrizadas por tipo, modelos/servicio, listas, formularios, detalle, confirmación compartida en feature, menú y guard admin (AC-01/02/04/07). Referencias: products/product-list/product-form/product-detail y supplier-form; ngx-datatable/ng-select, Reactive Forms, clases y badges existentes. No se crea un componente visual compartido nuevo.
+
+Pruebas de ingeniería: 157 pruebas backend y 2 migraciones de Acceso aisladas; 11 tests Angular iniciales; lint y build de desarrollo ejecutados. Esto no constituye el Quality Gate. Se añadieron 3 tests del guard posteriormente para el gate. Pruebas de concurrencia usan PostgreSQL real con ICU para nombres Unicode. Dependencias existentes reutilizadas; sin instalaciones.
+
+Desviaciones de implementación: selector `id` opcional para resolver nombre del usuario seleccionado fuera de la primera página; misma empresa y autorización. Tests de migración de Acceso ejecutados separados porque un TransactionTestCase previo vacía el dato sembrado; pasan aislados. Build local con preserve-symlinks por enlace de dependencias entre unidades; no cambia configuración de producto.
+
+Deuda: citas futuras se integrarán con Agenda según tarjeta. Sin nómina ni Sucursales. Revisión visual y gate independientes pendientes.
+
 
 ## Review
-_Pendiente_
+En curso con delivery-publish; no declarar PASS sin comprobaciones ejecutadas.
 
 ## Publicación
 _Pendiente_
 
 Decisión de negocio recibida el 2026-11-02: usuario opcional, vinculado a un solo profesional.
+
+| 2026-11-02 | PLANNING → ENGINEERING | Specification READY; vínculo uno a uno confirmado; PR #46 | delivery-start |
+| 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas preparadas | delivery-build |

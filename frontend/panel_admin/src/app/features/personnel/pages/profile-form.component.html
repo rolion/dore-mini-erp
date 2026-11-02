@@ -1,0 +1,48 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ id ? 'Editar' : 'Nuevo registro' }} · {{ title }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">Personal</li><li class="breadcrumb-item"><a [routerLink]="base">{{ title }}</a></li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="card-header"><h4>{{ id ? 'Editar' : 'Nuevo registro' }} · {{ title }}</h4></div>
+    <div class="card-body">
+      @if (loading) { <p role="status">Cargando…</p> }
+      @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+      @if (lookupError) { <div class="alert alert-warning" role="alert">{{ lookupError }} <button type="button" class="btn btn-light" (click)="loadOptions()">Reintentar opciones</button></div> }
+      <form class="register-form m-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <fieldset [disabled]="saving || loading">
+          <div class="row">
+            <div class="form-group col-md-12"><label for="profile-name">Nombre <span class="text-danger">*</span></label>
+              <input id="profile-name" class="form-control" formControlName="name" maxlength="150" required>
+              @if (errorFor('name')) { <small class="form-text text-danger">{{ errorFor('name') }}</small> }
+            </div>
+            @if (professional) {
+              <div class="form-group col-md-6"><label for="profile-identification">Identificación (opcional)</label>
+                <input id="profile-identification" class="form-control" formControlName="identification" maxlength="50">
+                <small class="form-text text-danger">{{ errorFor('identification') }}</small></div>
+              <div class="form-group col-md-6"><label for="profile-registration">Matrícula profesional (opcional)</label>
+                <input id="profile-registration" class="form-control" formControlName="registration_number" maxlength="100">
+                <small class="form-text text-danger">{{ errorFor('registration_number') }}</small></div>
+              <div class="form-group col-md-6"><label for="profile-phone">Teléfono (opcional)</label>
+                <input id="profile-phone" type="tel" class="form-control" formControlName="phone" maxlength="30">
+                <small class="form-text text-danger">{{ errorFor('phone') }}</small></div>
+              <div class="form-group col-md-6"><label for="profile-email">Correo (opcional)</label>
+                <input id="profile-email" type="email" class="form-control" formControlName="email" maxlength="254">
+                <small class="form-text text-danger">{{ errorFor('email') }}</small></div>
+              <div class="form-group col-md-12"><label for="profile-specialties">Especialidades (opcional)</label>
+                <ng-select [readonly]="saving || loading" labelForId="profile-specialties" [items]="specialties" bindLabel="name" bindValue="id" [multiple]="true" formControlName="specialty_ids" notFoundText="Sin especialidades" placeholder="Seleccionar por nombre"></ng-select>
+                <small class="form-text text-danger">{{ errorFor('specialty_ids') }}</small></div>
+              <div class="form-group col-md-12"><label for="profile-user">Usuario vinculado (opcional)</label>
+                <ng-select [readonly]="saving || loading" labelForId="profile-user" [items]="users" bindLabel="name" bindValue="id" [typeahead]="userSearch$" [clearable]="true" formControlName="user_id" notFoundText="Sin usuarios que coincidan" typeToSearchText="Escribe un nombre o usuario" placeholder="Sin usuario"></ng-select>
+                <small class="form-text text-muted">Puedes guardar sin usuario. Quitar la selección desvincula la cuenta y conserva sus permisos.</small>
+                <small class="form-text text-danger">{{ errorFor('user_id') }}</small></div>
+            }
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="saving || loading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
+          <a class="btn btn-light ms-2" [routerLink]="id ? [base, id] : [base]">Cancelar</a>
+        </fieldset>
+      </form>
+    </div>
+  </div></div>
+</section>

@@ -1,0 +1,39 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title m-b-0">Detalle</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">Personal</li><li class="breadcrumb-item"><a [routerLink]="base">{{ kind === 'professionals' ? 'Profesionales' : 'Especialidades' }}</a></li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="card-header"><h4>{{ profile?.name || 'Detalle' }}</h4></div>
+    <div class="card-body">
+      @if (loading) { <p role="status">Cargando…</p> }
+      @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
+      @if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+      @if (profile; as p) {
+        <dl class="row m-4">
+          <dt class="col-sm-3">Nombre</dt><dd class="col-sm-9">{{ p.name }}</dd>
+          @if (kind === 'professionals') {
+            <dt class="col-sm-3">Identificación</dt><dd class="col-sm-9">{{ p.identification || 'Sin identificación' }}</dd>
+            <dt class="col-sm-3">Teléfono</dt><dd class="col-sm-9">{{ p.phone || 'Sin teléfono' }}</dd>
+            <dt class="col-sm-3">Correo</dt><dd class="col-sm-9">{{ p.email || 'Sin correo' }}</dd>
+            <dt class="col-sm-3">Matrícula profesional</dt><dd class="col-sm-9">{{ p.registration_number || 'Sin matrícula' }}</dd>
+            <dt class="col-sm-3">Especialidades</dt><dd class="col-sm-9">
+              @for (item of p.specialties; track item.id) { <span class="d-block">{{ item.name }}{{ item.active ? '' : ' (Inactiva)' }}</span> }
+              @if (!p.specialties?.length) { Sin especialidades }
+            </dd>
+            <dt class="col-sm-3">Usuario vinculado</dt><dd class="col-sm-9">{{ p.user_id ? (userName || 'Cargando usuario…') : 'Sin usuario' }}</dd>
+          }
+          <dt class="col-sm-3">Estado</dt><dd class="col-sm-9"><span class="badge-outline" [class.col-green]="p.active" [class.col-red]="!p.active">{{ p.active ? 'Activo' : 'Inactivo' }}</span></dd>
+          <dt class="col-sm-3">Creado</dt><dd class="col-sm-9">{{ p.created_at | date:'dd/MM/yyyy HH:mm' }} · Usuario #{{ p.created_by }}</dd>
+          <dt class="col-sm-3">Última actualización</dt><dd class="col-sm-9">{{ p.updated_at | date:'dd/MM/yyyy HH:mm' }} · Usuario #{{ p.updated_by }}</dd>
+        </dl>
+        <div class="m-4">
+          <a class="btn btn-primary" [routerLink]="[base, p.id, 'edit']">Editar</a>
+          <button class="btn btn-warning ms-2" [disabled]="saving" (click)="toggle()">{{ saving ? 'Procesando…' : (p.active ? 'Desactivar' : 'Activar') }}</button>
+        </div>
+      }
+      <a class="btn btn-light m-4" [routerLink]="base">Volver</a>
+    </div>
+  </div></div>
+</section>

@@ -117,3 +117,5 @@ Ninguna prevista; no se instaló ninguna.
 
 ## Changelog
 - **v2** (2026-11-02): [Specification] AC-08 uno a uno tras respuesta explícita del usuario «solo a uno»; contrato final y readiness READY. [Implementation Plan] constraint único y composición del adaptador de identidad.
+
+- **v2 implementation detail:** Selector de usuarios admite filtro opcional `id` validado y acotado a empresa para mostrar el nombre del usuario actualmente vinculado, aunque no esté en la primera página; no modifica permisos ni cardinalidad. Se reutilizan dependencias existentes mediante junction local; PostgreSQL temporal con colación ICU.

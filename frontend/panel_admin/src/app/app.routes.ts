@@ -26,6 +26,12 @@ export const APP_ROUTE: Route[] = [
         children: [
             { path: '', redirectTo: 'dashboard/main', pathMatch: 'full' },
             {
+                path: 'personnel',
+                canActivate: [moduleGuard],
+                data: { module: 'personnel' },
+                loadChildren: () => import('./features/personnel/personnel.routes').then(m => m.PERSONNEL_ROUTES),
+            },
+            {
                 path: 'dashboard',
                 canActivate: [moduleGuard],
                 data: { module: 'reporting' },
