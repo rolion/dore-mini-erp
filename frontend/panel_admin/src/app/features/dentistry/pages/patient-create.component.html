@@ -1,0 +1,30 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style"><li class="breadcrumb-item"><h5 class="page-title m-b-0">Nuevo paciente</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">Odontología</li><li class="breadcrumb-item"><a routerLink="/pocketbiz/dentistry/patients">Pacientes</a></li><li class="breadcrumb-item">Nuevo</li></ul>
+  <div class="section-body"><div class="card"><div class="card-header"><h4>Vincular cliente existente</h4></div><div class="card-body">
+    <div class="m-4">
+      <p>Busca al cliente antes de crear un perfil odontológico. Su identidad y contacto se conservan en Clientes.</p>
+      <label for="existing-customer-search">Nombre o teléfono del cliente</label>
+      <input id="existing-customer-search" class="form-control mb-3" [formControl]="search" [readOnly]="saving">
+      @if (loading) { <p aria-live="polite">Buscando clientes…</p> }
+      @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light" (click)="retry()" [disabled]="saving">Reintentar búsqueda</button></div> }
+      @if (!loading && !error && !results.length) { <p>No hay clientes que coincidan con la búsqueda.</p> }
+      <div class="list-group mb-3">
+        @for (customer of results; track customer.id) {
+          <button class="list-group-item list-group-item-action" type="button" [disabled]="saving" [class.active]="selected?.id === customer.id" [attr.aria-pressed]="selected?.id === customer.id" (click)="select(customer)">
+            {{ customer.name }} · {{ customer.phone || 'Teléfono no informado' }} {{ customer.active ? '' : '· Inactivo' }}
+          </button>
+        }
+      </div>
+      @if (total > 20) { <p class="text-muted">Se muestran 20 coincidencias. Afina la búsqueda por nombre o teléfono.</p> }
+      <button class="btn btn-light mb-3" type="button" (click)="createCustomer()" [disabled]="saving || opening">Crear cliente con el flujo existente</button>
+      @if (selected; as customer) {
+        <div class="alert alert-info">Cliente seleccionado: <strong>{{ customer.name }}</strong>. Los antecedentes se completan en su ficha.</div>
+        @if (existingId) { <p>Este cliente ya tiene perfil odontológico. <a [routerLink]="['/pocketbiz/dentistry/patients', existingId]">Abrir ficha existente</a></p> }
+      }
+      <button type="button" class="btn btn-primary" (click)="create()" [disabled]="!selected || saving || !!existingId">{{ saving ? 'Creando…' : 'Crear perfil odontológico' }}</button>
+      <a class="btn btn-light ms-2" routerLink="/pocketbiz/dentistry/patients">Cancelar</a>
+    </div>
+  </div></div></div>
+</section>

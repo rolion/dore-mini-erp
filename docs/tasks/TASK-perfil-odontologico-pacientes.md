@@ -1,10 +1,10 @@
 # TASK-perfil-odontologico-pacientes: Registrar perfil odontológico de pacientes
 
-**Etapa actual:** PLANNING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-perfil-odontologico-pacientes
-**Pull Request:** Pendiente de apertura
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/47
 **Fuente:** https://trello.com/c/MTgh7h0v
 
 ## Historial de transiciones
@@ -12,6 +12,8 @@
 |---|---|---|---|
 | 2026-11-02 | (nuevo) → INVESTIGATION | Lectura de PB-ODO-001 y código | delivery-start |
 | 2026-11-02 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas en el chat | delivery-start |
+| 2026-11-02 | PLANNING → ENGINEERING | Specification READY; PR #47 abierto | delivery-start |
+| 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas de la Specification; se solicita Quality Gate independiente | delivery-build |
 
 ## Investigación
 ### Requerimiento
@@ -65,7 +67,17 @@ Fuga clínica por APIs administrativas, ampliación accidental del permiso globa
 ## Plan
 `docs/plans/PLAN-2026-11-02-perfil-odontologico-pacientes.md` (v1), COMPLETO, READY.
 ## Implementación
-Pendiente.
+Implementados AC-01/02/05/06 en dentistry (dominio, API, restricción de unicidad y auditoría atómica); AC-04/05 en Customers (demografía administrativa e historial separados, dominio con fecha inyectada); AC-03 en permiso clínico explícito compuesto con empresa/módulo; AC-07/08 en feature Angular con lista, alta vinculada y ficha de dos formularios independientes.
+
+Referencias visuales: Clientes/Productos para lista, formulario y detalle; Compras para pestañas. Reutilizados ngx-datatable, Reactive Forms, alta rápida de Clientes, badges, botones, guard de cambios sin guardar y componentes de layout. `PatientHistoryComponent` es específico del expediente; no se agregó un patrón compartido global.
+
+Pruebas implementadas: dominio/HTTP de textos, edad/responsable, unicidad concurrente (dos peticiones reales), autorización/módulos/multiempresa, rollback de escritura si falla auditoría, archivo/reactivación, HTTP Angular, guard, errores, envío único y conservación del otro formulario. Corridas locales de ingeniería: 250 pruebas backend y primeras 21 frontend, lint y build completados; no constituyen aprobación del Quality Gate. Se añadieron después dos pruebas del componente de historial y el formato local de fechas; requieren corrida final independiente.
+
+Desviaciones de implementación: la prueba existente de migración de Accounts se hizo independiente del orden (migra desde BEFORE), porque un nuevo TransactionTestCase de concurrencia vacía datos iniciales; no se modificó ninguna migración aplicada. El catálogo esperado de módulos incorpora dentistry. Sin cambios de Specification ni dependencias nuevas.
+
+Entorno: dependencias reutilizadas del checkout existente mediante junction local ignorado; build/test requieren `--preserve-symlinks` en este worktree entre discos. Vite dev presenta fallo de enlaces Windows, por lo que la revisión de navegador se hace sobre build de producción servido con un helper temporal fuera del repositorio. PostgreSQL 16 temporal con ICU es-BO en 127.0.0.1:55433, sin usar credenciales/base existentes. No se leyó .env.
+
+Recorrido de navegador de ingeniería: alta desde Customer existente, validación visible de menor/responsable, guardados administrativo/clínico y auditoría, ficha clara/oscura en 1440 y 390 px. En móvil, documento 375 px para viewport 390: sin desbordamiento de página; tablas de historial con scroll horizontal local. Confirmación de archivo observada; el adaptador de navegador no mantuvo el diálogo para aceptarlo, así que archivo/reactivación se verifica con integración API y componentes. Pendiente aprobación independiente y revisión visual del build final (incluye buscador Bootstrap y fechas dd/MM/yyyy).
 ## Review
 Pendiente.
 ## Publicación

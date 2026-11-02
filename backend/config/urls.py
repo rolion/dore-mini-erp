@@ -6,6 +6,7 @@ from modules.expenses.api.urls import category_urlpatterns, expense_urlpatterns
 from .health import health
 
 urlpatterns = [
+    path('api/dentistry/', include('modules.dentistry.api.urls')),
     path('admin/', admin.site.urls),
     path('api/health/', health, name='health'),
     path('api/auth/', include('modules.accounts.api.urls')),

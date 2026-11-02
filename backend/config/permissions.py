@@ -1,6 +1,6 @@
 from rest_framework.exceptions import PermissionDenied
 
-from modules.accounts.api.permissions import CompanyAdminPermission
+from modules.accounts.api.permissions import CompanyAdminPermission, has_clinical_access
 from shared import module_gate
 from shared.tenancy import company_id_from
 
@@ -35,3 +35,9 @@ class CompanyModulePermission(CompanyAdminPermission):
             if key not in enabled:
                 raise ModuleDisabled(key)
         return True
+
+
+class CompanyClinicalPermission(CompanyModulePermission):
+    """Clinical endpoints explicitly require both the existing checks and the clinical policy."""
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and has_clinical_access(request.user)

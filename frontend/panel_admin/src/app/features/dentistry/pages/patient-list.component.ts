@@ -1,0 +1,58 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { EMPTY, catchError, debounceTime, finalize, merge, switchMap, tap } from 'rxjs';
+import { PatientSummary } from '../models/patient';
+import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
+
+@Component({
+  selector: 'app-patient-list', imports: [RouterLink, ReactiveFormsModule, NgxDatatableModule],
+  templateUrl: './patient-list.component.html',
+})
+export class PatientListComponent implements OnInit {
+  private api = inject(DentistryApiService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
+  search = new FormControl('', { nonNullable: true });
+  active = new FormControl('true', { nonNullable: true });
+  rows: PatientSummary[] = [];
+  count = 0;
+  page = 1;
+  loading = false;
+  error = '';
+  messages = { emptyMessage: 'No hay pacientes que coincidan con los filtros.', totalMessage: 'en total' };
+  ngOnInit() {
+    merge(this.search.valueChanges.pipe(debounceTime(300)), this.active.valueChanges)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.filter());
+    this.route.queryParamMap.pipe(
+      tap(params => {
+        this.search.setValue(params.get('search') ?? '', { emitEvent: false });
+        const active = params.get('active') ?? 'true';
+        this.active.setValue(['true', 'false', ''].includes(active) ? active : 'true', { emitEvent: false });
+        this.page = Math.max(1, Number(params.get('page')) || 1);
+      }),
+      switchMap(() => {
+        this.loading = true; this.error = ''; this.rows = [];
+        return this.api.list(this.search.value, this.active.value, this.page).pipe(
+          catchError((error: HttpErrorResponse) => { this.error = errorMessage(error); this.count = 0; return EMPTY; }),
+          finalize(() => this.loading = false));
+      }), takeUntilDestroyed(this.destroyRef),
+    ).subscribe(result => { this.rows = result.results; this.count = result.count; });
+  }
+  get filters() { return { search: this.search.value, active: this.active.value, page: this.page }; }
+  filter(page = 1) {
+    this.router.navigate([], { relativeTo: this.route, queryParams: { search: this.search.value, active: this.active.value, page } });
+  }
+  clear() { this.search.setValue('', { emitEvent: false }); this.active.setValue('true', { emitEvent: false }); this.filter(); }
+  retry() {
+    this.loading = true; this.error = '';
+    this.api.list(this.search.value, this.active.value, this.page).pipe(
+      finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef),
+    ).subscribe({ next: result => { this.rows = result.results; this.count = result.count; },
+      error: (error: HttpErrorResponse) => this.error = errorMessage(error) });
+  }
+}

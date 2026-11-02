@@ -1,0 +1,72 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style"><li class="breadcrumb-item"><h5 class="page-title m-b-0">Ficha del paciente</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">Odontología</li><li class="breadcrumb-item"><a routerLink="/pocketbiz/dentistry/patients" [queryParams]="backFilters">Pacientes</a></li><li class="breadcrumb-item">Ficha</li></ul>
+  <div class="section-body">
+    @if (loading) { <p aria-live="polite">Cargando ficha…</p> }
+    @if (error) { <div class="alert alert-danger" role="alert">{{ error }} @if (!patient) { <button class="btn btn-light" type="button" (click)="load()">Reintentar</button> }</div> }
+    @if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
+    @if (patient; as p) {
+      <div class="card"><div class="card-header d-flex flex-wrap gap-3"><h4>{{ p.customer.name }}</h4>
+        <span class="badge-outline" [class.col-green]="p.active" [class.col-orange]="!p.active">{{ p.active ? 'Activo' : 'Archivado' }}</span>
+      </div><div class="card-body">
+        @if (!p.active) { <div class="alert alert-info">Perfil archivado. Su historia se conserva; reactívalo para editar.</div> }
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item" role="presentation"><button id="profile-tab" type="button" class="nav-link" role="tab" [class.active]="tab === 'profile'" [attr.aria-selected]="tab === 'profile'" aria-controls="profile-panel" (click)="tab = 'profile'">Perfil</button></li>
+          <li class="nav-item" role="presentation"><button id="clinical-tab" type="button" class="nav-link" role="tab" [class.active]="tab === 'clinical'" [attr.aria-selected]="tab === 'clinical'" aria-controls="clinical-panel" (click)="tab = 'clinical'">Antecedentes</button></li>
+        </ul>
+        @if (tab === 'profile') {
+          <div id="profile-panel" role="tabpanel" aria-labelledby="profile-tab">
+            <dl class="row m-4"><dt class="col-sm-3">Nombre</dt><dd class="col-sm-9">{{ p.customer.name }}</dd>
+              <dt class="col-sm-3">Teléfono</dt><dd class="col-sm-9">{{ p.customer.phone || 'No informado' }}</dd>
+              <dt class="col-sm-3">Correo</dt><dd class="col-sm-9">{{ p.customer.email || 'No informado' }}</dd>
+              <dt class="col-sm-3">Cliente</dt><dd class="col-sm-9"><a [routerLink]="['/pocketbiz/customers', p.id]">Ver datos administrativos del cliente</a></dd>
+              <dt class="col-sm-3">Alta del perfil</dt><dd class="col-sm-9">{{ p.created_at | date:'dd/MM/yyyy HH:mm' }} · Usuario {{ p.created_by }}</dd>
+              <dt class="col-sm-3">Último cambio clínico</dt><dd class="col-sm-9">{{ p.updated_at | date:'dd/MM/yyyy HH:mm' }} · Usuario {{ p.updated_by }}</dd>
+            </dl>
+            <form class="register-form m-4" [formGroup]="adminForm" (ngSubmit)="saveAdmin()" novalidate>
+              <fieldset [disabled]="saving"><legend class="h5">Datos administrativos adicionales</legend>
+                <p class="text-muted">La fecha de nacimiento es opcional. Si no se informa, la edad queda desconocida. Para menores de 18 años, nombre y teléfono del responsable son obligatorios.</p>
+                <div class="row"><div class="form-group col-md-4"><label for="birth-date">Fecha de nacimiento</label>
+                  <input id="birth-date" type="date" class="form-control" formControlName="birth_date" [max]="today" aria-describedby="birth-error">
+                  <small id="birth-error" class="form-text text-danger">{{ adminErrors['birth_date'] || (adminForm.hasError('futureBirth') ? 'La fecha no puede ser futura.' : '') }}</small>
+                </div><div class="form-group col-md-4"><label for="responsible-name">Nombre del responsable @if (needsResponsible) { <span class="text-danger">*</span> }</label>
+                  <input id="responsible-name" class="form-control" formControlName="responsible_name" maxlength="150" aria-describedby="responsible-name-error">
+                  <small id="responsible-name-error" class="form-text text-danger">{{ adminErrors['responsible_name'] || (adminForm.hasError('responsibleName') ? 'Indica el nombre del responsable.' : '') }}</small>
+                </div><div class="form-group col-md-4"><label for="responsible-phone">Teléfono del responsable @if (needsResponsible) { <span class="text-danger">*</span> }</label>
+                  <input id="responsible-phone" type="tel" class="form-control" formControlName="responsible_phone" maxlength="30" aria-describedby="responsible-phone-error">
+                  <small id="responsible-phone-error" class="form-text text-danger">{{ adminErrors['responsible_phone'] || (adminForm.hasError('responsiblePhone') ? 'Indica el teléfono del responsable.' : '') }}</small>
+                </div></div>
+                <button class="btn btn-primary" type="submit" [disabled]="saving || !p.active || !adminForm.dirty || adminForm.invalid">{{ savingAdmin ? 'Guardando…' : 'Guardar datos administrativos' }}</button>
+                <button class="btn btn-light ms-2" type="button" (click)="cancelAdmin()" [disabled]="saving || !adminForm.dirty">Cancelar cambios</button>
+              </fieldset>
+            </form>
+            <div class="m-4"><app-patient-history [patientId]="p.id" [clinical]="false" [revision]="adminRevision" /></div>
+          </div>
+        } @else {
+          <div id="clinical-panel" role="tabpanel" aria-labelledby="clinical-tab">
+            @if (p.allergies) { <div class="alert alert-warning m-4"><strong>Alergias informadas:</strong> {{ p.allergies }}</div> }
+            <form class="register-form m-4" [formGroup]="clinicalForm" (ngSubmit)="saveClinical()" novalidate>
+              <fieldset [disabled]="saving"><legend class="h5">Antecedentes clínicos</legend>
+                <p class="text-muted">Todos los campos son opcionales. Vacío significa «No informado», sin asumir ausencia. Declara expresamente cuando se haya confirmado que no hay antecedentes.</p>
+                @for (field of fields; track field.key) {
+                  <div class="form-group"><label [for]="field.key">{{ field.label }}</label>
+                    <textarea class="form-control" [id]="field.key" [formControlName]="field.key" rows="3" maxlength="4000" placeholder="No informado" [attr.aria-describedby]="field.key + '-error'"></textarea>
+                    <small class="form-text text-danger" [id]="field.key + '-error'">{{ clinicalErrors[field.key] || (clinicalForm.controls[field.key].hasError('maxlength') ? 'Máximo 4000 caracteres.' : '') }}</small>
+                  </div>
+                }
+                <button class="btn btn-primary" type="submit" [disabled]="saving || !p.active || !clinicalForm.dirty || clinicalForm.invalid">{{ savingClinical ? 'Guardando…' : 'Guardar antecedentes' }}</button>
+                <button class="btn btn-light ms-2" type="button" (click)="cancelClinical()" [disabled]="saving || !clinicalForm.dirty">Cancelar cambios</button>
+              </fieldset>
+            </form>
+            <div class="m-4"><app-patient-history [patientId]="p.id" [revision]="clinicalRevision" /></div>
+          </div>
+        }
+        <div class="m-4 d-flex flex-wrap gap-2">
+          <button class="btn btn-warning" type="button" (click)="toggleActive()" [disabled]="saving">{{ savingState ? 'Actualizando…' : p.active ? 'Archivar perfil' : 'Reactivar perfil' }}</button>
+          <a class="btn btn-light" routerLink="/pocketbiz/dentistry/patients" [queryParams]="backFilters">Volver a pacientes</a>
+        </div>
+      </div></div>
+    }
+  </div>
+</section>

@@ -70,6 +70,8 @@ class IsolationMigrationTests(TransactionTestCase):
         self.assertEqual(old.get_model('sales', 'OrderModel').objects.count(), 1)
 
     def test_empty_database_gets_the_default_company_and_nothing_else(self):  # EDGE-05
+        # Run the migration under test, independent of prior TransactionTestCase flushes.
+        self.migrate(BEFORE)
         new = self.migrate(AFTER)
         self.assertEqual(
             list(new.get_model('accounts', 'Company').objects.values_list('name', flat=True)),
