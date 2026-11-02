@@ -23,6 +23,8 @@
 | 2026-11-02 | REVIEW → ENGINEERING | Quality Gate detectó dos defectos Medium de paginación; REV-01/02 | delivery-publish |
 | 2026-11-02 | ENGINEERING → REVIEW | Correcciones de paginación y regresiones añadidas; sin cambio de Specification | delivery-build |
 
+| 2026-11-02 | REVIEW → REVIEW | Segunda revisión focal cierra REV-01/02; Quality Gate sin PASS por verificaciones PostgreSQL/visual pendientes | delivery-publish |
+
 ## Investigación
 ### Requerimiento
 [PB-SRV-001 · Administrar catálogo de servicios](https://trello.com/c/OmDBYZaq). Insumo funcional, no Specification aprobada por el usuario. Sin etiquetas, checklists ni comentarios al consultar. Administrador mantiene nombre obligatorio, código opcional único por empresa, descripción, precio base BOB no negativo, duración positiva en minutos, especialidad opcional y estado. Lista, alta/edición y detalle bajo Catálogo → Servicios; búsqueda por nombre, estado y especialidad. Crear, editar, activar/desactivar; sin stock ni unidad. Inactivos quedan en historial y no se ofrecen para nuevos usos. Cambios de precio/duración no alteran documentos previos. Ejemplo: 120/30 pasa a 150/45 conservando lo anterior. Rechazar duración cero y referencias ajenas.
@@ -88,8 +90,10 @@ Pendiente de entorno: pruebas API/BD y concurrencia escritas pero no ejecutadas:
 ## Review
 Primer Quality Gate independiente sobre 2e44a87: **FAIL / no PASS**. Revisor aislado leyó TASK/PLAN v2/ADR/DDR/sistema de diseño y diff. Ejecutó 21 tests de dominio/modularidad/DDD (exit 0) y Bandit (exit 0, sin hallazgos). Lint independiente quedó sin terminación y Karma independiente fue abortado tras 364.7 s sin salida; no se declaran aprobados por esa revisión. Build y audit solo contaban con autoverificación del implementador.
 
-Hallazgos IMPLEMENTATION Medium: [REV-01](../reviews/REV-2026-11-02-administrar-catalogo-servicios-01.md), parámetros de paginación; [REV-02](../reviews/REV-2026-11-02-administrar-catalogo-servicios-02.md), página inexistente tras desactivar último registro. Se volvió a delivery-build y se implementaron correcciones sin cambio de Specification. Segunda revisión focal pendiente.
+Hallazgos IMPLEMENTATION Medium: [REV-01](../reviews/REV-2026-11-02-administrar-catalogo-servicios-01.md), parámetros de paginación; [REV-02](../reviews/REV-2026-11-02-administrar-catalogo-servicios-02.md), página inexistente tras desactivar último registro. Se volvió a delivery-build y se implementaron correcciones sin cambio de Specification. Segunda revisión focal sobre 3e932c3: ambos hallazgos corregidos y cerrados; sin defectos nuevos. Revisor ejecutó 2 tests de paginación sin BD (exit 0) y confirmó recuperación de página por lectura. No ejecutó Angular en la revisión focal.
 
 Persisten verificaciones no realizadas: API/BD y concurrencia PostgreSQL con conexión autenticada; revisión visual integrada. No hay PASS ni autorización para publicar como listo.
 ## Publicación
-_Pendiente_
+PR #48 permanece **draft**, sin merge ni declaración de listo. Código y correcciones subidos; árbol limpio al entregar. **Etapa REVIEW**, pendiente de entorno para cerrar Quality Gate.
+
+Para continuar: proporcionar en el entorno una conexión PostgreSQL de pruebas autenticada (`DATABASE_URL`, sin publicar valores ni leer secretos en el chat), ejecutar pruebas API/BD/concurrencia y recorrido visual integrado en móvil/escritorio con temas claro/oscuro. La skill delivery-publish exige detenerse cuando no se puede ejecutar una verificación relevante; no se omiten esas verificaciones ni se las marca PASS.
