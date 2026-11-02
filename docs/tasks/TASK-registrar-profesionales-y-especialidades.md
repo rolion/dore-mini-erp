@@ -1,6 +1,6 @@
 # TASK-registrar-profesionales-y-especialidades: PB-PER-001
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-profesionales-y-especialidades
@@ -14,9 +14,9 @@
 | 2026-11-02 | INVESTIGATION → DESIGN | Nuevo contexto y pantallas administrativas | delivery-start |
 | 2026-11-02 | DESIGN → ARCHITECTURE | Propuesta de pantallas conforme al sistema de diseño | delivery-start |
 | 2026-11-02 | ARCHITECTURE → PLANNING | Alcance actualizado; pendiente cardinalidad del vínculo de usuario | delivery-start |
-
 | 2026-11-02 | PLANNING → ENGINEERING | Specification READY; vínculo uno a uno confirmado; PR #46 | delivery-start |
 | 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas preparadas | delivery-build |
+| 2026-11-02 | REVIEW → PUBLISH | Gate independiente PASS; REV-01 cerrado; pendiente aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -79,7 +79,7 @@ Vínculos ajenos; pérdida de autoría al desvincular; cambios accidentales de p
 [ADR-registrar-profesionales-y-especialidades-contexto-personal](../adr/ADR-registrar-profesionales-y-especialidades-contexto-personal.md), propuesto. Vínculo opcional uno a uno, confirmado por el usuario.
 
 ## Plan
-[PLAN-2026-11-02-registrar-profesionales-y-especialidades](../plans/PLAN-2026-11-02-registrar-profesionales-y-especialidades.md) (v3), COMPLETO, **Specification readiness: READY**. El usuario confirmó «solo a uno». Se continúa con PR único y delivery-build.
+[PLAN-2026-11-02-registrar-profesionales-y-especialidades](../plans/PLAN-2026-11-02-registrar-profesionales-y-especialidades.md) (v3), COMPLETO, **Specification readiness: READY**. El usuario confirmó «solo a uno». Implementado en el PR único #46.
 
 ## Implementación
 Dominio, casos de uso y repositorio Personal con empresa obligatoria; migración aditiva; user_id único no nulo y manejo de carrera concurrente (AC-01/02/03/05/08). Especialidades opcionales, selección por nombre y asociaciones conservadas. No se consulta Agenda ni se cambia ningún permiso al vincular/desvincular/desactivar.
@@ -94,14 +94,18 @@ Deuda: citas futuras se integrarán con Agenda según tarjeta. Sin nómina ni Su
 
 
 ## Review
-En curso con delivery-publish; no declarar PASS sin comprobaciones ejecutadas.
+**PASS** independiente sobre c471e4c. [QA final](../reviews/QA-2026-11-02-registrar-profesionales-y-especialidades.md): 157 tests backend, 2 migraciones de Acceso aisladas y 34 Angular; migraciones sin cambios pendientes, build producción, lint, Bandit y npm audit offline OK. [REV-01](../reviews/REV-2026-11-02-registrar-profesionales-y-especialidades-01.md) cerrado. Inspección visual real y capturas persistidas verificadas a móvil/escritorio y claro/oscuro.
+
+Ejecución final transportada por el agente principal por limitación de aprobación del subagente; análisis de código, logs y veredicto independientes. Cobertura frontend acotada: statements63.08%, branches46.31%; backend revisada manualmente por rama porque coverage.py no está instalado. Audit offline limitado a caché; no se atribuye comprobación de advisories nuevos online.
 
 ## Publicación
-_Pendiente_
+[PR #46](https://github.com/rolion/dore-mini-erp/pull/46), listo para revisión y aprobación humana. No se hace merge ni despliegue. Cambios sensibles: nuevo contexto y migración aditiva, con rollback/retención descritos en ADR. Sin dependencias nuevas ni cambios de permisos al vincular usuarios.
+
+Para usarlo, habilitar Personal en Configuración → Módulos de la empresa. Agenda, Sucursales, recursos y nómina fuera de alcance; citas futuras se integrarán con Agenda conforme a la tarjeta actualizada.
 
 Decisión de negocio recibida el 2026-11-02: usuario opcional, vinculado a un solo profesional.
 
 
-Revisión visual: retorno puntual a delivery-build por contraste del chip ng-select en tema oscuro; se aplica color de texto existente exclusivamente al formulario de Personal. PLAN v3 cambia solo implementación. Continúa revisión sobre el commit corregido.
+Revisión visual: retorno puntual a delivery-build por contraste del chip ng-select en tema oscuro; se aplica color de texto existente exclusivamente al formulario de Personal. PLAN v3 cambia solo implementación. Gate final PASS sobre el commit corregido c471e4c.
 
 Corrección de review REV-01: Guardar se deshabilita con form.invalid además de saving/loading; el test existente verifica estado inválido y válido. No cambia Specification.
