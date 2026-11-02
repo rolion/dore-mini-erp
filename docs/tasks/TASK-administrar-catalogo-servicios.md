@@ -1,10 +1,10 @@
 # TASK-administrar-catalogo-servicios: PB-SRV-001
 
-**Etapa actual:** PLANNING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-administrar-catalogo-servicios
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/48
 **Fuente:** https://trello.com/c/OmDBYZaq
 
 ## Historial de transiciones
@@ -15,6 +15,10 @@
 | 2026-11-02 | DESIGN → ARCHITECTURE | Nuevo modelo, API y habilitación por empresa | delivery-start |
 | 2026-11-02 | ARCHITECTURE → PLANNING | Contrastar alcance de integraciones opcionales | delivery-start |
 | 2026-11-02 | PLANNING → PLANNING | Regla de mayúsculas confirmada, aclaración innecesaria sobre Personal retirada; PLAN v2 READY | delivery-start |
+
+| 2026-11-02 | PLANNING → ENGINEERING | PLAN v2 READY y PR #48 abierto | delivery-start |
+
+| 2026-11-02 | ENGINEERING → REVIEW | Implementación y autoverificaciones completas; BD pendiente de entorno | delivery-build |
 
 ## Investigación
 ### Requerimiento
@@ -66,8 +70,17 @@ Confundir producto sin stock con servicio; aceptar UUID ajeno como especialidad 
 ## Plan
 [PLAN-2026-11-02-administrar-catalogo-servicios](../plans/PLAN-2026-11-02-administrar-catalogo-servicios.md) (v2), COMPLETO, **Specification readiness: READY**. Código normalizado a mayúsculas confirmado por usuario. Continuar con PR único y delivery-build.
 ## Implementación
-_Pendiente_
+Implementado mediante delivery-build en PR único #48:
+- Dominio Service, normalización obligatoria de códigos a mayúsculas y unicidad de códigos no vacíos por empresa (AC-01..04, INV-01..04). Dinero Decimal, duración entera positiva; migración nueva 0001 aditiva y constraints.
+- API CRUD sin DELETE, acciones de estado, filtros/paginación, gate services y repositorios por empresa. DTO inmutable para snapshots y exclusión de inactivos en nuevos usos (AC-02,05,06).
+- Especialidad opcional: proveedor no disponible explícito, null permitido y referencias no verificables rechazadas; UI informa limitación (AC-07).
+- Feature Angular lista/formulario/detalle, acciones confirmadas, códigos en mayúsculas, errores por campo, salida con cambios, doble envío y filtros/página conservados (AC-08). Referencias product-list/form/detail; reutiliza money, badges, Page, ngx-datatable y estilos btn-tbl; sin patrón compartido nuevo.
+- Sin cambios de Specification durante implementación. Detalles resueltos: virtualization=false en tabla paginada externamente para impedir que eventos de scroll reinicien la página; preserve-symlinks solo en el comando local de build por dependencias compartidas entre unidades.
+
+Autoverificación (no sustituye Quality Gate): 21 tests dominio/modularidad/límites DDD OK; 18 tests frontend enfocados con cobertura OK; ngc de app/spec OK; lint global OK; build producción con --preserve-symlinks OK (warnings heredados de Sass); Bandit sin hallazgos; npm audit --omit=dev reporta 0 vulnerabilidades.
+
+Pendiente de entorno: pruebas API/BD y concurrencia escritas pero no ejecutadas: PostgreSQL local exige autenticación y DATABASE_URL no está configurada en el proceso. No se leyeron .env/secretos. Docker instalado sin daemon disponible. Inspección visual integrada aún no verificada por falta de backend con BD. Cobertura mostrada por Karma incluye dependencias de layout; no se presenta como cobertura completa del producto.
 ## Review
-_Pendiente_
+Pendiente de Quality Gate independiente (delivery-publish). No declarar PASS sin pruebas PostgreSQL y verificación visual aplicables.
 ## Publicación
 _Pendiente_

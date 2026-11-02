@@ -40,6 +40,13 @@ export const APP_ROUTE: Route[] = [
                     import('./features/products/products.routes').then((m) => m.PRODUCTS_ROUTE),
             },
             {
+                path: 'catalog/services',
+                canActivate: [moduleGuard],
+                data: { module: 'services' },
+                loadChildren: () =>
+                    import('./features/services/services.routes').then((m) => m.SERVICES_ROUTE),
+            },
+            {
                 path: 'customers',
                 canActivate: [moduleGuard],
                 data: { module: 'customers' },

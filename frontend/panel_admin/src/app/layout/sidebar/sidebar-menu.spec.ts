@@ -44,7 +44,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(dashboard.groupTitle).toBeFalse();
 
     expect(catalog.class).toBe('menu-toggle');
-    expect(catalog.submenu.map((item) => item.path)).toEqual(['/pocketbiz/catalog/products']);
+    expect(catalog.submenu.map((item) => item.path)).toEqual(['/pocketbiz/catalog/products', '/pocketbiz/catalog/services']);
 
     expect(customer.path).toBe('/pocketbiz/customers');
     expect(customer.icon).toBe('users');
@@ -74,7 +74,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(25);
+    expect(titles.length).toBe(26);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {

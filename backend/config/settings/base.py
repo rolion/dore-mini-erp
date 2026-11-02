@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'modules.accounts',
     'modules.catalog',
+    'modules.service_catalog',
     'modules.inventory',
     'modules.costing',
     'modules.customers',
