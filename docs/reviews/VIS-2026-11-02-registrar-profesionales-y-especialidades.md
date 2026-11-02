@@ -32,3 +32,5 @@ Todas las imágenes contienen exclusivamente datos sintéticos. Las capturas de 
 - [Detalle móvil oscuro](evidence/personnel/mobile-dark-detail.jpg)
 
 No se prueba Agenda: su integración es alcance futuro explícito de la tarjeta. La deuda visual de layout/login ajena al feature no se modifica.
+
+Nota de captura final: la opción fullPage del navegador provocó un reflow temporal al exportar dos vistas oscuras móviles, distinto de la pantalla inspeccionada. Se reemplazaron mobile-dark-list y mobile-dark-detail por los mismos bytes de la captura real del viewport (getScreenshot), sin modificar imágenes. El revisor independiente reabre los archivos para validar la evidencia persistida.

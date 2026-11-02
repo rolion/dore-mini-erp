@@ -39,7 +39,7 @@
                 <small class="form-text text-danger">{{ errorFor('user_id') }}</small></div>
             }
           </div>
-          <button type="submit" class="btn btn-primary" [disabled]="saving || loading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
           <a class="btn btn-light ms-2" [routerLink]="id ? [base, id] : [base]">Cancelar</a>
         </fieldset>
       </form>

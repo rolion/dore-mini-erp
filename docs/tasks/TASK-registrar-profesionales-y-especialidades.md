@@ -103,3 +103,5 @@ Decisión de negocio recibida el 2026-11-02: usuario opcional, vinculado a un so
 
 
 Revisión visual: retorno puntual a delivery-build por contraste del chip ng-select en tema oscuro; se aplica color de texto existente exclusivamente al formulario de Personal. PLAN v3 cambia solo implementación. Continúa revisión sobre el commit corregido.
+
+Corrección de review REV-01: Guardar se deshabilita con form.invalid además de saving/loading; el test existente verifica estado inválido y válido. No cambia Specification.

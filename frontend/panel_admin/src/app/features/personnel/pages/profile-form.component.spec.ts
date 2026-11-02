@@ -37,6 +37,11 @@ describe('ProfileFormComponent', () => {
     expect(api.save).not.toHaveBeenCalled();
     expect(component.errorFor('name')).toBeTruthy();
     expect(component.errorFor('email')).toBeTruthy();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBeTrue();
+    component.form.patchValue({ name: 'Ana', email: '' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBeFalse();
   });
   it('prevents double submission and keeps input on a duplicate-user error (AC-07, AC-08)', () => {
     const pending = new Subject<Profile>();
