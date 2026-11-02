@@ -88,6 +88,17 @@ describe('ServiceListComponent', () => {
     expect(api.list).toHaveBeenCalledWith({ search: 'Limpieza', active: true, page: 1, pageSize: 20 });
     fixture.destroy();
   }));
+  it('recovers a valid page after the last active service on a saved page is deactivated', () => {
+    const state = TestBed.inject(ServiceFiltersState); state.pageIndex = 1;
+    api.list.and.returnValues(of({ count: 21, next: null, previous: null, results: [service] }),
+      throwError(() => new ServiceApiError('Página no disponible', 400, {}, true)),
+      of({ count: 20, next: null, previous: null, results: [{ ...service, id: 'another' }] }));
+    const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
+    fixture.componentInstance.onUpdated({ ...service, active: false }); fixture.detectChanges();
+    expect(state.pageIndex).toBe(0); expect(fixture.componentInstance.error).toBe('');
+    expect(fixture.componentInstance.rows[0].id).toBe('another');
+    expect(api.list).toHaveBeenCalledWith({ search: '', active: true, page: 1, pageSize: 20 });
+  });
   it('shows errors and can retry without displaying stale results', () => {
     api.list.and.returnValue(throwError(() => new ServiceApiError('Sin conexión', 0)));
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();

@@ -28,9 +28,11 @@ function toBody(input: Partial<ServiceInput>): Record<string, string | number | 
 
 function apiError(error: HttpErrorResponse): Observable<never> {
   const fieldErrors: Partial<Record<keyof ServiceInput, string>> = {};
+  let invalidPage = false;
   const body: unknown = error.error;
   if (body && typeof body === 'object') {
     const record = body as Record<string, unknown>;
+    invalidPage = error.status === 400 && Array.isArray(record['page']);
     for (const key of Object.keys(fields) as (keyof ServiceInput)[]) {
       const value = record[fields[key]];
       if (Array.isArray(value)) fieldErrors[key] = value.map(String).join(' ');
@@ -40,7 +42,7 @@ function apiError(error: HttpErrorResponse): Observable<never> {
     : error.status === 400 ? 'Revisa los datos ingresados.'
     : error.status === 403 ? 'No tienes permiso para acceder a Servicios.'
     : error.status === 404 ? 'Servicio no encontrado.' : 'No se pudo completar la operación. Inténtalo de nuevo.';
-  return throwError(() => new ServiceApiError(message, error.status, fieldErrors));
+  return throwError(() => new ServiceApiError(message, error.status, fieldErrors, invalidPage));
 }
 
 @Injectable({ providedIn: 'root' })

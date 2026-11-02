@@ -133,6 +133,15 @@ class ServiceApiTests(APITestCase):
         self.assertEqual(body['results'][0]['name'], 'Limpieza')
         self.assertEqual(self.client.get(URL, {'active': 'oops'}).status_code, 400)
 
+    def test_pagination_parameters_and_vanished_pages_are_field_errors(self):
+        self.create()
+        for field, raw in [('page', '0'), ('page', '-1'), ('page', 'abc'), ('page', '2'),
+                           ('page_size', '0'), ('page_size', 'abc'), ('page_size', '1.5')]:
+            with self.subTest(field=field, raw=raw):
+                response = self.client.get(URL, {field: raw})
+                self.assertEqual(response.status_code, 400, response.content)
+                self.assertIn(field, response.json())
+
     def test_disabled_module_and_unauthenticated_have_no_access(self):
         body = self.create()
         CompanyModuleModel.objects.filter(company_id=self.company.id, module_key='services').delete()

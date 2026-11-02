@@ -3,7 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, startWith, switchMap } from 'rxjs';
+import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, startWith, switchMap, throwError } from 'rxjs';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { ServiceToggleComponent } from '../components/service-toggle.component';
 import { CatalogService, ServiceApiError } from '../models/service';
@@ -32,9 +32,16 @@ export class ServiceListComponent implements OnInit {
     this.reload$.pipe(startWith(undefined), switchMap(() => {
       this.loading = true;
       this.error = '';
-      return this.api.list({ search: this.state.search,
+      const params = { search: this.state.search,
         active: this.state.status === 'all' ? undefined : this.state.status === 'active',
-        page: this.state.pageIndex + 1, pageSize: this.pageSize }).pipe(
+        page: this.state.pageIndex + 1, pageSize: this.pageSize };
+      return this.api.list(params).pipe(
+        catchError((error: ServiceApiError) => {
+          if (!error.invalidPage || this.state.pageIndex === 0) return throwError(() => error);
+          // A state change in this view or its detail can remove the last row of a saved page.
+          this.state.pageIndex = 0;
+          return this.api.list({ ...params, page: 1 });
+        }),
         catchError((error: ServiceApiError) => {
           this.error = error.message; this.rows = []; this.total = 0; return EMPTY;
         }), finalize(() => this.loading = false));

@@ -43,4 +43,9 @@ describe('ServicesApiService', () => {
     const req = http.expectOne('/api/services/service-1/deactivate/'); expect(req.request.method).toBe('POST');
     req.flush({}, { status: 403, statusText: 'Forbidden' });
   });
+  it('identifies a vanished page so the list can recover without hiding other errors', () => {
+    api.list({ page: 2 }).subscribe({ error: (error: ServiceApiError) => expect(error.invalidPage).toBeTrue() });
+    const req = http.expectOne(request => request.url === '/api/services/');
+    req.flush({ page: ['La página ya no está disponible.'] }, { status: 400, statusText: 'Bad Request' });
+  });
 });

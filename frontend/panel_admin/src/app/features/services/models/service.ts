@@ -37,7 +37,7 @@ export interface ServiceDto {
 
 export class ServiceApiError extends Error {
   constructor(message: string, readonly status: number,
-    readonly fields: Partial<Record<keyof ServiceInput, string>> = {}) {
+    readonly fields: Partial<Record<keyof ServiceInput, string>> = {}, readonly invalidPage = false) {
     super(message);
   }
 }

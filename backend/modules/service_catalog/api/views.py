@@ -19,6 +19,16 @@ class ServicePagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
+    def paginate_queryset(self, queryset, request, view=None):
+        for field in ('page', 'page_size'):
+            raw = request.query_params.get(field)
+            if raw is not None and (len(raw) > 10 or not raw.isascii() or not raw.isdigit() or int(raw) < 1):
+                raise ValidationError({field: ['Ingresa un entero mayor que cero.']})
+        try:
+            return super().paginate_queryset(queryset, request, view=view)
+        except NotFound as exc:
+            raise ValidationError({'page': ['La página solicitada ya no está disponible.']}) from exc
+
 
 def _catalog(request):
     return ServiceCatalog(DjangoServiceRepository(company_id_from(request)), UnavailableSpecialties())
