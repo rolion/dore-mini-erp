@@ -33,6 +33,7 @@ export interface AppointmentEvent {
   id: number;
   kind: string;
   author_id: number;
+  author_name: string;
   created_at: string;
   reason: string;
   previous_starts: string | null;

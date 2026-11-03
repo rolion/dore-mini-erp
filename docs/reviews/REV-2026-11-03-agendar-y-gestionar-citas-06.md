@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-06: Truncado silencioso a 100 registros (profesionales y calendario)
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ Se descartan sin mensaje (improbable en un consultorio único, pero no avisa).
 
 ## Evidence
 appointment-list.component.ts: personnel.list(... page_size: 100) y api.list({ ..., page_size: 100 }); appointment-form.component.ts igual.
+
+## Resolución
+`fetchAll` recorre todas las páginas de profesionales, servicios y citas del calendario; los clientes muestran «Se muestran N de M» cuando la búsqueda se trunca. Spec `fetch-all.spec.ts`.

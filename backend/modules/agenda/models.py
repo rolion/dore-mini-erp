@@ -62,6 +62,7 @@ class AppointmentEvent(models.Model):
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='events')
     kind = models.CharField(max_length=12)
     author_id = models.BigIntegerField()
+    author_name = models.CharField(max_length=150, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     reason = models.CharField(max_length=500, blank=True, default='')
     previous_starts = models.DateTimeField(null=True, blank=True)

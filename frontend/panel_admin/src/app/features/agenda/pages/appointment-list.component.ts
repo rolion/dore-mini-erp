@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { Profile } from '../../personnel/models/profile';
 import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
@@ -9,6 +9,7 @@ import {
   Appointment, AppointmentFilters, AppointmentStatus, STATUS_CLASSES, STATUS_LABELS, Slot,
 } from '../models/appointment';
 import { AppointmentsApiService, formatDateTime } from '../services/appointments-api.service';
+import { fetchAll } from '../services/fetch-all';
 
 interface DayGroup {
   date: string;
@@ -27,6 +28,8 @@ export class AppointmentListComponent implements OnInit {
   private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   readonly statuses = Object.keys(STATUS_LABELS) as AppointmentStatus[];
   readonly labels = STATUS_LABELS;
@@ -45,9 +48,14 @@ export class AppointmentListComponent implements OnInit {
   error = '';
 
   ngOnInit(): void {
-    this.personnel.list('professionals', { page: 1, page_size: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: page => this.people = page.results, error: () => this.error = 'No se pudieron cargar los profesionales.' });
-    this.search();
+    const query = this.route.snapshot.queryParamMap;
+    this.filters.patchValue({
+      from: query.get('from') ?? '', to: query.get('to') ?? '', professional: query.get('professional') ?? '',
+      status: query.get('status') ?? '', search: query.get('search') ?? '',
+    });
+    fetchAll(page => this.personnel.list('professionals', { page, page_size: 100 })).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: people => this.people = people, error: () => this.error = 'No se pudieron cargar los profesionales.' });
+    this.search(Math.max(1, Number(query.get('page')) || 1));
   }
 
   get hasFilters(): boolean {
@@ -70,6 +78,10 @@ export class AppointmentListComponent implements OnInit {
     this.page = page;
     const raw = this.filters.getRawValue();
     const filters: AppointmentFilters = { ...raw, status: raw.status as AppointmentStatus | '', page };
+    // Los filtros y la página viven en la URL: se recuperan al recargar, compartir o volver desde el detalle.
+    const queryParams: Record<string, string | number | null> = { page: page > 1 ? page : null };
+    for (const [key, value] of Object.entries(raw)) queryParams[key] = value || null;
+    void this.router.navigate([], { relativeTo: this.route, queryParams, replaceUrl: true });
     this.loading = true;
     this.error = '';
     this.api.list(filters).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
@@ -102,13 +114,12 @@ export class AppointmentListComponent implements OnInit {
     const last = this.addDays(date, Number(span) - 1);
     this.loading = true;
     forkJoin({
-      appointments: this.api.list({ professional, from: date, to: last, page_size: 100 }),
+      appointments: fetchAll(page => this.api.list({ professional, from: date, to: last, page_size: 100, page })),
       free: this.api.freeSlots(professional, date, last),
     }).pipe(
       takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false),
     ).subscribe({
-      next: ({ appointments, free }) => {
-        const items = appointments.results;
+      next: ({ appointments: items, free }) => {
         const groups: DayGroup[] = [];
         for (let i = 0; i < Number(span); i++) {
           const day = this.addDays(date, i);

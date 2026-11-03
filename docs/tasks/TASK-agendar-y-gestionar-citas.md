@@ -18,6 +18,7 @@
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada; pruebas de API pendientes de PostgreSQL | delivery-build |
 | 2026-11-03 | REVIEW (sin cambio) | Quality Gate sin PASS: AC-02 no verificable sin PostgreSQL; REV-01 (Medium) y REV-02..07 (Low) abiertos | delivery-publish |
 | 2026-11-03 | REVIEW (sin cambio) | REV-01 corregido por indicación de la persona; AC-02 sigue pendiente de PostgreSQL | delivery-build |
+| 2026-11-03 | REVIEW (sin cambio) | REV-02..07 corregidos; AC-02 verificado en PostgreSQL (.env local copiado a petición de la persona) | delivery-build |
 
 ## Investigación
 
@@ -95,6 +96,8 @@ Desviaciones respecto al plan:
 - Las acciones usan `<dialog>` nativo y no `NgbModal`, por coherencia con `AgendaComponent` (que migró a diálogos nativos tras el gate de PB-AGE-001).
 - La búsqueda por cliente filtra por el snapshot `customer_name` (`icontains`) en lugar de `search_customer_ids`: evita una llamada entre módulos y N+1; el ADR menciona la fachada solo como opción.
 - `WeekView` ahora usa `week_records` (extraído a `application/week.py`) para compartir la consulta; sin cambio de comportamiento.
+
+Correcciones tras el primer Quality Gate: REV-01..07 (profesional visible, filtros en la URL, autor legible con migración `0003`, ADR/DDR y design-system actualizados, paginación completa, pruebas de ausencia y specs de lista y formulario). Con el `.env` local copiado a petición de la persona: las pruebas de concurrencia (`test_concurrent_requests_accept_only_one` y `test_concurrent_overlapping_writes_accept_only_one`) pasan en PostgreSQL y `modules.agenda` completo corre en PostgreSQL (32 pruebas correctas); la suite completa del backend en PostgreSQL pasa (1383 pruebas) tras declarar en `modules/sales/tests/test_boundaries.py` que Agenda puede depender de Clientes y Servicios por sus fachadas. Karma de `features/agenda`: 18 correctas; lint limpio.
 
 Deuda técnica / limitaciones: turnos y ausencias editados después no revisan citas existentes; `treatment_item_id` queda reservado sin UI ni validación; sin restricción de fechas pasadas al crear (pregunta abierta del plan).
 

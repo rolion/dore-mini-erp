@@ -12,7 +12,7 @@ La recepción necesita ver, crear y gestionar citas. Hoy Agenda solo tiene la co
 - Calendario: vista **diaria o semanal** del profesional elegido, apilada por día, sin grilla interactiva (mismo criterio que el DDR de horarios): bloques de texto con hora, cliente, servicio y badge de estado, y «Disponible» como franjas libres con botón «Agendar» (abre el formulario con inicio y profesional precargados).
 - `/pocketbiz/agenda/citas/nueva` — **Formulario**: cliente (selector con búsqueda), profesional, servicio activo (precarga duración), fecha/hora de inicio, duración (editable, entero > 0), fin calculado de solo lectura, notas con aviso «No incluyas diagnósticos». Pie Guardar/Cancelar.
 - `/pocketbiz/agenda/citas/:id` — **Detalle con acciones de ciclo de vida**: `dl` con cliente, servicio, profesional, inicio/fin, estado (badge con texto), notas; sección «Historial» (tabla apilada con evento, autor, fecha, motivo y horario anterior). Acciones desde `allowed_actions` del servidor.
-- Diálogos `NgbModal` (`backdrop: 'static'`): **Confirmar cita**, **Reprogramar** (nuevo inicio/duración, motivo obligatorio, resumen antes→después), **Cancelar** (motivo obligatorio, `btn-danger` deshabilitado hasta tener motivo). Atendida / No asistió con diálogo de resumen, disponibles solo desde el inicio.
+- Diálogos nativos `<dialog>` modales (mismo patrón que la configuración de horarios tras su revisión; sin `NgbModal`): **Confirmar cita**, **Reprogramar** (nuevo inicio/duración, motivo obligatorio, resumen antes→después), **Cancelar** (motivo obligatorio, `btn-danger` deshabilitado hasta tener motivo). Atendida / No asistió con diálogo de resumen, disponibles solo desde el inicio.
 
 ## Componentes/patrones elegidos
 Plantillas de `design-system.md` §5: Lista (variante purchase-list), Formulario, Detalle con pestañas y acciones, Diálogo de acción irreversible con motivo. Badges con texto (`col-orange` programada, `col-blue` confirmada, `col-red` cancelada, `col-green` atendida, `col-grey` no asistió). Sin componentes nuevos compartidos; calendario propio con el mismo criterio de texto del DDR de horarios. Menú: Agenda → Citas junto a Configuración.
@@ -26,3 +26,6 @@ Cargando, vacío (mensaje explicativo y «Limpiar filtros»), error con «Reinte
 
 ## Consecuencias
 Calendario textual menos «visual» que una grilla horaria; aceptado por accesibilidad y coste. Sin vínculo a tratamiento en la UI hasta que exista ese módulo.
+
+## Actualización de implementación (2026-11-03, REV-04)
+Los diálogos de confirmar, reprogramar, cancelar y marcar atendida / no asistió usan `<dialog>` nativo por coherencia con `AgendaComponent`. Los filtros y la página del listado viven en la URL. El listado, el detalle y los diálogos muestran el profesional y el historial muestra el nombre del autor.

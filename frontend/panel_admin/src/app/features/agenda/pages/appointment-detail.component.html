@@ -46,7 +46,7 @@
                 <tr>
                   <td>{{ events[event.kind] || event.kind }}</td>
                   <td>{{ formatDateTime(event.created_at) }}</td>
-                  <td>Usuario {{ event.author_id }}</td>
+                  <td>{{ event.author_name || 'Usuario ' + event.author_id }}</td>
                   <td>{{ event.reason || '—' }}</td>
                   <td>{{ event.previous_starts ? formatDateTime(event.previous_starts) + ' – ' + (event.previous_ends ?? '').slice(11, 16) : '—' }}</td>
                 </tr>
