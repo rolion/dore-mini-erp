@@ -18,6 +18,7 @@ MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
     ModuleDefinition('services', 'Servicios', 'Catálogo de servicios con precio y duración, sin stock.',
                      requires=('catalog',)),
     ModuleDefinition('personnel', 'Personal', 'Profesionales y especialidades de atención.'),
+    ModuleDefinition('agenda', 'Agenda', 'Horarios y ausencias por profesional.', requires=('personnel',)),
     ModuleDefinition('customers', 'Clientes', 'Agenda de clientes e historial de compras.'),
     ModuleDefinition('dentistry', 'Odontología', 'Pacientes y antecedentes odontológicos.', requires=('customers',)),
     ModuleDefinition('sales', 'Ventas', 'Pedidos, entrega y cobros.', requires=('catalog',), optional=('customers',)),
