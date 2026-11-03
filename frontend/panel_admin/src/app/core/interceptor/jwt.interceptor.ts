@@ -1,4 +1,3 @@
-import { tr } from '../i18n/translate';
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { environment } from '../../../environments/environment';

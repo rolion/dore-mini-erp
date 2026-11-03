@@ -29,7 +29,9 @@ export class PatientListComponent implements OnInit {
   page = 1;
   loading = false;
   error = '';
-  messages = { emptyMessage: tr('DENTISTRY.PATIENT_LIST.NO_HAY_PACIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('DENTISTRY.PATIENT_LIST.NO_HAY_PACIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   ngOnInit() {
     merge(this.search.valueChanges.pipe(debounceTime(300)), this.active.valueChanges)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.filter());

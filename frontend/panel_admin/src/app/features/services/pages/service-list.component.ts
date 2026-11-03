@@ -35,7 +35,9 @@ export class ServiceListComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
-  readonly messages = { emptyMessage: tr('SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS'), totalMessage: 'servicios' };
+  get messages() {
+    return { emptyMessage: tr('SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS'), totalMessage: tr('COMMON.SERVICES_TOTAL') };
+  }
 
   ngOnInit(): void {
     this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({

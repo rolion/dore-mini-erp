@@ -20,7 +20,9 @@ export class ProfileFormComponent implements OnInit {
   private api = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   readonly kind = this.route.snapshot.data['kind'] as ProfileKind;
-  readonly title = this.kind === 'professionals' ? tr('PERSONNEL.PROFILE_FORM.PROFESIONAL') : tr('PERSONNEL.PROFILE_FORM.ESPECIALIDAD');
+  get title() {
+    return this.kind === 'professionals' ? tr('PERSONNEL.PROFILE_FORM.PROFESIONAL') : tr('PERSONNEL.PROFILE_FORM.ESPECIALIDAD');
+  }
   readonly base = `/pocketbiz/personnel/${this.kind}`;
   readonly professional = this.kind === 'professionals';
   readonly userSearch$ = new Subject<string>();

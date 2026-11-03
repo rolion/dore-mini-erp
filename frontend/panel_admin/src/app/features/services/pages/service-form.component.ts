@@ -28,7 +28,9 @@ export class ServiceFormComponent implements OnInit, HasUnsavedChanges {
     durationMinutes: this.fb.control<number | null>(null, [Validators.required, Validators.min(1), Validators.max(2147483647), Validators.pattern(/^\d+$/)]),
     specialtyId: this.fb.control<string | null>({ value: null, disabled: true }),
   });
-  readonly fieldLabels = { name: tr('SERVICES.SERVICE_FORM.NOMBRE'), code: tr('SERVICES.SERVICE_FORM.CODIGO'), description: tr('SERVICES.SERVICE_FORM.DESCRIPCION'), basePrice: tr('SERVICES.SERVICE_FORM.PRECIO_BASE_BS_2'), durationMinutes: tr('SERVICES.SERVICE_FORM.DURACION_MINUTOS_2') };
+  get fieldLabels() {
+    return { name: tr('SERVICES.SERVICE_FORM.NOMBRE'), code: tr('SERVICES.SERVICE_FORM.CODIGO'), description: tr('SERVICES.SERVICE_FORM.DESCRIPCION'), basePrice: tr('SERVICES.SERVICE_FORM.PRECIO_BASE_BS_2'), durationMinutes: tr('SERVICES.SERVICE_FORM.DURACION_MINUTOS_2') };
+  }
   readonly textFields = ['name', 'code'] as const;
   loading = false;
   saving = false;

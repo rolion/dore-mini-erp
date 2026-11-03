@@ -245,7 +245,8 @@
     "BACK_TO_HOME": "Back to home",
     "TYPE_TO_SEARCH_2": "Type to search",
     "NO_RESULTS_SHORT": "No results",
-    "TYPE_TO_SEARCH": "Type to search"
+    "TYPE_TO_SEARCH": "Type to search",
+    "SERVICES_TOTAL": "services"
   },
   "AUTH": {
     "FORGOT": {

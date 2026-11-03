@@ -1,6 +1,6 @@
 # TASK-habilitar-idiomas-es-en-pt: Habilitar español, inglés y portugués en el sistema y la landing
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-habilitar-idiomas-es-en-pt
@@ -14,6 +14,7 @@
 | 2026-11-03 | DESIGN → ARCHITECTURE | Veredicto NEEDS_ARCHITECTURE | delivery-start |
 | 2026-11-03 | ARCHITECTURE → PLANNING | DDR y 2 ADR escritos | delivery-start |
 | 2026-11-03 | PLANNING → ENGINEERING | Specification READY, PLAN v1 (COMPLETO) y PR abiertos | delivery-start |
+| 2026-11-03 | ENGINEERING → REVIEW | Implementación completa; pruebas, lint y build en verde | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,33 @@ Ver [DDR-habilitar-idiomas-es-en-pt-selector-de-idioma](../design/DDR-habilitar-
 [PLAN-2026-11-03-habilitar-idiomas-es-en-pt](../plans/PLAN-2026-11-03-habilitar-idiomas-es-en-pt.md) (v1, COMPLETO). Specification readiness: **READY**.
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Idiomas `es|en|pt` en todo el frontend (panel, autenticación, landing), selector `Spa / En / Pr`, URL con prefijo de idioma y preferencia guardada. Sin cambios de backend ni dependencias nuevas.
+
+| Parte | Qué se hizo | AC / INV |
+|---|---|---|
+| Infraestructura (`core/i18n/`, `core/service/language.service.ts`, `app.config.ts`) | `LanguageUrlSerializer` (quita/añade el prefijo; el router y las 311 referencias `/pocketbiz/…` no cambian), `LanguageState`, `LanguageService` reescrito (prefijo > preferencia `pocketbiz.lang` > `es`; carga previa con `provideAppInitializer`; `html lang`; `Location.replaceState` al cambiar), `tr()` para texto armado en código | AC-02, AC-04, AC-05, AC-11, AC-12, AC-13, INV-01, INV-02, INV-04, INV-05 |
+| Catálogos (`assets/i18n/{es,en,pt}.json`) | ~1 380 claves por idioma (se eliminó `de.json` y las banderas); fallback a `es`; prueba de paridad | AC-09, INV-03, EDGE-04 |
+| Selector (`shared/components/language-selector`) | Dropdown `Spa·Español / En·English / Pr·Português`, sin banderas; en header, landing y `auth-layout` | AC-01, AC-06, AC-07, UI-01..UI-03, UI-06 |
+| Migración de texto | ~86 plantillas (texto, atributos, `data-label`, ng-select, plantillas en línea) y ~83 archivos TS (`tr`, getters y funciones para constantes de módulo) a claves; landing reactiva | AC-03, AC-06, AC-07, AC-08 |
+| Pruebas | Nuevas: `LanguageService`, serializer, paridad de catálogos, router (prefijo, atrás/guards), selector, landing en en/pt. Ajustadas: `provideTestTranslations()` en 190 specs; `test-setup.ts` (catálogo español para `tr`) | AC-01..AC-13 |
+| Herramienta | `npm run i18n:check` (`tools/check-i18n-keys.mjs`): toda clave usada existe en los 3 catálogos | AC-08, AC-09 |
+| Docs | `CLAUDE.md` (URL con idioma, regla de no texto hardcodeado), `design-system.md` | — |
+
+**Desviaciones respecto al plan/ADR.**
+- ADR catálogos §4: además de `TranslateService.instant` se añadió un helper estático `tr()` (modelos y funciones puras no pueden inyectar). Las constantes de módulo con texto (`const X = '…'`) pasaron a funciones `X()` y las etiquetas de objetos a getters (`get label()`), para no congelar el idioma al cargar el módulo (codemod con el compilador de TypeScript; todos los usos y specs actualizados).
+- Se añadió `resolveJsonModule` en `tsconfig.json` (solo para importar los catálogos en pruebas) y `src/test-setup.ts` en los polyfills de `ng test`.
+- El selector usa el icono de FontAwesome `fa-globe` (no Feather) para no exigir `FeatherModule` en cada prueba.
+
+**Limitaciones conocidas / deuda técnica.**
+- Mensajes de error que devuelve el backend (`detail`) siguen en español (fuera de alcance, OQ-01).
+- Algunos textos calculados al crear una pantalla (p. ej. `confirmLabel` de un diálogo, títulos fijados en el constructor) se actualizan al reabrir la pantalla, no al instante; las etiquetas, mensajes de listas y plantillas sí son reactivas.
+- Fechas y moneda (`dd/MM/yyyy`, «Bs») no se localizan (OQ-03).
+- Páginas de demostración Oreva no enlazadas desde el menú no se tradujeron.
+- Traducciones en/pt redactadas por el agente: conviene revisión nativa (R-04).
+- No se pudo verificar en navegador con sesión iniciada (el backend/PostgreSQL no está levantado en este entorno). Sí se verificó en navegador la landing, el registro y el selector (cambio instantáneo, URL `/es|/en|/pt`, preferencia guardada, redirección de URL sin prefijo). La verificación de pantallas autenticadas queda para `delivery-publish`.
+
+**Pantalla de referencia / componentes.** Sin pantallas nuevas; se creó el componente compartido `app-language-selector` (anotado en `design-system.md`, sección 3).
 
 ## Review
 _Pendiente_

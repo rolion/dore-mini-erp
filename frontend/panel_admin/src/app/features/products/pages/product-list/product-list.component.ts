@@ -24,7 +24,9 @@ export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
 })
 export class ProductListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: tr('PRODUCTS.PRODUCT_LIST.NO_HAY_PRODUCTOS'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('PRODUCTS.PRODUCT_LIST.NO_HAY_PRODUCTOS'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly searchControl = new FormControl('', { nonNullable: true });
   readonly statusControl = new FormControl<StatusFilter>('all', { nonNullable: true });
   readonly useControl = new FormControl<UseFilter>('all', { nonNullable: true });

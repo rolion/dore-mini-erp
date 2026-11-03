@@ -44,7 +44,9 @@ export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_
 })
 export class ExpenseListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: tr('EXPENSES.EXPENSE_LIST.NO_HAY_GASTOS_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('EXPENSES.EXPENSE_LIST.NO_HAY_GASTOS_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly shortcuts = RANGE_SHORTCUTS;
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     dateFrom: [''],

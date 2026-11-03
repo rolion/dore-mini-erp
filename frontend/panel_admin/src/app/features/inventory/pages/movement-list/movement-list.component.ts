@@ -37,7 +37,9 @@ export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_
 })
 export class MovementListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: tr('INVENTORY.MOVEMENT_LIST.SIN_MOVIMIENTOS_PARA_LOS_FILTROS'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('INVENTORY.MOVEMENT_LIST.SIN_MOVIMIENTOS_PARA_LOS_FILTROS'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly sourceOptions = SOURCE_TYPE_OPTIONS;
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     dateFrom: [''],

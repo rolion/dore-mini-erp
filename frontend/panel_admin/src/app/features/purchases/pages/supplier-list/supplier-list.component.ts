@@ -21,7 +21,9 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
 })
 export class SupplierListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: tr('PURCHASES.SUPPLIER_LIST.NO_HAY_PROVEEDORES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('PURCHASES.SUPPLIER_LIST.NO_HAY_PROVEEDORES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly searchControl = new FormControl('', { nonNullable: true });
   /** Los proveedores desactivados no aparecen por defecto. */
   readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });

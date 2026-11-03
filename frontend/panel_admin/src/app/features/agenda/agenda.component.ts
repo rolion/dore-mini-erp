@@ -21,7 +21,9 @@ export class AgendaComponent {
   private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
-  readonly days = [tr('AGENDA.AGENDA.LUNES'), tr('AGENDA.AGENDA.MARTES'), tr('AGENDA.AGENDA.MIERCOLES'), tr('AGENDA.AGENDA.JUEVES'), tr('AGENDA.AGENDA.VIERNES'), tr('AGENDA.AGENDA.SABADO'), tr('AGENDA.AGENDA.DOMINGO')];
+  get days() {
+    return [tr('AGENDA.AGENDA.LUNES'), tr('AGENDA.AGENDA.MARTES'), tr('AGENDA.AGENDA.MIERCOLES'), tr('AGENDA.AGENDA.JUEVES'), tr('AGENDA.AGENDA.VIERNES'), tr('AGENDA.AGENDA.SABADO'), tr('AGENDA.AGENDA.DOMINGO')];
+  }
   readonly selection = this.fb.control('');
   readonly shift = this.fb.group({
     day: 0, starts: ['', Validators.required], ends: ['', Validators.required],

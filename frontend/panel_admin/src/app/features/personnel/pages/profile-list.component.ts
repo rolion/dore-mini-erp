@@ -20,12 +20,16 @@ export class ProfileListComponent implements OnInit, AfterViewInit {
   private api = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   readonly kind = this.route.snapshot.data['kind'] as ProfileKind;
-  readonly title = this.kind === 'professionals' ? tr('PERSONNEL.PROFILE_LIST.PROFESIONALES') : tr('PERSONNEL.PROFILE_LIST.ESPECIALIDADES_2');
+  get title() {
+    return this.kind === 'professionals' ? tr('PERSONNEL.PROFILE_LIST.PROFESIONALES') : tr('PERSONNEL.PROFILE_LIST.ESPECIALIDADES_2');
+  }
   readonly base = `/pocketbiz/personnel/${this.kind}`;
   readonly search = new FormControl('', { nonNullable: true });
   readonly status = new FormControl('true', { nonNullable: true });
   readonly specialty = new FormControl('', { nonNullable: true });
-  readonly messages = { emptyMessage: tr('PERSONNEL.PROFILE_LIST.NO_HAY_REGISTROS_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('PERSONNEL.PROFILE_LIST.NO_HAY_REGISTROS_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   private reload$ = new Subject<void>();
   rows: Profile[] = [];
   specialties: Profile[] = [];

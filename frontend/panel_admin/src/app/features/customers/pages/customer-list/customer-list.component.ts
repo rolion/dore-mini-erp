@@ -21,7 +21,9 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
 })
 export class CustomerListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: tr('CUSTOMERS.CUSTOMER_LIST.NO_HAY_CLIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  get messages() {
+    return { emptyMessage: tr('CUSTOMERS.CUSTOMER_LIST.NO_HAY_CLIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly searchControl = new FormControl('', { nonNullable: true });
   /** Los clientes desactivados no aparecen por defecto (REQ-CUS-005). */
   readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });
