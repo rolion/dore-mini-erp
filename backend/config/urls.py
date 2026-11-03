@@ -3,12 +3,16 @@ from django.urls import include, path
 
 from modules.expenses.api.urls import category_urlpatterns, expense_urlpatterns
 
+from modules.personnel.api.urls import professional_urls, specialty_urls
+
 from .health import health
 
 urlpatterns = [
     path('api/dentistry/', include('modules.dentistry.api.urls')),
     path('admin/', admin.site.urls),
     path('api/health/', health, name='health'),
+    path('api/professionals/', include(professional_urls)),
+    path('api/specialties/', include(specialty_urls)),
     path('api/auth/', include('modules.accounts.api.urls')),
     path('api/products/', include('modules.catalog.api.urls')),
     path('api/units/', include('modules.catalog.api.unit_urls')),

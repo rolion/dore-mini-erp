@@ -313,6 +313,41 @@
           "submenu": []
         }
       ]
+    },
+    {
+      "path": "",
+      "title": "MENUITEMS.PERSONNEL.TEXT",
+      "iconType": "feather",
+      "icon": "users",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "module": "personnel",
+      "submenu": [
+        {
+          "path": "/pocketbiz/personnel/professionals",
+          "title": "MENUITEMS.PERSONNEL.LIST.PROFESSIONALS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/personnel/specialties",
+          "title": "MENUITEMS.PERSONNEL.LIST.SPECIALTIES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ]
     }
   ]
 }

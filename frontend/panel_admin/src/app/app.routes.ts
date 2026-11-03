@@ -32,6 +32,12 @@ export const APP_ROUTE: Route[] = [
                 loadChildren: () => import('./features/dentistry/dentistry.routes').then(m => m.DENTISTRY_ROUTES),
             },
             {
+                path: 'personnel',
+                canActivate: [moduleGuard],
+                data: { module: 'personnel' },
+                loadChildren: () => import('./features/personnel/personnel.routes').then(m => m.PERSONNEL_ROUTES),
+            },
+            {
                 path: 'dashboard',
                 canActivate: [moduleGuard],
                 data: { module: 'reporting' },

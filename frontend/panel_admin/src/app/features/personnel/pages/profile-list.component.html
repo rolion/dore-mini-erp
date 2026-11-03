@@ -1,0 +1,47 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ title }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">Personal</li><li class="breadcrumb-item">{{ title }}</li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="card-header"><div class="ngxTableHeader"><div class="table-title"><h2><strong>{{ title }}</strong></h2></div></div></div>
+    <div class="card-body" #tableContainer>
+      <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+        <div><label for="profile-search">Buscar por nombre</label><input id="profile-search" class="search-field form-control" [formControl]="search"></div>
+        <div><label for="profile-state">Estado</label><select id="profile-state" class="form-select" [formControl]="status">
+          <option value="true">Activos</option><option value="false">Inactivos</option><option value="">Todos</option>
+        </select></div>
+        @if (kind === 'professionals') {
+          <div><label for="specialty-filter">Especialidad</label><select id="specialty-filter" class="form-select" [formControl]="specialty">
+            <option value="">Todas</option>@for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+          </select></div>
+        }
+        <a class="btn btn-icon btn-primary rounded-button" [routerLink]="[base, 'new']" title="Nuevo registro" aria-label="Nuevo registro"><i class="material-icons" aria-hidden="true">add</i></a>
+      </div>
+      @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button class="btn btn-light" (click)="refresh()">Reintentar</button></div> }
+      @if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+      <small class="text-muted d-block d-md-none mb-2">Desplaza la tabla horizontalmente para ver todos los datos y acciones.</small>
+      <div class="table-responsive" tabindex="0" aria-label="Listado de Personal">
+      <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+        [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+        [offset]="pageIndex" [limit]="10" [messages]="messages" (page)="onPage($event)">
+        <ngx-datatable-column name="Nombre" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template>
+          <a class="fw-bold text-break" [routerLink]="[base, row.id]">{{ row.name }}</a>
+        </ng-template></ngx-datatable-column>
+        @if (kind === 'professionals') {
+          <ngx-datatable-column name="Especialidades" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template><span class="text-break">{{ names(row) }}</span></ng-template></ngx-datatable-column>
+        }
+        <ngx-datatable-column name="Estado" [sortable]="false" [minWidth]="110"><ng-template let-row="row" ngx-datatable-cell-template>
+          <span class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? 'Activo' : 'Inactivo' }}</span>
+        </ng-template></ngx-datatable-column>
+        <ngx-datatable-column name="Acciones" [sortable]="false" [minWidth]="170"><ng-template let-row="row" ngx-datatable-cell-template>
+          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="[base, row.id]" title="Ver detalle" aria-label="Ver detalle"><i class="material-icons" aria-hidden="true">visibility</i></a>
+          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="[base, row.id, 'edit']" title="Editar" aria-label="Editar"><i class="material-icons" aria-hidden="true">edit</i></a>
+          <button class="btn btn-tbl-edit btn-tbl-toggle h-auto" [disabled]="saving" (click)="toggle(row)" [title]="row.active ? 'Desactivar' : 'Activar'" [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'"><i class="material-icons" aria-hidden="true">{{ row.active ? 'block' : 'check_circle' }}</i></button>
+        </ng-template></ngx-datatable-column>
+      </ngx-datatable>
+      </div>
+    </div>
+  </div></div>
+</section>

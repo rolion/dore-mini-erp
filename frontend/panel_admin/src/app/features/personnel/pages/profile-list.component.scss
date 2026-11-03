@@ -1,0 +1,4 @@
+@use '../../../shared/styles/table-actions';
+
+// Ancho mínimo de lectura; Bootstrap aporta el scroll y el foco al contenedor.
+ngx-datatable { min-width: 45rem; }
