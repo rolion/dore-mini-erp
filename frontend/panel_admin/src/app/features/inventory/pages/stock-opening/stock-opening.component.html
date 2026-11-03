@@ -85,8 +85,8 @@
                       <td [attr.data-label]="'COMMON.PRODUCTO' | translate">
                         <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name"
                           [typeahead]="productInput$" [loading]="productsLoading" [compareWith]="sameProduct"
-                          formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate" notFoundText="Sin resultados"
-                          typeToSearchText="Escriba para buscar" [clearable]="false" appendTo="body"
+                          formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                          [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" appendTo="body"
                           [attr.aria-label]="('INVENTORY.STOCK_OPENING.PRODUCTO_DE_LA_LINEA_N' | translate: { n: (i + 1) })" (change)="onProductsChanged()">
                         </ng-select>
                         @if (productMessage(i)) {

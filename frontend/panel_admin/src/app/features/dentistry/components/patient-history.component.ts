@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { tr } from '../../../core/i18n/translate';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
@@ -8,15 +9,15 @@ import { CLINICAL_FIELDS, PatientHistory } from '../models/patient';
 import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
 
 @Component({
-  selector: 'app-patient-history', imports: [DatePipe], template: `
-    <h5 class="h6 fw-semibold mb-3">{{ clinical ? 'Cambios clínicos' : 'Cambios administrativos' }}</h5>
-    @if (loading) { <p role="status">Cargando historial…</p> }
+  selector: 'app-patient-history', imports: [TranslatePipe, DatePipe], template: `
+    <h5 class="h6 fw-semibold mb-3">{{ (clinical ? 'DENTISTRY.PATIENT_HISTORY.CLINICAL_CHANGES' : 'DENTISTRY.PATIENT_HISTORY.ADMIN_CHANGES') | translate }}</h5>
+    @if (loading) { <p role="status">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CARGANDO_HISTORIAL' | translate }}</p> }
     @if (error) {
       <div class="alert alert-danger" role="alert">{{ error }}
-        <button class="btn btn-sm btn-light" type="button" (click)="load()">Reintentar</button>
+        <button class="btn btn-sm btn-light" type="button" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
       </div>
     }
-    @if (!loading && !error && !rows.length) { <p class="text-muted">Sin cambios registrados.</p> }
+    @if (!loading && !error && !rows.length) { <p class="text-muted">{{ 'SETTINGS.SETTINGS_HISTORY.SIN_CAMBIOS_REGISTRADOS' | translate }}</p> }
     <ol class="list-group list-group-flush border-start">
       @for (row of rows; track row.id) {
         <li class="list-group-item bg-transparent py-3">
@@ -30,8 +31,8 @@ import { DentistryApiService, errorMessage } from '../services/dentistry-api.ser
               <li class="mb-2">
                 <div class="fw-semibold small">{{ change.label }}</div>
                 <div class="row g-2 small text-break">
-                  <div class="col-sm-6"><span class="text-muted d-block">Antes</span>{{ change.before }}</div>
-                  <div class="col-sm-6"><span class="text-muted d-block">Después</span>{{ change.after }}</div>
+                  <div class="col-sm-6"><span class="text-muted d-block">{{ 'DENTISTRY.PATIENT_HISTORY.BEFORE' | translate }}</span>{{ change.before }}</div>
+                  <div class="col-sm-6"><span class="text-muted d-block">{{ 'DENTISTRY.PATIENT_HISTORY.AFTER' | translate }}</span>{{ change.after }}</div>
                 </div>
               </li>
             }
@@ -41,9 +42,9 @@ import { DentistryApiService, errorMessage } from '../services/dentistry-api.ser
     </ol>
     @if (next || previous) {
       <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
-        <button type="button" class="btn btn-light" [disabled]="loading || !previous" (click)="move(-1)">Anterior</button>
-        <span>Página {{ page }}</span>
-        <button type="button" class="btn btn-light" [disabled]="loading || !next" (click)="move(1)">Siguiente</button>
+        <button type="button" class="btn btn-light" [disabled]="loading || !previous" (click)="move(-1)">{{ 'DENTISTRY.PATIENT_HISTORY.PREVIOUS' | translate }}</button>
+        <span>{{ 'DENTISTRY.PATIENT_HISTORY.PAGE' | translate: { p0: page } }}</span>
+        <button type="button" class="btn btn-light" [disabled]="loading || !next" (click)="move(1)">{{ 'DENTISTRY.PATIENT_HISTORY.NEXT' | translate }}</button>
       </div>
     }
 

@@ -44,8 +44,8 @@
                   <label for="adjustment-product">{{ 'COMMON.PRODUCTO' | translate }} <span class="text-danger">*</span></label>
                   <ng-select labelForId="adjustment-product" [items]="productOptions" bindLabel="name"
                     [typeahead]="productInput$" [loading]="productsLoading" [compareWith]="sameProduct"
-                    formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate" notFoundText="Sin resultados"
-                    typeToSearchText="Escriba para buscar" [clearable]="false" appendTo="body">
+                    formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                    [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" appendTo="body">
                   </ng-select>
                   @if (message('productId')) {
                   <small class="form-text text-danger" data-testid="product-error">{{ message('productId') }}</small>

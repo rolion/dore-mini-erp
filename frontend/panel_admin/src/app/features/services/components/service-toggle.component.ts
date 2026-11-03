@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { tr } from '../../../core/i18n/translate';
 import { Component, DestroyRef, EventEmitter, Input, Output, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -7,12 +8,13 @@ import { CatalogService, ServiceApiError } from '../models/service';
 import { ServicesApiService } from '../services/services-api.service';
 
 @Component({
+  imports: [TranslatePipe],
   selector: 'app-service-toggle',
   template: `
     <button type="button" [class]="compact ? 'btn btn-tbl-edit btn-tbl-toggle h-auto' : 'btn btn-warning'"
       [disabled]="busy" (click)="toggle()" [title]="label" [attr.aria-label]="label">
       @if (compact) { <i class="material-icons" aria-hidden="true">power_settings_new</i> }
-      @else { {{ busy ? 'Guardando…' : label }} }
+      @else { {{ busy ? ('PERSONNEL.PROFILE_FORM.GUARDANDO' | translate) : label }} }
     </button>
     @if (error) { <small role="alert" class="text-danger d-block">{{ error }}</small> }
     @if (success) { <small role="status" class="text-success d-block">{{ success }}</small> }

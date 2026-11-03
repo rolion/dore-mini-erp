@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { tr } from '../../../../core/i18n/translate';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -5,7 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 /** Pantalla provisional de módulos habilitables que aún no existen (Compras, Inventario). */
 @Component({
   selector: 'app-coming-soon',
-  imports: [RouterLink],
+  imports: [TranslatePipe, RouterLink],
   template: `
     <section class="main-content">
       <ul class="breadcrumb breadcrumb-style ">
@@ -23,8 +24,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
             <h4>{{ title }}</h4>
           </div>
           <div class="card-body">
-            <p>Próximamente. Este módulo aún no está disponible, pero ya está habilitado para tu empresa.</p>
-            <a routerLink="/pocketbiz/dashboard/main" class="btn btn-light">Volver al panel</a>
+            <p>{{ 'SETTINGS.COMING_SOON.COMING_SOON_TEXT' | translate }}</p>
+            <a routerLink="/pocketbiz/dashboard/main" class="btn btn-light">{{ 'SETTINGS.COMING_SOON.BACK_TO_DASHBOARD' | translate }}</a>
           </div>
         </div>
       </div>

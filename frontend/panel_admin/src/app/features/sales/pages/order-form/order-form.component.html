@@ -25,8 +25,8 @@
                   <label for="order-customer">{{ 'COMMON.CLIENTE' | translate }}</label>
                   <ng-select inputId="order-customer" [items]="(customers$ | async) ?? []" bindLabel="name"
                     [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
-                    [placeholder]="'SALES.ORDER_FORM.SIN_CLIENTE_VENTA_DE_MOSTRADOR' | translate" notFoundText="Sin resultados"
-                    typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
+                    [placeholder]="'SALES.ORDER_FORM.SIN_CLIENTE_VENTA_DE_MOSTRADOR' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                    [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="true" [ariaLabel]="'COMMON.CLIENTE' | translate">
                     <ng-template ng-footer-tmp>
                       <button type="button" class="btn btn-link w-100 text-start" data-testid="new-customer"
                         (click)="createCustomer()">{{ 'SALES.ORDER_FORM.NUEVO_CLIENTE' | translate }}</button>

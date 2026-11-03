@@ -241,7 +241,11 @@
     "VERB_ACTIVATE": "activar",
     "AN_OUTBOUND": "una salida",
     "AN_INBOUND": "una entrada",
-    "IN_TOTAL": "en total"
+    "IN_TOTAL": "en total",
+    "BACK_TO_HOME": "Volver al inicio",
+    "TYPE_TO_SEARCH_2": "Escribe para buscar",
+    "NO_RESULTS_SHORT": "Sin resultados",
+    "TYPE_TO_SEARCH": "Escriba para buscar"
   },
   "AUTH": {
     "FORGOT": {
@@ -349,7 +353,8 @@
       "NUEVO": "Nuevo",
       "INGRESA_UN_CORREO_VALIDO": "Ingresa un correo válido.",
       "LAS_NOTAS_NO_PUEDEN_SUPERAR": "Las notas no pueden superar {{n}} caracteres.",
-      "CLIENTE_ACTUALIZADO": "Cliente actualizado"
+      "CLIENTE_ACTUALIZADO": "Cliente actualizado",
+      "PHONE_TAKEN_LIST": "Estos clientes ya tienen ese teléfono:"
     },
     "CUSTOMER_LIST": {
       "CLIENTES": "Clientes",
@@ -380,7 +385,8 @@
       "CREAR_CLIENTE_NUEVO": "Crear cliente nuevo",
       "TELEFONO_NO_INFORMADO": "Teléfono no informado",
       "CREANDO": "Creando…",
-      "CREAR_FICHA_CLINICA": "Crear ficha clínica"
+      "CREAR_FICHA_CLINICA": "Crear ficha clínica",
+      "SEARCHING_CUSTOMERS": "Buscando clientes…"
     },
     "PATIENT_DETAIL": {
       "CARGANDO_FICHA": "Cargando ficha…",
@@ -441,7 +447,14 @@
       "TELEFONO_DEL_RESPONSABLE": "Teléfono del responsable",
       "ACTIVO": "Activo",
       "ARCHIVADO": "Archivado",
-      "NO_INFORMADO": "No informado"
+      "NO_INFORMADO": "No informado",
+      "CLINICAL_CHANGES": "Cambios clínicos",
+      "ADMIN_CHANGES": "Cambios administrativos",
+      "BEFORE": "Antes",
+      "AFTER": "Después",
+      "PREVIOUS": "Anterior",
+      "PAGE": "Página {{p0}}",
+      "NEXT": "Siguiente"
     },
     "PATIENT": {
       "ANTECEDENTES_MEDICOS": "Antecedentes médicos",
@@ -454,6 +467,10 @@
       "REVISA_LOS_CAMPOS_SENALADOS": "Revisa los campos señalados.",
       "NO_TIENES_PERMISO_PARA_ACCEDER": "No tienes permiso para acceder a esta información.",
       "NO_SE_ENCONTRO_EL_PACIENTE": "No se encontró el paciente."
+    },
+    "ROUTES": {
+      "CLINICAL_ACCESS_UNAVAILABLE": "Acceso clínico no disponible",
+      "PERMISSION_CHECK_FAILED": "No se pudo verificar el permiso para acceder a Odontología."
     }
   },
   "EXPENSES": {
@@ -991,7 +1008,9 @@
       "PROFESIONAL": "Profesional",
       "ESPECIALIDAD": "Especialidad",
       "REVISA_ESTE_CAMPO": "Revisa este campo.",
-      "DATOS_GUARDADOS": "Datos guardados."
+      "DATOS_GUARDADOS": "Datos guardados.",
+      "NO_USERS_MATCH": "Sin usuarios que coincidan",
+      "TYPE_NAME_OR_USER": "Escribe un nombre o usuario"
     },
     "PROFILE_LIST": {
       "NUEVO_REGISTRO": "Nuevo registro",
@@ -1682,7 +1701,15 @@
       "NO_SE_PUDO_COMPLETAR_LA": "No se pudo completar la operación. Inténtalo de nuevo."
     },
     "COMING_SOON": {
-      "MODULO": "Módulo"
+      "MODULO": "Módulo",
+      "COMING_SOON_TEXT": "Próximamente. Este módulo aún no está disponible, pero ya está habilitado para tu empresa.",
+      "BACK_TO_DASHBOARD": "Volver al panel"
+    },
+    "MODULE_DISABLED": {
+      "MODULE_NOT_ENABLED": "Módulo no habilitado",
+      "NAMED_NOT_ENABLED": "El módulo {{p0}} no está habilitado para tu empresa.",
+      "THIS_NOT_ENABLED": "Este módulo no está habilitado para tu empresa.",
+      "ADMIN_CAN_ENABLE": "Un administrador puede habilitarlo en Configuración › Módulos."
     }
   },
   "LAYOUT": {

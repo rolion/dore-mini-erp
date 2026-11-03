@@ -71,8 +71,8 @@
                 <label for="filter-customer">{{ 'COMMON.CLIENTE' | translate }}</label>
                 <ng-select inputId="filter-customer" [items]="(customers$ | async) ?? []" bindLabel="name"
                   [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
-                  [placeholder]="'SALES.ORDER_LIST.TODOS_LOS_CLIENTES' | translate" notFoundText="Sin resultados"
-                  typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
+                  [placeholder]="'SALES.ORDER_LIST.TODOS_LOS_CLIENTES' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                  [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="true" [ariaLabel]="'COMMON.CLIENTE' | translate">
                 </ng-select>
               </div>
               }

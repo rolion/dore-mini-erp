@@ -75,8 +75,8 @@
                 <div class="form-group col-md-6">
                   <label for="expense-category">{{ 'COMMON.CATEGORIA' | translate }} <span class="text-danger">*</span></label>
                   <ng-select inputId="expense-category" [items]="categoryOptions" bindLabel="label" bindValue="id"
-                    formControlName="categoryId" [placeholder]="'EXPENSES.EXPENSE_FORM.ELIGE_UNA_CATEGORIA' | translate" notFoundText="Sin resultados"
-                    [clearable]="false" ariaLabel="Categoría">
+                    formControlName="categoryId" [placeholder]="'EXPENSES.EXPENSE_FORM.ELIGE_UNA_CATEGORIA' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                    [clearable]="false" [ariaLabel]="'COMMON.CATEGORIA' | translate">
                   </ng-select>
                   @if (hasError('categoryId')) {
                   <small class="form-text text-danger">{{ serverErrors.categoryId || ('EXPENSES.EXPENSE_FORM.LA_CATEGORIA_ES_OBLIGATORIA' | translate) }}</small>

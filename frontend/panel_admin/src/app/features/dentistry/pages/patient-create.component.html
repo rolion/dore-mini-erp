@@ -13,8 +13,8 @@
     <label class="form-label" for="existing-customer-search">{{ 'COMMON.CLIENTE' | translate }}</label>
     <ng-select labelForId="existing-customer-search" [items]="results" bindLabel="name" [typeahead]="customerSearch"
       [loading]="loading" [ngModel]="selected" (ngModelChange)="select($event)" [readonly]="saving"
-      [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate" notFoundText="No hay clientes que coincidan"
-      loadingText="Buscando clientes…" typeToSearchText="Escribe para buscar" [clearable]="true">
+      [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate" [notFoundText]="'CUSTOMERS.CUSTOMER_LIST.NO_HAY_CLIENTES_QUE_COINCIDAN' | translate"
+      [loadingText]="'DENTISTRY.PATIENT_CREATE.SEARCHING_CUSTOMERS' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate" [clearable]="true">
       <ng-template ng-option-tmp let-item="item">
         <span class="fw-semibold">{{ item.name }}</span>
         <small class="text-muted d-block">{{ item.phone || ('DENTISTRY.PATIENT_CREATE.TELEFONO_NO_INFORMADO' | translate) }}{{ item.active ? '' : ' · Inactivo' }}</small>

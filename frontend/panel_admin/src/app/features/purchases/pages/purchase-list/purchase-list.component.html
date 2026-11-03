@@ -50,8 +50,8 @@
                 <label for="filter-supplier">{{ 'COMMON.PROVEEDOR' | translate }}</label>
                 <ng-select inputId="filter-supplier" [items]="(suppliers$ | async) ?? []" bindLabel="name"
                   [typeahead]="supplierInput$" formControlName="supplier" [placeholder]="'PURCHASES.PURCHASE_LIST.TODOS_LOS_PROVEEDORES' | translate"
-                  notFoundText="Sin resultados" typeToSearchText="Escriba para buscar" [clearable]="true"
-                  ariaLabel="Proveedor">
+                  [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="true"
+                  [ariaLabel]="'COMMON.PROVEEDOR' | translate">
                 </ng-select>
               </div>
               <div class="col-md-2 col-6">

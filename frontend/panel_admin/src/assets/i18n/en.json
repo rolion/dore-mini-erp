@@ -241,7 +241,11 @@
     "VERB_ACTIVATE": "activate",
     "AN_OUTBOUND": "an outbound",
     "AN_INBOUND": "an inbound",
-    "IN_TOTAL": "in total"
+    "IN_TOTAL": "in total",
+    "BACK_TO_HOME": "Back to home",
+    "TYPE_TO_SEARCH_2": "Type to search",
+    "NO_RESULTS_SHORT": "No results",
+    "TYPE_TO_SEARCH": "Type to search"
   },
   "AUTH": {
     "FORGOT": {
@@ -349,7 +353,8 @@
       "NUEVO": "New",
       "INGRESA_UN_CORREO_VALIDO": "Enter a valid email.",
       "LAS_NOTAS_NO_PUEDEN_SUPERAR": "The notes cannot exceed {{n}} characters.",
-      "CLIENTE_ACTUALIZADO": "Customer updated"
+      "CLIENTE_ACTUALIZADO": "Customer updated",
+      "PHONE_TAKEN_LIST": "These customers already have that phone:"
     },
     "CUSTOMER_LIST": {
       "CLIENTES": "Customers",
@@ -380,7 +385,8 @@
       "CREAR_CLIENTE_NUEVO": "Create new customer",
       "TELEFONO_NO_INFORMADO": "Phone not provided",
       "CREANDO": "Creating…",
-      "CREAR_FICHA_CLINICA": "Create clinical record"
+      "CREAR_FICHA_CLINICA": "Create clinical record",
+      "SEARCHING_CUSTOMERS": "Searching customers…"
     },
     "PATIENT_DETAIL": {
       "CARGANDO_FICHA": "Loading record…",
@@ -441,7 +447,14 @@
       "TELEFONO_DEL_RESPONSABLE": "Guardian phone",
       "ACTIVO": "Active",
       "ARCHIVADO": "Archived",
-      "NO_INFORMADO": "Not provided"
+      "NO_INFORMADO": "Not provided",
+      "CLINICAL_CHANGES": "Clinical changes",
+      "ADMIN_CHANGES": "Administrative changes",
+      "BEFORE": "Before",
+      "AFTER": "After",
+      "PREVIOUS": "Previous",
+      "PAGE": "Page {{p0}}",
+      "NEXT": "Next"
     },
     "PATIENT": {
       "ANTECEDENTES_MEDICOS": "Medical history",
@@ -454,6 +467,10 @@
       "REVISA_LOS_CAMPOS_SENALADOS": "Check the highlighted fields.",
       "NO_TIENES_PERMISO_PARA_ACCEDER": "You do not have permission to access this information.",
       "NO_SE_ENCONTRO_EL_PACIENTE": "The patient was not found."
+    },
+    "ROUTES": {
+      "CLINICAL_ACCESS_UNAVAILABLE": "Clinical access unavailable",
+      "PERMISSION_CHECK_FAILED": "The permission to access Dentistry could not be verified."
     }
   },
   "EXPENSES": {
@@ -991,7 +1008,9 @@
       "PROFESIONAL": "Professional",
       "ESPECIALIDAD": "Specialty",
       "REVISA_ESTE_CAMPO": "Check this field.",
-      "DATOS_GUARDADOS": "Data saved."
+      "DATOS_GUARDADOS": "Data saved.",
+      "NO_USERS_MATCH": "No users match",
+      "TYPE_NAME_OR_USER": "Type a name or user"
     },
     "PROFILE_LIST": {
       "NUEVO_REGISTRO": "New record",
@@ -1682,7 +1701,15 @@
       "NO_SE_PUDO_COMPLETAR_LA": "The operation could not be completed. Try again."
     },
     "COMING_SOON": {
-      "MODULO": "Module"
+      "MODULO": "Module",
+      "COMING_SOON_TEXT": "Coming soon. This module is not available yet, but it is already enabled for your company.",
+      "BACK_TO_DASHBOARD": "Back to dashboard"
+    },
+    "MODULE_DISABLED": {
+      "MODULE_NOT_ENABLED": "Module not enabled",
+      "NAMED_NOT_ENABLED": "The {{p0}} module is not enabled for your company.",
+      "THIS_NOT_ENABLED": "This module is not enabled for your company.",
+      "ADMIN_CAN_ENABLE": "An administrator can enable it in Settings › Modules."
     }
   },
   "LAYOUT": {

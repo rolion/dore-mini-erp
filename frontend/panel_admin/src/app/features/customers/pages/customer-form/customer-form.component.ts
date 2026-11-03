@@ -43,12 +43,12 @@ export function escapeHtml(text: string): string {
 export function duplicateMatchesHtml(matches: DuplicateMatch[]): string {
   const items = matches
     .map((match) => {
-      const state = match.active ? '' : ' <em>(inactivo)</em>';
+      const state = match.active ? '' : ` <em>${tr('INVENTORY.STOCK_LIST.INACTIVO')}</em>`;
       const link = `/pocketbiz/customers/${encodeURIComponent(match.id)}`;
       return `<li><a href="${link}" target="_blank" rel="noopener">${escapeHtml(match.name)}</a>${state}</li>`;
     })
     .join('');
-  return `<p>Estos clientes ya tienen ese teléfono:</p><ul class="text-start">${items}</ul>`;
+  return `<p>${tr('CUSTOMERS.CUSTOMER_FORM.PHONE_TAKEN_LIST')}</p><ul class="text-start">${items}</ul>`;
 }
 
 @Component({

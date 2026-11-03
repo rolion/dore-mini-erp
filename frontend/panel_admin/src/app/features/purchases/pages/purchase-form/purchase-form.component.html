@@ -30,8 +30,8 @@
                   <label for="purchase-supplier">{{ 'PURCHASES.PURCHASE_FORM.PROVEEDOR' | translate }} <span class="text-danger">*</span></label>
                   <ng-select inputId="purchase-supplier" [items]="supplierOptions" bindLabel="name"
                     [typeahead]="supplierInput$" [loading]="suppliersLoading" formControlName="supplier"
-                    [placeholder]="'PURCHASES.PURCHASE_FORM.SELECCIONE_UN_PROVEEDOR' | translate" notFoundText="Sin resultados"
-                    typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Proveedor">
+                    [placeholder]="'PURCHASES.PURCHASE_FORM.SELECCIONE_UN_PROVEEDOR' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                    [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="true" [ariaLabel]="'COMMON.PROVEEDOR' | translate">
                     <ng-template ng-footer-tmp>
                       <button type="button" class="btn btn-link w-100 text-start" data-testid="new-supplier"
                         (click)="createSupplier()">{{ 'PURCHASES.PURCHASE_FORM.NUEVO_PROVEEDOR' | translate }}</button>
@@ -107,7 +107,7 @@
                       <td>
                         <ng-select [items]="optionsFor(i)" bindLabel="name" [typeahead]="productInput$"
                           [loading]="productsLoading" formControlName="product" [placeholder]="'PURCHASES.PURCHASE_FORM.BUSCAR_PRODUCTO' | translate"
-                          notFoundText="Sin resultados" typeToSearchText="Escriba para buscar" appendTo="body"
+                          [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" appendTo="body"
                           [clearable]="false" [attr.aria-label]="('INVENTORY.STOCK_OPENING.PRODUCTO_DE_LA_LINEA_N' | translate: { n: (i + 1) })"
                           (change)="onProductChange(line)"></ng-select>
                         @if (lineError(i, 'productId')) {

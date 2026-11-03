@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -11,33 +12,33 @@ export const HOME_BASE = APP_PATHS.catalog;
 
 @Component({
   selector: 'app-module-disabled',
-  imports: [AsyncPipe, RouterLink],
+  imports: [TranslatePipe, AsyncPipe, RouterLink],
   template: `
     <section class="main-content">
       <ul class="breadcrumb breadcrumb-style ">
         <li class="breadcrumb-item">
-          <h5 class="page-title m-b-0">Módulo no habilitado</h5>
+          <h5 class="page-title m-b-0">{{ 'SETTINGS.MODULE_DISABLED.MODULE_NOT_ENABLED' | translate }}</h5>
         </li>
         <li class="breadcrumb-item bcrumb-1">
-          <a [routerLink]="home$ | async" aria-label="Inicio"><i class="fas fa-home font-17"></i></a>
+          <a [routerLink]="home$ | async" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home font-17"></i></a>
         </li>
-        <li class="breadcrumb-item">Módulo no habilitado</li>
+        <li class="breadcrumb-item">{{ 'SETTINGS.MODULE_DISABLED.MODULE_NOT_ENABLED' | translate }}</li>
       </ul>
       <div class="section-body">
         <div class="card">
           <div class="card-header">
-            <h2><strong>Módulo no habilitado</strong></h2>
+            <h2><strong>{{ 'SETTINGS.MODULE_DISABLED.MODULE_NOT_ENABLED' | translate }}</strong></h2>
           </div>
           <div class="card-body">
             <p>
               @if (moduleName$ | async; as name) {
-                El módulo {{ name }} no está habilitado para tu empresa.
+                {{ 'SETTINGS.MODULE_DISABLED.NAMED_NOT_ENABLED' | translate: { p0: name } }}
               } @else {
-                Este módulo no está habilitado para tu empresa.
+                {{ 'SETTINGS.MODULE_DISABLED.THIS_NOT_ENABLED' | translate }}
               }
-              Un administrador puede habilitarlo en Configuración › Módulos.
+              {{ 'SETTINGS.MODULE_DISABLED.ADMIN_CAN_ENABLE' | translate }}
             </p>
-            <a [routerLink]="home$ | async" class="btn btn-primary">Volver al inicio</a>
+            <a [routerLink]="home$ | async" class="btn btn-primary">{{ 'COMMON.BACK_TO_HOME' | translate }}</a>
           </div>
         </div>
       </div>
