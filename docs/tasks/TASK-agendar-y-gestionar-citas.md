@@ -16,6 +16,7 @@
 | 2026-11-03 | ARCHITECTURE → PLANNING | Decisiones registradas en ADR/DDR | delivery-start |
 | 2026-11-03 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada; pruebas de API pendientes de PostgreSQL | delivery-build |
+| 2026-11-03 | REVIEW (sin cambio) | Quality Gate sin PASS: AC-02 no verificable sin PostgreSQL; REV-01 (Medium) y REV-02..07 (Low) abiertos | delivery-publish |
 
 ## Investigación
 
@@ -99,7 +100,12 @@ Deuda técnica / limitaciones: turnos y ausencias editados después no revisan c
 Verificación propia de ingeniería (no es el Quality Gate): `manage.py check` y `makemigrations --check` sin cambios; 12 pruebas de dominio sin base de datos; 31 pruebas de `modules.agenda` sobre SQLite temporal, todas correctas salvo las dos de concurrencia (`test_concurrent_*`, incluida la de PB-AGE-001), que fallan por bloqueo de tabla de SQLite y **requieren PostgreSQL**. Sin credenciales de PostgreSQL en este entorno: AC-02 no está verificado. Frontend: `ngc` de plantillas, `ng lint` y Karma de `features/agenda` y `layout` (32 pruebas) correctos. Recorrido visual y de teclado en navegador pendiente.
 
 ## Review
-_Pendiente_
+
+**Primer Quality Gate: sin PASS (PASS condicionado, no publicable).** Sin Critical ni High. Frontend: lint, `ngc`, build, `npm audit` (0 vulnerabilidades) y Karma completo (1129 correctas; sentencias 86,03 %, ramas 77,64 %). Backend: `check` y `makemigrations --check` limpios; `modules.agenda` 31 pruebas sobre SQLite, solo fallan las dos de concurrencia (bloqueo de tabla de SQLite). **AC-02 (dos reservas simultáneas) no se verificó: requiere PostgreSQL y no hay credenciales en este entorno**; por revisión de código el bloqueo por `Schedule` serializa las escrituras. `bandit`/`ruff` no ejecutados. Revisión visual en navegador no verificada.
+
+Hallazgos: [REV-01](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-01.md) (Medium, IMPLEMENTATION: el profesional no se muestra en listado ni detalle) y REV-02 a REV-07 (Low).
+
+Pendiente de una persona: ejecutar en PostgreSQL `test_concurrent_requests_accept_only_one` y `test_concurrent_overlapping_writes_accept_only_one`, recorrido visual/teclado, y decidir sobre REV-01.
 
 ## Publicación
 _Pendiente_
