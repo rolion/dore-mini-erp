@@ -9,7 +9,7 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.agenda.application.week import week_availability
+from modules.agenda.application.week import week_availability, week_records
 from modules.agenda.domain.schedule import shifts_overlap, validate_shift
 from modules.agenda.models import Schedule, Shift, Absence
 from modules.agenda.infrastructure.adapters import professional_exists
@@ -84,15 +84,7 @@ class WeekView(AgendaView):
             end = start + timedelta(days=7)
         except OverflowError as exc:
             raise ValidationError({'start': 'Fecha fuera del rango permitido.'}) from exc
-        shifts = list(Shift.objects.filter(
-            schedule__company_id=scope['company_id'], schedule__professional_id=professional_id,
-            valid_from__lt=end, valid_until__gte=start,
-        ).order_by('day', 'starts'))
-        absences = list(Absence.objects.filter(
-            schedule__company_id=scope['company_id'], schedule__professional_id=professional_id,
-            starts__lt=datetime.combine(end, datetime.min.time(), ZONE),
-            ends__gt=datetime.combine(start, datetime.min.time(), ZONE),
-        ).order_by('starts'))
+        shifts, absences = week_records(scope['company_id'], professional_id, start, ZONE)
         active_shifts, availability = week_availability(shifts, absences, start, ZONE)
         return Response({
             'timezone': ZONE.key, 'shifts': ShiftSerializer(active_shifts, many=True).data,
