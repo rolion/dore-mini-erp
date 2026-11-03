@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-09: Residuos en filtros en URL (vista del calendario y página fuera de rango)
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ Al recargar en modo Calendario vuelve al Listado; `?page=99` queda en error con 
 
 ## Evidence
 appointment-list.component.ts: ngOnInit lee from/to/professional/status/search/page, no `view`; `search(page)` se reintenta con la misma `page`; DRF PageNumberPagination responde 404 a páginas inexistentes. En navegador, tras «Ver agenda» el `location.search` quedó vacío.
+
+## Resolución
+La vista y los controles del calendario viajan en la URL (`view`, `cal_professional`, `cal_date`, `cal_span`) y se restauran al abrir; una página inexistente (404) vuelve a la 1. Specs en `appointment-list.component.spec.ts`.

@@ -9,14 +9,14 @@
     <div class="card">
       <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
         <h2><strong>Citas</strong></h2>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
           <div class="btn-group" role="group" aria-label="Vista">
-            <button type="button" class="btn" [class.btn-primary]="mode === 'list'" [class.btn-outline-primary]="mode !== 'list'"
+            <button type="button" class="btn text-nowrap" [class.btn-primary]="mode === 'list'" [class.btn-outline-primary]="mode !== 'list'"
               [attr.aria-pressed]="mode === 'list'" (click)="setMode('list')">Listado</button>
-            <button type="button" class="btn" [class.btn-primary]="mode === 'calendar'" [class.btn-outline-primary]="mode !== 'calendar'"
+            <button type="button" class="btn text-nowrap" [class.btn-primary]="mode === 'calendar'" [class.btn-outline-primary]="mode !== 'calendar'"
               [attr.aria-pressed]="mode === 'calendar'" (click)="setMode('calendar')">Calendario</button>
           </div>
-          <a class="btn btn-primary" routerLink="/pocketbiz/agenda/citas/nueva" aria-label="Nueva cita">+ Nueva cita</a>
+          <a class="btn btn-primary text-nowrap" routerLink="/pocketbiz/agenda/citas/nueva" aria-label="Nueva cita">+ Nueva cita</a>
         </div>
       </div>
       <div class="card-body">
@@ -56,19 +56,19 @@
             <p>{{ hasFilters ? 'No hay citas con esos filtros.' : 'Aún no hay citas registradas.' }}</p>
           }
           @if (rows.length) {
-            <div class="table-responsive">
-              <table class="table table-striped align-middle">
+            <div>
+              <table class="table table-striped align-middle inventory-table">
                 <thead><tr><th>Inicio</th><th>Fin</th><th>Cliente</th><th>Servicio</th><th>Profesional</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                   @for (row of rows; track row.id) {
                     <tr>
-                      <td>{{ formatDateTime(row.starts) }}</td>
-                      <td>{{ time(row.ends) }}</td>
-                      <td><a [routerLink]="['/pocketbiz/agenda/citas', row.id]"><strong>{{ row.customer_name }}</strong></a></td>
-                      <td>{{ row.service_name }}</td>
-                      <td>{{ row.professional_name || 'Sin profesional' }}</td>
-                      <td><span class="badge" [class]="classes[row.status]">{{ labels[row.status] }}</span></td>
-                      <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/agenda/citas', row.id]">Ver detalle</a></td>
+                      <td data-label="Inicio">{{ formatDateTime(row.starts) }}</td>
+                      <td data-label="Fin">{{ time(row.ends) }}</td>
+                      <td data-label="Cliente"><a [routerLink]="['/pocketbiz/agenda/citas', row.id]"><strong>{{ row.customer_name }}</strong></a></td>
+                      <td data-label="Servicio">{{ row.service_name }}</td>
+                      <td data-label="Profesional">{{ row.professional_name || 'Sin profesional' }}</td>
+                      <td data-label="Estado"><span class="badge" [class]="classes[row.status]">{{ labels[row.status] }}</span></td>
+                      <td data-label="Acciones"><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/agenda/citas', row.id]">Ver detalle</a></td>
                     </tr>
                   }
                 </tbody>

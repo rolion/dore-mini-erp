@@ -2,7 +2,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { debounceTime, finalize } from 'rxjs';
+import { catchError, debounceTime, finalize, merge, of, switchMap } from 'rxjs';
 import { Customer } from '../../customers/models/customer';
 import { CustomersApiService } from '../../customers/services/customers-api.service';
 import { Profile } from '../../personnel/models/profile';
@@ -42,6 +42,7 @@ export class AppointmentFormComponent implements OnInit {
 
   customers: Customer[] = [];
   customersTotal = 0;
+  private selectedCustomer: Customer | null = null;
   services: CatalogService[] = [];
   people: Profile[] = [];
   slots: Slot[] = [];
@@ -61,21 +62,31 @@ export class AppointmentFormComponent implements OnInit {
       .subscribe({ next: people => { this.people = people.filter(person => person.active); done(); }, error: fail });
     fetchAll(page => this.servicesApi.list({ active: true, pageSize: 100, page })).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: services => { this.services = services; done(); }, error: fail });
-    this.searchCustomers('', done);
-    this.customerSearch.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
-      .subscribe(term => this.searchCustomers(term));
+    // switchMap: solo cuenta la última búsqueda; una respuesta lenta de un término anterior se descarta.
+    let firstCustomers = true;
+    merge(of(''), this.customerSearch.valueChanges.pipe(debounceTime(300))).pipe(
+      switchMap(term => this.customersApi.list({ active: true, search: term.trim(), pageSize: 50 }).pipe(
+        catchError(() => of(null)))),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(page => {
+      if (page) this.showCustomers(page.results, page.count);
+      else this.error = 'No se pudieron cargar los clientes.';
+      if (firstCustomers) { firstCustomers = false; done(); }
+    });
+    this.form.controls.customer_id.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(id => {
+      this.selectedCustomer = this.customers.find(customer => customer.id === id) ?? null;
+    });
     this.form.controls.service_id.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(id => {
       const service = this.services.find(item => item.id === id);
       if (service) this.form.controls.duration_minutes.setValue(service.durationMinutes);
     });
   }
 
-  private searchCustomers(term: string, done?: () => void): void {
-    this.customersApi.list({ active: true, search: term.trim(), pageSize: 50 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: page => { this.customers = page.results; this.customersTotal = page.count; done?.(); },
-        error: () => { this.error = 'No se pudieron cargar los clientes.'; done?.(); },
-      });
+  /** El cliente ya elegido sigue entre las opciones aunque la búsqueda nueva no lo incluya. */
+  private showCustomers(results: Customer[], total: number): void {
+    const selected = this.selectedCustomer;
+    this.customers = selected && !results.some(customer => customer.id === selected.id) ? [selected, ...results] : results;
+    this.customersTotal = total;
   }
 
   get endsLabel(): string {

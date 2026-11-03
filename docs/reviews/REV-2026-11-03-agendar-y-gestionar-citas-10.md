@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-10: Búsqueda de clientes del formulario sin cancelar respuestas anteriores
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ Posible orden de respuestas inverso y selección que parece perdida.
 
 ## Evidence
 appointment-form.component.ts: `this.customerSearch.valueChanges.pipe(debounceTime(300), ...).subscribe(term => this.searchCustomers(term))` y `searchCustomers` hace `.subscribe` interno; `customers = page.results` sin conservar el elegido.
+
+## Resolución
+La búsqueda de clientes usa `switchMap` (descarta respuestas anteriores) y el cliente elegido se conserva entre las opciones. Spec en `appointment-form.component.spec.ts`.

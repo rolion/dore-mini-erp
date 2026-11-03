@@ -38,17 +38,17 @@
           @else if (!can('attend')) { <small class="text-muted">Atendida y No asistió se habilitan cuando llega la hora de inicio.</small> }
         </div>
         <h5 class="mx-4">Historial</h5>
-        <div class="table-responsive mx-4 mb-4">
-          <table class="table table-striped">
+        <div class="mx-4 mb-4">
+          <table class="table table-striped inventory-table">
             <thead><tr><th>Evento</th><th>Fecha</th><th>Autor</th><th>Motivo</th><th>Horario anterior</th></tr></thead>
             <tbody>
               @for (event of item.history ?? []; track event.id) {
                 <tr>
-                  <td>{{ events[event.kind] || event.kind }}</td>
-                  <td>{{ formatDateTime(event.created_at) }}</td>
-                  <td>{{ event.author_name || 'Usuario ' + event.author_id }}</td>
-                  <td>{{ event.reason || '—' }}</td>
-                  <td>{{ event.previous_starts ? formatDateTime(event.previous_starts) + ' – ' + (event.previous_ends ?? '').slice(11, 16) : '—' }}</td>
+                  <td data-label="Evento">{{ events[event.kind] || event.kind }}</td>
+                  <td data-label="Fecha">{{ formatDateTime(event.created_at) }}</td>
+                  <td data-label="Autor">{{ event.author_name || 'Usuario ' + event.author_id }}</td>
+                  <td data-label="Motivo">{{ event.reason || '—' }}</td>
+                  <td data-label="Horario anterior">{{ event.previous_starts ? formatDateTime(event.previous_starts) + ' – ' + (event.previous_ends ?? '').slice(11, 16) : '—' }}</td>
                 </tr>
               } @empty { <tr><td colspan="5">Sin eventos registrados.</td></tr> }
             </tbody>

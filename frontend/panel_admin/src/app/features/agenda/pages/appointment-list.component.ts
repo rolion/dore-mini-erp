@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -22,6 +23,7 @@ interface DayGroup {
   selector: 'app-appointment-list',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './appointment-list.component.html',
+  styleUrl: './appointment-list.component.scss',
 })
 export class AppointmentListComponent implements OnInit {
   private api = inject(AppointmentsApiService);
@@ -55,6 +57,15 @@ export class AppointmentListComponent implements OnInit {
     });
     fetchAll(page => this.personnel.list('professionals', { page, page_size: 100 })).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: people => this.people = people, error: () => this.error = 'No se pudieron cargar los profesionales.' });
+    if (query.get('view') === 'calendar') {
+      this.calendar.patchValue({
+        professional: query.get('cal_professional') ?? '', date: query.get('cal_date') || this.today(),
+        span: query.get('cal_span') === '7' ? '7' : '1',
+      });
+      this.mode = 'calendar';
+      this.loadCalendar();
+      return;
+    }
     this.search(Math.max(1, Number(query.get('page')) || 1));
   }
 
@@ -71,6 +82,7 @@ export class AppointmentListComponent implements OnInit {
 
   setMode(mode: 'list' | 'calendar'): void {
     this.mode = mode;
+    this.error = '';
     if (mode === 'list') this.search(); else this.loadCalendar();
   }
 
@@ -78,17 +90,31 @@ export class AppointmentListComponent implements OnInit {
     this.page = page;
     const raw = this.filters.getRawValue();
     const filters: AppointmentFilters = { ...raw, status: raw.status as AppointmentStatus | '', page };
-    // Los filtros y la página viven en la URL: se recuperan al recargar, compartir o volver desde el detalle.
-    const queryParams: Record<string, string | number | null> = { page: page > 1 ? page : null };
-    for (const [key, value] of Object.entries(raw)) queryParams[key] = value || null;
-    void this.router.navigate([], { relativeTo: this.route, queryParams, replaceUrl: true });
+    this.syncUrl(page);
     this.loading = true;
     this.error = '';
     this.api.list(filters).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
       .subscribe({
         next: result => { this.rows = result.results; this.count = result.count; },
-        error: () => this.error = 'No se pudieron cargar las citas.',
+        error: (failure: HttpErrorResponse) => {
+          // Una página que dejó de existir (enlace viejo, menos resultados) vuelve a la primera en vez de quedar atascada.
+          if (failure.status === 404 && page > 1) this.search(1);
+          else this.error = 'No se pudieron cargar las citas.';
+        },
       });
+  }
+
+  /** Filtros, página, vista y calendario viven en la URL: se recuperan al recargar, compartir o volver desde el detalle. */
+  private syncUrl(page: number): void {
+    const inList = this.mode === 'list';
+    const queryParams: Record<string, string | number | null> = { page: inList && page > 1 ? page : null };
+    const calendar = this.calendar.getRawValue();
+    for (const [key, value] of Object.entries(this.filters.getRawValue())) queryParams[key] = inList ? value || null : null;
+    queryParams['view'] = inList ? null : 'calendar';
+    queryParams['cal_professional'] = inList ? null : calendar.professional || null;
+    queryParams['cal_date'] = inList ? null : calendar.date;
+    queryParams['cal_span'] = inList ? null : calendar.span;
+    void this.router.navigate([], { relativeTo: this.route, queryParams, replaceUrl: true });
   }
 
   clear(): void {
@@ -108,6 +134,7 @@ export class AppointmentListComponent implements OnInit {
 
   loadCalendar(): void {
     const { professional, date, span } = this.calendar.getRawValue();
+    this.syncUrl(1);
     this.groups = [];
     this.error = '';
     if (!professional || !date) return;

@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-08: Listado e historial no se apilan en móvil (columnas clave fuera de pantalla)
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Medium
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ A 390 px, en el listado solo se ven Inicio, Fin y parte de Cliente; Servicio, Pr
 
 ## Evidence
 Revisión visual en el navegador integrado (backend con base temporal `test_doredb`, ya eliminada): capturas de /pocketbiz/agenda/citas y /pocketbiz/agenda/citas/:id a 390 px. appointment-list.component.html y appointment-detail.component.html: `<div class="table-responsive">` sin `_inventory-table`.
+
+## Resolución
+El listado y el historial usan `inventory-table` (apilado a <768 px, con `data-label` por celda; se importa el parcial de Inventario) y los botones de la cabecera son `text-nowrap` con `flex-wrap`. Falta reverificarlo visualmente a 390 px en el navegador.
