@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from modules.agenda.domain.schedule import shifts_overlap, subtract, validate_shift
 from modules.agenda.models import Schedule, Shift, Absence
-from modules.agenda.infrastructure.personnel import professional_exists
+from modules.agenda.infrastructure.adapters import professional_exists
 from shared.tenancy import company_id_from
 
 
@@ -93,10 +93,12 @@ class WeekView(AgendaView):
             ends__gt=datetime.combine(start, datetime.min.time(), ZONE),
         ).order_by('starts'))
         availability = []
+        active_shifts = []
         for shift in shifts:
             date = start + timedelta(days=shift.day)
             if not shift.valid_from <= date <= shift.valid_until:
                 continue
+            active_shifts.append(shift)
             begins = datetime.combine(date, shift.starts, ZONE)
             finishes = datetime.combine(date, shift.ends, ZONE)
             blocks = [(absence.starts, absence.ends) for absence in absences]
@@ -108,7 +110,7 @@ class WeekView(AgendaView):
                 for left, right in subtract(begins, finishes, blocks)
             )
         return Response({
-            'timezone': ZONE.key, 'shifts': ShiftSerializer(shifts, many=True).data,
+            'timezone': ZONE.key, 'shifts': ShiftSerializer(active_shifts, many=True).data,
             'absences': AbsenceSerializer(absences, many=True).data, 'availability': availability,
         })
 

@@ -65,6 +65,7 @@
       @if (!data.shifts.length && !data.absences.length) { <p>No hay turnos ni ausencias en esta semana.</p> }
       <div class="row g-3">
         <form class="col-12 col-lg-6" [formGroup]="shift" (ngSubmit)="saveShift()">
+          <fieldset [disabled]="saving">
           <h5>{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
           <label for="agenda-day">Día</label>
           <select id="agenda-day" class="form-select mb-2" formControlName="day">
@@ -93,8 +94,10 @@
           <button type="button" class="btn btn-outline-primary me-2" (click)="shift.controls.breaks.push(pause())">Añadir pausa</button>
           <button type="submit" class="btn btn-primary" [disabled]="shift.invalid || saving">Guardar turno</button>
           @if (editId) { <button type="button" class="btn btn-link" (click)="edit()">Cancelar edición</button> }
+          </fieldset>
         </form>
         <form class="col-12 col-lg-6" [formGroup]="absence" (ngSubmit)="saveAbsence()">
+          <fieldset [disabled]="saving">
           <h5>Registrar ausencia</h5>
           <label for="absence-start">Inicio</label>
           <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
@@ -103,6 +106,7 @@
           <label for="absence-reason">Motivo administrativo</label>
           <input id="absence-reason" class="form-control mb-2" maxlength="250" formControlName="reason">
           <button type="submit" class="btn btn-primary" [disabled]="absence.invalid || saving">Guardar ausencia</button>
+          </fieldset>
         </form>
       </div>
     }

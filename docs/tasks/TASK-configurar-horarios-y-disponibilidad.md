@@ -1,6 +1,6 @@
 # TASK-configurar-horarios-y-disponibilidad: PB-AGE-001
 
-**Etapa actual:** REVIEW
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-horarios-y-disponibilidad
@@ -18,6 +18,7 @@
 
 | 2026-11-03 | PLANNING → ENGINEERING | Alcance temporal confirmado y PR #49 abierto | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada y verificaciones pendientes registradas | delivery-build |
+| 2026-11-03 | REVIEW → ENGINEERING | FAIL del Quality Gate independiente | delivery-publish |
 
 ## Investigación
 
@@ -67,7 +68,14 @@ Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `
 
 ## Review
 
-_Pendiente._
+**FAIL** sobre `476397f`. Falló una prueba de límites entre módulos y quedaron sin ejecutar las verificaciones con PostgreSQL. La revisión visual en navegador queda pendiente. El PR #49 sigue en borrador.
+
+- [Falla el límite de arquitectura de Agenda](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-01.md) (High).
+- [Faltan pruebas de integración de Agenda](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-02.md) (High).
+- [El formulario permite cambios durante el guardado](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-03.md) (Medium).
+- [La semana vacía puede quedar sin mensaje](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-04.md) (Medium).
+
+Ingeniería corrigió el adaptador, el estado de semana vacía y la edición durante el guardado. La repetición de dominio y límites pasó 11 pruebas. Pendientes integración PostgreSQL y validación visual.
 
 ## Publicación
 
