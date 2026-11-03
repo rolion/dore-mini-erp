@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-agendar-y-gestionar-citas
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/50
 **Fuente:** https://trello.com/c/wXPEdZkA/4-pb-age-002-agendar-y-gestionar-citas-de-pacientes
 
 ## Historial de transiciones
