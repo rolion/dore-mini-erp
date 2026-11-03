@@ -1,5 +1,7 @@
 # DDD del proyecto — Gestión de emprendimientos
 
+> **Servicios (PB-SRV-001):** `modules/service_catalog` es el contexto de ofertas con precio BOB y duración, separado de Product y del inventario. Clave opcional `services` (requiere Catálogo), sin habilitación automática. Empresa obligatoria en repositorios y fachadas; `/api/services/` aplica admin/empresa activa/gate. Código recortado y siempre en mayúsculas, único si no está vacío por empresa. Fachada `get_service(company_id, id)` devuelve DTO inmutable, incluidos inactivos para consulta; `get_service_for_new_use` excluye inactivos. Ambos respetan habilitación. Consumidores futuros deben persistir snapshots propios de precio/duración. Personal es proveedor opcional de especialidades: mientras no esté integrado se permite null y se rechazan UUID no verificables. No hay stock, unidad, borrar, citas ni proformas en este contexto. Ver `ADR-administrar-catalogo-servicios-contexto`.
+
 ## 1. Objetivo
 
 Este documento define una arquitectura basada en **Domain-Driven Design (DDD) pragmático** para una aplicación orientada inicialmente a pequeños emprendimientos que venden productos por canales como WhatsApp, Facebook e Instagram.

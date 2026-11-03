@@ -10,6 +10,7 @@
     "CATALOG": {
       "TEXT": "Catálogo",
       "LIST": {
+        "SERVICES": "Servicios",
         "PRODUCT": "Producto"
       }
     },

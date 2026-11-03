@@ -32,6 +32,18 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/catalog/services",
+          "title": "MENUITEMS.CATALOG.LIST.SERVICES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": [],
+          "module": "services"
         }
       ],
       "module": "catalog"

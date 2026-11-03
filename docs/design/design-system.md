@@ -173,6 +173,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 ## 6. Menú y layout
 
+- Catálogo → Servicios (`/pocketbiz/catalog/services`, `/new`, `/:id`, `/:id/edit`): módulo opcional `services`, plantillas Lista/Formulario/Detalle de productos. Precio con `money`, duración con «min», código siempre en mayúsculas. Especialidad opcional desde Personal cuando está habilitado; sin él, selector deshabilitado y explicación visible, sin bloquear el guardado. Ver `DDR-administrar-catalogo-servicios-pantallas`.
 - Odontología → Pacientes (`/pocketbiz/dentistry/patients`, PB-ODO-001): lista, alta por selección de cliente existente y ficha `/:id` con Perfil (administrativo) / Antecedentes (clínico e historial). Reutiliza Lista, Formulario, Detalle y detalle con pestañas de §5. Acceso clínico comprobado en backend, admin autorizado en v1; no mostrar pestañas de capacidades futuras. Vacíos clínicos: «No informado», sin presumir ausencia. Véase `DDR-perfil-odontologico-pacientes-ficha-y-listado.md`.
 
 - Submenú de Compras: «Inicio» (`/purchases`, «Próximamente»), «Proveedores» (`/purchases/suppliers`, lista, `/new`, `/:id/edit` y detalle `/:id`, PB-COM-001; plantillas Lista, Formulario y Detalle de clientes, con «Ver compras» hacia `/purchases?supplierId=<id>`) y «Configuración» (`/purchases/settings`). Ver `DDR-gestionar-proveedores-pantallas-proveedores`.

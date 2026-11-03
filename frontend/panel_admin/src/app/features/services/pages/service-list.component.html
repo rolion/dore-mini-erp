@@ -1,0 +1,43 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">Servicios</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">Catálogo</li><li class="breadcrumb-item">Servicios</li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="p-10">
+      <div class="ngxTableHeader service-list-header d-flex flex-wrap gap-2 align-items-center">
+        <div class="table-title"><h2><strong>Servicios</strong></h2></div>
+        <div><label for="service-search" class="visually-hidden">Buscar por nombre</label>
+          <input id="service-search" class="browser-default search-field" placeholder="Buscar por nombre" [formControl]="search"></div>
+        <div><label for="service-status" class="visually-hidden">Estado</label>
+          <select id="service-status" class="form-select" [formControl]="status">
+            <option value="active">Activos</option><option value="inactive">Inactivos</option><option value="all">Todos</option>
+          </select></div>
+        <div><label for="service-specialty" class="visually-hidden">Especialidad</label>
+          <select id="service-specialty" class="form-select" [formControl]="specialty" aria-describedby="specialty-help">
+            <option value="">Todas las especialidades</option><option value="none">Sin especialidad</option>
+            @for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+          </select></div>
+        <a routerLink="/pocketbiz/catalog/services/new" class="btn btn-icon icon-left btn-primary rounded-button" title="Nuevo servicio" aria-label="Nuevo servicio"><i class="material-icons" aria-hidden="true">add</i></a>
+      </div>
+      @if (!specialtiesAvailable) { <small id="specialty-help" class="text-muted d-block">Habilita Personal para filtrar por especialidad. Puedes crear servicios sin especialidad.</small> }
+      @if (success) { <div role="status" class="alert alert-success mt-2">{{ success }}</div> }
+      @if (error) { <div role="alert" class="alert alert-danger mt-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">Reintentar</button></div> }
+      @if (state.search || state.status !== 'active' || state.specialtyId) { <button type="button" class="btn btn-light mt-2" (click)="clearFilters()">Limpiar filtros</button> }
+      @if (!loading && !error && total === 0 && !state.search && state.status === 'active') { <p class="mt-2">Aún no hay servicios activos. Usa «Nuevo servicio» para comenzar.</p> }
+      <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force" [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [virtualization]="false" [count]="total" [offset]="state.pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)" [scrollbarH]="true">
+        <ngx-datatable-column name="Nombre" [sortable]="false" [minWidth]="150"><ng-template ngx-datatable-cell-template let-row="row"><a class="fw-bold" [routerLink]="['/pocketbiz/catalog/services', row.id]">{{ row.name }}</a></ng-template></ngx-datatable-column>
+        <ngx-datatable-column name="Precio" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ row.basePrice | money }}</ng-template></ngx-datatable-column>
+        <ngx-datatable-column name="Duración" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ row.durationMinutes }} min</ng-template></ngx-datatable-column>
+        <ngx-datatable-column name="Especialidad" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ row.specialtyName || 'Sin especialidad' }}</ng-template></ngx-datatable-column>
+        <ngx-datatable-column name="Estado" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row"><div class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? 'Activo' : 'Inactivo' }}</div></ng-template></ngx-datatable-column>
+        <ngx-datatable-column name="Acciones" [sortable]="false" [minWidth]="160"><ng-template ngx-datatable-cell-template let-row="row">
+          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id]" title="Ver servicio" aria-label="Ver servicio"><i class="material-icons" aria-hidden="true">visibility</i></a>
+          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id, 'edit']" title="Editar servicio" aria-label="Editar servicio"><i class="material-icons" aria-hidden="true">edit</i></a>
+          <app-service-toggle [service]="row" [compact]="true" (updated)="onUpdated($event)" />
+        </ng-template></ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+  </div></div>
+</section>

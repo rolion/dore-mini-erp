@@ -15,6 +15,8 @@ class ModuleDefinition:
 MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
     ModuleDefinition('access', 'Acceso y Empresa', 'Registro, inicio de sesión y aislamiento por empresa.', is_base=True),
     ModuleDefinition('catalog', 'Catálogo', 'Productos y precios.', is_base=True),
+    ModuleDefinition('services', 'Servicios', 'Catálogo de servicios con precio y duración, sin stock.',
+                     requires=('catalog',)),
     ModuleDefinition('personnel', 'Personal', 'Profesionales y especialidades de atención.'),
     ModuleDefinition('customers', 'Clientes', 'Agenda de clientes e historial de compras.'),
     ModuleDefinition('dentistry', 'Odontología', 'Pacientes y antecedentes odontológicos.', requires=('customers',)),
