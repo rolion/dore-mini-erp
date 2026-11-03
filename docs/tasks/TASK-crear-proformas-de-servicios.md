@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-proformas-de-servicios (basada en `task/TASK-agendar-y-gestionar-citas`, PR #50, por indicación del usuario)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/52
 **Fuente:** https://trello.com/c/qMQgQ0CR
 
 ## Historial de transiciones
