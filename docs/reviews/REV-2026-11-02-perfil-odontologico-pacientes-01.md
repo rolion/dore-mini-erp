@@ -1,6 +1,6 @@
 # REV-2026-11-02-perfil-odontologico-pacientes-01: Regresión del menú y traducciones incompletas
 
-**Status:** Open
+**Status:** Resolved (2026-11-03)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-02-perfil-odontologico-pacientes.md (v1)
@@ -38,3 +38,7 @@ TOTAL: 2 FAILED, 1081 SUCCESS
 ```
 
 Los IDs AC-09/20/22 de estos nombres de test pertenecen a regresiones previas; la referencia de Specification de este hallazgo es AC-07 del plan vigente. La skill delivery-publish exige FAIL ante cualquier test fallando sin autorización explícita, incluso con severidad Medium.
+
+## Resolución
+
+En 706ae8f se agregaron los títulos en inglés y alemán y se actualizó la regresión del menú para incluir la ruta de Pacientes y su visibilidad por módulo. El suite completo registró `TOTAL: 1083 SUCCESS`. El [Quality Gate del ciclo 2](QA-2026-11-03-perfil-odontologico-pacientes.md) confirmó PASS.

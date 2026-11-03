@@ -1,6 +1,6 @@
 # TASK-perfil-odontologico-pacientes: Registrar perfil odontológico de pacientes
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-perfil-odontologico-pacientes
@@ -16,6 +16,7 @@
 | 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas de la Specification; se solicita Quality Gate independiente | delivery-build |
 | 2026-11-02 | REVIEW → ENGINEERING | FAIL: regresión del menú y traducciones en/de faltantes (REV-01) | delivery-publish |
 | 2026-11-03 | ENGINEERING → REVIEW | Actualizadas traducciones y cobertura de visibilidad del menú; se solicita segunda revisión | delivery-build |
+| 2026-11-03 | REVIEW → PUBLISH | PASS independiente en 706ae8f; REV-01 resuelto | delivery-publish |
 
 ## Investigación
 ### Requerimiento
@@ -83,6 +84,8 @@ Recorrido de navegador de ingeniería: alta desde Customer existente, validació
 ## Review
 Ciclo 1: **FAIL** en b0086a9. 250 pruebas backend pasaron; dos pruebas Angular del menú fallaron al ampliar su estructura y requerir etiquetas en/de. Ver `docs/reviews/QA-2026-11-02-perfil-odontologico-pacientes.md` y `docs/reviews/REV-2026-11-02-perfil-odontologico-pacientes-01.md`.
 
-Corrección: traducciones de los dos títulos en inglés/alemán y regresión del menú para incluir Odontología y verificar su visibilidad por módulo. Sin cambio de Specification, rutas ni permisos. Ciclo 2 pendiente.
+Corrección: traducciones de los dos títulos en inglés/alemán y regresión del menú para incluir Odontología y verificar su visibilidad por módulo. Sin cambio de Specification, rutas ni permisos.
+
+Ciclo 2: **PASS** independiente en `706ae8f`. Suite Angular: 1083 SUCCESS, cobertura global de líneas 87,61 %; lint y build exitosos; `npm audit` sin vulnerabilidades. Backend sin cambios respecto a ciclo 1: 250 pruebas PostgreSQL OK y Bandit sin hallazgos. Evidencia: `docs/reviews/QA-2026-11-03-perfil-odontologico-pacientes.md`, REV-01 resuelto, `docs/tests/VISUAL-2026-11-02-perfil-odontologico-pacientes.md`.
 ## Publicación
-Pendiente.
+PR único [#47](https://github.com/rolion/dore-mini-erp/pull/47), preparado para revisión humana. Cambios sensibles: autorización clínica explícita y migraciones aditivas de Odontología/Clientes, respaldados por `docs/adr/ADR-perfil-odontologico-pacientes-identidad-y-acceso.md`. Merge pendiente de aprobación humana.
