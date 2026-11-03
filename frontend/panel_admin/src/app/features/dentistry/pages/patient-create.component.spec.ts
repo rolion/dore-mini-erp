@@ -3,7 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { CustomersApiService } from '../../customers/services/customers-api.service';
-import { CustomerQuickCreateService } from '../../customers/services/customer-quick-create.service';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastrService } from 'ngx-toastr';
 import { Customer } from '../../customers/models/customer';
 import { DentistryApiService } from '../services/dentistry-api.service';
 import { Patient } from '../models/patient';
@@ -19,7 +20,8 @@ describe('PatientCreateComponent', () => {
     customers.list.and.returnValue(of({ ...EMPTY_HISTORY, results: [customer] }));
     await TestBed.configureTestingModule({ imports: [PatientCreateComponent], providers: [provideRouter([]),
       { provide: DentistryApiService, useValue: api }, { provide: CustomersApiService, useValue: customers },
-      { provide: CustomerQuickCreateService, useValue: { open: () => Promise.resolve(customer) } },
+      { provide: NgbActiveModal, useValue: { close: () => undefined, dismiss: () => undefined } },
+      { provide: ToastrService, useValue: {} },
     ] }).compileComponents();
   });
   it('opens an existing profile without allowing duplicate creation', () => {
@@ -37,9 +39,11 @@ describe('PatientCreateComponent', () => {
     pending.error(new HttpErrorResponse({ status: 409, error: { detail: 'Perfil existente' } }));
     expect(component.existingId).toBe('c-1'); expect(component.selected).toEqual(customer);
   });
-  it('reuses the existing quick-create flow and preserves the returned identity', async () => {
+  it('renders the existing quick-create form inside the patient modal', () => {
     api.get.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
     const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
-    await fixture.componentInstance.createCustomer(); expect(fixture.componentInstance.selected?.id).toBe('c-1');
+    fixture.componentInstance.createCustomer();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-customer-quick-create form')).not.toBeNull();
   });
 });

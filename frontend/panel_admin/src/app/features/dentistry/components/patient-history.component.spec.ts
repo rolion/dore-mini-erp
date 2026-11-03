@@ -27,4 +27,14 @@ describe('PatientHistoryComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('No tienes permiso');
     expect(fixture.nativeElement.textContent).toContain('Reintentar');
   });
+  it('shows a change even when the saved text equals the empty-state label', () => {
+    api.history.and.returnValue(of({ count: 1, next: null, previous: null, results: [{
+      id: 1, author_id: 1, author_name: 'ana', action: 'edit', created_at: '2026-11-02T14:00:00Z',
+      before: { allergies: '' }, after: { allergies: 'No informado' },
+    }] }));
+    const fixture = TestBed.createComponent(PatientHistoryComponent);
+    fixture.componentRef.setInput('patientId', 'c-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Alergias');
+  });
 });

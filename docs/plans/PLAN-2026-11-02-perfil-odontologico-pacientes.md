@@ -94,3 +94,7 @@ Nuevas migraciones customers/dentistry; sin modificar las aplicadas. No habilita
 Permisos globales y fuga clínica: regresión y matriz API. Duplicado: restricción DB. Auditoría: transacción/bloqueo. Demografía opcional: no presumir edad.
 ## New dependencies
 Ninguna. Reutilizar entornos y librerías existentes sin leer .env ni instalar paquetes.
+
+## Ajuste de implementación del 2026-11-03
+
+La revisión de interfaz del DDR reemplaza la pantalla intermedia de alta por un modal sobre el listado. El alcance frontend incluye el formulario compartido de alta rápida de Clientes para habilitar su modo embebido, con regresión de su uso existente desde Pedidos. La ficha conserva sus guardados independientes y presenta el historial en listas desplegables.

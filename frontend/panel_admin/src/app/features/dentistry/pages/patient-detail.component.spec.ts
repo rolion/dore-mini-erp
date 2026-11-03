@@ -23,10 +23,10 @@ describe('PatientDetailComponent', () => {
   it('separates profile from clinical fields and hides future capabilities', async () => {
     await setup(makePatient({ allergies: 'Dato clínico privado' }));
     expect(root().textContent).toContain('Ana');
-    expect(root().textContent).not.toContain('Dato clínico privado');
-    expect(root().textContent).not.toContain('Odontograma');
-    fixture.componentInstance.tab = 'clinical'; fixture.detectChanges();
     expect(root().textContent).toContain('Dato clínico privado');
+    expect(root().querySelector('textarea')).toBeNull();
+    expect(root().textContent).not.toContain('Odontograma');
+    fixture.componentInstance.editRecord(); fixture.detectChanges();
     expect(root().querySelector('textarea')?.placeholder).toBe('No informado');
   });
   it('preserves both forms and displays field errors after a failed save', async () => {
@@ -75,7 +75,9 @@ describe('PatientDetailComponent', () => {
     fixture.componentInstance.toggleActive(); fixture.detectChanges();
     expect(api.setActive).toHaveBeenCalledWith('c-1', false);
     expect(fixture.componentInstance.clinicalForm.disabled).toBeTrue();
-    expect(root().textContent).toContain('Su historia se conserva');
+    expect(root().textContent).toContain('Se conserva su historia.');
+    fixture.componentInstance.historyOpen = true;
+    fixture.detectChanges();
     expect(api.history).toHaveBeenCalled();
   });
   it('does not archive with unsaved changes and warns on browser exit', async () => {

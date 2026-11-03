@@ -1,9 +1,8 @@
-import { Component } from '@angular/core';
-import { Route, RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Route, Router, RouterLink } from '@angular/router';
 import { unsavedChangesGuard } from '../../core/guard/unsaved-changes.guard';
 import { clinicalGuard } from './clinical.guard';
 import { PatientListComponent } from './pages/patient-list.component';
-import { PatientCreateComponent } from './pages/patient-create.component';
 import { PatientDetailComponent } from './pages/patient-detail.component';
 
 @Component({
@@ -20,7 +19,7 @@ export class ClinicalDeniedComponent {}
 export const DENTISTRY_ROUTES: Route[] = [
   { path: 'access-denied', component: ClinicalDeniedComponent },
   { path: 'patients', component: PatientListComponent, canActivate: [clinicalGuard] },
-  { path: 'patients/new', component: PatientCreateComponent, canActivate: [clinicalGuard] },
+  { path: 'patients/new', pathMatch: 'full', redirectTo: () => inject(Router).createUrlTree(['/pocketbiz/dentistry/patients'], { queryParams: { new: 'true' } }) },
   { path: 'patients/:id', component: PatientDetailComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
   { path: '', redirectTo: 'patients', pathMatch: 'full' },
 ];

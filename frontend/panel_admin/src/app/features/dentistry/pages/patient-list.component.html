@@ -12,7 +12,7 @@
       <select class="form-select w-auto" aria-label="Estado del perfil" [formControl]="active">
         <option value="true">Activos</option><option value="false">Archivados</option><option value="">Todos</option>
       </select>
-      <a class="btn btn-icon btn-primary rounded-button" routerLink="/pocketbiz/dentistry/patients/new" aria-label="Nuevo paciente" title="Nuevo paciente"><i class="material-icons" aria-hidden="true">add</i></a>
+      <button type="button" class="btn btn-primary ms-lg-auto" (click)="openCreate()"><i class="fas fa-plus me-2" aria-hidden="true"></i>Nuevo paciente</button>
     </div>
     @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light ms-2" (click)="retry()">Reintentar</button></div> }
     @if (!loading && !error && count === 0) {

@@ -22,3 +22,9 @@ Carga visible, vacío con alta, búsqueda sin resultados con limpiar filtros, er
 Archivar requiere confirmación que explica que conserva historia y no desactiva al cliente; perfil archivado queda solo lectura hasta reactivar. El historial es solo lectura y muestra autor, fecha, acción y cambios; las notas clínicas solo se cargan con autorización.
 ## Consecuencias
 Sin nuevas fuentes, HEX o componentes de plantilla. No se ofrecen pestañas futuras vacías ni acciones de agenda que todavía no existen. No queda deuda visual deliberada.
+
+## Revisión de interfaz solicitada el 2026-11-03
+
+La ficha muestra Perfil y Antecedentes juntos, en tarjetas Bootstrap 5 de dos columnas que se apilan en móvil. «Editar ficha» abre ambas secciones y cada tarjeta conserva guardado independiente. El responsable se muestra para menores de 18 años con fecha informada. El historial se abre bajo la ficha y muestra dos listas cronológicas, una por origen, con autor, fecha y valores anteriores y nuevos. Para los estados se usan las variantes suaves de Bootstrap disponibles en Oreva.
+
+El botón «Nuevo paciente» abre un modal grande con búsqueda de Clientes mediante NgSelect. El alta rápida se integra dentro de ese mismo modal. La ruta anterior de alta redirige al listado y abre el modal. Si ya existe una ficha, se ofrece abrirla.

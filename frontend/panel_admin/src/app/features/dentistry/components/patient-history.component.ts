@@ -8,25 +8,44 @@ import { DentistryApiService, errorMessage } from '../services/dentistry-api.ser
 
 @Component({
   selector: 'app-patient-history', imports: [DatePipe], template: `
-    <h5 class="mt-4">Historial de cambios {{ clinical ? 'clínicos' : 'administrativos' }}</h5>
-    @if (loading) { <p aria-live="polite">Cargando historial…</p> }
-    @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button class="btn btn-light" type="button" (click)="load()">Reintentar</button></div> }
-    @if (!loading && !error && !rows.length) { <p>Sin cambios registrados.</p> }
-    @for (row of rows; track row.id) {
-      <div class="border rounded p-3 mb-2">
-        <p><strong>{{ row.author_name }}</strong> · {{ row.created_at | date:'dd/MM/yyyy HH:mm' }} · {{ action(row.action) }}</p>
-        <div class="table-responsive"><table class="table"><thead><tr><th>Dato</th><th>Antes</th><th>Después</th></tr></thead><tbody>
-          @for (change of changes(row); track change.key) {
-            <tr><th scope="row">{{ change.label }}</th><td class="text-break">{{ change.before }}</td><td class="text-break">{{ change.after }}</td></tr>
-          }
-        </tbody></table></div>
+    <h5 class="h6 fw-semibold mb-3">{{ clinical ? 'Cambios clínicos' : 'Cambios administrativos' }}</h5>
+    @if (loading) { <p role="status">Cargando historial…</p> }
+    @if (error) {
+      <div class="alert alert-danger" role="alert">{{ error }}
+        <button class="btn btn-sm btn-light" type="button" (click)="load()">Reintentar</button>
       </div>
     }
-    @if (count > rows.length) { <div class="d-flex gap-2 align-items-center">
-      <button type="button" class="btn btn-light" [disabled]="loading || !previous" (click)="move(-1)">Anterior</button>
-      <span>Página {{ page }}</span>
-      <button type="button" class="btn btn-light" [disabled]="loading || !next" (click)="move(1)">Siguiente</button>
-    </div> }
+    @if (!loading && !error && !rows.length) { <p class="text-muted">Sin cambios registrados.</p> }
+    <ol class="list-group list-group-flush border-start">
+      @for (row of rows; track row.id) {
+        <li class="list-group-item bg-transparent py-3">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ action(row.action) }}</span>
+            <time class="small text-muted" [attr.datetime]="row.created_at">{{ row.created_at | date:'dd/MM/yyyy HH:mm' }}</time>
+            <strong class="small text-break">{{ row.author_name }}</strong>
+          </div>
+          <ul class="list-unstyled mb-0">
+            @for (change of changes(row); track change.key) {
+              <li class="mb-2">
+                <div class="fw-semibold small">{{ change.label }}</div>
+                <div class="row g-2 small text-break">
+                  <div class="col-sm-6"><span class="text-muted d-block">Antes</span>{{ change.before }}</div>
+                  <div class="col-sm-6"><span class="text-muted d-block">Después</span>{{ change.after }}</div>
+                </div>
+              </li>
+            }
+          </ul>
+        </li>
+      }
+    </ol>
+    @if (next || previous) {
+      <div class="d-flex flex-wrap gap-2 align-items-center mt-3">
+        <button type="button" class="btn btn-light" [disabled]="loading || !previous" (click)="move(-1)">Anterior</button>
+        <span>Página {{ page }}</span>
+        <button type="button" class="btn btn-light" [disabled]="loading || !next" (click)="move(1)">Siguiente</button>
+      </div>
+    }
+
   `,
 })
 export class PatientHistoryComponent implements OnChanges {
@@ -39,7 +58,7 @@ export class PatientHistoryComponent implements OnChanges {
   loading = false;
   error = '';
   page = 1;
-  count = 0;
+
   next = false;
   previous = false;
   ngOnChanges() { this.page = 1; this.load(); }
@@ -49,7 +68,7 @@ export class PatientHistoryComponent implements OnChanges {
     this.api.history(this.patientId, this.clinical, this.page).pipe(
       finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef),
     ).subscribe({ next: result => {
-      this.rows = result.results; this.count = result.count; this.next = !!result.next; this.previous = !!result.previous;
+      this.rows = result.results; this.next = !!result.next; this.previous = !!result.previous;
     }, error: (error: HttpErrorResponse) => { this.rows = []; this.error = errorMessage(error); } });
   }
   action(value?: string) {
@@ -60,7 +79,7 @@ export class PatientHistoryComponent implements OnChanges {
       active: 'Estado del perfil', birth_date: 'Fecha de nacimiento', responsible_name: 'Nombre del responsable',
       responsible_phone: 'Teléfono del responsable', ...Object.fromEntries(CLINICAL_FIELDS.map(field => [field.key, field.label])),
     };
-    return Object.keys(row.after).filter(key => row.before[key] !== row.after[key]).map(key => ({
+    return Object.keys(row.after).filter(key => (row.before[key] ?? '') !== (row.after[key] ?? '')).map(key => ({
       key, label: labels[key] ?? key, before: this.display(row.before[key], key), after: this.display(row.after[key], key),
     }));
   }

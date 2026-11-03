@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,8 +11,20 @@ import { demographicsValidator, localDateInput, minorAt } from '../services/demo
 import { PatientHistoryComponent } from '../components/patient-history.component';
 
 @Component({
-  selector: 'app-patient-detail', imports: [DatePipe, RouterLink, ReactiveFormsModule, PatientHistoryComponent],
+  selector: 'app-patient-detail', imports: [DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent],
   templateUrl: './patient-detail.component.html',
+  styles: [`
+    :host-context(.dark) h3 {
+      color: var(--bs-gray-400) !important;
+    }
+    :host-context(body:not(.dark)) .btn-outline-warning:not(:hover) {
+      color: var(--bs-warning-text-emphasis);
+    }
+    .fst-italic.text-muted {
+      color: inherit !important;
+      opacity: .8;
+    }
+  `],
 })
 export class PatientDetailComponent implements OnInit {
   private api = inject(DentistryApiService);
@@ -29,7 +41,9 @@ export class PatientDetailComponent implements OnInit {
   savingClinical = false;
   savingAdmin = false;
   savingState = false;
-  tab: 'profile' | 'clinical' = 'profile';
+  editingAdmin = false;
+  editingClinical = false;
+  historyOpen = false;
   error = '';
   success = '';
   clinicalErrors: Record<string, string> = {};
@@ -44,7 +58,23 @@ export class PatientDetailComponent implements OnInit {
     responsible_phone: ['', Validators.maxLength(30)] }, { validators: demographicsValidator });
   get saving() { return this.savingClinical || this.savingAdmin || this.savingState; }
   get needsResponsible() { return minorAt(this.adminForm.controls.birth_date.value); }
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.adminForm.controls.birth_date.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(birth => {
+      if (!minorAt(birth) && this.patient) {
+        this.adminForm.patchValue({
+          responsible_name: this.patient.customer.responsible_name,
+          responsible_phone: this.patient.customer.responsible_phone,
+        }, { emitEvent: false, onlySelf: true });
+      }
+    });
+    this.load();
+  }
+  editRecord() {
+    if (this.patient?.active && !this.saving) {
+      this.editingAdmin = true;
+      this.editingClinical = true;
+    }
+  }
   load() {
     this.loading = true; this.error = '';
     this.api.get(this.id).pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -68,6 +98,7 @@ export class PatientDetailComponent implements OnInit {
     ).subscribe({ next: patient => {
       // Preserve an independently edited administrative form.
       this.patient = patient; this.clinicalForm.reset(this.clinicalValues(patient)); this.clinicalRevision++;
+      this.editingClinical = false;
       this.success = 'Antecedentes guardados.';
     }, error: (error: HttpErrorResponse) => { this.error = errorMessage(error); this.clinicalErrors = fieldErrors(error); } });
   }
@@ -82,6 +113,7 @@ export class PatientDetailComponent implements OnInit {
     ).subscribe({ next: data => {
       if (this.patient) this.patient = { ...this.patient, customer: { ...this.patient.customer, ...data } };
       this.adminForm.reset({ ...data, birth_date: data.birth_date ?? '' }); this.adminRevision++;
+      this.editingAdmin = false;
       this.success = 'Datos administrativos guardados.';
     }, error: (error: HttpErrorResponse) => { this.error = errorMessage(error); this.adminErrors = fieldErrors(error); } });
   }
@@ -97,8 +129,9 @@ export class PatientDetailComponent implements OnInit {
       error: (error: HttpErrorResponse) => this.error = errorMessage(error),
     });
   }
-  cancelClinical() { if (this.patient) { this.clinicalForm.reset(this.clinicalValues(this.patient)); this.clinicalErrors = {}; } }
+  cancelClinical() { this.editingClinical = false; if (this.patient) { this.clinicalForm.reset(this.clinicalValues(this.patient)); this.clinicalErrors = {}; } }
   cancelAdmin() {
+    this.editingAdmin = false;
     if (this.patient) { this.adminForm.reset({ birth_date: this.patient.customer.birth_date ?? '',
       responsible_name: this.patient.customer.responsible_name, responsible_phone: this.patient.customer.responsible_phone }); this.adminErrors = {}; }
   }
@@ -106,6 +139,8 @@ export class PatientDetailComponent implements OnInit {
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent) { if (this.hasUnsavedChanges()) { event.preventDefault(); event.returnValue = ''; } }
   private setFormState(active: boolean) {
+    this.editingAdmin = false;
+    this.editingClinical = false;
     if (active) { this.clinicalForm.enable(); this.adminForm.enable(); }
     else { this.clinicalForm.disable(); this.adminForm.disable(); }
   }
