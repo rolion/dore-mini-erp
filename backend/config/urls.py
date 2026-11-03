@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/auth/', include('modules.accounts.api.urls')),
     path('api/products/', include('modules.catalog.api.urls')),
     path('api/agenda/', include('modules.agenda.urls')),
+    path('api/quotations/', include('modules.quotations.api.urls')),
     path('api/services/', include('modules.service_catalog.api.urls')),
     path('api/units/', include('modules.catalog.api.unit_urls')),
     path('api/warehouses/', include('modules.inventory.api.urls')),
