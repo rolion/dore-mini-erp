@@ -122,6 +122,13 @@
         "ORDERS": "Pedidos",
         "SETTINGS": "Configuración"
       }
+    },
+    "PERSONNEL": {
+      "TEXT": "Personal",
+      "LIST": {
+        "PROFESSIONALS": "Profesionales",
+        "SPECIALTIES": "Especialidades"
+      }
     }
   }
 }
