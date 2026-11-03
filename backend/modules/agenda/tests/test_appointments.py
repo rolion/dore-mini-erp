@@ -99,6 +99,14 @@ class AppointmentApiTests(TransactionTestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json()['code'], 'module_disabled')
 
+    def test_absence_blocks_booking(self):
+        absence = self.client.post(f'/api/agenda/{self.pro.pk}/absences/', {
+            'starts': at(FUTURE, '11:00'), 'ends': at(FUTURE, '11:30'), 'reason': 'Permiso'}, format='json')
+        self.assertEqual(absence.status_code, 201, absence.content)
+        self.assertEqual(self.create(time='11:00').status_code, 400)
+        self.assertEqual(self.create(time='11:15').status_code, 400)
+        self.assertEqual(self.create(time='11:30').status_code, 201)
+
     # AC-02
     def test_concurrent_requests_accept_only_one(self):
         barrier = Barrier(2, timeout=10)
@@ -147,6 +155,7 @@ class AppointmentApiTests(TransactionTestCase):
         self.assertEqual(self_move.status_code, 200, self_move.content)
         event = self_move.json()['history'][-1]
         self.assertEqual((event['kind'], event['reason'], event['author_id']), ('rescheduled', 'Pidió cambio', self.admin.pk))
+        self.assertEqual(event['author_name'], self.admin.username)
         self.assertEqual((event['previous_starts'], event['previous_ends']), (at(FUTURE, '09:30'), at(FUTURE, '10:00')))
         overlap_self = self.act(second['id'], 'reschedule', {'starts': at(FUTURE, '09:40'), 'reason': 'ajuste'})
         self.assertEqual(overlap_self.status_code, 200, overlap_self.content)  # excluye la propia

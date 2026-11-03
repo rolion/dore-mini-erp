@@ -24,6 +24,10 @@ class AppointmentPagination(PageNumberPagination):
     max_page_size = 100
 
 
+def actor_from(request):
+    return service.Actor(request.user.pk, request.user.get_username())
+
+
 def _local(value):
     return value.astimezone(ZONE).isoformat() if value else None
 
@@ -91,7 +95,7 @@ def present(appointment, names, detail=False):
     if detail:
         data['created_at'] = _local(appointment.created_at)
         data['history'] = [
-            {'id': event.id, 'kind': event.kind, 'author_id': event.author_id, 'created_at': _local(event.created_at),
+            {'id': event.id, 'kind': event.kind, 'author_id': event.author_id, 'author_name': event.author_name, 'created_at': _local(event.created_at),
              'reason': event.reason, 'previous_starts': _local(event.previous_starts),
              'previous_ends': _local(event.previous_ends)}
             for event in appointment.events.all()
@@ -152,7 +156,7 @@ class AppointmentListCreateView(AppointmentView):
     def post(self, request):
         serializer = CreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = self.run(service.create, company_id_from(request), request.user.pk, **serializer.validated_data)
+        result = self.run(service.create, company_id_from(request), actor_from(request), **serializer.validated_data)
         return self.respond(result, status.HTTP_201_CREATED)
 
 
@@ -174,7 +178,7 @@ class AppointmentActionView(AppointmentView):
     action = ''
 
     def post(self, request, appointment_id):
-        company_id, user_id = company_id_from(request), request.user.pk
+        company_id, user_id = company_id_from(request), actor_from(request)
         if self.action == 'confirm':
             call = (service.confirm, company_id, user_id, appointment_id)
         elif self.action == 'attend':

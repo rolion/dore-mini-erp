@@ -1,5 +1,6 @@
 """Casos de uso de citas: todas las escrituras serializan por profesional con el bloqueo de `Schedule`."""
 from datetime import date, datetime, timedelta
+from typing import NamedTuple
 from zoneinfo import ZoneInfo
 
 from django.db import transaction
@@ -17,6 +18,13 @@ from modules.agenda.infrastructure.adapters import (
 from modules.agenda.models import Appointment, AppointmentEvent, Schedule
 
 ZONE = ZoneInfo('America/La_Paz')
+
+
+class Actor(NamedTuple):
+    """Usuario que ejecuta la acción: el id se conserva y el nombre se guarda para mostrarlo sin consultar otro módulo."""
+
+    id: int
+    name: str
 
 
 class AppointmentConflict(Exception):
@@ -86,9 +94,9 @@ def _ensure_placement(company_id, professional_id, starts, ends, exclude_id=None
         raise AppointmentConflict('El profesional ya tiene una cita en ese horario.')
 
 
-def _event(appointment, kind, user_id, reason='', previous=None) -> None:
+def _event(appointment, kind, actor, reason='', previous=None) -> None:
     AppointmentEvent.objects.create(
-        appointment=appointment, kind=kind, author_id=user_id, reason=reason,
+        appointment=appointment, kind=kind, author_id=actor.id, author_name=actor.name, reason=reason,
         previous_starts=previous[0] if previous else None, previous_ends=previous[1] if previous else None,
     )
 
@@ -102,7 +110,7 @@ def allowed_actions(appointment) -> list[str]:
 
 
 @transaction.atomic
-def create(company_id, user_id, *, professional_id, customer_id, service_id, starts, duration_minutes, notes=''):
+def create(company_id, actor, *, professional_id, customer_id, service_id, starts, duration_minutes, notes=''):
     if not professional_exists(company_id, professional_id):
         raise AppointmentRuleError('Profesional no encontrado.', 'professional_id')
     customer = get_customer_for_sale(company_id, customer_id)
@@ -117,9 +125,9 @@ def create(company_id, user_id, *, professional_id, customer_id, service_id, sta
     appointment = Appointment.objects.create(
         company_id=company_id, professional_id=professional_id, customer_id=customer.id,
         customer_name=customer.name, service_id=service.id, service_name=service.name,
-        starts=starts, ends=ends, duration_minutes=duration_minutes, notes=notes.strip(), created_by=user_id,
+        starts=starts, ends=ends, duration_minutes=duration_minutes, notes=notes.strip(), created_by=actor.id,
     )
-    _event(appointment, 'created', user_id)
+    _event(appointment, 'created', actor)
     return appointment
 
 
@@ -137,7 +145,7 @@ def _apply(appointment, state) -> None:
     appointment.save()
 
 
-def _transition(company_id, user_id, appointment_id, kind, action, reason=None):
+def _transition(company_id, actor, appointment_id, kind, action, reason=None):
     clean = clean_reason(reason) if reason is not None else ''
     appointment = _locked(company_id, appointment_id)
     state = _state(appointment)
@@ -146,34 +154,34 @@ def _transition(company_id, user_id, appointment_id, kind, action, reason=None):
     except AppointmentRuleError as exc:
         raise AppointmentConflict(exc.message, 'invalid_transition') from exc
     _apply(appointment, state)
-    _event(appointment, kind, user_id, clean)
+    _event(appointment, kind, actor, clean)
     return appointment
 
 
 @transaction.atomic
-def confirm(company_id, user_id, appointment_id):
-    return _transition(company_id, user_id, appointment_id, 'confirmed', lambda s: s.confirm())
+def confirm(company_id, actor, appointment_id):
+    return _transition(company_id, actor, appointment_id, 'confirmed', lambda s: s.confirm())
 
 
 @transaction.atomic
-def cancel(company_id, user_id, appointment_id, reason):
-    return _transition(company_id, user_id, appointment_id, 'cancelled', lambda s: s.cancel(), reason or '')
+def cancel(company_id, actor, appointment_id, reason):
+    return _transition(company_id, actor, appointment_id, 'cancelled', lambda s: s.cancel(), reason or '')
 
 
 @transaction.atomic
-def mark_attended(company_id, user_id, appointment_id):
-    return _transition(company_id, user_id, appointment_id, 'attended',
+def mark_attended(company_id, actor, appointment_id):
+    return _transition(company_id, actor, appointment_id, 'attended',
                        lambda s: s.mark_attended(timezone.now()))
 
 
 @transaction.atomic
-def mark_no_show(company_id, user_id, appointment_id):
-    return _transition(company_id, user_id, appointment_id, 'no_show',
+def mark_no_show(company_id, actor, appointment_id):
+    return _transition(company_id, actor, appointment_id, 'no_show',
                        lambda s: s.mark_no_show(timezone.now()))
 
 
 @transaction.atomic
-def reschedule(company_id, user_id, appointment_id, starts, duration_minutes, reason):
+def reschedule(company_id, actor, appointment_id, starts, duration_minutes, reason):
     clean = clean_reason(reason)
     appointment = _locked(company_id, appointment_id)
     state = _state(appointment)
@@ -186,7 +194,7 @@ def reschedule(company_id, user_id, appointment_id, starts, duration_minutes, re
         raise
     _ensure_placement(company_id, appointment.professional_id, starts, ends, appointment.pk)
     _apply(appointment, state)
-    _event(appointment, 'rescheduled', user_id, clean, previous)
+    _event(appointment, 'rescheduled', actor, clean, previous)
     return appointment
 
 

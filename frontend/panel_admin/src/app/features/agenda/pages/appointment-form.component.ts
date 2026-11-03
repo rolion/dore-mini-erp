@@ -11,6 +11,7 @@ import { CatalogService } from '../../services/models/service';
 import { ServicesApiService } from '../../services/services/services-api.service';
 import { AppointmentFailure, NOTES_MAX_LENGTH, Slot } from '../models/appointment';
 import { AppointmentsApiService, toServerDateTime } from '../services/appointments-api.service';
+import { fetchAll } from '../services/fetch-all';
 
 /** Alta de cita (plantilla Formulario del sistema de diseño). Ante un conflicto conserva lo escrito y refresca franjas. */
 @Component({
@@ -40,6 +41,7 @@ export class AppointmentFormComponent implements OnInit {
   });
 
   customers: Customer[] = [];
+  customersTotal = 0;
   services: CatalogService[] = [];
   people: Profile[] = [];
   slots: Slot[] = [];
@@ -55,10 +57,10 @@ export class AppointmentFormComponent implements OnInit {
     let pending = 3;
     const done = () => { if (--pending === 0) this.loadingOptions = false; };
     const fail = () => { this.error = 'No se pudieron cargar los datos del formulario.'; done(); };
-    this.personnel.list('professionals', { page: 1, page_size: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: page => { this.people = page.results.filter(person => person.active); done(); }, error: fail });
-    this.servicesApi.list({ active: true, pageSize: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: page => { this.services = page.results; done(); }, error: fail });
+    fetchAll(page => this.personnel.list('professionals', { page, page_size: 100 })).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: people => { this.people = people.filter(person => person.active); done(); }, error: fail });
+    fetchAll(page => this.servicesApi.list({ active: true, pageSize: 100, page })).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: services => { this.services = services; done(); }, error: fail });
     this.searchCustomers('', done);
     this.customerSearch.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe(term => this.searchCustomers(term));
@@ -71,7 +73,7 @@ export class AppointmentFormComponent implements OnInit {
   private searchCustomers(term: string, done?: () => void): void {
     this.customersApi.list({ active: true, search: term.trim(), pageSize: 50 }).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: page => { this.customers = page.results; done?.(); },
+        next: page => { this.customers = page.results; this.customersTotal = page.count; done?.(); },
         error: () => { this.error = 'No se pudieron cargar los clientes.'; done?.(); },
       });
   }

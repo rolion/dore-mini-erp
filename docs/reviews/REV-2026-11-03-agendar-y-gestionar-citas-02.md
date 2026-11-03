@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-02: Los filtros del listado no se reflejan en la URL
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ Los filtros se pierden al recargar o volver desde el detalle.
 
 ## Evidence
 grep ActivatedRoute|queryParam en appointment-list.component.*: sin coincidencias.
+
+## Resolución
+Filtros, página y vista se leen de la URL al abrir y se escriben con `router.navigate` (`replaceUrl`). Spec en `appointment-list.component.spec.ts`.

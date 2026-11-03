@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-07: Huecos de pruebas: ausencias en API y specs de lista/formulario
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ La regla de ausencia depende de week_availability (probada en PB-AGE-001), sin p
 
 ## Evidence
 ls features/agenda/pages/*.spec.ts -> solo appointment-detail.component.spec.ts. Karma completo: 1129 SUCCESS.
+
+## Resolución
+Prueba `test_absence_blocks_booking` y specs de lista y formulario (conflicto conserva datos, doble envío, estados).

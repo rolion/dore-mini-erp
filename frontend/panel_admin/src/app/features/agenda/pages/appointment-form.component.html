@@ -38,6 +38,9 @@
                 <option value="">Selecciona un cliente</option>
                 @for (customer of customers; track customer.id) { <option [value]="customer.id">{{ customer.name }}</option> }
               </select>
+              @if (customersTotal > customers.length) {
+                <small class="form-text text-muted d-block">Se muestran {{ customers.length }} de {{ customersTotal }} clientes: escribe en «Buscar cliente» para acotar.</small>
+              }
               @if (fields['customer_id']) { <small class="form-text text-danger">{{ fields['customer_id'] }}</small> }
               @else if (form.controls.customer_id.touched && form.controls.customer_id.invalid) {
                 <small class="form-text text-danger">Selecciona un cliente.</small> }
