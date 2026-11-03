@@ -1,6 +1,6 @@
 # TASK-habilitar-idiomas-es-en-pt: Habilitar español, inglés y portugués en el sistema y la landing
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-habilitar-idiomas-es-en-pt
@@ -15,6 +15,7 @@
 | 2026-11-03 | ARCHITECTURE → PLANNING | DDR y 2 ADR escritos | delivery-start |
 | 2026-11-03 | PLANNING → ENGINEERING | Specification READY, PLAN v1 (COMPLETO) y PR abiertos | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación completa; pruebas, lint y build en verde | delivery-build |
+| 2026-11-03 | REVIEW → PUBLISH | Quality Gate PASS con observaciones (REV-01..04 abiertos, sin Critical/High) | delivery-publish |
 
 ## Investigación
 
@@ -111,7 +112,7 @@ Ver [DDR-habilitar-idiomas-es-en-pt-selector-de-idioma](../design/DDR-habilitar-
 **Pantalla de referencia / componentes.** Sin pantallas nuevas; se creó el componente compartido `app-language-selector` (anotado en `design-system.md`, sección 3).
 
 ## Review
-_Pendiente_
+**PASS con observaciones** (Quality Gate aislado, 2026-11-03). `ng test` 1147/1147, cobertura statements 86.4 %; lint, build, `i18n:check` y `npm audit` sin errores. Hallazgos abiertos: [REV-01](../reviews/REV-2026-11-03-habilitar-idiomas-es-en-pt-01.md) (Medium, literales restantes), [REV-02](../reviews/REV-2026-11-03-habilitar-idiomas-es-en-pt-02.md) (Medium, pruebas por feature/auth/router), [REV-03](../reviews/REV-2026-11-03-habilitar-idiomas-es-en-pt-03.md) (Low, aviso EDGE-03), [REV-04](../reviews/REV-2026-11-03-habilitar-idiomas-es-en-pt-04.md) (Low, línea base de pruebas del plan). No verificado: pantallas autenticadas, tema oscuro, teclado.
 
 ## Publicación
-_Pendiente_
+PR 51 listo para aprobación humana; no se mergea. Sin cambios de backend, auth ni base de datos; hay dos ADR (URL con idioma, catálogos). Pendiente humano: revisar y decidir si se corrigen REV-01/REV-02 antes del merge, revisión nativa de las traducciones en/pt y verificar pantallas autenticadas.
