@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, NavigationStart } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { LEGACY_REDIRECTS } from '../routing/legacy-redirects';
+import { APP_PATHS } from '../routing/app-paths';
 import { unsavedChangesGuard } from '../guard/unsaved-changes.guard';
 import { LanguageService } from '../service/language.service';
 import { LanguageState } from './language-state';
@@ -27,6 +29,7 @@ describe('language routing', () => {
           { path: 'pocketbiz/login', component: LoginStubComponent },
           { path: 'pocketbiz/form/:id', component: LoginStubComponent, canDeactivate: [unsavedChangesGuard] },
           { path: '', component: LoginStubComponent },
+          ...LEGACY_REDIRECTS,
         ]),
         ...provideTestTranslations(),
       ],
@@ -73,5 +76,25 @@ describe('language routing', () => {
     await router.navigateByUrl('/en');
     await router.navigate(['/pocketbiz/login']);
     expect(router.url).toBe('/en/pocketbiz/login');
+  });
+
+  it('legacy URLs resolve and end with the language prefix (AC-11)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/en/authentication/signin');
+    expect(router.url).toBe('/en/pocketbiz/login');
+    await router.navigateByUrl('/authentication/signin');
+    expect(router.url).toBe('/en/pocketbiz/login');
+  });
+
+  it('the 401 redirect to the login keeps the active language (EDGE-05)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/pt/pocketbiz/login');
+    await router.navigate([APP_PATHS.login]);
+    expect(router.url).toBe('/pt/pocketbiz/login');
+  });
+
+  it('/api and /admin are never prefixed by the serializer (INV-04)', () => {
+    const router = TestBed.inject(Router);
+    expect(router.serializeUrl(router.parseUrl('/api/health/'))).toBe('/api/health/');
   });
 });

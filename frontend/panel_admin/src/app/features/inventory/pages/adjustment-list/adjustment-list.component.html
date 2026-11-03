@@ -107,7 +107,7 @@
                     <td [attr.data-label]="'COMMON.DIFERENCIA' | translate" class="text-md-end" data-testid="difference">
                       <span [class.text-success]="row.kind === 'in'" [class.text-danger]="row.kind === 'out'">
                         {{ signed(row.difference) }} {{ row.unitAbbreviation }}
-                        <span class="visually-hidden">({{ row.kind === 'in' ? 'entrada' : 'salida' }})</span>
+                        <span class="visually-hidden">({{ (row.kind === 'in' ? 'INVENTORY.ADJUSTMENT_LIST.INBOUND_SR' : 'INVENTORY.ADJUSTMENT_LIST.OUTBOUND_SR') | translate }})</span>
                       </span>
                     </td>
                     <td [attr.data-label]="'COMMON.USUARIO' | translate">{{ row.user.name || '—' }}</td>

@@ -1,8 +1,9 @@
 import { DOCUMENT, Location } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
 import { firstValueFrom } from 'rxjs';
-import { registerTranslator } from '../i18n/translate';
+import { registerTranslator, tr } from '../i18n/translate';
 import { LanguageState } from '../i18n/language-state';
 import {
   AppLanguage,
@@ -30,6 +31,7 @@ export class LanguageService {
   private readonly state = inject(LanguageState);
   private readonly document = inject(DOCUMENT);
   private readonly location = inject(Location);
+  private readonly toastr = inject(ToastrService, { optional: true });
   private readonly fallbackLoaded: Promise<void>;
 
   constructor() {
@@ -75,7 +77,8 @@ export class LanguageService {
     try {
       await this.load(lang);
     } catch {
-      // Catálogo no disponible (EDGE-03): se mantiene el idioma anterior.
+      // Catálogo no disponible (EDGE-03): se mantiene el idioma anterior y se avisa en ese idioma.
+      this.toastr?.error(tr('HEADER.LANGUAGE_LOAD_ERROR'));
       return;
     }
     writeStoredLanguage(lang);

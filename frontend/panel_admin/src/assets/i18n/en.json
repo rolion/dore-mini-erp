@@ -142,7 +142,8 @@
   },
   "HEADER": {
     "LANGUAGE": "Language",
-    "LOGOUT": "Log out"
+    "LOGOUT": "Log out",
+    "LANGUAGE_LOAD_ERROR": "Could not change the language. Try again."
   },
   "COMMON": {
     "591_7XXXXXXX": "+591 7xxxxxxx",
@@ -664,7 +665,9 @@
       "CONTADO": "Counted",
       "PAGINAS_DE_AJUSTES": "Adjustment pages",
       "SIN_AJUSTES_PARA_ESOS_FILTROS": "No adjustments for those filters.",
-      "AUN_NO_HAY_AJUSTES_DE": "There are no stock adjustments yet."
+      "AUN_NO_HAY_AJUSTES_DE": "There are no stock adjustments yet.",
+      "INBOUND_SR": "inbound",
+      "OUTBOUND_SR": "outbound"
     },
     "INVENTORY_CONFIGURATION": {
       "ALMACENES_Y_UNIDADES": "Warehouses and units",
@@ -831,7 +834,9 @@
       "LAS_EXISTENCIAS_CAMBIARON_DESDE_LA": "Stock changed since the reconciliation. Review the quantities and enter the missing values again.",
       "PENDIENTE_INGRESA_UN_VALOR_O": "Pending: enter a value or declare zero cost.",
       "INGRESA_UN_IMPORTE_VALIDO_CON": "Enter a valid amount with up to 2 decimals.",
-      "UN_COSTO_CERO_DEBE_DECLARARSE": "A zero cost must be declared explicitly."
+      "UN_COSTO_CERO_DEBE_DECLARARSE": "A zero cost must be declared explicitly.",
+      "PRODUCT_IS": "product is",
+      "PRODUCTS_ARE": "products are"
     },
     "VALUATION_API_SERVICE": {
       "REVISA_LOS_VALORES_INGRESADOS": "Check the values you entered."
@@ -1452,7 +1457,8 @@
       "LA_POLITICA_DE_INVENTARIO_NO": "The inventory policy does not allow negative balances: this delivery cannot be confirmed.",
       "ESTA_ENTREGA_DEJARA_SALDO_NEGATIVO": "This delivery will leave a negative balance in {{p0}} product(s). It is the inventory policy configured for the company.",
       "CONFIRMANDO": "Confirming…",
-      "CONFIRMAR_ENTREGA": "Confirm delivery"
+      "CONFIRMAR_ENTREGA": "Confirm delivery",
+      "NEGATIVE_SR": "negative"
     },
     "ORDER_ITEMS": {
       "PRODUCTOS_DEL_PEDIDO": "Order products",

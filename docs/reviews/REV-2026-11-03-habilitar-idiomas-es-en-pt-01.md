@@ -1,6 +1,6 @@
 # REV-2026-11-03-habilitar-idiomas-es-en-pt-01: Texto visible en español hardcodeado en plantillas del producto
 
-**Status:** Open
+**Status:** Resolved (corregido en delivery-build; verificación de la corrección sin Quality Gate aislado nuevo)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-habilitar-idiomas-es-en-pt.md (v1)

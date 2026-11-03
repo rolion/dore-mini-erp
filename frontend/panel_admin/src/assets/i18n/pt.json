@@ -142,7 +142,8 @@
   },
   "HEADER": {
     "LANGUAGE": "Idioma",
-    "LOGOUT": "Sair"
+    "LOGOUT": "Sair",
+    "LANGUAGE_LOAD_ERROR": "Não foi possível alterar o idioma. Tente novamente."
   },
   "COMMON": {
     "591_7XXXXXXX": "+591 7xxxxxxx",
@@ -664,7 +665,9 @@
       "CONTADO": "Contado",
       "PAGINAS_DE_AJUSTES": "Páginas de ajustes",
       "SIN_AJUSTES_PARA_ESOS_FILTROS": "Sem ajustes para esses filtros.",
-      "AUN_NO_HAY_AJUSTES_DE": "Ainda não há ajustes de estoque."
+      "AUN_NO_HAY_AJUSTES_DE": "Ainda não há ajustes de estoque.",
+      "INBOUND_SR": "entrada",
+      "OUTBOUND_SR": "saída"
     },
     "INVENTORY_CONFIGURATION": {
       "ALMACENES_Y_UNIDADES": "Depósitos e unidades",
@@ -831,7 +834,9 @@
       "LAS_EXISTENCIAS_CAMBIARON_DESDE_LA": "O estoque mudou desde a conciliação. Revise as quantidades e informe novamente os valores que faltam.",
       "PENDIENTE_INGRESA_UN_VALOR_O": "Pendente: informe um valor ou declare custo zero.",
       "INGRESA_UN_IMPORTE_VALIDO_CON": "Informe um valor válido com até 2 casas decimais.",
-      "UN_COSTO_CERO_DEBE_DECLARARSE": "Um custo zero deve ser declarado explicitamente."
+      "UN_COSTO_CERO_DEBE_DECLARARSE": "Um custo zero deve ser declarado explicitamente.",
+      "PRODUCT_IS": "produto está",
+      "PRODUCTS_ARE": "produtos estão"
     },
     "VALUATION_API_SERVICE": {
       "REVISA_LOS_VALORES_INGRESADOS": "Revise os valores informados."
@@ -1452,7 +1457,8 @@
       "LA_POLITICA_DE_INVENTARIO_NO": "A política de estoque não permite saldos negativos: não é possível confirmar esta entrega.",
       "ESTA_ENTREGA_DEJARA_SALDO_NEGATIVO": "Esta entrega deixará saldo negativo em {{p0}} produto(s). É a política de estoque configurada para a empresa.",
       "CONFIRMANDO": "Confirmando…",
-      "CONFIRMAR_ENTREGA": "Confirmar entrega"
+      "CONFIRMAR_ENTREGA": "Confirmar entrega",
+      "NEGATIVE_SR": "negativo"
     },
     "ORDER_ITEMS": {
       "PRODUCTOS_DEL_PEDIDO": "Produtos do pedido",

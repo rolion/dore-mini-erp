@@ -2,6 +2,8 @@ import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+import { throwError } from 'rxjs';
 import { LanguageState } from '../i18n/language-state';
 import { LANGUAGE_STORAGE_KEY } from '../i18n/language.config';
 import { provideTestTranslations } from '../i18n/testing';
@@ -80,5 +82,27 @@ describe('LanguageService', () => {
     await service.init('/');
     TestBed.inject(LanguageState).set('en');
     expect(service.current).toBe('en');
+  });
+
+  it('keeps the previous language and shows a notice when the catalog fails to load (EDGE-03)', async () => {
+    const toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['error']);
+    TestBed.configureTestingModule({ providers: [{ provide: ToastrService, useValue: toastr }] });
+    const service = TestBed.inject(LanguageService);
+    await service.init('/');
+    const translate = TestBed.inject(TranslateService);
+    spyOn(translate, 'use').and.returnValue(throwError(() => new Error('http')));
+    await service.setLanguage('pt');
+    expect(service.current).toBe('es');
+    expect(toastr.error).toHaveBeenCalledOnceWith('No se pudo cambiar el idioma. Inténtalo de nuevo.');
+    expect(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
+  });
+
+  it('falls back to Spanish for a key missing in the active language (EDGE-04)', async () => {
+    const service = TestBed.inject(LanguageService);
+    await service.init('/');
+    const translate = TestBed.inject(TranslateService);
+    translate.setTranslation('en', { OTHER: 'x' });
+    await service.setLanguage('en');
+    expect(translate.instant('HEADER.LOGOUT')).toBe('Cerrar sesión');
   });
 });

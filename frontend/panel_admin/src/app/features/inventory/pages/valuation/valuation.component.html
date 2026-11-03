@@ -217,7 +217,7 @@
               </div>
               @if (pendingCount) {
               <p class="text-muted" data-testid="pending-note">
-                {{ 'INVENTORY.VALUATION.PENDIENTE_S_UN_COSTO_AUSENTE' | translate: { p0: (pendingCount), p1: (pendingCount === 1 ? 'producto está' : 'productos están') } }}
+                {{ 'INVENTORY.VALUATION.PENDIENTE_S_UN_COSTO_AUSENTE' | translate: { p0: (pendingCount), p1: ((pendingCount === 1 ? 'INVENTORY.VALUATION.PRODUCT_IS' : 'INVENTORY.VALUATION.PRODUCTS_ARE') | translate) } }}
               </p>
               }
               <button type="button" class="btn btn-primary" data-testid="review" [disabled]="!canReview"

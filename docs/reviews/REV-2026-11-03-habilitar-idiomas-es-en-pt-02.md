@@ -1,6 +1,6 @@
 # REV-2026-11-03-habilitar-idiomas-es-en-pt-02: Faltan pruebas por feature en en/pt, autenticación y casos de borde previstos
 
-**Status:** Open
+**Status:** Resolved (corregido en delivery-build; verificación de la corrección sin Quality Gate aislado nuevo)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-habilitar-idiomas-es-en-pt.md (v1)

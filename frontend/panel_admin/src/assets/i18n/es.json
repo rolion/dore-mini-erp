@@ -142,7 +142,8 @@
   },
   "HEADER": {
     "LANGUAGE": "Idioma",
-    "LOGOUT": "Cerrar sesión"
+    "LOGOUT": "Cerrar sesión",
+    "LANGUAGE_LOAD_ERROR": "No se pudo cambiar el idioma. Inténtalo de nuevo."
   },
   "COMMON": {
     "591_7XXXXXXX": "+591 7xxxxxxx",
@@ -664,7 +665,9 @@
       "CONTADO": "Contado",
       "PAGINAS_DE_AJUSTES": "Páginas de ajustes",
       "SIN_AJUSTES_PARA_ESOS_FILTROS": "Sin ajustes para esos filtros.",
-      "AUN_NO_HAY_AJUSTES_DE": "Aún no hay ajustes de existencias."
+      "AUN_NO_HAY_AJUSTES_DE": "Aún no hay ajustes de existencias.",
+      "INBOUND_SR": "entrada",
+      "OUTBOUND_SR": "salida"
     },
     "INVENTORY_CONFIGURATION": {
       "ALMACENES_Y_UNIDADES": "Almacenes y unidades",
@@ -831,7 +834,9 @@
       "LAS_EXISTENCIAS_CAMBIARON_DESDE_LA": "Las existencias cambiaron desde la conciliación. Revisa las cantidades y vuelve a ingresar los valores que falten.",
       "PENDIENTE_INGRESA_UN_VALOR_O": "Pendiente: ingresa un valor o declara costo cero.",
       "INGRESA_UN_IMPORTE_VALIDO_CON": "Ingresa un importe válido con hasta 2 decimales.",
-      "UN_COSTO_CERO_DEBE_DECLARARSE": "Un costo cero debe declararse explícitamente."
+      "UN_COSTO_CERO_DEBE_DECLARARSE": "Un costo cero debe declararse explícitamente.",
+      "PRODUCT_IS": "producto está",
+      "PRODUCTS_ARE": "productos están"
     },
     "VALUATION_API_SERVICE": {
       "REVISA_LOS_VALORES_INGRESADOS": "Revisa los valores ingresados."
@@ -1452,7 +1457,8 @@
       "LA_POLITICA_DE_INVENTARIO_NO": "La política de inventario no permite saldos negativos: no se puede confirmar esta entrega.",
       "ESTA_ENTREGA_DEJARA_SALDO_NEGATIVO": "Esta entrega dejará saldo negativo en {{p0}} producto(s). Es la política de inventario configurada para la empresa.",
       "CONFIRMANDO": "Confirmando…",
-      "CONFIRMAR_ENTREGA": "Confirmar entrega"
+      "CONFIRMAR_ENTREGA": "Confirmar entrega",
+      "NEGATIVE_SR": "negativo"
     },
     "ORDER_ITEMS": {
       "PRODUCTOS_DEL_PEDIDO": "Productos del pedido",
