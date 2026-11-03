@@ -1,8 +1,20 @@
 {
   "MENUITEMS": {
-    "AGENDA":{"SCHEDULE":"Hours and absences","TEXT":"Schedule"},
-    "DENTISTRY": { "TEXT": "Dentistry", "PATIENTS": "Patients" },
-    "PERSONNEL": { "TEXT": "Personnel", "LIST": { "PROFESSIONALS": "Professionals", "SPECIALTIES": "Specialties" } },
+    "AGENDA": {
+      "SCHEDULE": "Hours and absences",
+      "TEXT": "Schedule"
+    },
+    "DENTISTRY": {
+      "TEXT": "Dentistry",
+      "PATIENTS": "Patients"
+    },
+    "PERSONNEL": {
+      "TEXT": "Personnel",
+      "LIST": {
+        "PROFESSIONALS": "Professionals",
+        "SPECIALTIES": "Specialties"
+      }
+    },
     "MAIN": {
       "TEXT": "-- Main"
     },
@@ -127,5 +139,9 @@
         "SETTINGS": "Settings"
       }
     }
+  },
+  "HEADER": {
+    "LANGUAGE": "Language",
+    "LOGOUT": "Log out"
   }
 }

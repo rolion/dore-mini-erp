@@ -1,7 +1,7 @@
 import routesFile from '../../../assets/data/routes.json';
-import de from '../../../assets/i18n/de.json';
 import en from '../../../assets/i18n/en.json';
 import es from '../../../assets/i18n/es.json';
+import pt from '../../../assets/i18n/pt.json';
 import { RouteInfo } from './sidebar.metadata';
 import { visibleRoutes } from './sidebar.component';
 
@@ -80,11 +80,11 @@ describe('Sidebar menu (routes.json)', () => {
     expect(reports.groupTitle).toBeFalse();
   });
 
-  it('has a translation in en, es and de for every menu title (AC-09)', () => {
+  it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
     expect(titles.length).toBe(33);
 
-    for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
+    for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
         expect(typeof translate(dictionary, title)).withContext(`${lang}: ${title}`).toBe('string');
       }
@@ -94,19 +94,19 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.CUSTOMER.TEXT')).toBe('Cliente');
     expect(translate(es, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Pedidos');
     expect(translate(en, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Orders');
-    expect(translate(de, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Bestellungen');
+    expect(translate(pt, 'MENUITEMS.SALES.LIST.ORDERS')).toBe('Pedidos');
     expect(translate(es, 'MENUITEMS.SALES.LIST.SETTINGS')).toBe('Configuración');
     expect(translate(es, 'MENUITEMS.EXPENSES.TEXT')).toBe('Gastos');
     expect(translate(es, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Categorías');
     expect(translate(en, 'MENUITEMS.EXPENSES.TEXT')).toBe('Expenses');
-    expect(translate(de, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Kategorien');
+    expect(translate(pt, 'MENUITEMS.EXPENSES.LIST.CATEGORY')).toBe('Categorias');
     expect(translate(es, 'MENUITEMS.REPORTS.TEXT')).toBe('Reportes');
     expect(translate(en, 'MENUITEMS.REPORTS.TEXT')).toBe('Reports');
-    expect(translate(de, 'MENUITEMS.REPORTS.TEXT')).toBe('Berichte');
+    expect(translate(pt, 'MENUITEMS.REPORTS.TEXT')).toBe('Relatórios');
     expect(translate(es, 'MENUITEMS.SETTINGS.LIST.MODULES')).toBe('Módulos');
     expect(translate(es, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Proveedores');
     expect(translate(en, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Suppliers');
-    expect(translate(de, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Lieferanten');
+    expect(translate(pt, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Fornecedores');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
     expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
   });

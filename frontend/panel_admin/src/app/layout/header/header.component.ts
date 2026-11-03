@@ -9,9 +9,11 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbDropdown, NgbDropdownToggle, NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FeatherModule } from 'angular-feather';
-import { AuthService, InConfiguration, LanguageService, LocalStorageService, RightSidebarService } from '@core';
+import { AuthService, InConfiguration, LocalStorageService, RightSidebarService } from '@core';
 import { ConfigService } from '@config/config.service';
+import { LanguageSelectorComponent } from '../../shared/components/language-selector/language-selector.component';
 import { UserAvatarComponent } from '../../shared/components/user-avatar/user-avatar.component';
 import { userFullName, userInitials } from '../../shared/models/user-profile';
 import { APP_PATHS } from '../../core/routing/app-paths';
@@ -28,16 +30,14 @@ import { APP_PATHS } from '../../core/routing/app-paths';
         NgbDropdownMenu,
         NgClass,
         UserAvatarComponent,
+        LanguageSelectorComponent,
+        TranslatePipe,
     ],
     providers: [RightSidebarService]
 })
 export class HeaderComponent implements OnInit, AfterViewInit {
   public config!: InConfiguration;
   isNavbarCollapsed = true;
-  flagvalue: string | string[] | undefined;
-  countryName: string | string[] = [];
-  langStoreValue?: string;
-  defaultFlag?: string;
   isOpenSidebar?: boolean;
   docElement?: HTMLElement;
   isFullScreen = false;
@@ -49,29 +49,12 @@ export class HeaderComponent implements OnInit, AfterViewInit {
   private configService = inject(ConfigService);
   private authService = inject(AuthService);
   private router = inject(Router);
-  public languageService = inject(LanguageService);
   private storageService = inject(LocalStorageService);
-
-  listLang = [
-    { text: 'English', flag: 'assets/images/flags/us.jpg', lang: 'en' },
-    { text: 'Spanish', flag: 'assets/images/flags/spain.jpg', lang: 'es' },
-    { text: 'German', flag: 'assets/images/flags/germany.jpg', lang: 'de' },
-  ];
 
   ngOnInit() {
     this.config = this.configService.configData;
     this.docElement = this.document.documentElement;
 
-    this.langStoreValue = this.storageService.get('lang') as string;
-    const val = this.listLang.filter((x) => x.lang === this.langStoreValue);
-    this.countryName = val.map((element) => element.text);
-    if (val.length === 0) {
-      if (this.flagvalue === undefined) {
-        this.defaultFlag = 'assets/images/flags/us.jpg';
-      }
-    } else {
-      this.flagvalue = val.map((element) => element.flag);
-    }
   }
   ngAfterViewInit() {
     // set theme on startup
@@ -121,12 +104,6 @@ export class HeaderComponent implements OnInit, AfterViewInit {
       document.exitFullscreen();
     }
     this.isFullScreen = !this.isFullScreen;
-  }
-  setLanguage(text: string, lang: string, flag: string) {
-    this.countryName = text;
-    this.flagvalue = flag;
-    this.langStoreValue = lang;
-    this.languageService.setLanguage(lang);
   }
   mobileMenuSidebarOpen(event: Event, className: string) {
     if (window.innerWidth < 1025) {

@@ -15,24 +15,8 @@
       <i-feather name="maximize"></i-feather>
     </a>
     </li>
-    <li class="dropdown dropdown-list-toggle" ngbDropdown>
-      <a data-toggle="dropdown" class="nav-link nav-link-lg lang-toggle remove-caret" ngbDropdownToggle>
-        @if (flagvalue !== undefined) {
-          <img src="{{flagvalue}}" alt="Header Language" height="16">
-        }
-        @if (flagvalue === undefined) {
-          <img src="{{defaultFlag}}" alt="Header Language" height="16">
-        }
-      </a>
-      <div class="dropdown-menu header-dropdown dropdown-menu-right lang-dropdown-list pullDown" ngbDropdownMenu>
-        @for (item of listLang; track item) {
-          <a href="javascript:void(0);" class="dropdown-item lang-item-list"
-            (click)="setLanguage(item.text, item.lang, item.flag)" [ngClass]="{'active': langStoreValue === item.lang}">
-            <img src="{{item.flag}}" alt="user-image" class="msr-1" height="12"> <span
-            class="align-middle">{{item.text}}</span>
-          </a>
-        }
-      </div>
+    <li>
+      <app-language-selector />
     </li>
     <li ngbDropdown><a ngbDropdownToggle data-toggle="dropdown"
       class="nav-link dropdown-toggle nav-link-lg nav-link-user user-toggle">
@@ -46,7 +30,7 @@
         <div class="dropdown-divider"></div>
         <a href="javascript:void(0);" class="dropdown-item has-icon text-danger logout-item" (click)="logout()"> <i
           class="fas fa-sign-out-alt"></i>
-          Logout
+          {{ 'HEADER.LOGOUT' | translate }}
         </a>
       </div>
     </li>

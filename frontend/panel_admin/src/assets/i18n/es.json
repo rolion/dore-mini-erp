@@ -1,7 +1,13 @@
 {
   "MENUITEMS": {
-    "AGENDA":{"SCHEDULE":"Horarios y ausencias","TEXT":"Agenda"},
-    "DENTISTRY": { "TEXT": "Odontología", "PATIENTS": "Pacientes" },
+    "AGENDA": {
+      "SCHEDULE": "Horarios y ausencias",
+      "TEXT": "Agenda"
+    },
+    "DENTISTRY": {
+      "TEXT": "Odontología",
+      "PATIENTS": "Pacientes"
+    },
     "MAIN": {
       "TEXT": "-- Principal"
     },
@@ -133,5 +139,9 @@
         "SPECIALTIES": "Especialidades"
       }
     }
+  },
+  "HEADER": {
+    "LANGUAGE": "Idioma",
+    "LOGOUT": "Cerrar sesión"
   }
 }

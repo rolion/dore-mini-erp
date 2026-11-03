@@ -1,0 +1,38 @@
+.language-selector {
+  display: inline-block;
+}
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.language-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.language-label {
+  font-weight: 600;
+  min-width: 2rem;
+  text-align: left;
+}
+
+.language-option {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.language-option-label {
+  min-width: 2.25rem;
+}
+
+.language-option.active {
+  font-weight: 600;
+}

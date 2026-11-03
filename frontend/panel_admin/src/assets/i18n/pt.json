@@ -1,0 +1,147 @@
+{
+  "MENUITEMS": {
+    "AGENDA": {
+      "SCHEDULE": "Horários e ausências",
+      "TEXT": "Agenda"
+    },
+    "DENTISTRY": {
+      "TEXT": "Odontologia",
+      "PATIENTS": "Pacientes"
+    },
+    "MAIN": {
+      "TEXT": "-- Principal"
+    },
+    "DASHBOARD": {
+      "TEXT": "Painel"
+    },
+    "CATALOG": {
+      "TEXT": "Catálogo",
+      "LIST": {
+        "SERVICES": "Serviços",
+        "PRODUCT": "Produto"
+      }
+    },
+    "CUSTOMER": {
+      "TEXT": "Cliente"
+    },
+    "ORDERS": {
+      "TEXT": "Pedidos"
+    },
+    "EXPENSES": {
+      "TEXT": "Despesas",
+      "LIST": {
+        "EXPENSE": "Despesas",
+        "CATEGORY": "Categorias"
+      }
+    },
+    "REPORTS": {
+      "TEXT": "Relatórios"
+    },
+    "HOME": {
+      "TEXT": "Início",
+      "LIST": {
+        "DASHBOARD1": "Painel 1",
+        "DASHBOARD2": "Painel 2"
+      }
+    },
+    "ADVANCE-TABLE": {
+      "TEXT": "Tabela avançada"
+    },
+    "APPS": {
+      "TEXT": "-- Aplicativos"
+    },
+    "CALENDAR": {
+      "TEXT": "Calendário"
+    },
+    "EMAIL": {
+      "TEXT": "E-mail",
+      "LIST": {
+        "INBOX": "Caixa de entrada",
+        "COMPOSE": "Escrever",
+        "READ": "Ler e-mail"
+      }
+    },
+    "MORE-APPS": {
+      "TEXT": "Mais aplicativos",
+      "LIST": {
+        "CHAT": "Chat",
+        "BLOG": "Blog",
+        "CONTACT-GRID": "Grade de contatos"
+      }
+    },
+    "COMPONENTS": {
+      "TEXT": "-- Componentes"
+    },
+    "WIDGETS": {
+      "TEXT": "Widgets",
+      "LIST": {
+        "CHART-WIDGET": "Widget de gráfico",
+        "DATA-WIDGET": "Widget de dados"
+      }
+    },
+    "FORMS": {
+      "TEXT": "Formulários",
+      "LIST": {
+        "BASIC": "Formulário básico",
+        "ADVANCE": "Controle avançado",
+        "EXAMPLE": "Exemplos de formulários",
+        "VALIDATION": "Validação de formulário",
+        "WIZARD": "Assistente",
+        "INPUT-MASK": "Máscara de entrada",
+        "SELECT-ITEM": "Selecione um item",
+        "EDITORS": "Editores"
+      }
+    },
+    "TABLES": {
+      "TEXT": "Tabelas",
+      "LIST": {
+        "BASIC": "Tabelas básicas",
+        "ADVANCE": "Tabelas avançadas"
+      }
+    },
+    "PURCHASES": {
+      "TEXT": "Compras",
+      "LIST": {
+        "PURCHASES": "Compras",
+        "SUPPLIERS": "Fornecedores",
+        "SETTINGS": "Configuração"
+      }
+    },
+    "INVENTORY": {
+      "TEXT": "Estoque",
+      "LIST": {
+        "HOME": "Início",
+        "STOCK": "Saldos de estoque",
+        "CONFIGURATION": "Depósitos e unidades",
+        "MOVEMENTS": "Movimentações",
+        "ADJUSTMENTS": "Ajustes de estoque",
+        "VALUATION": "Valorização",
+        "SETTINGS": "Ajustes"
+      }
+    },
+    "SETTINGS": {
+      "TEXT": "Configuração",
+      "LIST": {
+        "MODULES": "Módulos"
+      }
+    },
+    "SALES": {
+      "TEXT": "Vendas",
+      "LIST": {
+        "ORDERS": "Pedidos",
+        "SETTINGS": "Configuração"
+      }
+    },
+    "PERSONNEL": {
+      "TEXT": "Equipe",
+      "LIST": {
+        "PROFESSIONALS": "Profissionais",
+        "SPECIALTIES": "Especialidades"
+      }
+    }
+  },
+  "HEADER": {
+    "LANGUAGE": "Idioma",
+    "LOGOUT": "Sair"
+  }
+}
