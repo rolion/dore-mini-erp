@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-06: Truncado silencioso a 100 registros (profesionales y calendario)
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ appointment-list.component.ts: personnel.list(... page_size: 100) y api.list({ .
 
 ## Resolución
 `fetchAll` recorre todas las páginas de profesionales, servicios y citas del calendario; los clientes muestran «Se muestran N de M» cuando la búsqueda se trunca. Spec `fetch-all.spec.ts`.
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: fetchAll recorre next (fetch-all.ts, spec fetch-all.spec.ts); usado en profesionales, servicios y calendario; formulario muestra 'Se muestran N de M' para clientes.

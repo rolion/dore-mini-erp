@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-05: HEX escritos a mano en appointment-detail.component.scss
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ appointment-detail.component.scss lineas 1-3; mismo patrón en features/agenda/a
 
 ## Resolución
 BOM eliminado y excepción registrada en `design-system.md` §10 (importar `skins/_dark.scss` emitiría CSS global).
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: appointment-detail.component.scss sin BOM (empieza por '$da'); excepción HEX registrada en design-system.md §10.

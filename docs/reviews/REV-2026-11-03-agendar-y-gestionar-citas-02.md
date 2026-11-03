@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-02: Los filtros del listado no se reflejan en la URL
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ grep ActivatedRoute|queryParam en appointment-list.component.*: sin coincidencia
 
 ## Resolución
 Filtros, página y vista se leen de la URL al abrir y se escriben con `router.navigate` (`replaceUrl`). Spec en `appointment-list.component.spec.ts`.
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: ngOnInit lee queryParamMap y search() escribe router.navigate(replaceUrl); en navegador ?status=confirmed&search=ros restauró filtros y 1 fila; sin bucle de navegación. Residuos menores en REV-2026-11-03-agendar-y-gestionar-citas-09.

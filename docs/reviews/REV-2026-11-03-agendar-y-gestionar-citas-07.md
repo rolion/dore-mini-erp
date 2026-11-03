@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-07: Huecos de pruebas: ausencias en API y specs de lista/formulario
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ ls features/agenda/pages/*.spec.ts -> solo appointment-detail.component.spec.ts.
 
 ## Resolución
 Prueba `test_absence_blocks_booking` y specs de lista y formulario (conflicto conserva datos, doble envío, estados).
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: existen test_absence_blocks_booking y specs de lista y formulario; Karma completo 1136 SUCCESS.
