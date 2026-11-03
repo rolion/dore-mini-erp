@@ -6,6 +6,7 @@ import { moduleGuard } from './core/guard/module.guard';
 import { unsavedChangesGuard } from './core/guard/unsaved-changes.guard';
 import { Page404Component } from './authentication/page404/page404.component';
 import { LEGACY_REDIRECTS } from './core/routing/legacy-redirects';
+import { personnelAdminGuard } from './features/personnel/personnel.routes';
 
 export const APP_ROUTE: Route[] = [
     // Landing pública (sin AuthGuard ni layout del panel), carga diferida.
@@ -25,6 +26,12 @@ export const APP_ROUTE: Route[] = [
         canActivate: [AuthGuard],
         children: [
             { path: '', redirectTo: 'dashboard/main', pathMatch: 'full' },
+            {
+                path: 'agenda/configuracion/horarios',
+                canActivate: [moduleGuard, personnelAdminGuard],
+                data: { module: 'agenda' },
+                loadComponent: () => import('./features/agenda/agenda.component').then(m => m.AgendaComponent),
+            },
             {
                 path: 'dentistry',
                 canActivate: [moduleGuard],

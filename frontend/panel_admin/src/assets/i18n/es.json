@@ -1,5 +1,6 @@
 {
   "MENUITEMS": {
+    "AGENDA":{"SCHEDULE":"Horarios y ausencias","TEXT":"Agenda"},
     "DENTISTRY": { "TEXT": "Odontología", "PATIENTS": "Pacientes" },
     "MAIN": {
       "TEXT": "-- Principal"

@@ -1,0 +1,110 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">Horarios y ausencias</h5></li>
+    <li class="breadcrumb-item">Agenda</li>
+    <li class="breadcrumb-item">Configuración</li>
+  </ul>
+  <div class="section-body"><div class="card"><div class="card-body">
+    <label for="agenda-professional">Profesional</label>
+    <select id="agenda-professional" class="form-select" [formControl]="selection"
+      [attr.disabled]="loading || saving || loadingPeople ? '' : null" (change)="selectProfessional()">
+      <option value="">Selecciona un profesional</option>
+      @for (person of people; track person.id) {
+        <option [value]="person.id">{{ person.name }}</option>
+      }
+    </select>
+    @if (loadingPeople || loading) { <p role="status">Cargando…</p> }
+    @if (error) {
+      <p class="alert alert-danger" role="alert">{{ error }}</p>
+      @if (!week && !loading && !loadingPeople) {
+        <button class="btn btn-outline-primary" type="button" (click)="selection.value ? load() : loadPeople()">Reintentar</button>
+      }
+    }
+    @if (saved) { <p class="alert alert-success" role="status">{{ saved }}</p> }
+    @if (!loadingPeople && !people.length && !error) { <p>No hay profesionales registrados.</p> }
+    @if (selection.value) {
+      <div class="d-flex flex-wrap gap-2 align-items-center my-3">
+        <button class="btn btn-outline-primary" type="button" [disabled]="loading || saving" (click)="move(-7)">Semana anterior</button>
+        <span>{{ start }} a {{ date(6) }} · Hora de Bolivia</span>
+        <button class="btn btn-outline-primary" type="button" [disabled]="loading || saving" (click)="move(7)">Semana siguiente</button>
+      </div>
+    }
+    @if (week; as data) {
+      <div class="row g-3 mb-3">
+        @for (day of days; track day; let i = $index) {
+          <section class="col-12 col-md-6 col-xl-4">
+            <div class="border rounded p-3 h-100">
+              <h6>{{ day }} · {{ date(i) }}</h6>
+              <ul class="list-unstyled mb-0">
+                @for (item of data.availability; track item.starts) {
+                  @if (item.starts.startsWith(date(i))) {
+                    <li>Disponible {{ item.starts.slice(11,16) }}–{{ item.ends.slice(11,16) }}</li>
+                  }
+                }
+                @for (item of data.shifts; track item.id) {
+                  @if (item.day === i && item.valid_from <= date(i) && item.valid_until >= date(i)) {
+                    <li><button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="edit(item)">
+                      Editar turno {{ item.starts.slice(0,5) }}–{{ item.ends.slice(0,5) }}
+                    </button></li>
+                    @for (pause of item.breaks; track pause.starts) {
+                      <li>Pausa {{ pause.starts.slice(0,5) }}–{{ pause.ends.slice(0,5) }}</li>
+                    }
+                  }
+                }
+                @for (item of data.absences; track item.id) {
+                  @if (item.starts.slice(0,10) <= date(i) && item.ends.slice(0,19) > date(i) + 'T00:00:00') {
+                    <li>Ausencia {{ item.starts.slice(0,16).replace('T', ' ') }} a
+                      {{ item.ends.slice(0,16).replace('T', ' ') }} · {{ item.reason }}</li>
+                  }
+                }
+              </ul>
+            </div>
+          </section>
+        }
+      </div>
+      @if (!data.shifts.length && !data.absences.length) { <p>No hay turnos ni ausencias en esta semana.</p> }
+      <div class="row g-3">
+        <form class="col-12 col-lg-6" [formGroup]="shift" (ngSubmit)="saveShift()">
+          <h5>{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
+          <label for="agenda-day">Día</label>
+          <select id="agenda-day" class="form-select mb-2" formControlName="day">
+            @for (day of days; track day; let i = $index) { <option [ngValue]="i">{{ day }}</option> }
+          </select>
+          <label for="shift-start">Hora de inicio</label>
+          <input id="shift-start" type="time" class="form-control mb-2" formControlName="starts">
+          <label for="shift-end">Hora de fin (mismo día)</label>
+          <input id="shift-end" type="time" class="form-control mb-2" formControlName="ends">
+          <label for="shift-from">Vigente desde</label>
+          <input id="shift-from" type="date" class="form-control mb-2" formControlName="valid_from">
+          <label for="shift-until">Vigente hasta</label>
+          <input id="shift-until" type="date" class="form-control mb-2" formControlName="valid_until">
+          <div formArrayName="breaks">
+            @for (pause of shift.controls.breaks.controls; track pause; let i = $index) {
+              <fieldset class="border rounded p-2 mb-2" [formGroupName]="i">
+                <legend class="fs-6">Pausa {{ i + 1 }}</legend>
+                <label [for]="'pause-start-' + i">Inicio</label>
+                <input [id]="'pause-start-' + i" type="time" class="form-control" formControlName="starts">
+                <label [for]="'pause-end-' + i">Fin</label>
+                <input [id]="'pause-end-' + i" type="time" class="form-control" formControlName="ends">
+                <button type="button" class="btn btn-link" (click)="shift.controls.breaks.removeAt(i)">Quitar pausa</button>
+              </fieldset>
+            }
+          </div>
+          <button type="button" class="btn btn-outline-primary me-2" (click)="shift.controls.breaks.push(pause())">Añadir pausa</button>
+          <button type="submit" class="btn btn-primary" [disabled]="shift.invalid || saving">Guardar turno</button>
+          @if (editId) { <button type="button" class="btn btn-link" (click)="edit()">Cancelar edición</button> }
+        </form>
+        <form class="col-12 col-lg-6" [formGroup]="absence" (ngSubmit)="saveAbsence()">
+          <h5>Registrar ausencia</h5>
+          <label for="absence-start">Inicio</label>
+          <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
+          <label for="absence-end">Fin</label>
+          <input id="absence-end" type="datetime-local" class="form-control mb-2" formControlName="ends">
+          <label for="absence-reason">Motivo administrativo</label>
+          <input id="absence-reason" class="form-control mb-2" maxlength="250" formControlName="reason">
+          <button type="submit" class="btn btn-primary" [disabled]="absence.invalid || saving">Guardar ausencia</button>
+        </form>
+      </div>
+    }
+  </div></div></div>
+</section>

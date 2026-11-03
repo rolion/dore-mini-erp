@@ -328,6 +328,30 @@
     },
     {
       "path": "",
+      "title": "MENUITEMS.AGENDA.TEXT",
+      "iconType": "feather",
+      "icon": "calendar",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "module": "agenda",
+      "submenu": [
+        {
+          "path": "/pocketbiz/agenda/configuracion/horarios",
+          "title": "MENUITEMS.AGENDA.SCHEDULE",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ]
+    },
+    {
+      "path": "",
       "title": "MENUITEMS.PERSONNEL.TEXT",
       "iconType": "feather",
       "icon": "users",

@@ -1,7 +1,7 @@
 """Public specialty lookups for other business modules."""
 from uuid import UUID
 
-from modules.personnel.infrastructure.django.models import SpecialtyModel
+from modules.personnel.infrastructure.django.models import ProfessionalModel, SpecialtyModel
 from shared import module_gate
 
 
@@ -15,3 +15,7 @@ def specialty_names(company_id: UUID, ids: set[UUID]) -> dict[UUID, str]:
     if not ids:
         return {}
     return dict(SpecialtyModel.objects.filter(company_id=company_id, id__in=ids).values_list('id', 'name'))
+
+
+def professional_exists(company_id: UUID, professional_id: UUID) -> bool:
+    return ProfessionalModel.objects.filter(company_id=company_id, id=professional_id).exists()
