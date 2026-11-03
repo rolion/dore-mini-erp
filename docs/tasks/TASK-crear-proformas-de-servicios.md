@@ -89,7 +89,7 @@ Ver [DDR-crear-proformas-de-servicios-pantallas-proformas](../design/DDR-crear-p
 Ver [ADR-crear-proformas-de-servicios-contexto-congelacion-y-versiones](../adr/ADR-crear-proformas-de-servicios-contexto-congelacion-y-versiones.md).
 
 ## Plan
-[PLAN-2026-11-03-crear-proformas-de-servicios](../plans/PLAN-2026-11-03-crear-proformas-de-servicios.md) v1 · COMPLETO · Specification readiness: READY (supuestos no bloqueantes listados arriba y en el plan).
+[PLAN-2026-11-03-crear-proformas-de-servicios](../plans/PLAN-2026-11-03-crear-proformas-de-servicios.md) v2 · COMPLETO · Specification readiness: READY (supuestos no bloqueantes listados arriba y en el plan).
 
 ## Implementación
 Backend `modules/quotations` (dominio puro, aplicación, repositorio con contador bloqueado, adaptadores a Servicios/Clientes, API `/api/quotations/proformas/`), módulo `quotations` en el catálogo de `modularity` (requiere `services` y `customers`), migración `0001_initial` y feature Angular `features/quotations/` (lista, formulario con tabla de líneas, detalle con diálogo de presentar, servicio API), ruta, menú «Cotizaciones → Proformas» e i18n es/en/de.
@@ -111,7 +111,7 @@ UI: pantallas de referencia `purchase-list`/`appointment-list` (lista), `appoint
 
 ## Review
 **Quality Gate 1 (subagente aislado): FAIL, sin hallazgos Critical/High.** Ejecutado y OK: `ng test` (16/16), `ng build`, `ng lint`, `bandit` (sin hallazgos), `npm audit` (0), `makemigrations --check`, `test_domain`. Falló `test_boundaries` porque esta rama estaba atrás de su base (REV-01). **No ejecutado: pruebas con PostgreSQL** (`quotations/test_api`, `modularity`, regresiones), ruff/flake8 (no instalados) y revisión visual.
-Hallazgos: [REV-01](../reviews/REV-2026-11-03-crear-proformas-de-servicios-01.md) Medium, [02](../reviews/REV-2026-11-03-crear-proformas-de-servicios-02.md), [03](../reviews/REV-2026-11-03-crear-proformas-de-servicios-03.md), [05](../reviews/REV-2026-11-03-crear-proformas-de-servicios-05.md) corregidos tras integrar la base (boundaries 15/15 OK). Abiertos, Low: [04](../reviews/REV-2026-11-03-crear-proformas-de-servicios-04.md) (SPECIFICATION: cliente inactivo en borrador existente; requiere decisión del usuario), [06](../reviews/REV-2026-11-03-crear-proformas-de-servicios-06.md) (DESIGN: fechas ISO, filtros en URL, etc.), [07](../reviews/REV-2026-11-03-crear-proformas-de-servicios-07.md) (cobertura).
+Hallazgos: [REV-01](../reviews/REV-2026-11-03-crear-proformas-de-servicios-01.md) Medium, [02](../reviews/REV-2026-11-03-crear-proformas-de-servicios-02.md), [03](../reviews/REV-2026-11-03-crear-proformas-de-servicios-03.md), [05](../reviews/REV-2026-11-03-crear-proformas-de-servicios-05.md) corregidos tras integrar la base (boundaries 15/15 OK). Abiertos, Low: [04](../reviews/REV-2026-11-03-crear-proformas-de-servicios-04.md) (SPECIFICATION: resuelto, el usuario eligió exigir cliente activo; PLAN v2), [06](../reviews/REV-2026-11-03-crear-proformas-de-servicios-06.md) (DESIGN: fechas ISO, filtros en URL, etc.), [07](../reviews/REV-2026-11-03-crear-proformas-de-servicios-07.md) (cobertura).
 Pendiente para PASS: correr las pruebas con PostgreSQL (`python manage.py test modules.quotations modules.modularity modules.agenda modules.service_catalog`) y la revisión visual.
 
 ## Publicación

@@ -55,7 +55,7 @@ class ProformaService:
 
     # --- escritura ---------------------------------------------------------------------------------------
     def create(self, data: ProformaInput) -> Proforma:
-        name = self._customer(data.customer_id, current=None)
+        name = self._customer(data.customer_id)
         lines = self._lines(data.lines, existing={})
         proforma = Proforma.create(number='', customer_id=data.customer_id, customer_name=name, date=data.date,
                                    valid_until=data.valid_until, notes=data.notes, lines=lines,
@@ -68,7 +68,7 @@ class ProformaService:
         proforma = self._locked(proforma_id)
         if proforma.status != DRAFT:
             raise ProformaStateError('Solo se puede editar una proforma en borrador.')
-        name = self._customer(data.customer_id, current=proforma)
+        name = self._customer(data.customer_id)
         lines = self._lines(data.lines, existing={line.id: line for line in proforma.lines})
         proforma.replace_content(customer_id=data.customer_id, customer_name=name, date=data.date,
                                  valid_until=data.valid_until, notes=data.notes, lines=lines)
@@ -99,12 +99,10 @@ class ProformaService:
             raise ProformaNotFound()
         return proforma
 
-    def _customer(self, customer_id: UUID, *, current: Proforma | None) -> str:
+    def _customer(self, customer_id: UUID) -> str:
         customer = self.customers.get(customer_id)
         if customer is None:
             raise ProformaValidationError({'customer_id': ['El cliente no existe.']})
-        if current is not None and current.customer_id == customer_id:
-            return current.customer_name
         if not customer.active:
             raise ProformaValidationError({'customer_id': ['El cliente está inactivo.']})
         return customer.name

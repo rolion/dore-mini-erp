@@ -110,6 +110,13 @@ class ProformaApiTests(TransactionTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertTrue(response.json()['lines'][1])
 
+    def test_editing_a_draft_requires_an_active_customer(self):  # INV-06 / REV-04
+        body = self.create().json()
+        CustomerModel.objects.filter(pk=self.customer.pk).update(active=False)
+        response = self.client.put(f"{URL}{body['id']}/", self.payload(lines=body['lines']), format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('customer_id', response.json())
+
     # AC-05
     def test_present_needs_lines_then_freezes(self):
         empty = self.create(lines=[]).json()
