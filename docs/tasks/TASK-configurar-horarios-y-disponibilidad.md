@@ -1,6 +1,6 @@
 # TASK-configurar-horarios-y-disponibilidad: PB-AGE-001
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-horarios-y-disponibilidad
@@ -17,6 +17,7 @@
 | 2026-11-03 | ARCHITECTURE → PLANNING | Pendiente definir la fuente de zona horaria y turnos nocturnos | delivery-start |
 
 | 2026-11-03 | PLANNING → ENGINEERING | Alcance temporal confirmado y PR #49 abierto | delivery-start |
+| 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada y verificaciones pendientes registradas | delivery-build |
 
 ## Investigación
 
@@ -56,7 +57,13 @@
 
 ## Implementación
 
-_Pendiente._
+El commit `5f6fba6` implementa la API de Agenda, la migración aditiva y la vista semanal en el PR #49.
+
+- AC-01. La API exige rol administrativo y los módulos Agenda y Personal. Las consultas se acotan a la empresa de sesión.
+- AC-02 y AC-03. El dominio valida vigencia, pausas y solapamientos y calcula disponibilidad al descontar pausas y ausencias. El guardado de turnos se serializa por empresa y profesional.
+- AC-04. La vista agrupa intervalos por día en hora de Bolivia y reutiliza la tarjeta, el breadcrumb y los controles de formulario del panel. Los formularios se integraron en la pantalla en lugar de usar diálogos como proponía el DDR.
+
+Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `manage.py check`. `makemigrations --check --dry-run` no detectó diferencias entre modelos y migraciones, pero no pudo consultar el historial en PostgreSQL. Pendientes la aplicación de la migración, la integración de permisos y concurrencia en PostgreSQL y el recorrido visual y de teclado en navegador.
 
 ## Review
 
