@@ -25,3 +25,6 @@ El selector y filtro de especialidad siguen deshabilitados; el adaptador `Unavai
 
 ## Triage
 Tercer FAIL consecutivo del task. Detener reintentos automáticos según `delivery-publish`; volver a planificación antes de continuar. La Specification no se modifica en este ciclo.
+
+## Avance del 2026-11-03
+El usuario pidió resolver los conflictos con `main`. Se integró f6839a4 en el commit 2028f60, conservando Servicios, Personal y Odontología en el catálogo de módulos y sus pruebas. GitHub PR #48 volvió a `mergeable: true`. Verificación tras el merge: Django 1350 tests OK con PostgreSQL local de pruebas; Karma 1115/1115 OK con cobertura; lint y build OK. El hallazgo sigue **Open** por el contrato de especialidades de AC-07 y el PLAN/ADR pendientes de actualización; resolver conflictos no equivale a aprobar el PR.

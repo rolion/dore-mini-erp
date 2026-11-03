@@ -25,6 +25,7 @@
 | 2026-11-03 | REVIEW → ENGINEERING | Revisión móvil detectó solapamiento; PostgreSQL reveló expectativa de módulos obsoleta, REV-2026-11-03-01/02 | delivery-publish |
 | 2026-11-03 | ENGINEERING → REVIEW | Altura móvil corregida y expectativa actualizada; verificaciones completas propias | delivery-build |
 | 2026-11-03 | REVIEW → PLANNING | Tercer FAIL: main incorporó Personal; PLAN v2 y ADR requieren reevaluación, PR con conflictos | delivery-publish |
+| 2026-11-03 | PLANNING → PLANNING | Main f6839a4 integrado; cuatro conflictos resueltos, pruebas completas OK; AC-07 aún pendiente | integración de main |
 
 | 2026-11-02 | REVIEW → REVIEW | Segunda revisión focal cierra REV-01/02; Quality Gate sin PASS por verificaciones PostgreSQL/visual pendientes | delivery-publish |
 
@@ -98,5 +99,7 @@ Hallazgos IMPLEMENTATION Medium: [REV-01](../reviews/REV-2026-11-02-administrar-
 Revisión del 2026-11-03: [REV-2026-11-03-01](../reviews/REV-2026-11-03-administrar-catalogo-servicios-01.md) por solapamiento móvil y [REV-2026-11-03-02](../reviews/REV-2026-11-03-administrar-catalogo-servicios-02.md) por prueba obsoleta de módulos. Ambos corregidos y cerrados mediante delivery-build.
 
 Quality Gate independiente sobre e3165ba: **FAIL**, [REV-2026-11-03-03](../reviews/REV-2026-11-03-administrar-catalogo-servicios-03.md) `PLAN / High` abierto. `main` vigente f6839a4 ya incluye Personal y perfil odontológico; el PLAN v2/ADR suponen proveedor ausente, AC-07 requiere reevaluación y el PR tiene cuatro bloques de conflicto. El revisor confirmó árbol limpio y examinó TASK/PLAN/ADR/DDR/diff, pero su ejecución de PostgreSQL fue bloqueada por el sandbox y no completó las demás verificaciones. Las pruebas de 109 casos PostgreSQL, 1077 Karma con cobertura, lint, build, npm audit y la inspección visual sí fueron ejecutadas por el orquestador sobre e3165ba; no sustituyen el Quality Gate independiente. Es el tercer FAIL consecutivo; se detienen los reintentos automáticos.
+
+Integración de main solicitada por el usuario: commit 2028f60 resolvió los cuatro conflictos sin eliminar Servicios, Personal ni Odontología. El PR volvió a ser fusionable. Verificación del estado combinado: 1350 tests Django con PostgreSQL OK; 1115/1115 Karma con cobertura OK; lint y build producción OK. REV-2026-11-03-03 permanece abierto exclusivamente por la integración funcional y el plan/ADR de especialidades; no se repitió `delivery-publish`.
 ## Publicación
-PR #48 permanece **draft**, sin merge ni declaración de listo. **Etapa PLANNING** por REV-2026-11-03-03; el siguiente ciclo debe replanificar la integración con Personal y resolver conflictos con `main` antes de repetir Quality Gate.
+PR #48 permanece **draft**, sin merge ni declaración de listo. **Etapa PLANNING** por REV-2026-11-03-03; los conflictos con `main` están resueltos. El siguiente ciclo debe replanificar la integración con Personal antes de repetir Quality Gate.
