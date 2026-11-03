@@ -1,6 +1,6 @@
 # TASK-crear-proformas-de-servicios: PB-COT-001
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-proformas-de-servicios (basada en `task/TASK-agendar-y-gestionar-citas`, PR #50, por indicación del usuario)
@@ -15,6 +15,7 @@
 | 2026-11-03 | DESIGN → ARCHITECTURE | Nuevo bounded context, módulo habilitable y migración | delivery-start |
 | 2026-11-03 | ARCHITECTURE → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-03 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-03 | ENGINEERING → REVIEW | Implementación completa; pruebas con PostgreSQL pendientes de entorno | delivery-build |
 
 ## Investigación
 
@@ -90,7 +91,22 @@ Ver [ADR-crear-proformas-de-servicios-contexto-congelacion-y-versiones](../adr/A
 [PLAN-2026-11-03-crear-proformas-de-servicios](../plans/PLAN-2026-11-03-crear-proformas-de-servicios.md) v1 · COMPLETO · Specification readiness: READY (supuestos no bloqueantes listados arriba y en el plan).
 
 ## Implementación
-_Pendiente_
+Backend `modules/quotations` (dominio puro, aplicación, repositorio con contador bloqueado, adaptadores a Servicios/Clientes, API `/api/quotations/proformas/`), módulo `quotations` en el catálogo de `modularity` (requiere `services` y `customers`), migración `0001_initial` y feature Angular `features/quotations/` (lista, formulario con tabla de líneas, detalle con diálogo de presentar, servicio API), ruta, menú «Cotizaciones → Proformas» e i18n es/en/de.
+
+Cobertura: INV-01/03/05 y AC-01, 02, 05, 08 → `tests/test_domain.py` (SimpleTestCase); AC-01..10 → `tests/test_api.py` (TransactionTestCase, incluye numeración concurrente); AC-10 y límites → `modularity/tests/test_api.py` y `sales/tests/test_boundaries.py` (entrada `quotations`); AC-11 → `ng build`, `proformas-api.service.spec.ts` y `sidebar-menu.spec.ts`.
+
+Verificación propia (no es el Quality Gate):
+- `ng build --configuration development` OK; `ng test` acotado a quotations + sidebar: 16 de 16 OK.
+- Backend: `test_domain` OK sin base de datos; `makemigrations --check` sin cambios pendientes.
+- **No ejecutado**: pruebas con PostgreSQL (`test_api.py`, modularity) por no contar con credenciales de base de datos en este entorno (no se lee `.env`).
+- `test_boundaries` falla en `test_modules_only_reach_allowed_modules_and_only_through_services` por `agenda/infrastructure/adapters.py`, que importa las fachadas de `customers` y `service_catalog` sin estar declarado en `ALLOWED_DEPENDENCIES['agenda']`. **Preexistente en la rama base (PR #50)**, no causado por este cambio; quotations no aparece entre los infractores. Se deja sin tocar para no chocar con ese PR.
+- `npm run lint` (`ng lint`) no está configurado en el repositorio (ESLint sin `eslint.config.*`).
+
+Desviaciones respecto al plan: ninguna de alcance. Detalles: `previewSubtotal` en el modelo del frontend para la vista previa; el campo de precio se marca solo-lectura según `can_edit_price` del detalle (en alta se asume permitido y el servidor decide); `number` se asigna después de validar para que un rechazo no consuma consecutivo; `allowed_actions` expone `new-version` solo sin borrador pendiente del mismo número.
+
+Deuda técnica: sin autoguardado ni aviso al abandonar con cambios sin guardar (solo indicador); edición concurrente de un mismo borrador, el último guardado gana.
+
+UI: pantallas de referencia `purchase-list`/`appointment-list` (lista), `appointment-form` (formulario) y `appointment-detail` (detalle con `<dialog>` nativo); se reutilizan `MoneyPipe`, badges `col-*` y `shared/models/page`. Sin componentes compartidos nuevos; la tabla de líneas vive en el formulario del feature.
 
 ## Review
 _Pendiente_
