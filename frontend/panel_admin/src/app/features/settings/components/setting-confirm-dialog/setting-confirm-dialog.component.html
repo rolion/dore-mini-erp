@@ -1,12 +1,12 @@
 <div class="modal-header">
   <h4 class="modal-title">{{ title }}</h4>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
   <p class="mb-0" data-testid="confirm-message">{{ message }}</p>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
   <button type="button" class="btn btn-primary" data-testid="confirm-accept" (click)="activeModal.close(true)">
     {{ confirmLabel }}
   </button>

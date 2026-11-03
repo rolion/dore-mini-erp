@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -12,7 +13,7 @@ import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
 
 @Component({ selector: 'app-service-list',
-  imports: [ReactiveFormsModule, RouterLink, NgxDatatableModule, MoneyPipe, ServiceToggleComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgxDatatableModule, MoneyPipe, ServiceToggleComponent],
   templateUrl: './service-list.component.html',
   styleUrl: './service-list.component.scss',
 })

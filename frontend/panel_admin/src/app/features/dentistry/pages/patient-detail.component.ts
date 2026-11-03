@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
@@ -11,7 +12,7 @@ import { demographicsValidator, localDateInput, minorAt } from '../services/demo
 import { PatientHistoryComponent } from '../components/patient-history.component';
 
 @Component({
-  selector: 'app-patient-detail', imports: [DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent],
+  selector: 'app-patient-detail', imports: [TranslatePipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent],
   templateUrl: './patient-detail.component.html',
   styles: [`
     :host-context(.dark) h3 {

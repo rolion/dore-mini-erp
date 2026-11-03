@@ -1,43 +1,43 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
     <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ title }}</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
-    <li class="breadcrumb-item">Personal</li><li class="breadcrumb-item">{{ title }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.PERSONAL' | translate }}</li><li class="breadcrumb-item">{{ title }}</li>
   </ul>
   <div class="section-body"><div class="card">
     <div class="card-header"><div class="ngxTableHeader"><div class="table-title"><h2><strong>{{ title }}</strong></h2></div></div></div>
     <div class="card-body" #tableContainer>
       <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
-        <div><label for="profile-search">Buscar por nombre</label><input id="profile-search" class="search-field form-control" [formControl]="search"></div>
-        <div><label for="profile-state">Estado</label><select id="profile-state" class="form-select" [formControl]="status">
-          <option value="true">Activos</option><option value="false">Inactivos</option><option value="">Todos</option>
+        <div><label for="profile-search">{{ 'COMMON.BUSCAR_POR_NOMBRE' | translate }}</label><input id="profile-search" class="search-field form-control" [formControl]="search"></div>
+        <div><label for="profile-state">{{ 'COMMON.ESTADO' | translate }}</label><select id="profile-state" class="form-select" [formControl]="status">
+          <option value="true">{{ 'COMMON.ACTIVOS' | translate }}</option><option value="false">{{ 'COMMON.INACTIVOS' | translate }}</option><option value="">{{ 'COMMON.TODOS' | translate }}</option>
         </select></div>
         @if (kind === 'professionals') {
-          <div><label for="specialty-filter">Especialidad</label><select id="specialty-filter" class="form-select" [formControl]="specialty">
-            <option value="">Todas</option>@for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+          <div><label for="specialty-filter">{{ 'COMMON.ESPECIALIDAD' | translate }}</label><select id="specialty-filter" class="form-select" [formControl]="specialty">
+            <option value="">{{ 'COMMON.TODAS' | translate }}</option>@for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
           </select></div>
         }
-        <a class="btn btn-icon btn-primary rounded-button" [routerLink]="[base, 'new']" title="Nuevo registro" aria-label="Nuevo registro"><i class="material-icons" aria-hidden="true">add</i></a>
+        <a class="btn btn-icon btn-primary rounded-button" [routerLink]="[base, 'new']" [title]="'PERSONNEL.PROFILE_LIST.NUEVO_REGISTRO' | translate" [attr.aria-label]="'PERSONNEL.PROFILE_LIST.NUEVO_REGISTRO' | translate"><i class="material-icons" aria-hidden="true">add</i></a>
       </div>
-      @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button class="btn btn-light" (click)="refresh()">Reintentar</button></div> }
+      @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button class="btn btn-light" (click)="refresh()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
       @if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
-      <small class="text-muted d-block d-md-none mb-2">Desplaza la tabla horizontalmente para ver todos los datos y acciones.</small>
-      <div class="table-responsive" tabindex="0" aria-label="Listado de Personal">
+      <small class="text-muted d-block d-md-none mb-2">{{ 'PERSONNEL.PROFILE_LIST.DESPLAZA_LA_TABLA_HORIZONTALMENTE_PARA' | translate }}</small>
+      <div class="table-responsive" tabindex="0" [attr.aria-label]="'PERSONNEL.PROFILE_LIST.LISTADO_DE_PERSONAL' | translate">
       <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
         [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
         [offset]="pageIndex" [limit]="10" [messages]="messages" (page)="onPage($event)">
-        <ngx-datatable-column name="Nombre" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template>
+        <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template>
           <a class="fw-bold text-break" [routerLink]="[base, row.id]">{{ row.name }}</a>
         </ng-template></ngx-datatable-column>
         @if (kind === 'professionals') {
-          <ngx-datatable-column name="Especialidades" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template><span class="text-break">{{ names(row) }}</span></ng-template></ngx-datatable-column>
+          <ngx-datatable-column [name]="'PERSONNEL.PROFILE_LIST.ESPECIALIDADES' | translate" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template><span class="text-break">{{ names(row) }}</span></ng-template></ngx-datatable-column>
         }
-        <ngx-datatable-column name="Estado" [sortable]="false" [minWidth]="110"><ng-template let-row="row" ngx-datatable-cell-template>
+        <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [minWidth]="110"><ng-template let-row="row" ngx-datatable-cell-template>
           <span class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? 'Activo' : 'Inactivo' }}</span>
         </ng-template></ngx-datatable-column>
-        <ngx-datatable-column name="Acciones" [sortable]="false" [minWidth]="170"><ng-template let-row="row" ngx-datatable-cell-template>
-          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="[base, row.id]" title="Ver detalle" aria-label="Ver detalle"><i class="material-icons" aria-hidden="true">visibility</i></a>
-          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="[base, row.id, 'edit']" title="Editar" aria-label="Editar"><i class="material-icons" aria-hidden="true">edit</i></a>
+        <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [minWidth]="170"><ng-template let-row="row" ngx-datatable-cell-template>
+          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="[base, row.id]" [title]="'COMMON.VER_DETALLE' | translate" [attr.aria-label]="'COMMON.VER_DETALLE' | translate"><i class="material-icons" aria-hidden="true">visibility</i></a>
+          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="[base, row.id, 'edit']" [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate"><i class="material-icons" aria-hidden="true">edit</i></a>
           <button class="btn btn-tbl-edit btn-tbl-toggle h-auto" [disabled]="saving" (click)="toggle(row)" [title]="row.active ? 'Desactivar' : 'Activar'" [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'"><i class="material-icons" aria-hidden="true">{{ row.active ? 'block' : 'check_circle' }}</i></button>
         </ng-template></ngx-datatable-column>
       </ngx-datatable>

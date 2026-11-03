@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,7 +11,7 @@ import { SuppliersApiService } from '../../services/suppliers-api.service';
 @Component({
   selector: 'app-supplier-detail',
   templateUrl: './supplier-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class SupplierDetailComponent implements OnInit {
   supplier: Supplier | null = null;

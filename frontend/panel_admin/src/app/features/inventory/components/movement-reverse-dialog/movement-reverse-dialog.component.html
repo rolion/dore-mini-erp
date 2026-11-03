@@ -1,23 +1,23 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">Revertir movimiento</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+    <h4 class="modal-title">{{ 'INVENTORY.MOVEMENT_REVERSE_DIALOG.REVERTIR_MOVIMIENTO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
     @if (movement; as m) {
     <dl class="row mb-3">
-      <dt class="col-sm-4">Referencia</dt>
+      <dt class="col-sm-4">{{ 'COMMON.REFERENCIA' | translate }}</dt>
       <dd class="col-sm-8" data-testid="reference">{{ m.reference || '—' }}</dd>
-      <dt class="col-sm-4">Tipo</dt>
+      <dt class="col-sm-4">{{ 'COMMON.TIPO' | translate }}</dt>
       <dd class="col-sm-8" data-testid="type">{{ m.typeLabel }}</dd>
-      <dt class="col-sm-4">Producto</dt>
+      <dt class="col-sm-4">{{ 'COMMON.PRODUCTO' | translate }}</dt>
       <dd class="col-sm-8" data-testid="product">{{ m.productName }}</dd>
-      <dt class="col-sm-4">Almacén</dt>
+      <dt class="col-sm-4">{{ 'COMMON.ALMACEN' | translate }}</dt>
       <dd class="col-sm-8" data-testid="warehouse">{{ m.warehouseName }}</dd>
-      <dt class="col-sm-4">Cantidad</dt>
+      <dt class="col-sm-4">{{ 'COMMON.CANTIDAD' | translate }}</dt>
       <dd class="col-sm-8" data-testid="quantity">{{ m.quantity }} {{ m.unitAbbreviation }}</dd>
     </dl>
-    <p class="alert alert-info" role="status" data-testid="effect">{{ effect }} El movimiento original se conserva como «Revertido» y no se podrá revertir otra vez.</p>
+    <p class="alert alert-info" role="status" data-testid="effect">{{ 'INVENTORY.MOVEMENT_REVERSE_DIALOG.EL_MOVIMIENTO_ORIGINAL_SE_CONSERVA' | translate: { p0: (effect) } }}</p>
     }
     @if (stockShortage; as shortage) {
     <app-insufficient-stock-alert [info]="shortage" />
@@ -26,7 +26,7 @@
     <div class="alert alert-warning" role="alert" data-testid="error">{{ errorMessage }}</div>
     }
     <div class="form-group">
-      <label for="reverse-reason">Motivo de la reversión <span class="text-danger">*</span></label>
+      <label for="reverse-reason">{{ 'COMMON.MOTIVO_DE_LA_REVERSION' | translate }} <span class="text-danger">*</span></label>
       <textarea id="reverse-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="maxLength"></textarea>
       <small class="form-text text-muted" data-testid="counter">{{ form.controls.reason.value.length }} / {{ maxLength }}</small>
       @if (reasonError) {
@@ -36,6 +36,6 @@
   </div>
   <div class="modal-footer">
     <button type="submit" class="btn btn-danger" data-testid="reverse-movement" [disabled]="!canSubmit">{{ saving ? 'Revirtiendo…' : 'Revertir movimiento' }}</button>
-    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Volver</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
   </div>
 </form>

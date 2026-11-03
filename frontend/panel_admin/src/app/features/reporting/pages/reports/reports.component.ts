@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { EMPTY, Observable } from 'rxjs';
@@ -24,7 +25,7 @@ export function percentOf(part: string, total: string): number {
 @Component({
   selector: 'app-reports',
   templateUrl: './reports.component.html',
-  imports: [
+  imports: [TranslatePipe, 
     AsyncPipe,
     RouterLink,
     NgApexchartsModule,

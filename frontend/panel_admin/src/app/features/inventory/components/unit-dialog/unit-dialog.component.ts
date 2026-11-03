@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -17,7 +18,7 @@ export type UnitField = 'name' | 'abbreviation';
 @Component({
   selector: 'app-unit-dialog',
   templateUrl: './unit-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class UnitDialogComponent {
   readonly nameMaxLength = UNIT_NAME_MAX_LENGTH;

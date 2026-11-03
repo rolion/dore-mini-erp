@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -49,7 +50,7 @@ const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
 @Component({
   selector: 'app-order-detail',
   templateUrl: './order-detail.component.html',
-  imports: [
+  imports: [TranslatePipe, 
     RouterLink,
     DatePipe,
     MoneyPipe,

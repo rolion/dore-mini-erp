@@ -1,15 +1,15 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">Registrar pago</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+    <h4 class="modal-title">{{ 'COMMON.REGISTRAR_PAGO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
-    <div class="alert alert-info" data-testid="balance">Saldo actual: <strong>{{ balance | money }}</strong></div>
+    <div class="alert alert-info" data-testid="balance">{{ 'PURCHASES.PAYMENT_DIALOG.SALDO_ACTUAL' | translate }} <strong>{{ balance | money }}</strong></div>
     @if (generalError) {
     <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }}</div>
     }
     <div class="form-group mb-3">
-      <label for="payment-date">Fecha <span class="text-danger">*</span></label>
+      <label for="payment-date">{{ 'COMMON.FECHA' | translate }} <span class="text-danger">*</span></label>
       <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today"
         [attr.aria-invalid]="dateError ? true : null" [attr.aria-describedby]="dateError ? 'payment-date-error' : null" />
       @if (dateError; as message) {
@@ -17,23 +17,23 @@
       }
     </div>
     <div class="form-group mb-3">
-      <label for="payment-amount">Monto (Bs) <span class="text-danger">*</span></label>
+      <label for="payment-amount">{{ 'PURCHASES.PAYMENT_DIALOG.MONTO_BS' | translate }} <span class="text-danger">*</span></label>
       <div class="input-group">
         <input id="payment-amount" type="text" inputmode="decimal" class="form-control" formControlName="amount"
           autocomplete="off" (blur)="touched = true" [attr.aria-invalid]="amountFieldError ? true : null"
           [attr.aria-describedby]="amountFieldError ? 'payment-amount-error' : null" />
-        <button type="button" class="btn btn-light" data-testid="pay-in-full" (click)="payInFull()">Pagar el saldo completo</button>
+        <button type="button" class="btn btn-light" data-testid="pay-in-full" (click)="payInFull()">{{ 'PURCHASES.PAYMENT_DIALOG.PAGAR_EL_SALDO_COMPLETO' | translate }}</button>
       </div>
-      <small class="form-text text-muted">Saldo: {{ balance | money }}</small>
+      <small class="form-text text-muted">{{ 'PURCHASES.PAYMENT_DIALOG.SALDO' | translate: { p0: (balance | money) } }}</small>
       @if (amountFieldError; as message) {
       <small id="payment-amount-error" class="text-danger d-block" role="alert" data-testid="amount-error">{{ message }}</small>
       }
     </div>
     <div class="form-group mb-3">
-      <label for="payment-method">Método de pago <span class="text-danger">*</span></label>
+      <label for="payment-method">{{ 'COMMON.METODO_DE_PAGO' | translate }} <span class="text-danger">*</span></label>
       <select id="payment-method" class="form-select" formControlName="paymentMethod"
         [attr.aria-invalid]="methodError ? true : null" [attr.aria-describedby]="methodError ? 'payment-method-error' : null">
-        <option value="">Selecciona un método</option>
+        <option value="">{{ 'PURCHASES.PAYMENT_DIALOG.SELECCIONA_UN_METODO' | translate }}</option>
         @for (method of methods; track method) {
         <option [value]="method">{{ methodLabels[method] }}</option>
         }
@@ -47,6 +47,6 @@
     <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || (touched && !canSubmit)">
       {{ submitting ? 'Registrando…' : 'Registrar pago' }}
     </button>
-    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Cancelar</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
   </div>
 </form>

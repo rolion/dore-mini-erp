@@ -1,18 +1,18 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">Revertir recepción</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+    <h4 class="modal-title">{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.REVERTIR_RECEPCION' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
     @if (receipt; as r) {
-    <p class="mb-2" data-testid="summary">Recepción <strong>{{ r.reference }}</strong> de la compra {{ r.purchase.reference }}. Se revierte completa: no hay reversión parcial.</p>
+    <p class="mb-2" data-testid="summary">{{ 'COMMON.RECEPCION' | translate }} <strong>{{ r.reference }}</strong> {{ 'PURCHASES.RECEIPT_REVERT_DIALOG.DE_LA_COMPRA_SE_REVIERTE' | translate: { p0: (r.purchase.reference) } }}</p>
     <div class="table-responsive mb-3">
       <table class="table table-sm table-bordered align-middle mb-0">
         <thead>
           <tr>
-            <th scope="col">Producto</th>
-            <th scope="col" class="text-end">Cantidad</th>
-            <th scope="col">Efecto</th>
+            <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
+            <th scope="col">{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.EFECTO' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -22,11 +22,11 @@
             <td class="text-end">{{ line.quantity }} {{ line.unitAbbreviation }}</td>
             <td>
               @if (r.inventoryMode === 'documental') {
-              Sin movimiento de inventario
+              {{ 'PURCHASES.RECEIPT_REVERT_DIALOG.SIN_MOVIMIENTO_DE_INVENTARIO' | translate }}
               } @else if (line.stockEntry === false) {
               {{ noEntryLabel }}
               } @else {
-              Se registrará una salida de stock
+              {{ 'PURCHASES.RECEIPT_REVERT_DIALOG.SE_REGISTRARA_UNA_SALIDA_DE' | translate }}
               }
             </td>
           </tr>
@@ -35,22 +35,22 @@
       </table>
     </div>
     @if (r.inventoryMode === 'documental') {
-    <p class="alert alert-secondary" role="status" data-testid="documental-note">{{ documentalLabel }}: no hay movimientos de inventario que corregir.</p>
+    <p class="alert alert-secondary" role="status" data-testid="documental-note">{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.NO_HAY_MOVIMIENTOS_DE_INVENTARIO' | translate: { p0: (documentalLabel) } }}</p>
     }
     <p class="alert alert-info" role="status" data-testid="impact">
-      Las cantidades de esta recepción vuelven a quedar pendientes en la compra y el estado de recepción se recalcula.
-      <strong>Revertir la recepción no devuelve los pagos registrados.</strong>
+      {{ 'PURCHASES.RECEIPT_REVERT_DIALOG.LAS_CANTIDADES_DE_ESTA_RECEPCION' | translate }}
+      <strong>{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.REVERTIR_LA_RECEPCION_NO_DEVUELVE' | translate }}</strong>
     </p>
     }
     @if (shortage; as s) {
     <div class="alert alert-warning" role="alert" data-testid="shortage">
-      <p class="fw-bold mb-2">No hay existencia suficiente para revertir la recepción. No se revirtió ninguna línea.</p>
+      <p class="fw-bold mb-2">{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.NO_HAY_EXISTENCIA_SUFICIENTE_PARA' | translate }}</p>
       @if (s.warehouseName) {
-      <p class="mb-2">Almacén: {{ s.warehouseName }}</p>
+      <p class="mb-2">{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.ALMACEN' | translate: { p0: (s.warehouseName) } }}</p>
       }
       <ul class="mb-0">
         @for (line of s.lines; track line.productName) {
-        <li data-testid="shortage-line">{{ line.productName }}: se necesitan {{ line.requested }} {{ line.unit }} y hay {{ line.available }} {{ line.unit }}.</li>
+        <li data-testid="shortage-line">{{ 'PURCHASES.RECEIPT_REVERT_DIALOG.SE_NECESITAN_Y_HAY' | translate: { p0: (line.productName), p1: (line.requested), p2: (line.unit), p3: (line.available) } }}</li>
         }
       </ul>
     </div>
@@ -59,7 +59,7 @@
     <div class="alert alert-warning" role="alert" data-testid="error">{{ errorMessage }}</div>
     }
     <div class="form-group">
-      <label for="revert-reason">Motivo de la reversión <span class="text-danger">*</span></label>
+      <label for="revert-reason">{{ 'COMMON.MOTIVO_DE_LA_REVERSION' | translate }} <span class="text-danger">*</span></label>
       <textarea id="revert-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="maxLength"></textarea>
       <small class="form-text text-muted" data-testid="counter">{{ form.controls.reason.value.length }} / {{ maxLength }}</small>
       @if (reasonError) {
@@ -69,6 +69,6 @@
   </div>
   <div class="modal-footer">
     <button type="submit" class="btn btn-danger" data-testid="revert-receipt" [disabled]="!canSubmit">{{ saving ? 'Revirtiendo…' : 'Revertir recepción' }}</button>
-    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Volver</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
   </div>
 </form>

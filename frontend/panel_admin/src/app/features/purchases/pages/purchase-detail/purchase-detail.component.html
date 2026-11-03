@@ -1,15 +1,15 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Detalle de la compra</h5>
+      <h5 class="page-title m-b-0">{{ 'PURCHASES.PURCHASE_DETAIL.DETALLE_DE_LA_COMPRA' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Compras</li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">Compras</a></li>
-    <li class="breadcrumb-item">Detalle</li>
+    <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">{{ 'COMMON.COMPRAS' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.DETALLE' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
@@ -27,100 +27,100 @@
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'summary'" role="tab" id="tab-summary"
                 [attr.aria-selected]="tab === 'summary'" aria-controls="panel-summary" data-testid="tab-summary"
-                (click)="tab = 'summary'">Resumen</button>
+                (click)="tab = 'summary'">{{ 'PURCHASES.PURCHASE_DETAIL.RESUMEN' | translate }}</button>
             </li>
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'receptions'" role="tab" id="tab-receptions"
                 [attr.aria-selected]="tab === 'receptions'" aria-controls="panel-receptions" data-testid="tab-receptions"
-                (click)="tab = 'receptions'">Recepciones</button>
+                (click)="tab = 'receptions'">{{ 'PURCHASES.PURCHASE_DETAIL.RECEPCIONES' | translate }}</button>
             </li>
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'payments'" role="tab" id="tab-payments"
                 [attr.aria-selected]="tab === 'payments'" aria-controls="panel-payments" data-testid="tab-payments"
-                (click)="tab = 'payments'">Pagos</button>
+                (click)="tab = 'payments'">{{ 'PURCHASES.PURCHASE_DETAIL.PAGOS' | translate }}</button>
             </li>
           </ul>
           @if (tab === 'payments' && purchase) {
           <div class="card-body" role="tabpanel" id="panel-payments" aria-labelledby="tab-payments">
             <app-purchase-payments-tab [purchase]="purchase" (paid)="reload()" />
             <div class="m-4">
-              <a class="btn btn-light" routerLink="/pocketbiz/purchases">Volver</a>
+              <a class="btn btn-light" routerLink="/pocketbiz/purchases">{{ 'COMMON.VOLVER' | translate }}</a>
             </div>
           </div>
           } @else if (tab === 'receptions' && purchase) {
           <div class="card-body" role="tabpanel" id="panel-receptions" aria-labelledby="tab-receptions">
             <app-purchase-receipts-tab [purchase]="purchase" />
             <div class="m-4">
-              <a class="btn btn-light" routerLink="/pocketbiz/purchases">Volver</a>
+              <a class="btn btn-light" routerLink="/pocketbiz/purchases">{{ 'COMMON.VOLVER' | translate }}</a>
             </div>
           </div>
           } @else {
           <div class="card-body" role="tabpanel" id="panel-summary" aria-labelledby="tab-summary">
             @if (loading) {
-            <p class="m-4" data-testid="loading">Cargando…</p>
+            <p class="m-4" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
             }
             @if (purchase; as p) {
             <dl class="row m-4">
-              <dt class="col-sm-3">Referencia interna</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.REFERENCIA_INTERNA' | translate }}</dt>
               <dd class="col-sm-9" data-testid="reference">{{ p.reference }}</dd>
-              <dt class="col-sm-3">Proveedor</dt>
+              <dt class="col-sm-3">{{ 'COMMON.PROVEEDOR' | translate }}</dt>
               <dd class="col-sm-9" data-testid="supplier">
                 {{ p.supplier.name }}
                 @if (!p.supplier.active) {
-                <span class="badge-outline col-red d-inline-block ms-2">Inactivo</span>
+                <span class="badge-outline col-red d-inline-block ms-2">{{ 'COMMON.INACTIVO' | translate }}</span>
                 }
               </dd>
-              <dt class="col-sm-3">Fecha de compra</dt>
+              <dt class="col-sm-3">{{ 'COMMON.FECHA_DE_COMPRA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.purchaseDate | date: 'dd/MM/yyyy' }}</dd>
-              <dt class="col-sm-3">Referencia externa</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.REFERENCIA_EXTERNA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.externalReference || 'Sin referencia' }}</dd>
-              <dt class="col-sm-3">Estado</dt>
+              <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="status">{{ statusLabels[p.status] }}</dd>
-              <dt class="col-sm-3">Estado de recepción</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.ESTADO_DE_RECEPCION' | translate }}</dt>
               <dd class="col-sm-9" data-testid="reception-status">{{ receptionLabels[p.receptionStatus] }}</dd>
-              <dt class="col-sm-3">Estado de pago</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.ESTADO_DE_PAGO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="payment-status">
                 <span class="badge-outline d-inline-block" [class]="paymentClasses[p.paymentStatus]">{{ paymentLabels[p.paymentStatus] }}</span>
               </dd>
               @if (p.status === 'confirmed') {
-              <dt class="col-sm-3">Total pagado</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.TOTAL_PAGADO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="paid-total">{{ p.paidTotal | money }}</dd>
-              <dt class="col-sm-3">Saldo</dt>
+              <dt class="col-sm-3">{{ 'COMMON.SALDO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="balance">{{ p.balance | money }}</dd>
               }
-              <dt class="col-sm-3">Moneda</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.MONEDA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.currency }}</dd>
-              <dt class="col-sm-3">Notas</dt>
+              <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
               <dd class="col-sm-9">{{ p.notes || 'Sin notas' }}</dd>
-              <dt class="col-sm-3">Creada</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.CREADA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-              <dt class="col-sm-3">Actualizada</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.ACTUALIZADA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
               @if (p.status === 'confirmed' && p.confirmedAt) {
-              <dt class="col-sm-3">Confirmada el</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.CONFIRMADA_EL' | translate }}</dt>
               <dd class="col-sm-9" data-testid="confirmed-at">{{ p.confirmedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
               }
               @if (p.status === 'cancelled') {
-              <dt class="col-sm-3">Cancelada el</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.CANCELADA_EL' | translate }}</dt>
               <dd class="col-sm-9" data-testid="cancelled-at">{{ p.cancelledAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-              <dt class="col-sm-3">Motivo de cancelación</dt>
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.MOTIVO_DE_CANCELACION' | translate }}</dt>
               <dd class="col-sm-9" data-testid="cancel-reason">{{ p.cancellationReason }}</dd>
               }
             </dl>
-            <h5 class="mx-4">Productos</h5>
+            <h5 class="mx-4">{{ 'COMMON.PRODUCTOS' | translate }}</h5>
             <div class="table-responsive mx-4">
               <table class="table table-bordered align-middle">
                 <thead>
                   <tr>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Unidad base</th>
-                    <th scope="col" class="text-end">Cantidad</th>
+                    <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.UNIDAD_BASE' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
                     @if (p.status === 'confirmed') {
-                    <th scope="col" class="text-end">Recibida</th>
-                    <th scope="col" class="text-end">Pendiente</th>
+                    <th scope="col" class="text-end">{{ 'COMMON.RECIBIDA' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'COMMON.PENDIENTE' | translate }}</th>
                     }
-                    <th scope="col" class="text-end">Precio unitario</th>
-                    <th scope="col" class="text-end">Subtotal</th>
+                    <th scope="col" class="text-end">{{ 'PURCHASES.PURCHASE_DETAIL.PRECIO_UNITARIO' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'COMMON.SUBTOTAL' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,13 +138,13 @@
                   </tr>
                   } @empty {
                   <tr>
-                    <td [attr.colspan]="p.status === 'confirmed' ? 7 : 5" class="text-center text-muted" data-testid="no-items">Esta compra aún no tiene productos.</td>
+                    <td [attr.colspan]="p.status === 'confirmed' ? 7 : 5" class="text-center text-muted" data-testid="no-items">{{ 'PURCHASES.PURCHASE_DETAIL.ESTA_COMPRA_AUN_NO_TIENE' | translate }}</td>
                   </tr>
                   }
                 </tbody>
                 <tfoot>
                   <tr>
-                    <th scope="row" [attr.colspan]="p.status === 'confirmed' ? 6 : 4" class="text-end">Total ({{ p.currency }})</th>
+                    <th scope="row" [attr.colspan]="p.status === 'confirmed' ? 6 : 4" class="text-end">{{ 'COMMON.TOTAL_2' | translate: { p0: (p.currency) } }}</th>
                     <td class="text-end fw-bold text-nowrap" data-testid="total">{{ p.total | money }}</td>
                   </tr>
                 </tfoot>
@@ -152,35 +152,35 @@
             </div>
             <div class="m-4" data-testid="actions">
               @if (can('edit')) {
-              <a class="btn btn-primary" data-testid="edit" [routerLink]="['/pocketbiz/purchases', p.id, 'edit']">Editar</a>
+              <a class="btn btn-primary" data-testid="edit" [routerLink]="['/pocketbiz/purchases', p.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
               }
               @if (can('confirm')) {
               <button type="button" class="btn btn-success ms-2" data-testid="confirm" [disabled]="busy"
                 (click)="confirm()">{{ busy ? 'Procesando…' : 'Confirmar' }}</button>
               }
               @if (can('receive')) {
-              <a class="btn btn-primary ms-2" data-testid="receive" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', 'new']">Registrar recepción</a>
+              <a class="btn btn-primary ms-2" data-testid="receive" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', 'new']">{{ 'COMMON.REGISTRAR_RECEPCION' | translate }}</a>
               }
               @if (can('pay')) {
-              <button type="button" class="btn btn-primary ms-2" data-testid="pay" (click)="tab = 'payments'">Registrar pago</button>
+              <button type="button" class="btn btn-primary ms-2" data-testid="pay" (click)="tab = 'payments'">{{ 'COMMON.REGISTRAR_PAGO' | translate }}</button>
               }
               @if (can('cancel')) {
               <button type="button" class="btn btn-outline-danger ms-2" data-testid="cancel" [disabled]="busy"
-                (click)="cancel()">Cancelar compra</button>
+                (click)="cancel()">{{ 'PURCHASES.PURCHASE_DETAIL.CANCELAR_COMPRA' | translate }}</button>
               }
-              <a class="btn btn-light ms-2" routerLink="/pocketbiz/purchases">Volver</a>
+              <a class="btn btn-light ms-2" routerLink="/pocketbiz/purchases">{{ 'COMMON.VOLVER' | translate }}</a>
               @if (p.status === 'confirmed') {
               <small class="form-text text-muted d-block mt-2" data-testid="confirmed-note">
-                Confirmar no modifica las existencias; el stock cambia al registrar la recepción. Los pagos se registran en la pestaña «Pagos».
+                {{ 'PURCHASES.PURCHASE_DETAIL.CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS' | translate }}
               </small>
               @if (!can('pay')) {
               <small class="form-text text-muted d-block" data-testid="no-balance">{{ p.paymentStatus === 'paid' ? 'Compra pagada por completo.' : 'Sin saldo por pagar.' }}</small>
               }
               @if (!can('receive')) {
-              <small class="form-text text-muted d-block" data-testid="fully-received">Compra recibida por completo.</small>
+              <small class="form-text text-muted d-block" data-testid="fully-received">{{ 'PURCHASES.PURCHASE_DETAIL.COMPRA_RECIBIDA_POR_COMPLETO' | translate }}</small>
               }
               @if (!can('cancel')) {
-              <small class="form-text text-muted d-block" data-testid="cancel-blocked">No se puede cancelar: ya tiene recepciones o pagos.</small>
+              <small class="form-text text-muted d-block" data-testid="cancel-blocked">{{ 'PURCHASES.PURCHASE_DETAIL.NO_SE_PUEDE_CANCELAR_YA' | translate }}</small>
               }
               }
             </div>

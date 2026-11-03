@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -50,7 +51,7 @@ function positiveAmount(control: AbstractControl<string>): ValidationErrors | nu
 @Component({
   selector: 'app-expense-form',
   templateUrl: './expense-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent],
 })
 export class ExpenseFormComponent implements OnInit {
   readonly descriptionMaxLength = DESCRIPTION_MAX_LENGTH;

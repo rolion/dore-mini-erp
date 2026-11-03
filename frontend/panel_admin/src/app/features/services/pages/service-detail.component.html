@@ -1,24 +1,24 @@
 <section class="main-content">
-  <ul class="breadcrumb breadcrumb-style"><li class="breadcrumb-item"><h5 class="page-title">Detalle del servicio</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main">Inicio</a></li><li class="breadcrumb-item">Catálogo</li><li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/services">Servicios</a></li><li class="breadcrumb-item">Detalle</li></ul>
+  <ul class="breadcrumb breadcrumb-style"><li class="breadcrumb-item"><h5 class="page-title">{{ 'SERVICES.SERVICE_DETAIL.DETALLE_DEL_SERVICIO' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main">{{ 'COMMON.INICIO' | translate }}</a></li><li class="breadcrumb-item">{{ 'COMMON.CATALOGO' | translate }}</li><li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/services">{{ 'COMMON.SERVICIOS' | translate }}</a></li><li class="breadcrumb-item">{{ 'COMMON.DETALLE' | translate }}</li></ul>
   <div class="section-body"><div class="card"><div class="card-header"><h4>{{ service?.name || 'Servicio' }}</h4></div><div class="card-body">
-    @if (loading) { <p role="status">Cargando…</p> }
-    @if (error) { <div role="alert" class="alert alert-danger">{{ error }} <button type="button" class="btn btn-light" (click)="load()">Reintentar</button></div> }
-    @if (saved) { <div role="status" class="alert alert-success">Servicio guardado.</div> }
+    @if (loading) { <p role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+    @if (error) { <div role="alert" class="alert alert-danger">{{ error }} <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
+    @if (saved) { <div role="status" class="alert alert-success">{{ 'SERVICES.SERVICE_DETAIL.SERVICIO_GUARDADO' | translate }}</div> }
     @if (service; as s) {
       <dl class="row m-4">
-        <dt class="col-sm-3">Nombre</dt><dd class="col-sm-9">{{ s.name }}</dd>
-        <dt class="col-sm-3">Código</dt><dd class="col-sm-9">{{ s.code || 'Sin código' }}</dd>
-        <dt class="col-sm-3">Descripción</dt><dd class="col-sm-9 text-break">{{ s.description || 'Sin descripción' }}</dd>
-        <dt class="col-sm-3">Precio base</dt><dd class="col-sm-9">{{ s.basePrice | money }}</dd>
-        <dt class="col-sm-3">Duración</dt><dd class="col-sm-9">{{ s.durationMinutes }} min</dd>
-        <dt class="col-sm-3">Especialidad</dt><dd class="col-sm-9">{{ s.specialtyName || 'Sin especialidad' }}</dd>
-        <dt class="col-sm-3">Estado</dt><dd class="col-sm-9"><div class="badge-outline" [class.col-green]="s.active" [class.col-red]="!s.active">{{ s.active ? 'Activo' : 'Inactivo' }}</div></dd>
-        <dt class="col-sm-3">Creado</dt><dd class="col-sm-9">{{ s.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd>
-        <dt class="col-sm-3">Actualizado</dt><dd class="col-sm-9">{{ s.updatedAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.NOMBRE' | translate }}</dt><dd class="col-sm-9">{{ s.name }}</dd>
+        <dt class="col-sm-3">{{ 'SERVICES.SERVICE_DETAIL.CODIGO' | translate }}</dt><dd class="col-sm-9">{{ s.code || 'Sin código' }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.DESCRIPCION' | translate }}</dt><dd class="col-sm-9 text-break">{{ s.description || 'Sin descripción' }}</dd>
+        <dt class="col-sm-3">{{ 'SERVICES.SERVICE_DETAIL.PRECIO_BASE' | translate }}</dt><dd class="col-sm-9">{{ s.basePrice | money }}</dd>
+        <dt class="col-sm-3">{{ 'SERVICES.SERVICE_DETAIL.DURACION' | translate }}</dt><dd class="col-sm-9">{{ 'SERVICES.SERVICE_DETAIL.MIN' | translate: { p0: (s.durationMinutes) } }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.ESPECIALIDAD' | translate }}</dt><dd class="col-sm-9">{{ s.specialtyName || 'Sin especialidad' }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt><dd class="col-sm-9"><div class="badge-outline" [class.col-green]="s.active" [class.col-red]="!s.active">{{ s.active ? 'Activo' : 'Inactivo' }}</div></dd>
+        <dt class="col-sm-3">{{ 'COMMON.CREADO' | translate }}</dt><dd class="col-sm-9">{{ s.createdAt | date:'dd/MM/yyyy HH:mm' }}</dd>
+        <dt class="col-sm-3">{{ 'SERVICES.SERVICE_DETAIL.ACTUALIZADO' | translate }}</dt><dd class="col-sm-9">{{ s.updatedAt | date:'dd/MM/yyyy HH:mm' }}</dd>
       </dl>
-      <div class="m-4 d-flex flex-wrap gap-2"><a class="btn btn-primary" [routerLink]="['/pocketbiz/catalog/services', s.id, 'edit']">Editar</a>
-        <app-service-toggle [service]="s" (updated)="service = $event" /><a class="btn btn-light" routerLink="/pocketbiz/catalog/services">Volver</a></div>
-    } @else if (!loading) { <a class="btn btn-light" routerLink="/pocketbiz/catalog/services">Volver</a> }
+      <div class="m-4 d-flex flex-wrap gap-2"><a class="btn btn-primary" [routerLink]="['/pocketbiz/catalog/services', s.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
+        <app-service-toggle [service]="s" (updated)="service = $event" /><a class="btn btn-light" routerLink="/pocketbiz/catalog/services">{{ 'COMMON.VOLVER' | translate }}</a></div>
+    } @else if (!loading) { <a class="btn btn-light" routerLink="/pocketbiz/catalog/services">{{ 'COMMON.VOLVER' | translate }}</a> }
   </div></div></div>
 </section>

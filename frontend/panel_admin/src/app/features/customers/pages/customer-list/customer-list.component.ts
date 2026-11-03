@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -15,7 +16,7 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-customer-list',
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule],
 })
 export class CustomerListComponent implements OnInit {
   readonly pageSize = 10;

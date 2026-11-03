@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -37,7 +38,7 @@ type Tab = 'general' | 'history';
 @Component({
   selector: 'app-module-settings',
   templateUrl: './module-settings.component.html',
-  imports: [ReactiveFormsModule, RouterLink, SettingsHistoryComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, SettingsHistoryComponent],
 })
 export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
   readonly module: string = inject(ActivatedRoute).snapshot.data['settingsModule'] ?? '';

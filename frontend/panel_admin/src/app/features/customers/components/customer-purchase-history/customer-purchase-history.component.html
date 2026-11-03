@@ -1,10 +1,10 @@
 <div class="card">
   <div class="card-header">
-    <h4>Historial de compras</h4>
+    <h4>{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.HISTORIAL_DE_COMPRAS' | translate }}</h4>
   </div>
   <div class="card-body">
     @if (loading()) {
-    <p class="m-4" data-testid="history-loading">Cargando historial…</p>
+    <p class="m-4" data-testid="history-loading">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CARGANDO_HISTORIAL' | translate }}</p>
     } @else if (error()) {
     <p class="m-4 text-danger" data-testid="history-error">{{ error() }}</p>
     } @else if (orders().length) {
@@ -12,17 +12,17 @@
       <table class="table table-striped m-b-0">
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th>Pago</th>
+            <th>{{ 'COMMON.FECHA' | translate }}</th>
+            <th>{{ 'COMMON.TOTAL' | translate }}</th>
+            <th>{{ 'COMMON.ESTADO' | translate }}</th>
+            <th>{{ 'COMMON.PAGO' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           @for (order of orders(); track order.id) {
           <tr>
             <td><a [routerLink]="['/pocketbiz/sales/orders', order.id]">{{ order.date | date: 'dd/MM/yyyy' }}</a></td>
-            <td>Bs {{ order.total }}</td>
+            <td>{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.BS' | translate: { p0: (order.total) } }}</td>
             <td>{{ statusLabel(order.status) }}</td>
             <td>{{ paymentLabel(order.paymentStatus) }}</td>
           </tr>
@@ -32,11 +32,11 @@
     </div>
     @if (total() > orders().length) {
     <p class="m-3 text-muted" data-testid="history-partial">
-      Se muestran los {{ orders().length }} pedidos más recientes de {{ total() }}.
+      {{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.SE_MUESTRAN_LOS_PEDIDOS_MAS' | translate: { p0: (orders().length), p1: (total()) } }}
     </p>
     }
     } @else {
-    <p class="m-4">Este cliente aún no tiene pedidos.</p>
+    <p class="m-4">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ESTE_CLIENTE_AUN_NO_TIENE' | translate }}</p>
     }
   </div>
 </div>

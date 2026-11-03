@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -52,7 +53,7 @@ export function duplicateMatchesHtml(matches: DuplicateMatch[]): string {
 @Component({
   selector: 'app-customer-form',
   templateUrl: './customer-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class CustomerFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;

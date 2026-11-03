@@ -1,17 +1,17 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
   <div class="modal-header">
     <h4 class="modal-title">{{ isEdit ? 'Editar unidad' : 'Nueva unidad' }}</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
     @if (locked) {
     <div class="alert alert-warning" role="status">
-      Esta unidad ya está asignada a productos; solo se puede activar o desactivar.
+      {{ 'INVENTORY.UNIT_DIALOG.ESTA_UNIDAD_YA_ESTA_ASIGNADA' | translate }}
     </div>
     }
     <div class="form-group">
-      <label for="unit-name">Nombre <span class="text-danger">*</span></label>
-      <input id="unit-name" type="text" class="form-control" placeholder="Kilogramo" formControlName="name"
+      <label for="unit-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
+      <input id="unit-name" type="text" class="form-control" [placeholder]="'INVENTORY.UNIT_DIALOG.KILOGRAMO' | translate" formControlName="name"
         [attr.maxlength]="nameMaxLength">
       @if (hasError('name')) {
       <small class="form-text text-danger">
@@ -21,7 +21,7 @@
       }
     </div>
     <div class="form-group mt-3">
-      <label for="unit-abbreviation">Abreviatura <span class="text-danger">*</span></label>
+      <label for="unit-abbreviation">{{ 'INVENTORY.UNIT_DIALOG.ABREVIATURA' | translate }} <span class="text-danger">*</span></label>
       <input id="unit-abbreviation" type="text" class="form-control" placeholder="kg" formControlName="abbreviation"
         [attr.maxlength]="abbreviationMaxLength">
       @if (hasError('abbreviation')) {
@@ -34,14 +34,14 @@
     <div class="form-check form-switch mt-3">
       <input id="unit-fractions" type="checkbox" class="form-check-input" role="switch"
         formControlName="allowsFractions">
-      <label class="form-check-label" for="unit-fractions">Admite fracciones</label>
-      <small class="form-text text-muted d-block">Permite cantidades con decimales, por ejemplo 1,5 kg.</small>
+      <label class="form-check-label" for="unit-fractions">{{ 'INVENTORY.UNIT_DIALOG.ADMITE_FRACCIONES' | translate }}</label>
+      <small class="form-text text-muted d-block">{{ 'INVENTORY.UNIT_DIALOG.PERMITE_CANTIDADES_CON_DECIMALES_POR' | translate }}</small>
     </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ locked ? 'Cerrar' : 'Cancelar' }}</button>
     @if (!locked) {
-    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
     }
   </div>
 </form>

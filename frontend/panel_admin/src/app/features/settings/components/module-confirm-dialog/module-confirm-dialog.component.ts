@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -13,6 +14,7 @@ export type ModuleAction = 'enable' | 'disable';
  * quien lo abre fija `module`, `action` y `affected`; se cierra con el módulo actualizado.
  */
 @Component({
+  imports: [TranslatePipe],
   selector: 'app-module-confirm-dialog',
   templateUrl: './module-confirm-dialog.component.html',
 })

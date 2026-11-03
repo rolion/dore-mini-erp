@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,7 +11,7 @@ import { PersonnelApiService, profileError } from '../services/personnel-api.ser
 
 @Component({
   selector: 'app-personnel-form', templateUrl: './profile-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectModule],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectModule],
 })
 export class ProfileFormComponent implements OnInit {
   private route = inject(ActivatedRoute);

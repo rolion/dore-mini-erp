@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -43,7 +44,7 @@ export interface SummaryLine {
   selector: 'app-stock-opening',
   templateUrl: './stock-opening.component.html',
   styleUrl: './stock-opening.component.scss',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, DatePipe],
 })
 export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
   readonly referenceMaxLength = OPENING_REFERENCE_MAX_LENGTH;

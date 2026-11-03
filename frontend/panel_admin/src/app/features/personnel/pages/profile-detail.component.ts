@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,7 +9,7 @@ import { Profile, ProfileKind } from '../models/profile';
 import { PersonnelApiService, profileError } from '../services/personnel-api.service';
 
 @Component({
-  selector: 'app-personnel-detail', templateUrl: './profile-detail.component.html', imports: [RouterLink, DatePipe],
+  selector: 'app-personnel-detail', templateUrl: './profile-detail.component.html', imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class ProfileDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);

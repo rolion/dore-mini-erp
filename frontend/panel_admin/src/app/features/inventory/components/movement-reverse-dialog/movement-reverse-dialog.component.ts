@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -27,7 +28,7 @@ export interface ReversibleMovement {
 @Component({
   selector: 'app-movement-reverse-dialog',
   templateUrl: './movement-reverse-dialog.component.html',
-  imports: [ReactiveFormsModule, InsufficientStockAlertComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, InsufficientStockAlertComponent],
 })
 export class MovementReverseDialogComponent {
   readonly maxLength = REVERSAL_REASON_MAX_LENGTH;

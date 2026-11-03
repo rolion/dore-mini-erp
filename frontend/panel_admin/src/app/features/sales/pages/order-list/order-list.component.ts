@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -48,7 +49,7 @@ export const EMPTY_ALL = 'Aún no hay pedidos.';
   selector: 'app-order-list',
   templateUrl: './order-list.component.html',
   styleUrl: './order-list.component.scss',
-  imports: [
+  imports: [TranslatePipe, 
     RouterLink,
     DatePipe,
     AsyncPipe,

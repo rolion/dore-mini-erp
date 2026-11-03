@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component } from '@angular/core';
 import { FeatherModule } from 'angular-feather';
 
@@ -5,7 +6,7 @@ import { FeatherModule } from 'angular-feather';
     selector: 'app-footer',
     templateUrl: './footer.component.html',
     styleUrls: ['./footer.component.sass'],
-    imports: [FeatherModule]
+    imports: [TranslatePipe, FeatherModule]
 })
 export class FooterComponent {
 }

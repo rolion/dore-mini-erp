@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -14,7 +15,7 @@ import {
   selector: 'app-module-list',
   templateUrl: './module-list.component.html',
   styleUrl: './module-list.component.scss',
-  imports: [RouterLink, SettingsHistoryComponent],
+  imports: [TranslatePipe, RouterLink, SettingsHistoryComponent],
 })
 export class ModuleListComponent implements OnInit {
   tab: 'general' | 'history' = 'general';

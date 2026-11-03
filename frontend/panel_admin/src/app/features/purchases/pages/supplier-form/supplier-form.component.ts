@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -30,7 +31,7 @@ const FORM_FIELDS: readonly FormField[] = ['name', 'taxId', 'phone', 'email', 'n
 @Component({
   selector: 'app-supplier-form',
   templateUrl: './supplier-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class SupplierFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -27,7 +28,7 @@ export interface QuantityChangeEvent {
 @Component({
   selector: 'app-order-items',
   templateUrl: './order-items.component.html',
-  imports: [ReactiveFormsModule, AsyncPipe, NgSelectComponent, NgOptionTemplateDirective, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, AsyncPipe, NgSelectComponent, NgOptionTemplateDirective, MoneyPipe],
 })
 export class OrderItemsComponent {
   readonly order = input.required<Order>();

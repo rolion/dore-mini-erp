@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -18,7 +19,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-category-dialog',
   templateUrl: './category-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class CategoryDialogComponent {
   readonly nameMaxLength = CATEGORY_NAME_MAX_LENGTH;

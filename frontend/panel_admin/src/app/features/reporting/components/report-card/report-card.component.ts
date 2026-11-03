@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, input, output } from '@angular/core';
 
 /** Texto de una tarjeta cuya fuente (módulo) está deshabilitada: se explica la ausencia, no se muestra cero. */
@@ -8,6 +9,7 @@ export const UNAVAILABLE_MESSAGE = 'No disponible: módulo deshabilitado';
  * está lista, el contenido proyectado. Con `unavailable` no pide ni muestra datos: dice que el módulo está deshabilitado.
  */
 @Component({
+  imports: [TranslatePipe],
   selector: 'app-report-card',
   templateUrl: './report-card.component.html',
 })

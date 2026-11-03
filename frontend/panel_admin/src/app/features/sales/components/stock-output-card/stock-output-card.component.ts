@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -7,7 +8,7 @@ import { StockOutput, formatQuantity } from '../../models/order';
 @Component({
   selector: 'app-stock-output-card',
   templateUrl: './stock-output-card.component.html',
-  imports: [DatePipe, RouterLink],
+  imports: [TranslatePipe, DatePipe, RouterLink],
 })
 export class StockOutputCardComponent {
   readonly orderId = input.required<string>();

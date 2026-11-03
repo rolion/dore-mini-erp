@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -11,7 +12,7 @@ import { confirmProfileState } from '../services/profile-confirmation';
 @Component({
   selector: 'app-personnel-list', templateUrl: './profile-list.component.html',
   styleUrl: './profile-list.component.scss',
-  imports: [RouterLink, ReactiveFormsModule, NgxDatatableModule],
+  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule],
 })
 export class ProfileListComponent implements OnInit, AfterViewInit {
   private route = inject(ActivatedRoute);

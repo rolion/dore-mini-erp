@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -38,7 +39,7 @@ export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la 
   selector: 'app-expense-list',
   templateUrl: './expense-list.component.html',
   styleUrl: './expense-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, MoneyPipe],
 })
 export class ExpenseListComponent implements OnInit {
   readonly pageSize = 10;

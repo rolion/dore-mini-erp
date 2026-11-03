@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -45,7 +46,7 @@ const FILTER_DEBOUNCE_MS = 300;
   selector: 'app-purchase-list',
   templateUrl: './purchase-list.component.html',
   styleUrl: './purchase-list.component.scss',
-  imports: [RouterLink, ReactiveFormsModule, NgSelectComponent, AsyncPipe, NgxDatatableModule, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgSelectComponent, AsyncPipe, NgxDatatableModule, DatePipe, MoneyPipe],
 })
 export class PurchaseListComponent implements OnInit {
   readonly pageSize = 10;

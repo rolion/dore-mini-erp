@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -22,7 +23,7 @@ export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la 
   selector: 'app-adjustment-list',
   templateUrl: './adjustment-list.component.html',
   styleUrl: './adjustment-list.component.scss',
-  imports: [RouterLink, ReactiveFormsModule, DatePipe, NgbPagination],
+  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, DatePipe, NgbPagination],
 })
 export class AdjustmentListComponent implements OnInit {
   readonly pageSize = 25;

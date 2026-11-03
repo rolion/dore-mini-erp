@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,7 +13,7 @@ import { CustomersApiService } from '../../services/customers-api.service';
 @Component({
   selector: 'app-customer-detail',
   templateUrl: './customer-detail.component.html',
-  imports: [RouterLink, DatePipe, CustomerPurchaseHistoryComponent],
+  imports: [TranslatePipe, RouterLink, DatePipe, CustomerPurchaseHistoryComponent],
 })
 export class CustomerDetailComponent implements OnInit {
   customer: Customer | null = null;

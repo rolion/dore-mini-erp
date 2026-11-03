@@ -1,12 +1,12 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
   <div class="modal-header">
     <h4 class="modal-title">{{ isEdit ? 'Editar categoría' : 'Nueva categoría' }}</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
     <div class="form-group">
-      <label for="category-name">Nombre <span class="text-danger">*</span></label>
-      <input id="category-name" type="text" class="form-control" placeholder="Nombre de la categoría"
+      <label for="category-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
+      <input id="category-name" type="text" class="form-control" [placeholder]="'EXPENSES.CATEGORY_DIALOG.NOMBRE_DE_LA_CATEGORIA' | translate"
         formControlName="name" [attr.maxlength]="nameMaxLength" autofocus>
       @if (hasError()) {
       <small class="form-text text-danger">
@@ -17,7 +17,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">Cancelar</button>
-    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
   </div>
 </form>

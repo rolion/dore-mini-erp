@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,7 +25,7 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-payment-dialog',
   templateUrl: './payment-dialog.component.html',
-  imports: [ReactiveFormsModule, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
 })
 export class PaymentDialogComponent {
   readonly methods = PAYMENT_METHODS;

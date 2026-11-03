@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -41,7 +42,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   selector: 'app-signup',
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.sass'],
-  imports: [ReactiveFormsModule, FeatherModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, FeatherModule, RouterLink],
 })
 export class SignupComponent {
   private formBuilder = inject(NonNullableFormBuilder);

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PatientCreateComponent } from './patient-create.component';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -11,7 +12,7 @@ import { PatientSummary } from '../models/patient';
 import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
 
 @Component({
-  selector: 'app-patient-list', imports: [RouterLink, ReactiveFormsModule, NgxDatatableModule],
+  selector: 'app-patient-list', imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule],
   templateUrl: './patient-list.component.html',
 })
 export class PatientListComponent implements OnInit {

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -18,7 +19,7 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 @Component({
   selector: 'app-reception-detail',
   templateUrl: './reception-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class ReceptionDetailComponent implements OnInit {
   readonly statusLabels = RECEIPT_STATUS_LABELS;

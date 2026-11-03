@@ -6,7 +6,7 @@
           <div class="login-body">
             <div class="text-center">
               <div class="brand-wrapper">
-                  <a routerLink="/" aria-label="PocketBiz, volver al inicio">
+                  <a routerLink="/" [attr.aria-label]="'AUTH.SIGNUP.POCKETBIZ_VOLVER_AL_INICIO' | translate">
                     <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
                   </a>
                 </div>
@@ -15,10 +15,10 @@
               <div class="row">
                 <div class="col-lg-12">
                   <div class="form-group position-relative">
-                    <label for="signup-company">Nombre de la empresa <span class="text-danger">*</span></label>
+                    <label for="signup-company">{{ 'AUTH.SIGNUP.NOMBRE_DE_LA_EMPRESA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="briefcase" class="login-icons"></i-feather>
                     <input id="signup-company" type="text" class="form-control psl-5" formControlName="companyName"
-                      placeholder="Nombre de la empresa" autocomplete="organization" [attr.maxlength]="nameMaxLength">
+                      [placeholder]="'AUTH.SIGNUP.NOMBRE_DE_LA_EMPRESA' | translate" autocomplete="organization" [attr.maxlength]="nameMaxLength">
                     @if (fieldError('companyName')) {
                       <small class="form-text text-danger">{{ fieldError('companyName') }}</small>
                     }
@@ -26,10 +26,10 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group position-relative">
-                    <label for="signup-first-name">Nombre <span class="text-danger">*</span></label>
+                    <label for="signup-first-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="user" class="login-icons"></i-feather>
                     <input id="signup-first-name" type="text" class="form-control psl-5" formControlName="firstName"
-                      placeholder="Nombre" autocomplete="given-name" [attr.maxlength]="nameMaxLength">
+                      [placeholder]="'COMMON.NOMBRE' | translate" autocomplete="given-name" [attr.maxlength]="nameMaxLength">
                     @if (fieldError('firstName')) {
                       <small class="form-text text-danger">{{ fieldError('firstName') }}</small>
                     }
@@ -37,10 +37,10 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-group position-relative">
-                    <label for="signup-last-name">Apellido <span class="text-danger">*</span></label>
+                    <label for="signup-last-name">{{ 'AUTH.SIGNUP.APELLIDO' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="user-check" class="login-icons"></i-feather>
                     <input id="signup-last-name" type="text" class="form-control psl-5" formControlName="lastName"
-                      placeholder="Apellido" autocomplete="family-name" [attr.maxlength]="nameMaxLength">
+                      [placeholder]="'AUTH.SIGNUP.APELLIDO' | translate" autocomplete="family-name" [attr.maxlength]="nameMaxLength">
                     @if (fieldError('lastName')) {
                       <small class="form-text text-danger">{{ fieldError('lastName') }}</small>
                     }
@@ -48,10 +48,10 @@
                 </div>
                 <div class="col-lg-12">
                   <div class="form-group position-relative">
-                    <label for="signup-username">Usuario <span class="text-danger">*</span></label>
+                    <label for="signup-username">{{ 'COMMON.USUARIO' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="user" class="login-icons"></i-feather>
                     <input id="signup-username" type="text" class="form-control psl-5" formControlName="username"
-                      placeholder="Usuario" autocomplete="username" [attr.maxlength]="nameMaxLength">
+                      [placeholder]="'COMMON.USUARIO' | translate" autocomplete="username" [attr.maxlength]="nameMaxLength">
                     @if (fieldError('username')) {
                       <small class="form-text text-danger">{{ fieldError('username') }}</small>
                     }
@@ -59,10 +59,10 @@
                 </div>
                 <div class="col-lg-12">
                   <div class="form-group position-relative">
-                    <label for="signup-email">Correo <span class="text-danger">*</span></label>
+                    <label for="signup-email">{{ 'COMMON.CORREO' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="mail" class="login-icons"></i-feather>
                     <input id="signup-email" type="email" class="form-control psl-5" formControlName="email"
-                      placeholder="correo@ejemplo.com" autocomplete="email">
+                      [placeholder]="'COMMON.CORREO_EJEMPLO_COM' | translate" autocomplete="email">
                     @if (fieldError('email')) {
                       <small class="form-text text-danger">{{ fieldError('email') }}</small>
                     }
@@ -70,10 +70,10 @@
                 </div>
                 <div class="col-lg-12">
                   <div class="form-group position-relative">
-                    <label for="signup-password">Contraseña <span class="text-danger">*</span></label>
+                    <label for="signup-password">{{ 'AUTH.SIGNUP.CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="key" class="login-icons"></i-feather>
                     <input id="signup-password" type="password" class="form-control psl-5" formControlName="password"
-                      placeholder="Contraseña" autocomplete="new-password">
+                      [placeholder]="'AUTH.SIGNUP.CONTRASENA' | translate" autocomplete="new-password">
                     @if (fieldError('password')) {
                       <small class="form-text text-danger">{{ fieldError('password') }}</small>
                     }
@@ -81,10 +81,10 @@
                 </div>
                 <div class="col-lg-12">
                   <div class="form-group position-relative">
-                    <label for="signup-confirm-password">Confirmar contraseña <span class="text-danger">*</span></label>
+                    <label for="signup-confirm-password">{{ 'AUTH.SIGNUP.CONFIRMAR_CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="key" class="login-icons"></i-feather>
                     <input id="signup-confirm-password" type="password" class="form-control psl-5"
-                      formControlName="confirmPassword" placeholder="Confirmar contraseña" autocomplete="new-password">
+                      formControlName="confirmPassword" [placeholder]="'AUTH.SIGNUP.CONFIRMAR_CONTRASENA' | translate" autocomplete="new-password">
                     @if (fieldError('confirmPassword')) {
                       <small class="form-text text-danger">{{ fieldError('confirmPassword') }}</small>
                     }
@@ -96,11 +96,11 @@
                   </div>
                 }
                 <div class="col-lg-12 mb-0">
-                  <button type="submit" class="btn btn-primary auth-form-btn" [disabled]="loading">Crear cuenta</button>
+                  <button type="submit" class="btn btn-primary auth-form-btn" [disabled]="loading">{{ 'AUTH.SIGNUP.CREAR_CUENTA' | translate }}</button>
                 </div>
                 <div class="col-12 text-center">
-                  <p class="mb-0 mt-3"><small class="text-dark msr-2">¿Ya tienes cuenta?</small>
-                    <a routerLink="/pocketbiz/login" class="text-dark fw-bold">Inicia sesión</a></p>
+                  <p class="mb-0 mt-3"><small class="text-dark msr-2">{{ 'AUTH.SIGNUP.YA_TIENES_CUENTA' | translate }}</small>
+                    <a routerLink="/pocketbiz/login" class="text-dark fw-bold">{{ 'AUTH.SIGNUP.INICIA_SESION' | translate }}</a></p>
                 </div>
               </div>
             </form>

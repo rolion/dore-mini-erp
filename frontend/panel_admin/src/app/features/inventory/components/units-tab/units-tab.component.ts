@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -16,7 +17,7 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-units-tab',
   templateUrl: './units-tab.component.html',
   styleUrl: './units-tab.component.scss',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class UnitsTabComponent implements OnInit {
   readonly pageSize = 100;

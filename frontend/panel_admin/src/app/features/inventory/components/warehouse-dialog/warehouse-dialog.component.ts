@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -17,7 +18,7 @@ export type WarehouseField = 'name' | 'description' | 'isDefault';
 @Component({
   selector: 'app-warehouse-dialog',
   templateUrl: './warehouse-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class WarehouseDialogComponent {
   readonly nameMaxLength = WAREHOUSE_NAME_MAX_LENGTH;

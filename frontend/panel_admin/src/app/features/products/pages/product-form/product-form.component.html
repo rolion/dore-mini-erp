@@ -7,8 +7,8 @@
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Catálogo</li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/products">Producto</a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.CATALOGO' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/products">{{ 'COMMON.PRODUCTO' | translate }}</a></li>
     <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
   </ul>
   <div class="section-body">
@@ -22,8 +22,8 @@
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
               <div class="row">
                 <div class="form-group col-md-12">
-                  <label for="product-name">Nombre <span class="text-danger">*</span></label>
-                  <input id="product-name" type="text" class="form-control" placeholder="Nombre del producto"
+                  <label for="product-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
+                  <input id="product-name" type="text" class="form-control" [placeholder]="'PRODUCTS.PRODUCT_FORM.NOMBRE_DEL_PRODUCTO' | translate"
                     formControlName="name" [attr.maxlength]="nameMaxLength">
                   @if (hasError('name')) {
                   <small class="form-text text-danger">
@@ -35,30 +35,30 @@
               </div>
               <div class="row">
                 <div class="form-group col-md-12">
-                  <label for="product-description">Descripción</label>
-                  <textarea id="product-description" class="form-control" rows="3" placeholder="Descripción"
+                  <label for="product-description">{{ 'COMMON.DESCRIPCION' | translate }}</label>
+                  <textarea id="product-description" class="form-control" rows="3" [placeholder]="'COMMON.DESCRIPCION' | translate"
                     formControlName="description"></textarea>
                   @if (serverErrors.description) {
                   <small class="form-text text-danger">{{ serverErrors.description }}</small>
                   }
                 </div>
               </div>
-              <h5 class="mt-2">Usos del producto</h5>
+              <h5 class="mt-2">{{ 'PRODUCTS.PRODUCT_FORM.USOS_DEL_PRODUCTO' | translate }}</h5>
               @if (needsReview) {
               <div class="alert alert-warning" role="alert">
-                Este producto está por revisar: indica su categoría y si se compra.
+                {{ 'PRODUCTS.PRODUCT_FORM.ESTE_PRODUCTO_ESTA_POR_REVISAR' | translate }}
               </div>
               }
               <div class="row">
                 <div class="form-group col-md-6">
-                  <label for="product-category">Categoría <span class="text-danger">*</span></label>
+                  <label for="product-category">{{ 'COMMON.CATEGORIA' | translate }} <span class="text-danger">*</span></label>
                   <select id="product-category" class="form-select form-control" formControlName="category">
-                    <option value="">Selecciona una categoría</option>
+                    <option value="">{{ 'PRODUCTS.PRODUCT_FORM.SELECCIONA_UNA_CATEGORIA' | translate }}</option>
                     @for (option of categories; track option.value) {
                     <option [value]="option.value">{{ option.label }}</option>
                     }
                   </select>
-                  <small class="form-text text-muted">Organiza y filtra; no limita cómo usas el producto.</small>
+                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.ORGANIZA_Y_FILTRA_NO_LIMITA' | translate }}</small>
                   @if (hasError('category')) {
                   <small class="form-text text-danger d-block">
                     {{ serverErrors.category || 'La categoría es obligatoria.' }}
@@ -71,9 +71,9 @@
                   <div class="form-check form-switch">
                     <input id="product-can-buy" type="checkbox" class="form-check-input" role="switch"
                       formControlName="canBuy">
-                    <label class="form-check-label" for="product-can-buy">Se puede comprar</label>
+                    <label class="form-check-label" for="product-can-buy">{{ 'PRODUCTS.PRODUCT_FORM.SE_PUEDE_COMPRAR' | translate }}</label>
                   </div>
-                  <small class="form-text text-muted">El precio de compra se registra en cada compra.</small>
+                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.EL_PRECIO_DE_COMPRA_SE' | translate }}</small>
                   @if (serverErrors.canBuy) {
                   <small class="form-text text-danger d-block">{{ serverErrors.canBuy }}</small>
                   }
@@ -82,9 +82,9 @@
                   <div class="form-check form-switch">
                     <input id="product-can-sell" type="checkbox" class="form-check-input" role="switch"
                       formControlName="canSell">
-                    <label class="form-check-label" for="product-can-sell">Se puede vender</label>
+                    <label class="form-check-label" for="product-can-sell">{{ 'PRODUCTS.PRODUCT_FORM.SE_PUEDE_VENDER' | translate }}</label>
                   </div>
-                  <small class="form-text text-muted">Los productos que se venden necesitan precio de venta.</small>
+                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.LOS_PRODUCTOS_QUE_SE_VENDEN' | translate }}</small>
                   @if (serverErrors.canSell) {
                   <small class="form-text text-danger d-block">{{ serverErrors.canSell }}</small>
                   }
@@ -93,7 +93,7 @@
               @if (form.controls.canSell.value) {
               <div class="row">
                 <div class="form-group col-md-6">
-                  <label for="product-price">Precio de venta <span class="text-danger">*</span></label>
+                  <label for="product-price">{{ 'PRODUCTS.PRODUCT_FORM.PRECIO_DE_VENTA' | translate }} <span class="text-danger">*</span></label>
                   <input id="product-price" type="text" inputmode="decimal" class="form-control" placeholder="0.00"
                     formControlName="salePrice">
                   @if (hasError('salePrice')) {
@@ -107,31 +107,31 @@
               </div>
               }
               @if (inventoryEnabled) {
-              <h5 class="mt-2">Inventario</h5>
+              <h5 class="mt-2">{{ 'COMMON.INVENTARIO' | translate }}</h5>
               <div class="row">
                 <div class="form-group col-md-6">
                   <div class="form-check form-switch">
                     <input id="product-tracks-stock" type="checkbox" class="form-check-input" role="switch"
                       formControlName="tracksStock">
-                    <label class="form-check-label" for="product-tracks-stock">Controlar stock</label>
+                    <label class="form-check-label" for="product-tracks-stock">{{ 'PRODUCTS.PRODUCT_FORM.CONTROLAR_STOCK' | translate }}</label>
                   </div>
-                  <small class="form-text text-muted">Actívalo para productos con existencias; los servicios y productos sin stock se venden sin pedir existencias.</small>
+                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.ACTIVALO_PARA_PRODUCTOS_CON_EXISTENCIAS' | translate }}</small>
                   @if (serverErrors.tracksStock) {
                   <small class="form-text text-danger d-block">{{ serverErrors.tracksStock }}</small>
                   }
                 </div>
                 @if (form.controls.tracksStock.value) {
                 <div class="form-group col-md-6">
-                  <label for="product-base-unit">Unidad base <span class="text-danger">*</span></label>
+                  <label for="product-base-unit">{{ 'COMMON.UNIDAD_BASE' | translate }} <span class="text-danger">*</span></label>
                   <select id="product-base-unit" class="form-select form-control" formControlName="baseUnitId">
-                    <option value="">Selecciona una unidad</option>
+                    <option value="">{{ 'PRODUCTS.PRODUCT_FORM.SELECCIONA_UNA_UNIDAD' | translate }}</option>
                     @for (option of unitOptions; track option.id) {
                     <option [value]="option.id">{{ option.label }}</option>
                     }
                   </select>
                   @if (!unitOptions.length) {
                   <small class="form-text text-muted">
-                    Primero crea una unidad en <a routerLink="/pocketbiz/inventory/configuration">Inventario › Almacenes y unidades</a>.
+                    {{ 'PRODUCTS.PRODUCT_FORM.PRIMERO_CREA_UNA_UNIDAD_EN' | translate }} <a routerLink="/pocketbiz/inventory/configuration">{{ 'PRODUCTS.PRODUCT_FORM.INVENTARIO_ALMACENES_Y_UNIDADES' | translate }}</a>.
                   </small>
                   }
                   @if (hasError('baseUnitId')) {
@@ -149,10 +149,10 @@
               <div class="row">
                 <div class="col-md-12">
                   <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">
-                    Guardar
+                    {{ 'COMMON.GUARDAR' | translate }}
                   </button>
                   <a class="btn btn-light ms-2"
-                    [routerLink]="isEdit ? ['/pocketbiz/catalog/products', productId] : ['/pocketbiz/catalog/products']">Cancelar</a>
+                    [routerLink]="isEdit ? ['/pocketbiz/catalog/products', productId] : ['/pocketbiz/catalog/products']">{{ 'COMMON.CANCELAR' | translate }}</a>
                 </div>
               </div>
             </form>

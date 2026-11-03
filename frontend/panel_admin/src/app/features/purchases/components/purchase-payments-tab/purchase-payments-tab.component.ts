@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,7 +14,7 @@ import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.compone
 @Component({
   selector: 'app-purchase-payments-tab',
   templateUrl: './purchase-payments-tab.component.html',
-  imports: [DatePipe, MoneyPipe],
+  imports: [TranslatePipe, DatePipe, MoneyPipe],
 })
 export class PurchasePaymentsTabComponent implements OnInit {
   readonly purchase = input.required<Purchase>();

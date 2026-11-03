@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -27,7 +28,7 @@ export interface UnitOption {
 @Component({
   selector: 'app-product-form',
   templateUrl: './product-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class ProductFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;

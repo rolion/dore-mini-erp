@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -14,7 +15,7 @@ export const DEFAULT_ROUTE_AFTER_LOGIN = APP_PATHS.dashboard;
     selector: 'app-signin',
     templateUrl: './signin.component.html',
     styleUrls: ['./signin.component.scss'],
-    imports: [
+    imports: [TranslatePipe, 
         ReactiveFormsModule,
         FeatherModule,
         RouterLink,

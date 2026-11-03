@@ -1,13 +1,13 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Gastos</h5>
+      <h5 class="page-title m-b-0">{{ 'COMMON.GASTOS' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Gastos</li>
+    <li class="breadcrumb-item">{{ 'COMMON.GASTOS' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row clearfix">
@@ -18,11 +18,11 @@
               <div class="col-lg-12">
                 <div class="ngxTableHeader">
                   <div class="table-title">
-                    <h2><strong>Gastos</strong></h2>
+                    <h2><strong>{{ 'COMMON.GASTOS' | translate }}</strong></h2>
                   </div>
                   <div class="header-buttons-left">
                     <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/expenses/new"
-                      title="Nuevo gasto" aria-label="Nuevo gasto">
+                      [title]="'EXPENSES.EXPENSE_LIST.NUEVO_GASTO' | translate" [attr.aria-label]="'EXPENSES.EXPENSE_LIST.NUEVO_GASTO' | translate">
                       <i class="material-icons">add</i>
                     </a>
                   </div>
@@ -30,7 +30,7 @@
               </div>
             </div>
 
-            <div class="btn-group flex-wrap m-2" role="group" aria-label="Atajos de rango" data-testid="shortcuts">
+            <div class="btn-group flex-wrap m-2" role="group" [attr.aria-label]="'EXPENSES.EXPENSE_LIST.ATAJOS_DE_RANGO' | translate" data-testid="shortcuts">
               @for (shortcut of shortcuts; track shortcut.id) {
               <button type="button" class="btn" [class.btn-primary]="currentShortcut === shortcut.id"
                 [class.btn-outline-primary]="currentShortcut !== shortcut.id" [attr.data-shortcut]="shortcut.id"
@@ -42,28 +42,28 @@
 
             <form class="row g-2 m-2 expense-filters" [formGroup]="filterForm" data-testid="filters">
               <div class="col-md-3">
-                <label for="filter-from">Desde</label>
+                <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
                 <input id="filter-from" type="date" class="form-control" formControlName="dateFrom">
               </div>
               <div class="col-md-3">
-                <label for="filter-to">Hasta</label>
+                <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo">
               </div>
               <div class="col-md-3">
-                <label for="filter-category">Categoría</label>
+                <label for="filter-category">{{ 'COMMON.CATEGORIA' | translate }}</label>
                 <select id="filter-category" class="form-select form-control" formControlName="categoryId">
-                  <option value="">Todas</option>
+                  <option value="">{{ 'COMMON.TODAS' | translate }}</option>
                   @for (category of categories; track category.id) {
                   <option [value]="category.id">{{ categoryLabel(category) }}</option>
                   }
                 </select>
               </div>
               <div class="col-md-3">
-                <label for="filter-status">Estado</label>
+                <label for="filter-status">{{ 'COMMON.ESTADO' | translate }}</label>
                 <select id="filter-status" class="form-select form-control" formControlName="status">
-                  <option value="active">Vigentes</option>
-                  <option value="voided">Anulados</option>
-                  <option value="all">Todos</option>
+                  <option value="active">{{ 'EXPENSES.EXPENSE_LIST.VIGENTES' | translate }}</option>
+                  <option value="voided">{{ 'EXPENSES.EXPENSE_LIST.ANULADOS' | translate }}</option>
+                  <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
                 </select>
               </div>
               @if (rangeError) {
@@ -73,14 +73,14 @@
               }
               <div class="col-12">
                 <button type="button" class="btn btn-light" [disabled]="!filtersActive"
-                  (click)="clearFilters()">Limpiar filtros</button>
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
             </form>
 
             <div class="m-2 expense-total" data-testid="total">
-              <strong>Total de gastos vigentes del filtro: {{ totalAmount | money }}</strong>
+              <strong>{{ 'EXPENSES.EXPENSE_LIST.TOTAL_DE_GASTOS_VIGENTES_DEL' | translate: { p0: (totalAmount | money) } }}</strong>
               @if (showsVoided) {
-              <div><small class="text-muted">Los gastos anulados no se suman.</small></div>
+              <div><small class="text-muted">{{ 'EXPENSES.EXPENSE_LIST.LOS_GASTOS_ANULADOS_NO_SE' | translate }}</small></div>
               }
             </div>
 
@@ -88,35 +88,35 @@
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" [rowClass]="rowClass"
               (page)="onPage($event)">
-              <ngx-datatable-column name="Fecha" [sortable]="false" [width]="118">
+              <ngx-datatable-column [name]="'EXPENSES.EXPENSE_LIST.FECHA' | translate" [sortable]="false" [width]="118">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold" [routerLink]="['/pocketbiz/expenses', row.id]">{{ row.expenseDate | date: 'dd/MM/yyyy' }}</a>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Descripción" [sortable]="false" [width]="147">
+              <ngx-datatable-column [name]="'EXPENSES.EXPENSE_LIST.DESCRIPCION' | translate" [sortable]="false" [width]="147">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.description }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Categoría" [sortable]="false" [width]="120">
+              <ngx-datatable-column [name]="'EXPENSES.EXPENSE_LIST.CATEGORIA' | translate" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{ row.category.name }}
                   @if (!row.category.active) {
-                  <small class="text-muted">(inactiva)</small>
+                  <small class="text-muted">{{ 'EXPENSES.EXPENSE_LIST.INACTIVA' | translate }}</small>
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Método de pago" [sortable]="false" [width]="105">
+              <ngx-datatable-column [name]="'EXPENSES.EXPENSE_LIST.METODO_DE_PAGO' | translate" [sortable]="false" [width]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ paymentLabel(row.paymentMethod) }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Proveedor" [sortable]="false" [width]="115">
+              <ngx-datatable-column [name]="'EXPENSES.EXPENSE_LIST.PROVEEDOR' | translate" [sortable]="false" [width]="115">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.supplierName || '—' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Monto" [sortable]="false" [width]="125" cellClass="text-end"
+              <ngx-datatable-column [name]="'EXPENSES.EXPENSE_LIST.MONTO' | translate" [sortable]="false" [width]="125" cellClass="text-end"
                 headerClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span class="expense-amount">{{ row.amount | money }}</span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [width]="90">
+              <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="90">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.status === 'ACTIVE') {
                   <div class="badge-outline col-green">{{ statusLabel(row.status) }}</div>
@@ -125,20 +125,20 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="135">
+              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
                     <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/expenses', row.id]"
-                      title="Ver detalle" aria-label="Ver detalle">
+                      [title]="'COMMON.VER_DETALLE' | translate" [attr.aria-label]="'COMMON.VER_DETALLE' | translate">
                       <i class="fas fa-eye"></i>
                     </a>
                     @if (row.status === 'ACTIVE') {
                     <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/expenses', row.id, 'edit']"
-                      title="Editar" aria-label="Editar">
+                      [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
                       <i class="fas fa-pen"></i>
                     </a>
                     <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="voidExpense(row)"
-                      title="Anular" aria-label="Anular">
+                      [title]="'EXPENSES.EXPENSE_LIST.ANULAR' | translate" [attr.aria-label]="'EXPENSES.EXPENSE_LIST.ANULAR' | translate">
                       <i class="fas fa-ban"></i>
                     </button>
                     }

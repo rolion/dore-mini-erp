@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { EMPTY } from 'rxjs';
@@ -19,7 +20,7 @@ export const PENDING_NOTE = 'Estado actual de todos los pedidos; no depende del 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  imports: [
+  imports: [TranslatePipe, 
     AsyncPipe,
     DatePipe,
     RouterLink,

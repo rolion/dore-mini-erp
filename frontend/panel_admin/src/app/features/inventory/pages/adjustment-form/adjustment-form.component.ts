@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -34,7 +35,7 @@ export const NO_DIFFERENCE_MESSAGE = 'Sin diferencia: no se registrará ningún 
 @Component({
   selector: 'app-adjustment-form',
   templateUrl: './adjustment-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, InsufficientStockAlertComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, InsufficientStockAlertComponent],
 })
 export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
   readonly reasonMaxLength = ADJUSTMENT_REASON_MAX_LENGTH;

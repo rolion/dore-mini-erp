@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgbAccordionModule, NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
@@ -32,7 +33,7 @@ export type BillingPeriod = 'monthly' | 'annual';
     './landing-sections.scss',
     './landing-plans.scss',
   ],
-  imports: [RouterLink, NgbAccordionModule, NgbCollapseModule],
+  imports: [TranslatePipe, RouterLink, NgbAccordionModule, NgbCollapseModule],
 })
 export class LandingComponent {
   private authService = inject(AuthService);

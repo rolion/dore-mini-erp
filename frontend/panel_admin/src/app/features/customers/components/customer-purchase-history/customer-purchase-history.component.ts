@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -26,7 +27,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-customer-purchase-history',
   templateUrl: './customer-purchase-history.component.html',
-  imports: [DatePipe, RouterLink],
+  imports: [TranslatePipe, DatePipe, RouterLink],
 })
 export class CustomerPurchaseHistoryComponent {
   readonly orders = input<CustomerOrderSummary[]>([]);

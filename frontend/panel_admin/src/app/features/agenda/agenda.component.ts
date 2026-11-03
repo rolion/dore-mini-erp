@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,7 +11,7 @@ import { AgendaApiService } from './services/agenda-api.service';
 
 @Component({
   selector: 'app-agenda',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
   templateUrl: './agenda.component.html',
   styleUrl: './agenda.component.scss',
 })

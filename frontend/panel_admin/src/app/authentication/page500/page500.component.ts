@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +7,7 @@ import { FormsModule } from '@angular/forms';
     selector: 'app-page500',
     templateUrl: './page500.component.html',
     styleUrls: ['./page500.component.sass'],
-    imports: [FormsModule, RouterLink]
+    imports: [TranslatePipe, FormsModule, RouterLink]
 })
 export class Page500Component {
 

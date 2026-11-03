@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -49,7 +50,7 @@ export interface ReviewRow {
   selector: 'app-valuation',
   templateUrl: './valuation.component.html',
   styleUrl: './valuation.component.scss',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, DatePipe, MoneyPipe],
 })
 export class ValuationComponent implements OnInit, HasUnsavedChanges {
   readonly pendingLabel = PENDING_LABEL;

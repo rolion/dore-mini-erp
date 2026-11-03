@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, Input, Output, EventEmitter, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -20,7 +21,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-customer-quick-create',
   templateUrl: './customer-quick-create.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class CustomerQuickCreateComponent {
   @Input() embedded = false;

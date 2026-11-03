@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -35,7 +36,7 @@ export type FormField = Extract<
 @Component({
   selector: 'app-order-form',
   templateUrl: './order-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective],
 })
 export class OrderFormComponent implements OnInit {
   readonly notesMaxLength = NOTES_MAX_LENGTH;

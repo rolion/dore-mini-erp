@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -81,7 +82,7 @@ export type LineGroup = FormGroup<{
 @Component({
   selector: 'app-purchase-form',
   templateUrl: './purchase-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, NgFooterTemplateDirective, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, NgFooterTemplateDirective, MoneyPipe],
 })
 export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
   readonly currency = PURCHASE_CURRENCY;

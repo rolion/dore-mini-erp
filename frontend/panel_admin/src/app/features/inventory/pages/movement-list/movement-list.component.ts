@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -31,7 +32,7 @@ export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la 
   selector: 'app-movement-list',
   templateUrl: './movement-list.component.html',
   styleUrl: './movement-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe],
 })
 export class MovementListComponent implements OnInit {
   readonly pageSize = 10;

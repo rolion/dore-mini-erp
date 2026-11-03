@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +12,7 @@ import { ProductsApiService } from '../../services/products-api.service';
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class ProductDetailComponent implements OnInit {
   product: Product | null = null;

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -18,7 +19,7 @@ export type CategoryStatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-category-list',
   templateUrl: './category-list.component.html',
   styleUrl: './category-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule],
 })
 export class CategoryListComponent implements OnInit {
   readonly pageSize = 10;

@@ -1,25 +1,25 @@
 <div class="p-10">
   <div class="ngxTableHeader">
     <div class="table-title">
-      <h2><strong>Almacenes</strong></h2>
-      <small class="text-muted">Lugares donde se guardan las existencias. Siempre hay un almacén predeterminado.</small>
+      <h2><strong>{{ 'INVENTORY.WAREHOUSES_TAB.ALMACENES' | translate }}</strong></h2>
+      <small class="text-muted">{{ 'INVENTORY.WAREHOUSES_TAB.LUGARES_DONDE_SE_GUARDAN_LAS' | translate }}</small>
     </div>
     <div class="table-search-area">
       <div>
         <label for="warehouse-search"><i class="material-icons search-icon">search</i></label>
-        <input id="warehouse-search" placeholder="Buscar por nombre" type="text" class="browser-default search-field"
-          [formControl]="searchControl" aria-label="Buscar por nombre">
+        <input id="warehouse-search" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" type="text" class="browser-default search-field"
+          [formControl]="searchControl" [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE' | translate">
       </div>
     </div>
     <div class="header-buttons-left">
       <div class="d-flex align-items-center gap-2 ms-3">
-        <select class="form-select form-control w-auto" [formControl]="statusControl" aria-label="Filtrar por estado">
-          <option value="active">Activos</option>
-          <option value="inactive">Inactivos</option>
-          <option value="all">Todos</option>
+        <select class="form-select form-control w-auto" [formControl]="statusControl" [attr.aria-label]="'COMMON.FILTRAR_POR_ESTADO' | translate">
+          <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+          <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
+          <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
         </select>
         <button type="button" class="btn btn-icon icon-left btn-primary rounded-button" (click)="openDialog()"
-          title="Nuevo almacén" aria-label="Nuevo almacén">
+          [title]="'INVENTORY.WAREHOUSES_TAB.NUEVO_ALMACEN' | translate" [attr.aria-label]="'INVENTORY.WAREHOUSES_TAB.NUEVO_ALMACEN' | translate">
           <i class="material-icons">add</i>
         </button>
       </div>
@@ -29,25 +29,25 @@
   <div class="alert alert-warning m-3" role="alert">{{ blockReason }}</div>
   }
   @if (loading && !rows.length) {
-  <p class="m-4">Cargando…</p>
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
   } @else if (errorMessage) {
   <div class="m-4">
     <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
-    <button type="button" class="btn btn-light" (click)="reload()">Reintentar</button>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
   </div>
   } @else if (!rows.length) {
-  <p class="m-4">Sin almacenes.</p>
+  <p class="m-4">{{ 'INVENTORY.WAREHOUSES_TAB.SIN_ALMACENES' | translate }}</p>
   } @else {
   <div class="table-responsive">
     <table class="table align-middle inventory-table">
-      <caption class="visually-hidden">Almacenes</caption>
+      <caption class="visually-hidden">{{ 'INVENTORY.WAREHOUSES_TAB.ALMACENES' | translate }}</caption>
       <thead>
         <tr>
-          <th scope="col">Nombre</th>
-          <th scope="col">Descripción</th>
-          <th scope="col">Estado</th>
-          <th scope="col">Predeterminado</th>
-          <th scope="col">Acciones</th>
+          <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+          <th scope="col">{{ 'COMMON.DESCRIPCION' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+          <th scope="col">{{ 'INVENTORY.WAREHOUSES_TAB.PREDETERMINADO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -57,26 +57,26 @@
           <td data-label="Descripción">{{ warehouse.description || '—' }}</td>
           <td data-label="Estado">
             @if (warehouse.active) {
-            <div class="badge-outline col-green">Activo</div>
+            <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
             } @else {
-            <div class="badge-outline col-red">Inactivo</div>
+            <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
             }
           </td>
           <td data-label="Predeterminado">
             @if (warehouse.isDefault) {
-            <div class="badge-outline col-purple">Predeterminado</div>
+            <div class="badge-outline col-purple">{{ 'INVENTORY.WAREHOUSES_TAB.PREDETERMINADO' | translate }}</div>
             } @else {
             —
             }
           </td>
           <td>
             <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto" (click)="openDialog(warehouse)"
-              title="Editar" aria-label="Editar">
+              [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
               <i class="fas fa-pen"></i>
             </button>
             @if (warehouse.active && !warehouse.isDefault) {
             <button type="button" class="btn btn-tbl-edit btn-tbl-view h-auto" (click)="makeDefault(warehouse)"
-              title="Definir predeterminado" aria-label="Definir predeterminado">
+              [title]="'INVENTORY.WAREHOUSES_TAB.DEFINIR_PREDETERMINADO' | translate" [attr.aria-label]="'INVENTORY.WAREHOUSES_TAB.DEFINIR_PREDETERMINADO' | translate">
               <i class="fas fa-star"></i>
             </button>
             }

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +22,7 @@ export const INVALID_RANGE_MESSAGE = 'Elige las dos fechas; la final no puede se
 @Component({
   selector: 'app-period-selector',
   templateUrl: './period-selector.component.html',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, DatePipe],
 })
 export class PeriodSelectorComponent {
   /** Periodo efectivo de la última respuesta del servidor; `null` mientras no se conoce. */

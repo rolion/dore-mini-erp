@@ -1,14 +1,14 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Productos</h5>
+      <h5 class="page-title m-b-0">{{ 'COMMON.PRODUCTOS' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Catálogo</li>
-    <li class="breadcrumb-item">Producto</li>
+    <li class="breadcrumb-item">{{ 'COMMON.CATALOGO' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'COMMON.PRODUCTO' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row clearfix">
@@ -21,7 +21,7 @@
                   <div class="col-auto p-0">
                     <div class="ngxTableHeader">
                       <div class="table-title">
-                        <h2><strong>Productos</strong></h2>
+                        <h2><strong>{{ 'COMMON.PRODUCTOS' | translate }}</strong></h2>
                       </div>
                     </div>
                   </div>
@@ -30,35 +30,35 @@
                       <div class="table-search-area">
                         <div>
                           <label for="product-search"><i class="material-icons search-icon">search</i></label>
-                          <input id="product-search" placeholder="Buscar por nombre" type="text"
+                          <input id="product-search" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" type="text"
                             class="browser-default search-field" [formControl]="searchControl"
-                            aria-label="Buscar por nombre">
+                            [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE' | translate">
                         </div>
                       </div>
                       <div class="header-buttons-left">
                         <div class="d-flex align-items-center gap-2 ms-3">
                           <select class="form-select form-control w-auto" [formControl]="statusControl"
-                            aria-label="Filtrar por estado">
-                            <option value="all">Todos</option>
-                            <option value="active">Activos</option>
-                            <option value="inactive">Inactivos</option>
+                            [attr.aria-label]="'COMMON.FILTRAR_POR_ESTADO' | translate">
+                            <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+                            <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+                            <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
                           </select>
                           <select class="form-select form-control w-auto" [formControl]="useControl"
-                            aria-label="Filtrar por uso">
-                            <option value="all">Todos los usos</option>
-                            <option value="buy">Se compra</option>
-                            <option value="sell">Se vende</option>
+                            [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.FILTRAR_POR_USO' | translate">
+                            <option value="all">{{ 'PRODUCTS.PRODUCT_LIST.TODOS_LOS_USOS' | translate }}</option>
+                            <option value="buy">{{ 'PRODUCTS.PRODUCT_LIST.SE_COMPRA' | translate }}</option>
+                            <option value="sell">{{ 'PRODUCTS.PRODUCT_LIST.SE_VENDE' | translate }}</option>
                           </select>
                           <select class="form-select form-control w-auto" [formControl]="categoryControl"
-                            aria-label="Filtrar por categoría">
-                            <option value="all">Todas las categorías</option>
+                            [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.FILTRAR_POR_CATEGORIA' | translate">
+                            <option value="all">{{ 'PRODUCTS.PRODUCT_LIST.TODAS_LAS_CATEGORIAS' | translate }}</option>
                             @for (option of categories; track option.value) {
                             <option [value]="option.value">{{ option.label }}</option>
                             }
-                            <option value="unclassified">Por revisar</option>
+                            <option value="unclassified">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</option>
                           </select>
                           <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/catalog/products/new"
-                            title="Nuevo producto" aria-label="Nuevo producto">
+                            [title]="'PRODUCTS.PRODUCT_LIST.NUEVO_PRODUCTO' | translate" [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.NUEVO_PRODUCTO' | translate">
                             <i class="material-icons">add</i>
                           </a>
                         </div>
@@ -71,72 +71,72 @@
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
-              <ngx-datatable-column name="Nombre" [sortable]="false" [width]="250">
+              <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [width]="250">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{row.name}}</a>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Categoría" [sortable]="false" [width]="150">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.CATEGORIA' | translate" [sortable]="false" [width]="150">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.needsReview) {
-                  <div class="badge-outline col-orange">Por revisar</div>
+                  <div class="badge-outline col-orange">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</div>
                   } @else {
                   {{ categoryName(row) }}
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Uso" [sortable]="false" [width]="150">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.USO' | translate" [sortable]="false" [width]="150">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.canBuy) {
-                  <div class="badge-outline col-blue me-1">Compra</div>
+                  <div class="badge-outline col-blue me-1">{{ 'COMMON.COMPRA' | translate }}</div>
                   }
                   @if (row.canSell) {
-                  <div class="badge-outline col-green">Venta</div>
+                  <div class="badge-outline col-green">{{ 'PRODUCTS.PRODUCT_LIST.VENTA' | translate }}</div>
                   }
                   @if (!row.canBuy && !row.canSell) {
                   —
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Precio" [sortable]="false" [width]="120">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.PRECIO' | translate" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{ row.canSell ? (row.salePrice ?? '—') : '—' }}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [width]="120">
+              <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.active) {
-                  <div class="badge-outline col-green">Activo</div>
+                  <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
                   } @else {
-                  <div class="badge-outline col-red">Inactivo</div>
+                  <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
                   }
                 </ng-template>
               </ngx-datatable-column>
               @if (inventoryEnabled) {
-              <ngx-datatable-column name="Controla stock" [sortable]="false" [width]="130">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.CONTROLA_STOCK' | translate" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.tracksStock) {
-                  <div class="badge-outline col-green">Sí</div>
+                  <div class="badge-outline col-green">{{ 'PRODUCTS.PRODUCT_LIST.SI' | translate }}</div>
                   } @else {
-                  <div class="badge-outline col-brown">No</div>
+                  <div class="badge-outline col-brown">{{ 'PRODUCTS.PRODUCT_LIST.NO' | translate }}</div>
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Unidad base" [sortable]="false" [width]="130">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.UNIDAD_BASE' | translate" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{ row.baseUnit ? row.baseUnit.abbreviation : '—' }}
                 </ng-template>
               </ngx-datatable-column>
               }
-              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="180">
+              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="180">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
-                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/products', row.id]" title="Ver detalle"
-                      aria-label="Ver detalle">
+                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/products', row.id]" [title]="'COMMON.VER_DETALLE' | translate"
+                      [attr.aria-label]="'COMMON.VER_DETALLE' | translate">
                       <i class="fas fa-eye"></i>
                     </a>
                     <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/catalog/products', row.id, 'edit']"
-                      title="Editar" aria-label="Editar">
+                      [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
                       <i class="fas fa-pen"></i>
                     </a>
                     <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"

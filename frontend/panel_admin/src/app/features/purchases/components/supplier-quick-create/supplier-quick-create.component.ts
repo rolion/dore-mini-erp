@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -31,7 +32,7 @@ function emailFormat(control: AbstractControl<string>): ValidationErrors | null 
 @Component({
   selector: 'app-supplier-quick-create',
   templateUrl: './supplier-quick-create.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class SupplierQuickCreateComponent {
   readonly activeModal = inject(NgbActiveModal);

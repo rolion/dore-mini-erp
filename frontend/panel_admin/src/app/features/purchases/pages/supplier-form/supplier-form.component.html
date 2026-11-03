@@ -7,8 +7,8 @@
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Compras</li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases/suppliers">Proveedores</a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases/suppliers">{{ 'COMMON.PROVEEDORES' | translate }}</a></li>
     <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
   </ul>
   <div class="section-body">
@@ -22,8 +22,8 @@
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
               <div class="row">
                 <div class="form-group col-md-8">
-                  <label for="supplier-name">Nombre <span class="text-danger">*</span></label>
-                  <input id="supplier-name" type="text" class="form-control" placeholder="Nombre del proveedor"
+                  <label for="supplier-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
+                  <input id="supplier-name" type="text" class="form-control" [placeholder]="'PURCHASES.SUPPLIER_FORM.NOMBRE_DEL_PROVEEDOR' | translate"
                     formControlName="name" [attr.maxlength]="nameMaxLength">
                   @if (hasError('name')) {
                   <small class="form-text text-danger">
@@ -33,8 +33,8 @@
                   }
                 </div>
                 <div class="form-group col-md-4">
-                  <label for="supplier-tax-id">Identificación</label>
-                  <input id="supplier-tax-id" type="text" class="form-control" placeholder="NIT, CI o RUC"
+                  <label for="supplier-tax-id">{{ 'COMMON.IDENTIFICACION' | translate }}</label>
+                  <input id="supplier-tax-id" type="text" class="form-control" [placeholder]="'PURCHASES.SUPPLIER_FORM.NIT_CI_O_RUC' | translate"
                     formControlName="taxId" [attr.maxlength]="taxIdMaxLength">
                   @if (hasError('taxId')) {
                   <small class="form-text text-danger">
@@ -45,9 +45,9 @@
               </div>
               <div class="row">
                 <div class="form-group col-md-6">
-                  <label for="supplier-phone">Teléfono</label>
+                  <label for="supplier-phone">{{ 'COMMON.TELEFONO' | translate }}</label>
                   <input id="supplier-phone" type="text" inputmode="tel" class="form-control"
-                    placeholder="+591 7xxxxxxx" formControlName="phone" [attr.maxlength]="phoneMaxLength">
+                    [placeholder]="'COMMON.591_7XXXXXXX' | translate" formControlName="phone" [attr.maxlength]="phoneMaxLength">
                   @if (hasError('phone')) {
                   <small class="form-text text-danger">
                     {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
@@ -55,8 +55,8 @@
                   }
                 </div>
                 <div class="form-group col-md-6">
-                  <label for="supplier-email">Correo</label>
-                  <input id="supplier-email" type="email" class="form-control" placeholder="correo@ejemplo.com"
+                  <label for="supplier-email">{{ 'COMMON.CORREO' | translate }}</label>
+                  <input id="supplier-email" type="email" class="form-control" [placeholder]="'COMMON.CORREO_EJEMPLO_COM' | translate"
                     formControlName="email" [attr.maxlength]="emailMaxLength">
                   @if (hasError('email')) {
                   <small class="form-text text-danger">
@@ -67,8 +67,8 @@
               </div>
               <div class="row">
                 <div class="form-group col-md-12">
-                  <label for="supplier-notes">Notas</label>
-                  <textarea id="supplier-notes" class="form-control" rows="3" placeholder="Notas"
+                  <label for="supplier-notes">{{ 'COMMON.NOTAS' | translate }}</label>
+                  <textarea id="supplier-notes" class="form-control" rows="3" [placeholder]="'COMMON.NOTAS' | translate"
                     formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
                   @if (hasError('notes')) {
                   <small class="form-text text-danger">
@@ -80,10 +80,10 @@
               <div class="row">
                 <div class="col-md-12">
                   <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">
-                    Guardar
+                    {{ 'COMMON.GUARDAR' | translate }}
                   </button>
                   <a class="btn btn-light ms-2"
-                    [routerLink]="isEdit ? ['/pocketbiz/purchases/suppliers', supplierId] : ['/pocketbiz/purchases/suppliers']">Cancelar</a>
+                    [routerLink]="isEdit ? ['/pocketbiz/purchases/suppliers', supplierId] : ['/pocketbiz/purchases/suppliers']">{{ 'COMMON.CANCELAR' | translate }}</a>
                 </div>
               </div>
             </form>

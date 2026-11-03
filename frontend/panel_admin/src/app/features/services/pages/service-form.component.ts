@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,7 +10,7 @@ import { PersonnelApiService } from '../../personnel/services/personnel-api.serv
 import { ServiceApiError, ServiceInput } from '../models/service';
 import { ServicesApiService } from '../services/services-api.service';
 
-@Component({ selector: 'app-service-form', imports: [ReactiveFormsModule, RouterLink], templateUrl: './service-form.component.html' })
+@Component({ selector: 'app-service-form', imports: [TranslatePipe, ReactiveFormsModule, RouterLink], templateUrl: './service-form.component.html' })
 export class ServiceFormComponent implements OnInit, HasUnsavedChanges {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);

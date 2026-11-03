@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,7 +13,7 @@ import { ExpensesApiService } from '../../services/expenses-api.service';
 @Component({
   selector: 'app-expense-detail',
   templateUrl: './expense-detail.component.html',
-  imports: [RouterLink, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe],
 })
 export class ExpenseDetailComponent implements OnInit {
   readonly paymentLabels = PAYMENT_METHOD_LABELS;

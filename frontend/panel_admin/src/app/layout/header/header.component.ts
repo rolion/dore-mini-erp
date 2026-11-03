@@ -1,4 +1,4 @@
-import { NgClass, DOCUMENT } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
   Component,
   ElementRef,
@@ -28,7 +28,6 @@ import { APP_PATHS } from '../../core/routing/app-paths';
         NgbDropdown,
         NgbDropdownToggle,
         NgbDropdownMenu,
-        NgClass,
         UserAvatarComponent,
         LanguageSelectorComponent,
         TranslatePipe,
