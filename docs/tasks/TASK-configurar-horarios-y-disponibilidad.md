@@ -77,7 +77,9 @@ Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `
 - [El formulario permite cambios durante el guardado](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-03.md) (Medium).
 - [La semana vacía puede quedar sin mensaje](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-04.md) (Medium).
 
-Ingeniería corrigió los cuatro hallazgos, incorporó los diálogos del DDR y comprobó la integración en PostgreSQL. Pendiente una nueva revisión independiente.
+Ingeniería corrigió los cuatro hallazgos, incorporó diálogos nativos y comprobó la integración en PostgreSQL.
+
+**Segundo gate: sin PASS** sobre `ad64a92`. PostgreSQL 16 aprobó 122 pruebas y Django no reportó problemas. El lint de Angular pasó y `npm audit` reportó cero vulnerabilidades. El build y Karma no completaron la compilación. Node 22.12.0 terminó con código Windows 3221225477 y Node 24.22.1 salió con código 1 después de `Building...`. Quedan sin verificar la cobertura, la vista en navegador y la navegación por teclado. El TASK permanece en REVIEW y el PR sigue en borrador.
 
 ## Publicación
 
