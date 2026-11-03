@@ -13,3 +13,5 @@
 Un único `error` se muestra en la página y en ambos diálogos. Tras fallar Guardar turno, "Registrar ausencia" muestra el error del turno.
 
 Origen: tercer Quality Gate independiente sobre `7d521eb`.
+
+Corrección implementada tras el tercer gate; pendiente de verificación en el siguiente Quality Gate.

@@ -13,3 +13,5 @@
 En tema oscuro el diálogo de ausencia conserva fondo rgb(255,255,255) y texto negro, con inputs rgb(22,25,42). Cierra el pendiente de REV-05 en oscuro.
 
 Origen: tercer Quality Gate independiente sobre `7d521eb`.
+
+Corrección implementada tras el tercer gate; pendiente de verificación en el siguiente Quality Gate.

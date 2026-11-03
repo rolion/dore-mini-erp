@@ -13,3 +13,5 @@
 Faltan pruebas de no administrador (403), turno ajeno (404), pausas inválidas, vigencias adyacentes/coincidentes y contiguidad por API, y ausencias de varios días o superpuestas (incluido 09:00–12:00 con ausencia 10:00–11:00 por API). `tests/test_api.py` tiene 3 pruebas.
 
 Origen: tercer Quality Gate independiente sobre `7d521eb`.
+
+Corrección implementada tras el tercer gate; pendiente de verificación en el siguiente Quality Gate.

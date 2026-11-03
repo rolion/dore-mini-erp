@@ -22,6 +22,9 @@
 
 | 2026-11-03 | ENGINEERING → REVIEW | Hallazgos corregidos y 122 pruebas aprobadas en PostgreSQL | delivery-build |
 
+| 2026-11-03 | REVIEW → ENGINEERING | Tercer FAIL; la persona autorizó corregir REV-06 a REV-12 | delivery-publish |
+| 2026-11-03 | ENGINEERING → REVIEW | Hallazgos corregidos; pendiente un gate con acceso a PostgreSQL | delivery-build |
+
 ## Investigación
 
 ### Requerimiento
@@ -67,6 +70,18 @@ El commit `5f6fba6` implementa la API de Agenda, la migración aditiva y la vist
 - AC-04. La vista agrupa intervalos por día en hora de Bolivia y reutiliza la tarjeta, el breadcrumb y los controles de formulario del panel. Los formularios usan diálogos nativos y enfocan el mensaje de error cuando falla el guardado.
 
 Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `manage.py check`. `makemigrations --check --dry-run` no detectó diferencias entre modelos y migraciones, pero no pudo consultar el historial en PostgreSQL. La suite posterior aplicó las migraciones en PostgreSQL 16 y aprobó 122 pruebas, incluidas las de permisos, aislamiento, alta, edición, zona horaria y concurrencia. La compilación de plantillas Angular pasó con ngc. Pendiente el recorrido visual y de teclado en navegador.
+
+Corrección del tercer gate (REV-06 a REV-12):
+
+- REV-06. `sidebar-menu.spec.ts` incluye el menú Agenda (12 rutas, 33 títulos). Karma completo: 1121 pruebas correctas; cobertura 86,21 % sentencias, 77,95 % ramas.
+- REV-07. Los diálogos usan fondo, texto y borde del tema oscuro (`:host-context(.dark)`).
+- REV-08. `dialogError` separado de `error`: el error de guardado vive solo en su diálogo y se limpia al abrirlo.
+- REV-09. Frontend: `models/agenda.ts` y `services/agenda-api.service.ts` (con spec). Backend: el cálculo de disponibilidad pasó a `application/week.py`. Desviación: la vista conserva el control de solapamiento y de bloqueo dentro de la transacción, como fija el ADR; no se creó capa de comandos adicional.
+- REV-10. Nuevas pruebas de dominio (pausas inválidas, vigencias adyacentes y coincidentes, ausencias central, de varios días y superpuestas) y de API (usuario sin empresa activa, turno ajeno, pausas y turno nocturno inválidos, turnos contiguos, ausencias de varios días y superpuestas).
+- REV-11. Fechas `dd/MM/yyyy HH:mm` y texto «Sin turnos ni ausencias» en los días vacíos.
+- REV-12. Este bloque actualiza el TASK.
+
+Verificación propia de ingeniería (no es el Quality Gate): lint y build de Angular correctos; 14 pruebas backend sin base de datos correctas. **Las pruebas de API no se ejecutaron** (sin credenciales de PostgreSQL); solo compilan. Recorrido visual en navegador pendiente.
 
 ## Review
 

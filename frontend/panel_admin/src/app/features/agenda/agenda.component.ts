@@ -1,26 +1,12 @@
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EMPTY, expand, finalize, reduce } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { EMPTY, Observable, expand, finalize, reduce } from 'rxjs';
 import { Profile } from '../personnel/models/profile';
 import { PersonnelApiService } from '../personnel/services/personnel-api.service';
-
-interface Interval { starts: string; ends: string }
-interface Shift extends Interval {
-  id: number;
-  day: number;
-  valid_from: string;
-  valid_until: string;
-  breaks: Interval[];
-}
-interface Week {
-  timezone: string;
-  shifts: Shift[];
-  availability: Interval[];
-  absences: (Interval & { id: number; reason: string })[];
-}
+import { Interval, Shift, Week } from './models/agenda';
+import { AgendaApiService } from './services/agenda-api.service';
 
 @Component({
   selector: 'app-agenda',
@@ -29,7 +15,7 @@ interface Week {
   styleUrl: './agenda.component.scss',
 })
 export class AgendaComponent {
-  private http = inject(HttpClient);
+  private api = inject(AgendaApiService);
   private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
@@ -52,6 +38,7 @@ export class AgendaComponent {
   loadingPeople = false;
   saving = false;
   error = '';
+  dialogError = '';
   saved = '';
 
   constructor() { this.loadPeople(); }
@@ -85,8 +72,26 @@ export class AgendaComponent {
 
   date(day: number): string { return this.dateAt(new Date(this.start), day); }
 
-  private get base(): string {
-    return `${environment.apiUrl}/agenda/${this.selection.value}/`;
+  formatDate(value: string): string {
+    const [year, month, day] = value.slice(0, 10).split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  formatDateTime(value: string): string {
+    return `${this.formatDate(value)} ${value.slice(11, 16)}`;
+  }
+
+  dayEmpty(week: Week, index: number): boolean {
+    const date = this.date(index);
+    return !week.availability.some(item => item.starts.startsWith(date))
+      && !week.shifts.some(item => item.day === index && item.valid_from <= date && item.valid_until >= date)
+      && !week.absences.some(item => item.starts.slice(0, 10) <= date && item.ends.slice(0, 19) > date + 'T00:00:00');
+  }
+
+  open(dialog: HTMLDialogElement, prepare?: () => void): void {
+    this.dialogError = '';
+    prepare?.();
+    dialog.showModal();
   }
 
   move(offset: number): void {
@@ -99,7 +104,7 @@ export class AgendaComponent {
     this.error = '';
     if (!this.selection.value) return;
     this.loading = true;
-    this.http.get<Week>(this.base + 'week/', { params: { start: this.start } }).pipe(
+    this.api.week(this.selection.value, this.start).pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loading = false),
     ).subscribe({ next: week => this.week = week, error: error => this.showError(error) });
@@ -125,35 +130,37 @@ export class AgendaComponent {
 
   saveShift(dialog: HTMLDialogElement): void {
     if (this.shift.invalid || this.saving || this.loading || !this.week) return;
-    const url = this.base + 'shifts/';
-    const body = this.shift.getRawValue();
-    this.save(this.editId ? this.http.put(url + this.editId + '/', body) : this.http.post(url, body),
+    this.save(this.api.saveShift(this.selection.value, this.shift.getRawValue(), this.editId),
       dialog, () => this.edit());
   }
 
   saveAbsence(dialog: HTMLDialogElement): void {
     if (this.absence.invalid || this.saving || this.loading || !this.week) return;
-    this.save(this.http.post(this.base + 'absences/', this.absence.getRawValue()), dialog, () => this.absence.reset());
+    this.save(this.api.saveAbsence(this.selection.value, this.absence.getRawValue()), dialog, () => this.absence.reset());
   }
 
-  private save(request: ReturnType<HttpClient['post']>, dialog: HTMLDialogElement, reset: () => void): void {
-    this.error = '';
+  private save(request: Observable<unknown>, dialog: HTMLDialogElement, reset: () => void): void {
+    this.dialogError = '';
     this.saved = '';
     this.saving = true;
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
       next: () => { dialog.close(); reset(); this.saved = 'Cambios guardados.'; this.load(); },
       error: error => {
-        this.showError(error);
+        this.dialogError = this.message(error);
         requestAnimationFrame(() => dialog.querySelector<HTMLElement>('[data-save-error]')?.focus());
       },
     });
   }
 
   private showError(error: unknown): void {
+    this.error = this.message(error);
+  }
+
+  private message(error: unknown): string {
     const payload = error instanceof HttpErrorResponse ? error.error : null;
-    this.error = payload && typeof payload === 'object'
+    const text = payload && typeof payload === 'object'
       ? Object.values(payload).flat().filter(value => typeof value === 'string').join(' ')
       : '';
-    this.error ||= 'No se pudo completar la operación. Inténtalo de nuevo.';
+    return text || 'No se pudo completar la operación. Inténtalo de nuevo.';
   }
 }

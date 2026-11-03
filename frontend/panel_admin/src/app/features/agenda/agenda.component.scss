@@ -1,7 +1,20 @@
+$dark-surface: #16192a; // mismo valor que $color-dark-primary de skins/_dark.scss
+$dark-text: #96a2b4; // mismo valor que $color-font de skins/_dark.scss
+
 dialog {
   box-sizing: border-box;
   inline-size: min(32rem, calc(100% - 2rem));
   max-block-size: calc(100dvh - 2rem);
   margin: auto;
   overflow: auto;
+}
+
+:host-context(.dark) dialog {
+  background-color: $dark-surface;
+  color: $dark-text;
+  border-color: $dark-text;
+
+  &::backdrop {
+    background-color: rgb(0 0 0 / 60%);
+  }
 }

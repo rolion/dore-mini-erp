@@ -9,7 +9,8 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.agenda.domain.schedule import shifts_overlap, subtract, validate_shift
+from modules.agenda.application.week import week_availability
+from modules.agenda.domain.schedule import shifts_overlap, validate_shift
 from modules.agenda.models import Schedule, Shift, Absence
 from modules.agenda.infrastructure.adapters import professional_exists
 from shared.tenancy import company_id_from
@@ -92,23 +93,7 @@ class WeekView(AgendaView):
             starts__lt=datetime.combine(end, datetime.min.time(), ZONE),
             ends__gt=datetime.combine(start, datetime.min.time(), ZONE),
         ).order_by('starts'))
-        availability = []
-        active_shifts = []
-        for shift in shifts:
-            date = start + timedelta(days=shift.day)
-            if not shift.valid_from <= date <= shift.valid_until:
-                continue
-            active_shifts.append(shift)
-            begins = datetime.combine(date, shift.starts, ZONE)
-            finishes = datetime.combine(date, shift.ends, ZONE)
-            blocks = [(absence.starts, absence.ends) for absence in absences]
-            for pause in shift.breaks:
-                blocks.append(tuple(datetime.fromisoformat(f'{date}T{pause[key]}').replace(tzinfo=ZONE)
-                                    for key in ('starts', 'ends')))
-            availability.extend(
-                {'starts': left.astimezone(ZONE).isoformat(), 'ends': right.astimezone(ZONE).isoformat()}
-                for left, right in subtract(begins, finishes, blocks)
-            )
+        active_shifts, availability = week_availability(shifts, absences, start, ZONE)
         return Response({
             'timezone': ZONE.key, 'shifts': ShiftSerializer(active_shifts, many=True).data,
             'absences': AbsenceSerializer(absences, many=True).data, 'availability': availability,

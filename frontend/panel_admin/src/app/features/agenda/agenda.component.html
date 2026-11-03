@@ -25,7 +25,7 @@
     @if (selection.value) {
       <div class="d-flex flex-wrap gap-2 align-items-center my-3">
         <button class="btn btn-outline-primary" type="button" [disabled]="loading || saving" (click)="move(-7)">Semana anterior</button>
-        <span>{{ start }} a {{ date(6) }} · Hora de Bolivia</span>
+        <span>{{ formatDate(start) }} a {{ formatDate(date(6)) }} · Hora de Bolivia</span>
         <button class="btn btn-outline-primary" type="button" [disabled]="loading || saving" (click)="move(7)">Semana siguiente</button>
       </div>
     }
@@ -34,7 +34,7 @@
         @for (day of days; track day; let i = $index) {
           <section class="col-12 col-md-6 col-xl-4">
             <div class="border rounded p-3 h-100">
-              <h6>{{ day }} · {{ date(i) }}</h6>
+              <h6>{{ day }} · {{ formatDate(date(i)) }}</h6>
               <ul class="list-unstyled mb-0">
                 @for (item of data.availability; track item.starts) {
                   @if (item.starts.startsWith(date(i))) {
@@ -43,7 +43,7 @@
                 }
                 @for (item of data.shifts; track item.id) {
                   @if (item.day === i && item.valid_from <= date(i) && item.valid_until >= date(i)) {
-                    <li><button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="edit(item); shiftDialog.showModal()">
+                    <li><button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="open(shiftDialog, () => edit(item))">
                       Editar turno {{ item.starts.slice(0,5) }}–{{ item.ends.slice(0,5) }}
                     </button></li>
                     @for (pause of item.breaks; track pause.starts) {
@@ -51,10 +51,11 @@
                     }
                   }
                 }
+                @if (dayEmpty(data, i)) { <li>Sin turnos ni ausencias</li> }
                 @for (item of data.absences; track item.id) {
                   @if (item.starts.slice(0,10) <= date(i) && item.ends.slice(0,19) > date(i) + 'T00:00:00') {
-                    <li>Ausencia {{ item.starts.slice(0,16).replace('T', ' ') }} a
-                      {{ item.ends.slice(0,16).replace('T', ' ') }} · {{ item.reason }}</li>
+                    <li>Ausencia {{ formatDateTime(item.starts) }} a
+                      {{ formatDateTime(item.ends) }} · {{ item.reason }}</li>
                   }
                 }
               </ul>
@@ -65,15 +66,15 @@
       @if (!data.shifts.length && !data.absences.length) { <p>No hay turnos ni ausencias en esta semana.</p> }
       <div class="row g-3">
         <div class="col-12 d-flex gap-2">
-          <button type="button" class="btn btn-primary" (click)="edit(); shiftDialog.showModal()">Nuevo turno</button>
-          <button type="button" class="btn btn-outline-primary" (click)="absenceDialog.showModal()">Registrar ausencia</button>
+          <button type="button" class="btn btn-primary" (click)="open(shiftDialog, () => edit())">Nuevo turno</button>
+          <button type="button" class="btn btn-outline-primary" (click)="open(absenceDialog)">Registrar ausencia</button>
         </div>
         <dialog #shiftDialog class="rounded border p-4" aria-labelledby="shift-dialog-title"
           (cancel)="saving && $event.preventDefault()">
           <form [formGroup]="shift" (ngSubmit)="saveShift(shiftDialog)">
             <fieldset [disabled]="saving">
               <h5 id="shift-dialog-title">{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
-              <p data-save-error tabindex="-1" role="alert" [hidden]="!error">{{ error }}</p>
+              <p data-save-error tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
               <label for="agenda-day">Día</label>
               <select id="agenda-day" class="form-select mb-2" formControlName="day">
                 @for (day of days; track day; let i = $index) { <option [ngValue]="i">{{ day }}</option> }
@@ -109,7 +110,7 @@
           <form [formGroup]="absence" (ngSubmit)="saveAbsence(absenceDialog)">
             <fieldset [disabled]="saving">
               <h5 id="absence-dialog-title">Registrar ausencia</h5>
-              <p data-save-error tabindex="-1" role="alert" [hidden]="!error">{{ error }}</p>
+              <p data-save-error tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
               <label for="absence-start">Inicio</label>
               <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
               <label for="absence-end">Fin</label>

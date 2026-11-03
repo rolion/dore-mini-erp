@@ -13,3 +13,5 @@
 Fechas en ISO en lugar de `dd/MM/yyyy HH:mm`; los días sin intervalos quedan vacíos.
 
 Origen: tercer Quality Gate independiente sobre `7d521eb`.
+
+Corrección implementada tras el tercer gate; pendiente de verificación en el siguiente Quality Gate.
