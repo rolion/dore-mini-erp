@@ -1,7 +1,7 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar proveedor' : 'Nuevo proveedor' }}</h5>
+      <h5 class="page-title m-b-0">{{ isEdit ? ('PURCHASES.SUPPLIER_FORM.EDITAR_PROVEEDOR' | translate) : ('PURCHASES.SUPPLIER_QUICK_CREATE.NUEVO_PROVEEDOR' | translate) }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
@@ -9,14 +9,14 @@
     </li>
     <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases/suppliers">{{ 'COMMON.PROVEEDORES' | translate }}</a></li>
-    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+    <li class="breadcrumb-item">{{ isEdit ? ('COMMON.EDITAR' | translate) : ('CUSTOMERS.CUSTOMER_FORM.NUEVO' | translate) }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ isEdit ? 'Editar proveedor' : 'Nuevo proveedor' }}</h4>
+            <h4>{{ isEdit ? ('PURCHASES.SUPPLIER_FORM.EDITAR_PROVEEDOR' | translate) : ('PURCHASES.SUPPLIER_QUICK_CREATE.NUEVO_PROVEEDOR' | translate) }}</h4>
           </div>
           <div class="card-body">
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -28,7 +28,7 @@
                   @if (hasError('name')) {
                   <small class="form-text text-danger">
                     {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
-                    'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+                    ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_NO_PUEDE_SUPERAR' | translate: { n: nameMaxLength }) : ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_ES_OBLIGATORIO' | translate)) }}
                   </small>
                   }
                 </div>
@@ -38,7 +38,7 @@
                     formControlName="taxId" [attr.maxlength]="taxIdMaxLength">
                   @if (hasError('taxId')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.taxId || 'La identificación no puede superar ' + taxIdMaxLength + ' caracteres.' }}
+                    {{ serverErrors.taxId || ('PURCHASES.SUPPLIER_QUICK_CREATE.LA_IDENTIFICACION_NO_PUEDE_SUPERAR' | translate: { n: taxIdMaxLength }) }}
                   </small>
                   }
                 </div>
@@ -50,7 +50,7 @@
                     [placeholder]="'COMMON.591_7XXXXXXX' | translate" formControlName="phone" [attr.maxlength]="phoneMaxLength">
                   @if (hasError('phone')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
+                    {{ serverErrors.phone || ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_TELEFONO_NO_PUEDE_SUPERAR' | translate: { n: phoneMaxLength }) }}
                   </small>
                   }
                 </div>
@@ -60,7 +60,7 @@
                     formControlName="email" [attr.maxlength]="emailMaxLength">
                   @if (hasError('email')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.email || 'Ingresa un correo válido.' }}
+                    {{ serverErrors.email || ('CUSTOMERS.CUSTOMER_FORM.INGRESA_UN_CORREO_VALIDO' | translate) }}
                   </small>
                   }
                 </div>
@@ -72,7 +72,7 @@
                     formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
                   @if (hasError('notes')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.notes || 'Las notas no pueden superar ' + notesMaxLength + ' caracteres.' }}
+                    {{ serverErrors.notes || ('CUSTOMERS.CUSTOMER_FORM.LAS_NOTAS_NO_PUEDEN_SUPERAR' | translate: { n: notesMaxLength }) }}
                   </small>
                   }
                 </div>

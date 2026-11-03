@@ -15,7 +15,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ movement ? typeLabel(movement) + ': ' + movement.product.name : 'Movimiento' }}</h4>
+            <h4>{{ movement ? typeLabel(movement) + ': ' + movement.product.name : ('INVENTORY.ADJUSTMENT_DETAIL.MOVIMIENTO' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (successMessage) {
@@ -99,7 +99,7 @@
             <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
             } @else if (errorMessage) {
             <div class="m-4">
-              <div class="alert alert-danger" role="alert" data-testid="error">{{ notFound ? 'Movimiento no encontrado.' : errorMessage }}</div>
+              <div class="alert alert-danger" role="alert" data-testid="error">{{ notFound ? ('INVENTORY.MOVEMENT_DETAIL.MOVIMIENTO_NO_ENCONTRADO' | translate) : errorMessage }}</div>
               @if (!notFound) {
               <button type="button" class="btn btn-light me-2" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
               }

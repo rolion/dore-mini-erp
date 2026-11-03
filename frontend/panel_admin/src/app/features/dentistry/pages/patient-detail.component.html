@@ -13,14 +13,14 @@
         <div class="d-flex flex-wrap align-items-center gap-2">
           <h3 class="mb-0 fw-bold text-reset">{{ p.customer.name }}</h3>
           <span class="badge rounded-pill" [class.bg-success-subtle]="p.active" [class.text-success-emphasis]="p.active"
-            [class.bg-secondary-subtle]="!p.active" [class.text-secondary-emphasis]="!p.active">{{ p.active ? 'Activo' : 'Archivado' }}</span>
+            [class.bg-secondary-subtle]="!p.active" [class.text-secondary-emphasis]="!p.active">{{ p.active ? ('COMMON.ACTIVO' | translate) : ('DENTISTRY.PATIENT_DETAIL.ARCHIVADO' | translate) }}</span>
         </div>
       </div>
       <div class="d-flex flex-wrap gap-2">
         @if (p.active) {
           <button class="btn btn-primary" type="button" [disabled]="saving || (editingAdmin && editingClinical)" (click)="editRecord()">{{ 'DENTISTRY.PATIENT_DETAIL.EDITAR_FICHA' | translate }}</button>
         }
-        <button class="btn btn-outline-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ p.active ? 'Archivar perfil' : 'Reactivar perfil' }}</button>
+        <button class="btn btn-outline-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ p.active ? ('DENTISTRY.PATIENT_DETAIL.ARCHIVAR_PERFIL' | translate) : ('DENTISTRY.PATIENT_DETAIL.REACTIVAR_PERFIL' | translate) }}</button>
         <a class="btn btn-light" routerLink="/pocketbiz/dentistry/patients" [queryParams]="backFilters">{{ 'DENTISTRY.PATIENT_DETAIL.VOLVER_A_PACIENTES' | translate }}</a>
       </div>
     </header>
@@ -51,15 +51,15 @@
                 <fieldset [disabled]="saving">
                   <label class="form-label" for="birth-date">{{ 'DENTISTRY.PATIENT_DETAIL.FECHA_DE_NACIMIENTO' | translate }}</label>
                   <input id="birth-date" type="date" class="form-control bg-transparent" formControlName="birth_date" [max]="today" aria-describedby="birth-error">
-                  <small id="birth-error" class="text-danger">{{ adminErrors['birth_date'] || (adminForm.hasError('futureBirth') ? 'La fecha no puede ser futura.' : '') }}</small>
+                  <small id="birth-error" class="text-danger">{{ adminErrors['birth_date'] || (adminForm.hasError('futureBirth') ? ('DENTISTRY.PATIENT_DETAIL.LA_FECHA_NO_PUEDE_SER' | translate) : '') }}</small>
                   @if (needsResponsible) {
                     <div class="mt-3"><span class="badge bg-warning-subtle text-warning-emphasis">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span></div>
                     <label class="form-label mt-3" for="responsible-name">{{ 'DENTISTRY.PATIENT_DETAIL.NOMBRE_DEL_RESPONSABLE' | translate }}</label>
                     <input id="responsible-name" class="form-control bg-transparent" formControlName="responsible_name" maxlength="150" aria-required="true" aria-describedby="responsible-name-error">
-                    <small id="responsible-name-error" class="text-danger">{{ adminErrors['responsible_name'] || (adminForm.hasError('responsibleName') ? 'Indica el nombre del responsable.' : '') }}</small>
+                    <small id="responsible-name-error" class="text-danger">{{ adminErrors['responsible_name'] || (adminForm.hasError('responsibleName') ? ('DENTISTRY.PATIENT_DETAIL.INDICA_EL_NOMBRE_DEL_RESPONSABLE' | translate) : '') }}</small>
                     <label class="form-label mt-3" for="responsible-phone">{{ 'DENTISTRY.PATIENT_DETAIL.TELEFONO_DEL_RESPONSABLE' | translate }}</label>
                     <input id="responsible-phone" type="tel" class="form-control bg-transparent" formControlName="responsible_phone" maxlength="30" aria-required="true" aria-describedby="responsible-phone-error">
-                    <small id="responsible-phone-error" class="text-danger">{{ adminErrors['responsible_phone'] || (adminForm.hasError('responsiblePhone') ? 'Indica el teléfono del responsable.' : '') }}</small>
+                    <small id="responsible-phone-error" class="text-danger">{{ adminErrors['responsible_phone'] || (adminForm.hasError('responsiblePhone') ? ('DENTISTRY.PATIENT_DETAIL.INDICA_EL_TELEFONO_DEL_RESPONSABLE' | translate) : '') }}</small>
                   }
                   <div class="d-flex flex-wrap gap-2 mt-3">
                     <button class="btn btn-primary" type="submit" [disabled]="!adminForm.dirty || adminForm.invalid">{{ 'DENTISTRY.PATIENT_DETAIL.GUARDAR_DATOS_ADMINISTRATIVOS' | translate }}</button>

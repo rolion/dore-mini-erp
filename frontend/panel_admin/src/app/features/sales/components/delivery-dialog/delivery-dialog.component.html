@@ -104,7 +104,7 @@
     <button type="button" class="btn btn-light" data-testid="cancel" [disabled]="saving"
       (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
     <button type="submit" class="btn btn-primary" data-testid="confirm" [disabled]="!canConfirm">
-      {{ saving ? 'Confirmando…' : 'Confirmar entrega' }}
+      {{ saving ? ('SALES.DELIVERY_DIALOG.CONFIRMANDO' | translate) : ('SALES.DELIVERY_DIALOG.CONFIRMAR_ENTREGA' | translate) }}
     </button>
   </div>
 </form>

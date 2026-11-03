@@ -1,11 +1,11 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
-    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ id ? 'Editar' : 'Nuevo registro' }} · {{ title }}</h5></li>
+    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ id ? ('COMMON.EDITAR' | translate) : ('PERSONNEL.PROFILE_LIST.NUEVO_REGISTRO' | translate) }} · {{ title }}</h5></li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
     <li class="breadcrumb-item">{{ 'COMMON.PERSONAL' | translate }}</li><li class="breadcrumb-item"><a [routerLink]="base">{{ title }}</a></li>
   </ul>
   <div class="section-body"><div class="card">
-    <div class="card-header"><h4>{{ id ? 'Editar' : 'Nuevo registro' }} · {{ title }}</h4></div>
+    <div class="card-header"><h4>{{ id ? ('COMMON.EDITAR' | translate) : ('PERSONNEL.PROFILE_LIST.NUEVO_REGISTRO' | translate) }} · {{ title }}</h4></div>
     <div class="card-body">
       @if (loading) { <p role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
       @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
@@ -39,7 +39,7 @@
                 <small class="form-text text-danger">{{ errorFor('user_id') }}</small></div>
             }
           </div>
-          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">{{ saving ? ('PERSONNEL.PROFILE_FORM.GUARDANDO' | translate) : ('COMMON.GUARDAR' | translate) }}</button>
           <a class="btn btn-light ms-2" [routerLink]="id ? [base, id] : [base]">{{ 'COMMON.CANCELAR' | translate }}</a>
         </fieldset>
       </form>

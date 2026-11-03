@@ -146,7 +146,7 @@
                 @for (row of data.delivery.rows; track row.id) {
                 <tr>
                   <td><a [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a></td>
-                  <td>{{ row.customer?.name || 'Sin cliente' }}</td>
+                  <td>{{ row.customer?.name || ('SALES.ORDER_DETAIL.SIN_CLIENTE' | translate) }}</td>
                   <td>{{ row.expectedDeliveryDate ? (row.expectedDeliveryDate | date: 'dd/MM/yyyy') : '—' }}</td>
                   <td><app-order-status-badge [status]="row.status" /></td>
                 </tr>
@@ -179,7 +179,7 @@
                 @for (row of data.collection.rows; track row.id) {
                 <tr>
                   <td><a [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a></td>
-                  <td>{{ row.customer?.name || 'Sin cliente' }}</td>
+                  <td>{{ row.customer?.name || ('SALES.ORDER_DETAIL.SIN_CLIENTE' | translate) }}</td>
                   <td class="text-end">{{ row.total | money }}</td>
                   <td class="text-end">{{ row.balance | money }}</td>
                   <td><app-payment-status-badge [status]="row.paymentStatus" /></td>

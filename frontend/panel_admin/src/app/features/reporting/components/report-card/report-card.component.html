@@ -15,7 +15,7 @@
     }
     @case ('error') {
     <div class="d-flex align-items-center gap-3" data-testid="card-error">
-      <span class="text-danger">{{ error() || 'No se pudo cargar.' }}</span>
+      <span class="text-danger">{{ error() || ('REPORTING.REPORT_CARD.NO_SE_PUDO_CARGAR' | translate) }}</span>
       <button type="button" class="btn btn-light btn-sm" (click)="retry.emit()">{{ 'COMMON.REINTENTAR' | translate }}</button>
     </div>
     }

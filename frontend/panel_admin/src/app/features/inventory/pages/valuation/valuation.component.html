@@ -81,18 +81,18 @@
                 <tbody>
                   @for (line of filteredLines; track line.productId) {
                   <tr data-testid="adopted-line">
-                    <td data-label="Producto"><strong>{{ line.productName }}</strong></td>
-                    <td data-label="Cantidad conciliada">{{ amount(line.reconciledQuantity) }} {{ line.unitAbbreviation }}</td>
-                    <td data-label="Valor total">{{ line.totalValue | money }}
+                    <td [attr.data-label]="'COMMON.PRODUCTO' | translate"><strong>{{ line.productName }}</strong></td>
+                    <td [attr.data-label]="'INVENTORY.VALUATION.CANTIDAD_CONCILIADA' | translate">{{ amount(line.reconciledQuantity) }} {{ line.unitAbbreviation }}</td>
+                    <td [attr.data-label]="'INVENTORY.VALUATION.VALOR_TOTAL' | translate">{{ line.totalValue | money }}
                       @if (line.declaredZero) { <span class="badge badge-outline col-grey ms-1">{{ 'INVENTORY.VALUATION.COSTO_CERO' | translate }}</span> }
                     </td>
-                    <td data-label="Costo unitario">{{ line.unitCost | money }}</td>
-                    <td data-label="Fuente">{{ line.source }}</td>
+                    <td [attr.data-label]="'INVENTORY.VALUATION.COSTO_UNITARIO' | translate">{{ line.unitCost | money }}</td>
+                    <td [attr.data-label]="'INVENTORY.VALUATION.FUENTE' | translate">{{ line.source }}</td>
                   </tr>
                   } @empty {
                   <tr>
                     <td colspan="5" class="text-muted" data-testid="adopted-empty">
-                      {{ adoption.lines.length ? 'Sin resultados.' : 'No había existencias que valorar al momento del corte.' }}
+                      {{ adoption.lines.length ? ('INVENTORY.VALUATION.SIN_RESULTADOS' | translate) : ('INVENTORY.VALUATION.NO_HABIA_EXISTENCIAS_QUE_VALORAR' | translate) }}
                     </td>
                   </tr>
                   }
@@ -132,9 +132,9 @@
                   <tbody>
                     @for (line of proposal.lines; track line.productId) {
                     <tr data-testid="reconcile-line">
-                      <td data-label="Producto"><strong>{{ line.productName }}</strong></td>
-                      <td data-label="Cantidad conciliada">{{ quantity(line) }} {{ line.unitAbbreviation }}</td>
-                      <td data-label="Por almacén">
+                      <td [attr.data-label]="'COMMON.PRODUCTO' | translate"><strong>{{ line.productName }}</strong></td>
+                      <td [attr.data-label]="'INVENTORY.VALUATION.CANTIDAD_CONCILIADA' | translate">{{ quantity(line) }} {{ line.unitAbbreviation }}</td>
+                      <td [attr.data-label]="'INVENTORY.VALUATION.POR_ALMACEN' | translate">
                         @for (w of line.warehouses; track w.warehouseId) {
                         <div>{{ w.warehouseName }}: {{ amount(w.quantity) }}</div>
                         }
@@ -175,31 +175,31 @@
                     @for (line of proposal.lines; track line.productId; let i = $index) {
                     <tr [formGroupName]="i" [class.table-warning]="rowMessage(i) && serverLineErrors[i]"
                       data-testid="value-line">
-                      <td data-label="Producto"><strong>{{ line.productName }}</strong></td>
-                      <td data-label="Cantidad">{{ quantity(line) }} {{ line.unitAbbreviation }}</td>
-                      <td data-label="Valor total (BOB)">
+                      <td [attr.data-label]="'COMMON.PRODUCTO' | translate"><strong>{{ line.productName }}</strong></td>
+                      <td [attr.data-label]="'COMMON.CANTIDAD' | translate">{{ quantity(line) }} {{ line.unitAbbreviation }}</td>
+                      <td [attr.data-label]="'INVENTORY.VALUATION.VALOR_TOTAL_BOB' | translate">
                         <input type="text" inputmode="decimal" class="form-control" formControlName="totalValue"
-                          placeholder="0.00" [attr.aria-label]="'Valor total de ' + line.productName"
+                          placeholder="0.00" [attr.aria-label]="('INVENTORY.VALUATION.VALOR_TOTAL_DE_N' | translate: { n: line.productName })"
                           (input)="onValueEdited(i)">
                         @if (rowMessage(i)) {
                         <small class="form-text text-danger d-block" data-testid="value-error">{{ rowMessage(i) }}</small>
                         }
                       </td>
-                      <td data-label="Costo cero">
+                      <td [attr.data-label]="'INVENTORY.VALUATION.COSTO_CERO' | translate">
                         <div class="form-check">
                           <input type="checkbox" class="form-check-input" formControlName="declaredZero"
                             [id]="'zero-' + i" (change)="onZeroToggled(i)">
                           <label class="form-check-label" [for]="'zero-' + i">{{ 'INVENTORY.VALUATION.DECLARAR_COSTO_CERO' | translate }}</label>
                         </div>
                       </td>
-                      <td data-label="Fuente">
+                      <td [attr.data-label]="'INVENTORY.VALUATION.FUENTE' | translate">
                         <input type="text" class="form-control" formControlName="source" [placeholder]="defaultSource"
-                          [attr.maxlength]="sourceMaxLength" [attr.aria-label]="'Fuente de ' + line.productName">
+                          [attr.maxlength]="sourceMaxLength" [attr.aria-label]="('INVENTORY.VALUATION.FUENTE_DE_N' | translate: { n: line.productName })">
                         @if (sourceMessage(i)) {
                         <small class="form-text text-danger d-block">{{ sourceMessage(i) }}</small>
                         }
                       </td>
-                      <td data-label="Costo unitario" data-testid="unit-cost">
+                      <td [attr.data-label]="'INVENTORY.VALUATION.COSTO_UNITARIO' | translate" data-testid="unit-cost">
                         @if (isPending(i)) {
                         <span class="badge badge-outline col-orange" data-testid="pending-badge">{{ pendingLabel }}</span>
                         } @else {
@@ -252,13 +252,13 @@
                   <tbody>
                     @for (item of reviewRows; track $index) {
                     <tr data-testid="summary-line">
-                      <td data-label="Producto"><strong>{{ item.productName }}</strong></td>
-                      <td data-label="Cantidad">{{ item.quantity }} {{ item.unit }}</td>
-                      <td data-label="Valor total">{{ item.totalValue | money }}
+                      <td [attr.data-label]="'COMMON.PRODUCTO' | translate"><strong>{{ item.productName }}</strong></td>
+                      <td [attr.data-label]="'COMMON.CANTIDAD' | translate">{{ item.quantity }} {{ item.unit }}</td>
+                      <td [attr.data-label]="'INVENTORY.VALUATION.VALOR_TOTAL' | translate">{{ item.totalValue | money }}
                         @if (item.declaredZero) { <span class="badge badge-outline col-grey ms-1">{{ 'INVENTORY.VALUATION.COSTO_CERO' | translate }}</span> }
                       </td>
-                      <td data-label="Costo unitario">{{ item.unitCost | money }}</td>
-                      <td data-label="Fuente">{{ item.source }}</td>
+                      <td [attr.data-label]="'INVENTORY.VALUATION.COSTO_UNITARIO' | translate">{{ item.unitCost | money }}</td>
+                      <td [attr.data-label]="'INVENTORY.VALUATION.FUENTE' | translate">{{ item.source }}</td>
                     </tr>
                     }
                   </tbody>
@@ -268,7 +268,7 @@
                 {{ 'INVENTORY.VALUATION.ESTA_ADOPCION_NO_SE_PUEDE' | translate }}
               </p>
               <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="saving"
-                (click)="confirm()">{{ saving ? 'Registrando…' : 'Confirmar adopción' }}</button>
+                (click)="confirm()">{{ saving ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('INVENTORY.VALUATION.CONFIRMAR_ADOPCION' | translate) }}</button>
               <button type="button" class="btn btn-light ms-2" data-testid="back-to-values" [disabled]="saving"
                 (click)="backToValues()">{{ 'COMMON.VOLVER_A_EDITAR' | translate }}</button>
             </div>

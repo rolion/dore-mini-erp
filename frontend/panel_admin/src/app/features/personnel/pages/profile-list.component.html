@@ -33,12 +33,12 @@
           <ngx-datatable-column [name]="'PERSONNEL.PROFILE_LIST.ESPECIALIDADES' | translate" [sortable]="false" [minWidth]="220"><ng-template let-row="row" ngx-datatable-cell-template><span class="text-break">{{ names(row) }}</span></ng-template></ngx-datatable-column>
         }
         <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [minWidth]="110"><ng-template let-row="row" ngx-datatable-cell-template>
-          <span class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? 'Activo' : 'Inactivo' }}</span>
+          <span class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span>
         </ng-template></ngx-datatable-column>
         <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [minWidth]="170"><ng-template let-row="row" ngx-datatable-cell-template>
           <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="[base, row.id]" [title]="'COMMON.VER_DETALLE' | translate" [attr.aria-label]="'COMMON.VER_DETALLE' | translate"><i class="material-icons" aria-hidden="true">visibility</i></a>
           <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="[base, row.id, 'edit']" [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate"><i class="material-icons" aria-hidden="true">edit</i></a>
-          <button class="btn btn-tbl-edit btn-tbl-toggle h-auto" [disabled]="saving" (click)="toggle(row)" [title]="row.active ? 'Desactivar' : 'Activar'" [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'"><i class="material-icons" aria-hidden="true">{{ row.active ? 'block' : 'check_circle' }}</i></button>
+          <button class="btn btn-tbl-edit btn-tbl-toggle h-auto" [disabled]="saving" (click)="toggle(row)" [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)" [attr.aria-label]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"><i class="material-icons" aria-hidden="true">{{ row.active ? 'block' : 'check_circle' }}</i></button>
         </ng-template></ngx-datatable-column>
       </ngx-datatable>
       </div>

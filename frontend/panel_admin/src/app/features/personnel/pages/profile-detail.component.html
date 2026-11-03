@@ -2,10 +2,10 @@
   <ul class="breadcrumb breadcrumb-style">
     <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ 'COMMON.DETALLE' | translate }}</h5></li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
-    <li class="breadcrumb-item">{{ 'COMMON.PERSONAL' | translate }}</li><li class="breadcrumb-item"><a [routerLink]="base">{{ kind === 'professionals' ? 'Profesionales' : 'Especialidades' }}</a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.PERSONAL' | translate }}</li><li class="breadcrumb-item"><a [routerLink]="base">{{ kind === 'professionals' ? ('PERSONNEL.PROFILE_DETAIL.PROFESIONALES' | translate) : ('PERSONNEL.PROFILE_DETAIL.ESPECIALIDADES' | translate) }}</a></li>
   </ul>
   <div class="section-body"><div class="card">
-    <div class="card-header"><h4>{{ profile?.name || 'Detalle' }}</h4></div>
+    <div class="card-header"><h4>{{ profile?.name || ('COMMON.DETALLE' | translate) }}</h4></div>
     <div class="card-body">
       @if (loading) { <p role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
       @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
@@ -14,23 +14,23 @@
         <dl class="row m-4">
           <dt class="col-sm-3">{{ 'COMMON.NOMBRE' | translate }}</dt><dd class="col-sm-9">{{ p.name }}</dd>
           @if (kind === 'professionals') {
-            <dt class="col-sm-3">{{ 'COMMON.IDENTIFICACION' | translate }}</dt><dd class="col-sm-9">{{ p.identification || 'Sin identificación' }}</dd>
-            <dt class="col-sm-3">{{ 'COMMON.TELEFONO' | translate }}</dt><dd class="col-sm-9">{{ p.phone || 'Sin teléfono' }}</dd>
-            <dt class="col-sm-3">{{ 'COMMON.CORREO' | translate }}</dt><dd class="col-sm-9">{{ p.email || 'Sin correo' }}</dd>
-            <dt class="col-sm-3">{{ 'PERSONNEL.PROFILE_DETAIL.MATRICULA_PROFESIONAL' | translate }}</dt><dd class="col-sm-9">{{ p.registration_number || 'Sin matrícula' }}</dd>
+            <dt class="col-sm-3">{{ 'COMMON.IDENTIFICACION' | translate }}</dt><dd class="col-sm-9">{{ p.identification || ('PERSONNEL.PROFILE_DETAIL.SIN_IDENTIFICACION' | translate) }}</dd>
+            <dt class="col-sm-3">{{ 'COMMON.TELEFONO' | translate }}</dt><dd class="col-sm-9">{{ p.phone || ('PERSONNEL.PROFILE_DETAIL.SIN_TELEFONO' | translate) }}</dd>
+            <dt class="col-sm-3">{{ 'COMMON.CORREO' | translate }}</dt><dd class="col-sm-9">{{ p.email || ('PERSONNEL.PROFILE_DETAIL.SIN_CORREO' | translate) }}</dd>
+            <dt class="col-sm-3">{{ 'PERSONNEL.PROFILE_DETAIL.MATRICULA_PROFESIONAL' | translate }}</dt><dd class="col-sm-9">{{ p.registration_number || ('PERSONNEL.PROFILE_DETAIL.SIN_MATRICULA' | translate) }}</dd>
             <dt class="col-sm-3">{{ 'PERSONNEL.PROFILE_DETAIL.ESPECIALIDADES' | translate }}</dt><dd class="col-sm-9">
               @for (item of p.specialties; track item.id) { <span class="d-block">{{ item.name }}{{ item.active ? '' : ' (Inactiva)' }}</span> }
               @if (!p.specialties?.length) { {{ 'PERSONNEL.PROFILE_DETAIL.SIN_ESPECIALIDADES' | translate }} }
             </dd>
-            <dt class="col-sm-3">{{ 'PERSONNEL.PROFILE_DETAIL.USUARIO_VINCULADO' | translate }}</dt><dd class="col-sm-9">{{ p.user_id ? (userName || 'Cargando usuario…') : 'Sin usuario' }}</dd>
+            <dt class="col-sm-3">{{ 'PERSONNEL.PROFILE_DETAIL.USUARIO_VINCULADO' | translate }}</dt><dd class="col-sm-9">{{ p.user_id ? (userName || ('PERSONNEL.PROFILE_DETAIL.CARGANDO_USUARIO' | translate)) : ('PERSONNEL.PROFILE_FORM.SIN_USUARIO' | translate) }}</dd>
           }
-          <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt><dd class="col-sm-9"><span class="badge-outline" [class.col-green]="p.active" [class.col-red]="!p.active">{{ p.active ? 'Activo' : 'Inactivo' }}</span></dd>
+          <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt><dd class="col-sm-9"><span class="badge-outline" [class.col-green]="p.active" [class.col-red]="!p.active">{{ p.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></dd>
           <dt class="col-sm-3">{{ 'COMMON.CREADO' | translate }}</dt><dd class="col-sm-9">{{ 'PERSONNEL.PROFILE_DETAIL.USUARIO' | translate: { p0: (p.created_at | date:'dd/MM/yyyy HH:mm'), p1: (p.created_by) } }}</dd>
           <dt class="col-sm-3">{{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}</dt><dd class="col-sm-9">{{ 'PERSONNEL.PROFILE_DETAIL.USUARIO' | translate: { p0: (p.updated_at | date:'dd/MM/yyyy HH:mm'), p1: (p.updated_by) } }}</dd>
         </dl>
         <div class="m-4">
           <a class="btn btn-primary" [routerLink]="[base, p.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
-          <button class="btn btn-warning ms-2" [disabled]="saving" (click)="toggle()">{{ saving ? 'Procesando…' : (p.active ? 'Desactivar' : 'Activar') }}</button>
+          <button class="btn btn-warning ms-2" [disabled]="saving" (click)="toggle()">{{ saving ? ('PERSONNEL.PROFILE_DETAIL.PROCESANDO' | translate) : (p.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)) }}</button>
         </div>
       }
       <a class="btn btn-light m-4" [routerLink]="base">{{ 'COMMON.VOLVER' | translate }}</a>

@@ -16,7 +16,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ supplier?.name ?? 'Proveedor' }}</h4>
+            <h4>{{ supplier?.name ?? ('COMMON.PROVEEDOR' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (supplier; as s) {
@@ -30,7 +30,7 @@
               <dt class="col-sm-3">{{ 'COMMON.CORREO' | translate }}</dt>
               <dd class="col-sm-9">{{ s.email || '—' }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
-              <dd class="col-sm-9">{{ s.notes || 'Sin notas' }}</dd>
+              <dd class="col-sm-9">{{ s.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
               <dd class="col-sm-9">
                 @if (s.active) {
@@ -47,7 +47,7 @@
             <div class="m-4">
               <a class="btn btn-primary" [routerLink]="['/pocketbiz/purchases/suppliers', s.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
               <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">
-                {{ s.active ? 'Desactivar' : 'Activar' }}
+                {{ s.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate) }}
               </button>
               <a class="btn btn-secondary ms-2" routerLink="/pocketbiz/purchases"
                 [queryParams]="{ supplierId: s.id }">{{ 'PURCHASES.SUPPLIER_DETAIL.VER_COMPRAS' | translate }}</a>

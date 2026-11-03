@@ -45,7 +45,7 @@
   </div>
   <div class="modal-footer">
     <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || (touched && !canSubmit)">
-      {{ submitting ? 'Registrando…' : 'Registrar pago' }}
+      {{ submitting ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('COMMON.REGISTRAR_PAGO' | translate) }}
     </button>
     <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
   </div>

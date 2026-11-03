@@ -17,7 +17,7 @@
       loadingText="Buscando clientes…" typeToSearchText="Escribe para buscar" [clearable]="true">
       <ng-template ng-option-tmp let-item="item">
         <span class="fw-semibold">{{ item.name }}</span>
-        <small class="text-muted d-block">{{ item.phone || 'Teléfono no informado' }}{{ item.active ? '' : ' · Inactivo' }}</small>
+        <small class="text-muted d-block">{{ item.phone || ('DENTISTRY.PATIENT_CREATE.TELEFONO_NO_INFORMADO' | translate) }}{{ item.active ? '' : ' · Inactivo' }}</small>
       </ng-template>
     </ng-select>
     @if (searchError) {
@@ -39,6 +39,6 @@
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-light" [disabled]="saving" (click)="close()">{{ 'COMMON.CANCELAR' | translate }}</button>
-    <button type="button" class="btn btn-primary" (click)="create()" [disabled]="!selected || saving || checking || !!existingId">{{ saving ? 'Creando…' : 'Crear ficha clínica' }}</button>
+    <button type="button" class="btn btn-primary" (click)="create()" [disabled]="!selected || saving || checking || !!existingId">{{ saving ? ('DENTISTRY.PATIENT_CREATE.CREANDO' | translate) : ('DENTISTRY.PATIENT_CREATE.CREAR_FICHA_CLINICA' | translate) }}</button>
   </div>
 }

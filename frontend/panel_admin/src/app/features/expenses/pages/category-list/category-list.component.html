@@ -63,8 +63,8 @@
                       <i class="fas fa-pen"></i>
                     </button>
                     <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"
-                      [title]="row.active ? 'Desactivar' : 'Activar'"
-                      [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'">
+                      [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
+                      [attr.aria-label]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
                       <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
                     </button>
                   </span>

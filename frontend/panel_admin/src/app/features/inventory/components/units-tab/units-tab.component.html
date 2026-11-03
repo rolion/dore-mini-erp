@@ -50,10 +50,10 @@
       <tbody>
         @for (unit of rows; track unit.id) {
         <tr>
-          <td data-label="Nombre"><strong>{{ unit.name }}</strong></td>
-          <td data-label="Abreviatura">{{ unit.abbreviation }}</td>
-          <td data-label="Admite fracciones">{{ unit.allowsFractions ? 'Sí' : 'No' }}</td>
-          <td data-label="Estado">
+          <td [attr.data-label]="'COMMON.NOMBRE' | translate"><strong>{{ unit.name }}</strong></td>
+          <td [attr.data-label]="'INVENTORY.UNIT_DIALOG.ABREVIATURA' | translate">{{ unit.abbreviation }}</td>
+          <td [attr.data-label]="'INVENTORY.UNIT_DIALOG.ADMITE_FRACCIONES' | translate">{{ unit.allowsFractions ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</td>
+          <td [attr.data-label]="'COMMON.ESTADO' | translate">
             @if (unit.active) {
             <div class="badge-outline col-green">{{ 'INVENTORY.UNITS_TAB.ACTIVA' | translate }}</div>
             } @else {
@@ -66,7 +66,7 @@
               <i class="fas fa-pen"></i>
             </button>
             <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(unit)"
-              [title]="unit.active ? 'Desactivar' : 'Activar'" [attr.aria-label]="unit.active ? 'Desactivar' : 'Activar'">
+              [title]="unit.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)" [attr.aria-label]="unit.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
               <i class="fas" [class.fa-ban]="unit.active" [class.fa-check]="!unit.active"></i>
             </button>
           </td>

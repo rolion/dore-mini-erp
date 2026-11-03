@@ -16,7 +16,7 @@
     </div>
     @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light ms-2" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
     @if (!loading && !error && count === 0) {
-      <p>{{ search.value || active.value !== 'true' ? 'No hay resultados para estos filtros.' : 'Aún no hay pacientes registrados.' }}</p>
+      <p>{{ search.value || active.value !== 'true' ? ('DENTISTRY.PATIENT_LIST.NO_HAY_RESULTADOS_PARA_ESTOS' | translate) : ('DENTISTRY.PATIENT_LIST.AUN_NO_HAY_PACIENTES_REGISTRADOS' | translate) }}</p>
       <button type="button" class="btn btn-light mb-3" (click)="clear()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
     }
     <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
@@ -27,7 +27,7 @@
       </ng-template></ngx-datatable-column>
       <ngx-datatable-column [name]="'COMMON.TELEFONO' | translate" prop="customer.phone" [sortable]="false" [minWidth]="130" />
       <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [minWidth]="100"><ng-template let-row="row" ngx-datatable-cell-template>
-        <span class="badge-outline" [class.col-green]="row.active" [class.col-orange]="!row.active">{{ row.active ? 'Activo' : 'Archivado' }}</span>
+        <span class="badge-outline" [class.col-green]="row.active" [class.col-orange]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('DENTISTRY.PATIENT_DETAIL.ARCHIVADO' | translate) }}</span>
       </ng-template></ngx-datatable-column>
       <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [minWidth]="90"><ng-template let-row="row" ngx-datatable-cell-template>
         <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/dentistry/patients', row.id]" [queryParams]="filters" [title]="'DENTISTRY.PATIENT_LIST.VER_FICHA' | translate" [attr.aria-label]="'DENTISTRY.PATIENT_LIST.VER_FICHA' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>

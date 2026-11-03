@@ -15,7 +15,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ expense?.description ?? 'Gasto' }}</h4>
+            <h4>{{ expense?.description ?? ('EXPENSES.EXPENSE_DETAIL.GASTO' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (expense; as e) {
@@ -38,7 +38,7 @@
               <dt class="col-sm-3">{{ 'COMMON.PROVEEDOR' | translate }}</dt>
               <dd class="col-sm-9">{{ e.supplierName || '—' }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
-              <dd class="col-sm-9">{{ e.notes || 'Sin notas' }}</dd>
+              <dd class="col-sm-9">{{ e.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
               <dd class="col-sm-9">
                 @if (e.status === 'ACTIVE') {

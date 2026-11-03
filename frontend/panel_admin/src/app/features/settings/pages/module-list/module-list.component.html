@@ -60,7 +60,7 @@
                       <br><small class="text-danger">{{ 'SETTINGS.MODULE_LIST.REQUIERE_HABILITAR_PRIMERO' | translate: { p0: (module.missingRequires.join(', ')) } }}</small>
                       }
                     </td>
-                    <td data-label="Estado">
+                    <td [attr.data-label]="'COMMON.ESTADO' | translate">
                       @if (module.isBase) {
                       <div class="badge-outline col-blue">{{ 'SETTINGS.MODULE_LIST.BASE' | translate }}</div>
                       } @else if (module.enabled) {
@@ -69,14 +69,14 @@
                       <div class="badge-outline col-red">{{ 'SETTINGS.MODULE_LIST.DESHABILITADO' | translate }}</div>
                       }
                     </td>
-                    <td data-label="Requiere">
+                    <td [attr.data-label]="'SETTINGS.MODULE_CONFIRM_DIALOG.REQUIERE' | translate">
                       @for (link of module.requires; track link.key; let last = $last) {
                       <span [class.text-danger]="!link.enabled">{{ link.name }}</span>{{ last ? '' : ', ' }}
                       } @empty {
                       <span class="text-muted">—</span>
                       }
                     </td>
-                    <td data-label="Integra con (opcional)">
+                    <td [attr.data-label]="'SETTINGS.MODULE_LIST.INTEGRA_CON_OPCIONAL' | translate">
                       @for (link of module.optional; track link.key; let last = $last) {
                       <span [class.text-muted]="!link.enabled">{{ link.name }} ({{ link.enabled ? 'disponible' : 'no habilitado' }})</span>{{ last ? '' : ', ' }}
                       } @empty {
@@ -90,9 +90,9 @@
                       <button type="button" class="btn" [class.btn-primary]="!module.enabled"
                         [class.btn-warning]="module.enabled" [disabled]="!!blockedReason(module)"
                         [attr.title]="blockedReason(module) || null"
-                        [attr.aria-label]="(module.enabled ? 'Deshabilitar ' : 'Habilitar ') + module.name + (blockedReason(module) ? '. ' + blockedReason(module) : '')"
+                        [attr.aria-label]="(module.enabled ? ('SETTINGS.MODULE_LIST.DESHABILITAR_2' | translate) : ('SETTINGS.MODULE_LIST.HABILITAR_2' | translate)) + module.name + (blockedReason(module) ? '. ' + blockedReason(module) : '')"
                         (click)="open(module)">
-                        {{ module.enabled ? 'Deshabilitar' : 'Habilitar' }}
+                        {{ module.enabled ? ('SETTINGS.MODULE_LIST.DESHABILITAR' | translate) : ('SETTINGS.MODULE_LIST.HABILITAR' | translate) }}
                       </button>
                       @if (module.enabled && blockedReason(module)) {
                       <br><small class="text-danger">{{ blockedReason(module) }}</small>

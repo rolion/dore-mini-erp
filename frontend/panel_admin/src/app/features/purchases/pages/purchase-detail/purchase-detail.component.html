@@ -17,7 +17,7 @@
         <div class="card">
           <div class="card-header">
             <h4>
-              {{ purchase ? 'Compra ' + purchase.reference : 'Compra' }}
+              {{ purchase ? ('PURCHASES.PURCHASE_DETAIL.COMPRA_N' | translate: { n: purchase.reference }) : ('COMMON.COMPRA' | translate) }}
               @if (purchase; as p) {
               <span class="badge-outline d-inline-block ms-2" [class]="statusClass(p.status)" data-testid="status-badge">{{ statusLabels[p.status] }}</span>
               }
@@ -73,7 +73,7 @@
               <dt class="col-sm-3">{{ 'COMMON.FECHA_DE_COMPRA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.purchaseDate | date: 'dd/MM/yyyy' }}</dd>
               <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.REFERENCIA_EXTERNA' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.externalReference || 'Sin referencia' }}</dd>
+              <dd class="col-sm-9">{{ p.externalReference || ('PURCHASES.PURCHASE_DETAIL.SIN_REFERENCIA' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="status">{{ statusLabels[p.status] }}</dd>
               <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.ESTADO_DE_RECEPCION' | translate }}</dt>
@@ -91,7 +91,7 @@
               <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.MONEDA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.currency }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.notes || 'Sin notas' }}</dd>
+              <dd class="col-sm-9">{{ p.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.CREADA' | translate }}</dt>
               <dd class="col-sm-9">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
               <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.ACTUALIZADA' | translate }}</dt>
@@ -156,7 +156,7 @@
               }
               @if (can('confirm')) {
               <button type="button" class="btn btn-success ms-2" data-testid="confirm" [disabled]="busy"
-                (click)="confirm()">{{ busy ? 'Procesando…' : 'Confirmar' }}</button>
+                (click)="confirm()">{{ busy ? ('PERSONNEL.PROFILE_DETAIL.PROCESANDO' | translate) : ('SETTINGS.MODULE_CONFIRM_DIALOG.CONFIRMAR' | translate) }}</button>
               }
               @if (can('receive')) {
               <a class="btn btn-primary ms-2" data-testid="receive" [routerLink]="['/pocketbiz/purchases', p.id, 'receipts', 'new']">{{ 'COMMON.REGISTRAR_RECEPCION' | translate }}</a>
@@ -174,7 +174,7 @@
                 {{ 'PURCHASES.PURCHASE_DETAIL.CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS' | translate }}
               </small>
               @if (!can('pay')) {
-              <small class="form-text text-muted d-block" data-testid="no-balance">{{ p.paymentStatus === 'paid' ? 'Compra pagada por completo.' : 'Sin saldo por pagar.' }}</small>
+              <small class="form-text text-muted d-block" data-testid="no-balance">{{ p.paymentStatus === 'paid' ? ('PURCHASES.PURCHASE_DETAIL.COMPRA_PAGADA_POR_COMPLETO' | translate) : ('PURCHASES.PURCHASE_DETAIL.SIN_SALDO_POR_PAGAR' | translate) }}</small>
               }
               @if (!can('receive')) {
               <small class="form-text text-muted d-block" data-testid="fully-received">{{ 'PURCHASES.PURCHASE_DETAIL.COMPRA_RECIBIDA_POR_COMPLETO' | translate }}</small>

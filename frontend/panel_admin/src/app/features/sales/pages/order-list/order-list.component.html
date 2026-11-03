@@ -159,8 +159,8 @@
             </ngx-datatable>
             <p class="m-2 text-muted" data-testid="ordering-help">
               {{ ordering === 'expected'
-              ? 'Ordenado por entrega prevista, más próximas primero.'
-              : 'Ordenado por fecha de pedido, más recientes primero.' }}
+              ? ('SALES.ORDER_LIST.ORDENADO_POR_ENTREGA_PREVISTA_MAS' | translate)
+              : ('SALES.ORDER_LIST.ORDENADO_POR_FECHA_DE_PEDIDO' | translate) }}
             </p>
           </div>
         </div>

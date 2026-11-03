@@ -53,16 +53,16 @@
       <tbody>
         @for (warehouse of rows; track warehouse.id) {
         <tr>
-          <td data-label="Nombre"><strong>{{ warehouse.name }}</strong></td>
-          <td data-label="Descripción">{{ warehouse.description || '—' }}</td>
-          <td data-label="Estado">
+          <td [attr.data-label]="'COMMON.NOMBRE' | translate"><strong>{{ warehouse.name }}</strong></td>
+          <td [attr.data-label]="'COMMON.DESCRIPCION' | translate">{{ warehouse.description || '—' }}</td>
+          <td [attr.data-label]="'COMMON.ESTADO' | translate">
             @if (warehouse.active) {
             <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
             } @else {
             <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
             }
           </td>
-          <td data-label="Predeterminado">
+          <td [attr.data-label]="'INVENTORY.WAREHOUSE_DIALOG.PREDETERMINADO' | translate">
             @if (warehouse.isDefault) {
             <div class="badge-outline col-purple">{{ 'INVENTORY.WAREHOUSES_TAB.PREDETERMINADO' | translate }}</div>
             } @else {
@@ -81,8 +81,8 @@
             </button>
             }
             <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(warehouse)"
-              [title]="warehouse.active ? 'Desactivar' : 'Activar'"
-              [attr.aria-label]="warehouse.active ? 'Desactivar' : 'Activar'">
+              [title]="warehouse.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
+              [attr.aria-label]="warehouse.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
               <i class="fas" [class.fa-ban]="warehouse.active" [class.fa-check]="!warehouse.active"></i>
             </button>
           </td>

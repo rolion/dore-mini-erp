@@ -46,7 +46,7 @@
   </div>
   } @else if (!receipts.length) {
   <p class="m-4 text-muted" data-testid="empty">
-    {{ isConfirmed ? 'Aún no hay recepciones registradas para esta compra.' : 'Las recepciones se registran cuando la compra está confirmada.' }}
+    {{ isConfirmed ? ('PURCHASES.PURCHASE_RECEIPTS_TAB.AUN_NO_HAY_RECEPCIONES_REGISTRADAS' | translate) : ('PURCHASES.PURCHASE_RECEIPTS_TAB.LAS_RECEPCIONES_SE_REGISTRAN_CUANDO' | translate) }}
   </p>
   } @else {
   <div class="table-responsive m-4 mt-2">

@@ -1,6 +1,6 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">{{ isEdit ? 'Editar categoría' : 'Nueva categoría' }}</h4>
+    <h4 class="modal-title">{{ isEdit ? ('EXPENSES.CATEGORY_DIALOG.EDITAR_CATEGORIA' | translate) : ('EXPENSES.CATEGORY_LIST.NUEVA_CATEGORIA' | translate) }}</h4>
     <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
@@ -11,7 +11,7 @@
       @if (hasError()) {
       <small class="form-text text-danger">
         {{ serverError || (form.controls.name.hasError('maxlength') ?
-        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+        ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_NO_PUEDE_SUPERAR' | translate: { n: nameMaxLength }) : ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_ES_OBLIGATORIO' | translate)) }}
       </small>
       }
     </div>

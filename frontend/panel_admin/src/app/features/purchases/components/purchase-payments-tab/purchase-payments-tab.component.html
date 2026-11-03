@@ -31,7 +31,7 @@
   </div>
   } @else if (!payments.length) {
   <p class="m-4 text-muted" data-testid="empty">
-    {{ isConfirmed ? 'Aún no hay pagos registrados para esta compra.' : 'Los pagos se registran cuando la compra está confirmada.' }}
+    {{ isConfirmed ? ('PURCHASES.PURCHASE_PAYMENTS_TAB.AUN_NO_HAY_PAGOS_REGISTRADOS' | translate) : ('PURCHASES.PURCHASE_PAYMENTS_TAB.LOS_PAGOS_SE_REGISTRAN_CUANDO' | translate) }}
   </p>
   } @else {
   <div class="table-responsive m-4 mt-2">

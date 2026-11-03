@@ -58,7 +58,7 @@
                     [checked]="isOn(setting)" (change)="toggle(setting, $event)"
                     [attr.aria-describedby]="'help-' + setting.key">
                   <label class="form-check-label" [for]="'setting-' + setting.key">
-                    {{ isOn(setting) ? 'Activado' : 'Desactivado' }}
+                    {{ isOn(setting) ? ('SETTINGS.MODULE_SETTINGS.ACTIVADO' | translate) : ('SETTINGS.MODULE_SETTINGS.DESACTIVADO' | translate) }}
                   </label>
                 </div>
                 } @else {

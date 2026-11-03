@@ -47,11 +47,11 @@
     <tbody>
       @for (row of rows; track row.id) {
       <tr>
-        <td data-label="Fecha y hora">{{ row.changedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-        <td data-label="Usuario">{{ row.changedBy }}</td>
-        <td data-label="Ajuste">{{ row.settingLabel }}</td>
-        <td data-label="Valor anterior">{{ row.oldValue }}</td>
-        <td data-label="Valor nuevo">{{ row.newValue }}</td>
+        <td [attr.data-label]="'COMMON.FECHA_Y_HORA' | translate">{{ row.changedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+        <td [attr.data-label]="'COMMON.USUARIO' | translate">{{ row.changedBy }}</td>
+        <td [attr.data-label]="'SETTINGS.SETTINGS_HISTORY.AJUSTE' | translate">{{ row.settingLabel }}</td>
+        <td [attr.data-label]="'SETTINGS.SETTINGS_HISTORY.VALOR_ANTERIOR' | translate">{{ row.oldValue }}</td>
+        <td [attr.data-label]="'SETTINGS.SETTINGS_HISTORY.VALOR_NUEVO' | translate">{{ row.newValue }}</td>
       </tr>
       }
     </tbody>

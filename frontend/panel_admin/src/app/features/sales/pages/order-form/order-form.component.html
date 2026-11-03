@@ -1,21 +1,21 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar pedido' : 'Nuevo pedido' }}</h5>
+      <h5 class="page-title m-b-0">{{ isEdit ? ('SALES.ORDER_FORM.EDITAR_PEDIDO' | translate) : ('SALES.ORDER_LIST.NUEVO_PEDIDO' | translate) }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/sales/orders">{{ 'COMMON.PEDIDOS' | translate }}</a></li>
-    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+    <li class="breadcrumb-item">{{ isEdit ? ('COMMON.EDITAR' | translate) : ('CUSTOMERS.CUSTOMER_FORM.NUEVO' | translate) }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ isEdit ? 'Editar pedido' : 'Nuevo pedido' }}</h4>
+            <h4>{{ isEdit ? ('SALES.ORDER_FORM.EDITAR_PEDIDO' | translate) : ('SALES.ORDER_LIST.NUEVO_PEDIDO' | translate) }}</h4>
           </div>
           <div class="card-body">
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -50,7 +50,7 @@
                   </select>
                   @if (hasError('salesChannel')) {
                   <small class="form-text text-danger" data-testid="channel-error">
-                    {{ serverErrors.salesChannel || 'El canal de venta es obligatorio.' }}
+                    {{ serverErrors.salesChannel || ('SALES.ORDER_FORM.EL_CANAL_DE_VENTA_ES' | translate) }}
                   </small>
                   }
                 </div>
@@ -61,7 +61,7 @@
                   <input id="order-date" type="date" class="form-control" formControlName="orderDate">
                   @if (hasError('orderDate')) {
                   <small class="form-text text-danger" data-testid="order-date-error">
-                    {{ serverErrors.orderDate || 'La fecha del pedido es obligatoria.' }}
+                    {{ serverErrors.orderDate || ('SALES.ORDER_FORM.LA_FECHA_DEL_PEDIDO_ES' | translate) }}
                   </small>
                   }
                 </div>
@@ -83,7 +83,7 @@
                     formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
                   @if (hasError('notes')) {
                   <small class="form-text text-danger" data-testid="notes-error">
-                    {{ serverErrors.notes || 'Las notas no pueden superar ' + notesMaxLength + ' caracteres.' }}
+                    {{ serverErrors.notes || ('CUSTOMERS.CUSTOMER_FORM.LAS_NOTAS_NO_PUEDEN_SUPERAR' | translate: { n: notesMaxLength }) }}
                   </small>
                   }
                 </div>

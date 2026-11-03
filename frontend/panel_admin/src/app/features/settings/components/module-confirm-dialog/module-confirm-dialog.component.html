@@ -1,5 +1,5 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ isEnable ? 'Habilitar módulo' : 'Deshabilitar módulo' }}</h4>
+  <h4 class="modal-title">{{ isEnable ? ('SETTINGS.MODULE_CONFIRM_DIALOG.HABILITAR_MODULO' | translate) : ('SETTINGS.MODULE_CONFIRM_DIALOG.DESHABILITAR_MODULO' | translate) }}</h4>
   <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
@@ -9,13 +9,13 @@
     <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.EMPRESA' | translate }}</dt>
     <dd class="col-sm-8">{{ companyName }}</dd>
     <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.REQUIERE' | translate }}</dt>
-    <dd class="col-sm-8">{{ requiredNames.length ? requiredNames.join(', ') : 'Sin dependencias' }}</dd>
+    <dd class="col-sm-8">{{ requiredNames.length ? requiredNames.join(', ') : ('SETTINGS.MODULE_CONFIRM_DIALOG.SIN_DEPENDENCIAS' | translate) }}</dd>
     <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.SE_VERAN_AFECTADOS' | translate }}</dt>
     <dd class="col-sm-8">
       @if (isEnable) {
       {{ 'SETTINGS.MODULE_CONFIRM_DIALOG.NINGUNO' | translate }}
       } @else {
-      {{ affected.length ? affected.join(', ') : 'Ninguno' }}
+      {{ affected.length ? affected.join(', ') : ('INVENTORY.MOVEMENT_DETAIL.NINGUNO' | translate) }}
       }
     </dd>
   </dl>

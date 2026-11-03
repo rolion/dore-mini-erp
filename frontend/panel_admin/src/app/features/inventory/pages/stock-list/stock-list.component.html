@@ -122,21 +122,21 @@
                 <tbody>
                   @for (row of rows; track row.productId + row.warehouseId) {
                   <tr>
-                    <td data-label="Producto">
+                    <td [attr.data-label]="'COMMON.PRODUCTO' | translate">
                       <a class="fw-bold" [routerLink]="detailLink(row)" data-testid="detail-link">{{ row.productName }}</a>
                       @if (!row.productActive) {
                       <div class="badge-outline col-grey d-inline-block ms-1">{{ 'COMMON.INACTIVO' | translate }}</div>
                       }
                     </td>
-                    <td data-label="Almacén">{{ row.warehouseName }}</td>
-                    <td data-label="Clasificación" data-testid="category">
+                    <td [attr.data-label]="'COMMON.ALMACEN' | translate">{{ row.warehouseName }}</td>
+                    <td [attr.data-label]="'INVENTORY.STOCK_DETAIL.CLASIFICACION' | translate" data-testid="category">
                       @if (row.category) {
                       {{ categoryText(row) }}
                       } @else {
                       <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_LIST.SIN_CLASIFICAR' | translate }}</div>
                       }
                     </td>
-                    <td data-label="Usos" data-testid="uses">
+                    <td [attr.data-label]="'INVENTORY.STOCK_DETAIL.USOS' | translate" data-testid="uses">
                       @if (row.canBuy) {
                       <div class="badge-outline col-blue d-inline-block">{{ 'INVENTORY.STOCK_LIST.COMPRABLE' | translate }}</div>
                       }
@@ -147,14 +147,14 @@
                       <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_LIST.SIN_USOS' | translate }}</div>
                       }
                     </td>
-                    <td data-label="Unidad base">{{ row.unit?.abbreviation ?? '—' }}</td>
-                    <td data-label="Existencia" class="text-end" data-testid="quantity">
+                    <td [attr.data-label]="'COMMON.UNIDAD_BASE' | translate">{{ row.unit?.abbreviation ?? '—' }}</td>
+                    <td [attr.data-label]="'INVENTORY.STOCK_LIST.EXISTENCIA' | translate" class="text-end" data-testid="quantity">
                       <span [class.text-danger]="row.balanceState === 'negative'">{{ display(row.quantity) }}</span>
                       @if (row.balanceState === 'negative') {
                       <div class="badge-outline col-red d-inline-block ms-1" data-testid="negative-badge">{{ 'INVENTORY.STOCK_LIST.NEGATIVO' | translate }}</div>
                       }
                     </td>
-                    <td data-label="Acciones">
+                    <td [attr.data-label]="'COMMON.ACCIONES' | translate">
                       <button type="button" class="btn btn-light btn-sm" data-testid="open-movements"
                         (click)="openMovements(row)">{{ 'COMMON.MOVIMIENTOS' | translate }}</button>
                       <a class="btn btn-light btn-sm ms-1" data-testid="adjust-stock"

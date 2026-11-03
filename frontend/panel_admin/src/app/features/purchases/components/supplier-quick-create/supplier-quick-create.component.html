@@ -11,7 +11,7 @@
       @if (hasError('name')) {
       <small class="form-text text-danger" data-testid="name-error">
         {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
-        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+        ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_NO_PUEDE_SUPERAR' | translate: { n: nameMaxLength }) : ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_ES_OBLIGATORIO' | translate)) }}
       </small>
       }
     </div>
@@ -21,7 +21,7 @@
         formControlName="taxId" [attr.maxlength]="taxIdMaxLength">
       @if (hasError('taxId')) {
       <small class="form-text text-danger" data-testid="tax-id-error">
-        {{ serverErrors.taxId || 'La identificación no puede superar ' + taxIdMaxLength + ' caracteres.' }}
+        {{ serverErrors.taxId || ('PURCHASES.SUPPLIER_QUICK_CREATE.LA_IDENTIFICACION_NO_PUEDE_SUPERAR' | translate: { n: taxIdMaxLength }) }}
       </small>
       }
     </div>
@@ -31,7 +31,7 @@
         [attr.maxlength]="phoneMaxLength">
       @if (hasError('phone')) {
       <small class="form-text text-danger" data-testid="phone-error">
-        {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
+        {{ serverErrors.phone || ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_TELEFONO_NO_PUEDE_SUPERAR' | translate: { n: phoneMaxLength }) }}
       </small>
       }
     </div>
@@ -41,7 +41,7 @@
         [attr.maxlength]="emailMaxLength">
       @if (hasError('email')) {
       <small class="form-text text-danger" data-testid="email-error">
-        {{ serverErrors.email || 'Ingresa un correo válido.' }}
+        {{ serverErrors.email || ('CUSTOMERS.CUSTOMER_FORM.INGRESA_UN_CORREO_VALIDO' | translate) }}
       </small>
       }
     </div>

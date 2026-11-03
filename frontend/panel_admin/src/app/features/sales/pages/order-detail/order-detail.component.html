@@ -115,7 +115,7 @@
           <dt class="col-sm-3">{{ 'SALES.ORDER_DETAIL.FECHA_DEL_PEDIDO' | translate }}</dt>
           <dd class="col-sm-9">{{ o.orderDate | date: 'dd/MM/yyyy' }}</dd>
           <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
-          <dd class="col-sm-9">{{ o.notes || 'Sin notas' }}</dd>
+          <dd class="col-sm-9">{{ o.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
           <dt class="col-sm-3">{{ 'COMMON.CREADO' | translate }}</dt>
           <dd class="col-sm-9">{{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
           <dt class="col-sm-3">{{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}</dt>

@@ -293,15 +293,27 @@
     "CUSTOMER_QUICK_CREATE": {
       "NUEVO_CLIENTE": "Novo cliente",
       "NOMBRE_DEL_CLIENTE": "Nome do cliente",
-      "OPCIONAL_SE_GUARDARA_NORMALIZADO_P": "Opcional. Será salvo normalizado, por ex. +591 7xxxxxxx."
+      "OPCIONAL_SE_GUARDARA_NORMALIZADO_P": "Opcional. Será salvo normalizado, por ex. +591 7xxxxxxx.",
+      "EL_NOMBRE_ES_OBLIGATORIO": "O nome é obrigatório.",
+      "VOLVER_A_LA_BUSQUEDA": "Voltar à busca",
+      "CREAR_Y_SELECCIONAR_CLIENTE": "Criar e selecionar cliente",
+      "EL_NOMBRE_NO_PUEDE_SUPERAR": "O nome não pode ultrapassar {{n}} caracteres.",
+      "EL_TELEFONO_NO_PUEDE_SUPERAR": "O telefone não pode ultrapassar {{n}} caracteres."
     },
     "CUSTOMER_DETAIL": {
       "PERFIL_DEL_CLIENTE": "Perfil do cliente",
-      "PERFIL": "Perfil"
+      "PERFIL": "Perfil",
+      "SIN_NOTAS": "Sem observações",
+      "DESACTIVAR": "Desativar",
+      "ACTIVAR": "Ativar"
     },
     "CUSTOMER_FORM": {
       "NOMBRE_DEL_CLIENTE": "Nome do cliente",
-      "SE_GUARDARA_NORMALIZADO_P_EJ": "Será salvo normalizado, por ex. +591 7xxxxxxx."
+      "SE_GUARDARA_NORMALIZADO_P_EJ": "Será salvo normalizado, por ex. +591 7xxxxxxx.",
+      "EDITAR_CLIENTE": "Editar cliente",
+      "NUEVO": "Novo",
+      "INGRESA_UN_CORREO_VALIDO": "Informe um e-mail válido.",
+      "LAS_NOTAS_NO_PUEDEN_SUPERAR": "As observações não podem ultrapassar {{n}} caracteres."
     },
     "CUSTOMER_LIST": {
       "CLIENTES": "Clientes",
@@ -318,7 +330,10 @@
       "COMPROBANDO_FICHA": "Verificando ficha…",
       "EL_CLIENTE_YA_TIENE_UNA": "O cliente já tem uma ficha.",
       "ABRIR_FICHA_EXISTENTE": "Abrir ficha existente",
-      "CREAR_CLIENTE_NUEVO": "Criar novo cliente"
+      "CREAR_CLIENTE_NUEVO": "Criar novo cliente",
+      "TELEFONO_NO_INFORMADO": "Telefone não informado",
+      "CREANDO": "Criando…",
+      "CREAR_FICHA_CLINICA": "Criar ficha clínica"
     },
     "PATIENT_DETAIL": {
       "CARGANDO_FICHA": "Carregando ficha…",
@@ -339,7 +354,13 @@
       "ANTECEDENTES_CLINICOS": "Antecedentes clínicos",
       "EDITAR_ANTECEDENTES": "Editar antecedentes",
       "NO_INFORMADO": "Não informado",
-      "GUARDAR_ANTECEDENTES": "Salvar antecedentes"
+      "GUARDAR_ANTECEDENTES": "Salvar antecedentes",
+      "ARCHIVADO": "Arquivado",
+      "ARCHIVAR_PERFIL": "Arquivar perfil",
+      "REACTIVAR_PERFIL": "Reativar perfil",
+      "LA_FECHA_NO_PUEDE_SER": "A data não pode ser futura.",
+      "INDICA_EL_NOMBRE_DEL_RESPONSABLE": "Informe o nome do responsável.",
+      "INDICA_EL_TELEFONO_DEL_RESPONSABLE": "Informe o telefone do responsável."
     },
     "PATIENT_LIST": {
       "PACIENTES": "Pacientes",
@@ -349,12 +370,15 @@
       "ARCHIVADOS": "Arquivados",
       "NUEVO_PACIENTE": "Novo paciente",
       "VER_FICHA": "Ver ficha",
-      "PACIENTE": "Paciente"
+      "PACIENTE": "Paciente",
+      "NO_HAY_RESULTADOS_PARA_ESTOS": "Nenhum resultado para estes filtros.",
+      "AUN_NO_HAY_PACIENTES_REGISTRADOS": "Ainda não há pacientes cadastrados."
     }
   },
   "EXPENSES": {
     "CATEGORY_DIALOG": {
-      "NOMBRE_DE_LA_CATEGORIA": "Nome da categoria"
+      "NOMBRE_DE_LA_CATEGORIA": "Nome da categoria",
+      "EDITAR_CATEGORIA": "Editar categoria"
     },
     "CATEGORY_LIST": {
       "CATEGORIAS_DE_GASTO": "Categorias de despesa",
@@ -369,13 +393,24 @@
       "DETALLE_DEL_GASTO": "Detalhes da despesa",
       "INACTIVA": "(inativa)",
       "EL": "em {{p0}}",
-      "ANULAR_GASTO": "Anular despesa"
+      "ANULAR_GASTO": "Anular despesa",
+      "GASTO": "Despesa"
     },
     "EXPENSE_FORM": {
       "IR_A_CATEGORIAS": "Ir para Categorias",
       "QUE_SE_COMPRO_O_PAGO": "O que foi comprado ou pago",
       "ELIGE_UNA_CATEGORIA": "Escolha uma categoria",
-      "OPCIONAL": "Opcional"
+      "OPCIONAL": "Opcional",
+      "EDITAR_GASTO": "Editar despesa",
+      "LA_DESCRIPCION_ES_OBLIGATORIA": "A descrição é obrigatória.",
+      "EL_MONTO_ES_OBLIGATORIO": "O valor é obrigatório.",
+      "EL_MONTO_ADMITE_COMO_MAXIMO": "O valor admite no máximo 2 casas decimais.",
+      "EL_MONTO_DEBE_SER_MAYOR": "O valor deve ser maior que zero.",
+      "LA_FECHA_ES_OBLIGATORIA": "A data é obrigatória.",
+      "ELIGE_UN_METODO_DE_PAGO": "Escolha uma forma de pagamento.",
+      "LA_CATEGORIA_ES_OBLIGATORIA": "A categoria é obrigatória.",
+      "LA_DESCRIPCION_NO_PUEDE_SUPERAR": "A descrição não pode ultrapassar {{n}} caracteres.",
+      "EL_PROVEEDOR_NO_PUEDE_SUPERAR": "O fornecedor não pode ultrapassar {{n}} caracteres."
     },
     "EXPENSE_LIST": {
       "NUEVO_GASTO": "Nova despesa",
@@ -401,14 +436,18 @@
     },
     "MOVEMENT_REVERSE_DIALOG": {
       "REVERTIR_MOVIMIENTO": "Estornar movimentação",
-      "EL_MOVIMIENTO_ORIGINAL_SE_CONSERVA": "{{p0}} A movimentação original é mantida como \"Estornada\" e não poderá ser estornada novamente."
+      "EL_MOVIMIENTO_ORIGINAL_SE_CONSERVA": "{{p0}} A movimentação original é mantida como \"Estornada\" e não poderá ser estornada novamente.",
+      "REVIRTIENDO": "Estornando…"
     },
     "UNIT_DIALOG": {
       "ESTA_UNIDAD_YA_ESTA_ASIGNADA": "Esta unidade já está atribuída a produtos; só pode ser ativada ou desativada.",
       "KILOGRAMO": "Quilograma",
       "ABREVIATURA": "Abreviatura",
       "ADMITE_FRACCIONES": "Aceita frações",
-      "PERMITE_CANTIDADES_CON_DECIMALES_POR": "Permite quantidades decimais, por exemplo 1,5 kg."
+      "PERMITE_CANTIDADES_CON_DECIMALES_POR": "Permite quantidades decimais, por exemplo 1,5 kg.",
+      "EDITAR_UNIDAD": "Editar unidade",
+      "LA_ABREVIATURA_ES_OBLIGATORIA": "A abreviatura é obrigatória.",
+      "LA_ABREVIATURA_NO_PUEDE_SUPERAR": "A abreviatura não pode ultrapassar {{n}} caracteres."
     },
     "UNITS_TAB": {
       "UNIDAD_BASE_DE_LOS_PRODUCTOS": "Unidade base dos produtos que controlam estoque. Sem conversões.",
@@ -426,7 +465,8 @@
       "NOMBRE_DEL_ALMACEN": "Nome do depósito",
       "PREDETERMINADO": "Padrão",
       "PARA_CAMBIAR_EL_PREDETERMINADO_DEFINE": "Para alterar o padrão, defina outro depósito como padrão.",
-      "ACTIVA_EL_ALMACEN_PARA_PODER": "Ative o depósito para poder defini-lo como padrão."
+      "ACTIVA_EL_ALMACEN_PARA_PODER": "Ative o depósito para poder defini-lo como padrão.",
+      "EDITAR_ALMACEN": "Editar depósito"
     },
     "WAREHOUSES_TAB": {
       "ALMACENES": "Depósitos",
@@ -444,7 +484,8 @@
       "MOVIMIENTO": "Movimentação",
       "VER_MOVIMIENTO": "Ver movimentação",
       "REVERTIR": "Estornar",
-      "VOLVER_A_AJUSTES": "Voltar aos ajustes"
+      "VOLVER_A_AJUSTES": "Voltar aos ajustes",
+      "AJUSTE_NO_ENCONTRADO": "Ajuste não encontrado."
     },
     "ADJUSTMENT_FORM": {
       "NUEVO_AJUSTE": "Novo ajuste",
@@ -457,7 +498,12 @@
       "REVISAR_Y_CONFIRMAR": "Revisar e confirmar",
       "SALDO_DEL_SISTEMA": "Saldo do sistema",
       "SIN_DIFERENCIA": "Sem diferença",
-      "UN_AJUSTE_CONFIRMADO_NO_SE": "Um ajuste confirmado não pode ser editado; só poderá ser estornado."
+      "UN_AJUSTE_CONFIRMADO_NO_SE": "Um ajuste confirmado não pode ser editado; só poderá ser estornado.",
+      "REVISAR_Y_CONFIRMAR_AJUSTE": "Revisar e confirmar ajuste",
+      "ENTRADA_DE_AJUSTE": "Entrada de ajuste",
+      "SALIDA_DE_AJUSTE": "Saída de ajuste",
+      "REGISTRANDO": "Registrando…",
+      "CONFIRMAR_AJUSTE": "Confirmar ajuste"
     },
     "ADJUSTMENT_LIST": {
       "CORRECCIONES_DEL_SALDO_TRAS_UN": "Correções do saldo após uma contagem, com o motivo.",
@@ -465,7 +511,9 @@
       "AJUSTES_DE_EXISTENCIAS_CONFIRMADOS": "Ajustes de estoque confirmados",
       "SISTEMA": "Sistema",
       "CONTADO": "Contado",
-      "PAGINAS_DE_AJUSTES": "Páginas de ajustes"
+      "PAGINAS_DE_AJUSTES": "Páginas de ajustes",
+      "SIN_AJUSTES_PARA_ESOS_FILTROS": "Sem ajustes para esses filtros.",
+      "AUN_NO_HAY_AJUSTES_DE": "Ainda não há ajustes de estoque."
     },
     "INVENTORY_CONFIGURATION": {
       "ALMACENES_Y_UNIDADES": "Depósitos e unidades",
@@ -490,7 +538,8 @@
       "CONTRAMOVIMIENTO": "Contramovimentação",
       "CONTRAMOVIMIENTO_2": "Contramovimentação{{p0}}",
       "REVERTIR": "Estornar",
-      "VOLVER_A_MOVIMIENTOS": "Voltar às movimentações"
+      "VOLVER_A_MOVIMIENTOS": "Voltar às movimentações",
+      "MOVIMIENTO_NO_ENCONTRADO": "Movimentação não encontrada."
     },
     "MOVEMENT_LIST": {
       "INVENTARIO_MOVIMIENTOS": "Estoque › Movimentações",
@@ -563,7 +612,12 @@
       "PRODUCTOS_Y_CANTIDADES_QUE_INGRESARAN": "Produtos e quantidades que entrarão",
       "CANTIDAD_QUE_INGRESA": "Quantidade que entra",
       "LAS_LINEAS_CON_CANTIDAD_0": "As linhas com quantidade 0 não registram movimentação: esse produto poderá ser aberto mais tarde.",
-      "ESTA_CARGA_NO_SE_PUEDE": "Esta carga não pode ser editada depois; as correções são feitas com ajustes."
+      "ESTA_CARGA_NO_SE_PUEDE": "Esta carga não pode ser editada depois; as correções são feitas com ajustes.",
+      "REVISAR_APERTURA": "Revisar abertura",
+      "CONFIRMAR_APERTURA": "Confirmar abertura",
+      "PRODUCTO_DE_LA_LINEA_N": "Produto da linha {{n}}",
+      "CANTIDAD_INICIAL_DE_LA_LINEA": "Quantidade inicial da linha {{n}}",
+      "QUITAR_LA_LINEA_N": "Remover a linha {{n}}"
     },
     "VALUATION": {
       "VALORACION": "Valorização",
@@ -600,7 +654,12 @@
       "REVISAR_RESUMEN": "Revisar resumo",
       "AL_CONFIRMAR_HOY": "Ao confirmar (hoje)",
       "RESUMEN_DE_LA_VALORACION": "Resumo da valorização",
-      "ESTA_ADOPCION_NO_SE_PUEDE": "Esta adoção não pode ser editada depois e o passado não é recalculado automaticamente."
+      "ESTA_ADOPCION_NO_SE_PUEDE": "Esta adoção não pode ser editada depois e o passado não é recalculado automaticamente.",
+      "SIN_RESULTADOS": "Sem resultados.",
+      "NO_HABIA_EXISTENCIAS_QUE_VALORAR": "Não havia estoque para valorizar no momento do corte.",
+      "CONFIRMAR_ADOPCION": "Confirmar adoção",
+      "VALOR_TOTAL_DE_N": "Valor total de {{n}}",
+      "FUENTE_DE_N": "Fonte de {{n}}"
     }
   },
   "LANDING": {
@@ -656,7 +715,14 @@
       "ESPECIALIDADES": "Especialidades",
       "SIN_ESPECIALIDADES": "Sem especialidades",
       "USUARIO_VINCULADO": "Usuário vinculado",
-      "USUARIO": "{{p0}} · Usuário #{{p1}}"
+      "USUARIO": "{{p0}} · Usuário #{{p1}}",
+      "PROFESIONALES": "Profissionais",
+      "SIN_IDENTIFICACION": "Sem identificação",
+      "SIN_TELEFONO": "Sem telefone",
+      "SIN_CORREO": "Sem e-mail",
+      "SIN_MATRICULA": "Sem registro",
+      "CARGANDO_USUARIO": "Carregando usuário…",
+      "PROCESANDO": "Processando…"
     },
     "PROFILE_FORM": {
       "REINTENTAR_OPCIONES": "Tentar as opções novamente",
@@ -668,7 +734,8 @@
       "SELECCIONAR_POR_NOMBRE": "Selecionar por nome",
       "USUARIO_VINCULADO_OPCIONAL": "Usuário vinculado (opcional)",
       "SIN_USUARIO": "Sem usuário",
-      "PUEDES_GUARDAR_SIN_USUARIO_QUITAR": "Você pode salvar sem usuário. Remover a seleção desvincula a conta e mantém suas permissões."
+      "PUEDES_GUARDAR_SIN_USUARIO_QUITAR": "Você pode salvar sem usuário. Remover a seleção desvincula a conta e mantém suas permissões.",
+      "GUARDANDO": "Salvando…"
     },
     "PROFILE_LIST": {
       "NUEVO_REGISTRO": "Novo registro",
@@ -684,7 +751,10 @@
       "SE_COMPRA": "Comprado",
       "SE_VENDE": "Vendido",
       "PRECIO_DE_VENTA": "Preço de venda",
-      "CONTROLA_STOCK": "Controla estoque"
+      "CONTROLA_STOCK": "Controla estoque",
+      "SIN_DESCRIPCION": "Sem descrição",
+      "NO_SE_VENDE": "Não é vendido",
+      "SIN_UNIDAD": "Sem unidade"
     },
     "PRODUCT_FORM": {
       "NOMBRE_DEL_PRODUCTO": "Nome do produto",
@@ -701,7 +771,11 @@
       "ACTIVALO_PARA_PRODUCTOS_CON_EXISTENCIAS": "Ative para produtos com estoque; serviços e produtos sem estoque são vendidos sem exigir estoque.",
       "SELECCIONA_UNA_UNIDAD": "Selecione uma unidade",
       "PRIMERO_CREA_UNA_UNIDAD_EN": "Primeiro crie uma unidade em",
-      "INVENTARIO_ALMACENES_Y_UNIDADES": "Estoque › Depósitos e unidades"
+      "INVENTARIO_ALMACENES_Y_UNIDADES": "Estoque › Depósitos e unidades",
+      "EDITAR_PRODUCTO": "Editar produto",
+      "EL_PRECIO_DE_VENTA_ES": "O preço de venda é obrigatório.",
+      "INGRESA_UN_PRECIO_VALIDO_MAYOR": "Informe um preço válido, maior ou igual a 0, com até 2 casas decimais.",
+      "LA_UNIDAD_BASE_ES_OBLIGATORIA": "A unidade base é obrigatória quando você controla estoque."
     },
     "PRODUCT_LIST": {
       "FILTRAR_POR_USO": "Filtrar por uso",
@@ -746,13 +820,17 @@
       "TOTAL_DE_LA_COMPRA": "Total da compra",
       "TOTAL_PAGADO": "Total pago",
       "PAGOS_REGISTRADOS": "Pagamentos registrados",
-      "REGISTRADO_POR": "Registrado por"
+      "REGISTRADO_POR": "Registrado por",
+      "AUN_NO_HAY_PAGOS_REGISTRADOS": "Ainda não há pagamentos registrados para esta compra.",
+      "LOS_PAGOS_SE_REGISTRAN_CUANDO": "Os pagamentos são registrados quando a compra está confirmada."
     },
     "PURCHASE_RECEIPTS_TAB": {
       "AVANCE_DE_LA_RECEPCION": "Andamento do recebimento",
       "COMPRADA": "Comprada",
       "RECEPCIONES_REGISTRADAS": "Recebimentos registrados",
-      "COMPRA_RECIBIDA_POR_COMPLETO": "Compra recebida por completo."
+      "COMPRA_RECIBIDA_POR_COMPLETO": "Compra recebida por completo.",
+      "AUN_NO_HAY_RECEPCIONES_REGISTRADAS": "Ainda não há recebimentos registrados para esta compra.",
+      "LAS_RECEPCIONES_SE_REGISTRAN_CUANDO": "Os recebimentos são registrados quando a compra está confirmada."
     },
     "RECEIPT_REVERT_DIALOG": {
       "REVERTIR_RECEPCION": "Estornar recebimento",
@@ -770,7 +848,8 @@
     "SUPPLIER_QUICK_CREATE": {
       "NUEVO_PROVEEDOR": "Novo fornecedor",
       "NOMBRE_DEL_PROVEEDOR": "Nome do fornecedor",
-      "NIT_CI_O_RUC": "NIT, CI o RUC"
+      "NIT_CI_O_RUC": "NIT, CI o RUC",
+      "LA_IDENTIFICACION_NO_PUEDE_SUPERAR": "A identificação não pode ultrapassar {{n}} caracteres."
     },
     "PURCHASE_DETAIL": {
       "DETALLE_DE_LA_COMPRA": "Detalhes da compra",
@@ -793,7 +872,11 @@
       "CANCELAR_COMPRA": "Cancelar compra",
       "CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS": "Confirmar não altera o estoque; o estoque muda ao registrar o recebimento. Os pagamentos são registrados na aba \"Pagamentos\".",
       "COMPRA_RECIBIDA_POR_COMPLETO": "Compra recebida por completo.",
-      "NO_SE_PUEDE_CANCELAR_YA": "Não é possível cancelar: já tem recebimentos ou pagamentos."
+      "NO_SE_PUEDE_CANCELAR_YA": "Não é possível cancelar: já tem recebimentos ou pagamentos.",
+      "SIN_REFERENCIA": "Sem referência",
+      "COMPRA_PAGADA_POR_COMPLETO": "Compra paga por completo.",
+      "SIN_SALDO_POR_PAGAR": "Sem saldo a pagar.",
+      "COMPRA_N": "Compra {{n}}"
     },
     "PURCHASE_FORM": {
       "SELECCIONE_UN_PROVEEDOR": "Selecione um fornecedor",
@@ -820,7 +903,12 @@
       "BUSCAR_PRODUCTO": "Buscar produto",
       "TOTAL": "Total ({{p0}})",
       "AGREGAR_LINEA": "+ Adicionar linha",
-      "CANCELAR": "Cancelar"
+      "CANCELAR": "Cancelar",
+      "EDITAR_COMPRA": "Editar compra",
+      "NUEVA": "Nova",
+      "GUARDAR_BORRADOR": "Salvar rascunho",
+      "CANTIDAD_DE_LA_LINEA_N": "Quantidade da linha {{n}}",
+      "PRECIO_UNITARIO_DE_LA_LINEA": "Preço unitário da linha {{n}}"
     },
     "PURCHASE_LIST": {
       "NUEVA_COMPRA": "Nova compra",
@@ -853,7 +941,12 @@
       "VER_CONTRAMOVIMIENTO": "Ver contramovimentação",
       "INVENTARIO_ESTA_DESHABILITADO_LOS_MOVIMIENTOS": "O estoque está desabilitado; as movimentações são exibidas sem link.",
       "REVERTIR_RECEPCION": "Estornar recebimento",
-      "VOLVER_A_LA_COMPRA": "Voltar à compra"
+      "VOLVER_A_LA_COMPRA": "Voltar à compra",
+      "REVERTIDO": "Estornado",
+      "CONFIRMADO": "Confirmado",
+      "ESTA_RECEPCION_NO_GENERO_ENTRADAS": "Este recebimento não gerou entradas de estoque.",
+      "ESTA_RECEPCION_NO_MOVIO_EXISTENCIAS": "Este recebimento não movimentou estoque.",
+      "RECEPCION_N": "Recebimento {{n}}"
     },
     "RECEPTION_FORM": {
       "VOLVER_A_LA_COMPRA": "Voltar à compra",
@@ -874,7 +967,9 @@
       "PENDIENTE_DESPUES": "Pendente depois",
       "ENTRADA_DE_STOCK": "Entrada de estoque",
       "ESTA_RECEPCION_GENERARA_ENTRADAS_DE": "Este recebimento gerará entradas de estoque. Será registrada uma entrada de estoque em {{p0}} para cada produto com controle de estoque ({{p1}}).",
-      "ESTA_RECEPCION_NO_GENERARA_ENTRADAS": "Este recebimento não gerará entradas de estoque: nenhum produto recebido controla estoque."
+      "ESTA_RECEPCION_NO_GENERARA_ENTRADAS": "Este recebimento não gerará entradas de estoque: nenhum produto recebido controla estoque.",
+      "CONFIRMAR_RECEPCION": "Confirmar recebimento",
+      "CANTIDAD_A_RECIBIR_DE_N": "Quantidade a receber de {{n}}"
     },
     "SUPPLIER_DETAIL": {
       "DETALLE_DEL_PROVEEDOR": "Detalhes do fornecedor",
@@ -882,7 +977,8 @@
     },
     "SUPPLIER_FORM": {
       "NOMBRE_DEL_PROVEEDOR": "Nome do fornecedor",
-      "NIT_CI_O_RUC": "NIT, CI o RUC"
+      "NIT_CI_O_RUC": "NIT, CI o RUC",
+      "EDITAR_PROVEEDOR": "Editar fornecedor"
     },
     "SUPPLIER_LIST": {
       "BUSCAR_POR_NOMBRE_O_IDENTIFICACION": "Buscar por nome ou identificação",
@@ -932,7 +1028,11 @@
       "PRODUCTOS_MAS_VENDIDOS": "Produtos mais vendidos",
       "IMPORTE": "Valor",
       "CLIENTES_CON_MAYOR_COMPRA": "Clientes com maior compra",
-      "TOTAL_COMPRADO": "Total comprado"
+      "TOTAL_COMPRADO": "Total comprado",
+      "PORCENTAJE_DE_N": "Porcentagem de {{n}}"
+    },
+    "REPORT_CARD": {
+      "NO_SE_PUDO_CARGAR": "Não foi possível carregar."
     }
   },
   "SALES": {
@@ -948,14 +1048,19 @@
       "EXISTENCIA_INSUFICIENTE_EN": "Estoque insuficiente em {{p0}}.",
       "SOLICITADO_EXISTENCIA": "{{p0}}: solicitado {{p1}} {{p2}}, estoque {{p3}} {{p2}}",
       "LA_POLITICA_DE_INVENTARIO_NO": "A política de estoque não permite saldos negativos: não é possível confirmar esta entrega.",
-      "ESTA_ENTREGA_DEJARA_SALDO_NEGATIVO": "Esta entrega deixará saldo negativo em {{p0}} produto(s). É a política de estoque configurada para a empresa."
+      "ESTA_ENTREGA_DEJARA_SALDO_NEGATIVO": "Esta entrega deixará saldo negativo em {{p0}} produto(s). É a política de estoque configurada para a empresa.",
+      "CONFIRMANDO": "Confirmando…",
+      "CONFIRMAR_ENTREGA": "Confirmar entrega"
     },
     "ORDER_ITEMS": {
       "PRODUCTOS_DEL_PEDIDO": "Produtos do pedido",
       "BUSCAR_PRODUCTO_ACTIVO": "Buscar produto ativo",
       "AGREGAR": "Adicionar",
       "PRECIO_UNITARIO": "Preço unitário",
-      "AGREGUE_AL_MENOS_UN_PRODUCTO": "Adicione pelo menos um produto para poder avançar o pedido."
+      "AGREGUE_AL_MENOS_UN_PRODUCTO": "Adicione pelo menos um produto para poder avançar o pedido.",
+      "QUITAR_PRODUCTO": "Remover produto",
+      "CANTIDAD_DE_N": "Quantidade de {{n}}",
+      "QUITAR_N": "Remover {{n}}"
     },
     "ORDER_PAYMENTS": {
       "PAGOS": "Pagamentos",
@@ -1001,7 +1106,10 @@
       "CANAL_DE_VENTA": "Canal de venda",
       "SELECCIONE_UN_CANAL": "Selecione um canal",
       "FECHA_DEL_PEDIDO": "Data do pedido",
-      "PUEDE_COMPLETARLA_DESPUES": "Você pode completar depois."
+      "PUEDE_COMPLETARLA_DESPUES": "Você pode completar depois.",
+      "EDITAR_PEDIDO": "Editar pedido",
+      "EL_CANAL_DE_VENTA_ES": "O canal de venda é obrigatório.",
+      "LA_FECHA_DEL_PEDIDO_ES": "A data do pedido é obrigatória."
     },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "Novo pedido",
@@ -1019,7 +1127,9 @@
       "TOTAL": "Total",
       "SALDO": "Saldo",
       "ENTREGA": "Entrega",
-      "PAGO": "Pagamento"
+      "PAGO": "Pagamento",
+      "ORDENADO_POR_ENTREGA_PREVISTA_MAS": "Ordenado por entrega prevista, mais próximas primeiro.",
+      "ORDENADO_POR_FECHA_DE_PEDIDO": "Ordenado por data do pedido, mais recentes primeiro."
     }
   },
   "SERVICES": {
@@ -1030,14 +1140,18 @@
       "PRECIO_BASE": "Preço base",
       "DURACION": "Duração",
       "MIN": "{{p0}} min",
-      "ACTUALIZADO": "Atualizado"
+      "ACTUALIZADO": "Atualizado",
+      "SERVICIO": "Serviço",
+      "SIN_CODIGO": "Sem código"
     },
     "SERVICE_FORM": {
       "OPCIONAL_SE_GUARDA_SIEMPRE_EN": "Opcional. É sempre salvo em maiúsculas.",
       "PRECIO_BASE_BS": "Preço base (Bs)",
       "DURACION_MINUTOS": "Duração (minutos)",
       "SIN_ESPECIALIDAD": "Sem especialidade",
-      "ESTADO": "Status:"
+      "ESTADO": "Status:",
+      "OPCIONAL_SOLO_SE_PUEDEN_ELEGIR": "Opcional. Só é possível escolher especialidades ativas.",
+      "HABILITA_PERSONAL_PARA_ELEGIR_UNA": "Habilite Equipe para escolher uma especialidade. Você pode salvar sem especialidade."
     },
     "SERVICE_LIST": {
       "TODAS_LAS_ESPECIALIDADES": "Todas as especialidades",
@@ -1061,7 +1175,10 @@
       "SE_VERAN_AFECTADOS": "Serão afetados",
       "NINGUNO": "Nenhum",
       "LOS_DATOS_SE_CONSERVAN_LA": "Os dados são mantidos; a desativação segura completa chega em uma próxima versão.",
-      "CONFIRMAR": "Confirmar"
+      "CONFIRMAR": "Confirmar",
+      "HABILITAR_MODULO": "Habilitar módulo",
+      "DESHABILITAR_MODULO": "Desabilitar módulo",
+      "SIN_DEPENDENCIAS": "Sem dependências"
     },
     "SETTINGS_HISTORY": {
       "AJUSTE": "Ajuste",
@@ -1086,7 +1203,11 @@
       "BASE": "Base",
       "HABILITADO": "Habilitado",
       "DESHABILITADO": "Desabilitado",
-      "SIEMPRE_ACTIVO": "Sempre ativo"
+      "SIEMPRE_ACTIVO": "Sempre ativo",
+      "DESHABILITAR": "Desabilitar",
+      "HABILITAR": "Habilitar",
+      "DESHABILITAR_2": "Desabilitar",
+      "HABILITAR_2": "Habilitar"
     },
     "MODULE_SETTINGS": {
       "CONFIGURACION_DE": "Configurações de {{p0}}",
@@ -1095,7 +1216,9 @@
       "VALOR_PREDETERMINADO": "Valor padrão: {{p0}}",
       "RESTABLECER": "Redefinir",
       "GUARDAR_CAMBIOS": "Salvar alterações",
-      "CANCELAR_CAMBIOS": "Descartar alterações"
+      "CANCELAR_CAMBIOS": "Descartar alterações",
+      "ACTIVADO": "Ativado",
+      "DESACTIVADO": "Desativado"
     }
   },
   "LAYOUT": {
@@ -1148,7 +1271,8 @@
       "GUARDAR_TURNO": "Salvar turno",
       "CANCELAR": "Cancelar",
       "MOTIVO_ADMINISTRATIVO": "Motivo administrativo",
-      "GUARDAR_AUSENCIA": "Salvar ausência"
+      "GUARDAR_AUSENCIA": "Salvar ausência",
+      "EDITAR_TURNO_2": "Editar turno"
     }
   }
 }

@@ -1,21 +1,21 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar gasto' : 'Nuevo gasto' }}</h5>
+      <h5 class="page-title m-b-0">{{ isEdit ? ('EXPENSES.EXPENSE_FORM.EDITAR_GASTO' | translate) : ('EXPENSES.EXPENSE_LIST.NUEVO_GASTO' | translate) }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/expenses">{{ 'COMMON.GASTOS' | translate }}</a></li>
-    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+    <li class="breadcrumb-item">{{ isEdit ? ('COMMON.EDITAR' | translate) : ('CUSTOMERS.CUSTOMER_FORM.NUEVO' | translate) }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ isEdit ? 'Editar gasto' : 'Nuevo gasto' }}</h4>
+            <h4>{{ isEdit ? ('EXPENSES.EXPENSE_FORM.EDITAR_GASTO' | translate) : ('EXPENSES.EXPENSE_LIST.NUEVO_GASTO' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (noCategories) {
@@ -33,8 +33,8 @@
                   @if (hasError('description')) {
                   <small class="form-text text-danger">
                     {{ serverErrors.description || (form.controls.description.hasError('maxlength') ?
-                    'La descripción no puede superar ' + descriptionMaxLength + ' caracteres.' :
-                    'La descripción es obligatoria.') }}
+                    ('EXPENSES.EXPENSE_FORM.LA_DESCRIPCION_NO_PUEDE_SUPERAR' | translate: { n: descriptionMaxLength }) :
+                    ('EXPENSES.EXPENSE_FORM.LA_DESCRIPCION_ES_OBLIGATORIA' | translate)) }}
                   </small>
                   }
                 </div>
@@ -46,9 +46,9 @@
                     placeholder="0.00" formControlName="amount">
                   @if (hasError('amount')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.amount || (form.controls.amount.hasError('required') ? 'El monto es obligatorio.' :
-                    form.controls.amount.hasError('pattern') ? 'El monto admite como máximo 2 decimales.' :
-                    'El monto debe ser mayor a cero.') }}
+                    {{ serverErrors.amount || (form.controls.amount.hasError('required') ? ('EXPENSES.EXPENSE_FORM.EL_MONTO_ES_OBLIGATORIO' | translate) :
+                    form.controls.amount.hasError('pattern') ? ('EXPENSES.EXPENSE_FORM.EL_MONTO_ADMITE_COMO_MAXIMO' | translate) :
+                    ('EXPENSES.EXPENSE_FORM.EL_MONTO_DEBE_SER_MAYOR' | translate)) }}
                   </small>
                   }
                 </div>
@@ -56,7 +56,7 @@
                   <label for="expense-date">{{ 'COMMON.FECHA' | translate }} <span class="text-danger">*</span></label>
                   <input id="expense-date" type="date" class="form-control" formControlName="expenseDate">
                   @if (hasError('expenseDate')) {
-                  <small class="form-text text-danger">{{ serverErrors.expenseDate || 'La fecha es obligatoria.' }}</small>
+                  <small class="form-text text-danger">{{ serverErrors.expenseDate || ('EXPENSES.EXPENSE_FORM.LA_FECHA_ES_OBLIGATORIA' | translate) }}</small>
                   }
                 </div>
                 <div class="form-group col-md-4">
@@ -67,7 +67,7 @@
                     }
                   </select>
                   @if (hasError('paymentMethod')) {
-                  <small class="form-text text-danger">{{ serverErrors.paymentMethod || 'Elige un método de pago.' }}</small>
+                  <small class="form-text text-danger">{{ serverErrors.paymentMethod || ('EXPENSES.EXPENSE_FORM.ELIGE_UN_METODO_DE_PAGO' | translate) }}</small>
                   }
                 </div>
               </div>
@@ -79,7 +79,7 @@
                     [clearable]="false" ariaLabel="Categoría">
                   </ng-select>
                   @if (hasError('categoryId')) {
-                  <small class="form-text text-danger">{{ serverErrors.categoryId || 'La categoría es obligatoria.' }}</small>
+                  <small class="form-text text-danger">{{ serverErrors.categoryId || ('EXPENSES.EXPENSE_FORM.LA_CATEGORIA_ES_OBLIGATORIA' | translate) }}</small>
                   }
                 </div>
                 <div class="form-group col-md-6">
@@ -88,7 +88,7 @@
                     formControlName="supplierName" [attr.maxlength]="supplierMaxLength">
                   @if (hasError('supplierName')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.supplierName || 'El proveedor no puede superar ' + supplierMaxLength + ' caracteres.' }}
+                    {{ serverErrors.supplierName || ('EXPENSES.EXPENSE_FORM.EL_PROVEEDOR_NO_PUEDE_SUPERAR' | translate: { n: supplierMaxLength }) }}
                   </small>
                   }
                 </div>
@@ -100,7 +100,7 @@
                     formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
                   @if (hasError('notes')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.notes || 'Las notas no pueden superar ' + notesMaxLength + ' caracteres.' }}
+                    {{ serverErrors.notes || ('CUSTOMERS.CUSTOMER_FORM.LAS_NOTAS_NO_PUEDEN_SUPERAR' | translate: { n: notesMaxLength }) }}
                   </small>
                   }
                 </div>

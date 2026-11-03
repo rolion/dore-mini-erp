@@ -10,7 +10,7 @@
     <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">{{ 'COMMON.COMPRAS' | translate }}</a></li>
     <li class="breadcrumb-item">
-      <a [routerLink]="['/pocketbiz/purchases', purchaseId]" [queryParams]="{ tab: 'receptions' }">{{ receipt?.purchase?.reference || 'Compra' }}</a>
+      <a [routerLink]="['/pocketbiz/purchases', purchaseId]" [queryParams]="{ tab: 'receptions' }">{{ receipt?.purchase?.reference || ('COMMON.COMPRA' | translate) }}</a>
     </li>
     <li class="breadcrumb-item">{{ 'COMMON.RECEPCION' | translate }}</li>
   </ul>
@@ -20,7 +20,7 @@
         <div class="card">
           <div class="card-header">
             <h4>
-              {{ receipt ? 'Recepción ' + receipt.reference : 'Recepción' }}
+              {{ receipt ? ('PURCHASES.RECEPTION_DETAIL.RECEPCION_N' | translate: { n: receipt.reference }) : ('COMMON.RECEPCION' | translate) }}
               @if (receipt; as r) {
               <span class="badge-outline d-inline-block ms-2" [class]="statusClasses[r.status]" data-testid="status-badge">{{ statusLabels[r.status] }}</span>
               }
@@ -123,7 +123,7 @@
                     <td class="text-end">{{ movement.quantity }}</td>
                     <td>{{ movement.unitAbbreviation || '—' }}</td>
                     <td data-testid="movement-status">
-                      {{ movement.status === 'reversed' ? 'Revertido' : 'Confirmado' }}
+                      {{ movement.status === 'reversed' ? ('PURCHASES.RECEPTION_DETAIL.REVERTIDO' | translate) : ('PURCHASES.RECEPTION_DETAIL.CONFIRMADO' | translate) }}
                       @if (movement.reversedBy && r.inventoryAvailable) {
                       <a class="ms-1" data-testid="counter-link" [routerLink]="['/pocketbiz/inventory/movements', movement.reversedBy.id]">{{ 'PURCHASES.RECEPTION_DETAIL.VER_CONTRAMOVIMIENTO' | translate }}</a>
                       }
@@ -137,7 +137,7 @@
             <small class="form-text text-muted d-block mx-4" data-testid="movements-disabled">{{ 'PURCHASES.RECEPTION_DETAIL.INVENTARIO_ESTA_DESHABILITADO_LOS_MOVIMIENTOS' | translate }}</small>
             }
             } @else {
-            <small class="form-text text-muted d-block mx-4" data-testid="no-movements">{{ r.inventoryMode === 'inventory' ? 'Esta recepción no generó entradas de inventario.' : 'Esta recepción no movió existencias.' }}</small>
+            <small class="form-text text-muted d-block mx-4" data-testid="no-movements">{{ r.inventoryMode === 'inventory' ? ('PURCHASES.RECEPTION_DETAIL.ESTA_RECEPCION_NO_GENERO_ENTRADAS' | translate) : ('PURCHASES.RECEPTION_DETAIL.ESTA_RECEPCION_NO_MOVIO_EXISTENCIAS' | translate) }}</small>
             }
             }
             <div class="m-4">

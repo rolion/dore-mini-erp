@@ -10,7 +10,7 @@
     <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/purchases">{{ 'COMMON.COMPRAS' | translate }}</a></li>
     <li class="breadcrumb-item">
-      <a [routerLink]="['/pocketbiz/purchases', purchaseId]" [queryParams]="{ tab: 'receptions' }">{{ purchase?.reference || 'Compra' }}</a>
+      <a [routerLink]="['/pocketbiz/purchases', purchaseId]" [queryParams]="{ tab: 'receptions' }">{{ purchase?.reference || ('COMMON.COMPRA' | translate) }}</a>
     </li>
     <li class="breadcrumb-item">{{ 'COMMON.REGISTRAR_RECEPCION' | translate }}</li>
   </ul>
@@ -104,7 +104,7 @@
                         <input type="hidden" [formControlName]="row" />
                         } @else {
                         <input type="text" inputmode="decimal" class="form-control text-end" data-testid="quantity"
-                          [formControlName]="row" [attr.aria-label]="'Cantidad a recibir de ' + line.productName"
+                          [formControlName]="row" [attr.aria-label]="('PURCHASES.RECEPTION_FORM.CANTIDAD_A_RECIBIR_DE_N' | translate: { n: line.productName })"
                           (input)="onChange()" />
                         @if (lineError(row)) {
                         <small class="form-text text-danger" data-testid="line-error">{{ lineError(row) }}</small>
@@ -193,7 +193,7 @@
             }
             <div class="m-4">
               <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="submitting"
-                (click)="confirm()">{{ submitting ? 'Registrando…' : 'Confirmar recepción' }}</button>
+                (click)="confirm()">{{ submitting ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('PURCHASES.RECEPTION_FORM.CONFIRMAR_RECEPCION' | translate) }}</button>
               <button type="button" class="btn btn-light ms-2" data-testid="back" [disabled]="submitting"
                 (click)="backToEdit()">{{ 'COMMON.VOLVER_A_EDITAR' | translate }}</button>
             </div>

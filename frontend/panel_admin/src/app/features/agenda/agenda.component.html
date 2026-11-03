@@ -72,7 +72,7 @@
           (cancel)="saving && $event.preventDefault()">
           <form [formGroup]="shift" (ngSubmit)="saveShift(shiftDialog)">
             <fieldset [disabled]="saving">
-              <h5 id="shift-dialog-title">{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
+              <h5 id="shift-dialog-title">{{ editId ? ('AGENDA.AGENDA.EDITAR_TURNO_2' | translate) : ('AGENDA.AGENDA.NUEVO_TURNO' | translate) }}</h5>
               <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
               <label for="agenda-day">{{ 'AGENDA.AGENDA.DIA' | translate }}</label>
               <select id="agenda-day" class="form-select mb-2" formControlName="day">

@@ -51,7 +51,7 @@
             <td class="text-end">
               @if (order().editable) {
               <input #qty type="number" min="1" step="1" class="form-control form-control-sm text-end"
-                [attr.aria-label]="'Cantidad de ' + item.productName" [attr.data-item-id]="item.id" [value]="item.quantity" [disabled]="busy()"
+                [attr.aria-label]="('SALES.ORDER_ITEMS.CANTIDAD_DE_N' | translate: { n: item.productName })" [attr.data-item-id]="item.id" [value]="item.quantity" [disabled]="busy()"
                 (change)="onQuantity(item, qty)">
               } @else {
               {{ item.quantity }}
@@ -61,8 +61,8 @@
             @if (order().editable) {
             <td class="text-end">
               <button type="button" class="btn btn-sm btn-danger" [disabled]="busy() || isLastConfirmedItem(order())"
-                [title]="isLastConfirmedItem(order()) ? lastItemTooltip : 'Quitar producto'"
-                [attr.aria-label]="'Quitar ' + item.productName" (click)="itemRemove.emit(item)">
+                [title]="isLastConfirmedItem(order()) ? lastItemTooltip : ('SALES.ORDER_ITEMS.QUITAR_PRODUCTO' | translate)"
+                [attr.aria-label]="('SALES.ORDER_ITEMS.QUITAR_N' | translate: { n: item.productName })" (click)="itemRemove.emit(item)">
                 <i class="fas fa-trash"></i>
               </button>
             </td>

@@ -16,7 +16,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ step === 'edit' ? 'Registrar apertura' : 'Revisar apertura' }}</h4>
+            <h4>{{ step === 'edit' ? ('COMMON.REGISTRAR_APERTURA' | translate) : ('INVENTORY.STOCK_OPENING.REVISAR_APERTURA' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (step === 'edit') {
@@ -82,12 +82,12 @@
                     @for (line of lines.controls; track line; let i = $index) {
                     <tr [formGroupName]="i" [class.table-warning]="hasHistory(i) || isDuplicate(i)"
                       data-testid="opening-line">
-                      <td data-label="Producto">
+                      <td [attr.data-label]="'COMMON.PRODUCTO' | translate">
                         <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name"
                           [typeahead]="productInput$" [loading]="productsLoading" [compareWith]="sameProduct"
                           formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate" notFoundText="Sin resultados"
                           typeToSearchText="Escriba para buscar" [clearable]="false" appendTo="body"
-                          [attr.aria-label]="'Producto de la línea ' + (i + 1)" (change)="onProductsChanged()">
+                          [attr.aria-label]="('INVENTORY.STOCK_OPENING.PRODUCTO_DE_LA_LINEA_N' | translate: { n: (i + 1) })" (change)="onProductsChanged()">
                         </ng-select>
                         @if (productMessage(i)) {
                         <small class="form-text text-danger d-block" data-testid="product-error">
@@ -95,22 +95,22 @@
                         </small>
                         }
                       </td>
-                      <td data-label="Unidad base" data-testid="line-unit">
+                      <td [attr.data-label]="'COMMON.UNIDAD_BASE' | translate" data-testid="line-unit">
                         {{ productAt(i)?.unit?.abbreviation || '—' }}
                       </td>
-                      <td data-label="Cantidad inicial">
+                      <td [attr.data-label]="'INVENTORY.STOCK_OPENING.CANTIDAD_INICIAL' | translate">
                         <input type="text" inputmode="decimal" class="form-control" formControlName="quantity"
-                          placeholder="0" [attr.aria-label]="'Cantidad inicial de la línea ' + (i + 1)">
+                          placeholder="0" [attr.aria-label]="('INVENTORY.STOCK_OPENING.CANTIDAD_INICIAL_DE_LA_LINEA' | translate: { n: (i + 1) })">
                         @if (quantityMessage(i)) {
                         <small class="form-text text-danger d-block" data-testid="quantity-error">
                           {{ quantityMessage(i) }}
                         </small>
                         }
                       </td>
-                      <td data-label="Quitar">
+                      <td [attr.data-label]="'COMMON.QUITAR' | translate">
                         <button type="button" class="btn btn-light btn-sm" data-testid="remove-line"
                           [disabled]="lines.length <= 1" (click)="removeLine(i)"
-                          [attr.aria-label]="'Quitar la línea ' + (i + 1)">
+                          [attr.aria-label]="('INVENTORY.STOCK_OPENING.QUITAR_LA_LINEA_N' | translate: { n: (i + 1) })">
                           <i class="material-icons">delete</i>
                         </button>
                       </td>
@@ -155,8 +155,8 @@
                   <tbody>
                     @for (item of summaryLines; track $index) {
                     <tr data-testid="summary-line">
-                      <td data-label="Producto"><strong>{{ item.name }}</strong></td>
-                      <td data-label="Cantidad que ingresa">{{ item.quantity }} {{ item.unit }}</td>
+                      <td [attr.data-label]="'COMMON.PRODUCTO' | translate"><strong>{{ item.name }}</strong></td>
+                      <td [attr.data-label]="'INVENTORY.STOCK_OPENING.CANTIDAD_QUE_INGRESA' | translate">{{ item.quantity }} {{ item.unit }}</td>
                     </tr>
                     }
                   </tbody>
@@ -172,7 +172,7 @@
               </p>
               <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="saving"
                 (click)="confirm()">
-                {{ saving ? 'Registrando…' : 'Confirmar apertura' }}
+                {{ saving ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('INVENTORY.STOCK_OPENING.CONFIRMAR_APERTURA' | translate) }}
               </button>
               <button type="button" class="btn btn-light ms-2" data-testid="back-to-edit" [disabled]="saving"
                 (click)="backToEdit()">{{ 'COMMON.VOLVER_A_EDITAR' | translate }}</button>

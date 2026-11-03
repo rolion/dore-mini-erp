@@ -1,7 +1,7 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h5>
+      <h5 class="page-title m-b-0">{{ isEdit ? ('PRODUCTS.PRODUCT_FORM.EDITAR_PRODUCTO' | translate) : ('PRODUCTS.PRODUCT_LIST.NUEVO_PRODUCTO' | translate) }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
@@ -9,14 +9,14 @@
     </li>
     <li class="breadcrumb-item">{{ 'COMMON.CATALOGO' | translate }}</li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/products">{{ 'COMMON.PRODUCTO' | translate }}</a></li>
-    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+    <li class="breadcrumb-item">{{ isEdit ? ('COMMON.EDITAR' | translate) : ('CUSTOMERS.CUSTOMER_FORM.NUEVO' | translate) }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h4>
+            <h4>{{ isEdit ? ('PRODUCTS.PRODUCT_FORM.EDITAR_PRODUCTO' | translate) : ('PRODUCTS.PRODUCT_LIST.NUEVO_PRODUCTO' | translate) }}</h4>
           </div>
           <div class="card-body">
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -28,7 +28,7 @@
                   @if (hasError('name')) {
                   <small class="form-text text-danger">
                     {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
-                    'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+                    ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_NO_PUEDE_SUPERAR' | translate: { n: nameMaxLength }) : ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_ES_OBLIGATORIO' | translate)) }}
                   </small>
                   }
                 </div>
@@ -61,7 +61,7 @@
                   <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.ORGANIZA_Y_FILTRA_NO_LIMITA' | translate }}</small>
                   @if (hasError('category')) {
                   <small class="form-text text-danger d-block">
-                    {{ serverErrors.category || 'La categoría es obligatoria.' }}
+                    {{ serverErrors.category || ('EXPENSES.EXPENSE_FORM.LA_CATEGORIA_ES_OBLIGATORIA' | translate) }}
                   </small>
                   }
                 </div>
@@ -99,8 +99,8 @@
                   @if (hasError('salePrice')) {
                   <small class="form-text text-danger">
                     {{ serverErrors.salePrice || (form.controls.salePrice.hasError('required') ?
-                    'El precio de venta es obligatorio.' :
-                    'Ingresa un precio válido, mayor o igual a 0, con hasta 2 decimales.') }}
+                    ('PRODUCTS.PRODUCT_FORM.EL_PRECIO_DE_VENTA_ES' | translate) :
+                    ('PRODUCTS.PRODUCT_FORM.INGRESA_UN_PRECIO_VALIDO_MAYOR' | translate)) }}
                   </small>
                   }
                 </div>
@@ -136,7 +136,7 @@
                   }
                   @if (hasError('baseUnitId')) {
                   <small class="form-text text-danger">
-                    {{ serverErrors.baseUnitId || 'La unidad base es obligatoria cuando controlas stock.' }}
+                    {{ serverErrors.baseUnitId || ('PRODUCTS.PRODUCT_FORM.LA_UNIDAD_BASE_ES_OBLIGATORIA' | translate) }}
                   </small>
                   }
                 </div>

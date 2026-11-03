@@ -15,7 +15,7 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ position ? position.productName : 'Existencia' }}</h4>
+            <h4>{{ position ? position.productName : ('INVENTORY.STOCK_LIST.EXISTENCIA' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (loading) {
@@ -127,8 +127,8 @@
                 <tbody>
                   @for (m of movements; track m.id) {
                   <tr data-testid="movement-row">
-                    <td data-label="Fecha y hora">{{ m.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-                    <td data-label="Tipo">
+                    <td [attr.data-label]="'COMMON.FECHA_Y_HORA' | translate">{{ m.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td [attr.data-label]="'COMMON.TIPO' | translate">
                       @if (m.kind === 'in') {
                       <div class="badge-outline col-green d-inline-block">{{ kindLabel(m.kind) }}</div>
                       } @else {
@@ -138,10 +138,10 @@
                       <div class="badge-outline col-grey d-inline-block ms-1">{{ statusLabel(m.status) }}</div>
                       }
                     </td>
-                    <td data-label="Entrada" class="text-end">{{ m.quantityIn ? display(m.quantityIn) : '—' }}</td>
-                    <td data-label="Salida" class="text-end">{{ m.quantityOut ? display(m.quantityOut) : '—' }}</td>
-                    <td data-label="Referencia">{{ m.reference || '—' }}</td>
-                    <td data-label="Origen">
+                    <td [attr.data-label]="'INVENTORY.MOVEMENT_LIST.ENTRADA' | translate" class="text-end">{{ m.quantityIn ? display(m.quantityIn) : '—' }}</td>
+                    <td [attr.data-label]="'INVENTORY.MOVEMENT_LIST.SALIDA' | translate" class="text-end">{{ m.quantityOut ? display(m.quantityOut) : '—' }}</td>
+                    <td [attr.data-label]="'COMMON.REFERENCIA' | translate">{{ m.reference || '—' }}</td>
+                    <td [attr.data-label]="'COMMON.ORIGEN' | translate">
                       @if (m.source; as source) {
                       {{ source.label }}@if (source.id) { · {{ source.id }} }
                       @if (sourceLink(m); as link) {
@@ -151,7 +151,7 @@
                       <span class="text-muted">{{ 'INVENTORY.STOCK_DETAIL.SIN_DOCUMENTO' | translate }}</span>
                       }
                     </td>
-                    <td data-label="Acciones">
+                    <td [attr.data-label]="'COMMON.ACCIONES' | translate">
                       <a class="btn btn-light btn-sm" [routerLink]="['/pocketbiz/inventory/movements', m.id]"
                         data-testid="movement-detail">{{ 'COMMON.VER_DETALLE' | translate }}</a>
                     </td>

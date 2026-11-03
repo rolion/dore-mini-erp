@@ -74,7 +74,7 @@
             </div>
             } @else if (!rows.length) {
             <p class="m-4" data-testid="empty">
-              {{ filtersActive ? 'Sin ajustes para esos filtros.' : 'Aún no hay ajustes de existencias.' }}
+              {{ filtersActive ? ('INVENTORY.ADJUSTMENT_LIST.SIN_AJUSTES_PARA_ESOS_FILTROS' | translate) : ('INVENTORY.ADJUSTMENT_LIST.AUN_NO_HAY_AJUSTES_DE' | translate) }}
             </p>
             } @else {
             <div class="table-responsive">
@@ -96,22 +96,22 @@
                 <tbody>
                   @for (row of rows; track row.id) {
                   <tr data-testid="adjustment-row">
-                    <td data-label="Referencia">
+                    <td [attr.data-label]="'COMMON.REFERENCIA' | translate">
                       <a class="fw-bold" [routerLink]="['/pocketbiz/inventory/adjustments', row.id]">{{ row.reference }}</a>
                     </td>
-                    <td data-label="Fecha">{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-                    <td data-label="Producto">{{ row.product.name }}</td>
-                    <td data-label="Almacén">{{ row.warehouse.name }}</td>
-                    <td data-label="Sistema" class="text-md-end">{{ display(row.systemQuantity) }} {{ row.unitAbbreviation }}</td>
-                    <td data-label="Contado" class="text-md-end">{{ display(row.countedQuantity) }} {{ row.unitAbbreviation }}</td>
-                    <td data-label="Diferencia" class="text-md-end" data-testid="difference">
+                    <td [attr.data-label]="'COMMON.FECHA' | translate">{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td [attr.data-label]="'COMMON.PRODUCTO' | translate">{{ row.product.name }}</td>
+                    <td [attr.data-label]="'COMMON.ALMACEN' | translate">{{ row.warehouse.name }}</td>
+                    <td [attr.data-label]="'INVENTORY.ADJUSTMENT_LIST.SISTEMA' | translate" class="text-md-end">{{ display(row.systemQuantity) }} {{ row.unitAbbreviation }}</td>
+                    <td [attr.data-label]="'INVENTORY.ADJUSTMENT_LIST.CONTADO' | translate" class="text-md-end">{{ display(row.countedQuantity) }} {{ row.unitAbbreviation }}</td>
+                    <td [attr.data-label]="'COMMON.DIFERENCIA' | translate" class="text-md-end" data-testid="difference">
                       <span [class.text-success]="row.kind === 'in'" [class.text-danger]="row.kind === 'out'">
                         {{ signed(row.difference) }} {{ row.unitAbbreviation }}
                         <span class="visually-hidden">({{ row.kind === 'in' ? 'entrada' : 'salida' }})</span>
                       </span>
                     </td>
-                    <td data-label="Usuario">{{ row.user.name || '—' }}</td>
-                    <td data-label="Estado">
+                    <td [attr.data-label]="'COMMON.USUARIO' | translate">{{ row.user.name || '—' }}</td>
+                    <td [attr.data-label]="'COMMON.ESTADO' | translate">
                       @if (row.status === 'confirmed') {
                       <div class="badge-outline col-green d-inline-block">{{ statusLabel(row.status) }}</div>
                       } @else {

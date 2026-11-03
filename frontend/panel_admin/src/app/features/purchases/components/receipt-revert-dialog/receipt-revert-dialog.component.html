@@ -68,7 +68,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn btn-danger" data-testid="revert-receipt" [disabled]="!canSubmit">{{ saving ? 'Revirtiendo…' : 'Revertir recepción' }}</button>
+    <button type="submit" class="btn btn-danger" data-testid="revert-receipt" [disabled]="!canSubmit">{{ saving ? ('INVENTORY.MOVEMENT_REVERSE_DIALOG.REVIRTIENDO' | translate) : ('PURCHASES.RECEIPT_REVERT_DIALOG.REVERTIR_RECEPCION' | translate) }}</button>
     <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
   </div>
 </form>

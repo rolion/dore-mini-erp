@@ -16,7 +16,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ step === 'edit' ? 'Nuevo ajuste' : 'Revisar y confirmar ajuste' }}</h4>
+            <h4>{{ step === 'edit' ? ('INVENTORY.ADJUSTMENT_FORM.NUEVO_AJUSTE' | translate) : ('INVENTORY.ADJUSTMENT_FORM.REVISAR_Y_CONFIRMAR_AJUSTE' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (step === 'edit') {
@@ -56,7 +56,7 @@
                 <div class="form-group col-md-4">
                   <label for="adjustment-balance">{{ 'INVENTORY.ADJUSTMENT_FORM.SALDO_ACTUAL' | translate }}</label>
                   <input id="adjustment-balance" type="text" class="form-control" readonly
-                    [value]="balanceLoading ? 'Cargando…' : (balance ? balanceText + ' ' + unitLabel : '—')"
+                    [value]="balanceLoading ? ('COMMON.CARGANDO' | translate) : (balance ? balanceText + ' ' + unitLabel : '—')"
                     data-testid="balance">
                 </div>
                 <div class="form-group col-md-4">
@@ -87,7 +87,7 @@
               } @else if (difference !== null) {
               <p data-testid="difference-preview">
                 {{ 'INVENTORY.ADJUSTMENT_FORM.DIFERENCIA' | translate }} <strong>{{ differenceText }} {{ unitLabel }}</strong> ·
-                {{ direction === 'in' ? 'Entrada de ajuste' : 'Salida de ajuste' }}
+                {{ direction === 'in' ? ('INVENTORY.ADJUSTMENT_FORM.ENTRADA_DE_AJUSTE' | translate) : ('INVENTORY.ADJUSTMENT_FORM.SALIDA_DE_AJUSTE' | translate) }}
               </p>
               }
 
@@ -122,7 +122,7 @@
                   @if (noDifference) {
                   {{ 'INVENTORY.ADJUSTMENT_FORM.SIN_DIFERENCIA' | translate }}
                   } @else {
-                  {{ differenceText }} {{ unitLabel }} · {{ direction === 'in' ? 'Entrada de ajuste' : 'Salida de ajuste' }}
+                  {{ differenceText }} {{ unitLabel }} · {{ direction === 'in' ? ('INVENTORY.ADJUSTMENT_FORM.ENTRADA_DE_AJUSTE' | translate) : ('INVENTORY.ADJUSTMENT_FORM.SALIDA_DE_AJUSTE' | translate) }}
                   }
                 </dd>
                 <dt class="col-sm-3">{{ 'COMMON.MOTIVO' | translate }}</dt>
@@ -136,7 +136,7 @@
               <p class="text-muted">{{ 'INVENTORY.ADJUSTMENT_FORM.UN_AJUSTE_CONFIRMADO_NO_SE' | translate }}</p>
               <button type="button" class="btn btn-primary" data-testid="confirm" [disabled]="saving || !canConfirm"
                 (click)="confirm()">
-                {{ saving ? 'Registrando…' : 'Confirmar ajuste' }}
+                {{ saving ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('INVENTORY.ADJUSTMENT_FORM.CONFIRMAR_AJUSTE' | translate) }}
               </button>
               <button type="button" class="btn btn-light ms-2" data-testid="back-to-edit" [disabled]="saving"
                 (click)="backToEdit()">{{ 'COMMON.VOLVER_A_EDITAR' | translate }}</button>

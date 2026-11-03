@@ -16,7 +16,7 @@
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ product?.name ?? 'Producto' }}</h4>
+            <h4>{{ product?.name ?? ('COMMON.PRODUCTO' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (product; as p) {
@@ -24,7 +24,7 @@
               <dt class="col-sm-3">{{ 'COMMON.NOMBRE' | translate }}</dt>
               <dd class="col-sm-9">{{ p.name }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.DESCRIPCION' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.description || 'Sin descripción' }}</dd>
+              <dd class="col-sm-9">{{ p.description || ('PRODUCTS.PRODUCT_DETAIL.SIN_DESCRIPCION' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.CATEGORIA' | translate }}</dt>
               <dd class="col-sm-9">
                 {{ categoryName(p) }}
@@ -33,16 +33,16 @@
                 }
               </dd>
               <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.SE_COMPRA' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.canBuy ? 'Sí' : 'No' }}</dd>
+              <dd class="col-sm-9">{{ p.canBuy ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.SE_VENDE' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.canSell ? 'Sí' : 'No' }}</dd>
+              <dd class="col-sm-9">{{ p.canSell ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.PRECIO_DE_VENTA' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.canSell ? p.salePrice : 'No se vende' }}</dd>
+              <dd class="col-sm-9">{{ p.canSell ? p.salePrice : ('PRODUCTS.PRODUCT_DETAIL.NO_SE_VENDE' | translate) }}</dd>
               @if (inventoryEnabled) {
               <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.CONTROLA_STOCK' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.tracksStock ? 'Sí' : 'No' }}</dd>
+              <dd class="col-sm-9">{{ p.tracksStock ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.UNIDAD_BASE' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.baseUnit ? p.baseUnit.name + ' (' + p.baseUnit.abbreviation + ')' : 'Sin unidad' }}</dd>
+              <dd class="col-sm-9">{{ p.baseUnit ? p.baseUnit.name + ' (' + p.baseUnit.abbreviation + ')' : ('PRODUCTS.PRODUCT_DETAIL.SIN_UNIDAD' | translate) }}</dd>
               }
               <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
               <dd class="col-sm-9">
@@ -60,7 +60,7 @@
             <div class="m-4">
               <a class="btn btn-primary" [routerLink]="['/pocketbiz/catalog/products', p.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
               <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">
-                {{ p.active ? 'Desactivar' : 'Activar' }}
+                {{ p.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate) }}
               </button>
               <a class="btn btn-light ms-2" routerLink="/pocketbiz/catalog/products">{{ 'COMMON.VOLVER' | translate }}</a>
             </div>
