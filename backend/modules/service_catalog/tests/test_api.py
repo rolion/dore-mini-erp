@@ -10,6 +10,7 @@ from rest_framework.test import APIClient, APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.modularity.infrastructure.django.models import CompanyModuleModel, CompanySettingsModel
+from modules.personnel.infrastructure.django.models import SpecialtyModel
 from modules.service_catalog.infrastructure.django.models import ServiceModel
 from modules.service_catalog.services import get_service, get_service_for_new_use
 
@@ -124,6 +125,38 @@ class ServiceApiTests(APITestCase):
         self.assertEqual(self.client.get(URL, {'specialty_id': 'none'}).json()['count'], 1)
         self.assertEqual(self.client.get(URL, {'specialty_id': str(uuid4())}).json()['count'], 0)
         self.assertEqual(self.client.get(URL, {'specialty_id': 'invalid'}).status_code, 400)
+
+    def test_specialty_uses_active_personnel_of_same_company(self):
+        CompanyModuleModel.objects.create(company_id=self.company.id, module_key='personnel')
+        active = SpecialtyModel.objects.create(company_id=self.company.id, name='Ortodoncia',
+                                               created_by=self.user.id, updated_by=self.user.id)
+        inactive = SpecialtyModel.objects.create(company_id=self.company.id, name='Archivada', active=False,
+                                                 created_by=self.user.id, updated_by=self.user.id)
+        other = make_company('Servicios B')
+        foreign = SpecialtyModel.objects.create(company_id=other.id, name='Ajena',
+                                                created_by=self.user.id, updated_by=self.user.id)
+        for unavailable in (inactive.id, foreign.id, uuid4()):
+            response = self.client.post(URL, {'name': 'Consulta', 'base_price': '120',
+                                              'duration_minutes': 30, 'specialty_id': str(unavailable)}, format='json')
+            self.assertEqual(response.status_code, 400, response.content)
+            self.assertIn('specialty_id', response.json())
+        service = self.create(specialty_id=str(active.id))
+        self.assertEqual(service['specialty_name'], 'Ortodoncia')
+        self.assertEqual(self.client.get(URL, {'specialty_id': str(active.id)}).json()['count'], 1)
+        self.assertEqual(self.client.get(URL, {'specialty_id': 'none'}).json()['count'], 0)
+        active.active = False
+        active.save(update_fields=['active'])
+        self.assertEqual(self.client.get(f"{URL}{service['id']}/").json()['specialty_name'], 'Ortodoncia')
+        self.assertEqual(self.client.patch(f"{URL}{service['id']}/", {'name': 'Nueva'}, format='json').status_code, 200)
+        self.assertEqual(self.client.patch(f"{URL}{service['id']}/", {'specialty_id': str(foreign.id)},
+                                           format='json').status_code, 400)
+        CompanyModuleModel.objects.filter(company_id=self.company.id, module_key='personnel').delete()
+        self.assertEqual(self.client.get(f"{URL}{service['id']}/").json()['specialty_name'], 'Ortodoncia')
+        self.assertEqual(self.client.patch(f"{URL}{service['id']}/", {'description': 'Histórica'},
+                                           format='json').status_code, 200)
+        self.assertEqual(self.client.post(URL, {'name': 'Nueva', 'base_price': '10',
+                                                'duration_minutes': 30, 'specialty_id': str(active.id)},
+                                          format='json').status_code, 400)
 
     def test_search_pagination_and_invalid_filter(self):
         self.create(name='Evaluación')

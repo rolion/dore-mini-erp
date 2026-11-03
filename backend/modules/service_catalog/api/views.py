@@ -6,9 +6,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.service_catalog.application.services import ServiceCatalog, UnavailableSpecialties
+from modules.service_catalog.application.services import ServiceCatalog
 from modules.service_catalog.domain.service import ServiceNotFound, ServiceValidationError
 from modules.service_catalog.infrastructure.django.repositories import DjangoServiceRepository
+from modules.service_catalog.infrastructure.adapters import PersonnelSpecialties, specialty_names
 from shared.tenancy import company_id_from
 
 from .serializers import ServiceInputSerializer, ServiceSerializer
@@ -31,14 +32,21 @@ class ServicePagination(PageNumberPagination):
 
 
 def _catalog(request):
-    return ServiceCatalog(DjangoServiceRepository(company_id_from(request)), UnavailableSpecialties())
+    company_id = company_id_from(request)
+    return ServiceCatalog(DjangoServiceRepository(company_id), PersonnelSpecialties(company_id))
 
 
-def _run(callback, **values):
+def _serialize(services, company_id, *, many=False):
+    rows = services if many else [services]
+    names = specialty_names(company_id, {row.specialty_id for row in rows if row.specialty_id})
+    return ServiceSerializer(services, many=many, context={'specialty_names': names}).data
+
+
+def _run(callback, *, company_id, **values):
     try:
         with transaction.atomic():
             service = callback(**values)
-        return ServiceSerializer(service).data
+        return _serialize(service, company_id)
     except ServiceNotFound as exc:
         raise NotFound('Servicio no encontrado.') from exc
     except ServiceValidationError as exc:
@@ -63,25 +71,26 @@ class ServiceListCreateView(APIView):
             active=None if not active else active == 'true', specialty_id=specialty_id)
         paginator = ServicePagination()
         page = paginator.paginate_queryset(services, request, view=self)
-        return paginator.get_paginated_response(ServiceSerializer(page, many=True).data)
+        return paginator.get_paginated_response(_serialize(page, company_id_from(request), many=True))
 
     def post(self, request):
         serializer = ServiceInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = {'name': '', 'base_price': None, 'duration_minutes': None, **serializer.validated_data}
-        return Response(_run(_catalog(request).create, **values), status=201)
+        return Response(_run(_catalog(request).create, company_id=company_id_from(request), **values), status=201)
 
 
 class ServiceDetailView(APIView):
     required_modules = ('services',)
 
     def get(self, request, service_id):
-        return Response(_run(_catalog(request).get, service_id=service_id))
+        return Response(_run(_catalog(request).get, company_id=company_id_from(request), service_id=service_id))
 
     def patch(self, request, service_id):
         serializer = ServiceInputSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        return Response(_run(_catalog(request).update, service_id=service_id, **serializer.validated_data))
+        return Response(_run(_catalog(request).update, company_id=company_id_from(request),
+                             service_id=service_id, **serializer.validated_data))
 
 
 class ServiceActivateView(APIView):
@@ -89,7 +98,8 @@ class ServiceActivateView(APIView):
     active = True
 
     def post(self, request, service_id):
-        return Response(_run(_catalog(request).set_active, service_id=service_id, active=self.active))
+        return Response(_run(_catalog(request).set_active, company_id=company_id_from(request),
+                             service_id=service_id, active=self.active))
 
 
 class ServiceDeactivateView(ServiceActivateView):

@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, startWith, switchMap, throwError } from 'rxjs';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
+import { SpecialtyOption } from '../../personnel/models/profile';
+import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import { ServiceToggleComponent } from '../components/service-toggle.component';
 import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
@@ -17,10 +19,14 @@ import { ServiceFiltersState, ServicesApiService } from '../services/services-ap
 export class ServiceListComponent implements OnInit {
   readonly state = inject(ServiceFiltersState);
   private api = inject(ServicesApiService);
+  private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
   search = new FormControl(this.state.search, { nonNullable: true });
   status = new FormControl(this.state.status, { nonNullable: true });
+  specialty = new FormControl({ value: this.state.specialtyId, disabled: true }, { nonNullable: true });
+  specialties: SpecialtyOption[] = [];
+  specialtiesAvailable = false;
   rows: CatalogService[] = [];
   total = 0;
   pageSize = 20;
@@ -30,12 +36,21 @@ export class ServiceListComponent implements OnInit {
   readonly messages = { emptyMessage: 'No hay servicios para estos filtros.', totalMessage: 'servicios' };
 
   ngOnInit(): void {
+    this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: rows => {
+        this.specialties = rows.filter(row => row.active);
+        this.specialtiesAvailable = true;
+        this.specialty.enable({ emitEvent: false });
+      },
+      error: () => { this.specialtiesAvailable = false; },
+    });
     this.reload$.pipe(startWith(undefined), switchMap(() => {
       this.loading = true;
       this.error = '';
       const params = { search: this.state.search,
         active: this.state.status === 'all' ? undefined : this.state.status === 'active',
-        page: this.state.pageIndex + 1, pageSize: this.pageSize };
+        page: this.state.pageIndex + 1, pageSize: this.pageSize,
+        ...(this.state.specialtyId ? { specialtyId: this.state.specialtyId } : {}) };
       return this.api.list(params).pipe(
         catchError((error: ServiceApiError) => {
           if (!error.invalidPage || this.state.pageIndex === 0) return throwError(() => error);
@@ -55,6 +70,9 @@ export class ServiceListComponent implements OnInit {
     this.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(value => {
       this.state.status = value; this.state.pageIndex = 0; this.reload();
     });
+    this.specialty.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(value => {
+      this.state.specialtyId = value; this.state.pageIndex = 0; this.reload();
+    });
   }
   reload(): void { this.reload$.next(); }
   onPage(event: { offset: number }): void {
@@ -63,7 +81,9 @@ export class ServiceListComponent implements OnInit {
   }
   clearFilters(): void {
     this.search.setValue('', { emitEvent: false }); this.status.setValue('active', { emitEvent: false });
-    this.state.search = ''; this.state.status = 'active'; this.state.pageIndex = 0; this.reload();
+    this.specialty.setValue('', { emitEvent: false });
+    this.state.search = ''; this.state.status = 'active'; this.state.specialtyId = '';
+    this.state.pageIndex = 0; this.reload();
   }
   onUpdated(service: CatalogService): void {
     this.success = service.active ? 'Servicio activado.' : 'Servicio desactivado.';

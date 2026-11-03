@@ -1,4 +1,4 @@
-# PLAN-2026-11-02-administrar-catalogo-servicios (v2)
+# PLAN-2026-11-02-administrar-catalogo-servicios (v3)
 
 **Task:** TASK-administrar-catalogo-servicios · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-administrar-catalogo-servicios-pantallas; ADR-administrar-catalogo-servicios-contexto
@@ -34,7 +34,7 @@ Listar, crear, consultar, editar y activar/desactivar servicios con campos de la
 - AC-04: código duplicado se rechaza dentro de la empresa y se permite en otra; vacíos no colisionan. Se normaliza a mayúsculas en backend, también si se envía por API; en UI se refleja al escribir/salir del campo.
 - AC-05: activar/desactivar conserva datos; consulta histórica permite inactivos y selector para nuevas asignaciones solo devuelve activos.
 - AC-06: empresa ajena no puede leer/editar/activar/desactivar el servicio. Módulo deshabilitado o usuario no autorizado no lee ni escribe.
-- AC-07: especialidad seleccionada pertenece a la empresa; filtro y selector trabajan con el proveedor real. Sin Personal instalado, el selector/filtro muestra «Sin especialidad» deshabilitado y explica la integración pendiente. POST/PATCH sin specialty_id o con null funciona; UUID no nulo se rechaza con error de campo. No persistir referencias sin validar. Integración completa con Personal en su adopción posterior, sin crear duplicado de especialidades.
+- AC-07: especialidad seleccionada debe estar activa y pertenecer a la empresa; filtro y selector trabajan con Personal cuando su módulo está habilitado. Sin Personal habilitado, el selector/filtro queda deshabilitado y explica la limitación. POST/PATCH sin specialty_id o con null funciona; UUID ajeno, inactivo o inexistente se rechaza con error de campo. Una referencia histórica conserva su nombre y una edición ajena a especialidad no la elimina. No duplicar el catálogo de Personal.
 - AC-08: lista/formulario/detalle cumplen UI-01..03 y estados/accesibilidad; conservar filtros y datos al fallar, impedir doble envío.
 ## Edge cases / Error cases
 Duplicación concurrente de código debe traducir constraint a error de campo; UUID ajeno no revela datos. Limpiar código y especialidad opcionales sin perder otros campos. Fallo de proveedor no equivale a especialidad válida. Inactivos con referencias históricas siguen consultables.
@@ -68,14 +68,14 @@ NO instalar runner nuevo para este maestro. Verificación manual integrada de pa
 | 04 | Repositorio/API, constraint concurrente, incluyendo normalización a mayúsculas |
 | 05 | API/BD y selector/fachada, UI acciones |
 | 06 | API dos empresas, rol/gate; Angular rutas |
-| 07 | API rechaza referencia sin proveedor; UI explica estado opcional; prueba de integración real se añade al integrar Personal |
+| 07 | API con Personal activo/inactivo/ajeno y módulo deshabilitado; UI selector/filtro real y referencia histórica |
 | 08 | Specs Angular y revisión visual/manual |
 
 # Implementation Plan
 ## Architecture considerations
 Ver ADR propuesto. Dominio puro y empresa obligatoria en repositorios/fachadas; no imports de infraestructura ajena. Q1 resuelta explícitamente y Q2 retirada como bloqueo por alcance de la fuente.
 ## Proposed solution
-Nuevo contexto service_catalog y feature Angular services; habilitación `services` independiente dentro del menú Catálogo. Puerto de especialidades con implementación no disponible, sin imports a Personal inexistente. Contrato futuro se integra cuando exista proveedor.
+Nuevo contexto service_catalog y feature Angular services; habilitación `services` independiente dentro del menú Catálogo. El puerto de especialidades usa una fachada pública de Personal con consultas por empresa, sin FK ni importación de infraestructura ajena. Angular consume el API existente de Personal cuando está habilitado.
 ## Files/components affected
 backend/modules/service_catalog/{domain,application,infrastructure,api,tests,migrations}; config/settings/base.py y config/urls.py; modularity/domain/modules.py; mapa de límites de sales/tests/test_boundaries.py. frontend features/services, app.routes.ts, assets/data/routes.json e i18n; specs correspondientes. docs/architecture/ddd.md y design-system.md si requieren describir las nuevas rutas.
 ## Implementation steps
@@ -94,3 +94,4 @@ Ninguna nueva prevista; reutilizar entornos/dependencias ya instalados, informar
 
 ## Changelog
 - **v2** (2026-11-02): [Specification] INV-03/AC-04 cerrados por instrucción explícita del usuario: códigos siempre en mayúsculas. Q2 retirada como aclaración innecesaria: fuente permite operación sin Personal. Se explicita rechazo de referencias no verificables y limitación visible, sin adjudicar aprobación del usuario a esa interpretación. [Implementation Plan] Contrato/límites técnicos definidos y estado READY.
+- **v3** (2026-11-03): [Specification] AC-07 se actualiza por la instrucción del usuario de resolver el último hallazgo tras integrar Personal en main. Se concreta aceptación de especialidades activas de la misma empresa y conservación histórica. [Implementation Plan] Fachada pública de Personal, API de especialidades ya existente y pruebas de integración. Sin migraciones nuevas.

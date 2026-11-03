@@ -82,5 +82,6 @@ export class ServicesApiService {
 export class ServiceFiltersState {
   search = '';
   status = 'active';
+  specialtyId = '';
   pageIndex = 0;
 }

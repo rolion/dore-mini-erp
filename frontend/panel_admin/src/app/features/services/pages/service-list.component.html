@@ -15,13 +15,16 @@
             <option value="active">Activos</option><option value="inactive">Inactivos</option><option value="all">Todos</option>
           </select></div>
         <div><label for="service-specialty" class="visually-hidden">Especialidad</label>
-          <select id="service-specialty" class="form-select" disabled aria-describedby="specialty-help"><option>Sin especialidad</option></select></div>
+          <select id="service-specialty" class="form-select" [formControl]="specialty" aria-describedby="specialty-help">
+            <option value="">Todas las especialidades</option><option value="none">Sin especialidad</option>
+            @for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+          </select></div>
         <a routerLink="/pocketbiz/catalog/services/new" class="btn btn-icon icon-left btn-primary rounded-button" title="Nuevo servicio" aria-label="Nuevo servicio"><i class="material-icons" aria-hidden="true">add</i></a>
       </div>
-      <small id="specialty-help" class="text-muted d-block">Las especialidades estarán disponibles al integrar Personal. Puedes crear servicios sin especialidad.</small>
+      @if (!specialtiesAvailable) { <small id="specialty-help" class="text-muted d-block">Habilita Personal para filtrar por especialidad. Puedes crear servicios sin especialidad.</small> }
       @if (success) { <div role="status" class="alert alert-success mt-2">{{ success }}</div> }
       @if (error) { <div role="alert" class="alert alert-danger mt-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">Reintentar</button></div> }
-      @if (state.search || state.status !== 'active') { <button type="button" class="btn btn-light mt-2" (click)="clearFilters()">Limpiar filtros</button> }
+      @if (state.search || state.status !== 'active' || state.specialtyId) { <button type="button" class="btn btn-light mt-2" (click)="clearFilters()">Limpiar filtros</button> }
       @if (!loading && !error && total === 0 && !state.search && state.status === 'active') { <p class="mt-2">Aún no hay servicios activos. Usa «Nuevo servicio» para comenzar.</p> }
       <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force" [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [virtualization]="false" [count]="total" [offset]="state.pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)" [scrollbarH]="true">
         <ngx-datatable-column name="Nombre" [sortable]="false" [minWidth]="150"><ng-template ngx-datatable-cell-template let-row="row"><a class="fw-bold" [routerLink]="['/pocketbiz/catalog/services', row.id]">{{ row.name }}</a></ng-template></ngx-datatable-column>

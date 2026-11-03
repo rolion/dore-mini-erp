@@ -28,3 +28,6 @@ Tercer FAIL consecutivo del task. Detener reintentos automáticos según `delive
 
 ## Avance del 2026-11-03
 El usuario pidió resolver los conflictos con `main`. Se integró f6839a4 en el commit 2028f60, conservando Servicios, Personal y Odontología en el catálogo de módulos y sus pruebas. GitHub PR #48 volvió a `mergeable: true`. Verificación tras el merge: Django 1350 tests OK con PostgreSQL local de pruebas; Karma 1115/1115 OK con cobertura; lint y build OK. El hallazgo sigue **Open** por el contrato de especialidades de AC-07 y el PLAN/ADR pendientes de actualización; resolver conflictos no equivale a aprobar el PR.
+
+## Corrección propuesta para revisión
+El usuario pidió resolver el último hallazgo. PLAN v3, ADR y DDR actualizados; adaptador de Servicios consulta la fachada pública de Personal. Nuevas asignaciones exigen especialidad activa de la misma empresa y módulo Personal habilitado. Nombres históricos siguen visibles; selector y filtro Angular usan el API real de Personal. Autoverificación sobre la corrección: 1351 tests Django con PostgreSQL OK; 1118/1118 Karma con cobertura OK; lint, build y Bandit OK. Pendiente de Quality Gate independiente antes de cerrar el hallazgo.

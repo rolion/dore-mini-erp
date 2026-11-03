@@ -27,8 +27,10 @@
               @if (fieldError('durationMinutes')) { <small id="service-duration-error" class="form-text text-danger">{{ fieldError('durationMinutes') }}</small> }</div>
           </div>
           <div class="form-group"><label for="service-specialty">Especialidad</label>
-            <select id="service-specialty" class="form-select" formControlName="specialtyId" aria-describedby="service-specialty-help"><option [ngValue]="null">Sin especialidad</option></select>
-            <small id="service-specialty-help" class="text-muted d-block">Opcional. La selección estará disponible al integrar Personal.</small>
+            <select id="service-specialty" class="form-select" formControlName="specialtyId" aria-describedby="service-specialty-help"><option [ngValue]="null">Sin especialidad</option>
+              @for (specialty of specialties; track specialty.id) { <option [ngValue]="specialty.id" [disabled]="!specialty.active">{{ specialty.name }}{{ specialty.active ? '' : ' (inactiva)' }}</option> }
+            </select>
+            <small id="service-specialty-help" class="text-muted d-block">{{ specialtiesAvailable ? 'Opcional. Solo se pueden elegir especialidades activas.' : 'Habilita Personal para elegir una especialidad. Puedes guardar sin especialidad.' }}</small>
             @if (fieldError('specialtyId')) { <small class="form-text text-danger">{{ fieldError('specialtyId') }}</small> }</div>
           <p>Estado: <span class="badge-outline" [class.col-green]="active" [class.col-red]="!active">{{ active ? 'Activo' : 'Inactivo' }}</span></p>
           <button class="btn btn-primary" type="submit" [disabled]="form.invalid || saving || loading || loadFailed">{{ saving ? 'Guardando…' : 'Guardar' }}</button>

@@ -43,8 +43,10 @@ class ServiceCatalog:
         return self.repository.save(service)
 
     def update(self, service_id: UUID, **values) -> Service:
-        service = self.get(service_id, for_update=True).updated(**values)
-        self._validate_specialty(service)
+        previous = self.get(service_id, for_update=True)
+        service = previous.updated(**values)
+        if service.specialty_id != previous.specialty_id:
+            self._validate_specialty(service)
         return self.repository.save(service)
 
     def set_active(self, service_id: UUID, *, active: bool) -> Service:

@@ -4,6 +4,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { HasUnsavedChanges } from '../../../core/guard/unsaved-changes.guard';
+import { SpecialtyOption } from '../../personnel/models/profile';
+import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import { ServiceApiError, ServiceInput } from '../models/service';
 import { ServicesApiService } from '../services/services-api.service';
 
@@ -13,6 +15,7 @@ export class ServiceFormComponent implements OnInit, HasUnsavedChanges {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private api = inject(ServicesApiService);
+  private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   readonly id = this.route.snapshot.paramMap.get('id');
   readonly form = this.fb.group({
@@ -31,9 +34,22 @@ export class ServiceFormComponent implements OnInit, HasUnsavedChanges {
   error = '';
   active = true;
   serverErrors: Partial<Record<keyof ServiceInput, string>> = {};
+  specialties: SpecialtyOption[] = [];
+  specialtiesAvailable = false;
   get cancelLink(): string[] { return this.id ? ['/pocketbiz/catalog/services', this.id] : ['/pocketbiz/catalog/services']; }
 
   ngOnInit(): void {
+    this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: rows => {
+        const active = rows.filter(row => row.active);
+        const selected = this.specialties.find(row => row.id === this.form.controls.specialtyId.value);
+        this.specialties = selected && !active.some(row => row.id === selected.id)
+          ? [selected, ...active] : active;
+        this.specialtiesAvailable = true;
+        this.form.controls.specialtyId.enable({ emitEvent: false });
+      },
+      error: () => { this.specialtiesAvailable = false; },
+    });
     this.form.controls.code.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(value => {
       const upper = value.toUpperCase();
       if (upper !== value) this.form.controls.code.setValue(upper, { emitEvent: false });
@@ -44,7 +60,14 @@ export class ServiceFormComponent implements OnInit, HasUnsavedChanges {
     if (!this.id || this.loading) return;
     this.loading = true; this.loadFailed = false; this.error = '';
     this.api.get(this.id).pipe(finalize(() => this.loading = false), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: service => { this.form.patchValue(service); this.active = service.active; this.form.markAsPristine(); },
+      next: service => {
+        this.form.patchValue(service);
+        if (service.specialtyId && service.specialtyName &&
+            !this.specialties.some(row => row.id === service.specialtyId)) {
+          this.specialties = [{ id: service.specialtyId, name: service.specialtyName, active: false }, ...this.specialties];
+        }
+        this.active = service.active; this.form.markAsPristine();
+      },
       error: (error: ServiceApiError) => { this.error = error.message; this.loadFailed = true; },
     });
   }

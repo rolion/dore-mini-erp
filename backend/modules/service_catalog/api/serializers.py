@@ -38,5 +38,4 @@ class ServiceSerializer(serializers.Serializer):
     updated_at = serializers.DateTimeField(read_only=True)
 
     def get_specialty_name(self, service):
-        # No specialty references may be created until the real Personal directory is integrated.
-        return None
+        return self.context.get('specialty_names', {}).get(service.specialty_id)

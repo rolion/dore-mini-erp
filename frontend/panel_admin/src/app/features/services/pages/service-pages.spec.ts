@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angul
 import { Subject, of, throwError } from 'rxjs';
 import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
+import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import { ServiceFormComponent } from './service-form.component';
 import { ServiceListComponent } from './service-list.component';
 import { ServiceDetailComponent } from './service-detail.component';
@@ -12,21 +13,44 @@ const service: CatalogService = { id: 'one', name: 'Consulta', code: 'CON-01', d
 
 describe('ServiceFormComponent', () => {
   let api: jasmine.SpyObj<ServicesApiService>;
+  let personnel: jasmine.SpyObj<PersonnelApiService>;
   beforeEach(() => {
     api = jasmine.createSpyObj<ServicesApiService>('api', ['get', 'create', 'update']);
+    personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['specialties']);
+    personnel.specialties.and.returnValue(of([{ id: 'specialty-1', name: 'Ortodoncia', active: true,
+      created_by: 1, updated_by: 1, created_at: '', updated_at: '' }]));
     TestBed.configureTestingModule({ imports: [ServiceFormComponent], providers: [provideRouter([]),
       { provide: ServicesApiService, useValue: api },
+      { provide: PersonnelApiService, useValue: personnel },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}) } } }] });
   });
   function validForm(component: ServiceFormComponent): void {
     component.form.patchValue({ name: 'Consulta', code: 'con-01', basePrice: '120.00', durationMinutes: 30 });
   }
-  it('shows uppercase codes and an optional unavailable specialty selector', () => {
+  it('shows uppercase codes and selectable active specialties', () => {
     const fixture = TestBed.createComponent(ServiceFormComponent); fixture.detectChanges();
     validForm(fixture.componentInstance); fixture.detectChanges();
     expect(fixture.componentInstance.form.controls.code.value).toBe('CON-01');
+    expect(fixture.componentInstance.form.controls.specialtyId.enabled).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Ortodoncia');
+    expect(fixture.componentInstance.form.valid).toBeTrue();
+  });
+  it('sends a selected specialty with the service', () => {
+    api.create.and.returnValue(of({ ...service, specialtyId: 'specialty-1', specialtyName: 'Ortodoncia' }));
+    const fixture = TestBed.createComponent(ServiceFormComponent); fixture.detectChanges();
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    validForm(fixture.componentInstance);
+    fixture.componentInstance.form.controls.specialtyId.setValue('specialty-1');
+    fixture.componentInstance.save();
+    expect(api.create).toHaveBeenCalledWith(jasmine.objectContaining({ specialtyId: 'specialty-1' }));
+    expect(navigate).toHaveBeenCalled();
+  });
+  it('keeps specialty optional when Personal is unavailable', () => {
+    personnel.specialties.and.returnValue(throwError(() => new Error('Personal disabled')));
+    const fixture = TestBed.createComponent(ServiceFormComponent); fixture.detectChanges();
+    validForm(fixture.componentInstance); fixture.detectChanges();
     expect(fixture.componentInstance.form.controls.specialtyId.disabled).toBeTrue();
-    expect(fixture.nativeElement.textContent).toContain('al integrar Personal');
+    expect(fixture.nativeElement.textContent).toContain('Habilita Personal');
     expect(fixture.componentInstance.form.valid).toBeTrue();
   });
   it('rejects zero/fractional duration and invalid price before sending', () => {
@@ -59,11 +83,14 @@ describe('ServiceFormComponent', () => {
 
 describe('ServiceListComponent', () => {
   let api: jasmine.SpyObj<ServicesApiService>;
+  let personnel: jasmine.SpyObj<PersonnelApiService>;
   beforeEach(() => {
     api = jasmine.createSpyObj<ServicesApiService>('api', ['list']);
     api.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [service] }));
+    personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['specialties']);
+    personnel.specialties.and.returnValue(of([]));
     TestBed.configureTestingModule({ imports: [ServiceListComponent], providers: [provideRouter([]),
-      { provide: ServicesApiService, useValue: api }] });
+      { provide: ServicesApiService, useValue: api }, { provide: PersonnelApiService, useValue: personnel }] });
   });
   it('restores filters and pagination and displays formatted values', () => {
     api.list.and.returnValue(of({ count: 21, next: null, previous: null, results: [service] }));
@@ -88,6 +115,12 @@ describe('ServiceListComponent', () => {
     expect(api.list).toHaveBeenCalledWith({ search: 'Limpieza', active: true, page: 1, pageSize: 20 });
     fixture.destroy();
   }));
+  it('filters by specialty and keeps it in the saved list state', () => {
+    const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
+    fixture.componentInstance.specialty.setValue('specialty-1');
+    expect(TestBed.inject(ServiceFiltersState).specialtyId).toBe('specialty-1');
+    expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ specialtyId: 'specialty-1', page: 1 }));
+  });
   it('recovers a valid page after the last active service on a saved page is deactivated', () => {
     const state = TestBed.inject(ServiceFiltersState); state.pageIndex = 1;
     api.list.and.returnValues(of({ count: 21, next: null, previous: null, results: [service] }),
