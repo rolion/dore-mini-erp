@@ -81,6 +81,8 @@ Ingeniería corrigió los cuatro hallazgos, incorporó diálogos nativos y compr
 
 **Segundo gate: sin PASS** sobre `ad64a92`. PostgreSQL 16 aprobó 122 pruebas y Django no reportó problemas. El lint de Angular pasó y `npm audit` reportó cero vulnerabilidades. El build y Karma no completaron la compilación. Node 22.12.0 terminó con código Windows 3221225477 y Node 24.22.1 salió con código 1 después de `Building...`. Quedan sin verificar la cobertura, la vista en navegador y la navegación por teclado. El TASK permanece en REVIEW y el PR sigue en borrador.
 
+**Tercer gate: FAIL** sobre `7d521eb`. Build y lint pasan (con `NG_BUILD_MAX_WORKERS=1` y `--max-old-space-size=1536`), `npm audit` sin vulnerabilidades; Karma: 2 fallos de 1118 ([REV-06](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-06.md), High). Otros hallazgos: [07](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-07.md) a [12](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-12.md). La suite backend no se reprodujo en el gate (sin acceso a credenciales de PostgreSQL). Visual verificada solo con backend simulado. Es el tercer resultado sin PASS consecutivo: se detiene el ciclo y se consulta a la persona.
+
 ## Publicación
 
 El gate sigue sin PASS. La revisión visual parcial confirmó el [hallazgo del diálogo](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-05.md). El build de producción y Karma con cobertura siguen pendientes de verificación.
