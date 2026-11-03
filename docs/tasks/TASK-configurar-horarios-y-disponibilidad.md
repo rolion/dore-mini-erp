@@ -1,10 +1,10 @@
 # TASK-configurar-horarios-y-disponibilidad: PB-AGE-001
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-horarios-y-disponibilidad
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/49
 **Fuente:** https://trello.com/c/7MIst1PV/
 
 ## Historial de transiciones
@@ -15,6 +15,8 @@
 | 2026-11-03 | INVESTIGATION → DESIGN | Nueva vista semanal y formularios | delivery-start |
 | 2026-11-03 | DESIGN → ARCHITECTURE | Agenda consume Personal y persiste reglas propias | delivery-start |
 | 2026-11-03 | ARCHITECTURE → PLANNING | Pendiente definir la fuente de zona horaria y turnos nocturnos | delivery-start |
+
+| 2026-11-03 | PLANNING → ENGINEERING | Alcance temporal confirmado y PR #49 abierto | delivery-start |
 
 ## Investigación
 
@@ -50,7 +52,7 @@
 
 ## Plan
 
-**Specification readiness: READY.** [Plan v1](../plans/PLAN-2026-11-03-configurar-horarios-y-disponibilidad.md), modo COMPLETO. Pendiente registrar rama y PR.
+**Specification readiness: READY.** [Plan v1](../plans/PLAN-2026-11-03-configurar-horarios-y-disponibilidad.md), modo COMPLETO. Documentación publicada en el PR #49.
 
 ## Implementación
 
