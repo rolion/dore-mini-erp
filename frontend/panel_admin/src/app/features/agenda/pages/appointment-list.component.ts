@@ -1,0 +1,139 @@
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { finalize, forkJoin } from 'rxjs';
+import { Profile } from '../../personnel/models/profile';
+import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
+import {
+  Appointment, AppointmentFilters, AppointmentStatus, STATUS_CLASSES, STATUS_LABELS, Slot,
+} from '../models/appointment';
+import { AppointmentsApiService, formatDateTime } from '../services/appointments-api.service';
+
+interface DayGroup {
+  date: string;
+  appointments: Appointment[];
+  slots: Slot[];
+}
+
+/** Agenda → Citas: listado con filtros y calendario diario/semanal textual (ver DDR de citas). */
+@Component({
+  selector: 'app-appointment-list',
+  imports: [ReactiveFormsModule, RouterLink],
+  templateUrl: './appointment-list.component.html',
+})
+export class AppointmentListComponent implements OnInit {
+  private api = inject(AppointmentsApiService);
+  private personnel = inject(PersonnelApiService);
+  private destroyRef = inject(DestroyRef);
+  private fb = inject(FormBuilder).nonNullable;
+
+  readonly statuses = Object.keys(STATUS_LABELS) as AppointmentStatus[];
+  readonly labels = STATUS_LABELS;
+  readonly classes = STATUS_CLASSES;
+  readonly formatDateTime = formatDateTime;
+  readonly filters = this.fb.group({ from: '', to: '', professional: '', status: '', search: '' });
+  readonly calendar = this.fb.group({ professional: '', date: this.today(), span: '1' });
+
+  mode: 'list' | 'calendar' = 'list';
+  people: Profile[] = [];
+  rows: Appointment[] = [];
+  groups: DayGroup[] = [];
+  count = 0;
+  page = 1;
+  loading = false;
+  error = '';
+
+  ngOnInit(): void {
+    this.personnel.list('professionals', { page: 1, page_size: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: page => this.people = page.results, error: () => this.error = 'No se pudieron cargar los profesionales.' });
+    this.search();
+  }
+
+  get hasFilters(): boolean {
+    return Object.values(this.filters.getRawValue()).some(value => value !== '');
+  }
+
+  today(): string {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/La_Paz', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date());
+    return parts;
+  }
+
+  setMode(mode: 'list' | 'calendar'): void {
+    this.mode = mode;
+    if (mode === 'list') this.search(); else this.loadCalendar();
+  }
+
+  search(page = 1): void {
+    this.page = page;
+    const raw = this.filters.getRawValue();
+    const filters: AppointmentFilters = { ...raw, status: raw.status as AppointmentStatus | '', page };
+    this.loading = true;
+    this.error = '';
+    this.api.list(filters).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
+      .subscribe({
+        next: result => { this.rows = result.results; this.count = result.count; },
+        error: () => this.error = 'No se pudieron cargar las citas.',
+      });
+  }
+
+  clear(): void {
+    this.filters.reset();
+    this.search();
+  }
+
+  get pages(): number {
+    return Math.max(1, Math.ceil(this.count / 20));
+  }
+
+  private addDays(date: string, days: number): string {
+    const value = new Date(`${date}T00:00:00Z`);
+    value.setUTCDate(value.getUTCDate() + days);
+    return value.toISOString().slice(0, 10);
+  }
+
+  loadCalendar(): void {
+    const { professional, date, span } = this.calendar.getRawValue();
+    this.groups = [];
+    this.error = '';
+    if (!professional || !date) return;
+    const last = this.addDays(date, Number(span) - 1);
+    this.loading = true;
+    forkJoin({
+      appointments: this.api.list({ professional, from: date, to: last, page_size: 100 }),
+      free: this.api.freeSlots(professional, date, last),
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false),
+    ).subscribe({
+      next: ({ appointments, free }) => {
+        const items = appointments.results;
+        const groups: DayGroup[] = [];
+        for (let i = 0; i < Number(span); i++) {
+          const day = this.addDays(date, i);
+          groups.push({
+            date: day,
+            appointments: items.filter(item => item.starts.startsWith(day) && item.status !== 'cancelled'),
+            slots: free.slots.filter(slot => slot.starts.startsWith(day)),
+          });
+        }
+        this.groups = groups;
+      },
+      error: () => this.error = 'No se pudo cargar el calendario. Inténtalo de nuevo.',
+    });
+  }
+
+  newQuery(slot: Slot): Record<string, string> {
+    return { professional: this.calendar.controls.professional.value, starts: slot.starts.slice(0, 16) };
+  }
+
+  formatDay(value: string): string {
+    const [year, month, day] = value.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  time(value: string): string {
+    return value.slice(11, 16);
+  }
+}

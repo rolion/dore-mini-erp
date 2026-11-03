@@ -1,6 +1,6 @@
 # TASK-agendar-y-gestionar-citas: PB-AGE-002 · Agendar y gestionar citas de pacientes
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-agendar-y-gestionar-citas
@@ -15,6 +15,7 @@
 | 2026-11-03 | DESIGN → ARCHITECTURE | Agenda consume Clientes, Servicios y Personal; concurrencia; migración | delivery-start |
 | 2026-11-03 | ARCHITECTURE → PLANNING | Decisiones registradas en ADR/DDR | delivery-start |
 | 2026-11-03 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada; pruebas de API pendientes de PostgreSQL | delivery-build |
 
 ## Investigación
 
@@ -77,7 +78,25 @@ Ver `docs/adr/ADR-agendar-y-gestionar-citas-modelo-concurrencia-e-integracion.md
 `docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+
+Resumen: agregado `Appointment` con historial en Agenda, endpoints `/api/agenda/appointments/` y pantallas Agenda → Citas.
+
+- **Dominio** (`agenda/domain/appointment.py`, INV-01..05): estados, transiciones, solapes semiabiertos, ajuste a un intervalo disponible, motivo obligatorio. 6 pruebas unitarias (`agenda/test_appointment.py`).
+- **Persistencia** (`models.py`, migración `0002_appointments`): `Appointment` y `AppointmentEvent`, aditiva.
+- **Aplicación** (`application/appointments.py`): bloqueo por `Schedule` (mismo patrón de PB-AGE-001); disponibilidad = turnos − pausas − ausencias; franjas libres; crear, confirmar, reprogramar (todo o nada, excluye la propia), cancelar, atendida / no asistió (AC-01..07). Fachadas de Clientes, Servicios y Personal vía `infrastructure/adapters.py`.
+- **API** (`appointments_api.py`): lista con filtros y paginación, detalle con historial y `allowed_actions`, acciones, PATCH de notas, `free-slots` (AC-08). 409 para conflicto o transición inválida.
+- **Frontend** (`features/agenda/`): servicio, lista/calendario diario y semanal textual, formulario, detalle con diálogos nativos `<dialog>` (mismo patrón que la configuración de horarios), rutas, menú e i18n (AC-09).
+
+Pantallas de referencia: Lista (variante `purchase-list`), Formulario (`product-form`), Detalle con acciones (`purchase-detail`). Sin componentes compartidos nuevos.
+
+Desviaciones respecto al plan:
+- Las acciones usan `<dialog>` nativo y no `NgbModal`, por coherencia con `AgendaComponent` (que migró a diálogos nativos tras el gate de PB-AGE-001).
+- La búsqueda por cliente filtra por el snapshot `customer_name` (`icontains`) en lugar de `search_customer_ids`: evita una llamada entre módulos y N+1; el ADR menciona la fachada solo como opción.
+- `WeekView` ahora usa `week_records` (extraído a `application/week.py`) para compartir la consulta; sin cambio de comportamiento.
+
+Deuda técnica / limitaciones: turnos y ausencias editados después no revisan citas existentes; `treatment_item_id` queda reservado sin UI ni validación; sin restricción de fechas pasadas al crear (pregunta abierta del plan).
+
+Verificación propia de ingeniería (no es el Quality Gate): `manage.py check` y `makemigrations --check` sin cambios; 12 pruebas de dominio sin base de datos; 31 pruebas de `modules.agenda` sobre SQLite temporal, todas correctas salvo las dos de concurrencia (`test_concurrent_*`, incluida la de PB-AGE-001), que fallan por bloqueo de tabla de SQLite y **requieren PostgreSQL**. Sin credenciales de PostgreSQL en este entorno: AC-02 no está verificado. Frontend: `ngc` de plantillas, `ng lint` y Karma de `features/agenda` y `layout` (32 pruebas) correctos. Recorrido visual y de teclado en navegador pendiente.
 
 ## Review
 _Pendiente_

@@ -1,0 +1,95 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">Nueva cita</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">Agenda</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/agenda/citas">Citas</a></li>
+    <li class="breadcrumb-item active">Nueva</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header"><h4>Nueva cita</h4></div>
+      <div class="card-body">
+        @if (loadingOptions) { <p role="status">Cargando…</p> }
+        @if (error) { <p class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert">{{ error }}</p> }
+        @if (conflict && slots.length) {
+          <div class="alert alert-info" role="status">
+            <p class="mb-1">Franjas libres de ese día (Hora de Bolivia):</p>
+            <ul class="list-inline mb-0">
+              @for (slot of slots; track slot.starts) {
+                <li class="list-inline-item">
+                  <button type="button" class="btn btn-sm btn-outline-primary" (click)="useSlot(slot)">
+                    {{ time(slot.starts) }}–{{ time(slot.ends) }}</button>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+        @if (conflict && !slots.length) { <p class="alert alert-info" role="status">No quedan franjas libres ese día para esa duración.</p> }
+        <form class="register-form m-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="row">
+            <div class="form-group col-md-6">
+              <label for="a-customer-search">Buscar cliente</label>
+              <input id="a-customer-search" type="search" class="form-control" [formControl]="customerSearch" placeholder="Nombre o teléfono">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="a-customer">Cliente <span class="text-danger">*</span></label>
+              <select id="a-customer" class="form-select" formControlName="customer_id">
+                <option value="">Selecciona un cliente</option>
+                @for (customer of customers; track customer.id) { <option [value]="customer.id">{{ customer.name }}</option> }
+              </select>
+              @if (fields['customer_id']) { <small class="form-text text-danger">{{ fields['customer_id'] }}</small> }
+              @else if (form.controls.customer_id.touched && form.controls.customer_id.invalid) {
+                <small class="form-text text-danger">Selecciona un cliente.</small> }
+            </div>
+            <div class="form-group col-md-6">
+              <label for="a-professional">Profesional <span class="text-danger">*</span></label>
+              <select id="a-professional" class="form-select" formControlName="professional_id">
+                <option value="">Selecciona un profesional</option>
+                @for (person of people; track person.id) { <option [value]="person.id">{{ person.name }}</option> }
+              </select>
+              @if (fields['professional_id']) { <small class="form-text text-danger">{{ fields['professional_id'] }}</small> }
+              @else if (form.controls.professional_id.touched && form.controls.professional_id.invalid) {
+                <small class="form-text text-danger">Selecciona un profesional.</small> }
+            </div>
+            <div class="form-group col-md-6">
+              <label for="a-service">Servicio <span class="text-danger">*</span></label>
+              <select id="a-service" class="form-select" formControlName="service_id">
+                <option value="">Selecciona un servicio</option>
+                @for (service of services; track service.id) { <option [value]="service.id">{{ service.name }} ({{ service.durationMinutes }} min)</option> }
+              </select>
+              @if (fields['service_id']) { <small class="form-text text-danger">{{ fields['service_id'] }}</small> }
+              @else if (form.controls.service_id.touched && form.controls.service_id.invalid) {
+                <small class="form-text text-danger">Selecciona un servicio.</small> }
+            </div>
+            <div class="form-group col-md-4">
+              <label for="a-starts">Inicio (hora de Bolivia) <span class="text-danger">*</span></label>
+              <input id="a-starts" type="datetime-local" class="form-control" formControlName="starts">
+              @if (fields['starts']) { <small class="form-text text-danger">{{ fields['starts'] }}</small> }
+              @else if (form.controls.starts.touched && form.controls.starts.invalid) {
+                <small class="form-text text-danger">Indica la fecha y la hora de inicio.</small> }
+            </div>
+            <div class="form-group col-md-4">
+              <label for="a-duration">Duración (minutos) <span class="text-danger">*</span></label>
+              <input id="a-duration" type="number" min="1" max="1440" class="form-control" formControlName="duration_minutes">
+              @if (fields['duration_minutes'] || (form.controls.duration_minutes.touched && form.controls.duration_minutes.invalid)) {
+                <small class="form-text text-danger">{{ fields['duration_minutes'] || 'Ingresa minutos enteros mayores que cero.' }}</small> }
+            </div>
+            <div class="form-group col-md-4">
+              <span class="d-block">Fin calculado</span>
+              <output class="form-control-plaintext" aria-live="polite">{{ endsLabel }}</output>
+            </div>
+            <div class="form-group col-12">
+              <label for="a-notes">Notas administrativas</label>
+              <textarea id="a-notes" class="form-control" rows="3" formControlName="notes" [attr.maxlength]="notesMax"></textarea>
+              <small class="form-text text-muted">No incluyas diagnósticos. {{ form.controls.notes.value.length }} / {{ notesMax }}</small>
+              @if (fields['notes']) { <small class="form-text text-danger d-block">{{ fields['notes'] }}</small> }
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" [disabled]="saving">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
+          <a class="btn btn-light ms-2" routerLink="/pocketbiz/agenda/citas">Cancelar</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

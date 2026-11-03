@@ -1,6 +1,6 @@
 {
   "MENUITEMS": {
-    "AGENDA":{"SCHEDULE":"Arbeitszeiten und Abwesenheiten","TEXT":"Terminkalender"},
+    "AGENDA":{"APPOINTMENTS":"Termine","SCHEDULE":"Arbeitszeiten und Abwesenheiten","TEXT":"Terminkalender"},
     "DENTISTRY": { "TEXT": "Zahnmedizin", "PATIENTS": "Patienten" },
     "PERSONNEL": { "TEXT": "Personal", "LIST": { "PROFESSIONALS": "Fachkräfte", "SPECIALTIES": "Fachgebiete" } },
     "MAIN": {
