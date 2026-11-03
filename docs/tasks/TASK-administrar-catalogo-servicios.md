@@ -22,6 +22,8 @@
 
 | 2026-11-02 | REVIEW → ENGINEERING | Quality Gate detectó dos defectos Medium de paginación; REV-01/02 | delivery-publish |
 | 2026-11-02 | ENGINEERING → REVIEW | Correcciones de paginación y regresiones añadidas; sin cambio de Specification | delivery-build |
+| 2026-11-03 | REVIEW → ENGINEERING | Revisión móvil detectó solapamiento; PostgreSQL reveló expectativa de módulos obsoleta, REV-2026-11-03-01/02 | delivery-publish |
+| 2026-11-03 | ENGINEERING → REVIEW | Altura móvil corregida y expectativa actualizada; verificaciones completas propias | delivery-build |
 
 | 2026-11-02 | REVIEW → REVIEW | Segunda revisión focal cierra REV-01/02; Quality Gate sin PASS por verificaciones PostgreSQL/visual pendientes | delivery-publish |
 
@@ -86,14 +88,12 @@ Autoverificación (no sustituye Quality Gate): 21 tests dominio/modularidad/lím
 
 Correcciones de revisión: validación 400 por campo en page/page_size; recuperación única a página válida tras desactivar último registro. Nuevas regresiones de backend sin BD y frontend. Autoverificación final: 23 tests backend sin BD OK, 20 tests Angular OK, lint global OK y build producción con preserve-symlinks OK; Bandit sin hallazgos.
 
-Pendiente de entorno: pruebas API/BD y concurrencia escritas pero no ejecutadas: PostgreSQL local exige autenticación y DATABASE_URL no está configurada en el proceso. No se leyeron .env/secretos. Docker instalado sin daemon disponible. Inspección visual integrada aún no verificada por falta de backend con BD. Cobertura mostrada por Karma incluye dependencias de layout; no se presenta como cobertura completa del producto.
+Correcciones de revisión del 2026-11-03: cabecera de filtros con altura automática bajo 575 px; expectativa de catálogo de módulos actualizada para incluir `services` deshabilitado por defecto. Verificación propia: 109 tests backend con PostgreSQL local y base de pruebas exclusiva OK; Karma completo 1077/1077 OK con cobertura de líneas 87.54%; Karma de Servicios 17/17 OK; lint, build de producción y npm audit de producción OK. Inspección integrada de lista móvil a 390×844 en claro y oscuro y escritorio a 1440×900 confirmada. Configuración local cargada por runtime sin imprimir secretos.
 ## Review
 Primer Quality Gate independiente sobre 2e44a87: **FAIL / no PASS**. Revisor aislado leyó TASK/PLAN v2/ADR/DDR/sistema de diseño y diff. Ejecutó 21 tests de dominio/modularidad/DDD (exit 0) y Bandit (exit 0, sin hallazgos). Lint independiente quedó sin terminación y Karma independiente fue abortado tras 364.7 s sin salida; no se declaran aprobados por esa revisión. Build y audit solo contaban con autoverificación del implementador.
 
 Hallazgos IMPLEMENTATION Medium: [REV-01](../reviews/REV-2026-11-02-administrar-catalogo-servicios-01.md), parámetros de paginación; [REV-02](../reviews/REV-2026-11-02-administrar-catalogo-servicios-02.md), página inexistente tras desactivar último registro. Se volvió a delivery-build y se implementaron correcciones sin cambio de Specification. Segunda revisión focal sobre 3e932c3: ambos hallazgos corregidos y cerrados; sin defectos nuevos. Revisor ejecutó 2 tests de paginación sin BD (exit 0) y confirmó recuperación de página por lectura. No ejecutó Angular en la revisión focal.
 
-Persisten verificaciones no realizadas: API/BD y concurrencia PostgreSQL con conexión autenticada; revisión visual integrada. No hay PASS ni autorización para publicar como listo.
+Revisión del 2026-11-03: [REV-03](../reviews/REV-2026-11-03-administrar-catalogo-servicios-01.md) por solapamiento móvil y [REV-04](../reviews/REV-2026-11-03-administrar-catalogo-servicios-02.md) por prueba obsoleta de módulos. Ambos corregidos y cerrados mediante delivery-build. Sigue pendiente el Quality Gate independiente sobre el nuevo HEAD; no se declara PASS todavía.
 ## Publicación
-PR #48 permanece **draft**, sin merge ni declaración de listo. Código y correcciones subidos; árbol limpio al entregar. **Etapa REVIEW**, pendiente de entorno para cerrar Quality Gate.
-
-Para continuar: proporcionar en el entorno una conexión PostgreSQL de pruebas autenticada (`DATABASE_URL`, sin publicar valores ni leer secretos en el chat), ejecutar pruebas API/BD/concurrencia y recorrido visual integrado en móvil/escritorio con temas claro/oscuro. La skill delivery-publish exige detenerse cuando no se puede ejecutar una verificación relevante; no se omiten esas verificaciones ni se las marca PASS.
+PR #48 permanece **draft**, sin merge ni declaración de listo. **Etapa REVIEW** hasta que el Quality Gate independiente confirme el estado corregido.

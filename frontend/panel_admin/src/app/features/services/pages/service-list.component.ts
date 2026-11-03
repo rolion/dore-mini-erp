@@ -12,6 +12,7 @@ import { ServiceFiltersState, ServicesApiService } from '../services/services-ap
 @Component({ selector: 'app-service-list',
   imports: [ReactiveFormsModule, RouterLink, NgxDatatableModule, MoneyPipe, ServiceToggleComponent],
   templateUrl: './service-list.component.html',
+  styleUrl: './service-list.component.scss',
 })
 export class ServiceListComponent implements OnInit {
   readonly state = inject(ServiceFiltersState);
