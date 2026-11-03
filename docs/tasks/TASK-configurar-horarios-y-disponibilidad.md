@@ -106,7 +106,7 @@ Ingeniería corrigió los cuatro hallazgos, incorporó diálogos nativos y compr
 
 ## Corrección de REV-13 y REV-14
 
-Los `btn-link` y la alerta de éxito usan texto claro en tema oscuro; los diálogos definen su borde (ya no usan `.border`, que pisaba el tema); el error de guardado de los diálogos usa `alert alert-danger`. Lint, build y Karma (1121 correctas) pasan. **Pendiente: comprobar en navegador el contraste en oscuro y el nuevo estilo del error.** El gate PASS aplica a `968d912`; esta corrección es posterior.
+Los `btn-link` y la alerta de éxito usan texto claro en tema oscuro; los diálogos definen su borde (ya no usan `.border`, que pisaba el tema); el error de guardado de los diálogos usa `alert alert-danger`. Lint, build y Karma (1121 correctas) pasan. Comprobado en navegador (backend simulado, datos ficticios): en oscuro, «Editar turno» y «Cancelar» en blanco (17,4:1), diálogo con borde propio y las alertas de error y de éxito sin fondo de color, con texto blanco y borde de estado (17,4:1). Al medirlo, la alerta de éxito en oscuro quedó en 2,09:1 con el primer cambio y se corrigió; el error de guardado conserva los datos y el diálogo abierto. El PASS del gate aplica a `968d912`; esta corrección es posterior y no tuvo un gate independiente.
 
 ## Publicación
 

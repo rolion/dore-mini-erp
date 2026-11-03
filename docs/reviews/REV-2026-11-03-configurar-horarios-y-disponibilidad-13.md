@@ -15,3 +15,5 @@ En tema oscuro, los `btn-link` de Agenda («Editar turno», «Cancelar», «Quit
 No bloquea el PASS (no es Critical ni High); se registra como limitación conocida.
 
 Corrección implementada (REV-13); pendiente de verificación visual en navegador.
+
+Verificado en navegador tras la corrección (contraste en oscuro y estilo del error).

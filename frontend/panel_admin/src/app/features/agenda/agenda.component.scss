@@ -27,6 +27,14 @@ dialog {
   }
 
   .alert-success {
+    background-color: transparent;
+    border-color: var(--bs-success, currentcolor);
+    color: $dark-strong;
+  }
+
+  .alert-danger {
+    background-color: transparent;
+    border-color: var(--bs-danger, currentcolor);
     color: $dark-strong;
   }
 }
