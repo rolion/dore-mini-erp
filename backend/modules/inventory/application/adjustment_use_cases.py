@@ -10,14 +10,17 @@ from modules.inventory.domain.adjustment import (
     validate_reason,
 )
 from modules.inventory.domain.exceptions import (
+    AdjustmentConflict,
     AdjustmentIdReused,
     AdjustmentNotFound,
     AdjustmentValidationError,
     BalanceChanged,
+    InsufficientStock,
+    MovementConflict,
     MovementValidationError,
     WarehouseNotFound,
 )
-from modules.inventory.domain.movement import MovementSource
+from modules.inventory.domain.movement import MovementKind, MovementSource
 from modules.inventory.domain.repositories import (
     AdjustmentFilters,
     StockAdjustmentRepository,
@@ -25,6 +28,7 @@ from modules.inventory.domain.repositories import (
     WarehouseRepository,
 )
 from modules.inventory.domain.stock import check_quantity_for_unit
+from shared.stock_valuation import MovementValue
 
 from .movement_ports import InventoryPolicy, ProductDirectory
 from .movement_use_cases import RecordMovement
@@ -47,7 +51,8 @@ class ConfirmAdjustment:
 
     def execute(self, *, adjustment_id: UUID, product_id: UUID, warehouse_id: UUID, counted_quantity: object,
                 expected_system_quantity: object, reason: object, user_id: UUID | None,
-                user_name: str) -> tuple[StockAdjustment, bool]:
+                user_name: str, total_value: object = None,
+                declared_zero: bool = False) -> tuple[StockAdjustment, bool]:
         counted, expected, reason_text = self._validate(
             product_id, counted_quantity, expected_system_quantity, reason)
         with self.stock.locked(warehouse_id):
@@ -70,14 +75,23 @@ class ConfirmAdjustment:
                 adjustment_id=adjustment_id, product_id=product_id, warehouse_id=warehouse_id,
                 system_quantity=current, counted_quantity=counted, reason=reason_text, user_id=user_id,
                 user_name=user_name)
+            value = None
+            if adjustment.kind is MovementKind.IN:  # solo la entrada aporta un valor; la salida usa el promedio
+                value = MovementValue(
+                    cost_origin='manual_adjustment', declared_zero=declared_zero is True,
+                    total_value='0' if total_value is None and declared_zero is True else total_value)
             try:
                 movement, _ = self.recorder.execute(
                     product_id=product_id, warehouse_id=warehouse_id, kind=adjustment.kind,
                     quantity=abs(adjustment.difference), user_id=user_id, user_name=user_name,
                     reference=adjustment.reference, reason=reason_text,
-                    source=MovementSource(SOURCE_TYPE, str(adjustment_id)))
+                    source=MovementSource(SOURCE_TYPE, str(adjustment_id)), valuation=value)
             except MovementValidationError as exc:
                 raise AdjustmentValidationError(exc.errors) from exc
+            except InsufficientStock:
+                raise
+            except MovementConflict as exc:
+                raise AdjustmentConflict(exc.code, str(exc)) from exc
             return self.adjustments.insert(adjustment.with_movement(movement.id)), True
 
     def _validate(self, product_id: UUID, counted_quantity: object, expected: object,

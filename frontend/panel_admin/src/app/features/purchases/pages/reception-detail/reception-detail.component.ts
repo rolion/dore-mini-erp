@@ -3,6 +3,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { MovementValuationSectionComponent } from '../../../costing/components/movement-valuation-section/movement-valuation-section.component';
 import {
   DOCUMENTAL_LABEL,
   RECEIPT_STATUS_CLASSES,
@@ -18,7 +19,7 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 @Component({
   selector: 'app-reception-detail',
   templateUrl: './reception-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, MovementValuationSectionComponent],
 })
 export class ReceptionDetailComponent implements OnInit {
   readonly statusLabels = RECEIPT_STATUS_LABELS;

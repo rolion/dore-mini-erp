@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 from modules.costing.domain.exceptions import ValuationAlreadyAdopted
 from modules.costing.domain.valuation import ValuationAdoption, ValuationLine
 
-from .models import ValuationAdoptionModel, ValuationLineModel
+from .models import ProductCostModel, ValuationAdoptionModel, ValuationLineModel
 
 
 class DjangoAdoptionRepository:
@@ -38,5 +38,9 @@ class DjangoAdoptionRepository:
                     reconciled_quantity=line.reconciled_quantity, total_value=line.total_value,
                     unit_cost=line.unit_cost, declared_zero=line.declared_zero, source=line.source)
                     for line in adoption.lines])
+                # Estado corriente del costo: arranca con la base adoptada de cada producto.
+                ProductCostModel.objects.bulk_create([ProductCostModel(
+                    company_id=self.company_id, product_id=line.product_id, quantity=line.reconciled_quantity,
+                    total_value=line.total_value) for line in adoption.lines])
         except IntegrityError:  # carrera: la restricción de una adopción por empresa manda
             raise ValuationAlreadyAdopted() from None

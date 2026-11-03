@@ -86,6 +86,9 @@ export class AdjustmentsApiService {
       counted_quantity: input.countedQuantity,
       expected_system_quantity: input.expectedSystemQuantity,
       reason: input.reason,
+      ...(input.totalValue !== undefined
+        ? { total_value: input.totalValue, declared_zero: input.declaredZero === true }
+        : {}),
     };
     return this.http.post<StockAdjustmentDetailDto>(this.baseUrl, body).pipe(
       map(toAdjustmentDetail),

@@ -1,0 +1,123 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">Movimientos valorados</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory">Inventario</a></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/valuation">Valoración</a></li>
+    <li class="breadcrumb-item">Movimientos valorados</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="row">
+              <div class="col-lg-12">
+                <div class="ngxTableHeader">
+                  <div class="table-title">
+                    <h2><strong>Inventario › Valoración › Movimientos valorados</strong></h2>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
+              <div class="col-md-3">
+                <label for="filter-from">Desde</label>
+                <input id="filter-from" type="date" class="form-control" formControlName="dateFrom">
+              </div>
+              <div class="col-md-3">
+                <label for="filter-to">Hasta</label>
+                <input id="filter-to" type="date" class="form-control" formControlName="dateTo">
+              </div>
+              <div class="col-md-3">
+                <label for="filter-product">Producto</label>
+                <select id="filter-product" class="form-select form-control" formControlName="productId">
+                  <option value="">Todos</option>
+                  @for (product of products; track product.id) {
+                  <option [value]="product.id">{{ product.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label for="filter-source">Origen</label>
+                <select id="filter-source" class="form-select form-control" formControlName="sourceType">
+                  <option value="">Todos</option>
+                  @for (option of sourceOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              @if (rangeError) {
+              <div class="col-12">
+                <small class="form-text text-danger" data-testid="range-error">{{ rangeError }}</small>
+              </div>
+              }
+              <div class="col-12">
+                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
+                  (click)="clearFilters()">Limpiar filtros</button>
+              </div>
+            </form>
+
+            @if (errorMessage) {
+            <div class="alert alert-danger m-2 d-flex justify-content-between align-items-center" role="alert"
+              data-testid="error">
+              <span>{{ errorMessage }}</span>
+              <button type="button" class="btn btn-sm btn-light" (click)="reload()">Reintentar</button>
+            </div>
+            }
+
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              <ngx-datatable-column name="Fecha y hora" [sortable]="false" [width]="140">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a class="fw-bold" [routerLink]="['/pocketbiz/inventory/movements', row.movementId]">{{ row.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</a>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Producto" [sortable]="false" [width]="140">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.productName }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Tipo" [sortable]="false" [width]="90">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (row.kind === 'in') {
+                  <div class="badge-outline col-green d-inline-block">Entrada</div>
+                  } @else {
+                  <div class="badge-outline col-orange d-inline-block">Salida</div>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Cantidad" [sortable]="false" [width]="100" cellClass="valuation-num-cell"
+                headerClass="valuation-num-header">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.quantity }} {{ row.unitAbbreviation }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Costo unitario" [sortable]="false" [width]="110" cellClass="valuation-num-cell"
+                headerClass="valuation-num-header">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.unitCost | money }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Valor" [sortable]="false" [width]="100" cellClass="valuation-num-cell"
+                headerClass="valuation-num-header">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.value | money }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Promedio nuevo" [sortable]="false" [width]="110" cellClass="valuation-num-cell"
+                headerClass="valuation-num-header">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.averageAfter | money }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Origen del costo" [sortable]="false" [width]="150">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ originLabel(row) }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Documento" [sortable]="false" [width]="150">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.sourceLabel }}</ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

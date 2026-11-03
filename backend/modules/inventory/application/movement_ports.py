@@ -40,3 +40,13 @@ class BlockNegativeStock:
 
     def allow_negative_stock(self) -> bool:
         return False
+
+
+def apply_valuation(policy: object, movement, value=None) -> None:
+    """Valora el movimiento (inventario valorado) justo antes de insertarlo, en la misma sección crítica.
+
+    La política de producción lo implementa (`value_movement`); las políticas simples de las pruebas no valoran.
+    """
+    hook = getattr(policy, 'value_movement', None)
+    if hook is not None:
+        hook(movement, value)

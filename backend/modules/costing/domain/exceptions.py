@@ -47,3 +47,13 @@ class StockChanged(Exception):
         super().__init__('Las existencias cambiaron desde la conciliación. Vuelva a conciliar.')
         # (producto, cantidad enviada o None, cantidad actual o None)
         self.differences = differences
+
+
+class MovementValuationRejected(Exception):
+    """El movimiento no se puede valorar. `code`: `valuation_required` | `valuation_invalid` | `valuation_blocked`."""
+
+    def __init__(self, code: str, message: str, field: str = 'total_value'):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.field = field

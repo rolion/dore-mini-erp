@@ -73,6 +73,7 @@
                 }
               </dd>
             </dl>
+            <app-movement-valuation-section [movementId]="m.id" />
             @if (m.reversedBy; as r) {
             <h5 class="mx-4">Reversión</h5>
             <dl class="row mx-4" data-testid="reversal">

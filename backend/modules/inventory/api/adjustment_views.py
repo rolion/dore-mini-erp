@@ -44,6 +44,15 @@ class AdjustmentPagination(WarehousePagination):
     page_size = 25
 
 
+class RawMoneyField(RawQuantityField):
+    """Importe tal cual lo envía el cliente; el dominio de costeo lo valida (2 decimales, no negativo)."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, bool) or not isinstance(data, (int, float, str)):
+            raise serializers.ValidationError('El valor debe ser un importe decimal.')
+        return Decimal(str(data)) if isinstance(data, float) else data
+
+
 class AdjustmentInputSerializer(serializers.Serializer):
     """Valida forma y tipos; las reglas de negocio (cantidad, motivo, saldo) las aplica el dominio."""
 
@@ -53,6 +62,9 @@ class AdjustmentInputSerializer(serializers.Serializer):
     counted_quantity = RawQuantityField()
     expected_system_quantity = RawQuantityField()
     reason = serializers.CharField(allow_blank=True, trim_whitespace=False, max_length=2000)
+    # Solo con inventario valorado y diferencia positiva (cadena decimal, para no perder precisión).
+    total_value = RawMoneyField(required=False, allow_null=True)
+    declared_zero = serializers.BooleanField(required=False, default=False)
 
 
 class BalanceChangedConflict(APIException):
@@ -137,6 +149,7 @@ class StockAdjustmentListCreateView(APIView):
                 adjustment_id=data['adjustment_id'], product_id=data['product_id'],
                 warehouse_id=data['warehouse_id'], counted_quantity=data['counted_quantity'],
                 expected_system_quantity=data['expected_system_quantity'], reason=data['reason'],
+                total_value=data.get('total_value'), declared_zero=data.get('declared_zero', False),
                 user_id=user.pk, user_name=user.get_full_name().strip() or user.get_username())
         except AdjustmentValidationError as exc:
             raise ValidationError(exc.errors) from exc

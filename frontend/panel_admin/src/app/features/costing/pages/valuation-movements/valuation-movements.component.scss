@@ -1,0 +1,10 @@
+// Las celdas se pintan dentro de ngx-datatable (otro componente): hace falta ::ng-deep para alcanzarlas.
+// Encabezado y celda comparten la misma regla para que los importes queden alineados bajo su título.
+:host ::ng-deep .valuation-num-header .datatable-header-cell-label,
+:host ::ng-deep .valuation-num-cell .datatable-body-cell-label {
+  display: block;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
