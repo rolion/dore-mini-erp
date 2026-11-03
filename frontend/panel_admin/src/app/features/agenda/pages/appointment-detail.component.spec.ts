@@ -7,7 +7,7 @@ import { AppointmentDetailComponent } from './appointment-detail.component';
 
 function appointment(overrides: Partial<Appointment> = {}): Appointment {
   return {
-    id: 'a1', professional_id: 'p', customer_id: 'c', customer_name: 'Rosa Pérez', service_id: 's',
+    id: 'a1', professional_id: 'p', professional_name: 'Dra. Ana', customer_id: 'c', customer_name: 'Rosa Pérez', service_id: 's',
     service_name: 'Limpieza', starts: '2030-01-07T09:00:00-04:00', ends: '2030-01-07T09:30:00-04:00',
     duration_minutes: 30, notes: '', status: 'scheduled', timezone: 'America/La_Paz',
     allowed_actions: ['confirm', 'reschedule', 'cancel'], history: [], ...overrides,
@@ -38,6 +38,7 @@ describe('AppointmentDetailComponent', () => {
     const fixture = create();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Rosa Pérez');
+    expect(text).toContain('Dra. Ana');
     expect(text).toContain('Confirmar');
     expect(text).toContain('Reprogramar');
     expect(text).not.toContain('Marcar atendida');

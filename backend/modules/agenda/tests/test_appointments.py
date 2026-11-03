@@ -64,6 +64,7 @@ class AppointmentApiTests(TransactionTestCase):
         data = response.json()
         self.assertEqual((data['status'], data['customer_name'], data['service_name']),
                          ('scheduled', 'Rosa Pérez', 'Limpieza'))
+        self.assertEqual(data['professional_name'], 'Ana')
         self.assertEqual(data['ends'], at(FUTURE, '09:30'))
         self.assertEqual(data['history'][0]['kind'], 'created')
         for bad in (self.create(time='08:30'), self.create(time='10:15'), self.create(time='11:45'),
@@ -183,6 +184,7 @@ class AppointmentApiTests(TransactionTestCase):
         self.create(day=PAST)
         base = '/api/agenda/appointments/'
         self.assertEqual(self.client.get(base).json()['count'], 2)
+        self.assertEqual({row['professional_name'] for row in self.client.get(base).json()['results']}, {'Ana'})
         self.assertEqual(self.client.get(base, {'from': FUTURE, 'to': FUTURE}).json()['count'], 1)
         self.assertEqual(self.client.get(base, {'search': 'rosa'}).json()['count'], 2)
         self.assertEqual(self.client.get(base, {'search': 'zzz'}).json()['count'], 0)

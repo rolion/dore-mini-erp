@@ -58,7 +58,7 @@
           @if (rows.length) {
             <div class="table-responsive">
               <table class="table table-striped align-middle">
-                <thead><tr><th>Inicio</th><th>Fin</th><th>Cliente</th><th>Servicio</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Inicio</th><th>Fin</th><th>Cliente</th><th>Servicio</th><th>Profesional</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>
                   @for (row of rows; track row.id) {
                     <tr>
@@ -66,6 +66,7 @@
                       <td>{{ time(row.ends) }}</td>
                       <td><a [routerLink]="['/pocketbiz/agenda/citas', row.id]"><strong>{{ row.customer_name }}</strong></a></td>
                       <td>{{ row.service_name }}</td>
+                      <td>{{ row.professional_name || 'Sin profesional' }}</td>
                       <td><span class="badge" [class]="classes[row.status]">{{ labels[row.status] }}</span></td>
                       <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/agenda/citas', row.id]">Ver detalle</a></td>
                     </tr>

@@ -17,6 +17,7 @@
 | 2026-11-03 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada; pruebas de API pendientes de PostgreSQL | delivery-build |
 | 2026-11-03 | REVIEW (sin cambio) | Quality Gate sin PASS: AC-02 no verificable sin PostgreSQL; REV-01 (Medium) y REV-02..07 (Low) abiertos | delivery-publish |
+| 2026-11-03 | REVIEW (sin cambio) | REV-01 corregido por indicación de la persona; AC-02 sigue pendiente de PostgreSQL | delivery-build |
 
 ## Investigación
 

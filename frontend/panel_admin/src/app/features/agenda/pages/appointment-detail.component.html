@@ -21,6 +21,7 @@
         </div>
         <dl class="row m-4">
           <dt class="col-sm-3">Servicio</dt><dd class="col-sm-9">{{ item.service_name }}</dd>
+          <dt class="col-sm-3">Profesional</dt><dd class="col-sm-9">{{ item.professional_name || 'Sin profesional' }}</dd>
           <dt class="col-sm-3">Inicio</dt><dd class="col-sm-9">{{ formatDateTime(item.starts) }} · Hora de Bolivia</dd>
           <dt class="col-sm-3">Fin</dt><dd class="col-sm-9">{{ formatDateTime(item.ends) }}</dd>
           <dt class="col-sm-3">Duración</dt><dd class="col-sm-9">{{ item.duration_minutes }} min</dd>
@@ -64,6 +65,7 @@
         <dl class="row">
           <dt class="col-5">Cliente</dt><dd class="col-7">{{ appointment.customer_name }}</dd>
           <dt class="col-5">Servicio</dt><dd class="col-7">{{ appointment.service_name }}</dd>
+          <dt class="col-5">Profesional</dt><dd class="col-7">{{ appointment.professional_name }}</dd>
           <dt class="col-5">Horario actual</dt>
           <dd class="col-7">{{ formatDateTime(appointment.starts) }} – {{ appointment.ends.slice(11, 16) }}</dd>
         </dl>

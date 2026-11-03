@@ -42,6 +42,7 @@ export interface AppointmentEvent {
 export interface Appointment {
   id: string;
   professional_id: string;
+  professional_name: string;
   customer_id: string;
   customer_name: string;
   service_id: string;

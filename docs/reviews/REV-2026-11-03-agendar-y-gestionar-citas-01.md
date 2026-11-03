@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-01: El profesional no se muestra en listado ni detalle de citas
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ Tabla del listado: Inicio, Fin, Cliente, Servicio, Estado, Acciones. Detalle: Se
 
 ## Evidence
 grep de 'rofesional' en appointment-detail.component.html: sin coincidencias. En appointment-list.component.html solo aparece en los filtros y el selector de calendario (lineas 36, 87-102). backend/modules/agenda/appointments_api.py present(): solo 'professional_id'.
+
+## Resolución
+La API devuelve `professional_name` (fachada `personnel.services.professional_names`, consulta por lote en el listado). El listado, el detalle y el diálogo de acciones muestran el profesional. Cubierto por `test_appointments.py` (alta y listado) y `appointment-detail.component.spec.ts`.

@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from modules.agenda.application import appointments as service
 from modules.agenda.domain.appointment import STATUSES, AppointmentRuleError
+from modules.agenda.infrastructure.adapters import professional_names
 from modules.agenda.models import Appointment
 from shared.tenancy import company_id_from
 
@@ -76,9 +77,10 @@ class SlotsQuerySerializer(serializers.Serializer):
         return values
 
 
-def present(appointment, detail=False):
+def present(appointment, names, detail=False):
     data = {
         'id': str(appointment.id), 'professional_id': str(appointment.professional_id),
+        'professional_name': names.get(appointment.professional_id, ''),
         'customer_id': str(appointment.customer_id), 'customer_name': appointment.customer_name,
         'service_id': str(appointment.service_id), 'service_name': appointment.service_name,
         'starts': _local(appointment.starts), 'ends': _local(appointment.ends),
@@ -114,7 +116,8 @@ class AppointmentView(APIView):
         if isinstance(result, Response):
             return result
         result = Appointment.objects.prefetch_related('events').get(pk=result.pk)
-        return Response(present(result, detail=True), status=code)
+        names = professional_names(result.company_id, {result.professional_id})
+        return Response(present(result, names, detail=True), status=code)
 
     def get_appointment(self, request, appointment_id):
         appointment = Appointment.objects.filter(
@@ -143,7 +146,8 @@ class AppointmentListCreateView(AppointmentView):
             rows = rows.filter(customer_name__icontains=values['search'].strip())
         paginator = AppointmentPagination()
         page = paginator.paginate_queryset(rows.order_by('starts', 'id'), request)
-        return paginator.get_paginated_response([present(row) for row in page])
+        names = professional_names(company_id_from(request), {row.professional_id for row in page})
+        return paginator.get_paginated_response([present(row, names) for row in page])
 
     def post(self, request):
         serializer = CreateSerializer(data=request.data)
@@ -154,7 +158,9 @@ class AppointmentListCreateView(AppointmentView):
 
 class AppointmentDetailView(AppointmentView):
     def get(self, request, appointment_id):
-        return Response(present(self.get_appointment(request, appointment_id), detail=True))
+        appointment = self.get_appointment(request, appointment_id)
+        names = professional_names(appointment.company_id, {appointment.professional_id})
+        return Response(present(appointment, names, detail=True))
 
     def patch(self, request, appointment_id):
         serializer = NotesSerializer(data=request.data)
