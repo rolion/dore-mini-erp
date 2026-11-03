@@ -1,0 +1,139 @@
+<section class="main-content">
+  @if (loading) { <p role="status">Cargando ficha…</p> }
+  @if (error) {
+    <div class="alert alert-danger" role="alert">{{ error }}
+      @if (!patient) { <button class="btn btn-light" type="button" (click)="load()">Reintentar</button> }
+    </div>
+  }
+  @if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
+  @if (patient; as p) {
+    <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <p class="text-muted mb-1">Odontología / Pacientes</p>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <h3 class="mb-0 fw-bold text-reset">{{ p.customer.name }}</h3>
+          <span class="badge rounded-pill" [class.bg-success-subtle]="p.active" [class.text-success-emphasis]="p.active"
+            [class.bg-secondary-subtle]="!p.active" [class.text-secondary-emphasis]="!p.active">{{ p.active ? 'Activo' : 'Archivado' }}</span>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        @if (p.active) {
+          <button class="btn btn-primary" type="button" [disabled]="saving || (editingAdmin && editingClinical)" (click)="editRecord()">Editar ficha</button>
+        }
+        <button class="btn btn-outline-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ p.active ? 'Archivar perfil' : 'Reactivar perfil' }}</button>
+        <a class="btn btn-light" routerLink="/pocketbiz/dentistry/patients" [queryParams]="backFilters">Volver a pacientes</a>
+      </div>
+    </header>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <section class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-transparent border-bottom py-3"><h4 class="h6 mb-0 fw-semibold">Información general</h4></div>
+          <div class="card-body">
+            <dl class="row mb-0">
+              <dt class="col-sm-4">ID cliente</dt>
+              <dd class="col-sm-8 text-break"><a [routerLink]="['/pocketbiz/customers', p.customer.id]">{{ p.customer.id }}</a></dd>
+              <dt class="col-sm-4">Nombre</dt><dd class="col-sm-8">{{ p.customer.name }}</dd>
+              <dt class="col-sm-4">Teléfono</dt><dd class="col-sm-8"><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.phone }" /></dd>
+              <dt class="col-sm-4">Correo</dt><dd class="col-sm-8 text-break"><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.email }" /></dd>
+            </dl>
+          </div>
+        </section>
+
+        <section class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h4 class="h6 mb-0 fw-semibold">Nacimiento y responsable</h4>
+            @if (p.active && !editingAdmin) { <button class="btn btn-sm btn-light" type="button" [disabled]="saving" (click)="editingAdmin = true">Editar datos</button> }
+          </div>
+          <div class="card-body">
+            @if (editingAdmin) {
+              <form [formGroup]="adminForm" (ngSubmit)="saveAdmin()" novalidate>
+                <fieldset [disabled]="saving">
+                  <label class="form-label" for="birth-date">Fecha de nacimiento</label>
+                  <input id="birth-date" type="date" class="form-control bg-transparent" formControlName="birth_date" [max]="today" aria-describedby="birth-error">
+                  <small id="birth-error" class="text-danger">{{ adminErrors['birth_date'] || (adminForm.hasError('futureBirth') ? 'La fecha no puede ser futura.' : '') }}</small>
+                  @if (needsResponsible) {
+                    <div class="mt-3"><span class="badge bg-warning-subtle text-warning-emphasis">Menor de edad</span></div>
+                    <label class="form-label mt-3" for="responsible-name">Nombre del responsable *</label>
+                    <input id="responsible-name" class="form-control bg-transparent" formControlName="responsible_name" maxlength="150" aria-required="true" aria-describedby="responsible-name-error">
+                    <small id="responsible-name-error" class="text-danger">{{ adminErrors['responsible_name'] || (adminForm.hasError('responsibleName') ? 'Indica el nombre del responsable.' : '') }}</small>
+                    <label class="form-label mt-3" for="responsible-phone">Teléfono del responsable *</label>
+                    <input id="responsible-phone" type="tel" class="form-control bg-transparent" formControlName="responsible_phone" maxlength="30" aria-required="true" aria-describedby="responsible-phone-error">
+                    <small id="responsible-phone-error" class="text-danger">{{ adminErrors['responsible_phone'] || (adminForm.hasError('responsiblePhone') ? 'Indica el teléfono del responsable.' : '') }}</small>
+                  }
+                  <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit" [disabled]="!adminForm.dirty || adminForm.invalid">Guardar datos administrativos</button>
+                    <button class="btn btn-light" type="button" (click)="cancelAdmin()">Cancelar</button>
+                  </div>
+                </fieldset>
+              </form>
+            } @else {
+              <dl class="mb-0">
+                <dt>Fecha de nacimiento</dt>
+                <dd><ng-container *ngTemplateOutlet="value; context: { $implicit: (p.customer.birth_date | date:'dd/MM/yyyy') }" /></dd>
+                @if (needsResponsible) {
+                  <div class="mb-3"><span class="badge bg-warning-subtle text-warning-emphasis">Menor de edad</span></div>
+                  <dt>Nombre del responsable</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_name }" /></dd>
+                  <dt>Teléfono del responsable</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_phone }" /></dd>
+                }
+              </dl>
+            }
+          </div>
+        </section>
+      </div>
+
+      <div class="col-lg-6">
+        <section class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h4 class="h6 mb-0 fw-semibold">Antecedentes clínicos</h4>
+            @if (p.active && !editingClinical) { <button class="btn btn-sm btn-light" type="button" [disabled]="saving" (click)="editingClinical = true"><i class="fas fa-pen me-1" aria-hidden="true"></i>Editar antecedentes</button> }
+          </div>
+          <div class="card-body">
+            @if (editingClinical) {
+              <form [formGroup]="clinicalForm" (ngSubmit)="saveClinical()" novalidate>
+                <fieldset [disabled]="saving">
+                  @for (field of fields; track field.key) {
+                    <div class="mb-3">
+                      <label class="form-label" [for]="field.key">{{ field.label }}</label>
+                      <textarea class="form-control bg-transparent" [id]="field.key" [formControlName]="field.key" rows="2" maxlength="4000" placeholder="No informado" [attr.aria-describedby]="field.key + '-error'"></textarea>
+                      <small class="text-danger" [id]="field.key + '-error'">{{ clinicalErrors[field.key] }}</small>
+                    </div>
+                  }
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary" type="submit" [disabled]="!clinicalForm.dirty || clinicalForm.invalid">Guardar antecedentes</button>
+                    <button class="btn btn-light" type="button" (click)="cancelClinical()">Cancelar</button>
+                  </div>
+                </fieldset>
+              </form>
+            } @else {
+              <dl class="mb-0">
+                @for (field of fields; track field.key) {
+                  <dt class="mb-1">{{ field.label }}</dt>
+                  <dd class="text-break" style="white-space: pre-wrap"><ng-container *ngTemplateOutlet="value; context: { $implicit: p[field.key] }" /></dd>
+                }
+              </dl>
+            }
+          </div>
+        </section>
+      </div>
+
+      <div class="col-12">
+        <details class="card shadow-sm border-0 mb-4" (toggle)="historyOpen = history.open" #history>
+          <summary class="card-header bg-transparent border-bottom py-3 fw-semibold">Historial de cambios</summary>
+          @if (historyOpen) {
+            <div class="card-body">
+              <div class="row g-4">
+                <div class="col-lg-6"><app-patient-history [patientId]="p.id" [clinical]="false" [revision]="adminRevision" /></div>
+                <div class="col-lg-6"><app-patient-history [patientId]="p.id" [revision]="clinicalRevision" /></div>
+              </div>
+            </div>
+          }
+        </details>
+      </div>
+    </div>
+  }
+</section>
+
+<ng-template #value let-text>
+  @if (text?.trim()) { {{ text }} } @else { <span class="text-muted fst-italic">No informado</span> }
+</ng-template>

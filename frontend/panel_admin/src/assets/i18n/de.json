@@ -1,5 +1,7 @@
 {
   "MENUITEMS": {
+    "DENTISTRY": { "TEXT": "Zahnmedizin", "PATIENTS": "Patienten" },
+    "PERSONNEL": { "TEXT": "Personal", "LIST": { "PROFESSIONALS": "Fachkräfte", "SPECIALTIES": "Fachgebiete" } },
     "MAIN": {
       "TEXT": "-- Main"
     },

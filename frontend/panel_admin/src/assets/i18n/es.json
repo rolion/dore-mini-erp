@@ -1,5 +1,6 @@
 {
   "MENUITEMS": {
+    "DENTISTRY": { "TEXT": "Odontología", "PATIENTS": "Pacientes" },
     "MAIN": {
       "TEXT": "-- Principal"
     },
@@ -122,6 +123,13 @@
       "LIST": {
         "ORDERS": "Pedidos",
         "SETTINGS": "Configuración"
+      }
+    },
+    "PERSONNEL": {
+      "TEXT": "Personal",
+      "LIST": {
+        "PROFESSIONALS": "Profesionales",
+        "SPECIALTIES": "Especialidades"
       }
     }
   }

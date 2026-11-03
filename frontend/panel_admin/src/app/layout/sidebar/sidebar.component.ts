@@ -32,9 +32,9 @@ function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolea
 }
 
 /** Ítems visibles según los módulos habilitados, también dentro de los submenús (p. ej. «Valoración» con Costeo). */
-export function visibleRoutes(routes: RouteInfo[], enabled: ReadonlySet<string> | null): RouteInfo[] {
+export function visibleRoutes(routes: RouteInfo[], enabled: ReadonlySet<string> | null, isAdmin = true): RouteInfo[] {
   return routes
-    .filter((item) => item && isVisible(item, enabled))
+    .filter((item) => item && isVisible(item, enabled) && (item.module !== 'personnel' || isAdmin))
     .map((item) => ({ ...item, submenu: item.submenu.filter((sub) => isVisible(sub, enabled)) }));
 }
 
@@ -127,7 +127,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
       combineLatest([this.sidebarService.getRouteInfo(), this.modulesService.enabledKeys$])
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(([routes, enabled]) => {
-          this.sidebarItems = visibleRoutes(routes, enabled);
+          this.sidebarItems = visibleRoutes(routes, enabled, this.authService.currentUserValue?.role === 'admin');
         });
     }
     this.initLeftSidebar();
