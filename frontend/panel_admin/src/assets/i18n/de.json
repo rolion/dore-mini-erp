@@ -1,5 +1,6 @@
 {
   "MENUITEMS": {
+    "DENTISTRY": { "TEXT": "Zahnmedizin", "PATIENTS": "Patienten" },
     "MAIN": {
       "TEXT": "-- Main"
     },

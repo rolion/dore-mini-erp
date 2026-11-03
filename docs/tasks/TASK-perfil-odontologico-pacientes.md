@@ -14,6 +14,8 @@
 | 2026-11-02 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas en el chat | delivery-start |
 | 2026-11-02 | PLANNING → ENGINEERING | Specification READY; PR #47 abierto | delivery-start |
 | 2026-11-02 | ENGINEERING → REVIEW | Implementación y pruebas de la Specification; se solicita Quality Gate independiente | delivery-build |
+| 2026-11-02 | REVIEW → ENGINEERING | FAIL: regresión del menú y traducciones en/de faltantes (REV-01) | delivery-publish |
+| 2026-11-03 | ENGINEERING → REVIEW | Actualizadas traducciones y cobertura de visibilidad del menú; se solicita segunda revisión | delivery-build |
 
 ## Investigación
 ### Requerimiento
@@ -79,6 +81,8 @@ Entorno: dependencias reutilizadas del checkout existente mediante junction loca
 
 Recorrido de navegador de ingeniería: alta desde Customer existente, validación visible de menor/responsable, guardados administrativo/clínico y auditoría, ficha clara/oscura en 1440 y 390 px. En móvil, documento 375 px para viewport 390: sin desbordamiento de página; tablas de historial con scroll horizontal local. Confirmación de archivo observada; el adaptador de navegador no mantuvo el diálogo para aceptarlo, así que archivo/reactivación se verifica con integración API y componentes. Pendiente aprobación independiente y revisión visual del build final (incluye buscador Bootstrap y fechas dd/MM/yyyy).
 ## Review
-Pendiente.
+Ciclo 1: **FAIL** en b0086a9. 250 pruebas backend pasaron; dos pruebas Angular del menú fallaron al ampliar su estructura y requerir etiquetas en/de. Ver `docs/reviews/QA-2026-11-02-perfil-odontologico-pacientes.md` y `docs/reviews/REV-2026-11-02-perfil-odontologico-pacientes-01.md`.
+
+Corrección: traducciones de los dos títulos en inglés/alemán y regresión del menú para incluir Odontología y verificar su visibilidad por módulo. Sin cambio de Specification, rutas ni permisos. Ciclo 2 pendiente.
 ## Publicación
 Pendiente.
