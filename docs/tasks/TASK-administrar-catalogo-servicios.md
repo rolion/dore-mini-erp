@@ -1,6 +1,6 @@
 # TASK-administrar-catalogo-servicios: PB-SRV-001
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-administrar-catalogo-servicios
@@ -109,5 +109,8 @@ Corrección de REV-2026-11-03-03 solicitada por el usuario: PLAN v3 y ADR/DDR ac
 Nuevo `delivery-publish` sobre 8bc7784: revisor aislado leyó TASK, PLAN v3, ADR/DDR, DDD y REV-03; no encontró defecto estático en AC-07. Otro revisor aislado ejecutó Karma de Servicios con cobertura: `TOTAL: 20 SUCCESS`, exit 0, líneas 81.95% (168/205). La prueba independiente de Django/PostgreSQL quedó pendiente de escalación de acceso a `127.0.0.1:5432` y se abortó tras 766.7 s sin salida de Django; no se declara aprobada. La autoverificación del implementador sobre 8bc7784 fue 1351 Django OK, 1118 Karma OK, lint/build/Bandit/audit OK, pero no sustituye ese control. Veredicto **NO PASS**; REV-03 permanece Open y etapa REVIEW.
 
 Reintento independiente sobre b9b4114: acceso escalado a PostgreSQL concedido; `manage.py test --noinput` completó **1351/1351 OK** en 84.308 s, exit 0, con base de pruebas propia y system check sin incidencias. `npm run lint` pasó, Bandit no encontró hallazgos y `npm audit --omit=dev` reportó 0 vulnerabilidades. Karma completo con cobertura y build no terminaron en este Quality Gate: el sandbox denegó acceso a `node_modules`; el reintento escalado de Karma quedó sin resultado verificable y se interrumpió. La inspección visual independiente tampoco se realizó. Veredicto **NO PASS**; REV-03 permanece Open y etapa REVIEW.
+
+Quality Gate independiente completado sobre dfc5a17 (solo documentación desde b9b4114): Django/PostgreSQL 1351/1351 OK; Karma completo 1118/1118 OK con cobertura de líneas 87.38%; lint y build OK; Bandit sin hallazgos; npm audit 0 vulnerabilidades. Revisión visual en navegador 390×844 y 1440×900, claro y oscuro: controles sin solapamiento, tabla móvil con nombres recortados y desplazamiento horizontal pequeño. [REV-04](../reviews/REV-2026-11-03-administrar-catalogo-servicios-04.md) IMPLEMENTATION/Low abierto como limitación de usabilidad. La sesión demo tenía Personal deshabilitado; el selector habilitado se verificó mediante pruebas, no visualmente. [REV-03](../reviews/REV-2026-11-03-administrar-catalogo-servicios-03.md) cerrado. Veredicto **PASS**, sin hallazgos Critical/High ni tests fallidos.
+
 ## Publicación
-PR #48 permanece **draft**, sin merge ni declaración de listo. **Etapa REVIEW**: PLAN v3 implementado y REV-2026-11-03-03 pendiente de la prueba independiente con PostgreSQL. Los conflictos con `main` están resueltos.
+PR #48 preparado para aprobación humana, sin merge. **Etapa PUBLISH**: PLAN v3 implementado y Quality Gate independiente PASS. Limitación Low de tabla móvil documentada en REV-04. Los conflictos con `main` están resueltos. Cambio sensible: migración de base de datos y ADR de integración con Personal; el merge requiere aprobación humana.

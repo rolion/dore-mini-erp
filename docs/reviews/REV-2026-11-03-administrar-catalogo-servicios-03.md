@@ -1,6 +1,6 @@
 # REV-2026-11-03-administrar-catalogo-servicios-03: Replanificar integración con Personal
 
-**Status:** Open
+**Status:** Closed
 **Severity:** High
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-02-administrar-catalogo-servicios.md (v2)
@@ -31,3 +31,6 @@ El usuario pidió resolver los conflictos con `main`. Se integró f6839a4 en el 
 
 ## Corrección propuesta para revisión
 El usuario pidió resolver el último hallazgo. PLAN v3, ADR y DDR actualizados; adaptador de Servicios consulta la fachada pública de Personal. Nuevas asignaciones exigen especialidad activa de la misma empresa y módulo Personal habilitado. Nombres históricos siguen visibles; selector y filtro Angular usan el API real de Personal. Autoverificación sobre la corrección: 1351 tests Django con PostgreSQL OK; 1118/1118 Karma con cobertura OK; lint, build y Bandit OK. Pendiente de Quality Gate independiente antes de cerrar el hallazgo.
+
+## Cierre del 2026-11-03
+Quality Gate independiente sobre el código vigente: Django/PostgreSQL 1351/1351 OK; Karma completo 1118/1118 OK con cobertura; lint, build, Bandit y npm audit OK. Revisión visual a 390×844 y 1440×900, claro y oscuro. La integración de Personal descrita en PLAN v3, ADR y DDR no mostró un defecto nuevo de AC-07. Se cierra el hallazgo de planificación e implementación.
