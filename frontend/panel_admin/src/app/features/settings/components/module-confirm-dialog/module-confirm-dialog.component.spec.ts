@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
@@ -31,7 +32,7 @@ describe('ModuleConfirmDialogComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [ModuleConfirmDialogComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: ModulesService, useValue: service },
         { provide: NgbActiveModal, useValue: activeModal },
         { provide: ToastrService, useValue: toastr },

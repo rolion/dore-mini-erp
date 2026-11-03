@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -28,7 +29,7 @@ describe('SupplierDetailComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [SupplierDetailComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: SuppliersApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },

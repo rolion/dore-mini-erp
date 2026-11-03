@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -74,7 +75,7 @@ describe('ModuleSettingsComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
       imports: [ModuleSettingsComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: SettingsApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },

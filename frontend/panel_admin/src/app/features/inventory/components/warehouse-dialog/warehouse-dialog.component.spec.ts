@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
@@ -18,7 +19,7 @@ describe('WarehouseDialogComponent', () => {
     activeModal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     await TestBed.configureTestingModule({
       imports: [WarehouseDialogComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: WarehousesApiService, useValue: api },
         { provide: NgbActiveModal, useValue: activeModal },
         { provide: ToastrService, useValue: jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']) },

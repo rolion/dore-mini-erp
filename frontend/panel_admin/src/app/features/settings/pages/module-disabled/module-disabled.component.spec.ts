@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject, of } from 'rxjs';
@@ -21,7 +22,7 @@ describe('ModuleDisabledComponent', () => {
 
   function render(module: string | null) {
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ModulesService, useValue: { enabledKeys$: enabled$.asObservable(), modules$: of([INVENTORY]) } },
         { provide: ActivatedRoute, useValue: { queryParamMap: of(convertToParamMap(module ? { module } : {})) } },

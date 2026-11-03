@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { StockOutput } from '../../models/order';
@@ -19,7 +20,7 @@ describe('StockOutputCardComponent', () => {
   let fixture: ComponentFixture<StockOutputCardComponent>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [StockOutputCardComponent], providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ imports: [StockOutputCardComponent], providers: [...provideTestTranslations(), provideRouter([])] });
     fixture = TestBed.createComponent(StockOutputCardComponent);
     fixture.componentRef.setInput('orderId', 'o-1');
     fixture.componentRef.setInput('output', OUTPUT);

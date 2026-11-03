@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
@@ -18,7 +19,7 @@ describe('UnitsTabComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [UnitsTabComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: UnitsApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
         { provide: NgbModal, useValue: jasmine.createSpyObj<NgbModal>('NgbModal', ['open']) },

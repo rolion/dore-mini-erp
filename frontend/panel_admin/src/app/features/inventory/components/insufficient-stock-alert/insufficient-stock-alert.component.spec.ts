@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { InsufficientStockAlertComponent } from './insufficient-stock-alert.component';
 
@@ -5,7 +6,7 @@ describe('InsufficientStockAlertComponent', () => {
   let fixture: ComponentFixture<InsufficientStockAlertComponent>;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [InsufficientStockAlertComponent] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations()], imports: [InsufficientStockAlertComponent] });
     fixture = TestBed.createComponent(InsufficientStockAlertComponent);
     fixture.componentRef.setInput('info', {
       productName: 'Harina',

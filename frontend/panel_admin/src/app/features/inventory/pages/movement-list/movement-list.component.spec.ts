@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -44,7 +45,7 @@ describe('MovementListComponent', () => {
     warehouses.list.and.returnValue(of(page([makeWarehouse()])));
     await TestBed.configureTestingModule({
       imports: [MovementListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: MovementsApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },

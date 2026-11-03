@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -31,7 +32,7 @@ describe('AdjustmentListComponent', () => {
     warehouses.list.and.returnValue(of(page([makeWarehouse()])));
     await TestBed.configureTestingModule({
       imports: [AdjustmentListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: AdjustmentsApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },

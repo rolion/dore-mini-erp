@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../core/i18n/testing';
 import { importProvidersFrom } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -19,7 +20,7 @@ describe('SigninComponent', () => {
     auth = jasmine.createSpyObj<AuthService>('AuthService', ['login']);
     await TestBed.configureTestingModule({
       imports: [SigninComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         importProvidersFrom(FeatherModule.pick(allIcons)),
         { provide: AuthService, useValue: auth },

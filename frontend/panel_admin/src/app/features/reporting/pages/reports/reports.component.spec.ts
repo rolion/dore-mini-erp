@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -43,7 +44,7 @@ describe('ReportsComponent', () => {
     api.topCustomers.and.returnValue(of(makeCustomers()));
     await TestBed.configureTestingModule({
       imports: [ReportsComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ReportingApiService, useValue: api },
         { provide: ModulesService, useValue: modulesFake },

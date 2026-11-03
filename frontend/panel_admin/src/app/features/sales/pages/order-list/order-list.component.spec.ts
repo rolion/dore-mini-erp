@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -74,7 +75,7 @@ describe('OrderListComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [OrderListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: OrdersApiService, useValue: api },
         { provide: CustomerOptionsService, useValue: customerOptions },

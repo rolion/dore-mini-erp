@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -35,7 +36,7 @@ describe('CustomerListComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [CustomerListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: CustomersApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },

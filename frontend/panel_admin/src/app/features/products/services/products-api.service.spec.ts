@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -48,7 +49,7 @@ describe('ProductsApiService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(ProductsApiService);
     http = TestBed.inject(HttpTestingController);

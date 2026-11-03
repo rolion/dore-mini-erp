@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { PeriodSelection } from '../../models/report';
@@ -10,7 +11,7 @@ describe('PeriodSelectorComponent', () => {
   let emitted: PeriodSelection[];
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [PeriodSelectorComponent] }).compileComponents();
+    await TestBed.configureTestingModule({ providers: [...provideTestTranslations()], imports: [PeriodSelectorComponent] }).compileComponents();
     fixture = TestBed.createComponent(PeriodSelectorComponent);
     component = fixture.componentInstance;
     emitted = [];

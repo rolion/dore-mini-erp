@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -11,7 +12,7 @@ describe('ServiceToggleComponent', () => {
       durationMinutes: 30, specialtyId: null, specialtyName: null, active: true, createdAt: '', updatedAt: '' };
     const response = new Subject<CatalogService>();
     const api = jasmine.createSpyObj<ServicesApiService>('api', ['setActive']); api.setActive.and.returnValue(response);
-    TestBed.configureTestingModule({ imports: [ServiceToggleComponent], providers: [{ provide: ServicesApiService, useValue: api }] });
+    TestBed.configureTestingModule({ imports: [ServiceToggleComponent], providers: [...provideTestTranslations(), { provide: ServicesApiService, useValue: api }] });
     const fixture = TestBed.createComponent(ServiceToggleComponent); fixture.componentRef.setInput('service', service);
     const c = fixture.componentInstance; const updated = spyOn(c.updated, 'emit');
     const confirm = spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: false, isDenied: false, isDismissed: true });

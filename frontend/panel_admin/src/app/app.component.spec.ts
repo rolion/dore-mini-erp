@@ -1,3 +1,4 @@
+import { provideTestTranslations } from './core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { Title } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -7,7 +8,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter([])],
+      providers: [...provideTestTranslations(), provideRouter([])],
     }).compileComponents();
   });
 

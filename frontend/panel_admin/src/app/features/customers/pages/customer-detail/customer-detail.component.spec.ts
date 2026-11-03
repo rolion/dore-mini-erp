@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
@@ -29,7 +30,7 @@ describe('CustomerDetailComponent', () => {
     ordersApi.list.and.returnValue(of({ orders: [], total: 0 }));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
         { provide: CustomersApiService, useValue: api },
         { provide: CustomerOrdersApiService, useValue: ordersApi },
@@ -109,7 +110,7 @@ describe('CustomerDetailComponent', () => {
   it('asks Sales for the orders only after the customer is known, over HTTP (AC-26, ADR historial-compras)', async () => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
         provideHttpClient(),
         provideHttpClientTesting(),

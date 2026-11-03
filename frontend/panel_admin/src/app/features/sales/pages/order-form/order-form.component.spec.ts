@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -63,7 +64,7 @@ describe('OrderFormComponent', () => {
     defaults = NO_SALES_DEFAULTS;
     TestBed.configureTestingModule({
       imports: [OrderFormComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: OrdersApiService, useValue: ordersApi },
         { provide: CustomersApiService, useValue: customersApi },

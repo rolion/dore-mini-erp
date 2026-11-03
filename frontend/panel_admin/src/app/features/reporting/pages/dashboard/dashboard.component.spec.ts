@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -22,7 +23,7 @@ describe('DashboardComponent', () => {
     api.pending.and.returnValue(of(makePending()));
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ReportingApiService, useValue: api },
         { provide: ModulesService, useValue: modulesFake },

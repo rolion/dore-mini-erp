@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AuthService } from '../../../../core/service/auth.service';
@@ -16,7 +17,7 @@ describe('LandingComponent', () => {
     authenticated = isAuthenticated;
     await TestBed.configureTestingModule({
       imports: [LandingComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: AuthService, useValue: { get isAuthenticated() { return authenticated; } } },
       ],
