@@ -47,7 +47,7 @@
                   <tr>
                     <td><a [routerLink]="['/pocketbiz/quotations/proformas', row.id]"><strong>{{ row.number }}</strong></a> · v{{ row.version }}</td>
                     <td>{{ row.customer_name }}</td>
-                    <td>{{ row.date }}</td>
+                    <td>{{ row.date | date: 'dd/MM/yyyy' }}</td>
                     <td class="text-end">{{ row.total | money }}</td>
                     <td><span class="badge" [class]="classes[row.status]">{{ labels[row.status] }}</span></td>
                     <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/quotations/proformas', row.id]">Ver detalle</a></td>

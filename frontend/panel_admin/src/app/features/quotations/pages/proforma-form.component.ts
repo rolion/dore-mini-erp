@@ -3,6 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { debounceTime, finalize } from 'rxjs';
+import { HasUnsavedChanges } from '../../../core/guard/unsaved-changes.guard';
+import { fetchAll } from '../../agenda/services/fetch-all';
 import { Customer } from '../../customers/models/customer';
 import { CustomersApiService } from '../../customers/services/customers-api.service';
 import { CatalogService } from '../../services/models/service';
@@ -16,7 +18,7 @@ import { ProformasApiService } from '../services/proformas-api.service';
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './proforma-form.component.html',
 })
-export class ProformaFormComponent implements OnInit {
+export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
   private api = inject(ProformasApiService);
   private customersApi = inject(CustomersApiService);
   private servicesApi = inject(ServicesApiService);
@@ -55,8 +57,8 @@ export class ProformaFormComponent implements OnInit {
     let pending = this.proformaId ? 3 : 2;
     const done = () => { if (--pending === 0) this.loading = false; };
     const fail = () => { this.error = 'No se pudieron cargar los datos del formulario.'; done(); };
-    this.servicesApi.list({ active: true, pageSize: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: page => { this.services = page.results; done(); }, error: fail });
+    fetchAll(page => this.servicesApi.list({ active: true, pageSize: 100, page })).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: services => { this.services = services; done(); }, error: fail });
     this.searchCustomers('', done);
     this.customerSearch.valueChanges.pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe(term => this.searchCustomers(term));
@@ -111,6 +113,10 @@ export class ProformaFormComponent implements OnInit {
         },
         error: () => { this.error = 'No se pudieron cargar los clientes.'; done?.(); },
       });
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty && !this.saving;
   }
 
   isFrozen(index: number): boolean {

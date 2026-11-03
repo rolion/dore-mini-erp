@@ -3,6 +3,7 @@ from decimal import Decimal
 from threading import Barrier
 from unittest import mock
 
+from django.apps import apps
 from django.db import connections
 from django.test import TransactionTestCase
 from rest_framework.test import APIClient
@@ -11,7 +12,6 @@ from modules.accounts.testing import make_admin
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.modularity.infrastructure.django.repositories import DjangoCompanyModuleRepository
 from modules.quotations.infrastructure.django.models import ProformaLineModel, ProformaModel
-from modules.sales.infrastructure.django.models import OrderModel
 from modules.service_catalog.infrastructure.django.models import ServiceModel
 
 URL = '/api/quotations/proformas/'
@@ -117,6 +117,28 @@ class ProformaApiTests(TransactionTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn('customer_id', response.json())
 
+    def test_header_edge_cases_are_400(self):  # edge cases del PLAN
+        missing = self.client.post(URL, {'date': '2026-11-03', 'lines': []}, format='json')
+        self.assertEqual(missing.status_code, 400)
+        self.assertIn('customer_id', missing.json())
+        early = self.create(valid_until='2026-11-02')
+        self.assertEqual(early.status_code, 400)
+        self.assertIn('valid_until', early.json())
+        many = self.create(lines=[{'service_id': str(self.limpieza.pk), 'quantity': '1'}] * 201)
+        self.assertEqual(many.status_code, 400)
+        self.assertIn('lines', many.json())
+        self.assertEqual(ProformaModel.objects.count(), 0)
+
+    def test_price_rule_applies_to_frozen_lines_and_to_put(self):  # AC-03
+        body = self.create().json()
+        edited = [{**body['lines'][0], 'unit_price': '10.00'}, body['lines'][1]]
+        with mock.patch('modules.quotations.api.views.can_edit_price', return_value=False):
+            denied = self.client.put(f"{URL}{body['id']}/", self.payload(lines=edited), format='json')
+            self.assertEqual(denied.status_code, 403)
+        self.assertEqual(self.client.get(f"{URL}{body['id']}/").json()['total'], '250.00')
+        allowed = self.client.put(f"{URL}{body['id']}/", self.payload(lines=edited), format='json')
+        self.assertEqual((allowed.status_code, allowed.json()['total']), (200, '160.00'))
+
     # AC-05
     def test_present_needs_lines_then_freezes(self):
         empty = self.create(lines=[]).json()
@@ -129,11 +151,15 @@ class ProformaApiTests(TransactionTestCase):
 
     # AC-06
     def test_saving_repeatedly_creates_no_sale_or_stock(self):
+        before = {model: model.objects.count() for app in ('sales', 'inventory', 'purchases', 'expenses')
+                  for model in apps.get_app_config(app).get_models()}
         body = self.create().json()
         for _ in range(3):
             self.client.put(f"{URL}{body['id']}/", self.payload(lines=body['lines']), format='json')
         self.client.post(f"{URL}{body['id']}/present/")
-        self.assertEqual(OrderModel.objects.count(), 0)
+        for app in ('sales', 'inventory', 'purchases', 'expenses'):  # sin ventas, cobros ni stock
+            for model in apps.get_app_config(app).get_models():
+                self.assertEqual(model.objects.count(), before[model], model.__name__)
         self.assertEqual(ProformaModel.objects.count(), 1)
         self.assertEqual(ProformaLineModel.objects.count(), 2)
 

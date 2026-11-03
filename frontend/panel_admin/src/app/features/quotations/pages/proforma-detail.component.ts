@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,7 +10,7 @@ import { ProformasApiService } from '../services/proformas-api.service';
 /** Detalle de proforma con versiones y acciones según `allowed_actions` del servidor. */
 @Component({
   selector: 'app-proforma-detail',
-  imports: [RouterLink, MoneyPipe],
+  imports: [RouterLink, MoneyPipe, DatePipe],
   templateUrl: './proforma-detail.component.html',
   styleUrl: './proforma-detail.component.scss',
 })

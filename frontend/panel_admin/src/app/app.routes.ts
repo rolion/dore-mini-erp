@@ -59,12 +59,14 @@ export const APP_ROUTE: Route[] = [
             {
                 path: 'quotations/proformas/nueva',
                 canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
                 data: { module: 'quotations' },
                 loadComponent: () => import('./features/quotations/pages/proforma-form.component').then(m => m.ProformaFormComponent),
             },
             {
                 path: 'quotations/proformas/:id/editar',
                 canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
                 data: { module: 'quotations' },
                 loadComponent: () => import('./features/quotations/pages/proforma-form.component').then(m => m.ProformaFormComponent),
             },

@@ -1,6 +1,6 @@
 # REV-2026-11-03-crear-proformas-de-servicios-07: Huecos de cobertura frente al mapeo de pruebas del PLAN
 
-**Status:** Open
+**Status:** Resolved (pendiente de re-verificación con PostgreSQL y revisión visual)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-crear-proformas-de-servicios.md (v1)
