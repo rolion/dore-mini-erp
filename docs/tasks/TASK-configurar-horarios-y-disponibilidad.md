@@ -83,4 +83,6 @@ Ingeniería corrigió los cuatro hallazgos, incorporó diálogos nativos y compr
 
 ## Publicación
 
+El gate sigue sin PASS. La revisión visual parcial confirmó el [hallazgo del diálogo](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-05.md). El build de producción y Karma con cobertura siguen pendientes de verificación.
+
 _Pendiente._

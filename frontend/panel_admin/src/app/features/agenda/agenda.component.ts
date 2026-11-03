@@ -26,6 +26,7 @@ interface Week {
   selector: 'app-agenda',
   imports: [ReactiveFormsModule],
   templateUrl: './agenda.component.html',
+  styleUrl: './agenda.component.scss',
 })
 export class AgendaComponent {
   private http = inject(HttpClient);
