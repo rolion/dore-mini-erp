@@ -1,6 +1,6 @@
 # TASK-configurar-horarios-y-disponibilidad: PB-AGE-001
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-horarios-y-disponibilidad
@@ -24,6 +24,8 @@
 
 | 2026-11-03 | REVIEW → ENGINEERING | Tercer FAIL; la persona autorizó corregir REV-06 a REV-12 | delivery-publish |
 | 2026-11-03 | ENGINEERING → REVIEW | Hallazgos corregidos; pendiente un gate con acceso a PostgreSQL | delivery-build |
+
+| 2026-11-03 | REVIEW → PUBLISH | Cuarto Quality Gate: PASS con REV-13 (Medium) y REV-14 (Low) como limitaciones conocidas | delivery-publish |
 
 ## Investigación
 
@@ -98,8 +100,10 @@ Ingeniería corrigió los cuatro hallazgos, incorporó diálogos nativos y compr
 
 **Tercer gate: FAIL** sobre `7d521eb`. Build y lint pasan (con `NG_BUILD_MAX_WORKERS=1` y `--max-old-space-size=1536`), `npm audit` sin vulnerabilidades; Karma: 2 fallos de 1118 ([REV-06](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-06.md), High). Otros hallazgos: [07](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-07.md) a [12](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-12.md). La suite backend no se reprodujo en el gate (sin acceso a credenciales de PostgreSQL). Visual verificada solo con backend simulado. Es el tercer resultado sin PASS consecutivo: se detiene el ciclo y se consulta a la persona.
 
+## Review (cuarto gate)
+
+**PASS** sobre `968d912`. Backend: `check`, `makemigrations --check`, 1365 pruebas en PostgreSQL y `bandit` sin incidencias. Frontend: lint, build y `npm audit` sin problemas; Karma 1121 correctas (86,21 % sentencias, 77,95 % ramas). REV-05 a REV-12 verificados como corregidos. Visual verificada en navegador a 390 y 1440 px, claro y oscuro, sobre una base temporal con datos ficticios. Nuevos hallazgos no bloqueantes: [REV-13](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-13.md) (Medium, contraste de `btn-link` en oscuro) y [REV-14](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-14.md) (Low). No verificados: recorrido completo con Tab, error de guardado del diálogo de turno por UI y pausas por UI.
+
 ## Publicación
 
-El gate sigue sin PASS. La revisión visual parcial confirmó el [hallazgo del diálogo](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-05.md). El build de producción y Karma con cobertura siguen pendientes de verificación.
-
-_Pendiente._
+PR listo para aprobación humana; no se mergea. Toca base de datos (migración aditiva) y un ADR. Limitaciones conocidas: REV-13 y REV-14 abiertos; E2E aplazado hasta el flujo de reserva.
