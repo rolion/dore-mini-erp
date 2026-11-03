@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, Input, Output, EventEmitter, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -23,6 +23,9 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   imports: [ReactiveFormsModule],
 })
 export class CustomerQuickCreateComponent {
+  @Input() embedded = false;
+  @Output() created = new EventEmitter<Customer>();
+  @Output() cancelled = new EventEmitter<void>();
   readonly activeModal = inject(NgbActiveModal);
   readonly nameMaxLength = NAME_MAX_LENGTH;
   readonly phoneMaxLength = PHONE_MAX_LENGTH;
@@ -38,6 +41,11 @@ export class CustomerQuickCreateComponent {
   private api = inject(CustomersApiService);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
+
+  cancel(): void {
+    if (this.embedded) this.cancelled.emit();
+    else this.activeModal.dismiss('cancelar');
+  }
 
   submit(): void {
     if (this.form.invalid || this.saving) {
@@ -72,7 +80,8 @@ export class CustomerQuickCreateComponent {
         next: (customer: Customer) => {
           this.saving = false;
           this.toastr.success('Cliente creado');
-          this.activeModal.close(customer);
+          if (this.embedded) this.created.emit(customer);
+          else this.activeModal.close(customer);
         },
         error: (err: CustomerApiError) => {
           this.saving = false;

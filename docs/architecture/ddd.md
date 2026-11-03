@@ -1454,6 +1454,8 @@ Todo desplegado inicialmente como un monolito modular.
 
 # 31. Resumen
 
+> **Nota (PB-ODO-001):** `dentistry` extiende la identidad de `customers` sin copiarla: perfil único por `(company_id, customer_id)`, ID de API igual al del cliente, antecedentes opcionales y auditoría transaccional. Nueva dependencia permitida `dentistry → customers`, solo desde `infrastructure/adapters.py` mediante fachada/DTO administrativos (`get_customers_administrative`, `search_customer_ids`). Nacimiento/responsable e historial administrativo viven en Customers, con API separada para preservar contratos existentes. `CompanyClinicalPermission` compone empresa/módulos y política clínica explícita; solo admin en v1 por decisión del usuario. Registrar un profesional en Personal no crea cuenta ni acceso. Archivo preserva historia; confirmaciones/enmiendas y capacidades odontológicas posteriores no se implementan aquí. Ver `ADR-perfil-odontologico-pacientes-identidad-y-acceso.md`.
+
 La arquitectura recomendada es:
 
 ```text

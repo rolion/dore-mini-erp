@@ -8,6 +8,7 @@ from modules.personnel.api.urls import professional_urls, specialty_urls
 from .health import health
 
 urlpatterns = [
+    path('api/dentistry/', include('modules.dentistry.api.urls')),
     path('admin/', admin.site.urls),
     path('api/health/', health, name='health'),
     path('api/professionals/', include(professional_urls)),

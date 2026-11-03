@@ -1,5 +1,6 @@
 {
   "MENUITEMS": {
+    "DENTISTRY": { "TEXT": "Odontología", "PATIENTS": "Pacientes" },
     "MAIN": {
       "TEXT": "-- Principal"
     },

@@ -1,0 +1,44 @@
+<div class="modal-header">
+  <h4 class="modal-title" id="new-patient-title">Nuevo paciente</h4>
+  @if (!opening) {
+    <button type="button" class="btn btn-sm btn-light" aria-label="Cerrar" title="Cerrar" [disabled]="saving" (click)="close()">
+      <i class="fas fa-times" aria-hidden="true"></i>
+    </button>
+  }
+</div>
+@if (opening) {
+  <app-customer-quick-create [embedded]="true" (created)="select($event); opening = false" (cancelled)="opening = false" />
+} @else {
+  <div class="modal-body">
+    <label class="form-label" for="existing-customer-search">Cliente</label>
+    <ng-select labelForId="existing-customer-search" [items]="results" bindLabel="name" [typeahead]="customerSearch"
+      [loading]="loading" [ngModel]="selected" (ngModelChange)="select($event)" [readonly]="saving"
+      placeholder="Buscar por nombre o teléfono" notFoundText="No hay clientes que coincidan"
+      loadingText="Buscando clientes…" typeToSearchText="Escribe para buscar" [clearable]="true">
+      <ng-template ng-option-tmp let-item="item">
+        <span class="fw-semibold">{{ item.name }}</span>
+        <small class="text-muted d-block">{{ item.phone || 'Teléfono no informado' }}{{ item.active ? '' : ' · Inactivo' }}</small>
+      </ng-template>
+    </ng-select>
+    @if (searchError) {
+      <div class="mt-3" role="alert">
+        <p class="text-danger mb-2">{{ searchError }}</p>
+        <button type="button" class="btn btn-sm btn-light" [disabled]="saving" (click)="retryCustomers()">Reintentar búsqueda</button>
+      </div>
+    }
+    @if (total > 20) { <small class="text-muted">Se muestran 20 coincidencias. Afina la búsqueda para ver otras.</small> }
+    @if (error) { <p class="text-danger mt-3" role="alert">{{ error }}</p> }
+    @if (checking) { <p class="text-muted mt-3" role="status">Comprobando ficha…</p> }
+    @if (existingId) {
+      <p class="mt-3 mb-2">El cliente ya tiene una ficha.</p>
+      <button type="button" class="btn btn-sm btn-light" (click)="openRecord(existingId)">Abrir ficha existente</button>
+    }
+    <div class="mt-3">
+      <button type="button" class="btn btn-sm btn-light" [disabled]="saving" (click)="createCustomer()">Crear cliente nuevo</button>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="close()">Cancelar</button>
+    <button type="button" class="btn btn-primary" (click)="create()" [disabled]="!selected || saving || checking || !!existingId">{{ saving ? 'Creando…' : 'Crear ficha clínica' }}</button>
+  </div>
+}

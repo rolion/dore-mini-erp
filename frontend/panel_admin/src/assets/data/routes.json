@@ -50,6 +50,30 @@
     },
     {
       "path": "",
+      "title": "MENUITEMS.DENTISTRY.TEXT",
+      "iconType": "feather",
+      "icon": "heart",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "module": "dentistry",
+      "submenu": [
+        {
+          "path": "/pocketbiz/dentistry/patients",
+          "title": "MENUITEMS.DENTISTRY.PATIENTS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ]
+    },
+    {
+      "path": "",
       "title": "MENUITEMS.SALES.TEXT",
       "iconType": "feather",
       "icon": "shopping-cart",

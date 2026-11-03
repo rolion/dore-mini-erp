@@ -26,6 +26,12 @@ export const APP_ROUTE: Route[] = [
         children: [
             { path: '', redirectTo: 'dashboard/main', pathMatch: 'full' },
             {
+                path: 'dentistry',
+                canActivate: [moduleGuard],
+                data: { module: 'dentistry' },
+                loadChildren: () => import('./features/dentistry/dentistry.routes').then(m => m.DENTISTRY_ROUTES),
+            },
+            {
                 path: 'personnel',
                 canActivate: [moduleGuard],
                 data: { module: 'personnel' },

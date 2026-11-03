@@ -173,6 +173,8 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 ## 6. Menú y layout
 
+- Odontología → Pacientes (`/pocketbiz/dentistry/patients`, PB-ODO-001): lista, alta por selección de cliente existente y ficha `/:id` con Perfil (administrativo) / Antecedentes (clínico e historial). Reutiliza Lista, Formulario, Detalle y detalle con pestañas de §5. Acceso clínico comprobado en backend, admin autorizado en v1; no mostrar pestañas de capacidades futuras. Vacíos clínicos: «No informado», sin presumir ausencia. Véase `DDR-perfil-odontologico-pacientes-ficha-y-listado.md`.
+
 - Submenú de Compras: «Inicio» (`/purchases`, «Próximamente»), «Proveedores» (`/purchases/suppliers`, lista, `/new`, `/:id/edit` y detalle `/:id`, PB-COM-001; plantillas Lista, Formulario y Detalle de clientes, con «Ver compras» hacia `/purchases?supplierId=<id>`) y «Configuración» (`/purchases/settings`). Ver `DDR-gestionar-proveedores-pantallas-proveedores`.
 - Submenú de Inventario: «Inicio», «Almacenes y unidades» (`/inventory/configuration`), «Existencias» (`/inventory/stock`, con detalle `/inventory/stock/:productId/:warehouseId`, PB-INV-005), «Movimientos» (`/inventory/movements`, solo lectura, PB-INV-004), «Ajustes de existencias» (`/inventory/adjustments`, lista, `/new` y detalle de solo lectura, PB-INV-006) y «Ajustes» (`/inventory/settings`, PB-CFG-001). El formulario de ajuste sigue el patrón «formulario con revisión y confirmación de envío único» con la variante de reconfirmación: si el saldo cambió (409 `balance_changed`) vuelve al resumen con el saldo nuevo y la acción de confirmar queda explícita.
 

@@ -3,7 +3,7 @@ from django.apps import apps
 from django.test import SimpleTestCase
 from django.urls import URLPattern, URLResolver, get_resolver
 
-BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases', 'costing')
+BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases', 'costing', 'dentistry')
 # Tablas hijas: heredan la empresa de su pedido por la FK interna de Sales y se consultan siempre a través de él.
 CHILD_MODELS = {'sales.OrderItemModel', 'sales.PaymentModel', 'purchases.PurchaseItemModel',
                 'purchases.ReceiptItemModel'}
@@ -64,7 +64,8 @@ class DefaultPermissionTests(SimpleTestCase):
                 continue
             view_class = getattr(callback, 'view_class', None) or getattr(callback, 'cls', None)
             permissions = [p.__name__ for p in getattr(view_class, 'permission_classes', [])]
-            if permissions != ['CompanyModulePermission']:
+            expected = ['CompanyClinicalPermission'] if route.startswith('api/dentistry/') else ['CompanyModulePermission']
+            if permissions != expected:
                 offenders.append(f'{route}: {permissions}')
         self.assertEqual(offenders, [])
 
