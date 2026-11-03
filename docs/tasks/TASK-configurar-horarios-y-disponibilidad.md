@@ -104,6 +104,10 @@ Ingeniería corrigió los cuatro hallazgos, incorporó diálogos nativos y compr
 
 **PASS** sobre `968d912`. Backend: `check`, `makemigrations --check`, 1365 pruebas en PostgreSQL y `bandit` sin incidencias. Frontend: lint, build y `npm audit` sin problemas; Karma 1121 correctas (86,21 % sentencias, 77,95 % ramas). REV-05 a REV-12 verificados como corregidos. Visual verificada en navegador a 390 y 1440 px, claro y oscuro, sobre una base temporal con datos ficticios. Nuevos hallazgos no bloqueantes: [REV-13](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-13.md) (Medium, contraste de `btn-link` en oscuro) y [REV-14](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-14.md) (Low). No verificados: recorrido completo con Tab, error de guardado del diálogo de turno por UI y pausas por UI.
 
+## Corrección de REV-13 y REV-14
+
+Los `btn-link` y la alerta de éxito usan texto claro en tema oscuro; los diálogos definen su borde (ya no usan `.border`, que pisaba el tema); el error de guardado de los diálogos usa `alert alert-danger`. Lint, build y Karma (1121 correctas) pasan. **Pendiente: comprobar en navegador el contraste en oscuro y el nuevo estilo del error.** El gate PASS aplica a `968d912`; esta corrección es posterior.
+
 ## Publicación
 
 PR listo para aprobación humana; no se mergea. Toca base de datos (migración aditiva) y un ADR. Limitaciones conocidas: REV-13 y REV-14 abiertos; E2E aplazado hasta el flujo de reserva.

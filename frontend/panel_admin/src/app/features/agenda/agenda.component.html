@@ -69,12 +69,12 @@
           <button type="button" class="btn btn-primary" (click)="open(shiftDialog, () => edit())">Nuevo turno</button>
           <button type="button" class="btn btn-outline-primary" (click)="open(absenceDialog)">Registrar ausencia</button>
         </div>
-        <dialog #shiftDialog class="rounded border p-4" aria-labelledby="shift-dialog-title"
+        <dialog #shiftDialog class="rounded p-4" aria-labelledby="shift-dialog-title"
           (cancel)="saving && $event.preventDefault()">
           <form [formGroup]="shift" (ngSubmit)="saveShift(shiftDialog)">
             <fieldset [disabled]="saving">
               <h5 id="shift-dialog-title">{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
-              <p data-save-error tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
+              <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
               <label for="agenda-day">Día</label>
               <select id="agenda-day" class="form-select mb-2" formControlName="day">
                 @for (day of days; track day; let i = $index) { <option [ngValue]="i">{{ day }}</option> }
@@ -105,12 +105,12 @@
             </fieldset>
           </form>
         </dialog>
-        <dialog #absenceDialog class="rounded border p-4" aria-labelledby="absence-dialog-title"
+        <dialog #absenceDialog class="rounded p-4" aria-labelledby="absence-dialog-title"
           (cancel)="saving && $event.preventDefault()">
           <form [formGroup]="absence" (ngSubmit)="saveAbsence(absenceDialog)">
             <fieldset [disabled]="saving">
               <h5 id="absence-dialog-title">Registrar ausencia</h5>
-              <p data-save-error tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
+              <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
               <label for="absence-start">Inicio</label>
               <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
               <label for="absence-end">Fin</label>
