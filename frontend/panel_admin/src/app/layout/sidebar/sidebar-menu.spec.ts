@@ -13,9 +13,9 @@ describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
   it('has the business menu, Dentistry, Purchases, Inventory and Settings > Modules', () => {
-    expect(routes.length).toBe(12);
+    expect(routes.length).toBe(13);
 
-    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, settings, agenda, personnel] = routes;
+    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, settings, agenda, personnel, quotations] = routes;
     expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
@@ -26,6 +26,8 @@ describe('Sidebar menu (routes.json)', () => {
     expect(agenda.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/agenda/citas', '/pocketbiz/agenda/configuracion/horarios',
     ]);
+    expect(quotations.module).toBe('quotations');
+    expect(quotations.submenu.map((item) => item.path)).toEqual(['/pocketbiz/quotations/proformas']);
     expect(personnel.module).toBe('personnel');
     expect(personnel.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/personnel/professionals', '/pocketbiz/personnel/specialties',
@@ -85,7 +87,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and de for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(34);
+    expect(titles.length).toBe(36);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['de', de]] as const) {
       for (const title of titles) {

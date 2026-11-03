@@ -1,0 +1,71 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">Proformas</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">Cotizaciones</li>
+    <li class="breadcrumb-item active">Proformas</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <h2><strong>Proformas</strong></h2>
+        <a class="btn btn-primary" routerLink="/pocketbiz/quotations/proformas/nueva" aria-label="Nueva proforma">+ Nueva proforma</a>
+      </div>
+      <div class="card-body">
+        @if (loading) { <p role="status">Cargando…</p> }
+        @if (error) {
+          <p class="alert alert-danger" role="alert">{{ error }}
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="search(page)">Reintentar</button></p>
+        }
+        <form [formGroup]="filters" (ngSubmit)="search()" class="row g-2 mb-3">
+          <div class="col-md-3"><label for="f-customer">Cliente o número</label>
+            <input id="f-customer" type="search" class="form-control" formControlName="customer" placeholder="Buscar cliente o número"></div>
+          <div class="col-md-2"><label for="f-from">Desde</label>
+            <input id="f-from" type="date" class="form-control" formControlName="from"></div>
+          <div class="col-md-2"><label for="f-to">Hasta</label>
+            <input id="f-to" type="date" class="form-control" formControlName="to"></div>
+          <div class="col-md-2"><label for="f-status">Estado</label>
+            <select id="f-status" class="form-select" formControlName="status">
+              <option value="">Todos</option>
+              @for (status of statuses; track status) { <option [value]="status">{{ labels[status] }}</option> }
+            </select></div>
+          <div class="col-md-3 d-flex gap-2 align-items-end">
+            <button class="btn btn-primary" type="submit" [disabled]="loading">Filtrar</button>
+            <button class="btn btn-light" type="button" (click)="clear()" [disabled]="loading">Limpiar filtros</button>
+          </div>
+        </form>
+
+        @if (!loading && !error && !rows.length) {
+          <p>{{ hasFilters ? 'No hay proformas con esos filtros.' : 'Aún no hay proformas. Crea la primera con «Nueva proforma».' }}</p>
+        }
+        @if (rows.length) {
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead><tr><th>Número / versión</th><th>Cliente</th><th>Fecha</th><th class="text-end">Total propuesto</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                @for (row of rows; track row.id) {
+                  <tr>
+                    <td><a [routerLink]="['/pocketbiz/quotations/proformas', row.id]"><strong>{{ row.number }}</strong></a> · v{{ row.version }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.date }}</td>
+                    <td class="text-end">{{ row.total | money }}</td>
+                    <td><span class="badge" [class]="classes[row.status]">{{ labels[row.status] }}</span></td>
+                    <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/quotations/proformas', row.id]">Ver detalle</a></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">{{ count }} proformas</small>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="search(page - 1)">Anterior</button>
+              <span>Página {{ page }} de {{ pages }}</span>
+              <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="search(page + 1)">Siguiente</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

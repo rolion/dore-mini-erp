@@ -1,0 +1,86 @@
+export type ProformaStatus = 'draft' | 'presented' | 'superseded';
+export type ProformaAction = 'edit' | 'present' | 'new-version';
+
+export const STATUS_LABELS: Record<ProformaStatus, string> = {
+  draft: 'Borrador',
+  presented: 'Presentada',
+  superseded: 'Reemplazada',
+};
+
+export const STATUS_CLASSES: Record<ProformaStatus, string> = {
+  draft: 'col-orange',
+  presented: 'col-blue',
+  superseded: 'col-grey',
+};
+
+export const NOTES_MAX_LENGTH = 2000;
+
+export interface ProformaLine {
+  id: string;
+  service_id: string;
+  description: string;
+  quantity: string;
+  unit_price: string;
+  subtotal: string;
+  treatment_item_id: string | null;
+  piece: string;
+}
+
+export interface ProformaSummary {
+  id: string;
+  number: string;
+  version: number;
+  status: ProformaStatus;
+  customer_id: string;
+  customer_name: string;
+  date: string;
+  valid_until: string | null;
+  currency: string;
+  total: string;
+}
+
+export interface Proforma extends ProformaSummary {
+  notes: string;
+  lines: ProformaLine[];
+  allowed_actions: ProformaAction[];
+  can_edit_price: boolean;
+  versions: ProformaSummary[];
+}
+
+/** Línea que se envía: el servidor ignora descripción, subtotal y total, y los recalcula. */
+export interface ProformaLineInput {
+  id?: string;
+  service_id?: string;
+  quantity: string;
+  unit_price?: string;
+}
+
+export interface ProformaInput {
+  customer_id: string;
+  date: string;
+  valid_until: string | null;
+  notes: string;
+  lines: ProformaLineInput[];
+}
+
+export interface ProformaFilters {
+  customer?: string;
+  from?: string;
+  to?: string;
+  status?: ProformaStatus | '';
+  page?: number;
+}
+
+export interface ProformaFailure {
+  message: string;
+  fields: Record<string, string>;
+  /** Mensaje por posición de línea (vacío si la línea es válida). */
+  lines: Record<string, string>[];
+  conflict: boolean;
+}
+
+/** Subtotal con dos decimales, redondeo half-up; solo vista previa (el servidor es la autoridad). */
+export function previewSubtotal(quantity: string, unitPrice: string): number {
+  const cents = Math.round(Number(quantity) * Number(unitPrice) * 100 + 1e-9);
+  return Number.isFinite(cents) ? cents / 100 : 0;
+}

@@ -1,6 +1,7 @@
 {
   "MENUITEMS": {
     "AGENDA":{"APPOINTMENTS":"Citas","SCHEDULE":"Horarios y ausencias","TEXT":"Agenda"},
+    "QUOTATIONS":{"TEXT":"Cotizaciones","PROFORMAS":"Proformas"},
     "DENTISTRY": { "TEXT": "Odontología", "PATIENTS": "Pacientes" },
     "MAIN": {
       "TEXT": "-- Principal"

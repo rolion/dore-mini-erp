@@ -1,6 +1,7 @@
 {
   "MENUITEMS": {
     "AGENDA":{"APPOINTMENTS":"Appointments","SCHEDULE":"Hours and absences","TEXT":"Schedule"},
+    "QUOTATIONS":{"TEXT":"Quotations","PROFORMAS":"Proformas"},
     "DENTISTRY": { "TEXT": "Dentistry", "PATIENTS": "Patients" },
     "PERSONNEL": { "TEXT": "Personnel", "LIST": { "PROFESSIONALS": "Professionals", "SPECIALTIES": "Specialties" } },
     "MAIN": {
