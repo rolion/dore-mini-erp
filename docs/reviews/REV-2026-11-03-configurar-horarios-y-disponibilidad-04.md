@@ -1,6 +1,6 @@
 # REV-2026-11-03-configurar-horarios-y-disponibilidad-04: La semana vacía puede quedar sin mensaje
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-configurar-horarios-y-disponibilidad.md (v1)

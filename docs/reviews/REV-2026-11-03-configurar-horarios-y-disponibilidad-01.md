@@ -1,6 +1,6 @@
 # REV-2026-11-03-configurar-horarios-y-disponibilidad-01: Falla el límite de arquitectura de Agenda
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-configurar-horarios-y-disponibilidad.md (v1)

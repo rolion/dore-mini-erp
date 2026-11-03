@@ -1,6 +1,6 @@
 # TASK-configurar-horarios-y-disponibilidad: PB-AGE-001
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-horarios-y-disponibilidad
@@ -19,6 +19,8 @@
 | 2026-11-03 | PLANNING → ENGINEERING | Alcance temporal confirmado y PR #49 abierto | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación publicada y verificaciones pendientes registradas | delivery-build |
 | 2026-11-03 | REVIEW → ENGINEERING | FAIL del Quality Gate independiente | delivery-publish |
+
+| 2026-11-03 | ENGINEERING → REVIEW | Hallazgos corregidos y 122 pruebas aprobadas en PostgreSQL | delivery-build |
 
 ## Investigación
 
@@ -62,9 +64,9 @@ El commit `5f6fba6` implementa la API de Agenda, la migración aditiva y la vist
 
 - AC-01. La API exige rol administrativo y los módulos Agenda y Personal. Las consultas se acotan a la empresa de sesión.
 - AC-02 y AC-03. El dominio valida vigencia, pausas y solapamientos y calcula disponibilidad al descontar pausas y ausencias. El guardado de turnos se serializa por empresa y profesional.
-- AC-04. La vista agrupa intervalos por día en hora de Bolivia y reutiliza la tarjeta, el breadcrumb y los controles de formulario del panel. Los formularios se integraron en la pantalla en lugar de usar diálogos como proponía el DDR.
+- AC-04. La vista agrupa intervalos por día en hora de Bolivia y reutiliza la tarjeta, el breadcrumb y los controles de formulario del panel. Los formularios usan diálogos nativos y enfocan el mensaje de error cuando falla el guardado.
 
-Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `manage.py check`. `makemigrations --check --dry-run` no detectó diferencias entre modelos y migraciones, pero no pudo consultar el historial en PostgreSQL. Pendientes la aplicación de la migración, la integración de permisos y concurrencia en PostgreSQL y el recorrido visual y de teclado en navegador.
+Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `manage.py check`. `makemigrations --check --dry-run` no detectó diferencias entre modelos y migraciones, pero no pudo consultar el historial en PostgreSQL. La suite posterior aplicó las migraciones en PostgreSQL 16 y aprobó 122 pruebas, incluidas las de permisos, aislamiento, alta, edición, zona horaria y concurrencia. La compilación de plantillas Angular pasó con ngc. Pendiente el recorrido visual y de teclado en navegador.
 
 ## Review
 
@@ -75,7 +77,7 @@ Comprobaciones de ingeniería: tres pruebas de dominio, compilación Angular y `
 - [El formulario permite cambios durante el guardado](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-03.md) (Medium).
 - [La semana vacía puede quedar sin mensaje](../reviews/REV-2026-11-03-configurar-horarios-y-disponibilidad-04.md) (Medium).
 
-Ingeniería corrigió el adaptador, el estado de semana vacía y la edición durante el guardado. La repetición de dominio y límites pasó 11 pruebas. Pendientes integración PostgreSQL y validación visual.
+Ingeniería corrigió los cuatro hallazgos, incorporó los diálogos del DDR y comprobó la integración en PostgreSQL. Pendiente una nueva revisión independiente.
 
 ## Publicación
 

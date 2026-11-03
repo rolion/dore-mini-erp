@@ -43,7 +43,7 @@
                 }
                 @for (item of data.shifts; track item.id) {
                   @if (item.day === i && item.valid_from <= date(i) && item.valid_until >= date(i)) {
-                    <li><button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="edit(item)">
+                    <li><button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="edit(item); shiftDialog.showModal()">
                       Editar turno {{ item.starts.slice(0,5) }}–{{ item.ends.slice(0,5) }}
                     </button></li>
                     @for (pause of item.breaks; track pause.starts) {
@@ -64,50 +64,63 @@
       </div>
       @if (!data.shifts.length && !data.absences.length) { <p>No hay turnos ni ausencias en esta semana.</p> }
       <div class="row g-3">
-        <form class="col-12 col-lg-6" [formGroup]="shift" (ngSubmit)="saveShift()">
-          <fieldset [disabled]="saving">
-          <h5>{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
-          <label for="agenda-day">Día</label>
-          <select id="agenda-day" class="form-select mb-2" formControlName="day">
-            @for (day of days; track day; let i = $index) { <option [ngValue]="i">{{ day }}</option> }
-          </select>
-          <label for="shift-start">Hora de inicio</label>
-          <input id="shift-start" type="time" class="form-control mb-2" formControlName="starts">
-          <label for="shift-end">Hora de fin (mismo día)</label>
-          <input id="shift-end" type="time" class="form-control mb-2" formControlName="ends">
-          <label for="shift-from">Vigente desde</label>
-          <input id="shift-from" type="date" class="form-control mb-2" formControlName="valid_from">
-          <label for="shift-until">Vigente hasta</label>
-          <input id="shift-until" type="date" class="form-control mb-2" formControlName="valid_until">
-          <div formArrayName="breaks">
-            @for (pause of shift.controls.breaks.controls; track pause; let i = $index) {
-              <fieldset class="border rounded p-2 mb-2" [formGroupName]="i">
-                <legend class="fs-6">Pausa {{ i + 1 }}</legend>
-                <label [for]="'pause-start-' + i">Inicio</label>
-                <input [id]="'pause-start-' + i" type="time" class="form-control" formControlName="starts">
-                <label [for]="'pause-end-' + i">Fin</label>
-                <input [id]="'pause-end-' + i" type="time" class="form-control" formControlName="ends">
-                <button type="button" class="btn btn-link" (click)="shift.controls.breaks.removeAt(i)">Quitar pausa</button>
-              </fieldset>
-            }
-          </div>
-          <button type="button" class="btn btn-outline-primary me-2" (click)="shift.controls.breaks.push(pause())">Añadir pausa</button>
-          <button type="submit" class="btn btn-primary" [disabled]="shift.invalid || saving">Guardar turno</button>
-          @if (editId) { <button type="button" class="btn btn-link" (click)="edit()">Cancelar edición</button> }
-          </fieldset>
-        </form>
-        <form class="col-12 col-lg-6" [formGroup]="absence" (ngSubmit)="saveAbsence()">
-          <fieldset [disabled]="saving">
-          <h5>Registrar ausencia</h5>
-          <label for="absence-start">Inicio</label>
-          <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
-          <label for="absence-end">Fin</label>
-          <input id="absence-end" type="datetime-local" class="form-control mb-2" formControlName="ends">
-          <label for="absence-reason">Motivo administrativo</label>
-          <input id="absence-reason" class="form-control mb-2" maxlength="250" formControlName="reason">
-          <button type="submit" class="btn btn-primary" [disabled]="absence.invalid || saving">Guardar ausencia</button>
-          </fieldset>
-        </form>
+        <div class="col-12 d-flex gap-2">
+          <button type="button" class="btn btn-primary" (click)="edit(); shiftDialog.showModal()">Nuevo turno</button>
+          <button type="button" class="btn btn-outline-primary" (click)="absenceDialog.showModal()">Registrar ausencia</button>
+        </div>
+        <dialog #shiftDialog class="rounded border p-4" aria-labelledby="shift-dialog-title"
+          (cancel)="saving && $event.preventDefault()">
+          <form [formGroup]="shift" (ngSubmit)="saveShift(shiftDialog)">
+            <fieldset [disabled]="saving">
+              <h5 id="shift-dialog-title">{{ editId ? 'Editar turno' : 'Nuevo turno' }}</h5>
+              <p data-save-error tabindex="-1" role="alert" [hidden]="!error">{{ error }}</p>
+              <label for="agenda-day">Día</label>
+              <select id="agenda-day" class="form-select mb-2" formControlName="day">
+                @for (day of days; track day; let i = $index) { <option [ngValue]="i">{{ day }}</option> }
+              </select>
+              <label for="shift-start">Hora de inicio</label>
+              <input id="shift-start" type="time" class="form-control mb-2" formControlName="starts">
+              <label for="shift-end">Hora de fin (mismo día)</label>
+              <input id="shift-end" type="time" class="form-control mb-2" formControlName="ends">
+              <label for="shift-from">Vigente desde</label>
+              <input id="shift-from" type="date" class="form-control mb-2" formControlName="valid_from">
+              <label for="shift-until">Vigente hasta</label>
+              <input id="shift-until" type="date" class="form-control mb-2" formControlName="valid_until">
+              <div formArrayName="breaks">
+                @for (pause of shift.controls.breaks.controls; track pause; let i = $index) {
+                  <fieldset class="border rounded p-2 mb-2" [formGroupName]="i">
+                    <legend class="fs-6">Pausa {{ i + 1 }}</legend>
+                    <label [for]="'pause-start-' + i">Inicio</label>
+                    <input [id]="'pause-start-' + i" type="time" class="form-control" formControlName="starts">
+                    <label [for]="'pause-end-' + i">Fin</label>
+                    <input [id]="'pause-end-' + i" type="time" class="form-control" formControlName="ends">
+                    <button type="button" class="btn btn-link" (click)="shift.controls.breaks.removeAt(i)">Quitar pausa</button>
+                  </fieldset>
+                }
+              </div>
+              <button type="button" class="btn btn-outline-primary me-2" (click)="shift.controls.breaks.push(pause())">Añadir pausa</button>
+              <button type="submit" class="btn btn-primary" [disabled]="shift.invalid || saving">Guardar turno</button>
+              <button type="button" class="btn btn-link" (click)="shiftDialog.close()">Cancelar</button>
+            </fieldset>
+          </form>
+        </dialog>
+        <dialog #absenceDialog class="rounded border p-4" aria-labelledby="absence-dialog-title"
+          (cancel)="saving && $event.preventDefault()">
+          <form [formGroup]="absence" (ngSubmit)="saveAbsence(absenceDialog)">
+            <fieldset [disabled]="saving">
+              <h5 id="absence-dialog-title">Registrar ausencia</h5>
+              <p data-save-error tabindex="-1" role="alert" [hidden]="!error">{{ error }}</p>
+              <label for="absence-start">Inicio</label>
+              <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
+              <label for="absence-end">Fin</label>
+              <input id="absence-end" type="datetime-local" class="form-control mb-2" formControlName="ends">
+              <label for="absence-reason">Motivo administrativo</label>
+              <input id="absence-reason" class="form-control mb-2" maxlength="250" formControlName="reason">
+              <button type="submit" class="btn btn-primary" [disabled]="absence.invalid || saving">Guardar ausencia</button>
+              <button type="button" class="btn btn-link" (click)="absenceDialog.close()">Cancelar</button>
+            </fieldset>
+          </form>
+        </dialog>
       </div>
     }
   </div></div></div>

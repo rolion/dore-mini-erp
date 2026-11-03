@@ -1,6 +1,6 @@
 # REV-2026-11-03-configurar-horarios-y-disponibilidad-03: El formulario permite cambios durante el guardado
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-configurar-horarios-y-disponibilidad.md (v1)

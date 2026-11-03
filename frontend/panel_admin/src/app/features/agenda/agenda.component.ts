@@ -122,26 +122,29 @@ export class AgendaComponent {
     for (const pause of item?.breaks ?? []) this.shift.controls.breaks.push(this.pause(pause));
   }
 
-  saveShift(): void {
+  saveShift(dialog: HTMLDialogElement): void {
     if (this.shift.invalid || this.saving || this.loading || !this.week) return;
     const url = this.base + 'shifts/';
     const body = this.shift.getRawValue();
     this.save(this.editId ? this.http.put(url + this.editId + '/', body) : this.http.post(url, body),
-      () => this.edit());
+      dialog, () => this.edit());
   }
 
-  saveAbsence(): void {
+  saveAbsence(dialog: HTMLDialogElement): void {
     if (this.absence.invalid || this.saving || this.loading || !this.week) return;
-    this.save(this.http.post(this.base + 'absences/', this.absence.getRawValue()), () => this.absence.reset());
+    this.save(this.http.post(this.base + 'absences/', this.absence.getRawValue()), dialog, () => this.absence.reset());
   }
 
-  private save(request: ReturnType<HttpClient['post']>, reset: () => void): void {
+  private save(request: ReturnType<HttpClient['post']>, dialog: HTMLDialogElement, reset: () => void): void {
     this.error = '';
     this.saved = '';
     this.saving = true;
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
-      next: () => { reset(); this.saved = 'Cambios guardados.'; this.load(); },
-      error: error => this.showError(error),
+      next: () => { dialog.close(); reset(); this.saved = 'Cambios guardados.'; this.load(); },
+      error: error => {
+        this.showError(error);
+        requestAnimationFrame(() => dialog.querySelector<HTMLElement>('[data-save-error]')?.focus());
+      },
     });
   }
 
