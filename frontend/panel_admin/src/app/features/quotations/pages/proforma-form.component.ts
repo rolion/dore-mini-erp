@@ -153,11 +153,12 @@ export class ProformaFormComponent implements OnInit {
       date: value.date,
       valid_until: value.valid_until || null,
       notes: value.notes,
-      lines: (value.lines as { id: string; service_id: string; quantity: string; unit_price: string }[]).map(line => ({
+      // Solo se envía el precio si la persona lo editó: si no, el servidor usa el vigente (nuevas) o el congelado.
+      lines: (value.lines as { id: string; service_id: string; quantity: string; unit_price: string }[]).map((line, index) => ({
         ...(line.id ? { id: line.id } : {}),
         service_id: line.service_id,
         quantity: String(line.quantity),
-        unit_price: String(line.unit_price),
+        ...(this.lines.at(index).get('unit_price')?.dirty ? { unit_price: String(line.unit_price) } : {}),
       })),
     };
     this.saving = true;

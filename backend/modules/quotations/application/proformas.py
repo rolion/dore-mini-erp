@@ -112,7 +112,13 @@ class ProformaService:
     def _lines(self, inputs: list[LineInput], *, existing: dict[UUID, ProformaLine]) -> list[ProformaLine]:
         result: list[ProformaLine] = []
         errors: list[dict] = []
+        seen: set[UUID] = set()
         for item in inputs:
+            if item.id is not None and item.id in seen:
+                errors.append({'id': ['Línea repetida.']})
+                continue
+            if item.id is not None:
+                seen.add(item.id)
             frozen = existing.get(item.id) if item.id else None
             if frozen is not None:  # línea ya congelada: no se relee el catálogo
                 price = frozen.unit_price if item.unit_price is None else item.unit_price

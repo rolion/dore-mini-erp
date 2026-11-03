@@ -16,6 +16,7 @@
 | 2026-11-03 | ARCHITECTURE → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-03 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación completa; pruebas con PostgreSQL pendientes de entorno | delivery-build |
+| 2026-11-03 | REVIEW → REVIEW | Quality Gate 1: FAIL (rama atrás de su base; BD sin ejecutar); base integrada y REV-01/02/03/05 corregidos | delivery-publish |
 
 ## Investigación
 
@@ -100,7 +101,7 @@ Verificación propia (no es el Quality Gate):
 - Backend: `test_domain` OK sin base de datos; `makemigrations --check` sin cambios pendientes.
 - **No ejecutado**: pruebas con PostgreSQL (`test_api.py`, modularity) por no contar con credenciales de base de datos en este entorno (no se lee `.env`).
 - `test_boundaries` falla en `test_modules_only_reach_allowed_modules_and_only_through_services` por `agenda/infrastructure/adapters.py`, que importa las fachadas de `customers` y `service_catalog` sin estar declarado en `ALLOWED_DEPENDENCIES['agenda']`. **Preexistente en la rama base (PR #50)**, no causado por este cambio; quotations no aparece entre los infractores. Se deja sin tocar para no chocar con ese PR.
-- `npm run lint` (`ng lint`) no está configurado en el repositorio (ESLint sin `eslint.config.*`).
+- `npm run lint` pasa (`All files pass linting`).
 
 Desviaciones respecto al plan: ninguna de alcance. Detalles: `previewSubtotal` en el modelo del frontend para la vista previa; el campo de precio se marca solo-lectura según `can_edit_price` del detalle (en alta se asume permitido y el servidor decide); `number` se asigna después de validar para que un rechazo no consuma consecutivo; `allowed_actions` expone `new-version` solo sin borrador pendiente del mismo número.
 
@@ -109,7 +110,9 @@ Deuda técnica: sin autoguardado ni aviso al abandonar con cambios sin guardar (
 UI: pantallas de referencia `purchase-list`/`appointment-list` (lista), `appointment-form` (formulario) y `appointment-detail` (detalle con `<dialog>` nativo); se reutilizan `MoneyPipe`, badges `col-*` y `shared/models/page`. Sin componentes compartidos nuevos; la tabla de líneas vive en el formulario del feature.
 
 ## Review
-_Pendiente_
+**Quality Gate 1 (subagente aislado): FAIL, sin hallazgos Critical/High.** Ejecutado y OK: `ng test` (16/16), `ng build`, `ng lint`, `bandit` (sin hallazgos), `npm audit` (0), `makemigrations --check`, `test_domain`. Falló `test_boundaries` porque esta rama estaba atrás de su base (REV-01). **No ejecutado: pruebas con PostgreSQL** (`quotations/test_api`, `modularity`, regresiones), ruff/flake8 (no instalados) y revisión visual.
+Hallazgos: [REV-01](../reviews/REV-2026-11-03-crear-proformas-de-servicios-01.md) Medium, [02](../reviews/REV-2026-11-03-crear-proformas-de-servicios-02.md), [03](../reviews/REV-2026-11-03-crear-proformas-de-servicios-03.md), [05](../reviews/REV-2026-11-03-crear-proformas-de-servicios-05.md) corregidos tras integrar la base (boundaries 15/15 OK). Abiertos, Low: [04](../reviews/REV-2026-11-03-crear-proformas-de-servicios-04.md) (SPECIFICATION: cliente inactivo en borrador existente; requiere decisión del usuario), [06](../reviews/REV-2026-11-03-crear-proformas-de-servicios-06.md) (DESIGN: fechas ISO, filtros en URL, etc.), [07](../reviews/REV-2026-11-03-crear-proformas-de-servicios-07.md) (cobertura).
+Pendiente para PASS: correr las pruebas con PostgreSQL (`python manage.py test modules.quotations modules.modularity modules.agenda modules.service_catalog`) y la revisión visual.
 
 ## Publicación
 _Pendiente_

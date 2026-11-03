@@ -94,11 +94,21 @@ class ProformaApiTests(TransactionTestCase):
         for service in (self.corona, foreign):
             response = self.create(lines=[{'service_id': str(service.pk), 'quantity': '1'}])
             self.assertEqual(response.status_code, 400)
+        ServiceModel.objects.filter(pk=self.corona.pk).update(active=True)
         CustomerModel.objects.filter(pk=self.customer.pk).update(active=False)
-        self.assertEqual(self.create().status_code, 400)
+        inactive = self.create()
+        self.assertEqual(inactive.status_code, 400)
+        self.assertIn('customer_id', inactive.json())
         stranger = CustomerModel.objects.create(company_id=self.other.company_id, name='Ajeno')
         self.assertEqual(self.client.post(URL, self.payload(customer_id=str(stranger.pk)), format='json')
                          .status_code, 400)
+
+    def test_repeated_line_id_is_a_400_not_a_500(self):  # REV-02
+        body = self.create().json()
+        line = body['lines'][0]
+        response = self.client.put(f"{URL}{body['id']}/", self.payload(lines=[line, line]), format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(response.json()['lines'][1])
 
     # AC-05
     def test_present_needs_lines_then_freezes(self):
