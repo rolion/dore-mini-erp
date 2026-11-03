@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -19,11 +20,11 @@ import {
   PurchaseSummaryDto,
 } from '../models/purchase';
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const NOT_FOUND_MESSAGE = 'Compra no encontrada.';
-export const NOT_EDITABLE_MESSAGE = 'La compra ya no admite cambios.';
-export const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
+export const NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const NOT_FOUND_MESSAGE = (): string => tr('PURCHASES.PURCHASES_API_SERVICE.COMPRA_NO_ENCONTRADA');
+export const NOT_EDITABLE_MESSAGE = (): string => tr('PURCHASES.PURCHASE_FORM.LA_COMPRA_YA_NO_ADMITE');
+export const GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
 
 const HEADER_FIELDS: Readonly<Record<string, HeaderField>> = {
   supplier_id: 'supplierId',
@@ -143,22 +144,22 @@ export function toFieldErrors(body: unknown): PurchaseFieldErrors {
 }
 
 function toApiError(err: HttpErrorResponse): PurchaseApiError {
-  if (err.status === 0) return new PurchaseApiError(NETWORK_ERROR_MESSAGE, 0);
+  if (err.status === 0) return new PurchaseApiError(NETWORK_ERROR_MESSAGE(), 0);
   if (err.status === 400) {
-    return new PurchaseApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(err.error));
+    return new PurchaseApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(err.error));
   }
-  if (err.status === 404) return new PurchaseApiError(NOT_FOUND_MESSAGE, 404);
-  if (err.status === 409) return new PurchaseApiError(NOT_EDITABLE_MESSAGE, 409);
-  return new PurchaseApiError(GENERIC_ERROR_MESSAGE, err.status);
+  if (err.status === 404) return new PurchaseApiError(NOT_FOUND_MESSAGE(), 404);
+  if (err.status === 409) return new PurchaseApiError(NOT_EDITABLE_MESSAGE(), 409);
+  return new PurchaseApiError(GENERIC_ERROR_MESSAGE(), err.status);
 }
 
 /** Texto legible de un 400 de confirmar/cancelar: une todos los mensajes (`reason`, `items`, `supplier_id`). */
 function actionValidationMessage(body: unknown): string {
-  if (!body || typeof body !== 'object') return VALIDATION_ERROR_MESSAGE;
+  if (!body || typeof body !== 'object') return VALIDATION_ERROR_MESSAGE();
   const parts = Object.values(body as Record<string, unknown>).flatMap((value) =>
     Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [],
   );
-  return parts.length ? parts.join(' ') : VALIDATION_ERROR_MESSAGE;
+  return parts.length ? parts.join(' ') : VALIDATION_ERROR_MESSAGE();
 }
 
 /** Errores de las acciones de ciclo de vida: el 409 trae el motivo en `detail`. */
@@ -166,7 +167,7 @@ function toActionError(err: HttpErrorResponse): PurchaseApiError {
   if (err.status === 400) return new PurchaseApiError(actionValidationMessage(err.error), 400);
   if (err.status === 409) {
     const detail = (err.error as { detail?: unknown } | null)?.detail;
-    return new PurchaseApiError(typeof detail === 'string' ? detail : NOT_EDITABLE_MESSAGE, 409);
+    return new PurchaseApiError(typeof detail === 'string' ? detail : NOT_EDITABLE_MESSAGE(), 409);
   }
   return toApiError(err);
 }

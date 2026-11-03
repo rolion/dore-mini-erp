@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -31,5 +32,5 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
   `,
 })
 export class ComingSoonComponent {
-  readonly title = (inject(ActivatedRoute).snapshot.data['title'] as string | undefined) ?? 'Módulo';
+  readonly title = (inject(ActivatedRoute).snapshot.data['title'] as string | undefined) ?? tr('SETTINGS.COMING_SOON.MODULO');
 }

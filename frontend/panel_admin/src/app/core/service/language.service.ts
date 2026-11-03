@@ -2,6 +2,7 @@ import { DOCUMENT, Location } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
+import { registerTranslator } from '../i18n/translate';
 import { LanguageState } from '../i18n/language-state';
 import {
   AppLanguage,
@@ -32,6 +33,7 @@ export class LanguageService {
   private readonly fallbackLoaded: Promise<void>;
 
   constructor() {
+    registerTranslator(this.translate);
     this.translate.addLangs([...SUPPORTED_LANGUAGES]);
     this.fallbackLoaded = firstValueFrom(this.translate.setFallbackLang(DEFAULT_LANGUAGE)).then(
       () => undefined,

@@ -151,7 +151,7 @@ describe('ExpenseListComponent', () => {
     component.filterForm.patchValue({ dateFrom: '2026-10-20', dateTo: '2026-10-10' });
     fixture.detectChanges();
     expect(api.list).not.toHaveBeenCalled();
-    expect(text()).toContain(INVALID_RANGE_MESSAGE);
+    expect(text()).toContain(INVALID_RANGE_MESSAGE());
   });
 
   it('clears the filters back to active expenses without dates (AC-21)', () => {

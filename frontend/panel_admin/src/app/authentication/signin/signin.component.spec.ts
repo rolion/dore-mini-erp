@@ -55,7 +55,7 @@ describe('SigninComponent', () => {
     component.onSubmit();
     fixture.detectChanges();
     expect(auth.login).not.toHaveBeenCalled();
-    expect(alertText()).toBe(REQUIRED_FIELDS_MESSAGE);
+    expect(alertText()).toBe(REQUIRED_FIELDS_MESSAGE());
   });
 
   it('navigates to the dashboard on successful login (AC-03)', () => {

@@ -90,7 +90,7 @@ describe('AdjustmentListComponent', () => {
     const calls = api.list.calls.count();
     component.filterForm.patchValue({ dateFrom: '2026-10-31', dateTo: '2026-10-01' });
     fixture.detectChanges();
-    expect(component.rangeError).toBe(INVALID_RANGE_MESSAGE);
+    expect(component.rangeError).toBe(INVALID_RANGE_MESSAGE());
     expect(api.list.calls.count()).toBe(calls);
   });
 

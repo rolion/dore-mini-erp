@@ -1,7 +1,8 @@
-import { EnvironmentProviders, Provider, importProvidersFrom } from '@angular/core';
-import { TranslateLoader, TranslateModule, TranslationObject } from '@ngx-translate/core';
+import { EnvironmentProviders, Provider, importProvidersFrom, inject, provideEnvironmentInitializer } from '@angular/core';
+import { TranslateLoader, TranslateModule, TranslateService, TranslationObject } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 import es from '../../../assets/i18n/es.json';
+import { registerTranslator } from './translate';
 
 class SpanishTestLoader implements TranslateLoader {
   getTranslation(): Observable<TranslationObject> {
@@ -19,5 +20,6 @@ export function provideTestTranslations(): (Provider | EnvironmentProviders)[] {
         loader: { provide: TranslateLoader, useClass: SpanishTestLoader },
       })
     ),
+    provideEnvironmentInitializer(() => registerTranslator(inject(TranslateService))),
   ];
 }

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -34,7 +35,7 @@ export class ServiceListComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
-  readonly messages = { emptyMessage: 'No hay servicios para estos filtros.', totalMessage: 'servicios' };
+  readonly messages = { emptyMessage: tr('SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS'), totalMessage: 'servicios' };
 
   ngOnInit(): void {
     this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -87,7 +88,7 @@ export class ServiceListComponent implements OnInit {
     this.state.pageIndex = 0; this.reload();
   }
   onUpdated(service: CatalogService): void {
-    this.success = service.active ? 'Servicio activado.' : 'Servicio desactivado.';
+    this.success = service.active ? tr('SERVICES.SERVICE_TOGGLE.SERVICIO_ACTIVADO') : tr('SERVICES.SERVICE_TOGGLE.SERVICIO_DESACTIVADO');
     this.reload();
   }
 }

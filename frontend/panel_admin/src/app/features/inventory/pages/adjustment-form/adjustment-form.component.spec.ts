@@ -90,7 +90,7 @@ describe('AdjustmentFormComponent', () => {
 
   it('says «Sin diferencia» and does not allow confirming when the count equals the balance (AC-04)', () => {
     fill('10');
-    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE);
+    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE());
     expect(component.canReview).toBeFalse();
   });
 
@@ -187,7 +187,7 @@ describe('AdjustmentFormComponent', () => {
     goToReview('7');
     component.confirm();
     fixture.detectChanges();
-    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE);
+    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE());
     expect((el().querySelector('[data-testid="confirm"]') as HTMLButtonElement).disabled).toBeTrue();
   });
 

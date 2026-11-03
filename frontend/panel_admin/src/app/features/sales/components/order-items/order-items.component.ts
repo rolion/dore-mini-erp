@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChildren } from '@angular/core';
@@ -9,7 +10,7 @@ import { FieldErrors, Order, OrderItem } from '../../models/order';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 
 export const PRODUCT_SEARCH_PAGE_SIZE = 20;
-export const LAST_ITEM_TOOLTIP = 'Un pedido confirmado debe tener al menos un producto';
+export const LAST_ITEM_TOOLTIP = (): string => tr('SALES.ORDER_ITEMS.UN_PEDIDO_CONFIRMADO_DEBE_TENER');
 
 export interface AddItemEvent {
   productId: string;
@@ -38,7 +39,7 @@ export class OrderItemsComponent {
   readonly quantityChange = output<QuantityChangeEvent>();
   readonly itemRemove = output<OrderItem>();
 
-  readonly lastItemTooltip = LAST_ITEM_TOOLTIP;
+  readonly lastItemTooltip = LAST_ITEM_TOOLTIP();
   readonly addForm = inject(FormBuilder).group({
     product: [null as Product | null, Validators.required],
     quantity: [1, [Validators.required, Validators.min(1)]],

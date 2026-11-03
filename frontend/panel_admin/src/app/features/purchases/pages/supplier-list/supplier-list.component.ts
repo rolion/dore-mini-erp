@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -20,7 +21,7 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
 })
 export class SupplierListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: 'No hay proveedores que coincidan', totalMessage: 'en total' };
+  readonly messages = { emptyMessage: tr('PURCHASES.SUPPLIER_LIST.NO_HAY_PROVEEDORES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
   readonly searchControl = new FormControl('', { nonNullable: true });
   /** Los proveedores desactivados no aparecen por defecto. */
   readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });
@@ -89,7 +90,7 @@ export class SupplierListComponent implements OnInit {
     const request = supplier.active ? this.api.deactivate(supplier.id) : this.api.activate(supplier.id);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
-        this.toastr.success(updated.active ? 'Proveedor activado' : 'Proveedor desactivado');
+        this.toastr.success(updated.active ? tr('PURCHASES.SUPPLIER_DETAIL.PROVEEDOR_ACTIVADO') : tr('PURCHASES.SUPPLIER_DETAIL.PROVEEDOR_DESACTIVADO'));
         this.reload$.next();
       },
       error: (err: SupplierApiError) => this.toastr.error(err.message),
@@ -100,15 +101,15 @@ export class SupplierListComponent implements OnInit {
   protected async confirmToggle(supplier: Supplier): Promise<boolean> {
     const verb = supplier.active ? 'desactivar' : 'activar';
     const result = await Swal.fire({
-      titleText: `¿Quieres ${verb} a "${supplier.name}"?`,
+      titleText: tr('CUSTOMERS.CUSTOMER_DETAIL.QUIERES_A', { p0: verb, p1: supplier.name }),
       text: supplier.active
-        ? 'Dejará de ofrecerse en compras nuevas. Sus compras históricas se conservan.'
-        : 'Volverá a ofrecerse en compras nuevas.',
+        ? tr('PURCHASES.SUPPLIER_DETAIL.DEJARA_DE_OFRECERSE_EN_COMPRAS')
+        : tr('PURCHASES.SUPPLIER_DETAIL.VOLVERA_A_OFRECERSE_EN_COMPRAS'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

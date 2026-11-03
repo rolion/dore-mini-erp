@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -81,7 +82,7 @@ export class WarehouseDialogComponent {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (saved) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Almacén actualizado' : 'Almacén creado');
+        this.toastr.success(this.isEdit ? tr('INVENTORY.WAREHOUSE_DIALOG.ALMACEN_ACTUALIZADO') : tr('INVENTORY.WAREHOUSE_DIALOG.ALMACEN_CREADO'));
         this.activeModal.close(saved);
       },
       error: (err: InventoryApiError) => {

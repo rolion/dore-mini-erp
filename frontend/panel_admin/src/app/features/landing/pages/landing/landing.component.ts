@@ -1,7 +1,9 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgbAccordionModule, NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
+import { LanguageSelectorComponent } from '../../../../shared/components/language-selector/language-selector.component';
 import { AuthService } from '../../../../core/service/auth.service';
 import { APP_PATHS } from '../../../../core/routing/app-paths';
 import {
@@ -33,28 +35,48 @@ export type BillingPeriod = 'monthly' | 'annual';
     './landing-sections.scss',
     './landing-plans.scss',
   ],
-  imports: [TranslatePipe, RouterLink, NgbAccordionModule, NgbCollapseModule],
+  imports: [TranslatePipe, LanguageSelectorComponent, RouterLink, NgbAccordionModule, NgbCollapseModule],
 })
 export class LandingComponent {
   private authService = inject(AuthService);
 
   readonly paths = APP_PATHS;
   readonly anchors = NAV_ANCHORS;
-  readonly freeLimitsNote = FREE_LIMITS_NOTE;
-  readonly recognition = RECOGNITION;
+  get freeLimitsNote(): string {
+    return FREE_LIMITS_NOTE();
+  }
+  get recognition(): readonly string[] {
+    return RECOGNITION();
+  }
   readonly benefits = BENEFITS;
-  readonly channelNote = CHANNEL_NOTE;
+  get channelNote(): string {
+    return CHANNEL_NOTE();
+  }
   readonly flowSteps = FLOW_STEPS;
   readonly readyRows = READY_ROWS;
   readonly deliveredRows = DELIVERED_ROWS;
-  readonly periods = PERIODS;
-  readonly selectedPeriod = 'Este mes';
-  readonly profitNote = PROFIT_NOTE;
+  get periods(): readonly string[] {
+    return PERIODS();
+  }
+  get selectedPeriod(): string {
+    return tr('EXPENSES.EXPENSE_LIST.ESTE_MES');
+  }
+  get profitNote(): string {
+    return PROFIT_NOTE();
+  }
   readonly getStarted = GET_STARTED;
-  readonly freeFeatures = FREE_PLAN_FEATURES;
-  readonly freeLimitText = FREE_PLAN_LIMIT_TEXT;
-  readonly proFeature = PRO_PLAN_FEATURE;
-  readonly proPaymentLabel = PRO_PAYMENT_LABEL;
+  get freeFeatures(): readonly string[] {
+    return FREE_PLAN_FEATURES();
+  }
+  get freeLimitText(): string {
+    return FREE_PLAN_LIMIT_TEXT();
+  }
+  get proFeature(): string {
+    return PRO_PLAN_FEATURE();
+  }
+  get proPaymentLabel(): string {
+    return PRO_PAYMENT_LABEL();
+  }
   readonly faq = FAQ;
 
   readonly period = signal<BillingPeriod>('annual');
@@ -63,9 +85,9 @@ export class LandingComponent {
   /** La sesión es del servicio de autenticación; la landing solo adapta el CTA. */
   readonly isAuthenticated = computed(() => this.authService.isAuthenticated);
 
-  readonly primaryCtaLabel = computed(() =>
-    this.isAuthenticated() ? 'Ir a mi panel' : 'Empezar gratis'
-  );
+  primaryCtaLabel(): string {
+    return this.isAuthenticated() ? tr('LANDING.LANDING.IR_A_MI_PANEL') : tr('LANDING.LANDING.EMPEZAR_GRATIS');
+  }
   readonly primaryCtaPath = computed(() =>
     this.isAuthenticated() ? this.paths.dashboard : this.paths.signup
   );

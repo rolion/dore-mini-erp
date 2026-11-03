@@ -68,7 +68,7 @@ describe('SignupComponent', () => {
   it('does not call the backend with an empty form and marks the fields (AC-14)', () => {
     submit();
     expect(auth.register).not.toHaveBeenCalled();
-    expect(text('.alert-danger')).toBe(INVALID_FORM_MESSAGE);
+    expect(text('.alert-danger')).toBe(INVALID_FORM_MESSAGE());
     expect(component.fieldError('companyName')).toBe('El nombre de la empresa es obligatorio.');
     expect(el().querySelectorAll('.text-danger.form-text').length).toBeGreaterThanOrEqual(6);
   });

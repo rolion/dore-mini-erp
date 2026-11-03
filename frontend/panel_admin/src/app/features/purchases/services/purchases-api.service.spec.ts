@@ -164,7 +164,7 @@ describe('PurchasesApiService', () => {
       { status: 400, statusText: 'Bad Request' },
     );
     expect(error?.status).toBe(400);
-    expect(error?.message).toBe(VALIDATION_ERROR_MESSAGE);
+    expect(error?.message).toBe(VALIDATION_ERROR_MESSAGE());
     expect(error?.fieldErrors.header.supplierId).toBe('Selecciona un proveedor activo.');
     expect(error?.fieldErrors.items).toEqual([{}, { quantity: 'La cantidad debe ser mayor a cero.', unitPrice: 'No negativo.' }]);
   });
@@ -177,10 +177,10 @@ describe('PurchasesApiService', () => {
 
   it('maps network, 404, 409 and unexpected errors', () => {
     const cases: [number, string][] = [
-      [0, NETWORK_ERROR_MESSAGE],
-      [404, NOT_FOUND_MESSAGE],
-      [409, NOT_EDITABLE_MESSAGE],
-      [500, GENERIC_ERROR_MESSAGE],
+      [0, NETWORK_ERROR_MESSAGE()],
+      [404, NOT_FOUND_MESSAGE()],
+      [409, NOT_EDITABLE_MESSAGE()],
+      [500, GENERIC_ERROR_MESSAGE()],
     ];
     for (const [status, message] of cases) {
       let error: PurchaseApiError | undefined;

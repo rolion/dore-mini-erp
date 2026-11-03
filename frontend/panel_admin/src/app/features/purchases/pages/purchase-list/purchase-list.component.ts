@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -107,7 +108,7 @@ export class PurchaseListComponent implements OnInit {
   }
 
   get messages(): { emptyMessage: string; totalMessage: string } {
-    return { emptyMessage: 'Aún no hay compras. Crea la primera con «Nueva compra».', totalMessage: 'en total' };
+    return { emptyMessage: tr('PURCHASES.PURCHASE_LIST.AUN_NO_HAY_COMPRAS_CREA'), totalMessage: tr('COMMON.IN_TOTAL') };
   }
 
   ngOnInit(): void {

@@ -1,3 +1,4 @@
+import { tr } from '../i18n/translate';
 export interface ModuleLinkDto {
   key: string;
   name: string;

@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -85,7 +86,7 @@ export class MovementDetailComponent implements OnInit {
     } catch {
       return; // «Volver»: no cambia nada.
     }
-    this.successMessage = 'Movimiento revertido';
+    this.successMessage = tr('INVENTORY.MOVEMENT_DETAIL.MOVIMIENTO_REVERTIDO');
     this.load();
   }
 

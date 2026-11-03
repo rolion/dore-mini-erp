@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -82,7 +83,7 @@ export class UnitsTabComponent implements OnInit {
     const request = unit.active ? this.api.deactivate(unit.id) : this.api.activate(unit.id);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
-        this.toastr.success(updated.active ? 'Unidad activada' : 'Unidad desactivada');
+        this.toastr.success(updated.active ? tr('INVENTORY.UNITS_TAB.UNIDAD_ACTIVADA') : tr('INVENTORY.UNITS_TAB.UNIDAD_DESACTIVADA'));
         this.reload$.next();
       },
       error: (err: InventoryApiError) => this.toastr.error(err.message),

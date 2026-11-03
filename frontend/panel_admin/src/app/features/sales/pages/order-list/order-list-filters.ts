@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { ParamMap, Params } from '@angular/router';
 import {
   ORDER_STATUSES,
@@ -53,11 +54,11 @@ export interface Shortcut {
 
 /** Los atajos solo fijan los filtros finos: el usuario ve qué se aplicó y puede ajustarlo. */
 export const SHORTCUTS: readonly Shortcut[] = [
-  { id: 'all', label: 'Todos', statusKey: 'ALL', paymentKey: 'ALL' },
-  { id: 'pending', label: 'Pendientes de entrega', statusKey: 'PENDING_DELIVERY', paymentKey: 'ALL' },
-  { id: 'receivable', label: 'Por cobrar', statusKey: 'NOT_CANCELLED', paymentKey: 'WITH_BALANCE' },
-  { id: 'delivered', label: 'Entregados', statusKey: 'DELIVERED', paymentKey: 'ALL' },
-  { id: 'cancelled', label: 'Cancelados', statusKey: 'CANCELLED', paymentKey: 'ALL' },
+  { id: 'all', get label() { return tr('INVENTORY.STOCK.TODOS'); }, statusKey: 'ALL', paymentKey: 'ALL' },
+  { id: 'pending', get label() { return tr('SALES.ORDER_LIST_FILTERS.PENDIENTES_DE_ENTREGA'); }, statusKey: 'PENDING_DELIVERY', paymentKey: 'ALL' },
+  { id: 'receivable', get label() { return tr('SALES.ORDER_LIST_FILTERS.POR_COBRAR'); }, statusKey: 'NOT_CANCELLED', paymentKey: 'WITH_BALANCE' },
+  { id: 'delivered', get label() { return tr('SALES.ORDER_LIST_FILTERS.ENTREGADOS'); }, statusKey: 'DELIVERED', paymentKey: 'ALL' },
+  { id: 'cancelled', get label() { return tr('SALES.ORDER_LIST_FILTERS.CANCELADOS'); }, statusKey: 'CANCELLED', paymentKey: 'ALL' },
 ];
 
 export function statusesFor(key: StatusKey): OrderStatus[] | undefined {

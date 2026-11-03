@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -19,7 +20,7 @@ export class ProfileFormComponent implements OnInit {
   private api = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   readonly kind = this.route.snapshot.data['kind'] as ProfileKind;
-  readonly title = this.kind === 'professionals' ? 'Profesional' : 'Especialidad';
+  readonly title = this.kind === 'professionals' ? tr('PERSONNEL.PROFILE_FORM.PROFESIONAL') : tr('PERSONNEL.PROFILE_FORM.ESPECIALIDAD');
   readonly base = `/pocketbiz/personnel/${this.kind}`;
   readonly professional = this.kind === 'professionals';
   readonly userSearch$ = new Subject<string>();
@@ -79,7 +80,7 @@ export class ProfileFormComponent implements OnInit {
   errorFor(key: keyof ProfileInput): string {
     if (this.fieldErrors[key]) return this.fieldErrors[key];
     const control = this.form.controls[key];
-    return control?.invalid && (control.touched || control.dirty) ? 'Revisa este campo.' : '';
+    return control?.invalid && (control.touched || control.dirty) ? tr('PERSONNEL.PROFILE_FORM.REVISA_ESTE_CAMPO') : '';
   }
   submit(): void {
     if (this.saving || this.loading) return;
@@ -93,7 +94,7 @@ export class ProfileFormComponent implements OnInit {
     this.saving = true;
     this.error = '';
     this.api.save(this.kind, input, this.id).pipe(finalize(() => this.saving = false), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: item => this.router.navigate([this.base, item.id], { state: { message: 'Datos guardados.' } }),
+      next: item => this.router.navigate([this.base, item.id], { state: { message: tr('PERSONNEL.PROFILE_FORM.DATOS_GUARDADOS') } }),
       error: (error: unknown) => {
         this.error = profileError(error);
         if (error instanceof HttpErrorResponse && error.status === 400 && error.error && typeof error.error === 'object') {

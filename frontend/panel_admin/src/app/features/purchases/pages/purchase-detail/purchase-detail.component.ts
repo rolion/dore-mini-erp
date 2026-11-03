@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -70,7 +71,7 @@ export class PurchaseDetailComponent implements OnInit {
     const ref = this.modal.open(PurchaseConfirmDialogComponent, { size: 'lg', backdrop: 'static' });
     (ref.componentInstance as PurchaseConfirmDialogComponent).init(purchase);
     try {
-      if ((await ref.result) === true) this.run(this.api.confirm(purchase.id), 'Compra confirmada');
+      if ((await ref.result) === true) this.run(this.api.confirm(purchase.id), tr('PURCHASES.PURCHASE_DETAIL.COMPRA_CONFIRMADA'));
     } catch {
       // «Volver»: no cambia nada.
     }
@@ -83,7 +84,7 @@ export class PurchaseDetailComponent implements OnInit {
     (ref.componentInstance as PurchaseCancelDialogComponent).init(purchase);
     try {
       const reason = (await ref.result) as string;
-      this.run(this.api.cancel(purchase.id, reason), 'Compra cancelada');
+      this.run(this.api.cancel(purchase.id, reason), tr('PURCHASES.PURCHASE_DETAIL.COMPRA_CANCELADA'));
     } catch {
       // «Volver»: no cambia nada.
     }

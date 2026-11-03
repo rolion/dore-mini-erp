@@ -112,7 +112,7 @@ describe('CustomersApiService', () => {
 
     expect(holder.error instanceof DuplicateCustomerError).toBeTrue();
     expect((holder.error as DuplicateCustomerError).matches).toEqual(matches);
-    expect(holder.error.message).toBe(DUPLICATE_PHONE_MESSAGE);
+    expect(holder.error.message).toBe(DUPLICATE_PHONE_MESSAGE());
     expect(holder.error.status).toBe(409);
   });
 
@@ -120,7 +120,7 @@ describe('CustomersApiService', () => {
     const holder = watchError(service.create(INPUT));
     http.expectOne('/api/customers/').flush({ detail: 'otro' }, { status: 409, statusText: 'Conflict' });
     expect(holder.error instanceof DuplicateCustomerError).toBeFalse();
-    expect(holder.error.message).toBe(GENERIC_ERROR_MESSAGE);
+    expect(holder.error.message).toBe(GENERIC_ERROR_MESSAGE());
   });
 
   it('updates with PATCH sending only the given fields (AC-11)', () => {
@@ -160,15 +160,15 @@ describe('CustomersApiService', () => {
   it('maps 404, network and other errors to friendly messages (AC-13)', () => {
     const notFound = watchError(service.get('x'));
     http.expectOne('/api/customers/x/').flush({ detail: 'no' }, { status: 404, statusText: 'Not Found' });
-    expect(notFound.error.message).toBe(NOT_FOUND_MESSAGE);
+    expect(notFound.error.message).toBe(NOT_FOUND_MESSAGE());
 
     const network = watchError(service.get('y'));
     http.expectOne('/api/customers/y/').error(new ProgressEvent('error'));
-    expect(network.error.message).toBe(NETWORK_ERROR_MESSAGE);
+    expect(network.error.message).toBe(NETWORK_ERROR_MESSAGE());
     expect(network.error.status).toBe(0);
 
     const generic = watchError(service.get('z'));
     http.expectOne('/api/customers/z/').flush('', { status: 500, statusText: 'Server Error' });
-    expect(generic.error.message).toBe(GENERIC_ERROR_MESSAGE);
+    expect(generic.error.message).toBe(GENERIC_ERROR_MESSAGE());
   });
 });

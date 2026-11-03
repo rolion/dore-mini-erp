@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 export type SettingKind = 'choice' | 'percent' | 'boolean';
 
 export interface SettingChoice {
@@ -53,7 +54,7 @@ export interface HistoryFilters {
 
 export const HISTORY_PAGE_SIZE = 20;
 
-export const SETTINGS_ERROR_MESSAGE = 'No se pudo completar la operación. Inténtalo de nuevo.';
+export const SETTINGS_ERROR_MESSAGE = (): string => tr('SETTINGS.SETTING.NO_SE_PUDO_COMPLETAR_LA');
 
 /** Error de la API de ajustes: mensaje general y errores por clave de ajuste (400). */
 export class SettingsApiError extends Error {

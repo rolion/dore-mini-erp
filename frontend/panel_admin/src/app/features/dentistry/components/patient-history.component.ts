@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, Input, OnChanges, inject } from '@angular/core';
@@ -72,22 +73,22 @@ export class PatientHistoryComponent implements OnChanges {
     }, error: (error: HttpErrorResponse) => { this.rows = []; this.error = errorMessage(error); } });
   }
   action(value?: string) {
-    return value === 'create' ? 'Alta' : value === 'archive' ? 'Archivo' : value === 'activate' ? 'Reactivación' : 'Edición';
+    return value === 'create' ? tr('DENTISTRY.PATIENT_HISTORY.ALTA') : value === 'archive' ? tr('DENTISTRY.PATIENT_HISTORY.ARCHIVO') : value === 'activate' ? tr('DENTISTRY.PATIENT_HISTORY.REACTIVACION') : tr('DENTISTRY.PATIENT_HISTORY.EDICION');
   }
   changes(row: PatientHistory) {
     const labels: Record<string, string> = {
-      active: 'Estado del perfil', birth_date: 'Fecha de nacimiento', responsible_name: 'Nombre del responsable',
-      responsible_phone: 'Teléfono del responsable', ...Object.fromEntries(CLINICAL_FIELDS.map(field => [field.key, field.label])),
+      active: tr('DENTISTRY.PATIENT_HISTORY.ESTADO_DEL_PERFIL'), birth_date: tr('DENTISTRY.PATIENT_HISTORY.FECHA_DE_NACIMIENTO'), responsible_name: tr('DENTISTRY.PATIENT_HISTORY.NOMBRE_DEL_RESPONSABLE'),
+      responsible_phone: tr('DENTISTRY.PATIENT_HISTORY.TELEFONO_DEL_RESPONSABLE'), ...Object.fromEntries(CLINICAL_FIELDS.map(field => [field.key, field.label])),
     };
     return Object.keys(row.after).filter(key => (row.before[key] ?? '') !== (row.after[key] ?? '')).map(key => ({
       key, label: labels[key] ?? key, before: this.display(row.before[key], key), after: this.display(row.after[key], key),
     }));
   }
   private display(value: string | boolean | null | undefined, key: string) {
-    if (typeof value === 'boolean') return value ? 'Activo' : 'Archivado';
+    if (typeof value === 'boolean') return value ? tr('DENTISTRY.PATIENT_HISTORY.ACTIVO') : tr('DENTISTRY.PATIENT_HISTORY.ARCHIVADO');
     if (key === 'birth_date' && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
       return value.split('-').reverse().join('/');
     }
-    return value || 'No informado';
+    return value || tr('DENTISTRY.PATIENT_HISTORY.NO_INFORMADO');
   }
 }

@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -50,7 +51,7 @@ export class SupplierDetailComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
         this.supplier = updated;
-        this.toastr.success(updated.active ? 'Proveedor activado' : 'Proveedor desactivado');
+        this.toastr.success(updated.active ? tr('PURCHASES.SUPPLIER_DETAIL.PROVEEDOR_ACTIVADO') : tr('PURCHASES.SUPPLIER_DETAIL.PROVEEDOR_DESACTIVADO'));
       },
       error: (err: SupplierApiError) => this.toastr.error(err.message),
     });
@@ -58,17 +59,17 @@ export class SupplierDetailComponent implements OnInit {
 
   /** Confirmación previa a cambiar el estado; separada para poder sustituirla en pruebas. */
   protected async confirmToggle(supplier: Supplier): Promise<boolean> {
-    const verb = supplier.active ? 'desactivar' : 'activar';
+    const verb = supplier.active ? tr('COMMON.VERB_DEACTIVATE') : tr('COMMON.VERB_ACTIVATE');
     const result = await Swal.fire({
-      titleText: `¿Quieres ${verb} a "${supplier.name}"?`,
+      titleText: tr('CUSTOMERS.CUSTOMER_DETAIL.QUIERES_A', { p0: verb, p1: supplier.name }),
       text: supplier.active
-        ? 'Dejará de ofrecerse en compras nuevas. Sus compras históricas se conservan.'
-        : 'Volverá a ofrecerse en compras nuevas.',
+        ? tr('PURCHASES.SUPPLIER_DETAIL.DEJARA_DE_OFRECERSE_EN_COMPRAS')
+        : tr('PURCHASES.SUPPLIER_DETAIL.VOLVERA_A_OFRECERSE_EN_COMPRAS'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

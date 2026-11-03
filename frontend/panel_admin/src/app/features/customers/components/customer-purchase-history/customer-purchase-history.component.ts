@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, input } from '@angular/core';
@@ -6,18 +7,18 @@ import { CustomerOrderSummary } from '../../models/customer';
 
 /** Etiquetas de los códigos de Sales; un código desconocido se muestra tal cual en vez de romper la tabla. */
 const STATUS_LABELS: Record<string, string> = {
-  NEW: 'Nuevo',
-  IN_PREPARATION: 'En preparación',
-  READY: 'Listo',
-  DELIVERED: 'Entregado',
-  CANCELLED: 'Cancelado',
+  get NEW() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.NUEVO'); },
+  get IN_PREPARATION() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.EN_PREPARACION'); },
+  get READY() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.LISTO'); },
+  get DELIVERED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ENTREGADO'); },
+  get CANCELLED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CANCELADO'); },
 };
 
 const PAYMENT_LABELS: Record<string, string> = {
-  PENDING: 'Pendiente',
-  PARTIAL: 'Parcial',
-  PAID: 'Pagado',
-  REFUNDED: 'Reembolsado',
+  get PENDING() { return tr('INVENTORY.VALUATION.PENDIENTE'); },
+  get PARTIAL() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PARCIAL'); },
+  get PAID() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PAGADO'); },
+  get REFUNDED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.REEMBOLSADO'); },
 };
 
 /**

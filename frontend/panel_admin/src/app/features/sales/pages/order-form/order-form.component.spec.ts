@@ -323,7 +323,7 @@ describe('OrderFormComponent', () => {
     it('sends the user to the detail when the order is no longer editable (AC-19, AC-24)', () => {
       ordersApi.get.and.returnValue(of(makeOrder({ editable: false, status: 'DELIVERED' })));
       setup('o-1');
-      expect(toastr.error).toHaveBeenCalledWith(NOT_EDITABLE_MESSAGE);
+      expect(toastr.error).toHaveBeenCalledWith(NOT_EDITABLE_MESSAGE());
       expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'o-1']);
     });
 

@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -38,7 +39,7 @@ import { SupplierQuickCreateService } from '../../services/supplier-quick-create
 import { SuppliersApiService } from '../../services/suppliers-api.service';
 
 export const SEARCH_PAGE_SIZE = 20;
-export const NOT_EDITABLE_MESSAGE = 'La compra ya no admite cambios.';
+export const NOT_EDITABLE_MESSAGE = (): string => tr('PURCHASES.PURCHASE_FORM.LA_COMPRA_YA_NO_ADMITE');
 
 /** Producto elegido en una línea: lo mínimo que la pantalla necesita mostrar y validar. */
 export interface LineProduct {
@@ -232,15 +233,15 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
     if (!(control.invalid && (control.touched || control.dirty))) return '';
     switch (field) {
       case 'productId':
-        return 'Selecciona un producto.';
+        return tr('PURCHASES.PURCHASE_FORM.SELECCIONA_UN_PRODUCTO');
       case 'quantity': {
         const allows = line.controls.product.value?.allowsFractions ?? true;
         return allows
-          ? 'La cantidad debe ser mayor a cero (hasta 3 decimales).'
-          : 'La cantidad debe ser un entero mayor a cero.';
+          ? tr('PURCHASES.PURCHASE_FORM.LA_CANTIDAD_DEBE_SER_MAYOR')
+          : tr('PURCHASES.PURCHASE_FORM.LA_CANTIDAD_DEBE_SER_UN');
       }
       case 'unitPrice':
-        return 'El precio debe ser cero o mayor (hasta 2 decimales).';
+        return tr('PURCHASES.PURCHASE_FORM.EL_PRECIO_DEBE_SER_CERO');
     }
   }
 
@@ -251,10 +252,10 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
     const control = this.form.controls[field === 'supplierId' ? 'supplier' : field];
     if (!(control.invalid && (control.touched || control.dirty))) return '';
     const messages: Record<HeaderField, string> = {
-      supplierId: 'Selecciona un proveedor activo.',
-      purchaseDate: 'La fecha de compra es obligatoria.',
-      externalReference: `La referencia no puede superar ${REFERENCE_MAX_LENGTH} caracteres.`,
-      notes: `Las notas no pueden superar ${NOTES_MAX_LENGTH} caracteres.`,
+      supplierId: tr('PURCHASES.PURCHASE_FORM.SELECCIONA_UN_PROVEEDOR_ACTIVO'),
+      purchaseDate: tr('PURCHASES.PURCHASE_FORM.LA_FECHA_DE_COMPRA_ES'),
+      externalReference: tr('INVENTORY.STOCK_OPENING.LA_REFERENCIA_NO_PUEDE_SUPERAR', { p0: REFERENCE_MAX_LENGTH }),
+      notes: tr('PURCHASES.PURCHASE_FORM.LAS_NOTAS_NO_PUEDEN_SUPERAR', { p0: NOTES_MAX_LENGTH }),
     };
     return messages[field];
   }
@@ -301,7 +302,7 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
       next: (purchase) => {
         this.saving = false;
         this.saved = true;
-        this.toastr.success('Compra guardada');
+        this.toastr.success(tr('PURCHASES.PURCHASE_FORM.COMPRA_GUARDADA'));
         void this.router.navigate(['/pocketbiz/purchases', purchase.id]);
       },
       error: (err: PurchaseApiError) => {
@@ -315,7 +316,7 @@ export class PurchaseFormComponent implements OnInit, HasUnsavedChanges {
 
   private fill(purchase: Purchase): void {
     if (!purchase.editable) {
-      this.toastr.error(NOT_EDITABLE_MESSAGE);
+      this.toastr.error(NOT_EDITABLE_MESSAGE());
       void this.router.navigate(['/pocketbiz/purchases', purchase.id]);
       return;
     }

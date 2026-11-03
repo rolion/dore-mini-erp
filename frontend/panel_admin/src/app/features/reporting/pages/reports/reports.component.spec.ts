@@ -156,11 +156,11 @@ describe('ReportsComponent', () => {
     render();
     expect((byTestId('products-table') as HTMLElement).textContent).toContain('Pack cuñapé');
     expect((byTestId('products-table') as HTMLElement).textContent).toContain('Bs 175.00');
-    expect(byTestId('products-note')?.textContent?.trim()).toBe(PRODUCT_AMOUNT_NOTE);
+    expect(byTestId('products-note')?.textContent?.trim()).toBe(PRODUCT_AMOUNT_NOTE());
     const customers = byTestId('customers-table') as HTMLElement;
     expect(customers.textContent).toContain('Ana Pérez');
     expect(customers.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/customers/k1');
-    expect(byTestId('customers-note')?.textContent?.trim()).toBe(CUSTOMER_RANKING_NOTE);
+    expect(byTestId('customers-note')?.textContent?.trim()).toBe(CUSTOMER_RANKING_NOTE());
   });
 
   it('shows an empty state in each card without errors (AC-26)', () => {

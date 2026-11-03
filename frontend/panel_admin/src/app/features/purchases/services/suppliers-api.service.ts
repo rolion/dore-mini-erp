@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -12,10 +13,10 @@ import {
   SupplierListParams,
 } from '../models/supplier';
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const NOT_FOUND_MESSAGE = 'Proveedor no encontrado.';
-export const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
+export const NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const NOT_FOUND_MESSAGE = (): string => tr('PURCHASES.SUPPLIERS_API_SERVICE.PROVEEDOR_NO_ENCONTRADO');
+export const GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
 
 /** Campo del formulario -> campo de la API. */
 const API_FIELDS: Readonly<Record<keyof SupplierInput, string>> = {
@@ -66,15 +67,15 @@ function toFieldErrors(body: unknown): FieldErrors {
 
 function toApiError(err: HttpErrorResponse): SupplierApiError {
   if (err.status === 0) {
-    return new SupplierApiError(NETWORK_ERROR_MESSAGE, 0);
+    return new SupplierApiError(NETWORK_ERROR_MESSAGE(), 0);
   }
   if (err.status === 400) {
-    return new SupplierApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(err.error));
+    return new SupplierApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(err.error));
   }
   if (err.status === 404) {
-    return new SupplierApiError(NOT_FOUND_MESSAGE, 404);
+    return new SupplierApiError(NOT_FOUND_MESSAGE(), 404);
   }
-  return new SupplierApiError(GENERIC_ERROR_MESSAGE, err.status);
+  return new SupplierApiError(GENERIC_ERROR_MESSAGE(), err.status);
 }
 
 @Injectable({

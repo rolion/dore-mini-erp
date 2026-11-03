@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -61,7 +62,7 @@ export class ExpenseDetailComponent implements OnInit {
       .subscribe({
         next: (updated) => {
           this.expense = updated;
-          this.toastr.success('Gasto anulado');
+          this.toastr.success(tr('EXPENSES.EXPENSE_DETAIL.GASTO_ANULADO'));
         },
         error: (err: ExpensesApiError) => this.toastr.error(err.message),
       });
@@ -70,13 +71,13 @@ export class ExpenseDetailComponent implements OnInit {
   /** Confirmación previa a anular; separada para poder sustituirla en pruebas. */
   protected async confirmVoid(expense: Expense): Promise<boolean> {
     const result = await Swal.fire({
-      titleText: `¿Anular el gasto "${expense.description}"?`,
-      text: 'Este gasto dejará de sumar en los reportes. Se conserva en el historial.',
+      titleText: tr('EXPENSES.EXPENSE_DETAIL.ANULAR_EL_GASTO', { p0: expense.description }),
+      text: tr('EXPENSES.EXPENSE_DETAIL.ESTE_GASTO_DEJARA_DE_SUMAR'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Anular gasto',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('EXPENSES.EXPENSE_DETAIL.ANULAR_GASTO_2'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

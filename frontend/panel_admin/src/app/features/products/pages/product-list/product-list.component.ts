@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,7 +24,7 @@ export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
 })
 export class ProductListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: 'No hay productos', totalMessage: 'en total' };
+  readonly messages = { emptyMessage: tr('PRODUCTS.PRODUCT_LIST.NO_HAY_PRODUCTOS'), totalMessage: tr('COMMON.IN_TOTAL') };
   readonly searchControl = new FormControl('', { nonNullable: true });
   readonly statusControl = new FormControl<StatusFilter>('all', { nonNullable: true });
   readonly useControl = new FormControl<UseFilter>('all', { nonNullable: true });
@@ -107,7 +108,7 @@ export class ProductListComponent implements OnInit {
     const request = product.active ? this.api.deactivate(product.id) : this.api.activate(product.id);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
-        this.toastr.success(updated.active ? 'Producto activado' : 'Producto desactivado');
+        this.toastr.success(updated.active ? tr('PRODUCTS.PRODUCT_DETAIL.PRODUCTO_ACTIVADO') : tr('PRODUCTS.PRODUCT_DETAIL.PRODUCTO_DESACTIVADO'));
         this.reload$.next();
       },
       error: (err: ProductApiError) => this.toastr.error(err.message),
@@ -116,15 +117,15 @@ export class ProductListComponent implements OnInit {
 
   /** Confirmación previa a cambiar el estado; separada para poder sustituirla en pruebas. */
   protected async confirmToggle(product: Product): Promise<boolean> {
-    const verb = product.active ? 'desactivar' : 'activar';
+    const verb = product.active ? tr('COMMON.VERB_DEACTIVATE') : tr('COMMON.VERB_ACTIVATE');
     const result = await Swal.fire({
-      title: `¿Quieres ${verb} "${product.name}"?`,
-      text: product.active ? 'Dejará de poder agregarse a nuevos pedidos.' : 'Volverá a estar disponible para la venta.',
+      title: tr('PRODUCTS.PRODUCT_DETAIL.QUIERES', { p0: verb, p1: product.name }),
+      text: product.active ? tr('PRODUCTS.PRODUCT_DETAIL.DEJARA_DE_PODER_AGREGARSE_A') : tr('PRODUCTS.PRODUCT_DETAIL.VOLVERA_A_ESTAR_DISPONIBLE_PARA'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

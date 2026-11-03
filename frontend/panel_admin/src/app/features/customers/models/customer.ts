@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Cliente. Los campos opcionales ausentes llegan como texto vacío. */
 export interface Customer {
   id: string;

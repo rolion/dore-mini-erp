@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -40,9 +41,9 @@ type PrimaryAction = 'prepare' | 'ready' | 'deliver';
 
 const PRIMARY_ORDER: readonly PrimaryAction[] = ['prepare', 'ready', 'deliver'];
 export const PRIMARY_LABELS: Record<PrimaryAction, string> = {
-  prepare: 'Iniciar preparación',
-  ready: 'Marcar listo',
-  deliver: 'Marcar entregado',
+  get prepare() { return tr('SALES.ORDER_DETAIL.INICIAR_PREPARACION'); },
+  get ready() { return tr('SALES.ORDER_DETAIL.MARCAR_LISTO'); },
+  get deliver() { return tr('SALES.ORDER_DETAIL.MARCAR_ENTREGADO'); },
 };
 const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
 
@@ -143,9 +144,9 @@ export class OrderDetailComponent implements OnInit {
     const order = this.order;
     switch (this.primaryAction) {
       case 'prepare':
-        return this.run(() => this.api.prepare(order!.id), 'Pedido en preparación');
+        return this.run(() => this.api.prepare(order!.id), tr('SALES.ORDER_DETAIL.PEDIDO_EN_PREPARACION'));
       case 'ready':
-        return this.run(() => this.api.ready(order!.id), 'Pedido listo');
+        return this.run(() => this.api.ready(order!.id), tr('SALES.ORDER_DETAIL.PEDIDO_LISTO'));
       case 'deliver':
         void this.deliver();
         return;
@@ -171,7 +172,7 @@ export class OrderDetailComponent implements OnInit {
     }
     const deliveredDate = await this.askDeliveryDate(order);
     if (deliveredDate !== null) {
-      this.run(() => this.api.deliver(order.id, deliveredDate), 'Pedido entregado');
+      this.run(() => this.api.deliver(order.id, deliveredDate), tr('SALES.ORDER_DETAIL.PEDIDO_ENTREGADO'));
     }
   }
 
@@ -180,12 +181,12 @@ export class OrderDetailComponent implements OnInit {
     if (!order) return;
     const reason = await this.askCancelReason(order);
     if (reason !== null) {
-      this.run(() => this.api.cancel(order.id, reason), 'Pedido cancelado');
+      this.run(() => this.api.cancel(order.id, reason), tr('SALES.ORDER_DETAIL.PEDIDO_CANCELADO_2'));
     }
   }
 
   addItem(event: AddItemEvent): void {
-    this.run(() => this.api.addItem(this.order!.id, event.productId, event.quantity), 'Producto agregado');
+    this.run(() => this.api.addItem(this.order!.id, event.productId, event.quantity), tr('SALES.ORDER_DETAIL.PRODUCTO_AGREGADO'));
   }
 
   changeQuantity(event: QuantityChangeEvent): void {
@@ -195,15 +196,15 @@ export class OrderDetailComponent implements OnInit {
   async removeItem(item: OrderItem): Promise<void> {
     const order = this.order;
     if (!order || !(await this.confirmRemove(item))) return;
-    this.run(() => this.api.removeItem(order.id, item.id), 'Producto quitado');
+    this.run(() => this.api.removeItem(order.id, item.id), tr('SALES.ORDER_DETAIL.PRODUCTO_QUITADO'));
   }
 
   applyDiscount(discount: string): void {
-    this.run(() => this.api.applyDiscount(this.order!.id, discount), 'Descuento aplicado');
+    this.run(() => this.api.applyDiscount(this.order!.id, discount), tr('SALES.ORDER_DETAIL.DESCUENTO_APLICADO'));
   }
 
   registerPayment(input: PaymentInput): void {
-    this.run(() => this.api.registerPayment(this.order!.id, input), 'Pago registrado');
+    this.run(() => this.api.registerPayment(this.order!.id, input), tr('PURCHASES.PURCHASE_PAYMENTS_TAB.PAGO_REGISTRADO'));
   }
 
   /** Entrega con salida de inventario: el diálogo elige almacén y confirma; devuelve el pedido entregado. */
@@ -212,11 +213,11 @@ export class OrderDetailComponent implements OnInit {
     (ref.componentInstance as DeliveryDialogComponent).init(order, preview);
     try {
       this.order = (await ref.result) as Order;
-      this.toastr.success('Pedido entregado');
+      this.toastr.success(tr('SALES.ORDER_DETAIL.PEDIDO_ENTREGADO'));
     } catch (reason) {
       // Cancelar no cambia nada; si el pedido cambió en otra parte, se vuelve a leer.
       if (reason === STALE_ORDER) {
-        this.toastr.error('El pedido cambió desde que se abrió la entrega. Se actualizó con los datos vigentes.');
+        this.toastr.error(tr('SALES.ORDER_DETAIL.EL_PEDIDO_CAMBIO_DESDE_QUE'));
         this.reload();
       }
     }
@@ -225,18 +226,18 @@ export class OrderDetailComponent implements OnInit {
   /** Diálogo de entrega: fecha real (hoy por defecto) y aviso de saldo que no bloquea. `null` = cancelado. */
   protected async askDeliveryDate(order: Order): Promise<string | null> {
     const result = await Swal.fire({
-      title: 'Marcar como entregado',
-      text: hasBalance(order) ? `Quedará un saldo de Bs ${order.balance} por cobrar.` : undefined,
+      title: tr('SALES.ORDER_DETAIL.MARCAR_COMO_ENTREGADO'),
+      text: hasBalance(order) ? tr('SALES.ORDER_DETAIL.QUEDARA_UN_SALDO_DE_BS', { p0: order.balance }) : undefined,
       input: 'date',
-      inputLabel: 'Fecha de entrega',
+      inputLabel: tr('SALES.ORDER_DETAIL.FECHA_DE_ENTREGA'),
       inputValue: todayIso(),
       inputAttributes: { max: todayIso() },
-      inputValidator: (value) => (value ? null : 'La fecha de entrega es obligatoria.'),
+      inputValidator: (value) => (value ? null : tr('SALES.ORDER_DETAIL.LA_FECHA_DE_ENTREGA_ES')),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Marcar entregado',
-      cancelButtonText: 'Volver',
+      confirmButtonText: tr('SALES.ORDER_DETAIL.MARCAR_ENTREGADO'),
+      cancelButtonText: tr('PERSONNEL.PROFILE_CONFIRMATION.VOLVER'),
     });
     return result.isConfirmed ? String(result.value) : null;
   }
@@ -244,31 +245,31 @@ export class OrderDetailComponent implements OnInit {
   /** Diálogo de cancelación con motivo obligatorio. `null` = el usuario volvió atrás. */
   protected async askCancelReason(order: Order): Promise<string | null> {
     const result = await Swal.fire({
-      title: 'Cancelar pedido',
+      title: tr('SALES.ORDER_DETAIL.CANCELAR_PEDIDO_2'),
       text: order.payments.length
-        ? 'Los pagos registrados no se eliminan.'
-        : 'El pedido quedará cancelado y no podrá continuar el flujo de entrega.',
+        ? tr('SALES.ORDER_DETAIL.LOS_PAGOS_REGISTRADOS_NO_SE')
+        : tr('SALES.ORDER_DETAIL.EL_PEDIDO_QUEDARA_CANCELADO_Y'),
       input: 'textarea',
-      inputLabel: 'Motivo de la cancelación',
+      inputLabel: tr('SALES.ORDER_DETAIL.MOTIVO_DE_LA_CANCELACION'),
       inputAttributes: { maxlength: '500' },
-      inputValidator: (value) => (value?.trim() ? null : 'El motivo es obligatorio.'),
+      inputValidator: (value) => (value?.trim() ? null : tr('INVENTORY.ADJUSTMENT_FORM.EL_MOTIVO_ES_OBLIGATORIO')),
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Cancelar pedido',
-      cancelButtonText: 'Volver',
+      confirmButtonText: tr('SALES.ORDER_DETAIL.CANCELAR_PEDIDO_2'),
+      cancelButtonText: tr('PERSONNEL.PROFILE_CONFIRMATION.VOLVER'),
     });
     return result.isConfirmed ? String(result.value).trim() : null;
   }
 
   protected async confirmRemove(item: OrderItem): Promise<boolean> {
     const result = await Swal.fire({
-      titleText: `¿Quitar "${item.productName}"?`,
+      titleText: tr('SALES.ORDER_DETAIL.QUITAR', { p0: item.productName }),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Quitar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('SALES.ORDER_DETAIL.QUITAR_2'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

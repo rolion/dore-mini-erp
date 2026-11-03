@@ -183,9 +183,9 @@ describe('OrderListComponent', () => {
     it('show the right empty message depending on whether filters are active (AC-23)', () => {
       api.list.and.returnValue(of(page([])));
       start();
-      expect(component.messages.emptyMessage).toBe(EMPTY_ALL);
+      expect(component.messages.emptyMessage).toBe(EMPTY_ALL());
       start({ status: 'CANCELLED' });
-      expect(component.messages.emptyMessage).toBe(EMPTY_FILTERED);
+      expect(component.messages.emptyMessage).toBe(EMPTY_FILTERED());
     });
   });
 

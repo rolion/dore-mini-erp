@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -41,8 +42,8 @@ import {
 } from './order-list-filters';
 
 export const PAGE_SIZE = 10;
-export const EMPTY_FILTERED = 'No hay pedidos que coincidan con los filtros.';
-export const EMPTY_ALL = 'Aún no hay pedidos.';
+export const EMPTY_FILTERED = (): string => tr('SALES.ORDER_LIST.NO_HAY_PEDIDOS_QUE_COINCIDAN');
+export const EMPTY_ALL = (): string => tr('SALES.ORDER_LIST.AUN_NO_HAY_PEDIDOS');
 
 /** Lista operativa de pedidos. La URL es la fuente de verdad de filtros y página, así se conservan al volver del detalle. */
 @Component({
@@ -65,15 +66,15 @@ export class OrderListComponent implements OnInit {
   readonly pageSize = PAGE_SIZE;
   readonly shortcuts = SHORTCUTS;
   readonly statusOptions = [
-    { value: 'ALL', label: 'Todos' },
-    { value: 'PENDING_DELIVERY', label: 'Pendientes de entrega' },
+    { value: 'ALL', label: tr('INVENTORY.STOCK.TODOS') },
+    { value: 'PENDING_DELIVERY', label: tr('SALES.ORDER_LIST_FILTERS.PENDIENTES_DE_ENTREGA') },
     ...ORDER_STATUSES.map((value) => ({ value, label: ORDER_STATUS_LABELS[value] })),
-    { value: 'NOT_CANCELLED', label: 'No cancelados' },
+    { value: 'NOT_CANCELLED', label: tr('SALES.ORDER_LIST.NO_CANCELADOS') },
   ];
   readonly paymentOptions = [
-    { value: 'ALL', label: 'Todos' },
+    { value: 'ALL', label: tr('INVENTORY.STOCK.TODOS') },
     ...PAYMENT_STATUSES.map((value) => ({ value, label: PAYMENT_STATUS_LABELS[value] })),
-    { value: 'WITH_BALANCE', label: 'Con saldo pendiente' },
+    { value: 'WITH_BALANCE', label: tr('SALES.ORDER_LIST.CON_SALDO_PENDIENTE') },
   ];
   readonly channelOptions = SALES_CHANNELS.map((value) => ({ value, label: SALES_CHANNEL_LABELS[value] }));
 
@@ -92,7 +93,7 @@ export class OrderListComponent implements OnInit {
   /** Página actual base 0, como espera ngx-datatable. */
   pageIndex = 0;
   loading = false;
-  emptyMessage = EMPTY_ALL;
+  emptyMessage = EMPTY_ALL();
   ordering: 'newest' | 'expected' = 'newest';
 
   /** `ng-select` tipa el typeahead como `Subject<string>`, pero emite `null` al elegir o limpiar una opción. */
@@ -128,7 +129,7 @@ export class OrderListComponent implements OnInit {
   }
 
   get messages(): { emptyMessage: string; totalMessage: string } {
-    return { emptyMessage: this.emptyMessage, totalMessage: 'en total' };
+    return { emptyMessage: this.emptyMessage, totalMessage: tr('COMMON.IN_TOTAL') };
   }
 
   get currentShortcut(): Shortcut['id'] | null {
@@ -167,7 +168,7 @@ export class OrderListComponent implements OnInit {
       const { page, ...filters } = state;
       this.filterForm.setValue(filters, { emitEvent: false });
       this.pageIndex = page - 1;
-      this.emptyMessage = hasActiveFilters(filters) ? EMPTY_FILTERED : EMPTY_ALL;
+      this.emptyMessage = hasActiveFilters(filters) ? EMPTY_FILTERED() : EMPTY_ALL();
       this.ordering = state.statusKey === 'PENDING_DELIVERY' ? 'expected' : 'newest';
       this.reload$.next(state);
     });

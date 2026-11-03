@@ -1,3 +1,4 @@
+import { tr } from '../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,7 +9,7 @@ import { finalize } from 'rxjs';
 import { AuthService } from '@core';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
-export const REQUIRED_FIELDS_MESSAGE = 'Usuario y contraseña son obligatorios.';
+export const REQUIRED_FIELDS_MESSAGE = (): string => tr('AUTH.SIGNIN.USUARIO_Y_CONTRASENA_SON_OBLIGATORIOS');
 export const DEFAULT_ROUTE_AFTER_LOGIN = APP_PATHS.dashboard;
 
 @Component({
@@ -45,7 +46,7 @@ export class SigninComponent {
     this.error = '';
 
     if (this.loginForm.invalid) {
-      this.error = REQUIRED_FIELDS_MESSAGE;
+      this.error = REQUIRED_FIELDS_MESSAGE();
       return;
     }
 

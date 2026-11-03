@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -11,7 +12,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 export class SettingConfirmDialogComponent {
   title = '';
   message = '';
-  confirmLabel = 'Confirmar';
+  confirmLabel = tr('PERSONNEL.PROFILE_CONFIRMATION.CONFIRMAR');
 
   readonly activeModal = inject(NgbActiveModal);
 }

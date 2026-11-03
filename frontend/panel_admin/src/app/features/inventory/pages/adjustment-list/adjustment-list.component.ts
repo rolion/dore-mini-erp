@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -16,7 +17,7 @@ import { Warehouse } from '../../models/warehouse';
 import { AdjustmentsApiService } from '../../services/adjustments-api.service';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
 
-export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la inicial.';
+export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_FECHA_FINAL_NO_PUEDE');
 
 /** Inventario › Ajustes de existencias: lista de ajustes confirmados con filtros y punto de entrada de «Nuevo ajuste». */
 @Component({
@@ -123,7 +124,7 @@ export class AdjustmentListComponent implements OnInit {
 
   private validateRange(): boolean {
     const { dateFrom, dateTo } = this.filterForm.getRawValue();
-    this.rangeError = dateFrom && dateTo && dateFrom > dateTo ? INVALID_RANGE_MESSAGE : '';
+    this.rangeError = dateFrom && dateTo && dateFrom > dateTo ? INVALID_RANGE_MESSAGE() : '';
     return !this.rangeError;
   }
 

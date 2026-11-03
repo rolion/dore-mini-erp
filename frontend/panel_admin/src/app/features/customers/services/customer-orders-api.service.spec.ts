@@ -58,6 +58,6 @@ describe('CustomerOrdersApiService', () => {
     let error: Error | undefined;
     service.list('c-1').subscribe({ error: (e: Error) => (error = e) });
     http.expectOne((r) => r.url === '/api/orders/').flush('boom', { status: 500, statusText: 'x' });
-    expect(error?.message).toBe(HISTORY_ERROR_MESSAGE);
+    expect(error?.message).toBe(HISTORY_ERROR_MESSAGE());
   });
 });

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AfterViewInit, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -19,12 +20,12 @@ export class ProfileListComponent implements OnInit, AfterViewInit {
   private api = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   readonly kind = this.route.snapshot.data['kind'] as ProfileKind;
-  readonly title = this.kind === 'professionals' ? 'Profesionales' : 'Especialidades';
+  readonly title = this.kind === 'professionals' ? tr('PERSONNEL.PROFILE_LIST.PROFESIONALES') : tr('PERSONNEL.PROFILE_LIST.ESPECIALIDADES_2');
   readonly base = `/pocketbiz/personnel/${this.kind}`;
   readonly search = new FormControl('', { nonNullable: true });
   readonly status = new FormControl('true', { nonNullable: true });
   readonly specialty = new FormControl('', { nonNullable: true });
-  readonly messages = { emptyMessage: 'No hay registros que coincidan.', totalMessage: 'en total' };
+  readonly messages = { emptyMessage: tr('PERSONNEL.PROFILE_LIST.NO_HAY_REGISTROS_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
   private reload$ = new Subject<void>();
   rows: Profile[] = [];
   specialties: Profile[] = [];
@@ -73,13 +74,13 @@ export class ProfileListComponent implements OnInit, AfterViewInit {
   onPage(event: { offset: number }): void {
     if (this.pageIndex !== event.offset) { this.pageIndex = event.offset; this.reload$.next(); }
   }
-  names(row: Profile): string { return row.specialties?.map(item => item.name).join(', ') || 'Sin especialidades'; }
+  names(row: Profile): string { return row.specialties?.map(item => item.name).join(', ') || tr('PERSONNEL.PROFILE_LIST.SIN_ESPECIALIDADES'); }
   async toggle(item: Profile): Promise<void> {
     if (this.saving) return;
     this.saving = true;
     if (!await confirmProfileState(item)) { this.saving = false; return; }
     this.api.setActive(this.kind, item).pipe(finalize(() => this.saving = false), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => { this.message = 'Estado actualizado.'; this.refresh(); },
+      next: () => { this.message = tr('PERSONNEL.PROFILE_LIST.ESTADO_ACTUALIZADO'); this.refresh(); },
       error: error => this.error = profileError(error),
     });
   }

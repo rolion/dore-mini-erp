@@ -25,8 +25,8 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 })
 export class ReceiptRevertDialogComponent {
   readonly maxLength = REVERT_REASON_MAX_LENGTH;
-  readonly documentalLabel = DOCUMENTAL_LABEL;
-  readonly noEntryLabel = SIN_ENTRADA_LABEL;
+  readonly documentalLabel = DOCUMENTAL_LABEL();
+  readonly noEntryLabel = SIN_ENTRADA_LABEL();
   readonly form = inject(FormBuilder).nonNullable.group({ reason: '' });
   readonly activeModal = inject(NgbActiveModal);
   receipt: Receipt | null = null;

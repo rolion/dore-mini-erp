@@ -1,19 +1,20 @@
+import { tr } from '../../../core/i18n/translate';
 export type PaymentMethod = 'CASH' | 'QR' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
 export type PaymentRecordStatus = 'confirmed' | 'voided';
 
 export const PAYMENT_METHOD_LABELS: Readonly<Record<PaymentMethod, string>> = {
-  CASH: 'Efectivo',
+  get CASH() { return tr('EXPENSES.EXPENSE.EFECTIVO'); },
   QR: 'QR',
-  BANK_TRANSFER: 'Transferencia',
-  CARD: 'Tarjeta',
-  OTHER: 'Otro',
+  get BANK_TRANSFER() { return tr('EXPENSES.EXPENSE.TRANSFERENCIA'); },
+  get CARD() { return tr('EXPENSES.EXPENSE.TARJETA'); },
+  get OTHER() { return tr('EXPENSES.EXPENSE.OTRO'); },
 };
 
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ['CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER'];
 
 export const PAYMENT_STATUS_RECORD_LABELS: Readonly<Record<PaymentRecordStatus, string>> = {
-  confirmed: 'Confirmado',
-  voided: 'Anulado',
+  get confirmed() { return tr('INVENTORY.MOVEMENT.CONFIRMADO'); },
+  get voided() { return tr('EXPENSES.EXPENSE.ANULADO'); },
 };
 
 export interface Payment {

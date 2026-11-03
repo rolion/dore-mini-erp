@@ -236,7 +236,12 @@
     "VOLVER": "Back",
     "VOLVER_A_EDITAR": "Back to editing",
     "CORREO_EJEMPLO_COM": "email@example.com",
-    "ULTIMA_ACTUALIZACION": "Last updated"
+    "ULTIMA_ACTUALIZACION": "Last updated",
+    "VERB_DEACTIVATE": "deactivate",
+    "VERB_ACTIVATE": "activate",
+    "AN_OUTBOUND": "an outbound",
+    "AN_INBOUND": "an inbound",
+    "IN_TOTAL": "in total"
   },
   "AUTH": {
     "FORGOT": {
@@ -269,7 +274,8 @@
       "SIGN_IN": "Sign in",
       "OR_LOGIN_WITH": "Or sign in with",
       "DON_T_HAVE_AN_ACCOUNT": "Don't have an account?",
-      "SIGN_UP": "Sign up"
+      "SIGN_UP": "Sign up",
+      "USUARIO_Y_CONTRASENA_SON_OBLIGATORIOS": "Username and password are required."
     },
     "SIGNUP": {
       "POCKETBIZ_VOLVER_AL_INICIO": "PocketBiz, back to home",
@@ -279,7 +285,18 @@
       "CONFIRMAR_CONTRASENA": "Confirm password",
       "CREAR_CUENTA": "Create account",
       "YA_TIENES_CUENTA": "Already have an account?",
-      "INICIA_SESION": "Sign in"
+      "INICIA_SESION": "Sign in",
+      "REVISA_LOS_CAMPOS_MARCADOS": "Check the marked fields.",
+      "EL_NOMBRE_DE_LA_EMPRESA": "The company name is required.",
+      "EL_NOMBRE_ES_OBLIGATORIO": "The name is required.",
+      "EL_APELLIDO_ES_OBLIGATORIO": "The last name is required.",
+      "EL_USUARIO_ES_OBLIGATORIO": "The username is required.",
+      "EL_CORREO_ES_OBLIGATORIO": "The email is required.",
+      "LA_CONTRASENA_ES_OBLIGATORIA": "The password is required.",
+      "CONFIRMA_LA_CONTRASENA": "Confirm the password.",
+      "LAS_CONTRASENAS_NO_COINCIDEN": "The passwords do not match.",
+      "INGRESA_UN_CORREO_VALIDO": "Enter a valid email.",
+      "NO_PUEDE_SUPERAR_CARACTERES": "It cannot exceed {{p0}} characters."
     }
   },
   "CUSTOMERS": {
@@ -288,7 +305,15 @@
       "CARGANDO_HISTORIAL": "Loading history…",
       "BS": "Bs {{p0}}",
       "SE_MUESTRAN_LOS_PEDIDOS_MAS": "Showing the {{p0}} most recent orders of {{p1}}.",
-      "ESTE_CLIENTE_AUN_NO_TIENE": "This customer has no orders yet."
+      "ESTE_CLIENTE_AUN_NO_TIENE": "This customer has no orders yet.",
+      "NUEVO": "New",
+      "EN_PREPARACION": "In preparation",
+      "LISTO": "Ready",
+      "ENTREGADO": "Delivered",
+      "CANCELADO": "Cancelled",
+      "PARCIAL": "Partial",
+      "PAGADO": "Paid",
+      "REEMBOLSADO": "Refunded"
     },
     "CUSTOMER_QUICK_CREATE": {
       "NUEVO_CLIENTE": "New customer",
@@ -298,14 +323,24 @@
       "VOLVER_A_LA_BUSQUEDA": "Back to search",
       "CREAR_Y_SELECCIONAR_CLIENTE": "Create and select customer",
       "EL_NOMBRE_NO_PUEDE_SUPERAR": "The name cannot exceed {{n}} characters.",
-      "EL_TELEFONO_NO_PUEDE_SUPERAR": "The phone cannot exceed {{n}} characters."
+      "EL_TELEFONO_NO_PUEDE_SUPERAR": "The phone cannot exceed {{n}} characters.",
+      "YA_EXISTE_UN_CLIENTE_CON": "A customer with this phone already exists",
+      "CREAR_DE_TODOS_MODOS": "Create anyway",
+      "CANCELAR": "Cancel",
+      "CLIENTE_CREADO": "Customer created"
     },
     "CUSTOMER_DETAIL": {
       "PERFIL_DEL_CLIENTE": "Customer profile",
       "PERFIL": "Profile",
       "SIN_NOTAS": "No notes",
       "DESACTIVAR": "Deactivate",
-      "ACTIVAR": "Activate"
+      "ACTIVAR": "Activate",
+      "CLIENTE_ACTIVADO": "Customer activated",
+      "CLIENTE_DESACTIVADO": "Customer deactivated",
+      "QUIERES_A": "Do you want to {{p0}} \"{{p1}}\"?",
+      "DEJARA_DE_APARECER_ENTRE_LOS": "It will no longer appear among active customers. Its order history is kept.",
+      "VOLVERA_A_APARECER_ENTRE_LOS": "It will appear again among active customers.",
+      "SI": "Yes"
     },
     "CUSTOMER_FORM": {
       "NOMBRE_DEL_CLIENTE": "Customer name",
@@ -313,13 +348,25 @@
       "EDITAR_CLIENTE": "Edit customer",
       "NUEVO": "New",
       "INGRESA_UN_CORREO_VALIDO": "Enter a valid email.",
-      "LAS_NOTAS_NO_PUEDEN_SUPERAR": "The notes cannot exceed {{n}} characters."
+      "LAS_NOTAS_NO_PUEDEN_SUPERAR": "The notes cannot exceed {{n}} characters.",
+      "CLIENTE_ACTUALIZADO": "Customer updated"
     },
     "CUSTOMER_LIST": {
       "CLIENTES": "Customers",
       "NUEVO_CLIENTE": "New customer",
       "VER_PERFIL": "View profile",
-      "CORREO": "Email"
+      "CORREO": "Email",
+      "NO_HAY_CLIENTES_QUE_COINCIDAN": "No customers match"
+    },
+    "CUSTOMER_ORDERS_API_SERVICE": {
+      "NO_SE_PUDO_CARGAR_EL": "The purchase history could not be loaded."
+    },
+    "CUSTOMERS_API_SERVICE": {
+      "NO_SE_PUDO_CONECTAR_CON": "Could not connect to the server. Try again.",
+      "CLIENTE_NO_ENCONTRADO": "Customer not found.",
+      "OCURRIO_UN_ERROR_INESPERADO_INTENTALO": "An unexpected error occurred. Try again.",
+      "REVISA_LOS_DATOS_INGRESADOS": "Check the data you entered.",
+      "YA_EXISTE_UN_CLIENTE_CON": "A customer with this phone already exists."
     }
   },
   "DENTISTRY": {
@@ -360,7 +407,15 @@
       "REACTIVAR_PERFIL": "Reactivate profile",
       "LA_FECHA_NO_PUEDE_SER": "The date cannot be in the future.",
       "INDICA_EL_NOMBRE_DEL_RESPONSABLE": "Enter the guardian name.",
-      "INDICA_EL_TELEFONO_DEL_RESPONSABLE": "Enter the guardian phone."
+      "INDICA_EL_TELEFONO_DEL_RESPONSABLE": "Enter the guardian phone.",
+      "PERFIL_ODONTOLOGICO_CREADO": "Dental profile created.",
+      "ANTECEDENTES_GUARDADOS": "History saved.",
+      "DATOS_ADMINISTRATIVOS_GUARDADOS": "Administrative data saved.",
+      "GUARDA_O_CANCELA_LOS_CAMBIOS": "Save or discard the changes before changing the status.",
+      "REACTIVAR_EL_PERFIL_CONSERVANDO_SU": "Reactivate the profile keeping its history?",
+      "ARCHIVAR_EL_PERFIL_SE_CONSERVARA": "Archive the profile? Its history will be kept and the customer will remain available.",
+      "PERFIL_REACTIVADO": "Profile reactivated.",
+      "PERFIL_ARCHIVADO_SE_CONSERVA_SU": "Profile archived. Its history is kept."
     },
     "PATIENT_LIST": {
       "PACIENTES": "Patients",
@@ -372,13 +427,41 @@
       "VER_FICHA": "View record",
       "PACIENTE": "Patient",
       "NO_HAY_RESULTADOS_PARA_ESTOS": "No results for these filters.",
-      "AUN_NO_HAY_PACIENTES_REGISTRADOS": "There are no registered patients yet."
+      "AUN_NO_HAY_PACIENTES_REGISTRADOS": "There are no registered patients yet.",
+      "NO_HAY_PACIENTES_QUE_COINCIDAN": "No patients match the filters."
+    },
+    "PATIENT_HISTORY": {
+      "ALTA": "Creation",
+      "ARCHIVO": "Archive",
+      "REACTIVACION": "Reactivation",
+      "EDICION": "Edit",
+      "ESTADO_DEL_PERFIL": "Profile status",
+      "FECHA_DE_NACIMIENTO": "Date of birth",
+      "NOMBRE_DEL_RESPONSABLE": "Guardian name",
+      "TELEFONO_DEL_RESPONSABLE": "Guardian phone",
+      "ACTIVO": "Active",
+      "ARCHIVADO": "Archived",
+      "NO_INFORMADO": "Not provided"
+    },
+    "PATIENT": {
+      "ANTECEDENTES_MEDICOS": "Medical history",
+      "ANTECEDENTES_ODONTOLOGICOS": "Dental history",
+      "ALERGIAS": "Allergies",
+      "MEDICACION": "Medication",
+      "OBSERVACIONES_CLINICAS": "Clinical notes"
+    },
+    "DENTISTRY_API_SERVICE": {
+      "REVISA_LOS_CAMPOS_SENALADOS": "Check the highlighted fields.",
+      "NO_TIENES_PERMISO_PARA_ACCEDER": "You do not have permission to access this information.",
+      "NO_SE_ENCONTRO_EL_PACIENTE": "The patient was not found."
     }
   },
   "EXPENSES": {
     "CATEGORY_DIALOG": {
       "NOMBRE_DE_LA_CATEGORIA": "Category name",
-      "EDITAR_CATEGORIA": "Edit category"
+      "EDITAR_CATEGORIA": "Edit category",
+      "CATEGORIA_ACTUALIZADA": "Category updated",
+      "CATEGORIA_CREADA": "Category created"
     },
     "CATEGORY_LIST": {
       "CATEGORIAS_DE_GASTO": "Expense categories",
@@ -387,14 +470,24 @@
       "INACTIVAS": "Inactive",
       "NUEVA_CATEGORIA": "New category",
       "ACTIVA": "Active",
-      "INACTIVA": "Inactive"
+      "INACTIVA": "Inactive",
+      "AUN_NO_HAY_CATEGORIAS_CREA": "There are no categories yet. Create the first one to record expenses.",
+      "CATEGORIA_ACTIVADA": "Category activated",
+      "CATEGORIA_DESACTIVADA": "Category deactivated",
+      "QUIERES_LA_CATEGORIA": "Do you want to {{p0}} the category \"{{p1}}\"?",
+      "DEJARA_DE_OFRECERSE_PARA_NUEVOS": "It will no longer be offered for new expenses. Expenses already recorded keep it.",
+      "VOLVERA_A_OFRECERSE_PARA_NUEVOS": "It will be offered again for new expenses."
     },
     "EXPENSE_DETAIL": {
       "DETALLE_DEL_GASTO": "Expense details",
       "INACTIVA": "(inactive)",
       "EL": "on {{p0}}",
       "ANULAR_GASTO": "Void expense",
-      "GASTO": "Expense"
+      "GASTO": "Expense",
+      "GASTO_ANULADO": "Expense voided",
+      "ANULAR_EL_GASTO": "Void the expense \"{{p0}}\"?",
+      "ESTE_GASTO_DEJARA_DE_SUMAR": "This expense will stop counting in reports. It is kept in the history.",
+      "ANULAR_GASTO_2": "Void expense"
     },
     "EXPENSE_FORM": {
       "IR_A_CATEGORIAS": "Go to Categories",
@@ -410,7 +503,11 @@
       "ELIGE_UN_METODO_DE_PAGO": "Choose a payment method.",
       "LA_CATEGORIA_ES_OBLIGATORIA": "The category is required.",
       "LA_DESCRIPCION_NO_PUEDE_SUPERAR": "The description cannot exceed {{n}} characters.",
-      "EL_PROVEEDOR_NO_PUEDE_SUPERAR": "The supplier cannot exceed {{n}} characters."
+      "EL_PROVEEDOR_NO_PUEDE_SUPERAR": "The supplier cannot exceed {{n}} characters.",
+      "PRIMERO_CREA_UNA_CATEGORIA": "First create a category",
+      "GASTO_ACTUALIZADO": "Expense updated",
+      "GASTO_REGISTRADO": "Expense recorded",
+      "EL_GASTO_ESTA_ANULADO_Y": "The expense is voided and cannot be edited."
     },
     "EXPENSE_LIST": {
       "NUEVO_GASTO": "New expense",
@@ -426,7 +523,23 @@
       "CATEGORIA": "Category",
       "METODO_DE_PAGO": "Payment method",
       "PROVEEDOR": "Supplier",
-      "MONTO": "Amount"
+      "MONTO": "Amount",
+      "LA_FECHA_FINAL_NO_PUEDE": "The end date cannot be earlier than the start date.",
+      "ESTE_MES": "This month",
+      "MES_ANTERIOR": "Previous month",
+      "TODO": "Everything",
+      "NO_HAY_GASTOS_QUE_COINCIDAN": "No expenses match"
+    },
+    "API_ERROR": {
+      "NO_SE_ENCONTRO_EL_REGISTRO": "The record was not found."
+    },
+    "EXPENSE": {
+      "EFECTIVO": "Cash",
+      "TRANSFERENCIA": "Transfer",
+      "TARJETA": "Card",
+      "OTRO": "Other",
+      "VIGENTE": "Valid",
+      "ANULADO": "Voided"
     }
   },
   "INVENTORY": {
@@ -437,7 +550,8 @@
     "MOVEMENT_REVERSE_DIALOG": {
       "REVERTIR_MOVIMIENTO": "Reverse movement",
       "EL_MOVIMIENTO_ORIGINAL_SE_CONSERVA": "{{p0}} The original movement is kept as \"Reversed\" and cannot be reversed again.",
-      "REVIRTIENDO": "Reversing…"
+      "REVIRTIENDO": "Reversing…",
+      "SE_REGISTRARA_DE_EN": "{{p0}} of {{p1}}{{p2}} will be recorded in {{p3}}."
     },
     "UNIT_DIALOG": {
       "ESTA_UNIDAD_YA_ESTA_ASIGNADA": "This unit is already assigned to products; it can only be activated or deactivated.",
@@ -447,7 +561,9 @@
       "PERMITE_CANTIDADES_CON_DECIMALES_POR": "Allows decimal quantities, for example 1.5 kg.",
       "EDITAR_UNIDAD": "Edit unit",
       "LA_ABREVIATURA_ES_OBLIGATORIA": "The abbreviation is required.",
-      "LA_ABREVIATURA_NO_PUEDE_SUPERAR": "The abbreviation cannot exceed {{n}} characters."
+      "LA_ABREVIATURA_NO_PUEDE_SUPERAR": "The abbreviation cannot exceed {{n}} characters.",
+      "UNIDAD_ACTUALIZADA": "Unit updated",
+      "UNIDAD_CREADA": "Unit created"
     },
     "UNITS_TAB": {
       "UNIDAD_BASE_DE_LOS_PRODUCTOS": "Base unit for products that track stock. No conversions.",
@@ -459,14 +575,18 @@
       "ABREVIATURA": "Abbreviation",
       "ADMITE_FRACCIONES": "Allows fractions",
       "ACTIVA": "Active",
-      "INACTIVA": "Inactive"
+      "INACTIVA": "Inactive",
+      "UNIDAD_ACTIVADA": "Unit activated",
+      "UNIDAD_DESACTIVADA": "Unit deactivated"
     },
     "WAREHOUSE_DIALOG": {
       "NOMBRE_DEL_ALMACEN": "Warehouse name",
       "PREDETERMINADO": "Default",
       "PARA_CAMBIAR_EL_PREDETERMINADO_DEFINE": "To change the default, set another warehouse as the default.",
       "ACTIVA_EL_ALMACEN_PARA_PODER": "Activate the warehouse to be able to set it as the default.",
-      "EDITAR_ALMACEN": "Edit warehouse"
+      "EDITAR_ALMACEN": "Edit warehouse",
+      "ALMACEN_ACTUALIZADO": "Warehouse updated",
+      "ALMACEN_CREADO": "Warehouse created"
     },
     "WAREHOUSES_TAB": {
       "ALMACENES": "Warehouses",
@@ -474,7 +594,10 @@
       "NUEVO_ALMACEN": "New warehouse",
       "SIN_ALMACENES": "No warehouses.",
       "PREDETERMINADO": "Default",
-      "DEFINIR_PREDETERMINADO": "Set as default"
+      "DEFINIR_PREDETERMINADO": "Set as default",
+      "ALMACEN_ACTIVADO": "Warehouse activated",
+      "ALMACEN_DESACTIVADO": "Warehouse deactivated",
+      "ALMACEN_PREDETERMINADO_ACTUALIZADO": "Default warehouse updated"
     },
     "ADJUSTMENT_DETAIL": {
       "DETALLE_DEL_AJUSTE": "Adjustment details",
@@ -485,7 +608,8 @@
       "VER_MOVIMIENTO": "View movement",
       "REVERTIR": "Reverse",
       "VOLVER_A_AJUSTES": "Back to adjustments",
-      "AJUSTE_NO_ENCONTRADO": "Adjustment not found."
+      "AJUSTE_NO_ENCONTRADO": "Adjustment not found.",
+      "AJUSTE_REVERTIDO": "Adjustment reversed"
     },
     "ADJUSTMENT_FORM": {
       "NUEVO_AJUSTE": "New adjustment",
@@ -503,7 +627,16 @@
       "ENTRADA_DE_AJUSTE": "Adjustment inbound",
       "SALIDA_DE_AJUSTE": "Adjustment outbound",
       "REGISTRANDO": "Recording…",
-      "CONFIRMAR_AJUSTE": "Confirm adjustment"
+      "CONFIRMAR_AJUSTE": "Confirm adjustment",
+      "AJUSTE_REGISTRADO": "Adjustment recorded",
+      "SIN_DIFERENCIA_NO_SE_REGISTRARA_2": "No difference: no movement will be recorded.",
+      "EL_MOTIVO_NO_PUEDE_SUPERAR": "The reason cannot exceed {{p0}} characters.",
+      "EL_MOTIVO_ES_OBLIGATORIO": "The reason is required.",
+      "ELIGE_UN_ALMACEN": "Choose a warehouse.",
+      "ELIGE_UN_PRODUCTO": "Choose a product.",
+      "AHORA_NO_HAY_DIFERENCIA": "There is no difference now.",
+      "LA_DIFERENCIA_AHORA_ES": "The difference is now {{p0}} {{p1}}.",
+      "EL_SALDO_CAMBIO_DE_A": "The balance changed from {{p0}} to {{p1}} since your count. {{p2}}"
     },
     "ADJUSTMENT_LIST": {
       "CORRECCIONES_DEL_SALDO_TRAS_UN": "Balance corrections after a count, with their reason.",
@@ -539,7 +672,8 @@
       "CONTRAMOVIMIENTO_2": "Counter-movement{{p0}}",
       "REVERTIR": "Reverse",
       "VOLVER_A_MOVIMIENTOS": "Back to movements",
-      "MOVIMIENTO_NO_ENCONTRADO": "Movement not found."
+      "MOVIMIENTO_NO_ENCONTRADO": "Movement not found.",
+      "MOVIMIENTO_REVERTIDO": "Movement reversed"
     },
     "MOVEMENT_LIST": {
       "INVENTARIO_MOVIMIENTOS": "Inventory › Movements",
@@ -554,7 +688,10 @@
       "ALMACEN": "Warehouse",
       "TIPO": "Type",
       "UNIDAD": "Unit",
-      "ORIGEN": "Source"
+      "ORIGEN": "Source",
+      "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "No movements for the chosen filters.",
+      "RECEPCION": "Receipt",
+      "PEDIDO": "Order"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Stock details",
@@ -576,7 +713,10 @@
       "SALIDA": "Outbound",
       "ABRIR_DOCUMENTO": "Open document",
       "SIN_DOCUMENTO": "No document",
-      "PAGINAS_DEL_HISTORIAL": "History pages"
+      "PAGINAS_DEL_HISTORIAL": "History pages",
+      "LA_APERTURA_SOLO_PROCEDE_SIN": "Opening is only possible with no previous movements; corrections are made with an adjustment.",
+      "PRODUCTO_O_ALMACEN_INACTIVO": "Inactive product or warehouse.",
+      "ALMACEN_INACTIVO_NO_SE_PUEDEN": "Inactive warehouse: adjustments cannot be recorded."
     },
     "STOCK_LIST": {
       "CANTIDAD_ACTUAL_DE_CADA_PRODUCTO": "Current quantity of each product by warehouse.",
@@ -617,7 +757,13 @@
       "CONFIRMAR_APERTURA": "Confirm opening",
       "PRODUCTO_DE_LA_LINEA_N": "Product of line {{n}}",
       "CANTIDAD_INICIAL_DE_LA_LINEA": "Initial quantity of line {{n}}",
-      "QUITAR_LA_LINEA_N": "Remove line {{n}}"
+      "QUITAR_LA_LINEA_N": "Remove line {{n}}",
+      "ESTE_PRODUCTO_YA_ESTA_EN": "This product is already on another line.",
+      "YA_TIENE_MOVIMIENTOS_EN_ESTE": "It already has movements in this warehouse; correct it with an adjustment.",
+      "APERTURA_REGISTRADA": "Opening recorded",
+      "LA_FECHA_ES_OBLIGATORIA": "The date is required.",
+      "LA_REFERENCIA_DE_APERTURA_ES": "The opening reference is required.",
+      "LA_REFERENCIA_NO_PUEDE_SUPERAR": "The reference cannot exceed {{p0}} characters."
     },
     "VALUATION": {
       "VALORACION": "Valuation",
@@ -659,7 +805,52 @@
       "NO_HABIA_EXISTENCIAS_QUE_VALORAR": "There was no stock to value at the cut-off.",
       "CONFIRMAR_ADOPCION": "Confirm adoption",
       "VALOR_TOTAL_DE_N": "Total value of {{n}}",
-      "FUENTE_DE_N": "Source of {{n}}"
+      "FUENTE_DE_N": "Source of {{n}}",
+      "PENDIENTE": "Pending",
+      "INGRESO_MANUAL": "Manual entry",
+      "PROMEDIO_PONDERADO_MOVIL_COSTO_DE": "Moving weighted average (management cost)",
+      "VALORACION_ADOPTADA": "Valuation adopted",
+      "LAS_EXISTENCIAS_CAMBIARON_DESDE_LA": "Stock changed since the reconciliation. Review the quantities and enter the missing values again.",
+      "PENDIENTE_INGRESA_UN_VALOR_O": "Pending: enter a value or declare zero cost.",
+      "INGRESA_UN_IMPORTE_VALIDO_CON": "Enter a valid amount with up to 2 decimals.",
+      "UN_COSTO_CERO_DEBE_DECLARARSE": "A zero cost must be declared explicitly."
+    },
+    "VALUATION_API_SERVICE": {
+      "REVISA_LOS_VALORES_INGRESADOS": "Check the values you entered."
+    },
+    "MOVEMENT": {
+      "ENTRADA": "Inbound",
+      "SALIDA": "Outbound",
+      "SALIDA_POR_VENTA": "Outbound from sale",
+      "ENTRADA_POR_COMPRA": "Inbound from purchase",
+      "CONFIRMADO": "Confirmed",
+      "REVERTIDO": "Reversed",
+      "PEDIDO_DE_VENTA": "Sales order",
+      "RECEPCION_DE_COMPRA": "Purchase receipt",
+      "AJUSTE_DE_INVENTARIO": "Inventory adjustment",
+      "APERTURA_DE_EXISTENCIAS": "Opening stock",
+      "SIN_DOCUMENTO": "No document"
+    },
+    "STOCK": {
+      "TODAS_LAS_CLASIFICACIONES": "All classifications",
+      "MATERIA_PRIMA": "Raw material",
+      "EMPAQUE": "Packaging",
+      "INTERMEDIO": "Intermediate",
+      "TERMINADO": "Finished",
+      "MERCADERIA": "Merchandise",
+      "SIN_CLASIFICAR": "Unclassified",
+      "TODOS": "All",
+      "NO": "No",
+      "TODOS_LOS_SALDOS": "All balances",
+      "CON_SALDO_CERO": "With zero balance",
+      "CON_SALDO_DISTINTO_DE_CERO": "With non-zero balance",
+      "CON_SALDO_NEGATIVO": "With negative balance",
+      "ACTIVOS": "Active",
+      "INACTIVOS": "Inactive",
+      "LA_CANTIDAD_ES_OBLIGATORIA": "The quantity is required.",
+      "INGRESA_UN_NUMERO_MAYOR_O": "Enter a number greater than or equal to zero.",
+      "LA_CANTIDAD_ADMITE_COMO_MAXIMO": "The quantity allows at most {{p0}} decimals.",
+      "LA_UNIDAD_BASE_DE_ESTE": "The base unit of this product does not allow fractions."
     }
   },
   "LANDING": {
@@ -706,7 +897,65 @@
       "TUS_DATOS_TU_EMPRESA": "Your data, your company",
       "CADA_EMPRESA_VE_SOLO_SUS": "Each company sees only its own data.",
       "PREGUNTAS_FRECUENTES": "Frequently asked questions",
-      "EMPIEZA_A_VER_TU_NEGOCIO": "Start seeing your business clearly"
+      "EMPIEZA_A_VER_TU_NEGOCIO": "Start seeing your business clearly",
+      "IR_A_MI_PANEL": "Go to my dashboard",
+      "EMPEZAR_GRATIS": "Start for free"
+    },
+    "LANDING_CONTENT": {
+      "PLAN_GRATUITO_CON_LIMITES_1": "Free plan with limits: 1 product, 1 customer, 2 sales and 2 expenses per day.",
+      "WHATSAPP_FACEBOOK_INSTAGRAM_VENTA_DIRECTA": "WhatsApp, Facebook, Instagram, direct sale, fair or other",
+      "VENTAS_GASTOS_REGISTRADOS_ES_UNA": "Sales − recorded expenses. It is an estimate, not the accounting profit.",
+      "AL_LLEGAR_AL_LIMITE_SIGUES": "When you reach the limit you keep seeing your data and can record again the next day",
+      "PRODUCTOS_CLIENTES_VENTAS_Y_GASTOS": "Products, customers, sales and expenses with no restrictions",
+      "PAGO_DISPONIBLE_PROXIMAMENTE": "Payment available soon",
+      "QUE_PUEDES_CONTROLAR": "What you can control",
+      "COMO_FUNCIONA": "How it works",
+      "PLANES": "Plans",
+      "PREGUNTAS": "Questions",
+      "PEDIDOS_QUE_SE_PIERDEN_ENTRE": "Orders that get lost among messages.",
+      "COBROS_QUE_SE_OLVIDAN": "Payments that get forgotten.",
+      "GASTOS_QUE_NUNCA_SE_ANOTAN": "Expenses that are never written down.",
+      "PEDIDOS_Y_ENTREGAS": "Orders and deliveries",
+      "ESTADOS_DE_CADA_PEDIDO_Y": "Status of each order and sales channel: WhatsApp, Facebook, Instagram, direct sale, fair or other.",
+      "COBROS": "Payments",
+      "PAGOS_PARCIALES_Y_SALDO_PENDIENTE": "Partial payments and pending balance per order.",
+      "GASTOS": "Expenses",
+      "REGISTRO_POR_CATEGORIA_Y_METODO": "Records by category and payment method.",
+      "CLIENTES_Y_PRODUCTOS": "Customers and products",
+      "HISTORIAL_DE_COMPRAS_PRECIOS_Y": "Purchase history, prices, and activate or deactivate.",
+      "REGISTRAS_EL_PEDIDO_Y_SU": "You record the order and its sales channel",
+      "CADA_PEDIDO_GUARDA_DE_DONDE": "Each order keeps where it came from.",
+      "PEDIDO_LISTO_ENTREGA_PENDIENTE": "Order ready, delivery pending",
+      "VES_EL_SALDO_POR_COBRAR": "You see the balance to collect while it is being delivered.",
+      "ENTREGADO_Y_PAGADO": "Delivered and paid",
+      "CUANDO_SE_ENTREGA_Y_SE": "When it is delivered and paid, the order has no balance left.",
+      "ENTREGA": "Delivery",
+      "COBRO": "Payment collection",
+      "HOY": "Today",
+      "ESTA_SEMANA": "This week",
+      "RANGO": "Range",
+      "CREA_TU_CUENTA": "Create your account",
+      "CON_EL_NOMBRE_DE_TU": "With your company name.",
+      "REGISTRA_TUS_PRODUCTOS_CLIENTES_Y": "Record your products, customers and your first order",
+      "EMPIEZA_CON_LO_QUE_VENDES": "Start with what you sell today.",
+      "MIRA_TU_RESUMEN": "See your summary",
+      "VENTAS_GASTOS_Y_GANANCIA_ESTIMADA": "Sales, expenses and estimated profit.",
+      "DASHBOARD_Y_REPORTES_DE_VENTAS": "Dashboard and reports for sales and expenses",
+      "NECESITO_INSTALAR_ALGO": "Do I need to install anything?",
+      "ES_UNA_WEB_SE_USA": "It is a web app: you use it from your phone or computer browser.",
+      "EMITE_FACTURAS_O_LLEVA_INVENTARIO": "Does it issue invoices or manage inventory?",
+      "NO_ES_CONTROL_DE_PEDIDOS": "No. It is a tool to control orders, payments and expenses.",
+      "LA_GANANCIA_ES_REAL": "Is the profit real?",
+      "ES_ESTIMADA_VENTAS_MENOS_GASTOS": "It is estimated: sales minus recorded expenses.",
+      "PUEDO_AGREGAR_A_MI_EQUIPO": "Can I add my team?",
+      "HOY_NO_SE_HACE_DESDE": "Today this is not done from the screen.",
+      "QUE_PASA_SI_OLVIDO_MI": "What happens if I forget my password?",
+      "AUN_NO_HAY_RECUPERACION_AUTOMATICA": "There is no automatic recovery yet.",
+      "QUE_PASA_AL_LLEGAR_AL": "What happens when I reach the free plan limit?",
+      "NO_PUEDES_INGRESAR_MAS_DATOS": "You cannot enter more data until the next day or until you move to Pro; your data stays visible.",
+      "FREE_PRODUCT": "1 product",
+      "FREE_CUSTOMER": "1 customer",
+      "FREE_LIMITS": "2 sales and 2 expenses per day"
     }
   },
   "PERSONNEL": {
@@ -722,7 +971,10 @@
       "SIN_CORREO": "No email",
       "SIN_MATRICULA": "No license",
       "CARGANDO_USUARIO": "Loading user…",
-      "PROCESANDO": "Processing…"
+      "PROCESANDO": "Processing…",
+      "USUARIO_2": "User #{{p0}}",
+      "REGISTRO_ACTIVADO": "Record activated.",
+      "REGISTRO_DESACTIVADO": "Record deactivated."
     },
     "PROFILE_FORM": {
       "REINTENTAR_OPCIONES": "Retry options",
@@ -735,13 +987,34 @@
       "USUARIO_VINCULADO_OPCIONAL": "Linked user (optional)",
       "SIN_USUARIO": "No user",
       "PUEDES_GUARDAR_SIN_USUARIO_QUITAR": "You can save without a user. Clearing the selection unlinks the account and keeps its permissions.",
-      "GUARDANDO": "Saving…"
+      "GUARDANDO": "Saving…",
+      "PROFESIONAL": "Professional",
+      "ESPECIALIDAD": "Specialty",
+      "REVISA_ESTE_CAMPO": "Check this field.",
+      "DATOS_GUARDADOS": "Data saved."
     },
     "PROFILE_LIST": {
       "NUEVO_REGISTRO": "New record",
       "DESPLAZA_LA_TABLA_HORIZONTALMENTE_PARA": "Scroll the table horizontally to see all data and actions.",
       "LISTADO_DE_PERSONAL": "Staff list",
-      "ESPECIALIDADES": "Specialties"
+      "ESPECIALIDADES": "Specialties",
+      "PROFESIONALES": "Professionals",
+      "ESPECIALIDADES_2": "Specialties",
+      "NO_HAY_REGISTROS_QUE_COINCIDAN": "No records match.",
+      "SIN_ESPECIALIDADES": "No specialties",
+      "ESTADO_ACTUALIZADO": "Status updated."
+    },
+    "PERSONNEL_API_SERVICE": {
+      "NO_SE_PUDO_COMPLETAR_LA": "The operation could not be completed.",
+      "NO_TIENES_PERMISO_O_PERSONAL": "You do not have permission or Staff is not enabled.",
+      "REGISTRO_NO_ENCONTRADO": "Record not found.",
+      "REVISA_LOS_DATOS_MARCADOS": "Check the marked data."
+    },
+    "PROFILE_CONFIRMATION": {
+      "QUIERES_A": "Do you want to {{p0}} \"{{p1}}\"?",
+      "SE_CONSERVARAN_EL_PERFIL_SUS": "The profile, its links and its historical authorship will be kept.",
+      "CONFIRMAR": "Confirm",
+      "VOLVER": "Back"
     }
   },
   "PRODUCTS": {
@@ -754,7 +1027,12 @@
       "CONTROLA_STOCK": "Tracks stock",
       "SIN_DESCRIPCION": "No description",
       "NO_SE_VENDE": "Not sold",
-      "SIN_UNIDAD": "No unit"
+      "SIN_UNIDAD": "No unit",
+      "PRODUCTO_ACTIVADO": "Product activated",
+      "PRODUCTO_DESACTIVADO": "Product deactivated",
+      "QUIERES": "Do you want to {{p0}} \"{{p1}}\"?",
+      "DEJARA_DE_PODER_AGREGARSE_A": "It can no longer be added to new orders.",
+      "VOLVERA_A_ESTAR_DISPONIBLE_PARA": "It will be available for sale again."
     },
     "PRODUCT_FORM": {
       "NOMBRE_DEL_PRODUCTO": "Product name",
@@ -775,7 +1053,9 @@
       "EDITAR_PRODUCTO": "Edit product",
       "EL_PRECIO_DE_VENTA_ES": "The sale price is required.",
       "INGRESA_UN_PRECIO_VALIDO_MAYOR": "Enter a valid price, greater than or equal to 0, with up to 2 decimals.",
-      "LA_UNIDAD_BASE_ES_OBLIGATORIA": "The base unit is required when you track stock."
+      "LA_UNIDAD_BASE_ES_OBLIGATORIA": "The base unit is required when you track stock.",
+      "PRODUCTO_ACTUALIZADO": "Product updated",
+      "PRODUCTO_CREADO": "Product created"
     },
     "PRODUCT_LIST": {
       "FILTRAR_POR_USO": "Filter by use",
@@ -793,7 +1073,11 @@
       "USO": "Use",
       "PRECIO": "Price",
       "CONTROLA_STOCK": "Tracks stock",
-      "UNIDAD_BASE": "Base unit"
+      "UNIDAD_BASE": "Base unit",
+      "NO_HAY_PRODUCTOS": "No products"
+    },
+    "PRODUCTS_API_SERVICE": {
+      "PRODUCTO_NO_ENCONTRADO": "Product not found."
     }
   },
   "PURCHASES": {
@@ -802,7 +1086,9 @@
       "MONTO_BS": "Amount (Bs)",
       "PAGAR_EL_SALDO_COMPLETO": "Pay the full balance",
       "SALDO": "Balance: {{p0}}",
-      "SELECCIONA_UN_METODO": "Select a method"
+      "SELECCIONA_UN_METODO": "Select a method",
+      "LA_FECHA_NO_PUEDE_SER": "The date cannot be in the future.",
+      "ELIGE_UN_METODO_DE_PAGO": "Choose a payment method."
     },
     "PURCHASE_CANCEL_DIALOG": {
       "CANCELAR_COMPRA": "Cancel purchase",
@@ -822,7 +1108,11 @@
       "PAGOS_REGISTRADOS": "Recorded payments",
       "REGISTRADO_POR": "Recorded by",
       "AUN_NO_HAY_PAGOS_REGISTRADOS": "There are no payments recorded for this purchase yet.",
-      "LOS_PAGOS_SE_REGISTRAN_CUANDO": "Payments are recorded once the purchase is confirmed."
+      "LOS_PAGOS_SE_REGISTRAN_CUANDO": "Payments are recorded once the purchase is confirmed.",
+      "CONFIRMA_LA_COMPRA_PARA_REGISTRAR": "Confirm the purchase to record payments.",
+      "LA_COMPRA_ESTA_CANCELADA": "The purchase is cancelled.",
+      "SIN_SALDO_POR_PAGAR": "No balance to pay.",
+      "PAGO_REGISTRADO": "Payment recorded"
     },
     "PURCHASE_RECEIPTS_TAB": {
       "AVANCE_DE_LA_RECEPCION": "Receipt progress",
@@ -849,7 +1139,8 @@
       "NUEVO_PROVEEDOR": "New supplier",
       "NOMBRE_DEL_PROVEEDOR": "Supplier name",
       "NIT_CI_O_RUC": "NIT, CI o RUC",
-      "LA_IDENTIFICACION_NO_PUEDE_SUPERAR": "The ID cannot exceed {{n}} characters."
+      "LA_IDENTIFICACION_NO_PUEDE_SUPERAR": "The ID cannot exceed {{n}} characters.",
+      "PROVEEDOR_CREADO": "Supplier created"
     },
     "PURCHASE_DETAIL": {
       "DETALLE_DE_LA_COMPRA": "Purchase details",
@@ -876,7 +1167,9 @@
       "SIN_REFERENCIA": "No reference",
       "COMPRA_PAGADA_POR_COMPLETO": "Purchase paid in full.",
       "SIN_SALDO_POR_PAGAR": "No balance to pay.",
-      "COMPRA_N": "Purchase {{n}}"
+      "COMPRA_N": "Purchase {{n}}",
+      "COMPRA_CONFIRMADA": "Purchase confirmed",
+      "COMPRA_CANCELADA": "Purchase cancelled"
     },
     "PURCHASE_FORM": {
       "SELECCIONE_UN_PROVEEDOR": "Select a supplier",
@@ -908,7 +1201,16 @@
       "NUEVA": "New",
       "GUARDAR_BORRADOR": "Save draft",
       "CANTIDAD_DE_LA_LINEA_N": "Quantity of line {{n}}",
-      "PRECIO_UNITARIO_DE_LA_LINEA": "Unit price of line {{n}}"
+      "PRECIO_UNITARIO_DE_LA_LINEA": "Unit price of line {{n}}",
+      "LA_COMPRA_YA_NO_ADMITE": "The purchase no longer accepts changes.",
+      "SELECCIONA_UN_PRODUCTO": "Select a product.",
+      "LA_CANTIDAD_DEBE_SER_MAYOR": "The quantity must be greater than zero (up to 3 decimals).",
+      "LA_CANTIDAD_DEBE_SER_UN": "The quantity must be a whole number greater than zero.",
+      "EL_PRECIO_DEBE_SER_CERO": "The price must be zero or greater (up to 2 decimals).",
+      "SELECCIONA_UN_PROVEEDOR_ACTIVO": "Select an active supplier.",
+      "LA_FECHA_DE_COMPRA_ES": "The purchase date is required.",
+      "LAS_NOTAS_NO_PUEDEN_SUPERAR": "The notes cannot exceed {{p0}} characters.",
+      "COMPRA_GUARDADA": "Purchase saved"
     },
     "PURCHASE_LIST": {
       "NUEVA_COMPRA": "New purchase",
@@ -926,7 +1228,8 @@
       "TOTAL": "Total",
       "RECEPCION": "Receipt",
       "PAGO": "Payment",
-      "SALDO": "Balance"
+      "SALDO": "Balance",
+      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\"."
     },
     "RECEPTION_DETAIL": {
       "DETALLE_DE_LA_RECEPCION": "Receipt details",
@@ -946,7 +1249,9 @@
       "CONFIRMADO": "Confirmed",
       "ESTA_RECEPCION_NO_GENERO_ENTRADAS": "This receipt did not generate inventory entries.",
       "ESTA_RECEPCION_NO_MOVIO_EXISTENCIAS": "This receipt did not move stock.",
-      "RECEPCION_N": "Receipt {{n}}"
+      "RECEPCION_N": "Receipt {{n}}",
+      "INVENTARIO_ESTA_DESHABILITADO_HABILITALO_PARA": "Inventory is disabled: enable it to reverse a receipt that moved stock.",
+      "RECEPCION_REVERTIDA": "Receipt reversed"
     },
     "RECEPTION_FORM": {
       "VOLVER_A_LA_COMPRA": "Back to the purchase",
@@ -969,16 +1274,26 @@
       "ESTA_RECEPCION_GENERARA_ENTRADAS_DE": "This receipt will generate inventory entries. A stock inbound will be recorded in {{p0}} for each product with stock control ({{p1}}).",
       "ESTA_RECEPCION_NO_GENERARA_ENTRADAS": "This receipt will not generate inventory entries: no received product tracks stock.",
       "CONFIRMAR_RECEPCION": "Confirm receipt",
-      "CANTIDAD_A_RECIBIR_DE_N": "Quantity to receive of {{n}}"
+      "CANTIDAD_A_RECIBIR_DE_N": "Quantity to receive of {{n}}",
+      "INDICA_UNA_CANTIDAD_MAYOR_A_2": "Enter a quantity greater than zero for at least one product.",
+      "LA_FECHA_DE_RECEPCION_NO": "The receipt date cannot be in the future.",
+      "LA_FECHA_DE_RECEPCION_ES": "The receipt date is required.",
+      "SELECCIONA_UN_ALMACEN_PARA_LOS": "Select a warehouse for the products with stock control.",
+      "RECEPCION_REGISTRADA": "Receipt {{p0}} recorded"
     },
     "SUPPLIER_DETAIL": {
       "DETALLE_DEL_PROVEEDOR": "Supplier details",
-      "VER_COMPRAS": "View purchases"
+      "VER_COMPRAS": "View purchases",
+      "PROVEEDOR_ACTIVADO": "Supplier activated",
+      "PROVEEDOR_DESACTIVADO": "Supplier deactivated",
+      "DEJARA_DE_OFRECERSE_EN_COMPRAS": "It will no longer be offered in new purchases. Its past purchases are kept.",
+      "VOLVERA_A_OFRECERSE_EN_COMPRAS": "It will be offered again in new purchases."
     },
     "SUPPLIER_FORM": {
       "NOMBRE_DEL_PROVEEDOR": "Supplier name",
       "NIT_CI_O_RUC": "NIT, CI o RUC",
-      "EDITAR_PROVEEDOR": "Edit supplier"
+      "EDITAR_PROVEEDOR": "Edit supplier",
+      "PROVEEDOR_ACTUALIZADO": "Supplier updated"
     },
     "SUPPLIER_LIST": {
       "BUSCAR_POR_NOMBRE_O_IDENTIFICACION": "Search by name or ID",
@@ -986,7 +1301,62 @@
       "VER_PROVEEDOR": "View supplier",
       "VER_COMPRAS": "View purchases",
       "IDENTIFICACION": "ID",
-      "CORREO": "Email"
+      "CORREO": "Email",
+      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No suppliers match"
+    },
+    "RECEIPT": {
+      "SIN_CONTROL_DE_STOCK_SIN": "No stock control · no inbound",
+      "RECEPCION_DOCUMENTAL_SIN_MOVIMIENTO_DE": "Document-only receipt, no inventory movement",
+      "REVERTIDA": "Reversed"
+    },
+    "PAYMENTS_API_SERVICE": {
+      "NO_SE_ENCONTRO_LA_COMPRA": "The purchase was not found.",
+      "SOLO_UNA_COMPRA_CONFIRMADA_ADMITE": "Only a confirmed purchase accepts payments."
+    },
+    "PURCHASES_API_SERVICE": {
+      "COMPRA_NO_ENCONTRADA": "Purchase not found."
+    },
+    "RECEIPTS_API_SERVICE": {
+      "NO_SE_ENCONTRO_LA_COMPRA": "The purchase or the receipt was not found.",
+      "SOLO_UNA_COMPRA_CONFIRMADA_ADMITE": "Only a confirmed purchase accepts receipts."
+    },
+    "SUPPLIERS_API_SERVICE": {
+      "PROVEEDOR_NO_ENCONTRADO": "Supplier not found."
+    },
+    "PURCHASE": {
+      "BORRADOR": "Draft",
+      "CONFIRMADA": "Confirmed",
+      "CANCELADA": "Cancelled",
+      "SIN_RECIBIR": "Not received",
+      "RECIBIDA_PARCIALMENTE": "Partially received",
+      "RECIBIDA": "Received",
+      "SIN_PAGAR": "Unpaid",
+      "PAGO_PARCIAL": "Partial payment",
+      "PAGADA": "Paid"
+    },
+    "PURCHASE_LIST_FILTERS": {
+      "TODAS": "All",
+      "PAGO_PENDIENTE": "Pending payment",
+      "BUSQUEDA": "Search: {{p0}}",
+      "PROVEEDOR": "Supplier: {{p0}}",
+      "DESDE": "From: {{p0}}",
+      "HASTA": "To: {{p0}}",
+      "ESTADO": "Status: {{p0}}",
+      "RECEPCION": "Receipt: {{p0}}",
+      "PAGO": "Payment: {{p0}}"
+    },
+    "PAYMENT_AMOUNTS": {
+      "EL_MONTO_ES_OBLIGATORIO": "The amount is required.",
+      "INGRESA_UN_MONTO_VALIDO_CON": "Enter a valid amount with up to 2 decimals.",
+      "EL_MONTO_DEBE_SER_MAYOR": "The amount must be greater than zero.",
+      "EL_MONTO_NO_PUEDE_SUPERAR": "The amount cannot exceed the pending balance (Bs {{p0}})."
+    },
+    "RECEPTION_QUANTITIES": {
+      "LA_CANTIDAD_NO_PUEDE_SER": "The quantity cannot be negative.",
+      "INGRESA_UN_NUMERO_VALIDO": "Enter a valid number.",
+      "ADMITE_COMO_MAXIMO_3_DECIMALES": "Allows at most 3 decimals.",
+      "LA_UNIDAD_NO_ADMITE_FRACCIONES": "The unit does not allow fractions: use a whole quantity.",
+      "NO_PUEDE_SUPERAR_EL_PENDIENTE": "It cannot exceed the pending amount ({{p0}})."
     }
   },
   "REPORTING": {
@@ -994,7 +1364,8 @@
       "PERIODO": "Period",
       "APLICAR": "Apply",
       "DIA": "Day {{p0}}",
-      "DEL_AL": "From {{p0}} to {{p1}}"
+      "DEL_AL": "From {{p0}} to {{p1}}",
+      "ELIGE_LAS_DOS_FECHAS_LA": "Choose both dates; the end date cannot be earlier than the start date."
     },
     "DASHBOARD": {
       "DASHBOARD": "Dashboard",
@@ -1013,7 +1384,10 @@
       "CARGANDO_INDICADORES": "Loading indicators…",
       "MOSTRANDO_DE": "Showing {{p0}} of {{p1}}.",
       "VER_TODOS": "View all",
-      "SIN_REGISTROS": "No records."
+      "SIN_REGISTROS": "No records.",
+      "VENTAS_MENOS_GASTOS_REGISTRADOS_NO": "Sales minus recorded expenses; it does not include production cost or cost of sales.",
+      "REQUIERE_VENTAS_Y_GASTOS_HABILITADOS": "Requires Sales and Expenses enabled.",
+      "ESTADO_ACTUAL_DE_TODOS_LOS": "Current status of all orders; it does not depend on the period."
     },
     "REPORTS": {
       "REPORTES": "Reports",
@@ -1029,10 +1403,18 @@
       "IMPORTE": "Amount",
       "CLIENTES_CON_MAYOR_COMPRA": "Top customers by purchases",
       "TOTAL_COMPRADO": "Total purchased",
-      "PORCENTAJE_DE_N": "Percentage of {{n}}"
+      "PORCENTAJE_DE_N": "Percentage of {{n}}",
+      "IMPORTES_ANTES_DE_DESCUENTOS_DEL": "Amounts before order discounts.",
+      "NO_INCLUYE_PEDIDOS_SIN_CLIENTE": "Does not include orders without a customer."
     },
     "REPORT_CARD": {
-      "NO_SE_PUDO_CARGAR": "Could not load."
+      "NO_SE_PUDO_CARGAR": "Could not load.",
+      "NO_DISPONIBLE_MODULO_DESHABILITADO": "Not available: module disabled"
+    },
+    "REPORTING_API_SERVICE": {
+      "NO_SE_PUDO_CONECTAR_CON": "Could not connect to the server.",
+      "NO_SE_PUDO_CARGAR": "Could not load.",
+      "EL_PERIODO_NO_ES_VALIDO": "The period is not valid."
     }
   },
   "SALES": {
@@ -1060,7 +1442,8 @@
       "AGREGUE_AL_MENOS_UN_PRODUCTO": "Add at least one product to be able to advance the order.",
       "QUITAR_PRODUCTO": "Remove product",
       "CANTIDAD_DE_N": "Quantity of {{n}}",
-      "QUITAR_N": "Remove {{n}}"
+      "QUITAR_N": "Remove {{n}}",
+      "UN_PEDIDO_CONFIRMADO_DEBE_TENER": "A confirmed order must have at least one product"
     },
     "ORDER_PAYMENTS": {
       "PAGOS": "Payments",
@@ -1097,7 +1480,28 @@
       "DATOS_DEL_PEDIDO": "Order data",
       "EDITAR_DATOS": "Edit data",
       "SIN_CLIENTE": "No customer",
-      "FECHA_DEL_PEDIDO": "Order date"
+      "FECHA_DEL_PEDIDO": "Order date",
+      "INICIAR_PREPARACION": "Start preparation",
+      "MARCAR_LISTO": "Mark as ready",
+      "MARCAR_ENTREGADO": "Mark as delivered",
+      "PEDIDO_EN_PREPARACION": "Order in preparation",
+      "PEDIDO_LISTO": "Order ready",
+      "PEDIDO_ENTREGADO": "Order delivered",
+      "PEDIDO_CANCELADO_2": "Order cancelled",
+      "PRODUCTO_AGREGADO": "Product added",
+      "PRODUCTO_QUITADO": "Product removed",
+      "DESCUENTO_APLICADO": "Discount applied",
+      "EL_PEDIDO_CAMBIO_DESDE_QUE": "The order changed since the delivery was opened. It was updated with the current data.",
+      "MARCAR_COMO_ENTREGADO": "Mark as delivered",
+      "QUEDARA_UN_SALDO_DE_BS": "A balance of Bs {{p0}} will remain to be collected.",
+      "FECHA_DE_ENTREGA": "Delivery date",
+      "LA_FECHA_DE_ENTREGA_ES": "The delivery date is required.",
+      "CANCELAR_PEDIDO_2": "Cancel order",
+      "LOS_PAGOS_REGISTRADOS_NO_SE": "Recorded payments are not deleted.",
+      "EL_PEDIDO_QUEDARA_CANCELADO_Y": "The order will be cancelled and cannot continue the delivery flow.",
+      "MOTIVO_DE_LA_CANCELACION": "Reason for cancellation",
+      "QUITAR": "Remove \"{{p0}}\"?",
+      "QUITAR_2": "Remove"
     },
     "ORDER_FORM": {
       "SIN_CLIENTE_VENTA_DE_MOSTRADOR": "No customer (counter sale)",
@@ -1109,7 +1513,10 @@
       "PUEDE_COMPLETARLA_DESPUES": "You can complete it later.",
       "EDITAR_PEDIDO": "Edit order",
       "EL_CANAL_DE_VENTA_ES": "The sales channel is required.",
-      "LA_FECHA_DEL_PEDIDO_ES": "The order date is required."
+      "LA_FECHA_DEL_PEDIDO_ES": "The order date is required.",
+      "EL_PEDIDO_YA_NO_ADMITE": "The order no longer accepts changes.",
+      "PEDIDO_ACTUALIZADO": "Order updated",
+      "PEDIDO_CREADO": "Order created"
     },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "New order",
@@ -1129,7 +1536,20 @@
       "ENTREGA": "Delivery",
       "PAGO": "Payment",
       "ORDENADO_POR_ENTREGA_PREVISTA_MAS": "Sorted by expected delivery, nearest first.",
-      "ORDENADO_POR_FECHA_DE_PEDIDO": "Sorted by order date, most recent first."
+      "ORDENADO_POR_FECHA_DE_PEDIDO": "Sorted by order date, most recent first.",
+      "NO_HAY_PEDIDOS_QUE_COINCIDAN": "No orders match the filters.",
+      "AUN_NO_HAY_PEDIDOS": "There are no orders yet.",
+      "NO_CANCELADOS": "Not cancelled",
+      "CON_SALDO_PENDIENTE": "With pending balance"
+    },
+    "ORDERS_API_SERVICE": {
+      "PEDIDO_NO_ENCONTRADO": "Order not found."
+    },
+    "ORDER_LIST_FILTERS": {
+      "PENDIENTES_DE_ENTREGA": "Pending delivery",
+      "POR_COBRAR": "To collect",
+      "ENTREGADOS": "Delivered",
+      "CANCELADOS": "Cancelled"
     }
   },
   "SERVICES": {
@@ -1151,7 +1571,15 @@
       "SIN_ESPECIALIDAD": "No specialty",
       "ESTADO": "Status:",
       "OPCIONAL_SOLO_SE_PUEDEN_ELEGIR": "Optional. Only active specialties can be chosen.",
-      "HABILITA_PERSONAL_PARA_ELEGIR_UNA": "Enable Staff to choose a specialty. You can save without a specialty."
+      "HABILITA_PERSONAL_PARA_ELEGIR_UNA": "Enable Staff to choose a specialty. You can save without a specialty.",
+      "NOMBRE": "Name",
+      "CODIGO": "Code",
+      "DESCRIPCION": "Description",
+      "PRECIO_BASE_BS_2": "Base price (Bs)",
+      "DURACION_MINUTOS_2": "Duration (minutes)",
+      "INGRESA_UN_PRECIO_NO_NEGATIVO": "Enter a non-negative price with up to 2 decimals.",
+      "INGRESA_MINUTOS_ENTEROS_MAYORES_QUE": "Enter whole minutes greater than zero.",
+      "REVISA_ESTE_CAMPO_Y_SU": "Check this field and its maximum length."
     },
     "SERVICE_LIST": {
       "TODAS_LAS_ESPECIALIDADES": "All specialties",
@@ -1164,7 +1592,21 @@
       "EDITAR_SERVICIO": "Edit service",
       "PRECIO": "Price",
       "DURACION": "Duration",
-      "ESPECIALIDAD": "Specialty"
+      "ESPECIALIDAD": "Specialty",
+      "NO_HAY_SERVICIOS_PARA_ESTOS": "No services for these filters."
+    },
+    "SERVICE_TOGGLE": {
+      "DESACTIVAR": "Deactivate",
+      "ACTIVAR": "Activate",
+      "TEXT": "{{p0}} {{p1}}?",
+      "NO_SE_OFRECERA_EN_NUEVOS": "It will not be offered in new uses. Its history is kept.",
+      "VOLVERA_A_ESTAR_DISPONIBLE_PARA": "It will be available for new uses again.",
+      "SERVICIO_ACTIVADO": "Service activated.",
+      "SERVICIO_DESACTIVADO": "Service deactivated."
+    },
+    "SERVICES_API_SERVICE": {
+      "NO_TIENES_PERMISO_PARA_ACCEDER": "You do not have permission to access Services.",
+      "SERVICIO_NO_ENCONTRADO": "Service not found."
     }
   },
   "SETTINGS": {
@@ -1178,7 +1620,9 @@
       "CONFIRMAR": "Confirm",
       "HABILITAR_MODULO": "Enable module",
       "DESHABILITAR_MODULO": "Disable module",
-      "SIN_DEPENDENCIAS": "No dependencies"
+      "SIN_DEPENDENCIAS": "No dependencies",
+      "MODULO_HABILITADO": "Module enabled",
+      "MODULO_DESHABILITADO": "Module disabled"
     },
     "SETTINGS_HISTORY": {
       "AJUSTE": "Setting",
@@ -1207,7 +1651,9 @@
       "DESHABILITAR": "Disable",
       "HABILITAR": "Enable",
       "DESHABILITAR_2": "Disable ",
-      "HABILITAR_2": "Enable "
+      "HABILITAR_2": "Enable ",
+      "LO_REQUIEREN": "Required by: {{p0}}",
+      "REQUIERE_HABILITAR_PRIMERO_2": "Requires enabling first: {{p0}}"
     },
     "MODULE_SETTINGS": {
       "CONFIGURACION_DE": "{{p0}} settings",
@@ -1218,7 +1664,25 @@
       "GUARDAR_CAMBIOS": "Save changes",
       "CANCELAR_CAMBIOS": "Discard changes",
       "ACTIVADO": "Enabled",
-      "DESACTIVADO": "Disabled"
+      "DESACTIVADO": "Disabled",
+      "CONFIGURACION_GUARDADA": "Settings saved",
+      "ESTE_MODULO_AUN_NO_TIENE": "This module has no configurable settings yet. When rules are available they will appear here.",
+      "VENTAS": "Sales",
+      "COMPRAS": "Purchases",
+      "INVENTARIO": "Inventory",
+      "PERMITIR_STOCK_NEGATIVO": "Allow negative stock",
+      "PODRAN_EXISTIR_SALDOS_NEGATIVOS_LAS": "Negative balances may exist: outbound movements will be recorded even if there is not enough stock. ",
+      "PODRA_VOLVER_A_BLOQUEARLO_PERO": "You can block it again, but negative balances already created are not fixed automatically.",
+      "PERMITIR": "Allow",
+      "ACTIVADO_2": "Enabled",
+      "DESACTIVADO_2": "Disabled",
+      "SIN_PREDETERMINADO_2": "No default"
+    },
+    "SETTING": {
+      "NO_SE_PUDO_COMPLETAR_LA": "The operation could not be completed. Try again."
+    },
+    "COMING_SOON": {
+      "MODULO": "Module"
     }
   },
   "LAYOUT": {
@@ -1272,7 +1736,38 @@
       "CANCELAR": "Cancel",
       "MOTIVO_ADMINISTRATIVO": "Administrative reason",
       "GUARDAR_AUSENCIA": "Save absence",
-      "EDITAR_TURNO_2": "Edit shift"
+      "EDITAR_TURNO_2": "Edit shift",
+      "LUNES": "Monday",
+      "MARTES": "Tuesday",
+      "MIERCOLES": "Wednesday",
+      "JUEVES": "Thursday",
+      "VIERNES": "Friday",
+      "SABADO": "Saturday",
+      "DOMINGO": "Sunday",
+      "CAMBIOS_GUARDADOS": "Changes saved."
+    }
+  },
+  "CORE": {
+    "UNSAVED_CHANGES_GUARD": {
+      "HAY_CAMBIOS_SIN_GUARDAR_SALIR": "You have unsaved changes. Leave without saving?"
+    },
+    "AUTH_SERVICE": {
+      "CREDENCIALES_INVALIDAS": "Invalid credentials",
+      "DEMASIADOS_INTENTOS_ESPERA_UN_MOMENTO": "Too many attempts. Wait a moment and try again.",
+      "EL_REGISTRO_NO_ESTA_DISPONIBLE": "Registration is not available at the moment.",
+      "REVISA_LOS_DATOS_MARCADOS_E": "Check the marked data and try again."
+    },
+    "MODULES_SERVICE": {
+      "NO_SE_PUDIERON_CARGAR_LOS": "Modules could not be loaded. Try again."
+    }
+  },
+  "SHARED": {
+    "SALES_CHANNEL": {
+      "VENTA_DIRECTA": "Direct sale",
+      "FERIA": "Fair"
+    },
+    "MONEY_PIPE": {
+      "BS": "Bs {{p0}}"
     }
   }
 }

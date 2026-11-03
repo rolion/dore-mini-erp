@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -145,14 +146,14 @@ export class StockDetailComponent implements OnInit {
       return '';
     }
     if (position.hasHistory) {
-      return 'La apertura solo procede sin movimientos previos; las correcciones se hacen con un ajuste.';
+      return tr('INVENTORY.STOCK_DETAIL.LA_APERTURA_SOLO_PROCEDE_SIN');
     }
-    return 'Producto o almacén inactivo.';
+    return tr('INVENTORY.STOCK_DETAIL.PRODUCTO_O_ALMACEN_INACTIVO');
   }
 
   /** Por qué no se ofrece «Registrar ajuste» (solo cuando el almacén está inactivo). */
   get adjustmentNote(): string {
-    return this.position && !this.position.canRegisterAdjustment ? 'Almacén inactivo: no se pueden registrar ajustes.' : '';
+    return this.position && !this.position.canRegisterAdjustment ? tr('INVENTORY.STOCK_DETAIL.ALMACEN_INACTIVO_NO_SE_PUEDEN') : '';
   }
 
   /** Contexto con el que los flujos de apertura y ajuste preseleccionan el par y vuelven a este detalle. */

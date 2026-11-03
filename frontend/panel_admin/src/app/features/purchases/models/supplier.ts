@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Proveedor. Los campos opcionales ausentes llegan como texto vacío. */
 export interface Supplier {
   id: string;

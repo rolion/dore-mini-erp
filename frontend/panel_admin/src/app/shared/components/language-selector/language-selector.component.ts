@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
-import { FeatherModule } from 'angular-feather';
 import { LanguageService } from '../../../core/service/language.service';
 import { AppLanguage, LanguageOption } from '../../../core/i18n/language.config';
 
@@ -11,7 +10,7 @@ import { AppLanguage, LanguageOption } from '../../../core/i18n/language.config'
   selector: 'app-language-selector',
   templateUrl: './language-selector.component.html',
   styleUrl: './language-selector.component.scss',
-  imports: [FeatherModule, NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownItem, TranslatePipe],
+  imports: [NgbDropdown, NgbDropdownToggle, NgbDropdownMenu, NgbDropdownItem, TranslatePipe],
 })
 export class LanguageSelectorComponent {
   private readonly languageService = inject(LanguageService);

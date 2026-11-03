@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,23 +13,22 @@ import { Setting, SettingsApiError } from '../../models/setting';
 import { SettingsApiService } from '../../services/settings-api.service';
 
 export const MODULE_TITLES: Record<string, string> = {
-  sales: 'Ventas',
-  purchases: 'Compras',
-  inventory: 'Inventario',
+  get sales() { return tr('SETTINGS.MODULE_SETTINGS.VENTAS'); },
+  get purchases() { return tr('SETTINGS.MODULE_SETTINGS.COMPRAS'); },
+  get inventory() { return tr('SETTINGS.MODULE_SETTINGS.INVENTARIO'); },
 };
 
-export const SAVED_MESSAGE = 'Configuración guardada';
-export const NO_SETTINGS_MESSAGE =
-  'Este módulo aún no tiene ajustes configurables. Cuando haya reglas disponibles aparecerán aquí.';
+export const SAVED_MESSAGE = (): string => tr('SETTINGS.MODULE_SETTINGS.CONFIGURACION_GUARDADA');
+export const NO_SETTINGS_MESSAGE = (): string => tr('SETTINGS.MODULE_SETTINGS.ESTE_MODULO_AUN_NO_TIENE');
 
 /** Ajustes que piden confirmar una explicación antes de guardarse activados. */
 export const ENABLE_CONFIRMATIONS: Record<string, { title: string; message: string; confirmLabel: string }> = {
   'inventory.allow_negative_stock': {
-    title: 'Permitir stock negativo',
-    message:
-      'Podrán existir saldos negativos: las salidas se registrarán aunque no haya existencias suficientes. ' +
-      'Podrá volver a bloquearlo, pero los saldos negativos ya creados no se corrigen solos.',
-    confirmLabel: 'Permitir',
+    get title() { return tr('SETTINGS.MODULE_SETTINGS.PERMITIR_STOCK_NEGATIVO'); },
+    get message() {
+      return tr('SETTINGS.MODULE_SETTINGS.PODRAN_EXISTIR_SALDOS_NEGATIVOS_LAS') + tr('SETTINGS.MODULE_SETTINGS.PODRA_VOLVER_A_BLOQUEARLO_PERO');
+    },
+    get confirmLabel() { return tr('SETTINGS.MODULE_SETTINGS.PERMITIR'); },
   },
 };
 
@@ -43,7 +43,7 @@ type Tab = 'general' | 'history';
 export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
   readonly module: string = inject(ActivatedRoute).snapshot.data['settingsModule'] ?? '';
   readonly title = MODULE_TITLES[this.module] ?? this.module;
-  readonly noSettingsMessage = NO_SETTINGS_MESSAGE;
+  readonly noSettingsMessage = NO_SETTINGS_MESSAGE();
 
   tab: Tab = 'general';
   settings: Setting[] = [];
@@ -131,9 +131,9 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
       return `${setting.default} %`;
     }
     if (setting.kind === 'boolean') {
-      return setting.default === 'true' ? 'Activado' : 'Desactivado';
+      return setting.default === 'true' ? tr('SETTINGS.MODULE_SETTINGS.ACTIVADO_2') : tr('SETTINGS.MODULE_SETTINGS.DESACTIVADO_2');
     }
-    return setting.choices.find((c) => c.value === setting.default)?.label ?? 'Sin predeterminado';
+    return setting.choices.find((c) => c.value === setting.default)?.label ?? tr('SETTINGS.MODULE_SETTINGS.SIN_PREDETERMINADO_2');
   }
 
   isOn(setting: Setting): boolean {
@@ -195,7 +195,7 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
         next: (result) => {
           this.saving = false;
           this.apply(result.settings);
-          this.toastr.success(SAVED_MESSAGE);
+          this.toastr.success(SAVED_MESSAGE());
         },
         error: (err: SettingsApiError) => {
           // Los datos introducidos se conservan: solo se muestran los errores.

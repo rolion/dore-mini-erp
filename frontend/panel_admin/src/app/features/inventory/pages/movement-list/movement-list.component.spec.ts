@@ -169,7 +169,7 @@ describe('MovementListComponent', () => {
     await setup();
     api.list.calls.reset();
     component.filterForm.patchValue({ dateFrom: '2026-10-10', dateTo: '2026-10-01' });
-    expect(component.rangeError).toBe(INVALID_RANGE_MESSAGE);
+    expect(component.rangeError).toBe(INVALID_RANGE_MESSAGE());
     expect(api.list).not.toHaveBeenCalled();
   });
 

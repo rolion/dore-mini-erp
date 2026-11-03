@@ -46,7 +46,7 @@ describe('PeriodSelectorComponent', () => {
     component.applyRange();
     fixture.detectChanges();
     expect(emitted).toEqual([]);
-    expect(text()).toContain(INVALID_RANGE_MESSAGE);
+    expect(text()).toContain(INVALID_RANGE_MESSAGE());
 
     component.rangeForm.setValue({ dateFrom: '2026-10-20', dateTo: '2026-10-10' });
     component.applyRange();
@@ -56,7 +56,7 @@ describe('PeriodSelectorComponent', () => {
     component.applyRange();
     fixture.detectChanges();
     expect(emitted).toEqual([{ kind: 'range', dateFrom: '2026-10-01', dateTo: '2026-10-20' }]);
-    expect(text()).not.toContain(INVALID_RANGE_MESSAGE);
+    expect(text()).not.toContain(INVALID_RANGE_MESSAGE());
   });
 
   it('accepts a single-day range', () => {

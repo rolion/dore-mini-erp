@@ -140,6 +140,6 @@ describe('ReportingApiService', () => {
     http.expectOne((r) => r.url === '/api/reports/sales/').flush({ period: ['x'] }, { status: 400, statusText: 'Bad Request' });
     service.pending().subscribe({ error: (e: Error) => messages.push(e.message) });
     http.expectOne('/api/reports/pending/').flush('boom', { status: 500, statusText: 'Server Error' });
-    expect(messages).toEqual([NETWORK_ERROR_MESSAGE, INVALID_PERIOD_MESSAGE, GENERIC_ERROR_MESSAGE]);
+    expect(messages).toEqual([NETWORK_ERROR_MESSAGE(), INVALID_PERIOD_MESSAGE(), GENERIC_ERROR_MESSAGE()]);
   });
 });

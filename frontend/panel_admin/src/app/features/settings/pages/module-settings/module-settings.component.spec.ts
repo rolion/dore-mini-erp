@@ -133,7 +133,7 @@ describe('ModuleSettingsComponent', () => {
     component.form.controls[PERCENT].setValue('50');
     component.save();
     expect(api.save).toHaveBeenCalledOnceWith('sales', { [PERCENT]: '50' });
-    expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE);
+    expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE());
     expect(component.hasUnsavedChanges()).toBeFalse();
   });
 
@@ -229,7 +229,7 @@ describe('ModuleSettingsComponent', () => {
       await fixture.whenStable();
       expect(modal.open).toHaveBeenCalledTimes(1);
       expect(api.save).toHaveBeenCalledOnceWith('inventory', { [NEGATIVE]: 'true' });
-      expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE);
+      expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE());
     });
 
     it('does not save and keeps the switch when the confirmation is cancelled', async () => {

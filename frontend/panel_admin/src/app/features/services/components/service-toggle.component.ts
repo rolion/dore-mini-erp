@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { Component, DestroyRef, EventEmitter, Input, Output, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
@@ -26,21 +27,21 @@ export class ServiceToggleComponent {
   busy = false;
   error = '';
   success = '';
-  get label(): string { return this.service.active ? 'Desactivar' : 'Activar'; }
+  get label(): string { return this.service.active ? tr('SERVICES.SERVICE_TOGGLE.DESACTIVAR') : tr('SERVICES.SERVICE_TOGGLE.ACTIVAR'); }
 
   async toggle(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
     this.error = '';
     this.success = '';
-    const result = await Swal.fire({ title: `¿${this.label} ${this.service.name}?`,
-      text: this.service.active ? 'No se ofrecerá en nuevos usos. Su historial se conserva.' : 'Volverá a estar disponible para nuevos usos.',
-      showCancelButton: true, confirmButtonText: this.label, cancelButtonText: 'Cancelar' });
+    const result = await Swal.fire({ title: tr('SERVICES.SERVICE_TOGGLE.TEXT', { p0: this.label, p1: this.service.name }),
+      text: this.service.active ? tr('SERVICES.SERVICE_TOGGLE.NO_SE_OFRECERA_EN_NUEVOS') : tr('SERVICES.SERVICE_TOGGLE.VOLVERA_A_ESTAR_DISPONIBLE_PARA'),
+      showCancelButton: true, confirmButtonText: this.label, cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR') });
     if (!result.isConfirmed || this.destroyRef.destroyed) { this.busy = false; return; }
     this.api.setActive(this.service.id, !this.service.active).pipe(
       finalize(() => this.busy = false), takeUntilDestroyed(this.destroyRef),
     ).subscribe({ next: service => {
-      this.success = service.active ? 'Servicio activado.' : 'Servicio desactivado.';
+      this.success = service.active ? tr('SERVICES.SERVICE_TOGGLE.SERVICIO_ACTIVADO') : tr('SERVICES.SERVICE_TOGGLE.SERVICIO_DESACTIVADO');
       this.updated.emit(service);
     }, error: (error: ServiceApiError) => this.error = error.message });
   }

@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
@@ -13,9 +14,9 @@ import { RemoteResource } from '../../models/remote';
 import { DEFAULT_SELECTION, DashboardSummary, Period, PeriodSelection } from '../../models/report';
 import { ReportingApiService } from '../../services/reporting-api.service';
 
-export const ESTIMATE_NOTE = 'Ventas menos gastos registrados; no incluye costo de producción ni costo de ventas.';
-export const PROFIT_REQUIRES_NOTE = 'Requiere Ventas y Gastos habilitados.';
-export const PENDING_NOTE = 'Estado actual de todos los pedidos; no depende del periodo.';
+export const ESTIMATE_NOTE = (): string => tr('REPORTING.DASHBOARD.VENTAS_MENOS_GASTOS_REGISTRADOS_NO');
+export const PROFIT_REQUIRES_NOTE = (): string => tr('REPORTING.DASHBOARD.REQUIERE_VENTAS_Y_GASTOS_HABILITADOS');
+export const PENDING_NOTE = (): string => tr('REPORTING.DASHBOARD.ESTADO_ACTUAL_DE_TODOS_LOS');
 
 @Component({
   selector: 'app-dashboard',
@@ -33,10 +34,10 @@ export const PENDING_NOTE = 'Estado actual de todos los pedidos; no depende del 
   ],
 })
 export class DashboardComponent {
-  readonly estimateNote = ESTIMATE_NOTE;
-  readonly pendingNote = PENDING_NOTE;
-  readonly profitRequires = PROFIT_REQUIRES_NOTE;
-  readonly unavailableMessage = UNAVAILABLE_MESSAGE;
+  readonly estimateNote = ESTIMATE_NOTE();
+  readonly pendingNote = PENDING_NOTE();
+  readonly profitRequires = PROFIT_REQUIRES_NOTE();
+  readonly unavailableMessage = UNAVAILABLE_MESSAGE();
 
   selection: PeriodSelection = DEFAULT_SELECTION;
 

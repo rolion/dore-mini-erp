@@ -1,11 +1,12 @@
+import { tr } from '../i18n/translate';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, catchError, finalize, map, of, share, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AppModule, BASE_MODULE_KEYS, ModuleDto, ModulesApiError, toAppModule } from '../models/module';
 
-export const MODULES_ERROR_MESSAGE = 'No se pudieron cargar los módulos. Inténtalo de nuevo.';
-const GENERIC_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+export const MODULES_ERROR_MESSAGE = (): string => tr('CORE.MODULES_SERVICE.NO_SE_PUDIERON_CARGAR_LOS');
+const GENERIC_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
 
 /** Estado de los módulos de la empresa del usuario: alimenta el menú, el guard y la pantalla de módulos. */
 @Injectable({
@@ -50,7 +51,7 @@ export class ModulesService {
       catchError((err: HttpErrorResponse) => {
         this.modulesSubject.next(null);
         this.enabledSubject.next(new Set(BASE_MODULE_KEYS));
-        return throwError(() => new ModulesApiError(MODULES_ERROR_MESSAGE, err.status));
+        return throwError(() => new ModulesApiError(MODULES_ERROR_MESSAGE(), err.status));
       }),
       finalize(() => (this.inflight = null)),
       share(),
@@ -105,7 +106,7 @@ export class ModulesService {
     const detail = typeof body.detail === 'string' ? body.detail : '';
     const names = [body.missing, body.dependents].find(Array.isArray);
     return new ModulesApiError(
-      err.status === 0 ? MODULES_ERROR_MESSAGE : detail || GENERIC_MESSAGE,
+      err.status === 0 ? MODULES_ERROR_MESSAGE() : detail || GENERIC_MESSAGE(),
       err.status,
       names ? names.map(String) : [],
     );

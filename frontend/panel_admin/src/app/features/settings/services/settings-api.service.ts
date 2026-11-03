@@ -112,7 +112,7 @@ export class SettingsApiService {
       typeof body.detail === 'string'
         ? body.detail
         : [body.date_from, body.date_to].flat().find((m): m is string => typeof m === 'string');
-    const message = err.status === 0 ? SETTINGS_ERROR_MESSAGE : detail || SETTINGS_ERROR_MESSAGE;
+    const message = err.status === 0 ? SETTINGS_ERROR_MESSAGE() : detail || SETTINGS_ERROR_MESSAGE();
     return new SettingsApiError(message, err.status, fieldErrors);
   }
 }

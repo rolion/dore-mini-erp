@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -59,9 +60,9 @@ export class MovementReverseDialogComponent {
   get effect(): string {
     const movement = this.movement;
     if (!movement) return '';
-    const inverse = movement.kind === 'in' ? 'una salida' : 'una entrada';
+    const inverse = movement.kind === 'in' ? tr('COMMON.AN_OUTBOUND') : tr('COMMON.AN_INBOUND');
     const unit = movement.unitAbbreviation ? ` ${movement.unitAbbreviation}` : '';
-    return `Se registrará ${inverse} de ${movement.quantity}${unit} en ${movement.warehouseName}.`;
+    return tr('INVENTORY.MOVEMENT_REVERSE_DIALOG.SE_REGISTRARA_DE_EN', { p0: inverse, p1: movement.quantity, p2: unit, p3: movement.warehouseName });
   }
 
   submit(): void {

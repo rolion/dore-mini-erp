@@ -157,7 +157,7 @@ describe('OrderItemsComponent', () => {
     const element = render(makeOrder({ status: 'IN_PREPARATION' }));
     const button = element.querySelector('[data-testid="item-row"] button') as HTMLButtonElement;
     expect(button.disabled).toBeTrue();
-    expect(button.title).toBe(LAST_ITEM_TOOLTIP);
+    expect(button.title).toBe(LAST_ITEM_TOOLTIP());
   });
 
   it('allows emptying a NEW order (AC-02)', () => {

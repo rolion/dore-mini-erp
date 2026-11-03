@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,8 +25,8 @@ export type CategoryStatusFilter = 'all' | 'active' | 'inactive';
 export class CategoryListComponent implements OnInit {
   readonly pageSize = 10;
   readonly messages = {
-    emptyMessage: 'Aún no hay categorías. Crea la primera para registrar gastos.',
-    totalMessage: 'en total',
+    emptyMessage: tr('EXPENSES.CATEGORY_LIST.AUN_NO_HAY_CATEGORIAS_CREA'),
+    totalMessage: tr('COMMON.IN_TOTAL'),
   };
   /** Las categorías inactivas no aparecen por defecto. */
   readonly statusControl = new FormControl<CategoryStatusFilter>('active', { nonNullable: true });
@@ -98,7 +99,7 @@ export class CategoryListComponent implements OnInit {
     const request = category.active ? this.api.deactivate(category.id) : this.api.activate(category.id);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
-        this.toastr.success(updated.active ? 'Categoría activada' : 'Categoría desactivada');
+        this.toastr.success(updated.active ? tr('EXPENSES.CATEGORY_LIST.CATEGORIA_ACTIVADA') : tr('EXPENSES.CATEGORY_LIST.CATEGORIA_DESACTIVADA'));
         this.reload$.next();
       },
       error: (err: ExpensesApiError) => this.toastr.error(err.message),
@@ -107,17 +108,17 @@ export class CategoryListComponent implements OnInit {
 
   /** Confirmación previa a cambiar el estado; separada para poder sustituirla en pruebas. */
   protected async confirmToggle(category: ExpenseCategory): Promise<boolean> {
-    const verb = category.active ? 'desactivar' : 'activar';
+    const verb = category.active ? tr('COMMON.VERB_DEACTIVATE') : tr('COMMON.VERB_ACTIVATE');
     const result = await Swal.fire({
-      titleText: `¿Quieres ${verb} la categoría "${category.name}"?`,
+      titleText: tr('EXPENSES.CATEGORY_LIST.QUIERES_LA_CATEGORIA', { p0: verb, p1: category.name }),
       text: category.active
-        ? 'Dejará de ofrecerse para nuevos gastos. Los gastos ya registrados la conservan.'
-        : 'Volverá a ofrecerse para nuevos gastos.',
+        ? tr('EXPENSES.CATEGORY_LIST.DEJARA_DE_OFRECERSE_PARA_NUEVOS')
+        : tr('EXPENSES.CATEGORY_LIST.VOLVERA_A_OFRECERSE_PARA_NUEVOS'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

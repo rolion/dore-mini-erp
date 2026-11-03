@@ -72,7 +72,7 @@ describe('AuthService', () => {
     service.login('ana', 'mala').subscribe({ error: (e: Error) => (message = e.message) });
     http.expectOne('/api/auth/login/').flush({ detail: 'Credenciales inválidas.' }, { status: 401, statusText: 'Unauthorized' });
 
-    expect(message).toBe(INVALID_CREDENTIALS_MESSAGE);
+    expect(message).toBe(INVALID_CREDENTIALS_MESSAGE());
     expect(service.isAuthenticated).toBeFalse();
     expect(localStorage.length).toBe(0);
   });
@@ -86,7 +86,7 @@ describe('AuthService', () => {
     service.login('a', 'b').subscribe({ error: (e: Error) => messages.push(e.message) });
     http.expectOne('/api/auth/login/').error(new ProgressEvent('error'));
 
-    expect(messages).toEqual([TOO_MANY_ATTEMPTS_MESSAGE, SERVER_ERROR_MESSAGE, SERVER_ERROR_MESSAGE]);
+    expect(messages).toEqual([TOO_MANY_ATTEMPTS_MESSAGE(), SERVER_ERROR_MESSAGE(), SERVER_ERROR_MESSAGE()]);
   });
 
   it('restores the session from storage and ignores entries without token', () => {
@@ -176,7 +176,7 @@ describe('AuthService', () => {
     );
 
     expect(error instanceof RegisterError).toBeTrue();
-    expect(error?.message).toBe(REGISTER_INVALID_MESSAGE);
+    expect(error?.message).toBe(REGISTER_INVALID_MESSAGE());
     expect(error?.fieldErrors).toEqual({
       companyName: 'Ya existe una empresa con ese nombre.',
       password: 'Demasiado común.',
@@ -195,7 +195,7 @@ describe('AuthService', () => {
     http.expectOne('/api/auth/register/').error(new ProgressEvent('error'));
 
     expect(messages).toEqual([
-      REGISTRATION_DISABLED_MESSAGE, TOO_MANY_ATTEMPTS_MESSAGE, SERVER_ERROR_MESSAGE, SERVER_ERROR_MESSAGE,
+      REGISTRATION_DISABLED_MESSAGE(), TOO_MANY_ATTEMPTS_MESSAGE(), SERVER_ERROR_MESSAGE(), SERVER_ERROR_MESSAGE(),
     ]);
   });
 });

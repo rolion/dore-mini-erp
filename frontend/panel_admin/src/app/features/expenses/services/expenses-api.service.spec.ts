@@ -131,6 +131,6 @@ describe('ExpensesApiService', () => {
     http.expectOne('/api/expenses/e1/').error(new ProgressEvent('error'));
     service.get('e2').subscribe({ error: (err: ExpensesApiError) => messages.push(err.message) });
     http.expectOne('/api/expenses/e2/').flush('boom', { status: 500, statusText: 'Server Error' });
-    expect(messages).toEqual([NETWORK_ERROR_MESSAGE, GENERIC_ERROR_MESSAGE]);
+    expect(messages).toEqual([NETWORK_ERROR_MESSAGE(), GENERIC_ERROR_MESSAGE()]);
   });
 });

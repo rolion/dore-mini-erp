@@ -15,6 +15,7 @@
       </ul>
 
       <div class="landing-actions">
+        <app-language-selector class="landing-language" />
         @if (!isAuthenticated()) {
           <a class="landing-login d-none d-sm-inline" [routerLink]="paths.login">{{ 'LANDING.LANDING.INICIAR_SESION' | translate }}</a>
         }

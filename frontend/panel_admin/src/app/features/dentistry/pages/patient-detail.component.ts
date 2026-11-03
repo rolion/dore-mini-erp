@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
@@ -85,7 +86,7 @@ export class PatientDetailComponent implements OnInit {
         this.adminForm.reset({ birth_date: patient.customer.birth_date ?? '', responsible_name: patient.customer.responsible_name,
           responsible_phone: patient.customer.responsible_phone });
         this.setFormState(patient.active);
-        if (this.route.snapshot.queryParamMap.get('created') === 'true') this.success = 'Perfil odontológico creado.';
+        if (this.route.snapshot.queryParamMap.get('created') === 'true') this.success = tr('DENTISTRY.PATIENT_DETAIL.PERFIL_ODONTOLOGICO_CREADO');
       }, error: (error: HttpErrorResponse) => this.error = errorMessage(error),
     });
   }
@@ -100,7 +101,7 @@ export class PatientDetailComponent implements OnInit {
       // Preserve an independently edited administrative form.
       this.patient = patient; this.clinicalForm.reset(this.clinicalValues(patient)); this.clinicalRevision++;
       this.editingClinical = false;
-      this.success = 'Antecedentes guardados.';
+      this.success = tr('DENTISTRY.PATIENT_DETAIL.ANTECEDENTES_GUARDADOS');
     }, error: (error: HttpErrorResponse) => { this.error = errorMessage(error); this.clinicalErrors = fieldErrors(error); } });
   }
   saveAdmin() {
@@ -115,18 +116,18 @@ export class PatientDetailComponent implements OnInit {
       if (this.patient) this.patient = { ...this.patient, customer: { ...this.patient.customer, ...data } };
       this.adminForm.reset({ ...data, birth_date: data.birth_date ?? '' }); this.adminRevision++;
       this.editingAdmin = false;
-      this.success = 'Datos administrativos guardados.';
+      this.success = tr('DENTISTRY.PATIENT_DETAIL.DATOS_ADMINISTRATIVOS_GUARDADOS');
     }, error: (error: HttpErrorResponse) => { this.error = errorMessage(error); this.adminErrors = fieldErrors(error); } });
   }
   toggleActive() {
     if (!this.patient || this.saving) return;
-    if (this.hasUnsavedChanges()) { this.error = 'Guarda o cancela los cambios antes de cambiar el estado.'; return; }
+    if (this.hasUnsavedChanges()) { this.error = tr('DENTISTRY.PATIENT_DETAIL.GUARDA_O_CANCELA_LOS_CAMBIOS'); return; }
     const active = !this.patient.active;
-    if (!window.confirm(active ? '¿Reactivar el perfil conservando su historia?' : '¿Archivar el perfil? Se conservará su historia y el cliente seguirá disponible.')) return;
+    if (!window.confirm(active ? tr('DENTISTRY.PATIENT_DETAIL.REACTIVAR_EL_PERFIL_CONSERVANDO_SU') : tr('DENTISTRY.PATIENT_DETAIL.ARCHIVAR_EL_PERFIL_SE_CONSERVARA'))) return;
     this.savingState = true; this.error = ''; this.success = '';
     this.api.setActive(this.id, active).pipe(finalize(() => this.savingState = false), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: patient => { this.patient = patient; this.setFormState(patient.active); this.clinicalRevision++;
-        this.success = active ? 'Perfil reactivado.' : 'Perfil archivado. Se conserva su historia.'; },
+        this.success = active ? tr('DENTISTRY.PATIENT_DETAIL.PERFIL_REACTIVADO') : tr('DENTISTRY.PATIENT_DETAIL.PERFIL_ARCHIVADO_SE_CONSERVA_SU'); },
       error: (error: HttpErrorResponse) => this.error = errorMessage(error),
     });
   }

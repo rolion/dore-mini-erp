@@ -1,3 +1,4 @@
+import { tr } from '../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,16 +16,16 @@ import { AuthService, RegisterError, RegisterField } from '@core';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
 export const DEFAULT_ROUTE_AFTER_SIGNUP = APP_PATHS.dashboard;
-export const INVALID_FORM_MESSAGE = 'Revisa los campos marcados.';
+export const INVALID_FORM_MESSAGE = (): string => tr('AUTH.SIGNUP.REVISA_LOS_CAMPOS_MARCADOS');
 export const NAME_MAX_LENGTH = 150;
 
 const REQUIRED_MESSAGES: Record<RegisterField, string> = {
-  companyName: 'El nombre de la empresa es obligatorio.',
-  firstName: 'El nombre es obligatorio.',
-  lastName: 'El apellido es obligatorio.',
-  username: 'El usuario es obligatorio.',
-  email: 'El correo es obligatorio.',
-  password: 'La contraseña es obligatoria.',
+  get companyName() { return tr('AUTH.SIGNUP.EL_NOMBRE_DE_LA_EMPRESA'); },
+  get firstName() { return tr('AUTH.SIGNUP.EL_NOMBRE_ES_OBLIGATORIO'); },
+  get lastName() { return tr('AUTH.SIGNUP.EL_APELLIDO_ES_OBLIGATORIO'); },
+  get username() { return tr('AUTH.SIGNUP.EL_USUARIO_ES_OBLIGATORIO'); },
+  get email() { return tr('AUTH.SIGNUP.EL_CORREO_ES_OBLIGATORIO'); },
+  get password() { return tr('AUTH.SIGNUP.LA_CONTRASENA_ES_OBLIGATORIA'); },
 };
 
 /** Rechaza textos vacíos o solo con espacios (el backend también recorta). */
@@ -91,18 +92,18 @@ export class SignupComponent {
     }
     if (field === 'confirmPassword') {
       if (control.hasError('required')) {
-        return 'Confirma la contraseña.';
+        return tr('AUTH.SIGNUP.CONFIRMA_LA_CONTRASENA');
       }
-      return this.registerForm.hasError('passwordMismatch') ? 'Las contraseñas no coinciden.' : '';
+      return this.registerForm.hasError('passwordMismatch') ? tr('AUTH.SIGNUP.LAS_CONTRASENAS_NO_COINCIDEN') : '';
     }
     if (control.hasError('required')) {
       return REQUIRED_MESSAGES[field];
     }
     if (control.hasError('email')) {
-      return 'Ingresa un correo válido.';
+      return tr('AUTH.SIGNUP.INGRESA_UN_CORREO_VALIDO');
     }
     if (control.hasError('maxlength')) {
-      return `No puede superar ${field === 'email' ? 254 : NAME_MAX_LENGTH} caracteres.`;
+      return tr('AUTH.SIGNUP.NO_PUEDE_SUPERAR_CARACTERES', { p0: field === 'email' ? 254 : NAME_MAX_LENGTH });
     }
     return '';
   }
@@ -114,7 +115,7 @@ export class SignupComponent {
 
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
-      this.error = INVALID_FORM_MESSAGE;
+      this.error = INVALID_FORM_MESSAGE();
       return;
     }
 

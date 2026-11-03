@@ -131,7 +131,7 @@ describe('StockOpeningComponent', () => {
     expect(stockApi.productsWithHistory).toHaveBeenCalledWith('w-1', ['p-1']);
     expect(rows()[0].classList).toContain('table-warning');
     expect(el().querySelector('[data-testid="history-alert"]')?.textContent).toContain('Harina');
-    expect(component.productMessage(0)).toBe(HISTORY_MESSAGE);
+    expect(component.productMessage(0)).toBe(HISTORY_MESSAGE());
     expect(component.canReview).toBeFalse();
     stockApi.productsWithHistory.and.returnValue(of([]));
     component.form.controls.warehouseId.setValue('w-2');

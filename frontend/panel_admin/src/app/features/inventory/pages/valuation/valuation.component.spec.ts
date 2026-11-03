@@ -146,7 +146,7 @@ describe('ValuationComponent', () => {
     click('confirm');
     expect(api.proposal).toHaveBeenCalledTimes(2);
     expect(q('step-reconcile')).not.toBeNull();
-    expect(q('valuation-conflict')?.textContent).toContain(STOCK_CHANGED_MESSAGE);
+    expect(q('valuation-conflict')?.textContent).toContain(STOCK_CHANGED_MESSAGE());
     expect(q<HTMLButtonElement>('to-values')?.disabled).toBeFalse();
   });
 
