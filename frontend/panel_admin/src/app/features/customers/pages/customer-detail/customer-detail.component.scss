@@ -1,6 +1,8 @@
-// Las cuatro cifras miden lo mismo aunque una no lleve texto de apoyo: la tarjeta llena la altura de su columna.
+// Las cuatro cifras miden lo mismo aunque una no lleve texto de apoyo: la tarjeta crece para llenar la columna
+// (flex, no `height: 100%`) y así conserva su margen inferior, que es el espacio hasta el historial.
 app-report-card {
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
