@@ -1,6 +1,6 @@
 # TASK-cobrar-servicios-anticipos-pagos-parciales: PB-COB-001 · Cobrar servicios con anticipos y pagos parciales
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cobrar-servicios-anticipos-pagos-parciales (desde `origin/main` c82d9a7, que ya contiene PB-COT-001/002 tras el PR #60)
@@ -14,6 +14,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE, diseño SI; decisiones de negocio resueltas con el usuario | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate PASS con limitaciones (REV-01 Medium, REV-02/03 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -100,7 +101,11 @@ DDR: `docs/design/DDR-cobrar-servicios-anticipos-pagos-parciales-pantallas-cobro
 **Verificación propia (no es el Quality Gate).** Backend: pruebas de dominio, límites de módulos, guards y catálogo (74) en verde con el Python del repo principal. Las pruebas de integración con PostgreSQL (`receivables/tests/test_api.py`, incluida la concurrencia) están escritas y compilan pero **no se pudieron ejecutar**: no hay credenciales de base de datos en este entorno. Frontend: `ng build`, `ng lint`, `i18n:check` y 1310 pruebas en verde; 1 fallo previo e independiente (`screens-i18n.spec.ts`, «Delivered»/«Entregado»), que también falla en `main`.
 
 ## Review
-_Pendiente_
+Resultado: **PASS con limitaciones**. Hallazgos abiertos (no bloqueantes):
+- [REV-01](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-01.md) Medium — «hoy» del pago usa fecha UTC en backend y frontend en lugar de la zona horaria de la empresa.
+- [REV-02](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-02.md) Low — tras un 409 el FormArray de imputaciones no se reconstruye (posible desalineación por índice).
+- [REV-03](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-03.md) Low — `except Exception: continue` en la lista de Cobros (bandit B112).
+Consistencia visual: revisada solo por lectura; no verificada en navegador.
 
 ## Publicación
-_Pendiente_
+PR #61 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migraciones aditivas en `receivables`, `quotations`, `dentistry`) y acceso por módulo/fuente; respaldo: ADR de módulo y de pagos. Pendiente de la persona que aprueba: ejecutar las pruebas con PostgreSQL (`python manage.py test`) y la revisión visual en navegador, y decidir si se corrige REV-01 antes del merge.
