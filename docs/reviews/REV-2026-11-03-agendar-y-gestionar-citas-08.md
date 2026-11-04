@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-08: Listado e historial no se apilan en móvil (columnas clave fuera de pantalla)
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Medium
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ Revisión visual en el navegador integrado (backend con base temporal `test_dore
 
 ## Resolución
 El listado y el historial usan `inventory-table` (apilado a <768 px, con `data-label` por celda; se importa el parcial de Inventario) y los botones de la cabecera son `text-nowrap` con `flex-wrap`. Falta reverificarlo visualmente a 390 px en el navegador.
+
+## Verificación (Quality Gate 3)
+Verificado en gate 3 en el navegador integrado (backend con base temporal `test_doredb`, ya eliminada; frontend `npm start`). A 390 px el listado y el historial se apilan: `td` computa `display: block`, `thead` queda `position: absolute` (oculto solo visualmente), `td::before` muestra la etiqueta (`"Inicio: "`), `scrollWidth` = `clientWidth` = 390 (sin scroll horizontal) y las tablas miden 280 px. Cada celda lleva `data-label`; las tablas llevan `inventory-table` y los dos SCSS hacen `@use '../../inventory/components/inventory-table'`. El encapsulamiento de Angular no afecta: las tablas están en la plantilla del propio componente, así que los selectores reciben el atributo `_ngcontent`. Botones de cabecera: 30 px de alto, una línea (82/105/117 px de ancho), sin deformarse; en detalle Confirmar/Reprogramar/Cancelar/Volver a 36 px. A 1440 px `td` = `table-cell`, `thead` estático, sin etiquetas, tabla normal de 1076 px. Tema oscuro correcto a 390 px en listado y detalle (historial con Autor, Motivo y Horario anterior visibles).

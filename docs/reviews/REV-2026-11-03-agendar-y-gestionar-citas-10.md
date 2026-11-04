@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-10: Búsqueda de clientes del formulario sin cancelar respuestas anteriores
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ appointment-form.component.ts: `this.customerSearch.valueChanges.pipe(debounceTi
 
 ## Resolución
 La búsqueda de clientes usa `switchMap` (descarta respuestas anteriores) y el cliente elegido se conserva entre las opciones. Spec en `appointment-form.component.spec.ts`.
+
+## Verificación (Quality Gate 3)
+Verificado en gate 3: `switchMap` en la búsqueda (`merge(of(''), valueChanges.pipe(debounceTime(300)))` con `catchError` interno, el flujo no muere ante un error) y `selectedCustomer` conservado vía `showCustomers`. Spec `only the latest customer search counts…` comprueba `first.cancelled` y que `customers` = [elegido, resultado]. En el navegador: con «Rosa Pérez» elegida, buscar «car» deja las opciones «Rosa Pérez» (conservada) y «Carlos Quispe» y el select sigue en Rosa; al limpiar la búsqueda vuelve la lista completa sin duplicar a Rosa y la selección se mantiene.

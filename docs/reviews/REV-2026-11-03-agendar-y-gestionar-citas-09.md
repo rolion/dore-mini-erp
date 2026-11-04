@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-09: Residuos en filtros en URL (vista del calendario y página fuera de rango)
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ appointment-list.component.ts: ngOnInit lee from/to/professional/status/search/p
 
 ## Resolución
 La vista y los controles del calendario viajan en la URL (`view`, `cal_professional`, `cal_date`, `cal_span`) y se restauran al abrir; una página inexistente (404) vuelve a la 1. Specs en `appointment-list.component.spec.ts`.
+
+## Verificación (Quality Gate 3)
+Verificado en gate 3 en el navegador: «Calendario» escribe `?view=calendar&cal_date=…&cal_span=…`; tras elegir profesional y «Ver agenda» la URL queda `?view=calendar&cal_professional=<id>&cal_date=2026-11-09&cal_span=7`; recargar esa URL restaura la vista (Calendario pulsado, profesional, fecha y 7 secciones con las citas) y volver desde el detalle (`history back`) recupera el calendario. Sin bucle de navegación (`history.length` +1 por cada navegación explícita). `?page=99` responde 404, vuelve solo a la página 1 (URL limpia, «Página 1 de 1», 3 filas, sin alerta). Specs nuevos en `appointment-list.component.spec.ts` (Karma completo: 1139 correctas). Residuos menores en REV-2026-11-03-agendar-y-gestionar-citas-11 y -12.

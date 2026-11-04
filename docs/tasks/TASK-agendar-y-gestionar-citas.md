@@ -1,6 +1,6 @@
 # TASK-agendar-y-gestionar-citas: PB-AGE-002 · Agendar y gestionar citas de pacientes
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-agendar-y-gestionar-citas
@@ -21,6 +21,7 @@
 | 2026-11-03 | REVIEW (sin cambio) | REV-02..07 corregidos; AC-02 verificado en PostgreSQL (.env local copiado a petición de la persona) | delivery-build |
 | 2026-11-03 | REVIEW → PUBLISH | Segundo Quality Gate: PASS con REV-08 (Medium), REV-09 y REV-10 (Low) como limitaciones conocidas | delivery-publish |
 | 2026-11-03 | PUBLISH → REVIEW | REV-08, REV-09 y REV-10 corregidos por indicación de la persona; pendiente reverificar REV-08 en navegador | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Tercer Quality Gate: PASS con REV-11 y REV-12 (Low) como limitaciones conocidas | delivery-publish |
 
 ## Investigación
 
@@ -117,5 +118,9 @@ Pendiente de una persona: ejecutar en PostgreSQL `test_concurrent_requests_accep
 
 Limitaciones conocidas: [REV-08](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-08.md) (Medium, DESIGN: a 390 px el listado y el historial usan `table-responsive` en lugar de tabla apilada y los botones de la cabecera se deforman), [REV-09](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-09.md) (Low: la vista del calendario no va en la URL y con `?page` inexistente «Reintentar» queda atascado) y [REV-10](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-10.md) (Low: la búsqueda de clientes del formulario no cancela respuestas anteriores). No verificados: `ruff` (no instalado ni configurado), recorrido con teclado del formulario y de los diálogos de confirmar, cancelar y atender.
 
+**Tercer Quality Gate: PASS con limitaciones conocidas** (sobre `bf49cdd`). Sin Critical ni High. REV-08, REV-09 y REV-10 verificados; REV-01 a REV-07 sin regresiones. Backend en PostgreSQL: `check` y `makemigrations --check` limpios, suite completa 1383 correctas, `modules.agenda` 32 correctas en 2 corridas (las dos pruebas de concurrencia estables), `bandit` sin incidencias. Frontend: lint, `ngc`, build, `npm audit` (0) y Karma completo 1139 correctas (sentencias 86,15 %, ramas 77,73 %). Visual verificada en navegador a 390 y 1440 px, tema claro y oscuro, sobre una base temporal ya eliminada: listado e historial apilados sin scroll horizontal.
+
+Limitaciones conocidas: [REV-11](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-11.md) (Low: tras el 404 de una página inexistente, el reintento a la página 1 pierde el indicador de carga) y [REV-12](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-12.md) (Low: abrir el calendario borra de la URL los filtros del listado). No verificados: `ruff` (no instalado ni configurado) y el recorrido con teclado del formulario y de los diálogos de confirmar, cancelar y atender.
+
 ## Publicación
-Tras el segundo gate se corrigieron REV-08, REV-09 y REV-10 (pendientes de reverificación; el TASK vuelve a REVIEW hasta un nuevo Quality Gate). PR #50 sujeto a aprobación humana; no se mergea. Toca base de datos (migración aditiva `0002` y `0003`), tiene un ADR y cambia la prueba de límites entre módulos. Correcciones posteriores: build y lint correctos, Karma completo 1139 correctas; REV-08 sin reverificar visualmente a 390 px.
+PR #50 listo para aprobación humana; no se mergea. Toca base de datos (migraciones aditivas `0002` y `0003`), tiene un ADR y cambia la prueba de límites entre módulos. Limitaciones conocidas: REV-11, REV-12, `ruff` y teclado sin verificar.
