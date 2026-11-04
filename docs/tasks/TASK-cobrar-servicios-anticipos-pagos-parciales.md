@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cobrar-servicios-anticipos-pagos-parciales (desde `origin/main` c82d9a7, que ya contiene PB-COT-001/002 tras el PR #60)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/61
 **Fuente:** https://trello.com/c/P070M244/8-pb-cob-001-cobrar-servicios-con-anticipos-y-pagos-parciales
 
 ## Historial de transiciones
