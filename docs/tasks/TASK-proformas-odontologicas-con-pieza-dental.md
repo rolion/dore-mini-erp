@@ -1,6 +1,6 @@
 # TASK-proformas-odontologicas-con-pieza-dental: Proformas dentro de Odontología con pieza dental
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-proformas-odontologicas-con-pieza-dental (basada en `task/TASK-crear-proformas-de-servicios`, PR #52, por indicación del usuario)
@@ -14,6 +14,7 @@
 | 2026-11-04 | DESIGN → ARCHITECTURE | Nuevo agregado en Odontología, migración y dependencia nueva `dentistry → service_catalog` | delivery-start |
 | 2026-11-04 | ARCHITECTURE → PLANNING | ADR y DDR escritos; dos decisiones de negocio respondidas por el usuario | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa y autoverificaciones propias | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,17 @@ Ver [ADR-proformas-odontologicas-con-pieza-dental-agregado-propio-en-odontologia
 [PLAN-2026-11-04-proformas-odontologicas-con-pieza-dental](../plans/PLAN-2026-11-04-proformas-odontologicas-con-pieza-dental.md) v1 · COMPLETO · Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Backend `modules/dentistry`: dominio `DentalProforma` con `dental_piece` por línea (`domain/proforma.py`), caso de uso con comprobación de paciente activo y política de precio (`application/proformas.py`), modelos y migración `0002_dental_proformas` (tablas `dentistry_proforma*`), repositorio con contador bloqueado (`ODO-NNNNNN`), adaptadores a Servicios y Clientes (`infrastructure/adapters.py`), API `/api/dentistry/patients/{customer_id}/proformas/` y `/api/dentistry/proformas/{id}/…` con `CompanyClinicalPermission` y `required_modules = ('dentistry','customers','services')`. Frontend `features/dentistry`: modelo, servicio API, formulario con columna «Pieza dental», detalle, tarjeta «Proformas» en la ficha del paciente (visible solo con `services` habilitado), rutas, claves `DENTISTRY.PROFORMAS.*` en es/en/pt (107 por idioma).
+
+Cobertura: INV-01..04 y AC-02, 03, 05 → `tests/test_proforma_domain.py`; AC-01..09 y AC-11 → `tests/test_proforma_api.py` (incluye numeración concurrente y conteo de filas ajenas); AC-11 también `sales/tests/test_boundaries.py` (`dentistry → customers, service_catalog`); AC-10 → specs de servicio, formulario, detalle y tarjeta del paciente, `ng build`, `i18n:check`.
+
+Verificación propia (no es el Quality Gate): backend suite completa en PostgreSQL OK; `makemigrations --check` limpio; frontend `ng test` 1229 OK más 1 fallo intermitente preexistente (`screens-i18n.spec`, falla igual en `origin/main`); `ng lint`, `ng build` y `npm run i18n:check` (1670 claves, 0 faltantes) OK. Revisión visual en navegador no realizada.
+
+Desviaciones respecto al plan: (1) `modules/accounts/test_guards.py` se amplió: `DentalProformaLineModel` figura como tabla hija y el contador declara `db_index` en su clave primaria; es una guarda de aislamiento que ya cubría `dentistry`. (2) Se añadió una nota en `docs/architecture/ddd.md` (prevista en el plan). (3) El formulario importa `fetchAll` desde `features/agenda` (utilidad genérica ya existente).
+
+Deuda técnica: duplicación consciente con `quotations` (ADR); extraer un dominio común solo si aparece una tercera variante.
+
+UI: pantallas de referencia `features/quotations` (copia, por instrucción del usuario) y `patient-detail` para la tarjeta; se reutilizan `MoneyPipe`, badges `col-*`, `unsavedChangesGuard`, `fetchAll`; sin componentes compartidos nuevos.
 
 ## Review
 _Pendiente_

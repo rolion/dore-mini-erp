@@ -1,0 +1,119 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ (proformaId ? 'DENTISTRY.PROFORMAS.EDITAR_TITULO' : 'DENTISTRY.PROFORMAS.NUEVA_TITULO') | translate }}</h5></li>
+    <li class="breadcrumb-item">{{ 'DENTISTRY.PROFORMAS.BC_ODONTOLOGIA' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dentistry/patients">{{ 'DENTISTRY.PROFORMAS.BC_PACIENTES' | translate }}</a></li>
+    <li class="breadcrumb-item"><a [routerLink]="['/pocketbiz/dentistry/patients', patientId]">{{ patientName || ('DENTISTRY.PROFORMAS.BC_PACIENTE' | translate) }}</a></li>
+    <li class="breadcrumb-item active">{{ (proformaId ? 'DENTISTRY.PROFORMAS.BC_EDITAR' : 'DENTISTRY.PROFORMAS.BC_NUEVA') | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header"><h4>{{ proformaId ? ('DENTISTRY.PROFORMAS.EDITAR_BORRADOR' | translate: { name: header }) : ('DENTISTRY.PROFORMAS.NUEVA_PARA' | translate: { name: patientName }) }}</h4></div>
+      <div class="card-body">
+        @if (loading) { <p role="status">{{ 'DENTISTRY.PROFORMAS.CARGANDO' | translate }}</p> }
+        @if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
+        @if (form.dirty && !saving) { <p class="alert alert-info" role="status">{{ 'DENTISTRY.PROFORMAS.SIN_GUARDAR' | translate }}</p> }
+        <form class="register-form m-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <fieldset [disabled]="readOnly">
+            <div class="row">
+              <div class="form-group col-md-6">
+                <label for="d-patient">{{ 'DENTISTRY.PROFORMAS.PACIENTE' | translate }}</label>
+                <input id="d-patient" class="form-control" [value]="patientName" readonly>
+                @if (fields['customer_id']) { <small class="form-text text-danger">{{ fields['customer_id'] }}</small> }
+              </div>
+              <div class="form-group col-md-2">
+                <label for="d-currency">{{ 'DENTISTRY.PROFORMAS.MONEDA' | translate }}</label>
+                <input id="d-currency" class="form-control" value="BOB" readonly>
+              </div>
+              <div class="form-group col-md-2">
+                <label for="d-date">{{ 'DENTISTRY.PROFORMAS.FECHA' | translate }} <span class="text-danger">*</span></label>
+                <input id="d-date" type="date" class="form-control" formControlName="date">
+                @if (fields['date']) { <small class="form-text text-danger">{{ fields['date'] }}</small> }
+              </div>
+              <div class="form-group col-md-2">
+                <label for="d-valid">{{ 'DENTISTRY.PROFORMAS.VIGENCIA_OPC' | translate }}</label>
+                <input id="d-valid" type="date" class="form-control" formControlName="valid_until">
+                @if (fields['valid_until']) { <small class="form-text text-danger">{{ fields['valid_until'] }}</small> }
+              </div>
+            </div>
+
+            <h5 class="mt-3">{{ 'DENTISTRY.PROFORMAS.LINEAS' | translate }}</h5>
+            @if (fields['lines']) { <p class="alert alert-danger" role="alert">{{ fields['lines'] }}</p> }
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead><tr>
+                  <th>{{ 'DENTISTRY.PROFORMAS.SERVICIO' | translate }}</th>
+                  <th>{{ 'DENTISTRY.PROFORMAS.PIEZA_COL' | translate }}</th>
+                  <th>{{ 'DENTISTRY.PROFORMAS.CANTIDAD' | translate }}</th>
+                  <th>{{ 'DENTISTRY.PROFORMAS.PRECIO_UNIT_BS' | translate }}</th>
+                  <th class="text-end">{{ 'DENTISTRY.PROFORMAS.SUBTOTAL_BS' | translate }}</th>
+                  <th><span class="visually-hidden">{{ 'DENTISTRY.PROFORMAS.QUITAR' | translate }}</span></th>
+                </tr></thead>
+                <tbody formArrayName="lines">
+                  @for (line of lines.controls; track line; let i = $index) {
+                    <tr [formGroupName]="i">
+                      <td>
+                        @if (isFrozen(i)) {
+                          <strong>{{ line.get('description')?.value }}</strong>
+                          <small class="d-block text-muted">{{ 'DENTISTRY.PROFORMAS.CONGELADOS' | translate }}</small>
+                        } @else {
+                          <select class="form-select" formControlName="service_id" [attr.aria-label]="'DENTISTRY.PROFORMAS.SERVICIO_LINEA' | translate: { n: i + 1 }"
+                            (change)="pickService(i)">
+                            <option value="">{{ 'DENTISTRY.PROFORMAS.SEL_SERVICIO' | translate }}</option>
+                            @for (service of services; track service.id) { <option [value]="service.id">{{ 'DENTISTRY.PROFORMAS.OPCION_SERVICIO' | translate: { name: service.name, price: service.basePrice } }}</option> }
+                          </select>
+                        }
+                        @if (lineErrors[i]?.['service_id']) { <small class="form-text text-danger">{{ lineErrors[i]['service_id'] }}</small> }
+                      </td>
+                      <td>
+                        <input type="text" class="form-control" formControlName="dental_piece" [attr.maxlength]="pieceMax"
+                          [attr.placeholder]="'DENTISTRY.PROFORMAS.PIEZA_PH' | translate"
+                          [attr.aria-label]="'DENTISTRY.PROFORMAS.PIEZA_LINEA' | translate: { n: i + 1 }">
+                        @if (lineErrors[i]?.['dental_piece']) { <small class="form-text text-danger">{{ lineErrors[i]['dental_piece'] }}</small> }
+                        @else if (line.get('dental_piece')?.invalid) {
+                          <small class="form-text text-danger">{{ 'DENTISTRY.PROFORMAS.ERR_PIEZA' | translate }}</small> }
+                      </td>
+                      <td>
+                        <input type="number" class="form-control" formControlName="quantity" step="0.01" min="0.01"
+                          [attr.aria-label]="'DENTISTRY.PROFORMAS.CANTIDAD_LINEA' | translate: { n: i + 1 }">
+                        @if (lineErrors[i]?.['quantity']) { <small class="form-text text-danger">{{ lineErrors[i]['quantity'] }}</small> }
+                        @else if (line.get('quantity')?.touched && line.get('quantity')?.invalid) {
+                          <small class="form-text text-danger">{{ 'DENTISTRY.PROFORMAS.ERR_CANTIDAD' | translate }}</small> }
+                      </td>
+                      <td>
+                        <input type="number" class="form-control" formControlName="unit_price" step="0.01" min="0"
+                          [readonly]="!canEditPrice" [attr.aria-label]="'DENTISTRY.PROFORMAS.PRECIO_LINEA' | translate: { n: i + 1 }">
+                        @if (lineErrors[i]?.['unit_price']) { <small class="form-text text-danger">{{ lineErrors[i]['unit_price'] }}</small> }
+                        @else if (line.get('unit_price')?.touched && line.get('unit_price')?.invalid) {
+                          <small class="form-text text-danger">{{ 'DENTISTRY.PROFORMAS.ERR_PRECIO' | translate }}</small> }
+                      </td>
+                      <td class="text-end">{{ subtotal(i) }}</td>
+                      <td><button type="button" class="btn btn-sm btn-outline-danger" (click)="removeLine(i)"
+                        [attr.aria-label]="'DENTISTRY.PROFORMAS.QUITAR_LINEA' | translate: { n: i + 1 }"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                  }
+                </tbody>
+                <tfoot><tr><th colspan="4" class="text-end">{{ 'DENTISTRY.PROFORMAS.TOTAL_PROPUESTO' | translate }}</th><th class="text-end">{{ total }}</th><th></th></tr></tfoot>
+              </table>
+            </div>
+            <small class="form-text text-muted d-block mb-2">{{ 'DENTISTRY.PROFORMAS.PIEZA_AYUDA' | translate }}</small>
+            <button type="button" class="btn btn-outline-primary mb-3" (click)="addLine()">{{ 'DENTISTRY.PROFORMAS.AGREGAR_LINEA' | translate }}</button>
+            <p class="text-muted"><small>{{ 'DENTISTRY.PROFORMAS.VISTA_PREVIA' | translate }}</small></p>
+
+            <div class="form-group">
+              <label for="d-notes">{{ 'DENTISTRY.PROFORMAS.NOTAS' | translate }}</label>
+              <textarea id="d-notes" class="form-control" rows="3" formControlName="notes" [attr.maxlength]="notesMax"></textarea>
+              <small class="form-text text-muted">{{ 'DENTISTRY.PROFORMAS.NOTAS_AVISO' | translate }}</small>
+              @if (fields['notes']) { <small class="form-text text-danger d-block">{{ fields['notes'] }}</small> }
+            </div>
+          </fieldset>
+
+          <div class="d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-primary" [disabled]="saving || readOnly">{{ (saving ? 'DENTISTRY.PROFORMAS.GUARDANDO' : 'DENTISTRY.PROFORMAS.GUARDAR') | translate }}</button>
+            <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/patients', patientId]">{{ 'DENTISTRY.PROFORMAS.CANCELAR' | translate }}</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

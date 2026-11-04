@@ -51,7 +51,7 @@ class DentalProformaLineModel(models.Model):
 
 
 class DentalProformaCounterModel(models.Model):
-    company_id = models.UUIDField(primary_key=True)
+    company_id = models.UUIDField(primary_key=True, db_index=True)  # la PK ya lo indexa; db_index lo declara
     last_number = models.PositiveIntegerField(default=0)
 
     class Meta:
