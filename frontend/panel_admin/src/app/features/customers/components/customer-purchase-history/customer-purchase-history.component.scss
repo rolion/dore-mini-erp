@@ -49,4 +49,11 @@
       line-height: 44px;
     }
   }
+
+  // «Ver todos los pedidos» también mide al menos 44 px de alto (AC-09).
+  .card-header .btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
 }

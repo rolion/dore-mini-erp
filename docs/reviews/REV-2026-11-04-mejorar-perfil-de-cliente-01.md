@@ -1,6 +1,6 @@
 # REV-2026-11-04-mejorar-perfil-de-cliente-01: Objetivo táctil ≥ 44 px en móvil solo cubierto para los enlaces de la tabla
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-04-mejorar-perfil-de-cliente.md (v1)
@@ -36,3 +36,6 @@ td a {
 ```
 
 `grep` de `min-height`/`44px` en los archivos del PR: solo esa regla. Los elementos `btn btn-light btn-sm` aparecen en `customer-detail.component.html` (WhatsApp) y `customer-purchase-history.component.html` (Ver todos). No verificado en navegador (sin backend); el incumplimiento se infiere del código y de la altura estándar de `btn-sm`. La confirmación visual debe hacerse en la revisión manual del paso 8 del plan.
+
+## Resolución
+2026-11-04: en viewport < 768 px los botones y enlaces accionables miden al menos 44 px. Nuevo `customer-detail.component.scss` (botones de la cabecera, WhatsApp, enlaces `tel:` y `mailto:`) y regla `.card-header .btn` en `customer-purchase-history.component.scss` («Ver todos los pedidos»). Verificado: `npm run lint` limpio, `npm run build` ok, `npm test` 1183 correctas, y las reglas `min-height:44px` aparecen en el bundle compilado. **No verificado en navegador** (el tamaño real queda para la revisión visual manual); Karma no cubre el layout con media queries.

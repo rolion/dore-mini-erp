@@ -18,6 +18,7 @@ import { CustomersApiService } from '../../services/customers-api.service';
 @Component({
   selector: 'app-customer-detail',
   templateUrl: './customer-detail.component.html',
+  styleUrl: './customer-detail.component.scss',
   imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe, ReportCardComponent, CustomerPurchaseHistoryComponent],
 })
 export class CustomerDetailComponent implements OnInit {

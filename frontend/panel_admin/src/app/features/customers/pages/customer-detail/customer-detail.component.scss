@@ -1,0 +1,10 @@
+// En móvil todo control accionable del perfil mide al menos 44 px de alto (objetivo táctil, AC-09).
+@media (max-width: 767.98px) {
+  .card-header .btn,
+  dd .btn,
+  dd a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
