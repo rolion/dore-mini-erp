@@ -32,8 +32,21 @@ describe('AgendaApiService', () => {
     expect(http.expectOne(`${environment.apiUrl}/agenda/7/shifts/3/`).request.method).toBe('PUT');
   });
 
-  it('registers an absence', () => {
+  it('creates shifts for several days with one POST', () => {
+    const { day, ...rest } = body;
+    service.createShifts('7', { ...rest, days: [0, 1] }).subscribe();
+    const req = http.expectOne(`${environment.apiUrl}/agenda/7/shifts/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.days).toEqual([0, 1]);
+    expect(day).toBe(0);
+  });
+
+  it('registers an absence, edits it with PUT and deletes it', () => {
     service.saveAbsence('7', { starts: 'a', ends: 'b', reason: 'Permiso' }).subscribe();
     expect(http.expectOne(`${environment.apiUrl}/agenda/7/absences/`).request.method).toBe('POST');
+    service.saveAbsence('7', { starts: 'a', ends: 'b', reason: 'Permiso' }, 4).subscribe();
+    expect(http.expectOne(`${environment.apiUrl}/agenda/7/absences/4/`).request.method).toBe('PUT');
+    service.deleteAbsence('7', 4).subscribe();
+    expect(http.expectOne(`${environment.apiUrl}/agenda/7/absences/4/`).request.method).toBe('DELETE');
   });
 });
