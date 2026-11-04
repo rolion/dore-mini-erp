@@ -92,7 +92,7 @@ Ver [PLAN-2026-11-04-mejorar-ux-horarios-y-ausencias](../plans/PLAN-2026-11-04-m
 **Deuda técnica:** sin eliminación de turnos; sin aviso de citas existentes al crear/editar turnos o ausencias (ambos fuera de alcance).
 
 ## Review
-Quality Gate (subagente aislado, ciclo 1): sin Critical/High; 2 Medium y 4 Low. Backend y revisión visual **no ejecutados**. Hallazgos: docs/reviews/REV-2026-11-04-mejorar-ux-horarios-y-ausencias-01..06. Corregidos en el ciclo 2 de build (REV-04 se resolvió como IMPLEMENTATION: AC-08 solo fija `valid_until`, por lo que al editar se conserva `valid_from`). Pendiente: nueva revisión, pruebas de backend con PostgreSQL y revisión visual.
+Quality Gate (subagente aislado, ciclo 1): sin Critical/High; 2 Medium y 4 Low. Backend y revisión visual **no ejecutados**. Hallazgos: docs/reviews/REV-2026-11-04-mejorar-ux-horarios-y-ausencias-01..06. Corregidos en el ciclo 2 de build (REV-04 se resolvió como IMPLEMENTATION: AC-08 solo fija `valid_until`, por lo que al editar se conserva `valid_from`). Verificaciones posteriores (ciclo 2): backend `python manage.py test` completo 1391 OK (40 de agenda; un test propio corregido: el error llega como texto, no lista); revisión visual en navegador (escritorio claro/oscuro y móvil 390 px) sin hallazgos funcionales; detalles menores en REV-07 (dos ya corregidos). Pendiente: nueva revisión del estado final.
 
 ## Publicación
 _Pendiente_

@@ -141,7 +141,7 @@ class AgendaApiTests(TransactionTestCase):
         self.client.post(self.base + 'shifts/', {**self.shift, 'day': 1}, format='json')
         response = self.multi()
         self.assertEqual(response.status_code, 400)
-        self.assertIn('martes', response.json()['starts'][0])
+        self.assertIn('martes', response.json()['starts'])
         self.assertEqual(Shift.objects.count(), 1)
 
     def test_single_day_still_works_and_day_with_days_is_rejected(self):
