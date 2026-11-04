@@ -58,7 +58,7 @@
                     <option [value]="option.value">{{ option.label }}</option>
                     }
                   </select>
-                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.ORGANIZA_Y_FILTRA_NO_LIMITA' | translate }}</small>
+                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.ORGANIZA_Y_MUESTRA_INSUMO' | translate }}</small>
                   @if (hasError('category')) {
                   <small class="form-text text-danger d-block">
                     {{ serverErrors.category || ('EXPENSES.EXPENSE_FORM.LA_CATEGORIA_ES_OBLIGATORIA' | translate) }}
@@ -69,29 +69,16 @@
               <div class="row">
                 <div class="form-group col-md-6">
                   <div class="form-check form-switch">
-                    <input id="product-can-buy" type="checkbox" class="form-check-input" role="switch"
-                      formControlName="canBuy">
-                    <label class="form-check-label" for="product-can-buy">{{ 'PRODUCTS.PRODUCT_FORM.SE_PUEDE_COMPRAR' | translate }}</label>
-                  </div>
-                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.EL_PRECIO_DE_COMPRA_SE' | translate }}</small>
-                  @if (serverErrors.canBuy) {
-                  <small class="form-text text-danger d-block">{{ serverErrors.canBuy }}</small>
-                  }
-                </div>
-                <div class="form-group col-md-6">
-                  <div class="form-check form-switch">
                     <input id="product-can-sell" type="checkbox" class="form-check-input" role="switch"
-                      formControlName="canSell">
-                    <label class="form-check-label" for="product-can-sell">{{ 'PRODUCTS.PRODUCT_FORM.SE_PUEDE_VENDER' | translate }}</label>
+                      formControlName="canSell" aria-describedby="product-can-sell-help">
+                    <label class="form-check-label ms-2" for="product-can-sell">{{ 'PRODUCTS.PRODUCT_FORM.SE_PUEDE_VENDER' | translate }}</label>
                   </div>
-                  <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.LOS_PRODUCTOS_QUE_SE_VENDEN' | translate }}</small>
+                  <small id="product-can-sell-help" class="form-text text-muted d-block">{{ 'PRODUCTS.PRODUCT_FORM.LOS_PRODUCTOS_QUE_SE_VENDEN' | translate }}</small>
                   @if (serverErrors.canSell) {
                   <small class="form-text text-danger d-block">{{ serverErrors.canSell }}</small>
                   }
                 </div>
-              </div>
-              @if (form.controls.canSell.value) {
-              <div class="row">
+                @if (form.controls.canSell.value) {
                 <div class="form-group col-md-6">
                   <label for="product-price">{{ 'PRODUCTS.PRODUCT_FORM.PRECIO_DE_VENTA' | translate }} <span class="text-danger">*</span></label>
                   <input id="product-price" type="text" inputmode="decimal" class="form-control" placeholder="0.00"
@@ -104,8 +91,25 @@
                   </small>
                   }
                 </div>
+                }
               </div>
-              }
+              <div class="row">
+                <div class="form-group col-md-6">
+                  <div class="form-check form-switch">
+                    <input id="product-can-buy" type="checkbox" class="form-check-input" role="switch"
+                      formControlName="canBuy" aria-describedby="product-can-buy-help">
+                    <label class="form-check-label ms-2" for="product-can-buy">{{ 'PRODUCTS.PRODUCT_FORM.SE_PUEDE_COMPRAR' | translate }}</label>
+                  </div>
+                  <small id="product-can-buy-help" class="form-text text-muted d-block">{{ 'PRODUCTS.PRODUCT_FORM.EL_PRECIO_DE_COMPRA_SE' | translate }}</small>
+                  @if (serverErrors.canBuy) {
+                  <small class="form-text text-danger d-block">{{ serverErrors.canBuy }}</small>
+                  }
+                </div>
+              </div>
+              <p class="mb-3" data-testid="uses-preview">
+                <small class="text-muted me-2">{{ 'PRODUCTS.PRODUCT_USES.SE_MOSTRARA_COMO' | translate }}</small>
+                <app-product-uses [product]="usesPreview()" />
+              </p>
               @if (inventoryEnabled) {
               <h5 class="mt-2">{{ 'COMMON.INVENTARIO' | translate }}</h5>
               <div class="row">
@@ -113,7 +117,7 @@
                   <div class="form-check form-switch">
                     <input id="product-tracks-stock" type="checkbox" class="form-check-input" role="switch"
                       formControlName="tracksStock">
-                    <label class="form-check-label" for="product-tracks-stock">{{ 'PRODUCTS.PRODUCT_FORM.CONTROLAR_STOCK' | translate }}</label>
+                    <label class="form-check-label ms-2" for="product-tracks-stock">{{ 'PRODUCTS.PRODUCT_FORM.CONTROLAR_STOCK' | translate }}</label>
                   </div>
                   <small class="form-text text-muted">{{ 'PRODUCTS.PRODUCT_FORM.ACTIVALO_PARA_PRODUCTOS_CON_EXISTENCIAS' | translate }}</small>
                   @if (serverErrors.tracksStock) {

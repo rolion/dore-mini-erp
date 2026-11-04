@@ -101,6 +101,14 @@ describe('ServiceListComponent', () => {
     expect(fixture.componentInstance.rows[0].durationMinutes).toBe(30);
     expect(fixture.nativeElement.textContent).toContain('Sin especialidad');
   });
+  it('dims inactive rows and uses the standard action buttons (AC-07)', () => {
+    api.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [{ ...service, active: false }] }));
+    const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('datatable-body-row')?.classList).toContain('text-muted');
+    expect(el.querySelector('.btn-tbl-view .fa-eye')).not.toBeNull();
+    expect(el.querySelector('.search-icon')).not.toBeNull();
+  });
   it('keeps the restored page while the table initializes with an empty loading state', () => {
     const pending = new Subject<{ count: number; next: null; previous: null; results: CatalogService[] }>();
     api.list.and.returnValue(pending);
@@ -150,5 +158,15 @@ describe('ServiceDetailComponent', () => {
     const fixture = TestBed.createComponent(ServiceDetailComponent); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Bs 120.00'); expect(fixture.nativeElement.textContent).toContain('30 min');
     expect(fixture.nativeElement.textContent).toContain('Inactivo'); expect(api.get).toHaveBeenCalledWith('one');
+  });
+  it('shows a summary and the shared «Última actualización» label (AC-08)', () => {
+    const api = jasmine.createSpyObj<ServicesApiService>('api', ['get']); api.get.and.returnValue(of(service));
+    TestBed.configureTestingModule({ imports: [ServiceDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
+      { provide: ServicesApiService, useValue: api }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'one' }) } } }] });
+    const fixture = TestBed.createComponent(ServiceDetailComponent); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="service-summary"]')?.textContent).toContain('Duración');
+    expect(el.textContent).toContain('Última actualización');
+    expect(el.textContent).not.toContain('Actualizado:');
   });
 });

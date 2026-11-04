@@ -15,48 +15,52 @@
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header d-flex flex-wrap align-items-center gap-2">
             <h4>{{ product?.name ?? ('COMMON.PRODUCTO' | translate) }}</h4>
+            @if (product; as p) {
+            @if (p.active) {
+            <div class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</div>
+            } @else {
+            <div class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</div>
+            }
+            <app-product-uses [product]="p" />
+            }
           </div>
           <div class="card-body">
             @if (product; as p) {
+            <div class="row m-4 mb-0 gy-3" data-testid="product-summary">
+              <div class="col-sm-4">
+                <small class="text-muted d-block">{{ 'PRODUCTS.PRODUCT_DETAIL.PRECIO_DE_VENTA' | translate }}</small>
+                <h5 class="mb-0">{{ p.canSell ? (p.salePrice | money) : ('PRODUCTS.PRODUCT_DETAIL.NO_SE_VENDE' | translate) }}</h5>
+              </div>
+              <div class="col-sm-4">
+                <small class="text-muted d-block">{{ 'COMMON.CATEGORIA' | translate }}</small>
+                <h5 class="mb-0">
+                  {{ categoryName(p) }}
+                  @if (p.needsReview) {
+                  <div class="badge-outline col-orange d-inline-block ms-2">{{ 'PRODUCTS.PRODUCT_DETAIL.POR_REVISAR' | translate }}</div>
+                  }
+                </h5>
+              </div>
+              @if (inventoryEnabled) {
+              <div class="col-sm-4">
+                <small class="text-muted d-block">{{ 'COMMON.UNIDAD_BASE' | translate }}</small>
+                <h5 class="mb-0">{{ p.baseUnit ? p.baseUnit.name + ' (' + p.baseUnit.abbreviation + ')' : ('PRODUCTS.PRODUCT_DETAIL.SIN_UNIDAD' | translate) }}</h5>
+              </div>
+              }
+            </div>
             <dl class="row m-4">
-              <dt class="col-sm-3">{{ 'COMMON.NOMBRE' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.name }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.DESCRIPCION' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.description || ('PRODUCTS.PRODUCT_DETAIL.SIN_DESCRIPCION' | translate) }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.CATEGORIA' | translate }}</dt>
-              <dd class="col-sm-9">
-                {{ categoryName(p) }}
-                @if (p.needsReview) {
-                <div class="badge-outline col-orange d-inline-block ms-2">{{ 'PRODUCTS.PRODUCT_DETAIL.POR_REVISAR' | translate }}</div>
-                }
-              </dd>
-              <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.SE_COMPRA' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.canBuy ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</dd>
-              <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.SE_VENDE' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.canSell ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</dd>
-              <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.PRECIO_DE_VENTA' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.canSell ? p.salePrice : ('PRODUCTS.PRODUCT_DETAIL.NO_SE_VENDE' | translate) }}</dd>
+              <dd class="col-sm-9" [class.text-muted]="!p.description">{{ p.description || ('PRODUCTS.PRODUCT_DETAIL.SIN_DESCRIPCION' | translate) }}</dd>
               @if (inventoryEnabled) {
               <dt class="col-sm-3">{{ 'PRODUCTS.PRODUCT_DETAIL.CONTROLA_STOCK' | translate }}</dt>
               <dd class="col-sm-9">{{ p.tracksStock ? ('PRODUCTS.PRODUCT_LIST.SI' | translate) : ('PRODUCTS.PRODUCT_LIST.NO' | translate) }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.UNIDAD_BASE' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.baseUnit ? p.baseUnit.name + ' (' + p.baseUnit.abbreviation + ')' : ('PRODUCTS.PRODUCT_DETAIL.SIN_UNIDAD' | translate) }}</dd>
               }
-              <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
-              <dd class="col-sm-9">
-                @if (p.active) {
-                <div class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</div>
-                } @else {
-                <div class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</div>
-                }
-              </dd>
-              <dt class="col-sm-3">{{ 'COMMON.CREADO' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}</dt>
-              <dd class="col-sm-9">{{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
             </dl>
+            <p class="mx-4 mb-0"><small class="text-muted">
+              {{ 'COMMON.CREADO' | translate }}: {{ p.createdAt | date: 'dd/MM/yyyy HH:mm' }} ·
+              {{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}: {{ p.updatedAt | date: 'dd/MM/yyyy HH:mm' }}
+            </small></p>
             <div class="m-4">
               <a class="btn btn-primary" [routerLink]="['/pocketbiz/catalog/products', p.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
               <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">

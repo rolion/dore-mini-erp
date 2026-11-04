@@ -1,13 +1,15 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, OnInit, computed, inject } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { startWith } from 'rxjs';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { UnitsApiService } from '../../../inventory';
 import { PRODUCT_CATEGORIES, Product, ProductApiError, ProductCategory, ProductInput } from '../../models/product';
+import { ProductUsesComponent } from '../../../../shared/components/product-uses/product-uses.component';
 import { ProductsApiService } from '../../services/products-api.service';
 
 export const NAME_MAX_LENGTH = 150;
@@ -29,7 +31,7 @@ export interface UnitOption {
 @Component({
   selector: 'app-product-form',
   templateUrl: './product-form.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, ProductUsesComponent],
 })
 export class ProductFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;
@@ -43,6 +45,15 @@ export class ProductFormComponent implements OnInit {
     salePrice: ['', [Validators.required, Validators.pattern(PRICE_PATTERN)]],
     tracksStock: [false],
     baseUnitId: [''],
+  });
+
+  private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(this.form.getRawValue())), {
+    initialValue: this.form.getRawValue(),
+  });
+  /** Usos que verá la persona en lista y detalle según lo que va eligiendo (AC-06). */
+  readonly usesPreview = computed(() => {
+    const value = this.formValue();
+    return { canSell: !!value.canSell, canBuy: !!value.canBuy, category: value.category || null };
   });
 
   productId: string | null = null;

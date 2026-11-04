@@ -93,10 +93,22 @@ describe('ProductListComponent', () => {
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Materia prima');
-    expect(text).toContain('Compra');
+    expect(text).toContain('Comprable');
+    expect(text).toContain('Insumo');
     expect(text).toContain('Por revisar');
     expect(text).toContain('—');
     expect(text).not.toContain('9.99'); // REV-01
+  });
+
+  it('shows the sale price with money format and dims inactive rows (AC-03)', () => {
+    api.list.and.returnValue(of(page([active, inactive])));
+    fixture.detectChanges();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Bs 5.50');
+    const rows = Array.from(el.querySelectorAll('datatable-body-row'));
+    expect(rows[1].classList).toContain('text-muted');
+    expect(rows[0].classList).not.toContain('text-muted');
   });
 
   it('links the "+" button to the new product form (AC-10)', () => {
@@ -229,17 +241,17 @@ describe('ProductListComponent', () => {
       expect(text).not.toContain('Unidad base');
     });
 
-    it('shows «Controla stock» and the base unit when Inventario is enabled (AC-05)', () => {
+    it('shows the base unit, not «Controla stock», when Inventario is enabled (AC-03)', () => {
       spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
       api.list.and.returnValue(of(page([stocked, active])));
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
       const headers = Array.from(el.querySelectorAll('datatable-header-cell')).map((h) => h.textContent?.trim());
-      expect(headers).toEqual(jasmine.arrayContaining(['Controla stock', 'Unidad base']));
+      expect(headers).toContain('Unidad base');
+      expect(headers).not.toContain('Controla stock'); // AC-03
       const rows = Array.from(el.querySelectorAll('datatable-body-row')).map((r) => r.textContent ?? '');
-      expect(rows[0]).toContain('Sí');
       expect(rows[0]).toContain('kg');
-      expect(rows[1]).toContain('No');
+      expect(rows[1]).not.toContain('kg');
     });
   });
 });

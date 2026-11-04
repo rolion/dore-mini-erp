@@ -8,12 +8,14 @@ import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { Product, ProductApiError, categoryLabel } from '../../models/product';
+import { ProductUsesComponent } from '../../../../shared/components/product-uses/product-uses.component';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ProductsApiService } from '../../services/products-api.service';
 
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.component.html',
-  imports: [TranslatePipe, RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe, ProductUsesComponent, MoneyPipe],
 })
 export class ProductDetailComponent implements OnInit {
   product: Product | null = null;

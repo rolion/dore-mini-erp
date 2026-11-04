@@ -70,7 +70,7 @@
             </div>
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
-              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" [rowClass]="rowClass" (page)="onPage($event)">
               <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [width]="250">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{row.name}}</a>
@@ -85,22 +85,15 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.USO' | translate" [sortable]="false" [width]="150">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.USOS' | translate" [sortable]="false" [width]="230">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  @if (row.canBuy) {
-                  <div class="badge-outline col-blue me-1">{{ 'COMMON.COMPRA' | translate }}</div>
-                  }
-                  @if (row.canSell) {
-                  <div class="badge-outline col-green">{{ 'PRODUCTS.PRODUCT_LIST.VENTA' | translate }}</div>
-                  }
-                  @if (!row.canBuy && !row.canSell) {
-                  —
-                  }
+                  <app-product-uses [product]="row" />
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.PRECIO' | translate" [sortable]="false" [width]="120">
+              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.PRECIO' | translate" [sortable]="false" [width]="120"
+                headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.canSell ? (row.salePrice ?? '—') : '—' }}
+                  {{ row.canSell ? (row.salePrice | money) : '—' }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="120">
@@ -113,18 +106,9 @@
                 </ng-template>
               </ngx-datatable-column>
               @if (inventoryEnabled) {
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.CONTROLA_STOCK' | translate" [sortable]="false" [width]="130">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  @if (row.tracksStock) {
-                  <div class="badge-outline col-green">{{ 'PRODUCTS.PRODUCT_LIST.SI' | translate }}</div>
-                  } @else {
-                  <div class="badge-outline col-brown">{{ 'PRODUCTS.PRODUCT_LIST.NO' | translate }}</div>
-                  }
-                </ng-template>
-              </ngx-datatable-column>
               <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.UNIDAD_BASE' | translate" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.baseUnit ? row.baseUnit.abbreviation : '—' }}
+                  {{ row.tracksStock && row.baseUnit ? row.baseUnit.abbreviation : '—' }}
                 </ng-template>
               </ngx-datatable-column>
               }

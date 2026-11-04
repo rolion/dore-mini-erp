@@ -1060,6 +1060,14 @@
     }
   },
   "PRODUCTS": {
+    "PRODUCT_USES": {
+      "VENDIBLE": "Vendible",
+      "COMPRABLE": "Comprable",
+      "INSUMO": "Insumo",
+      "INSUMO_AYUDA": "Según su categoría: se puede usar para producir otros productos.",
+      "SIN_USOS": "Sin usos",
+      "SE_MOSTRARA_COMO": "Se mostrará como:"
+    },
     "PRODUCT_DETAIL": {
       "DETALLE_DEL_PRODUCTO": "Detalle del producto",
       "POR_REVISAR": "Por revisar",
@@ -1077,6 +1085,7 @@
       "VOLVERA_A_ESTAR_DISPONIBLE_PARA": "Volverá a estar disponible para la venta."
     },
     "PRODUCT_FORM": {
+      "ORGANIZA_Y_MUESTRA_INSUMO": "Organiza y filtra. Materia prima, empaque e intermedio se muestran como Insumo.",
       "NOMBRE_DEL_PRODUCTO": "Nombre del producto",
       "USOS_DEL_PRODUCTO": "Usos del producto",
       "ESTE_PRODUCTO_ESTA_POR_REVISAR": "Este producto está por revisar: indica su categoría y si se compra.",
@@ -1100,6 +1109,7 @@
       "PRODUCTO_CREADO": "Producto creado"
     },
     "PRODUCT_LIST": {
+      "USOS": "Usos",
       "FILTRAR_POR_USO": "Filtrar por uso",
       "TODOS_LOS_USOS": "Todos los usos",
       "SE_COMPRA": "Se compra",

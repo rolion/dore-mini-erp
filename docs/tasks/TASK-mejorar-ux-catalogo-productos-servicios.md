@@ -1,10 +1,10 @@
 # TASK-mejorar-ux-catalogo-productos-servicios: Mejorar cómo se muestran Productos y Servicios del catálogo
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mejorar-ux-catalogo-productos-servicios
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/55
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -13,6 +13,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN | Pantallas afectadas, diseño requerido | delivery-start |
 | 2026-11-04 | DESIGN → PLANNING | DDR propuesto; Specification READY | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Plan v1 y PR | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -79,7 +80,25 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-04-mejorar-ux-catalogo-productos-servicios.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+Solo frontend, sin backend ni migraciones.
+
+- **Componente nuevo** `shared/components/product-uses` (`app-product-uses` + `productUses()`): chips Vendible / Comprable / Insumo / Sin usos; «Insumo» se deriva de la categoría (AC-01, AC-02, EDGE-01, EDGE-02, INV-01).
+- **Lista de Productos:** columna Usos, precio con `money` a la derecha, sin «Controla stock», unidad base solo si controla stock, inactivos atenuados, chevron de los filtros sin solape (AC-01, AC-03, AC-04).
+- **Detalle de Producto:** cabecera con estado y usos, cifras (precio, categoría, unidad base), secundarios y fechas al pie (AC-05).
+- **Formulario de Producto:** venta con su precio debajo, compra, línea «Se mostrará como:» en vivo (`toSignal`), espacio interruptor/etiqueta, ayudas con `aria-describedby` (AC-06, AC-11).
+- **Servicios:** lista con `table-actions` importado (causa de los botones grises), iconos `fas`, buscador con icono, precio a la derecha, inactivos atenuados; detalle con cifras y etiqueta común; espaciado del formulario (AC-07 a AC-09).
+- **i18n:** claves nuevas `PRODUCTS.PRODUCT_USES.*`, `PRODUCT_LIST.USOS`, `PRODUCT_FORM.ORGANIZA_Y_MUESTRA_INSUMO` en es/en/pt (AC-10).
+- **Sistema de diseño:** `design-system.md` §3 (componente) y §5 (Catálogo).
+
+**Pruebas propias** (no es el Quality Gate): specs de products/services/product-uses 87/87 OK; `npm run i18n:check` 0 faltantes; `npm run lint` OK. La suite completa dio 1 fallo distinto y ajeno en cada corrida (specs de idioma/stock, estado global de idioma); el mismo fallo de idioma ocurre en `origin/main`.
+
+**Desviaciones respecto al plan:** ninguna de alcance. Las claves antiguas `PRODUCT_LIST.USO/VENTA/CONTROLA_STOCK` y `SERVICE_DETAIL.ACTUALIZADO` quedan sin uso en los catálogos (limpieza pendiente).
+
+**Verificación pendiente / hipótesis del TASK:** no se pudo reproducir el tooltip «Price» de Servicios ni el conteo «9 en total» (no hay datos reales); revisión visual a 1440/390 px y tema oscuro por hacer en `delivery-publish`. `ng build` no se pudo ejecutar al final por un problema de entorno (ver más abajo).
+
+**Deuda técnica:** Inventario conserva su marcado de badges propio; filtro por «Insumo» y bloques «Hecho con / Se usa en» quedan para cuando exista Producción.
+
+**Pantallas de referencia seguidas:** `product-list`, `product-detail`, `product-form`. **Componentes compartidos reutilizados:** `money`; creado: `app-product-uses`.
 
 ## Review
 _Pendiente_

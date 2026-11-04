@@ -1060,6 +1060,14 @@
     }
   },
   "PRODUCTS": {
+    "PRODUCT_USES": {
+      "VENDIBLE": "Sellable",
+      "COMPRABLE": "Purchasable",
+      "INSUMO": "Ingredient",
+      "INSUMO_AYUDA": "Based on its category: it can be used to produce other products.",
+      "SIN_USOS": "No uses",
+      "SE_MOSTRARA_COMO": "It will be shown as:"
+    },
     "PRODUCT_DETAIL": {
       "DETALLE_DEL_PRODUCTO": "Product details",
       "POR_REVISAR": "To review",
@@ -1077,6 +1085,7 @@
       "VOLVERA_A_ESTAR_DISPONIBLE_PARA": "It will be available for sale again."
     },
     "PRODUCT_FORM": {
+      "ORGANIZA_Y_MUESTRA_INSUMO": "Organizes and filters. Raw material, packaging and intermediate are shown as Ingredient.",
       "NOMBRE_DEL_PRODUCTO": "Product name",
       "USOS_DEL_PRODUCTO": "Product uses",
       "ESTE_PRODUCTO_ESTA_POR_REVISAR": "This product needs review: set its category and whether it is bought.",
@@ -1100,6 +1109,7 @@
       "PRODUCTO_CREADO": "Product created"
     },
     "PRODUCT_LIST": {
+      "USOS": "Uses",
       "FILTRAR_POR_USO": "Filter by use",
       "TODOS_LOS_USOS": "All uses",
       "SE_COMPRA": "Bought",

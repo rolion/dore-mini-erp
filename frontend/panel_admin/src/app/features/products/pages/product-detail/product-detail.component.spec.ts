@@ -63,6 +63,19 @@ describe('ProductDetailComponent', () => {
     expect(first.el.textContent).not.toContain('9.00'); // REV-01
   });
 
+  it('shows use chips and a summary instead of Sí/No rows (AC-05)', async () => {
+    api.get.and.returnValue(of(makeProduct({ category: 'raw_material', canBuy: true, canSell: true, salePrice: '9.00' })));
+    const { el } = await open();
+    const text = el.textContent ?? '';
+    expect(text).toContain('Vendible');
+    expect(text).toContain('Comprable');
+    expect(text).toContain('Insumo');
+    expect(text).toContain('Bs 9.00');
+    expect(text).not.toContain('Se compra');
+    expect(text).not.toContain('Se vende');
+    expect(el.querySelector('[data-testid="product-summary"]')).not.toBeNull();
+  });
+
   it('flags products pending review as unclassified (AC-06, AC-09)', async () => {
     api.get.and.returnValue(of(makeProduct({ category: null, needsReview: true })));
     const { el } = await open();

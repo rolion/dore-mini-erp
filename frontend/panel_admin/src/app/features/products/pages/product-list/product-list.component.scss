@@ -1,1 +1,7 @@
 @use '../../../../shared/styles/table-actions';
+
+// El chevron del select no debe pisar el texto de las opciones largas.
+.header-buttons-left .form-select {
+  padding-right: 2.25rem;
+  background-position: right 0.75rem center;
+}
