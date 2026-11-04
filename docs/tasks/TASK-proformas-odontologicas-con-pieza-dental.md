@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-proformas-odontologicas-con-pieza-dental (basada en `task/TASK-crear-proformas-de-servicios`, PR #52, por indicación del usuario)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/56
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
