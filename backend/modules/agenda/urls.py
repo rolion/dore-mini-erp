@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .api import AbsenceView, ShiftView, WeekView
+from .api import AbsenceDetailView, AbsenceView, ShiftView, WeekView
 from .appointments_api import (
     AppointmentActionView, AppointmentDetailView, AppointmentListCreateView, FreeSlotsView,
 )
@@ -19,4 +19,5 @@ urlpatterns = [
     path('<uuid:professional_id>/shifts/', ShiftView.as_view()),
     path('<uuid:professional_id>/shifts/<int:shift_id>/', ShiftView.as_view()),
     path('<uuid:professional_id>/absences/', AbsenceView.as_view()),
+    path('<uuid:professional_id>/absences/<int:absence_id>/', AbsenceDetailView.as_view()),
 ]

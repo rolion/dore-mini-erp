@@ -20,13 +20,24 @@
         <button class="btn btn-outline-primary" type="button" (click)="selection.value ? load() : loadPeople()">{{ 'AGENDA.AGENDA.REINTENTAR' | translate }}</button>
       }
     }
-    @if (saved) { <p class="alert alert-success" role="status">{{ saved }}</p> }
+    @if (saved) {
+      <div class="alert alert-success d-flex justify-content-between align-items-center" role="status">
+        <span>{{ saved }}</span>
+        <button type="button" class="btn btn-link p-0 text-reset" (click)="saved = ''">{{ 'AGENDA.AGENDA.CERRAR' | translate }}</button>
+      </div>
+    }
     @if (!loadingPeople && !people.length && !error) { <p>{{ 'AGENDA.AGENDA.NO_HAY_PROFESIONALES_REGISTRADOS' | translate }}</p> }
     @if (selection.value) {
       <div class="d-flex flex-wrap gap-2 align-items-center my-3">
         <button class="btn btn-outline-primary" type="button" [disabled]="loading || saving" (click)="move(-7)">{{ 'AGENDA.AGENDA.SEMANA_ANTERIOR' | translate }}</button>
         <span>{{ 'AGENDA.AGENDA.A_HORA_DE_BOLIVIA' | translate: { p0: (formatDate(start)), p1: (formatDate(date(6))) } }}</span>
         <button class="btn btn-outline-primary" type="button" [disabled]="loading || saving" (click)="move(7)">{{ 'AGENDA.AGENDA.SEMANA_SIGUIENTE' | translate }}</button>
+        @if (week) {
+          <span class="ms-md-auto d-flex gap-2">
+            <button type="button" class="btn btn-primary" (click)="open(shiftDialog, () => edit())">{{ 'AGENDA.AGENDA.NUEVO_TURNO' | translate }}</button>
+            <button type="button" class="btn btn-light" (click)="open(absenceDialog, () => editAbsence())">{{ 'AGENDA.AGENDA.REGISTRAR_AUSENCIA' | translate }}</button>
+          </span>
+        }
       </div>
     }
     @if (week; as data) {
@@ -43,9 +54,14 @@
                 }
                 @for (item of data.shifts; track item.id) {
                   @if (item.day === i && item.valid_from <= date(i) && item.valid_until >= date(i)) {
-                    <li><button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="open(shiftDialog, () => edit(item))">
-                      {{ 'AGENDA.AGENDA.EDITAR_TURNO' | translate: { p0: (item.starts.slice(0,5)), p1: (item.ends.slice(0,5)) } }}
-                    </button></li>
+                    <li>
+                      <button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="open(shiftDialog, () => edit(item))">
+                        {{ 'AGENDA.AGENDA.EDITAR_TURNO' | translate: { p0: (item.starts.slice(0,5)), p1: (item.ends.slice(0,5)) } }}
+                      </button>
+                      <button type="button" class="btn btn-link px-2" [disabled]="saving" [attr.aria-label]="('AGENDA.AGENDA.COPIAR_A_OTROS_DIAS' | translate) + ' · ' + day" (click)="open(shiftDialog, () => edit(item, true))">
+                        {{ 'AGENDA.AGENDA.COPIAR_A_OTROS_DIAS' | translate }}
+                      </button>
+                    </li>
                     @for (pause of item.breaks; track pause.starts) {
                       <li>{{ 'AGENDA.AGENDA.PAUSA' | translate: { p0: (pause.starts.slice(0,5)), p1: (pause.ends.slice(0,5)) } }}</li>
                     }
@@ -54,7 +70,11 @@
                 @if (dayEmpty(data, i)) { <li>{{ 'AGENDA.AGENDA.SIN_TURNOS_NI_AUSENCIAS' | translate }}</li> }
                 @for (item of data.absences; track item.id) {
                   @if (item.starts.slice(0,10) <= date(i) && item.ends.slice(0,19) > date(i) + 'T00:00:00') {
-                    <li>{{ 'AGENDA.AGENDA.AUSENCIA_A' | translate: { p0: (formatDateTime(item.starts)), p1: (formatDateTime(item.ends)), p2: (item.reason) } }}</li>
+                    <li>
+                      <span>{{ 'AGENDA.AGENDA.AUSENTE' | translate: { p0: item.reason } }}</span>
+                      <button type="button" class="btn btn-link px-2" [disabled]="saving" [attr.aria-label]="('AGENDA.AGENDA.EDITAR_AUSENCIA' | translate) + ' · ' + item.reason" (click)="open(absenceDialog, () => editAbsence(item))">{{ 'AGENDA.AGENDA.EDITAR' | translate }}</button>
+                      <button type="button" class="btn btn-link px-0 text-danger" [disabled]="saving" [attr.aria-label]="('AGENDA.AGENDA.ELIMINAR_AUSENCIA' | translate) + ' · ' + item.reason" (click)="open(absenceDialog, () => editAbsence(item, true))">{{ 'AGENDA.AGENDA.ELIMINAR' | translate }}</button>
+                    </li>
                   }
                 }
               </ul>
@@ -63,65 +83,108 @@
         }
       </div>
       @if (!data.shifts.length && !data.absences.length) { <p>{{ 'AGENDA.AGENDA.NO_HAY_TURNOS_NI_AUSENCIAS' | translate }}</p> }
-      <div class="row g-3">
-        <div class="col-12 d-flex gap-2">
-          <button type="button" class="btn btn-primary" (click)="open(shiftDialog, () => edit())">{{ 'AGENDA.AGENDA.NUEVO_TURNO' | translate }}</button>
-          <button type="button" class="btn btn-outline-primary" (click)="open(absenceDialog)">{{ 'AGENDA.AGENDA.REGISTRAR_AUSENCIA' | translate }}</button>
-        </div>
-        <dialog #shiftDialog class="rounded p-4" aria-labelledby="shift-dialog-title"
-          (cancel)="saving && $event.preventDefault()">
-          <form [formGroup]="shift" (ngSubmit)="saveShift(shiftDialog)">
-            <fieldset [disabled]="saving">
-              <h5 id="shift-dialog-title">{{ editId ? ('AGENDA.AGENDA.EDITAR_TURNO_2' | translate) : ('AGENDA.AGENDA.NUEVO_TURNO' | translate) }}</h5>
-              <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
-              <label for="agenda-day">{{ 'AGENDA.AGENDA.DIA' | translate }}</label>
-              <select id="agenda-day" class="form-select mb-2" formControlName="day">
-                @for (day of days; track day; let i = $index) { <option [ngValue]="i">{{ day }}</option> }
-              </select>
-              <label for="shift-start">{{ 'AGENDA.AGENDA.HORA_DE_INICIO' | translate }}</label>
-              <input id="shift-start" type="time" class="form-control mb-2" formControlName="starts">
-              <label for="shift-end">{{ 'AGENDA.AGENDA.HORA_DE_FIN_MISMO_DIA' | translate }}</label>
-              <input id="shift-end" type="time" class="form-control mb-2" formControlName="ends">
+    }
+      <dialog #shiftDialog class="rounded p-4" aria-labelledby="shift-dialog-title"
+        (cancel)="saving && $event.preventDefault()">
+        <form [formGroup]="shift" (ngSubmit)="saveShift(shiftDialog)">
+          <fieldset [disabled]="saving">
+            <h5 id="shift-dialog-title">{{ editId ? ('AGENDA.AGENDA.EDITAR_TURNO_2' | translate) : ('AGENDA.AGENDA.NUEVO_TURNO' | translate) }}</h5>
+            <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
+            <fieldset class="mb-2">
+              <legend class="fs-6 mb-1">{{ 'AGENDA.AGENDA.DIAS' | translate }}</legend>
+              <div class="d-flex flex-wrap gap-1 mb-1" role="group" [attr.aria-label]="'AGENDA.AGENDA.DIAS' | translate">
+                @for (day of shortDays; track day; let i = $index) {
+                  <input type="checkbox" class="btn-check" [id]="'shift-day-' + i" autocomplete="off"
+                    [checked]="shift.controls.days.value.includes(i)" [disabled]="dayDisabled(i)" (change)="toggleDay(i, $event)">
+                  <label class="btn btn-outline-primary btn-sm" [for]="'shift-day-' + i" [attr.title]="days[i]">{{ day }}</label>
+                }
+              </div>
+              @if (!editId) {
+                <button type="button" class="btn btn-light btn-sm me-1" (click)="pickDays([0, 1, 2, 3, 4])">{{ 'AGENDA.AGENDA.ATAJO_LUN_VIE' | translate }}</button>
+                <button type="button" class="btn btn-light btn-sm me-1" (click)="pickDays([0, 1, 2, 3, 4, 5, 6])">{{ 'AGENDA.AGENDA.ATAJO_TODOS' | translate }}</button>
+                <button type="button" class="btn btn-light btn-sm" (click)="pickDays([])">{{ 'AGENDA.AGENDA.ATAJO_LIMPIAR' | translate }}</button>
+              }
+              @if (shift.controls.days.invalid && shift.controls.days.dirty) {
+                <small class="form-text text-danger d-block">{{ 'AGENDA.AGENDA.SELECCIONA_AL_MENOS_UN_DIA' | translate }}</small>
+              }
+            </fieldset>
+            <label for="shift-start">{{ 'AGENDA.AGENDA.HORA_DE_INICIO' | translate }}</label>
+            <input id="shift-start" type="time" class="form-control mb-2" formControlName="starts">
+            <label for="shift-end">{{ 'AGENDA.AGENDA.HORA_DE_FIN_MISMO_DIA' | translate }}</label>
+            <input id="shift-end" type="time" class="form-control mb-2" formControlName="ends">
+            <fieldset class="mb-2">
+              <legend class="fs-6 mb-1">{{ 'AGENDA.AGENDA.REPETIR' | translate }}</legend>
+              @for (option of [['week', 'AGENDA.AGENDA.REPETIR_SEMANA'], ['month', 'AGENDA.AGENDA.REPETIR_MES'], ['custom', 'AGENDA.AGENDA.REPETIR_FECHA']]; track option[0]) {
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" formControlName="repeat" [value]="option[0]"
+                    [id]="'shift-repeat-' + option[0]" (change)="applyRepeat()">
+                  <label class="form-check-label" [for]="'shift-repeat-' + option[0]">{{ option[1] | translate }}</label>
+                </div>
+              }
+            </fieldset>
+            @if (shift.controls.repeat.value === 'custom') {
               <label for="shift-from">{{ 'AGENDA.AGENDA.VIGENTE_DESDE' | translate }}</label>
               <input id="shift-from" type="date" class="form-control mb-2" formControlName="valid_from">
               <label for="shift-until">{{ 'AGENDA.AGENDA.VIGENTE_HASTA' | translate }}</label>
               <input id="shift-until" type="date" class="form-control mb-2" formControlName="valid_until">
-              <div formArrayName="breaks">
-                @for (pause of shift.controls.breaks.controls; track pause; let i = $index) {
-                  <fieldset class="border rounded p-2 mb-2" [formGroupName]="i">
-                    <legend class="fs-6">{{ 'AGENDA.AGENDA.PAUSA_2' | translate: { p0: (i + 1) } }}</legend>
-                    <label [for]="'pause-start-' + i">{{ 'AGENDA.AGENDA.INICIO' | translate }}</label>
-                    <input [id]="'pause-start-' + i" type="time" class="form-control" formControlName="starts">
-                    <label [for]="'pause-end-' + i">{{ 'AGENDA.AGENDA.FIN' | translate }}</label>
-                    <input [id]="'pause-end-' + i" type="time" class="form-control" formControlName="ends">
-                    <button type="button" class="btn btn-link" (click)="shift.controls.breaks.removeAt(i)">{{ 'AGENDA.AGENDA.QUITAR_PAUSA' | translate }}</button>
-                  </fieldset>
-                }
+            }
+            @if (shiftSummary) { <p class="text-muted small" role="status">{{ shiftSummary }}</p> }
+            <div formArrayName="breaks">
+              @for (pause of shift.controls.breaks.controls; track pause; let i = $index) {
+                <fieldset class="border rounded p-2 mb-2" [formGroupName]="i">
+                  <legend class="fs-6">{{ 'AGENDA.AGENDA.PAUSA_2' | translate: { p0: (i + 1) } }}</legend>
+                  <label [for]="'pause-start-' + i">{{ 'AGENDA.AGENDA.INICIO' | translate }}</label>
+                  <input [id]="'pause-start-' + i" type="time" class="form-control" formControlName="starts">
+                  <label [for]="'pause-end-' + i">{{ 'AGENDA.AGENDA.FIN' | translate }}</label>
+                  <input [id]="'pause-end-' + i" type="time" class="form-control" formControlName="ends">
+                  <button type="button" class="btn btn-link" (click)="shift.controls.breaks.removeAt(i)">{{ 'AGENDA.AGENDA.QUITAR_PAUSA' | translate }}</button>
+                </fieldset>
+              }
+            </div>
+            <button type="button" class="btn btn-outline-primary me-2" (click)="shift.controls.breaks.push(pause())">{{ 'AGENDA.AGENDA.ANADIR_PAUSA' | translate }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="shift.invalid || saving">{{ 'AGENDA.AGENDA.GUARDAR_TURNO' | translate }}</button>
+            <button type="button" class="btn btn-light ms-2" (click)="shiftDialog.close()">{{ 'AGENDA.AGENDA.CANCELAR' | translate }}</button>
+          </fieldset>
+        </form>
+      </dialog>
+      <dialog #absenceDialog class="rounded p-4" aria-labelledby="absence-dialog-title"
+        (cancel)="saving && $event.preventDefault()">
+        <form [formGroup]="absence" (ngSubmit)="saveAbsence(absenceDialog)">
+          <fieldset [disabled]="saving">
+            <h5 id="absence-dialog-title">{{ absenceId ? ((confirmDelete ? 'AGENDA.AGENDA.ELIMINAR_AUSENCIA' : 'AGENDA.AGENDA.EDITAR_AUSENCIA') | translate) : ('AGENDA.AGENDA.REGISTRAR_AUSENCIA' | translate) }}</h5>
+            <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
+            @if (confirmDelete) {
+              <p role="alert">{{ 'AGENDA.AGENDA.ELIMINAR_AUSENCIA_CONFIRMAR' | translate }}</p>
+              <button type="button" class="btn btn-danger" [disabled]="saving" (click)="removeAbsence(absenceDialog)">{{ 'AGENDA.AGENDA.SI_ELIMINAR' | translate }}</button>
+              <button type="button" class="btn btn-light ms-2" (click)="absenceDialog.close()">{{ 'AGENDA.AGENDA.CANCELAR' | translate }}</button>
+            } @else {
+              <div class="form-check form-switch mb-2">
+                <input id="absence-all-day" type="checkbox" class="form-check-input" role="switch" formControlName="allDay" (change)="toggleAllDay()">
+                <label for="absence-all-day" class="form-check-label">{{ 'AGENDA.AGENDA.TODO_EL_DIA' | translate }}</label>
               </div>
-              <button type="button" class="btn btn-outline-primary me-2" (click)="shift.controls.breaks.push(pause())">{{ 'AGENDA.AGENDA.ANADIR_PAUSA' | translate }}</button>
-              <button type="submit" class="btn btn-primary" [disabled]="shift.invalid || saving">{{ 'AGENDA.AGENDA.GUARDAR_TURNO' | translate }}</button>
-              <button type="button" class="btn btn-link" (click)="shiftDialog.close()">{{ 'AGENDA.AGENDA.CANCELAR' | translate }}</button>
-            </fieldset>
-          </form>
-        </dialog>
-        <dialog #absenceDialog class="rounded p-4" aria-labelledby="absence-dialog-title"
-          (cancel)="saving && $event.preventDefault()">
-          <form [formGroup]="absence" (ngSubmit)="saveAbsence(absenceDialog)">
-            <fieldset [disabled]="saving">
-              <h5 id="absence-dialog-title">{{ 'AGENDA.AGENDA.REGISTRAR_AUSENCIA' | translate }}</h5>
-              <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
-              <label for="absence-start">{{ 'AGENDA.AGENDA.INICIO' | translate }}</label>
-              <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
-              <label for="absence-end">{{ 'AGENDA.AGENDA.FIN' | translate }}</label>
-              <input id="absence-end" type="datetime-local" class="form-control mb-2" formControlName="ends">
+              <label for="absence-start">{{ (absence.controls.allDay.value ? 'AGENDA.AGENDA.DESDE' : 'AGENDA.AGENDA.INICIO') | translate }}</label>
+              @if (absence.controls.allDay.value) {
+                <input id="absence-start" type="date" class="form-control mb-2" formControlName="starts">
+              } @else {
+                <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
+              }
+              <label for="absence-end">{{ (absence.controls.allDay.value ? 'AGENDA.AGENDA.HASTA' : 'AGENDA.AGENDA.FIN') | translate }}</label>
+              @if (absence.controls.allDay.value) {
+                <input id="absence-end" type="date" class="form-control mb-2" formControlName="ends">
+              } @else {
+                <input id="absence-end" type="datetime-local" class="form-control mb-2" formControlName="ends">
+              }
+              @if (absenceDuration) { <p class="text-muted small" role="status">{{ absenceDuration }}</p> }
               <label for="absence-reason">{{ 'AGENDA.AGENDA.MOTIVO_ADMINISTRATIVO' | translate }}</label>
               <input id="absence-reason" class="form-control mb-2" maxlength="250" formControlName="reason">
               <button type="submit" class="btn btn-primary" [disabled]="absence.invalid || saving">{{ 'AGENDA.AGENDA.GUARDAR_AUSENCIA' | translate }}</button>
-              <button type="button" class="btn btn-link" (click)="absenceDialog.close()">{{ 'AGENDA.AGENDA.CANCELAR' | translate }}</button>
-            </fieldset>
-          </form>
-        </dialog>
-      </div>
-    }
+              <button type="button" class="btn btn-light ms-2" (click)="absenceDialog.close()">{{ 'AGENDA.AGENDA.CANCELAR' | translate }}</button>
+              @if (absenceId) {
+                <button type="button" class="btn btn-link text-danger" (click)="confirmDelete = true">{{ 'AGENDA.AGENDA.ELIMINAR_AUSENCIA' | translate }}</button>
+              }
+            }
+          </fieldset>
+        </form>
+      </dialog>
   </div></div></div>
 </section>

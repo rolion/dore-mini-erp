@@ -24,4 +24,13 @@ export interface ShiftPayload extends Interval {
   breaks: Interval[];
 }
 
+export interface MultiShiftPayload extends Interval {
+  days: number[];
+  valid_from: string;
+  valid_until: string;
+  breaks: Interval[];
+}
+
 export interface AbsencePayload extends Interval { reason: string }
+
+export type RepeatMode = 'week' | 'month' | 'custom';
