@@ -1,6 +1,6 @@
 # TASK-mejorar-perfil-de-cliente: Perfil de cliente accionable con resumen de compras y saldo
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mejorar-perfil-de-cliente
@@ -12,6 +12,7 @@
 | 2026-11-04 | (nuevo) → INVESTIGATION | Task creado a partir de la crítica de diseño de la pantalla de perfil de cliente | delivery-start |
 | 2026-11-04 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, DDR y PLAN v1 escritos; Specification READY | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Plan listo para implementar | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -73,7 +74,38 @@ No aplica según veredicto.
 Ver `docs/plans/PLAN-2026-11-04-mejorar-perfil-de-cliente.md` (v1, COMPLETO: cálculo financiero y frontera entre contextos).
 
 ## Implementación
-_Pendiente_
+
+Resumen: perfil de cliente rehecho solo en frontend, según el DDR y el PLAN v1. Sin cambios de backend ni de API.
+
+| Parte | Cubre |
+|---|---|
+| `shared/utils/decimal-sum.ts` (+spec): suma decimal sobre enteros (`BigInt`), sin `float` | INV-01 |
+| `customers/models/customer-purchase-summary.ts` (+spec): `summarizePurchases` (excluye cancelados, última fecha, conteo, total, saldo) y `whatsappUrl` | AC-02, AC-03, INV-01, EDGE-02, EDGE-03 |
+| `customer.ts` y `customer-orders-api.service.ts` (+spec): leen `code`, `paid_total`, `balance` del contrato existente | API-01 |
+| `customer-purchase-history` (html, ts, nuevo scss, spec): columnas Pedido/Fecha/Total/Pagado/Saldo/Entrega/Pago con badges de Sales, cancelados atenuados con saldo «—», pie «Pedidos mostrados: X de Y», enlace «Ver todos los pedidos», vacío con «Crear primer pedido», tabla apilada en móvil, `caption` y `scope="col"` | AC-04, AC-05, AC-06, AC-09, EDGE-01, EDGE-05 |
+| `customer-detail` (html, ts, spec): acciones en la cabecera (Nuevo pedido primario, Editar `btn-light`, Desactivar), contacto con `tel:`/WhatsApp/`mailto:`, «Sin …», tira de 4 cifras con `app-report-card`, aviso de cifras parciales, pie de auditoría, sin «Volver» ni fila «Nombre» | AC-01, AC-02, AC-03, AC-05, AC-07, AC-08, EDGE-04 |
+| `order-form.component.ts` (+spec): preselecciona el cliente desde `?customer=&customer_name=` solo en alta y con Clientes habilitado | AC-07 |
+| `assets/i18n/{es,en,pt}.json`: claves nuevas en las tres; se retiran `BS` y `SE_MUESTRAN_LOS_PEDIDOS_MAS` del historial por quedar sin uso | AC-10 |
+
+Pantalla de referencia: `product-detail` (plantilla Detalle) y `features/reporting` (cifras con `app-report-card`). Reutilizados: `app-report-card`, `app-order-status-badge`, `app-payment-status-badge`, pipe `money`, patrón de tabla apilada de inventario (copiado en un scss del componente).
+
+### Desviaciones respecto al plan
+- «Pedidos mostrados: X de Y» sustituye la nota anterior «Se muestran los N pedidos más recientes de M»; el aviso de cifras parciales vive en el detalle («Calculado con los N pedidos más recientes»), no en el historial.
+- Con error del historial se oculta la tira de cifras completa (no se muestran tarjetas en «error»).
+- Se añadió `hasOutstandingBalance` al resumen (decide el color/texto del saldo sin comparar con coma flotante).
+- No se movió `app-report-card` a `shared/`: se importa desde Reporting (queda como deuda abajo).
+
+### Deuda técnica
+- `app-report-card`, `app-order-status-badge` y `app-payment-status-badge` se importan desde `features/reporting` y `features/sales` en `features/customers`; según el sistema de diseño deberían moverse a `shared/`.
+- Las cifras usan los pedidos cargados (hasta 100); un agregado en servidor sigue pendiente (ADR historial-compras).
+- Estilo de tabla apilada duplicado en dos scss (inventario e historial de clientes).
+- `docs/design/design-system.md` no se actualizó: «Nuevo pedido» como acción primaria en detalles queda como desviación del DDR.
+
+### Verificación propia (no es el Quality Gate)
+`npm run i18n:check` (0 faltantes), `npm run lint` (limpio), `npm run build` (ok) y `npm test`: 1182 pruebas en verde y 1 fallo ya existente en `origin/main` (`core/i18n/screens-i18n.spec.ts:60`, «labels coming from code follow the active language»; se reproduce aislado en un checkout limpio de `main`, no relacionado con este cambio). No se revisó visualmente en el navegador.
+
+### Incidencia de entorno
+Para ejecutar las pruebas en este worktree se enlazó el `node_modules` del checkout principal (junction) y, al borrar un worktree temporal con `git worktree remove --force`, Git borró por el enlace una parte de `E:\dore-mini-erp\frontend\panel_admin\node_modules` (los paquetes `@algolia` a `@angular` y otros). Después `npm ci` en el checkout principal falló al encontrar procesos `esbuild` en uso. Este worktree tiene ahora su propio `node_modules` (`npm ci`). El checkout principal necesita `npm ci` con esos procesos detenidos. No afecta a los archivos versionados.
 
 ## Review
 _Pendiente_

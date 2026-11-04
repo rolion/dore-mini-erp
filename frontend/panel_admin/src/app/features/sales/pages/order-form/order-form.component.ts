@@ -100,6 +100,7 @@ export class OrderFormComponent implements OnInit {
     this.orderId = this.route.snapshot.paramMap.get('id');
     if (!this.orderId) {
       this.suggestChannel();
+      this.preselectCustomer();
     }
     if (this.orderId) {
       this.loading = true;
@@ -171,6 +172,18 @@ export class OrderFormComponent implements OnInit {
 
   private searchCustomers(term: string | null): Observable<OrderCustomer[]> {
     return this.customerOptions.search(term).pipe(finalize(() => (this.customersLoading = false)));
+  }
+
+  /**
+   * Un pedido nuevo abierto desde el perfil de un cliente (`?customer=<id>&customer_name=<nombre>`) parte con ese
+   * cliente elegido. El nombre es solo la etiqueta del selector; el servidor valida el cliente al guardar.
+   */
+  private preselectCustomer(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const id = params.get('customer');
+    if (id && !this.customersDisabled) {
+      this.selectCustomer({ id, name: params.get('customer_name') ?? '' });
+    }
   }
 
   /** Un pedido nuevo parte con el canal predeterminado de la empresa, si lo hay y la persona aún no eligió otro. */

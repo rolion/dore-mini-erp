@@ -11,8 +11,11 @@ export const HISTORY_PAGE_SIZE = 100;
 
 interface OrderRowDto {
   id: string;
+  code: string;
   order_date: string;
   total: string;
+  paid_total: string;
+  balance: string;
   status: string;
   payment_status: string;
 }
@@ -43,8 +46,11 @@ export class CustomerOrdersApiService {
         orders: page.results.map(
           (row): CustomerOrderSummary => ({
             id: row.id,
+            code: row.code,
             date: row.order_date,
             total: row.total,
+            paidTotal: row.paid_total,
+            balance: row.balance,
             status: row.status,
             paymentStatus: row.payment_status,
           }),

@@ -8,54 +8,124 @@
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item"><a routerLink="/pocketbiz/customers">{{ 'COMMON.CLIENTE' | translate }}</a></li>
-    <li class="breadcrumb-item">{{ 'CUSTOMERS.CUSTOMER_DETAIL.PERFIL' | translate }}</li>
+    <li class="breadcrumb-item">{{ customer?.name ?? ('CUSTOMERS.CUSTOMER_DETAIL.PERFIL' | translate) }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
-          <div class="card-header">
-            <h4>{{ customer?.name ?? ('COMMON.CLIENTE' | translate) }}</h4>
+          <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <h4>{{ customer?.name ?? ('COMMON.CLIENTE' | translate) }}</h4>
+              @if (customer; as c) {
+              @if (c.active) {
+              <div class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</div>
+              } @else {
+              <div class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</div>
+              }
+              }
+            </div>
+            @if (customer; as c) {
+            <div class="d-flex flex-wrap gap-2" data-testid="customer-actions">
+              @if (canCreateOrder) {
+              <a class="btn btn-primary" data-testid="new-order" routerLink="/pocketbiz/sales/orders/new"
+                [queryParams]="{ customer: c.id, customer_name: c.name }">{{ 'CUSTOMERS.CUSTOMER_DETAIL.NUEVO_PEDIDO' | translate }}</a>
+              }
+              <a class="btn btn-light" [routerLink]="['/pocketbiz/customers', c.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
+              <button type="button" class="btn btn-warning" (click)="toggleActive()">
+                {{ c.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate) }}
+              </button>
+            </div>
+            }
           </div>
           <div class="card-body">
             @if (customer; as c) {
             <dl class="row m-4">
-              <dt class="col-sm-3">{{ 'COMMON.NOMBRE' | translate }}</dt>
-              <dd class="col-sm-9">{{ c.name }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.TELEFONO' | translate }}</dt>
-              <dd class="col-sm-9">{{ c.phone || '—' }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.CORREO' | translate }}</dt>
-              <dd class="col-sm-9">{{ c.email || '—' }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
-              <dd class="col-sm-9">{{ c.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
               <dd class="col-sm-9">
-                @if (c.active) {
-                <div class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</div>
+                @if (c.phone) {
+                <a [href]="'tel:' + c.phone">{{ c.phone }}</a>
+                @if (whatsappLink(c); as whatsapp) {
+                <a class="btn btn-light btn-sm ms-2" data-testid="whatsapp" [href]="whatsapp" target="_blank" rel="noopener"
+                  [attr.aria-label]="'CUSTOMERS.CUSTOMER_DETAIL.ESCRIBIR_POR_WHATSAPP_A' | translate: { p0: c.name }"
+                  [title]="'CUSTOMERS.CUSTOMER_DETAIL.ESCRIBIR_POR_WHATSAPP_A' | translate: { p0: c.name }">
+                  <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'CUSTOMERS.CUSTOMER_DETAIL.WHATSAPP' | translate }}
+                </a>
+                }
                 } @else {
-                <div class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</div>
+                {{ 'CUSTOMERS.CUSTOMER_DETAIL.SIN_TELEFONO' | translate }}
                 }
               </dd>
-              <dt class="col-sm-3">{{ 'COMMON.CREADO' | translate }}</dt>
-              <dd class="col-sm-9">{{ c.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-              <dt class="col-sm-3">{{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}</dt>
-              <dd class="col-sm-9">{{ c.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">{{ 'COMMON.CORREO' | translate }}</dt>
+              <dd class="col-sm-9">
+                @if (c.email) {
+                <a [href]="'mailto:' + c.email">{{ c.email }}</a>
+                } @else {
+                {{ 'CUSTOMERS.CUSTOMER_DETAIL.SIN_CORREO' | translate }}
+                }
+              </dd>
+              <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
+              <dd class="col-sm-9">{{ c.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
             </dl>
-            <div class="m-4">
-              <a class="btn btn-primary" [routerLink]="['/pocketbiz/customers', c.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
-              <button type="button" class="btn btn-warning ms-2" (click)="toggleActive()">
-                {{ c.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate) }}
-              </button>
-              <a class="btn btn-light ms-2" routerLink="/pocketbiz/customers">{{ 'COMMON.VOLVER' | translate }}</a>
-            </div>
             } @else if (loading) {
             <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
             }
           </div>
         </div>
         @if (customer) {
+        @if (!ordersError) {
+        <div class="row" data-testid="purchase-summary">
+          <div class="col-6 col-lg-3">
+            <app-report-card [title]="'CUSTOMERS.CUSTOMER_DETAIL.ULTIMA_COMPRA' | translate" [status]="ordersLoading ? 'loading' : 'ready'">
+              @if (summary; as s) {
+              @if (s.lastPurchaseDate) {
+              <p class="h4 mb-0" data-testid="summary-last">{{ s.lastPurchaseDate | date: 'dd/MM/yyyy' }}</p>
+              } @else {
+              <p class="h4 mb-0" data-testid="summary-last">{{ 'CUSTOMERS.CUSTOMER_DETAIL.SIN_COMPRAS' | translate }}</p>
+              }
+              }
+            </app-report-card>
+          </div>
+          <div class="col-6 col-lg-3">
+            <app-report-card [title]="'COMMON.PEDIDOS' | translate" [status]="ordersLoading ? 'loading' : 'ready'">
+              @if (summary; as s) {
+              <p class="h4 mb-0" data-testid="summary-count">{{ s.orderCount }}</p>
+              <small class="text-muted">{{ 'CUSTOMERS.CUSTOMER_DETAIL.SIN_CONTAR_CANCELADOS' | translate }}</small>
+              }
+            </app-report-card>
+          </div>
+          <div class="col-6 col-lg-3">
+            <app-report-card [title]="'CUSTOMERS.CUSTOMER_DETAIL.TOTAL_COMPRADO' | translate" [status]="ordersLoading ? 'loading' : 'ready'">
+              @if (summary; as s) {
+              <p class="h4 mb-0" data-testid="summary-total">{{ s.totalPurchased | money }}</p>
+              <small class="text-muted">{{ 'CUSTOMERS.CUSTOMER_DETAIL.SIN_CONTAR_CANCELADOS' | translate }}</small>
+              }
+            </app-report-card>
+          </div>
+          <div class="col-6 col-lg-3">
+            <app-report-card [title]="'CUSTOMERS.CUSTOMER_DETAIL.SALDO_PENDIENTE' | translate" [status]="ordersLoading ? 'loading' : 'ready'">
+              @if (summary; as s) {
+              <p class="h4 mb-0" [class.text-danger]="s.hasOutstandingBalance" data-testid="summary-balance">{{ s.outstandingBalance | money }}</p>
+              <small class="text-muted">
+                {{ (s.hasOutstandingBalance ? 'CUSTOMERS.CUSTOMER_DETAIL.PENDIENTE_DE_COBRO' : 'CUSTOMERS.CUSTOMER_DETAIL.AL_DIA') | translate }}
+              </small>
+              }
+            </app-report-card>
+          </div>
+        </div>
+        @if (!ordersLoading && summaryIsPartial) {
+        <p class="text-muted" data-testid="summary-partial">
+          {{ 'CUSTOMERS.CUSTOMER_DETAIL.CALCULADO_CON_LOS_PEDIDOS_MAS_RECIENTES' | translate: { p0: orders.length } }}
+        </p>
+        }
+        }
         <app-customer-purchase-history [orders]="orders" [loading]="ordersLoading" [error]="ordersError"
-          [total]="ordersTotal" />
+          [total]="ordersTotal" [customerId]="customer.id" [customerName]="customer.name"
+          [ordersEnabled]="ordersEnabled" [canCreateOrder]="canCreateOrder" />
+        <p class="text-muted small" data-testid="audit">
+          {{ 'COMMON.CREADO' | translate }} {{ customer.createdAt | date: 'dd/MM/yyyy HH:mm' }} ·
+          {{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }} {{ customer.updatedAt | date: 'dd/MM/yyyy HH:mm' }}
+        </p>
         }
       </div>
     </div>
