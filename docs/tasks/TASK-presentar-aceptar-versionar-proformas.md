@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-presentar-aceptar-versionar-proformas (basada en `origin/task/TASK-crear-proformas-de-servicios`, 672d71b, que contiene los PR #52 y #56; por indicación del usuario)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/59
 **Fuente:** https://trello.com/c/FF97zg6h/6-pb-cot-002-presentar-aceptar-y-versionar-proformas
 
 ## Historial de transiciones
