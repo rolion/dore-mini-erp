@@ -1,13 +1,13 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Reportes</h5>
+      <h5 class="page-title m-b-0">{{ 'REPORTING.REPORTS.REPORTES' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Reportes</li>
+    <li class="breadcrumb-item">{{ 'REPORTING.REPORTS.REPORTES' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="mb-3">
@@ -17,23 +17,23 @@
 
     <div class="row">
       <div class="col-md-6">
-        <app-report-card title="Total de ventas" [status]="(sales.state$ | async)?.status ?? 'loading'"
+        <app-report-card [title]="'REPORTING.REPORTS.TOTAL_DE_VENTAS' | translate" [status]="(sales.state$ | async)?.status ?? 'loading'"
           [error]="(sales.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="sales.reload()">
           @if ((sales.state$ | async)?.data; as d) {
           <h2 class="mb-1" data-testid="sales-total">{{ d.total | money }}</h2>
-          <p class="mb-1" data-testid="sales-orders">{{ d.ordersCount }} pedidos · Ticket promedio {{ d.averageTicket ? (d.averageTicket | money) : 'Sin registros' }}</p>
+          <p class="mb-1" data-testid="sales-orders">{{ 'REPORTING.REPORTS.PEDIDOS_TICKET_PROMEDIO' | translate: { p0: (d.ordersCount), p1: (d.averageTicket ? (d.averageTicket | money) : ('REPORTING.REPORTS.SIN_REGISTROS' | translate)) } }}</p>
           <small class="text-muted d-block" data-testid="sales-period">{{ periodLabel(d.period) }}</small>
           <small class="text-muted" data-testid="sales-criteria">{{ d.criteria }}</small>
           }
         </app-report-card>
       </div>
       <div class="col-md-6">
-        <app-report-card title="Total de gastos" [status]="(expenses.state$ | async)?.status ?? 'loading'"
+        <app-report-card [title]="'REPORTING.REPORTS.TOTAL_DE_GASTOS' | translate" [status]="(expenses.state$ | async)?.status ?? 'loading'"
           [error]="(expenses.state$ | async)?.error ?? ''" [unavailable]="expensesDisabled" (retry)="expenses.reload()">
           @if ((expenses.state$ | async)?.data; as d) {
           <h2 class="mb-1" data-testid="expenses-total">{{ d.total | money }}</h2>
           <small class="text-muted d-block" data-testid="expenses-period">{{ periodLabel(d.period) }}</small>
-          <small class="text-muted">Gastos vigentes del periodo; los anulados no se incluyen.</small>
+          <small class="text-muted">{{ 'REPORTING.REPORTS.GASTOS_VIGENTES_DEL_PERIODO_LOS' | translate }}</small>
           }
         </app-report-card>
       </div>
@@ -41,12 +41,12 @@
 
     <div class="row">
       <div class="col-lg-6">
-        <app-report-card title="Ventas por canal" [status]="(channels.state$ | async)?.status ?? 'loading'"
+        <app-report-card [title]="'REPORTING.REPORTS.VENTAS_POR_CANAL' | translate" [status]="(channels.state$ | async)?.status ?? 'loading'"
           [error]="(channels.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="channels.reload()">
           @if ((channels.state$ | async)?.data; as d) {
           @if (d.channels.length) {
           <table class="table table-sm" data-testid="channels-table">
-            <thead><tr><th>Canal</th><th class="text-end">Pedidos</th><th class="text-end">Ventas</th><th>% del total</th></tr></thead>
+            <thead><tr><th>{{ 'COMMON.CANAL' | translate }}</th><th class="text-end">{{ 'COMMON.PEDIDOS' | translate }}</th><th class="text-end">{{ 'COMMON.VENTAS' | translate }}</th><th>{{ 'REPORTING.REPORTS.DEL_TOTAL' | translate }}</th></tr></thead>
             <tbody>
               @for (row of d.channels; track row.salesChannel) {
               <tr>
@@ -55,7 +55,7 @@
                 <td class="text-end">{{ row.total | money }}</td>
                 <td class="w-25">
                   <div class="progress" style="height: .6rem" role="progressbar" [attr.aria-valuenow]="percent(row.total, channelsTotal(d.channels))"
-                    aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Porcentaje de ' + channelLabel(row.salesChannel)">
+                    aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="('REPORTING.REPORTS.PORCENTAJE_DE_N' | translate: { n: channelLabel(row.salesChannel) })">
                     <div class="progress-bar" [style.width.%]="percent(row.total, channelsTotal(d.channels))"></div>
                   </div>
                   <small>{{ percent(row.total, channelsTotal(d.channels)) }}%</small>
@@ -65,21 +65,21 @@
             </tbody>
           </table>
           } @else {
-          <p class="mb-0" data-testid="channels-empty">Sin registros</p>
+          <p class="mb-0" data-testid="channels-empty">{{ 'REPORTING.REPORTS.SIN_REGISTROS' | translate }}</p>
           }
           }
         </app-report-card>
       </div>
 
       <div class="col-lg-6">
-        <app-report-card title="Gastos por categoría" [status]="(expenses.state$ | async)?.status ?? 'loading'"
+        <app-report-card [title]="'REPORTING.REPORTS.GASTOS_POR_CATEGORIA' | translate" [status]="(expenses.state$ | async)?.status ?? 'loading'"
           [error]="(expenses.state$ | async)?.error ?? ''" [unavailable]="expensesDisabled" (retry)="expenses.reload()">
           @if ((expenses.state$ | async)?.data; as d) {
           @if (d.categories.length) {
           <apx-chart [series]="chartSeries(d)" [chart]="chart" [labels]="chartLabels(d)" [legend]="legend"
             data-testid="expenses-chart" />
           <table class="table table-sm" data-testid="categories-table">
-            <thead><tr><th>Categoría</th><th class="text-end">Monto</th><th class="text-end">% del total</th></tr></thead>
+            <thead><tr><th>{{ 'COMMON.CATEGORIA' | translate }}</th><th class="text-end">{{ 'COMMON.MONTO' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.DEL_TOTAL' | translate }}</th></tr></thead>
             <tbody>
               @for (row of d.categories; track row.categoryId) {
               <tr>
@@ -90,11 +90,11 @@
               }
             </tbody>
             <tfoot>
-              <tr class="fw-bold"><td>Total</td><td class="text-end" data-testid="categories-total">{{ d.total | money }}</td><td></td></tr>
+              <tr class="fw-bold"><td>{{ 'COMMON.TOTAL' | translate }}</td><td class="text-end" data-testid="categories-total">{{ d.total | money }}</td><td></td></tr>
             </tfoot>
           </table>
           } @else {
-          <p class="mb-0" data-testid="categories-empty">Sin registros</p>
+          <p class="mb-0" data-testid="categories-empty">{{ 'REPORTING.REPORTS.SIN_REGISTROS' | translate }}</p>
           }
           }
         </app-report-card>
@@ -103,12 +103,12 @@
 
     <div class="row">
       <div class="col-lg-6">
-        <app-report-card title="Productos más vendidos" [status]="(products.state$ | async)?.status ?? 'loading'"
+        <app-report-card [title]="'REPORTING.REPORTS.PRODUCTOS_MAS_VENDIDOS' | translate" [status]="(products.state$ | async)?.status ?? 'loading'"
           [error]="(products.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="products.reload()">
           @if ((products.state$ | async)?.data; as d) {
           @if (d.products.length) {
           <table class="table table-sm" data-testid="products-table">
-            <thead><tr><th>Producto</th><th class="text-end">Unidades</th><th class="text-end">Importe</th></tr></thead>
+            <thead><tr><th>{{ 'COMMON.PRODUCTO' | translate }}</th><th class="text-end">{{ 'COMMON.UNIDADES' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.IMPORTE' | translate }}</th></tr></thead>
             <tbody>
               @for (row of d.products; track row.productId) {
               <tr>
@@ -121,7 +121,7 @@
           </table>
           <small class="text-muted" data-testid="products-note">{{ productAmountNote }}</small>
           } @else {
-          <p class="mb-0" data-testid="products-empty">Sin registros</p>
+          <p class="mb-0" data-testid="products-empty">{{ 'REPORTING.REPORTS.SIN_REGISTROS' | translate }}</p>
           }
           }
         </app-report-card>
@@ -129,16 +129,16 @@
 
       @if (!customersDisabled) {
       <div class="col-lg-6">
-        <app-report-card title="Clientes con mayor compra" [status]="(customers.state$ | async)?.status ?? 'loading'"
+        <app-report-card [title]="'REPORTING.REPORTS.CLIENTES_CON_MAYOR_COMPRA' | translate" [status]="(customers.state$ | async)?.status ?? 'loading'"
           [error]="(customers.state$ | async)?.error ?? ''" [unavailable]="salesDisabled" (retry)="customers.reload()">
           @if ((customers.state$ | async)?.data; as d) {
           @if (d.customers.length) {
           <table class="table table-sm" data-testid="customers-table">
-            <thead><tr><th>Cliente</th><th class="text-end">Pedidos</th><th class="text-end">Total comprado</th></tr></thead>
+            <thead><tr><th>{{ 'COMMON.CLIENTE' | translate }}</th><th class="text-end">{{ 'COMMON.PEDIDOS' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.TOTAL_COMPRADO' | translate }}</th></tr></thead>
             <tbody>
               @for (row of d.customers; track row.customerId) {
               <tr>
-                <td><a [routerLink]="['/pocketbiz/customers', row.customerId]">{{ row.name || 'Cliente' }}</a></td>
+                <td><a [routerLink]="['/pocketbiz/customers', row.customerId]">{{ row.name || ('COMMON.CLIENTE' | translate) }}</a></td>
                 <td class="text-end">{{ row.ordersCount }}</td>
                 <td class="text-end">{{ row.total | money }}</td>
               </tr>
@@ -147,7 +147,7 @@
           </table>
           <small class="text-muted" data-testid="customers-note">{{ customerRankingNote }}</small>
           } @else {
-          <p class="mb-0" data-testid="customers-empty">Sin registros</p>
+          <p class="mb-0" data-testid="customers-empty">{{ 'REPORTING.REPORTS.SIN_REGISTROS' | translate }}</p>
           }
           }
         </app-report-card>

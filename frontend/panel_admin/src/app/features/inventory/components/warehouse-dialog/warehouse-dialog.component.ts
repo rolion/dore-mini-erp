@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -17,7 +19,7 @@ export type WarehouseField = 'name' | 'description' | 'isDefault';
 @Component({
   selector: 'app-warehouse-dialog',
   templateUrl: './warehouse-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class WarehouseDialogComponent {
   readonly nameMaxLength = WAREHOUSE_NAME_MAX_LENGTH;
@@ -80,7 +82,7 @@ export class WarehouseDialogComponent {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (saved) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Almacén actualizado' : 'Almacén creado');
+        this.toastr.success(this.isEdit ? tr('INVENTORY.WAREHOUSE_DIALOG.ALMACEN_ACTUALIZADO') : tr('INVENTORY.WAREHOUSE_DIALOG.ALMACEN_CREADO'));
         this.activeModal.close(saved);
       },
       error: (err: InventoryApiError) => {

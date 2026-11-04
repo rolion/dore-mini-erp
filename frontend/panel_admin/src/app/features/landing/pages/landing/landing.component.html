@@ -1,8 +1,8 @@
 <div class="landing">
   <!-- Cabecera fija -->
   <header class="landing-header">
-    <nav class="container landing-nav" aria-label="Principal">
-      <a class="landing-brand" [routerLink]="paths.landing" aria-label="PocketBiz, inicio">
+    <nav class="container landing-nav" [attr.aria-label]="'LANDING.LANDING.PRINCIPAL' | translate">
+      <a class="landing-brand" [routerLink]="paths.landing" [attr.aria-label]="'LANDING.LANDING.POCKETBIZ_INICIO' | translate">
         <img src="assets/images/main-logo.png" alt="PocketBiz" width="1000" height="218" />
       </a>
 
@@ -15,8 +15,9 @@
       </ul>
 
       <div class="landing-actions">
+        <app-language-selector class="landing-language" />
         @if (!isAuthenticated()) {
-          <a class="landing-login d-none d-sm-inline" [routerLink]="paths.login">Iniciar sesión</a>
+          <a class="landing-login d-none d-sm-inline" [routerLink]="paths.login">{{ 'LANDING.LANDING.INICIAR_SESION' | translate }}</a>
         }
         <a class="btn btn-primary landing-cta" [routerLink]="primaryCtaPath()" data-testid="cta-header">
           {{ primaryCtaLabel() }}
@@ -24,7 +25,7 @@
         <button
           type="button"
           class="btn landing-toggler d-lg-none"
-          aria-label="Abrir menú"
+          [attr.aria-label]="'LANDING.LANDING.ABRIR_MENU' | translate"
           aria-controls="landing-menu"
           [attr.aria-expanded]="!menuCollapsed()"
           (click)="toggleMenu()"
@@ -42,7 +43,7 @@
           </li>
         }
         @if (!isAuthenticated()) {
-          <li><a [routerLink]="paths.login">Iniciar sesión</a></li>
+          <li><a [routerLink]="paths.login">{{ 'LANDING.LANDING.INICIAR_SESION' | translate }}</a></li>
         }
       </ul>
     </div>
@@ -54,10 +55,9 @@
       <div class="container">
         <div class="row align-items-center g-5">
           <div class="col-lg-6">
-            <h1>Tu negocio en el bolsillo</h1>
+            <h1>{{ 'LANDING.LANDING.TU_NEGOCIO_EN_EL_BOLSILLO' | translate }}</h1>
             <p class="landing-lead">
-              Registra tus pedidos, cobros y gastos en un solo lugar y mira de un vistazo cuánto
-              vendiste, qué te deben y qué tienes que entregar.
+              {{ 'LANDING.LANDING.REGISTRA_TUS_PEDIDOS_COBROS_Y' | translate }}
             </p>
             <a
               class="btn btn-primary btn-lg landing-cta"
@@ -75,11 +75,11 @@
                   src="assets/images/landing/dashboard-movil-403-positivo.png"
                   width="403"
                   height="850"
-                  alt="Panel de PocketBiz en el celular: ventas, gastos y ganancia estimada del mes"
+                  [alt]="'LANDING.LANDING.PANEL_DE_POCKETBIZ_EN_EL' | translate"
                 />
               </div>
               <figcaption class="landing-note">
-                Captura de la aplicación con datos de ejemplo
+                {{ 'LANDING.LANDING.CAPTURA_DE_LA_APLICACION_CON' | translate }}
               </figcaption>
             </figure>
           </div>
@@ -90,7 +90,7 @@
     <!-- Reconocimiento -->
     <section class="landing-section landing-section--white">
       <div class="container text-center">
-        <h2>¿Tus ventas viven en chats, cuadernos y de memoria?</h2>
+        <h2>{{ 'LANDING.LANDING.TUS_VENTAS_VIVEN_EN_CHATS' | translate }}</h2>
         <ul class="landing-recognition">
           @for (item of recognition; track item) {
             <li>{{ item }}</li>
@@ -102,9 +102,9 @@
     <!-- Qué puedes controlar -->
     <section id="que-puedes-controlar" class="landing-section">
       <div class="container">
-        <h2 class="text-center">Qué puedes controlar</h2>
+        <h2 class="text-center">{{ 'LANDING.LANDING.QUE_PUEDES_CONTROLAR' | translate }}</h2>
         <p class="landing-sub text-center">
-          Pedidos, cobros, gastos, clientes y productos, en un solo lugar.
+          {{ 'LANDING.LANDING.PEDIDOS_COBROS_GASTOS_CLIENTES_Y' | translate }}
         </p>
         <div class="row g-4">
           @for (benefit of benefits; track benefit.title) {
@@ -125,9 +125,9 @@
     <!-- Entrega y pago, por separado -->
     <section class="landing-section landing-section--white">
       <div class="container">
-        <h2 class="text-center">Entrega y pago, por separado</h2>
+        <h2 class="text-center">{{ 'LANDING.LANDING.ENTREGA_Y_PAGO_POR_SEPARADO' | translate }}</h2>
         <p class="landing-sub text-center">
-          Cada pedido guarda su canal de venta, y su entrega y su cobro se siguen por separado.
+          {{ 'LANDING.LANDING.CADA_PEDIDO_GUARDA_SU_CANAL' | translate }}
         </p>
         <div class="row g-4">
           <div class="col-12 col-lg-4">
@@ -136,8 +136,8 @@
               <h3>{{ flowSteps[0].title }}</h3>
               <p>{{ flowSteps[0].text }}</p>
               <div class="landing-mock">
-                <span class="landing-mock-label">Canal de venta</span>
-                <span class="landing-mock-field">WhatsApp</span>
+                <span class="landing-mock-label">{{ 'LANDING.LANDING.CANAL_DE_VENTA' | translate }}</span>
+                <span class="landing-mock-field">{{ 'LANDING.LANDING.WHATSAPP' | translate }}</span>
               </div>
               <p class="landing-note mb-0">{{ channelNote }}</p>
             </article>
@@ -156,7 +156,7 @@
                     </span>
                   </div>
                 }
-                <p class="landing-balance mb-0">Saldo Bs 28.00</p>
+                <p class="landing-balance mb-0">{{ 'LANDING.LANDING.SALDO_BS_28_00' | translate }}</p>
               </div>
             </article>
           </div>
@@ -174,23 +174,23 @@
                     </span>
                   </div>
                 }
-                <p class="landing-balance landing-balance--ok mb-0">Sin saldo</p>
+                <p class="landing-balance landing-balance--ok mb-0">{{ 'LANDING.LANDING.SIN_SALDO' | translate }}</p>
               </div>
             </article>
           </div>
         </div>
-        <p class="landing-note text-center mt-3">Ejemplo con datos ficticios</p>
+        <p class="landing-note text-center mt-3">{{ 'LANDING.LANDING.EJEMPLO_CON_DATOS_FICTICIOS' | translate }}</p>
       </div>
     </section>
 
     <!-- Tu resumen -->
     <section class="landing-section">
       <div class="container">
-        <h2 class="text-center">Tu resumen</h2>
+        <h2 class="text-center">{{ 'LANDING.LANDING.TU_RESUMEN' | translate }}</h2>
         <p class="landing-sub text-center">
-          Mira cuánto vendiste, cuánto gastaste y cuánto te queda, estimado.
+          {{ 'LANDING.LANDING.MIRA_CUANTO_VENDISTE_CUANTO_GASTASTE' | translate }}
         </p>
-        <div class="landing-periods" role="group" aria-label="Periodo de ejemplo">
+        <div class="landing-periods" role="group" [attr.aria-label]="'LANDING.LANDING.PERIODO_DE_EJEMPLO' | translate">
           @for (label of periods; track label) {
             <span class="landing-period" [class.landing-period--active]="label === selectedPeriod">{{ label }}</span>
           }
@@ -198,33 +198,33 @@
         <div class="row g-4 justify-content-center">
           <div class="col-12 col-md-4">
             <div class="landing-card h-100">
-              <span class="landing-stat-label">Ventas</span>
-              <strong class="landing-stat">Bs 280.50</strong>
-              <span class="landing-note">Total de los pedidos del periodo</span>
+              <span class="landing-stat-label">{{ 'COMMON.VENTAS' | translate }}</span>
+              <strong class="landing-stat">{{ 'LANDING.LANDING.BS_280_50' | translate }}</strong>
+              <span class="landing-note">{{ 'LANDING.LANDING.TOTAL_DE_LOS_PEDIDOS_DEL' | translate }}</span>
             </div>
           </div>
           <div class="col-12 col-md-4">
             <div class="landing-card h-100">
-              <span class="landing-stat-label">Gastos</span>
-              <strong class="landing-stat">Bs 270.00</strong>
+              <span class="landing-stat-label">{{ 'COMMON.GASTOS' | translate }}</span>
+              <strong class="landing-stat">{{ 'LANDING.LANDING.BS_270_00' | translate }}</strong>
             </div>
           </div>
           <div class="col-12 col-md-4">
             <div class="landing-card landing-card--profit h-100" data-testid="profit-card">
-              <span class="landing-stat-label">Ganancia estimada</span>
-              <strong class="landing-stat landing-stat--profit">Bs 10.50</strong>
+              <span class="landing-stat-label">{{ 'LANDING.LANDING.GANANCIA_ESTIMADA' | translate }}</span>
+              <strong class="landing-stat landing-stat--profit">{{ 'LANDING.LANDING.BS_10_50' | translate }}</strong>
               <span class="landing-note">{{ profitNote }}</span>
             </div>
           </div>
         </div>
-        <p class="landing-note text-center mt-3">Ejemplo con datos ficticios</p>
+        <p class="landing-note text-center mt-3">{{ 'LANDING.LANDING.EJEMPLO_CON_DATOS_FICTICIOS' | translate }}</p>
       </div>
     </section>
 
     <!-- Cómo empezar -->
     <section id="como-funciona" class="landing-section landing-section--white">
       <div class="container">
-        <h2 class="text-center">Cómo empezar en tres pasos</h2>
+        <h2 class="text-center">{{ 'LANDING.LANDING.COMO_EMPEZAR_EN_TRES_PASOS' | translate }}</h2>
         <ol class="row g-4 landing-steps">
           @for (step of getStarted; track step.title; let i = $index) {
             <li class="col-12 col-md-4">
@@ -247,8 +247,8 @@
     <!-- Planes (solo informativa) -->
     <section id="planes" class="landing-section">
       <div class="container">
-        <h2 class="text-center">Planes</h2>
-        <div class="landing-periods" role="group" aria-label="Facturación del plan Pro">
+        <h2 class="text-center">{{ 'LANDING.LANDING.PLANES' | translate }}</h2>
+        <div class="landing-periods" role="group" [attr.aria-label]="'LANDING.LANDING.FACTURACION_DEL_PLAN_PRO' | translate">
           <button
             type="button"
             class="landing-period-btn"
@@ -257,7 +257,7 @@
             [attr.aria-pressed]="period() === 'monthly'"
             (click)="setPeriod('monthly')"
           >
-            Mensual
+            {{ 'LANDING.LANDING.MENSUAL' | translate }}
           </button>
           <button
             type="button"
@@ -267,14 +267,14 @@
             [attr.aria-pressed]="period() === 'annual'"
             (click)="setPeriod('annual')"
           >
-            Anual
+            {{ 'LANDING.LANDING.ANUAL' | translate }}
           </button>
         </div>
         <div class="row g-4 justify-content-center">
           <div class="col-12 col-md-6 col-lg-5">
             <article class="landing-card landing-plan h-100" data-testid="plan-free">
-              <h3>Gratis</h3>
-              <p class="landing-price">Bs 0</p>
+              <h3>{{ 'LANDING.LANDING.GRATIS' | translate }}</h3>
+              <p class="landing-price">{{ 'LANDING.LANDING.BS_0' | translate }}</p>
               <ul class="landing-checks">
                 @for (feature of freeFeatures; track feature) {
                   <li><i class="fas fa-check-circle" aria-hidden="true"></i> {{ feature }}</li>
@@ -292,12 +292,12 @@
           </div>
           <div class="col-12 col-md-6 col-lg-5">
             <article class="landing-card landing-plan h-100" data-testid="plan-pro">
-              <h3>Pro</h3>
+              <h3>{{ 'LANDING.LANDING.PRO' | translate }}</h3>
               @if (period() === 'annual') {
-                <p class="landing-price" data-testid="pro-price">Bs 350 <small>al año</small></p>
-                <p class="landing-note">(Bs 30 al mes)</p>
+                <p class="landing-price" data-testid="pro-price">{{ 'LANDING.LANDING.BS_350' | translate }} <small>{{ 'LANDING.LANDING.AL_ANO' | translate }}</small></p>
+                <p class="landing-note">{{ 'LANDING.LANDING.BS_30_AL_MES' | translate }}</p>
               } @else {
-                <p class="landing-price" data-testid="pro-price">Bs 30 <small>al mes</small></p>
+                <p class="landing-price" data-testid="pro-price">{{ 'LANDING.LANDING.BS_30' | translate }} <small>{{ 'LANDING.LANDING.AL_MES' | translate }}</small></p>
               }
               <ul class="landing-checks">
                 <li><i class="fas fa-check-circle" aria-hidden="true"></i> {{ proFeature }}</li>
@@ -313,15 +313,15 @@
     <section class="landing-section landing-section--white">
       <div class="container text-center">
         <span class="landing-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
-        <h2>Tus datos, tu empresa</h2>
-        <p class="landing-sub">Cada empresa ve solo sus datos.</p>
+        <h2>{{ 'LANDING.LANDING.TUS_DATOS_TU_EMPRESA' | translate }}</h2>
+        <p class="landing-sub">{{ 'LANDING.LANDING.CADA_EMPRESA_VE_SOLO_SUS' | translate }}</p>
       </div>
     </section>
 
     <!-- Preguntas -->
     <section id="preguntas" class="landing-section">
       <div class="container landing-faq">
-        <h2 class="text-center">Preguntas frecuentes</h2>
+        <h2 class="text-center">{{ 'LANDING.LANDING.PREGUNTAS_FRECUENTES' | translate }}</h2>
         <div ngbAccordion [closeOthers]="true">
           @for (item of faq; track item.question; let first = $first) {
             <div ngbAccordionItem [collapsed]="!first">
@@ -342,7 +342,7 @@
     <!-- Cierre -->
     <section class="landing-section landing-closing">
       <div class="container text-center">
-        <h2>Empieza a ver tu negocio con claridad</h2>
+        <h2>{{ 'LANDING.LANDING.EMPIEZA_A_VER_TU_NEGOCIO' | translate }}</h2>
         <p>
           <a
             class="btn btn-primary btn-lg landing-cta"
@@ -353,7 +353,7 @@
           </a>
         </p>
         @if (!isAuthenticated()) {
-          <a class="landing-login" [routerLink]="paths.login">Iniciar sesión</a>
+          <a class="landing-login" [routerLink]="paths.login">{{ 'LANDING.LANDING.INICIAR_SESION' | translate }}</a>
         }
       </div>
     </section>
@@ -363,7 +363,7 @@
     <div class="container landing-footer-inner">
       <img src="assets/images/main-logo.png" alt="PocketBiz" width="1000" height="218" />
       @if (!isAuthenticated()) {
-        <a [routerLink]="paths.login">Iniciar sesión</a>
+        <a [routerLink]="paths.login">{{ 'LANDING.LANDING.INICIAR_SESION' | translate }}</a>
       }
     </div>
   </footer>

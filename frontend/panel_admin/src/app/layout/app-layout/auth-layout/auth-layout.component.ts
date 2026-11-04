@@ -4,12 +4,13 @@ import { Component, Renderer2, DOCUMENT, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { DirectionService, InConfiguration, LocalStorageService } from '@core';
 import { ConfigService } from '@config/config.service';
+import { LanguageSelectorComponent } from '../../../shared/components/language-selector/language-selector.component';
 
 @Component({
     selector: 'app-auth-layout',
     templateUrl: './auth-layout.component.html',
-    styleUrls: [],
-    imports: [RouterOutlet]
+    styleUrls: ['./auth-layout.component.scss'],
+    imports: [RouterOutlet, LanguageSelectorComponent]
 })
 export class AuthLayoutComponent {
   direction!: Direction;

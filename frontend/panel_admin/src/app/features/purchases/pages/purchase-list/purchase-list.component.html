@@ -1,14 +1,14 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Compras</h5>
+      <h5 class="page-title m-b-0">{{ 'COMMON.COMPRAS' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Compras</li>
-    <li class="breadcrumb-item">Compras</li>
+    <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'COMMON.COMPRAS' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row clearfix">
@@ -21,7 +21,7 @@
                   <div class="col-auto p-0">
                     <div class="ngxTableHeader">
                       <div class="table-title">
-                        <h2><strong>Compras</strong></h2>
+                        <h2><strong>{{ 'COMMON.COMPRAS' | translate }}</strong></h2>
                       </div>
                     </div>
                   </div>
@@ -30,7 +30,7 @@
                       <div class="header-buttons-left">
                         <div class="d-flex align-items-center gap-2 ms-3">
                           <a class="btn btn-icon icon-left btn-primary rounded-button"
-                            routerLink="/pocketbiz/purchases/new" title="Nueva compra" aria-label="Nueva compra">
+                            routerLink="/pocketbiz/purchases/new" [title]="'PURCHASES.PURCHASE_LIST.NUEVA_COMPRA' | translate" [attr.aria-label]="'PURCHASES.PURCHASE_LIST.NUEVA_COMPRA' | translate">
                             <i class="material-icons">add</i>
                           </a>
                         </div>
@@ -42,35 +42,35 @@
             </div>
             <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters" (ngSubmit)="applyForm()">
               <div class="col-md-4">
-                <label for="filter-search">Buscar</label>
+                <label for="filter-search">{{ 'PURCHASES.PURCHASE_LIST.BUSCAR' | translate }}</label>
                 <input id="filter-search" type="search" class="form-control search-field" formControlName="search"
-                  placeholder="Referencia interna o externa" aria-label="Buscar por referencia interna o externa">
+                  [placeholder]="'PURCHASES.PURCHASE_LIST.REFERENCIA_INTERNA_O_EXTERNA' | translate" [attr.aria-label]="'PURCHASES.PURCHASE_LIST.BUSCAR_POR_REFERENCIA_INTERNA_O' | translate">
               </div>
               <div class="col-md-4">
-                <label for="filter-supplier">Proveedor</label>
+                <label for="filter-supplier">{{ 'COMMON.PROVEEDOR' | translate }}</label>
                 <ng-select inputId="filter-supplier" [items]="(suppliers$ | async) ?? []" bindLabel="name"
-                  [typeahead]="supplierInput$" formControlName="supplier" placeholder="Todos los proveedores"
-                  notFoundText="Sin resultados" typeToSearchText="Escriba para buscar" [clearable]="true"
-                  ariaLabel="Proveedor">
+                  [typeahead]="supplierInput$" formControlName="supplier" [placeholder]="'PURCHASES.PURCHASE_LIST.TODOS_LOS_PROVEEDORES' | translate"
+                  [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="true"
+                  [ariaLabel]="'COMMON.PROVEEDOR' | translate">
                 </ng-select>
               </div>
               <div class="col-md-2 col-6">
-                <label for="filter-from">Desde</label>
+                <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
                 <input id="filter-from" type="date" class="form-control" formControlName="dateFrom"
                   [class.is-invalid]="rangeInvalid">
               </div>
               <div class="col-md-2 col-6">
-                <label for="filter-to">Hasta</label>
+                <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo"
                   [class.is-invalid]="rangeInvalid">
               </div>
               @if (rangeInvalid) {
               <div class="col-12">
-                <small class="form-text text-danger" data-testid="range-error">La fecha «Hasta» no puede ser anterior a «Desde».</small>
+                <small class="form-text text-danger" data-testid="range-error">{{ 'PURCHASES.PURCHASE_LIST.LA_FECHA_HASTA_NO_PUEDE' | translate }}</small>
               </div>
               }
               <div class="col-md-3 col-6">
-                <label for="filter-status">Estado</label>
+                <label for="filter-status">{{ 'COMMON.ESTADO' | translate }}</label>
                 <select id="filter-status" class="form-select form-control" formControlName="status">
                   @for (option of statusOptions; track option.value) {
                   <option [value]="option.value">{{ option.label }}</option>
@@ -78,7 +78,7 @@
                 </select>
               </div>
               <div class="col-md-3 col-6">
-                <label for="filter-reception">Recepción</label>
+                <label for="filter-reception">{{ 'COMMON.RECEPCION' | translate }}</label>
                 <select id="filter-reception" class="form-select form-control" formControlName="receptionStatus">
                   @for (option of receptionOptions; track option.value) {
                   <option [value]="option.value">{{ option.label }}</option>
@@ -86,7 +86,7 @@
                 </select>
               </div>
               <div class="col-md-3 col-6">
-                <label for="filter-payment">Pago</label>
+                <label for="filter-payment">{{ 'COMMON.PAGO' | translate }}</label>
                 <select id="filter-payment" class="form-select form-control" formControlName="paymentStatus">
                   @for (option of paymentOptions; track option.value) {
                   <option [value]="option.value">{{ option.label }}</option>
@@ -95,34 +95,34 @@
               </div>
               <div class="col-md-3 col-6 d-flex align-items-end">
                 <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
-                  (click)="clearFilters()">Limpiar filtros</button>
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
               <div class="col-12">
-                <small class="form-text text-muted">Recepción y pago aplican solo a compras confirmadas.</small>
+                <small class="form-text text-muted">{{ 'PURCHASES.PURCHASE_LIST.RECEPCION_Y_PAGO_APLICAN_SOLO' | translate }}</small>
               </div>
             </form>
             @if (errorMessage) {
             <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
               {{ errorMessage }}
-              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">Reintentar</button>
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
             </div>
             }
             @if (emptyWithFilters) {
             <div class="text-center p-4" data-testid="empty-filtered">
-              <p class="mb-2">No hay compras que coincidan con los filtros aplicados.</p>
+              <p class="mb-2">{{ 'PURCHASES.PURCHASE_LIST.NO_HAY_COMPRAS_QUE_COINCIDAN' | translate }}</p>
               <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
                 @for (filter of appliedFilters; track filter) {
                 <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
                 }
               </div>
-              <button type="button" class="btn btn-light me-2" data-testid="empty-clear" (click)="clearFilters()">Limpiar filtros</button>
-              <a class="btn btn-primary" routerLink="/pocketbiz/purchases/new" data-testid="empty-new">Nueva compra</a>
+              <button type="button" class="btn btn-light me-2" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              <a class="btn btn-primary" routerLink="/pocketbiz/purchases/new" data-testid="empty-new">{{ 'PURCHASES.PURCHASE_LIST.NUEVA_COMPRA' | translate }}</a>
             </div>
             } @else {
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
-              <ngx-datatable-column name="Referencia" [sortable]="false" [flexGrow]="1.2" [minWidth]="135">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.REFERENCIA' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold text-nowrap" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
                   @if (row.externalReference) {
@@ -130,18 +130,18 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Fecha" [sortable]="false" [flexGrow]="1" [minWidth]="110">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.FECHA' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.purchaseDate | date: 'dd/MM/yyyy' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Proveedor" [sortable]="false" [flexGrow]="1.5" [minWidth]="130">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.PROVEEDOR' | translate" [sortable]="false" [flexGrow]="1.5" [minWidth]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>{{ row.supplier.name || '—' }}</ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Total" [sortable]="false" [flexGrow]="1" [minWidth]="105" headerClass="text-end" cellClass="text-end">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.TOTAL' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span class="d-block text-end text-nowrap">{{ row.total | money }}</span>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Recepción" [sortable]="false" [flexGrow]="1.4" [minWidth]="165">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.RECEPCION' | translate" [sortable]="false" [flexGrow]="1.4" [minWidth]="165">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.receptionStatus; as reception) {
                   <div class="badge-outline" data-testid="reception-badge" [class]="receptionClass(reception)">{{ receptionLabel(reception) }}</div>
@@ -150,12 +150,12 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [flexGrow]="1" [minWidth]="120">
+              <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="120">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <div class="badge-outline" [class]="statusClass(row.status)">{{ statusLabel(row.status) }}</div>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Pago" [sortable]="false" [flexGrow]="1" [minWidth]="128">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.PAGO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="128">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.paymentStatus; as payment) {
                   <div class="badge-outline" data-testid="payment-badge" [class]="paymentClass(payment)">{{ paymentLabel(payment) }}</div>
@@ -164,7 +164,7 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Saldo" [sortable]="false" [flexGrow]="1" [minWidth]="100" headerClass="text-end" cellClass="text-end">
+              <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.SALDO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="100" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.balance !== null) {
                   <span class="d-block text-end text-nowrap" data-testid="balance">{{ row.balance | money }}</span>
@@ -173,16 +173,16 @@
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones" [sortable]="false" [flexGrow]="0.6" [minWidth]="105">
+              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [flexGrow]="0.6" [minWidth]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
                     <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/purchases', row.id]"
-                      title="Ver compra" aria-label="Ver compra">
+                      [title]="'PURCHASES.PURCHASE_LIST.VER_COMPRA' | translate" [attr.aria-label]="'PURCHASES.PURCHASE_LIST.VER_COMPRA' | translate">
                       <i class="fas fa-eye"></i>
                     </a>
                     @if (row.status === 'draft') {
                     <a class="btn btn-tbl-edit btn-tbl-update h-auto"
-                      [routerLink]="['/pocketbiz/purchases', row.id, 'edit']" title="Editar" aria-label="Editar">
+                      [routerLink]="['/pocketbiz/purchases', row.id, 'edit']" [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
                       <i class="fas fa-pen"></i>
                     </a>
                     }

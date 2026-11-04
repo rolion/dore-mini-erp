@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
@@ -13,7 +14,7 @@ describe('PurchaseCancelDialogComponent', () => {
     activeModal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     await TestBed.configureTestingModule({
       imports: [PurchaseCancelDialogComponent],
-      providers: [{ provide: NgbActiveModal, useValue: activeModal }],
+      providers: [...provideTestTranslations(), { provide: NgbActiveModal, useValue: activeModal }],
     }).compileComponents();
     fixture = TestBed.createComponent(PurchaseCancelDialogComponent);
     component = fixture.componentInstance;

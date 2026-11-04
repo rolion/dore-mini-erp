@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -5,11 +6,11 @@ import { environment } from '../../../../environments/environment';
 import { Page } from '../../../shared/models/page';
 import { Payment, PaymentApiError, PaymentDto, PaymentFieldErrors, PaymentInput } from '../models/payment';
 
-export const PAYMENT_NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const PAYMENT_NOT_FOUND_MESSAGE = 'No se encontró la compra.';
-export const PAYMENT_NOT_PAYABLE_MESSAGE = 'Solo una compra confirmada admite pagos.';
-export const PAYMENT_GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const PAYMENT_VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
+export const PAYMENT_NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const PAYMENT_NOT_FOUND_MESSAGE = (): string => tr('PURCHASES.PAYMENTS_API_SERVICE.NO_SE_ENCONTRO_LA_COMPRA');
+export const PAYMENT_NOT_PAYABLE_MESSAGE = (): string => tr('PURCHASES.PAYMENTS_API_SERVICE.SOLO_UNA_COMPRA_CONFIRMADA_ADMITE');
+export const PAYMENT_GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const PAYMENT_VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
 
 function messages(value: unknown): string | undefined {
   return Array.isArray(value) && value.length ? value.map(String).join(' ') : undefined;
@@ -27,17 +28,17 @@ export function toPaymentFieldErrors(body: unknown): PaymentFieldErrors {
 }
 
 function toError(err: HttpErrorResponse): PaymentApiError {
-  if (err.status === 0) return new PaymentApiError(PAYMENT_NETWORK_ERROR_MESSAGE, 0);
+  if (err.status === 0) return new PaymentApiError(PAYMENT_NETWORK_ERROR_MESSAGE(), 0);
   if (err.status === 400) {
     const general = messages((err.error as Record<string, unknown> | null)?.['non_field_errors']);
-    return new PaymentApiError(general ?? PAYMENT_VALIDATION_ERROR_MESSAGE, 400, toPaymentFieldErrors(err.error));
+    return new PaymentApiError(general ?? PAYMENT_VALIDATION_ERROR_MESSAGE(), 400, toPaymentFieldErrors(err.error));
   }
-  if (err.status === 404) return new PaymentApiError(PAYMENT_NOT_FOUND_MESSAGE, 404);
+  if (err.status === 404) return new PaymentApiError(PAYMENT_NOT_FOUND_MESSAGE(), 404);
   if (err.status === 409) {
     const detail = (err.error as { detail?: unknown } | null)?.detail;
-    return new PaymentApiError(typeof detail === 'string' ? detail : PAYMENT_NOT_PAYABLE_MESSAGE, 409);
+    return new PaymentApiError(typeof detail === 'string' ? detail : PAYMENT_NOT_PAYABLE_MESSAGE(), 409);
   }
-  return new PaymentApiError(PAYMENT_GENERIC_ERROR_MESSAGE, err.status);
+  return new PaymentApiError(PAYMENT_GENERIC_ERROR_MESSAGE(), err.status);
 }
 
 function toPayment(dto: PaymentDto): Payment {

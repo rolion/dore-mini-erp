@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -17,7 +19,7 @@ export type UnitField = 'name' | 'abbreviation';
 @Component({
   selector: 'app-unit-dialog',
   templateUrl: './unit-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class UnitDialogComponent {
   readonly nameMaxLength = UNIT_NAME_MAX_LENGTH;
@@ -80,7 +82,7 @@ export class UnitDialogComponent {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (saved) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Unidad actualizada' : 'Unidad creada');
+        this.toastr.success(this.isEdit ? tr('INVENTORY.UNIT_DIALOG.UNIDAD_ACTUALIZADA') : tr('INVENTORY.UNIT_DIALOG.UNIDAD_CREADA'));
         this.activeModal.close(saved);
       },
       error: (err: InventoryApiError) => {

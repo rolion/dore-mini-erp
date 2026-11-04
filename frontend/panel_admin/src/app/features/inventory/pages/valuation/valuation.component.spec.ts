@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -47,7 +48,7 @@ describe('ValuationComponent', () => {
     const toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
       imports: [ValuationComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ValuationApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
@@ -145,7 +146,7 @@ describe('ValuationComponent', () => {
     click('confirm');
     expect(api.proposal).toHaveBeenCalledTimes(2);
     expect(q('step-reconcile')).not.toBeNull();
-    expect(q('valuation-conflict')?.textContent).toContain(STOCK_CHANGED_MESSAGE);
+    expect(q('valuation-conflict')?.textContent).toContain(STOCK_CHANGED_MESSAGE());
     expect(q<HTMLButtonElement>('to-values')?.disabled).toBeFalse();
   });
 
@@ -200,7 +201,7 @@ describe('ValuationComponent', () => {
     api.get.and.returnValue(new Observable<Valuation>());
     TestBed.configureTestingModule({
       imports: [ValuationComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ValuationApiService, useValue: api },
         { provide: ToastrService, useValue: jasmine.createSpyObj<ToastrService>('ToastrService', ['success']) },
@@ -224,7 +225,7 @@ describe('ValuationComponent', () => {
     api.get.and.returnValue(throwError(() => new ValuationApiError('Sin conexión', 0)));
     TestBed.configureTestingModule({
       imports: [ValuationComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ValuationApiService, useValue: api },
         { provide: ToastrService, useValue: jasmine.createSpyObj<ToastrService>('ToastrService', ['success']) },

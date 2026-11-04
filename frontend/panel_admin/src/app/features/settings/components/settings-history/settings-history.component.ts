@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +12,7 @@ import { SettingsApiService } from '../../services/settings-api.service';
   selector: 'app-settings-history',
   templateUrl: './settings-history.component.html',
   styleUrl: './settings-history.component.scss',
-  imports: [ReactiveFormsModule, DatePipe, NgbPagination],
+  imports: [TranslatePipe, ReactiveFormsModule, DatePipe, NgbPagination],
 })
 export class SettingsHistoryComponent implements OnInit {
   /** Ámbito: clave del módulo o `modules` (activación general). */

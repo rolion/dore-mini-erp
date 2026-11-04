@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /**
  * Cantidades de una recepción en el navegador, solo para validar y mostrar mientras se escribe. Replican la regla
  * del servidor (cantidad > 0, hasta 3 decimales, entera si la unidad no admite fracciones, sin superar el
@@ -39,14 +40,14 @@ export function isReceivable(text: string): boolean {
 export function quantityError(text: string, pending: string, allowsFractions: boolean): string | null {
   const value = text.trim();
   if (value === '') return null;
-  if (value.startsWith('-')) return 'La cantidad no puede ser negativa.';
-  if (!PLAIN_DECIMAL.test(value)) return 'Ingresa un número válido.';
+  if (value.startsWith('-')) return tr('PURCHASES.RECEPTION_QUANTITIES.LA_CANTIDAD_NO_PUEDE_SER');
+  if (!PLAIN_DECIMAL.test(value)) return tr('PURCHASES.RECEPTION_QUANTITIES.INGRESA_UN_NUMERO_VALIDO');
   const scaled = toScaled(value);
-  if (scaled === null) return 'Admite como máximo 3 decimales.';
+  if (scaled === null) return tr('PURCHASES.RECEPTION_QUANTITIES.ADMITE_COMO_MAXIMO_3_DECIMALES');
   if (scaled === 0n) return null;
-  if (!allowsFractions && scaled % 1000n !== 0n) return 'La unidad no admite fracciones: usa una cantidad entera.';
+  if (!allowsFractions && scaled % 1000n !== 0n) return tr('PURCHASES.RECEPTION_QUANTITIES.LA_UNIDAD_NO_ADMITE_FRACCIONES');
   const limit = toScaled(pending) ?? 0n;
-  if (scaled > limit) return `No puede superar el pendiente (${pending}).`;
+  if (scaled > limit) return tr('PURCHASES.RECEPTION_QUANTITIES.NO_PUEDE_SUPERAR_EL_PENDIENTE', { p0: pending });
   return null;
 }
 

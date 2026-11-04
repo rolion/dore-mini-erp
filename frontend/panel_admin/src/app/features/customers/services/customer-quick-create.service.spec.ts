@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
@@ -15,7 +16,7 @@ describe('CustomerQuickCreateService', () => {
 
   beforeEach(() => {
     modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
-    TestBed.configureTestingModule({ providers: [{ provide: NgbModal, useValue: modal }] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), { provide: NgbModal, useValue: modal }] });
     service = TestBed.inject(CustomerQuickCreateService);
   });
 

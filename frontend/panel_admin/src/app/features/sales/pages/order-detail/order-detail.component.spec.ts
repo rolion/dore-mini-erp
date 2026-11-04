@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -63,7 +64,7 @@ describe('OrderDetailComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [OrderDetailComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: OrdersApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },

@@ -23,6 +23,6 @@ describe('unsavedChangesGuard', () => {
     const confirm = spyOn(window, 'confirm').and.returnValues(false, true);
     expect(run(true)).toBeFalse();
     expect(run(true)).toBeTrue();
-    expect(confirm).toHaveBeenCalledWith(UNSAVED_CHANGES_MESSAGE);
+    expect(confirm).toHaveBeenCalledWith(UNSAVED_CHANGES_MESSAGE());
   });
 });

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -12,9 +13,9 @@ import {
   ValuationDto,
 } from '../models/valuation';
 
-const GENERIC_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-const NETWORK_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-const VALIDATION_MESSAGE = 'Revisa los valores ingresados.';
+const GENERIC_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+const NETWORK_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+const VALIDATION_MESSAGE = (): string => tr('INVENTORY.VALUATION_API_SERVICE.REVISA_LOS_VALORES_INGRESADOS');
 
 /** Errores por campo de una línea de la adopción (misma posición que las líneas enviadas). */
 export type ValuationLineErrors = Partial<Record<'totalValue' | 'reconciledQuantity' | 'productId' | 'source', string[]>>;
@@ -46,12 +47,12 @@ function toLineErrors(line: unknown): ValuationLineErrors {
 
 export function toValuationError(status: number, body: unknown): ValuationApiError {
   if (status === 0) {
-    return new ValuationApiError(NETWORK_MESSAGE, 0);
+    return new ValuationApiError(NETWORK_MESSAGE(), 0);
   }
   const record = (body && typeof body === 'object' ? body : {}) as Record<string, unknown>;
   if (status === 400) {
     const lines = Array.isArray(record['lines']) ? (record['lines'] as unknown[]).map(toLineErrors) : [];
-    return new ValuationApiError(VALIDATION_MESSAGE, 400, null, lines);
+    return new ValuationApiError(VALIDATION_MESSAGE(), 400, null, lines);
   }
   const detail = typeof record['detail'] === 'string' ? record['detail'] : '';
   const code = typeof record['code'] === 'string' ? record['code'] : null;
@@ -59,9 +60,9 @@ export function toValuationError(status: number, body: unknown): ValuationApiErr
     const blockers = Array.isArray(record['blockers'])
       ? (record['blockers'] as ProposalBlockerLike[]).map(toBlocker)
       : [];
-    return new ValuationApiError(detail || GENERIC_MESSAGE, 409, code, [], blockers);
+    return new ValuationApiError(detail || GENERIC_MESSAGE(), 409, code, [], blockers);
   }
-  return new ValuationApiError(detail || GENERIC_MESSAGE, status, code);
+  return new ValuationApiError(detail || GENERIC_MESSAGE(), status, code);
 }
 
 type ProposalBlockerLike = ProposalDto['blockers'][number];

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -45,7 +46,7 @@ describe('StockDetailComponent', () => {
     movementsApi.list.and.returnValue(of(page(movements)));
     await TestBed.configureTestingModule({
       imports: [StockDetailComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: StockApiService, useValue: stockApi },
         { provide: MovementsApiService, useValue: movementsApi },

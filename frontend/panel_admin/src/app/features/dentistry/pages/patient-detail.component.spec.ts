@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -13,7 +14,7 @@ describe('PatientDetailComponent', () => {
   async function setup(patient = makePatient()) {
     api = jasmine.createSpyObj<DentistryApiService>('api', ['get', 'update', 'demographics', 'setActive', 'history']);
     api.get.and.returnValue(of(patient)); api.history.and.returnValue(of(EMPTY_HISTORY));
-    await TestBed.configureTestingModule({ imports: [PatientDetailComponent], providers: [provideRouter([]),
+    await TestBed.configureTestingModule({ imports: [PatientDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: DentistryApiService, useValue: api },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }), queryParamMap: convertToParamMap({ search: 'Ana', page: '2' }) } } },
     ] }).compileComponents();

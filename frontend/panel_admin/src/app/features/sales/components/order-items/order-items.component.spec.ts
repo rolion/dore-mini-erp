@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
@@ -48,7 +49,7 @@ describe('OrderItemsComponent', () => {
     api.list.and.returnValue(of(page([PRODUCT])));
     TestBed.configureTestingModule({
       imports: [OrderItemsComponent],
-      providers: [{ provide: ProductsApiService, useValue: api }],
+      providers: [...provideTestTranslations(), { provide: ProductsApiService, useValue: api }],
     });
   });
 
@@ -156,7 +157,7 @@ describe('OrderItemsComponent', () => {
     const element = render(makeOrder({ status: 'IN_PREPARATION' }));
     const button = element.querySelector('[data-testid="item-row"] button') as HTMLButtonElement;
     expect(button.disabled).toBeTrue();
-    expect(button.title).toBe(LAST_ITEM_TOOLTIP);
+    expect(button.title).toBe(LAST_ITEM_TOOLTIP());
   });
 
   it('allows emptying a NEW order (AC-02)', () => {

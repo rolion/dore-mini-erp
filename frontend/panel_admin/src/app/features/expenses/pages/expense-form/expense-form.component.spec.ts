@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -24,7 +25,7 @@ describe('ExpenseFormComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error', 'warning']);
     await TestBed.configureTestingModule({
       imports: [ExpenseFormComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ExpensesApiService, useValue: api },
         { provide: CategoriesApiService, useValue: categoriesApi },
@@ -137,7 +138,7 @@ describe('ExpenseFormComponent', () => {
     categoriesApi.list.and.returnValue(of(categoryPage([])));
     fixture.detectChanges();
     expect(component.noCategories).toBeTrue();
-    expect(text()).toContain(NO_CATEGORIES_MESSAGE);
+    expect(text()).toContain(NO_CATEGORIES_MESSAGE());
     expect((fixture.debugElement.query(By.css('button[type="submit"]')).nativeElement as HTMLButtonElement).disabled).toBeTrue();
     expect(fixture.debugElement.query(By.css('a[href="/pocketbiz/expenses/categories"]'))).not.toBeNull();
   });

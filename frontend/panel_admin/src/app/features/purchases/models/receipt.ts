@@ -1,8 +1,9 @@
+import { tr } from '../../../core/i18n/translate';
 export type ReceiptStatus = 'confirmed' | 'reverted';
 
 export const RECEIPT_STATUS_LABELS: Readonly<Record<ReceiptStatus, string>> = {
-  confirmed: 'Confirmada',
-  reverted: 'Revertida',
+  get confirmed() { return tr('PURCHASES.PURCHASE.CONFIRMADA'); },
+  get reverted() { return tr('PURCHASES.RECEIPT.REVERTIDA'); },
 };
 
 export const RECEIPT_STATUS_CLASSES: Readonly<Record<ReceiptStatus, string>> = {
@@ -22,8 +23,8 @@ export interface ReceiptSummary {
 /** Modo con que se confirmó la recepción; `null` en recepciones antiguas sin almacén (modo desconocido). */
 export type ReceiptInventoryMode = 'inventory' | 'documental';
 
-export const SIN_ENTRADA_LABEL = 'Sin control de stock · sin entrada';
-export const DOCUMENTAL_LABEL = 'Recepción documental, sin movimiento de inventario';
+export const SIN_ENTRADA_LABEL = (): string => tr('PURCHASES.RECEIPT.SIN_CONTROL_DE_STOCK_SIN');
+export const DOCUMENTAL_LABEL = (): string => tr('PURCHASES.RECEIPT.RECEPCION_DOCUMENTAL_SIN_MOVIMIENTO_DE');
 
 export interface ReceiptLine {
   itemId: string;

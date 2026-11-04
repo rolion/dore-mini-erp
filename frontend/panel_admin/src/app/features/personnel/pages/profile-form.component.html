@@ -1,46 +1,46 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
-    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ id ? 'Editar' : 'Nuevo registro' }} · {{ title }}</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
-    <li class="breadcrumb-item">Personal</li><li class="breadcrumb-item"><a [routerLink]="base">{{ title }}</a></li>
+    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ id ? ('COMMON.EDITAR' | translate) : ('PERSONNEL.PROFILE_LIST.NUEVO_REGISTRO' | translate) }} · {{ title }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.PERSONAL' | translate }}</li><li class="breadcrumb-item"><a [routerLink]="base">{{ title }}</a></li>
   </ul>
   <div class="section-body"><div class="card">
-    <div class="card-header"><h4>{{ id ? 'Editar' : 'Nuevo registro' }} · {{ title }}</h4></div>
+    <div class="card-header"><h4>{{ id ? ('COMMON.EDITAR' | translate) : ('PERSONNEL.PROFILE_LIST.NUEVO_REGISTRO' | translate) }} · {{ title }}</h4></div>
     <div class="card-body">
-      @if (loading) { <p role="status">Cargando…</p> }
+      @if (loading) { <p role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
       @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
-      @if (lookupError) { <div class="alert alert-warning" role="alert">{{ lookupError }} <button type="button" class="btn btn-light" (click)="loadOptions()">Reintentar opciones</button></div> }
+      @if (lookupError) { <div class="alert alert-warning" role="alert">{{ lookupError }} <button type="button" class="btn btn-light" (click)="loadOptions()">{{ 'PERSONNEL.PROFILE_FORM.REINTENTAR_OPCIONES' | translate }}</button></div> }
       <form class="register-form m-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <fieldset [disabled]="saving || loading">
           <div class="row">
-            <div class="form-group col-md-12"><label for="profile-name">Nombre <span class="text-danger">*</span></label>
+            <div class="form-group col-md-12"><label for="profile-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
               <input id="profile-name" class="form-control" formControlName="name" maxlength="150" required>
               @if (errorFor('name')) { <small class="form-text text-danger">{{ errorFor('name') }}</small> }
             </div>
             @if (professional) {
-              <div class="form-group col-md-6"><label for="profile-identification">Identificación (opcional)</label>
+              <div class="form-group col-md-6"><label for="profile-identification">{{ 'PERSONNEL.PROFILE_FORM.IDENTIFICACION_OPCIONAL' | translate }}</label>
                 <input id="profile-identification" class="form-control" formControlName="identification" maxlength="50">
                 <small class="form-text text-danger">{{ errorFor('identification') }}</small></div>
-              <div class="form-group col-md-6"><label for="profile-registration">Matrícula profesional (opcional)</label>
+              <div class="form-group col-md-6"><label for="profile-registration">{{ 'PERSONNEL.PROFILE_FORM.MATRICULA_PROFESIONAL_OPCIONAL' | translate }}</label>
                 <input id="profile-registration" class="form-control" formControlName="registration_number" maxlength="100">
                 <small class="form-text text-danger">{{ errorFor('registration_number') }}</small></div>
-              <div class="form-group col-md-6"><label for="profile-phone">Teléfono (opcional)</label>
+              <div class="form-group col-md-6"><label for="profile-phone">{{ 'PERSONNEL.PROFILE_FORM.TELEFONO_OPCIONAL' | translate }}</label>
                 <input id="profile-phone" type="tel" class="form-control" formControlName="phone" maxlength="30">
                 <small class="form-text text-danger">{{ errorFor('phone') }}</small></div>
-              <div class="form-group col-md-6"><label for="profile-email">Correo (opcional)</label>
+              <div class="form-group col-md-6"><label for="profile-email">{{ 'PERSONNEL.PROFILE_FORM.CORREO_OPCIONAL' | translate }}</label>
                 <input id="profile-email" type="email" class="form-control" formControlName="email" maxlength="254">
                 <small class="form-text text-danger">{{ errorFor('email') }}</small></div>
-              <div class="form-group col-md-12"><label for="profile-specialties">Especialidades (opcional)</label>
-                <ng-select [readonly]="saving || loading" labelForId="profile-specialties" [items]="specialties" bindLabel="name" bindValue="id" [multiple]="true" formControlName="specialty_ids" notFoundText="Sin especialidades" placeholder="Seleccionar por nombre"></ng-select>
+              <div class="form-group col-md-12"><label for="profile-specialties">{{ 'PERSONNEL.PROFILE_FORM.ESPECIALIDADES_OPCIONAL' | translate }}</label>
+                <ng-select [readonly]="saving || loading" labelForId="profile-specialties" [items]="specialties" bindLabel="name" bindValue="id" [multiple]="true" formControlName="specialty_ids" [notFoundText]="'PERSONNEL.PROFILE_DETAIL.SIN_ESPECIALIDADES' | translate" [placeholder]="'PERSONNEL.PROFILE_FORM.SELECCIONAR_POR_NOMBRE' | translate"></ng-select>
                 <small class="form-text text-danger">{{ errorFor('specialty_ids') }}</small></div>
-              <div class="form-group col-md-12"><label for="profile-user">Usuario vinculado (opcional)</label>
-                <ng-select [readonly]="saving || loading" labelForId="profile-user" [items]="users" bindLabel="name" bindValue="id" [typeahead]="userSearch$" [clearable]="true" formControlName="user_id" notFoundText="Sin usuarios que coincidan" typeToSearchText="Escribe un nombre o usuario" placeholder="Sin usuario"></ng-select>
-                <small class="form-text text-muted">Puedes guardar sin usuario. Quitar la selección desvincula la cuenta y conserva sus permisos.</small>
+              <div class="form-group col-md-12"><label for="profile-user">{{ 'PERSONNEL.PROFILE_FORM.USUARIO_VINCULADO_OPCIONAL' | translate }}</label>
+                <ng-select [readonly]="saving || loading" labelForId="profile-user" [items]="users" bindLabel="name" bindValue="id" [typeahead]="userSearch$" [clearable]="true" formControlName="user_id" [notFoundText]="'PERSONNEL.PROFILE_FORM.NO_USERS_MATCH' | translate" [typeToSearchText]="'PERSONNEL.PROFILE_FORM.TYPE_NAME_OR_USER' | translate" [placeholder]="'PERSONNEL.PROFILE_FORM.SIN_USUARIO' | translate"></ng-select>
+                <small class="form-text text-muted">{{ 'PERSONNEL.PROFILE_FORM.PUEDES_GUARDAR_SIN_USUARIO_QUITAR' | translate }}</small>
                 <small class="form-text text-danger">{{ errorFor('user_id') }}</small></div>
             }
           </div>
-          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
-          <a class="btn btn-light ms-2" [routerLink]="id ? [base, id] : [base]">Cancelar</a>
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">{{ saving ? ('PERSONNEL.PROFILE_FORM.GUARDANDO' | translate) : ('COMMON.GUARDAR' | translate) }}</button>
+          <a class="btn btn-light ms-2" [routerLink]="id ? [base, id] : [base]">{{ 'COMMON.CANCELAR' | translate }}</a>
         </fieldset>
       </form>
     </div>

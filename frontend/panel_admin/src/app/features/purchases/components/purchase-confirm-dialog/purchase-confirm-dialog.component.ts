@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -11,7 +12,7 @@ import { Purchase } from '../../models/purchase';
 @Component({
   selector: 'app-purchase-confirm-dialog',
   templateUrl: './purchase-confirm-dialog.component.html',
-  imports: [DatePipe, MoneyPipe],
+  imports: [TranslatePipe, DatePipe, MoneyPipe],
 })
 export class PurchaseConfirmDialogComponent {
   /** Compra a confirmar; la fija quien abre el diálogo. */

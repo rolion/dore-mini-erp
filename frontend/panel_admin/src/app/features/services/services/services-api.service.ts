@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -38,10 +39,10 @@ function apiError(error: HttpErrorResponse): Observable<never> {
       if (Array.isArray(value)) fieldErrors[key] = value.map(String).join(' ');
     }
   }
-  const message = error.status === 0 ? 'No se pudo conectar con el servidor. Inténtalo de nuevo.'
-    : error.status === 400 ? 'Revisa los datos ingresados.'
-    : error.status === 403 ? 'No tienes permiso para acceder a Servicios.'
-    : error.status === 404 ? 'Servicio no encontrado.' : 'No se pudo completar la operación. Inténtalo de nuevo.';
+  const message = error.status === 0 ? tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON')
+    : error.status === 400 ? tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS')
+    : error.status === 403 ? tr('SERVICES.SERVICES_API_SERVICE.NO_TIENES_PERMISO_PARA_ACCEDER')
+    : error.status === 404 ? tr('SERVICES.SERVICES_API_SERVICE.SERVICIO_NO_ENCONTRADO') : tr('SETTINGS.SETTING.NO_SE_PUDO_COMPLETAR_LA');
   return throwError(() => new ServiceApiError(message, error.status, fieldErrors, invalidPage));
 }
 

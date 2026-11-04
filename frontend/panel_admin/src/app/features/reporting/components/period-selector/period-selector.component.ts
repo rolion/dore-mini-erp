@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -6,13 +8,13 @@ import { DEFAULT_SELECTION, Period, PeriodSelection, isRangeValid } from '../../
 export type SelectorKind = 'day' | 'week' | 'month' | 'range';
 
 export const SELECTOR_OPTIONS: readonly { kind: SelectorKind; label: string }[] = [
-  { kind: 'day', label: 'Hoy' },
-  { kind: 'week', label: 'Esta semana' },
-  { kind: 'month', label: 'Este mes' },
-  { kind: 'range', label: 'Rango' },
+  { kind: 'day', get label() { return tr('LANDING.LANDING_CONTENT.HOY'); } },
+  { kind: 'week', get label() { return tr('LANDING.LANDING_CONTENT.ESTA_SEMANA'); } },
+  { kind: 'month', get label() { return tr('EXPENSES.EXPENSE_LIST.ESTE_MES'); } },
+  { kind: 'range', get label() { return tr('LANDING.LANDING_CONTENT.RANGO'); } },
 ];
 
-export const INVALID_RANGE_MESSAGE = 'Elige las dos fechas; la final no puede ser anterior a la inicial.';
+export const INVALID_RANGE_MESSAGE = (): string => tr('REPORTING.PERIOD_SELECTOR.ELIGE_LAS_DOS_FECHAS_LA');
 
 /**
  * Selector de periodo compartido por el dashboard y los reportes. No calcula fechas: emite lo pedido y muestra
@@ -21,7 +23,7 @@ export const INVALID_RANGE_MESSAGE = 'Elige las dos fechas; la final no puede se
 @Component({
   selector: 'app-period-selector',
   templateUrl: './period-selector.component.html',
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, DatePipe],
 })
 export class PeriodSelectorComponent {
   /** Periodo efectivo de la última respuesta del servidor; `null` mientras no se conoce. */
@@ -45,7 +47,7 @@ export class PeriodSelectorComponent {
   applyRange(): void {
     const { dateFrom, dateTo } = this.rangeForm.getRawValue();
     if (!isRangeValid(dateFrom, dateTo)) {
-      this.rangeError = INVALID_RANGE_MESSAGE;
+      this.rangeError = INVALID_RANGE_MESSAGE();
       return;
     }
     this.rangeError = '';

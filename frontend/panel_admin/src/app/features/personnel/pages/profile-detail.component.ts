@@ -1,3 +1,5 @@
+import { tr } from '../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,7 +10,7 @@ import { Profile, ProfileKind } from '../models/profile';
 import { PersonnelApiService, profileError } from '../services/personnel-api.service';
 
 @Component({
-  selector: 'app-personnel-detail', templateUrl: './profile-detail.component.html', imports: [RouterLink, DatePipe],
+  selector: 'app-personnel-detail', templateUrl: './profile-detail.component.html', imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class ProfileDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -36,8 +38,8 @@ export class ProfileDetailComponent implements OnInit {
       this.profile = item;
       this.userName = '';
       if (item.user_id) this.api.users('', item.user_id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-        next: users => this.userName = users[0]?.name || `Usuario #${item.user_id}`,
-        error: () => this.userName = `Usuario #${item.user_id}`,
+        next: users => this.userName = users[0]?.name || tr('PERSONNEL.PROFILE_DETAIL.USUARIO_2', { p0: item.user_id }),
+        error: () => this.userName = tr('PERSONNEL.PROFILE_DETAIL.USUARIO_2', { p0: item.user_id }),
       });
     });
   }
@@ -48,7 +50,7 @@ export class ProfileDetailComponent implements OnInit {
     if (!await confirmProfileState(item)) { this.saving = false; return; }
     this.error = '';
     this.api.setActive(this.kind, item).pipe(finalize(() => this.saving = false), takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: updated => { this.profile = updated; this.message = updated.active ? 'Registro activado.' : 'Registro desactivado.'; },
+      next: updated => { this.profile = updated; this.message = updated.active ? tr('PERSONNEL.PROFILE_DETAIL.REGISTRO_ACTIVADO') : tr('PERSONNEL.PROFILE_DETAIL.REGISTRO_DESACTIVADO'); },
       error: error => this.error = profileError(error),
     });
   }

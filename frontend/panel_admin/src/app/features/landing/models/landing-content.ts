@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Contenido estático de la landing (docs/design/specs/landing-pagina-principal.md). */
 
 export interface NavAnchor {
@@ -29,111 +30,107 @@ export interface FlowStep {
 }
 
 export const NAV_ANCHORS: readonly NavAnchor[] = [
-  { id: 'que-puedes-controlar', label: 'Qué puedes controlar' },
-  { id: 'como-funciona', label: 'Cómo funciona' },
-  { id: 'planes', label: 'Planes' },
-  { id: 'preguntas', label: 'Preguntas' },
+  { id: 'que-puedes-controlar', get label() { return tr('LANDING.LANDING_CONTENT.QUE_PUEDES_CONTROLAR'); } },
+  { id: 'como-funciona', get label() { return tr('LANDING.LANDING_CONTENT.COMO_FUNCIONA'); } },
+  { id: 'planes', get label() { return tr('LANDING.LANDING_CONTENT.PLANES'); } },
+  { id: 'preguntas', get label() { return tr('LANDING.LANDING_CONTENT.PREGUNTAS'); } },
 ];
 
-export const FREE_LIMITS_NOTE =
-  'Plan gratuito con límites: 1 producto, 1 cliente, 2 ventas y 2 gastos por día.';
+export const FREE_LIMITS_NOTE = (): string => tr('LANDING.LANDING_CONTENT.PLAN_GRATUITO_CON_LIMITES_1');
 
-export const RECOGNITION: readonly string[] = [
-  'Pedidos que se pierden entre mensajes.',
-  'Cobros que se olvidan.',
-  'Gastos que nunca se anotan.',
+export const RECOGNITION = (): readonly string[] => [
+  tr('LANDING.LANDING_CONTENT.PEDIDOS_QUE_SE_PIERDEN_ENTRE'),
+  tr('LANDING.LANDING_CONTENT.COBROS_QUE_SE_OLVIDAN'),
+  tr('LANDING.LANDING_CONTENT.GASTOS_QUE_NUNCA_SE_ANOTAN'),
 ];
 
 export const BENEFITS: readonly Benefit[] = [
   {
     icon: 'fa-truck',
-    title: 'Pedidos y entregas',
-    text: 'Estados de cada pedido y canal de venta: WhatsApp, Facebook, Instagram, venta directa, feria u otro.',
+    get title() { return tr('LANDING.LANDING_CONTENT.PEDIDOS_Y_ENTREGAS'); },
+    get text() { return tr('LANDING.LANDING_CONTENT.ESTADOS_DE_CADA_PEDIDO_Y'); },
   },
   {
     icon: 'fa-coins',
-    title: 'Cobros',
-    text: 'Pagos parciales y saldo pendiente por pedido.',
+    get title() { return tr('LANDING.LANDING_CONTENT.COBROS'); },
+    get text() { return tr('LANDING.LANDING_CONTENT.PAGOS_PARCIALES_Y_SALDO_PENDIENTE'); },
   },
   {
     icon: 'fa-receipt',
-    title: 'Gastos',
-    text: 'Registro por categoría y método de pago.',
+    get title() { return tr('LANDING.LANDING_CONTENT.GASTOS'); },
+    get text() { return tr('LANDING.LANDING_CONTENT.REGISTRO_POR_CATEGORIA_Y_METODO'); },
   },
   {
     icon: 'fa-users',
-    title: 'Clientes y productos',
-    text: 'Historial de compras, precios y activar o desactivar.',
+    get title() { return tr('LANDING.LANDING_CONTENT.CLIENTES_Y_PRODUCTOS'); },
+    get text() { return tr('LANDING.LANDING_CONTENT.HISTORIAL_DE_COMPRAS_PRECIOS_Y'); },
   },
 ];
 
-export const CHANNEL_NOTE = 'WhatsApp, Facebook, Instagram, venta directa, feria u otro';
+export const CHANNEL_NOTE = (): string => tr('LANDING.LANDING_CONTENT.WHATSAPP_FACEBOOK_INSTAGRAM_VENTA_DIRECTA');
 
 export const FLOW_STEPS: readonly FlowStep[] = [
-  { title: 'Registras el pedido y su canal de venta', text: 'Cada pedido guarda de dónde vino.' },
-  { title: 'Pedido listo, entrega pendiente', text: 'Ves el saldo por cobrar mientras se entrega.' },
-  { title: 'Entregado y pagado', text: 'Cuando se entrega y se cobra, el pedido queda sin saldo.' },
+  { get title() { return tr('LANDING.LANDING_CONTENT.REGISTRAS_EL_PEDIDO_Y_SU'); }, get text() { return tr('LANDING.LANDING_CONTENT.CADA_PEDIDO_GUARDA_DE_DONDE'); } },
+  { get title() { return tr('LANDING.LANDING_CONTENT.PEDIDO_LISTO_ENTREGA_PENDIENTE'); }, get text() { return tr('LANDING.LANDING_CONTENT.VES_EL_SALDO_POR_COBRAR'); } },
+  { get title() { return tr('LANDING.LANDING_CONTENT.ENTREGADO_Y_PAGADO'); }, get text() { return tr('LANDING.LANDING_CONTENT.CUANDO_SE_ENTREGA_Y_SE'); } },
 ];
 
 export const READY_ROWS: readonly StatusRow[] = [
-  { label: 'Entrega', badge: 'Listo', icon: 'fa-check-circle', tone: 'success' },
-  { label: 'Cobro', badge: 'Pendiente', icon: 'fa-clock', tone: 'warning' },
+  { get label() { return tr('LANDING.LANDING_CONTENT.ENTREGA'); }, get badge() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.LISTO'); }, icon: 'fa-check-circle', tone: 'success' },
+  { get label() { return tr('LANDING.LANDING_CONTENT.COBRO'); }, get badge() { return tr('INVENTORY.VALUATION.PENDIENTE'); }, icon: 'fa-clock', tone: 'warning' },
 ];
 
 export const DELIVERED_ROWS: readonly StatusRow[] = [
-  { label: 'Entrega', badge: 'Entregado', icon: 'fa-truck', tone: 'success' },
-  { label: 'Cobro', badge: 'Pagado', icon: 'fa-coins', tone: 'success' },
+  { get label() { return tr('LANDING.LANDING_CONTENT.ENTREGA'); }, get badge() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ENTREGADO'); }, icon: 'fa-truck', tone: 'success' },
+  { get label() { return tr('LANDING.LANDING_CONTENT.COBRO'); }, get badge() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PAGADO'); }, icon: 'fa-coins', tone: 'success' },
 ];
 
-export const PERIODS: readonly string[] = ['Hoy', 'Esta semana', 'Este mes', 'Rango'];
+export const PERIODS = (): readonly string[] => [tr('LANDING.LANDING_CONTENT.HOY'), tr('LANDING.LANDING_CONTENT.ESTA_SEMANA'), tr('EXPENSES.EXPENSE_LIST.ESTE_MES'), tr('LANDING.LANDING_CONTENT.RANGO')];
 
-export const PROFIT_NOTE =
-  'Ventas − gastos registrados. Es una estimación, no la utilidad contable.';
+export const PROFIT_NOTE = (): string => tr('LANDING.LANDING_CONTENT.VENTAS_GASTOS_REGISTRADOS_ES_UNA');
 
 export const GET_STARTED: readonly FlowStep[] = [
-  { title: 'Crea tu cuenta', text: 'Con el nombre de tu empresa.' },
-  { title: 'Registra tus productos, clientes y tu primer pedido', text: 'Empieza con lo que vendes hoy.' },
-  { title: 'Mira tu resumen', text: 'Ventas, gastos y ganancia estimada.' },
+  { get title() { return tr('LANDING.LANDING_CONTENT.CREA_TU_CUENTA'); }, get text() { return tr('LANDING.LANDING_CONTENT.CON_EL_NOMBRE_DE_TU'); } },
+  { get title() { return tr('LANDING.LANDING_CONTENT.REGISTRA_TUS_PRODUCTOS_CLIENTES_Y'); }, get text() { return tr('LANDING.LANDING_CONTENT.EMPIEZA_CON_LO_QUE_VENDES'); } },
+  { get title() { return tr('LANDING.LANDING_CONTENT.MIRA_TU_RESUMEN'); }, get text() { return tr('LANDING.LANDING_CONTENT.VENTAS_GASTOS_Y_GANANCIA_ESTIMADA'); } },
 ];
 
-export const FREE_PLAN_FEATURES: readonly string[] = [
-  '1 producto',
-  '1 cliente',
-  '2 ventas y 2 gastos por día',
-  'Dashboard y reportes de ventas y gastos',
+export const FREE_PLAN_FEATURES = (): readonly string[] => [
+  tr('LANDING.LANDING_CONTENT.FREE_PRODUCT'),
+  tr('LANDING.LANDING_CONTENT.FREE_CUSTOMER'),
+  tr('LANDING.LANDING_CONTENT.FREE_LIMITS'),
+  tr('LANDING.LANDING_CONTENT.DASHBOARD_Y_REPORTES_DE_VENTAS'),
 ];
 
-export const FREE_PLAN_LIMIT_TEXT =
-  'Al llegar al límite sigues viendo tus datos y puedes registrar de nuevo al día siguiente';
+export const FREE_PLAN_LIMIT_TEXT = (): string => tr('LANDING.LANDING_CONTENT.AL_LLEGAR_AL_LIMITE_SIGUES');
 
-export const PRO_PLAN_FEATURE = 'Productos, clientes, ventas y gastos sin restricciones';
+export const PRO_PLAN_FEATURE = (): string => tr('LANDING.LANDING_CONTENT.PRODUCTOS_CLIENTES_VENTAS_Y_GASTOS');
 
-export const PRO_PAYMENT_LABEL = 'Pago disponible próximamente';
+export const PRO_PAYMENT_LABEL = (): string => tr('LANDING.LANDING_CONTENT.PAGO_DISPONIBLE_PROXIMAMENTE');
 
 export const FAQ: readonly FaqItem[] = [
   {
-    question: '¿Necesito instalar algo?',
-    answer: 'Es una web: se usa desde el navegador del celular o de la computadora.',
+    get question() { return tr('LANDING.LANDING_CONTENT.NECESITO_INSTALAR_ALGO'); },
+    get answer() { return tr('LANDING.LANDING_CONTENT.ES_UNA_WEB_SE_USA'); },
   },
   {
-    question: '¿Emite facturas o lleva inventario?',
-    answer: 'No. Es control de pedidos, cobros y gastos.',
+    get question() { return tr('LANDING.LANDING_CONTENT.EMITE_FACTURAS_O_LLEVA_INVENTARIO'); },
+    get answer() { return tr('LANDING.LANDING_CONTENT.NO_ES_CONTROL_DE_PEDIDOS'); },
   },
   {
-    question: '¿La ganancia es real?',
-    answer: 'Es estimada: ventas menos gastos registrados.',
+    get question() { return tr('LANDING.LANDING_CONTENT.LA_GANANCIA_ES_REAL'); },
+    get answer() { return tr('LANDING.LANDING_CONTENT.ES_ESTIMADA_VENTAS_MENOS_GASTOS'); },
   },
   {
-    question: '¿Puedo agregar a mi equipo?',
-    answer: 'Hoy no se hace desde la pantalla.',
+    get question() { return tr('LANDING.LANDING_CONTENT.PUEDO_AGREGAR_A_MI_EQUIPO'); },
+    get answer() { return tr('LANDING.LANDING_CONTENT.HOY_NO_SE_HACE_DESDE'); },
   },
   {
-    question: '¿Qué pasa si olvido mi contraseña?',
-    answer: 'Aún no hay recuperación automática.',
+    get question() { return tr('LANDING.LANDING_CONTENT.QUE_PASA_SI_OLVIDO_MI'); },
+    get answer() { return tr('LANDING.LANDING_CONTENT.AUN_NO_HAY_RECUPERACION_AUTOMATICA'); },
   },
   {
-    question: '¿Qué pasa al llegar al límite del plan gratuito?',
-    answer:
-      'No puedes ingresar más datos hasta el día siguiente o hasta pasar a Pro; tus datos siguen visibles.',
+    get question() { return tr('LANDING.LANDING_CONTENT.QUE_PASA_AL_LLEGAR_AL'); },
+    get answer() { return tr('LANDING.LANDING_CONTENT.NO_PUEDES_INGRESAR_MAS_DATOS'); },
   },
 ];

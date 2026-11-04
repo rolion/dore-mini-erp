@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -30,7 +32,7 @@ const FORM_FIELDS: readonly FormField[] = ['name', 'taxId', 'phone', 'email', 'n
 @Component({
   selector: 'app-supplier-form',
   templateUrl: './supplier-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class SupplierFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;
@@ -104,7 +106,7 @@ export class SupplierFormComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (supplier) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Proveedor actualizado' : 'Proveedor creado');
+        this.toastr.success(this.isEdit ? tr('PURCHASES.SUPPLIER_FORM.PROVEEDOR_ACTUALIZADO') : tr('PURCHASES.SUPPLIER_QUICK_CREATE.PROVEEDOR_CREADO'));
         this.router.navigate(['/pocketbiz/purchases/suppliers', supplier.id]);
       },
       error: (err: SupplierApiError) => {

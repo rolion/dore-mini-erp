@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,7 +15,7 @@ import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.compone
 @Component({
   selector: 'app-purchase-payments-tab',
   templateUrl: './purchase-payments-tab.component.html',
-  imports: [DatePipe, MoneyPipe],
+  imports: [TranslatePipe, DatePipe, MoneyPipe],
 })
 export class PurchasePaymentsTabComponent implements OnInit {
   readonly purchase = input.required<Purchase>();
@@ -47,10 +49,10 @@ export class PurchasePaymentsTabComponent implements OnInit {
   get blockedReason(): string {
     const p = this.purchase();
     if (this.canPay) return '';
-    if (p.status === 'draft') return 'Confirma la compra para registrar pagos.';
-    if (p.status === 'cancelled') return 'La compra está cancelada.';
-    if (p.paymentStatus === 'paid') return 'Pagado';
-    return 'Sin saldo por pagar.';
+    if (p.status === 'draft') return tr('PURCHASES.PURCHASE_PAYMENTS_TAB.CONFIRMA_LA_COMPRA_PARA_REGISTRAR');
+    if (p.status === 'cancelled') return tr('PURCHASES.PURCHASE_PAYMENTS_TAB.LA_COMPRA_ESTA_CANCELADA');
+    if (p.paymentStatus === 'paid') return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PAGADO');
+    return tr('PURCHASES.PURCHASE_PAYMENTS_TAB.SIN_SALDO_POR_PAGAR');
   }
 
   load(): void {
@@ -85,7 +87,7 @@ export class PurchasePaymentsTabComponent implements OnInit {
     } catch {
       return; // «Cancelar»: no cambia nada.
     }
-    this.toastr.success('Pago registrado');
+    this.toastr.success(tr('PURCHASES.PURCHASE_PAYMENTS_TAB.PAGO_REGISTRADO'));
     this.load();
     this.paid.emit();
   }

@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,7 +26,7 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-payment-dialog',
   templateUrl: './payment-dialog.component.html',
-  imports: [ReactiveFormsModule, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
 })
 export class PaymentDialogComponent {
   readonly methods = PAYMENT_METHODS;
@@ -66,12 +68,12 @@ export class PaymentDialogComponent {
 
   get dateMessage(): string | null {
     const date = this.form.controls.paymentDate.value;
-    if (!date) return 'La fecha es obligatoria.';
-    return date > this.today ? 'La fecha no puede ser futura.' : null;
+    if (!date) return tr('INVENTORY.STOCK_OPENING.LA_FECHA_ES_OBLIGATORIA');
+    return date > this.today ? tr('PURCHASES.PAYMENT_DIALOG.LA_FECHA_NO_PUEDE_SER') : null;
   }
 
   get methodMessage(): string | null {
-    return this.form.controls.paymentMethod.value ? null : 'Elige un método de pago.';
+    return this.form.controls.paymentMethod.value ? null : tr('PURCHASES.PAYMENT_DIALOG.ELIGE_UN_METODO_DE_PAGO');
   }
 
   get canSubmit(): boolean {

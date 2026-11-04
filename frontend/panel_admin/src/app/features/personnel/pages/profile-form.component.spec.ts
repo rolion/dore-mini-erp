@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -12,7 +13,7 @@ describe('ProfileFormComponent', () => {
     api = jasmine.createSpyObj<PersonnelApiService>('api', ['get', 'save', 'specialties', 'users']);
     api.specialties.and.returnValue(of([]));
     api.users.and.returnValue(of([]));
-    TestBed.configureTestingModule({ imports: [ProfileFormComponent], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [ProfileFormComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: PersonnelApiService, useValue: api },
       { provide: ActivatedRoute, useValue: { snapshot: { data: { kind: 'professionals' } }, paramMap: of(convertToParamMap({})) } },
     ] });

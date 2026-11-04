@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -42,7 +43,7 @@ describe('SuppliersApiService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(SuppliersApiService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -110,7 +111,7 @@ describe('SuppliersApiService', () => {
         statusText: 'Bad Request',
       });
     expect(error?.status).toBe(400);
-    expect(error?.message).toBe(VALIDATION_ERROR_MESSAGE);
+    expect(error?.message).toBe(VALIDATION_ERROR_MESSAGE());
     expect(error?.fieldErrors).toEqual({
       name: ['El nombre es obligatorio.'],
       taxId: ['Muy largo'],
@@ -120,9 +121,9 @@ describe('SuppliersApiService', () => {
 
   it('maps 404, network and other errors to friendly messages', () => {
     const cases: [number, string][] = [
-      [404, NOT_FOUND_MESSAGE],
-      [0, NETWORK_ERROR_MESSAGE],
-      [500, GENERIC_ERROR_MESSAGE],
+      [404, NOT_FOUND_MESSAGE()],
+      [0, NETWORK_ERROR_MESSAGE()],
+      [500, GENERIC_ERROR_MESSAGE()],
     ];
     for (const [status, message] of cases) {
       let error: SupplierApiError | undefined;

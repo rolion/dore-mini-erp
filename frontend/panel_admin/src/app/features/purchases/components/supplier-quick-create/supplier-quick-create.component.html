@@ -1,53 +1,53 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">Nuevo proveedor</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss('cerrar')"></button>
+    <h4 class="modal-title">{{ 'PURCHASES.SUPPLIER_QUICK_CREATE.NUEVO_PROVEEDOR' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss('cerrar')"></button>
   </div>
   <div class="modal-body">
     <div class="form-group mb-3">
-      <label for="quick-supplier-name">Nombre <span class="text-danger">*</span></label>
-      <input id="quick-supplier-name" type="text" class="form-control" placeholder="Nombre del proveedor"
+      <label for="quick-supplier-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
+      <input id="quick-supplier-name" type="text" class="form-control" [placeholder]="'PURCHASES.SUPPLIER_QUICK_CREATE.NOMBRE_DEL_PROVEEDOR' | translate"
         formControlName="name" [attr.maxlength]="nameMaxLength">
       @if (hasError('name')) {
       <small class="form-text text-danger" data-testid="name-error">
         {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
-        'El nombre no puede superar ' + nameMaxLength + ' caracteres.' : 'El nombre es obligatorio.') }}
+        ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_NO_PUEDE_SUPERAR' | translate: { n: nameMaxLength }) : ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_ES_OBLIGATORIO' | translate)) }}
       </small>
       }
     </div>
     <div class="form-group mb-3">
-      <label for="quick-supplier-tax-id">Identificación</label>
-      <input id="quick-supplier-tax-id" type="text" class="form-control" placeholder="NIT, CI o RUC"
+      <label for="quick-supplier-tax-id">{{ 'COMMON.IDENTIFICACION' | translate }}</label>
+      <input id="quick-supplier-tax-id" type="text" class="form-control" [placeholder]="'PURCHASES.SUPPLIER_QUICK_CREATE.NIT_CI_O_RUC' | translate"
         formControlName="taxId" [attr.maxlength]="taxIdMaxLength">
       @if (hasError('taxId')) {
       <small class="form-text text-danger" data-testid="tax-id-error">
-        {{ serverErrors.taxId || 'La identificación no puede superar ' + taxIdMaxLength + ' caracteres.' }}
+        {{ serverErrors.taxId || ('PURCHASES.SUPPLIER_QUICK_CREATE.LA_IDENTIFICACION_NO_PUEDE_SUPERAR' | translate: { n: taxIdMaxLength }) }}
       </small>
       }
     </div>
     <div class="form-group mb-3">
-      <label for="quick-supplier-phone">Teléfono</label>
+      <label for="quick-supplier-phone">{{ 'COMMON.TELEFONO' | translate }}</label>
       <input id="quick-supplier-phone" type="text" inputmode="tel" class="form-control" formControlName="phone"
         [attr.maxlength]="phoneMaxLength">
       @if (hasError('phone')) {
       <small class="form-text text-danger" data-testid="phone-error">
-        {{ serverErrors.phone || 'El teléfono no puede superar ' + phoneMaxLength + ' caracteres.' }}
+        {{ serverErrors.phone || ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_TELEFONO_NO_PUEDE_SUPERAR' | translate: { n: phoneMaxLength }) }}
       </small>
       }
     </div>
     <div class="form-group">
-      <label for="quick-supplier-email">Correo</label>
+      <label for="quick-supplier-email">{{ 'COMMON.CORREO' | translate }}</label>
       <input id="quick-supplier-email" type="email" class="form-control" formControlName="email"
         [attr.maxlength]="emailMaxLength">
       @if (hasError('email')) {
       <small class="form-text text-danger" data-testid="email-error">
-        {{ serverErrors.email || 'Ingresa un correo válido.' }}
+        {{ serverErrors.email || ('CUSTOMERS.CUSTOMER_FORM.INGRESA_UN_CORREO_VALIDO' | translate) }}
       </small>
       }
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-light" (click)="activeModal.dismiss('cancelar')">Cancelar</button>
-    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">Guardar</button>
+    <button type="button" class="btn btn-light" (click)="activeModal.dismiss('cancelar')">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
   </div>
 </form>

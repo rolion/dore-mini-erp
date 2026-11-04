@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
@@ -13,7 +14,7 @@ describe('AuthGuard', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     guard = TestBed.inject(AuthGuard);
     auth = TestBed.inject(AuthService);

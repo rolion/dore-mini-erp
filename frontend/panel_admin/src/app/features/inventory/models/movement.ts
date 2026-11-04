@@ -1,7 +1,8 @@
+import { tr } from '../../../core/i18n/translate';
 export type MovementKind = 'in' | 'out';
 export type MovementStatus = 'confirmed' | 'reversed';
 
-export const MOVEMENT_KIND_LABELS: Record<MovementKind, string> = { in: 'Entrada', out: 'Salida' };
+export const MOVEMENT_KIND_LABELS: Record<MovementKind, string> = { get in() { return tr('INVENTORY.MOVEMENT.ENTRADA'); }, get out() { return tr('INVENTORY.MOVEMENT.SALIDA'); } };
 /** Clase de origen cuyas salidas se muestran como «Salida por venta». */
 export const SALES_ORDER_SOURCE = 'sales_order';
 
@@ -10,23 +11,23 @@ export const PURCHASE_RECEIPT_SOURCE = 'purchase_receipt';
 
 /** Etiqueta del tipo de movimiento: «Salida por venta» (pedido) y «Entrada por compra» (recepción). */
 export function movementTypeLabel(movement: { kind: MovementKind; source: { type: string } | null }): string {
-  if (movement.kind === 'out' && movement.source?.type === SALES_ORDER_SOURCE) return 'Salida por venta';
-  if (movement.kind === 'in' && movement.source?.type === PURCHASE_RECEIPT_SOURCE) return 'Entrada por compra';
+  if (movement.kind === 'out' && movement.source?.type === SALES_ORDER_SOURCE) return tr('INVENTORY.MOVEMENT.SALIDA_POR_VENTA');
+  if (movement.kind === 'in' && movement.source?.type === PURCHASE_RECEIPT_SOURCE) return tr('INVENTORY.MOVEMENT.ENTRADA_POR_COMPRA');
   return MOVEMENT_KIND_LABELS[movement.kind];
 }
 
 export const MOVEMENT_STATUS_LABELS: Record<MovementStatus, string> = {
-  confirmed: 'Confirmado',
-  reversed: 'Revertido',
+  get confirmed() { return tr('INVENTORY.MOVEMENT.CONFIRMADO'); },
+  get reversed() { return tr('INVENTORY.MOVEMENT.REVERTIDO'); },
 };
 
 /** Clases de documento de origen que conoce el servidor, con la etiqueta del filtro. */
 export const SOURCE_TYPE_OPTIONS: readonly { value: string; label: string }[] = [
-  { value: 'sales_order', label: 'Pedido de venta' },
-  { value: 'purchase_receipt', label: 'Recepción de compra' },
-  { value: 'inventory_adjustment', label: 'Ajuste de inventario' },
-  { value: 'inventory_opening', label: 'Apertura de existencias' },
-  { value: 'none', label: 'Sin documento' },
+  { value: 'sales_order', get label() { return tr('INVENTORY.MOVEMENT.PEDIDO_DE_VENTA'); } },
+  { value: 'purchase_receipt', get label() { return tr('INVENTORY.MOVEMENT.RECEPCION_DE_COMPRA'); } },
+  { value: 'inventory_adjustment', get label() { return tr('INVENTORY.MOVEMENT.AJUSTE_DE_INVENTARIO'); } },
+  { value: 'inventory_opening', get label() { return tr('INVENTORY.MOVEMENT.APERTURA_DE_EXISTENCIAS'); } },
+  { value: 'none', get label() { return tr('INVENTORY.MOVEMENT.SIN_DOCUMENTO'); } },
 ];
 
 /** Pantalla de destino por clase de origen; solo existen las de módulos ya construidos. */

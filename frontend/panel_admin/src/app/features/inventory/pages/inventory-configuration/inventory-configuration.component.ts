@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -11,7 +12,7 @@ export type ConfigurationTab = 'warehouses' | 'units';
 @Component({
   selector: 'app-inventory-configuration',
   templateUrl: './inventory-configuration.component.html',
-  imports: [RouterLink, AsyncPipe, WarehousesTabComponent, UnitsTabComponent],
+  imports: [TranslatePipe, RouterLink, AsyncPipe, WarehousesTabComponent, UnitsTabComponent],
 })
 export class InventoryConfigurationComponent {
   /** Módulos habilitados: «Valoración» solo se ofrece con Costeo (la API es la barrera real). */

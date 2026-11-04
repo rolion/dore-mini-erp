@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -35,7 +36,7 @@ describe('ExpensesApiService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(ExpensesApiService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -130,6 +131,6 @@ describe('ExpensesApiService', () => {
     http.expectOne('/api/expenses/e1/').error(new ProgressEvent('error'));
     service.get('e2').subscribe({ error: (err: ExpensesApiError) => messages.push(err.message) });
     http.expectOne('/api/expenses/e2/').flush('boom', { status: 500, statusText: 'Server Error' });
-    expect(messages).toEqual([NETWORK_ERROR_MESSAGE, GENERIC_ERROR_MESSAGE]);
+    expect(messages).toEqual([NETWORK_ERROR_MESSAGE(), GENERIC_ERROR_MESSAGE()]);
   });
 });

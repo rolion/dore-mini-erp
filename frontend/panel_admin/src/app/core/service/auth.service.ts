@@ -1,3 +1,4 @@
+import { tr } from '../i18n/translate';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of, tap, throwError } from 'rxjs';
@@ -6,11 +7,11 @@ import { LoginResponse, RegisterField, RegisterInput, User } from '../models/use
 import { ModulesService } from './modules.service';
 import { LocalStorageService } from './storage.service';
 
-export const INVALID_CREDENTIALS_MESSAGE = 'Credenciales inválidas';
-export const SERVER_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const TOO_MANY_ATTEMPTS_MESSAGE = 'Demasiados intentos. Espera un momento e inténtalo de nuevo.';
-export const REGISTRATION_DISABLED_MESSAGE = 'El registro no está disponible por el momento.';
-export const REGISTER_INVALID_MESSAGE = 'Revisa los datos marcados e inténtalo de nuevo.';
+export const INVALID_CREDENTIALS_MESSAGE = (): string => tr('CORE.AUTH_SERVICE.CREDENCIALES_INVALIDAS');
+export const SERVER_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const TOO_MANY_ATTEMPTS_MESSAGE = (): string => tr('CORE.AUTH_SERVICE.DEMASIADOS_INTENTOS_ESPERA_UN_MOMENTO');
+export const REGISTRATION_DISABLED_MESSAGE = (): string => tr('CORE.AUTH_SERVICE.EL_REGISTRO_NO_ESTA_DISPONIBLE');
+export const REGISTER_INVALID_MESSAGE = (): string => tr('CORE.AUTH_SERVICE.REVISA_LOS_DATOS_MARCADOS_E');
 
 /** Campo del backend (snake_case) → control del formulario de registro. */
 const REGISTER_FIELD_BY_API_KEY: Record<string, RegisterField> = {
@@ -132,24 +133,24 @@ export class AuthService {
   private loginErrorMessage(status: number): string {
     switch (status) {
       case 401:
-        return INVALID_CREDENTIALS_MESSAGE;
+        return INVALID_CREDENTIALS_MESSAGE();
       case 429:
-        return TOO_MANY_ATTEMPTS_MESSAGE;
+        return TOO_MANY_ATTEMPTS_MESSAGE();
       default:
-        return SERVER_ERROR_MESSAGE;
+        return SERVER_ERROR_MESSAGE();
     }
   }
 
   private registerError(err: HttpErrorResponse): RegisterError {
     switch (err.status) {
       case 400:
-        return new RegisterError(REGISTER_INVALID_MESSAGE, this.fieldErrors(err.error));
+        return new RegisterError(REGISTER_INVALID_MESSAGE(), this.fieldErrors(err.error));
       case 403:
-        return new RegisterError(REGISTRATION_DISABLED_MESSAGE);
+        return new RegisterError(REGISTRATION_DISABLED_MESSAGE());
       case 429:
-        return new RegisterError(TOO_MANY_ATTEMPTS_MESSAGE);
+        return new RegisterError(TOO_MANY_ATTEMPTS_MESSAGE());
       default:
-        return new RegisterError(SERVER_ERROR_MESSAGE);
+        return new RegisterError(SERVER_ERROR_MESSAGE());
     }
   }
 

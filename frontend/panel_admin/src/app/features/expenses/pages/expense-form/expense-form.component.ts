@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -29,7 +31,7 @@ export interface CategoryOption {
 }
 
 const AMOUNT_PATTERN = /^\d+(\.\d{1,2})?$/;
-export const NO_CATEGORIES_MESSAGE = 'Primero crea una categoría';
+export const NO_CATEGORIES_MESSAGE = (): string => tr('EXPENSES.EXPENSE_FORM.PRIMERO_CREA_UNA_CATEGORIA');
 
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
@@ -50,7 +52,7 @@ function positiveAmount(control: AbstractControl<string>): ValidationErrors | nu
 @Component({
   selector: 'app-expense-form',
   templateUrl: './expense-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent],
 })
 export class ExpenseFormComponent implements OnInit {
   readonly descriptionMaxLength = DESCRIPTION_MAX_LENGTH;
@@ -58,7 +60,7 @@ export class ExpenseFormComponent implements OnInit {
   readonly notesMaxLength = NOTES_MAX_LENGTH;
   readonly paymentMethods = PAYMENT_METHODS;
   readonly paymentLabels = PAYMENT_METHOD_LABELS;
-  readonly noCategoriesMessage = NO_CATEGORIES_MESSAGE;
+  readonly noCategoriesMessage = NO_CATEGORIES_MESSAGE();
   readonly form = inject(FormBuilder).nonNullable.group({
     description: ['', [notBlank, Validators.maxLength(DESCRIPTION_MAX_LENGTH)]],
     amount: ['', [positiveAmount]],
@@ -136,7 +138,7 @@ export class ExpenseFormComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (expense) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Gasto actualizado' : 'Gasto registrado');
+        this.toastr.success(this.isEdit ? tr('EXPENSES.EXPENSE_FORM.GASTO_ACTUALIZADO') : tr('EXPENSES.EXPENSE_FORM.GASTO_REGISTRADO'));
         this.router.navigate(['/pocketbiz/expenses', expense.id]);
       },
       error: (err: ExpensesApiError) => {
@@ -168,7 +170,7 @@ export class ExpenseFormComponent implements OnInit {
   private fill(expense: Expense): void {
     if (isVoided(expense)) {
       this.loading = false;
-      this.toastr.warning('El gasto está anulado y no se puede editar.');
+      this.toastr.warning(tr('EXPENSES.EXPENSE_FORM.EL_GASTO_ESTA_ANULADO_Y'));
       this.router.navigate(['/pocketbiz/expenses', expense.id]);
       return;
     }

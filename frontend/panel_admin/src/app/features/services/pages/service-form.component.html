@@ -1,40 +1,40 @@
 <section class="main-content">
-  <ul class="breadcrumb breadcrumb-style"><li class="breadcrumb-item"><h5 class="page-title">{{ id ? 'Editar servicio' : 'Nuevo servicio' }}</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main">Inicio</a></li><li class="breadcrumb-item">Catálogo</li><li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/services">Servicios</a></li></ul>
-  <div class="section-body"><div class="card"><div class="card-header"><h4>{{ id ? 'Editar servicio' : 'Nuevo servicio' }}</h4></div>
+  <ul class="breadcrumb breadcrumb-style"><li class="breadcrumb-item"><h5 class="page-title">{{ id ? ('SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate) : ('SERVICES.SERVICE_LIST.NUEVO_SERVICIO' | translate) }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main">{{ 'COMMON.INICIO' | translate }}</a></li><li class="breadcrumb-item">{{ 'COMMON.CATALOGO' | translate }}</li><li class="breadcrumb-item"><a routerLink="/pocketbiz/catalog/services">{{ 'COMMON.SERVICIOS' | translate }}</a></li></ul>
+  <div class="section-body"><div class="card"><div class="card-header"><h4>{{ id ? ('SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate) : ('SERVICES.SERVICE_LIST.NUEVO_SERVICIO' | translate) }}</h4></div>
     <div class="card-body">
-      @if (loading) { <p role="status">Cargando…</p> }
-      @if (error) { <div role="alert" class="alert alert-danger">{{ error }} @if (loadFailed) { <button type="button" class="btn btn-light" (click)="load()">Reintentar</button> }</div> }
+      @if (loading) { <p role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+      @if (error) { <div role="alert" class="alert alert-danger">{{ error }} @if (loadFailed) { <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button> }</div> }
       <form class="register-form m-4" [formGroup]="form" (ngSubmit)="save()">
         <fieldset [disabled]="loading || saving || loadFailed">
           <div class="row">
             @for (field of textFields; track field) {
               <div class="form-group col-md-6"><label [for]="'service-' + field">{{ fieldLabels[field] }} @if (field === 'name') { <span class="text-danger">*</span> }</label>
                 <input [id]="'service-' + field" class="form-control" [formControlName]="field" [attr.maxlength]="field === 'name' ? 150 : 50" [attr.aria-describedby]="'service-' + field + '-error'">
-                @if (field === 'code') { <small class="text-muted">Opcional. Se guarda siempre en mayúsculas.</small> }
+                @if (field === 'code') { <small class="text-muted">{{ 'SERVICES.SERVICE_FORM.OPCIONAL_SE_GUARDA_SIEMPRE_EN' | translate }}</small> }
                 @if (fieldError(field)) { <small [id]="'service-' + field + '-error'" class="form-text text-danger d-block">{{ fieldError(field) }}</small> }
               </div>
             }
           </div>
-          <div class="form-group"><label for="service-description">Descripción</label><textarea id="service-description" rows="3" class="form-control" formControlName="description" maxlength="5000"></textarea>
+          <div class="form-group"><label for="service-description">{{ 'COMMON.DESCRIPCION' | translate }}</label><textarea id="service-description" rows="3" class="form-control" formControlName="description" maxlength="5000"></textarea>
             @if (fieldError('description')) { <small class="form-text text-danger">{{ fieldError('description') }}</small> }</div>
           <div class="row">
-            <div class="form-group col-md-6"><label for="service-price">Precio base (Bs) <span class="text-danger">*</span></label>
+            <div class="form-group col-md-6"><label for="service-price">{{ 'SERVICES.SERVICE_FORM.PRECIO_BASE_BS' | translate }} <span class="text-danger">*</span></label>
               <input id="service-price" type="text" inputmode="decimal" class="form-control" formControlName="basePrice" aria-describedby="service-price-error">
               @if (fieldError('basePrice')) { <small id="service-price-error" class="form-text text-danger">{{ fieldError('basePrice') }}</small> }</div>
-            <div class="form-group col-md-6"><label for="service-duration">Duración (minutos) <span class="text-danger">*</span></label>
+            <div class="form-group col-md-6"><label for="service-duration">{{ 'SERVICES.SERVICE_FORM.DURACION_MINUTOS' | translate }} <span class="text-danger">*</span></label>
               <input id="service-duration" type="number" min="1" max="2147483647" step="1" class="form-control" formControlName="durationMinutes" aria-describedby="service-duration-error">
               @if (fieldError('durationMinutes')) { <small id="service-duration-error" class="form-text text-danger">{{ fieldError('durationMinutes') }}</small> }</div>
           </div>
-          <div class="form-group"><label for="service-specialty">Especialidad</label>
-            <select id="service-specialty" class="form-select" formControlName="specialtyId" aria-describedby="service-specialty-help"><option [ngValue]="null">Sin especialidad</option>
+          <div class="form-group"><label for="service-specialty">{{ 'COMMON.ESPECIALIDAD' | translate }}</label>
+            <select id="service-specialty" class="form-select" formControlName="specialtyId" aria-describedby="service-specialty-help"><option [ngValue]="null">{{ 'SERVICES.SERVICE_FORM.SIN_ESPECIALIDAD' | translate }}</option>
               @for (specialty of specialties; track specialty.id) { <option [ngValue]="specialty.id" [disabled]="!specialty.active">{{ specialty.name }}{{ specialty.active ? '' : ' (inactiva)' }}</option> }
             </select>
-            <small id="service-specialty-help" class="text-muted d-block">{{ specialtiesAvailable ? 'Opcional. Solo se pueden elegir especialidades activas.' : 'Habilita Personal para elegir una especialidad. Puedes guardar sin especialidad.' }}</small>
+            <small id="service-specialty-help" class="text-muted d-block">{{ specialtiesAvailable ? ('SERVICES.SERVICE_FORM.OPCIONAL_SOLO_SE_PUEDEN_ELEGIR' | translate) : ('SERVICES.SERVICE_FORM.HABILITA_PERSONAL_PARA_ELEGIR_UNA' | translate) }}</small>
             @if (fieldError('specialtyId')) { <small class="form-text text-danger">{{ fieldError('specialtyId') }}</small> }</div>
-          <p>Estado: <span class="badge-outline" [class.col-green]="active" [class.col-red]="!active">{{ active ? 'Activo' : 'Inactivo' }}</span></p>
-          <button class="btn btn-primary" type="submit" [disabled]="form.invalid || saving || loading || loadFailed">{{ saving ? 'Guardando…' : 'Guardar' }}</button>
-          <a class="btn btn-light ms-2" [routerLink]="cancelLink">Cancelar</a>
+          <p>{{ 'SERVICES.SERVICE_FORM.ESTADO' | translate }} <span class="badge-outline" [class.col-green]="active" [class.col-red]="!active">{{ active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></p>
+          <button class="btn btn-primary" type="submit" [disabled]="form.invalid || saving || loading || loadFailed">{{ saving ? ('PERSONNEL.PROFILE_FORM.GUARDANDO' | translate) : ('COMMON.GUARDAR' | translate) }}</button>
+          <a class="btn btn-light ms-2" [routerLink]="cancelLink">{{ 'COMMON.CANCELAR' | translate }}</a>
         </fieldset>
       </form>
     </div>

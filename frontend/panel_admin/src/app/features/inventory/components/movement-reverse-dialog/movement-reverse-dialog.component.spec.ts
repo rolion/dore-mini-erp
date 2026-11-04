@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { of, throwError } from 'rxjs';
@@ -17,7 +18,7 @@ describe('MovementReverseDialogComponent', () => {
     api = jasmine.createSpyObj<MovementsApiService>('MovementsApiService', ['reverse']);
     await TestBed.configureTestingModule({
       imports: [MovementReverseDialogComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: NgbActiveModal, useValue: activeModal },
         { provide: MovementsApiService, useValue: api },
       ],

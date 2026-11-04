@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -16,7 +17,7 @@ describe('HTTP interceptors', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideHttpClient(withInterceptors([tokenInterceptor, errorInterceptor])),
         provideHttpClientTesting(),
         provideRouter([]),

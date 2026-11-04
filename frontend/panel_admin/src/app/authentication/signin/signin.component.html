@@ -6,7 +6,7 @@
             <div class="login-body">
               <div class="text-center">
                 <div class="brand-wrapper">
-                  <a routerLink="/" aria-label="PocketBiz, volver al inicio">
+                  <a routerLink="/" [attr.aria-label]="'AUTH.SIGNIN.POCKETBIZ_VOLVER_AL_INICIO' | translate">
                     <img src="assets/images/main-logo.png" alt="PocketBiz" class="logo logo-main">
                   </a>
                 </div>
@@ -15,17 +15,17 @@
                 <div class="row">
                   <div class="col-lg-12">
                     <div class="form-group position-relative">
-                      <label>Usuario <span class="text-danger">*</span></label>
+                      <label>{{ 'COMMON.USUARIO' | translate }} <span class="text-danger">*</span></label>
                       <i-feather name="user" class="login-icons"></i-feather>
-                      <input type="text" class="form-control psl-5" formControlName="username" placeholder="Usuario" autocomplete="username">
+                      <input type="text" class="form-control psl-5" formControlName="username" [placeholder]="'COMMON.USUARIO' | translate" autocomplete="username">
                       </div>
                     </div>
                     <div class="col-lg-12">
                       <div class="form-group position-relative">
-                        <label>Contraseña <span class="text-danger">*</span></label>
+                        <label>{{ 'AUTH.SIGNIN.CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                         <i-feather name="key" class="login-icons"></i-feather>
                         <input type="password" class="form-control psl-5" formControlName="password"
-                          placeholder="Contraseña" autocomplete="current-password">
+                          [placeholder]="'AUTH.SIGNIN.CONTRASENA' | translate" autocomplete="current-password">
                         </div>
                       </div>
                       <div class="col-lg-12">
@@ -34,22 +34,22 @@
                             <div class="form-check">
                               <input class="form-check-input" type="checkbox" id="customCheck1" formControlName="remember">
                                 <label class="form-check-label" for="customCheck1">
-                                  Remember me
+                                  {{ 'AUTH.SIGNIN.REMEMBER_ME' | translate }}
                                 </label>
                               </div>
                             </div>
                             <p class="forgot-pass mb-0"><a routerLink="/pocketbiz/forgot"
-                            class="text-dark fw-bold">Forgot password ?</a></p>
+                            class="text-dark fw-bold">{{ 'AUTH.SIGNIN.FORGOT_PASSWORD' | translate }}</a></p>
                           </div>
                         </div>
                         @if (error) {
                           <div class="alert alert-danger mb-3 msl-3">{{error}}</div>
                         }
                         <div class="col-lg-12 mb-0">
-                          <button type="submit" class="btn btn-primary auth-form-btn" [disabled]="loading">Sign in</button>
+                          <button type="submit" class="btn btn-primary auth-form-btn" [disabled]="loading">{{ 'AUTH.SIGNIN.SIGN_IN' | translate }}</button>
                         </div>
                         <div class="col-lg-12 mt-4 text-center">
-                          <h6>Or Login With</h6>
+                          <h6>{{ 'AUTH.SIGNIN.OR_LOGIN_WITH' | translate }}</h6>
                           <ul class="list-unstyled social-icon mb-0 mt-3">
                             <li class="list-inline-item"><a href="javascript:void(0)" class="rounded">
                               <i-feather name="facebook" class="fea-social sm-icon"></i-feather>
@@ -66,8 +66,8 @@
                           </ul>
                         </div>
                         <div class="col-12 text-center">
-                          <p class="mb-0 mt-3"><small class="text-dark msr-2">Don't have an account ?</small> <a
-                        routerLink="/pocketbiz/signup" class="text-dark fw-bold">Sign Up</a></p>
+                          <p class="mb-0 mt-3"><small class="text-dark msr-2">{{ 'AUTH.SIGNIN.DON_T_HAVE_AN_ACCOUNT' | translate }}</small> <a
+                        routerLink="/pocketbiz/signup" class="text-dark fw-bold">{{ 'AUTH.SIGNIN.SIGN_UP' | translate }}</a></p>
                       </div>
                     </div>
                   </form>

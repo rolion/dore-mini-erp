@@ -1,27 +1,27 @@
 <div class="modal-header">
-  <h4 class="modal-title">{{ isEnable ? 'Habilitar módulo' : 'Deshabilitar módulo' }}</h4>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  <h4 class="modal-title">{{ isEnable ? ('SETTINGS.MODULE_CONFIRM_DIALOG.HABILITAR_MODULO' | translate) : ('SETTINGS.MODULE_CONFIRM_DIALOG.DESHABILITAR_MODULO' | translate) }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
   <dl class="row mb-0">
-    <dt class="col-sm-4">Módulo</dt>
+    <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.MODULO' | translate }}</dt>
     <dd class="col-sm-8">{{ module.name }}</dd>
-    <dt class="col-sm-4">Empresa</dt>
+    <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.EMPRESA' | translate }}</dt>
     <dd class="col-sm-8">{{ companyName }}</dd>
-    <dt class="col-sm-4">Requiere</dt>
-    <dd class="col-sm-8">{{ requiredNames.length ? requiredNames.join(', ') : 'Sin dependencias' }}</dd>
-    <dt class="col-sm-4">Se verán afectados</dt>
+    <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.REQUIERE' | translate }}</dt>
+    <dd class="col-sm-8">{{ requiredNames.length ? requiredNames.join(', ') : ('SETTINGS.MODULE_CONFIRM_DIALOG.SIN_DEPENDENCIAS' | translate) }}</dd>
+    <dt class="col-sm-4">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.SE_VERAN_AFECTADOS' | translate }}</dt>
     <dd class="col-sm-8">
       @if (isEnable) {
-      Ninguno
+      {{ 'SETTINGS.MODULE_CONFIRM_DIALOG.NINGUNO' | translate }}
       } @else {
-      {{ affected.length ? affected.join(', ') : 'Ninguno' }}
+      {{ affected.length ? affected.join(', ') : ('INVENTORY.MOVEMENT_DETAIL.NINGUNO' | translate) }}
       }
     </dd>
   </dl>
   @if (!isEnable) {
   <small class="form-text text-muted">
-    Los datos se conservan; la desactivación segura completa llega en una próxima versión.
+    {{ 'SETTINGS.MODULE_CONFIRM_DIALOG.LOS_DATOS_SE_CONSERVAN_LA' | translate }}
   </small>
   }
   @if (serverError) {
@@ -29,6 +29,6 @@
   }
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">Cancelar</button>
-  <button type="button" class="btn btn-primary" [disabled]="saving" (click)="confirm()">Confirmar</button>
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+  <button type="button" class="btn btn-primary" [disabled]="saving" (click)="confirm()">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.CONFIRMAR' | translate }}</button>
 </div>

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../../environments/environment';
@@ -7,10 +8,10 @@ import { ClinicalInput, Demographics, Patient, PatientHistory, PatientSummary } 
 export function errorMessage(error: HttpErrorResponse): string {
   const detail: unknown = error.error?.detail;
   if (typeof detail === 'string') return detail;
-  if (error.status === 400) return 'Revisa los campos señalados.';
-  if (error.status === 403) return 'No tienes permiso para acceder a esta información.';
-  if (error.status === 404) return 'No se encontró el paciente.';
-  return 'No se pudo completar la operación. Inténtalo de nuevo.';
+  if (error.status === 400) return tr('DENTISTRY.DENTISTRY_API_SERVICE.REVISA_LOS_CAMPOS_SENALADOS');
+  if (error.status === 403) return tr('DENTISTRY.DENTISTRY_API_SERVICE.NO_TIENES_PERMISO_PARA_ACCEDER');
+  if (error.status === 404) return tr('DENTISTRY.DENTISTRY_API_SERVICE.NO_SE_ENCONTRO_EL_PACIENTE');
+  return tr('SETTINGS.SETTING.NO_SE_PUDO_COMPLETAR_LA');
 }
 export function fieldErrors(error: HttpErrorResponse): Record<string, string> {
   const result: Record<string, string> = {};

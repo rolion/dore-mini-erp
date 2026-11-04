@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -18,13 +20,13 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 @Component({
   selector: 'app-reception-detail',
   templateUrl: './reception-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class ReceptionDetailComponent implements OnInit {
   readonly statusLabels = RECEIPT_STATUS_LABELS;
   readonly statusClasses = RECEIPT_STATUS_CLASSES;
-  readonly documentalLabel = DOCUMENTAL_LABEL;
-  readonly noEntryLabel = SIN_ENTRADA_LABEL;
+  readonly documentalLabel = DOCUMENTAL_LABEL();
+  readonly noEntryLabel = SIN_ENTRADA_LABEL();
   purchaseId = '';
   receipt: Receipt | null = null;
   loading = true;
@@ -40,7 +42,7 @@ export class ReceptionDetailComponent implements OnInit {
   get revertBlockedMessage(): string {
     const receipt = this.receipt;
     return receipt?.status === 'confirmed' && !receipt.canRevert
-      ? 'Inventario está deshabilitado: habilítalo para revertir una recepción que movió existencias.'
+      ? tr('PURCHASES.RECEPTION_DETAIL.INVENTARIO_ESTA_DESHABILITADO_HABILITALO_PARA')
       : '';
   }
 
@@ -54,7 +56,7 @@ export class ReceptionDetailComponent implements OnInit {
     } catch {
       return; // «Volver»: no cambia nada.
     }
-    this.successMessage = 'Recepción revertida';
+    this.successMessage = tr('PURCHASES.RECEPTION_DETAIL.RECEPCION_REVERTIDA');
     this.load();
   }
 

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ORDER_STATUSES, ORDER_STATUS_LABELS, OrderStatus } from '../../models/order';
@@ -13,7 +14,7 @@ describe('OrderStatusBadgeComponent', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  beforeEach(() => TestBed.configureTestingModule({ imports: [OrderStatusBadgeComponent] }));
+  beforeEach(() => TestBed.configureTestingModule({ providers: [...provideTestTranslations()], imports: [OrderStatusBadgeComponent] }));
 
   it('shows the label with the truck icon for every status (UI-04)', () => {
     for (const status of ORDER_STATUSES) {

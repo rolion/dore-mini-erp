@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { ProductCategory } from '../../products/models/product';
 
 export const OPENING_REFERENCE_MAX_LENGTH = 100;
@@ -43,32 +44,32 @@ export type CategoryFilter = '' | ProductCategory | 'none';
 export type UseFilter = '' | 'true' | 'false';
 
 export const CATEGORY_FILTER_OPTIONS: readonly { value: CategoryFilter; label: string }[] = [
-  { value: '', label: 'Todas las clasificaciones' },
-  { value: 'raw_material', label: 'Materia prima' },
-  { value: 'packaging', label: 'Empaque' },
-  { value: 'intermediate', label: 'Intermedio' },
-  { value: 'finished', label: 'Terminado' },
-  { value: 'merchandise', label: 'Mercadería' },
-  { value: 'none', label: 'Sin clasificar' },
+  { value: '', get label() { return tr('INVENTORY.STOCK.TODAS_LAS_CLASIFICACIONES'); } },
+  { value: 'raw_material', get label() { return tr('INVENTORY.STOCK.MATERIA_PRIMA'); } },
+  { value: 'packaging', get label() { return tr('INVENTORY.STOCK.EMPAQUE'); } },
+  { value: 'intermediate', get label() { return tr('INVENTORY.STOCK.INTERMEDIO'); } },
+  { value: 'finished', get label() { return tr('INVENTORY.STOCK.TERMINADO'); } },
+  { value: 'merchandise', get label() { return tr('INVENTORY.STOCK.MERCADERIA'); } },
+  { value: 'none', get label() { return tr('INVENTORY.STOCK.SIN_CLASIFICAR'); } },
 ];
 
 export const USE_FILTER_OPTIONS: readonly { value: UseFilter; label: string }[] = [
-  { value: '', label: 'Todos' },
-  { value: 'true', label: 'Sí' },
-  { value: 'false', label: 'No' },
+  { value: '', get label() { return tr('INVENTORY.STOCK.TODOS'); } },
+  { value: 'true', get label() { return tr('CUSTOMERS.CUSTOMER_DETAIL.SI'); } },
+  { value: 'false', get label() { return tr('INVENTORY.STOCK.NO'); } },
 ];
 
 export const BALANCE_FILTER_OPTIONS: readonly { value: BalanceFilter; label: string }[] = [
-  { value: '', label: 'Todos los saldos' },
-  { value: 'zero', label: 'Con saldo cero' },
-  { value: 'nonzero', label: 'Con saldo distinto de cero' },
-  { value: 'negative', label: 'Con saldo negativo' },
+  { value: '', get label() { return tr('INVENTORY.STOCK.TODOS_LOS_SALDOS'); } },
+  { value: 'zero', get label() { return tr('INVENTORY.STOCK.CON_SALDO_CERO'); } },
+  { value: 'nonzero', get label() { return tr('INVENTORY.STOCK.CON_SALDO_DISTINTO_DE_CERO'); } },
+  { value: 'negative', get label() { return tr('INVENTORY.STOCK.CON_SALDO_NEGATIVO'); } },
 ];
 
 export const ACTIVE_FILTER_OPTIONS: readonly { value: ActiveFilter; label: string }[] = [
-  { value: 'true', label: 'Activos' },
-  { value: 'false', label: 'Inactivos' },
-  { value: 'all', label: 'Todos' },
+  { value: 'true', get label() { return tr('INVENTORY.STOCK.ACTIVOS'); } },
+  { value: 'false', get label() { return tr('INVENTORY.STOCK.INACTIVOS'); } },
+  { value: 'all', get label() { return tr('INVENTORY.STOCK.TODOS'); } },
 ];
 
 export interface StockListParams {
@@ -174,17 +175,17 @@ export function newUuid(): string {
 export function quantityError(raw: string, allowsFractions: boolean): string | null {
   const text = raw.trim();
   if (text === '') {
-    return 'La cantidad es obligatoria.';
+    return tr('INVENTORY.STOCK.LA_CANTIDAD_ES_OBLIGATORIA');
   }
   if (!/^\d+(\.\d+)?$/.test(text)) {
-    return 'Ingresa un número mayor o igual a cero.';
+    return tr('INVENTORY.STOCK.INGRESA_UN_NUMERO_MAYOR_O');
   }
   const decimals = text.split('.')[1] ?? '';
   if (decimals.length > QUANTITY_MAX_DECIMALS) {
-    return `La cantidad admite como máximo ${QUANTITY_MAX_DECIMALS} decimales.`;
+    return tr('INVENTORY.STOCK.LA_CANTIDAD_ADMITE_COMO_MAXIMO', { p0: QUANTITY_MAX_DECIMALS });
   }
   if (!allowsFractions && /[1-9]/.test(decimals)) {
-    return 'La unidad base de este producto no admite fracciones.';
+    return tr('INVENTORY.STOCK.LA_UNIDAD_BASE_DE_ESTE');
   }
   return null;
 }

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
@@ -28,7 +29,7 @@ describe('PurchasePaymentsTabComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [PurchasePaymentsTabComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: PaymentsApiService, useValue: api },
         { provide: NgbModal, useValue: modal },
         { provide: ToastrService, useValue: toastr },

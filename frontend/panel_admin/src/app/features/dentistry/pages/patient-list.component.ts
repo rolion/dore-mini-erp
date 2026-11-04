@@ -1,3 +1,5 @@
+import { tr } from '../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PatientCreateComponent } from './patient-create.component';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -11,7 +13,7 @@ import { PatientSummary } from '../models/patient';
 import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
 
 @Component({
-  selector: 'app-patient-list', imports: [RouterLink, ReactiveFormsModule, NgxDatatableModule],
+  selector: 'app-patient-list', imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule],
   templateUrl: './patient-list.component.html',
 })
 export class PatientListComponent implements OnInit {
@@ -27,7 +29,9 @@ export class PatientListComponent implements OnInit {
   page = 1;
   loading = false;
   error = '';
-  messages = { emptyMessage: 'No hay pacientes que coincidan con los filtros.', totalMessage: 'en total' };
+  get messages() {
+    return { emptyMessage: tr('DENTISTRY.PATIENT_LIST.NO_HAY_PACIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   ngOnInit() {
     merge(this.search.valueChanges.pipe(debounceTime(300)), this.active.valueChanges)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.filter());

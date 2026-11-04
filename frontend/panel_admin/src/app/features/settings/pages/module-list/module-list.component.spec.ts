@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -46,7 +47,7 @@ describe('ModuleListComponent', () => {
     modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     await TestBed.configureTestingModule({
       imports: [ModuleListComponent],
-      providers: [provideRouter([]), { provide: ModulesService, useValue: service }, { provide: NgbModal, useValue: modal }],
+      providers: [...provideTestTranslations(), provideRouter([]), { provide: ModulesService, useValue: service }, { provide: NgbModal, useValue: modal }],
     }).compileComponents();
   });
 

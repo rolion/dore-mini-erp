@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -15,9 +16,9 @@ import {
   SalesReport,
 } from '../models/report';
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor.';
-export const GENERIC_ERROR_MESSAGE = 'No se pudo cargar.';
-export const INVALID_PERIOD_MESSAGE = 'El periodo no es válido.';
+export const NETWORK_ERROR_MESSAGE = (): string => tr('REPORTING.REPORTING_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const GENERIC_ERROR_MESSAGE = (): string => tr('REPORTING.REPORTING_API_SERVICE.NO_SE_PUDO_CARGAR');
+export const INVALID_PERIOD_MESSAGE = (): string => tr('REPORTING.REPORTING_API_SERVICE.EL_PERIODO_NO_ES_VALIDO');
 
 // --- Formas de respuesta de la API (snake_case) -------------------------------------------------------------
 
@@ -99,9 +100,9 @@ function toCategory(dto: ExpensesDto['categories'][number]): CategoryExpense {
 }
 
 function toError(err: HttpErrorResponse): Error {
-  if (err.status === 0) return new Error(NETWORK_ERROR_MESSAGE);
-  if (err.status === 400) return new Error(INVALID_PERIOD_MESSAGE);
-  return new Error(GENERIC_ERROR_MESSAGE);
+  if (err.status === 0) return new Error(NETWORK_ERROR_MESSAGE());
+  if (err.status === 400) return new Error(INVALID_PERIOD_MESSAGE());
+  return new Error(GENERIC_ERROR_MESSAGE());
 }
 
 /** `period`/`date_from`/`date_to` según lo pedido; el servidor devuelve las fechas efectivas. */

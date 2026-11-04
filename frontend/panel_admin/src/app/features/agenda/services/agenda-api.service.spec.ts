@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -10,7 +11,7 @@ describe('AgendaApiService', () => {
   const body = { day: 0, starts: '09:00', ends: '12:00', valid_from: '2026-11-02', valid_until: '2026-11-08', breaks: [] };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(AgendaApiService);
     http = TestBed.inject(HttpTestingController);
   });

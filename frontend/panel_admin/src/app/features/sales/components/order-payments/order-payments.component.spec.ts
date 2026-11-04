@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
@@ -32,7 +33,7 @@ describe('OrderPaymentsComponent', () => {
     defaults = NO_SALES_DEFAULTS;
     TestBed.configureTestingModule({
       imports: [OrderPaymentsComponent],
-      providers: [{ provide: SalesSettingsService, useValue: { defaults: () => of(defaults) } }],
+      providers: [...provideTestTranslations(), { provide: SalesSettingsService, useValue: { defaults: () => of(defaults) } }],
     });
   });
 
