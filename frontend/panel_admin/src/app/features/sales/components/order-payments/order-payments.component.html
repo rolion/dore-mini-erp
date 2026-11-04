@@ -63,7 +63,7 @@
         <tbody>
           @for (payment of order().payments; track payment.id) {
           <tr data-testid="payment-row">
-            <td>{{ payment.paymentDate }}</td>
+            <td>{{ payment.paymentDate | date: 'dd/MM/yyyy' }}</td>
             <td>{{ methodLabels[payment.paymentMethod] }}</td>
             <td>{{ payment.reference || '—' }}</td>
             <td class="text-end">{{ payment.amount | money }}</td>

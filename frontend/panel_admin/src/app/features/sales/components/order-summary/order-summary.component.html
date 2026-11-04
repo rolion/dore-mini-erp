@@ -18,7 +18,7 @@
             <small class="form-text text-danger" data-testid="discount-error">{{ errors().discount?.join(' ') }}</small>
             }
           </div>
-          <button type="button" class="btn btn-sm btn-primary" [disabled]="busy()"
+          <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy()"
             (click)="submitDiscount()">{{ 'SALES.ORDER_SUMMARY.APLICAR' | translate }}</button>
         </div>
         } @else {

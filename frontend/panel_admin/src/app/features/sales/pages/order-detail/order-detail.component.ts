@@ -1,7 +1,7 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -80,6 +80,8 @@ export class OrderDetailComponent implements OnInit {
   private toastr = inject(ToastrService);
   private modal = inject(NgbModal);
   private destroyRef = inject(DestroyRef);
+  private payments = viewChild(OrderPaymentsComponent);
+  private paymentsHost = viewChild(OrderPaymentsComponent, { read: ElementRef });
 
   /** Id del pedido de la URL; cambia si se navega a otro pedido sin salir de esta pantalla. */
   private orderId = '';
@@ -138,6 +140,14 @@ export class OrderDetailComponent implements OnInit {
 
   get cancelled(): boolean {
     return this.order?.status === 'CANCELLED';
+  }
+
+  /** «Registrar pago» de la tarjeta Cobro: abre el formulario de Pagos, lo deja a la vista y enfoca el monto. */
+  openPayment(): void {
+    this.payments()?.open();
+    const host = this.paymentsHost()?.nativeElement as HTMLElement | undefined;
+    host?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => host?.querySelector<HTMLInputElement>('#payment-amount')?.focus());
   }
 
   runPrimary(): void {

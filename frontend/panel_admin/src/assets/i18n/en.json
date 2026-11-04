@@ -1590,7 +1590,9 @@
       "EL_PEDIDO_QUEDARA_CANCELADO_Y": "The order will be cancelled and cannot continue the delivery flow.",
       "MOTIVO_DE_LA_CANCELACION": "Reason for cancellation",
       "QUITAR": "Remove \"{{p0}}\"?",
-      "QUITAR_2": "Remove"
+      "QUITAR_2": "Remove",
+      "SIN_PRODUCTOS": "No products",
+      "AGREGUE_PRODUCTOS_PARA_COBRAR": "Add products to be able to collect payment."
     },
     "ORDER_FORM": {
       "SIN_CLIENTE_VENTA_DE_MOSTRADOR": "No customer (counter sale)",
@@ -1629,7 +1631,8 @@
       "NO_HAY_PEDIDOS_QUE_COINCIDAN": "No orders match the filters.",
       "AUN_NO_HAY_PEDIDOS": "There are no orders yet.",
       "NO_CANCELADOS": "Not cancelled",
-      "CON_SALDO_PENDIENTE": "With pending balance"
+      "CON_SALDO_PENDIENTE": "With pending balance",
+      "MAS_FILTROS": "More filters"
     },
     "ORDERS_API_SERVICE": {
       "PEDIDO_NO_ENCONTRADO": "Order not found."
