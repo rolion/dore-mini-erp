@@ -18,7 +18,7 @@ def _decision(row: DentalProformaLineDecisionModel) -> Decision:
 
 def to_domain(row: DentalProformaModel) -> DentalProforma:
     lines = [DentalProformaLine(l.id, l.service_id, l.description, l.quantity, l.unit_price, l.dental_piece,
-                                l.origin_line_id, l.line_kind, tuple(_decision(d) for d in l.decisions.all()))
+                                l.origin_line_id, l.line_kind, tuple(_decision(d) for d in l.decisions.all()), l.collected)
              for l in row.lines.all()]
     return DentalProforma(row.id, row.number, row.version, row.status, row.customer_id, row.patient_name, row.date,
                           row.valid_until, row.notes, lines, row.created_by)
@@ -54,6 +54,9 @@ class DjangoDentalProformaRepository:
         """Líneas de la versión anterior, por id (vacío en la versión 1)."""
         row = self._qs().filter(number=number, version=version - 1).first()
         return {line.id: line for line in to_domain(row).lines} if row else {}
+
+    def versions_of(self, numbers) -> list[DentalProforma]:
+        return [to_domain(r) for r in self._qs().filter(number__in=list(numbers))]
 
     def draft_exists(self, number: str) -> bool:
         return DentalProformaModel.objects.filter(company_id=self.company_id, number=number, status=DRAFT).exists()
@@ -97,6 +100,8 @@ class DjangoDentalProformaRepository:
                               'quantity': line.quantity, 'unit_price': line.unit_price,
                               'dental_piece': line.dental_piece, 'origin_line_id': line.origin_line_id,
                               'line_kind': line.line_kind})
+                if line.collected:  # monótona: nunca se reinicia desde el dominio
+                    DentalProformaLineModel.objects.filter(pk=line.id).update(collected=True)
                 self._save_decisions(proforma, line)
 
     def _save_decisions(self, proforma: DentalProforma, line: DentalProformaLine) -> None:

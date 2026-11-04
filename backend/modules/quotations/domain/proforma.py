@@ -83,6 +83,7 @@ class ProformaLine:
     origin_line_id: UUID | None = None  # línea de la versión anterior de la que viene
     line_kind: str = LINE_ORIGINAL
     decisions: tuple[Decision, ...] = ()
+    collected: bool = False  # PB-COB-001: la línea tiene cobros; no se puede rectificar a rechazada
 
     @property
     def subtotal(self) -> Decimal:
@@ -288,6 +289,8 @@ class Proforma:
             errors['line_id'] = ['La línea no pertenece a la proforma.']
         if errors:
             raise ProformaValidationError(errors)
+        if line.collected:
+            raise ProformaStateError('La línea tiene cobros registrados: no se puede rectificar.')
         if line.decision == PENDING:
             raise ProformaStateError('La línea aún no tiene una decisión que rectificar.')
         if line.decision == decision:

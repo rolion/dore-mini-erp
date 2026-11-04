@@ -47,6 +47,8 @@ class ProformaLineModel(models.Model):
     # PB-COT-002: vínculo con la línea de la versión anterior (sin FK) y su tipo en esta versión.
     origin_line_id = models.UUIDField(null=True, blank=True)
     line_kind = models.CharField(max_length=12, default='original')
+    # PB-COB-001: monótona; solo la escribe el repositorio al heredarla y la fachada `services` al cobrar.
+    collected = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'quotations_proforma_line'

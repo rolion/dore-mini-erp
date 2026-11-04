@@ -169,3 +169,14 @@ class ProformaVersioningTests(SimpleTestCase):
             v1.decide([v1.lines[0].id], REJECTED, now=NOW)
         with self.assertRaises(DentalProformaStateError):
             v1.rectify(v1.lines[0].id, REJECTED, now=NOW, reason='x')
+
+
+class CollectedLineTests(SimpleTestCase):
+    def test_collected_line_cannot_be_rectified_and_mark_is_inherited(self):  # INV-08 / AC-06
+        from dataclasses import replace
+        proforma = presented()
+        accept(proforma, [0])
+        proforma.lines = [replace(proforma.lines[0], collected=True), proforma.lines[1]]
+        with self.assertRaises(DentalProformaStateError):
+            proforma.rectify(proforma.lines[0].id, REJECTED, now=NOW, reason='Cambio')
+        self.assertTrue(proforma.new_version().lines[0].collected)
