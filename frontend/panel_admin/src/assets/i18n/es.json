@@ -1909,7 +1909,25 @@
       "ERR_REVISA": "Revisa los datos marcados.",
       "ERR_PERMISO": "No tienes permiso o un módulo requerido no está habilitado.",
       "ERR_NO_ENCONTRADA": "Cita no encontrada.",
-      "ERR_CONEXION": "No se pudo conectar con el servidor. Inténtalo de nuevo."
+      "ERR_CONEXION": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
+      "VAL_REASON_REQUIRED": "El motivo es obligatorio.",
+      "VAL_REASON_TOO_LONG": "El motivo no puede superar 500 caracteres.",
+      "VAL_ENDS_BEFORE_START": "El fin debe ser posterior al inicio.",
+      "VAL_PROFESSIONAL_NOT_FOUND": "Profesional no encontrado.",
+      "VAL_CUSTOMER_INVALID": "Selecciona un cliente activo de tu empresa.",
+      "VAL_SERVICE_INVALID": "Selecciona un servicio activo.",
+      "VAL_SAME_DAY": "La cita debe terminar el mismo día en que empieza.",
+      "VAL_OUTSIDE_AVAILABILITY": "El horario queda fuera del turno del profesional, en una pausa o en una ausencia.",
+      "VAL_SCHEDULE_CONFLICT": "El profesional ya tiene una cita en ese horario.",
+      "VAL_INVALID_TRANSITION": "La cita no admite esta acción en su estado actual.",
+      "VAL_REQUIRED": "Este campo es obligatorio.",
+      "VAL_NULL": "Este campo es obligatorio.",
+      "VAL_BLANK": "Este campo no puede estar vacío.",
+      "VAL_INVALID": "El valor no es válido.",
+      "VAL_INVALID_CHOICE": "La opción elegida no es válida.",
+      "VAL_MAX_LENGTH": "El texto es demasiado largo.",
+      "VAL_MIN_VALUE": "El valor es menor que el mínimo permitido.",
+      "VAL_MAX_VALUE": "El valor supera el máximo permitido."
     }
   },
   "CORE": {

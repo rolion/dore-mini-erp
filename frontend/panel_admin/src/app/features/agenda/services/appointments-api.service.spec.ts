@@ -1,6 +1,7 @@
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { TranslateService } from '@ngx-translate/core';
 import { AppointmentFailure } from '../models/appointment';
 import {
   AppointmentsApiService, formatDateTime, toFailure, toLocalInput, toServerDateTime,
@@ -36,7 +37,7 @@ describe('AppointmentsApiService', () => {
     request.flush({});
   });
 
-  it('maps a 409 to a conflict failure that keeps the server message', () => {
+  it('maps a 409 to a conflict failure with the message translated from its code', () => {
     let failure: AppointmentFailure | undefined;
     api.create({
       professional_id: 'p', customer_id: 'c', service_id: 's', starts: '2030-01-07T09:00:00-04:00',
@@ -44,7 +45,7 @@ describe('AppointmentsApiService', () => {
     }).subscribe({ error: (error: AppointmentFailure) => failure = error });
     http.expectOne(req => req.method === 'POST').flush({ detail: 'Ocupado', code: 'schedule_conflict' },
       { status: 409, statusText: 'Conflict' });
-    expect(failure).toEqual({ message: 'Ocupado', fields: {}, conflict: true });
+    expect(failure).toEqual({ message: 'El profesional ya tiene una cita en ese horario.', fields: {}, conflict: true });
   });
 
   it('maps 400 field errors and generic failures', () => {
@@ -53,6 +54,21 @@ describe('AppointmentsApiService', () => {
     expect(toFailure(new HttpErrorResponse({ status: 0 })).message).toContain('servidor');
     expect(toFailure(new HttpErrorResponse({ status: 403 })).message).toContain('permiso');
     expect(toFailure('x').conflict).toBeFalse();
+  });
+
+  it('translates server errors by code into the selected language and keeps unknown ones', async () => {
+    const invalid = new HttpErrorResponse({
+      status: 400, error: { starts: ['El horario queda fuera.'], reason: ['Otro'], codes: { starts: 'outside_availability', reason: 'desconocido' } },
+    });
+    expect(toFailure(invalid).fields['starts']).toContain('fuera del turno');
+    await TestBed.inject(TranslateService).use('en').toPromise();
+    expect(toFailure(invalid).fields['starts']).toContain('outside');
+    expect(toFailure(invalid).fields['reason']).toBe('Otro');
+    expect(toFailure(invalid).fields['codes']).toBeUndefined();
+    const conflict = new HttpErrorResponse({ status: 409, error: { detail: 'El profesional ya tiene una cita en ese horario.', code: 'schedule_conflict' } });
+    expect(toFailure(conflict).message).toBe('The professional already has an appointment at that time.');
+    await TestBed.inject(TranslateService).use('pt').toPromise();
+    expect(toFailure(conflict).message).toContain('já tem um agendamento');
   });
 
   it('formats Bolivia date times', () => {

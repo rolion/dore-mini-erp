@@ -16,22 +16,25 @@ REASON_MAX = 500
 class AppointmentRuleError(Exception):
     """Regla de negocio incumplida; `field` indica el campo afectado cuando aplica."""
 
-    def __init__(self, message: str, field: str = 'non_field_errors'):
+    def __init__(self, message: str, field: str = 'non_field_errors', code: str = 'invalid'):
         self.message = message
         self.field = field
+        # Código estable: el cliente traduce el mensaje a su idioma a partir de él.
+        self.code = code
         super().__init__(message)
 
 
 class InvalidTransition(AppointmentRuleError):
-    pass
+    def __init__(self, message: str, field: str = 'non_field_errors', code: str = 'invalid_transition'):
+        super().__init__(message, field, code)
 
 
 def clean_reason(reason) -> str:
     value = reason.strip() if isinstance(reason, str) else ''
     if not value:
-        raise AppointmentRuleError('El motivo es obligatorio.', 'reason')
+        raise AppointmentRuleError('El motivo es obligatorio.', 'reason', 'reason_required')
     if len(value) > REASON_MAX:
-        raise AppointmentRuleError(f'No puede superar {REASON_MAX} caracteres.', 'reason')
+        raise AppointmentRuleError(f'No puede superar {REASON_MAX} caracteres.', 'reason', 'reason_too_long')
     return value
 
 
@@ -76,7 +79,7 @@ class Appointment:
         """Devuelve el horario anterior. Conserva el estado."""
         self._require('reschedule')
         if starts >= ends:
-            raise AppointmentRuleError('El fin debe ser posterior al inicio.', 'starts')
+            raise AppointmentRuleError('El fin debe ser posterior al inicio.', 'starts', 'ends_before_start')
         previous = (self.starts, self.ends)
         self.starts, self.ends = starts, ends
         return previous

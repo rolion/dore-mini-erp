@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-11: Tras el reintento por página inexistente el indicador «Cargando…» se apaga con la petición en curso
 
-**Status:** Open
+**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -19,3 +19,6 @@ Por revisión de código: durante esa segunda petición `loading` es `false`, as
 
 ## Evidence
 `frontend/panel_admin/src/app/features/agenda/pages/appointment-list.component.ts`, método `search`: `.pipe(takeUntilDestroyed(...), finalize(() => this.loading = false)).subscribe({ ..., error: failure => { if (failure.status === 404 && page > 1) this.search(1); ... } })`. El spec `goes back to the first page…` no comprueba `loading`.
+
+## Resolución
+La lista identifica cada consulta (`requestId`): el cierre o la respuesta de una consulta anterior ya no pisa el indicador de carga de la vigente, así que el reintento a la página 1 mantiene «Cargando…» y no muestra el vacío. Spec en `appointment-list.component.spec.ts`.

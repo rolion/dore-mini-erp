@@ -1909,7 +1909,25 @@
       "ERR_REVISA": "Check the highlighted fields.",
       "ERR_PERMISO": "You do not have permission or a required module is not enabled.",
       "ERR_NO_ENCONTRADA": "Appointment not found.",
-      "ERR_CONEXION": "Could not connect to the server. Try again."
+      "ERR_CONEXION": "Could not connect to the server. Try again.",
+      "VAL_REASON_REQUIRED": "The reason is required.",
+      "VAL_REASON_TOO_LONG": "The reason cannot exceed 500 characters.",
+      "VAL_ENDS_BEFORE_START": "The end must be after the start.",
+      "VAL_PROFESSIONAL_NOT_FOUND": "Professional not found.",
+      "VAL_CUSTOMER_INVALID": "Select an active customer of your company.",
+      "VAL_SERVICE_INVALID": "Select an active service.",
+      "VAL_SAME_DAY": "The appointment must end on the same day it starts.",
+      "VAL_OUTSIDE_AVAILABILITY": "The time is outside the professional's shift, during a break or during an absence.",
+      "VAL_SCHEDULE_CONFLICT": "The professional already has an appointment at that time.",
+      "VAL_INVALID_TRANSITION": "The appointment does not accept this action in its current status.",
+      "VAL_REQUIRED": "This field is required.",
+      "VAL_NULL": "This field is required.",
+      "VAL_BLANK": "This field cannot be empty.",
+      "VAL_INVALID": "The value is not valid.",
+      "VAL_INVALID_CHOICE": "The chosen option is not valid.",
+      "VAL_MAX_LENGTH": "The text is too long.",
+      "VAL_MIN_VALUE": "The value is below the allowed minimum.",
+      "VAL_MAX_VALUE": "The value is above the allowed maximum."
     }
   },
   "CORE": {

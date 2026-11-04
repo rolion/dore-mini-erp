@@ -59,8 +59,12 @@ describe('AppointmentListComponent', () => {
       .flush({ detail: 'Página inválida.' }, { status: 404, statusText: 'Not Found' });
     const retry = http.expectOne(req => req.url.endsWith('/agenda/appointments/'));
     expect(retry.request.params.get('page')).toBe('1');
+    expect(fixture.componentInstance.loading).toBeTrue();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Aún no hay citas registradas.');
     retry.flush(EMPTY_PAGE);
     fixture.detectChanges();
+    expect(fixture.componentInstance.loading).toBeFalse();
     expect(fixture.componentInstance.error).toBe('');
     expect(fixture.componentInstance.page).toBe(1);
   });

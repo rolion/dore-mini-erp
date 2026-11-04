@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 from django.utils import timezone
 from rest_framework import serializers, status
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import ErrorDetail, NotFound, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -106,11 +106,21 @@ def present(appointment, names, detail=False):
 class AppointmentView(APIView):
     required_modules = ('personnel', 'agenda', 'customers', 'services')
 
+    def handle_exception(self, exc):
+        """Los errores 400 añaden `codes` (campo → código estable) para que el cliente los traduzca a su idioma."""
+        response = super().handle_exception(exc)
+        if isinstance(exc, ValidationError) and isinstance(response.data, dict):
+            codes = exc.get_codes()
+            if isinstance(codes, dict):
+                response.data = {**response.data, 'codes': {
+                    field: (code[0] if isinstance(code, list) and code else code) for field, code in codes.items()}}
+        return response
+
     def run(self, action, *args, **kwargs):
         try:
             return action(*args, **kwargs)
         except AppointmentRuleError as exc:
-            raise ValidationError({exc.field: [exc.message]}) from exc
+            raise ValidationError({exc.field: [ErrorDetail(exc.message, code=exc.code)]}) from exc
         except service.AppointmentNotFound as exc:
             raise NotFound('Cita no encontrada.') from exc
         except service.AppointmentConflict as exc:

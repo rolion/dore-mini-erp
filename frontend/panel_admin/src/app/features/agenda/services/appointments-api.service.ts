@@ -28,17 +28,29 @@ function firstMessage(value: unknown): string {
   return Array.isArray(value) ? String(value[0] ?? '') : typeof value === 'string' ? value : '';
 }
 
+/** Traduce un código estable del servidor; si el catálogo no lo conoce, conserva el mensaje que llegó. */
+function byCode(code: unknown, fallback: string): string {
+  if (typeof code !== 'string' || !code) return fallback;
+  const key = `AGENDA.CITAS.VAL_${code.toUpperCase()}`;
+  const text = tr(key);
+  return text === key ? fallback : text;
+}
+
 export function toFailure(error: unknown): AppointmentFailure {
   if (!(error instanceof HttpErrorResponse)) {
     return { message: tr('AGENDA.CITAS.ERR_GENERICO'), fields: {}, conflict: false };
   }
   const body = (error.error ?? {}) as Record<string, unknown>;
   if (error.status === 409) {
-    return { message: firstMessage(body['detail']) || tr('AGENDA.CITAS.ERR_HORARIO'), fields: {}, conflict: true };
+    const detail = firstMessage(body['detail']) || tr('AGENDA.CITAS.ERR_HORARIO');
+    return { message: byCode(body['code'], detail), fields: {}, conflict: true };
   }
   if (error.status === 400) {
     const fields: Record<string, string> = {};
-    for (const [key, value] of Object.entries(body)) fields[key] = firstMessage(value);
+    const codes = (body['codes'] ?? {}) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(body)) {
+      if (key !== 'codes') fields[key] = byCode(codes[key], firstMessage(value));
+    }
     return { message: tr('AGENDA.CITAS.ERR_REVISA'), fields, conflict: false };
   }
   if (error.status === 403) {

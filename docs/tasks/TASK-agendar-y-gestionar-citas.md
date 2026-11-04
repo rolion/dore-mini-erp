@@ -1,6 +1,6 @@
 # TASK-agendar-y-gestionar-citas: PB-AGE-002 · Agendar y gestionar citas de pacientes
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-agendar-y-gestionar-citas
@@ -24,6 +24,7 @@
 | 2026-11-04 | REVIEW → PUBLISH | Tercer Quality Gate: PASS con REV-11 y REV-12 (Low) como limitaciones conocidas | delivery-publish |
 | 2026-11-04 | PUBLISH (sin cambio) | Merge de main (idiomas es/en/pt): conflictos en los catálogos y pantallas de Citas pasadas a claves de traducción | delivery-build |
 | 2026-11-04 | PUBLISH (sin cambio) | Cuarto Quality Gate tras el merge con main: PASS con REV-11, REV-12 y REV-13 (Low) como limitaciones conocidas | delivery-publish |
+| 2026-11-04 | PUBLISH → REVIEW | REV-11 y REV-13 corregidos por indicación de la persona; REV-12 se deja abierto por decisión de la persona | delivery-build |
 
 ## Investigación
 
@@ -129,6 +130,8 @@ Limitaciones conocidas: [REV-11](../reviews/REV-2026-11-03-agendar-y-gestionar-c
 **Cuarto Quality Gate (tras el merge con `main` e i18n de Citas): PASS con limitaciones conocidas.** Sin Critical ni High. REV-01 a REV-10 siguen verificados. Backend en PostgreSQL: `check` y `makemigrations --check` limpios, suite completa 1383 correctas, `modules.agenda` 32 correctas (concurrencia incluida), `bandit` sin incidencias. Frontend: `i18n:check` (1486 claves, 0 faltantes), lint, `ngc`, build, `npm audit` (0) y Karma completo 1173 correctas (sentencias 86,34 %, ramas 77,6 %). Las 128 claves `AGENDA.CITAS.*` existen en es/en/pt con los mismos placeholders; sin texto fijo ni claves crudas en pantalla. Visual verificada en es/en/pt sobre una base temporal ya eliminada. La prueba intermitente de `screens-i18n.spec.ts` falla también sobre `origin/main`: preexistente y ajena al task.
 
 Limitaciones conocidas: REV-11 y REV-12 (Low, ver arriba) y [REV-13](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-13.md) (Low: los mensajes de error que llegan del servidor, como el detalle de un 409 o los errores por campo de un 400, se muestran en español aunque la interfaz esté en inglés o portugués). No verificados: `ruff`, recorrido con teclado y pantallas de error del servidor en en/pt.
+
+**Correcciones tras el cuarto gate (2026-11-04):** REV-11 (el reintento tras una página inexistente conserva el indicador de carga) y REV-13 (los errores del servidor se traducen al idioma activo mediante códigos estables `code` / `codes`, claves `AGENDA.CITAS.VAL_*` en es/en/pt) están corregidos y pendientes de reverificación. REV-12 se deja abierto por decisión de la persona. Verificación: `i18n:check` 0 faltantes, lint, `ngc`, Karma 1173 correctas más la prueba intermitente de `main` (`screens-i18n.spec.ts`, preexistente), backend 1384 correctas en PostgreSQL.
 
 ## Publicación
 PR #50 listo para aprobación humana; no se mergea. Toca base de datos (migraciones aditivas `0002` y `0003`), tiene un ADR y cambia la prueba de límites entre módulos. Limitaciones conocidas: REV-11, REV-12, `ruff` y teclado sin verificar.

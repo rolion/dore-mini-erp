@@ -50,6 +50,8 @@ export class AppointmentListComponent implements OnInit {
   page = 1;
   loading = false;
   error = '';
+  /** Identifica la última consulta: la respuesta o el cierre de una anterior no pisa el estado de la vigente. */
+  private requestId = 0;
 
   ngOnInit(): void {
     const query = this.route.snapshot.queryParamMap;
@@ -93,12 +95,16 @@ export class AppointmentListComponent implements OnInit {
     const raw = this.filters.getRawValue();
     const filters: AppointmentFilters = { ...raw, status: raw.status as AppointmentStatus | '', page };
     this.syncUrl(page);
+    const requestId = ++this.requestId;
     this.loading = true;
     this.error = '';
-    this.api.list(filters).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
-      .subscribe({
-        next: result => { this.rows = result.results; this.count = result.count; },
+    this.api.list(filters).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => { if (requestId === this.requestId) this.loading = false; }),
+    ).subscribe({
+        next: result => { if (requestId === this.requestId) { this.rows = result.results; this.count = result.count; } },
         error: (failure: HttpErrorResponse) => {
+          if (requestId !== this.requestId) return;
           // Una página que dejó de existir (enlace viejo, menos resultados) vuelve a la primera en vez de quedar atascada.
           if (failure.status === 404 && page > 1) this.search(1);
           else this.error = tr('AGENDA.CITAS.ERR_CARGAR_CITAS');

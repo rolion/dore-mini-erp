@@ -81,11 +81,12 @@ def free_slots(company_id, professional_id, first: date, last: date, minutes: in
 def _ensure_placement(company_id, professional_id, starts, ends, exclude_id=None) -> None:
     local_start, local_end = starts.astimezone(ZONE), ends.astimezone(ZONE)
     if local_start.date() != local_end.date():
-        raise AppointmentRuleError('La cita debe terminar el mismo día en que empieza.', 'starts')
+        raise AppointmentRuleError('La cita debe terminar el mismo día en que empieza.', 'starts', 'same_day')
     available = available_intervals(company_id, professional_id, local_start.date(), local_start.date())
     if not fits_in(starts, ends, available):
         raise AppointmentRuleError(
-            'El horario queda fuera del turno del profesional, en una pausa o en una ausencia.', 'starts')
+            'El horario queda fuera del turno del profesional, en una pausa o en una ausencia.', 'starts',
+            'outside_availability')
     clash = Appointment.objects.filter(
         company_id=company_id, professional_id=professional_id, status__in=OCCUPYING,
         starts__lt=ends, ends__gt=starts,
@@ -112,13 +113,13 @@ def allowed_actions(appointment) -> list[str]:
 @transaction.atomic
 def create(company_id, actor, *, professional_id, customer_id, service_id, starts, duration_minutes, notes=''):
     if not professional_exists(company_id, professional_id):
-        raise AppointmentRuleError('Profesional no encontrado.', 'professional_id')
+        raise AppointmentRuleError('Profesional no encontrado.', 'professional_id', 'professional_not_found')
     customer = get_customer_for_sale(company_id, customer_id)
     if customer is None or not customer.active:
-        raise AppointmentRuleError('Selecciona un cliente activo de tu empresa.', 'customer_id')
+        raise AppointmentRuleError('Selecciona un cliente activo de tu empresa.', 'customer_id', 'customer_invalid')
     service = get_service_for_new_use(company_id, service_id)
     if service is None:
-        raise AppointmentRuleError('Selecciona un servicio activo.', 'service_id')
+        raise AppointmentRuleError('Selecciona un servicio activo.', 'service_id', 'service_invalid')
     ends = starts + timedelta(minutes=duration_minutes)
     _lock(company_id, professional_id)
     _ensure_placement(company_id, professional_id, starts, ends)

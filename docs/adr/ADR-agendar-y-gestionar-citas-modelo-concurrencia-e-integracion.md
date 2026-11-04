@@ -28,3 +28,4 @@ Garantía de no doble reserva depende de que toda escritura pase por el servicio
 ## Actualización de implementación (2026-11-03, REV-04)
 - La búsqueda por cliente usa el snapshot `customer_name` y no `search_customer_ids`. Limitación aceptada: si se renombra un cliente, las citas anteriores se encuentran por el nombre que tenía al agendar.
 - Cada evento guarda también `author_name` (migración `0003`), para mostrar el autor sin consultar `accounts`.
+- Los errores de la API llevan códigos estables (`code` en los 409, `codes` por campo en los 400) y el cliente los traduce al idioma activo (REV-13); los mensajes en español del servidor quedan como respaldo.

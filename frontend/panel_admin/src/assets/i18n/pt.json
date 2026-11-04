@@ -1909,7 +1909,25 @@
       "ERR_REVISA": "Revise os dados destacados.",
       "ERR_PERMISO": "Você não tem permissão ou um módulo necessário não está habilitado.",
       "ERR_NO_ENCONTRADA": "Agendamento não encontrado.",
-      "ERR_CONEXION": "Não foi possível conectar ao servidor. Tente novamente."
+      "ERR_CONEXION": "Não foi possível conectar ao servidor. Tente novamente.",
+      "VAL_REASON_REQUIRED": "O motivo é obrigatório.",
+      "VAL_REASON_TOO_LONG": "O motivo não pode ultrapassar 500 caracteres.",
+      "VAL_ENDS_BEFORE_START": "O fim deve ser posterior ao início.",
+      "VAL_PROFESSIONAL_NOT_FOUND": "Profissional não encontrado.",
+      "VAL_CUSTOMER_INVALID": "Selecione um cliente ativo da sua empresa.",
+      "VAL_SERVICE_INVALID": "Selecione um serviço ativo.",
+      "VAL_SAME_DAY": "O agendamento deve terminar no mesmo dia em que começa.",
+      "VAL_OUTSIDE_AVAILABILITY": "O horário fica fora do turno do profissional, em uma pausa ou em uma ausência.",
+      "VAL_SCHEDULE_CONFLICT": "O profissional já tem um agendamento nesse horário.",
+      "VAL_INVALID_TRANSITION": "O agendamento não aceita esta ação no status atual.",
+      "VAL_REQUIRED": "Este campo é obrigatório.",
+      "VAL_NULL": "Este campo é obrigatório.",
+      "VAL_BLANK": "Este campo não pode ficar vazio.",
+      "VAL_INVALID": "O valor não é válido.",
+      "VAL_INVALID_CHOICE": "A opção escolhida não é válida.",
+      "VAL_MAX_LENGTH": "O texto é longo demais.",
+      "VAL_MIN_VALUE": "O valor é menor que o mínimo permitido.",
+      "VAL_MAX_VALUE": "O valor ultrapassa o máximo permitido."
     }
   },
   "CORE": {

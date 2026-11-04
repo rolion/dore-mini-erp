@@ -107,6 +107,19 @@ class AppointmentApiTests(TransactionTestCase):
         self.assertEqual(self.create(time='11:15').status_code, 400)
         self.assertEqual(self.create(time='11:30').status_code, 201)
 
+    def test_errors_carry_stable_codes_for_translation(self):
+        outside = self.create(time='08:30')
+        self.assertEqual(outside.status_code, 400)
+        self.assertEqual(outside.json()['codes'], {'starts': 'outside_availability'})
+        invalid = self.client.post('/api/agenda/appointments/', {**self.body(), 'duration_minutes': 0}, format='json')
+        self.assertEqual(invalid.json()['codes'], {'duration_minutes': 'min_value'})
+        created = self.create().json()
+        no_reason = self.act(created['id'], 'cancel', {'reason': '  '})
+        self.assertEqual(no_reason.json()['codes'], {'reason': 'reason_required'})
+        self.assertEqual(self.create().json()['code'], 'schedule_conflict')
+        self.assertEqual(self.act(created['id'], 'cancel', {'reason': 'x'}).status_code, 200)
+        self.assertEqual(self.act(created['id'], 'cancel', {'reason': 'y'}).json()['code'], 'invalid_transition')
+
     # AC-02
     def test_concurrent_requests_accept_only_one(self):
         barrier = Barrier(2, timeout=10)
