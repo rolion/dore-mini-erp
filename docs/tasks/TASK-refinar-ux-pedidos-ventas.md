@@ -1,6 +1,6 @@
 # TASK-refinar-ux-pedidos-ventas: Refinar la experiencia de Pedidos (lista y detalle) en Ventas
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-refinar-ux-pedidos-ventas
@@ -14,6 +14,7 @@
 | 2026-11-04 | DESIGN → PLANNING | DDR propuesto; Specification READY | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Plan v1 y PR | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate PASS con 2 observaciones Low | delivery-publish |
 
 ## Investigación
 
@@ -99,7 +100,11 @@ Solo frontend de `features/sales` y `assets/i18n/{es,en,pt}.json`; sin cambios d
 
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (Quality Gate en subagente aislado, 2026-11-04). Sin hallazgos Critical/High.
+- `ng test` completo: 1247 OK, 1 fallo preexistente en `main` (`screens-i18n.spec.ts:60`, dependiente del orden/idioma; reproducido en `origin/main`, la rama no toca ese spec). `npm run lint` OK, `npm run i18n:check` 0 faltantes, `npm run build` OK, `npm audit --omit=dev` 0 vulnerabilidades. Backend sin cambios (no se corrió).
+- AC-01..AC-10 cubiertos (AC-06 ya existía).
+- Hallazgos Low abiertos: [REV-01](../reviews/REV-2026-11-04-refinar-ux-pedidos-ventas-01.md) (`aria-controls` apunta a un id que solo existe con el panel abierto), [REV-02](../reviews/REV-2026-11-04-refinar-ux-pedidos-ventas-02.md) (`setTimeout` sin cancelar; dependencia del id `#payment-amount`).
+- Consistencia visual: **no verificada** en navegador (solo código y diff).
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/57 listo para aprobación humana; no se mergea. Sin cambio sensible (sin ADR, auth, base de datos ni infraestructura).
