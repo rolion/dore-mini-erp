@@ -51,6 +51,32 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/agenda/agenda.component').then(m => m.AgendaComponent),
             },
             {
+                path: 'quotations/proformas',
+                canActivate: [moduleGuard],
+                data: { module: 'quotations' },
+                loadComponent: () => import('./features/quotations/pages/proforma-list.component').then(m => m.ProformaListComponent),
+            },
+            {
+                path: 'quotations/proformas/nueva',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'quotations' },
+                loadComponent: () => import('./features/quotations/pages/proforma-form.component').then(m => m.ProformaFormComponent),
+            },
+            {
+                path: 'quotations/proformas/:id/editar',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'quotations' },
+                loadComponent: () => import('./features/quotations/pages/proforma-form.component').then(m => m.ProformaFormComponent),
+            },
+            {
+                path: 'quotations/proformas/:id',
+                canActivate: [moduleGuard],
+                data: { module: 'quotations' },
+                loadComponent: () => import('./features/quotations/pages/proforma-detail.component').then(m => m.ProformaDetailComponent),
+            },
+            {
                 path: 'dentistry',
                 canActivate: [moduleGuard],
                 data: { module: 'dentistry' },

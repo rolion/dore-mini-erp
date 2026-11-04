@@ -40,11 +40,12 @@ describe('OrderFormComponent', () => {
   let toastr: jasmine.SpyObj<ToastrService>;
   let quickCreate: jasmine.SpyObj<CustomerQuickCreateService>;
   let navigate: jasmine.Spy;
-  const route = { snapshot: { paramMap: convertToParamMap({}) } };
+  const route = { snapshot: { paramMap: convertToParamMap({}), queryParamMap: convertToParamMap({}) } };
   let defaults: SalesDefaults;
 
-  function setup(id: string | null = null): HTMLElement {
+  function setup(id: string | null = null, query: Record<string, string> = {}): HTMLElement {
     route.snapshot.paramMap = convertToParamMap(id ? { id } : {});
+    route.snapshot.queryParamMap = convertToParamMap(query);
     fixture = TestBed.createComponent(OrderFormComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -104,6 +105,27 @@ describe('OrderFormComponent', () => {
         expectedDeliveryDate: '',
         notes: '',
       });
+    });
+
+    it('preselects the customer sent by the customer profile in a new order (AC-07)', () => {
+      setup(null, { customer: 'c-9', customer_name: 'Ana Pérez' });
+      expect(component.form.controls.customer.value).toEqual({ id: 'c-9', name: 'Ana Pérez' });
+    });
+
+    it('does not preselect a customer when editing an order, whatever the query says (AC-07)', () => {
+      ordersApi.get.and.returnValue(of(makeOrder({ customer: null })));
+      setup('o-1', { customer: 'c-9', customer_name: 'Ana Pérez' });
+      expect(component.form.controls.customer.value).toBeNull();
+    });
+
+    it('does not preselect a customer when the Customers module is disabled (AC-07)', () => {
+      modulesState.customersDisabled = true;
+      try {
+        setup(null, { customer: 'c-9', customer_name: 'Ana Pérez' });
+        expect(component.form.controls.customer.value).toBeNull();
+      } finally {
+        modulesState.customersDisabled = false;
+      }
     });
 
     it('shows the customer selector while the Customers module is enabled (UI-05)', () => {

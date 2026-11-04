@@ -1,0 +1,18 @@
+// Las cuatro cifras miden lo mismo aunque una no lleve texto de apoyo: la tarjeta crece para llenar la columna
+// (flex, no `height: 100%`) y así conserva su margen inferior, que es el espacio hasta el historial.
+app-report-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+// En móvil todo control accionable del perfil mide al menos 44 px de alto (objetivo táctil, AC-09).
+@media (max-width: 767.98px) {
+  .card-header .btn,
+  dd .btn,
+  dd a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+}
