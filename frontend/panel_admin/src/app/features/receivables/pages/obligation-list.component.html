@@ -1,0 +1,77 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'RECEIVABLES.TITULO' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'RECEIVABLES.IR_INICIO' | translate"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item active">{{ 'RECEIVABLES.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header">
+        <h2><strong>{{ 'RECEIVABLES.TITULO' | translate }}</strong></h2>
+      </div>
+      <div class="card-body">
+        @if (loading) { <p role="status">{{ 'RECEIVABLES.CARGANDO' | translate }}</p> }
+        @if (error) {
+          <p class="alert alert-danger" role="alert">{{ error }}
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="search(page)">{{ 'RECEIVABLES.REINTENTAR' | translate }}</button></p>
+        }
+        <form [formGroup]="filters" (ngSubmit)="search()" class="row g-2 mb-3">
+          @if (filters.controls.customer_id.value) {
+            <div class="col-12"><span class="badge col-blue">{{ 'RECEIVABLES.FILTRO_CLIENTE_ACTIVO' | translate }}</span></div>
+          }
+          <div class="col-md-3"><label for="f-from">{{ 'RECEIVABLES.DESDE' | translate }}</label>
+            <input id="f-from" type="date" class="form-control" formControlName="date_from"></div>
+          <div class="col-md-3"><label for="f-to">{{ 'RECEIVABLES.HASTA' | translate }}</label>
+            <input id="f-to" type="date" class="form-control" formControlName="date_to"></div>
+          <div class="col-md-3"><label for="f-status">{{ 'RECEIVABLES.ESTADO' | translate }}</label>
+            <select id="f-status" class="form-select" formControlName="status">
+              <option value="">{{ 'RECEIVABLES.TODOS' | translate }}</option>
+              @for (status of statuses; track status) { <option [value]="status">{{ statusLabel(status) }}</option> }
+            </select></div>
+          <div class="col-md-3 d-flex gap-2 align-items-end">
+            <button class="btn btn-primary" type="submit" [disabled]="loading">{{ 'RECEIVABLES.FILTRAR' | translate }}</button>
+            <button class="btn btn-light" type="button" (click)="clear()" [disabled]="loading">{{ 'RECEIVABLES.LIMPIAR' | translate }}</button>
+          </div>
+        </form>
+
+        @if (!loading && !error && !rows.length) {
+          <p>{{ (hasFilters ? 'RECEIVABLES.VACIO_FILTROS' : 'RECEIVABLES.VACIO') | translate }}</p>
+        }
+        @if (rows.length) {
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead><tr>
+                <th>{{ 'RECEIVABLES.COL_PROFORMA' | translate }}</th><th>{{ 'RECEIVABLES.COL_CLIENTE' | translate }}</th>
+                <th class="text-end">{{ 'RECEIVABLES.COL_ACEPTADO' | translate }}</th><th class="text-end">{{ 'RECEIVABLES.COL_COBRADO' | translate }}</th>
+                <th class="text-end">{{ 'RECEIVABLES.COL_SALDO' | translate }}</th><th>{{ 'RECEIVABLES.COL_ULTIMO_PAGO' | translate }}</th>
+                <th>{{ 'RECEIVABLES.COL_ESTADO' | translate }}</th><th>{{ 'RECEIVABLES.COL_ACCIONES' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                @for (row of rows; track row.kind + row.number) {
+                  <tr>
+                    <td><a [routerLink]="['/pocketbiz/receivables', row.kind, row.number]"><strong>{{ row.number }}</strong></a> · v{{ row.version }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td class="text-end">{{ row.accepted | money }}</td>
+                    <td class="text-end">{{ row.paid | money }}</td>
+                    <td class="text-end">{{ row.balance | money }}</td>
+                    <td>{{ (row.last_payment_date | date: 'dd/MM/yyyy') || '—' }}</td>
+                    <td><span class="badge" [class]="classes[row.payment_status]">{{ statusLabel(row.payment_status) }}</span></td>
+                    <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/receivables', row.kind, row.number]">{{ 'RECEIVABLES.VER_DETALLE' | translate }}</a></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">{{ 'RECEIVABLES.CUENTA' | translate: { count: count } }}</small>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="search(page - 1)">{{ 'RECEIVABLES.ANTERIOR' | translate }}</button>
+              <span>{{ 'RECEIVABLES.PAGINA' | translate: { page: page, pages: pages } }}</span>
+              <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="search(page + 1)">{{ 'RECEIVABLES.SIGUIENTE' | translate }}</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

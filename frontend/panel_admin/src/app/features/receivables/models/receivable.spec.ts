@@ -1,0 +1,15 @@
+import { fromCents, toCents } from './receivable';
+
+describe('importes en centavos', () => {
+  it('parsea importes con hasta dos decimales y rechaza el resto', () => {
+    expect(toCents('100')).toBe(10000);
+    expect(toCents('100.5')).toBe(10050);
+    expect(toCents('0,05')).toBe(5);
+    for (const bad of ['', 'abc', '-1', '1.005', '1.2.3', null, undefined]) expect(toCents(bad)).toBeNull();
+  });
+
+  it('formatea sin errores de coma flotante', () => {
+    expect(fromCents(toCents('0.10')! + toCents('0.20')!)).toBe('0.30');
+    expect(fromCents(15000)).toBe('150.00');
+  });
+});

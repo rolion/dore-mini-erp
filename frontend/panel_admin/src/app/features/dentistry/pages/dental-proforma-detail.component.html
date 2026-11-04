@@ -21,6 +21,9 @@
             @if (can('edit')) {
               <a class="btn btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', p.id, 'editar']">{{ 'DENTISTRY.PROFORMAS.EDITAR' | translate }}</a>
             }
+            @if (p.collectible) {
+              <a class="btn btn-success" [routerLink]="['/pocketbiz/receivables/dental', p.number]">{{ 'DENTISTRY.PROFORMAS.COBRAR' | translate }}</a>
+            }
             @if (can('present')) {
               <button type="button" class="btn btn-primary" (click)="open(dlg)">{{ 'DENTISTRY.PROFORMAS.PRESENTAR' | translate }}</button>
             }
