@@ -1,2 +1,9 @@
 @use '../../../shared/styles/table-actions';
 
+@media (max-width: 575px) {
+  .service-list-header {
+    height: auto;
+    min-height: 70px;
+    padding-block: 10px;
+  }
+}

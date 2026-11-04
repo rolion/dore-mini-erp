@@ -1,6 +1,6 @@
 # TASK-mejorar-ux-catalogo-productos-servicios: Mejorar cómo se muestran Productos y Servicios del catálogo
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mejorar-ux-catalogo-productos-servicios
@@ -14,6 +14,7 @@
 | 2026-11-04 | DESIGN → PLANNING | DDR propuesto; Specification READY | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Plan v1 y PR | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate PASS con observaciones; REV-01 corregido | delivery-publish |
 
 ## Investigación
 
@@ -101,7 +102,7 @@ Solo frontend, sin backend ni migraciones.
 **Pantallas de referencia seguidas:** `product-list`, `product-detail`, `product-form`. **Componentes compartidos reutilizados:** `money`; creado: `app-product-uses`.
 
 ## Review
-_Pendiente_
+Quality Gate en subagente aislado: **PASS con observaciones**. Suite Angular 1193/1193 OK (cobertura líneas 87,7 %), lint OK, i18n:check 0 faltantes, build OK, `npm audit` 0 vulnerabilidades, sin cambios en backend, AC-01..AC-11 y EDGE-01..05 cumplidos por código y pruebas. Hallazgo: [REV-01](../reviews/REV-2026-11-04-mejorar-ux-catalogo-productos-servicios-01.md) (Medium, IMPLEMENTATION: se perdió la regla móvil de `service-list.component.scss`), **corregido y cerrado** tras el informe (cambio solo de SCSS, verificado con build; la suite no se repitió). **No verificada:** revisión visual a 1440/390 px y tema oscuro (AC-04, contraste, REV-01 en móvil) y los dos puntos de la hipótesis (tooltip «Price», «9 en total»).
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana; sin merge. Sin ADR ni cambios de auth/BD/infra.
