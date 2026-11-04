@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mejorar-ux-horarios-y-ausencias
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/58
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
