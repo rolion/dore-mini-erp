@@ -1,0 +1,71 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'QUOTATIONS.PROFORMAS.TITULO' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'QUOTATIONS.PROFORMAS.IR_INICIO' | translate"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">{{ 'QUOTATIONS.PROFORMAS.COTIZACIONES' | translate }}</li>
+    <li class="breadcrumb-item active">{{ 'QUOTATIONS.PROFORMAS.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+        <h2><strong>{{ 'QUOTATIONS.PROFORMAS.TITULO' | translate }}</strong></h2>
+        <a class="btn btn-primary" routerLink="/pocketbiz/quotations/proformas/nueva" [attr.aria-label]="'QUOTATIONS.PROFORMAS.NUEVA_AR' | translate">{{ 'QUOTATIONS.PROFORMAS.NUEVA' | translate }}</a>
+      </div>
+      <div class="card-body">
+        @if (loading) { <p role="status">{{ 'QUOTATIONS.PROFORMAS.CARGANDO' | translate }}</p> }
+        @if (error) {
+          <p class="alert alert-danger" role="alert">{{ error }}
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="search(page)">{{ 'QUOTATIONS.PROFORMAS.REINTENTAR' | translate }}</button></p>
+        }
+        <form [formGroup]="filters" (ngSubmit)="search()" class="row g-2 mb-3">
+          <div class="col-md-3"><label for="f-customer">{{ 'QUOTATIONS.PROFORMAS.FILTRO_CLIENTE' | translate }}</label>
+            <input id="f-customer" type="search" class="form-control" formControlName="customer" [attr.placeholder]="'QUOTATIONS.PROFORMAS.FILTRO_CLIENTE_PH' | translate"></div>
+          <div class="col-md-2"><label for="f-from">{{ 'QUOTATIONS.PROFORMAS.DESDE' | translate }}</label>
+            <input id="f-from" type="date" class="form-control" formControlName="from"></div>
+          <div class="col-md-2"><label for="f-to">{{ 'QUOTATIONS.PROFORMAS.HASTA' | translate }}</label>
+            <input id="f-to" type="date" class="form-control" formControlName="to"></div>
+          <div class="col-md-2"><label for="f-status">{{ 'QUOTATIONS.PROFORMAS.ESTADO' | translate }}</label>
+            <select id="f-status" class="form-select" formControlName="status">
+              <option value="">{{ 'QUOTATIONS.PROFORMAS.TODOS' | translate }}</option>
+              @for (status of statuses; track status) { <option [value]="status">{{ statusLabel(status) }}</option> }
+            </select></div>
+          <div class="col-md-3 d-flex gap-2 align-items-end">
+            <button class="btn btn-primary" type="submit" [disabled]="loading">{{ 'QUOTATIONS.PROFORMAS.FILTRAR' | translate }}</button>
+            <button class="btn btn-light" type="button" (click)="clear()" [disabled]="loading">{{ 'QUOTATIONS.PROFORMAS.LIMPIAR' | translate }}</button>
+          </div>
+        </form>
+
+        @if (!loading && !error && !rows.length) {
+          <p>{{ (hasFilters ? 'QUOTATIONS.PROFORMAS.VACIO_FILTROS' : 'QUOTATIONS.PROFORMAS.VACIO') | translate }}</p>
+        }
+        @if (rows.length) {
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead><tr><th>{{ 'QUOTATIONS.PROFORMAS.COL_NUMERO' | translate }}</th><th>{{ 'QUOTATIONS.PROFORMAS.COL_CLIENTE' | translate }}</th><th>{{ 'QUOTATIONS.PROFORMAS.COL_FECHA' | translate }}</th><th class="text-end">{{ 'QUOTATIONS.PROFORMAS.COL_TOTAL' | translate }}</th><th>{{ 'QUOTATIONS.PROFORMAS.COL_ESTADO' | translate }}</th><th>{{ 'QUOTATIONS.PROFORMAS.COL_ACCIONES' | translate }}</th></tr></thead>
+              <tbody>
+                @for (row of rows; track row.id) {
+                  <tr>
+                    <td><a [routerLink]="['/pocketbiz/quotations/proformas', row.id]"><strong>{{ row.number }}</strong></a> · v{{ row.version }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.date | date: 'dd/MM/yyyy' }}</td>
+                    <td class="text-end">{{ row.total | money }}</td>
+                    <td><span class="badge" [class]="classes[row.status]">{{ statusLabel(row.status) }}</span></td>
+                    <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/quotations/proformas', row.id]">{{ 'QUOTATIONS.PROFORMAS.VER_DETALLE' | translate }}</a></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">{{ 'QUOTATIONS.PROFORMAS.CUENTA' | translate: { count: count } }}</small>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="search(page - 1)">{{ 'QUOTATIONS.PROFORMAS.ANTERIOR' | translate }}</button>
+              <span>{{ 'QUOTATIONS.PROFORMAS.PAGINA' | translate: { page: page, pages: pages } }}</span>
+              <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="search(page + 1)">{{ 'QUOTATIONS.PROFORMAS.SIGUIENTE' | translate }}</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

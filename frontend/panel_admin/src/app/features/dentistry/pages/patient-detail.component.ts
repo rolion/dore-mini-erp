@@ -12,6 +12,7 @@ import { CLINICAL_FIELDS, ClinicalField, ClinicalInput, Patient } from '../model
 import { DentistryApiService, errorMessage, fieldErrors } from '../services/dentistry-api.service';
 import { ageAt, demographicsValidator, localDateInput, minorAt } from '../services/demographics-form';
 import { PatientHistoryComponent } from '../components/patient-history.component';
+import { PatientProformasComponent } from '../components/patient-proformas.component';
 
 export type SectionState = 'idle' | 'saving' | 'saved' | 'error';
 export type Section = 'clinical' | 'admin';
@@ -19,7 +20,7 @@ const CLINICAL_LIMIT = 4000;
 const COUNTER_FROM = 3200;
 
 @Component({
-  selector: 'app-patient-detail', imports: [TranslatePipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent],
+  selector: 'app-patient-detail', imports: [TranslatePipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent, PatientProformasComponent],
   templateUrl: './patient-detail.component.html',
   styles: [`
     :host-context(.dark) h3 {

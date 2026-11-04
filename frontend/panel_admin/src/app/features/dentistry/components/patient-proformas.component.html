@@ -1,0 +1,49 @@
+@if (servicesEnabled) {
+  <section class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+      <h4 class="h5 mb-0 fw-semibold">{{ 'DENTISTRY.PROFORMAS.TITULO' | translate }}</h4>
+      @if (active) {
+        <a class="btn btn-primary" [routerLink]="['/pocketbiz/dentistry/patients', patientId, 'proformas', 'nueva']">{{ 'DENTISTRY.PROFORMAS.NUEVA' | translate }}</a>
+      }
+    </div>
+    <div class="card-body">
+      @if (!active) { <p class="alert alert-warning" role="status">{{ 'DENTISTRY.PROFORMAS.ARCHIVADO' | translate }}</p> }
+      @if (loading) { <p role="status">{{ 'DENTISTRY.PROFORMAS.CARGANDO' | translate }}</p> }
+      @if (error) {
+        <p class="alert alert-danger" role="alert">{{ error }}
+          <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load(page)">{{ 'DENTISTRY.PROFORMAS.REINTENTAR' | translate }}</button></p>
+      }
+      @if (!loading && !error && !rows.length) { <p class="mb-0">{{ 'DENTISTRY.PROFORMAS.VACIO' | translate }}</p> }
+      @if (rows.length) {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle mb-2">
+            <thead><tr>
+              <th>{{ 'DENTISTRY.PROFORMAS.COL_NUMERO' | translate }}</th><th>{{ 'DENTISTRY.PROFORMAS.COL_FECHA' | translate }}</th>
+              <th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_TOTAL' | translate }}</th><th>{{ 'DENTISTRY.PROFORMAS.COL_ESTADO' | translate }}</th>
+              <th>{{ 'DENTISTRY.PROFORMAS.COL_ACCIONES' | translate }}</th>
+            </tr></thead>
+            <tbody>
+              @for (row of rows; track row.id) {
+                <tr>
+                  <td><a [routerLink]="['/pocketbiz/dentistry/proformas', row.id]"><strong>{{ row.number }}</strong></a> · v{{ row.version }}</td>
+                  <td>{{ row.date | date: 'dd/MM/yyyy' }}</td>
+                  <td class="text-end">{{ row.total | money }}</td>
+                  <td><span class="badge" [class]="classes[row.status]">{{ statusLabel(row.status) }}</span></td>
+                  <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', row.id]">{{ 'DENTISTRY.PROFORMAS.VER_DETALLE' | translate }}</a></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-muted">{{ 'DENTISTRY.PROFORMAS.CUENTA' | translate: { count: count } }}</small>
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="load(page - 1)">{{ 'DENTISTRY.PROFORMAS.ANTERIOR' | translate }}</button>
+            <span>{{ 'DENTISTRY.PROFORMAS.PAGINA' | translate: { page: page, pages: pages } }}</span>
+            <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="load(page + 1)">{{ 'DENTISTRY.PROFORMAS.SIGUIENTE' | translate }}</button>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+}

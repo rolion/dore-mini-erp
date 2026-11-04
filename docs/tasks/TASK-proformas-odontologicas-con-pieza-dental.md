@@ -1,0 +1,101 @@
+# TASK-proformas-odontologicas-con-pieza-dental: Proformas dentro de Odontología con pieza dental
+
+**Etapa actual:** PUBLISH
+**Veredicto de complejidad:** NEEDS_ARCHITECTURE
+**Diseño requerido:** SI
+**Rama:** task/TASK-proformas-odontologicas-con-pieza-dental (basada en `task/TASK-crear-proformas-de-servicios`, PR #52, por indicación del usuario)
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/56
+
+## Historial de transiciones
+| Fecha (UTC) | Transición | Motivo | Origen |
+|---|---|---|---|
+| 2026-11-04 | (nuevo) → INVESTIGATION | Requerimiento en texto libre del usuario | delivery-start |
+| 2026-11-04 | INVESTIGATION → DESIGN | Pantallas nuevas dentro de la ficha del paciente | delivery-start |
+| 2026-11-04 | DESIGN → ARCHITECTURE | Nuevo agregado en Odontología, migración y dependencia nueva `dentistry → service_catalog` | delivery-start |
+| 2026-11-04 | ARCHITECTURE → PLANNING | ADR y DDR escritos; dos decisiones de negocio respondidas por el usuario | delivery-start |
+| 2026-11-04 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa y autoverificaciones propias | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate: PASS con 3 hallazgos Low abiertos (REV-01, 02, 04); REV-03 (Medium, móvil) corregido tras la prueba visual | delivery-publish |
+
+## Investigación
+
+### Requerimiento
+Texto del usuario (no es una Specification aprobada hasta que se confirme el plan): «creo que el módulo de cotizaciones está bien como un módulo genérico, pero esto puede cambiar un poco para odontología, por ejemplo en la proforma debemos agregar un campo pieza dental, en este campo el doctor agrega el número de diente o código de diente sobre el cual el trabajo, el campo es de tipo texto, **copia proforma dentro de odontología** y agrega el campo pieza dental, es texto y opcional. Dentro de la vista de paciente debería poder verse todas las proformas del paciente y el estado en que se encuentran.»
+
+Aclaraciones obtenidas del usuario en el chat (2026-11-04):
+- **Pieza dental por línea** de la proforma (un trabajo por diente), opcional, texto.
+- La ficha del paciente muestra **solo las proformas de Odontología** (no mezcla las del módulo genérico Cotizaciones).
+- Base: rama del PR #52 (aún sin mergear); la rama y el PR se apilan sobre ella.
+
+### Hechos encontrados
+- `backend/modules/quotations/domain/proforma.py` — agregado genérico con líneas congeladas, estados `draft/presented/superseded` y `ProformaLine.piece` reservado, sin exponer.
+- `backend/modules/quotations/application/proformas.py` — caso de uso con puertos de servicios/clientes, numeración, versiones, política de precio (`PriceEditNotAllowed`) y cliente activo (INV-06, PLAN v3).
+- `backend/modules/dentistry/infrastructure/models.py:5-23` — `PatientModel` único por `(company_id, customer_id)`; el paciente se identifica por `customer_id` (también en la API: `api/urls.py` `patients/<uuid:customer_id>/`).
+- `backend/modules/dentistry/api/views.py:40-60` — vistas clínicas con `required_modules = ('dentistry', 'customers')` y `CompanyClinicalPermission` (solo admin en v1).
+- `backend/modules/dentistry/infrastructure/adapters.py:1-11` — único punto donde Odontología importa fachadas ajenas (hoy solo `customers`).
+- `backend/modules/sales/tests/test_boundaries.py` — `ALLOWED_DEPENDENCIES['dentistry'] = {'customers'}`; `dentistry` ya figura en `CONSUMERS`.
+- `backend/modules/service_catalog/services.py:34` — `get_service_for_new_use(company_id, service_id)` devuelve el snapshot (nombre, precio) para nuevos usos.
+- `backend/modules/modularity/domain/modules.py:25` — `dentistry` requiere `customers`; `services` es un módulo aparte que la empresa habilita.
+- `frontend/panel_admin/src/app/features/dentistry/dentistry.routes.ts` — rutas `patients` y `patients/:id` bajo `clinicalGuard`; `pages/patient-detail.component.html` ya tiene bloques (p. ej. historial en `<details>`).
+- `docs/adr/ADR-perfil-odontologico-pacientes-identidad-y-acceso.md` y `docs/architecture/ddd.md:1459` — Odontología extiende la identidad de Clientes sin copiarla y solo puede importar fachadas desde `adapters.py`.
+- `frontend/panel_admin/src/app/features/quotations/` — implementación de referencia (lista, formulario con tabla de líneas, detalle, servicio API, i18n `QUOTATIONS.PROFORMAS.*`).
+
+### Hipótesis / supuestos no confirmados
+- «Copia» se interpreta como **agregado propio de Odontología** (tablas, API y pantallas propias), no como reutilización del módulo genérico. El módulo `quotations` queda intacto.
+- Numeración propia `ODO-NNNNNN` (consecutivo por empresa) para no chocar con `PRO-NNNNNN`.
+- Pieza dental: texto libre de hasta 20 caracteres, sin validar contra FDI/universal (admite `18`, `36`, `11-13`).
+- Una proforma se crea desde la ficha de un paciente con perfil odontológico **activo**; no hay menú global de proformas de Odontología en esta historia.
+- Permisos: igual que el resto de Odontología (admin, `CompanyClinicalPermission`); precio distinto del catálogo solo con la política `can_edit_price` (hoy admin).
+- Módulos: las pantallas y la API exigen `dentistry`, `customers` y `services` habilitados; sin `services` la sección no se ofrece.
+- Fuera del alcance: aceptar/rechazar, PDF, convertir en tratamiento/cobro, odontograma.
+
+### Módulos y dependencias relacionadas
+`dentistry` (nuevo agregado) → `customers` (existente) y `service_catalog` (nueva, solo por fachada desde `adapters.py`). `quotations` no se toca.
+
+### Implementaciones similares existentes
+Todo el módulo `quotations` (se replica con cambios) y la sección de historial de la ficha del paciente.
+
+### Comportamiento actual
+Odontología no tiene proformas; las del módulo genérico no llevan pieza ni se ven en la ficha del paciente.
+
+### Restricciones
+`CLAUDE.md`: `Decimal`, `company_id`, i18n es/en/pt (pipe `translate` / `tr()`), módulos solo por fachada, no editar migraciones aplicadas, sin dependencias nuevas.
+
+### Riesgos identificados
+Duplicación de lógica con `quotations` (deuda aceptada por instrucción del usuario); numeración concurrente; coherencia entre paciente archivado y proformas existentes; tamaño del cambio (backend + frontend + i18n).
+
+### Veredicto de complejidad
+**NEEDS_ARCHITECTURE** — nuevo agregado y migración en Odontología, dependencia nueva entre módulos, decisión de duplicar en lugar de compartir.
+
+### Diseño requerido
+**SI** — formulario, detalle y sección nueva en la ficha del paciente.
+
+## Diseño
+Ver [DDR-proformas-odontologicas-con-pieza-dental-proformas-en-ficha-del-paciente](../design/DDR-proformas-odontologicas-con-pieza-dental-proformas-en-ficha-del-paciente.md).
+
+## Arquitectura
+Ver [ADR-proformas-odontologicas-con-pieza-dental-agregado-propio-en-odontologia](../adr/ADR-proformas-odontologicas-con-pieza-dental-agregado-propio-en-odontologia.md).
+
+## Plan
+[PLAN-2026-11-04-proformas-odontologicas-con-pieza-dental](../plans/PLAN-2026-11-04-proformas-odontologicas-con-pieza-dental.md) v1 · COMPLETO · Specification readiness: READY.
+
+## Implementación
+Backend `modules/dentistry`: dominio `DentalProforma` con `dental_piece` por línea (`domain/proforma.py`), caso de uso con comprobación de paciente activo y política de precio (`application/proformas.py`), modelos y migración `0002_dental_proformas` (tablas `dentistry_proforma*`), repositorio con contador bloqueado (`ODO-NNNNNN`), adaptadores a Servicios y Clientes (`infrastructure/adapters.py`), API `/api/dentistry/patients/{customer_id}/proformas/` y `/api/dentistry/proformas/{id}/…` con `CompanyClinicalPermission` y `required_modules = ('dentistry','customers','services')`. Frontend `features/dentistry`: modelo, servicio API, formulario con columna «Pieza dental», detalle, tarjeta «Proformas» en la ficha del paciente (visible solo con `services` habilitado), rutas, claves `DENTISTRY.PROFORMAS.*` en es/en/pt (107 por idioma).
+
+Cobertura: INV-01..04 y AC-02, 03, 05 → `tests/test_proforma_domain.py`; AC-01..09 y AC-11 → `tests/test_proforma_api.py` (incluye numeración concurrente y conteo de filas ajenas); AC-11 también `sales/tests/test_boundaries.py` (`dentistry → customers, service_catalog`); AC-10 → specs de servicio, formulario, detalle y tarjeta del paciente, `ng build`, `i18n:check`.
+
+Verificación propia (no es el Quality Gate): backend suite completa en PostgreSQL OK; `makemigrations --check` limpio; frontend `ng test` 1229 OK más 1 fallo intermitente preexistente (`screens-i18n.spec`, falla igual en `origin/main`); `ng lint`, `ng build` y `npm run i18n:check` (1670 claves, 0 faltantes) OK. Revisión visual en navegador no realizada.
+
+Desviaciones respecto al plan: (1) `modules/accounts/test_guards.py` se amplió: `DentalProformaLineModel` figura como tabla hija y el contador declara `db_index` en su clave primaria; es una guarda de aislamiento que ya cubría `dentistry`. (2) Se añadió una nota en `docs/architecture/ddd.md` (prevista en el plan). (3) El formulario importa `fetchAll` desde `features/agenda` (utilidad genérica ya existente).
+
+Deuda técnica: duplicación consciente con `quotations` (ADR); extraer un dominio común solo si aparece una tercera variante.
+
+UI: pantallas de referencia `features/quotations` (copia, por instrucción del usuario) y `patient-detail` para la tarjeta; se reutilizan `MoneyPipe`, badges `col-*`, `unsavedChangesGuard`, `fetchAll`; sin componentes compartidos nuevos.
+
+## Review
+**Quality Gate (subagente aislado, 2026-11-04): PASS de código, sin Critical/High.** Backend 1425 OK (PostgreSQL), `makemigrations --check` limpio, `ng lint`, `i18n:check` (1670 claves), `ng build`, `ng test` de Odontología 41/41 (suite completa 1229 OK + 1 intermitente preexistente de `screens-i18n`), `npm audit` 0. No ejecutado: bandit/ruff/flake8 (no instalados).
+Hallazgos: [REV-01](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-01.md) Low (pieza dental acepta números y separadores Unicode), [REV-02](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-02.md) Low (huecos de pruebas), [REV-04](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-04.md) Low (contraste de la plantilla); [REV-03](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-03.md) Medium (desborde horizontal en móvil) corregido.
+**Prueba visual (navegador integrado, backend aislado con base `dore_visual_wt`, frontend en `localhost:4300`):** login, ficha del paciente con la tarjeta «Proformas» (4 proformas con estado, total y fecha), formulario con columna «Pieza dental» (se guardó la pieza `36` y aparece en el detalle), detalle con versiones y botones; 1440 px y 390 px; tema claro en ambos tamaños y oscuro en el formulario móvil. Detectó el desborde móvil (REV-03) y el contraste de la plantilla (REV-04). **No verificado visualmente:** detalle y tarjeta en tema oscuro, y el flujo de presentar / nueva versión en el navegador.
+
+## Publicación
+Estado: PUBLISH. Cambio sensible: nuevo agregado y migración en Odontología (`dentistry/0002`) y dependencia `dentistry → service_catalog` (ADR relacionado). Solo un humano aprueba el merge. PR apilado sobre #52: mergear #52 primero o cambiar la base a `main`.

@@ -40,6 +40,13 @@ class RuleTests(SimpleTestCase):
         self.assertEqual(ctx.exception.names, ['Gastos'])
         self.assertEqual(ctx.exception.kind, 'missing')
 
+    def test_quotations_requires_services_and_customers(self):  # PB-COT-001 AC-10
+        self.assertEqual(set(d.BY_KEY['quotations'].requires), {'services', 'customers'})
+        with self.assertRaises(d.DependencyError) as ctx:
+            d.check_can_enable('quotations', d.effective_enabled({'customers'}))
+        self.assertEqual(ctx.exception.names, ['Servicios'])
+        d.check_can_enable('quotations', d.effective_enabled({'customers', 'services'}))
+
     def test_enable_ok_when_dependencies_enabled(self):
         d.check_can_enable('inventory', d.effective_enabled(set()))
 

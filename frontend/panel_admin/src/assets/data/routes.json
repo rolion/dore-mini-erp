@@ -395,6 +395,30 @@
           "submenu": []
         }
       ]
+    },
+    {
+      "path": "",
+      "title": "MENUITEMS.QUOTATIONS.TEXT",
+      "iconType": "feather",
+      "icon": "file-text",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "module": "quotations",
+      "submenu": [
+        {
+          "path": "/pocketbiz/quotations/proformas",
+          "title": "MENUITEMS.QUOTATIONS.PROFORMAS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ]
     }
   ]
 }

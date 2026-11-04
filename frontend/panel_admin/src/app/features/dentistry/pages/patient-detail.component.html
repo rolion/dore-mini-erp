@@ -185,6 +185,10 @@
       </div>
 
       <div class="col-12">
+        <app-patient-proformas [patientId]="p.id" [active]="p.active" />
+      </div>
+
+      <div class="col-12">
         <details class="card shadow-sm border-0 mb-4" (toggle)="historyOpen = history.open" #history>
           <summary class="card-header bg-transparent border-bottom py-3 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.REGISTRO_DE_CAMBIOS' | translate }}</summary>
           @if (historyOpen) {
