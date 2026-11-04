@@ -6,15 +6,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
+import { ModulesService } from '../../../../core/service/modules.service';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { ReportCardComponent } from '../../../reporting/components/report-card/report-card.component';
 import { CustomerPurchaseHistoryComponent } from '../../components/customer-purchase-history/customer-purchase-history.component';
 import { Customer, CustomerApiError, CustomerOrderSummary } from '../../models/customer';
+import { CustomerPurchaseSummary, summarizePurchases, whatsappUrl } from '../../models/customer-purchase-summary';
 import { CustomerOrdersApiService } from '../../services/customer-orders-api.service';
 import { CustomersApiService } from '../../services/customers-api.service';
 
 @Component({
   selector: 'app-customer-detail',
   templateUrl: './customer-detail.component.html',
-  imports: [TranslatePipe, RouterLink, DatePipe, CustomerPurchaseHistoryComponent],
+  styleUrl: './customer-detail.component.scss',
+  imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe, ReportCardComponent, CustomerPurchaseHistoryComponent],
 })
 export class CustomerDetailComponent implements OnInit {
   customer: Customer | null = null;
@@ -25,8 +30,11 @@ export class CustomerDetailComponent implements OnInit {
   ordersLoading = false;
   /** Un fallo del historial no impide ver los datos del cliente. */
   ordersError = '';
+  /** Cifras del perfil; `null` mientras carga o si el historial falló (no se muestran ceros falsos). */
+  summary: CustomerPurchaseSummary | null = null;
 
   private api = inject(CustomersApiService);
+  private modules = inject(ModulesService);
   private ordersApi = inject(CustomerOrdersApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -52,9 +60,29 @@ export class CustomerDetailComponent implements OnInit {
       });
   }
 
+  /** Con el módulo Pedidos deshabilitado se ocultan las acciones y enlaces a pedidos. */
+  get ordersEnabled(): boolean {
+    return !this.modules.isDisabled('sales');
+  }
+
+  /** Solo un cliente activo puede recibir pedidos nuevos (el selector del pedido lista solo activos). */
+  get canCreateOrder(): boolean {
+    return !!this.customer?.active && this.ordersEnabled;
+  }
+
+  /** El historial parcial hace que las cifras cubran solo los pedidos cargados. */
+  get summaryIsPartial(): boolean {
+    return this.ordersTotal > this.orders.length;
+  }
+
+  whatsappLink(customer: Customer): string | null {
+    return whatsappUrl(customer.phone);
+  }
+
   private loadOrders(customerId: string): void {
     this.ordersLoading = true;
     this.ordersError = '';
+    this.summary = null;
     this.ordersApi
       .list(customerId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -62,6 +90,7 @@ export class CustomerDetailComponent implements OnInit {
         next: (history) => {
           this.orders = history.orders;
           this.ordersTotal = history.total;
+          this.summary = summarizePurchases(history.orders);
           this.ordersLoading = false;
         },
         error: (err: Error) => {

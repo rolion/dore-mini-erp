@@ -44,10 +44,16 @@ export interface CustomerListParams {
  */
 export interface CustomerOrderSummary {
   id: string;
+  /** Etiqueta corta del pedido para mostrar (el identificador es `id`). */
+  code: string;
   /** Fecha del pedido (`AAAA-MM-DD`). */
   date: string;
   /** Texto decimal ("120.50"); no se opera con aritmética de coma flotante. */
   total: string;
+  /** Importe ya pagado (texto decimal). */
+  paidTotal: string;
+  /** Saldo pendiente (texto decimal). */
+  balance: string;
   /** Código del estado de entrega (p. ej. `DELIVERED`). */
   status: string;
   /** Código del estado de pago (p. ej. `PARTIAL`). */

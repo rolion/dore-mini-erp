@@ -8,7 +8,8 @@ import { ToastrService } from 'ngx-toastr';
 import Swal, { SweetAlertResult } from 'sweetalert2';
 import { of, throwError } from 'rxjs';
 
-import { Customer, CustomerApiError } from '../../models/customer';
+import { ModulesService } from '../../../../core/service/modules.service';
+import { Customer, CustomerApiError, CustomerOrderSummary } from '../../models/customer';
 import { CustomerOrdersApiService } from '../../services/customer-orders-api.service';
 import { CustomersApiService } from '../../services/customers-api.service';
 import { makeCustomer } from '../../testing/customer-fixtures';
@@ -16,6 +17,16 @@ import { CustomerDetailComponent } from './customer-detail.component';
 
 interface ToggleHook {
   confirmToggle(customer: Customer): Promise<boolean>;
+}
+
+const modulesState = { salesDisabled: false };
+const modulesFake = { isDisabled: (key: string) => key === 'sales' && modulesState.salesDisabled };
+
+function makeOrder(overrides: Partial<CustomerOrderSummary> = {}): CustomerOrderSummary {
+  return {
+    id: 'o1', code: 'A-0042', date: '2026-10-05', total: '120.50', paidTotal: '100.00', balance: '20.50',
+    status: 'DELIVERED', paymentStatus: 'PARTIAL', ...overrides,
+  };
 }
 
 describe('CustomerDetailComponent', () => {
@@ -34,11 +45,14 @@ describe('CustomerDetailComponent', () => {
         provideRouter([{ path: 'pocketbiz/customers/:id', component: CustomerDetailComponent }]),
         { provide: CustomersApiService, useValue: api },
         { provide: CustomerOrdersApiService, useValue: ordersApi },
+        { provide: ModulesService, useValue: modulesFake },
         { provide: ToastrService, useValue: toastr },
       ],
     });
     navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
   });
+
+  afterEach(() => (modulesState.salesDisabled = false));
 
   async function open(id = 'c-1') {
     const harness = await RouterTestingHarness.create();
@@ -56,17 +70,115 @@ describe('CustomerDetailComponent', () => {
     for (const expected of ['Ana Pérez', '+59176543210', 'ana@example.com', 'Cliente frecuente', 'Activo']) {
       expect(text).toContain(expected);
     }
-    const editLink = el.querySelector('a.btn-primary') as HTMLAnchorElement;
+    const actions = el.querySelector('[data-testid="customer-actions"]') as HTMLElement;
+    expect(actions.closest('.card-header')).not.toBeNull();
+    const newOrder = actions.querySelector('a.btn-primary') as HTMLAnchorElement;
+    expect(newOrder.textContent?.trim()).toBe('Nuevo pedido');
+    expect(newOrder.getAttribute('href')).toBe('/pocketbiz/sales/orders/new?customer=c-1&customer_name=Ana%20P%C3%A9rez');
+    const editLink = actions.querySelector('a.btn-light') as HTMLAnchorElement;
+    expect(editLink.textContent?.trim()).toBe('Editar');
     expect(editLink.getAttribute('href')).toBe('/pocketbiz/customers/c-1/edit');
-    expect(el.querySelector('button.btn-warning')?.textContent?.trim()).toBe('Desactivar');
-    expect(el.textContent).toContain('Volver');
+    expect(actions.querySelector('button.btn-warning')?.textContent?.trim()).toBe('Desactivar');
+    expect(el.textContent).not.toContain('Volver');
+    expect(Array.from(el.querySelectorAll('dt')).map((dt) => dt.textContent?.trim())).toEqual(['Teléfono', 'Correo', 'Notas']);
   });
 
-  it('shows dashes and "Sin notas" for empty optional fields (AC-13)', async () => {
+  it('makes the phone and the email actionable (AC-02)', async () => {
+    api.get.and.returnValue(of(makeCustomer({ phone: '+591 7654-3210' })));
+    const { el } = await open();
+    expect(el.querySelector('a[href="tel:+591 7654-3210"]')).not.toBeNull();
+    expect(el.querySelector('a[href="mailto:ana@example.com"]')).not.toBeNull();
+    const whatsapp = el.querySelector('[data-testid="whatsapp"]') as HTMLAnchorElement;
+    expect(whatsapp.getAttribute('href')).toBe('https://wa.me/59176543210');
+    expect(whatsapp.getAttribute('target')).toBe('_blank');
+    expect(whatsapp.getAttribute('rel')).toBe('noopener');
+    expect(whatsapp.getAttribute('aria-label')).toBe('Escribir por WhatsApp a Ana Pérez');
+  });
+
+  it('says "Sin teléfono", "Sin correo" and "Sin notas" for empty optional fields (AC-02)', async () => {
     api.get.and.returnValue(of(makeCustomer({ phone: '', email: '', notes: '' })));
     const { el } = await open();
+    expect(el.textContent).toContain('Sin teléfono');
+    expect(el.textContent).toContain('Sin correo');
     expect(el.textContent).toContain('Sin notas');
-    expect((el.textContent ?? '').match(/—/g)?.length).toBe(2);
+    expect(el.querySelector('[data-testid="whatsapp"]')).toBeNull();
+    expect(el.querySelector('a[href^="tel:"]')).toBeNull();
+  });
+
+  it('shows the creation and update dates as a discreet footer (AC-08)', async () => {
+    api.get.and.returnValue(of(makeCustomer()));
+    const { el } = await open();
+    const audit = el.querySelector('[data-testid="audit"]') as HTMLElement;
+    expect(audit.textContent).toContain('Creado');
+    expect(audit.textContent).toContain('Última actualización');
+    expect(Array.from(el.querySelectorAll('dt')).map((dt) => dt.textContent?.trim())).not.toContain('Creado');
+  });
+
+  it('shows last purchase, orders, total purchased and outstanding balance of the loaded orders (AC-03)', async () => {
+    api.get.and.returnValue(of(makeCustomer()));
+    ordersApi.list.and.returnValue(
+      of({
+        total: 3,
+        orders: [
+          makeOrder({ id: 'o3', date: '2026-10-30', total: '0.10', balance: '0.00' }),
+          makeOrder({ id: 'o2', date: '2026-10-05', total: '120.50', balance: '20.50' }),
+          makeOrder({ id: 'o1', date: '2026-10-31', total: '999.00', balance: '999.00', status: 'CANCELLED' }),
+        ],
+      }),
+    );
+    const { el } = await open();
+    const text = (id: string) => el.querySelector(`[data-testid="${id}"]`)?.textContent?.trim();
+    expect(text('summary-last')).toBe('30/10/2026');
+    expect(text('summary-count')).toBe('2');
+    expect(text('summary-total')).toBe('Bs 120.60');
+    expect(text('summary-balance')).toBe('Bs 20.50');
+    expect(el.querySelector('[data-testid="summary-balance"]')?.classList).toContain('text-danger');
+    expect(el.textContent).toContain('Pendiente de cobro');
+    expect(el.querySelector('[data-testid="summary-partial"]')).toBeNull();
+  });
+
+  it('shows "Sin compras" and zero amounts for a customer without orders (AC-03)', async () => {
+    api.get.and.returnValue(of(makeCustomer()));
+    const { el } = await open();
+    const text = (id: string) => el.querySelector(`[data-testid="${id}"]`)?.textContent?.trim();
+    expect(text('summary-last')).toBe('Sin compras');
+    expect(text('summary-count')).toBe('0');
+    expect(text('summary-total')).toBe('Bs 0.00');
+    expect(text('summary-balance')).toBe('Bs 0.00');
+    expect(el.querySelector('[data-testid="summary-balance"]')?.classList).not.toContain('text-danger');
+    expect(el.textContent).toContain('Al día');
+  });
+
+  it('warns that the figures cover only the loaded orders when the history is partial (AC-05, EDGE-04)', async () => {
+    api.get.and.returnValue(of(makeCustomer()));
+    ordersApi.list.and.returnValue(of({ total: 250, orders: [makeOrder()] }));
+    const { el } = await open();
+    expect(el.querySelector('[data-testid="summary-partial"]')?.textContent).toContain('Calculado con los 1 pedidos más recientes.');
+  });
+
+  it('shows no figures, not zeros, while loading or when the history failed (AC-03, EDGE-01)', async () => {
+    api.get.and.returnValue(of(makeCustomer()));
+    ordersApi.list.and.returnValue(throwError(() => new Error('No se pudo cargar el historial de compras.')));
+    const { el } = await open();
+    expect(el.querySelector('[data-testid="purchase-summary"]')).toBeNull();
+    expect(el.querySelector('[data-testid="summary-total"]')).toBeNull();
+    expect(el.querySelector('[data-testid="new-order"]')).not.toBeNull();
+  });
+
+  it('does not offer a new order for an inactive customer (AC-07)', async () => {
+    api.get.and.returnValue(of(makeCustomer({ active: false })));
+    const { el } = await open();
+    expect(el.querySelector('[data-testid="new-order"]')).toBeNull();
+    expect(el.querySelector('[data-testid="history-create-first"]')).toBeNull();
+  });
+
+  it('hides the order actions and links when the Orders module is disabled (AC-07)', async () => {
+    modulesState.salesDisabled = true;
+    api.get.and.returnValue(of(makeCustomer()));
+    ordersApi.list.and.returnValue(of({ total: 1, orders: [makeOrder()] }));
+    const { el } = await open();
+    expect(el.querySelector('[data-testid="new-order"]')).toBeNull();
+    expect(el.querySelector('[data-testid="history-all-orders"]')).toBeNull();
   });
 
   it('shows the purchase history section empty when the customer has no orders (AC-26)', async () => {
@@ -83,14 +195,15 @@ describe('CustomerDetailComponent', () => {
       of({
         total: 2,
         orders: [
-          { id: 'o2', date: '2026-10-05', total: '120.50', status: 'DELIVERED', paymentStatus: 'PARTIAL' },
-          { id: 'o1', date: '2026-09-01', total: '35.00', status: 'CANCELLED', paymentStatus: 'PENDING' },
+          makeOrder({ id: 'o2' }),
+          makeOrder({ id: 'o1', date: '2026-09-01', total: '35.00', status: 'CANCELLED', paymentStatus: 'PENDING' }),
         ],
       }),
     );
     const { el } = await open();
     const rows = Array.from(el.querySelectorAll('app-customer-purchase-history tbody tr'));
     expect(rows.length).toBe(2);
+    expect(rows[0].textContent).toContain('A-0042');
     expect(rows[0].textContent).toContain('Bs 120.50');
     expect(rows[0].textContent).toContain('Entregado');
     expect(rows[0].textContent).toContain('Parcial');
