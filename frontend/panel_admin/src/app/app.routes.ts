@@ -27,6 +27,24 @@ export const APP_ROUTE: Route[] = [
         children: [
             { path: '', redirectTo: 'dashboard/main', pathMatch: 'full' },
             {
+                path: 'agenda/citas',
+                canActivate: [moduleGuard, personnelAdminGuard],
+                data: { module: 'agenda' },
+                loadComponent: () => import('./features/agenda/pages/appointment-list.component').then(m => m.AppointmentListComponent),
+            },
+            {
+                path: 'agenda/citas/nueva',
+                canActivate: [moduleGuard, personnelAdminGuard],
+                data: { module: 'agenda' },
+                loadComponent: () => import('./features/agenda/pages/appointment-form.component').then(m => m.AppointmentFormComponent),
+            },
+            {
+                path: 'agenda/citas/:id',
+                canActivate: [moduleGuard, personnelAdminGuard],
+                data: { module: 'agenda' },
+                loadComponent: () => import('./features/agenda/pages/appointment-detail.component').then(m => m.AppointmentDetailComponent),
+            },
+            {
                 path: 'agenda/configuracion/horarios',
                 canActivate: [moduleGuard, personnelAdminGuard],
                 data: { module: 'agenda' },

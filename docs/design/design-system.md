@@ -215,4 +215,5 @@ Una pantalla nueva o modificada pasa si:
 - La plantilla conserva pantallas demo (calendario, tablas avanzadas, etc.) con la marca y el estilo originales; no son parte del producto.
 - Los skins alternativos del panel de configuración conservan sus propios colores y pueden alejarse de la paleta de marca.
 - Hay textos de la plantilla Oreva sin traducir fuera de las pantallas del producto (por ejemplo "Welcome to Oreva" en el header).
+- `features/agenda` (`agenda.component.scss`, `pages/appointment-detail.component.scss`) repite tres HEX del tema oscuro (`#16192a`, `#96a2b4`, `#fff`) para sus `<dialog>` nativos, con comentario a `skins/_dark.scss`; importar ese archivo emitiría sus reglas globales en cada componente. Pendiente: extraer las variables a un parcial compartido.
 - Algunos HEX de las acciones de tabla están escritos a mano en `_table-actions.scss`; deberían apuntar a variables.

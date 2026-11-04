@@ -338,6 +338,17 @@
       "module": "agenda",
       "submenu": [
         {
+          "path": "/pocketbiz/agenda/citas",
+          "title": "MENUITEMS.AGENDA.APPOINTMENTS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/agenda/configuracion/horarios",
           "title": "MENUITEMS.AGENDA.SCHEDULE",
           "iconType": "",
