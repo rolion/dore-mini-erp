@@ -1,3 +1,9 @@
+// Las cuatro cifras miden lo mismo aunque una no lleve texto de apoyo: la tarjeta llena la altura de su columna.
+app-report-card {
+  display: block;
+  height: 100%;
+}
+
 // En móvil todo control accionable del perfil mide al menos 44 px de alto (objetivo táctil, AC-09).
 @media (max-width: 767.98px) {
   .card-header .btn,
