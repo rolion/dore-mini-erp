@@ -1,6 +1,6 @@
 # TASK-mejorar-perfil-de-cliente: Perfil de cliente accionable con resumen de compras y saldo
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mejorar-perfil-de-cliente
@@ -13,6 +13,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, DDR y PLAN v1 escritos; Specification READY | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Plan listo para implementar | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate PASS con observaciones (REV-01, Low) | delivery-publish |
 
 ## Investigación
 
@@ -108,7 +109,15 @@ Pantalla de referencia: `product-detail` (plantilla Detalle) y `features/reporti
 Para ejecutar las pruebas en este worktree se enlazó el `node_modules` del checkout principal (junction) y, al borrar un worktree temporal con `git worktree remove --force`, Git borró por el enlace una parte de `E:\dore-mini-erp\frontend\panel_admin\node_modules` (los paquetes `@algolia` a `@angular` y otros). Después `npm ci` en el checkout principal falló al encontrar procesos `esbuild` en uso. Este worktree tiene ahora su propio `node_modules` (`npm ci`). El checkout principal necesita `npm ci` con esos procesos detenidos. No afecta a los archivos versionados.
 
 ## Review
-_Pendiente_
+
+**Resultado: PASS con observaciones** (Quality Gate en subagente aislado, 2026-11-04).
+
+- `npm test`: 1183 correctas (la prueba `screens-i18n.spec.ts:60`, que falló en mi verificación propia y también en un checkout limpio de `main`, pasó en esta ejecución: es preexistente/intermitente y no atribuible a este PR). Cobertura de archivos nuevos: `decimal-sum.ts` y `customer-purchase-summary.ts` al 100 %; `customer-detail.component.ts` 48/49 sentencias, 12/15 ramas.
+- `npm run lint` limpio, `npm run build` ok, `npm run i18n:check` 0 faltantes, `npm audit` 0 vulnerabilidades. Backend sin cambios.
+- Conformidad: AC-01 a AC-10, INV-01 a INV-03, EDGE-01 a EDGE-05, API-01 y UI-01 a UI-05 verificados contra código y pruebas; AC-09 parcial (ver REV-01).
+- Hallazgo abierto: [REV-2026-11-04-mejorar-perfil-de-cliente-01](../reviews/REV-2026-11-04-mejorar-perfil-de-cliente-01.md) (Low, IMPLEMENTATION): el objetivo táctil de 44 px en móvil solo se fuerza en los enlaces de la tabla; WhatsApp, «Ver todos los pedidos» y los enlaces `tel:`/`mailto:` no lo cumplen.
+- **No verificado:** revisión visual en navegador (escritorio/móvil, claro/oscuro), cobertura de `order-form`, que el fallo intermitente de `screens-i18n` se reproduzca en `main`.
 
 ## Publicación
-_Pendiente_
+
+PR listo para aprobación humana (no se mergea). Cambio sin impacto de arquitectura, autenticación, base de datos ni infraestructura: no hay ADR nuevo. Pendiente de la persona que aprueba: decidir si REV-01 (Low) se corrige antes del merge o queda como deuda, y mirar la pantalla en el navegador.
