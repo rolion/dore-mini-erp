@@ -26,6 +26,9 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 })
 export class CustomerQuickCreateComponent {
   @Input() embedded = false;
+  /** Etiquetas opcionales del modo embebido; vacías conservan los textos por defecto (pedidos). */
+  @Input() submitLabel = '';
+  @Input() backLabel = '';
   @Output() created = new EventEmitter<Customer>();
   @Output() cancelled = new EventEmitter<void>();
   readonly activeModal = inject(NgbActiveModal);

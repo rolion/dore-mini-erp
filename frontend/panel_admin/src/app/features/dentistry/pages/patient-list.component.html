@@ -8,16 +8,18 @@
     <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
       <h2><strong>{{ 'DENTISTRY.PATIENT_LIST.PACIENTES' | translate }}</strong></h2>
       <div><label for="patient-search" class="visually-hidden">{{ 'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate }}</label>
-        <input id="patient-search" class="form-control" [placeholder]="'DENTISTRY.PATIENT_LIST.NOMBRE_O_TELEFONO' | translate" [formControl]="search"></div>
+        <input id="patient-search" class="form-control" [placeholder]="'DENTISTRY.PATIENT_LIST.NOMBRE_O_TELEFONO' | translate" [formControl]="search" aria-describedby="patient-search-help">
+        <small id="patient-search-help" class="form-text d-block">{{ 'DENTISTRY.PATIENT_LIST.BUSQUEDA_AYUDA' | translate }}</small></div>
       <select class="form-select w-auto" [attr.aria-label]="'DENTISTRY.PATIENT_LIST.ESTADO_DEL_PERFIL' | translate" [formControl]="active">
         <option value="true">{{ 'COMMON.ACTIVOS' | translate }}</option><option value="false">{{ 'DENTISTRY.PATIENT_LIST.ARCHIVADOS' | translate }}</option><option value="">{{ 'COMMON.TODOS' | translate }}</option>
       </select>
+      @if (hasFilters) { <button type="button" class="btn btn-light" (click)="clear()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button> }
       <button type="button" class="btn btn-primary ms-lg-auto" (click)="openCreate()"><i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'DENTISTRY.PATIENT_LIST.NUEVO_PACIENTE' | translate }}</button>
     </div>
     @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light ms-2" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
     @if (!loading && !error && count === 0) {
-      <p>{{ search.value || active.value !== 'true' ? ('DENTISTRY.PATIENT_LIST.NO_HAY_RESULTADOS_PARA_ESTOS' | translate) : ('DENTISTRY.PATIENT_LIST.AUN_NO_HAY_PACIENTES_REGISTRADOS' | translate) }}</p>
-      <button type="button" class="btn btn-light mb-3" (click)="clear()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+      <p>{{ narrowed ? ('DENTISTRY.PATIENT_LIST.NO_HAY_RESULTADOS_PARA_ESTOS' | translate) : ('DENTISTRY.PATIENT_LIST.AUN_NO_HAY_PACIENTES_REGISTRADOS' | translate) }}
+        @if (narrowed && active.value !== '') { {{ 'DENTISTRY.PATIENT_LIST.SUGERENCIA_TODOS' | translate }} }</p>
     }
     <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
       [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [scrollbarH]="true" [externalPaging]="true"
@@ -26,6 +28,10 @@
         <a class="fw-bold" [routerLink]="['/pocketbiz/dentistry/patients', row.id]" [queryParams]="filters">{{ row.customer.name }}</a>
       </ng-template></ngx-datatable-column>
       <ngx-datatable-column [name]="'COMMON.TELEFONO' | translate" prop="customer.phone" [sortable]="false" [minWidth]="130" />
+      <ngx-datatable-column [name]="'DENTISTRY.PATIENT_LIST.EDAD' | translate" [sortable]="false" [minWidth]="110"><ng-template let-row="row" ngx-datatable-cell-template>
+        @if (ageOf(row) !== null) { {{ ageOf(row) }} @if (isMinor(row)) { <span class="badge-outline col-orange ms-1">{{ 'DENTISTRY.PATIENT_LIST.MENOR' | translate }}</span> } } @else { — }
+      </ng-template></ngx-datatable-column>
+      <ngx-datatable-column [name]="'DENTISTRY.PATIENT_LIST.ACTUALIZADO' | translate" prop="updated_at" [sortable]="false" [minWidth]="120"><ng-template let-row="row" ngx-datatable-cell-template>{{ row.updated_at | date:'dd/MM/yyyy' }}</ng-template></ngx-datatable-column>
       <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [minWidth]="100"><ng-template let-row="row" ngx-datatable-cell-template>
         <span class="badge-outline" [class.col-green]="row.active" [class.col-orange]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('DENTISTRY.PATIENT_DETAIL.ARCHIVADO' | translate) }}</span>
       </ng-template></ngx-datatable-column>

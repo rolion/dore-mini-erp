@@ -3,6 +3,14 @@ import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 export function localDateInput(today = new Date()): string {
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 }
+/** Años cumplidos a `today`; null si no hay fecha de nacimiento válida. */
+export function ageAt(birth: string | null | undefined, today = new Date()): number | null {
+  if (!birth) return null;
+  const [year, month, day] = birth.split('-').map(Number);
+  if (!year || !month || !day) return null;
+  const birthdayPending = today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day);
+  return today.getFullYear() - year - (birthdayPending ? 1 : 0);
+}
 export function minorAt(birth: string, today = new Date()): boolean {
   if (!birth) return false;
   const [year, month, day] = birth.split('-').map(Number);

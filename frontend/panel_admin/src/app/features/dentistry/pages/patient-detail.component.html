@@ -7,86 +7,53 @@
   }
   @if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
   @if (patient; as p) {
-    <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
       <div>
         <p class="text-muted mb-1">{{ 'DENTISTRY.PATIENT_DETAIL.ODONTOLOGIA_PACIENTES' | translate }}</p>
         <div class="d-flex flex-wrap align-items-center gap-2">
           <h3 class="mb-0 fw-bold text-reset">{{ p.customer.name }}</h3>
           <span class="badge rounded-pill" [class.bg-success-subtle]="p.active" [class.text-success-emphasis]="p.active"
             [class.bg-secondary-subtle]="!p.active" [class.text-secondary-emphasis]="!p.active">{{ p.active ? ('COMMON.ACTIVO' | translate) : ('DENTISTRY.PATIENT_DETAIL.ARCHIVADO' | translate) }}</span>
+          @if (isMinor) {
+            <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ minorText }}</span>
+          }
         </div>
+        <p class="mb-0 mt-2 text-break">
+          {{ p.customer.phone || ('DENTISTRY.PATIENT_CREATE.TELEFONO_NO_INFORMADO' | translate) }}
+          @if (p.customer.email) { · {{ p.customer.email }} }
+          · <a [routerLink]="['/pocketbiz/customers', p.customer.id]">{{ 'DENTISTRY.PATIENT_DETAIL.VER_CLIENTE' | translate }}</a>
+        </p>
       </div>
       <div class="d-flex flex-wrap gap-2">
         @if (p.active) {
-          <button class="btn btn-primary" type="button" [disabled]="saving || (editingAdmin && editingClinical)" (click)="editRecord()">{{ 'DENTISTRY.PATIENT_DETAIL.EDITAR_FICHA' | translate }}</button>
+          <button class="btn btn-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ 'DENTISTRY.PATIENT_DETAIL.ARCHIVAR_PERFIL' | translate }}</button>
         }
-        <button class="btn btn-outline-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ p.active ? ('DENTISTRY.PATIENT_DETAIL.ARCHIVAR_PERFIL' | translate) : ('DENTISTRY.PATIENT_DETAIL.REACTIVAR_PERFIL' | translate) }}</button>
         <a class="btn btn-light" routerLink="/pocketbiz/dentistry/patients" [queryParams]="backFilters">{{ 'DENTISTRY.PATIENT_DETAIL.VOLVER_A_PACIENTES' | translate }}</a>
       </div>
     </header>
 
-    <div class="row g-4">
-      <div class="col-lg-6">
-        <section class="card shadow-sm border-0 mb-4">
-          <div class="card-header bg-transparent border-bottom py-3"><h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.INFORMACION_GENERAL' | translate }}</h4></div>
-          <div class="card-body">
-            <dl class="row mb-0">
-              <dt class="col-sm-4">{{ 'DENTISTRY.PATIENT_DETAIL.ID_CLIENTE' | translate }}</dt>
-              <dd class="col-sm-8 text-break"><a [routerLink]="['/pocketbiz/customers', p.customer.id]">{{ p.customer.id }}</a></dd>
-              <dt class="col-sm-4">{{ 'COMMON.NOMBRE' | translate }}</dt><dd class="col-sm-8">{{ p.customer.name }}</dd>
-              <dt class="col-sm-4">{{ 'COMMON.TELEFONO' | translate }}</dt><dd class="col-sm-8"><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.phone }" /></dd>
-              <dt class="col-sm-4">{{ 'COMMON.CORREO' | translate }}</dt><dd class="col-sm-8 text-break"><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.email }" /></dd>
-            </dl>
-          </div>
-        </section>
-
-        <section class="card shadow-sm border-0 mb-4">
-          <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.NACIMIENTO_Y_RESPONSABLE' | translate }}</h4>
-            @if (p.active && !editingAdmin) { <button class="btn btn-sm btn-light" type="button" [disabled]="saving" (click)="editingAdmin = true">{{ 'DENTISTRY.PATIENT_DETAIL.EDITAR_DATOS' | translate }}</button> }
-          </div>
-          <div class="card-body">
-            @if (editingAdmin) {
-              <form [formGroup]="adminForm" (ngSubmit)="saveAdmin()" novalidate>
-                <fieldset [disabled]="saving">
-                  <label class="form-label" for="birth-date">{{ 'DENTISTRY.PATIENT_DETAIL.FECHA_DE_NACIMIENTO' | translate }}</label>
-                  <input id="birth-date" type="date" class="form-control bg-transparent" formControlName="birth_date" [max]="today" aria-describedby="birth-error">
-                  <small id="birth-error" class="text-danger">{{ adminErrors['birth_date'] || (adminForm.hasError('futureBirth') ? ('DENTISTRY.PATIENT_DETAIL.LA_FECHA_NO_PUEDE_SER' | translate) : '') }}</small>
-                  @if (needsResponsible) {
-                    <div class="mt-3"><span class="badge bg-warning-subtle text-warning-emphasis">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span></div>
-                    <label class="form-label mt-3" for="responsible-name">{{ 'DENTISTRY.PATIENT_DETAIL.NOMBRE_DEL_RESPONSABLE' | translate }}</label>
-                    <input id="responsible-name" class="form-control bg-transparent" formControlName="responsible_name" maxlength="150" aria-required="true" aria-describedby="responsible-name-error">
-                    <small id="responsible-name-error" class="text-danger">{{ adminErrors['responsible_name'] || (adminForm.hasError('responsibleName') ? ('DENTISTRY.PATIENT_DETAIL.INDICA_EL_NOMBRE_DEL_RESPONSABLE' | translate) : '') }}</small>
-                    <label class="form-label mt-3" for="responsible-phone">{{ 'DENTISTRY.PATIENT_DETAIL.TELEFONO_DEL_RESPONSABLE' | translate }}</label>
-                    <input id="responsible-phone" type="tel" class="form-control bg-transparent" formControlName="responsible_phone" maxlength="30" aria-required="true" aria-describedby="responsible-phone-error">
-                    <small id="responsible-phone-error" class="text-danger">{{ adminErrors['responsible_phone'] || (adminForm.hasError('responsiblePhone') ? ('DENTISTRY.PATIENT_DETAIL.INDICA_EL_TELEFONO_DEL_RESPONSABLE' | translate) : '') }}</small>
-                  }
-                  <div class="d-flex flex-wrap gap-2 mt-3">
-                    <button class="btn btn-primary" type="submit" [disabled]="!adminForm.dirty || adminForm.invalid">{{ 'DENTISTRY.PATIENT_DETAIL.GUARDAR_DATOS_ADMINISTRATIVOS' | translate }}</button>
-                    <button class="btn btn-light" type="button" (click)="cancelAdmin()">{{ 'COMMON.CANCELAR' | translate }}</button>
-                  </div>
-                </fieldset>
-              </form>
-            } @else {
-              <dl class="mb-0">
-                <dt>{{ 'DENTISTRY.PATIENT_DETAIL.FECHA_DE_NACIMIENTO' | translate }}</dt>
-                <dd><ng-container *ngTemplateOutlet="value; context: { $implicit: (p.customer.birth_date | date:'dd/MM/yyyy') }" /></dd>
-                @if (needsResponsible) {
-                  <div class="mb-3"><span class="badge bg-warning-subtle text-warning-emphasis">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span></div>
-                  <dt>{{ 'DENTISTRY.PATIENT_DETAIL.NOMBRE_DEL_RESPONSABLE_2' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_name }" /></dd>
-                  <dt>{{ 'DENTISTRY.PATIENT_DETAIL.TELEFONO_DEL_RESPONSABLE_2' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_phone }" /></dd>
-                }
-              </dl>
-            }
-          </div>
-        </section>
+    @if (!p.active) {
+      <div class="alert alert-secondary d-flex flex-wrap align-items-center justify-content-between gap-2" role="status">
+        <span>{{ 'DENTISTRY.PATIENT_DETAIL.PERFIL_ARCHIVADO_SOLO_LECTURA' | translate }}</span>
+        <button class="btn btn-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ 'DENTISTRY.PATIENT_DETAIL.REACTIVAR_PERFIL' | translate }}</button>
       </div>
+    }
 
-      <div class="col-lg-6">
-        <section class="card shadow-sm border-0 mb-4">
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <section id="clinical-section" tabindex="-1" class="card shadow-sm border-0 mb-4">
           <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.ANTECEDENTES_CLINICOS' | translate }}</h4>
-            @if (p.active && !editingClinical) { <button class="btn btn-sm btn-light" type="button" [disabled]="saving" (click)="editingClinical = true"><i class="fas fa-pen me-1" aria-hidden="true"></i>{{ 'DENTISTRY.PATIENT_DETAIL.EDITAR_ANTECEDENTES' | translate }}</button> }
+            <h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.ANTECEDENTES_CLINICOS' | translate }}
+              @if (editingClinical) { <span class="badge bg-primary-subtle text-primary-emphasis ms-2">{{ 'DENTISTRY.PATIENT_DETAIL.EDITANDO' | translate }}</span> }
+            </h4>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <span class="small" [class.text-danger]="clinicalState === 'error'" role="status" aria-live="polite" data-testid="clinical-status">{{ statusText('clinical') }}</span>
+              @if (clinicalState === 'error') { <button class="btn btn-sm btn-light" type="button" [disabled]="saving" (click)="saveClinical()">{{ 'COMMON.REINTENTAR' | translate }}</button> }
+              @if (!editingClinical) {
+                <button id="clinical-edit-btn" class="btn btn-sm btn-light" type="button" [disabled]="saving || !p.active"
+                  [attr.title]="!p.active ? ('DENTISTRY.PATIENT_DETAIL.REACTIVA_PARA_EDITAR' | translate) : null" (click)="editClinical()"><i class="fas fa-pen me-1" aria-hidden="true"></i>{{ 'DENTISTRY.PATIENT_DETAIL.EDITAR' | translate }}</button>
+              }
+            </div>
           </div>
           <div class="card-body">
             @if (editingClinical) {
@@ -95,8 +62,13 @@
                   @for (field of fields; track field.key) {
                     <div class="mb-3">
                       <label class="form-label" [for]="field.key">{{ field.label }}</label>
-                      <textarea class="form-control bg-transparent" [id]="field.key" [formControlName]="field.key" rows="2" maxlength="4000" [placeholder]="'DENTISTRY.PATIENT_DETAIL.NO_INFORMADO' | translate" [attr.aria-describedby]="field.key + '-error'"></textarea>
-                      <small class="text-danger" [id]="field.key + '-error'">{{ clinicalErrors[field.key] }}</small>
+                      <textarea class="form-control bg-transparent" [id]="field.key" [formControlName]="field.key" rows="2" [attr.maxlength]="limit"
+                        [placeholder]="field.placeholder" (input)="autosize($event)"
+                        [attr.aria-invalid]="clinicalErrors[field.key] ? 'true' : null" [attr.aria-describedby]="field.key + '-error ' + field.key + '-count'"></textarea>
+                      <div class="d-flex justify-content-between">
+                        <small class="text-danger" role="alert" [id]="field.key + '-error'">{{ clinicalErrors[field.key] }}</small>
+                        <small class="text-muted ms-auto" [id]="field.key + '-count'">@if (showCounter(field.key)) { {{ length(field.key) }} / {{ limit }} }</small>
+                      </div>
                     </div>
                   }
                   <div class="d-flex flex-wrap gap-2">
@@ -106,10 +78,32 @@
                 </fieldset>
               </form>
             } @else {
-              <dl class="mb-0">
-                @for (field of fields; track field.key) {
+              <h5 class="h6 text-uppercase text-muted mb-2">{{ 'DENTISTRY.PATIENT_DETAIL.RESUMEN_CLINICO' | translate }}</h5>
+              <dl class="mb-4">
+                @for (field of summaryFields; track field.key) {
                   <dt class="mb-1">{{ field.label }}</dt>
-                  <dd class="text-break" style="white-space: pre-wrap"><ng-container *ngTemplateOutlet="value; context: { $implicit: p[field.key] }" /></dd>
+                  <dd class="text-break fs-5" style="white-space: pre-wrap">
+                    @if (p[field.key].trim()) { {{ p[field.key] }} } @else {
+                      <span class="text-muted">{{ 'DENTISTRY.PATIENT_DETAIL.SIN_REGISTRAR' | translate }}</span>
+                      @if (p.active) {
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-2 align-baseline" [disabled]="saving" (click)="editClinical(field.key)">{{ 'DENTISTRY.PATIENT_DETAIL.REGISTRAR' | translate }}<span class="visually-hidden"> {{ field.label }}</span></button>
+                      }
+                    }
+                  </dd>
+                }
+              </dl>
+              <h5 class="h6 text-uppercase text-muted mb-2">{{ 'DENTISTRY.PATIENT_DETAIL.ANTECEDENTES' | translate }}</h5>
+              <dl class="mb-0">
+                @for (field of backgroundFields; track field.key) {
+                  <dt class="mb-1">{{ field.label }}</dt>
+                  <dd class="text-break" style="white-space: pre-wrap">
+                    @if (p[field.key].trim()) { {{ p[field.key] }} } @else {
+                      <span class="text-muted">{{ 'DENTISTRY.PATIENT_DETAIL.SIN_REGISTRAR' | translate }}</span>
+                      @if (p.active) {
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-2 align-baseline" [disabled]="saving" (click)="editClinical(field.key)">{{ 'DENTISTRY.PATIENT_DETAIL.REGISTRAR' | translate }}<span class="visually-hidden"> {{ field.label }}</span></button>
+                      }
+                    }
+                  </dd>
                 }
               </dl>
             }
@@ -117,14 +111,94 @@
         </section>
       </div>
 
+      <div class="col-lg-4">
+        <section id="admin-section" class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.DATOS_PERSONALES' | translate }}
+              @if (editingAdmin) { <span class="badge bg-primary-subtle text-primary-emphasis ms-2">{{ 'DENTISTRY.PATIENT_DETAIL.EDITANDO' | translate }}</span> }
+            </h4>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              @if (!editingAdmin) {
+                <button id="admin-edit-btn" class="btn btn-sm btn-light" type="button" [disabled]="saving || !p.active"
+                  [attr.title]="!p.active ? ('DENTISTRY.PATIENT_DETAIL.REACTIVA_PARA_EDITAR' | translate) : null" (click)="editAdmin()">{{ 'DENTISTRY.PATIENT_DETAIL.EDITAR' | translate }}</button>
+              }
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="small mb-3" [class.text-danger]="adminState === 'error'" role="status" aria-live="polite" data-testid="admin-status">{{ statusText('admin') }}
+              @if (adminState === 'error') { <button class="btn btn-sm btn-light ms-2" type="button" [disabled]="saving" (click)="saveAdmin()">{{ 'COMMON.REINTENTAR' | translate }}</button> }
+            </p>
+            @if (editingAdmin) {
+              <form [formGroup]="adminForm" (ngSubmit)="saveAdmin()" novalidate>
+                <fieldset [disabled]="saving">
+                  <label class="form-label" for="birth-date">{{ 'DENTISTRY.PATIENT_DETAIL.FECHA_DE_NACIMIENTO' | translate }}</label>
+                  <input id="birth-date" type="date" class="form-control bg-transparent" formControlName="birth_date" [max]="today" aria-describedby="birth-error"
+                    [attr.aria-invalid]="(adminErrors['birth_date'] || adminForm.hasError('futureBirth')) ? 'true' : null">
+                  <small id="birth-error" class="text-danger" role="alert">{{ adminErrors['birth_date'] || (adminForm.hasError('futureBirth') ? ('DENTISTRY.PATIENT_DETAIL.LA_FECHA_NO_PUEDE_SER' | translate) : '') }}</small>
+                  @if (needsResponsible) {
+                    <p class="mt-3 mb-0 small"><span class="badge bg-warning-subtle text-warning-emphasis me-1">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span>{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_INDICA_RESPONSABLE' | translate }}</p>
+                  <label class="form-label mt-3" for="responsible-name">{{ 'DENTISTRY.PATIENT_DETAIL.NOMBRE_DEL_RESPONSABLE' | translate }}
+                    <span class="text-danger small ms-1">{{ 'DENTISTRY.PATIENT_DETAIL.OBLIGATORIO' | translate }}</span></label>
+                  <input id="responsible-name" class="form-control bg-transparent" formControlName="responsible_name" maxlength="150" aria-required="true" aria-describedby="responsible-name-error"
+                    [attr.aria-invalid]="(adminErrors['responsible_name'] || adminForm.hasError('responsibleName')) ? 'true' : null">
+                  <small id="responsible-name-error" class="text-danger" role="alert">{{ adminErrors['responsible_name'] || (adminForm.hasError('responsibleName') ? ('DENTISTRY.PATIENT_DETAIL.INDICA_EL_NOMBRE_DEL_RESPONSABLE' | translate) : '') }}</small>
+                  <label class="form-label mt-3" for="responsible-phone">{{ 'DENTISTRY.PATIENT_DETAIL.TELEFONO_DEL_RESPONSABLE' | translate }}
+                    <span class="text-danger small ms-1">{{ 'DENTISTRY.PATIENT_DETAIL.OBLIGATORIO' | translate }}</span></label>
+                  <input id="responsible-phone" type="tel" class="form-control bg-transparent" formControlName="responsible_phone" maxlength="30" aria-required="true" aria-describedby="responsible-phone-error"
+                    [attr.aria-invalid]="(adminErrors['responsible_phone'] || adminForm.hasError('responsiblePhone')) ? 'true' : null">
+                  <small id="responsible-phone-error" class="text-danger" role="alert">{{ adminErrors['responsible_phone'] || (adminForm.hasError('responsiblePhone') ? ('DENTISTRY.PATIENT_DETAIL.INDICA_EL_TELEFONO_DEL_RESPONSABLE' | translate) : '') }}</small>
+                  }
+                  <div class="d-flex flex-wrap gap-2 mt-3">
+                    <button class="btn btn-primary" type="submit" [disabled]="!adminForm.dirty || adminForm.invalid">{{ 'DENTISTRY.PATIENT_DETAIL.GUARDAR_DATOS_PERSONALES' | translate }}</button>
+                    <button class="btn btn-light" type="button" (click)="cancelAdmin()">{{ 'COMMON.CANCELAR' | translate }}</button>
+                  </div>
+                </fieldset>
+              </form>
+            } @else {
+              <dl class="mb-0">
+                <dt>{{ 'DENTISTRY.PATIENT_DETAIL.FECHA_DE_NACIMIENTO' | translate }}</dt>
+                <dd>
+                  <ng-container *ngTemplateOutlet="value; context: { $implicit: (p.customer.birth_date | date:'dd/MM/yyyy') }" />
+                  @if (age !== null) { · {{ ageText }} }
+                  @if (isMinor) { <span class="badge bg-warning-subtle text-warning-emphasis ms-1">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span> }
+                </dd>
+                @if (isMinor) {
+                  <dt>{{ 'DENTISTRY.PATIENT_DETAIL.NOMBRE_DEL_RESPONSABLE_2' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_name }" /></dd>
+                  <dt>{{ 'DENTISTRY.PATIENT_DETAIL.TELEFONO_DEL_RESPONSABLE_2' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_phone }" /></dd>
+                }
+              </dl>
+              @if (missingResponsible) { <p class="small text-warning-emphasis mb-0" role="status">{{ 'DENTISTRY.PATIENT_DETAIL.FALTA_RESPONSABLE' | translate }}</p> }
+            }
+          </div>
+        </section>
+
+        <section class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-transparent border-bottom py-3"><h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.CONTACTO' | translate }}</h4></div>
+          <div class="card-body">
+            <dl class="mb-2">
+              <dt>{{ 'COMMON.TELEFONO' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.phone }" /></dd>
+              <dt>{{ 'COMMON.CORREO' | translate }}</dt><dd class="text-break"><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.email }" /></dd>
+            </dl>
+            <p class="small text-muted mb-0">{{ 'DENTISTRY.PATIENT_DETAIL.CONTACTO_NOTA' | translate }}</p>
+          </div>
+        </section>
+      </div>
+
       <div class="col-12">
         <details class="card shadow-sm border-0 mb-4" (toggle)="historyOpen = history.open" #history>
-          <summary class="card-header bg-transparent border-bottom py-3 fw-semibold">{{ 'COMMON.HISTORIAL_DE_CAMBIOS' | translate }}</summary>
+          <summary class="card-header bg-transparent border-bottom py-3 fw-semibold">{{ 'DENTISTRY.PATIENT_DETAIL.REGISTRO_DE_CAMBIOS' | translate }}</summary>
           @if (historyOpen) {
             <div class="card-body">
-              <div class="row g-4">
-                <div class="col-lg-6"><app-patient-history [patientId]="p.id" [clinical]="false" [revision]="adminRevision" /></div>
-                <div class="col-lg-6"><app-patient-history [patientId]="p.id" [revision]="clinicalRevision" /></div>
+              <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="historyTab === 'clinical'" role="tab" id="history-tab-clinical" aria-controls="history-panel" [attr.aria-selected]="historyTab === 'clinical'" (click)="historyTab = 'clinical'">{{ 'DENTISTRY.PATIENT_DETAIL.ANTECEDENTES' | translate }}</button></li>
+                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="historyTab === 'admin'" role="tab" id="history-tab-admin" aria-controls="history-panel" [attr.aria-selected]="historyTab === 'admin'" (click)="historyTab = 'admin'">{{ 'DENTISTRY.PATIENT_DETAIL.DATOS_PERSONALES' | translate }}</button></li>
+              </ul>
+              <div id="history-panel" role="tabpanel" [attr.aria-labelledby]="'history-tab-' + historyTab">
+              @if (historyTab === 'clinical') {
+                <app-patient-history [patientId]="p.id" [revision]="clinicalRevision" />
+              } @else {
+                <app-patient-history [patientId]="p.id" [clinical]="false" [revision]="adminRevision" />
+              }
               </div>
             </div>
           }
@@ -135,5 +209,5 @@
 </section>
 
 <ng-template #value let-text>
-  @if (text?.trim()) { {{ text }} } @else { <span class="text-muted fst-italic">{{ 'DENTISTRY.PATIENT_DETAIL.NO_INFORMADO' | translate }}</span> }
+  @if (text?.trim()) { {{ text }} } @else { <span class="text-muted">{{ 'DENTISTRY.PATIENT_DETAIL.SIN_REGISTRAR' | translate }}</span> }
 </ng-template>

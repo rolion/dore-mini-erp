@@ -8,9 +8,10 @@ import { finalize } from 'rxjs';
 import { CLINICAL_FIELDS, PatientHistory } from '../models/patient';
 import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
 
+const LONG_TEXT = 200;
+
 @Component({
   selector: 'app-patient-history', imports: [TranslatePipe, DatePipe], template: `
-    <h5 class="h6 fw-semibold mb-3">{{ (clinical ? 'DENTISTRY.PATIENT_HISTORY.CLINICAL_CHANGES' : 'DENTISTRY.PATIENT_HISTORY.ADMIN_CHANGES') | translate }}</h5>
     @if (loading) { <p role="status">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CARGANDO_HISTORIAL' | translate }}</p> }
     @if (error) {
       <div class="alert alert-danger" role="alert">{{ error }}
@@ -30,10 +31,13 @@ import { DentistryApiService, errorMessage } from '../services/dentistry-api.ser
             @for (change of changes(row); track change.key) {
               <li class="mb-2">
                 <div class="fw-semibold small">{{ change.label }}</div>
-                <div class="row g-2 small text-break">
-                  <div class="col-sm-6"><span class="text-muted d-block">{{ 'DENTISTRY.PATIENT_HISTORY.BEFORE' | translate }}</span>{{ change.before }}</div>
-                  <div class="col-sm-6"><span class="text-muted d-block">{{ 'DENTISTRY.PATIENT_HISTORY.AFTER' | translate }}</span>{{ change.after }}</div>
+                <div class="small text-break" style="white-space: pre-wrap">
+                  <div><span class="text-muted">{{ 'DENTISTRY.PATIENT_HISTORY.BEFORE' | translate }}:</span> {{ shown(row.id, change.key, change.before) }}</div>
+                  <div><span class="text-muted">{{ 'DENTISTRY.PATIENT_HISTORY.AFTER' | translate }}:</span> {{ shown(row.id, change.key, change.after) }}</div>
                 </div>
+                @if (isLong(change.before) || isLong(change.after)) {
+                  <button type="button" class="btn btn-link btn-sm p-0" [attr.aria-expanded]="isExpanded(row.id, change.key)" (click)="toggle(row.id, change.key)">{{ (isExpanded(row.id, change.key) ? 'DENTISTRY.PATIENT_HISTORY.MOSTRAR_MENOS' : 'DENTISTRY.PATIENT_HISTORY.MOSTRAR_COMPLETO') | translate }}</button>
+                }
               </li>
             }
           </ul>
@@ -57,6 +61,7 @@ export class PatientHistoryComponent implements OnChanges {
   private api = inject(DentistryApiService);
   private destroyRef = inject(DestroyRef);
   rows: PatientHistory[] = [];
+  private expanded = new Set<string>();
   loading = false;
   error = '';
   page = 1;
@@ -73,6 +78,15 @@ export class PatientHistoryComponent implements OnChanges {
       this.rows = result.results; this.next = !!result.next; this.previous = !!result.previous;
     }, error: (error: HttpErrorResponse) => { this.rows = []; this.error = errorMessage(error); } });
   }
+  isLong(text: string) { return text.length > LONG_TEXT; }
+  isExpanded(rowId: number, key: string) { return this.expanded.has(`${rowId}:${key}`); }
+  toggle(rowId: number, key: string) {
+    const id = `${rowId}:${key}`;
+    if (!this.expanded.delete(id)) this.expanded.add(id);
+  }
+  shown(rowId: number, key: string, text: string) {
+    return this.isLong(text) && !this.isExpanded(rowId, key) ? `${text.slice(0, LONG_TEXT)}…` : text;
+  }
   action(value?: string) {
     return value === 'create' ? tr('DENTISTRY.PATIENT_HISTORY.ALTA') : value === 'archive' ? tr('DENTISTRY.PATIENT_HISTORY.ARCHIVO') : value === 'activate' ? tr('DENTISTRY.PATIENT_HISTORY.REACTIVACION') : tr('DENTISTRY.PATIENT_HISTORY.EDICION');
   }
@@ -82,7 +96,7 @@ export class PatientHistoryComponent implements OnChanges {
       responsible_phone: tr('DENTISTRY.PATIENT_HISTORY.TELEFONO_DEL_RESPONSABLE'), ...Object.fromEntries(CLINICAL_FIELDS.map(field => [field.key, field.label])),
     };
     return Object.keys(row.after).filter(key => (row.before[key] ?? '') !== (row.after[key] ?? '')).map(key => ({
-      key, label: labels[key] ?? key, before: this.display(row.before[key], key), after: this.display(row.after[key], key),
+      key, label: labels[key] ?? tr('DENTISTRY.PATIENT_HISTORY.OTRO_DATO'), before: this.display(row.before[key], key), after: this.display(row.after[key], key),
     }));
   }
   private display(value: string | boolean | null | undefined, key: string) {
@@ -90,6 +104,6 @@ export class PatientHistoryComponent implements OnChanges {
     if (key === 'birth_date' && typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
       return value.split('-').reverse().join('/');
     }
-    return value || tr('DENTISTRY.PATIENT_HISTORY.NO_INFORMADO');
+    return value || tr('DENTISTRY.PATIENT_HISTORY.SIN_REGISTRAR');
   }
 }

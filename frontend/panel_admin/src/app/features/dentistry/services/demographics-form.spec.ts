@@ -1,5 +1,5 @@
 import { FormControl, FormGroup } from '@angular/forms';
-import { demographicsValidator, minorAt } from './demographics-form';
+import { ageAt, demographicsValidator, minorAt } from './demographics-form';
 describe('Administrative demographics', () => {
   it('distinguishes unknown age and the exact 18th birthday', () => {
     expect(minorAt('', new Date(2026, 10, 2))).toBeFalse();
@@ -18,5 +18,12 @@ describe('Administrative demographics', () => {
     expect(form.valid).toBeTrue();
     form.patchValue({ responsible_name: 'Tutor' });
     expect(form.hasError('responsiblePhone')).toBeTrue();
+  });
+  it('computes completed years and returns null without a valid birth date', () => {
+    expect(ageAt(null)).toBeNull();
+    expect(ageAt('')).toBeNull();
+    expect(ageAt('2014-03-12', new Date(2026, 10, 4))).toBe(12);
+    expect(ageAt('2014-11-05', new Date(2026, 10, 4))).toBe(11);
+    expect(ageAt('2014-11-04', new Date(2026, 10, 4))).toBe(12);
   });
 });

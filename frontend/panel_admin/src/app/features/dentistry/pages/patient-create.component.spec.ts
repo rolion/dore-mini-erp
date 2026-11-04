@@ -6,7 +6,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { CustomersApiService } from '../../customers/services/customers-api.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
-import { Customer } from '../../customers/models/customer';
+import { Customer, CustomerApiError } from '../../customers/models/customer';
 import { DentistryApiService } from '../services/dentistry-api.service';
 import { Patient } from '../models/patient';
 import { makePatient, EMPTY_HISTORY } from '../testing/patient-fixtures';
@@ -29,7 +29,49 @@ describe('PatientCreateComponent', () => {
     api.get.and.returnValue(of(makePatient()));
     const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
     fixture.componentInstance.select(customer); fixture.componentInstance.create(); fixture.detectChanges();
-    expect(api.create).not.toHaveBeenCalled(); expect(fixture.nativeElement.textContent).toContain('Abrir ficha existente');
+    expect(api.create).not.toHaveBeenCalled();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Ana ya es paciente.');
+    expect(fixture.nativeElement.querySelector('.alert-danger')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.modal-footer .btn-primary')?.textContent).toContain('Abrir ficha');
+  });
+  it('explains why the primary action is disabled and uses patient wording (AC-01, AC-06)', () => {
+    api.get.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
+    const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Busca a la persona entre tus clientes');
+    expect(root.textContent).toContain('Elige o registra a una persona');
+    expect(root.textContent).not.toContain('ficha clínica');
+    expect((root.querySelector('.modal-footer .btn-primary') as HTMLButtonElement).textContent).toContain('Crear paciente');
+    expect((root.querySelector('.modal-footer .btn-primary') as HTMLButtonElement).disabled).toBeTrue();
+  });
+  it('creates the profile right after registering a new customer, without another click (AC-03)', () => {
+    const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
+    const component = fixture.componentInstance; component.createCustomer();
+    api.create.and.returnValue(of(makePatient()));
+    component.customerCreated(customer);
+    expect(api.get).not.toHaveBeenCalled();
+    expect(api.create).toHaveBeenCalledOnceWith('c-1');
+    expect(component.opening).toBeFalse();
+  });
+  it('keeps the new customer and retries only the profile when it fails (AC-04)', () => {
+    const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
+    const component = fixture.componentInstance;
+    api.create.and.returnValue(throwError(() => new HttpErrorResponse({ status: 500 })));
+    component.customerCreated(customer); fixture.detectChanges();
+    expect(component.selected).toEqual(customer); expect(component.profileFailed).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Se registró a Ana como cliente, pero no se pudo crear su ficha.');
+    expect(customers.list).toHaveBeenCalledTimes(1);
+    api.create.and.returnValue(of(makePatient()));
+    component.create();
+    expect(api.create).toHaveBeenCalledTimes(2);
+  });
+  it('passes patient labels to the embedded quick-create form (AC-02)', () => {
+    const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
+    fixture.componentInstance.createCustomer(); fixture.detectChanges();
+    const form = fixture.nativeElement as HTMLElement;
+    expect(form.querySelector('button[type="submit"]')?.textContent).toContain('Registrar paciente');
+    expect(form.textContent).toContain('Volver a buscar');
   });
   it('prevents duplicate submits and links the winner after a concurrent conflict', () => {
     api.get.and.returnValue(throwError(() => new HttpErrorResponse({ status: 404 })));
@@ -46,5 +88,14 @@ describe('PatientCreateComponent', () => {
     fixture.componentInstance.createCustomer();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('app-customer-quick-create form')).not.toBeNull();
+  });
+  it('offers to retry a failed customer search (EDGE-01)', () => {
+    customers.list.and.returnValue(throwError(() => new CustomerApiError('Falla de búsqueda', 500, {})));
+    const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
+    expect(fixture.componentInstance.searchError).toBe('Falla de búsqueda');
+    expect(fixture.nativeElement.textContent).toContain('Reintentar búsqueda');
+    customers.list.and.returnValue(of({ ...EMPTY_HISTORY, results: [customer] }));
+    fixture.componentInstance.retryCustomers(); fixture.detectChanges();
+    expect(fixture.componentInstance.searchError).toBe(''); expect(fixture.componentInstance.results).toEqual([customer]);
   });
 });

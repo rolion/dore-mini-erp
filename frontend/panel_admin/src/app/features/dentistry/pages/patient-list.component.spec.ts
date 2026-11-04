@@ -28,6 +28,39 @@ describe('PatientListComponent', () => {
     expect(fixture.componentInstance.rows).toEqual([]);
     expect(fixture.nativeElement.textContent).toContain('Reintentar');
     api.list.and.returnValue(of(EMPTY_HISTORY)); fixture.componentInstance.retry(); fixture.detectChanges();
-    expect(fixture.componentInstance.error).toBe(''); expect(fixture.nativeElement.textContent).toContain('No hay resultados');
+    expect(fixture.componentInstance.error).toBe(''); expect(fixture.nativeElement.textContent).toContain('No hay pacientes que coincidan');
+  });
+  it('shows age with a minor badge, updated date, search help and a visible clear button (AC-08, AC-09, AC-10)', () => {
+    const birth = new Date(); birth.setFullYear(birth.getFullYear() - 10);
+    const iso = `${birth.getFullYear()}-${String(birth.getMonth() + 1).padStart(2, '0')}-${String(birth.getDate()).padStart(2, '0')}`;
+    const patient = makePatient(); patient.customer.birth_date = iso;
+    api.list.and.returnValue(of({ ...EMPTY_HISTORY, count: 1, results: [patient] }));
+    const fixture = TestBed.createComponent(PatientListComponent); fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('10'); expect(text).toContain('Menor'); expect(text).toContain('/11/2026');
+    expect(text).toContain('Edad'); expect(text).toContain('Actualizado');
+    expect(text).toContain('Se ignoran espacios y guiones');
+    expect(fixture.componentInstance.hasFilters).toBeTrue();
+    expect(text).toContain('Limpiar filtros');
+  });
+  it('hides the clear button with default filters and suggests "Todos" when nothing matches (AC-10, AC-11)', () => {
+    params.next(convertToParamMap({ search: '', active: 'true', page: '1' }));
+    api.list.and.returnValue(of(EMPTY_HISTORY));
+    const fixture = TestBed.createComponent(PatientListComponent); fixture.detectChanges();
+    expect(fixture.componentInstance.hasFilters).toBeFalse();
+    expect(fixture.nativeElement.textContent).not.toContain('Limpiar filtros');
+    expect(fixture.nativeElement.textContent).toContain('Aún no hay pacientes. Registra el primero');
+    params.next(convertToParamMap({ search: 'zzz', active: 'true', page: '1' })); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Prueba también con «Todos»');
+    params.next(convertToParamMap({ search: 'Ana', active: 'false', page: '2' }));
+  });
+  it('shows a single empty message and treats "Todos" without patients as an empty clinic (REV-04)', () => {
+    params.next(convertToParamMap({ search: '', active: '', page: '1' }));
+    api.list.and.returnValue(of(EMPTY_HISTORY));
+    const fixture = TestBed.createComponent(PatientListComponent); fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aún no hay pacientes. Registra el primero');
+    expect(text).not.toContain('No hay pacientes que coincidan');
+    params.next(convertToParamMap({ search: 'Ana', active: 'false', page: '2' }));
   });
 });

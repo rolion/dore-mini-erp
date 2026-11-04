@@ -1,4 +1,5 @@
 import { TranslatePipe } from '@ngx-translate/core';
+import { tr } from '../../../core/i18n/translate';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,6 +34,9 @@ export class PatientCreateComponent implements OnInit {
   saving = false;
   opening = false;
   existingId = '';
+  /** Cliente creado en este modal: si falla la ficha, se reintenta solo la ficha. */
+  private fresh: Customer | null = null;
+  profileFailed = false;
   ngOnInit() {
     merge(this.customerSearch.pipe(debounceTime(300)), this.retrySearch).pipe(startWith(''),
       switchMap(search => {
@@ -52,13 +56,25 @@ export class PatientCreateComponent implements OnInit {
   }
   select(customer: Customer | null) {
     if (this.saving) return;
-    this.selected = customer; this.existingId = ''; this.error = '';
+    this.selected = customer; this.existingId = ''; this.error = ''; this.fresh = null; this.profileFailed = false;
     this.checking = !!customer;
     if (!customer) return;
     this.api.get(customer.id).pipe(finalize(() => { if (this.selected === customer) this.checking = false; }), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => { if (this.selected === customer) this.existingId = customer.id; },
       error: (error: HttpErrorResponse) => { if (this.selected === customer && error.status !== 404) this.error = errorMessage(error); },
     });
+  }
+  get disabledReason(): string {
+    if (this.existingId || this.saving) return '';
+    if (this.checking) return tr('DENTISTRY.PATIENT_CREATE.COMPROBANDO_SI_ES_PACIENTE');
+    return this.selected ? '' : tr('DENTISTRY.PATIENT_CREATE.ELIGE_O_REGISTRA');
+  }
+  /** Persona nueva: el cliente ya existe, así que se crea la ficha sin pedir otro clic. */
+  customerCreated(customer: Customer) {
+    this.opening = false;
+    this.selected = customer; this.existingId = ''; this.error = ''; this.profileFailed = false;
+    this.fresh = customer;
+    this.create();
   }
   createCustomer() {
     if (!this.saving) this.opening = true;
@@ -78,7 +94,13 @@ export class PatientCreateComponent implements OnInit {
     const customerId = this.selected.id;
     this.api.create(customerId).pipe(finalize(() => this.saving = false), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: patient => this.openRecord(patient.id, true),
-      error: (error: HttpErrorResponse) => { this.error = errorMessage(error); if (error.status === 409) this.existingId = customerId; },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 409) { this.existingId = customerId; this.error = ''; return; }
+        if (this.fresh?.id === customerId) {
+          this.profileFailed = true;
+          this.error = tr('DENTISTRY.PATIENT_CREATE.CLIENTE_SIN_FICHA', { name: this.fresh.name });
+        } else this.error = errorMessage(error);
+      },
     });
   }
 }

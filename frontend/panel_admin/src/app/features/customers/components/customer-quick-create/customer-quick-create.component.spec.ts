@@ -50,6 +50,19 @@ describe('CustomerQuickCreateComponent', () => {
     expect((element.querySelector('button[type="submit"]') as HTMLButtonElement).disabled).toBeTrue();
   });
 
+  it('keeps default embedded labels and accepts optional ones (dentistry AC-02)', () => {
+    let element = render();
+    fixture.componentRef.setInput('embedded', true);
+    fixture.detectChanges();
+    expect(element.querySelector('button[type="submit"]')?.textContent).toContain('Crear y seleccionar cliente');
+    fixture.componentRef.setInput('submitLabel', 'Registrar paciente');
+    fixture.componentRef.setInput('backLabel', 'Volver a buscar');
+    fixture.detectChanges();
+    element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('button[type="submit"]')?.textContent).toContain('Registrar paciente');
+    expect(element.querySelector('button[type="button"]')?.textContent).toContain('Volver a buscar');
+  });
+
   it('requires a non-blank name before saving (AC-27)', () => {
     api.create.and.returnValue(of(makeCustomer()));
     const element = render();
