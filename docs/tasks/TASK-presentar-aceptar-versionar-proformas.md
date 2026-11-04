@@ -1,6 +1,6 @@
 # TASK-presentar-aceptar-versionar-proformas: PB-COT-002
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-presentar-aceptar-versionar-proformas (basada en `origin/task/TASK-crear-proformas-de-servicios`, 672d71b, que contiene los PR #52 y #56; por indicación del usuario)
@@ -15,6 +15,7 @@
 | 2026-11-04 | DESIGN → ARCHITECTURE | Cambia el modelo de datos de dos módulos y el contrato API | delivery-start |
 | 2026-11-04 | ARCHITECTURE → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa; pruebas de API con PostgreSQL pendientes de entorno | delivery-build |
 
 ## Investigación
 
@@ -85,7 +86,18 @@ Ver [ADR-presentar-aceptar-versionar-proformas-libro-de-decisiones-y-versionado]
 [PLAN-2026-11-04-presentar-aceptar-versionar-proformas](../plans/PLAN-2026-11-04-presentar-aceptar-versionar-proformas.md) v1 · COMPLETO · Specification readiness: READY (supuestos no bloqueantes listados arriba y en el plan).
 
 ## Implementación
-_Pendiente_
+Backend (copia adaptada en `quotations` y `dentistry`): agregado con libro de decisiones (`Decision`), `decide`/`rectify`, estado derivado y totales, versionado con `origin_line_id`/`line_kind` y recálculo al guardar (INV-01..11); repositorio que guarda por diferencia con ids de línea estables; idempotencia por lote (`…_decision_batch`); API `decisions/`, `lines/<id>/rectify/`, `printable/`; migraciones `quotations/0002` y `dentistry/0003`. Frontend: componente compartido `app-proforma-decisions` (totales, selección, diálogo de dos pasos con resumen, rectificación, historial), `ProformaDecisionsApiService`, página de impresión `ProformaPrintPageComponent`, rutas `…/imprimir`, claves `PROFORMA_DECISIONS.*` en es/en/pt y adaptación de ambos detalles.
+
+Cobertura: INV-01..09, AC-01, 04..09 → `test_decisions_domain.py` y `test_proforma_decisions_domain.py` (SimpleTestCase); AC-01..13 → `test_decisions_api.py` y `test_proforma_decisions_api.py` (TransactionTestCase); AC-14 → specs de `ProformaDecisionsComponent` y `ProformaDecisionsApiService`, `ng build`, `i18n:check`, lint.
+
+Verificación propia (no es el Quality Gate): dominio de ambos módulos 34/34 OK sin base de datos; `makemigrations` genera solo las migraciones aditivas; `test_boundaries` OK; `ng build --configuration development` OK; `ng lint` OK; `i18n:check` 1719 claves, 0 faltantes; specs de `shared`, `quotations` y `dentistry` 80/80 OK. **No ejecutado:** las pruebas de API con PostgreSQL (no hay `DATABASE_URL` en este entorno y no se lee `.env`).
+
+Desviaciones respecto al plan:
+- `allowed_actions` no cambia (compatibilidad total de AC-15): las acciones nuevas viajan en `decision_actions` (`decide`, `rectify`).
+- DDR: un único componente compartido `app-proforma-decisions` con un solo `<dialog>` nativo (patrón ya usado por los detalles) en lugar de tres componentes con `NgbModal`; el historial va dentro del mismo componente.
+- La clave de idempotencia se genera al abrir el diálogo y se reutiliza en cada reintento (patrón de `stock-opening`).
+
+Deuda técnica: lógica de decisiones duplicada en dos módulos (decisión del ADR); la protección de rectificaciones frente a ejecución/cobros vinculados queda como límite hasta que existan esas historias; la vista de impresión usa el diálogo del navegador. Pantallas de referencia: Detalle con acciones de ciclo de vida (`purchase-detail`) y formulario con resumen (`stock-opening`).
 
 ## Review
 _Pendiente_

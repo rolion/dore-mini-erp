@@ -31,48 +31,29 @@
           </div>
         </div>
         <div class="card-body">
+          @if (p.status === 'superseded') {
+            <p class="alert alert-info" role="status">{{ 'PROFORMA_DECISIONS.VERSION_ANTERIOR' | translate }}</p>
+          }
           <dl class="row">
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.PACIENTE' | translate }}</dt><dd class="col-sm-9">{{ p.patient_name }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.VIGENCIA' | translate }}</dt><dd class="col-sm-9">{{ (p.valid_until | date: 'dd/MM/yyyy') || '—' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.MONEDA' | translate }}</dt><dd class="col-sm-9">{{ p.currency }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.TOTAL_PROPUESTO' | translate }}</dt><dd class="col-sm-9"><strong>{{ p.total | money }}</strong></dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.TOTAL_ACEPTADO' | translate }}</dt><dd class="col-sm-9">—</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.CONDICIONES' | translate }}</dt><dd class="col-sm-9">{{ p.notes || '—' }}</dd>
           </dl>
 
-          <h5>{{ 'DENTISTRY.PROFORMAS.LINEAS' | translate }}</h5>
-          <div class="table-responsive">
-            <table class="table table-striped align-middle">
-              <thead><tr>
-                <th>{{ 'DENTISTRY.PROFORMAS.SERVICIO' | translate }}</th>
-                <th>{{ 'DENTISTRY.PROFORMAS.PIEZA_COL' | translate }}</th>
-                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.CANTIDAD' | translate }}</th>
-                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.PRECIO_UNIT' | translate }}</th>
-                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.SUBTOTAL' | translate }}</th>
-              </tr></thead>
-              <tbody>
-                @for (line of p.lines; track line.id) {
-                  <tr>
-                    <td>{{ line.description }}</td>
-                    <td>{{ line.dental_piece || '—' }}</td>
-                    <td class="text-end">{{ line.quantity }}</td>
-                    <td class="text-end">{{ line.unit_price | money }}</td>
-                    <td class="text-end">{{ line.subtotal | money }}</td>
-                  </tr>
-                } @empty {
-                  <tr><td colspan="5">{{ 'DENTISTRY.PROFORMAS.SIN_LINEAS' | translate }}</td></tr>
-                }
-              </tbody>
-            </table>
-          </div>
+          <app-proforma-decisions
+            base="dentistry/proformas" [proformaId]="p.id" [status]="p.status" [lines]="lineViews()" [totals]="p.totals"
+            [acceptanceStatus]="p.acceptance_status" [actions]="p.decision_actions" [history]="p.decision_history"
+            [pieceLabelKey]="'DENTISTRY.PROFORMAS.PIEZA_COL'" (changed)="reload()" />
 
           <h5 class="mt-4">{{ 'DENTISTRY.PROFORMAS.VERSIONES' | translate }}</h5>
           <div class="table-responsive">
             <table class="table align-middle">
               <thead><tr>
                 <th>{{ 'DENTISTRY.PROFORMAS.COL_VERSION' | translate }}</th><th>{{ 'DENTISTRY.PROFORMAS.COL_FECHA' | translate }}</th>
-                <th>{{ 'DENTISTRY.PROFORMAS.COL_ESTADO' | translate }}</th><th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_TOTAL' | translate }}</th>
+                <th>{{ 'DENTISTRY.PROFORMAS.COL_ESTADO' | translate }}</th><th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_TOTAL' | translate }}</th><th class="text-end">{{ 'PROFORMA_DECISIONS.TOTAL_ACEPTADO' | translate }}</th>
                 <th>{{ 'DENTISTRY.PROFORMAS.VER' | translate }}</th>
               </tr></thead>
               <tbody>
@@ -82,6 +63,7 @@
                     <td>{{ version.date | date: 'dd/MM/yyyy' }}</td>
                     <td><span class="badge" [class]="classes[version.status]">{{ statusLabel(version.status) }}</span></td>
                     <td class="text-end">{{ version.total | money }}</td>
+                    <td class="text-end">{{ version.accepted_total | money }}</td>
                     <td>
                       @if (version.id !== p.id) {
                         <a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', version.id]">{{ 'DENTISTRY.PROFORMAS.VER' | translate }}</a>

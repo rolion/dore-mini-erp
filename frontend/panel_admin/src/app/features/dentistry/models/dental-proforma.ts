@@ -1,4 +1,5 @@
 import { tr } from '../../../core/i18n/translate';
+import { AcceptanceStatus, LineDecisionFields, ProformaDecisionState } from '../../../shared/models/proforma-decisions';
 
 export type DentalProformaStatus = 'draft' | 'presented' | 'superseded';
 export type DentalProformaAction = 'edit' | 'present' | 'new-version';
@@ -19,7 +20,7 @@ export const PROFORMA_STATUS_CLASSES: Record<DentalProformaStatus, string> = {
 export const PROFORMA_NOTES_MAX_LENGTH = 2000;
 export const DENTAL_PIECE_MAX_LENGTH = 20;
 
-export interface DentalProformaLine {
+export interface DentalProformaLine extends LineDecisionFields {
   id: string;
   service_id: string;
   description: string;
@@ -40,9 +41,11 @@ export interface DentalProformaSummary {
   valid_until: string | null;
   currency: string;
   total: string;
+  accepted_total: string;
+  acceptance_status: AcceptanceStatus;
 }
 
-export interface DentalProforma extends DentalProformaSummary {
+export interface DentalProforma extends DentalProformaSummary, ProformaDecisionState {
   notes: string;
   lines: DentalProformaLine[];
   allowed_actions: DentalProformaAction[];

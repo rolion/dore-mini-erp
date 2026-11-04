@@ -26,6 +26,10 @@ export const DENTISTRY_ROUTES: Route[] = [
   { path: 'patients/:id', component: PatientDetailComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
   { path: 'patients/:patientId/proformas/nueva', component: DentalProformaFormComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
   { path: 'proformas/:proformaId', component: DentalProformaDetailComponent, canActivate: [clinicalGuard] },
+  {
+    path: 'proformas/:proformaId/imprimir', canActivate: [clinicalGuard], data: { base: 'dentistry/proformas' },
+    loadComponent: () => import('../../shared/components/proforma-decisions/proforma-print-page.component').then(m => m.ProformaPrintPageComponent),
+  },
   { path: 'proformas/:proformaId/editar', component: DentalProformaFormComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
   { path: '', redirectTo: 'patients', pathMatch: 'full' },
 ];
