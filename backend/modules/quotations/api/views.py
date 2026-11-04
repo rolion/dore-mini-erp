@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from django.db import transaction
 from rest_framework import status as http
@@ -7,15 +8,15 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.quotations.application.proformas import PriceEditNotAllowed, ProformaService
+from modules.quotations.application.proformas import PriceEditNotAllowed, ProformaService, RectifyNotAllowed
 from modules.quotations.domain.proforma import (
-    STATUSES, ProformaNotFound, ProformaStateError, ProformaValidationError,
+    STATUSES, ProformaNotFound, ProformaStateError, ProformaValidationError, money,
 )
 from modules.quotations.infrastructure.adapters import CustomerLookup, ServiceLookup
 from modules.quotations.infrastructure.django.repositories import DjangoProformaRepository, to_domain
 from shared.tenancy import company_id_from
 
-from .serializers import ProformaInputSerializer, detail_data, summary_data
+from .serializers import DecisionInputSerializer, ProformaInputSerializer, detail_data, printable_data, summary_data
 
 REQUIRED_MODULES = ('quotations',)
 
@@ -50,16 +51,28 @@ class ProformaPagination(PageNumberPagination):
             raise ValidationError({'page': ['La página solicitada ya no está disponible.']}) from exc
 
 
+def can_rectify(user) -> bool:
+    """Política de rectificaciones: hoy solo el administrador; un rol futuro sin permiso recibe 403."""
+    return getattr(user, 'role', None) == 'admin'
+
+
+def _user_name(user) -> str:
+    full = user.get_full_name() if hasattr(user, 'get_full_name') else ''
+    return (full or user.get_username())[:150]
+
+
 def _service(request) -> ProformaService:
     company_id = company_id_from(request)
     return ProformaService(DjangoProformaRepository(company_id), ServiceLookup(company_id),
                            CustomerLookup(company_id), can_edit_price=can_edit_price(request.user),
-                           user_id=request.user.pk)
+                           user_id=request.user.pk, can_rectify=can_rectify(request.user),
+                           user_name=_user_name(request.user))
 
 
 def _detail(service: ProformaService, proforma) -> dict:
     return detail_data(proforma, allowed_actions=service.allowed_actions(proforma),
-                       can_edit_price=service.can_edit_price, versions=service.versions(proforma))
+                       can_edit_price=service.can_edit_price, versions=service.versions(proforma),
+                       decision_actions=service.decision_actions(proforma))
 
 
 def _run(callback):
@@ -74,6 +87,8 @@ def _run(callback):
         raise Conflict(str(exc)) from exc
     except PriceEditNotAllowed as exc:
         raise PermissionDenied('No tienes permiso para editar precios.') from exc
+    except RectifyNotAllowed as exc:
+        raise PermissionDenied('No tienes permiso para rectificar decisiones.') from exc
 
 
 def _date_param(request, name):
@@ -132,3 +147,39 @@ class ProformaActionView(APIView):
         method = {'present': service.present, 'new_version': service.new_version}[self.action]
         proforma = _run(lambda: method(proforma_id))
         return Response(_detail(service, proforma), status=201 if self.action == 'new_version' else 200)
+
+
+class ProformaDecisionView(APIView):
+    """Registra la aceptación o el rechazo de una o varias líneas (idempotente por `idempotency_key`)."""
+    required_modules = REQUIRED_MODULES
+
+    def post(self, request, proforma_id):
+        serializer = DecisionInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        service = _service(request)
+        result = _run(lambda: service.decide(proforma_id, serializer.to_input()))
+        chosen = {str(i) for i in result.line_ids}
+        amount = sum((l.subtotal for l in result.proforma.lines if str(l.id) in chosen), Decimal('0'))
+        return Response({**_detail(service, result.proforma), 'replayed': result.replayed,
+                         'summary': {'lines': len(chosen), 'amount': f'{money(amount):.2f}'}},
+                        status=200 if result.replayed else 201)
+
+
+class ProformaRectifyView(APIView):
+    required_modules = REQUIRED_MODULES
+
+    def post(self, request, proforma_id, line_id):
+        serializer = DecisionInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        service = _service(request)
+        result = _run(lambda: service.rectify(proforma_id, line_id, serializer.to_input([line_id])))
+        return Response({**_detail(service, result.proforma), 'replayed': result.replayed},
+                        status=200 if result.replayed else 201)
+
+
+class ProformaPrintableView(APIView):
+    required_modules = REQUIRED_MODULES
+
+    def get(self, request, proforma_id):
+        service = _service(request)
+        return Response(printable_data(_run(lambda: service.printable(proforma_id))))

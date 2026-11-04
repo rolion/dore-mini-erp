@@ -1,6 +1,7 @@
 from django.urls import path
 from .proforma_views import (
-    PatientProformaListCreateView, ProformaActionView, ProformaDetailView,
+    PatientProformaListCreateView, ProformaActionView, ProformaDecisionView, ProformaDetailView,
+    ProformaPrintableView, ProformaRectifyView,
 )
 from .views import CapabilitiesView, PatientListView, PatientDetailView, PatientStateView, PatientHistoryView
 
@@ -15,4 +16,7 @@ urlpatterns = [
     path('proformas/<uuid:proforma_id>/', ProformaDetailView.as_view()),
     path('proformas/<uuid:proforma_id>/present/', ProformaActionView.as_view(action='present')),
     path('proformas/<uuid:proforma_id>/new-version/', ProformaActionView.as_view(action='new_version')),
+    path('proformas/<uuid:proforma_id>/decisions/', ProformaDecisionView.as_view()),
+    path('proformas/<uuid:proforma_id>/lines/<uuid:line_id>/rectify/', ProformaRectifyView.as_view()),
+    path('proformas/<uuid:proforma_id>/printable/', ProformaPrintableView.as_view()),
 ]

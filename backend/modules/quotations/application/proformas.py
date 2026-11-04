@@ -1,17 +1,40 @@
 """Casos de uso de Proformas: leen Servicios/Clientes por puertos, mutan el agregado y persisten."""
-from dataclasses import dataclass
-from datetime import date
+import hashlib
+from dataclasses import dataclass, replace
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import UUID, uuid4
 
 from modules.quotations.domain.proforma import (
-    DRAFT, PRESENTED, Proforma, ProformaLine, ProformaNotFound, ProformaStateError, ProformaValidationError,
-    money,
+    ACCEPTED, DRAFT, PENDING, PRESENTED, Proforma, ProformaLine, ProformaNotFound, ProformaStateError,
+    ProformaValidationError, money,
 )
 
 
 class PriceEditNotAllowed(Exception):
     """El usuario no puede fijar un precio distinto del vigente del servicio."""
+
+
+class RectifyNotAllowed(Exception):
+    """El usuario no puede rectificar decisiones registradas."""
+
+
+@dataclass(frozen=True)
+class DecisionInput:
+    idempotency_key: UUID
+    decision: str
+    line_ids: list[UUID]
+    accepted_by_name: str = ''
+    medium: str = ''
+    reference: str = ''
+    reason: str = ''
+
+
+@dataclass(frozen=True)
+class DecisionResult:
+    proforma: Proforma
+    replayed: bool
+    line_ids: list[UUID]
 
 
 @dataclass(frozen=True)
@@ -32,9 +55,12 @@ class ProformaInput:
 
 
 class ProformaService:
-    def __init__(self, repository, services, customers, *, can_edit_price: bool, user_id: int | None = None):
+    def __init__(self, repository, services, customers, *, can_edit_price: bool, user_id: int | None = None,
+                 can_rectify: bool = False, user_name: str = '', clock=None):
         self.repository, self.services, self.customers = repository, services, customers
         self.can_edit_price, self.user_id = can_edit_price, user_id
+        self.can_rectify, self.user_name = can_rectify, user_name
+        self.clock = clock or (lambda: datetime.now(timezone.utc))
 
     # --- lectura -----------------------------------------------------------------------------------------
     def get(self, proforma_id: UUID) -> Proforma:
@@ -52,6 +78,21 @@ class ProformaService:
 
     def versions(self, proforma: Proforma) -> list[Proforma]:
         return self.repository.versions(proforma.number)
+
+    def decision_actions(self, proforma: Proforma) -> list[str]:
+        """Acciones de decisión (aditivas a `allowed_actions`): solo sobre la proforma presentada vigente."""
+        if proforma.status != PRESENTED:
+            return []
+        actions = ['decide'] if any(l.decision == PENDING for l in proforma.lines) else []
+        if self.can_rectify and any(l.decision != PENDING for l in proforma.lines):
+            actions.append('rectify')
+        return actions
+
+    def printable(self, proforma_id: UUID) -> Proforma:
+        proforma = self.get(proforma_id)
+        if proforma.status == DRAFT:
+            raise ProformaStateError('Solo se puede imprimir una proforma presentada.')
+        return proforma
 
     # --- escritura ---------------------------------------------------------------------------------------
     def create(self, data: ProformaInput) -> Proforma:
@@ -71,7 +112,8 @@ class ProformaService:
         name = self._customer(data.customer_id)
         lines = self._lines(data.lines, existing={line.id: line for line in proforma.lines})
         proforma.replace_content(customer_id=data.customer_id, customer_name=name, date=data.date,
-                                 valid_until=data.valid_until, notes=data.notes, lines=lines)
+                                 valid_until=data.valid_until, notes=data.notes, lines=lines,
+                                 origins=self.repository.origin_lines(proforma.number, proforma.version))
         self.repository.save(proforma)
         return proforma
 
@@ -93,6 +135,47 @@ class ProformaService:
         draft = proforma.new_version()
         self.repository.save(draft)
         return draft
+
+    # --- decisiones (PB-COT-002) ------------------------------------------------------------------------------
+    def decide(self, proforma_id: UUID, data: DecisionInput) -> DecisionResult:
+        proforma = self._locked(proforma_id)
+        digest = _digest('decide', proforma_id, data.decision, sorted(str(i) for i in data.line_ids),
+                         data.accepted_by_name.strip(), data.medium.strip(), data.reference.strip(),
+                         data.reason.strip())
+        if self._replay(data.idempotency_key, proforma_id, digest):
+            return DecisionResult(proforma, True, data.line_ids)
+        proforma.decide(data.line_ids, data.decision, now=self.clock(), recorded_by=self.user_id,
+                        recorded_by_name=self.user_name, accepted_by_name=data.accepted_by_name,
+                        medium=data.medium, reference=data.reference, reason=data.reason,
+                        batch_key=data.idempotency_key)
+        self.repository.save(proforma)
+        self.repository.add_batch(data.idempotency_key, proforma_id, digest)
+        return DecisionResult(proforma, False, data.line_ids)
+
+    def rectify(self, proforma_id: UUID, line_id: UUID, data: DecisionInput) -> DecisionResult:
+        if not self.can_rectify:
+            raise RectifyNotAllowed()
+        proforma = self._locked(proforma_id)
+        digest = _digest('rectify', proforma_id, line_id, data.decision, data.accepted_by_name.strip(),
+                         data.medium.strip(), data.reference.strip(), data.reason.strip())
+        if self._replay(data.idempotency_key, proforma_id, digest):
+            return DecisionResult(proforma, True, [line_id])
+        proforma.rectify(line_id, data.decision, now=self.clock(), recorded_by=self.user_id,
+                         recorded_by_name=self.user_name, accepted_by_name=data.accepted_by_name,
+                         medium=data.medium, reference=data.reference, reason=data.reason,
+                         batch_key=data.idempotency_key)
+        self.repository.save(proforma)
+        self.repository.add_batch(data.idempotency_key, proforma_id, digest)
+        return DecisionResult(proforma, False, [line_id])
+
+    def _replay(self, key: UUID, proforma_id: UUID, digest: str) -> bool:
+        """INV-09: misma clave y mismo contenido → reintento; misma clave con otro contenido → 409."""
+        batch = self.repository.get_batch(key)
+        if batch is None:
+            return False
+        if batch.proforma_id != proforma_id or batch.payload_hash != digest:
+            raise ProformaStateError('La clave de la operación ya se usó con otros datos.')
+        return True
 
     # --- apoyo -------------------------------------------------------------------------------------------
     def _locked(self, proforma_id: UUID) -> Proforma:
@@ -123,8 +206,7 @@ class ProformaService:
             if frozen is not None:  # línea ya congelada: no se relee el catálogo
                 price = frozen.unit_price if item.unit_price is None else item.unit_price
                 self._check_price(price, frozen.unit_price)
-                result.append(ProformaLine(frozen.id, frozen.service_id, frozen.description, item.quantity, price,
-                                           frozen.treatment_item_id, frozen.piece))
+                result.append(replace(frozen, quantity=item.quantity, unit_price=price))
                 errors.append({})
                 continue
             service = self.services.for_new_use(item.service_id) if item.service_id else None
@@ -142,3 +224,7 @@ class ProformaService:
     def _check_price(self, price: Decimal, reference: Decimal) -> None:
         if not self.can_edit_price and money(price) != money(reference):
             raise PriceEditNotAllowed()
+
+
+def _digest(*parts) -> str:
+    return hashlib.sha256('|'.join(str(part) for part in parts).encode('utf-8')).hexdigest()

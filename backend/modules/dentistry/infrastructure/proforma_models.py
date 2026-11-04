@@ -40,6 +40,9 @@ class DentalProformaLineModel(models.Model):
     quantity = models.DecimalField(max_digits=8, decimal_places=2)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
     dental_piece = models.CharField(max_length=20, blank=True, default='')
+    # PB-COT-002: vínculo con la línea de la versión anterior (sin FK) y su tipo en esta versión.
+    origin_line_id = models.UUIDField(null=True, blank=True)
+    line_kind = models.CharField(max_length=12, default='original')
 
     class Meta:
         db_table = 'dentistry_proforma_line'
@@ -56,3 +59,41 @@ class DentalProformaCounterModel(models.Model):
 
     class Meta:
         db_table = 'dentistry_proforma_counter'
+
+
+class DentalProformaLineDecisionModel(models.Model):
+    """Libro append-only de decisiones por línea: nunca se actualiza ni se borra (salvo `carried` en borradores)."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    line = models.ForeignKey(DentalProformaLineModel, on_delete=models.CASCADE, related_name='decisions')
+    kind = models.CharField(max_length=14)
+    decision = models.CharField(max_length=10)
+    decided_at = models.DateTimeField()
+    recorded_by = models.BigIntegerField(null=True, blank=True)
+    recorded_by_name = models.CharField(max_length=150, blank=True, default='')
+    accepted_by_name = models.CharField(max_length=120, blank=True, default='')
+    medium = models.CharField(max_length=20, blank=True, default='')
+    reference = models.CharField(max_length=200, blank=True, default='')
+    reason = models.CharField(max_length=500, blank=True, default='')
+    batch_key = models.UUIDField(null=True, blank=True)
+    source_decision_id = models.UUIDField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'dentistry_proforma_line_decision'
+        ordering = ['decided_at', 'id']
+
+
+class DentalProformaDecisionBatchModel(models.Model):
+    """Una fila por operación confirmada: hace idempotentes los reintentos con la misma clave."""
+    id = models.BigAutoField(primary_key=True)
+    company_id = models.UUIDField()
+    idempotency_key = models.UUIDField()
+    proforma_id = models.UUIDField()
+    payload_hash = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'dentistry_proforma_decision_batch'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'idempotency_key'], name='dental_batch_key_unique'),
+        ]
