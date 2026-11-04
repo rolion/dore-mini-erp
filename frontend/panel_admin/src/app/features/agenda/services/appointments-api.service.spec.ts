@@ -5,13 +5,14 @@ import { AppointmentFailure } from '../models/appointment';
 import {
   AppointmentsApiService, formatDateTime, toFailure, toLocalInput, toServerDateTime,
 } from './appointments-api.service';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 
 describe('AppointmentsApiService', () => {
   let api: AppointmentsApiService;
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
     api = TestBed.inject(AppointmentsApiService);
     http = TestBed.inject(HttpTestingController);
   });

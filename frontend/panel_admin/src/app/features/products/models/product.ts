@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Producto del catálogo. `salePrice` viaja como texto decimal ("35.00") para no perder precisión. */
 export interface BaseUnit {
   id: string;
@@ -19,15 +20,15 @@ export interface BaseUnitDto {
 export type ProductCategory = 'raw_material' | 'packaging' | 'intermediate' | 'finished' | 'merchandise';
 
 export const PRODUCT_CATEGORIES: readonly { value: ProductCategory; label: string }[] = [
-  { value: 'raw_material', label: 'Materia prima' },
-  { value: 'packaging', label: 'Empaque' },
-  { value: 'intermediate', label: 'Intermedio' },
-  { value: 'finished', label: 'Terminado' },
-  { value: 'merchandise', label: 'Mercadería' },
+  { value: 'raw_material', get label() { return tr('INVENTORY.STOCK.MATERIA_PRIMA'); } },
+  { value: 'packaging', get label() { return tr('INVENTORY.STOCK.EMPAQUE'); } },
+  { value: 'intermediate', get label() { return tr('INVENTORY.STOCK.INTERMEDIO'); } },
+  { value: 'finished', get label() { return tr('INVENTORY.STOCK.TERMINADO'); } },
+  { value: 'merchandise', get label() { return tr('INVENTORY.STOCK.MERCADERIA'); } },
 ];
 
 export function categoryLabel(category: ProductCategory | null): string {
-  return PRODUCT_CATEGORIES.find((c) => c.value === category)?.label ?? 'Sin clasificar';
+  return PRODUCT_CATEGORIES.find((c) => c.value === category)?.label ?? tr('INVENTORY.STOCK.SIN_CLASIFICAR');
 }
 
 export interface Product {

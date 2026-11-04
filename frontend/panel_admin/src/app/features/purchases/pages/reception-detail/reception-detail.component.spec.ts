@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
@@ -17,7 +18,7 @@ describe('ReceptionDetailComponent', () => {
     api.get.and.returnValue(receipt instanceof ReceiptApiError ? throwError(() => receipt) : of(receipt));
     await TestBed.configureTestingModule({
       imports: [ReceptionDetailComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ReceiptsApiService, useValue: api },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1', receiptId: 'r-1' }) } } },

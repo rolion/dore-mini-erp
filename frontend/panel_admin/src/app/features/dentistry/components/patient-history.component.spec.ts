@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
@@ -7,7 +8,7 @@ describe('PatientHistoryComponent', () => {
   let api: jasmine.SpyObj<DentistryApiService>;
   beforeEach(async () => {
     api = jasmine.createSpyObj<DentistryApiService>('api', ['history']);
-    await TestBed.configureTestingModule({ imports: [PatientHistoryComponent], providers: [{ provide: DentistryApiService, useValue: api }] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [PatientHistoryComponent], providers: [...provideTestTranslations(), { provide: DentistryApiService, useValue: api }] }).compileComponents();
   });
   it('shows audit author, before/after and server-side pagination', () => {
     api.history.and.returnValue(of({ count: 11, next: '/next', previous: null, results: [{ id: 1, author_id: 1,

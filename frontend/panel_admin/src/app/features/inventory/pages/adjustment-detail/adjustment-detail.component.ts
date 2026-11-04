@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -14,7 +16,7 @@ import { AdjustmentsApiService } from '../../services/adjustments-api.service';
 @Component({
   selector: 'app-adjustment-detail',
   templateUrl: './adjustment-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class AdjustmentDetailComponent implements OnInit {
   readonly kindLabels = MOVEMENT_KIND_LABELS;
@@ -62,7 +64,7 @@ export class AdjustmentDetailComponent implements OnInit {
     (ref.componentInstance as MovementReverseDialogComponent).init({
       id: adjustment.movementId,
       reference: adjustment.reference,
-      typeLabel: `${adjustment.kind === 'in' ? 'Entrada' : 'Salida'} de ajuste`,
+      typeLabel: `${adjustment.kind === 'in' ? tr('INVENTORY.MOVEMENT.ENTRADA') : tr('INVENTORY.MOVEMENT.SALIDA')} de ajuste`,
       productName: adjustment.product.name,
       warehouseName: adjustment.warehouse.name,
       quantity: adjustment.difference.replace(/^-/, ''),
@@ -74,7 +76,7 @@ export class AdjustmentDetailComponent implements OnInit {
     } catch {
       return; // «Volver»: no cambia nada.
     }
-    this.successMessage = 'Ajuste revertido';
+    this.successMessage = tr('INVENTORY.ADJUSTMENT_DETAIL.AJUSTE_REVERTIDO');
     this.load();
   }
 

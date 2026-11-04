@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -30,7 +31,7 @@ describe('PurchaseListComponent', () => {
     query = new BehaviorSubject(convertToParamMap(params));
     await TestBed.configureTestingModule({
       imports: [PurchaseListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: PurchasesApiService, useValue: api },
         { provide: SuppliersApiService, useValue: suppliers },

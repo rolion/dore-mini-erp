@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -31,7 +33,7 @@ function emailFormat(control: AbstractControl<string>): ValidationErrors | null 
 @Component({
   selector: 'app-supplier-quick-create',
   templateUrl: './supplier-quick-create.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class SupplierQuickCreateComponent {
   readonly activeModal = inject(NgbActiveModal);
@@ -80,7 +82,7 @@ export class SupplierQuickCreateComponent {
       .subscribe({
         next: (supplier: Supplier) => {
           this.saving = false;
-          this.toastr.success('Proveedor creado');
+          this.toastr.success(tr('PURCHASES.SUPPLIER_QUICK_CREATE.PROVEEDOR_CREADO'));
           this.activeModal.close(supplier);
         },
         error: (err: SupplierApiError) => {

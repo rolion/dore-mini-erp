@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { AppointmentListComponent } from './appointment-list.component';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 
 const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
 
@@ -13,7 +14,7 @@ describe('AppointmentListComponent', () => {
   function create(query: Record<string, string> = {}) {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        ...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
       ],
     });

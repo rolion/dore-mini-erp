@@ -1,20 +1,20 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Dashboard</h5>
+      <h5 class="page-title m-b-0">{{ 'REPORTING.DASHBOARD.DASHBOARD' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Dashboard</li>
+    <li class="breadcrumb-item">{{ 'REPORTING.DASHBOARD.DASHBOARD' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="d-flex flex-wrap align-items-start justify-content-between mb-3">
       <app-period-selector [effective]="(summary.state$ | async)?.data?.period ?? null"
         (selectionChange)="onSelection($event)" />
       <button type="button" class="btn btn-light" (click)="refresh()" data-testid="refresh">
-        <i class="fas fa-sync-alt me-1" aria-hidden="true"></i>Actualizar
+        <i class="fas fa-sync-alt me-1" aria-hidden="true"></i>{{ 'REPORTING.DASHBOARD.ACTUALIZAR' | translate }}
       </button>
     </div>
 
@@ -24,10 +24,10 @@
       <div class="col-xl-4 col-md-6">
         <div class="card">
           <div class="card-body">
-            <h6 class="text-muted">Ventas</h6>
+            <h6 class="text-muted">{{ 'COMMON.VENTAS' | translate }}</h6>
             @if (d.sources.sales) {
             <h3 class="mb-1" data-testid="sales-total">{{ d.salesTotal | money }}</h3>
-            <small class="text-muted">Total de los pedidos · {{ periodLabel(d.period) }}</small>
+            <small class="text-muted">{{ 'REPORTING.DASHBOARD.TOTAL_DE_LOS_PEDIDOS' | translate: { p0: (periodLabel(d.period)) } }}</small>
             } @else {
             <p class="mb-0 text-muted" data-testid="sales-unavailable">{{ unavailableMessage }}</p>
             }
@@ -37,11 +37,11 @@
       <div class="col-xl-4 col-md-6">
         <div class="card">
           <div class="card-body">
-            <h6 class="text-muted">Gastos</h6>
+            <h6 class="text-muted">{{ 'COMMON.GASTOS' | translate }}</h6>
             @if (d.sources.expenses) {
             <h3 class="mb-1" data-testid="expenses-total">{{ d.expensesTotal | money }}</h3>
-            <small class="text-muted d-block">Gastos vigentes · {{ periodLabel(d.period) }}</small>
-            <a routerLink="/pocketbiz/reports" class="small">Ver gastos por categoría</a>
+            <small class="text-muted d-block">{{ 'REPORTING.DASHBOARD.GASTOS_VIGENTES' | translate: { p0: (periodLabel(d.period)) } }}</small>
+            <a routerLink="/pocketbiz/reports" class="small">{{ 'REPORTING.DASHBOARD.VER_GASTOS_POR_CATEGORIA' | translate }}</a>
             } @else {
             <p class="mb-0 text-muted" data-testid="expenses-unavailable">{{ unavailableMessage }}</p>
             }
@@ -51,7 +51,7 @@
       <div class="col-xl-4 col-md-6">
         <div class="card">
           <div class="card-body">
-            <h6 class="text-muted">Ganancia estimada</h6>
+            <h6 class="text-muted">{{ 'REPORTING.DASHBOARD.GANANCIA_ESTIMADA' | translate }}</h6>
             @if (d.estimatedProfit !== null) {
             <h3 class="mb-1" data-testid="estimated-profit" [class.col-green]="!isNegative(d.estimatedProfit)"
               [class.col-red]="isNegative(d.estimatedProfit)" [ngbTooltip]="profitFormula(d)">
@@ -69,15 +69,15 @@
       <div class="col-xl-4 col-md-6">
         <div class="card">
           <div class="card-body">
-            <h6 class="text-muted">Pedidos</h6>
+            <h6 class="text-muted">{{ 'COMMON.PEDIDOS' | translate }}</h6>
             @if (d.sources.sales) {
             <h3 class="mb-1" data-testid="orders-count">{{ d.ordersCount }}</h3>
-            <small class="text-muted d-block">pedidos · {{ periodLabel(d.period) }}</small>
+            <small class="text-muted d-block">{{ 'REPORTING.DASHBOARD.PEDIDOS' | translate: { p0: (periodLabel(d.period)) } }}</small>
             <small class="text-muted" data-testid="average-ticket">
               @if (d.averageTicket !== null) {
-              Ticket promedio {{ d.averageTicket | money }}
+              {{ 'REPORTING.DASHBOARD.TICKET_PROMEDIO' | translate: { p0: (d.averageTicket | money) } }}
               } @else {
-              Ticket promedio: Sin registros
+              {{ 'REPORTING.DASHBOARD.TICKET_PROMEDIO_SIN_REGISTROS' | translate }}
               }
             </small>
             } @else {
@@ -89,10 +89,10 @@
       <div class="col-xl-4 col-md-6">
         <div class="card">
           <div class="card-body">
-            <h6 class="text-muted">Pendientes de entrega</h6>
+            <h6 class="text-muted">{{ 'REPORTING.DASHBOARD.PENDIENTES_DE_ENTREGA' | translate }}</h6>
             @if (d.sources.sales) {
             <h3 class="mb-1" data-testid="pending-delivery-count">{{ d.pendingDeliveryCount }}</h3>
-            <small class="text-muted">pedidos sin entregar · Estado actual</small>
+            <small class="text-muted">{{ 'REPORTING.DASHBOARD.PEDIDOS_SIN_ENTREGAR_ESTADO_ACTUAL' | translate }}</small>
             } @else {
             <p class="mb-0 text-muted" data-testid="pending-delivery-unavailable">{{ unavailableMessage }}</p>
             }
@@ -102,11 +102,11 @@
       <div class="col-xl-4 col-md-6">
         <div class="card">
           <div class="card-body">
-            <h6 class="text-muted">Pendientes de cobro</h6>
+            <h6 class="text-muted">{{ 'REPORTING.DASHBOARD.PENDIENTES_DE_COBRO' | translate }}</h6>
             @if (d.sources.sales) {
             <h3 class="mb-1" data-testid="pending-collection-count">{{ d.pendingCollectionCount }}</h3>
             <small class="text-muted" data-testid="pending-collection-balance">
-              {{ d.pendingCollectionBalance | money }} por cobrar · Estado actual
+              {{ 'REPORTING.DASHBOARD.POR_COBRAR_ESTADO_ACTUAL' | translate: { p0: (d.pendingCollectionBalance | money) } }}
             </small>
             } @else {
             <p class="mb-0 text-muted" data-testid="pending-collection-unavailable">{{ unavailableMessage }}</p>
@@ -119,12 +119,12 @@
     <p class="text-muted small" data-testid="criteria">{{ d.salesCriteria }}</p>
     }
     } @else if (s.status === 'loading') {
-    <div class="card"><div class="card-body" data-testid="indicators-loading">Cargando indicadores…</div></div>
+    <div class="card"><div class="card-body" data-testid="indicators-loading">{{ 'REPORTING.DASHBOARD.CARGANDO_INDICADORES' | translate }}</div></div>
     } @else if (s.status === 'error') {
     <div class="card">
       <div class="card-body d-flex align-items-center gap-3" data-testid="indicators-error">
         <span class="text-danger">{{ s.error }}</span>
-        <button type="button" class="btn btn-light btn-sm" (click)="summary.reload()">Reintentar</button>
+        <button type="button" class="btn btn-light btn-sm" (click)="summary.reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
       </div>
     </div>
     }
@@ -133,20 +133,20 @@
     @if (pending.state$ | async; as p) {
     <div class="row">
       <div class="col-lg-6">
-        <app-report-card title="Pendientes de entrega" [status]="p.status" [error]="p.error" [subtitle]="pendingNote"
+        <app-report-card [title]="'REPORTING.DASHBOARD.PENDIENTES_DE_ENTREGA' | translate" [status]="p.status" [error]="p.error" [subtitle]="pendingNote"
           [unavailable]="salesDisabled" (retry)="pending.reload()">
           @if (p.data; as data) {
           @if (data.delivery.rows.length) {
           <div class="table-responsive">
             <table class="table table-sm" data-testid="delivery-table">
               <thead>
-                <tr><th>Pedido</th><th>Cliente</th><th>Entrega prevista</th><th>Estado</th></tr>
+                <tr><th>{{ 'COMMON.PEDIDO' | translate }}</th><th>{{ 'COMMON.CLIENTE' | translate }}</th><th>{{ 'COMMON.ENTREGA_PREVISTA' | translate }}</th><th>{{ 'COMMON.ESTADO' | translate }}</th></tr>
               </thead>
               <tbody>
                 @for (row of data.delivery.rows; track row.id) {
                 <tr>
                   <td><a [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a></td>
-                  <td>{{ row.customer?.name || 'Sin cliente' }}</td>
+                  <td>{{ row.customer?.name || ('SALES.ORDER_DETAIL.SIN_CLIENTE' | translate) }}</td>
                   <td>{{ row.expectedDeliveryDate ? (row.expectedDeliveryDate | date: 'dd/MM/yyyy') : '—' }}</td>
                   <td><app-order-status-badge [status]="row.status" /></td>
                 </tr>
@@ -155,31 +155,31 @@
             </table>
           </div>
           @if (data.delivery.count > data.delivery.rows.length) {
-          <small class="text-muted d-block mb-2">Mostrando {{ data.delivery.rows.length }} de {{ data.delivery.count }}.</small>
+          <small class="text-muted d-block mb-2">{{ 'REPORTING.DASHBOARD.MOSTRANDO_DE' | translate: { p0: (data.delivery.rows.length), p1: (data.delivery.count) } }}</small>
           }
           <a class="btn btn-outline-primary btn-sm" routerLink="/pocketbiz/sales/orders"
-            [queryParams]="{ status: 'PENDING_DELIVERY' }" data-testid="delivery-all">Ver todos</a>
+            [queryParams]="{ status: 'PENDING_DELIVERY' }" data-testid="delivery-all">{{ 'REPORTING.DASHBOARD.VER_TODOS' | translate }}</a>
           } @else {
-          <p class="mb-0" data-testid="delivery-empty">Sin registros.</p>
+          <p class="mb-0" data-testid="delivery-empty">{{ 'REPORTING.DASHBOARD.SIN_REGISTROS' | translate }}</p>
           }
           }
         </app-report-card>
       </div>
       <div class="col-lg-6">
-        <app-report-card title="Pendientes de cobro" [status]="p.status" [error]="p.error" [subtitle]="pendingNote"
+        <app-report-card [title]="'REPORTING.DASHBOARD.PENDIENTES_DE_COBRO' | translate" [status]="p.status" [error]="p.error" [subtitle]="pendingNote"
           [unavailable]="salesDisabled" (retry)="pending.reload()">
           @if (p.data; as data) {
           @if (data.collection.rows.length) {
           <div class="table-responsive">
             <table class="table table-sm" data-testid="collection-table">
               <thead>
-                <tr><th>Pedido</th><th>Cliente</th><th class="text-end">Total</th><th class="text-end">Saldo</th><th>Pago</th></tr>
+                <tr><th>{{ 'COMMON.PEDIDO' | translate }}</th><th>{{ 'COMMON.CLIENTE' | translate }}</th><th class="text-end">{{ 'COMMON.TOTAL' | translate }}</th><th class="text-end">{{ 'COMMON.SALDO' | translate }}</th><th>{{ 'COMMON.PAGO' | translate }}</th></tr>
               </thead>
               <tbody>
                 @for (row of data.collection.rows; track row.id) {
                 <tr>
                   <td><a [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a></td>
-                  <td>{{ row.customer?.name || 'Sin cliente' }}</td>
+                  <td>{{ row.customer?.name || ('SALES.ORDER_DETAIL.SIN_CLIENTE' | translate) }}</td>
                   <td class="text-end">{{ row.total | money }}</td>
                   <td class="text-end">{{ row.balance | money }}</td>
                   <td><app-payment-status-badge [status]="row.paymentStatus" /></td>
@@ -189,12 +189,12 @@
             </table>
           </div>
           @if (data.collection.count > data.collection.rows.length) {
-          <small class="text-muted d-block mb-2">Mostrando {{ data.collection.rows.length }} de {{ data.collection.count }}.</small>
+          <small class="text-muted d-block mb-2">{{ 'REPORTING.DASHBOARD.MOSTRANDO_DE' | translate: { p0: (data.collection.rows.length), p1: (data.collection.count) } }}</small>
           }
           <a class="btn btn-outline-primary btn-sm" routerLink="/pocketbiz/sales/orders"
-            [queryParams]="{ status: 'NOT_CANCELLED', pay: 'WITH_BALANCE' }" data-testid="collection-all">Ver todos</a>
+            [queryParams]="{ status: 'NOT_CANCELLED', pay: 'WITH_BALANCE' }" data-testid="collection-all">{{ 'REPORTING.DASHBOARD.VER_TODOS' | translate }}</a>
           } @else {
-          <p class="mb-0" data-testid="collection-empty">Sin registros.</p>
+          <p class="mb-0" data-testid="collection-empty">{{ 'REPORTING.DASHBOARD.SIN_REGISTROS' | translate }}</p>
           }
           }
         </app-report-card>

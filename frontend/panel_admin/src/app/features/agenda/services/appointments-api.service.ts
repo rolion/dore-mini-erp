@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { tr } from '../../../core/i18n/translate';
 import { Page } from '../../../shared/models/page';
 import {
   Appointment, AppointmentAction, AppointmentFailure, AppointmentFilters, AppointmentInput, FreeSlots,
@@ -29,22 +30,22 @@ function firstMessage(value: unknown): string {
 
 export function toFailure(error: unknown): AppointmentFailure {
   if (!(error instanceof HttpErrorResponse)) {
-    return { message: 'No se pudo completar la operación.', fields: {}, conflict: false };
+    return { message: tr('AGENDA.CITAS.ERR_GENERICO'), fields: {}, conflict: false };
   }
   const body = (error.error ?? {}) as Record<string, unknown>;
   if (error.status === 409) {
-    return { message: firstMessage(body['detail']) || 'El horario ya no está disponible.', fields: {}, conflict: true };
+    return { message: firstMessage(body['detail']) || tr('AGENDA.CITAS.ERR_HORARIO'), fields: {}, conflict: true };
   }
   if (error.status === 400) {
     const fields: Record<string, string> = {};
     for (const [key, value] of Object.entries(body)) fields[key] = firstMessage(value);
-    return { message: 'Revisa los datos marcados.', fields, conflict: false };
+    return { message: tr('AGENDA.CITAS.ERR_REVISA'), fields, conflict: false };
   }
   if (error.status === 403) {
-    return { message: 'No tienes permiso o un módulo requerido no está habilitado.', fields: {}, conflict: false };
+    return { message: tr('AGENDA.CITAS.ERR_PERMISO'), fields: {}, conflict: false };
   }
-  if (error.status === 404) return { message: 'Cita no encontrada.', fields: {}, conflict: false };
-  return { message: 'No se pudo conectar con el servidor. Inténtalo de nuevo.', fields: {}, conflict: false };
+  if (error.status === 404) return { message: tr('AGENDA.CITAS.ERR_NO_ENCONTRADA'), fields: {}, conflict: false };
+  return { message: tr('AGENDA.CITAS.ERR_CONEXION'), fields: {}, conflict: false };
 }
 
 @Injectable({ providedIn: 'root' })

@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,10 +28,10 @@ import {
 } from '../../services/reception-quantities';
 import { ReceiptsApiService } from '../../services/receipts-api.service';
 
-export const NO_POSITIVE_MESSAGE = 'Indica una cantidad mayor a cero en al menos un producto.';
-export const FUTURE_DATE_MESSAGE = 'La fecha de recepción no puede ser futura.';
-export const DATE_REQUIRED_MESSAGE = 'La fecha de recepción es obligatoria.';
-export const WAREHOUSE_REQUIRED_MESSAGE = 'Selecciona un almacén para los productos con control de stock.';
+export const NO_POSITIVE_MESSAGE = (): string => tr('PURCHASES.RECEPTION_FORM.INDICA_UNA_CANTIDAD_MAYOR_A_2');
+export const FUTURE_DATE_MESSAGE = (): string => tr('PURCHASES.RECEPTION_FORM.LA_FECHA_DE_RECEPCION_NO');
+export const DATE_REQUIRED_MESSAGE = (): string => tr('PURCHASES.RECEPTION_FORM.LA_FECHA_DE_RECEPCION_ES');
+export const WAREHOUSE_REQUIRED_MESSAGE = (): string => tr('PURCHASES.RECEPTION_FORM.SELECCIONA_UN_ALMACEN_PARA_LOS');
 
 /** Línea del resumen: lo que se recibe y lo que queda pendiente después. */
 export interface ReviewLine {
@@ -42,7 +44,7 @@ export interface ReviewLine {
 @Component({
   selector: 'app-reception-form',
   templateUrl: './reception-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, DatePipe],
 })
 export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
   private fb = inject(FormBuilder);
@@ -54,8 +56,8 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
   private destroyRef = inject(DestroyRef);
 
   readonly today = todayIso();
-  readonly noEntryLabel = SIN_ENTRADA_LABEL;
-  readonly documentalLabel = DOCUMENTAL_LABEL;
+  readonly noEntryLabel = SIN_ENTRADA_LABEL();
+  readonly documentalLabel = DOCUMENTAL_LABEL();
   /** Identificador de la recepción: se reutiliza en cada reintento para no duplicarla. */
   private readonly receiptId = crypto.randomUUID();
   purchaseId = '';
@@ -127,14 +129,14 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
 
   get dateError(): string {
     const value = this.form.controls.receiptDate.value;
-    if (!value) return DATE_REQUIRED_MESSAGE;
-    if (value > this.today) return FUTURE_DATE_MESSAGE;
+    if (!value) return DATE_REQUIRED_MESSAGE();
+    if (value > this.today) return FUTURE_DATE_MESSAGE();
     return this.serverErrors.receiptDate ?? '';
   }
 
   get warehouseError(): string {
     if (this.serverErrors.warehouseId) return this.serverErrors.warehouseId;
-    return this.requiresWarehouse && !this.form.controls.warehouseId.value ? WAREHOUSE_REQUIRED_MESSAGE : '';
+    return this.requiresWarehouse && !this.form.controls.warehouseId.value ? WAREHOUSE_REQUIRED_MESSAGE() : '';
   }
 
   /** Error de la línea: primero lo que se ve en el navegador, luego lo que respondió el servidor. */
@@ -230,7 +232,7 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
       .subscribe({
         next: (receipt) => {
           this.submitted = true;
-          this.toastr.success(`Recepción ${receipt.reference} registrada`);
+          this.toastr.success(tr('PURCHASES.RECEPTION_FORM.RECEPCION_REGISTRADA', { p0: receipt.reference }));
           void this.router.navigate(['/pocketbiz/purchases', this.purchaseId], { queryParams: { tab: 'receptions' } });
         },
         error: (err: ReceiptApiError) => this.onSubmitError(err),

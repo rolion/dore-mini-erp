@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, inject } from '@angular/core';
 import { Route, Router, RouterLink } from '@angular/router';
 import { unsavedChangesGuard } from '../../core/guard/unsaved-changes.guard';
@@ -7,11 +8,11 @@ import { PatientDetailComponent } from './pages/patient-detail.component';
 
 @Component({
   selector: 'app-clinical-denied',
-  imports: [RouterLink],
+  imports: [TranslatePipe, RouterLink],
   template: `<section class="main-content"><div class="card"><div class="card-body">
-    <h4>Acceso clínico no disponible</h4><p>No se pudo verificar el permiso para acceder a Odontología.</p>
-    <a class="btn btn-primary" routerLink="/pocketbiz/dentistry/patients">Reintentar</a>
-    <a class="btn btn-light ms-2" routerLink="/pocketbiz/dashboard/main">Volver al inicio</a>
+    <h4>{{ 'DENTISTRY.ROUTES.CLINICAL_ACCESS_UNAVAILABLE' | translate }}</h4><p>{{ 'DENTISTRY.ROUTES.PERMISSION_CHECK_FAILED' | translate }}</p>
+    <a class="btn btn-primary" routerLink="/pocketbiz/dentistry/patients">{{ 'COMMON.REINTENTAR' | translate }}</a>
+    <a class="btn btn-light ms-2" routerLink="/pocketbiz/dashboard/main">{{ 'COMMON.BACK_TO_HOME' | translate }}</a>
     </div></div></section>`,
 })
 export class ClinicalDeniedComponent {}

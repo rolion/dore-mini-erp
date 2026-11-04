@@ -1,8 +1,10 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, debounceTime, finalize, merge, of, switchMap } from 'rxjs';
+import { tr } from '../../../core/i18n/translate';
 import { Customer } from '../../customers/models/customer';
 import { CustomersApiService } from '../../customers/services/customers-api.service';
 import { Profile } from '../../personnel/models/profile';
@@ -16,7 +18,7 @@ import { fetchAll } from '../services/fetch-all';
 /** Alta de cita (plantilla Formulario del sistema de diseño). Ante un conflicto conserva lo escrito y refresca franjas. */
 @Component({
   selector: 'app-appointment-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './appointment-form.component.html',
 })
 export class AppointmentFormComponent implements OnInit {
@@ -57,7 +59,7 @@ export class AppointmentFormComponent implements OnInit {
     this.form.patchValue({ professional_id: query.get('professional') ?? '', starts: query.get('starts') ?? '' });
     let pending = 3;
     const done = () => { if (--pending === 0) this.loadingOptions = false; };
-    const fail = () => { this.error = 'No se pudieron cargar los datos del formulario.'; done(); };
+    const fail = () => { this.error = tr('AGENDA.CITAS.ERR_CARGAR_FORM'); done(); };
     fetchAll(page => this.personnel.list('professionals', { page, page_size: 100 })).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: people => { this.people = people.filter(person => person.active); done(); }, error: fail });
     fetchAll(page => this.servicesApi.list({ active: true, pageSize: 100, page })).pipe(takeUntilDestroyed(this.destroyRef))
@@ -70,7 +72,7 @@ export class AppointmentFormComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(page => {
       if (page) this.showCustomers(page.results, page.count);
-      else this.error = 'No se pudieron cargar los clientes.';
+      else this.error = tr('AGENDA.CITAS.ERR_CARGAR_CLIENTES');
       if (firstCustomers) { firstCustomers = false; done(); }
     });
     this.form.controls.customer_id.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(id => {

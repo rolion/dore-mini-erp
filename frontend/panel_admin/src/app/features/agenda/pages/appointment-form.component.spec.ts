@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { AppointmentFormComponent } from './appointment-form.component';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 
 const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
 
@@ -12,7 +13,7 @@ describe('AppointmentFormComponent', () => {
   function create(customers: { id: string; name: string }[] = []) {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        ...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParamMap: convertToParamMap({ professional: 'p1', starts: '2030-01-07T09:00' }) } },

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -31,7 +32,7 @@ describe('AdjustmentListComponent', () => {
     warehouses.list.and.returnValue(of(page([makeWarehouse()])));
     await TestBed.configureTestingModule({
       imports: [AdjustmentListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: AdjustmentsApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },
@@ -89,7 +90,7 @@ describe('AdjustmentListComponent', () => {
     const calls = api.list.calls.count();
     component.filterForm.patchValue({ dateFrom: '2026-10-31', dateTo: '2026-10-01' });
     fixture.detectChanges();
-    expect(component.rangeError).toBe(INVALID_RANGE_MESSAGE);
+    expect(component.rangeError).toBe(INVALID_RANGE_MESSAGE());
     expect(api.list.calls.count()).toBe(calls);
   });
 

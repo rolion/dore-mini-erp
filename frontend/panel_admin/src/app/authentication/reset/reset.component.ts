@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -5,7 +6,7 @@ import { FormsModule } from '@angular/forms';
     selector: 'app-reset',
     templateUrl: './reset.component.html',
     styleUrls: ['./reset.component.sass'],
-    imports: [FormsModule]
+    imports: [TranslatePipe, FormsModule]
 })
 export class ResetComponent {
 

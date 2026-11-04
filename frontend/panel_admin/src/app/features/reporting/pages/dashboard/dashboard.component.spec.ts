@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -22,7 +23,7 @@ describe('DashboardComponent', () => {
     api.pending.and.returnValue(of(makePending()));
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ReportingApiService, useValue: api },
         { provide: ModulesService, useValue: modulesFake },
@@ -57,7 +58,7 @@ describe('DashboardComponent', () => {
   it('labels the profit "Ganancia estimada", explains it is an estimate and never mentions cost or margin (AC-25, UI-03)', () => {
     render();
     expect(text()).toContain('Ganancia estimada');
-    expect(byTestId('estimate-note')?.textContent?.trim()).toBe(ESTIMATE_NOTE);
+    expect(byTestId('estimate-note')?.textContent?.trim()).toBe(ESTIMATE_NOTE());
     expect(byTestId('estimated-profit')?.textContent).toContain('Bs 750.00');
     expect(byTestId('estimated-profit')?.classList).toContain('col-green');
     expect(text().toLowerCase()).not.toContain('margen');
@@ -66,7 +67,7 @@ describe('DashboardComponent', () => {
 
   it('shows the exact profit rule on the card (AC-06)', () => {
     render();
-    expect(ESTIMATE_NOTE).toBe('Ventas menos gastos registrados; no incluye costo de producción ni costo de ventas.');
+    expect(ESTIMATE_NOTE()).toBe('Ventas menos gastos registrados; no incluye costo de producción ni costo de ventas.');
     expect(byTestId('profit-unavailable')).toBeNull();
   });
 
@@ -189,7 +190,7 @@ describe('DashboardComponent', () => {
 
   it('lists the pending orders with links, the independence note and "Ver todos" (AC-25)', () => {
     render();
-    expect(text()).toContain(PENDING_NOTE);
+    expect(text()).toContain(PENDING_NOTE());
     const delivery = byTestId('delivery-table') as HTMLElement;
     expect(delivery.textContent).toContain('01/10/2026');
     expect(delivery.textContent).toContain('Ana Pérez');

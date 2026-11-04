@@ -1,36 +1,36 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
-    <li class="breadcrumb-item"><h5 class="page-title m-b-0">Pacientes</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home" aria-hidden="true"></i></a></li>
-    <li class="breadcrumb-item">Odontología</li><li class="breadcrumb-item">Pacientes</li>
+    <li class="breadcrumb-item"><h5 class="page-title m-b-0">{{ 'DENTISTRY.PATIENT_LIST.PACIENTES' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'DENTISTRY.PATIENT_LIST.ODONTOLOGIA' | translate }}</li><li class="breadcrumb-item">{{ 'DENTISTRY.PATIENT_LIST.PACIENTES' | translate }}</li>
   </ul>
   <div class="section-body"><div class="card"><div class="card-body">
     <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-      <h2><strong>Pacientes</strong></h2>
-      <div><label for="patient-search" class="visually-hidden">Buscar por nombre o teléfono</label>
-        <input id="patient-search" class="form-control" placeholder="Nombre o teléfono" [formControl]="search"></div>
-      <select class="form-select w-auto" aria-label="Estado del perfil" [formControl]="active">
-        <option value="true">Activos</option><option value="false">Archivados</option><option value="">Todos</option>
+      <h2><strong>{{ 'DENTISTRY.PATIENT_LIST.PACIENTES' | translate }}</strong></h2>
+      <div><label for="patient-search" class="visually-hidden">{{ 'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate }}</label>
+        <input id="patient-search" class="form-control" [placeholder]="'DENTISTRY.PATIENT_LIST.NOMBRE_O_TELEFONO' | translate" [formControl]="search"></div>
+      <select class="form-select w-auto" [attr.aria-label]="'DENTISTRY.PATIENT_LIST.ESTADO_DEL_PERFIL' | translate" [formControl]="active">
+        <option value="true">{{ 'COMMON.ACTIVOS' | translate }}</option><option value="false">{{ 'DENTISTRY.PATIENT_LIST.ARCHIVADOS' | translate }}</option><option value="">{{ 'COMMON.TODOS' | translate }}</option>
       </select>
-      <button type="button" class="btn btn-primary ms-lg-auto" (click)="openCreate()"><i class="fas fa-plus me-2" aria-hidden="true"></i>Nuevo paciente</button>
+      <button type="button" class="btn btn-primary ms-lg-auto" (click)="openCreate()"><i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'DENTISTRY.PATIENT_LIST.NUEVO_PACIENTE' | translate }}</button>
     </div>
-    @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light ms-2" (click)="retry()">Reintentar</button></div> }
+    @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light ms-2" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
     @if (!loading && !error && count === 0) {
-      <p>{{ search.value || active.value !== 'true' ? 'No hay resultados para estos filtros.' : 'Aún no hay pacientes registrados.' }}</p>
-      <button type="button" class="btn btn-light mb-3" (click)="clear()">Limpiar filtros</button>
+      <p>{{ search.value || active.value !== 'true' ? ('DENTISTRY.PATIENT_LIST.NO_HAY_RESULTADOS_PARA_ESTOS' | translate) : ('DENTISTRY.PATIENT_LIST.AUN_NO_HAY_PACIENTES_REGISTRADOS' | translate) }}</p>
+      <button type="button" class="btn btn-light mb-3" (click)="clear()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
     }
     <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
       [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [scrollbarH]="true" [externalPaging]="true"
       [count]="count" [offset]="page - 1" [limit]="10" [messages]="messages" (page)="filter($event.offset + 1)">
-      <ngx-datatable-column name="Paciente" prop="customer.name" [sortable]="false" [minWidth]="180"><ng-template let-row="row" ngx-datatable-cell-template>
+      <ngx-datatable-column [name]="'DENTISTRY.PATIENT_LIST.PACIENTE' | translate" prop="customer.name" [sortable]="false" [minWidth]="180"><ng-template let-row="row" ngx-datatable-cell-template>
         <a class="fw-bold" [routerLink]="['/pocketbiz/dentistry/patients', row.id]" [queryParams]="filters">{{ row.customer.name }}</a>
       </ng-template></ngx-datatable-column>
-      <ngx-datatable-column name="Teléfono" prop="customer.phone" [sortable]="false" [minWidth]="130" />
-      <ngx-datatable-column name="Estado" [sortable]="false" [minWidth]="100"><ng-template let-row="row" ngx-datatable-cell-template>
-        <span class="badge-outline" [class.col-green]="row.active" [class.col-orange]="!row.active">{{ row.active ? 'Activo' : 'Archivado' }}</span>
+      <ngx-datatable-column [name]="'COMMON.TELEFONO' | translate" prop="customer.phone" [sortable]="false" [minWidth]="130" />
+      <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [minWidth]="100"><ng-template let-row="row" ngx-datatable-cell-template>
+        <span class="badge-outline" [class.col-green]="row.active" [class.col-orange]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('DENTISTRY.PATIENT_DETAIL.ARCHIVADO' | translate) }}</span>
       </ng-template></ngx-datatable-column>
-      <ngx-datatable-column name="Acciones" [sortable]="false" [minWidth]="90"><ng-template let-row="row" ngx-datatable-cell-template>
-        <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/dentistry/patients', row.id]" [queryParams]="filters" title="Ver ficha" aria-label="Ver ficha"><i class="fas fa-eye" aria-hidden="true"></i></a>
+      <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [minWidth]="90"><ng-template let-row="row" ngx-datatable-cell-template>
+        <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/dentistry/patients', row.id]" [queryParams]="filters" [title]="'DENTISTRY.PATIENT_LIST.VER_FICHA' | translate" [attr.aria-label]="'DENTISTRY.PATIENT_LIST.VER_FICHA' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>
       </ng-template></ngx-datatable-column>
     </ngx-datatable>
   </div></div></div>

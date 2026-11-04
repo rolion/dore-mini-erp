@@ -5,10 +5,10 @@
   <ng-scrollbar [style.height]="maxHeight + 'px'" visibility="hover">
     <div class="settingSidebar-body ps-container ps-theme-default">
       <div class=" fade show active">
-        <div class="setting-panel-header">Setting Panel
+        <div class="setting-panel-header">{{ 'LAYOUT.RIGHT_SIDEBAR.SETTING_PANEL' | translate }}
         </div>
         <div class="p-15 border-bottom">
-          <h6 class="font-medium m-b-10">Select Layout</h6>
+          <h6 class="font-medium m-b-10">{{ 'LAYOUT.RIGHT_SIDEBAR.SELECT_LAYOUT' | translate }}</h6>
           <div class="flex flex-wrap hiddenradio">
             <div class="flex flex-col ">
               <label>
@@ -16,19 +16,19 @@
                   (click)="lightThemeBtnClick()">
                 <img src="assets/images/light.png">
               </label>
-              <div class="mt-1 text-md text-center"> Light </div>
+              <div class="mt-1 text-md text-center"> {{ 'LAYOUT.RIGHT_SIDEBAR.LIGHT' | translate }} </div>
             </div>
             <div class="flex flex-col mt-3"> <label>
                 <input type="radio" name="value" value="dark" [checked]="isDarTheme === true ? true : false"
                   (click)="darkThemeBtnClick()">
                 <img src="assets/images/dark.png">
               </label>
-              <div class="mt-1 text-md text-center"> Dark </div>
+              <div class="mt-1 text-md text-center"> {{ 'LAYOUT.RIGHT_SIDEBAR.DARK' | translate }} </div>
             </div>
           </div>
         </div>
         <div class="p-15 border-bottom">
-          <h6 class="font-medium m-b-10">Sidebar Color</h6>
+          <h6 class="font-medium m-b-10">{{ 'LAYOUT.RIGHT_SIDEBAR.SIDEBAR_COLOR' | translate }}</h6>
           <div class="selectgroup selectgroup-pills sidebar-color">
             <label class="selectgroup-item">
               <input type="radio" name="icon-input" value="light" (click)="lightSidebarBtnClick()"
@@ -45,7 +45,7 @@
           </div>
         </div>
         <div class="p-15 border-bottom">
-          <h6 class="font-medium m-b-10">Color Theme</h6>
+          <h6 class="font-medium m-b-10">{{ 'LAYOUT.RIGHT_SIDEBAR.COLOR_THEME' | translate }}</h6>
           <div class="theme-setting-options">
             <ul class="choose-theme list-unstyled mb-0">
               <li data-theme="white" [ngClass]="{'active': selectedBgColor === 'white'}" (click)="selectTheme('white')">

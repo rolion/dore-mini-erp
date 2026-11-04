@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -25,8 +27,8 @@ import { ValuationApiError, ValuationApiService, ValuationLineErrors } from '../
 export type ValuationPhase = 'loading' | 'error' | 'adopted' | 'wizard';
 export type ValuationStep = 'reconcile' | 'values' | 'review';
 
-export const ADOPTION_SUCCESS_MESSAGE = 'Valoración adoptada';
-export const STOCK_CHANGED_MESSAGE = 'Las existencias cambiaron desde la conciliación. Revisa las cantidades y vuelve a ingresar los valores que falten.';
+export const ADOPTION_SUCCESS_MESSAGE = (): string => tr('INVENTORY.VALUATION.VALORACION_ADOPTADA');
+export const STOCK_CHANGED_MESSAGE = (): string => tr('INVENTORY.VALUATION.LAS_EXISTENCIAS_CAMBIARON_DESDE_LA');
 
 type RowGroup = FormGroup<{
   totalValue: FormControl<string>;
@@ -49,13 +51,13 @@ export interface ReviewRow {
   selector: 'app-valuation',
   templateUrl: './valuation.component.html',
   styleUrl: './valuation.component.scss',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, DatePipe, MoneyPipe],
 })
 export class ValuationComponent implements OnInit, HasUnsavedChanges {
-  readonly pendingLabel = PENDING_LABEL;
-  readonly methodLabel = METHOD_LABEL;
+  readonly pendingLabel = PENDING_LABEL();
+  readonly methodLabel = METHOD_LABEL();
   readonly sourceMaxLength = SOURCE_MAX_LENGTH;
-  readonly defaultSource = DEFAULT_SOURCE;
+  readonly defaultSource = DEFAULT_SOURCE();
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly api = inject(ValuationApiService);
   private readonly toastr = inject(ToastrService);
@@ -260,7 +262,7 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
         totalValue: row.declaredZero ? '0.00' : this.twoDecimals(row.totalValue.trim()),
         unitCost: this.unitCost(index) ?? '',
         declaredZero: row.declaredZero,
-        source: row.source.trim() || DEFAULT_SOURCE,
+        source: row.source.trim() || DEFAULT_SOURCE(),
       };
     });
   }
@@ -314,7 +316,7 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
           this.adoption = adoption;
           this.justAdopted = true;
           this.phase = 'adopted';
-          this.toastr.success(ADOPTION_SUCCESS_MESSAGE);
+          this.toastr.success(ADOPTION_SUCCESS_MESSAGE());
         },
         error: (err: ValuationApiError) => {
           this.saving = false;
@@ -333,7 +335,7 @@ export class ValuationComponent implements OnInit, HasUnsavedChanges {
       this.conflictMessage = err.message;
       this.step = 'reconcile';
     } else if (err.code === 'stock_changed') {
-      this.loadProposal('reconcile', STOCK_CHANGED_MESSAGE);
+      this.loadProposal('reconcile', STOCK_CHANGED_MESSAGE());
     } else if (err.code === 'valuation_already_adopted' || err.code === 'adoption_id_reused') {
       this.conflictMessage = err.message;
       this.load();

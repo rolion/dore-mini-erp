@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { importProvidersFrom } from '@angular/core';
@@ -5,7 +6,6 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { FeatherModule } from 'angular-feather';
 import { allIcons } from 'angular-feather/icons';
-import { provideTranslateService } from '@ngx-translate/core';
 import { AuthService, User } from '@core';
 import { SidebarComponent } from './sidebar.component';
 import { RouteInfo } from './sidebar.metadata';
@@ -17,11 +17,10 @@ describe('SidebarComponent', () => {
     session = null;
     TestBed.configureTestingModule({
     imports: [SidebarComponent],
-    providers: [
+    providers: [...provideTestTranslations(), 
       provideRouter([]),
       provideHttpClient(),
       provideHttpClientTesting(),
-      provideTranslateService(),
       importProvidersFrom(FeatherModule.pick(allIcons)),
       { provide: AuthService, useValue: { get currentUserValue() { return session; } } },
     ]

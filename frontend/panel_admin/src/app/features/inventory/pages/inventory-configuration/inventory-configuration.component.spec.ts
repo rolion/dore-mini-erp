@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -16,7 +17,7 @@ describe('InventoryConfigurationComponent', () => {
     units.list.and.returnValue(of(empty));
     TestBed.configureTestingModule({
       imports: [InventoryConfigurationComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: WarehousesApiService, useValue: warehouses },
         { provide: UnitsApiService, useValue: units },

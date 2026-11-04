@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, UrlTree } from '@angular/router';
 import { Observable, firstValueFrom, of, throwError } from 'rxjs';
@@ -7,7 +8,7 @@ describe('clinicalGuard', () => {
   let api: jasmine.SpyObj<DentistryApiService>;
   beforeEach(() => {
     api = jasmine.createSpyObj<DentistryApiService>('api', ['capabilities']);
-    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: DentistryApiService, useValue: api }] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideRouter([]), { provide: DentistryApiService, useValue: api }] });
   });
   const run = () => firstValueFrom(TestBed.runInInjectionContext(() => clinicalGuard({} as never, {} as never)) as Observable<boolean | UrlTree>);
   it('checks backend capability before allowing navigation', async () => {

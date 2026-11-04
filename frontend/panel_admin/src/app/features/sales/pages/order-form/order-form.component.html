@@ -1,38 +1,38 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ isEdit ? 'Editar pedido' : 'Nuevo pedido' }}</h5>
+      <h5 class="page-title m-b-0">{{ isEdit ? ('SALES.ORDER_FORM.EDITAR_PEDIDO' | translate) : ('SALES.ORDER_LIST.NUEVO_PEDIDO' | translate) }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/sales/orders">Pedidos</a></li>
-    <li class="breadcrumb-item">{{ isEdit ? 'Editar' : 'Nuevo' }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/sales/orders">{{ 'COMMON.PEDIDOS' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ isEdit ? ('COMMON.EDITAR' | translate) : ('CUSTOMERS.CUSTOMER_FORM.NUEVO' | translate) }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12 col-md-12 col-lg-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ isEdit ? 'Editar pedido' : 'Nuevo pedido' }}</h4>
+            <h4>{{ isEdit ? ('SALES.ORDER_FORM.EDITAR_PEDIDO' | translate) : ('SALES.ORDER_LIST.NUEVO_PEDIDO' | translate) }}</h4>
           </div>
           <div class="card-body">
             <form class="register-form m-4" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
               <div class="row">
                 @if (!customersDisabled) {
                 <div class="form-group col-md-6">
-                  <label for="order-customer">Cliente</label>
+                  <label for="order-customer">{{ 'COMMON.CLIENTE' | translate }}</label>
                   <ng-select inputId="order-customer" [items]="(customers$ | async) ?? []" bindLabel="name"
                     [typeahead]="customerInput$" [loading]="customersLoading" formControlName="customer"
-                    placeholder="Sin cliente (venta de mostrador)" notFoundText="Sin resultados"
-                    typeToSearchText="Escriba para buscar" [clearable]="true" ariaLabel="Cliente">
+                    [placeholder]="'SALES.ORDER_FORM.SIN_CLIENTE_VENTA_DE_MOSTRADOR' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                    [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="true" [ariaLabel]="'COMMON.CLIENTE' | translate">
                     <ng-template ng-footer-tmp>
                       <button type="button" class="btn btn-link w-100 text-start" data-testid="new-customer"
-                        (click)="createCustomer()">+ Nuevo cliente</button>
+                        (click)="createCustomer()">{{ 'SALES.ORDER_FORM.NUEVO_CLIENTE' | translate }}</button>
                     </ng-template>
                   </ng-select>
-                  <small class="form-text text-muted">Opcional. Busque por nombre o teléfono.</small>
+                  <small class="form-text text-muted">{{ 'SALES.ORDER_FORM.OPCIONAL_BUSQUE_POR_NOMBRE_O' | translate }}</small>
                   @if (hasError('customerId')) {
                   <small class="form-text text-danger d-block" data-testid="customer-error">
                     {{ serverErrors.customerId }}
@@ -41,34 +41,34 @@
                 </div>
                 }
                 <div class="form-group col-md-6">
-                  <label for="order-channel">Canal de venta <span class="text-danger">*</span></label>
+                  <label for="order-channel">{{ 'SALES.ORDER_FORM.CANAL_DE_VENTA' | translate }} <span class="text-danger">*</span></label>
                   <select id="order-channel" class="form-select form-control" formControlName="salesChannel">
-                    <option value="" disabled>Seleccione un canal</option>
+                    <option value="" disabled>{{ 'SALES.ORDER_FORM.SELECCIONE_UN_CANAL' | translate }}</option>
                     @for (channel of channels; track channel) {
                     <option [value]="channel">{{ channelLabels[channel] }}</option>
                     }
                   </select>
                   @if (hasError('salesChannel')) {
                   <small class="form-text text-danger" data-testid="channel-error">
-                    {{ serverErrors.salesChannel || 'El canal de venta es obligatorio.' }}
+                    {{ serverErrors.salesChannel || ('SALES.ORDER_FORM.EL_CANAL_DE_VENTA_ES' | translate) }}
                   </small>
                   }
                 </div>
               </div>
               <div class="row">
                 <div class="form-group col-md-6">
-                  <label for="order-date">Fecha del pedido <span class="text-danger">*</span></label>
+                  <label for="order-date">{{ 'SALES.ORDER_FORM.FECHA_DEL_PEDIDO' | translate }} <span class="text-danger">*</span></label>
                   <input id="order-date" type="date" class="form-control" formControlName="orderDate">
                   @if (hasError('orderDate')) {
                   <small class="form-text text-danger" data-testid="order-date-error">
-                    {{ serverErrors.orderDate || 'La fecha del pedido es obligatoria.' }}
+                    {{ serverErrors.orderDate || ('SALES.ORDER_FORM.LA_FECHA_DEL_PEDIDO_ES' | translate) }}
                   </small>
                   }
                 </div>
                 <div class="form-group col-md-6">
-                  <label for="order-expected">Entrega prevista</label>
+                  <label for="order-expected">{{ 'COMMON.ENTREGA_PREVISTA' | translate }}</label>
                   <input id="order-expected" type="date" class="form-control" formControlName="expectedDeliveryDate">
-                  <small class="form-text text-muted">Puede completarla después.</small>
+                  <small class="form-text text-muted">{{ 'SALES.ORDER_FORM.PUEDE_COMPLETARLA_DESPUES' | translate }}</small>
                   @if (hasError('expectedDeliveryDate')) {
                   <small class="form-text text-danger d-block" data-testid="expected-error">
                     {{ serverErrors.expectedDeliveryDate }}
@@ -78,12 +78,12 @@
               </div>
               <div class="row">
                 <div class="form-group col-md-12">
-                  <label for="order-notes">Notas</label>
-                  <textarea id="order-notes" class="form-control" rows="3" placeholder="Notas"
+                  <label for="order-notes">{{ 'COMMON.NOTAS' | translate }}</label>
+                  <textarea id="order-notes" class="form-control" rows="3" [placeholder]="'COMMON.NOTAS' | translate"
                     formControlName="notes" [attr.maxlength]="notesMaxLength"></textarea>
                   @if (hasError('notes')) {
                   <small class="form-text text-danger" data-testid="notes-error">
-                    {{ serverErrors.notes || 'Las notas no pueden superar ' + notesMaxLength + ' caracteres.' }}
+                    {{ serverErrors.notes || ('CUSTOMERS.CUSTOMER_FORM.LAS_NOTAS_NO_PUEDEN_SUPERAR' | translate: { n: notesMaxLength }) }}
                   </small>
                   }
                 </div>
@@ -91,10 +91,10 @@
               <div class="row">
                 <div class="col-md-12">
                   <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">
-                    Guardar
+                    {{ 'COMMON.GUARDAR' | translate }}
                   </button>
                   <a class="btn btn-light ms-2"
-                    [routerLink]="isEdit ? ['/pocketbiz/sales/orders', orderId] : ['/pocketbiz/sales/orders']">Cancelar</a>
+                    [routerLink]="isEdit ? ['/pocketbiz/sales/orders', orderId] : ['/pocketbiz/sales/orders']">{{ 'COMMON.CANCELAR' | translate }}</a>
                 </div>
               </div>
             </form>

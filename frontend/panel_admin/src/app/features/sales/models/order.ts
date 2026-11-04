@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { SALES_CHANNELS, SALES_CHANNEL_LABELS, SalesChannel } from '../../../shared/models/sales-channel';
 
 // El canal de venta es un tipo compartido (lo usan Pedidos y Reportes); se reexporta para no cambiar los imports de Sales.
@@ -14,26 +15,26 @@ export const PAYMENT_STATUSES: readonly PaymentStatus[] = ['PENDING', 'PARTIAL',
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ['CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER'];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  NEW: 'Nuevo',
-  IN_PREPARATION: 'En preparación',
-  READY: 'Listo',
-  DELIVERED: 'Entregado',
-  CANCELLED: 'Cancelado',
+  get NEW() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.NUEVO'); },
+  get IN_PREPARATION() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.EN_PREPARACION'); },
+  get READY() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.LISTO'); },
+  get DELIVERED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ENTREGADO'); },
+  get CANCELLED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CANCELADO'); },
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  PENDING: 'Pendiente',
-  PARTIAL: 'Parcial',
-  PAID: 'Pagado',
-  REFUNDED: 'Reembolsado',
+  get PENDING() { return tr('INVENTORY.VALUATION.PENDIENTE'); },
+  get PARTIAL() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PARCIAL'); },
+  get PAID() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PAGADO'); },
+  get REFUNDED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.REEMBOLSADO'); },
 };
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  CASH: 'Efectivo',
+  get CASH() { return tr('EXPENSES.EXPENSE.EFECTIVO'); },
   QR: 'QR',
-  BANK_TRANSFER: 'Transferencia',
-  CARD: 'Tarjeta',
-  OTHER: 'Otro',
+  get BANK_TRANSFER() { return tr('EXPENSES.EXPENSE.TRANSFERENCIA'); },
+  get CARD() { return tr('EXPENSES.EXPENSE.TARJETA'); },
+  get OTHER() { return tr('EXPENSES.EXPENSE.OTRO'); },
 };
 
 /** Colores de la plantilla (`badge-outline col-*`); el texto y el icono siempre acompañan al color. */

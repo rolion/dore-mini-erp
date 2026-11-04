@@ -2,12 +2,14 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
+import { tr } from '../../../core/i18n/translate';
 import { Profile } from '../../personnel/models/profile';
 import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import {
-  Appointment, AppointmentFilters, AppointmentStatus, STATUS_CLASSES, STATUS_LABELS, Slot,
+  APPOINTMENT_STATUSES, Appointment, AppointmentFilters, AppointmentStatus, STATUS_CLASSES, Slot, statusLabel,
 } from '../models/appointment';
 import { AppointmentsApiService, formatDateTime } from '../services/appointments-api.service';
 import { fetchAll } from '../services/fetch-all';
@@ -21,7 +23,7 @@ interface DayGroup {
 /** Agenda → Citas: listado con filtros y calendario diario/semanal textual (ver DDR de citas). */
 @Component({
   selector: 'app-appointment-list',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './appointment-list.component.html',
   styleUrl: './appointment-list.component.scss',
 })
@@ -33,8 +35,8 @@ export class AppointmentListComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  readonly statuses = Object.keys(STATUS_LABELS) as AppointmentStatus[];
-  readonly labels = STATUS_LABELS;
+  readonly statuses = APPOINTMENT_STATUSES;
+  readonly statusLabel = statusLabel;
   readonly classes = STATUS_CLASSES;
   readonly formatDateTime = formatDateTime;
   readonly filters = this.fb.group({ from: '', to: '', professional: '', status: '', search: '' });
@@ -56,7 +58,7 @@ export class AppointmentListComponent implements OnInit {
       status: query.get('status') ?? '', search: query.get('search') ?? '',
     });
     fetchAll(page => this.personnel.list('professionals', { page, page_size: 100 })).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: people => this.people = people, error: () => this.error = 'No se pudieron cargar los profesionales.' });
+      .subscribe({ next: people => this.people = people, error: () => this.error = tr('AGENDA.CITAS.ERR_CARGAR_PROFESIONALES') });
     if (query.get('view') === 'calendar') {
       this.calendar.patchValue({
         professional: query.get('cal_professional') ?? '', date: query.get('cal_date') || this.today(),
@@ -99,7 +101,7 @@ export class AppointmentListComponent implements OnInit {
         error: (failure: HttpErrorResponse) => {
           // Una página que dejó de existir (enlace viejo, menos resultados) vuelve a la primera en vez de quedar atascada.
           if (failure.status === 404 && page > 1) this.search(1);
-          else this.error = 'No se pudieron cargar las citas.';
+          else this.error = tr('AGENDA.CITAS.ERR_CARGAR_CITAS');
         },
       });
   }
@@ -158,7 +160,7 @@ export class AppointmentListComponent implements OnInit {
         }
         this.groups = groups;
       },
-      error: () => this.error = 'No se pudo cargar el calendario. Inténtalo de nuevo.',
+      error: () => this.error = tr('AGENDA.CITAS.ERR_CARGAR_CALENDARIO'),
     });
   }
 

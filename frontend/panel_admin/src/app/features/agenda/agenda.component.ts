@@ -1,3 +1,5 @@
+import { tr } from '../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,7 +12,7 @@ import { AgendaApiService } from './services/agenda-api.service';
 
 @Component({
   selector: 'app-agenda',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
   templateUrl: './agenda.component.html',
   styleUrl: './agenda.component.scss',
 })
@@ -19,7 +21,9 @@ export class AgendaComponent {
   private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
-  readonly days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+  get days() {
+    return [tr('AGENDA.AGENDA.LUNES'), tr('AGENDA.AGENDA.MARTES'), tr('AGENDA.AGENDA.MIERCOLES'), tr('AGENDA.AGENDA.JUEVES'), tr('AGENDA.AGENDA.VIERNES'), tr('AGENDA.AGENDA.SABADO'), tr('AGENDA.AGENDA.DOMINGO')];
+  }
   readonly selection = this.fb.control('');
   readonly shift = this.fb.group({
     day: 0, starts: ['', Validators.required], ends: ['', Validators.required],
@@ -144,7 +148,7 @@ export class AgendaComponent {
     this.saved = '';
     this.saving = true;
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
-      next: () => { dialog.close(); reset(); this.saved = 'Cambios guardados.'; this.load(); },
+      next: () => { dialog.close(); reset(); this.saved = tr('AGENDA.AGENDA.CAMBIOS_GUARDADOS'); this.load(); },
       error: error => {
         this.dialogError = this.message(error);
         requestAnimationFrame(() => dialog.querySelector<HTMLElement>('[data-save-error]')?.focus());
@@ -161,6 +165,6 @@ export class AgendaComponent {
     const text = payload && typeof payload === 'object'
       ? Object.values(payload).flat().filter(value => typeof value === 'string').join(' ')
       : '';
-    return text || 'No se pudo completar la operación. Inténtalo de nuevo.';
+    return text || tr('SETTINGS.SETTING.NO_SE_PUDO_COMPLETAR_LA');
   }
 }

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -10,7 +11,7 @@ import { CANCEL_REASON_MAX_LENGTH, Purchase } from '../../models/purchase';
 @Component({
   selector: 'app-purchase-cancel-dialog',
   templateUrl: './purchase-cancel-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class PurchaseCancelDialogComponent {
   readonly maxLength = CANCEL_REASON_MAX_LENGTH;

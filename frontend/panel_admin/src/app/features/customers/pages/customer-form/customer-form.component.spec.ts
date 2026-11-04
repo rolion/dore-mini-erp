@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -24,7 +25,7 @@ describe('CustomerFormComponent', () => {
     api = jasmine.createSpyObj<CustomersApiService>('CustomersApiService', ['get', 'create', 'update']);
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([
           { path: 'pocketbiz/customers/new', component: CustomerFormComponent },
           { path: 'pocketbiz/customers/:id/edit', component: CustomerFormComponent },

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Errores de validación por campo devueltos por el servidor (clave = campo del formulario). */
 export type FieldErrors = Partial<Record<string, string[]>>;
 
@@ -31,10 +32,10 @@ export class InventoryApiError extends Error {
   }
 }
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
-export const NOT_FOUND_MESSAGE = 'No se encontró el registro.';
+export const NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
+export const NOT_FOUND_MESSAGE = (): string => tr('EXPENSES.API_ERROR.NO_SE_ENCONTRO_EL_REGISTRO');
 
 /** Campo del servidor → campo del formulario. */
 const FIELD_MAP: Record<string, string> = {
@@ -107,23 +108,23 @@ function toInsufficientStock(body: unknown): InsufficientStockInfo | null {
 /** Traduce una respuesta HTTP de error a un error con mensaje listo para mostrar. */
 export function toApiError(status: number, body: unknown): InventoryApiError {
   if (status === 0) {
-    return new InventoryApiError(NETWORK_ERROR_MESSAGE, 0);
+    return new InventoryApiError(NETWORK_ERROR_MESSAGE(), 0);
   }
   if (status === 400) {
-    return new InventoryApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(body), null, toLineErrors(body));
+    return new InventoryApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(body), null, toLineErrors(body));
   }
   const record = (body && typeof body === 'object' ? body : {}) as { detail?: unknown; code?: unknown };
   const detail = typeof record.detail === 'string' ? record.detail : '';
   const code = typeof record.code === 'string' ? record.code : null;
   if (status === 404) {
-    return new InventoryApiError(detail || NOT_FOUND_MESSAGE, 404);
+    return new InventoryApiError(detail || NOT_FOUND_MESSAGE(), 404);
   }
   if (status === 409) {
     const history = code === 'stock_history_exists' ? toHistoryProductIds(body) : [];
     const balance = (body as { current_balance?: unknown } | null)?.current_balance;
     const current = code === 'balance_changed' && typeof balance === 'string' ? balance : null;
     const stock = code === 'insufficient_stock' ? toInsufficientStock(body) : null;
-    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE, 409, {}, code, [], history, current, stock);
+    return new InventoryApiError(detail || GENERIC_ERROR_MESSAGE(), 409, {}, code, [], history, current, stock);
   }
-  return new InventoryApiError(GENERIC_ERROR_MESSAGE, status);
+  return new InventoryApiError(GENERIC_ERROR_MESSAGE(), status);
 }

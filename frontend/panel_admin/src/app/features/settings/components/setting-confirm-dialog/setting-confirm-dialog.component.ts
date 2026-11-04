@@ -1,15 +1,18 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, inject } from '@angular/core';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 /** Confirma un ajuste antes de guardarlo activado. Quien lo abre fija `title`, `message` y `confirmLabel`. */
 @Component({
+  imports: [TranslatePipe],
   selector: 'app-setting-confirm-dialog',
   templateUrl: './setting-confirm-dialog.component.html',
 })
 export class SettingConfirmDialogComponent {
   title = '';
   message = '';
-  confirmLabel = 'Confirmar';
+  confirmLabel = tr('PERSONNEL.PROFILE_CONFIRMATION.CONFIRMAR');
 
   readonly activeModal = inject(NgbActiveModal);
 }

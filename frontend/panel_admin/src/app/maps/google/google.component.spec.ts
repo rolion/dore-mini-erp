@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../core/i18n/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { GoogleMapsModule } from '@angular/google-maps';
 import { provideTemplateTestServices } from '../../../testing/template-test.providers';
@@ -11,7 +12,7 @@ describe('GoogleComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [provideTemplateTestServices()],
+      providers: [...provideTestTranslations(), provideTemplateTestServices()],
     imports: [GoogleComponent]
 })
     .overrideComponent(GoogleComponent, {

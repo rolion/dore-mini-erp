@@ -1,13 +1,13 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Clientes</h5>
+      <h5 class="page-title m-b-0">{{ 'CUSTOMERS.CUSTOMER_LIST.CLIENTES' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">Cliente</li>
+    <li class="breadcrumb-item">{{ 'COMMON.CLIENTE' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row clearfix">
@@ -20,7 +20,7 @@
                   <div class="col-auto p-0">
                     <div class="ngxTableHeader">
                       <div class="table-title">
-                        <h2><strong>Clientes</strong></h2>
+                        <h2><strong>{{ 'CUSTOMERS.CUSTOMER_LIST.CLIENTES' | translate }}</strong></h2>
                       </div>
                     </div>
                   </div>
@@ -29,21 +29,21 @@
                       <div class="table-search-area">
                         <div>
                           <label for="customer-search"><i class="material-icons search-icon">search</i></label>
-                          <input id="customer-search" placeholder="Buscar por nombre o teléfono" type="text"
+                          <input id="customer-search" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate" type="text"
                             class="browser-default search-field" [formControl]="searchControl"
-                            aria-label="Buscar por nombre o teléfono">
+                            [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate">
                         </div>
                       </div>
                       <div class="header-buttons-left">
                         <div class="d-flex align-items-center gap-2 ms-3">
                           <select class="form-select form-control w-auto" [formControl]="statusControl"
-                            aria-label="Filtrar por estado">
-                            <option value="active">Activos</option>
-                            <option value="inactive">Inactivos</option>
-                            <option value="all">Todos</option>
+                            [attr.aria-label]="'COMMON.FILTRAR_POR_ESTADO' | translate">
+                            <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+                            <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
+                            <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
                           </select>
                           <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/customers/new"
-                            title="Nuevo cliente" aria-label="Nuevo cliente">
+                            [title]="'CUSTOMERS.CUSTOMER_LIST.NUEVO_CLIENTE' | translate" [attr.aria-label]="'CUSTOMERS.CUSTOMER_LIST.NUEVO_CLIENTE' | translate">
                             <i class="material-icons">add</i>
                           </a>
                         </div>
@@ -56,44 +56,44 @@
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
-              <ngx-datatable-column name="Nombre" [sortable]="false" [width]="220">
+              <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [width]="220">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold" [routerLink]="['/pocketbiz/customers', row.id]">{{row.name}}</a>
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Teléfono" [sortable]="false" [width]="160">
+              <ngx-datatable-column [name]="'COMMON.TELEFONO' | translate" [sortable]="false" [width]="160">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{row.phone || '—'}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Correo" [sortable]="false" [width]="220">
+              <ngx-datatable-column [name]="'CUSTOMERS.CUSTOMER_LIST.CORREO' | translate" [sortable]="false" [width]="220">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{row.email || '—'}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Estado" [sortable]="false" [width]="110">
+              <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (row.active) {
-                  <div class="badge-outline col-green">Activo</div>
+                  <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
                   } @else {
-                  <div class="badge-outline col-red">Inactivo</div>
+                  <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
                   }
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Acciones" [sortable]="false" [width]="180">
+              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="180">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <span>
-                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/customers', row.id]" title="Ver perfil"
-                      aria-label="Ver perfil">
+                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/customers', row.id]" [title]="'CUSTOMERS.CUSTOMER_LIST.VER_PERFIL' | translate"
+                      [attr.aria-label]="'CUSTOMERS.CUSTOMER_LIST.VER_PERFIL' | translate">
                       <i class="fas fa-eye"></i>
                     </a>
                     <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/customers', row.id, 'edit']"
-                      title="Editar" aria-label="Editar">
+                      [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
                       <i class="fas fa-pen"></i>
                     </a>
                     <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"
-                      [title]="row.active ? 'Desactivar' : 'Activar'"
-                      [attr.aria-label]="row.active ? 'Desactivar' : 'Activar'">
+                      [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
+                      [attr.aria-label]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
                       <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
                     </button>
                   </span>

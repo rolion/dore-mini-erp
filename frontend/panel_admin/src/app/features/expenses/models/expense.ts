@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 export type PaymentMethod = 'CASH' | 'QR' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
 export type ExpenseStatus = 'ACTIVE' | 'VOIDED';
 /** Filtro de estado de la lista: vigentes (por omisión), anulados o todos. */
@@ -6,16 +7,16 @@ export type ExpenseStatusFilter = 'active' | 'voided' | 'all';
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ['CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER'];
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  CASH: 'Efectivo',
+  get CASH() { return tr('EXPENSES.EXPENSE.EFECTIVO'); },
   QR: 'QR',
-  BANK_TRANSFER: 'Transferencia',
-  CARD: 'Tarjeta',
-  OTHER: 'Otro',
+  get BANK_TRANSFER() { return tr('EXPENSES.EXPENSE.TRANSFERENCIA'); },
+  get CARD() { return tr('EXPENSES.EXPENSE.TARJETA'); },
+  get OTHER() { return tr('EXPENSES.EXPENSE.OTRO'); },
 };
 
 export const EXPENSE_STATUS_LABELS: Record<ExpenseStatus, string> = {
-  ACTIVE: 'Vigente',
-  VOIDED: 'Anulado',
+  get ACTIVE() { return tr('EXPENSES.EXPENSE.VIGENTE'); },
+  get VOIDED() { return tr('EXPENSES.EXPENSE.ANULADO'); },
 };
 
 export const DESCRIPTION_MAX_LENGTH = 200;

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,7 +21,7 @@ import { SalesSettingsService } from '../../services/sales-settings.service';
 @Component({
   selector: 'app-order-payments',
   templateUrl: './order-payments.component.html',
-  imports: [ReactiveFormsModule, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
 })
 export class OrderPaymentsComponent {
   readonly order = input.required<Order>();

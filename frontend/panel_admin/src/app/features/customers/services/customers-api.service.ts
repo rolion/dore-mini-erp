@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -14,11 +15,11 @@ import {
 } from '../models/customer';
 import { Page } from '../../../shared/models/page';
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const NOT_FOUND_MESSAGE = 'Cliente no encontrado.';
-export const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
-export const DUPLICATE_PHONE_MESSAGE = 'Ya existe un cliente con este teléfono.';
+export const NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const NOT_FOUND_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.CLIENTE_NO_ENCONTRADO');
+export const GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
+export const DUPLICATE_PHONE_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.YA_EXISTE_UN_CLIENTE_CON');
 
 const DUPLICATE_PHONE_CODE = 'duplicate_phone';
 const API_FIELDS: readonly (keyof CustomerInput)[] = ['name', 'phone', 'email', 'notes'];
@@ -70,18 +71,18 @@ function isDuplicatePhone(body: unknown): boolean {
 
 function toApiError(err: HttpErrorResponse): CustomerApiError {
   if (err.status === 0) {
-    return new CustomerApiError(NETWORK_ERROR_MESSAGE, 0);
+    return new CustomerApiError(NETWORK_ERROR_MESSAGE(), 0);
   }
   if (err.status === 400) {
-    return new CustomerApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(err.error));
+    return new CustomerApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(err.error));
   }
   if (err.status === 404) {
-    return new CustomerApiError(NOT_FOUND_MESSAGE, 404);
+    return new CustomerApiError(NOT_FOUND_MESSAGE(), 404);
   }
   if (err.status === 409 && isDuplicatePhone(err.error)) {
-    return new DuplicateCustomerError(DUPLICATE_PHONE_MESSAGE, toMatches(err.error));
+    return new DuplicateCustomerError(DUPLICATE_PHONE_MESSAGE(), toMatches(err.error));
   }
-  return new CustomerApiError(GENERIC_ERROR_MESSAGE, err.status);
+  return new CustomerApiError(GENERIC_ERROR_MESSAGE(), err.status);
 }
 
 @Injectable({

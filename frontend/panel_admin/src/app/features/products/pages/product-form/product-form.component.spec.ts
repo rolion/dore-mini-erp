@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -28,7 +29,7 @@ describe('ProductFormComponent', () => {
       of({ count: 1, next: null, previous: null, results: [{ id: 'u-1', name: 'Kilogramo', abbreviation: 'kg', allowsFractions: true, active: true, inUse: false }] }),
     );
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([
           { path: 'pocketbiz/catalog/products/new', component: ProductFormComponent },
           { path: 'pocketbiz/catalog/products/:id/edit', component: ProductFormComponent },

@@ -9,7 +9,7 @@ Fuente de verdad del lenguaje visual de `frontend/panel_admin/`. Lo leen `delive
 1. **Reutiliza antes de crear.** Usa un componente de `shared/` o de la plantilla Oreva (`frontend/panel_admin_doc/`). Una pantalla nueva copia la estructura de una existente (sección 5).
 2. **Nada de colores, fuentes ni tamaños sueltos.** No escribas HEX en componentes. Usa clases de la plantilla (`btn-primary`, `col-green`, `text-danger`) o variables de `_variable.scss`.
 3. **El color nunca va solo.** Estados llevan texto (y, si ya existe, icono). Los botones de solo icono llevan `title` y `aria-label`.
-4. **Textos en español**, con "Bs" como moneda y fechas `dd/MM/yyyy HH:mm`.
+4. **Textos por clave de traducción** (español, inglés y portugués; el español es la referencia y el idioma por defecto). Nunca texto visible hardcodeado: ver `DDR-habilitar-idiomas-es-en-pt-selector-de-idioma.md`. Moneda "Bs" y fechas `dd/MM/yyyy HH:mm` en los tres idiomas.
 5. **Un solo patrón por tipo de pantalla**: lista, formulario, detalle, dashboard/reporte.
 6. Una desviación de este documento se justifica en el DDR de la tarea o en el PR.
 
@@ -56,6 +56,7 @@ Contraste: `#1677FF` sobre blanco da ≈3,9:1. Úsalo en botones con texto blanc
 | Necesidad | Usa | Dónde |
 |---|---|---|
 | Avatar con iniciales | `app-user-avatar` (`size`: `sm` o `xl`) | `shared/components/user-avatar` |
+| Selector de idioma (Spa / En / Pr) | `app-language-selector` (header, landing y autenticación) | `shared/components/language-selector` (nuevo en TASK-habilitar-idiomas-es-en-pt) |
 | Mostrar dinero | pipe `money` (`"70.00"` → `Bs 70.00`, vacío → `—`); no convierte ni redondea | `shared/pipes/money.pipe.ts` |
 | Canal de venta | modelo compartido | `shared/models/sales-channel.ts` |
 | Paginación | modelo `Page` | `shared/models/page.ts` |

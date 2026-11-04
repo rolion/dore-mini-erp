@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -16,11 +17,11 @@ import {
   ReceptionFormDto,
 } from '../models/receipt';
 
-export const RECEIPT_NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const RECEIPT_NOT_FOUND_MESSAGE = 'No se encontró la compra o la recepción.';
-export const RECEIPT_NOT_RECEIVABLE_MESSAGE = 'Solo una compra confirmada admite recepciones.';
-export const RECEIPT_GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const RECEIPT_VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
+export const RECEIPT_NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const RECEIPT_NOT_FOUND_MESSAGE = (): string => tr('PURCHASES.RECEIPTS_API_SERVICE.NO_SE_ENCONTRO_LA_COMPRA');
+export const RECEIPT_NOT_RECEIVABLE_MESSAGE = (): string => tr('PURCHASES.RECEIPTS_API_SERVICE.SOLO_UNA_COMPRA_CONFIRMADA_ADMITE');
+export const RECEIPT_GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const RECEIPT_VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
 
 function messages(value: unknown): string | undefined {
   return Array.isArray(value) && value.length ? value.map(String).join(' ') : undefined;
@@ -65,24 +66,24 @@ function toShortage(body: unknown): ReceiptShortage | null {
 }
 
 function toError(err: HttpErrorResponse): ReceiptApiError {
-  if (err.status === 0) return new ReceiptApiError(RECEIPT_NETWORK_ERROR_MESSAGE, 0);
+  if (err.status === 0) return new ReceiptApiError(RECEIPT_NETWORK_ERROR_MESSAGE(), 0);
   if (err.status === 400) {
     const general = messages((err.error as Record<string, unknown> | null)?.['non_field_errors']);
-    return new ReceiptApiError(general ?? RECEIPT_VALIDATION_ERROR_MESSAGE, 400, toReceiptFieldErrors(err.error));
+    return new ReceiptApiError(general ?? RECEIPT_VALIDATION_ERROR_MESSAGE(), 400, toReceiptFieldErrors(err.error));
   }
-  if (err.status === 404) return new ReceiptApiError(RECEIPT_NOT_FOUND_MESSAGE, 404);
+  if (err.status === 404) return new ReceiptApiError(RECEIPT_NOT_FOUND_MESSAGE(), 404);
   if (err.status === 409) {
     const body = (err.error ?? {}) as { detail?: unknown; code?: unknown };
     const code = typeof body.code === 'string' ? body.code : null;
     return new ReceiptApiError(
-      typeof body.detail === 'string' ? body.detail : RECEIPT_NOT_RECEIVABLE_MESSAGE,
+      typeof body.detail === 'string' ? body.detail : RECEIPT_NOT_RECEIVABLE_MESSAGE(),
       409,
       { lines: [] },
       code,
       code === 'insufficient_stock' ? toShortage(err.error) : null,
     );
   }
-  return new ReceiptApiError(RECEIPT_GENERIC_ERROR_MESSAGE, err.status);
+  return new ReceiptApiError(RECEIPT_GENERIC_ERROR_MESSAGE(), err.status);
 }
 
 function toReceipt(dto: ReceiptDto): Receipt {

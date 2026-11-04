@@ -1,43 +1,21 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { tr } from '../../../core/i18n/translate';
 import {
-  Appointment, AppointmentAction, AppointmentFailure, EVENT_LABELS, REASON_MAX_LENGTH, STATUS_CLASSES, STATUS_LABELS,
+  Appointment, AppointmentAction, AppointmentFailure, REASON_MAX_LENGTH, STATUS_CLASSES, eventLabel, statusLabel,
 } from '../models/appointment';
 import {
   AppointmentsApiService, formatDateTime, toLocalInput, toServerDateTime,
 } from '../services/appointments-api.service';
 
-const ACTION_TITLES: Record<AppointmentAction, string> = {
-  confirm: 'Confirmar cita',
-  reschedule: 'Reprogramar cita',
-  cancel: 'Cancelar cita',
-  attend: 'Marcar como atendida',
-  no_show: 'Marcar como no asistió',
-};
-
-const ACTION_BUTTONS: Record<AppointmentAction, string> = {
-  confirm: 'Confirmar',
-  reschedule: 'Reprogramar',
-  cancel: 'Cancelar cita',
-  attend: 'Atendida',
-  no_show: 'No asistió',
-};
-
-const SUCCESS: Record<AppointmentAction, string> = {
-  confirm: 'Cita confirmada.',
-  reschedule: 'Cita reprogramada.',
-  cancel: 'Cita cancelada.',
-  attend: 'Cita marcada como atendida. No se registró tratamiento ni pago.',
-  no_show: 'Cita marcada como no asistió.',
-};
-
 /** Detalle con historial y acciones de ciclo de vida; las acciones salen de `allowed_actions` del servidor. */
 @Component({
   selector: 'app-appointment-detail',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './appointment-detail.component.html',
   styleUrl: './appointment-detail.component.scss',
 })
@@ -47,11 +25,9 @@ export class AppointmentDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
 
-  readonly labels = STATUS_LABELS;
   readonly classes = STATUS_CLASSES;
-  readonly events = EVENT_LABELS;
-  readonly titles = ACTION_TITLES;
-  readonly buttons = ACTION_BUTTONS;
+  readonly statusLabel = statusLabel;
+  readonly eventLabel = eventLabel;
   readonly reasonMax = REASON_MAX_LENGTH;
   readonly formatDateTime = formatDateTime;
   readonly form = this.fb.group({ starts: '', duration_minutes: 30, reason: '' });
@@ -79,8 +55,16 @@ export class AppointmentDetailComponent implements OnInit {
     this.api.get(this.id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
       .subscribe({
         next: appointment => this.appointment = appointment,
-        error: () => this.error = 'No se pudo cargar la cita.',
+        error: () => this.error = tr('AGENDA.CITAS.ERR_CARGAR_CITA'),
       });
+  }
+
+  title(action: AppointmentAction): string {
+    return tr(`AGENDA.CITAS.TIT_${action.toUpperCase()}`);
+  }
+
+  button(action: AppointmentAction): string {
+    return tr(`AGENDA.CITAS.BTN_${action.toUpperCase()}`);
   }
 
   can(action: AppointmentAction): boolean {
@@ -137,7 +121,7 @@ export class AppointmentDetailComponent implements OnInit {
       .subscribe({
         next: appointment => {
           this.appointment = appointment;
-          this.success = SUCCESS[action];
+          this.success = tr(`AGENDA.CITAS.OK_${action.toUpperCase()}`);
           dialog.close();
           this.action = null;
         },

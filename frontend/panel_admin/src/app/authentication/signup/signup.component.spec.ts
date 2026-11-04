@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../core/i18n/testing';
 import { importProvidersFrom } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -28,7 +29,7 @@ describe('SignupComponent', () => {
     auth = jasmine.createSpyObj<AuthService>('AuthService', ['register']);
     await TestBed.configureTestingModule({
       imports: [SignupComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         importProvidersFrom(FeatherModule.pick(allIcons)),
         { provide: AuthService, useValue: auth },
@@ -67,7 +68,7 @@ describe('SignupComponent', () => {
   it('does not call the backend with an empty form and marks the fields (AC-14)', () => {
     submit();
     expect(auth.register).not.toHaveBeenCalled();
-    expect(text('.alert-danger')).toBe(INVALID_FORM_MESSAGE);
+    expect(text('.alert-danger')).toBe(INVALID_FORM_MESSAGE());
     expect(component.fieldError('companyName')).toBe('El nombre de la empresa es obligatorio.');
     expect(el().querySelectorAll('.text-danger.form-text').length).toBeGreaterThanOrEqual(6);
   });

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -48,7 +49,7 @@ describe('ProductsApiService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()],
     });
     service = TestBed.inject(ProductsApiService);
     http = TestBed.inject(HttpTestingController);
@@ -149,16 +150,16 @@ describe('ProductsApiService', () => {
     const notFound = watchError(service.get('x'));
     http.expectOne('/api/products/x/').flush({ detail: 'x' }, { status: 404, statusText: 'Not Found' });
     expect(notFound.error.status).toBe(404);
-    expect(notFound.error.message).toBe(NOT_FOUND_MESSAGE);
+    expect(notFound.error.message).toBe(NOT_FOUND_MESSAGE());
 
     const network = watchError(service.get('y'));
     http.expectOne('/api/products/y/').error(new ProgressEvent('error'));
     expect(network.error.status).toBe(0);
-    expect(network.error.message).toBe(NETWORK_ERROR_MESSAGE);
+    expect(network.error.message).toBe(NETWORK_ERROR_MESSAGE());
 
     const server = watchError(service.list());
     http.expectOne((r) => r.url === '/api/products/').flush('boom', { status: 500, statusText: 'Server Error' });
     expect(server.error.status).toBe(500);
-    expect(server.error.message).toBe(GENERIC_ERROR_MESSAGE);
+    expect(server.error.message).toBe(GENERIC_ERROR_MESSAGE());
   });
 });

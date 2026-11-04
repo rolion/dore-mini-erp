@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Appointment } from '../models/appointment';
 import { AppointmentDetailComponent } from './appointment-detail.component';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 
 function appointment(overrides: Partial<Appointment> = {}): Appointment {
   return {
@@ -20,7 +21,7 @@ describe('AppointmentDetailComponent', () => {
   function create() {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        ...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['id', 'a1']]) } } },
       ],
     });

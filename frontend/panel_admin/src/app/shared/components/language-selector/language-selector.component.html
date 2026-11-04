@@ -1,0 +1,27 @@
+<div ngbDropdown placement="bottom-end" class="language-selector">
+  <button
+    type="button"
+    ngbDropdownToggle
+    class="language-toggle nav-link nav-link-lg"
+    [attr.aria-label]="'HEADER.LANGUAGE' | translate"
+    [attr.title]="'HEADER.LANGUAGE' | translate"
+  >
+    <i class="fas fa-globe language-icon" aria-hidden="true"></i>
+    <span class="language-label">{{ activeOption.label }}</span>
+  </button>
+  <div ngbDropdownMenu class="dropdown-menu-end language-menu">
+    @for (option of options; track option.code) {
+      <button
+        type="button"
+        ngbDropdownItem
+        class="language-option"
+        [class.active]="option.code === current()"
+        [attr.aria-current]="option.code === current() ? 'true' : null"
+        [attr.lang]="option.code"
+        (click)="select(option.code)"
+      >
+        <strong class="language-option-label">{{ option.label }}</strong>{{ ' ' }}<span class="language-option-name">{{ option.name }}</span>
+      </button>
+    }
+  </div>
+</div>

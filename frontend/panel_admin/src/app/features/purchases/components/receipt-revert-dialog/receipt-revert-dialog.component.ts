@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -20,12 +21,12 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 @Component({
   selector: 'app-receipt-revert-dialog',
   templateUrl: './receipt-revert-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class ReceiptRevertDialogComponent {
   readonly maxLength = REVERT_REASON_MAX_LENGTH;
-  readonly documentalLabel = DOCUMENTAL_LABEL;
-  readonly noEntryLabel = SIN_ENTRADA_LABEL;
+  readonly documentalLabel = DOCUMENTAL_LABEL();
+  readonly noEntryLabel = SIN_ENTRADA_LABEL();
   readonly form = inject(FormBuilder).nonNullable.group({ reason: '' });
   readonly activeModal = inject(NgbActiveModal);
   receipt: Receipt | null = null;

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -11,7 +12,7 @@ describe('ProfileListComponent', () => {
     api = jasmine.createSpyObj<PersonnelApiService>('api', ['list', 'specialties']);
     api.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     api.specialties.and.returnValue(of([]));
-    TestBed.configureTestingModule({ imports: [ProfileListComponent], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [ProfileListComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: PersonnelApiService, useValue: api },
       { provide: ActivatedRoute, useValue: { snapshot: { data: { kind: 'professionals' } } } },
     ] });

@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +13,7 @@ import { ProductsApiService } from '../../services/products-api.service';
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.component.html',
-  imports: [RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
@@ -60,7 +62,7 @@ export class ProductDetailComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
         this.product = updated;
-        this.toastr.success(updated.active ? 'Producto activado' : 'Producto desactivado');
+        this.toastr.success(updated.active ? tr('PRODUCTS.PRODUCT_DETAIL.PRODUCTO_ACTIVADO') : tr('PRODUCTS.PRODUCT_DETAIL.PRODUCTO_DESACTIVADO'));
       },
       error: (err: ProductApiError) => this.toastr.error(err.message),
     });
@@ -68,15 +70,15 @@ export class ProductDetailComponent implements OnInit {
 
   /** Confirmación previa a cambiar el estado; separada para poder sustituirla en pruebas. */
   protected async confirmToggle(product: Product): Promise<boolean> {
-    const verb = product.active ? 'desactivar' : 'activar';
+    const verb = product.active ? tr('COMMON.VERB_DEACTIVATE') : tr('COMMON.VERB_ACTIVATE');
     const result = await Swal.fire({
-      title: `¿Quieres ${verb} "${product.name}"?`,
-      text: product.active ? 'Dejará de poder agregarse a nuevos pedidos.' : 'Volverá a estar disponible para la venta.',
+      title: tr('PRODUCTS.PRODUCT_DETAIL.QUIERES', { p0: verb, p1: product.name }),
+      text: product.active ? tr('PRODUCTS.PRODUCT_DETAIL.DEJARA_DE_PODER_AGREGARSE_A') : tr('PRODUCTS.PRODUCT_DETAIL.VOLVERA_A_ESTAR_DISPONIBLE_PARA'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

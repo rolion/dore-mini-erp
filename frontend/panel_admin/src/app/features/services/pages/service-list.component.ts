@@ -1,3 +1,5 @@
+import { tr } from '../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -12,7 +14,7 @@ import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
 
 @Component({ selector: 'app-service-list',
-  imports: [ReactiveFormsModule, RouterLink, NgxDatatableModule, MoneyPipe, ServiceToggleComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgxDatatableModule, MoneyPipe, ServiceToggleComponent],
   templateUrl: './service-list.component.html',
   styleUrl: './service-list.component.scss',
 })
@@ -33,7 +35,9 @@ export class ServiceListComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
-  readonly messages = { emptyMessage: 'No hay servicios para estos filtros.', totalMessage: 'servicios' };
+  get messages() {
+    return { emptyMessage: tr('SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS'), totalMessage: tr('COMMON.SERVICES_TOTAL') };
+  }
 
   ngOnInit(): void {
     this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -86,7 +90,7 @@ export class ServiceListComponent implements OnInit {
     this.state.pageIndex = 0; this.reload();
   }
   onUpdated(service: CatalogService): void {
-    this.success = service.active ? 'Servicio activado.' : 'Servicio desactivado.';
+    this.success = service.active ? tr('SERVICES.SERVICE_TOGGLE.SERVICIO_ACTIVADO') : tr('SERVICES.SERVICE_TOGGLE.SERVICIO_DESACTIVADO');
     this.reload();
   }
 }

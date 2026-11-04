@@ -1,26 +1,26 @@
 <div class="modal-header">
-  <h4 class="modal-title">Confirmar compra</h4>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+  <h4 class="modal-title">{{ 'PURCHASES.PURCHASE_CONFIRM_DIALOG.CONFIRMAR_COMPRA' | translate }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
 </div>
 <div class="modal-body">
   @if (purchase; as p) {
   <dl class="row mb-3" data-testid="summary">
-    <dt class="col-sm-4">Proveedor</dt>
+    <dt class="col-sm-4">{{ 'COMMON.PROVEEDOR' | translate }}</dt>
     <dd class="col-sm-8" data-testid="summary-supplier">{{ p.supplier.name }}</dd>
-    <dt class="col-sm-4">Fecha de compra</dt>
+    <dt class="col-sm-4">{{ 'COMMON.FECHA_DE_COMPRA' | translate }}</dt>
     <dd class="col-sm-8">{{ p.purchaseDate | date: 'dd/MM/yyyy' }}</dd>
-    <dt class="col-sm-4">Productos</dt>
+    <dt class="col-sm-4">{{ 'COMMON.PRODUCTOS' | translate }}</dt>
     <dd class="col-sm-8" data-testid="summary-count">{{ p.items.length }}</dd>
-    <dt class="col-sm-4">Total ({{ p.currency }})</dt>
+    <dt class="col-sm-4">{{ 'COMMON.TOTAL_2' | translate: { p0: (p.currency) } }}</dt>
     <dd class="col-sm-8 fw-bold" data-testid="summary-total">{{ p.total | money }}</dd>
   </dl>
   <div class="alert alert-warning mb-2" role="alert" data-testid="lock-warning">
-    Al confirmar, los precios y las cantidades quedan bloqueados y la compra ya no se podrá editar.
+    {{ 'PURCHASES.PURCHASE_CONFIRM_DIALOG.AL_CONFIRMAR_LOS_PRECIOS_Y' | translate }}
   </div>
-  <small class="text-muted d-block">Confirmar no modifica las existencias; el stock cambia al recibir la mercadería.</small>
+  <small class="text-muted d-block">{{ 'PURCHASES.PURCHASE_CONFIRM_DIALOG.CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS' | translate }}</small>
   }
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-primary" data-testid="confirm" (click)="activeModal.close(true)">Confirmar compra</button>
-  <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Volver</button>
+  <button type="button" class="btn btn-primary" data-testid="confirm" (click)="activeModal.close(true)">{{ 'PURCHASES.PURCHASE_CONFIRM_DIALOG.CONFIRMAR_COMPRA' | translate }}</button>
+  <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
 </div>

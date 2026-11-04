@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,7 +26,7 @@ import { OrdersApiService } from '../../services/orders-api.service';
 import { SalesSettingsService } from '../../services/sales-settings.service';
 
 export const NOTES_MAX_LENGTH = 2000;
-export const NOT_EDITABLE_MESSAGE = 'El pedido ya no admite cambios.';
+export const NOT_EDITABLE_MESSAGE = (): string => tr('SALES.ORDER_FORM.EL_PEDIDO_YA_NO_ADMITE');
 
 export type FormField = Extract<
   OrderErrorField,
@@ -35,7 +37,7 @@ export type FormField = Extract<
 @Component({
   selector: 'app-order-form',
   templateUrl: './order-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, AsyncPipe, NgSelectComponent, NgFooterTemplateDirective],
 })
 export class OrderFormComponent implements OnInit {
   readonly notesMaxLength = NOTES_MAX_LENGTH;
@@ -144,7 +146,7 @@ export class OrderFormComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (order) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Pedido actualizado' : 'Pedido creado');
+        this.toastr.success(this.isEdit ? tr('SALES.ORDER_FORM.PEDIDO_ACTUALIZADO') : tr('SALES.ORDER_FORM.PEDIDO_CREADO'));
         this.router.navigate(['/pocketbiz/sales/orders', order.id]);
       },
       error: (err: OrderApiError) => {
@@ -186,7 +188,7 @@ export class OrderFormComponent implements OnInit {
 
   private fill(order: Order): void {
     if (!order.editable) {
-      this.toastr.error(NOT_EDITABLE_MESSAGE);
+      this.toastr.error(NOT_EDITABLE_MESSAGE());
       this.router.navigate(['/pocketbiz/sales/orders', order.id]);
       return;
     }

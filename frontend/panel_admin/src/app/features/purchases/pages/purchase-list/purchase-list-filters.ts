@@ -1,3 +1,4 @@
+import { tr } from '../../../../core/i18n/translate';
 import { ParamMap, Params } from '@angular/router';
 import {
   PAYMENT_STATUS_LABELS,
@@ -36,19 +37,19 @@ export interface FilterOption<T extends string> {
   label: string;
 }
 
-const optionsFrom = <T extends string>(allLabel: string, labels: Readonly<Record<T, string>>): FilterOption<T>[] => [
-  { value: '', label: allLabel },
-  ...(Object.keys(labels) as T[]).map((value) => ({ value, label: labels[value] })),
+const optionsFrom = <T extends string>(allLabel: () => string, labels: Readonly<Record<T, string>>): FilterOption<T>[] => [
+  { value: '', get label() { return allLabel(); } },
+  ...(Object.keys(labels) as T[]).map((value) => ({ value, get label() { return labels[value]; } })),
 ];
 
-export const STATUS_OPTIONS = optionsFrom<PurchaseStatus>('Todos', PURCHASE_STATUS_LABELS);
-export const RECEPTION_OPTIONS = optionsFrom<ReceptionStatus>('Todas', RECEPTION_STATUS_LABELS);
+export const STATUS_OPTIONS = optionsFrom<PurchaseStatus>(() => tr('COMMON.TODOS'), PURCHASE_STATUS_LABELS);
+export const RECEPTION_OPTIONS = optionsFrom<ReceptionStatus>(() => tr('COMMON.TODAS'), RECEPTION_STATUS_LABELS);
 export const PAYMENT_OPTIONS: FilterOption<PaymentFilter>[] = [
-  { value: '', label: 'Todos' },
-  { value: 'pending', label: 'Pago pendiente' },
+  { value: '', get label() { return tr('INVENTORY.STOCK.TODOS'); } },
+  { value: 'pending', get label() { return tr('PURCHASES.PURCHASE_LIST_FILTERS.PAGO_PENDIENTE'); } },
   ...(Object.keys(PAYMENT_STATUS_LABELS) as PaymentStatus[]).map((value) => ({
     value,
-    label: PAYMENT_STATUS_LABELS[value],
+    get label() { return PAYMENT_STATUS_LABELS[value]; },
   })),
 ];
 
@@ -115,12 +116,12 @@ export function describeFilters(filters: PurchaseListFilters, supplierName: stri
   const label = (options: { value: string; label: string }[], value: string): string =>
     options.find((o) => o.value === value)?.label ?? value;
   const parts: string[] = [];
-  if (filters.search.trim()) parts.push(`Búsqueda: ${filters.search.trim()}`);
-  if (filters.supplierId) parts.push(`Proveedor: ${supplierName || '…'}`);
-  if (filters.dateFrom) parts.push(`Desde: ${formatDate(filters.dateFrom)}`);
-  if (filters.dateTo) parts.push(`Hasta: ${formatDate(filters.dateTo)}`);
-  if (filters.status) parts.push(`Estado: ${label(STATUS_OPTIONS, filters.status)}`);
-  if (filters.receptionStatus) parts.push(`Recepción: ${label(RECEPTION_OPTIONS, filters.receptionStatus)}`);
-  if (filters.paymentStatus) parts.push(`Pago: ${label(PAYMENT_OPTIONS, filters.paymentStatus)}`);
+  if (filters.search.trim()) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.BUSQUEDA', { p0: filters.search.trim() }));
+  if (filters.supplierId) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.PROVEEDOR', { p0: supplierName || '…' }));
+  if (filters.dateFrom) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.DESDE', { p0: formatDate(filters.dateFrom) }));
+  if (filters.dateTo) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.HASTA', { p0: formatDate(filters.dateTo) }));
+  if (filters.status) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.ESTADO', { p0: label(STATUS_OPTIONS, filters.status) }));
+  if (filters.receptionStatus) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.RECEPCION', { p0: label(RECEPTION_OPTIONS, filters.receptionStatus) }));
+  if (filters.paymentStatus) parts.push(tr('PURCHASES.PURCHASE_LIST_FILTERS.PAGO', { p0: label(PAYMENT_OPTIONS, filters.paymentStatus) }));
   return parts;
 }

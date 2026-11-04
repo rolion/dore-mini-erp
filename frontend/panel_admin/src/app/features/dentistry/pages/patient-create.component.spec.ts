@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -18,7 +19,7 @@ describe('PatientCreateComponent', () => {
     api = jasmine.createSpyObj<DentistryApiService>('api', ['get', 'create']);
     customers = jasmine.createSpyObj<CustomersApiService>('customers', ['list']);
     customers.list.and.returnValue(of({ ...EMPTY_HISTORY, results: [customer] }));
-    await TestBed.configureTestingModule({ imports: [PatientCreateComponent], providers: [provideRouter([]),
+    await TestBed.configureTestingModule({ imports: [PatientCreateComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: DentistryApiService, useValue: api }, { provide: CustomersApiService, useValue: customers },
       { provide: NgbActiveModal, useValue: { close: () => undefined, dismiss: () => undefined } },
       { provide: ToastrService, useValue: {} },

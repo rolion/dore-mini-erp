@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -10,7 +11,7 @@ describe('ReportingApiService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(ReportingApiService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -139,6 +140,6 @@ describe('ReportingApiService', () => {
     http.expectOne((r) => r.url === '/api/reports/sales/').flush({ period: ['x'] }, { status: 400, statusText: 'Bad Request' });
     service.pending().subscribe({ error: (e: Error) => messages.push(e.message) });
     http.expectOne('/api/reports/pending/').flush('boom', { status: 500, statusText: 'Server Error' });
-    expect(messages).toEqual([NETWORK_ERROR_MESSAGE, INVALID_PERIOD_MESSAGE, GENERIC_ERROR_MESSAGE]);
+    expect(messages).toEqual([NETWORK_ERROR_MESSAGE(), INVALID_PERIOD_MESSAGE(), GENERIC_ERROR_MESSAGE()]);
   });
 });

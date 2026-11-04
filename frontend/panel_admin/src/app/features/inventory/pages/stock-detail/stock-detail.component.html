@@ -1,96 +1,96 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">Detalle de existencia</h5>
+      <h5 class="page-title m-b-0">{{ 'INVENTORY.STOCK_DETAIL.DETALLE_DE_EXISTENCIA' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/stock">Existencias</a></li>
-    <li class="breadcrumb-item">Detalle</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory/stock">{{ 'COMMON.EXISTENCIAS' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.DETALLE' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row">
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ position ? position.productName : 'Existencia' }}</h4>
+            <h4>{{ position ? position.productName : ('INVENTORY.STOCK_LIST.EXISTENCIA' | translate) }}</h4>
           </div>
           <div class="card-body">
             @if (loading) {
-            <p class="m-4">Cargando…</p>
+            <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
             } @else if (notFound) {
             <p class="m-4" data-testid="not-found">
-              Existencia no encontrada. <a routerLink="/pocketbiz/inventory/stock">Volver a existencias</a>
+              {{ 'INVENTORY.STOCK_DETAIL.EXISTENCIA_NO_ENCONTRADA' | translate }} <a routerLink="/pocketbiz/inventory/stock">{{ 'INVENTORY.STOCK_DETAIL.VOLVER_A_EXISTENCIAS' | translate }}</a>
             </p>
             } @else if (errorMessage) {
             <div class="m-4">
               <small class="form-text text-danger d-block mb-2" data-testid="detail-error">{{ errorMessage }}</small>
-              <button type="button" class="btn btn-light" (click)="load()">Reintentar</button>
+              <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
             </div>
             } @else if (position; as p) {
             <dl class="row m-4">
-              <dt class="col-sm-3">Producto</dt>
+              <dt class="col-sm-3">{{ 'COMMON.PRODUCTO' | translate }}</dt>
               <dd class="col-sm-9">{{ p.productName }}</dd>
-              <dt class="col-sm-3">Estado del producto</dt>
+              <dt class="col-sm-3">{{ 'INVENTORY.STOCK_DETAIL.ESTADO_DEL_PRODUCTO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="product-state">
                 @if (p.productActive) {
-                <div class="badge-outline col-green d-inline-block">Activo</div>
+                <div class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</div>
                 } @else {
-                <div class="badge-outline col-grey d-inline-block">Inactivo</div>
+                <div class="badge-outline col-grey d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</div>
                 }
               </dd>
-              <dt class="col-sm-3">Clasificación</dt>
+              <dt class="col-sm-3">{{ 'INVENTORY.STOCK_DETAIL.CLASIFICACION' | translate }}</dt>
               <dd class="col-sm-9" data-testid="category">
                 @if (p.category) {
                 {{ categoryText }}
                 } @else {
-                <div class="badge-outline col-grey d-inline-block">Sin clasificar</div>
+                <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_DETAIL.SIN_CLASIFICAR' | translate }}</div>
                 }
               </dd>
-              <dt class="col-sm-3">Usos</dt>
+              <dt class="col-sm-3">{{ 'INVENTORY.STOCK_DETAIL.USOS' | translate }}</dt>
               <dd class="col-sm-9" data-testid="uses">
                 @if (p.canBuy) {
-                <div class="badge-outline col-blue d-inline-block">Comprable</div>
+                <div class="badge-outline col-blue d-inline-block">{{ 'INVENTORY.STOCK_DETAIL.COMPRABLE' | translate }}</div>
                 }
                 @if (p.canSell) {
-                <div class="badge-outline col-green d-inline-block ms-1">Vendible</div>
+                <div class="badge-outline col-green d-inline-block ms-1">{{ 'INVENTORY.STOCK_DETAIL.VENDIBLE' | translate }}</div>
                 }
                 @if (!p.canBuy && !p.canSell) {
-                <div class="badge-outline col-grey d-inline-block">Sin usos</div>
+                <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_DETAIL.SIN_USOS' | translate }}</div>
                 }
               </dd>
-              <dt class="col-sm-3">Almacén</dt>
+              <dt class="col-sm-3">{{ 'COMMON.ALMACEN' | translate }}</dt>
               <dd class="col-sm-9">
                 {{ p.warehouseName }}
                 @if (!p.warehouseActive) {
-                <div class="badge-outline col-grey d-inline-block ms-1">Inactivo</div>
+                <div class="badge-outline col-grey d-inline-block ms-1">{{ 'COMMON.INACTIVO' | translate }}</div>
                 }
               </dd>
-              <dt class="col-sm-3">Unidad base</dt>
+              <dt class="col-sm-3">{{ 'COMMON.UNIDAD_BASE' | translate }}</dt>
               <dd class="col-sm-9" data-testid="unit">{{ p.unit?.abbreviation ?? '—' }}</dd>
-              <dt class="col-sm-3">Existencia actual</dt>
+              <dt class="col-sm-3">{{ 'COMMON.EXISTENCIA_ACTUAL' | translate }}</dt>
               <dd class="col-sm-9" data-testid="balance">
                 <strong [class.text-danger]="p.balanceState === 'negative'">{{ display(p.quantity) }}</strong>
                 {{ p.unit?.abbreviation }}
                 @if (p.balanceState === 'negative') {
-                <div class="badge-outline col-red d-inline-block ms-1" data-testid="negative-badge">Negativo</div>
+                <div class="badge-outline col-red d-inline-block ms-1" data-testid="negative-badge">{{ 'INVENTORY.STOCK_DETAIL.NEGATIVO' | translate }}</div>
                 }
               </dd>
             </dl>
             <div class="m-4">
               <button type="button" class="btn btn-primary" data-testid="view-movements"
-                (click)="openMovements()">Ver movimientos</button>
+                (click)="openMovements()">{{ 'COMMON.VER_MOVIMIENTOS' | translate }}</button>
               @if (p.canRegisterOpening) {
               <a class="btn btn-outline-primary ms-2" routerLink="/pocketbiz/inventory/stock/opening"
-                [queryParams]="operationParams" data-testid="register-opening">Registrar apertura</a>
+                [queryParams]="operationParams" data-testid="register-opening">{{ 'COMMON.REGISTRAR_APERTURA' | translate }}</a>
               }
               @if (p.canRegisterAdjustment) {
               <a class="btn btn-outline-primary ms-2" routerLink="/pocketbiz/inventory/adjustments/new"
-                [queryParams]="operationParams" data-testid="register-adjustment">Registrar ajuste</a>
+                [queryParams]="operationParams" data-testid="register-adjustment">{{ 'INVENTORY.STOCK_DETAIL.REGISTRAR_AJUSTE' | translate }}</a>
               }
-              <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/stock">Volver</a>
+              <a class="btn btn-light ms-2" routerLink="/pocketbiz/inventory/stock">{{ 'COMMON.VOLVER' | translate }}</a>
               @if (openingNote) {
               <small class="form-text text-muted d-block mt-2" data-testid="opening-note">{{ openingNote }}</small>
               }
@@ -99,36 +99,36 @@
               }
             </div>
 
-            <h5 class="mx-4">Historial de movimientos</h5>
+            <h5 class="mx-4">{{ 'INVENTORY.STOCK_DETAIL.HISTORIAL_DE_MOVIMIENTOS' | translate }}</h5>
             @if (movementsError) {
             <div class="m-4">
               <small class="form-text text-danger d-block mb-2" data-testid="movements-error">{{ movementsError }}</small>
-              <button type="button" class="btn btn-light" (click)="reloadMovements()">Reintentar</button>
+              <button type="button" class="btn btn-light" (click)="reloadMovements()">{{ 'COMMON.REINTENTAR' | translate }}</button>
             </div>
             } @else if (movementsLoading && !movements.length) {
-            <p class="m-4">Cargando…</p>
+            <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
             } @else if (!movements.length) {
-            <p class="m-4" data-testid="no-movements">Sin movimientos para este producto en este almacén.</p>
+            <p class="m-4" data-testid="no-movements">{{ 'INVENTORY.STOCK_DETAIL.SIN_MOVIMIENTOS_PARA_ESTE_PRODUCTO' | translate }}</p>
             } @else {
             <div class="table-responsive">
               <table class="table align-middle inventory-table">
-                <caption class="visually-hidden">Historial de movimientos del producto en el almacén</caption>
+                <caption class="visually-hidden">{{ 'INVENTORY.STOCK_DETAIL.HISTORIAL_DE_MOVIMIENTOS_DEL_PRODUCTO' | translate }}</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Fecha y hora</th>
-                    <th scope="col">Tipo</th>
-                    <th scope="col" class="text-end">Entrada</th>
-                    <th scope="col" class="text-end">Salida</th>
-                    <th scope="col">Referencia</th>
-                    <th scope="col">Origen</th>
-                    <th scope="col">Acciones</th>
+                    <th scope="col">{{ 'COMMON.FECHA_Y_HORA' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.TIPO' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'INVENTORY.STOCK_DETAIL.ENTRADA' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'INVENTORY.STOCK_DETAIL.SALIDA' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.REFERENCIA' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ORIGEN' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   @for (m of movements; track m.id) {
                   <tr data-testid="movement-row">
-                    <td data-label="Fecha y hora">{{ m.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-                    <td data-label="Tipo">
+                    <td [attr.data-label]="'COMMON.FECHA_Y_HORA' | translate">{{ m.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td [attr.data-label]="'COMMON.TIPO' | translate">
                       @if (m.kind === 'in') {
                       <div class="badge-outline col-green d-inline-block">{{ kindLabel(m.kind) }}</div>
                       } @else {
@@ -138,22 +138,22 @@
                       <div class="badge-outline col-grey d-inline-block ms-1">{{ statusLabel(m.status) }}</div>
                       }
                     </td>
-                    <td data-label="Entrada" class="text-end">{{ m.quantityIn ? display(m.quantityIn) : '—' }}</td>
-                    <td data-label="Salida" class="text-end">{{ m.quantityOut ? display(m.quantityOut) : '—' }}</td>
-                    <td data-label="Referencia">{{ m.reference || '—' }}</td>
-                    <td data-label="Origen">
+                    <td [attr.data-label]="'INVENTORY.MOVEMENT_LIST.ENTRADA' | translate" class="text-end">{{ m.quantityIn ? display(m.quantityIn) : '—' }}</td>
+                    <td [attr.data-label]="'INVENTORY.MOVEMENT_LIST.SALIDA' | translate" class="text-end">{{ m.quantityOut ? display(m.quantityOut) : '—' }}</td>
+                    <td [attr.data-label]="'COMMON.REFERENCIA' | translate">{{ m.reference || '—' }}</td>
+                    <td [attr.data-label]="'COMMON.ORIGEN' | translate">
                       @if (m.source; as source) {
                       {{ source.label }}@if (source.id) { · {{ source.id }} }
                       @if (sourceLink(m); as link) {
-                      <a class="ms-1" [routerLink]="link" data-testid="source-link">Abrir documento</a>
+                      <a class="ms-1" [routerLink]="link" data-testid="source-link">{{ 'INVENTORY.STOCK_DETAIL.ABRIR_DOCUMENTO' | translate }}</a>
                       }
                       } @else {
-                      <span class="text-muted">Sin documento</span>
+                      <span class="text-muted">{{ 'INVENTORY.STOCK_DETAIL.SIN_DOCUMENTO' | translate }}</span>
                       }
                     </td>
-                    <td data-label="Acciones">
+                    <td [attr.data-label]="'COMMON.ACCIONES' | translate">
                       <a class="btn btn-light btn-sm" [routerLink]="['/pocketbiz/inventory/movements', m.id]"
-                        data-testid="movement-detail">Ver detalle</a>
+                        data-testid="movement-detail">{{ 'COMMON.VER_DETALLE' | translate }}</a>
                     </td>
                   </tr>
                   }
@@ -163,7 +163,7 @@
             @if (movementsCount > pageSize) {
             <ngb-pagination class="d-flex justify-content-center" [collectionSize]="movementsCount"
               [pageSize]="pageSize" [page]="movementsPage" [maxSize]="5" [boundaryLinks]="true"
-              aria-label="Páginas del historial" (pageChange)="goTo($event)" />
+              [attr.aria-label]="'INVENTORY.STOCK_DETAIL.PAGINAS_DEL_HISTORIAL' | translate" (pageChange)="goTo($event)" />
             }
             }
             }

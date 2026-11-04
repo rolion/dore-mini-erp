@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { NgClass, DOCUMENT } from '@angular/common';
 import {
   Component,
@@ -19,7 +20,7 @@ import { InConfiguration, LocalStorageService, RightSidebarService } from '@core
   selector: 'app-right-sidebar',
   templateUrl: './right-sidebar.component.html',
   styleUrls: ['./right-sidebar.component.sass'],
-  imports: [NgClass, NgScrollbar],
+  imports: [TranslatePipe, NgClass, NgScrollbar],
   providers: [RightSidebarService],
 })
 export class RightSidebarComponent implements OnInit, AfterViewInit {

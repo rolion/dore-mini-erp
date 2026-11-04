@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, effect, input, output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { FieldErrors, Order } from '../../models/order';
@@ -10,7 +11,7 @@ import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 @Component({
   selector: 'app-order-summary',
   templateUrl: './order-summary.component.html',
-  imports: [ReactiveFormsModule, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
 })
 export class OrderSummaryComponent {
   readonly order = input.required<Order>();

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +12,7 @@ import { CustomersApiService } from '../../customers/services/customers-api.serv
 import { CustomerQuickCreateComponent } from '../../customers/components/customer-quick-create/customer-quick-create.component';
 import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
 
-@Component({ selector: 'app-patient-create', imports: [FormsModule, NgSelectModule, CustomerQuickCreateComponent], templateUrl: './patient-create.component.html' })
+@Component({ selector: 'app-patient-create', imports: [TranslatePipe, FormsModule, NgSelectModule, CustomerQuickCreateComponent], templateUrl: './patient-create.component.html' })
 export class PatientCreateComponent implements OnInit {
   private customers = inject(CustomersApiService);
   private modal = inject(NgbActiveModal);

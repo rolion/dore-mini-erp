@@ -1,21 +1,21 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">Cancelar compra</h4>
-    <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+    <h4 class="modal-title">{{ 'PURCHASES.PURCHASE_CANCEL_DIALOG.CANCELAR_COMPRA' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
     <p class="mb-3" data-testid="cancel-info">
-      La compra quedará cancelada y en solo lectura.
-      @if (purchase?.status === 'confirmed') { Se cancela sin recepciones ni pagos registrados. }
+      {{ 'PURCHASES.PURCHASE_CANCEL_DIALOG.LA_COMPRA_QUEDARA_CANCELADA_Y' | translate }}
+      @if (purchase?.status === 'confirmed') { {{ 'PURCHASES.PURCHASE_CANCEL_DIALOG.SE_CANCELA_SIN_RECEPCIONES_NI' | translate }} }
     </p>
     <div class="form-group">
-      <label for="cancel-reason">Motivo de la cancelación <span class="text-danger">*</span></label>
+      <label for="cancel-reason">{{ 'PURCHASES.PURCHASE_CANCEL_DIALOG.MOTIVO_DE_LA_CANCELACION' | translate }} <span class="text-danger">*</span></label>
       <textarea id="cancel-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="maxLength"></textarea>
       <small class="form-text text-muted" data-testid="counter">{{ form.controls.reason.value.length }} / {{ maxLength }}</small>
     </div>
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn btn-danger" data-testid="cancel-purchase" [disabled]="!canSubmit">Cancelar compra</button>
-    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">Volver</button>
+    <button type="submit" class="btn btn-danger" data-testid="cancel-purchase" [disabled]="!canSubmit">{{ 'PURCHASES.PURCHASE_CANCEL_DIALOG.CANCELAR_COMPRA' | translate }}</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
   </div>
 </form>

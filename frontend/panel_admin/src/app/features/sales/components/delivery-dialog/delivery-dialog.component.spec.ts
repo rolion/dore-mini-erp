@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, of, throwError } from 'rxjs';
@@ -35,7 +36,7 @@ describe('DeliveryDialogComponent', () => {
     modal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     TestBed.configureTestingModule({
       imports: [DeliveryDialogComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: OrdersApiService, useValue: api },
         { provide: NgbActiveModal, useValue: modal },
       ],

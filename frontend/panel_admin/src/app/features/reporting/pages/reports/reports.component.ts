@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { EMPTY, Observable } from 'rxjs';
@@ -12,8 +14,8 @@ import { DEFAULT_SELECTION, ExpensesReport, PeriodSelection } from '../../models
 import { ModulesService } from '../../../../core/service/modules.service';
 import { ReportingApiService } from '../../services/reporting-api.service';
 
-export const PRODUCT_AMOUNT_NOTE = 'Importes antes de descuentos del pedido.';
-export const CUSTOMER_RANKING_NOTE = 'No incluye pedidos sin cliente.';
+export const PRODUCT_AMOUNT_NOTE = (): string => tr('REPORTING.REPORTS.IMPORTES_ANTES_DE_DESCUENTOS_DEL');
+export const CUSTOMER_RANKING_NOTE = (): string => tr('REPORTING.REPORTS.NO_INCLUYE_PEDIDOS_SIN_CLIENTE');
 
 /** Porcentaje de `part` sobre `total` con un decimal; solo para mostrar (los importes exactos siguen siendo texto). */
 export function percentOf(part: string, total: string): number {
@@ -24,7 +26,7 @@ export function percentOf(part: string, total: string): number {
 @Component({
   selector: 'app-reports',
   templateUrl: './reports.component.html',
-  imports: [
+  imports: [TranslatePipe, 
     AsyncPipe,
     RouterLink,
     NgApexchartsModule,
@@ -34,8 +36,8 @@ export function percentOf(part: string, total: string): number {
   ],
 })
 export class ReportsComponent {
-  readonly productAmountNote = PRODUCT_AMOUNT_NOTE;
-  readonly customerRankingNote = CUSTOMER_RANKING_NOTE;
+  readonly productAmountNote = PRODUCT_AMOUNT_NOTE();
+  readonly customerRankingNote = CUSTOMER_RANKING_NOTE();
   readonly chart: ApexChart = { type: 'donut', height: 260, foreColor: '#9aa0ac' };
   readonly legend: ApexLegend = { position: 'bottom' };
 

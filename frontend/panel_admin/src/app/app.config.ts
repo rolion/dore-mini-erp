@@ -1,11 +1,12 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, inject, provideAppInitializer } from '@angular/core';
 import { APP_ROUTE } from './app.routes';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { tokenInterceptor } from '@core/interceptor/jwt.interceptor';
 import { errorInterceptor } from '@core/interceptor/error.interceptor';
 import { DirectionService, LanguageService } from '@core';
+import { LANGUAGE_URL_SERIALIZER_PROVIDER } from '@core/i18n/language-url.serializer';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { FeatherModule } from 'angular-feather';
@@ -20,9 +21,13 @@ export const appConfig: ApplicationConfig = {
         provideToastr(),
         provideAnimations(),
         DirectionService, LanguageService,
+        LANGUAGE_URL_SERIALIZER_PROVIDER,
         provideTranslateService({
-            defaultLanguage: 'es',
+            fallbackLang: 'es',
+            lang: 'es',
         }),
+        // Carga el catálogo del idioma (URL > preferencia > español) antes del primer render.
+        provideAppInitializer(() => inject(LanguageService).init()),
         provideTranslateHttpLoader({
             prefix: './assets/i18n/',
             suffix: '.json',

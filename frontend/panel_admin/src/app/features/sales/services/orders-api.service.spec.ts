@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -17,7 +18,7 @@ describe('OrdersApiService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(OrdersApiService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -185,7 +186,7 @@ describe('OrdersApiService', () => {
     it('maps 400 to field errors in camelCase and ignores unknown keys (AC-24)', () => {
       const error = failWith(400, { sales_channel: ['Obligatorio'], expected_delivery_date: ['Antes'], otro: ['x'] });
       expect(error.status).toBe(400);
-      expect(error.message).toBe(VALIDATION_ERROR_MESSAGE);
+      expect(error.message).toBe(VALIDATION_ERROR_MESSAGE());
       expect(error.fieldErrors).toEqual({ salesChannel: ['Obligatorio'], expectedDeliveryDate: ['Antes'] });
     });
 
@@ -200,12 +201,12 @@ describe('OrdersApiService', () => {
     it('maps a 409 without code to the generic error', () => {
       const error = failWith(409, 'raro');
       expect(error instanceof OrderRuleError).toBeFalse();
-      expect(error.message).toBe(GENERIC_ERROR_MESSAGE);
+      expect(error.message).toBe(GENERIC_ERROR_MESSAGE());
     });
 
     it('maps 404 using the server detail or a default (EDGE-12)', () => {
       expect(failWith(404, { detail: 'Pedido no encontrado.' }).message).toBe('Pedido no encontrado.');
-      expect(failWith(404, 'html').message).toBe(NOT_FOUND_MESSAGE);
+      expect(failWith(404, 'html').message).toBe(NOT_FOUND_MESSAGE());
     });
 
     it('maps network failures and unexpected statuses', () => {
@@ -213,8 +214,8 @@ describe('OrdersApiService', () => {
       service.get('o-1').subscribe({ error: (e: OrderApiError) => (error = e) });
       http.expectOne('/api/orders/o-1/').error(new ProgressEvent('error'));
       expect(error?.status).toBe(0);
-      expect(error?.message).toBe(NETWORK_ERROR_MESSAGE);
-      expect(failWith(500, {}).message).toBe(GENERIC_ERROR_MESSAGE);
+      expect(error?.message).toBe(NETWORK_ERROR_MESSAGE());
+      expect(failWith(500, {}).message).toBe(GENERIC_ERROR_MESSAGE());
     });
   });
 

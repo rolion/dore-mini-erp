@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -43,7 +44,7 @@ describe('ExpenseListComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ExpenseListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: ExpensesApiService, useValue: api },
         { provide: CategoriesApiService, useValue: categoriesApi },
@@ -150,7 +151,7 @@ describe('ExpenseListComponent', () => {
     component.filterForm.patchValue({ dateFrom: '2026-10-20', dateTo: '2026-10-10' });
     fixture.detectChanges();
     expect(api.list).not.toHaveBeenCalled();
-    expect(text()).toContain(INVALID_RANGE_MESSAGE);
+    expect(text()).toContain(INVALID_RANGE_MESSAGE());
   });
 
   it('clears the filters back to active expenses without dates (AC-21)', () => {

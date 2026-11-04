@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -32,7 +33,7 @@ describe('AdjustmentFormComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [AdjustmentFormComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: AdjustmentsApiService, useValue: api },
         { provide: WarehousesApiService, useValue: warehouses },
@@ -89,7 +90,7 @@ describe('AdjustmentFormComponent', () => {
 
   it('says «Sin diferencia» and does not allow confirming when the count equals the balance (AC-04)', () => {
     fill('10');
-    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE);
+    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE());
     expect(component.canReview).toBeFalse();
   });
 
@@ -186,7 +187,7 @@ describe('AdjustmentFormComponent', () => {
     goToReview('7');
     component.confirm();
     fixture.detectChanges();
-    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE);
+    expect(text('no-difference')).toBe(NO_DIFFERENCE_MESSAGE());
     expect((el().querySelector('[data-testid="confirm"]') as HTMLButtonElement).disabled).toBeTrue();
   });
 
@@ -240,7 +241,7 @@ describe('AdjustmentFormComponent coming from the stock detail', () => {
     products.search.and.returnValue(of([{ ...PIECE, id: P }]));
     await TestBed.configureTestingModule({
       imports: [AdjustmentFormComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: AdjustmentsApiService, useValue: api },
         { provide: WarehousesApiService, useValue: warehouses },

@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -42,7 +43,7 @@ describe('StockListComponent', () => {
     );
     await TestBed.configureTestingModule({
       imports: [StockListComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: StockApiService, useValue: stockApi },
         { provide: WarehousesApiService, useValue: warehouses },

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, expand, map, reduce, EMPTY } from 'rxjs';
@@ -6,11 +7,11 @@ import { Page } from '../../../shared/models/page';
 import { Profile, ProfileInput, ProfileKind, UserOption } from '../models/profile';
 
 export function profileError(error: unknown): string {
-  if (!(error instanceof HttpErrorResponse)) return 'No se pudo completar la operación.';
-  if (error.status === 403) return 'No tienes permiso o Personal no está habilitado.';
-  if (error.status === 404) return 'Registro no encontrado.';
-  if (error.status === 400) return 'Revisa los datos marcados.';
-  return 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
+  if (!(error instanceof HttpErrorResponse)) return tr('PERSONNEL.PERSONNEL_API_SERVICE.NO_SE_PUDO_COMPLETAR_LA');
+  if (error.status === 403) return tr('PERSONNEL.PERSONNEL_API_SERVICE.NO_TIENES_PERMISO_O_PERSONAL');
+  if (error.status === 404) return tr('PERSONNEL.PERSONNEL_API_SERVICE.REGISTRO_NO_ENCONTRADO');
+  if (error.status === 400) return tr('PERSONNEL.PERSONNEL_API_SERVICE.REVISA_LOS_DATOS_MARCADOS');
+  return tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
 }
 
 @Injectable({ providedIn: 'root' })
