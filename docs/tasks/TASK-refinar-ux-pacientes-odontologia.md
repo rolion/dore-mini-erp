@@ -1,6 +1,6 @@
 # TASK-refinar-ux-pacientes-odontologia: Refinar la experiencia de Pacientes (Odontología)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-refinar-ux-pacientes-odontologia
@@ -12,6 +12,7 @@
 | 2026-11-04 | (nuevo) → INVESTIGATION | Task creado a partir de la crítica de diseño de Odontología → Pacientes | delivery-start |
 | 2026-11-04 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN; DDR escrito; sin ADR | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación y pruebas de la Specification; se solicita Quality Gate independiente | delivery-build |
 
 ## Investigación
 
@@ -83,7 +84,30 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-04-refinar-ux-pacientes-odontologia.md` (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+Solo frontend (`frontend/panel_admin/`); sin cambios en backend, endpoints, permisos ni migraciones. Sin dependencias nuevas.
+
+| AC / INV | Parte implementada |
+|---|---|
+| AC-01…07 | `patient-create.component.{ts,html}`: modal en una pantalla (texto introductorio, «Buscar cliente», «¿No está? Registrar persona nueva», «Crear paciente»/«Registrar paciente»/«Abrir ficha»), `customerCreated()` encadena la creación del perfil, `profileFailed` + «Reintentar» conserva el cliente, aviso informativo «ya es paciente», motivo del botón deshabilitado, «Inactivo» por clave i18n |
+| AC-02 | `CustomerQuickCreateComponent`: `@Input() submitLabel` y `backLabel` opcionales (por defecto, textos anteriores; spec de compatibilidad) |
+| AC-08…11 | `patient-list.component.{ts,html}`: columnas Edad (badge «Menor») y Actualizado, ayuda del buscador, «Limpiar filtros» condicional, vacíos diferenciados; `ageAt()` en `demographics-form.ts` |
+| AC-12…15, 22, 23 | `patient-detail.component.{ts,html}`: ficha reordenada (Resumen clínico → Antecedentes → Datos personales → Contacto → Registro), sin UUID ni «Editar ficha», «Sin registrar» + «Registrar», edad y aviso de menor, banner de archivado, botones «Editar» deshabilitados con `title`, confirmación `Swal` (`confirmStateChange`) |
+| AC-16…21 | Estado por sección (`clinicalState`/`adminState`, `statusText()`), sin banners globales de guardado, `aria-invalid`/`role="alert"`, foco, contador desde 3 200, textareas autoajustables, placeholders de ejemplo (`CLINICAL_FIELDS[].placeholder`) |
+| AC-24, 25 | `patient-history.component.ts` (recorte con «Mostrar texto completo», etiqueta neutra, acciones legibles) y pestañas en la ficha |
+| AC-26 | Claves nuevas/ajustadas/eliminadas en `es/en/pt.json` (mismas claves) |
+| INV-01…04 | Sin cambios de regla; cubiertas por pruebas de la ficha |
+
+**Pantallas de referencia seguidas:** Lista (`product-list`) y Detalle (`product-detail`), según DDR. **Componentes compartidos:** `ngx-datatable`, `ng-select`, `app-customer-quick-create` (extendido con inputs opcionales), badges `badge-outline`, `Swal` ya usado en Clientes. Sin componente nuevo en `shared/`. `docs/design/design-system.md` actualizado con el patrón «Detalle con edición por sección y línea de estado».
+
+**Verificación propia (no es el Quality Gate):** `npm test` → 1199 correctas, 1 fallo (`screens-i18n.spec.ts` «labels coming from code follow the active language»), que **también falla en `origin/main` limpio** (reproducido en un checkout aparte, 2 de 2 veces; el mensaje cambia entre «Entregado»/«Entregue»); no se tocó. `npm run lint` y `npm run i18n:check` limpios; `ng build` correcto (solo avisos Sass previos). Para ejecutar las pruebas en el worktree se enlazó `node_modules` del checkout principal mediante una junction (ignorada por git).
+
+**Desviaciones respecto al plan:**
+- En modo edición de la ficha, los campos del responsable siguen apareciendo solo para menores (como antes); el plan no pedía mostrarlos siempre.
+- La línea de estado «Guardado ✓» permanece hasta la siguiente edición (no se desvanece); el AC no exigía desvanecerla.
+- «Sin cambios» se muestra en la línea de estado de la sección (no dentro del botón); el botón queda deshabilitado.
+- La creación rápida sigue reemplazando el contenido del modal (vista «Registrar persona nueva» con «Volver a buscar»), dentro del mismo modal.
+
+**Deuda técnica / pendiente de verificación visual (para publish):** estados archivado, menor, historial expandido, móvil, tema oscuro y UI en español no se vieron en ejecución; contraste de botones deshabilitados; `unsavedChangesGuard` sigue usando `window.confirm` (compartido); `Swal` sin componente compartido; «Sin registrar» vs «No informado» en otras fichas.
 
 ## Review
 _Pendiente_

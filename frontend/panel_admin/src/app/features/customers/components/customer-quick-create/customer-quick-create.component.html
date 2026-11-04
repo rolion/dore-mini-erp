@@ -30,7 +30,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-light" [disabled]="saving" (click)="cancel()">{{ embedded ? ('CUSTOMERS.CUSTOMER_QUICK_CREATE.VOLVER_A_LA_BUSQUEDA' | translate) : ('COMMON.CANCELAR' | translate) }}</button>
-    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">{{ embedded ? ('CUSTOMERS.CUSTOMER_QUICK_CREATE.CREAR_Y_SELECCIONAR_CLIENTE' | translate) : ('COMMON.GUARDAR' | translate) }}</button>
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="cancel()">{{ embedded ? (backLabel || ('CUSTOMERS.CUSTOMER_QUICK_CREATE.VOLVER_A_LA_BUSQUEDA' | translate)) : ('COMMON.CANCELAR' | translate) }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">{{ embedded ? (submitLabel || ('CUSTOMERS.CUSTOMER_QUICK_CREATE.CREAR_Y_SELECCIONAR_CLIENTE' | translate)) : ('COMMON.GUARDAR' | translate) }}</button>
   </div>
 </form>

@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { PatientCreateComponent } from './patient-create.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -11,9 +12,10 @@ import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, catchError, debounceTime, finalize, merge, switchMap, tap } from 'rxjs';
 import { PatientSummary } from '../models/patient';
 import { DentistryApiService, errorMessage } from '../services/dentistry-api.service';
+import { ageAt } from '../services/demographics-form';
 
 @Component({
-  selector: 'app-patient-list', imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule],
+  selector: 'app-patient-list', imports: [TranslatePipe, DatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule],
   templateUrl: './patient-list.component.html',
 })
 export class PatientListComponent implements OnInit {
@@ -59,6 +61,9 @@ export class PatientListComponent implements OnInit {
       backdrop: 'static', keyboard: false, ariaLabelledBy: 'new-patient-title' });
     ref.componentInstance.backFilters = this.filters;
   }
+  get hasFilters() { return !!this.search.value.trim() || this.active.value !== 'true'; }
+  ageOf(patient: PatientSummary): number | null { return ageAt(patient.customer.birth_date); }
+  isMinor(patient: PatientSummary): boolean { const age = this.ageOf(patient); return age !== null && age < 18; }
   get filters() { return { search: this.search.value, active: this.active.value, page: this.page }; }
   filter(page = 1) {
     this.router.navigate([], { relativeTo: this.route, queryParams: { search: this.search.value, active: this.active.value, page } });

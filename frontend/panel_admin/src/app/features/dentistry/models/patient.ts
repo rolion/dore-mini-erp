@@ -1,10 +1,10 @@
 import { tr } from '../../../core/i18n/translate';
 export const CLINICAL_FIELDS = [
-  { key: 'medical_history', get label() { return tr('DENTISTRY.PATIENT.ANTECEDENTES_MEDICOS'); } },
-  { key: 'dental_history', get label() { return tr('DENTISTRY.PATIENT.ANTECEDENTES_ODONTOLOGICOS'); } },
-  { key: 'allergies', get label() { return tr('DENTISTRY.PATIENT.ALERGIAS'); } },
-  { key: 'medication', get label() { return tr('DENTISTRY.PATIENT.MEDICACION'); } },
-  { key: 'clinical_notes', get label() { return tr('DENTISTRY.PATIENT.OBSERVACIONES_CLINICAS'); } },
+  { key: 'medical_history', get label() { return tr('DENTISTRY.PATIENT.ANTECEDENTES_MEDICOS'); }, get placeholder() { return tr('DENTISTRY.PATIENT.EJ_MEDICOS'); } },
+  { key: 'dental_history', get label() { return tr('DENTISTRY.PATIENT.ANTECEDENTES_ODONTOLOGICOS'); }, get placeholder() { return tr('DENTISTRY.PATIENT.EJ_ODONTOLOGICOS'); } },
+  { key: 'allergies', get label() { return tr('DENTISTRY.PATIENT.ALERGIAS'); }, get placeholder() { return tr('DENTISTRY.PATIENT.EJ_ALERGIAS'); } },
+  { key: 'medication', get label() { return tr('DENTISTRY.PATIENT.MEDICACION'); }, get placeholder() { return tr('DENTISTRY.PATIENT.EJ_MEDICACION'); } },
+  { key: 'clinical_notes', get label() { return tr('DENTISTRY.PATIENT.OBSERVACIONES_CLINICAS'); }, get placeholder() { return tr('DENTISTRY.PATIENT.EJ_OBSERVACIONES'); } },
 ] as const;
 export type ClinicalField = typeof CLINICAL_FIELDS[number]['key'];
 export type ClinicalInput = Record<ClinicalField, string>;

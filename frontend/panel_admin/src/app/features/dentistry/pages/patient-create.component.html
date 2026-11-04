@@ -7,17 +7,19 @@
   }
 </div>
 @if (opening) {
-  <app-customer-quick-create [embedded]="true" (created)="select($event); opening = false" (cancelled)="opening = false" />
+  <app-customer-quick-create [embedded]="true" [submitLabel]="'DENTISTRY.PATIENT_CREATE.REGISTRAR_PACIENTE' | translate"
+    [backLabel]="'DENTISTRY.PATIENT_CREATE.VOLVER_A_BUSCAR' | translate" (created)="customerCreated($event)" (cancelled)="opening = false" />
 } @else {
   <div class="modal-body">
-    <label class="form-label" for="existing-customer-search">{{ 'COMMON.CLIENTE' | translate }}</label>
+    <p class="text-muted">{{ 'DENTISTRY.PATIENT_CREATE.INTRO' | translate }}</p>
+    <label class="form-label" for="existing-customer-search">{{ 'DENTISTRY.PATIENT_CREATE.BUSCAR_CLIENTE' | translate }}</label>
     <ng-select labelForId="existing-customer-search" [items]="results" bindLabel="name" [typeahead]="customerSearch"
       [loading]="loading" [ngModel]="selected" (ngModelChange)="select($event)" [readonly]="saving"
       [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate" [notFoundText]="'CUSTOMERS.CUSTOMER_LIST.NO_HAY_CLIENTES_QUE_COINCIDAN' | translate"
       [loadingText]="'DENTISTRY.PATIENT_CREATE.SEARCHING_CUSTOMERS' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate" [clearable]="true">
       <ng-template ng-option-tmp let-item="item">
         <span class="fw-semibold">{{ item.name }}</span>
-        <small class="text-muted d-block">{{ item.phone || ('DENTISTRY.PATIENT_CREATE.TELEFONO_NO_INFORMADO' | translate) }}{{ item.active ? '' : ' · Inactivo' }}</small>
+        <small class="text-muted d-block">{{ item.phone || ('DENTISTRY.PATIENT_CREATE.TELEFONO_NO_INFORMADO' | translate) }}@if (!item.active) { · {{ 'DENTISTRY.PATIENT_CREATE.INACTIVO' | translate }} }</small>
       </ng-template>
     </ng-select>
     @if (searchError) {
@@ -27,18 +29,29 @@
       </div>
     }
     @if (total > 20) { <small class="text-muted">{{ 'DENTISTRY.PATIENT_CREATE.SE_MUESTRAN_20_COINCIDENCIAS_AFINA' | translate }}</small> }
-    @if (error) { <p class="text-danger mt-3" role="alert">{{ error }}</p> }
-    @if (checking) { <p class="text-muted mt-3" role="status">{{ 'DENTISTRY.PATIENT_CREATE.COMPROBANDO_FICHA' | translate }}</p> }
-    @if (existingId) {
-      <p class="mt-3 mb-2">{{ 'DENTISTRY.PATIENT_CREATE.EL_CLIENTE_YA_TIENE_UNA' | translate }}</p>
-      <button type="button" class="btn btn-sm btn-light" (click)="openRecord(existingId)">{{ 'DENTISTRY.PATIENT_CREATE.ABRIR_FICHA_EXISTENTE' | translate }}</button>
+    @if (error) {
+      <div class="mt-3" role="alert">
+        <p class="text-danger mb-2">{{ error }}</p>
+        @if (profileFailed) {
+          <button type="button" class="btn btn-sm btn-light" [disabled]="saving" (click)="create()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        }
+      </div>
+    }
+    @if (checking) { <p class="text-muted mt-3" role="status">{{ 'DENTISTRY.PATIENT_CREATE.COMPROBANDO_SI_ES_PACIENTE' | translate }}</p> }
+    @if (existingId && selected) {
+      <div class="alert alert-info mt-3 mb-0" role="status">{{ 'DENTISTRY.PATIENT_CREATE.YA_ES_PACIENTE' | translate: { name: selected.name } }}</div>
     }
     <div class="mt-3">
-      <button type="button" class="btn btn-sm btn-light" [disabled]="saving" (click)="createCustomer()">{{ 'DENTISTRY.PATIENT_CREATE.CREAR_CLIENTE_NUEVO' | translate }}</button>
+      <button type="button" class="btn btn-sm btn-light" [disabled]="saving" (click)="createCustomer()">{{ 'DENTISTRY.PATIENT_CREATE.REGISTRAR_PERSONA_NUEVA' | translate }}</button>
     </div>
   </div>
   <div class="modal-footer">
+    @if (disabledReason) { <small class="text-muted me-auto" role="status">{{ disabledReason }}</small> }
     <button type="button" class="btn btn-light" [disabled]="saving" (click)="close()">{{ 'COMMON.CANCELAR' | translate }}</button>
-    <button type="button" class="btn btn-primary" (click)="create()" [disabled]="!selected || saving || checking || !!existingId">{{ saving ? ('DENTISTRY.PATIENT_CREATE.CREANDO' | translate) : ('DENTISTRY.PATIENT_CREATE.CREAR_FICHA_CLINICA' | translate) }}</button>
+    @if (existingId) {
+      <button type="button" class="btn btn-primary" (click)="openRecord(existingId)">{{ 'DENTISTRY.PATIENT_CREATE.ABRIR_FICHA' | translate }}</button>
+    } @else {
+      <button type="button" class="btn btn-primary" (click)="create()" [disabled]="!selected || saving || checking">{{ saving ? ('DENTISTRY.PATIENT_CREATE.CREANDO' | translate) : ('DENTISTRY.PATIENT_CREATE.CREAR_PACIENTE' | translate) }}</button>
+    }
   </div>
 }
