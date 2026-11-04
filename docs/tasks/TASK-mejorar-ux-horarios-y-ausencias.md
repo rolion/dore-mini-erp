@@ -1,6 +1,6 @@
 # TASK-mejorar-ux-horarios-y-ausencias: Registrar un mismo horario en varios días y editar ausencias
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mejorar-ux-horarios-y-ausencias
@@ -12,6 +12,7 @@
 | 2026-11-04 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-04 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, diseño requerido | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY, plan v1 | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -70,7 +71,24 @@ No aplica según veredicto.
 Ver [PLAN-2026-11-04-mejorar-ux-horarios-y-ausencias](../plans/PLAN-2026-11-04-mejorar-ux-horarios-y-ausencias.md) (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+
+**Backend** (`backend/modules/agenda/`):
+- `api.py`: `ShiftView.post` acepta `days` (AC-01..03, INV-04, EDGE-02); alta atómica con comprobación de solape por día; error indica el día. Nueva `AbsenceDetailView` con `put` y `delete` filtradas por empresa y profesional (AC-04..06). `urls.py`: ruta `absences/<int:absence_id>/`.
+- `tests/test_api.py`: pruebas de AC-01..AC-06 y EDGE-02/03/05.
+
+**Frontend** (`features/agenda/`):
+- `agenda.component.{ts,html}`: chips de días con atajos, repetición (semana / fin de mes / fecha) con resumen, «Copiar a otros días», ausencia con «Todo el día», edición, eliminación con confirmación en el mismo diálogo, acciones en la cabecera y aviso de éxito descartable (AC-07..AC-11, UI del DDR).
+- `models/agenda-dates.ts` (+ spec): funciones puras de fechas (AC-08, AC-10). `services/agenda-api.service.ts`: `createShifts`, `saveAbsence` con PUT, `deleteAbsence`.
+- i18n es/en/pt: 29 claves nuevas (AC-12). Pantalla de referencia: la propia pantalla (DDR vigente); botones según sección 3 del sistema de diseño.
+
+**Desviaciones respecto al plan:**
+- Los `<dialog>` pasaron fuera del bloque `@if (week)` porque los botones de la cabecera los referencian.
+- El aviso de éxito se cierra con un botón «Cerrar»; no desaparece solo.
+- El DDR pedía «Eliminar» desde la tarjeta: abre el diálogo de ausencia directamente en la confirmación.
+
+**Verificación propia (no es el Quality Gate):** `npm run lint`, `npm run i18n:check` y `npm run build` pasan; 35 pruebas de `features/agenda` pasan. En `npm test` completo falla 1 prueba ajena a esta tarea (`core/i18n/screens-i18n.spec.ts:60`, «Entregue» vs «Entregado»), no revisada en `main`. Las pruebas de backend **no se ejecutaron** (el worktree no tiene `DATABASE_URL`); solo se comprobó la sintaxis.
+
+**Deuda técnica:** sin eliminación de turnos; sin aviso de citas existentes al crear/editar turnos o ausencias (ambos fuera de alcance).
 
 ## Review
 _Pendiente_
