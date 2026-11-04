@@ -1,6 +1,6 @@
 # TASK-proformas-odontologicas-con-pieza-dental: Proformas dentro de Odontología con pieza dental
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-proformas-odontologicas-con-pieza-dental (basada en `task/TASK-crear-proformas-de-servicios`, PR #52, por indicación del usuario)
@@ -15,6 +15,7 @@
 | 2026-11-04 | ARCHITECTURE → PLANNING | ADR y DDR escritos; dos decisiones de negocio respondidas por el usuario | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa y autoverificaciones propias | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate: PASS con 3 hallazgos Low abiertos (REV-01, 02, 04); REV-03 (Medium, móvil) corregido tras la prueba visual | delivery-publish |
 
 ## Investigación
 
@@ -92,7 +93,9 @@ Deuda técnica: duplicación consciente con `quotations` (ADR); extraer un domin
 UI: pantallas de referencia `features/quotations` (copia, por instrucción del usuario) y `patient-detail` para la tarjeta; se reutilizan `MoneyPipe`, badges `col-*`, `unsavedChangesGuard`, `fetchAll`; sin componentes compartidos nuevos.
 
 ## Review
-_Pendiente_
+**Quality Gate (subagente aislado, 2026-11-04): PASS de código, sin Critical/High.** Backend 1425 OK (PostgreSQL), `makemigrations --check` limpio, `ng lint`, `i18n:check` (1670 claves), `ng build`, `ng test` de Odontología 41/41 (suite completa 1229 OK + 1 intermitente preexistente de `screens-i18n`), `npm audit` 0. No ejecutado: bandit/ruff/flake8 (no instalados).
+Hallazgos: [REV-01](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-01.md) Low (pieza dental acepta números y separadores Unicode), [REV-02](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-02.md) Low (huecos de pruebas), [REV-04](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-04.md) Low (contraste de la plantilla); [REV-03](../reviews/REV-2026-11-04-proformas-odontologicas-con-pieza-dental-03.md) Medium (desborde horizontal en móvil) corregido.
+**Prueba visual (navegador integrado, backend aislado con base `dore_visual_wt`, frontend en `localhost:4300`):** login, ficha del paciente con la tarjeta «Proformas» (4 proformas con estado, total y fecha), formulario con columna «Pieza dental» (se guardó la pieza `36` y aparece en el detalle), detalle con versiones y botones; 1440 px y 390 px; tema claro en ambos tamaños y oscuro en el formulario móvil. Detectó el desborde móvil (REV-03) y el contraste de la plantilla (REV-04). **No verificado visualmente:** detalle y tarjeta en tema oscuro, y el flujo de presentar / nueva versión en el navegador.
 
 ## Publicación
-_Pendiente_
+Estado: PUBLISH. Cambio sensible: nuevo agregado y migración en Odontología (`dentistry/0002`) y dependencia `dentistry → service_catalog` (ADR relacionado). Solo un humano aprueba el merge. PR apilado sobre #52: mergear #52 primero o cambiar la base a `main`.
