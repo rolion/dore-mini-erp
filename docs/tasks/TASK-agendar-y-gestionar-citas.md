@@ -22,6 +22,7 @@
 | 2026-11-03 | REVIEW → PUBLISH | Segundo Quality Gate: PASS con REV-08 (Medium), REV-09 y REV-10 (Low) como limitaciones conocidas | delivery-publish |
 | 2026-11-03 | PUBLISH → REVIEW | REV-08, REV-09 y REV-10 corregidos por indicación de la persona; pendiente reverificar REV-08 en navegador | delivery-build |
 | 2026-11-04 | REVIEW → PUBLISH | Tercer Quality Gate: PASS con REV-11 y REV-12 (Low) como limitaciones conocidas | delivery-publish |
+| 2026-11-04 | PUBLISH (sin cambio) | Merge de main (idiomas es/en/pt): conflictos en los catálogos y pantallas de Citas pasadas a claves de traducción | delivery-build |
 
 ## Investigación
 
@@ -121,6 +122,8 @@ Limitaciones conocidas: [REV-08](../reviews/REV-2026-11-03-agendar-y-gestionar-c
 **Tercer Quality Gate: PASS con limitaciones conocidas** (sobre `bf49cdd`). Sin Critical ni High. REV-08, REV-09 y REV-10 verificados; REV-01 a REV-07 sin regresiones. Backend en PostgreSQL: `check` y `makemigrations --check` limpios, suite completa 1383 correctas, `modules.agenda` 32 correctas en 2 corridas (las dos pruebas de concurrencia estables), `bandit` sin incidencias. Frontend: lint, `ngc`, build, `npm audit` (0) y Karma completo 1139 correctas (sentencias 86,15 %, ramas 77,73 %). Visual verificada en navegador a 390 y 1440 px, tema claro y oscuro, sobre una base temporal ya eliminada: listado e historial apilados sin scroll horizontal.
 
 Limitaciones conocidas: [REV-11](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-11.md) (Low: tras el 404 de una página inexistente, el reintento a la página 1 pierde el indicador de carga) y [REV-12](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-12.md) (Low: abrir el calendario borra de la URL los filtros del listado). No verificados: `ruff` (no instalado ni configurado) y el recorrido con teclado del formulario y de los diálogos de confirmar, cancelar y atender.
+
+**Merge con `main` (2026-11-04):** `main` incorporó los idiomas es/en/pt (sin texto fijo en pantallas y sin `de.json`). Hubo conflicto en `es.json`, `en.json` y `de.json`; se tomó el catálogo de `main` y se añadió `AGENDA.CITAS.*` (128 claves) y `MENUITEMS.AGENDA.APPOINTMENTS` en es/en/pt. Las pantallas, el modelo y los mensajes de error de Citas pasaron a `translate` / `tr()` y los specs usan `provideTestTranslations()`. Verificación tras el merge: `npm run i18n:check` (0 faltantes), lint, `ngc`, Karma completo 1173 correctas, backend 1383 correctas en PostgreSQL, `makemigrations --check` sin cambios. Los tres Quality Gates anteriores no cubren el código de traducción: conviene un último gate sobre este commit. Una prueba de `main` (`screens-i18n.spec.ts`, «labels coming from code follow the active language») es intermitente según el orden de ejecución, también ejecutada sola (preexistente, ajena a este task).
 
 ## Publicación
 PR #50 listo para aprobación humana; no se mergea. Toca base de datos (migraciones aditivas `0002` y `0003`), tiene un ADR y cambia la prueba de límites entre módulos. Limitaciones conocidas: REV-11, REV-12, `ruff` y teclado sin verificar.
