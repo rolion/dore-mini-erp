@@ -1,0 +1,118 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'DENTISTRY.PROFORMAS.DETALLE_TITULO' | translate }}</h5></li>
+    <li class="breadcrumb-item">{{ 'DENTISTRY.PROFORMAS.BC_ODONTOLOGIA' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dentistry/patients">{{ 'DENTISTRY.PROFORMAS.BC_PACIENTES' | translate }}</a></li>
+    @if (proforma) {
+      <li class="breadcrumb-item"><a [routerLink]="['/pocketbiz/dentistry/patients', proforma.customer_id]">{{ proforma.patient_name }}</a></li>
+    }
+    <li class="breadcrumb-item active">{{ proforma?.number || ('DENTISTRY.PROFORMAS.BC_DETALLE' | translate) }}</li>
+  </ul>
+  <div class="section-body">
+    @if (loading) { <p role="status">{{ 'DENTISTRY.PROFORMAS.CARGANDO' | translate }}</p> }
+    @if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
+    @if (proforma; as p) {
+      <div class="card">
+        <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+          <h2><strong>{{ p.number }}</strong> · v{{ p.version }}
+            <span class="badge ms-2" [class]="classes[p.status]">{{ statusLabel(p.status) }}</span></h2>
+          <div class="d-flex gap-2">
+            <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/patients', p.customer_id]">{{ 'DENTISTRY.PROFORMAS.IR_PACIENTE' | translate }}</a>
+            @if (can('edit')) {
+              <a class="btn btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', p.id, 'editar']">{{ 'DENTISTRY.PROFORMAS.EDITAR' | translate }}</a>
+            }
+            @if (can('present')) {
+              <button type="button" class="btn btn-primary" (click)="open(dlg)">{{ 'DENTISTRY.PROFORMAS.PRESENTAR' | translate }}</button>
+            }
+            @if (can('new-version')) {
+              <button type="button" class="btn btn-primary" [disabled]="saving" (click)="newVersion()">
+                {{ (saving ? 'DENTISTRY.PROFORMAS.CREANDO' : 'DENTISTRY.PROFORMAS.NUEVA_VERSION') | translate }}</button>
+            }
+          </div>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.PACIENTE' | translate }}</dt><dd class="col-sm-9">{{ p.patient_name }}</dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.VIGENCIA' | translate }}</dt><dd class="col-sm-9">{{ (p.valid_until | date: 'dd/MM/yyyy') || '—' }}</dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.MONEDA' | translate }}</dt><dd class="col-sm-9">{{ p.currency }}</dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.TOTAL_PROPUESTO' | translate }}</dt><dd class="col-sm-9"><strong>{{ p.total | money }}</strong></dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.TOTAL_ACEPTADO' | translate }}</dt><dd class="col-sm-9">—</dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.CONDICIONES' | translate }}</dt><dd class="col-sm-9">{{ p.notes || '—' }}</dd>
+          </dl>
+
+          <h5>{{ 'DENTISTRY.PROFORMAS.LINEAS' | translate }}</h5>
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead><tr>
+                <th>{{ 'DENTISTRY.PROFORMAS.SERVICIO' | translate }}</th>
+                <th>{{ 'DENTISTRY.PROFORMAS.PIEZA_COL' | translate }}</th>
+                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.CANTIDAD' | translate }}</th>
+                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.PRECIO_UNIT' | translate }}</th>
+                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.SUBTOTAL' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                @for (line of p.lines; track line.id) {
+                  <tr>
+                    <td>{{ line.description }}</td>
+                    <td>{{ line.dental_piece || '—' }}</td>
+                    <td class="text-end">{{ line.quantity }}</td>
+                    <td class="text-end">{{ line.unit_price | money }}</td>
+                    <td class="text-end">{{ line.subtotal | money }}</td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="5">{{ 'DENTISTRY.PROFORMAS.SIN_LINEAS' | translate }}</td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <h5 class="mt-4">{{ 'DENTISTRY.PROFORMAS.VERSIONES' | translate }}</h5>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead><tr>
+                <th>{{ 'DENTISTRY.PROFORMAS.COL_VERSION' | translate }}</th><th>{{ 'DENTISTRY.PROFORMAS.COL_FECHA' | translate }}</th>
+                <th>{{ 'DENTISTRY.PROFORMAS.COL_ESTADO' | translate }}</th><th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_TOTAL' | translate }}</th>
+                <th>{{ 'DENTISTRY.PROFORMAS.VER' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                @for (version of p.versions; track version.id) {
+                  <tr [class.fw-bold]="version.id === p.id">
+                    <td>v{{ version.version }}</td>
+                    <td>{{ version.date | date: 'dd/MM/yyyy' }}</td>
+                    <td><span class="badge" [class]="classes[version.status]">{{ statusLabel(version.status) }}</span></td>
+                    <td class="text-end">{{ version.total | money }}</td>
+                    <td>
+                      @if (version.id !== p.id) {
+                        <a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', version.id]">{{ 'DENTISTRY.PROFORMAS.VER' | translate }}</a>
+                      } @else { {{ 'DENTISTRY.PROFORMAS.ACTUAL' | translate }} }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <dialog #dlg aria-labelledby="dental-present-title" (cancel)="$event.preventDefault(); close(dlg)">
+        <div class="p-3">
+          <h4 id="dental-present-title">{{ 'DENTISTRY.PROFORMAS.DLG_TITULO' | translate }}</h4>
+          <p>{{ 'DENTISTRY.PROFORMAS.DLG_TEXTO' | translate }}</p>
+          <dl class="row">
+            <dt class="col-5">{{ 'DENTISTRY.PROFORMAS.DLG_NUMERO' | translate }}</dt><dd class="col-7">{{ p.number }} · v{{ p.version }}</dd>
+            <dt class="col-5">{{ 'DENTISTRY.PROFORMAS.PACIENTE' | translate }}</dt><dd class="col-7">{{ p.patient_name }}</dd>
+            <dt class="col-5">{{ 'DENTISTRY.PROFORMAS.DLG_LINEAS' | translate }}</dt><dd class="col-7">{{ p.lines.length }}</dd>
+            <dt class="col-5">{{ 'DENTISTRY.PROFORMAS.TOTAL_PROPUESTO' | translate }}</dt><dd class="col-7">{{ p.total | money }}</dd>
+          </dl>
+          @if (dialogError) { <p class="alert alert-warning" role="alert">{{ dialogError }}</p> }
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" [disabled]="saving" (click)="present(dlg)">
+              {{ (saving ? 'DENTISTRY.PROFORMAS.PRESENTANDO' : 'DENTISTRY.PROFORMAS.PRESENTAR') | translate }}</button>
+            <button type="button" class="btn btn-light" [disabled]="saving" (click)="close(dlg)">{{ 'DENTISTRY.PROFORMAS.VOLVER' | translate }}</button>
+          </div>
+        </div>
+      </dialog>
+    }
+  </div>
+</section>

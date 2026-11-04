@@ -11,9 +11,10 @@ import { CLINICAL_FIELDS, ClinicalInput, Patient } from '../models/patient';
 import { DentistryApiService, errorMessage, fieldErrors } from '../services/dentistry-api.service';
 import { demographicsValidator, localDateInput, minorAt } from '../services/demographics-form';
 import { PatientHistoryComponent } from '../components/patient-history.component';
+import { PatientProformasComponent } from '../components/patient-proformas.component';
 
 @Component({
-  selector: 'app-patient-detail', imports: [TranslatePipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent],
+  selector: 'app-patient-detail', imports: [TranslatePipe, DatePipe, NgTemplateOutlet, RouterLink, ReactiveFormsModule, PatientHistoryComponent, PatientProformasComponent],
   templateUrl: './patient-detail.component.html',
   styles: [`
     :host-context(.dark) h3 {
