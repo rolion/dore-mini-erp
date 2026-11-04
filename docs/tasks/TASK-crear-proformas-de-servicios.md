@@ -1,6 +1,6 @@
 # TASK-crear-proformas-de-servicios: PB-COT-001
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-proformas-de-servicios (basada en `task/TASK-agendar-y-gestionar-citas`, PR #50, por indicación del usuario)
@@ -17,6 +17,8 @@
 | 2026-11-03 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-03 | ENGINEERING → REVIEW | Implementación completa; pruebas con PostgreSQL pendientes de entorno | delivery-build |
 | 2026-11-03 | REVIEW → REVIEW | Quality Gate 1: FAIL (rama atrás de su base; BD sin ejecutar); base integrada y REV-01/02/03/05 corregidos | delivery-publish |
+| 2026-11-04 | REVIEW → REVIEW | REV-04 (decisión del usuario, PLAN v2), REV-06 y REV-07 corregidos; pruebas con PostgreSQL 1405 OK | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate 2: PASS condicionado (revisión visual no verificada); 2 hallazgos Low abiertos (REV-08, REV-09) | delivery-publish |
 
 ## Investigación
 
@@ -115,7 +117,8 @@ Hallazgos: [REV-01](../reviews/REV-2026-11-03-crear-proformas-de-servicios-01.md
 Pendiente para PASS: correr las pruebas con PostgreSQL (`python manage.py test modules.quotations modules.modularity modules.agenda modules.service_catalog`) y la revisión visual.
 
 ## Publicación
-_Pendiente_
+Quality Gate 2 (subagente aislado, 2026-11-04): **PASS condicionado**. Backend (`quotations`, `modularity`, `agenda`, `service_catalog`, `sales`) 447 OK y suite completa 1405 OK en PostgreSQL; `makemigrations --check` limpio; `bandit` 0; frontend `ng lint`, `ng build`, 22/22 specs, `npm audit` 0 vulnerabilidades. **No verificado:** revisión visual (móvil/escritorio, claro/oscuro) y ruff/flake8 (no instalados). Hallazgos abiertos, Low: [REV-08](../reviews/REV-2026-11-03-crear-proformas-de-servicios-08.md) (sin spec del detalle) y [REV-09](../reviews/REV-2026-11-03-crear-proformas-de-servicios-09.md) (SPECIFICATION: presentar/nueva versión no revalidan cliente activo; requiere decisión del usuario).
+Cambio sensible: nuevo módulo habilitable y migración `quotations/0001_initial` (ADR relacionado). Solo un humano aprueba el merge; PR apilado sobre #50 (mergear #50 primero o retargetear a `main`).
 
 **Seguimiento:** REV-06 (fechas `dd/MM/yyyy`, filtros en la URL, aviso al salir con cambios, todas las páginas de servicios, Escape bloqueado al guardar; DDR actualizado: «Presentar» solo en el detalle y tabla de líneas dentro del formulario) y REV-07 (AC-06 sobre todos los modelos de sales/inventory/purchases/expenses, `requires` de AC-10, edge cases de API, specs de formulario y lista) corregidos. `ng test` acotado 22/22, `ng lint` y `ng build` OK; `test_domain`, `modularity test_domain` y `test_boundaries` OK. Pruebas con PostgreSQL y revisión visual siguen pendientes.
 
