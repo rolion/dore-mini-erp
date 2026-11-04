@@ -1,6 +1,6 @@
 # TASK-presentar-aceptar-versionar-proformas: PB-COT-002
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-presentar-aceptar-versionar-proformas (basada en `origin/task/TASK-crear-proformas-de-servicios`, 672d71b, que contiene los PR #52 y #56; por indicación del usuario)
@@ -16,6 +16,7 @@
 | 2026-11-04 | ARCHITECTURE → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa; pruebas de API con PostgreSQL pendientes de entorno | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate: PASS condicionado (pruebas con PostgreSQL OK; REV-03 corregido; REV-02 Low preexistente abierto) | delivery-publish |
 
 ## Investigación
 
@@ -108,4 +109,4 @@ Ejecutado y OK:
 Revisión visual (navegador integrado, app local con backend propio): en escritorio se recorrió aceptar una línea (validación de nombre/medio, resumen con importe, confirmación, totales 300/100/200, «Parcialmente aceptada», línea «Autorizada», historial, versiones con total aceptado) y la vista imprimible; en 375 px sin desborde horizontal; tema oscuro correcto en tablas, botones y diálogo. Se corrigió un hallazgo visual Low: «Total propuesto» duplicado en ambos detalles. **No verificado visualmente:** rechazo, rectificación y nueva versión con decisiones en el navegador (cubiertos por pruebas de API y componentes), ni el diálogo de impresión del navegador; ruff no está instalado.
 
 ## Publicación
-_Pendiente_
+PR [#59](https://github.com/rolion/dore-mini-erp/pull/59) listo para aprobación humana contra `task/TASK-crear-proformas-de-servicios` (base apilada; los PR #52 y #56 aún no están en `main`). **Cambio sensible:** migraciones de base de datos (`quotations/0002`, `dentistry/0003`, aditivas) respaldadas por el ADR. Solo un humano decide el merge.
