@@ -54,4 +54,13 @@ describe('PatientListComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Prueba también con «Todos»');
     params.next(convertToParamMap({ search: 'Ana', active: 'false', page: '2' }));
   });
+  it('shows a single empty message and treats "Todos" without patients as an empty clinic (REV-04)', () => {
+    params.next(convertToParamMap({ search: '', active: '', page: '1' }));
+    api.list.and.returnValue(of(EMPTY_HISTORY));
+    const fixture = TestBed.createComponent(PatientListComponent); fixture.detectChanges();
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Aún no hay pacientes. Registra el primero');
+    expect(text).not.toContain('No hay pacientes que coincidan');
+    params.next(convertToParamMap({ search: 'Ana', active: 'false', page: '2' }));
+  });
 });

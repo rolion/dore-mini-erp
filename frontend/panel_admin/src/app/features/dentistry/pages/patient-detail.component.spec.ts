@@ -177,7 +177,7 @@ describe('PatientDetailComponent', () => {
   }));
   it('announces profile creation and focuses the clinical section (AC-03)', fakeAsync(async () => {
     await setup(makePatient(), { created: 'true' }); tick(); fixture.detectChanges();
-    expect(text()).toContain('Paciente creado. Puedes completar los antecedentes ahora o más tarde.');
+    expect(text()).toContain('Perfil creado. Puedes completar los antecedentes ahora o más tarde.');
     expect(document.activeElement?.id).toBe('clinical-section');
   }));
   it('shows the change log as tabs, one list at a time (AC-24)', async () => {
@@ -189,5 +189,39 @@ describe('PatientDetailComponent', () => {
     fixture.detectChanges();
     expect(api.history).toHaveBeenCalledWith('c-1', false, 1);
     expect(root().querySelectorAll('app-patient-history').length).toBe(1);
+  });
+  it('uses singular for one year old and keeps valid markup in personal data (REV-01, REV-03)', async () => {
+    const patient = makePatient(); patient.customer.birth_date = yearsAgo(1);
+    patient.customer.responsible_name = 'Madre'; patient.customer.responsible_phone = '76543210';
+    await setup(patient);
+    expect(text()).toContain('Menor · 1 año'); expect(text()).not.toContain('1 años');
+    expect(root().querySelectorAll('#admin-section dl > div, #admin-section dl > p').length).toBe(0);
+    fixture.componentInstance.historyOpen = true; fixture.detectChanges();
+    const panel = root().querySelector('[role="tabpanel"]');
+    expect(panel?.getAttribute('aria-labelledby')).toBe('history-tab-clinical');
+    expect(root().querySelector('#history-tab-clinical')?.getAttribute('aria-controls')).toBe(panel?.id);
+  });
+  it('clears the archive-blocked warning once the pending section is cancelled or saved (REV-02)', async () => {
+    await setup(); const component = fixture.componentInstance;
+    component.editClinical(); component.clinicalForm.markAsDirty();
+    await component.toggleActive(); fixture.detectChanges();
+    expect(root().querySelector('.alert-danger')).not.toBeNull();
+    component.cancelClinical(); fixture.detectChanges();
+    expect(root().querySelector('.alert-danger')).toBeNull();
+  });
+  it('keeps requiring the second responsible field for adults who informed one (EDGE-04)', async () => {
+    await setup(); const component = fixture.componentInstance;
+    component.adminForm.controls.birth_date.setValue('2000-01-01');
+    component.adminForm.controls.responsible_name.setValue('Tutor');
+    expect(component.adminForm.hasError('responsiblePhone')).toBeTrue();
+    expect(component.adminForm.hasError('responsibleName')).toBeFalse();
+  });
+  it('shows a 409 from a profile archived elsewhere in the section status and keeps the draft (EDGE-06)', async () => {
+    await setup(); const component = fixture.componentInstance;
+    component.editClinical(); component.clinicalForm.controls.allergies.setValue('Texto'); component.clinicalForm.markAsDirty();
+    api.update.and.returnValue(throwError(() => new HttpErrorResponse({ status: 409, error: { detail: 'Reactiva el perfil antes de editarlo.' } })));
+    component.saveClinical(); fixture.detectChanges();
+    expect(root().querySelector('[data-testid="clinical-status"]')?.textContent).toContain('Reactiva el perfil antes de editarlo.');
+    expect(component.clinicalForm.controls.allergies.value).toBe('Texto');
   });
 });

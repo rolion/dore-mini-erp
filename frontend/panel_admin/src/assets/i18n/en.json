@@ -432,7 +432,7 @@
       "LA_FECHA_NO_PUEDE_SER": "The date cannot be in the future.",
       "INDICA_EL_NOMBRE_DEL_RESPONSABLE": "Enter the guardian name.",
       "INDICA_EL_TELEFONO_DEL_RESPONSABLE": "Enter the guardian phone.",
-      "PERFIL_ODONTOLOGICO_CREADO": "Patient created. You can complete the background now or later.",
+      "PERFIL_ODONTOLOGICO_CREADO": "Profile created. You can complete the background now or later.",
       "GUARDA_O_CANCELA_LOS_CAMBIOS": "Save or cancel the changes in {{sections}} before changing the status.",
       "PERFIL_REACTIVADO": "Profile reactivated.",
       "PERFIL_ARCHIVADO_SE_CONSERVA_SU": "Profile archived. Its history is kept.",
@@ -463,7 +463,9 @@
       "DIALOG_ARCHIVAR_TEXTO": "It will no longer appear under Active and cannot be edited until reactivated. No data is deleted.",
       "DIALOG_REACTIVAR_TITULO": "Reactivate the profile of {{name}}?",
       "DIALOG_REACTIVAR_TEXTO": "You will be able to edit it again. All its history is kept.",
-      "REGISTRO_DE_CAMBIOS": "Change log"
+      "REGISTRO_DE_CAMBIOS": "Change log",
+      "EDAD_ANO": "{{n}} year",
+      "MENOR_EDAD_ANO": "Minor · {{n}} year"
     },
     "PATIENT_LIST": {
       "PACIENTES": "Patients",
@@ -476,7 +478,6 @@
       "PACIENTE": "Patient",
       "NO_HAY_RESULTADOS_PARA_ESTOS": "No patients match the search or filters.",
       "AUN_NO_HAY_PACIENTES_REGISTRADOS": "There are no patients yet. Register the first one with “New patient”.",
-      "NO_HAY_PACIENTES_QUE_COINCIDAN": "No patients match the filters.",
       "BUSQUEDA_AYUDA": "Search by name or phone. Spaces and dashes are ignored.",
       "EDAD": "Age",
       "ACTUALIZADO": "Updated",

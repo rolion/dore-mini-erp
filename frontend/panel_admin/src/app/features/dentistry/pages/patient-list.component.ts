@@ -32,7 +32,7 @@ export class PatientListComponent implements OnInit {
   loading = false;
   error = '';
   get messages() {
-    return { emptyMessage: tr('DENTISTRY.PATIENT_LIST.NO_HAY_PACIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+    return { emptyMessage: '', totalMessage: tr('COMMON.IN_TOTAL') };
   }
   ngOnInit() {
     merge(this.search.valueChanges.pipe(debounceTime(300)), this.active.valueChanges)
@@ -61,6 +61,8 @@ export class PatientListComponent implements OnInit {
       backdrop: 'static', keyboard: false, ariaLabelledBy: 'new-patient-title' });
     ref.componentInstance.backFilters = this.filters;
   }
+  /** Hay búsqueda o se miran solo los archivados: el vacío se explica por el filtro, no porque no existan pacientes. */
+  get narrowed() { return !!this.search.value.trim() || this.active.value === 'false'; }
   get hasFilters() { return !!this.search.value.trim() || this.active.value !== 'true'; }
   ageOf(patient: PatientSummary): number | null { return ageAt(patient.customer.birth_date); }
   isMinor(patient: PatientSummary): boolean { const age = this.ageOf(patient); return age !== null && age < 18; }

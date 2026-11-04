@@ -13,6 +13,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN; DDR escrito; sin ADR | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación y pruebas de la Specification; se solicita Quality Gate independiente | delivery-build |
+| 2026-11-04 | REVIEW → REVIEW | Quality Gate: sin Critical/High; 6 hallazgos Low (REV-01..06) corregidos en el mismo ciclo; revisión visual pendiente (la app no se pudo levantar) | delivery-publish |
 
 ## Investigación
 
@@ -110,7 +111,14 @@ Solo frontend (`frontend/panel_admin/`); sin cambios en backend, endpoints, perm
 **Deuda técnica / pendiente de verificación visual (para publish):** estados archivado, menor, historial expandido, móvil, tema oscuro y UI en español no se vieron en ejecución; contraste de botones deshabilitados; `unsavedChangesGuard` sigue usando `window.confirm` (compartido); `Swal` sin componente compartido; «Sin registrar» vs «No informado» en otras fichas.
 
 ## Review
-_Pendiente_
+**Quality Gate independiente (subagente aislado) sobre el commit d7a32e0:** sin hallazgos Critical/High; 6 Low abiertos → `docs/reviews/REV-2026-11-04-refinar-ux-pacientes-odontologia-01..06.md`. Veredicto del gate: **no aprobado** únicamente porque la revisión visual (§8 del sistema de diseño) no pudo ejecutarse (backend/PostgreSQL no disponibles; levantarlo exige `.env`).
+
+Evidencia del gate: `ng test` 1199 OK + 1 fallo preexistente (`screens-i18n.spec.ts`, también falla en `origin/main` limpio, flaky por orden aleatorio); cobertura Statements 86,74 %, Branches 78,27 %, Functions 82,09 %, Lines 87,8 %; lint, `i18n:check` (1430 claves, 0 faltantes), `ng build` y `npm audit` (0 vulnerabilidades) correctos; 0 archivos de `backend/` en el diff; todos los AC/INV conformes por código y prueba.
+
+**Correcciones posteriores (verificación propia, sin re-revisión independiente todavía):** REV-01 plural de edad; REV-02 el aviso de bloqueo se limpia; REV-03 marcado `dl` válido y `tabpanel` con `aria-controls`; REV-04 mensaje de vacío único y «Todos» sin pacientes = clínica vacía; REV-05 pruebas de EDGE-01/04/06 (AC-07 sigue cubierto solo por `i18n:check`); REV-06 el aviso dice «Perfil creado…», alineado con AC-03. Tras ellas: pruebas de dentistry y quick-create 69/69; suite completa 1204 OK + el mismo fallo preexistente; lint y build correctos.
+
+**Pendiente:** revisión visual humana (archivado, menor, historial expandido, móvil, tema oscuro, español, diálogo Swal, modal de alta). El task permanece en REVIEW hasta entonces; el PR no se marca listo.
+
 
 ## Publicación
 _Pendiente_

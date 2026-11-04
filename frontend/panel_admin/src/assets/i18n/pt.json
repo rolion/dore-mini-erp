@@ -432,7 +432,7 @@
       "LA_FECHA_NO_PUEDE_SER": "A data não pode ser futura.",
       "INDICA_EL_NOMBRE_DEL_RESPONSABLE": "Informe o nome do responsável.",
       "INDICA_EL_TELEFONO_DEL_RESPONSABLE": "Informe o telefone do responsável.",
-      "PERFIL_ODONTOLOGICO_CREADO": "Paciente criado. Você pode completar os antecedentes agora ou depois.",
+      "PERFIL_ODONTOLOGICO_CREADO": "Perfil criado. Você pode completar os antecedentes agora ou depois.",
       "GUARDA_O_CANCELA_LOS_CAMBIOS": "Salve ou cancele as alterações em {{sections}} antes de mudar o estado.",
       "PERFIL_REACTIVADO": "Perfil reativado.",
       "PERFIL_ARCHIVADO_SE_CONSERVA_SU": "Perfil arquivado. Seu histórico é mantido.",
@@ -463,7 +463,9 @@
       "DIALOG_ARCHIVAR_TEXTO": "Deixará de aparecer em Ativos e não poderá ser editado até ser reativado. Nenhum dado é excluído.",
       "DIALOG_REACTIVAR_TITULO": "Reativar o perfil de {{name}}?",
       "DIALOG_REACTIVAR_TEXTO": "Você poderá editá-lo novamente. Todo o histórico é mantido.",
-      "REGISTRO_DE_CAMBIOS": "Registro de alterações"
+      "REGISTRO_DE_CAMBIOS": "Registro de alterações",
+      "EDAD_ANO": "{{n}} ano",
+      "MENOR_EDAD_ANO": "Menor · {{n}} ano"
     },
     "PATIENT_LIST": {
       "PACIENTES": "Pacientes",
@@ -476,7 +478,6 @@
       "PACIENTE": "Paciente",
       "NO_HAY_RESULTADOS_PARA_ESTOS": "Nenhum paciente corresponde à busca ou aos filtros.",
       "AUN_NO_HAY_PACIENTES_REGISTRADOS": "Ainda não há pacientes. Registre o primeiro com “Novo paciente”.",
-      "NO_HAY_PACIENTES_QUE_COINCIDAN": "Nenhum paciente corresponde aos filtros.",
       "BUSQUEDA_AYUDA": "Busque por nome ou telefone. Espaços e hifens são ignorados.",
       "EDAD": "Idade",
       "ACTUALIZADO": "Atualizado",

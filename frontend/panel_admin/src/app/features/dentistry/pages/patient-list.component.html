@@ -18,8 +18,8 @@
     </div>
     @if (error) { <div class="alert alert-danger" role="alert">{{ error }} <button type="button" class="btn btn-light ms-2" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
     @if (!loading && !error && count === 0) {
-      <p>{{ hasFilters ? ('DENTISTRY.PATIENT_LIST.NO_HAY_RESULTADOS_PARA_ESTOS' | translate) : ('DENTISTRY.PATIENT_LIST.AUN_NO_HAY_PACIENTES_REGISTRADOS' | translate) }}
-        @if (hasFilters && active.value !== '') { {{ 'DENTISTRY.PATIENT_LIST.SUGERENCIA_TODOS' | translate }} }</p>
+      <p>{{ narrowed ? ('DENTISTRY.PATIENT_LIST.NO_HAY_RESULTADOS_PARA_ESTOS' | translate) : ('DENTISTRY.PATIENT_LIST.AUN_NO_HAY_PACIENTES_REGISTRADOS' | translate) }}
+        @if (narrowed && active.value !== '') { {{ 'DENTISTRY.PATIENT_LIST.SUGERENCIA_TODOS' | translate }} }</p>
     }
     <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
       [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [scrollbarH]="true" [externalPaging]="true"

@@ -6,7 +6,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { CustomersApiService } from '../../customers/services/customers-api.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
-import { Customer } from '../../customers/models/customer';
+import { Customer, CustomerApiError } from '../../customers/models/customer';
 import { DentistryApiService } from '../services/dentistry-api.service';
 import { Patient } from '../models/patient';
 import { makePatient, EMPTY_HISTORY } from '../testing/patient-fixtures';
@@ -88,5 +88,14 @@ describe('PatientCreateComponent', () => {
     fixture.componentInstance.createCustomer();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('app-customer-quick-create form')).not.toBeNull();
+  });
+  it('offers to retry a failed customer search (EDGE-01)', () => {
+    customers.list.and.returnValue(throwError(() => new CustomerApiError('Falla de búsqueda', 500, {})));
+    const fixture = TestBed.createComponent(PatientCreateComponent); fixture.detectChanges();
+    expect(fixture.componentInstance.searchError).toBe('Falla de búsqueda');
+    expect(fixture.nativeElement.textContent).toContain('Reintentar búsqueda');
+    customers.list.and.returnValue(of({ ...EMPTY_HISTORY, results: [customer] }));
+    fixture.componentInstance.retryCustomers(); fixture.detectChanges();
+    expect(fixture.componentInstance.searchError).toBe(''); expect(fixture.componentInstance.results).toEqual([customer]);
   });
 });

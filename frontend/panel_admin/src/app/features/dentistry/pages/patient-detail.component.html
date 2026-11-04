@@ -15,7 +15,7 @@
           <span class="badge rounded-pill" [class.bg-success-subtle]="p.active" [class.text-success-emphasis]="p.active"
             [class.bg-secondary-subtle]="!p.active" [class.text-secondary-emphasis]="!p.active">{{ p.active ? ('COMMON.ACTIVO' | translate) : ('DENTISTRY.PATIENT_DETAIL.ARCHIVADO' | translate) }}</span>
           @if (isMinor) {
-            <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_EDAD_ANOS' | translate: { n: age } }}</span>
+            <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">{{ minorText }}</span>
           }
         </div>
         <p class="mb-0 mt-2 text-break">
@@ -159,15 +159,15 @@
                 <dt>{{ 'DENTISTRY.PATIENT_DETAIL.FECHA_DE_NACIMIENTO' | translate }}</dt>
                 <dd>
                   <ng-container *ngTemplateOutlet="value; context: { $implicit: (p.customer.birth_date | date:'dd/MM/yyyy') }" />
-                  @if (age !== null) { · {{ 'DENTISTRY.PATIENT_DETAIL.EDAD_ANOS' | translate: { n: age } }} }
+                  @if (age !== null) { · {{ ageText }} }
+                  @if (isMinor) { <span class="badge bg-warning-subtle text-warning-emphasis ms-1">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span> }
                 </dd>
                 @if (isMinor) {
-                  <div class="mb-3"><span class="badge bg-warning-subtle text-warning-emphasis">{{ 'DENTISTRY.PATIENT_DETAIL.MENOR_DE_EDAD' | translate }}</span></div>
                   <dt>{{ 'DENTISTRY.PATIENT_DETAIL.NOMBRE_DEL_RESPONSABLE_2' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_name }" /></dd>
                   <dt>{{ 'DENTISTRY.PATIENT_DETAIL.TELEFONO_DEL_RESPONSABLE_2' | translate }}</dt><dd><ng-container *ngTemplateOutlet="value; context: { $implicit: p.customer.responsible_phone }" /></dd>
-                  @if (missingResponsible) { <p class="small text-warning-emphasis mb-0" role="status">{{ 'DENTISTRY.PATIENT_DETAIL.FALTA_RESPONSABLE' | translate }}</p> }
                 }
               </dl>
+              @if (missingResponsible) { <p class="small text-warning-emphasis mb-0" role="status">{{ 'DENTISTRY.PATIENT_DETAIL.FALTA_RESPONSABLE' | translate }}</p> }
             }
           </div>
         </section>
@@ -190,14 +190,16 @@
           @if (historyOpen) {
             <div class="card-body">
               <ul class="nav nav-tabs mb-3" role="tablist">
-                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="historyTab === 'clinical'" role="tab" [attr.aria-selected]="historyTab === 'clinical'" (click)="historyTab = 'clinical'">{{ 'DENTISTRY.PATIENT_DETAIL.ANTECEDENTES' | translate }}</button></li>
-                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="historyTab === 'admin'" role="tab" [attr.aria-selected]="historyTab === 'admin'" (click)="historyTab = 'admin'">{{ 'DENTISTRY.PATIENT_DETAIL.DATOS_PERSONALES' | translate }}</button></li>
+                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="historyTab === 'clinical'" role="tab" id="history-tab-clinical" aria-controls="history-panel" [attr.aria-selected]="historyTab === 'clinical'" (click)="historyTab = 'clinical'">{{ 'DENTISTRY.PATIENT_DETAIL.ANTECEDENTES' | translate }}</button></li>
+                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="historyTab === 'admin'" role="tab" id="history-tab-admin" aria-controls="history-panel" [attr.aria-selected]="historyTab === 'admin'" (click)="historyTab = 'admin'">{{ 'DENTISTRY.PATIENT_DETAIL.DATOS_PERSONALES' | translate }}</button></li>
               </ul>
+              <div id="history-panel" role="tabpanel" [attr.aria-labelledby]="'history-tab-' + historyTab">
               @if (historyTab === 'clinical') {
                 <app-patient-history [patientId]="p.id" [revision]="clinicalRevision" />
               } @else {
                 <app-patient-history [patientId]="p.id" [clinical]="false" [revision]="adminRevision" />
               }
+              </div>
             </div>
           }
         </details>

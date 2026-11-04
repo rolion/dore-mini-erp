@@ -72,6 +72,8 @@ export class PatientDetailComponent implements OnInit {
   /** Edad y condición de menor según lo guardado (no según el borrador del formulario). */
   get age(): number | null { return ageAt(this.patient?.customer.birth_date); }
   get isMinor(): boolean { return this.age !== null && this.age < 18; }
+  get ageText(): string { return tr(this.age === 1 ? 'DENTISTRY.PATIENT_DETAIL.EDAD_ANO' : 'DENTISTRY.PATIENT_DETAIL.EDAD_ANOS', { n: this.age }); }
+  get minorText(): string { return tr(this.age === 1 ? 'DENTISTRY.PATIENT_DETAIL.MENOR_EDAD_ANO' : 'DENTISTRY.PATIENT_DETAIL.MENOR_EDAD_ANOS', { n: this.age }); }
   get missingResponsible(): boolean {
     return this.isMinor && !(this.patient?.customer.responsible_name.trim() && this.patient?.customer.responsible_phone.trim());
   }
@@ -116,7 +118,7 @@ export class PatientDetailComponent implements OnInit {
     if (!this.patient?.active || this.saving || !this.clinicalForm.dirty) return;
     this.clinicalForm.markAllAsTouched();
     if (this.clinicalForm.invalid) return;
-    this.savingClinical = true; this.clinicalState = 'saving'; this.clinicalMessage = ''; this.clinicalErrors = {};
+    this.error = ''; this.savingClinical = true; this.clinicalState = 'saving'; this.clinicalMessage = ''; this.clinicalErrors = {};
     this.api.update(this.id, this.clinicalForm.getRawValue()).pipe(
       finalize(() => this.savingClinical = false), takeUntilDestroyed(this.destroyRef),
     ).subscribe({ next: patient => {
@@ -133,7 +135,7 @@ export class PatientDetailComponent implements OnInit {
     if (!this.patient?.active || this.saving || !this.adminForm.dirty) return;
     this.adminForm.markAllAsTouched();
     if (this.adminForm.invalid) return;
-    this.savingAdmin = true; this.adminState = 'saving'; this.adminMessage = ''; this.adminErrors = {};
+    this.error = ''; this.savingAdmin = true; this.adminState = 'saving'; this.adminMessage = ''; this.adminErrors = {};
     const input = this.adminForm.getRawValue();
     this.api.demographics(this.id, { ...input, birth_date: input.birth_date || null }).pipe(
       finalize(() => this.savingAdmin = false), takeUntilDestroyed(this.destroyRef),
@@ -175,12 +177,12 @@ export class PatientDetailComponent implements OnInit {
     return result.isConfirmed;
   }
   cancelClinical() {
-    this.editingClinical = false; this.clinicalState = 'idle'; this.clinicalMessage = '';
+    this.error = ''; this.editingClinical = false; this.clinicalState = 'idle'; this.clinicalMessage = '';
     if (this.patient) { this.clinicalForm.reset(this.clinicalValues(this.patient)); this.clinicalErrors = {}; }
     this.focusLater('#clinical-edit-btn');
   }
   cancelAdmin() {
-    this.editingAdmin = false; this.adminState = 'idle'; this.adminMessage = '';
+    this.error = ''; this.editingAdmin = false; this.adminState = 'idle'; this.adminMessage = '';
     if (this.patient) { this.adminForm.reset({ birth_date: this.patient.customer.birth_date ?? '',
       responsible_name: this.patient.customer.responsible_name, responsible_phone: this.patient.customer.responsible_phone }); this.adminErrors = {}; }
     this.focusLater('#admin-edit-btn');
