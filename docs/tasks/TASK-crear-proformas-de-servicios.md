@@ -118,3 +118,5 @@ Pendiente para PASS: correr las pruebas con PostgreSQL (`python manage.py test m
 _Pendiente_
 
 **Seguimiento:** REV-06 (fechas `dd/MM/yyyy`, filtros en la URL, aviso al salir con cambios, todas las páginas de servicios, Escape bloqueado al guardar; DDR actualizado: «Presentar» solo en el detalle y tabla de líneas dentro del formulario) y REV-07 (AC-06 sobre todos los modelos de sales/inventory/purchases/expenses, `requires` de AC-10, edge cases de API, specs de formulario y lista) corregidos. `ng test` acotado 22/22, `ng lint` y `ng build` OK; `test_domain`, `modularity test_domain` y `test_boundaries` OK. Pruebas con PostgreSQL y revisión visual siguen pendientes.
+
+**Verificación con PostgreSQL (2026-11-04, ejecutada tras el Quality Gate):** `manage.py test modules.quotations modules.modularity modules.agenda modules.service_catalog` → 164 pruebas OK (incluye numeración concurrente con `Barrier`); suite completa del backend → 1405 pruebas OK; `makemigrations --check` sin cambios. Pendiente solo la revisión visual y un nuevo Quality Gate formal para PASS.
