@@ -90,11 +90,11 @@ Solo frontend, sin backend ni migraciones.
 - **i18n:** claves nuevas `PRODUCTS.PRODUCT_USES.*`, `PRODUCT_LIST.USOS`, `PRODUCT_FORM.ORGANIZA_Y_MUESTRA_INSUMO` en es/en/pt (AC-10).
 - **Sistema de diseño:** `design-system.md` §3 (componente) y §5 (Catálogo).
 
-**Pruebas propias** (no es el Quality Gate): specs de products/services/product-uses 87/87 OK; `npm run i18n:check` 0 faltantes; `npm run lint` OK. La suite completa dio 1 fallo distinto y ajeno en cada corrida (specs de idioma/stock, estado global de idioma); el mismo fallo de idioma ocurre en `origin/main`.
+**Pruebas propias** (no es el Quality Gate): specs de products/services/product-uses 87/87 OK; `npm run i18n:check` 0 faltantes; `npm run lint` OK; `npm run build` OK (solo advertencias Sass heredadas). La suite completa dio 1 fallo distinto y ajeno en cada corrida (specs de idioma/stock, estado global de idioma); el mismo fallo de idioma ocurre en `origin/main`.
 
 **Desviaciones respecto al plan:** ninguna de alcance. Las claves antiguas `PRODUCT_LIST.USO/VENTA/CONTROLA_STOCK` y `SERVICE_DETAIL.ACTUALIZADO` quedan sin uso en los catálogos (limpieza pendiente).
 
-**Verificación pendiente / hipótesis del TASK:** no se pudo reproducir el tooltip «Price» de Servicios ni el conteo «9 en total» (no hay datos reales); revisión visual a 1440/390 px y tema oscuro por hacer en `delivery-publish`. `ng build` no se pudo ejecutar al final por un problema de entorno (ver más abajo).
+**Verificación pendiente / hipótesis del TASK:** no se pudo reproducir el tooltip «Price» de Servicios ni el conteo «9 en total» (no hay datos reales); revisión visual a 1440/390 px y tema oscuro por hacer en `delivery-publish`.
 
 **Deuda técnica:** Inventario conserva su marcado de badges propio; filtro por «Insumo» y bloques «Hecho con / Se usa en» quedan para cuando exista Producción.
 
