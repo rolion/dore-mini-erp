@@ -58,6 +58,7 @@ Contraste: `#1677FF` sobre blanco da ≈3,9:1. Úsalo en botones con texto blanc
 | Avatar con iniciales | `app-user-avatar` (`size`: `sm` o `xl`) | `shared/components/user-avatar` |
 | Selector de idioma (Spa / En / Pr) | `app-language-selector` (header, landing y autenticación) | `shared/components/language-selector` (nuevo en TASK-habilitar-idiomas-es-en-pt) |
 | Mostrar dinero | pipe `money` (`"70.00"` → `Bs 70.00`, vacío → `—`); no convierte ni redondea | `shared/pipes/money.pipe.ts` |
+| Usos de un producto (Vendible / Comprable / Insumo / Sin usos) | `app-product-uses` (`[product]`: `canSell`, `canBuy`, `category`); «Insumo» se deriva de la categoría materia prima, empaque o intermedio, es solo visual | `shared/components/product-uses` (nuevo en TASK-mejorar-ux-catalogo-productos-servicios; Inventario conserva su marcado propio) |
 | Canal de venta | modelo compartido | `shared/models/sales-channel.ts` |
 | Paginación | modelo `Page` | `shared/models/page.ts` |
 | Botones de acción en tabla | clases `btn btn-tbl-edit btn-tbl-view\|update\|toggle h-auto` | `shared/styles/_table-actions.scss` |
@@ -156,6 +157,11 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 #### Variante con seguimiento de estados y alta rápida (referencia: `features/purchases/pages/purchase-list`)
 - Lista con filtros que conserva el botón «+» (el documento se crea desde la lista), un buscador por referencia y varias columnas de estado en badges de texto (documental, recepción, pago) más una columna de saldo; los estados que no aplican al documento (borrador, cancelado) muestran «—». Los filtros viven en la URL. **Vacío con filtros aplicados:** muestra cada filtro activo como badge, «Limpiar filtros» y el acceso al alta; sin filtros, solo el mensaje de «aún no hay…».
+
+### Catálogo: Productos y Servicios (referencia: `features/products`, `features/services`)
+- **Lista:** plantilla Lista; columnas Nombre, Categoría, **Usos** (`app-product-uses`), Precio (`money`, a la derecha), Estado y, con Inventario, Unidad base; los inactivos se atenúan (`text-muted`) además de su badge. Servicios: mismas acciones de tabla (`@use table-actions`, iconos `fas`), buscador con icono y precio a la derecha.
+- **Detalle:** plantilla Detalle con badge de estado (y chips de usos en Productos) en la cabecera, una fila de cifras (`small.text-muted` + `h5`: Precio, Categoría/Unidad base en Productos; Precio base, Duración, Especialidad en Servicios), `dl` solo con lo secundario y las fechas al pie en `small.text-muted` («Creado … · Última actualización …»). No se muestran bloques de receta hasta que exista Producción.
+- **Formulario de producto:** sección «Usos del producto» con Categoría, «Se puede vender» (con su precio debajo), «Se puede comprar» y la línea «Se mostrará como:» con `app-product-uses` en vivo.
 
 ### Detalle con historial embebido (referencia: `features/inventory/pages/stock-detail`)
 - Plantilla Detalle (`.card`, `h4` = nombre, `dl.row`) más acciones bajo los datos (la principal en `btn-primary`, una acción condicionada por regla de negocio que, si no aplica, se oculta y se explica con `small.text-muted`) y una sección `h5` con el historial: tabla Bootstrap apilada (`_inventory-table.scss`), 10 filas por página con `ngb-pagination`, vacío con mensaje (nunca error), y enlace «Ver detalle» a cada registro. Un saldo negativo se marca con texto («Negativo», `badge-outline col-red`) además del color `text-danger`.

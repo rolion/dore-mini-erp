@@ -35,6 +35,8 @@ export class ServiceListComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
+  /** Los servicios inactivos se atenúan además de llevar su badge de estado. */
+  readonly rowClass = (row: CatalogService): Record<string, boolean> => ({ 'text-muted': !row.active });
   get messages() {
     return { emptyMessage: tr('SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS'), totalMessage: tr('COMMON.SERVICES_TOTAL') };
   }

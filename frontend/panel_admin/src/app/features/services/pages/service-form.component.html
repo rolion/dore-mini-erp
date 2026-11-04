@@ -32,7 +32,7 @@
             </select>
             <small id="service-specialty-help" class="text-muted d-block">{{ specialtiesAvailable ? ('SERVICES.SERVICE_FORM.OPCIONAL_SOLO_SE_PUEDEN_ELEGIR' | translate) : ('SERVICES.SERVICE_FORM.HABILITA_PERSONAL_PARA_ELEGIR_UNA' | translate) }}</small>
             @if (fieldError('specialtyId')) { <small class="form-text text-danger">{{ fieldError('specialtyId') }}</small> }</div>
-          <p>{{ 'SERVICES.SERVICE_FORM.ESTADO' | translate }} <span class="badge-outline" [class.col-green]="active" [class.col-red]="!active">{{ active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></p>
+          <p class="mt-2">{{ 'SERVICES.SERVICE_FORM.ESTADO' | translate }} <span class="badge-outline" [class.col-green]="active" [class.col-red]="!active">{{ active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></p>
           <button class="btn btn-primary" type="submit" [disabled]="form.invalid || saving || loading || loadFailed">{{ saving ? ('PERSONNEL.PROFILE_FORM.GUARDANDO' | translate) : ('COMMON.GUARDAR' | translate) }}</button>
           <a class="btn btn-light ms-2" [routerLink]="cancelLink">{{ 'COMMON.CANCELAR' | translate }}</a>
         </fieldset>

@@ -192,6 +192,22 @@ describe('ProductFormComponent', () => {
       expect(component.form.controls.salePrice.valid).toBeTrue();
     });
 
+    it('previews the uses live from sell, buy and category (AC-06)', async () => {
+      const { harness, component, el } = await open('/pocketbiz/catalog/products/new');
+      const preview = () => el.querySelector('[data-testid="uses-preview"]')?.textContent ?? '';
+      expect(preview()).toContain('Vendible');
+      expect(preview()).not.toContain('Insumo');
+
+      component.form.controls.category.setValue('raw_material');
+      component.form.controls.canBuy.setValue(true);
+      component.form.controls.canSell.setValue(false);
+      harness.detectChanges();
+
+      expect(preview()).toContain('Comprable');
+      expect(preview()).toContain('Insumo');
+      expect(preview()).not.toContain('Vendible');
+    });
+
     it('does not block saving when the hidden price is invalid and the product is not sold (REV-02)', async () => {
       const { component } = await open('/pocketbiz/catalog/products/new');
       api.create.and.returnValue(of(makeProduct()));

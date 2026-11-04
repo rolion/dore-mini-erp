@@ -13,7 +13,7 @@ import { ServicesApiService } from '../services/services-api.service';
   template: `
     <button type="button" [class]="compact ? 'btn btn-tbl-edit btn-tbl-toggle h-auto' : 'btn btn-warning'"
       [disabled]="busy" (click)="toggle()" [title]="label" [attr.aria-label]="label">
-      @if (compact) { <i class="material-icons" aria-hidden="true">power_settings_new</i> }
+      @if (compact) { <i class="fas" [class.fa-ban]="service.active" [class.fa-check]="!service.active" aria-hidden="true"></i> }
       @else { {{ busy ? ('PERSONNEL.PROFILE_FORM.GUARDANDO' | translate) : label }} }
     </button>
     @if (error) { <small role="alert" class="text-danger d-block">{{ error }}</small> }

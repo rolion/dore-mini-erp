@@ -8,8 +8,9 @@
     <div class="p-10">
       <div class="ngxTableHeader service-list-header d-flex flex-wrap gap-2 align-items-center">
         <div class="table-title"><h2><strong>{{ 'COMMON.SERVICIOS' | translate }}</strong></h2></div>
-        <div><label for="service-search" class="visually-hidden">{{ 'COMMON.BUSCAR_POR_NOMBRE' | translate }}</label>
-          <input id="service-search" class="browser-default search-field" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" [formControl]="search"></div>
+        <div class="table-search-area"><div><label for="service-search"><i class="material-icons search-icon" aria-hidden="true">search</i><span class="visually-hidden">{{ 'COMMON.BUSCAR_POR_NOMBRE' | translate }}</span></label>
+          <input id="service-search" class="browser-default search-field" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" [formControl]="search"
+            [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE' | translate"></div></div>
         <div><label for="service-status" class="visually-hidden">{{ 'COMMON.ESTADO' | translate }}</label>
           <select id="service-status" class="form-select" [formControl]="status">
             <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option><option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option><option value="all">{{ 'COMMON.TODOS' | translate }}</option>
@@ -26,15 +27,15 @@
       @if (error) { <div role="alert" class="alert alert-danger mt-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
       @if (state.search || state.status !== 'active' || state.specialtyId) { <button type="button" class="btn btn-light mt-2" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button> }
       @if (!loading && !error && total === 0 && !state.search && state.status === 'active') { <p class="mt-2">{{ 'SERVICES.SERVICE_LIST.AUN_NO_HAY_SERVICIOS_ACTIVOS' | translate }}</p> }
-      <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force" [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [virtualization]="false" [count]="total" [offset]="state.pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)" [scrollbarH]="true">
+      <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force" [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [virtualization]="false" [count]="total" [offset]="state.pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)" [scrollbarH]="true" [rowClass]="rowClass">
         <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [minWidth]="150"><ng-template ngx-datatable-cell-template let-row="row"><a class="fw-bold" [routerLink]="['/pocketbiz/catalog/services', row.id]">{{ row.name }}</a></ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.PRECIO' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ row.basePrice | money }}</ng-template></ngx-datatable-column>
+        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.PRECIO' | translate" [sortable]="false" headerClass="text-end" cellClass="text-end"><ng-template ngx-datatable-cell-template let-row="row">{{ row.basePrice | money }}</ng-template></ngx-datatable-column>
         <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.DURACION' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ 'SERVICES.SERVICE_LIST.MIN' | translate: { p0: (row.durationMinutes) } }}</ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.ESPECIALIDAD' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ row.specialtyName || ('SERVICES.SERVICE_FORM.SIN_ESPECIALIDAD' | translate) }}</ng-template></ngx-datatable-column>
+        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.ESPECIALIDAD' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">@if (row.specialtyName) { {{ row.specialtyName }} } @else { <span class="text-muted">{{ 'SERVICES.SERVICE_FORM.SIN_ESPECIALIDAD' | translate }}</span> }</ng-template></ngx-datatable-column>
         <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row"><div class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</div></ng-template></ngx-datatable-column>
         <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [minWidth]="160"><ng-template ngx-datatable-cell-template let-row="row">
-          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id]" [title]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate"><i class="material-icons" aria-hidden="true">visibility</i></a>
-          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id, 'edit']" [title]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate"><i class="material-icons" aria-hidden="true">edit</i></a>
+          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id]" [title]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>
+          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id, 'edit']" [title]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate"><i class="fas fa-pen" aria-hidden="true"></i></a>
           <app-service-toggle [service]="row" [compact]="true" (updated)="onUpdated($event)" />
         </ng-template></ngx-datatable-column>
       </ngx-datatable>

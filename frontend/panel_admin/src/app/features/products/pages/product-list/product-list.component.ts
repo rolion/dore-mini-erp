@@ -10,6 +10,8 @@ import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finaliz
 import Swal from 'sweetalert2';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { PRODUCT_CATEGORIES, Product, ProductApiError, ProductCategory, categoryLabel } from '../../models/product';
+import { ProductUsesComponent } from '../../../../shared/components/product-uses/product-uses.component';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ProductsApiService } from '../../services/products-api.service';
 
 export type StatusFilter = 'all' | 'active' | 'inactive';
@@ -20,7 +22,7 @@ export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, ProductUsesComponent, MoneyPipe],
 })
 export class ProductListComponent implements OnInit {
   readonly pageSize = 10;
@@ -89,6 +91,9 @@ export class ProductListComponent implements OnInit {
 
     this.reload$.next();
   }
+
+  /** Los productos inactivos se atenúan además de llevar su badge de estado. */
+  readonly rowClass = (row: Product): Record<string, boolean> => ({ 'text-muted': !row.active });
 
   categoryName(product: Product): string {
     return categoryLabel(product.category);
