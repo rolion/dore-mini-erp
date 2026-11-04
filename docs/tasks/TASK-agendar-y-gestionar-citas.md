@@ -1,6 +1,6 @@
 # TASK-agendar-y-gestionar-citas: PB-AGE-002 · Agendar y gestionar citas de pacientes
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-agendar-y-gestionar-citas
@@ -25,6 +25,7 @@
 | 2026-11-04 | PUBLISH (sin cambio) | Merge de main (idiomas es/en/pt): conflictos en los catálogos y pantallas de Citas pasadas a claves de traducción | delivery-build |
 | 2026-11-04 | PUBLISH (sin cambio) | Cuarto Quality Gate tras el merge con main: PASS con REV-11, REV-12 y REV-13 (Low) como limitaciones conocidas | delivery-publish |
 | 2026-11-04 | PUBLISH → REVIEW | REV-11 y REV-13 corregidos por indicación de la persona; REV-12 se deja abierto por decisión de la persona | delivery-build |
+| 2026-11-04 | REVIEW → PUBLISH | Quinto Quality Gate: PASS con REV-12 (abierto por decisión de la persona) y REV-14 (Low) como limitaciones conocidas | delivery-publish |
 
 ## Investigación
 
@@ -132,6 +133,10 @@ Limitaciones conocidas: [REV-11](../reviews/REV-2026-11-03-agendar-y-gestionar-c
 Limitaciones conocidas: REV-11 y REV-12 (Low, ver arriba) y [REV-13](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-13.md) (Low: los mensajes de error que llegan del servidor, como el detalle de un 409 o los errores por campo de un 400, se muestran en español aunque la interfaz esté en inglés o portugués). No verificados: `ruff`, recorrido con teclado y pantallas de error del servidor en en/pt.
 
 **Correcciones tras el cuarto gate (2026-11-04):** REV-11 (el reintento tras una página inexistente conserva el indicador de carga) y REV-13 (los errores del servidor se traducen al idioma activo mediante códigos estables `code` / `codes`, claves `AGENDA.CITAS.VAL_*` en es/en/pt) están corregidos y pendientes de reverificación. REV-12 se deja abierto por decisión de la persona. Verificación: `i18n:check` 0 faltantes, lint, `ngc`, Karma 1173 correctas más la prueba intermitente de `main` (`screens-i18n.spec.ts`, preexistente), backend 1384 correctas en PostgreSQL.
+
+**Quinto Quality Gate (sobre `a4c35dd`): PASS con limitaciones conocidas.** Sin Critical ni High. REV-11 y REV-13 verificados; REV-01 a REV-10 siguen verificados. Backend en PostgreSQL: `check` y `makemigrations --check` limpios, suite completa 1384 correctas, `modules.agenda` 33 correctas (concurrencia incluida), `bandit` sin incidencias. Frontend: `i18n:check` (0 faltantes), lint, `ngc`, build, `npm audit` (0) y Karma completo: 1174 correctas en una corrida y 1173 más la prueba intermitente de `main` (`screens-i18n.spec.ts`, preexistente) en otra; cobertura 86,31 % de sentencias y 77,65 % de ramas. Verificado en navegador sobre una base temporal: `?page=99` mantiene «Cargando…» y no muestra el vacío; los errores de alta y reprogramar salen traducidos en inglés y portugués.
+
+Limitaciones conocidas: REV-12 (Low, abierto por decisión de la persona) y [REV-14](../reviews/REV-2026-11-03-agendar-y-gestionar-citas-14.md) (Low: `loadCalendar` no usa el identificador de consulta y, al cambiar de vista con una consulta en vuelo, una respuesta anterior puede pisar `loading`, las filas o el error; no se reprodujo en navegador). No verificados: `ruff`, recorrido con teclado, cancelar con motivo vacío en en/pt y un 409 de transición en vivo (cubiertos solo por pruebas automáticas).
 
 ## Publicación
 PR #50 listo para aprobación humana; no se mergea. Toca base de datos (migraciones aditivas `0002` y `0003`), tiene un ADR y cambia la prueba de límites entre módulos. Limitaciones conocidas: REV-11, REV-12, `ruff` y teclado sin verificar.

@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-13: Los mensajes de error del servidor de Citas salen siempre en español, también con la interfaz en inglés o portugués
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ Por revisión de código: con `/en` o `/pt`, un conflicto de horario, un motivo 
 
 ## Resolución
 Los errores del servidor llevan códigos estables (`code` en los 409 y `codes` por campo en los 400) y el cliente los traduce al idioma activo (`AGENDA.CITAS.VAL_*`, es/en/pt); un código desconocido conserva el mensaje del servidor. Pruebas: `test_errors_carry_stable_codes_for_translation` y `appointments-api.service.spec.ts` (es, en, pt).
+
+## Verificación (quinto Quality Gate)
+Verificado: `test_errors_carry_stable_codes_for_translation` y la suite completa (1384 pruebas OK); 17 claves `AGENDA.CITAS.VAL_*` presentes en es/en/pt, `i18n:check` (1486 claves, 0 faltantes) y catalogs.spec en verde; `appointments-api.service.spec.ts` cubre es/en/pt y código desconocido. En el navegador (backend temporal): fuera de turno con `/en` mostró «The time is outside the professional's shift…» (formulario y diálogo de reprogramar) y un conflicto con `/pt` mostró «O profissional já tem um agendamento nesse horário.». La clave `codes` no se muestra como campo; 404/403/errores de red ya usaban `tr()`.
