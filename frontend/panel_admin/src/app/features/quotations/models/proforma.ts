@@ -1,4 +1,5 @@
 import { tr } from '../../../core/i18n/translate';
+import { AcceptanceStatus, LineDecisionFields, ProformaDecisionState } from '../../../shared/models/proforma-decisions';
 
 export type ProformaStatus = 'draft' | 'presented' | 'superseded';
 export type ProformaAction = 'edit' | 'present' | 'new-version';
@@ -18,7 +19,7 @@ export const STATUS_CLASSES: Record<ProformaStatus, string> = {
 
 export const NOTES_MAX_LENGTH = 2000;
 
-export interface ProformaLine {
+export interface ProformaLine extends LineDecisionFields {
   id: string;
   service_id: string;
   description: string;
@@ -40,9 +41,11 @@ export interface ProformaSummary {
   valid_until: string | null;
   currency: string;
   total: string;
+  accepted_total: string;
+  acceptance_status: AcceptanceStatus;
 }
 
-export interface Proforma extends ProformaSummary {
+export interface Proforma extends ProformaSummary, ProformaDecisionState {
   notes: string;
   lines: ProformaLine[];
   allowed_actions: ProformaAction[];

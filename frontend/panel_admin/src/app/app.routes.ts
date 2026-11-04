@@ -71,6 +71,12 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/quotations/pages/proforma-form.component').then(m => m.ProformaFormComponent),
             },
             {
+                path: 'quotations/proformas/:id/imprimir',
+                canActivate: [moduleGuard],
+                data: { module: 'quotations', base: 'quotations/proformas' },
+                loadComponent: () => import('./shared/components/proforma-decisions/proforma-print-page.component').then(m => m.ProformaPrintPageComponent),
+            },
+            {
                 path: 'quotations/proformas/:id',
                 canActivate: [moduleGuard],
                 data: { module: 'quotations' },

@@ -4,6 +4,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { ProformaDecisionsComponent } from '../../../shared/components/proforma-decisions/proforma-decisions.component';
+import { DecisionLineView } from '../../../shared/models/proforma-decisions';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { Proforma, ProformaFailure, STATUS_CLASSES, statusLabel } from '../models/proforma';
 import { ProformasApiService } from '../services/proformas-api.service';
@@ -11,7 +13,7 @@ import { ProformasApiService } from '../services/proformas-api.service';
 /** Detalle de proforma con versiones y acciones según `allowed_actions` del servidor. */
 @Component({
   selector: 'app-proforma-detail',
-  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, ProformaDecisionsComponent],
   templateUrl: './proforma-detail.component.html',
   styleUrl: './proforma-detail.component.scss',
 })
@@ -36,6 +38,15 @@ export class ProformaDetailComponent implements OnInit {
 
   can(action: string): boolean {
     return !!this.proforma?.allowed_actions.includes(action as never);
+  }
+
+  /** Relee la proforma tras registrar o rectificar una decisión. */
+  reload(): void {
+    if (this.proforma) this.load(this.proforma.id);
+  }
+
+  lineViews(): DecisionLineView[] {
+    return (this.proforma?.lines ?? []).map(line => ({ ...line, piece: line.piece || (line.treatment_item_id ? '—' : '') }));
   }
 
   private load(id: string): void {

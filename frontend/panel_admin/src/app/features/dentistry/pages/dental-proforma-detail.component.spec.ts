@@ -7,13 +7,18 @@ import { provideTestTranslations } from '../../../core/i18n/testing';
 import { DentalProforma } from '../models/dental-proforma';
 import { DentalProformaDetailComponent } from './dental-proforma-detail.component';
 
+const DECISION_FIELDS = { line_kind: 'original', origin_line_id: null, decision: 'pending', decided_at: null,
+  decision_detail: null, authorized: false } as const;
+
 const PROFORMA = (status: DentalProforma['status'], actions: DentalProforma['allowed_actions']): DentalProforma => ({
   id: 'p1', number: 'ODO-000001', version: 1, status, customer_id: 'c-1', patient_name: 'Ana', date: '2026-11-04',
   valid_until: null, currency: 'BOB', total: '250.00', notes: '', can_edit_price: true, allowed_actions: actions,
-  lines: [{ id: 'l1', service_id: 's1', description: 'Limpieza', quantity: '1.00', unit_price: '250.00', subtotal: '250.00', dental_piece: '18' },
-    { id: 'l2', service_id: 's2', description: 'Corona', quantity: '1.00', unit_price: '0.00', subtotal: '0.00', dental_piece: '' }],
+  lines: [{ id: 'l1', service_id: 's1', description: 'Limpieza', quantity: '1.00', unit_price: '250.00', subtotal: '250.00', dental_piece: '18', ...DECISION_FIELDS },
+    { id: 'l2', service_id: 's2', description: 'Corona', quantity: '1.00', unit_price: '0.00', subtotal: '0.00', dental_piece: '', ...DECISION_FIELDS }],
   versions: [{ id: 'p1', number: 'ODO-000001', version: 1, status, customer_id: 'c-1', patient_name: 'Ana', date: '2026-11-04',
-    valid_until: null, currency: 'BOB', total: '250.00' }],
+    valid_until: null, currency: 'BOB', total: '250.00', accepted_total: '0.00', acceptance_status: 'pending' }],
+  decision_actions: [], totals: { proposed: '250.00', accepted: '0.00', pending: '250.00', rejected: '0.00' },
+  decision_history: [], previous_version_id: null, acceptance_status: 'pending', accepted_total: '0.00',
 });
 
 describe('DentalProformaDetailComponent', () => {

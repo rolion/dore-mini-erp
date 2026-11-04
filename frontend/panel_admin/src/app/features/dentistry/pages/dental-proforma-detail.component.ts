@@ -4,6 +4,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { ProformaDecisionsComponent } from '../../../shared/components/proforma-decisions/proforma-decisions.component';
+import { DecisionLineView } from '../../../shared/models/proforma-decisions';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import {
   DentalProforma, DentalProformaFailure, PROFORMA_STATUS_CLASSES, proformaStatusLabel,
@@ -13,7 +15,7 @@ import { DentalProformasApiService } from '../services/dental-proformas-api.serv
 /** Detalle de proforma odontológica con versiones y acciones según `allowed_actions` del servidor. */
 @Component({
   selector: 'app-dental-proforma-detail',
-  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, ProformaDecisionsComponent],
   templateUrl: './dental-proforma-detail.component.html',
   styleUrl: './dental-proforma-detail.component.scss',
 })
@@ -38,6 +40,15 @@ export class DentalProformaDetailComponent implements OnInit {
 
   can(action: string): boolean {
     return !!this.proforma?.allowed_actions.includes(action as never);
+  }
+
+  /** Relee la proforma tras registrar o rectificar una decisión. */
+  reload(): void {
+    if (this.proforma) this.load(this.proforma.id);
+  }
+
+  lineViews(): DecisionLineView[] {
+    return (this.proforma?.lines ?? []).map(line => ({ ...line, piece: line.dental_piece }));
   }
 
   private load(id: string): void {
