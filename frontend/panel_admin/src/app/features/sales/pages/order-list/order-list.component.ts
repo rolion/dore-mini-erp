@@ -88,6 +88,8 @@ export class OrderListComponent implements OnInit {
     dateTo: [DEFAULT_FILTERS.dateTo],
   });
 
+  /** «Más filtros» (canal y fechas): cerrado por defecto, abierto si alguno está activo. */
+  moreFiltersOpen = false;
   rows: OrderSummary[] = [];
   total = 0;
   /** Página actual base 0, como espera ngx-datatable. */
@@ -140,6 +142,11 @@ export class OrderListComponent implements OnInit {
     return hasActiveFilters(this.filterForm.getRawValue());
   }
 
+  get secondaryFiltersActive(): boolean {
+    const { channel, dateField, dateFrom, dateTo } = this.filterForm.getRawValue();
+    return channel !== DEFAULT_FILTERS.channel || dateField !== DEFAULT_FILTERS.dateField || !!dateFrom || !!dateTo;
+  }
+
   ngOnInit(): void {
     this.reload$
       .pipe(
@@ -168,6 +175,7 @@ export class OrderListComponent implements OnInit {
       const { page, ...filters } = state;
       this.filterForm.setValue(filters, { emitEvent: false });
       this.pageIndex = page - 1;
+      this.moreFiltersOpen = this.moreFiltersOpen || this.secondaryFiltersActive;
       this.emptyMessage = hasActiveFilters(filters) ? EMPTY_FILTERED() : EMPTY_ALL();
       this.ordering = state.statusKey === 'PENDING_DELIVERY' ? 'expected' : 'newest';
       this.reload$.next(state);
@@ -192,6 +200,17 @@ export class OrderListComponent implements OnInit {
       return;
     }
     this.navigate(this.filterForm.getRawValue(), event.offset + 1);
+  }
+
+  /** Clic en cualquier parte de la fila abre el detalle; los enlaces y botones de la fila ya navegan solos. */
+  onActivate(event: { type: string; row?: OrderSummary; event?: Event }): void {
+    if (event.type !== 'click' || !event.row) {
+      return;
+    }
+    if ((event.event?.target as HTMLElement | null)?.closest('a, button')) {
+      return;
+    }
+    void this.router.navigate(['/pocketbiz/sales/orders', event.row.id]);
   }
 
   /** La fila del datatable no está tipada: se acepta cualquier código y se traduce el conocido. */

@@ -77,6 +77,7 @@
           <div class="card-body">
             <div class="m-3">
               <app-payment-status-badge [status]="o.paymentStatus" />
+              @if (o.items.length) {
               <p class="mt-3 mb-1" data-testid="paid-of-total">{{ 'SALES.ORDER_DETAIL.PAGADO_DE' | translate: { p0: (o.paidTotal | money), p1: (o.total | money) } }}</p>
               <p class="mb-0 fs-4 fw-bold" data-testid="balance-panel"
                 [class.text-danger]="hasBalance" [class.text-success]="!hasBalance">
@@ -86,17 +87,33 @@
                 {{ 'SALES.ORDER_DETAIL.SIN_SALDO' | translate }}
                 }
               </p>
+              @if (o.canRegisterPayment) {
+              <button type="button" class="btn btn-primary btn-sm mt-3" data-testid="pay-action" [disabled]="busy"
+                (click)="openPayment()">{{ 'COMMON.REGISTRAR_PAGO' | translate }}</button>
+              }
+              } @else {
+              <p class="mt-3 mb-0 fs-4 fw-bold text-muted" data-testid="balance-panel">{{ 'SALES.ORDER_DETAIL.SIN_PRODUCTOS' | translate }}</p>
+              <small class="text-muted">{{ 'SALES.ORDER_DETAIL.AGREGUE_PRODUCTOS_PARA_COBRAR' | translate }}</small>
+              }
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    <app-order-items [order]="o" [busy]="busy" [errors]="fieldErrors" (itemAdd)="addItem($event)"
+      (quantityChange)="changeQuantity($event)" (itemRemove)="removeItem($event)" />
+    <app-order-summary [order]="o" [busy]="busy" [errors]="fieldErrors" (discountSubmit)="applyDiscount($event)" />
+    <app-order-payments #payments [order]="o" [busy]="busy" [errors]="fieldErrors" (paymentSubmit)="registerPayment($event)" />
+    @if (o.stockOutput; as output) {
+    <app-stock-output-card [orderId]="o.id" [output]="output" />
+    }
+
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4>{{ 'SALES.ORDER_DETAIL.DATOS_DEL_PEDIDO' | translate }}</h4>
         @if (o.editable) {
-        <a class="btn btn-sm btn-primary" data-testid="edit-link" [routerLink]="['/pocketbiz/sales/orders', o.id, 'edit']">
+        <a class="btn btn-sm btn-outline-primary" data-testid="edit-link" [routerLink]="['/pocketbiz/sales/orders', o.id, 'edit']">
           {{ 'SALES.ORDER_DETAIL.EDITAR_DATOS' | translate }}</a>
         }
       </div>
@@ -116,22 +133,13 @@
           <dd class="col-sm-9">{{ o.orderDate | date: 'dd/MM/yyyy' }}</dd>
           <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
           <dd class="col-sm-9">{{ o.notes || ('CUSTOMERS.CUSTOMER_DETAIL.SIN_NOTAS' | translate) }}</dd>
-          <dt class="col-sm-3">{{ 'COMMON.CREADO' | translate }}</dt>
-          <dd class="col-sm-9">{{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-          <dt class="col-sm-3">{{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}</dt>
-          <dd class="col-sm-9">{{ o.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
         </dl>
+        <small class="d-block mx-4 mb-3 text-muted" data-testid="audit">
+          {{ 'COMMON.CREADO' | translate }} {{ o.createdAt | date: 'dd/MM/yyyy HH:mm' }} · {{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }} {{ o.updatedAt | date: 'dd/MM/yyyy HH:mm' }}
+        </small>
       </div>
     </div>
 
-    @if (o.stockOutput; as output) {
-    <app-stock-output-card [orderId]="o.id" [output]="output" />
-    }
-
-    <app-order-items [order]="o" [busy]="busy" [errors]="fieldErrors" (itemAdd)="addItem($event)"
-      (quantityChange)="changeQuantity($event)" (itemRemove)="removeItem($event)" />
-    <app-order-summary [order]="o" [busy]="busy" [errors]="fieldErrors" (discountSubmit)="applyDiscount($event)" />
-    <app-order-payments [order]="o" [busy]="busy" [errors]="fieldErrors" (paymentSubmit)="registerPayment($event)" />
     } @else if (loading) {
     <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
     }

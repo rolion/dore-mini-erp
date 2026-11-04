@@ -1,7 +1,7 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
-import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChildren } from '@angular/core';
+import { Component, DestroyRef, ElementRef, effect, inject, input, output, viewChild, viewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgOptionTemplateDirective, NgSelectComponent } from '@ng-select/ng-select';
 import { Observable, Subject, catchError, concat, debounceTime, defer, distinctUntilChanged, finalize, map, of, switchMap, tap } from 'rxjs';
@@ -52,6 +52,8 @@ export class OrderItemsComponent {
   private api = inject(ProductsApiService);
   private destroyRef = inject(DestroyRef);
   private quantityInputs = viewChildren<ElementRef<HTMLInputElement>>('qty');
+  private productSelect = viewChild(NgSelectComponent);
+  private focusedEmpty = false;
 
   constructor() {
     // Si el servidor rechaza un cambio (o el pedido cambia), los campos vuelven a la cantidad vigente.
@@ -63,6 +65,16 @@ export class OrderItemsComponent {
         if (item) {
           ref.nativeElement.value = String(item.quantity);
         }
+      }
+    });
+
+    // Pedido editable sin líneas: lo siguiente es agregar un producto, así que el buscador recibe el foco una vez.
+    effect(() => {
+      const select = this.productSelect();
+      const order = this.order();
+      if (select && !this.focusedEmpty && order.editable && order.items.length === 0) {
+        this.focusedEmpty = true;
+        setTimeout(() => select.focus());
       }
     });
 

@@ -57,15 +57,6 @@
                   }
                 </select>
               </div>
-              <div class="col-md-3">
-                <label for="filter-channel">{{ 'COMMON.CANAL' | translate }}</label>
-                <select id="filter-channel" class="form-select form-control" formControlName="channel">
-                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
-                  @for (option of channelOptions; track option.value) {
-                  <option [value]="option.value">{{ option.label }}</option>
-                  }
-                </select>
-              </div>
               @if (!customersDisabled) {
               <div class="col-md-3">
                 <label for="filter-customer">{{ 'COMMON.CLIENTE' | translate }}</label>
@@ -76,6 +67,26 @@
                 </ng-select>
               </div>
               }
+              <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="button" class="btn btn-outline-primary" data-testid="more-filters" aria-controls="more-filters"
+                  [attr.aria-expanded]="moreFiltersOpen" (click)="moreFiltersOpen = !moreFiltersOpen">
+                  <i class="fas" [class.fa-chevron-down]="!moreFiltersOpen" [class.fa-chevron-up]="moreFiltersOpen"></i>
+                  {{ 'SALES.ORDER_LIST.MAS_FILTROS' | translate }}
+                </button>
+                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+              @if (moreFiltersOpen) {
+              <div id="more-filters" class="row g-2 m-0 p-0" data-testid="more-filters-panel">
+              <div class="col-md-3">
+                <label for="filter-channel">{{ 'COMMON.CANAL' | translate }}</label>
+                <select id="filter-channel" class="form-select form-control" formControlName="channel">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  @for (option of channelOptions; track option.value) {
+                  <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
               <div class="col-md-3">
                 <label for="filter-date-field">{{ 'SALES.ORDER_LIST.FECHA_DE' | translate }}</label>
                 <select id="filter-date-field" class="form-select form-control" formControlName="dateField">
@@ -91,19 +102,17 @@
                 <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo">
               </div>
-              <div class="col-md-3 d-flex align-items-end">
-                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
-                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
+              }
             </form>
 
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
-              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)" (activate)="onActivate($event)">
               <ngx-datatable-column [name]="'SALES.ORDER_LIST.PEDIDO' | translate" [sortable]="false" [width]="130">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.orderDate | date: 'dd/MM/yyyy' }}</a>
-                  <div><small class="text-muted">{{ row.code }}</small></div>
+                  <a class="fw-bold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.code }}</a>
+                  <div><small class="text-muted">{{ row.orderDate | date: 'dd/MM/yyyy' }}</small></div>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'SALES.ORDER_LIST.CLIENTE' | translate" [sortable]="false" [width]="170">

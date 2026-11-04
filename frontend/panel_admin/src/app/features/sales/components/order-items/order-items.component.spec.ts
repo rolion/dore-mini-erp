@@ -1,6 +1,7 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { NgSelectComponent } from '@ng-select/ng-select';
 import { of, throwError } from 'rxjs';
 
 import { Product, ProductsApiService } from '../../../products';
@@ -53,6 +54,26 @@ describe('OrderItemsComponent', () => {
     });
   });
 
+  it('focuses the product search of an editable order without lines, once (AC-07)', fakeAsync(() => {
+    const focus = spyOn(NgSelectComponent.prototype, 'focus');
+    render(makeOrder({ items: [] }));
+    tick();
+    expect(focus).toHaveBeenCalledTimes(1);
+    fixture.componentRef.setInput('order', makeOrder({ items: [], notes: 'otra' }));
+    fixture.detectChanges();
+    tick();
+    expect(focus).toHaveBeenCalledTimes(1);
+  }));
+
+  it('does not steal the focus when the order already has items or is not editable (AC-07)', fakeAsync(() => {
+    const focus = spyOn(NgSelectComponent.prototype, 'focus');
+    render(makeOrder());
+    tick();
+    render(makeOrder({ items: [], editable: false }));
+    tick();
+    expect(focus).not.toHaveBeenCalled();
+  }));
+
   it('lists the items with the snapshot name, unit price, quantity and server subtotal (AC-25)', () => {
     const element = render(makeOrder());
     const row = element.querySelector('[data-testid="item-row"]') as HTMLElement;
@@ -98,7 +119,7 @@ describe('OrderItemsComponent', () => {
     component.itemAdd.subscribe((event) => added.push(event));
     component.addForm.setValue({ product: PRODUCT, quantity: 3 });
     fixture.detectChanges();
-    (fixture.debugElement.query(By.css('button.btn-primary')).nativeElement as HTMLButtonElement).click();
+    (fixture.debugElement.query(By.css('button.btn-outline-primary')).nativeElement as HTMLButtonElement).click();
     expect(added).toEqual([{ productId: 'p-9', quantity: 3 }]);
     expect(component.addForm.getRawValue()).toEqual({ product: null, quantity: 1 });
   });
@@ -114,7 +135,7 @@ describe('OrderItemsComponent', () => {
     component.addForm.setValue({ product: PRODUCT, quantity: 1 });
     component.add();
     expect(added).toEqual([]);
-    const button = fixture.debugElement.query(By.css('button.btn-primary')).nativeElement as HTMLButtonElement;
+    const button = fixture.debugElement.query(By.css('button.btn-outline-primary')).nativeElement as HTMLButtonElement;
     fixture.detectChanges();
     expect(button.disabled).toBeTrue();
   });

@@ -207,6 +207,63 @@ describe('OrderDetailComponent', () => {
     });
   });
 
+  describe('refined layout (TASK-refinar-ux-pedidos-ventas)', () => {
+    it('orders items, amounts and payments before the order data, with creation dates as a footnote (AC-01)', () => {
+      const element = setup();
+      const items = element.querySelector('app-order-items') as HTMLElement;
+      const summary = element.querySelector('app-order-summary') as HTMLElement;
+      const payments = element.querySelector('app-order-payments') as HTMLElement;
+      const customer = q(element, 'customer') as HTMLElement;
+      const follows = (a: HTMLElement, b: HTMLElement) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(q(element, 'payment-panel') as HTMLElement, items)).toBeTrue();
+      expect(follows(items, summary)).toBeTrue();
+      expect(follows(summary, payments)).toBeTrue();
+      expect(follows(payments, customer)).toBeTrue();
+      expect(text(element, 'audit')).toContain('Creado 01/10/2026');
+      expect(text(element, 'audit')).toContain('Última actualización 01/10/2026');
+    });
+
+    it('registers a payment from the Cobro card by opening the payment form (AC-02)', () => {
+      const element = setup();
+      expect(element.querySelector('#payment-amount')).toBeNull();
+      (q(element, 'pay-action') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(element.querySelector('#payment-amount')).not.toBeNull();
+    });
+
+    it('does not offer to register a payment when nothing can be collected (AC-02)', () => {
+      const element = setup(makeOrder({ canRegisterPayment: false, balance: '0.00', paymentStatus: 'PAID', paidTotal: '70.00' }));
+      expect(q(element, 'pay-action')).toBeNull();
+    });
+
+    it('says "Sin productos" instead of a green "Sin saldo" for an order without lines (AC-03)', () => {
+      const element = setup(makeOrder({
+        items: [], subtotal: '0.00', total: '0.00', balance: '0.00', canRegisterPayment: false,
+      }));
+      expect(text(element, 'balance-panel')).toBe('Sin productos');
+      expect(q(element, 'balance-panel')?.classList).not.toContain('text-success');
+      expect(q(element, 'pay-action')).toBeNull();
+    });
+
+    it('keeps the green "Sin saldo" for a paid order with products (AC-03)', () => {
+      const element = setup(makeOrder({ balance: '0.00', paymentStatus: 'PAID', paidTotal: '70.00', canRegisterPayment: false }));
+      expect(text(element, 'balance-panel')).toBe('Sin saldo');
+      expect(q(element, 'balance-panel')?.classList).toContain('text-success');
+    });
+
+    it('keeps one solid primary action and makes the other actions outline (AC-04)', () => {
+      const element = setup();
+      expect(q(element, 'primary-action')?.classList).toContain('btn-primary');
+      expect(q(element, 'edit-link')?.classList).toContain('btn-outline-primary');
+      expect(element.querySelector('app-order-summary button')?.classList).toContain('btn-outline-primary');
+    });
+
+    it('formats the payment date as dd/MM/yyyy (AC-05)', () => {
+      const element = setup(makeOrder({ payments: [makePayment({ paymentDate: '2026-11-04' })] }));
+      expect(text(element, 'payment-row')).toContain('04/11/2026');
+    });
+  });
+
   describe('data and amounts', () => {
     it('shows customer (linked), channel label, dates and notes (AC-17)', () => {
       const element = setup(makeOrder({ salesChannel: 'STORE', notes: 'Sin picante' }));

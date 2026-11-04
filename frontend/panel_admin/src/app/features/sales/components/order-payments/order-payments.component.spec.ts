@@ -69,8 +69,8 @@ describe('OrderPaymentsComponent', () => {
       Array.from(row.querySelectorAll('td')).map((cell) => cell.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['2026-10-02', 'QR', 'ref-1', 'Bs 20.00'],
-      ['2026-10-02', 'Transferencia', '—', 'Bs 5.00'],
+      ['02/10/2026', 'QR', 'ref-1', 'Bs 20.00'],
+      ['02/10/2026', 'Transferencia', '—', 'Bs 5.00'],
     ]);
     expect(element.querySelector('[data-testid="payments-total"]')?.textContent).toContain('Bs 25.00');
   });
@@ -102,10 +102,10 @@ describe('OrderPaymentsComponent', () => {
     openForm();
     const emitted: PaymentInput[] = [];
     component.paymentSubmit.subscribe((input) => emitted.push(input));
-    component.form.setValue({ amount: ' 20.00 ', paymentMethod: 'QR', paymentDate: '2026-10-02', reference: ' ref ' });
+    component.form.setValue({ amount: ' 20.00 ', paymentMethod: 'QR', paymentDate: '02/10/2026', reference: ' ref ' });
     fixture.detectChanges();
     (fixture.debugElement.query(By.css('form button[type="submit"]')).nativeElement as HTMLButtonElement).click();
-    expect(emitted).toEqual([{ amount: '20.00', paymentMethod: 'QR', paymentDate: '2026-10-02', reference: 'ref' }]);
+    expect(emitted).toEqual([{ amount: '20.00', paymentMethod: 'QR', paymentDate: '02/10/2026', reference: 'ref' }]);
   });
 
   it('does not emit without an amount or while busy (AC-12)', () => {

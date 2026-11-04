@@ -1,6 +1,6 @@
 # TASK-refinar-ux-pedidos-ventas: Refinar la experiencia de Pedidos (lista y detalle) en Ventas
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-refinar-ux-pedidos-ventas
@@ -13,6 +13,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN | Pantallas afectadas, diseño requerido | delivery-start |
 | 2026-11-04 | DESIGN → PLANNING | DDR propuesto; Specification READY | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Plan v1 y PR | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -76,7 +77,26 @@ No aplica según veredicto.
 Ver `docs/plans/PLAN-2026-11-04-refinar-ux-pedidos-ventas.md` (v1, COMPACTO, READY).
 
 ## Implementación
-_Pendiente_
+Solo frontend de `features/sales` y `assets/i18n/{es,en,pt}.json`; sin cambios de API, dominio ni migraciones.
+
+- **AC-01** `order-detail.component.html`: orden Entrega/Cobro → Productos → Importes → Pagos → Salida de inventario → Datos del pedido; «Creado/Última actualización» en `small.text-muted` (`data-testid="audit"`).
+- **AC-02** `order-detail.component.ts`: `openPayment()` (`viewChild` a `OrderPaymentsComponent`: abre el formulario, scroll y foco al monto) y botón `pay-action` en Cobro, solo con `canRegisterPayment`.
+- **AC-03** Cobro con `items.length === 0` muestra «Sin productos» atenuado y no ofrece pago.
+- **AC-04** «Editar datos», «Aplicar» y «Agregar» pasan a `btn-outline-primary`.
+- **AC-05** Fecha de pago con `date: 'dd/MM/yyyy'` (`order-payments`, importa `DatePipe`).
+- **AC-06** Ya existía: `removeItem` pide confirmación con `confirmRemove` (`order-detail.component.ts`) y la prueba «removes an item only after confirming (AC-05)». Sin cambios.
+- **AC-07** `order-items.component.ts`: `effect` que enfoca el buscador una vez si el pedido es editable y no tiene líneas.
+- **AC-08/AC-09** `order-list`: código como enlace principal con fecha debajo; `onActivate` navega al detalle al hacer clic en la fila (ignora clics en enlaces/botones); «Más filtros» (canal, fecha de, desde, hasta) con `aria-expanded`, abierto si hay filtro secundario activo.
+- **AC-10** Claves nuevas en las tres lenguas: `SALES.ORDER_DETAIL.SIN_PRODUCTOS`, `…AGREGUE_PRODUCTOS_PARA_COBRAR`, `SALES.ORDER_LIST.MAS_FILTROS`.
+
+**Pantallas de referencia:** plantillas Detalle y Lista de `design-system.md` §5 (`product-detail`/`product-list`). **Componentes compartidos:** `money`, badges existentes; no se creó ninguno.
+
+**Desviaciones respecto al plan:** AC-06 no requirió código (ya implementado). Dos specs existentes se ajustaron por cambio intencional: clase del botón «Agregar» y formato de fecha de pagos; el spec de la lista abre «Más filtros» antes de leer las opciones de canal.
+
+**Verificación propia (no es el Quality Gate):** `ng test` de `features/sales` 212 pruebas OK; `npm run lint`, `npm run i18n:check` y `npm run build` sin errores. Para correr las pruebas en este worktree se enlazó `node_modules` del checkout principal con una *junction* (no versionada; sin instalar dependencias). Una prueba de `order-list-filters.spec.ts` falló una vez de forma intermitente en una corrida y pasó en las siguientes; no depende de este cambio.
+
+**Deuda / hipótesis sin verificar visualmente:** fondo azul de inputs, índigo de «Marcar listo» y tamaño de texto del detalle (tema/skin; no se tocaron); «Almacén de salida» en el modal de entrega. No se probó en navegador.
+
 
 ## Review
 _Pendiente_

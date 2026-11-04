@@ -291,8 +291,49 @@ describe('OrderListComponent', () => {
         'Todos', 'Pendientes de entrega', 'Nuevo', 'En preparación', 'Listo', 'Entregado', 'Cancelado', 'No cancelados',
       ]);
       expect(options('filter-payment')).toEqual(['Todos', 'Pendiente', 'Parcial', 'Pagado', 'Reembolsado', 'Con saldo pendiente']);
+      (element.querySelector('[data-testid="more-filters"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
       expect(options('filter-channel')).toEqual(['Todos', 'WhatsApp', 'Facebook', 'Instagram', 'Venta directa', 'Feria', 'Otro']);
       expect(options('filter-date-field')).toEqual(['Pedido', 'Entrega prevista']);
+    });
+
+    it('keeps channel and date filters under "Más filtros", closed by default (AC-09)', () => {
+      const element = start();
+      const toggle = element.querySelector('[data-testid="more-filters"]') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(element.querySelector('#filter-channel')).toBeNull();
+      expect(element.querySelector('#filter-status')).not.toBeNull();
+      expect(element.querySelector('#filter-payment')).not.toBeNull();
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(element.querySelector('#filter-channel')).not.toBeNull();
+      expect(element.querySelector('#filter-from')).not.toBeNull();
+    });
+
+    it('opens "Más filtros" when a channel or date filter is already active (AC-09)', () => {
+      const element = start({ channel: 'FAIR' });
+      expect(element.querySelector('#filter-channel')).not.toBeNull();
+      expect((element.querySelector('[data-testid="more-filters"]') as HTMLElement).getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('shows the order code as the main identifier with the date below (AC-08)', () => {
+      const element = start();
+      fixture.detectChanges();
+      const link = element.querySelector('a.fw-bold') as HTMLAnchorElement;
+      expect(link.textContent?.trim()).toBe('P-AAAAAAAA');
+      expect(link.parentElement?.textContent).toContain('01/10/2026');
+    });
+
+    it('opens the detail when the row is clicked, but not when a link inside it is (AC-08)', () => {
+      start();
+      const link = document.createElement('a');
+      component.onActivate({ type: 'click', row: open, event: { target: link } as unknown as Event });
+      expect(navigate).not.toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'a']);
+      component.onActivate({ type: 'mouseenter', row: open });
+      expect(navigate).not.toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'a']);
+      component.onActivate({ type: 'click', row: open, event: { target: document.createElement('span') } as unknown as Event });
+      expect(navigate).toHaveBeenCalledWith(['/pocketbiz/sales/orders', 'a']);
     });
 
     it('"Limpiar filtros" resets everything and is disabled when nothing is filtered', () => {
