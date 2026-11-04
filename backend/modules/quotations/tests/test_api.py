@@ -139,6 +139,19 @@ class ProformaApiTests(TransactionTestCase):
         allowed = self.client.put(f"{URL}{body['id']}/", self.payload(lines=edited), format='json')
         self.assertEqual((allowed.status_code, allowed.json()['total']), (200, '160.00'))
 
+    def test_present_and_new_version_require_an_active_customer(self):  # INV-06 / REV-09
+        body = self.create().json()
+        CustomerModel.objects.filter(pk=self.customer.pk).update(active=False)
+        denied = self.client.post(f"{URL}{body['id']}/present/")
+        self.assertEqual(denied.status_code, 400)
+        self.assertIn('customer_id', denied.json())
+        CustomerModel.objects.filter(pk=self.customer.pk).update(active=True)
+        self.assertEqual(self.client.post(f"{URL}{body['id']}/present/").status_code, 200)
+        CustomerModel.objects.filter(pk=self.customer.pk).update(active=False)
+        again = self.client.post(f"{URL}{body['id']}/new-version/")
+        self.assertEqual(again.status_code, 400)
+        self.assertEqual(ProformaModel.objects.count(), 1)
+
     # AC-05
     def test_present_needs_lines_then_freezes(self):
         empty = self.create(lines=[]).json()

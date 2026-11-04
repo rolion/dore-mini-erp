@@ -77,6 +77,7 @@ class ProformaService:
 
     def present(self, proforma_id: UUID) -> Proforma:
         proforma = self._locked(proforma_id)
+        self._customer(proforma.customer_id)  # INV-06: también al presentar
         proforma.present()
         for previous in self.repository.presented_below(proforma.number, proforma.version):
             previous.supersede()
@@ -86,6 +87,7 @@ class ProformaService:
 
     def new_version(self, proforma_id: UUID) -> Proforma:
         proforma = self._locked(proforma_id)
+        self._customer(proforma.customer_id)  # INV-06: también al crear una versión nueva
         if self.repository.draft_exists(proforma.number):
             raise ProformaStateError('Ya existe un borrador de este número; edítalo o preséntalo.')
         draft = proforma.new_version()

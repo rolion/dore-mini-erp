@@ -1,4 +1,4 @@
-# PLAN-2026-11-03-crear-proformas-de-servicios (v2)
+# PLAN-2026-11-03-crear-proformas-de-servicios (v3)
 
 **Task:** TASK-crear-proformas-de-servicios · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** [DDR](../design/DDR-crear-proformas-de-servicios-pantallas-proformas.md) · [ADR](../adr/ADR-crear-proformas-de-servicios-contexto-congelacion-y-versiones.md)
@@ -35,7 +35,7 @@ Existe el agregado Proforma con numeración por empresa y versiones; los precios
 - INV-03 Solo se editan líneas/cabecera en `draft`. `present()` exige ≥ 1 línea válida y cliente. Estados `draft → presented → superseded`; sin otras transiciones.
 - INV-04 Número `PRO-NNNNNN` consecutivo por empresa; `(empresa, número, versión)` único.
 - INV-05 «Nueva versión» solo desde `presented`, copia líneas congeladas y exige que no haya otro borrador del mismo número; al presentar la versión nueva la anterior pasa a `superseded`.
-- INV-06 Cliente activo al crear y **cada vez que se guarda** un borrador (también si es el mismo cliente de antes); `customer_name` se guarda como snapshot. Vigencia opcional ≥ fecha de la proforma.
+- INV-06 Cliente activo al crear y **cada vez que se guarda** un borrador (también si es el mismo cliente de antes), al **presentar** y al crear una **nueva versión**; `customer_name` se guarda como snapshot. Vigencia opcional ≥ fecha de la proforma.
 - INV-07 Moneda siempre BOB. `accepted_total` no se expone ni se calcula.
 
 ## Acceptance criteria
@@ -137,4 +137,5 @@ Numeración concurrente (contador bloqueado + prueba); conflictos de fusión con
 Ninguna.
 
 ## Changelog
+- **v3** (2026-11-04): [Specification] INV-06 extendida a presentar y nueva versión tras aprobación explícita del usuario en el chat (REV-09).
 - **v2** (2026-11-03): [Specification] INV-06 aclarada tras aprobación explícita del usuario en el chat: guardar un borrador exige cliente activo aunque no haya cambiado (REV-04).

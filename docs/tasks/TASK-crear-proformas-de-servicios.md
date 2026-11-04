@@ -91,7 +91,7 @@ Ver [DDR-crear-proformas-de-servicios-pantallas-proformas](../design/DDR-crear-p
 Ver [ADR-crear-proformas-de-servicios-contexto-congelacion-y-versiones](../adr/ADR-crear-proformas-de-servicios-contexto-congelacion-y-versiones.md).
 
 ## Plan
-[PLAN-2026-11-03-crear-proformas-de-servicios](../plans/PLAN-2026-11-03-crear-proformas-de-servicios.md) v2 · COMPLETO · Specification readiness: READY (supuestos no bloqueantes listados arriba y en el plan).
+[PLAN-2026-11-03-crear-proformas-de-servicios](../plans/PLAN-2026-11-03-crear-proformas-de-servicios.md) v3 · COMPLETO · Specification readiness: READY (supuestos no bloqueantes listados arriba y en el plan).
 
 ## Implementación
 Backend `modules/quotations` (dominio puro, aplicación, repositorio con contador bloqueado, adaptadores a Servicios/Clientes, API `/api/quotations/proformas/`), módulo `quotations` en el catálogo de `modularity` (requiere `services` y `customers`), migración `0001_initial` y feature Angular `features/quotations/` (lista, formulario con tabla de líneas, detalle con diálogo de presentar, servicio API), ruta, menú «Cotizaciones → Proformas» e i18n es/en/de.
@@ -117,9 +117,11 @@ Hallazgos: [REV-01](../reviews/REV-2026-11-03-crear-proformas-de-servicios-01.md
 Pendiente para PASS: correr las pruebas con PostgreSQL (`python manage.py test modules.quotations modules.modularity modules.agenda modules.service_catalog`) y la revisión visual.
 
 ## Publicación
-Quality Gate 2 (subagente aislado, 2026-11-04): **PASS condicionado**. Backend (`quotations`, `modularity`, `agenda`, `service_catalog`, `sales`) 447 OK y suite completa 1405 OK en PostgreSQL; `makemigrations --check` limpio; `bandit` 0; frontend `ng lint`, `ng build`, 22/22 specs, `npm audit` 0 vulnerabilidades. **No verificado:** revisión visual (móvil/escritorio, claro/oscuro) y ruff/flake8 (no instalados). Hallazgos abiertos, Low: [REV-08](../reviews/REV-2026-11-03-crear-proformas-de-servicios-08.md) (sin spec del detalle) y [REV-09](../reviews/REV-2026-11-03-crear-proformas-de-servicios-09.md) (SPECIFICATION: presentar/nueva versión no revalidan cliente activo; requiere decisión del usuario).
+Quality Gate 2 (subagente aislado, 2026-11-04): **PASS condicionado**. Backend (`quotations`, `modularity`, `agenda`, `service_catalog`, `sales`) 447 OK y suite completa 1405 OK en PostgreSQL; `makemigrations --check` limpio; `bandit` 0; frontend `ng lint`, `ng build`, 22/22 specs, `npm audit` 0 vulnerabilidades. **No verificado:** revisión visual (móvil/escritorio, claro/oscuro) y ruff/flake8 (no instalados). Hallazgos abiertos, Low: [REV-08](../reviews/REV-2026-11-03-crear-proformas-de-servicios-08.md) (sin spec del detalle) y [REV-09](../reviews/REV-2026-11-03-crear-proformas-de-servicios-09.md) (SPECIFICATION: resuelto, el usuario eligió exigir cliente activo también al presentar y en nueva versión; PLAN v3).
 Cambio sensible: nuevo módulo habilitable y migración `quotations/0001_initial` (ADR relacionado). Solo un humano aprueba el merge; PR apilado sobre #50 (mergear #50 primero o retargetear a `main`).
 
 **Seguimiento:** REV-06 (fechas `dd/MM/yyyy`, filtros en la URL, aviso al salir con cambios, todas las páginas de servicios, Escape bloqueado al guardar; DDR actualizado: «Presentar» solo en el detalle y tabla de líneas dentro del formulario) y REV-07 (AC-06 sobre todos los modelos de sales/inventory/purchases/expenses, `requires` de AC-10, edge cases de API, specs de formulario y lista) corregidos. `ng test` acotado 22/22, `ng lint` y `ng build` OK; `test_domain`, `modularity test_domain` y `test_boundaries` OK. Pruebas con PostgreSQL y revisión visual siguen pendientes.
 
 **Verificación con PostgreSQL (2026-11-04, ejecutada tras el Quality Gate):** `manage.py test modules.quotations modules.modularity modules.agenda modules.service_catalog` → 164 pruebas OK (incluye numeración concurrente con `Barrier`); suite completa del backend → 1405 pruebas OK; `makemigrations --check` sin cambios. Pendiente solo la revisión visual y un nuevo Quality Gate formal para PASS.
+
+**Seguimiento 2026-11-04:** REV-09 resuelto (PLAN v3, aprobado por el usuario): presentar y «Nueva versión» exigen cliente activo (400 `customer_id`). `quotations` + `modularity` + `test_boundaries`: 122 pruebas OK en PostgreSQL. REV-08 (spec del detalle) sigue abierto, Low.

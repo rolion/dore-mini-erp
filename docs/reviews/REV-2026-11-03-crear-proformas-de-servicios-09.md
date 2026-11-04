@@ -1,6 +1,6 @@
 # REV-2026-11-03-crear-proformas-de-servicios-09: Un borrador con cliente inactivo se puede presentar sin pasar por el guardado
 
-**Status:** Open
+**Status:** Resolved (decisión del usuario: exigir cliente activo; PLAN v3)
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-03-crear-proformas-de-servicios.md (v2)
