@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -18,7 +20,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-category-dialog',
   templateUrl: './category-dialog.component.html',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class CategoryDialogComponent {
   readonly nameMaxLength = CATEGORY_NAME_MAX_LENGTH;
@@ -66,7 +68,7 @@ export class CategoryDialogComponent {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (saved) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Categoría actualizada' : 'Categoría creada');
+        this.toastr.success(this.isEdit ? tr('EXPENSES.CATEGORY_DIALOG.CATEGORIA_ACTUALIZADA') : tr('EXPENSES.CATEGORY_DIALOG.CATEGORIA_CREADA'));
         this.activeModal.close(saved);
       },
       error: (err: ExpensesApiError) => {

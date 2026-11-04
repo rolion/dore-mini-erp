@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -15,11 +17,13 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-customer-list',
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule],
 })
 export class CustomerListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: 'No hay clientes que coincidan', totalMessage: 'en total' };
+  get messages() {
+    return { emptyMessage: tr('CUSTOMERS.CUSTOMER_LIST.NO_HAY_CLIENTES_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly searchControl = new FormControl('', { nonNullable: true });
   /** Los clientes desactivados no aparecen por defecto (REQ-CUS-005). */
   readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });
@@ -88,7 +92,7 @@ export class CustomerListComponent implements OnInit {
     const request = customer.active ? this.api.deactivate(customer.id) : this.api.activate(customer.id);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
-        this.toastr.success(updated.active ? 'Cliente activado' : 'Cliente desactivado');
+        this.toastr.success(updated.active ? tr('CUSTOMERS.CUSTOMER_DETAIL.CLIENTE_ACTIVADO') : tr('CUSTOMERS.CUSTOMER_DETAIL.CLIENTE_DESACTIVADO'));
         this.reload$.next();
       },
       error: (err: CustomerApiError) => this.toastr.error(err.message),
@@ -97,17 +101,17 @@ export class CustomerListComponent implements OnInit {
 
   /** Confirmación previa a cambiar el estado; separada para poder sustituirla en pruebas. */
   protected async confirmToggle(customer: Customer): Promise<boolean> {
-    const verb = customer.active ? 'desactivar' : 'activar';
+    const verb = customer.active ? tr('COMMON.VERB_DEACTIVATE') : tr('COMMON.VERB_ACTIVATE');
     const result = await Swal.fire({
-      titleText: `¿Quieres ${verb} a "${customer.name}"?`,
+      titleText: tr('CUSTOMERS.CUSTOMER_DETAIL.QUIERES_A', { p0: verb, p1: customer.name }),
       text: customer.active
-        ? 'Dejará de aparecer entre los clientes activos. Su historial de pedidos se conserva.'
-        : 'Volverá a aparecer entre los clientes activos.',
+        ? tr('CUSTOMERS.CUSTOMER_DETAIL.DEJARA_DE_APARECER_ENTRE_LOS')
+        : tr('CUSTOMERS.CUSTOMER_DETAIL.VOLVERA_A_APARECER_ENTRE_LOS'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

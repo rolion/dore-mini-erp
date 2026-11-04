@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -18,7 +19,7 @@ describe('MovementDetailComponent', () => {
     api.get.and.returnValue(result instanceof InventoryApiError ? throwError(() => result) : of(result));
     await TestBed.configureTestingModule({
       imports: [MovementDetailComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: MovementsApiService, useValue: api },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['id', 'm-1']]) } } },

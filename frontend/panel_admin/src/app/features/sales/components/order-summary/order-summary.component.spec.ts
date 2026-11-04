@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
@@ -21,7 +22,7 @@ describe('OrderSummaryComponent', () => {
     return element.querySelector(`[data-testid="${id}"]`)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
   }
 
-  beforeEach(() => TestBed.configureTestingModule({ imports: [OrderSummaryComponent] }));
+  beforeEach(() => TestBed.configureTestingModule({ providers: [...provideTestTranslations()], imports: [OrderSummaryComponent] }));
 
   it('shows the amounts exactly as the server calculated them (AC-25, UI-05)', () => {
     const element = render(

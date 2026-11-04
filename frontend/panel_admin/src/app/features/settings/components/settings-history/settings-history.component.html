@@ -1,57 +1,57 @@
 <form class="row g-2 align-items-end m-4" [formGroup]="filters" (ngSubmit)="apply()">
   <div class="col-md-3 col-sm-6">
-    <label class="form-label" for="history-date-from">Desde</label>
+    <label class="form-label" for="history-date-from">{{ 'COMMON.DESDE' | translate }}</label>
     <input id="history-date-from" type="date" class="form-control" formControlName="dateFrom">
   </div>
   <div class="col-md-3 col-sm-6">
-    <label class="form-label" for="history-date-to">Hasta</label>
+    <label class="form-label" for="history-date-to">{{ 'COMMON.HASTA' | translate }}</label>
     <input id="history-date-to" type="date" class="form-control" formControlName="dateTo">
   </div>
   <div class="col-md-3 col-sm-6">
-    <label class="form-label" for="history-setting">Ajuste</label>
+    <label class="form-label" for="history-setting">{{ 'SETTINGS.SETTINGS_HISTORY.AJUSTE' | translate }}</label>
     <select id="history-setting" class="form-select" formControlName="setting">
-      <option value="">Todos</option>
+      <option value="">{{ 'COMMON.TODOS' | translate }}</option>
       @for (option of options; track option.key) {
       <option [value]="option.key">{{ option.label }}</option>
       }
     </select>
   </div>
   <div class="col-md-3 col-sm-6">
-    <button type="submit" class="btn btn-primary" [disabled]="loading">Filtrar</button>
-    <button type="button" class="btn btn-light ms-2" [disabled]="loading" (click)="clear()">Limpiar</button>
+    <button type="submit" class="btn btn-primary" [disabled]="loading">{{ 'SETTINGS.SETTINGS_HISTORY.FILTRAR' | translate }}</button>
+    <button type="button" class="btn btn-light ms-2" [disabled]="loading" (click)="clear()">{{ 'SETTINGS.SETTINGS_HISTORY.LIMPIAR' | translate }}</button>
   </div>
 </form>
 
 @if (loading && !rows.length) {
-<p class="m-4">Cargando…</p>
+<p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
 } @else if (errorMessage) {
 <div class="m-4">
   <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
-  <button type="button" class="btn btn-light" (click)="load()">Reintentar</button>
+  <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
 </div>
 } @else if (!rows.length) {
-<p class="m-4 text-muted">Sin cambios registrados.</p>
+<p class="m-4 text-muted">{{ 'SETTINGS.SETTINGS_HISTORY.SIN_CAMBIOS_REGISTRADOS' | translate }}</p>
 } @else {
 <div class="table-responsive">
   <table class="table align-middle history-table">
-    <caption class="visually-hidden">Historial de cambios de configuración</caption>
+    <caption class="visually-hidden">{{ 'SETTINGS.SETTINGS_HISTORY.HISTORIAL_DE_CAMBIOS_DE_CONFIGURACION' | translate }}</caption>
     <thead>
       <tr>
-        <th scope="col">Fecha y hora</th>
-        <th scope="col">Usuario</th>
-        <th scope="col">Ajuste</th>
-        <th scope="col">Valor anterior</th>
-        <th scope="col">Valor nuevo</th>
+        <th scope="col">{{ 'COMMON.FECHA_Y_HORA' | translate }}</th>
+        <th scope="col">{{ 'COMMON.USUARIO' | translate }}</th>
+        <th scope="col">{{ 'SETTINGS.SETTINGS_HISTORY.AJUSTE' | translate }}</th>
+        <th scope="col">{{ 'SETTINGS.SETTINGS_HISTORY.VALOR_ANTERIOR' | translate }}</th>
+        <th scope="col">{{ 'SETTINGS.SETTINGS_HISTORY.VALOR_NUEVO' | translate }}</th>
       </tr>
     </thead>
     <tbody>
       @for (row of rows; track row.id) {
       <tr>
-        <td data-label="Fecha y hora">{{ row.changedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
-        <td data-label="Usuario">{{ row.changedBy }}</td>
-        <td data-label="Ajuste">{{ row.settingLabel }}</td>
-        <td data-label="Valor anterior">{{ row.oldValue }}</td>
-        <td data-label="Valor nuevo">{{ row.newValue }}</td>
+        <td [attr.data-label]="'COMMON.FECHA_Y_HORA' | translate">{{ row.changedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+        <td [attr.data-label]="'COMMON.USUARIO' | translate">{{ row.changedBy }}</td>
+        <td [attr.data-label]="'SETTINGS.SETTINGS_HISTORY.AJUSTE' | translate">{{ row.settingLabel }}</td>
+        <td [attr.data-label]="'SETTINGS.SETTINGS_HISTORY.VALOR_ANTERIOR' | translate">{{ row.oldValue }}</td>
+        <td [attr.data-label]="'SETTINGS.SETTINGS_HISTORY.VALOR_NUEVO' | translate">{{ row.newValue }}</td>
       </tr>
       }
     </tbody>
@@ -59,6 +59,6 @@
 </div>
 @if (count > pageSize) {
 <ngb-pagination class="d-flex justify-content-center" [collectionSize]="count" [pageSize]="pageSize" [page]="page"
-  [maxSize]="5" [boundaryLinks]="true" aria-label="Páginas del historial" (pageChange)="goTo($event)" />
+  [maxSize]="5" [boundaryLinks]="true" [attr.aria-label]="'SETTINGS.SETTINGS_HISTORY.PAGINAS_DEL_HISTORIAL' | translate" (pageChange)="goTo($event)" />
 }
 }

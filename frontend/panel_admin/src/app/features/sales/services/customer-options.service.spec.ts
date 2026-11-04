@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 
@@ -27,7 +28,7 @@ describe('CustomerOptionsService', () => {
     api = jasmine.createSpyObj<CustomersApiService>('CustomersApiService', ['list']);
     modulesState.customersDisabled = false;
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         { provide: CustomersApiService, useValue: api },
         { provide: ModulesService, useValue: modulesFake },
       ],

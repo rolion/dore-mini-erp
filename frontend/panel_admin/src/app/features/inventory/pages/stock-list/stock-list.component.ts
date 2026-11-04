@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -30,7 +31,7 @@ export const ALL_WAREHOUSES = '';
   selector: 'app-stock-list',
   templateUrl: './stock-list.component.html',
   styleUrl: './stock-list.component.scss',
-  imports: [ReactiveFormsModule, RouterLink, NgbPagination],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgbPagination],
 })
 export class StockListComponent implements OnInit {
   readonly pageSize = 20;

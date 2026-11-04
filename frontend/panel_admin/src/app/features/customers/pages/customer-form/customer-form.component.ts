@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -41,18 +43,18 @@ export function escapeHtml(text: string): string {
 export function duplicateMatchesHtml(matches: DuplicateMatch[]): string {
   const items = matches
     .map((match) => {
-      const state = match.active ? '' : ' <em>(inactivo)</em>';
+      const state = match.active ? '' : ` <em>${tr('INVENTORY.STOCK_LIST.INACTIVO')}</em>`;
       const link = `/pocketbiz/customers/${encodeURIComponent(match.id)}`;
       return `<li><a href="${link}" target="_blank" rel="noopener">${escapeHtml(match.name)}</a>${state}</li>`;
     })
     .join('');
-  return `<p>Estos clientes ya tienen ese teléfono:</p><ul class="text-start">${items}</ul>`;
+  return `<p>${tr('CUSTOMERS.CUSTOMER_FORM.PHONE_TAKEN_LIST')}</p><ul class="text-start">${items}</ul>`;
 }
 
 @Component({
   selector: 'app-customer-form',
   templateUrl: './customer-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class CustomerFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;
@@ -117,13 +119,13 @@ export class CustomerFormComponent implements OnInit {
   /** Diálogo previo a crear un cliente duplicado; separado para poder sustituirlo en pruebas. */
   protected async confirmDuplicate(matches: DuplicateMatch[]): Promise<boolean> {
     const result = await Swal.fire({
-      title: 'Ya existe un cliente con este teléfono',
+      title: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.YA_EXISTE_UN_CLIENTE_CON'),
       html: duplicateMatchesHtml(matches),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Crear de todos modos',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CREAR_DE_TODOS_MODOS'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }
@@ -143,7 +145,7 @@ export class CustomerFormComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (customer) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Cliente actualizado' : 'Cliente creado');
+        this.toastr.success(this.isEdit ? tr('CUSTOMERS.CUSTOMER_FORM.CLIENTE_ACTUALIZADO') : tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CLIENTE_CREADO'));
         this.router.navigate(['/pocketbiz/customers', customer.id]);
       },
       error: (err: CustomerApiError) => {

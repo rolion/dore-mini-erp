@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -23,7 +24,7 @@ describe('ProductDetailComponent', () => {
     api = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['get', 'activate', 'deactivate']);
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([{ path: 'pocketbiz/catalog/products/:id', component: ProductDetailComponent }]),
         { provide: ProductsApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },

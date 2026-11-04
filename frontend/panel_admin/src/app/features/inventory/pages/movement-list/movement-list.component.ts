@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -25,17 +27,19 @@ import { Warehouse } from '../../models/warehouse';
 import { MovementsApiService } from '../../services/movements-api.service';
 import { WarehousesApiService } from '../../services/warehouses-api.service';
 
-export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la inicial.';
+export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_FECHA_FINAL_NO_PUEDE');
 
 @Component({
   selector: 'app-movement-list',
   templateUrl: './movement-list.component.html',
   styleUrl: './movement-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe],
 })
 export class MovementListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: 'Sin movimientos para los filtros elegidos.', totalMessage: 'en total' };
+  get messages() {
+    return { emptyMessage: tr('INVENTORY.MOVEMENT_LIST.SIN_MOVIMIENTOS_PARA_LOS_FILTROS'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly sourceOptions = SOURCE_TYPE_OPTIONS;
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     dateFrom: [''],
@@ -73,7 +77,7 @@ export class MovementListComponent implements OnInit {
   }
 
   get documentFilterTitle(): string {
-    return this.documentSource === PURCHASE_RECEIPT_SOURCE ? 'Recepción' : 'Pedido';
+    return this.documentSource === PURCHASE_RECEIPT_SOURCE ? tr('INVENTORY.MOVEMENT_LIST.RECEPCION') : tr('INVENTORY.MOVEMENT_LIST.PEDIDO');
   }
 
   /** Código visible del pedido filtrado, tomado de los movimientos cargados. */
@@ -194,7 +198,7 @@ export class MovementListComponent implements OnInit {
 
   private validateRange(): boolean {
     const { dateFrom, dateTo } = this.filterForm.getRawValue();
-    this.rangeError = dateFrom && dateTo && dateFrom > dateTo ? INVALID_RANGE_MESSAGE : '';
+    this.rangeError = dateFrom && dateTo && dateFrom > dateTo ? INVALID_RANGE_MESSAGE() : '';
     return !this.rangeError;
   }
 

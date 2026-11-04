@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { SettingHistoryPage, SettingsApiError } from '../../models/setting';
@@ -35,7 +36,7 @@ describe('SettingsHistoryComponent', () => {
 
   beforeEach(() => {
     api = jasmine.createSpyObj<SettingsApiService>('SettingsApiService', ['history']);
-    TestBed.configureTestingModule({ imports: [SettingsHistoryComponent], providers: [{ provide: SettingsApiService, useValue: api }] });
+    TestBed.configureTestingModule({ imports: [SettingsHistoryComponent], providers: [...provideTestTranslations(), { provide: SettingsApiService, useValue: api }] });
   });
 
   it('lists date, user, setting, previous and new value (AC-06, UI-04)', () => {

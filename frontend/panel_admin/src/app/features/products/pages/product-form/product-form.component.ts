@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -27,7 +29,7 @@ export interface UnitOption {
 @Component({
   selector: 'app-product-form',
   templateUrl: './product-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class ProductFormComponent implements OnInit {
   readonly nameMaxLength = NAME_MAX_LENGTH;
@@ -142,7 +144,7 @@ export class ProductFormComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (product) => {
         this.saving = false;
-        this.toastr.success(this.isEdit ? 'Producto actualizado' : 'Producto creado');
+        this.toastr.success(this.isEdit ? tr('PRODUCTS.PRODUCT_FORM.PRODUCTO_ACTUALIZADO') : tr('PRODUCTS.PRODUCT_FORM.PRODUCTO_CREADO'));
         this.router.navigate(this.isEdit ? ['/pocketbiz/catalog/products', product.id] : ['/pocketbiz/catalog/products']);
       },
       error: (err: ProductApiError) => {

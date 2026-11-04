@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,22 +29,24 @@ import { ExpensesApiService } from '../../services/expenses-api.service';
 export type RangeShortcut = 'month' | 'previous-month' | 'all';
 
 export const RANGE_SHORTCUTS: readonly { id: RangeShortcut; label: string }[] = [
-  { id: 'month', label: 'Este mes' },
-  { id: 'previous-month', label: 'Mes anterior' },
-  { id: 'all', label: 'Todo' },
+  { id: 'month', get label() { return tr('EXPENSES.EXPENSE_LIST.ESTE_MES'); } },
+  { id: 'previous-month', get label() { return tr('EXPENSES.EXPENSE_LIST.MES_ANTERIOR'); } },
+  { id: 'all', get label() { return tr('EXPENSES.EXPENSE_LIST.TODO'); } },
 ];
 
-export const INVALID_RANGE_MESSAGE = 'La fecha final no puede ser anterior a la inicial.';
+export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_FECHA_FINAL_NO_PUEDE');
 
 @Component({
   selector: 'app-expense-list',
   templateUrl: './expense-list.component.html',
   styleUrl: './expense-list.component.scss',
-  imports: [RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, MoneyPipe],
 })
 export class ExpenseListComponent implements OnInit {
   readonly pageSize = 10;
-  readonly messages = { emptyMessage: 'No hay gastos que coincidan', totalMessage: 'en total' };
+  get messages() {
+    return { emptyMessage: tr('EXPENSES.EXPENSE_LIST.NO_HAY_GASTOS_QUE_COINCIDAN'), totalMessage: tr('COMMON.IN_TOTAL') };
+  }
   readonly shortcuts = RANGE_SHORTCUTS;
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     dateFrom: [''],
@@ -164,7 +168,7 @@ export class ExpenseListComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.toastr.success('Gasto anulado');
+          this.toastr.success(tr('EXPENSES.EXPENSE_DETAIL.GASTO_ANULADO'));
           this.reload$.next();
         },
         error: (err: ExpensesApiError) => this.toastr.error(err.message),
@@ -174,13 +178,13 @@ export class ExpenseListComponent implements OnInit {
   /** Confirmación previa a anular; separada para poder sustituirla en pruebas. */
   protected async confirmVoid(expense: Expense): Promise<boolean> {
     const result = await Swal.fire({
-      titleText: `¿Anular el gasto "${expense.description}"?`,
-      text: 'Este gasto dejará de sumar en los reportes. Se conserva en el historial.',
+      titleText: tr('EXPENSES.EXPENSE_DETAIL.ANULAR_EL_GASTO', { p0: expense.description }),
+      text: tr('EXPENSES.EXPENSE_DETAIL.ESTE_GASTO_DEJARA_DE_SUMAR'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Anular gasto',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('EXPENSES.EXPENSE_DETAIL.ANULAR_GASTO_2'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }
@@ -211,7 +215,7 @@ export class ExpenseListComponent implements OnInit {
 
   private validateRange(): boolean {
     const { dateFrom, dateTo } = this.filterForm.getRawValue();
-    this.rangeError = dateFrom && dateTo && dateFrom > dateTo ? INVALID_RANGE_MESSAGE : '';
+    this.rangeError = dateFrom && dateTo && dateFrom > dateTo ? INVALID_RANGE_MESSAGE() : '';
     return !this.rangeError;
   }
 

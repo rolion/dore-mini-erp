@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
@@ -17,7 +18,7 @@ describe('PurchaseReceiptsTabComponent', () => {
     api.list.and.returnValue(list);
     await TestBed.configureTestingModule({
       imports: [PurchaseReceiptsTabComponent],
-      providers: [provideRouter([]), { provide: ReceiptsApiService, useValue: api }],
+      providers: [...provideTestTranslations(), provideRouter([]), { provide: ReceiptsApiService, useValue: api }],
     }).compileComponents();
     fixture = TestBed.createComponent(PurchaseReceiptsTabComponent);
     fixture.componentRef.setInput('purchase', purchase);

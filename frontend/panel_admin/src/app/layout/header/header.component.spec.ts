@@ -4,7 +4,7 @@ import { importProvidersFrom } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
-import { provideTranslateService } from '@ngx-translate/core';
+import { provideTestTranslations } from "../../core/i18n/testing";
 import { FeatherModule } from 'angular-feather';
 import { allIcons } from 'angular-feather/icons';
 import { AuthService, User } from '@core';
@@ -25,7 +25,7 @@ describe('HeaderComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        provideTranslateService(),
+        ...provideTestTranslations(),
         importProvidersFrom(FeatherModule.pick(allIcons)),
         {
           provide: AuthService,
@@ -93,7 +93,7 @@ describe('HeaderComponent', () => {
     const menu = (fixture.nativeElement as HTMLElement).querySelector('.user-toggle')
       ?.parentElement?.querySelector('.dropdown-menu') as HTMLElement;
     const links = Array.from(menu.querySelectorAll('a')).map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Logout']);
+    expect(links).toEqual(['Cerrar sesión']);
     expect(menu.querySelector('.dropdown-title')?.textContent?.trim()).toBe('María Quispe');
     expect(menu.querySelector('.company-name')?.textContent?.trim()).toBe('Cuñapés SRL');
   });

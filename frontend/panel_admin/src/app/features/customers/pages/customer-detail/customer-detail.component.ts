@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,7 +14,7 @@ import { CustomersApiService } from '../../services/customers-api.service';
 @Component({
   selector: 'app-customer-detail',
   templateUrl: './customer-detail.component.html',
-  imports: [RouterLink, DatePipe, CustomerPurchaseHistoryComponent],
+  imports: [TranslatePipe, RouterLink, DatePipe, CustomerPurchaseHistoryComponent],
 })
 export class CustomerDetailComponent implements OnInit {
   customer: Customer | null = null;
@@ -78,7 +80,7 @@ export class CustomerDetailComponent implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
         this.customer = updated;
-        this.toastr.success(updated.active ? 'Cliente activado' : 'Cliente desactivado');
+        this.toastr.success(updated.active ? tr('CUSTOMERS.CUSTOMER_DETAIL.CLIENTE_ACTIVADO') : tr('CUSTOMERS.CUSTOMER_DETAIL.CLIENTE_DESACTIVADO'));
       },
       error: (err: CustomerApiError) => this.toastr.error(err.message),
     });
@@ -86,17 +88,17 @@ export class CustomerDetailComponent implements OnInit {
 
   /** Confirmación previa a cambiar el estado; separada para poder sustituirla en pruebas. */
   protected async confirmToggle(customer: Customer): Promise<boolean> {
-    const verb = customer.active ? 'desactivar' : 'activar';
+    const verb = customer.active ? tr('COMMON.VERB_DEACTIVATE') : tr('COMMON.VERB_ACTIVATE');
     const result = await Swal.fire({
-      titleText: `¿Quieres ${verb} a "${customer.name}"?`,
+      titleText: tr('CUSTOMERS.CUSTOMER_DETAIL.QUIERES_A', { p0: verb, p1: customer.name }),
       text: customer.active
-        ? 'Dejará de aparecer entre los clientes activos. Su historial de pedidos se conserva.'
-        : 'Volverá a aparecer entre los clientes activos.',
+        ? tr('CUSTOMERS.CUSTOMER_DETAIL.DEJARA_DE_APARECER_ENTRE_LOS')
+        : tr('CUSTOMERS.CUSTOMER_DETAIL.VOLVERA_A_APARECER_ENTRE_LOS'),
       showCancelButton: true,
       confirmButtonColor: '#8963ff',
       cancelButtonColor: '#fb7823',
-      confirmButtonText: 'Sí',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: tr('CUSTOMERS.CUSTOMER_DETAIL.SI'),
+      cancelButtonText: tr('CUSTOMERS.CUSTOMER_QUICK_CREATE.CANCELAR'),
     });
     return result.isConfirmed;
   }

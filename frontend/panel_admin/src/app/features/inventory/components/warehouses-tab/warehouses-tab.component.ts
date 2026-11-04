@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -16,7 +18,7 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-warehouses-tab',
   templateUrl: './warehouses-tab.component.html',
   styleUrl: './warehouses-tab.component.scss',
-  imports: [ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class WarehousesTabComponent implements OnInit {
   readonly pageSize = 100;
@@ -81,12 +83,12 @@ export class WarehousesTabComponent implements OnInit {
 
   toggleActive(warehouse: Warehouse): void {
     this.run(warehouse.active ? this.api.deactivate(warehouse.id) : this.api.activate(warehouse.id), (updated) =>
-      updated.active ? 'Almacén activado' : 'Almacén desactivado',
+      updated.active ? tr('INVENTORY.WAREHOUSES_TAB.ALMACEN_ACTIVADO') : tr('INVENTORY.WAREHOUSES_TAB.ALMACEN_DESACTIVADO'),
     );
   }
 
   makeDefault(warehouse: Warehouse): void {
-    this.run(this.api.makeDefault(warehouse.id), () => 'Almacén predeterminado actualizado');
+    this.run(this.api.makeDefault(warehouse.id), () => tr('INVENTORY.WAREHOUSES_TAB.ALMACEN_PREDETERMINADO_ACTUALIZADO'));
   }
 
   private run(request: ReturnType<WarehousesApiService['activate']>, message: (w: Warehouse) => string): void {

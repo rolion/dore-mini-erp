@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -5,7 +6,7 @@ import { CustomerOrderSummary } from '../../models/customer';
 import { CustomerPurchaseHistoryComponent } from './customer-purchase-history.component';
 
 describe('CustomerPurchaseHistoryComponent', () => {
-  beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
+  beforeEach(() => TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideRouter([])] }));
 
   function render(
     inputs: Partial<{ orders: CustomerOrderSummary[]; loading: boolean; error: string; total: number }> = {},

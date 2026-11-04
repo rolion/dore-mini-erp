@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -27,14 +29,14 @@ import { WarehousesApiService } from '../../services/warehouses-api.service';
 export type AdjustmentStep = 'edit' | 'review';
 export type AdjustmentField = 'warehouseId' | 'productId' | 'countedQuantity' | 'reason';
 
-export const ADJUSTMENT_SUCCESS_MESSAGE = 'Ajuste registrado';
-export const NO_DIFFERENCE_MESSAGE = 'Sin diferencia: no se registrará ningún movimiento.';
+export const ADJUSTMENT_SUCCESS_MESSAGE = (): string => tr('INVENTORY.ADJUSTMENT_FORM.AJUSTE_REGISTRADO');
+export const NO_DIFFERENCE_MESSAGE = (): string => tr('INVENTORY.ADJUSTMENT_FORM.SIN_DIFERENCIA_NO_SE_REGISTRARA_2');
 
 /** Nuevo ajuste: producto, almacén, cantidad contada y motivo; revisión y confirmación de envío único. */
 @Component({
   selector: 'app-adjustment-form',
   templateUrl: './adjustment-form.component.html',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, InsufficientStockAlertComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, InsufficientStockAlertComponent],
 })
 export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
   readonly reasonMaxLength = ADJUSTMENT_REASON_MAX_LENGTH;
@@ -140,9 +142,9 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
       return null;
     }
     if (control.errors?.['maxlength']) {
-      return `El motivo no puede superar ${ADJUSTMENT_REASON_MAX_LENGTH} caracteres.`;
+      return tr('INVENTORY.ADJUSTMENT_FORM.EL_MOTIVO_NO_PUEDE_SUPERAR', { p0: ADJUSTMENT_REASON_MAX_LENGTH });
     }
-    return control.value.trim() ? null : 'El motivo es obligatorio.';
+    return control.value.trim() ? null : tr('INVENTORY.ADJUSTMENT_FORM.EL_MOTIVO_ES_OBLIGATORIO');
   }
 
   message(field: 'warehouseId' | 'productId'): string | null {
@@ -154,7 +156,7 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
     if (!(control.invalid && (control.touched || control.dirty))) {
       return null;
     }
-    return field === 'warehouseId' ? 'Elige un almacén.' : 'Elige un producto.';
+    return field === 'warehouseId' ? tr('INVENTORY.ADJUSTMENT_FORM.ELIGE_UN_ALMACEN') : tr('INVENTORY.ADJUSTMENT_FORM.ELIGE_UN_PRODUCTO');
   }
 
   /** Diferencia contada − saldo (texto con signo), o `null` mientras falte el saldo o la cantidad no sea válida. */
@@ -224,7 +226,7 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
       .subscribe({
         next: (adjustment) => {
           this.completed = true;
-          this.toastr.success(ADJUSTMENT_SUCCESS_MESSAGE);
+          this.toastr.success(ADJUSTMENT_SUCCESS_MESSAGE());
           if (this.returnLink) {
             this.router.navigate(this.returnLink);
           } else {
@@ -259,9 +261,9 @@ export class AdjustmentFormComponent implements OnInit, HasUnsavedChanges {
       const diff = this.difference;
       const effect =
         diff === null || directionOf(diff) === null
-          ? 'Ahora no hay diferencia.'
-          : `La diferencia ahora es ${signedDifference(diff)} ${this.unitLabel}.`;
-      this.balanceNotice = `El saldo cambió de ${previous} a ${this.balanceText} desde tu conteo. ${effect}`;
+          ? tr('INVENTORY.ADJUSTMENT_FORM.AHORA_NO_HAY_DIFERENCIA')
+          : tr('INVENTORY.ADJUSTMENT_FORM.LA_DIFERENCIA_AHORA_ES', { p0: signedDifference(diff), p1: this.unitLabel });
+      this.balanceNotice = tr('INVENTORY.ADJUSTMENT_FORM.EL_SALDO_CAMBIO_DE_A', { p0: previous, p1: this.balanceText, p2: effect });
       return;
     }
     this.step = 'edit';

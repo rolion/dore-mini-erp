@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -32,7 +33,7 @@ describe('PurchaseDetailComponent', () => {
     modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     await TestBed.configureTestingModule({
       imports: [PurchaseDetailComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: PurchasesApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },

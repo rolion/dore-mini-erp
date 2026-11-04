@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -14,7 +16,7 @@ import {
   selector: 'app-module-list',
   templateUrl: './module-list.component.html',
   styleUrl: './module-list.component.scss',
-  imports: [RouterLink, SettingsHistoryComponent],
+  imports: [TranslatePipe, RouterLink, SettingsHistoryComponent],
 })
 export class ModuleListComponent implements OnInit {
   tab: 'general' | 'history' = 'general';
@@ -66,9 +68,9 @@ export class ModuleListComponent implements OnInit {
   blockedReason(module: AppModule): string {
     if (module.enabled) {
       const dependents = this.disableBlockedBy(module);
-      return dependents.length ? `Lo requieren: ${dependents.join(', ')}` : '';
+      return dependents.length ? tr('SETTINGS.MODULE_LIST.LO_REQUIEREN', { p0: dependents.join(', ') }) : '';
     }
-    return module.missingRequires.length ? `Requiere habilitar primero: ${module.missingRequires.join(', ')}` : '';
+    return module.missingRequires.length ? tr('SETTINGS.MODULE_LIST.REQUIERE_HABILITAR_PRIMERO_2', { p0: module.missingRequires.join(', ') }) : '';
   }
 
   open(module: AppModule): void {

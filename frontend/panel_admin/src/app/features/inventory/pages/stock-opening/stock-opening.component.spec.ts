@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -41,7 +42,7 @@ describe('StockOpeningComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [StockOpeningComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: StockApiService, useValue: stockApi },
         { provide: WarehousesApiService, useValue: warehouses },
@@ -130,7 +131,7 @@ describe('StockOpeningComponent', () => {
     expect(stockApi.productsWithHistory).toHaveBeenCalledWith('w-1', ['p-1']);
     expect(rows()[0].classList).toContain('table-warning');
     expect(el().querySelector('[data-testid="history-alert"]')?.textContent).toContain('Harina');
-    expect(component.productMessage(0)).toBe(HISTORY_MESSAGE);
+    expect(component.productMessage(0)).toBe(HISTORY_MESSAGE());
     expect(component.canReview).toBeFalse();
     stockApi.productsWithHistory.and.returnValue(of([]));
     component.form.controls.warehouseId.setValue('w-2');
@@ -269,7 +270,7 @@ describe('StockOpeningComponent coming from the stock detail', () => {
     products.search.and.returnValue(of([{ ...PIECE, id: P }, KILO]));
     await TestBed.configureTestingModule({
       imports: [StockOpeningComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: StockApiService, useValue: stockApi },
         { provide: WarehousesApiService, useValue: warehouses },

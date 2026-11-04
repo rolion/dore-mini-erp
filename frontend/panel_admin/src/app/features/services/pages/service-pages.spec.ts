@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
@@ -19,7 +20,7 @@ describe('ServiceFormComponent', () => {
     personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['specialties']);
     personnel.specialties.and.returnValue(of([{ id: 'specialty-1', name: 'Ortodoncia', active: true,
       created_by: 1, updated_by: 1, created_at: '', updated_at: '' }]));
-    TestBed.configureTestingModule({ imports: [ServiceFormComponent], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [ServiceFormComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: ServicesApiService, useValue: api },
       { provide: PersonnelApiService, useValue: personnel },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}) } } }] });
@@ -89,7 +90,7 @@ describe('ServiceListComponent', () => {
     api.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [service] }));
     personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['specialties']);
     personnel.specialties.and.returnValue(of([]));
-    TestBed.configureTestingModule({ imports: [ServiceListComponent], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [ServiceListComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: ServicesApiService, useValue: api }, { provide: PersonnelApiService, useValue: personnel }] });
   });
   it('restores filters and pagination and displays formatted values', () => {
@@ -144,7 +145,7 @@ describe('ServiceListComponent', () => {
 describe('ServiceDetailComponent', () => {
   it('shows price, duration, inactive state and a preserved service history', () => {
     const api = jasmine.createSpyObj<ServicesApiService>('api', ['get']); api.get.and.returnValue(of({ ...service, active: false }));
-    TestBed.configureTestingModule({ imports: [ServiceDetailComponent], providers: [provideRouter([]),
+    TestBed.configureTestingModule({ imports: [ServiceDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: ServicesApiService, useValue: api }, { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'one' }) } } }] });
     const fixture = TestBed.createComponent(ServiceDetailComponent); fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Bs 120.00'); expect(fixture.nativeElement.textContent).toContain('30 min');

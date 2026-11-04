@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { SettingConfirmDialogComponent } from './setting-confirm-dialog.component';
@@ -12,7 +13,7 @@ describe('SettingConfirmDialogComponent', () => {
     active = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     TestBed.configureTestingModule({
       imports: [SettingConfirmDialogComponent],
-      providers: [{ provide: NgbActiveModal, useValue: active }],
+      providers: [...provideTestTranslations(), { provide: NgbActiveModal, useValue: active }],
     });
     fixture = TestBed.createComponent(SettingConfirmDialogComponent);
     Object.assign(fixture.componentInstance, { title: 'Permitir stock negativo', message: 'Podrán existir saldos negativos.', confirmLabel: 'Permitir' });

@@ -1,3 +1,4 @@
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,7 +9,7 @@ import { ServiceToggleComponent } from '../components/service-toggle.component';
 import { CatalogService, ServiceApiError } from '../models/service';
 import { ServicesApiService } from '../services/services-api.service';
 
-@Component({ selector: 'app-service-detail', imports: [RouterLink, DatePipe, MoneyPipe, ServiceToggleComponent],
+@Component({ selector: 'app-service-detail', imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe, ServiceToggleComponent],
   templateUrl: './service-detail.component.html' })
 export class ServiceDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);

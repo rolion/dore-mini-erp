@@ -1,3 +1,5 @@
+import { tr } from '../../../../core/i18n/translate';
+import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,9 +28,9 @@ import { WarehousesApiService } from '../../services/warehouses-api.service';
 export type OpeningStep = 'edit' | 'review';
 export type HeaderField = 'warehouseId' | 'movementDate' | 'reference';
 
-export const DUPLICATE_MESSAGE = 'Este producto ya está en otra línea.';
-export const HISTORY_MESSAGE = 'Ya tiene movimientos en este almacén; corrígelo con un ajuste.';
-export const OPENING_SUCCESS_MESSAGE = 'Apertura registrada';
+export const DUPLICATE_MESSAGE = (): string => tr('INVENTORY.STOCK_OPENING.ESTE_PRODUCTO_YA_ESTA_EN');
+export const HISTORY_MESSAGE = (): string => tr('INVENTORY.STOCK_OPENING.YA_TIENE_MOVIMIENTOS_EN_ESTE');
+export const OPENING_SUCCESS_MESSAGE = (): string => tr('INVENTORY.STOCK_OPENING.APERTURA_REGISTRADA');
 
 type LineGroup = FormGroup<{ product: FormControl<OpeningProduct | null>; quantity: FormControl<string> }>;
 
@@ -43,7 +45,7 @@ export interface SummaryLine {
   selector: 'app-stock-opening',
   templateUrl: './stock-opening.component.html',
   styleUrl: './stock-opening.component.scss',
-  imports: [ReactiveFormsModule, RouterLink, NgSelectComponent, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, DatePipe],
 })
 export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
   readonly referenceMaxLength = OPENING_REFERENCE_MAX_LENGTH;
@@ -175,9 +177,9 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
       return server;
     }
     if (this.isDuplicate(index)) {
-      return DUPLICATE_MESSAGE;
+      return DUPLICATE_MESSAGE();
     }
-    return this.hasHistory(index) ? HISTORY_MESSAGE : null;
+    return this.hasHistory(index) ? HISTORY_MESSAGE() : null;
   }
 
   headerMessage(field: HeaderField): string | null {
@@ -190,12 +192,12 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
       return null;
     }
     const required: Record<HeaderField, string> = {
-      warehouseId: 'Elige un almacén.',
-      movementDate: 'La fecha es obligatoria.',
-      reference: 'La referencia de apertura es obligatoria.',
+      warehouseId: tr('INVENTORY.ADJUSTMENT_FORM.ELIGE_UN_ALMACEN'),
+      movementDate: tr('INVENTORY.STOCK_OPENING.LA_FECHA_ES_OBLIGATORIA'),
+      reference: tr('INVENTORY.STOCK_OPENING.LA_REFERENCIA_DE_APERTURA_ES'),
     };
     return control.errors?.['maxlength']
-      ? `La referencia no puede superar ${OPENING_REFERENCE_MAX_LENGTH} caracteres.`
+      ? tr('INVENTORY.STOCK_OPENING.LA_REFERENCIA_NO_PUEDE_SUPERAR', { p0: OPENING_REFERENCE_MAX_LENGTH })
       : required[field];
   }
 
@@ -260,7 +262,7 @@ export class StockOpeningComponent implements OnInit, HasUnsavedChanges {
       .subscribe({
         next: (result) => {
           this.completed = true;
-          this.toastr.success(OPENING_SUCCESS_MESSAGE);
+          this.toastr.success(OPENING_SUCCESS_MESSAGE());
           if (this.returnLink) {
             this.router.navigate(this.returnLink);
           } else {

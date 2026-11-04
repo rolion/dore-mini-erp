@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -74,7 +75,7 @@ describe('ModuleSettingsComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     TestBed.configureTestingModule({
       imports: [ModuleSettingsComponent],
-      providers: [
+      providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: SettingsApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
@@ -132,7 +133,7 @@ describe('ModuleSettingsComponent', () => {
     component.form.controls[PERCENT].setValue('50');
     component.save();
     expect(api.save).toHaveBeenCalledOnceWith('sales', { [PERCENT]: '50' });
-    expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE);
+    expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE());
     expect(component.hasUnsavedChanges()).toBeFalse();
   });
 
@@ -228,7 +229,7 @@ describe('ModuleSettingsComponent', () => {
       await fixture.whenStable();
       expect(modal.open).toHaveBeenCalledTimes(1);
       expect(api.save).toHaveBeenCalledOnceWith('inventory', { [NEGATIVE]: 'true' });
-      expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE);
+      expect(toastr.success).toHaveBeenCalledWith(SAVED_MESSAGE());
     });
 
     it('does not save and keeps the switch when the confirmation is cancelled', async () => {

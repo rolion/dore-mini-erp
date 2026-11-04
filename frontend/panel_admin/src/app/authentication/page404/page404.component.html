@@ -4,7 +4,7 @@
       <div class="page-inner">
         <h1>404</h1>
         <div class="page-description">
-          The page you were looking for could not be found.
+          {{ 'AUTH.PAGE404.THE_PAGE_YOU_WERE_LOOKING' | translate }}
         </div>
         <div class="page-search">
           <form>
@@ -15,17 +15,17 @@
                     <i class="fas fa-search"></i>
                   </div>
                 </div>
-                <input type="text" class="form-control" placeholder="Search">
+                <input type="text" class="form-control" [placeholder]="'AUTH.PAGE404.SEARCH' | translate">
                 <div class="input-group-append">
                   <button class="btn btn-primary btn-lg">
-                    Search
+                    {{ 'AUTH.PAGE404.SEARCH' | translate }}
                   </button>
                 </div>
               </div>
             </div>
           </form>
           <div class="mt-3">
-            <a routerLink="/pocketbiz">Back to Home</a>
+            <a routerLink="/pocketbiz">{{ 'AUTH.PAGE404.BACK_TO_HOME' | translate }}</a>
           </div>
         </div>
       </div>

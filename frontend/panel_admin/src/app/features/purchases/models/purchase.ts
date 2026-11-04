@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Moneda fija e informativa de las compras. */
 export const PURCHASE_CURRENCY = 'BOB';
 export const MAX_ITEMS = 200;
@@ -13,9 +14,9 @@ export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 export type PurchaseAction = 'edit' | 'confirm' | 'cancel' | 'receive' | 'pay';
 
 export const PURCHASE_STATUS_LABELS: Readonly<Record<PurchaseStatus, string>> = {
-  draft: 'Borrador',
-  confirmed: 'Confirmada',
-  cancelled: 'Cancelada',
+  get draft() { return tr('PURCHASES.PURCHASE.BORRADOR'); },
+  get confirmed() { return tr('PURCHASES.PURCHASE.CONFIRMADA'); },
+  get cancelled() { return tr('PURCHASES.PURCHASE.CANCELADA'); },
 };
 
 export const PURCHASE_STATUS_CLASSES: Readonly<Record<PurchaseStatus, string>> = {
@@ -25,9 +26,9 @@ export const PURCHASE_STATUS_CLASSES: Readonly<Record<PurchaseStatus, string>> =
 };
 
 export const RECEPTION_STATUS_LABELS: Readonly<Record<ReceptionStatus, string>> = {
-  not_received: 'Sin recibir',
-  partial: 'Recibida parcialmente',
-  received: 'Recibida',
+  get not_received() { return tr('PURCHASES.PURCHASE.SIN_RECIBIR'); },
+  get partial() { return tr('PURCHASES.PURCHASE.RECIBIDA_PARCIALMENTE'); },
+  get received() { return tr('PURCHASES.PURCHASE.RECIBIDA'); },
 };
 
 export const RECEPTION_STATUS_CLASSES: Readonly<Record<ReceptionStatus, string>> = {
@@ -43,9 +44,9 @@ export const PAYMENT_STATUS_CLASSES: Readonly<Record<PaymentStatus, string>> = {
 };
 
 export const PAYMENT_STATUS_LABELS: Readonly<Record<PaymentStatus, string>> = {
-  unpaid: 'Sin pagar',
-  partial: 'Pago parcial',
-  paid: 'Pagada',
+  get unpaid() { return tr('PURCHASES.PURCHASE.SIN_PAGAR'); },
+  get partial() { return tr('PURCHASES.PURCHASE.PAGO_PARCIAL'); },
+  get paid() { return tr('PURCHASES.PURCHASE.PAGADA'); },
 };
 
 export interface PurchaseSupplier {

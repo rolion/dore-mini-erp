@@ -1,3 +1,4 @@
+import { provideTestTranslations } from '../i18n/testing';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Route, Router, provideRouter } from '@angular/router';
@@ -90,7 +91,7 @@ describe('Rutas de la aplicación (ADR landing-pocketbiz-rutas)', () => {
 
     beforeEach(() => {
       TestBed.configureTestingModule({
-        providers: [
+        providers: [...provideTestTranslations(), 
           provideRouter([
             ...LEGACY_REDIRECTS,
             {

@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -26,10 +27,10 @@ import {
   StockShortage,
 } from '../models/order';
 
-export const NETWORK_ERROR_MESSAGE = 'No se pudo conectar con el servidor. Inténtalo de nuevo.';
-export const NOT_FOUND_MESSAGE = 'Pedido no encontrado.';
-export const GENERIC_ERROR_MESSAGE = 'Ocurrió un error inesperado. Inténtalo de nuevo.';
-export const VALIDATION_ERROR_MESSAGE = 'Revisa los datos ingresados.';
+export const NETWORK_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
+export const NOT_FOUND_MESSAGE = (): string => tr('SALES.ORDERS_API_SERVICE.PEDIDO_NO_ENCONTRADO');
+export const GENERIC_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO');
+export const VALIDATION_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS');
 
 const FIELD_NAMES: Record<string, OrderErrorField> = {
   customer_id: 'customerId',
@@ -198,14 +199,14 @@ function ruleMessage(body: unknown): { code: string; detail: string } | null {
 
 function toApiError(err: HttpErrorResponse): OrderApiError {
   if (err.status === 0) {
-    return new OrderApiError(NETWORK_ERROR_MESSAGE, 0);
+    return new OrderApiError(NETWORK_ERROR_MESSAGE(), 0);
   }
   if (err.status === 400) {
-    return new OrderApiError(VALIDATION_ERROR_MESSAGE, 400, toFieldErrors(err.error));
+    return new OrderApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(err.error));
   }
   if (err.status === 404) {
     const detail = (err.error as { detail?: unknown } | null)?.detail;
-    return new OrderApiError(typeof detail === 'string' ? detail : NOT_FOUND_MESSAGE, 404);
+    return new OrderApiError(typeof detail === 'string' ? detail : NOT_FOUND_MESSAGE(), 404);
   }
   const rule = err.status === 409 ? ruleMessage(err.error) : null;
   if (rule) {
@@ -217,7 +218,7 @@ function toApiError(err: HttpErrorResponse): OrderApiError {
       typeof warehouse?.name === 'string' ? warehouse.name : '',
     );
   }
-  return new OrderApiError(GENERIC_ERROR_MESSAGE, err.status);
+  return new OrderApiError(GENERIC_ERROR_MESSAGE(), err.status);
 }
 
 function toBody(input: Partial<OrderInput>): Record<string, string | null> {

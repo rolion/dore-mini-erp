@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
@@ -5,7 +6,7 @@ import { environment } from '../../../../environments/environment';
 import { Page } from '../../../shared/models/page';
 import { CustomerOrderSummary } from '../models/customer';
 
-export const HISTORY_ERROR_MESSAGE = 'No se pudo cargar el historial de compras.';
+export const HISTORY_ERROR_MESSAGE = (): string => tr('CUSTOMERS.CUSTOMER_ORDERS_API_SERVICE.NO_SE_PUDO_CARGAR_EL');
 export const HISTORY_PAGE_SIZE = 100;
 
 interface OrderRowDto {
@@ -49,7 +50,7 @@ export class CustomerOrdersApiService {
           }),
         ),
       })),
-      catchError((err: HttpErrorResponse) => throwError(() => new Error(HISTORY_ERROR_MESSAGE, { cause: err }))),
+      catchError((err: HttpErrorResponse) => throwError(() => new Error(HISTORY_ERROR_MESSAGE(), { cause: err }))),
     );
   }
 }

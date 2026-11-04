@@ -1,3 +1,4 @@
+import { tr } from '../../../core/i18n/translate';
 /** Valoración inicial del inventario (módulo Costeo). Cantidades e importes viajan como texto decimal. */
 
 export type ValuationStatus = 'not_adopted' | 'adopted';
@@ -112,10 +113,10 @@ export interface ValuationDto {
 /** Estado de captura de una línea: «Pendiente» (sin valor), inválida, o lista. */
 export type LineValueState = 'pending' | 'invalid' | 'zero-undeclared' | 'ok';
 
-export const PENDING_LABEL = 'Pendiente';
-export const DEFAULT_SOURCE = 'Ingreso manual';
+export const PENDING_LABEL = (): string => tr('INVENTORY.VALUATION.PENDIENTE');
+export const DEFAULT_SOURCE = (): string => tr('INVENTORY.VALUATION.INGRESO_MANUAL');
 export const SOURCE_MAX_LENGTH = 200;
-export const METHOD_LABEL = 'Promedio ponderado móvil (costo de gestión)';
+export const METHOD_LABEL = (): string => tr('INVENTORY.VALUATION.PROMEDIO_PONDERADO_MOVIL_COSTO_DE');
 
 const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/;
 const QUANTITY_PATTERN = /^\d+(\.\d{1,4})?$/;
@@ -139,11 +140,11 @@ export function lineValueState(totalValue: string, declaredZero: boolean): LineV
 export function lineValueMessage(state: LineValueState): string | null {
   switch (state) {
     case 'pending':
-      return 'Pendiente: ingresa un valor o declara costo cero.';
+      return tr('INVENTORY.VALUATION.PENDIENTE_INGRESA_UN_VALOR_O');
     case 'invalid':
-      return 'Ingresa un importe válido con hasta 2 decimales.';
+      return tr('INVENTORY.VALUATION.INGRESA_UN_IMPORTE_VALIDO_CON');
     case 'zero-undeclared':
-      return 'Un costo cero debe declararse explícitamente.';
+      return tr('INVENTORY.VALUATION.UN_COSTO_CERO_DEBE_DECLARARSE');
     default:
       return null;
   }

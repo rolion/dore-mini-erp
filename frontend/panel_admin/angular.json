@@ -119,7 +119,8 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing",
-              "@angular/localize/init"
+              "@angular/localize/init",
+              "src/test-setup.ts"
             ],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
