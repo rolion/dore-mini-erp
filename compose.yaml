@@ -41,8 +41,8 @@ services:
       context: ./frontend/panel_admin
     restart: unless-stopped
     environment:
-      VIRTUAL_HOST: www.pocketbiz.website,app.pocketbiz.website
-      LETSENCRYPT_HOST: www.pocketbiz.website,app.pocketbiz.website
+      VIRTUAL_HOST: www.pocketbiz.website,app.pocketbiz.website,pocketbiz.website
+      LETSENCRYPT_HOST: www.pocketbiz.website,app.pocketbiz.website,pocketbiz.website
       LETSENCRYPT_EMAIL: joe.doe@pocketbiz.com
       VIRTUAL_PORT: "80"
     expose:
