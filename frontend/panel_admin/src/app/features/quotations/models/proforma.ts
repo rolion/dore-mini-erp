@@ -1,11 +1,14 @@
+import { tr } from '../../../core/i18n/translate';
+
 export type ProformaStatus = 'draft' | 'presented' | 'superseded';
 export type ProformaAction = 'edit' | 'present' | 'new-version';
 
-export const STATUS_LABELS: Record<ProformaStatus, string> = {
-  draft: 'Borrador',
-  presented: 'Presentada',
-  superseded: 'Reemplazada',
-};
+export const STATUSES: ProformaStatus[] = ['draft', 'presented', 'superseded'];
+
+/** Se evalúa al usarla (no en una constante de módulo): el catálogo se carga al arrancar. */
+export function statusLabel(status: ProformaStatus): string {
+  return tr(`QUOTATIONS.PROFORMAS.ESTADO_${status.toUpperCase()}`);
+}
 
 export const STATUS_CLASSES: Record<ProformaStatus, string> = {
   draft: 'col-orange',

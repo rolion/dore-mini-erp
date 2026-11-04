@@ -2,16 +2,18 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { tr } from '../../../core/i18n/translate';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
-import { ProformaStatus, ProformaSummary, STATUS_CLASSES, STATUS_LABELS } from '../models/proforma';
+import { ProformaStatus, ProformaSummary, STATUSES, STATUS_CLASSES, statusLabel } from '../models/proforma';
 import { ProformasApiService } from '../services/proformas-api.service';
 
 /** Cotizaciones → Proformas: lista con filtros (plantilla Lista del sistema de diseño). */
 @Component({
   selector: 'app-proforma-list',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, TranslatePipe],
   templateUrl: './proforma-list.component.html',
 })
 export class ProformaListComponent implements OnInit {
@@ -21,8 +23,8 @@ export class ProformaListComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  readonly statuses = Object.keys(STATUS_LABELS) as ProformaStatus[];
-  readonly labels = STATUS_LABELS;
+  readonly statuses = STATUSES;
+  readonly statusLabel = statusLabel;
   readonly classes = STATUS_CLASSES;
   readonly filters = this.fb.group({ customer: '', from: '', to: '', status: '' });
 
@@ -63,7 +65,7 @@ export class ProformaListComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
       .subscribe({
         next: result => { this.rows = result.results; this.count = result.count; },
-        error: () => this.error = 'No se pudieron cargar las proformas.',
+        error: () => this.error = tr('QUOTATIONS.PROFORMAS.ERR_LISTA'),
       });
   }
 

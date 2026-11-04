@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { previewSubtotal, ProformaFailure, ProformaInput } from '../models/proforma';
 import { ProformasApiService } from './proformas-api.service';
 
@@ -13,7 +14,7 @@ describe('ProformasApiService', () => {
   };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), ...provideTestTranslations()] });
     service = TestBed.inject(ProformasApiService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -44,23 +45,25 @@ describe('ProformasApiService', () => {
     let failure: ProformaFailure | undefined;
     service.create(input).subscribe({ error: (error: ProformaFailure) => failure = error });
     http.expectOne(r => r.method === 'POST').flush(
-      { customer_id: ['El cliente está inactivo.'], lines: [{}, { quantity: ['Ingresa una cantidad mayor que cero.'] }] },
+      { customer_id: ['The customer is inactive.'], lines: [{}, { quantity: ['Server message in any language.'] }] },
       { status: 400, statusText: 'Bad Request' });
-    expect(failure?.fields['customer_id']).toBe('El cliente está inactivo.');
-    expect(failure?.lines[1]['quantity']).toContain('cantidad');
+    expect(failure?.fields['customer_id']).toBe('Selecciona un cliente activo.');
+    expect(failure?.lines[1]['quantity']).toContain('cantidad mayor que cero');
     expect(failure?.lines[0]).toEqual({});
   });
 
-  it('maps 409 as conflict and 403 keeps the server message', () => {
+  it('maps 409 as conflict and tells apart a price 403 from a disabled module', () => {
     let failure: ProformaFailure | undefined;
     service.present('p1').subscribe({ error: (error: ProformaFailure) => failure = error });
-    http.expectOne(r => r.method === 'POST').flush({ detail: 'Solo se puede presentar una proforma en borrador.' },
+    http.expectOne(r => r.method === 'POST').flush({ detail: 'Server detail in another language.' },
       { status: 409, statusText: 'Conflict' });
     expect(failure?.conflict).toBeTrue();
     service.create(input).subscribe({ error: (error: ProformaFailure) => failure = error });
-    http.expectOne(r => r.method === 'POST').flush({ detail: 'No tienes permiso para editar precios.' },
-      { status: 403, statusText: 'Forbidden' });
+    http.expectOne(r => r.method === 'POST').flush({ detail: 'x' }, { status: 403, statusText: 'Forbidden' });
     expect(failure?.message).toBe('No tienes permiso para editar precios.');
+    service.create(input).subscribe({ error: (error: ProformaFailure) => failure = error });
+    http.expectOne(r => r.method === 'POST').flush({ code: 'module_disabled' }, { status: 403, statusText: 'Forbidden' });
+    expect(failure?.message).toContain('módulo requerido');
   });
 });
 

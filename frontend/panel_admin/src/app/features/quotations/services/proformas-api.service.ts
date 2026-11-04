@@ -1,6 +1,7 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
+import { tr } from '../../../core/i18n/translate';
 import { environment } from '../../../../environments/environment';
 import { Page } from '../../../shared/models/page';
 import { Proforma, ProformaFailure, ProformaFilters, ProformaInput, ProformaSummary } from '../models/proforma';
@@ -9,13 +10,18 @@ function firstMessage(value: unknown): string {
   return Array.isArray(value) ? String(value[0] ?? '') : typeof value === 'string' ? value : '';
 }
 
+const FIELD_ERRORS = ['quantity', 'unit_price', 'service_id', 'customer_id', 'valid_until', 'notes', 'lines', 'date', 'id'];
+
+/** Traduce el error de un campo por su nombre; si no se conoce, conserva el mensaje del servidor. */
+function fieldMessage(field: string, value: unknown): string {
+  return FIELD_ERRORS.includes(field) ? tr(`QUOTATIONS.PROFORMAS.E_${field.toUpperCase()}`) : firstMessage(value);
+}
+
 export function toFailure(error: unknown): ProformaFailure {
   const none = { fields: {}, lines: [], conflict: false };
-  if (!(error instanceof HttpErrorResponse)) return { message: 'No se pudo completar la operación.', ...none };
+  if (!(error instanceof HttpErrorResponse)) return { message: tr('QUOTATIONS.PROFORMAS.ERR_GENERICO'), ...none };
   const body = (error.error ?? {}) as Record<string, unknown>;
-  if (error.status === 409) {
-    return { message: firstMessage(body['detail']) || 'La operación no es válida para el estado actual.', ...none, conflict: true };
-  }
+  if (error.status === 409) return { message: tr('QUOTATIONS.PROFORMAS.ERR_ESTADO'), ...none, conflict: true };
   if (error.status === 400) {
     const fields: Record<string, string> = {};
     let lines: Record<string, string>[] = [];
@@ -23,19 +29,19 @@ export function toFailure(error: unknown): ProformaFailure {
       if (key === 'lines' && Array.isArray(value) && value.some(item => typeof item === 'object' && item !== null && !Array.isArray(item))) {
         lines = (value as Record<string, unknown>[]).map(item => {
           const row: Record<string, string> = {};
-          for (const [field, message] of Object.entries(item ?? {})) row[field] = firstMessage(message);
+          for (const [field, message] of Object.entries(item ?? {})) row[field] = fieldMessage(field, message);
           return row;
         });
-      } else fields[key] = firstMessage(value);
+      } else fields[key] = fieldMessage(key, value);
     }
-    return { message: 'Revisa los datos marcados.', fields, lines, conflict: false };
+    return { message: tr('QUOTATIONS.PROFORMAS.ERR_REVISA'), fields, lines, conflict: false };
   }
   if (error.status === 403) {
-    const detail = firstMessage(body['detail']);
-    return { message: detail || 'No tienes permiso o un módulo requerido no está habilitado.', ...none };
+    const key = body['code'] === 'module_disabled' ? 'ERR_PERMISO' : 'ERR_PERMISO_PRECIO';
+    return { message: tr(`QUOTATIONS.PROFORMAS.${key}`), ...none };
   }
-  if (error.status === 404) return { message: 'Proforma no encontrada.', ...none };
-  return { message: 'No se pudo conectar con el servidor. Inténtalo de nuevo.', ...none };
+  if (error.status === 404) return { message: tr('QUOTATIONS.PROFORMAS.ERR_NO_ENCONTRADA'), ...none };
+  return { message: tr('QUOTATIONS.PROFORMAS.ERR_CONEXION'), ...none };
 }
 
 @Injectable({ providedIn: 'root' })

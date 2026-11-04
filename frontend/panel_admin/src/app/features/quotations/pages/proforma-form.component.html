@@ -1,107 +1,107 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
-    <li class="breadcrumb-item"><h5 class="page-title">{{ proformaId ? 'Editar proforma' : 'Nueva proforma' }}</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home"></i></a></li>
-    <li class="breadcrumb-item">Cotizaciones</li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/quotations/proformas">Proformas</a></li>
-    <li class="breadcrumb-item active">{{ proformaId ? 'Editar' : 'Nueva' }}</li>
+    <li class="breadcrumb-item"><h5 class="page-title">{{ (proformaId ? 'QUOTATIONS.PROFORMAS.EDITAR_TITULO' : 'QUOTATIONS.PROFORMAS.NUEVA_TITULO') | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'QUOTATIONS.PROFORMAS.IR_INICIO' | translate"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">{{ 'QUOTATIONS.PROFORMAS.COTIZACIONES' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/quotations/proformas">{{ 'QUOTATIONS.PROFORMAS.TITULO' | translate }}</a></li>
+    <li class="breadcrumb-item active">{{ (proformaId ? 'QUOTATIONS.PROFORMAS.BC_EDITAR' : 'QUOTATIONS.PROFORMAS.BC_NUEVA') | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="card">
-      <div class="card-header"><h4>{{ proformaId ? 'Editar borrador ' + header : 'Nueva proforma' }}</h4></div>
+      <div class="card-header"><h4>{{ proformaId ? ('QUOTATIONS.PROFORMAS.EDITAR_BORRADOR' | translate: { name: header }) : ('QUOTATIONS.PROFORMAS.NUEVA_TITULO' | translate) }}</h4></div>
       <div class="card-body">
-        @if (loading) { <p role="status">Cargando…</p> }
+        @if (loading) { <p role="status">{{ 'QUOTATIONS.PROFORMAS.CARGANDO' | translate }}</p> }
         @if (error) { <p class="alert alert-danger" role="alert">{{ error }}</p> }
-        @if (form.dirty && !saving) { <p class="alert alert-info" role="status">Hay cambios sin guardar.</p> }
+        @if (form.dirty && !saving) { <p class="alert alert-info" role="status">{{ 'QUOTATIONS.PROFORMAS.SIN_GUARDAR' | translate }}</p> }
         <form class="register-form m-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="row">
             <div class="form-group col-md-6">
-              <label for="p-customer-search">Buscar cliente</label>
-              <input id="p-customer-search" type="search" class="form-control" [formControl]="customerSearch" placeholder="Nombre o teléfono">
+              <label for="p-customer-search">{{ 'QUOTATIONS.PROFORMAS.BUSCAR_CLIENTE' | translate }}</label>
+              <input id="p-customer-search" type="search" class="form-control" [formControl]="customerSearch" [attr.placeholder]="'QUOTATIONS.PROFORMAS.BUSCAR_CLIENTE_PH' | translate">
             </div>
             <div class="form-group col-md-6">
-              <label for="p-customer">Cliente <span class="text-danger">*</span></label>
+              <label for="p-customer">{{ 'QUOTATIONS.PROFORMAS.CLIENTE' | translate }} <span class="text-danger">*</span></label>
               <select id="p-customer" class="form-select" formControlName="customer_id">
-                <option value="">Selecciona un cliente</option>
+                <option value="">{{ 'QUOTATIONS.PROFORMAS.SEL_CLIENTE' | translate }}</option>
                 @for (customer of customers; track customer.id) { <option [value]="customer.id">{{ customer.name }}</option> }
               </select>
               @if (fields['customer_id']) { <small class="form-text text-danger">{{ fields['customer_id'] }}</small> }
               @else if (form.controls.customer_id.touched && form.controls.customer_id.invalid) {
-                <small class="form-text text-danger">Selecciona un cliente.</small> }
+                <small class="form-text text-danger">{{ 'QUOTATIONS.PROFORMAS.ERR_SEL_CLIENTE' | translate }}</small> }
             </div>
             <div class="form-group col-md-4">
-              <label for="p-date">Fecha <span class="text-danger">*</span></label>
+              <label for="p-date">{{ 'QUOTATIONS.PROFORMAS.FECHA' | translate }} <span class="text-danger">*</span></label>
               <input id="p-date" type="date" class="form-control" formControlName="date">
               @if (fields['date']) { <small class="form-text text-danger">{{ fields['date'] }}</small> }
             </div>
             <div class="form-group col-md-4">
-              <label for="p-valid">Vigencia (opcional)</label>
+              <label for="p-valid">{{ 'QUOTATIONS.PROFORMAS.VIGENCIA_OPC' | translate }}</label>
               <input id="p-valid" type="date" class="form-control" formControlName="valid_until">
               @if (fields['valid_until']) { <small class="form-text text-danger">{{ fields['valid_until'] }}</small> }
             </div>
             <div class="form-group col-md-4">
-              <label for="p-currency">Moneda</label>
+              <label for="p-currency">{{ 'QUOTATIONS.PROFORMAS.MONEDA' | translate }}</label>
               <input id="p-currency" class="form-control" value="BOB" readonly>
             </div>
           </div>
 
-          <h5 class="mt-3">Líneas</h5>
+          <h5 class="mt-3">{{ 'QUOTATIONS.PROFORMAS.LINEAS' | translate }}</h5>
           @if (fields['lines']) { <p class="alert alert-danger" role="alert">{{ fields['lines'] }}</p> }
           <div class="table-responsive">
             <table class="table align-middle">
-              <thead><tr><th>Servicio</th><th>Cantidad</th><th>Precio unitario (Bs)</th><th class="text-end">Subtotal (Bs)</th><th><span class="visually-hidden">Quitar</span></th></tr></thead>
+              <thead><tr><th>{{ 'QUOTATIONS.PROFORMAS.SERVICIO' | translate }}</th><th>{{ 'QUOTATIONS.PROFORMAS.CANTIDAD' | translate }}</th><th>{{ 'QUOTATIONS.PROFORMAS.PRECIO_UNIT_BS' | translate }}</th><th class="text-end">{{ 'QUOTATIONS.PROFORMAS.SUBTOTAL_BS' | translate }}</th><th><span class="visually-hidden">{{ 'QUOTATIONS.PROFORMAS.QUITAR' | translate }}</span></th></tr></thead>
               <tbody formArrayName="lines">
                 @for (line of lines.controls; track line; let i = $index) {
                   <tr [formGroupName]="i">
                     <td>
                       @if (isFrozen(i)) {
                         <strong>{{ line.get('description')?.value }}</strong>
-                        <small class="d-block text-muted">Precio y nombre congelados</small>
+                        <small class="d-block text-muted">{{ 'QUOTATIONS.PROFORMAS.CONGELADOS' | translate }}</small>
                       } @else {
-                        <select class="form-select" formControlName="service_id" [attr.aria-label]="'Servicio de la línea ' + (i + 1)"
+                        <select class="form-select" formControlName="service_id" [attr.aria-label]="'QUOTATIONS.PROFORMAS.SERVICIO_LINEA' | translate: { n: i + 1 }"
                           (change)="pickService(i)">
-                          <option value="">Selecciona un servicio</option>
-                          @for (service of services; track service.id) { <option [value]="service.id">{{ service.name }} — Bs {{ service.basePrice }}</option> }
+                          <option value="">{{ 'QUOTATIONS.PROFORMAS.SEL_SERVICIO' | translate }}</option>
+                          @for (service of services; track service.id) { <option [value]="service.id">{{ 'QUOTATIONS.PROFORMAS.OPCION_SERVICIO' | translate: { name: service.name, price: service.basePrice } }}</option> }
                         </select>
                       }
                       @if (lineErrors[i]?.['service_id']) { <small class="form-text text-danger">{{ lineErrors[i]['service_id'] }}</small> }
                     </td>
                     <td>
                       <input type="number" class="form-control" formControlName="quantity" step="0.01" min="0.01"
-                        [attr.aria-label]="'Cantidad de la línea ' + (i + 1)">
+                        [attr.aria-label]="'QUOTATIONS.PROFORMAS.CANTIDAD_LINEA' | translate: { n: i + 1 }">
                       @if (lineErrors[i]?.['quantity']) { <small class="form-text text-danger">{{ lineErrors[i]['quantity'] }}</small> }
                       @else if (line.get('quantity')?.touched && line.get('quantity')?.invalid) {
-                        <small class="form-text text-danger">Cantidad mayor que cero.</small> }
+                        <small class="form-text text-danger">{{ 'QUOTATIONS.PROFORMAS.ERR_CANTIDAD' | translate }}</small> }
                     </td>
                     <td>
                       <input type="number" class="form-control" formControlName="unit_price" step="0.01" min="0"
-                        [readonly]="!canEditPrice" [attr.aria-label]="'Precio unitario de la línea ' + (i + 1)">
+                        [readonly]="!canEditPrice" [attr.aria-label]="'QUOTATIONS.PROFORMAS.PRECIO_LINEA' | translate: { n: i + 1 }">
                       @if (lineErrors[i]?.['unit_price']) { <small class="form-text text-danger">{{ lineErrors[i]['unit_price'] }}</small> }
                       @else if (line.get('unit_price')?.touched && line.get('unit_price')?.invalid) {
-                        <small class="form-text text-danger">Precio igual o mayor que cero.</small> }
+                        <small class="form-text text-danger">{{ 'QUOTATIONS.PROFORMAS.ERR_PRECIO' | translate }}</small> }
                     </td>
                     <td class="text-end">{{ subtotal(i) }}</td>
                     <td><button type="button" class="btn btn-sm btn-outline-danger" (click)="removeLine(i)"
-                      [attr.aria-label]="'Quitar línea ' + (i + 1)"><i class="fas fa-trash"></i></button></td>
+                      [attr.aria-label]="'QUOTATIONS.PROFORMAS.QUITAR_LINEA' | translate: { n: i + 1 }"><i class="fas fa-trash"></i></button></td>
                   </tr>
                 }
               </tbody>
-              <tfoot><tr><th colspan="3" class="text-end">Total propuesto</th><th class="text-end">{{ total }}</th><th></th></tr></tfoot>
+              <tfoot><tr><th colspan="3" class="text-end">{{ 'QUOTATIONS.PROFORMAS.TOTAL_PROPUESTO' | translate }}</th><th class="text-end">{{ total }}</th><th></th></tr></tfoot>
             </table>
           </div>
-          <button type="button" class="btn btn-outline-primary mb-3" (click)="addLine()">+ Agregar línea</button>
-          <p class="text-muted"><small>El total es una vista previa; el servidor lo recalcula al guardar.</small></p>
+          <button type="button" class="btn btn-outline-primary mb-3" (click)="addLine()">{{ 'QUOTATIONS.PROFORMAS.AGREGAR_LINEA' | translate }}</button>
+          <p class="text-muted"><small>{{ 'QUOTATIONS.PROFORMAS.VISTA_PREVIA' | translate }}</small></p>
 
           <div class="form-group">
-            <label for="p-notes">Condiciones y notas comerciales</label>
+            <label for="p-notes">{{ 'QUOTATIONS.PROFORMAS.NOTAS' | translate }}</label>
             <textarea id="p-notes" class="form-control" rows="3" formControlName="notes" [attr.maxlength]="notesMax"></textarea>
-            <small class="form-text text-muted">No incluyas diagnósticos ni datos clínicos.</small>
+            <small class="form-text text-muted">{{ 'QUOTATIONS.PROFORMAS.NOTAS_AVISO' | translate }}</small>
             @if (fields['notes']) { <small class="form-text text-danger d-block">{{ fields['notes'] }}</small> }
           </div>
 
           <div class="d-flex gap-2 mt-3">
-            <button type="submit" class="btn btn-primary" [disabled]="saving">{{ saving ? 'Guardando…' : 'Guardar borrador' }}</button>
-            <a class="btn btn-light" routerLink="/pocketbiz/quotations/proformas">Cancelar</a>
+            <button type="submit" class="btn btn-primary" [disabled]="saving">{{ (saving ? 'QUOTATIONS.PROFORMAS.GUARDANDO' : 'QUOTATIONS.PROFORMAS.GUARDAR') | translate }}</button>
+            <a class="btn btn-light" routerLink="/pocketbiz/quotations/proformas">{{ 'QUOTATIONS.PROFORMAS.CANCELAR' | translate }}</a>
           </div>
         </form>
       </div>

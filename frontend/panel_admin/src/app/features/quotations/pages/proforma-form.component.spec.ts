@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { ProformaFormComponent } from './proforma-form.component';
 
 const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
@@ -16,7 +17,7 @@ describe('ProformaFormComponent', () => {
   function create() {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        provideHttpClient(), provideHttpClientTesting(), provideRouter([]), ...provideTestTranslations(),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({}) } } },
       ],
     });
@@ -76,8 +77,8 @@ describe('ProformaFormComponent', () => {
     component.submit();
     const request = http.expectOne(req => req.method === 'POST');
     expect(request.request.body.lines[0].unit_price).toBe('5');
-    request.flush({ lines: [{ unit_price: ['Precio inválido.'] }] }, { status: 400, statusText: 'Bad Request' });
-    expect(component.lineErrors[0]['unit_price']).toBe('Precio inválido.');
+    request.flush({ lines: [{ unit_price: ['Invalid price.'] }] }, { status: 400, statusText: 'Bad Request' });
+    expect(component.lineErrors[0]['unit_price']).toBe('Ingresa un precio igual o mayor que cero con dos decimales.');
     expect(component.form.controls.customer_id.value).toBe('c1');
     expect(component.saving).toBeFalse();
   });

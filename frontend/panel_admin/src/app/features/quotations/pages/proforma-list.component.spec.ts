@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 import { ProformaListComponent } from './proforma-list.component';
 
 const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
@@ -16,7 +17,7 @@ describe('ProformaListComponent', () => {
   function create(query: Record<string, string> = {}) {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        provideHttpClient(), provideHttpClientTesting(), provideRouter([]), ...provideTestTranslations(),
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
       ],
     });

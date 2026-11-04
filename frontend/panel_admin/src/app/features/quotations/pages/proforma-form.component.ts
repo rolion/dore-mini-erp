@@ -1,8 +1,10 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { debounceTime, finalize } from 'rxjs';
+import { tr } from '../../../core/i18n/translate';
 import { HasUnsavedChanges } from '../../../core/guard/unsaved-changes.guard';
 import { fetchAll } from '../../agenda/services/fetch-all';
 import { Customer } from '../../customers/models/customer';
@@ -15,7 +17,7 @@ import { ProformasApiService } from '../services/proformas-api.service';
 /** Alta y edición de borrador (plantilla Formulario + tabla de líneas editable). El servidor recalcula todo. */
 @Component({
   selector: 'app-proforma-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './proforma-form.component.html',
 })
 export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
@@ -43,6 +45,7 @@ export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
   services: CatalogService[] = [];
   canEditPrice = true;
   saving = false;
+  readOnly = false;
   loading = true;
   error = '';
   fields: Record<string, string> = {};
@@ -56,7 +59,7 @@ export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
     this.proformaId = this.route.snapshot.paramMap.get('id');
     let pending = this.proformaId ? 3 : 2;
     const done = () => { if (--pending === 0) this.loading = false; };
-    const fail = () => { this.error = 'No se pudieron cargar los datos del formulario.'; done(); };
+    const fail = () => { this.error = tr('QUOTATIONS.PROFORMAS.ERR_CARGA_FORM'); done(); };
     fetchAll(page => this.servicesApi.list({ active: true, pageSize: 100, page })).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: services => { this.services = services; done(); }, error: fail });
     this.searchCustomers('', done);
@@ -90,7 +93,8 @@ export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
     this.header = `${proforma.number} · v${proforma.version}`;
     this.canEditPrice = proforma.can_edit_price;
     if (!proforma.allowed_actions.includes('edit')) {
-      this.error = 'Solo se puede editar una proforma en borrador.';
+      this.error = tr('QUOTATIONS.PROFORMAS.ERR_SOLO_BORRADOR');
+      this.readOnly = true;
     }
     this.form.patchValue({
       customer_id: proforma.customer_id, date: proforma.date, valid_until: proforma.valid_until ?? '', notes: proforma.notes,
@@ -111,7 +115,7 @@ export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
           this.customers = [...selected, ...page.results.filter(c => !selected.some(s => s.id === c.id))];
           done?.();
         },
-        error: () => { this.error = 'No se pudieron cargar los clientes.'; done?.(); },
+        error: () => { this.error = tr('QUOTATIONS.PROFORMAS.ERR_CLIENTES'); done?.(); },
       });
   }
 
@@ -152,7 +156,7 @@ export class ProformaFormComponent implements OnInit, HasUnsavedChanges {
 
   submit(): void {
     this.form.markAllAsTouched();
-    if (this.form.invalid || this.saving || this.error === 'Solo se puede editar una proforma en borrador.') return;
+    if (this.form.invalid || this.saving || this.readOnly) return;
     const value = this.form.getRawValue();
     const input: ProformaInput = {
       customer_id: value.customer_id,

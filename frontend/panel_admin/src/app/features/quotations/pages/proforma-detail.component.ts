@@ -1,16 +1,17 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
-import { Proforma, ProformaFailure, STATUS_CLASSES, STATUS_LABELS } from '../models/proforma';
+import { Proforma, ProformaFailure, STATUS_CLASSES, statusLabel } from '../models/proforma';
 import { ProformasApiService } from '../services/proformas-api.service';
 
 /** Detalle de proforma con versiones y acciones según `allowed_actions` del servidor. */
 @Component({
   selector: 'app-proforma-detail',
-  imports: [RouterLink, MoneyPipe, DatePipe],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe],
   templateUrl: './proforma-detail.component.html',
   styleUrl: './proforma-detail.component.scss',
 })
@@ -20,7 +21,7 @@ export class ProformaDetailComponent implements OnInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
-  readonly labels = STATUS_LABELS;
+  readonly statusLabel = statusLabel;
   readonly classes = STATUS_CLASSES;
 
   proforma: Proforma | null = null;
