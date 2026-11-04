@@ -100,10 +100,12 @@ Desviaciones respecto al plan:
 Deuda técnica: lógica de decisiones duplicada en dos módulos (decisión del ADR); la protección de rectificaciones frente a ejecución/cobros vinculados queda como límite hasta que existan esas historias; la vista de impresión usa el diálogo del navegador. Pantallas de referencia: Detalle con acciones de ciclo de vida (`purchase-detail`) y formulario con resumen (`stock-opening`).
 
 ## Review
-Quality Gate 1 (ejecutado por el mismo agente porque no se lanzó subagente; aislamiento procedimental): **NO CONCLUYE (sin PASS)**. Sin hallazgos Critical/High, pero una verificación aplicable no se pudo ejecutar.
-Ejecutado y OK: dominio de `quotations` y `dentistry` + `test_boundaries` (46 pruebas), `makemigrations --check`, `ng build`, `ng lint`, `npm run i18n:check` (0 faltantes), `npm audit` (0 vulnerabilidades), specs de `shared`/`quotations`/`dentistry` (80/80). Suite completa de frontend: 1238 OK y 1 fallo preexistente fuera del alcance ([REV-02](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-02.md), Low).
-**No ejecutado:** pruebas de API con PostgreSQL ([REV-01](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-01.md), Medium), `bandit`/`ruff` (no instalados), revisión visual en navegador (requiere backend y base de datos).
-Para el PASS: correr `python manage.py test modules.quotations modules.dentistry modules.modularity modules.service_catalog modules.sales.tests.test_boundaries` con PostgreSQL y la revisión visual; luego repetir el gate.
+Quality Gate (ejecutado por el mismo agente; aislamiento procedimental, sin subagente): **PASS condicionado**. Sin hallazgos Critical/High abiertos.
+Ejecutado y OK:
+- Backend con PostgreSQL: `quotations`, `dentistry`, `modularity`, `service_catalog` y `test_boundaries` → 217 pruebas OK (incluye las 20 de API nuevas). Suite completa 1468: el único fallo era [REV-03](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-03.md) (índice de `company_id`), corregido (`accounts`+`dentistry` 96 OK). `makemigrations --check` limpio.
+- Frontend: `ng build`, `ng lint`, `i18n:check` (0 faltantes), `npm audit` (0), specs de shared/quotations/dentistry 80/80. Suite completa: 1238 OK y 1 fallo preexistente ajeno ([REV-02](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-02.md), Low, abierto).
+- `bandit`: sin hallazgos en `quotations`/`dentistry`. [REV-01](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-01.md) resuelto.
+Revisión visual (navegador integrado, app local con backend propio): en escritorio se recorrió aceptar una línea (validación de nombre/medio, resumen con importe, confirmación, totales 300/100/200, «Parcialmente aceptada», línea «Autorizada», historial, versiones con total aceptado) y la vista imprimible; en 375 px sin desborde horizontal; tema oscuro correcto en tablas, botones y diálogo. Se corrigió un hallazgo visual Low: «Total propuesto» duplicado en ambos detalles. **No verificado visualmente:** rechazo, rectificación y nueva versión con decisiones en el navegador (cubiertos por pruebas de API y componentes), ni el diálogo de impresión del navegador; ruff no está instalado.
 
 ## Publicación
 _Pendiente_

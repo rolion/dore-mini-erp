@@ -36,7 +36,6 @@
             <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
             <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.VIGENCIA' | translate }}</dt><dd class="col-sm-9">{{ (p.valid_until | date: 'dd/MM/yyyy') || '—' }}</dd>
             <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.MONEDA' | translate }}</dt><dd class="col-sm-9">{{ p.currency }}</dd>
-            <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.TOTAL_PROPUESTO' | translate }}</dt><dd class="col-sm-9"><strong>{{ p.total | money }}</strong></dd>
             <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.CONDICIONES' | translate }}</dt><dd class="col-sm-9">{{ p.notes || '—' }}</dd>
           </dl>
 

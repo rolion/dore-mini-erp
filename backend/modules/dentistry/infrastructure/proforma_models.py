@@ -86,7 +86,7 @@ class DentalProformaLineDecisionModel(models.Model):
 class DentalProformaDecisionBatchModel(models.Model):
     """Una fila por operación confirmada: hace idempotentes los reintentos con la misma clave."""
     id = models.BigAutoField(primary_key=True)
-    company_id = models.UUIDField()
+    company_id = models.UUIDField(db_index=True)
     idempotency_key = models.UUIDField()
     proforma_id = models.UUIDField()
     payload_hash = models.CharField(max_length=64)

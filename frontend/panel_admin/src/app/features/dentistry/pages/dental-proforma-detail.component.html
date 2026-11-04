@@ -39,7 +39,6 @@
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.VIGENCIA' | translate }}</dt><dd class="col-sm-9">{{ (p.valid_until | date: 'dd/MM/yyyy') || '—' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.MONEDA' | translate }}</dt><dd class="col-sm-9">{{ p.currency }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.TOTAL_PROPUESTO' | translate }}</dt><dd class="col-sm-9"><strong>{{ p.total | money }}</strong></dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.CONDICIONES' | translate }}</dt><dd class="col-sm-9">{{ p.notes || '—' }}</dd>
           </dl>
 
