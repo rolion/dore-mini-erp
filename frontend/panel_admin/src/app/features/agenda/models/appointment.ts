@@ -1,13 +1,21 @@
+import { tr } from '../../../core/i18n/translate';
+
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'cancelled' | 'attended' | 'no_show';
 export type AppointmentAction = 'confirm' | 'reschedule' | 'cancel' | 'attend' | 'no_show';
 
-export const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  scheduled: 'Programada',
-  confirmed: 'Confirmada',
-  cancelled: 'Cancelada',
-  attended: 'Atendida',
-  no_show: 'No asistió',
-};
+export const APPOINTMENT_STATUSES: AppointmentStatus[] = ['scheduled', 'confirmed', 'cancelled', 'attended', 'no_show'];
+
+/** Etiqueta del estado en el idioma activo; se evalúa al renderizar, nunca en una constante de módulo. */
+export function statusLabel(status: AppointmentStatus): string {
+  return tr(`AGENDA.CITAS.ESTADO_${status.toUpperCase()}`);
+}
+
+/** Etiqueta de un evento del historial; un tipo desconocido se muestra tal cual. */
+export function eventLabel(kind: string): string {
+  const key = `AGENDA.CITAS.EVT_${kind.toUpperCase()}`;
+  const label = tr(key);
+  return label === key ? kind : label;
+}
 
 export const STATUS_CLASSES: Record<AppointmentStatus, string> = {
   scheduled: 'col-orange',
@@ -15,15 +23,6 @@ export const STATUS_CLASSES: Record<AppointmentStatus, string> = {
   cancelled: 'col-red',
   attended: 'col-green',
   no_show: 'col-grey',
-};
-
-export const EVENT_LABELS: Record<string, string> = {
-  created: 'Creada',
-  confirmed: 'Confirmada',
-  rescheduled: 'Reprogramada',
-  cancelled: 'Cancelada',
-  attended: 'Atendida',
-  no_show: 'No asistió',
 };
 
 export const REASON_MAX_LENGTH = 500;

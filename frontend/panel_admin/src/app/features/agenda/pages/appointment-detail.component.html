@@ -1,56 +1,59 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
-    <li class="breadcrumb-item"><h5 class="page-title">Detalle de cita</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home"></i></a></li>
-    <li class="breadcrumb-item">Agenda</li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/agenda/citas">Citas</a></li>
-    <li class="breadcrumb-item active">Detalle</li>
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'AGENDA.CITAS.DETALLE_TITULO' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'AGENDA.CITAS.IR_INICIO' | translate"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">{{ 'AGENDA.CITAS.AGENDA' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/agenda/citas">{{ 'AGENDA.CITAS.TITULO' | translate }}</a></li>
+    <li class="breadcrumb-item active">{{ 'AGENDA.CITAS.DETALLE' | translate }}</li>
   </ul>
   <div class="section-body">
-    @if (loading) { <p role="status">Cargando…</p> }
+    @if (loading) { <p role="status">{{ 'AGENDA.CITAS.CARGANDO' | translate }}</p> }
     @if (error) {
       <p class="alert alert-danger" role="alert">{{ error }}
-        <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Reintentar</button></p>
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">{{ 'AGENDA.CITAS.REINTENTAR' | translate }}</button></p>
     }
     @if (success) { <p class="alert alert-success" role="status">{{ success }}</p> }
     @if (appointment; as item) {
       <div class="card">
         <div class="card-header d-flex align-items-center gap-2">
           <h4 class="mb-0">{{ item.customer_name }}</h4>
-          <span class="badge" [class]="classes[item.status]">{{ labels[item.status] }}</span>
+          <span class="badge" [class]="classes[item.status]">{{ statusLabel(item.status) }}</span>
         </div>
         <dl class="row m-4">
-          <dt class="col-sm-3">Servicio</dt><dd class="col-sm-9">{{ item.service_name }}</dd>
-          <dt class="col-sm-3">Profesional</dt><dd class="col-sm-9">{{ item.professional_name || 'Sin profesional' }}</dd>
-          <dt class="col-sm-3">Inicio</dt><dd class="col-sm-9">{{ formatDateTime(item.starts) }} · Hora de Bolivia</dd>
-          <dt class="col-sm-3">Fin</dt><dd class="col-sm-9">{{ formatDateTime(item.ends) }}</dd>
-          <dt class="col-sm-3">Duración</dt><dd class="col-sm-9">{{ item.duration_minutes }} min</dd>
-          <dt class="col-sm-3">Notas</dt><dd class="col-sm-9">{{ item.notes || 'Sin notas' }}</dd>
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.SERVICIO' | translate }}</dt><dd class="col-sm-9">{{ item.service_name }}</dd>
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</dt><dd class="col-sm-9">{{ item.professional_name || ('AGENDA.CITAS.SIN_PROFESIONAL' | translate) }}</dd>
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.INICIO' | translate }}</dt><dd class="col-sm-9">{{ 'AGENDA.CITAS.INICIO_HORA_BOLIVIA' | translate: { date: formatDateTime(item.starts) } }}</dd>
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.FIN' | translate }}</dt><dd class="col-sm-9">{{ formatDateTime(item.ends) }}</dd>
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.DURACION' | translate }}</dt><dd class="col-sm-9">{{ 'AGENDA.CITAS.MINUTOS' | translate: { count: item.duration_minutes } }}</dd>
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.NOTAS' | translate }}</dt><dd class="col-sm-9">{{ item.notes || ('AGENDA.CITAS.SIN_NOTAS' | translate) }}</dd>
         </dl>
         <div class="m-4 d-flex flex-wrap gap-2 align-items-center">
-          @if (can('confirm')) { <button type="button" class="btn btn-primary" (click)="open(dlg, 'confirm')">Confirmar</button> }
-          @if (can('reschedule')) { <button type="button" class="btn btn-warning" (click)="open(dlg, 'reschedule')">Reprogramar</button> }
-          @if (can('attend')) { <button type="button" class="btn btn-success" (click)="open(dlg, 'attend')">Marcar atendida</button> }
-          @if (can('no_show')) { <button type="button" class="btn btn-secondary" (click)="open(dlg, 'no_show')">Marcar no asistió</button> }
-          @if (can('cancel')) { <button type="button" class="btn btn-danger" (click)="open(dlg, 'cancel')">Cancelar cita</button> }
-          <a class="btn btn-light" routerLink="/pocketbiz/agenda/citas">Volver</a>
-          @if (isTerminal) { <small class="text-muted">Esta cita ya no admite acciones.</small> }
-          @else if (!can('attend')) { <small class="text-muted">Atendida y No asistió se habilitan cuando llega la hora de inicio.</small> }
+          @if (can('confirm')) { <button type="button" class="btn btn-primary" (click)="open(dlg, 'confirm')">{{ 'AGENDA.CITAS.CONFIRMAR' | translate }}</button> }
+          @if (can('reschedule')) { <button type="button" class="btn btn-warning" (click)="open(dlg, 'reschedule')">{{ 'AGENDA.CITAS.REPROGRAMAR' | translate }}</button> }
+          @if (can('attend')) { <button type="button" class="btn btn-success" (click)="open(dlg, 'attend')">{{ 'AGENDA.CITAS.MARCAR_ATENDIDA' | translate }}</button> }
+          @if (can('no_show')) { <button type="button" class="btn btn-secondary" (click)="open(dlg, 'no_show')">{{ 'AGENDA.CITAS.MARCAR_NO_ASISTIO' | translate }}</button> }
+          @if (can('cancel')) { <button type="button" class="btn btn-danger" (click)="open(dlg, 'cancel')">{{ 'AGENDA.CITAS.CANCELAR_CITA' | translate }}</button> }
+          <a class="btn btn-light" routerLink="/pocketbiz/agenda/citas">{{ 'AGENDA.CITAS.VOLVER' | translate }}</a>
+          @if (isTerminal) { <small class="text-muted">{{ 'AGENDA.CITAS.SIN_ACCIONES' | translate }}</small> }
+          @else if (!can('attend')) { <small class="text-muted">{{ 'AGENDA.CITAS.AVISO_HORA' | translate }}</small> }
         </div>
-        <h5 class="mx-4">Historial</h5>
-        <div class="table-responsive mx-4 mb-4">
-          <table class="table table-striped">
-            <thead><tr><th>Evento</th><th>Fecha</th><th>Autor</th><th>Motivo</th><th>Horario anterior</th></tr></thead>
+        <h5 class="mx-4">{{ 'AGENDA.CITAS.HISTORIAL' | translate }}</h5>
+        <div class="mx-4 mb-4">
+          <table class="table table-striped inventory-table">
+            <thead><tr>
+              <th>{{ 'AGENDA.CITAS.EVENTO' | translate }}</th><th>{{ 'AGENDA.CITAS.FECHA' | translate }}</th><th>{{ 'AGENDA.CITAS.AUTOR' | translate }}</th>
+              <th>{{ 'AGENDA.CITAS.MOTIVO' | translate }}</th><th>{{ 'AGENDA.CITAS.HORARIO_ANTERIOR' | translate }}</th>
+            </tr></thead>
             <tbody>
               @for (event of item.history ?? []; track event.id) {
                 <tr>
-                  <td>{{ events[event.kind] || event.kind }}</td>
-                  <td>{{ formatDateTime(event.created_at) }}</td>
-                  <td>{{ event.author_name || 'Usuario ' + event.author_id }}</td>
-                  <td>{{ event.reason || '—' }}</td>
-                  <td>{{ event.previous_starts ? formatDateTime(event.previous_starts) + ' – ' + (event.previous_ends ?? '').slice(11, 16) : '—' }}</td>
+                  <td [attr.data-label]="'AGENDA.CITAS.EVENTO' | translate">{{ eventLabel(event.kind) }}</td>
+                  <td [attr.data-label]="'AGENDA.CITAS.FECHA' | translate">{{ formatDateTime(event.created_at) }}</td>
+                  <td [attr.data-label]="'AGENDA.CITAS.AUTOR' | translate">{{ event.author_name || ('AGENDA.CITAS.USUARIO_N' | translate: { id: event.author_id }) }}</td>
+                  <td [attr.data-label]="'AGENDA.CITAS.MOTIVO' | translate">{{ event.reason || '—' }}</td>
+                  <td [attr.data-label]="'AGENDA.CITAS.HORARIO_ANTERIOR' | translate">{{ event.previous_starts ? formatDateTime(event.previous_starts) + ' – ' + (event.previous_ends ?? '').slice(11, 16) : '—' }}</td>
                 </tr>
-              } @empty { <tr><td colspan="5">Sin eventos registrados.</td></tr> }
+              } @empty { <tr><td colspan="5">{{ 'AGENDA.CITAS.SIN_EVENTOS' | translate }}</td></tr> }
             </tbody>
           </table>
         </div>
@@ -61,42 +64,42 @@
   <dialog #dlg class="appointment-dialog" aria-labelledby="appointment-dialog-title" (cancel)="action = null">
     @if (action && appointment) {
       <form [formGroup]="form" (ngSubmit)="submit(dlg)" novalidate class="p-3">
-        <h4 id="appointment-dialog-title">{{ titles[action] }}</h4>
+        <h4 id="appointment-dialog-title">{{ title(action) }}</h4>
         <dl class="row">
-          <dt class="col-5">Cliente</dt><dd class="col-7">{{ appointment.customer_name }}</dd>
-          <dt class="col-5">Servicio</dt><dd class="col-7">{{ appointment.service_name }}</dd>
-          <dt class="col-5">Profesional</dt><dd class="col-7">{{ appointment.professional_name }}</dd>
-          <dt class="col-5">Horario actual</dt>
+          <dt class="col-5">{{ 'AGENDA.CITAS.CLIENTE' | translate }}</dt><dd class="col-7">{{ appointment.customer_name }}</dd>
+          <dt class="col-5">{{ 'AGENDA.CITAS.SERVICIO' | translate }}</dt><dd class="col-7">{{ appointment.service_name }}</dd>
+          <dt class="col-5">{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</dt><dd class="col-7">{{ appointment.professional_name }}</dd>
+          <dt class="col-5">{{ 'AGENDA.CITAS.HORARIO_ACTUAL' | translate }}</dt>
           <dd class="col-7">{{ formatDateTime(appointment.starts) }} – {{ appointment.ends.slice(11, 16) }}</dd>
         </dl>
         @if (action === 'reschedule') {
           <div class="form-group mb-2">
-            <label for="d-starts">Nuevo inicio <span class="text-danger">*</span></label>
+            <label for="d-starts">{{ 'AGENDA.CITAS.NUEVO_INICIO' | translate }} <span class="text-danger">*</span></label>
             <input id="d-starts" type="datetime-local" class="form-control" formControlName="starts">
             @if (fields['starts']) { <small class="form-text text-danger">{{ fields['starts'] }}</small> }
           </div>
           <div class="form-group mb-2">
-            <label for="d-duration">Duración (minutos)</label>
+            <label for="d-duration">{{ 'AGENDA.CITAS.DURACION_MINUTOS' | translate }}</label>
             <input id="d-duration" type="number" min="1" max="1440" class="form-control" formControlName="duration_minutes">
             @if (fields['duration_minutes']) { <small class="form-text text-danger">{{ fields['duration_minutes'] }}</small> }
           </div>
-          <p class="alert alert-info" role="status">Nuevo horario: {{ newStarts }} – {{ newEnds.slice(11) }}. Se conserva el horario anterior en el historial.</p>
+          <p class="alert alert-info" role="status">{{ 'AGENDA.CITAS.NUEVO_HORARIO' | translate: { start: newStarts, end: newEnds.slice(11) } }}</p>
         }
         @if (action === 'cancel' || action === 'reschedule') {
           <div class="form-group mb-2">
-            <label for="d-reason">Motivo <span class="text-danger">*</span></label>
+            <label for="d-reason">{{ 'AGENDA.CITAS.MOTIVO' | translate }} <span class="text-danger">*</span></label>
             <textarea id="d-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="reasonMax"></textarea>
             <small class="form-text text-muted">{{ form.controls.reason.value.length }} / {{ reasonMax }}</small>
             @if (fields['reason']) { <small class="form-text text-danger d-block">{{ fields['reason'] }}</small> }
           </div>
         }
-        @if (action === 'cancel') { <p class="alert alert-info">Al cancelar se libera el horario. La cita seguirá consultable.</p> }
-        @if (action === 'attend') { <p class="alert alert-info">Marcar como atendida no registra tratamiento ni cobro.</p> }
+        @if (action === 'cancel') { <p class="alert alert-info">{{ 'AGENDA.CITAS.AVISO_CANCELAR' | translate }}</p> }
+        @if (action === 'attend') { <p class="alert alert-info">{{ 'AGENDA.CITAS.AVISO_ATENDER' | translate }}</p> }
         @if (dialogError) { <p class="alert alert-warning" role="alert">{{ dialogError }}</p> }
         <div class="d-flex gap-2">
           <button type="submit" class="btn" [class.btn-danger]="action === 'cancel'" [class.btn-primary]="action !== 'cancel'"
-            [disabled]="!canSubmit">{{ saving ? 'Guardando…' : buttons[action] }}</button>
-          <button type="button" class="btn btn-light" [disabled]="saving" (click)="close(dlg)">Volver</button>
+            [disabled]="!canSubmit">{{ saving ? ('AGENDA.CITAS.GUARDANDO' | translate) : button(action) }}</button>
+          <button type="button" class="btn btn-light" [disabled]="saving" (click)="close(dlg)">{{ 'AGENDA.CITAS.VOLVER' | translate }}</button>
         </div>
       </form>
     }

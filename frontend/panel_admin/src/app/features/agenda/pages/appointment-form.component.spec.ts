@@ -1,18 +1,19 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { AppointmentFormComponent } from './appointment-form.component';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 
 const EMPTY_PAGE = { count: 0, next: null, previous: null, results: [] };
 
 describe('AppointmentFormComponent', () => {
   let http: HttpTestingController;
 
-  function create() {
+  function create(customers: { id: string; name: string }[] = []) {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        ...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParamMap: convertToParamMap({ professional: 'p1', starts: '2030-01-07T09:00' }) } },
@@ -24,7 +25,8 @@ describe('AppointmentFormComponent', () => {
     fixture.detectChanges();
     http.expectOne(req => req.url.endsWith('/professionals/')).flush(EMPTY_PAGE);
     http.expectOne(req => req.url.endsWith('/services/')).flush(EMPTY_PAGE);
-    http.expectOne(req => req.url.endsWith('/customers/')).flush(EMPTY_PAGE);
+    http.expectOne(req => req.url.endsWith('/customers/'))
+      .flush({ ...EMPTY_PAGE, count: customers.length, results: customers });
     return fixture;
   }
 
@@ -55,6 +57,22 @@ describe('AppointmentFormComponent', () => {
     expect(requests[0].request.body.starts).toBe('2030-01-07T09:00:00-04:00');
     requests[0].flush({ id: 'a1' });
   });
+
+  it('only the latest customer search counts and the chosen customer stays among the options', fakeAsync(() => {
+    const fixture = create([{ id: 'c1', name: 'Rosa' }, { id: 'c2', name: 'Raúl' }]);
+    const component = fixture.componentInstance;
+    component.form.controls.customer_id.setValue('c1');
+    component.customerSearch.setValue('ro');
+    tick(300);
+    const first = http.expectOne(req => req.url.endsWith('/customers/') && req.params.get('search') === 'ro');
+    component.customerSearch.setValue('ros');
+    tick(300);
+    const second = http.expectOne(req => req.url.endsWith('/customers/') && req.params.get('search') === 'ros');
+    expect(first.cancelled).toBeTrue();
+    second.flush({ ...EMPTY_PAGE, count: 1, results: [{ id: 'c3', name: 'Rosario' }] });
+    expect(component.customers.map(customer => customer.id)).toEqual(['c1', 'c3']);
+    expect(component.form.controls.customer_id.value).toBe('c1');
+  }));
 
   it('keeps what was typed on a conflict, explains it and refreshes the free slots', () => {
     const fixture = create();

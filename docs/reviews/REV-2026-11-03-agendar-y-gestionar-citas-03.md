@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-03: El historial muestra «Usuario N» en lugar del autor
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ appointment-detail.component.html: <td>Usuario {{ event.author_id }}</td>. El da
 
 ## Resolución
 El evento guarda `author_name` (migración `0003`) y la UI lo muestra. Cubierto en `test_appointments.py` y `appointment-detail.component.spec.ts`.
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: author_name en AppointmentEvent (migración 0003) y la UI lo muestra; en navegador el historial muestra 'visual'; test_appointments.py comprueba author_name.

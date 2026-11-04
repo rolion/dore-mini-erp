@@ -1,123 +1,128 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
-    <li class="breadcrumb-item"><h5 class="page-title">Citas</h5></li>
-    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" aria-label="Inicio"><i class="fas fa-home"></i></a></li>
-    <li class="breadcrumb-item">Agenda</li>
-    <li class="breadcrumb-item active">Citas</li>
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'AGENDA.CITAS.TITULO' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'AGENDA.CITAS.IR_INICIO' | translate"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">{{ 'AGENDA.CITAS.AGENDA' | translate }}</li>
+    <li class="breadcrumb-item active">{{ 'AGENDA.CITAS.TITULO' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="card">
       <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
-        <h2><strong>Citas</strong></h2>
-        <div class="d-flex gap-2">
-          <div class="btn-group" role="group" aria-label="Vista">
-            <button type="button" class="btn" [class.btn-primary]="mode === 'list'" [class.btn-outline-primary]="mode !== 'list'"
-              [attr.aria-pressed]="mode === 'list'" (click)="setMode('list')">Listado</button>
-            <button type="button" class="btn" [class.btn-primary]="mode === 'calendar'" [class.btn-outline-primary]="mode !== 'calendar'"
-              [attr.aria-pressed]="mode === 'calendar'" (click)="setMode('calendar')">Calendario</button>
+        <h2><strong>{{ 'AGENDA.CITAS.TITULO' | translate }}</strong></h2>
+        <div class="d-flex flex-wrap gap-2">
+          <div class="btn-group" role="group" [attr.aria-label]="'AGENDA.CITAS.VISTA' | translate">
+            <button type="button" class="btn text-nowrap" [class.btn-primary]="mode === 'list'" [class.btn-outline-primary]="mode !== 'list'"
+              [attr.aria-pressed]="mode === 'list'" (click)="setMode('list')">{{ 'AGENDA.CITAS.LISTADO' | translate }}</button>
+            <button type="button" class="btn text-nowrap" [class.btn-primary]="mode === 'calendar'" [class.btn-outline-primary]="mode !== 'calendar'"
+              [attr.aria-pressed]="mode === 'calendar'" (click)="setMode('calendar')">{{ 'AGENDA.CITAS.CALENDARIO' | translate }}</button>
           </div>
-          <a class="btn btn-primary" routerLink="/pocketbiz/agenda/citas/nueva" aria-label="Nueva cita">+ Nueva cita</a>
+          <a class="btn btn-primary text-nowrap" routerLink="/pocketbiz/agenda/citas/nueva" [attr.aria-label]="'AGENDA.CITAS.NUEVA_CITA_AR' | translate">{{ 'AGENDA.CITAS.NUEVA_CITA' | translate }}</a>
         </div>
       </div>
       <div class="card-body">
-        @if (loading) { <p role="status">Cargando…</p> }
+        @if (loading) { <p role="status">{{ 'AGENDA.CITAS.CARGANDO' | translate }}</p> }
         @if (error) {
           <p class="alert alert-danger" role="alert">{{ error }}
             <button type="button" class="btn btn-sm btn-outline-danger ms-2"
-              (click)="mode === 'list' ? search(page) : loadCalendar()">Reintentar</button></p>
+              (click)="mode === 'list' ? search(page) : loadCalendar()">{{ 'AGENDA.CITAS.REINTENTAR' | translate }}</button></p>
         }
 
         @if (mode === 'list') {
           <form [formGroup]="filters" (ngSubmit)="search()" class="row g-2 mb-3">
-            <div class="col-md-2"><label for="f-from">Desde</label>
+            <div class="col-md-2"><label for="f-from">{{ 'AGENDA.CITAS.DESDE' | translate }}</label>
               <input id="f-from" type="date" class="form-control" formControlName="from"></div>
-            <div class="col-md-2"><label for="f-to">Hasta</label>
+            <div class="col-md-2"><label for="f-to">{{ 'AGENDA.CITAS.HASTA' | translate }}</label>
               <input id="f-to" type="date" class="form-control" formControlName="to"></div>
-            <div class="col-md-3"><label for="f-professional">Profesional</label>
+            <div class="col-md-3"><label for="f-professional">{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</label>
               <select id="f-professional" class="form-select" formControlName="professional">
-                <option value="">Todos</option>
+                <option value="">{{ 'AGENDA.CITAS.TODOS' | translate }}</option>
                 @for (person of people; track person.id) { <option [value]="person.id">{{ person.name }}</option> }
               </select></div>
-            <div class="col-md-2"><label for="f-status">Estado</label>
+            <div class="col-md-2"><label for="f-status">{{ 'AGENDA.CITAS.ESTADO' | translate }}</label>
               <select id="f-status" class="form-select" formControlName="status">
-                <option value="">Todos</option>
-                @for (status of statuses; track status) { <option [value]="status">{{ labels[status] }}</option> }
+                <option value="">{{ 'AGENDA.CITAS.TODOS' | translate }}</option>
+                @for (status of statuses; track status) { <option [value]="status">{{ statusLabel(status) }}</option> }
               </select></div>
-            <div class="col-md-3"><label for="f-search">Cliente</label>
-              <input id="f-search" type="search" class="form-control" formControlName="search" aria-label="Buscar cliente"
-                placeholder="Buscar cliente"></div>
+            <div class="col-md-3"><label for="f-search">{{ 'AGENDA.CITAS.CLIENTE' | translate }}</label>
+              <input id="f-search" type="search" class="form-control" formControlName="search" [attr.aria-label]="'AGENDA.CITAS.BUSCAR_CLIENTE' | translate"
+                [attr.placeholder]="'AGENDA.CITAS.BUSCAR_CLIENTE' | translate"></div>
             <div class="col-12 d-flex gap-2">
-              <button class="btn btn-primary" type="submit" [disabled]="loading">Filtrar</button>
-              <button class="btn btn-light" type="button" (click)="clear()" [disabled]="loading">Limpiar filtros</button>
+              <button class="btn btn-primary" type="submit" [disabled]="loading">{{ 'AGENDA.CITAS.FILTRAR' | translate }}</button>
+              <button class="btn btn-light" type="button" (click)="clear()" [disabled]="loading">{{ 'AGENDA.CITAS.LIMPIAR_FILTROS' | translate }}</button>
             </div>
           </form>
 
           @if (!loading && !error && !rows.length) {
-            <p>{{ hasFilters ? 'No hay citas con esos filtros.' : 'Aún no hay citas registradas.' }}</p>
+            <p>{{ (hasFilters ? 'AGENDA.CITAS.SIN_RESULTADOS_FILTROS' : 'AGENDA.CITAS.SIN_CITAS') | translate }}</p>
           }
           @if (rows.length) {
-            <div class="table-responsive">
-              <table class="table table-striped align-middle">
-                <thead><tr><th>Inicio</th><th>Fin</th><th>Cliente</th><th>Servicio</th><th>Profesional</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <div>
+              <table class="table table-striped align-middle inventory-table">
+                <thead><tr>
+                  <th>{{ 'AGENDA.CITAS.INICIO' | translate }}</th><th>{{ 'AGENDA.CITAS.FIN' | translate }}</th>
+                  <th>{{ 'AGENDA.CITAS.CLIENTE' | translate }}</th><th>{{ 'AGENDA.CITAS.SERVICIO' | translate }}</th>
+                  <th>{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</th><th>{{ 'AGENDA.CITAS.ESTADO' | translate }}</th>
+                  <th>{{ 'AGENDA.CITAS.ACCIONES' | translate }}</th>
+                </tr></thead>
                 <tbody>
                   @for (row of rows; track row.id) {
                     <tr>
-                      <td>{{ formatDateTime(row.starts) }}</td>
-                      <td>{{ time(row.ends) }}</td>
-                      <td><a [routerLink]="['/pocketbiz/agenda/citas', row.id]"><strong>{{ row.customer_name }}</strong></a></td>
-                      <td>{{ row.service_name }}</td>
-                      <td>{{ row.professional_name || 'Sin profesional' }}</td>
-                      <td><span class="badge" [class]="classes[row.status]">{{ labels[row.status] }}</span></td>
-                      <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/agenda/citas', row.id]">Ver detalle</a></td>
+                      <td [attr.data-label]="'AGENDA.CITAS.INICIO' | translate">{{ formatDateTime(row.starts) }}</td>
+                      <td [attr.data-label]="'AGENDA.CITAS.FIN' | translate">{{ time(row.ends) }}</td>
+                      <td [attr.data-label]="'AGENDA.CITAS.CLIENTE' | translate"><a [routerLink]="['/pocketbiz/agenda/citas', row.id]"><strong>{{ row.customer_name }}</strong></a></td>
+                      <td [attr.data-label]="'AGENDA.CITAS.SERVICIO' | translate">{{ row.service_name }}</td>
+                      <td [attr.data-label]="'AGENDA.CITAS.PROFESIONAL' | translate">{{ row.professional_name || ('AGENDA.CITAS.SIN_PROFESIONAL' | translate) }}</td>
+                      <td [attr.data-label]="'AGENDA.CITAS.ESTADO' | translate"><span class="badge" [class]="classes[row.status]">{{ statusLabel(row.status) }}</span></td>
+                      <td [attr.data-label]="'AGENDA.CITAS.ACCIONES' | translate"><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/agenda/citas', row.id]">{{ 'AGENDA.CITAS.VER_DETALLE' | translate }}</a></td>
                     </tr>
                   }
                 </tbody>
               </table>
             </div>
             <div class="d-flex justify-content-between align-items-center">
-              <small class="text-muted">{{ count }} citas · Hora de Bolivia</small>
+              <small class="text-muted">{{ 'AGENDA.CITAS.TOTAL_CITAS' | translate: { count: count } }}</small>
               <div class="d-flex gap-2 align-items-center">
-                <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="search(page - 1)">Anterior</button>
-                <span>Página {{ page }} de {{ pages }}</span>
-                <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="search(page + 1)">Siguiente</button>
+                <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="search(page - 1)">{{ 'AGENDA.CITAS.ANTERIOR' | translate }}</button>
+                <span>{{ 'AGENDA.CITAS.PAGINA' | translate: { page: page, pages: pages } }}</span>
+                <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="search(page + 1)">{{ 'AGENDA.CITAS.SIGUIENTE' | translate }}</button>
               </div>
             </div>
           }
         } @else {
           <form [formGroup]="calendar" (ngSubmit)="loadCalendar()" class="row g-2 mb-3">
-            <div class="col-md-4"><label for="c-professional">Profesional</label>
+            <div class="col-md-4"><label for="c-professional">{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</label>
               <select id="c-professional" class="form-select" formControlName="professional">
-                <option value="">Selecciona un profesional</option>
+                <option value="">{{ 'AGENDA.CITAS.SELECCIONA_PROFESIONAL' | translate }}</option>
                 @for (person of people; track person.id) { <option [value]="person.id">{{ person.name }}</option> }
               </select></div>
-            <div class="col-md-3"><label for="c-date">Fecha</label>
+            <div class="col-md-3"><label for="c-date">{{ 'AGENDA.CITAS.FECHA' | translate }}</label>
               <input id="c-date" type="date" class="form-control" formControlName="date"></div>
-            <div class="col-md-2"><label for="c-span">Vista</label>
+            <div class="col-md-2"><label for="c-span">{{ 'AGENDA.CITAS.VISTA' | translate }}</label>
               <select id="c-span" class="form-select" formControlName="span">
-                <option value="1">Diaria</option><option value="7">Semanal</option>
+                <option value="1">{{ 'AGENDA.CITAS.DIARIA' | translate }}</option><option value="7">{{ 'AGENDA.CITAS.SEMANAL' | translate }}</option>
               </select></div>
             <div class="col-md-3 d-flex align-items-end">
-              <button class="btn btn-primary" type="submit" [disabled]="loading || !calendar.controls.professional.value">Ver agenda</button>
+              <button class="btn btn-primary" type="submit" [disabled]="loading || !calendar.controls.professional.value">{{ 'AGENDA.CITAS.VER_AGENDA' | translate }}</button>
             </div>
           </form>
-          @if (!calendar.controls.professional.value) { <p>Selecciona un profesional para ver su agenda.</p> }
+          @if (!calendar.controls.professional.value) { <p>{{ 'AGENDA.CITAS.SELECCIONA_PROFESIONAL_VER' | translate }}</p> }
           @for (group of groups; track group.date) {
             <section class="border rounded p-3 mb-3">
-              <h3 class="h6">{{ formatDay(group.date) }} · Hora de Bolivia</h3>
-              @if (!group.appointments.length && !group.slots.length) { <p class="mb-0">Sin turno ni citas este día.</p> }
+              <h3 class="h6">{{ 'AGENDA.CITAS.DIA_HORA_BOLIVIA' | translate: { date: formatDay(group.date) } }}</h3>
+              @if (!group.appointments.length && !group.slots.length) { <p class="mb-0">{{ 'AGENDA.CITAS.SIN_TURNO_NI_CITAS' | translate }}</p> }
               <ul class="list-unstyled mb-0">
                 @for (item of group.appointments; track item.id) {
                   <li class="mb-1">
                     <strong>{{ time(item.starts) }}–{{ time(item.ends) }}</strong>
                     <a [routerLink]="['/pocketbiz/agenda/citas', item.id]"> {{ item.customer_name }} · {{ item.service_name }}</a>
-                    <span class="badge ms-1" [class]="classes[item.status]">{{ labels[item.status] }}</span>
+                    <span class="badge ms-1" [class]="classes[item.status]">{{ statusLabel(item.status) }}</span>
                   </li>
                 }
                 @for (slot of group.slots; track slot.starts) {
                   <li class="mb-1">
-                    <strong>{{ time(slot.starts) }}–{{ time(slot.ends) }}</strong> Disponible
+                    <strong>{{ time(slot.starts) }}–{{ time(slot.ends) }}</strong> {{ 'AGENDA.CITAS.DISPONIBLE' | translate }}
                     <a class="btn btn-sm btn-outline-primary ms-2" routerLink="/pocketbiz/agenda/citas/nueva"
-                      [queryParams]="newQuery(slot)">Agendar</a>
+                      [queryParams]="newQuery(slot)">{{ 'AGENDA.CITAS.AGENDAR' | translate }}</a>
                   </li>
                 }
               </ul>

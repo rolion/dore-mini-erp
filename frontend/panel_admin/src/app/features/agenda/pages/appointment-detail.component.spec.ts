@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { Appointment } from '../models/appointment';
 import { AppointmentDetailComponent } from './appointment-detail.component';
+import { provideTestTranslations } from '../../../core/i18n/testing';
 
 function appointment(overrides: Partial<Appointment> = {}): Appointment {
   return {
@@ -20,7 +21,7 @@ describe('AppointmentDetailComponent', () => {
   function create() {
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
+        ...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([]),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['id', 'a1']]) } } },
       ],
     });
@@ -60,7 +61,7 @@ describe('AppointmentDetailComponent', () => {
     expect(request.request.body).toEqual({ reason: '  Paciente avisó ' });
     request.flush({ detail: 'La cita ya fue cancelada.', code: 'invalid_transition' }, { status: 409, statusText: 'Conflict' });
     http.expectOne(req => req.url.endsWith('/agenda/appointments/a1/')).flush(appointment({ status: 'cancelled', allowed_actions: [] }));
-    expect(component.dialogError).toBe('La cita ya fue cancelada.');
+    expect(component.dialogError).toBe('La cita no admite esta acción en su estado actual.');
     expect(component.form.controls.reason.value).toBe('  Paciente avisó ');
     expect(component.appointment?.status).toBe('cancelled');
   });

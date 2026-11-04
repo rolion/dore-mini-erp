@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-04: ADR/DDR/PLAN no reflejan las desviaciones implementadas
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Low
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ appointments_api.py: rows.filter(customer_name__icontains=...). docs/adr/ADR-age
 
 ## Resolución
 ADR y DDR actualizados con las desviaciones (`<dialog>`, búsqueda por snapshot) y la limitación del snapshot.
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: ADR (decisión 3 y actualización) y DDR (actualización de implementación) reflejan snapshot customer_name y <dialog> nativo; limitación del snapshot declarada.

@@ -26,7 +26,7 @@ describe('CustomerOrdersApiService', () => {
     req.flush({ count: 0, next: null, previous: null, results: [] });
   });
 
-  it('maps date, total, delivery status and payment status, keeping the server order (AC-26)', () => {
+  it('maps code, date, total, paid, balance and both statuses, keeping the server order (AC-26, API-01)', () => {
     let history: unknown;
     service.list('c-1').subscribe((h) => (history = h));
     http.expectOne((r) => r.url === '/api/orders/').flush({
@@ -34,15 +34,15 @@ describe('CustomerOrdersApiService', () => {
       next: null,
       previous: null,
       results: [
-        { id: 'o2', order_date: '2026-10-05', total: '120.50', status: 'DELIVERED', payment_status: 'PARTIAL', code: 'P-2' },
-        { id: 'o1', order_date: '2026-09-01', total: '35.00', status: 'CANCELLED', payment_status: 'PENDING', code: 'P-1' },
+        { id: 'o2', order_date: '2026-10-05', total: '120.50', paid_total: '100.00', balance: '20.50', status: 'DELIVERED', payment_status: 'PARTIAL', code: 'P-2' },
+        { id: 'o1', order_date: '2026-09-01', total: '35.00', paid_total: '0.00', balance: '35.00', status: 'CANCELLED', payment_status: 'PENDING', code: 'P-1' },
       ],
     });
     expect(history).toEqual({
       total: 2,
       orders: [
-        { id: 'o2', date: '2026-10-05', total: '120.50', status: 'DELIVERED', paymentStatus: 'PARTIAL' },
-        { id: 'o1', date: '2026-09-01', total: '35.00', status: 'CANCELLED', paymentStatus: 'PENDING' },
+        { id: 'o2', code: 'P-2', date: '2026-10-05', total: '120.50', paidTotal: '100.00', balance: '20.50', status: 'DELIVERED', paymentStatus: 'PARTIAL' },
+        { id: 'o1', code: 'P-1', date: '2026-09-01', total: '35.00', paidTotal: '0.00', balance: '35.00', status: 'CANCELLED', paymentStatus: 'PENDING' },
       ],
     });
   });

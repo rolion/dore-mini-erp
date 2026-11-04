@@ -1,6 +1,6 @@
 # REV-2026-11-03-agendar-y-gestionar-citas-01: El profesional no se muestra en listado ni detalle de citas
 
-**Status:** Fixed (pendiente de reverificación en el próximo Quality Gate)
+**Status:** Verified
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-03-agendar-y-gestionar-citas.md (v1)
@@ -22,3 +22,6 @@ grep de 'rofesional' en appointment-detail.component.html: sin coincidencias. En
 
 ## Resolución
 La API devuelve `professional_name` (fachada `personnel.services.professional_names`, consulta por lote en el listado). El listado, el detalle y el diálogo de acciones muestran el profesional. Cubierto por `test_appointments.py` (alta y listado) y `appointment-detail.component.spec.ts`.
+
+## Verificación (Quality Gate 2)
+Verificado en gate 2: API devuelve professional_name por lote (professional_names, 1 consulta); listado (col. Profesional), detalle (dl) y diálogo lo muestran; en navegador: 'Ana Rojas' visible en lista y detalle.

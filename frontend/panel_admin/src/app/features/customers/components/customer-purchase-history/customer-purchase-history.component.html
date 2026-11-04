@@ -1,6 +1,12 @@
 <div class="card">
-  <div class="card-header">
+  <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
     <h4>{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.HISTORIAL_DE_COMPRAS' | translate }}</h4>
+    @if (ordersEnabled() && orders().length) {
+    <a class="btn btn-light btn-sm" data-testid="history-all-orders" routerLink="/pocketbiz/sales/orders"
+      [queryParams]="{ customer: customerId(), customer_name: customerName() }">
+      {{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.VER_TODOS_LOS_PEDIDOS' | translate }}
+    </a>
+    }
   </div>
   <div class="card-body">
     @if (loading()) {
@@ -9,34 +15,65 @@
     <p class="m-4 text-danger" data-testid="history-error">{{ error() }}</p>
     } @else if (orders().length) {
     <div class="table-responsive">
-      <table class="table table-striped m-b-0">
+      <table class="table table-striped m-b-0 history-table">
+        <caption class="visually-hidden">
+          {{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.HISTORIAL_DE_COMPRAS_DE' | translate: { p0: customerName() } }}
+        </caption>
         <thead>
           <tr>
-            <th>{{ 'COMMON.FECHA' | translate }}</th>
-            <th>{{ 'COMMON.TOTAL' | translate }}</th>
-            <th>{{ 'COMMON.ESTADO' | translate }}</th>
-            <th>{{ 'COMMON.PAGO' | translate }}</th>
+            <th scope="col">{{ 'COMMON.PEDIDO' | translate }}</th>
+            <th scope="col">{{ 'COMMON.FECHA' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'COMMON.TOTAL' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PAGADO' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.SALDO' | translate }}</th>
+            <th scope="col">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ENTREGA' | translate }}</th>
+            <th scope="col">{{ 'COMMON.PAGO' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           @for (order of orders(); track order.id) {
-          <tr>
-            <td><a [routerLink]="['/pocketbiz/sales/orders', order.id]">{{ order.date | date: 'dd/MM/yyyy' }}</a></td>
-            <td>{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.BS' | translate: { p0: (order.total) } }}</td>
-            <td>{{ statusLabel(order.status) }}</td>
-            <td>{{ paymentLabel(order.paymentStatus) }}</td>
+          <tr [class.text-muted]="isCancelled(order)">
+            <td [attr.data-label]="'COMMON.PEDIDO' | translate">
+              <a class="fw-semibold" [routerLink]="['/pocketbiz/sales/orders', order.id]">{{ order.code }}</a>
+            </td>
+            <td [attr.data-label]="'COMMON.FECHA' | translate">{{ order.date | date: 'dd/MM/yyyy' }}</td>
+            <td class="text-end" [attr.data-label]="'COMMON.TOTAL' | translate">{{ order.total | money }}</td>
+            <td class="text-end" [attr.data-label]="'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PAGADO' | translate">{{ order.paidTotal | money }}</td>
+            <td class="text-end" [attr.data-label]="'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.SALDO' | translate">
+              {{ (isCancelled(order) ? '' : order.balance) | money }}
+            </td>
+            <td [attr.data-label]="'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ENTREGA' | translate">
+              @if (orderStatus(order.status); as status) {
+              <app-order-status-badge [status]="status" />
+              } @else {
+              {{ order.status }}
+              }
+            </td>
+            <td [attr.data-label]="'COMMON.PAGO' | translate">
+              @if (paymentStatus(order.paymentStatus); as status) {
+              <app-payment-status-badge [status]="status" />
+              } @else {
+              {{ order.paymentStatus }}
+              }
+            </td>
           </tr>
           }
         </tbody>
       </table>
     </div>
-    @if (total() > orders().length) {
-    <p class="m-3 text-muted" data-testid="history-partial">
-      {{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.SE_MUESTRAN_LOS_PEDIDOS_MAS' | translate: { p0: (orders().length), p1: (total()) } }}
+    <p class="m-3 mb-0 text-muted" data-testid="history-count">
+      {{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.PEDIDOS_MOSTRADOS' | translate: { p0: orders().length, p1: total() || orders().length } }}
     </p>
-    }
     } @else {
-    <p class="m-4">{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ESTE_CLIENTE_AUN_NO_TIENE' | translate }}</p>
+    <div class="m-4" data-testid="history-empty">
+      <p>{{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ESTE_CLIENTE_AUN_NO_TIENE' | translate }}</p>
+      @if (canCreateOrder()) {
+      <a class="btn btn-primary" data-testid="history-create-first" routerLink="/pocketbiz/sales/orders/new"
+        [queryParams]="{ customer: customerId(), customer_name: customerName() }">
+        {{ 'CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CREAR_PRIMER_PEDIDO' | translate }}
+      </a>
+      }
+    </div>
     }
   </div>
 </div>
