@@ -100,7 +100,10 @@ Desviaciones respecto al plan:
 Deuda técnica: lógica de decisiones duplicada en dos módulos (decisión del ADR); la protección de rectificaciones frente a ejecución/cobros vinculados queda como límite hasta que existan esas historias; la vista de impresión usa el diálogo del navegador. Pantallas de referencia: Detalle con acciones de ciclo de vida (`purchase-detail`) y formulario con resumen (`stock-opening`).
 
 ## Review
-_Pendiente_
+Quality Gate 1 (ejecutado por el mismo agente porque no se lanzó subagente; aislamiento procedimental): **NO CONCLUYE (sin PASS)**. Sin hallazgos Critical/High, pero una verificación aplicable no se pudo ejecutar.
+Ejecutado y OK: dominio de `quotations` y `dentistry` + `test_boundaries` (46 pruebas), `makemigrations --check`, `ng build`, `ng lint`, `npm run i18n:check` (0 faltantes), `npm audit` (0 vulnerabilidades), specs de `shared`/`quotations`/`dentistry` (80/80). Suite completa de frontend: 1238 OK y 1 fallo preexistente fuera del alcance ([REV-02](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-02.md), Low).
+**No ejecutado:** pruebas de API con PostgreSQL ([REV-01](../reviews/REV-2026-11-04-presentar-aceptar-versionar-proformas-01.md), Medium), `bandit`/`ruff` (no instalados), revisión visual en navegador (requiere backend y base de datos).
+Para el PASS: correr `python manage.py test modules.quotations modules.dentistry modules.modularity modules.service_catalog modules.sales.tests.test_boundaries` con PostgreSQL y la revisión visual; luego repetir el gate.
 
 ## Publicación
 _Pendiente_
