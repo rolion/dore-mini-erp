@@ -1,6 +1,6 @@
 # TASK-cobrar-servicios-anticipos-pagos-parciales: PB-COB-001 · Cobrar servicios con anticipos y pagos parciales
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cobrar-servicios-anticipos-pagos-parciales (desde `origin/main` c82d9a7, que ya contiene PB-COT-001/002 tras el PR #60)
@@ -13,6 +13,7 @@
 | 2026-11-04 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-04 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE, diseño SI; decisiones de negocio resueltas con el usuario | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
+| 2026-11-04 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,22 @@ DDR: `docs/design/DDR-cobrar-servicios-anticipos-pagos-parciales-pantallas-cobro
 `docs/plans/PLAN-2026-11-04-cobrar-servicios-anticipos-pagos-parciales.md` (v1, COMPLETO). Specification readiness: **READY**.
 
 ## Implementación
-_Pendiente_
+**Resumen.** Módulo nuevo `backend/modules/receivables` (dominio `Obligation`, casos de uso `CollectionService`, repositorio con bloqueo de fila, API `/api/receivables/`), fachadas `services.py` en `quotations` y `dentistry` (con marca monótona `collected` y migraciones aditivas `quotations/0003`, `dentistry/0004`), DTO neutro `shared/domain/commitment.py`, registro en el catálogo de módulos y feature Angular `receivables` (lista, detalle con formulario de pago y resumen), botones «Cobrar» y enlace en la ficha del paciente, i18n es/en/pt.
+
+**Cobertura.** INV-01..05, 09 y AC-04/07: `receivables/domain/obligation.py` + `tests/test_domain.py`. INV-06/07 y AC-02/03: `collections.py` (clave + hash, bloqueo obligación → proforma) + `tests/test_api.py`. INV-08/AC-06: `rectify` de ambos agregados + `CollectedLineTests`. AC-01/05/08/09/10: `tests/test_api.py`. AC-08/11: specs de componentes. AC-12: `i18n:check` y prueba de claves.
+
+**Desviaciones respecto al plan.**
+- `ALLOWED_DEPENDENCIES['receivables'] = {quotations, dentistry}` (sin `customers`): el nombre del cliente viaja en el snapshot de la fuente. `ModuleDefinition('receivables')` no `requires` nada (opcionales: quotations, dentistry).
+- El formulario de pago es un panel dentro del detalle (no un modal); mismo contenido y pasos (DDR admite «panel/diálogo»).
+- La marca `collected` también se propaga a copias en versiones posteriores ya creadas (borradores) para que no se pueda rectificar tras presentar.
+- El filtro por fecha de la lista usa la fecha de alta de la obligación (primer pago). El filtro por estado se aplica en memoria (volumen de un consultorio); sin N+1 gracias a la lectura por lote.
+- `collectible` en el detalle de proformas es opcional en los modelos del frontend para no romper fixtures.
+
+**Deuda técnica.** Lista de Cobros paginada en memoria; pantalla sin impresión de comprobante; sin anulación de pagos ni profesional por línea (fuera de alcance).
+
+**Pantallas.** Referencias: `quotations/pages/proforma-list` (lista), `proforma-detail` (detalle). Se reutilizan `MoneyPipe`, badges `col-*` y `Page`; no se crearon componentes compartidos.
+
+**Verificación propia (no es el Quality Gate).** Backend: pruebas de dominio, límites de módulos, guards y catálogo (74) en verde con el Python del repo principal. Las pruebas de integración con PostgreSQL (`receivables/tests/test_api.py`, incluida la concurrencia) están escritas y compilan pero **no se pudieron ejecutar**: no hay credenciales de base de datos en este entorno. Frontend: `ng build`, `ng lint`, `i18n:check` y 1310 pruebas en verde; 1 fallo previo e independiente (`screens-i18n.spec.ts`, «Delivered»/«Entregado»), que también falla en `main`.
 
 ## Review
 _Pendiente_
