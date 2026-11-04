@@ -58,7 +58,7 @@
                       <button type="button" class="btn btn-link px-0" [disabled]="saving" (click)="open(shiftDialog, () => edit(item))">
                         {{ 'AGENDA.AGENDA.EDITAR_TURNO' | translate: { p0: (item.starts.slice(0,5)), p1: (item.ends.slice(0,5)) } }}
                       </button>
-                      <button type="button" class="btn btn-link px-2" [disabled]="saving" (click)="open(shiftDialog, () => edit(item, true))">
+                      <button type="button" class="btn btn-link px-2" [disabled]="saving" [attr.aria-label]="('AGENDA.AGENDA.COPIAR_A_OTROS_DIAS' | translate) + ' · ' + day" (click)="open(shiftDialog, () => edit(item, true))">
                         {{ 'AGENDA.AGENDA.COPIAR_A_OTROS_DIAS' | translate }}
                       </button>
                     </li>
@@ -72,8 +72,8 @@
                   @if (item.starts.slice(0,10) <= date(i) && item.ends.slice(0,19) > date(i) + 'T00:00:00') {
                     <li>
                       <span>{{ 'AGENDA.AGENDA.AUSENTE' | translate: { p0: item.reason } }}</span>
-                      <button type="button" class="btn btn-link px-2" [disabled]="saving" (click)="open(absenceDialog, () => editAbsence(item))">{{ 'AGENDA.AGENDA.EDITAR' | translate }}</button>
-                      <button type="button" class="btn btn-link px-0 text-danger" [disabled]="saving" (click)="open(absenceDialog, () => editAbsence(item, true))">{{ 'AGENDA.AGENDA.ELIMINAR' | translate }}</button>
+                      <button type="button" class="btn btn-link px-2" [disabled]="saving" [attr.aria-label]="('AGENDA.AGENDA.EDITAR_AUSENCIA' | translate) + ' · ' + item.reason" (click)="open(absenceDialog, () => editAbsence(item))">{{ 'AGENDA.AGENDA.EDITAR' | translate }}</button>
+                      <button type="button" class="btn btn-link px-0 text-danger" [disabled]="saving" [attr.aria-label]="('AGENDA.AGENDA.ELIMINAR_AUSENCIA' | translate) + ' · ' + item.reason" (click)="open(absenceDialog, () => editAbsence(item, true))">{{ 'AGENDA.AGENDA.ELIMINAR' | translate }}</button>
                     </li>
                   }
                 }
@@ -92,10 +92,10 @@
             <p data-save-error class="alert alert-danger" tabindex="-1" role="alert" [hidden]="!dialogError">{{ dialogError }}</p>
             <fieldset class="mb-2">
               <legend class="fs-6 mb-1">{{ 'AGENDA.AGENDA.DIAS' | translate }}</legend>
-              <div class="d-flex flex-wrap gap-1 mb-1" role="group">
+              <div class="d-flex flex-wrap gap-1 mb-1" role="group" [attr.aria-label]="'AGENDA.AGENDA.DIAS' | translate">
                 @for (day of shortDays; track day; let i = $index) {
                   <input type="checkbox" class="btn-check" [id]="'shift-day-' + i" autocomplete="off"
-                    [checked]="shift.controls.days.value.includes(i)" [disabled]="dayDisabled(i)" (change)="toggleDay(i)">
+                    [checked]="shift.controls.days.value.includes(i)" [disabled]="dayDisabled(i)" (change)="toggleDay(i, $event)">
                   <label class="btn btn-outline-primary btn-sm" [for]="'shift-day-' + i" [attr.title]="days[i]">{{ day }}</label>
                 }
               </div>
@@ -163,9 +163,17 @@
                 <label for="absence-all-day" class="form-check-label">{{ 'AGENDA.AGENDA.TODO_EL_DIA' | translate }}</label>
               </div>
               <label for="absence-start">{{ (absence.controls.allDay.value ? 'AGENDA.AGENDA.DESDE' : 'AGENDA.AGENDA.INICIO') | translate }}</label>
-              <input id="absence-start" [type]="absence.controls.allDay.value ? 'date' : 'datetime-local'" class="form-control mb-2" formControlName="starts">
+              @if (absence.controls.allDay.value) {
+                <input id="absence-start" type="date" class="form-control mb-2" formControlName="starts">
+              } @else {
+                <input id="absence-start" type="datetime-local" class="form-control mb-2" formControlName="starts">
+              }
               <label for="absence-end">{{ (absence.controls.allDay.value ? 'AGENDA.AGENDA.HASTA' : 'AGENDA.AGENDA.FIN') | translate }}</label>
-              <input id="absence-end" [type]="absence.controls.allDay.value ? 'date' : 'datetime-local'" class="form-control mb-2" formControlName="ends">
+              @if (absence.controls.allDay.value) {
+                <input id="absence-end" type="date" class="form-control mb-2" formControlName="ends">
+              } @else {
+                <input id="absence-end" type="datetime-local" class="form-control mb-2" formControlName="ends">
+              }
               @if (absenceDuration) { <p class="text-muted small" role="status">{{ absenceDuration }}</p> }
               <label for="absence-reason">{{ 'AGENDA.AGENDA.MOTIVO_ADMINISTRATIVO' | translate }}</label>
               <input id="absence-reason" class="form-control mb-2" maxlength="250" formControlName="reason">

@@ -13,6 +13,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, diseño requerido | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY, plan v1 | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-04 | REVIEW → ENGINEERING → REVIEW | REV-01..06 corregidos (ciclo 2) | delivery-publish / delivery-build |
 
 ## Investigación
 
@@ -86,12 +87,12 @@ Ver [PLAN-2026-11-04-mejorar-ux-horarios-y-ausencias](../plans/PLAN-2026-11-04-m
 - El aviso de éxito se cierra con un botón «Cerrar»; no desaparece solo.
 - El DDR pedía «Eliminar» desde la tarjeta: abre el diálogo de ausencia directamente en la confirmación.
 
-**Verificación propia (no es el Quality Gate):** `npm run lint`, `npm run i18n:check` y `npm run build` pasan; 35 pruebas de `features/agenda` pasan. En `npm test` completo falla 1 prueba ajena a esta tarea (`core/i18n/screens-i18n.spec.ts:60`, «Entregue» vs «Entregado»), no revisada en `main`. Las pruebas de backend **no se ejecutaron** (el worktree no tiene `DATABASE_URL`); solo se comprobó la sintaxis.
+**Verificación propia (no es el Quality Gate):** `npm run lint`, `npm run i18n:check` y `npm run build` pasan; 35 pruebas de `features/agenda` pasan. `npm test` completo: 1264 pruebas pasan (la falla ajena de `screens-i18n.spec.ts` observada antes no se reprodujo). Las pruebas de backend **no se ejecutaron** (el worktree no tiene `DATABASE_URL`); solo se comprobó la sintaxis.
 
 **Deuda técnica:** sin eliminación de turnos; sin aviso de citas existentes al crear/editar turnos o ausencias (ambos fuera de alcance).
 
 ## Review
-_Pendiente_
+Quality Gate (subagente aislado, ciclo 1): sin Critical/High; 2 Medium y 4 Low. Backend y revisión visual **no ejecutados**. Hallazgos: docs/reviews/REV-2026-11-04-mejorar-ux-horarios-y-ausencias-01..06. Corregidos en el ciclo 2 de build (REV-04 se resolvió como IMPLEMENTATION: AC-08 solo fija `valid_until`, por lo que al editar se conserva `valid_from`). Pendiente: nueva revisión, pruebas de backend con PostgreSQL y revisión visual.
 
 ## Publicación
 _Pendiente_

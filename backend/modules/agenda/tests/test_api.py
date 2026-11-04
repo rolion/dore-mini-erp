@@ -156,7 +156,7 @@ class AgendaApiTests(TransactionTestCase):
 
     def test_invalid_days_are_rejected(self):
         self.modules.enable('agenda')
-        for days in ([], [7], [-1], [1, 1], ['1'], 'x', [True]):
+        for days in ([], [7], [-1], [1, 1], ['1'], 'x', [True], [[1]], [{}], [None]):
             self.assertEqual(self.multi(days=days).status_code, 400, days)
         self.assertEqual(Shift.objects.count(), 0)
 
@@ -187,6 +187,15 @@ class AgendaApiTests(TransactionTestCase):
         self.assertEqual(self.week().json()['availability'], [
             {'starts': '2026-11-02T09:00:00-04:00', 'ends': '2026-11-02T12:00:00-04:00'},
         ])
+
+    def test_absence_edit_rejects_equal_bounds_and_unknown_id(self):
+        self.modules.enable('agenda')
+        body = {'starts': '2026-11-02T10:00:00-04:00', 'ends': '2026-11-02T10:00:00-04:00', 'reason': 'x'}
+        created = self.client.post(
+            self.base + 'absences/', {**body, 'ends': '2026-11-02T11:00:00-04:00'}, format='json',
+        ).json()
+        self.assertEqual(self.client.put(self.base + f"absences/{created['id']}/", body, format='json').status_code, 400)
+        self.assertEqual(self.client.put(self.base + 'absences/999999/', body, format='json').status_code, 404)
 
     def test_foreign_absence_is_not_found(self):
         self.modules.enable('agenda')

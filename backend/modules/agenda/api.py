@@ -108,8 +108,9 @@ class ShiftView(AgendaView):
         days = data['days']
         if editing or 'day' in data:
             raise ValidationError({'days': 'Indica un solo día (day) o varios (days) al crear.'})
-        if (not isinstance(days, list) or not days or len(set(days)) != len(days)
-                or any(type(day) is not int or not 0 <= day <= 6 for day in days)):
+        if (not isinstance(days, list) or not days
+                or any(type(day) is not int or not 0 <= day <= 6 for day in days)
+                or len(set(days)) != len(days)):
             raise ValidationError({'days': 'Indica al menos un día distinto entre 0 y 6.'})
         return days
 

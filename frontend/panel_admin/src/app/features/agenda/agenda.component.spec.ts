@@ -114,6 +114,36 @@ describe('AgendaComponent', () => {
     expect(api.deleteAbsence).toHaveBeenCalledWith('p1', 9);
   });
 
+  it('keeps the validity start when changing the repetition of an existing shift', () => {
+    component.edit({ ...shift, valid_from: '2026-10-01' });
+    component.shift.controls.repeat.setValue('month');
+    component.applyRepeat();
+    expect(component.shift.getRawValue()).toEqual(jasmine.objectContaining({ valid_from: '2026-10-01', valid_until: '2026-11-30' }));
+  });
+
+  it('keeps the checkbox marked when the selected day is pressed again while editing', () => {
+    component.edit(shift);
+    fixture.detectChanges();
+    const box = fixture.nativeElement.querySelector('#shift-day-2') as HTMLInputElement;
+    box.click();
+    expect(box.checked).toBeTrue();
+    expect(component.shift.controls.days.value).toEqual([2]);
+  });
+
+  it('shows the dates of an all-day absence in the date inputs (AC-10)', () => {
+    component.editAbsence(absence);
+    fixture.detectChanges();
+    const start = fixture.nativeElement.querySelector('#absence-start') as HTMLInputElement;
+    expect(start.type).toBe('date');
+    expect(start.value).toBe('2026-11-05');
+    component.absence.controls.allDay.setValue(false);
+    component.toggleAllDay();
+    fixture.detectChanges();
+    const timed = fixture.nativeElement.querySelector('#absence-start') as HTMLInputElement;
+    expect(timed.type).toBe('datetime-local');
+    expect(timed.value).toBe('2026-11-05T00:00');
+  });
+
   it('keeps timed absences with date and time and creates new ones with POST', () => {
     component.editAbsence();
     component.absence.patchValue({ starts: '2026-11-05T07:00', ends: '2026-11-05T09:30', reason: 'Curso' });

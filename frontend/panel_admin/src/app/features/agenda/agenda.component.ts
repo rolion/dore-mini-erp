@@ -149,9 +149,12 @@ export class AgendaComponent {
     for (const pause of item?.breaks ?? []) this.shift.controls.breaks.push(this.pause(pause));
   }
 
-  toggleDay(day: number): void {
+  toggleDay(day: number, event?: Event): void {
     const days = this.shift.controls.days;
-    if (this.editId) days.setValue([day]);
+    if (this.editId) {
+      days.setValue([day]);
+      if (event?.target instanceof HTMLInputElement) event.target.checked = true;
+    }
     else days.setValue(days.value.includes(day) ? days.value.filter(item => item !== day) : [...days.value, day].sort());
     days.markAsDirty();
   }
@@ -165,7 +168,9 @@ export class AgendaComponent {
   applyRepeat(): void {
     const { repeat } = this.shift.controls;
     if (repeat.value === 'custom') return;
-    this.shift.patchValue({ valid_from: this.start, valid_until: repeatUntil(repeat.value, this.start) });
+    // Al editar se conserva el inicio de vigencia del turno; solo cambia el fin (AC-08).
+    if (!this.editId) this.shift.patchValue({ valid_from: this.start });
+    this.shift.patchValue({ valid_until: repeatUntil(repeat.value, this.start) });
   }
 
   get shiftSummary(): string {
