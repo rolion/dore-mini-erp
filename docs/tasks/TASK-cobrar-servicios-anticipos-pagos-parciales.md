@@ -107,5 +107,11 @@ Resultado: **PASS con limitaciones**. Hallazgos abiertos (no bloqueantes):
 - [REV-03](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-03.md) Low — `except Exception: continue` en la lista de Cobros (bandit B112).
 Consistencia visual: revisada solo por lectura; no verificada en navegador.
 
+**Actualización 2026-11-05 — verificación con PostgreSQL y revisión manual** (a pedido del usuario, con la BD de pruebas por `TEST_DATABASE_NAME`):
+- `manage.py test modules.receivables` → `Ran 22 tests ... OK` (incluye idempotencia, concurrencia con hilos, versionado, rectificación bloqueada, aislamiento por empresa, módulo deshabilitado y proforma odontológica).
+- Suite completa del backend → `Ran 1499 tests`, 1 fallo: `modularity/tests/test_api.py` fijaba la lista de módulos sin `receivables`. Corregido (prueba actualizada) y `modules.modularity` → `Ran 92 tests ... OK`.
+- Revisión manual en el navegador (backend + `npm start`, empresa y usuario de prueba creados en la BD local de desarrollo; migraciones `dentistry.0004`, `quotations.0003`, `receivables.0001` aplicadas): botón «Cobrar» en la proforma; caso de la tarjeta reproducido (aceptado 300 → anticipo 100, saldo 200, estado Parcial, comprobante CB-000001 → abono 50, saldo 150, CB-000002); la línea rechazada no es cobrable; la línea ya pagada deja de ofrecerse; validación «la suma debe ser igual al monto»; paso de resumen; lista de Cobros con estado Parcial. Móvil (390 px): sin scroll horizontal de página, tablas con scroll propio. **No verificado:** tema oscuro de la app y flujo odontológico en navegador (cubierto por prueba de integración).
+- Observación menor (sin REV): el resumen muestra el monto tal como se tecleó («Bs 100»).
+
 ## Publicación
 PR #61 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migraciones aditivas en `receivables`, `quotations`, `dentistry`) y acceso por módulo/fuente; respaldo: ADR de módulo y de pagos. Pendiente de la persona que aprueba: ejecutar las pruebas con PostgreSQL (`python manage.py test`) y la revisión visual en navegador, y decidir si se corrige REV-01 antes del merge.
