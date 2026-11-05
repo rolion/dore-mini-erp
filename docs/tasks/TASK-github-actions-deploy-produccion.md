@@ -1,6 +1,6 @@
 # TASK-github-actions-deploy-produccion: Deploy automático a producción con GitHub Actions
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-github-actions-deploy-produccion
@@ -13,6 +13,8 @@
 | 2026-11-05 | INVESTIGATION → ARCHITECTURE | Infraestructura + migraciones de BD + secretos | delivery-start |
 | 2026-11-05 | ARCHITECTURE → PLANNING → ENGINEERING | ADR y PLAN v1 escritos, spec READY | delivery-start |
 | 2026-11-05 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-05 | REVIEW → ENGINEERING → REVIEW | Ciclo 1 FAIL, correcciones REV-01..04 | delivery-publish |
+| 2026-11-05 | REVIEW → PUBLISH | Ciclo 2 PASS | delivery-publish |
 
 ## Investigación
 
@@ -74,7 +76,7 @@ Workflow `.github/workflows/deploy.yml` (AC-01, AC-02, AC-05, INV-04), script re
 Desviaciones: el script remoto se envía por stdin (no se copia al droplet); el tag es el SHA de 12 caracteres. Deuda: el flujo real contra el droplet no se pudo probar (requiere secrets y servidor); queda para el primer merge. Sin gate de tests (fuera de alcance).
 
 ## Review
-_Pendiente_
+Ciclo 1: FAIL (REV-01 y REV-02 High, REV-03 y REV-04 Medium, todos IMPLEMENTATION), corregidos en el commit siguiente. Ciclo 2: PASS (subagente aislado). `python -m unittest config.test_deploy_pipeline config.test_production_deployment`: 16 pruebas OK; `bash -n` OK. No ejecutado: shellcheck (no instalado) ni un deploy real contra el droplet. Low abiertos: la prueba con docker falso no detecta por sí sola la vuelta a `bash -s` (lo cubre una aserción de texto sobre deploy.yml); los secrets están en el `env` de todo el job.
 
 ## Publicación
-_Pendiente_
+PR #64 listo para aprobación humana. Cambio sensible: infraestructura, secretos y migraciones sobre la BD de producción (respaldado por ADR-github-actions-deploy-produccion-pipeline-y-secretos). No se mergea automáticamente.

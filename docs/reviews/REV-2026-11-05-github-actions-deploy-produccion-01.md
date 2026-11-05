@@ -1,6 +1,6 @@
 # REV-2026-11-05-github-actions-deploy-produccion-01: El migrate consume el stdin del script
 
-**Status:** Resolved (pendiente de re-verificación)
+**Status:** Closed (verificado en ciclo 2)
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-05-github-actions-deploy-produccion.md (v1)

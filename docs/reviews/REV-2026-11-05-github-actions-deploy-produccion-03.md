@@ -1,6 +1,6 @@
 # REV-2026-11-05-github-actions-deploy-produccion-03: workflow_dispatch puede desplegar cualquier rama
 
-**Status:** Resolved (pendiente de re-verificación)
+**Status:** Closed (verificado en ciclo 2)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-05-github-actions-deploy-produccion.md (v1)
