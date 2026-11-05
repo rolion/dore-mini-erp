@@ -28,6 +28,10 @@ Mini ERP. Proyecto nuevo, en construcción.
 - Frontend: organizar por `src/app/features/<modulo>/` (pages, components, services, models) según el documento DDD. Lógica no visual en services inyectables, tipos explícitos (sin `any`), Reactive Forms, sin suscripciones colgadas. **Sin texto visible hardcodeado:** plantillas con el pipe `translate` y claves de `assets/i18n/{es,en,pt}.json` (las tres con las mismas claves; una prueba lo verifica y `npm run i18n:check` comprueba que las claves usadas existan); en TypeScript, `tr('CLAVE')` de `core/i18n/translate` dentro de funciones/getters (nunca en constantes de módulo). Pruebas de componentes: `provideTestTranslations()`.
 - Rama base: `main`. Una rama y un PR por task (`task/TASK-<slug>`).
 
+## Deploy
+
+Cada push a `main` despliega a producción vía `.github/workflows/deploy.yml` (build de imágenes, backup, `migrate`, `up`); secrets y variables en el environment `production` de GitHub. Ver `docs/deployment/github-actions.md`.
+
 ## Flujo de trabajo
 
 Tareas no triviales usan las skills `delivery-*`: `delivery-start` (investigación, diseño y arquitectura si aplican, plan y PR) → `delivery-build` (implementación) → `delivery-publish` (review, pruebas y PR listo para aprobación humana; nunca mergea). Se encadenan solas; piden confirmación solo ante decisiones de negocio abiertas o dudas del requerimiento. Cada task vive en `docs/tasks/TASK-<slug>.md`. El lenguaje visual de toda UI está en `docs/design/design-system.md`; las skills `delivery-ux-research/design-system/ui-design/frontend/visual-review` son un flujo aparte, solo de UX/UI con Stitch.
