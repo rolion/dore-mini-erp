@@ -1,7 +1,9 @@
 """Pruebas estáticas del pipeline de deploy (TASK-github-actions-deploy-produccion)."""
 import os
 import shutil
+import stat
 import subprocess
+import tempfile
 from pathlib import Path
 from unittest import TestCase, skipUnless
 
@@ -47,6 +49,10 @@ class WorkflowStructureTests(TestCase):
         self.assertIn('StrictHostKeyChecking yes', self.text)
         self.assertNotIn('ssh-keyscan', self.text)
 
+    def test_only_main_and_stdin_read_before_eval(self):  # REV-01, REV-03
+        self.assertIn("github.ref == 'refs/heads/main'", self.text)
+        self.assertIn('payload=$(cat); eval "$payload"', self.text)
+
     def test_smoke_check_present(self):  # AC-05
         self.assertIn('/api/health/', self.text)
         self.assertIn('curl --fail', self.text)
@@ -79,3 +85,65 @@ class RemoteDeployScriptTests(TestCase):
         result = run_script(env)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('DB_PASSWORD', result.stderr)
+
+
+def posix(path):
+    p = Path(path).as_posix()
+    return '/' + p[0].lower() + p[2:] if len(p) > 1 and p[1] == ':' else p
+
+
+FAKE_DOCKER = r"""#!/usr/bin/env bash
+echo "$*" >> "$FAKE_LOG"
+case "$1 $2" in
+  "exec -e") [ "${FAIL_ON:-}" = pg_dump ] && exit 1; echo dump; exit 0 ;;
+  "compose run") cat > /dev/null; [ "${FAIL_ON:-}" = migrate ] && exit 1; exit 0 ;;
+  "image ls") printf 'abc123\nlatest\n'; exit 0 ;;
+esac
+cat > /dev/null
+exit 0
+"""
+
+
+@skipUnless(BASH, 'bash no disponible')
+class RemoteDeployExecutionTests(TestCase):
+    """Ejecuta el script como en producción (stdin -> eval) con un docker falso."""
+
+    def run_deploy(self, fail_on=''):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        bin_dir = Path(tmp, 'bin')
+        bin_dir.mkdir()
+        fake = bin_dir / 'docker'
+        fake.write_text(FAKE_DOCKER, encoding='utf-8', newline='\n')
+        fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        log = Path(tmp, 'calls.log')
+        deploy = Path(tmp, 'deploy')
+        deploy.mkdir()
+        env = {k: v for k, v in BASE_ENV.items() if k != 'DEPLOY_CHECK_ONLY'}
+        env.update(DEPLOY_PATH=posix(deploy), FAIL_ON=fail_on, FAKE_LOG=posix(log))
+        exports = ''.join(f"export {k}='{v}'\n" for k, v in env.items())
+        payload = exports + SCRIPT.read_text(encoding='utf-8')
+        result = subprocess.run(
+            [BASH, '-c', 'payload=$(cat); eval "$payload"'],
+            input=payload, text=True, capture_output=True,
+            env={'PATH': posix(bin_dir) + os.pathsep + os.environ.get('PATH', '')},
+        )
+        calls = log.read_text(encoding='utf-8') if log.exists() else ''
+        return result, calls
+
+    def test_happy_path_runs_all_steps_even_with_nothing_to_prune(self):  # REV-01, REV-02
+        result, calls = self.run_deploy()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertLess(calls.index('pg_dump'), calls.index('manage.py migrate'))
+        self.assertLess(calls.index('manage.py migrate'), calls.index('up -d --no-build --wait'))
+        self.assertIn('completado', result.stdout)
+
+    def test_backup_failure_prevents_migration(self):  # INV-01
+        result, calls = self.run_deploy('pg_dump')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('migrate', calls)
+
+    def test_migration_failure_prevents_up(self):  # INV-02
+        result, calls = self.run_deploy('migrate')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn('up -d', calls)

@@ -14,6 +14,8 @@ concurrency:
 
 jobs:
   deploy:
+    # workflow_dispatch podría elegir otra rama: solo se despliega main.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment: production
@@ -81,12 +83,14 @@ jobs:
 
       - name: Backup, migraciones y despliegue
         run: |
+          # El shell remoto lee TODO el stdin antes de evaluar: ningún docker puede consumirlo.
+          remote='payload=$(cat); eval "$payload"'
           {
             for v in IMAGE_TAG DEPLOY_PATH DATABASE_NETWORK SECRET_KEY DB_USER DB_PASSWORD DB_NAME DB_HOST DB_PORT DB_CONTAINER TIME_ZONE REGISTRATION_ENABLED; do
               if [ -n "${!v:-}" ]; then printf 'export %s=%q\n' "$v" "${!v}"; fi
             done
             cat scripts/deploy/remote-deploy.sh
-          } | ssh deploy-target 'bash -s'
+          } | ssh deploy-target "bash -c '${remote}'"
 
       - name: Smoke check
         run: curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-connrefused "$HEALTH_URL"

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Se ejecuta en el droplet (enviado por stdin desde .github/workflows/deploy.yml).
+# Se ejecuta en el droplet: el workflow envía exports + este script por stdin y el
+# shell remoto lo evalúa tras leer TODO el stdin (así ningún docker puede consumirlo).
 # Recibe la configuración como variables de entorno; nunca escribe secretos a disco.
 # DEPLOY_CHECK_ONLY=1 valida variables y compone DATABASE_URL sin tocar Docker.
 set -euo pipefail
@@ -52,7 +53,7 @@ cd "$DEPLOY_PATH"
 mkdir -p backups
 
 echo "==> Validando compose"
-docker compose config --quiet
+docker compose config --quiet </dev/null
 
 echo "==> Backup de la base de datos (INV-01)"
 stamp="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -69,17 +70,17 @@ mv "${backup}.tmp" "$backup"
 ls -1t backups/*.sql.gz 2>/dev/null | tail -n +"$((KEEP_BACKUPS + 1))" | xargs -r rm --
 
 echo "==> Migraciones (INV-02: si fallan, no se reemplazan los contenedores)"
-docker compose run --rm --no-deps backend python manage.py migrate --noinput
+docker compose run --rm -T --no-deps backend python manage.py migrate --noinput </dev/null
 
 echo "==> Levantando la versión ${IMAGE_TAG}"
-docker compose up -d --no-build --wait
-docker compose ps
+docker compose up -d --no-build --wait </dev/null
+docker compose ps </dev/null
 
 echo "==> Limpiando imágenes antiguas (se conservan ${KEEP_RELEASES})"
 for repo in pocketbiz-backend pocketbiz-frontend; do
   docker image ls "$repo" --format '{{.Tag}}' \
-    | grep -v -x -e "$IMAGE_TAG" -e latest -e '<none>' \
+    | { grep -v -x -e "$IMAGE_TAG" -e latest -e '<none>' || true; } \
     | tail -n +"$KEEP_RELEASES" \
-    | while read -r tag; do docker rmi "${repo}:${tag}" >/dev/null 2>&1 || true; done
+    | while read -r tag; do docker rmi "${repo}:${tag}" </dev/null >/dev/null 2>&1 || true; done
 done
 echo "==> Deploy ${IMAGE_TAG} completado"

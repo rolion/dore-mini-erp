@@ -1,6 +1,6 @@
 # Deploy automático con GitHub Actions
 
-Cada push a `main` (merge de un PR) ejecuta `.github/workflows/deploy.yml`, que: construye las imágenes en el runner de GitHub, las carga en el droplet por SSH, respalda la BD, corre `migrate` y levanta la nueva versión; al final verifica `/api/health/`. También se puede lanzar a mano desde *Actions → Deploy → Run workflow* (sirve para re-desplegar o volver a un commit anterior). Decisión: `docs/adr/ADR-github-actions-deploy-produccion-pipeline-y-secretos.md`.
+Cada push a `main` (merge de un PR) ejecuta `.github/workflows/deploy.yml`, que: construye las imágenes en el runner de GitHub, las carga en el droplet por SSH, respalda la BD, corre `migrate` y levanta la nueva versión; al final verifica `/api/health/`. También se puede lanzar a mano desde *Actions → Deploy → Run workflow* (solo se despliega desde `main`; sirve para re-desplegar). Decisión: `docs/adr/ADR-github-actions-deploy-produccion-pipeline-y-secretos.md`.
 
 ## Configuración única (antes del primer merge)
 
@@ -31,6 +31,8 @@ En GitHub: *Settings → Environments → New environment* `production` (opciona
 | `TIME_ZONE`, `REGISTRATION_ENABLED` (opc.) | Ver `docker.md` |
 | `HEALTH_URL` (opc.) | Por defecto `https://www.pocketbiz.website/api/health/` |
 
+Recomendado: en el environment `production`, restringir *Deployment branches* a `main`.
+
 `DATABASE_URL` no se guarda: se compone de `DB_USER`, `DB_PASSWORD` y `DB_NAME`. El workflow falla al inicio si falta algo.
 
 ## Llave SSH de deploy
@@ -50,7 +52,7 @@ Añadir `deploy_key.pub` a `~/.ssh/authorized_keys` del usuario de deploy en el 
 
 ## Rollback
 
-- Re-ejecutar el workflow sobre un commit anterior, o en el droplet: `IMAGE_TAG=<sha previo> docker compose up -d --no-build --wait` (con las variables de `docker.md` exportadas).
+- Revertir el commit en `main` (el push redespliega), o en el droplet: `IMAGE_TAG=<sha previo> docker compose up -d --no-build --wait` (con las variables de `docker.md` exportadas).
 - Volver de imagen no deshace migraciones. Si una migración fue destructiva, restaurar el backup más reciente de `$DEPLOY_PATH/backups/` (`gunzip -c … | docker exec -i db_v2 psql -U USER DB`) tras evaluar el impacto.
 - Nunca `docker compose down -v`.
 
