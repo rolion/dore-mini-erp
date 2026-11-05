@@ -43,6 +43,8 @@ export interface ProformaSummary {
   total: string;
   accepted_total: string;
   acceptance_status: AcceptanceStatus;
+  /** Presentada y con líneas aceptadas: se puede cobrar (PB-COB-001). */
+  collectible?: boolean;
 }
 
 export interface Proforma extends ProformaSummary, ProformaDecisionState {

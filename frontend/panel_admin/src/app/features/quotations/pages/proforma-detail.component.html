@@ -18,6 +18,9 @@
             @if (can('edit')) {
               <a class="btn btn-outline-primary" [routerLink]="['/pocketbiz/quotations/proformas', p.id, 'editar']">{{ 'QUOTATIONS.PROFORMAS.EDITAR' | translate }}</a>
             }
+            @if (p.collectible) {
+              <a class="btn btn-success" [routerLink]="['/pocketbiz/receivables/quotation', p.number]">{{ 'QUOTATIONS.PROFORMAS.COBRAR' | translate }}</a>
+            }
             @if (can('present')) {
               <button type="button" class="btn btn-primary" (click)="open(dlg)">{{ 'QUOTATIONS.PROFORMAS.PRESENTAR' | translate }}</button>
             }

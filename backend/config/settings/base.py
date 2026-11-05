@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'modules.personnel',
     'modules.agenda',
     'modules.quotations',
+    'modules.receivables',
     'modules.reporting',
     'modules.modularity',
 ]
