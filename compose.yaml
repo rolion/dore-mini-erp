@@ -10,7 +10,7 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.production
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY for production}
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL for the existing PostgreSQL container}
-      ALLOWED_HOSTS: www.pocketbiz.website,app.pocketbiz.website
+      ALLOWED_HOSTS: www.pocketbiz.website,app.pocketbiz.website,pocketbiz.website
       TIME_ZONE: ${TIME_ZONE:-America/La_Paz}
       REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-True}
     expose:
