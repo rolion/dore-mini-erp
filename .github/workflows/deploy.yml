@@ -1,0 +1,92 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DATABASE_NETWORK: ${{ vars.DATABASE_NETWORK }}
+      DB_HOST: ${{ vars.DB_HOST }}
+      DB_PORT: ${{ vars.DB_PORT }}
+      DB_CONTAINER: ${{ vars.DB_CONTAINER }}
+      TIME_ZONE: ${{ vars.TIME_ZONE }}
+      REGISTRATION_ENABLED: ${{ vars.REGISTRATION_ENABLED }}
+      HEALTH_URL: ${{ vars.HEALTH_URL || 'https://www.pocketbiz.website/api/health/' }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+    steps:
+      - name: Verificar configuración requerida
+        run: |
+          missing=()
+          for v in DEPLOY_HOST DEPLOY_USER DEPLOY_PATH DATABASE_NETWORK SECRET_KEY DB_USER DB_PASSWORD DB_NAME DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS; do
+            [ -n "${!v}" ] || missing+=("$v")
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Faltan secrets/variables en el environment production: ${missing[*]}"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Definir tag de la release
+        run: echo "IMAGE_TAG=${GITHUB_SHA::12}" >> "$GITHUB_ENV"
+
+      - name: Construir imágenes
+        run: |
+          docker build -t "pocketbiz-backend:${IMAGE_TAG}" backend
+          docker build -t "pocketbiz-frontend:${IMAGE_TAG}" frontend/panel_admin
+
+      - name: Configurar SSH
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<EOF
+          Host deploy-target
+            HostName ${DEPLOY_HOST}
+            User ${DEPLOY_USER}
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+          EOF
+
+      - name: Transferir imágenes y compose al servidor
+        run: |
+          docker save "pocketbiz-backend:${IMAGE_TAG}" "pocketbiz-frontend:${IMAGE_TAG}" \
+            | gzip \
+            | ssh deploy-target 'gunzip | docker load'
+          ssh deploy-target "mkdir -p '${DEPLOY_PATH}' && cat > '${DEPLOY_PATH}/compose.yaml'" < compose.yaml
+
+      - name: Backup, migraciones y despliegue
+        run: |
+          {
+            for v in IMAGE_TAG DEPLOY_PATH DATABASE_NETWORK SECRET_KEY DB_USER DB_PASSWORD DB_NAME DB_HOST DB_PORT DB_CONTAINER TIME_ZONE REGISTRATION_ENABLED; do
+              if [ -n "${!v:-}" ]; then printf 'export %s=%q\n' "$v" "${!v}"; fi
+            done
+            cat scripts/deploy/remote-deploy.sh
+          } | ssh deploy-target 'bash -s'
+
+      - name: Smoke check
+        run: curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-connrefused "$HEALTH_URL"

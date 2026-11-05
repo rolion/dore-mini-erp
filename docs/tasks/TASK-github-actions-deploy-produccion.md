@@ -1,10 +1,10 @@
 # TASK-github-actions-deploy-produccion: Deploy automático a producción con GitHub Actions
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-github-actions-deploy-produccion
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/64
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -12,6 +12,7 @@
 | 2026-11-05 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-05 | INVESTIGATION → ARCHITECTURE | Infraestructura + migraciones de BD + secretos | delivery-start |
 | 2026-11-05 | ARCHITECTURE → PLANNING → ENGINEERING | ADR y PLAN v1 escritos, spec READY | delivery-start |
+| 2026-11-05 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -68,7 +69,9 @@ No aplica.
 `docs/plans/PLAN-2026-11-05-github-actions-deploy-produccion.md` (v1, COMPLETO, READY)
 
 ## Implementación
-_Pendiente_
+Workflow `.github/workflows/deploy.yml` (AC-01, AC-02, AC-05, INV-04), script remoto `scripts/deploy/remote-deploy.sh` (AC-03, AC-04, INV-01..03), guía `docs/deployment/github-actions.md` (AC-06) y enlaces en `docker.md` y `CLAUDE.md`. Pruebas estáticas en `backend/config/test_deploy_pipeline.py` (7 pruebas, pasan localmente).
+
+Desviaciones: el script remoto se envía por stdin (no se copia al droplet); el tag es el SHA de 12 caracteres. Deuda: el flujo real contra el droplet no se pudo probar (requiere secrets y servidor); queda para el primer merge. Sin gate de tests (fuera de alcance).
 
 ## Review
 _Pendiente_
