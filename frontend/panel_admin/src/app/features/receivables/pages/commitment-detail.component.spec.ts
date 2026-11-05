@@ -97,4 +97,30 @@ describe('CommitmentDetailComponent', () => {
     expect(retry.request.body.idempotency_key).toBe(first.request.body.idempotency_key);
     retry.flush({}, { status: 500, statusText: 'Error' });
   });
+
+  it('tras un conflicto 409 recarga y reconstruye la distribución sin desalinear tratamientos', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    component.open();
+    component.form.patchValue({ amount: '150.00' });
+    component.distributeInOrder();
+    component.review();
+    component.confirm();
+    http.expectOne((req) => req.url.endsWith('/payments/')).flush({}, { status: 409, statusText: 'Conflict' });
+    // Mientras tanto otra persona cobró del todo «Limpieza»: ya no es cobrable.
+    const reloaded: Commitment = {
+      ...COMMITMENT,
+      lines: [{ ...COMMITMENT.lines[0], paid: '100.00', balance: '0.00', collectible: false }, ...COMMITMENT.lines.slice(1)],
+    };
+    http.expectOne((req) => req.url.endsWith('/commitments/quotation/PRO-000001/')).flush(reloaded);
+    fixture.detectChanges();
+    expect(component.saving).toBeFalse();
+    expect(component.step).toBe('form');
+    expect(component.allocations.length).toBe(component.payableLines.length);
+    expect(component.allocations.length).toBe(1);
+    expect(component.allocations.at(0).value.amount).toBe('');
+    expect(component.form.controls.amount.value).toBe('150.00');
+    component.review(); // distribución vacía: no pasa al resumen ni lanza errores
+    expect(component.step).toBe('form');
+  });
 });

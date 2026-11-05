@@ -14,7 +14,7 @@
 | 2026-11-04 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE, diseño SI; decisiones de negocio resueltas con el usuario | delivery-start |
 | 2026-11-04 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
 | 2026-11-04 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
-| 2026-11-04 | REVIEW → PUBLISH | Quality Gate PASS con limitaciones (REV-01 Medium, REV-02/03 Low abiertos) | delivery-publish |
+| 2026-11-04 | REVIEW → PUBLISH | Quality Gate PASS con limitaciones (REV-01 Medium, REV-02/03 Low abiertos; luego resueltos) | delivery-publish |
 
 ## Investigación
 
@@ -103,7 +103,7 @@ DDR: `docs/design/DDR-cobrar-servicios-anticipos-pagos-parciales-pantallas-cobro
 ## Review
 Resultado: **PASS con limitaciones**. Hallazgos abiertos (no bloqueantes):
 - [REV-01](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-01.md) Medium (RESUELTO) — «hoy» del pago usa fecha UTC en backend y frontend en lugar de la zona horaria de la empresa.
-- [REV-02](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-02.md) Low — tras un 409 el FormArray de imputaciones no se reconstruye (posible desalineación por índice).
+- [REV-02](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-02.md) Low (RESUELTO) — tras un 409 el FormArray de imputaciones no se reconstruye (posible desalineación por índice).
 - [REV-03](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-03.md) Low (RESUELTO) — `except Exception: continue` en la lista de Cobros (bandit B112).
 Consistencia visual: revisada solo por lectura; no verificada en navegador.
 

@@ -95,6 +95,7 @@ export class CommitmentDetailComponent implements OnInit {
     const amount = this.amountCents;
     if (amount === null || amount <= 0) return tr('RECEIVABLES.E_AMOUNT');
     const lines = this.payableLines;
+    if (this.allocations.length !== lines.length) return tr('RECEIVABLES.E_ALLOCATIONS');
     for (let i = 0; i < this.allocations.length; i++) {
       const value = this.allocations.at(i).get('amount')?.value;
       const cents = value ? toCents(value) : 0;
@@ -112,16 +113,25 @@ export class CommitmentDetailComponent implements OnInit {
       .filter((row) => (toCents(row.amount) ?? 0) > 0);
   }
 
-  load(): void {
+  load(afterLoad?: () => void): void {
     this.loading = true;
     this.error = '';
     this.api
       .get(this.kind, this.number)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => (this.loading = false)))
       .subscribe({
-        next: (commitment) => (this.commitment = commitment),
+        next: (commitment) => {
+          this.commitment = commitment;
+          afterLoad?.();
+        },
         error: (failure: ReceivableFailure) => (this.error = failure.message),
       });
+  }
+
+  /** Una fila por tratamiento cobrable actual, sin importes: la distribución anterior ya no es fiable. */
+  private rebuildAllocations(): void {
+    this.allocations.clear();
+    for (let i = 0; i < this.payableLines.length; i++) this.allocations.push(this.fb.group({ amount: [''] }));
   }
 
   open(): void {
@@ -129,7 +139,7 @@ export class CommitmentDetailComponent implements OnInit {
     this.receipt = null;
     this.failure = null;
     this.allocations.clear();
-    for (let i = 0; i < this.payableLines.length; i++) this.allocations.push(this.fb.group({ amount: [''] }));
+    this.rebuildAllocations();
     this.form.patchValue({ amount: '', payment_method: 'CASH', payment_date: this.today, reference: '' });
     this.step = 'form';
   }
@@ -190,7 +200,7 @@ export class CommitmentDetailComponent implements OnInit {
           // Los datos del formulario se conservan; si el servidor rechazó por saldo, se recarga el compromiso.
           this.failure = failure;
           this.step = 'form';
-          if (failure.conflict) this.load();
+          if (failure.conflict) this.load(() => this.rebuildAllocations());
         },
       });
   }

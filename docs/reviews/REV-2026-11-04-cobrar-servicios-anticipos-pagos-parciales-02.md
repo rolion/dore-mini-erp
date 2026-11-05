@@ -1,6 +1,6 @@
 # REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-02: Tras recargar por conflicto, las imputaciones del formulario quedan desalineadas con las líneas cobrables
 
-**Status:** Open
+**Status:** Resolved (corregido y verificado con prueba de componente el 2026-11-05)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-04-cobrar-servicios-anticipos-pagos-parciales.md (v1)
