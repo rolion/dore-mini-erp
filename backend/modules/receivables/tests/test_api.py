@@ -1,9 +1,11 @@
 import threading
+from datetime import datetime, timezone as dt_timezone
+from unittest import mock
 from decimal import Decimal
 from uuid import uuid4
 
 from django.db import connection
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 from rest_framework.test import APIClient
 
 from modules.accounts.testing import make_admin
@@ -215,3 +217,37 @@ class ReceivablesApiTests(TransactionTestCase):
         blocked = self.client.post(f"{DENTAL}proformas/{p['id']}/lines/{p['lines'][0]['id']}/rectify/", {
             'idempotency_key': str(uuid4()), 'decision': 'rejected', 'reason': 'x'}, format='json')
         self.assertEqual(blocked.status_code, 409, blocked.content)
+
+
+    # REV-01: «hoy» respeta TIME_ZONE y no el día UTC
+    @override_settings(TIME_ZONE='Pacific/Kiritimati')  # UTC+14
+    def test_payment_date_uses_the_configured_time_zone(self):
+        p = self.quote()
+        line = p['lines'][0]['id']
+        instant = datetime(2026, 11, 5, 23, 0, tzinfo=dt_timezone.utc)  # local: 6 nov 13:00
+        with mock.patch('django.utils.timezone.now', return_value=instant):
+            default = self.pay(p['number'], [(line, '10.00')])
+            self.assertEqual(default.status_code, 201, default.content)
+            self.assertEqual(default.json()['payment']['payment_date'], '2026-11-06')
+            self.assertEqual(self.pay(p['number'], [(line, '10.00')], payment_date='2026-11-06').status_code, 201)
+            self.assertEqual(self.pay(p['number'], [(line, '10.00')], payment_date='2026-11-07').status_code, 400)
+
+    # REV-03: la lista oculta solo lo no autorizado y no traga otros errores
+    def test_list_hides_disabled_sources_but_does_not_swallow_other_errors(self):
+        q = self.quote()
+        self.pay(q['number'], [(q['lines'][0]['id'], '10.00')])
+        url = f'{DENTAL}patients/{self.customer.pk}/proformas/'
+        body = self.client.post(url, {'date': '2026-11-04', 'lines': [{'service_id': str(self.a.pk), 'quantity': '1'}]},
+                                format='json').json()
+        d = self.client.post(f"{DENTAL}proformas/{body['id']}/present/").json()
+        self.client.post(f"{DENTAL}proformas/{d['id']}/decisions/", {
+            'idempotency_key': str(uuid4()), 'decision': 'accepted', 'line_ids': [d['lines'][0]['id']],
+            'accepted_by_name': 'Rosa', 'medium': 'in_person'}, format='json')
+        self.pay(d['number'], [(d['lines'][0]['id'], '10.00')], kind='dental')
+        self.assertEqual(len(self.client.get(f'{BASE}obligations/').json()['results']), 2)
+        DjangoCompanyModuleRepository(self.admin.company_id).disable('dentistry')
+        rows = self.client.get(f'{BASE}obligations/').json()['results']
+        self.assertEqual([r['kind'] for r in rows], ['quotation'])
+        with mock.patch('modules.receivables.api.views._authorize', side_effect=RuntimeError('boom')):
+            with self.assertRaises(RuntimeError):
+                self.client.get(f'{BASE}obligations/')

@@ -9,7 +9,7 @@ import { tr } from '../../../core/i18n/translate';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import {
   CollectionPayment, Commitment, CommitmentLine, PAYMENT_METHODS, PaymentMethod, REFERENCE_MAX_LENGTH,
-  ReceivableFailure, SourceKind, STATUS_CLASSES, fromCents, methodLabel, statusLabel, toCents,
+  ReceivableFailure, SourceKind, STATUS_CLASSES, fromCents, localToday, methodLabel, statusLabel, toCents,
 } from '../models/receivable';
 import { ReceivablesApiService } from '../services/receivables-api.service';
 
@@ -32,7 +32,7 @@ export class CommitmentDetailComponent implements OnInit {
   readonly classes = STATUS_CLASSES;
   readonly methods = PAYMENT_METHODS;
   readonly referenceMax = REFERENCE_MAX_LENGTH;
-  readonly today = new Date().toISOString().slice(0, 10);
+  readonly today = localToday();
 
   kind: SourceKind = 'quotation';
   number = '';

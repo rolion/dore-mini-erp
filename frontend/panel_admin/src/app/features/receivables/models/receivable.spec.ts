@@ -1,4 +1,4 @@
-import { fromCents, toCents } from './receivable';
+import { fromCents, localToday, toCents } from './receivable';
 
 describe('importes en centavos', () => {
   it('parsea importes con hasta dos decimales y rechaza el resto', () => {
@@ -11,5 +11,13 @@ describe('importes en centavos', () => {
   it('formatea sin errores de coma flotante', () => {
     expect(fromCents(toCents('0.10')! + toCents('0.20')!)).toBe('0.30');
     expect(fromCents(15000)).toBe('150.00');
+  });
+});
+
+describe('localToday', () => {
+  it('usa el día local y no el UTC', () => {
+    // 5 nov 2026 23:30 en hora local: toISOString podría dar el día 6 en zonas al oeste de UTC.
+    expect(localToday(new Date(2026, 10, 5, 23, 30))).toBe('2026-11-05');
+    expect(localToday(new Date(2026, 0, 2, 0, 5))).toBe('2026-01-02');
   });
 });

@@ -115,6 +115,12 @@ export interface ReceivableFailure {
   conflict: boolean;
 }
 
+/** Fecha de hoy en la zona horaria del navegador (AAAA-MM-DD); `toISOString` daría el día UTC. */
+export function localToday(now: Date = new Date()): string {
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 /** Importes en centavos enteros: evita errores de coma flotante al sumar y comparar. */
 export function toCents(value: string | null | undefined): number | null {
   const text = (value ?? '').trim().replace(',', '.');

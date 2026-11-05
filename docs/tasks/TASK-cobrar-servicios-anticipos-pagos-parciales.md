@@ -102,9 +102,9 @@ DDR: `docs/design/DDR-cobrar-servicios-anticipos-pagos-parciales-pantallas-cobro
 
 ## Review
 Resultado: **PASS con limitaciones**. Hallazgos abiertos (no bloqueantes):
-- [REV-01](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-01.md) Medium — «hoy» del pago usa fecha UTC en backend y frontend en lugar de la zona horaria de la empresa.
+- [REV-01](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-01.md) Medium (RESUELTO) — «hoy» del pago usa fecha UTC en backend y frontend en lugar de la zona horaria de la empresa.
 - [REV-02](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-02.md) Low — tras un 409 el FormArray de imputaciones no se reconstruye (posible desalineación por índice).
-- [REV-03](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-03.md) Low — `except Exception: continue` en la lista de Cobros (bandit B112).
+- [REV-03](docs/reviews/REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-03.md) Low (RESUELTO) — `except Exception: continue` en la lista de Cobros (bandit B112).
 Consistencia visual: revisada solo por lectura; no verificada en navegador.
 
 **Actualización 2026-11-05 — verificación con PostgreSQL y revisión manual** (a pedido del usuario, con la BD de pruebas por `TEST_DATABASE_NAME`):

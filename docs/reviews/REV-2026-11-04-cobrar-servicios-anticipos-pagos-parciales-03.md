@@ -1,6 +1,6 @@
 # REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-03: La lista de Cobros captura `Exception` genérica al filtrar por permisos
 
-**Status:** Open
+**Status:** Resolved (corregido y verificado con prueba de integración el 2026-11-05)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-04-cobrar-servicios-anticipos-pagos-parciales.md (v1)

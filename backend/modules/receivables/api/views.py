@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 from uuid import UUID
 
 from django.db import transaction
+from django.utils import timezone as dj_timezone
 from rest_framework import status as http
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -45,6 +46,15 @@ def _authorize(request, kind: str) -> None:
         raise PermissionDenied()
 
 
+def _can_list(request, kind: str) -> bool:
+    """Una sola evaluación por tipo de fuente; solo «módulo deshabilitado/sin acceso» oculta filas."""
+    try:
+        _authorize(request, kind)
+    except (NotFound, PermissionDenied):
+        return False
+    return True
+
+
 def _user_name(user) -> str:
     full = user.get_full_name() if hasattr(user, 'get_full_name') else ''
     return (full or user.get_username())[:150]
@@ -54,7 +64,7 @@ def _service(request) -> CollectionService:
     company_id = company_id_from(request)
     return CollectionService(
         DjangoObligationRepository(company_id), lambda kind: source_for(kind, company_id),
-        today=lambda: datetime.now(timezone.utc).date(), now=lambda: datetime.now(timezone.utc),
+        today=dj_timezone.localdate, now=lambda: datetime.now(timezone.utc),
         user_id=request.user.pk, user_name=_user_name(request.user))
 
 
@@ -111,13 +121,8 @@ class ObligationListView(APIView):
         views = _service(request).list(customer_id=customer_id, date_from=_date_param(request, 'date_from'),
                                        date_to=_date_param(request, 'date_to'), status=status)
         # Cada fuente solo se ofrece si su módulo está habilitado (y, en Odontología, con acceso clínico).
-        visible = []
-        for view in views:
-            try:
-                _authorize(request, view.snapshot.kind)
-            except Exception:  # noqa: BLE001 - módulo deshabilitado o sin acceso: no se lista
-                continue
-            visible.append(view)
+        allowed = {kind: _can_list(request, kind) for kind in {view.snapshot.kind for view in views}}
+        visible = [view for view in views if allowed[view.snapshot.kind]]
         paginator = ObligationPagination()
         page = paginator.paginate_queryset(visible, request, view=self)
         return paginator.get_paginated_response([summary_data(v) for v in page])

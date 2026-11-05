@@ -1,6 +1,6 @@
 # REV-2026-11-04-cobrar-servicios-anticipos-pagos-parciales-01: La fecha «hoy» del pago usa UTC en vez de la zona horaria configurada
 
-**Status:** Open
+**Status:** Resolved (corregido y verificado con prueba de integración el 2026-11-05)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-04-cobrar-servicios-anticipos-pagos-parciales.md (v1)
