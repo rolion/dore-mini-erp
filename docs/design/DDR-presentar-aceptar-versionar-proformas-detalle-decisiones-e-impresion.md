@@ -1,6 +1,6 @@
 # DDR-presentar-aceptar-versionar-proformas-detalle-decisiones-e-impresion: Detalle de proforma con decisiones por línea, historial e impresión
 
-**Estado:** Propuesto
+**Estado:** Propuesto — **reemplazado parcialmente por** `DDR-simplificar-flujo-proforma-cobro-flujo-y-pantallas` (diálogo de decisión y diálogo de cobro)
 **Task relacionado:** TASK-presentar-aceptar-versionar-proformas
 **Fecha:** 2026-11-04
 
