@@ -404,6 +404,10 @@
   },
   "DENTISTRY": {
     "PROFORMAS": {
+      "COL_ACEPTADO": "Aceito",
+      "COL_COBRADO": "Cobrado",
+      "COL_SALDO": "Saldo",
+      "ERR_COBROS": "Não foi possível carregar o estado de cobrança; as proformas são exibidas sem esses valores.",
       "COBRAR": "Cobrar",
       "VER_COBROS": "Ver cobranças do paciente",
       "TITULO": "Proformas",

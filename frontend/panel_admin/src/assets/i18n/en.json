@@ -404,6 +404,10 @@
   },
   "DENTISTRY": {
     "PROFORMAS": {
+      "COL_ACEPTADO": "Accepted",
+      "COL_COBRADO": "Collected",
+      "COL_SALDO": "Balance",
+      "ERR_COBROS": "The collection status could not be loaded; proformas are shown without those amounts.",
       "COBRAR": "Collect",
       "VER_COBROS": "View patient collections",
       "TITULO": "Proformas",

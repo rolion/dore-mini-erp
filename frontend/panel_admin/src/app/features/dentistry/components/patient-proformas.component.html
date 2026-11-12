@@ -10,6 +10,10 @@
       </div>
     </div>
     <div class="card-body">
+      @if (receipt; as r) {
+        <p class="alert alert-success" role="status">{{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
+      }
+      @if (collectionsError) { <p class="small text-muted" role="status">{{ 'DENTISTRY.PROFORMAS.ERR_COBROS' | translate }}</p> }
       @if (!active) { <p class="alert alert-warning" role="status">{{ 'DENTISTRY.PROFORMAS.ARCHIVADO' | translate }}</p> }
       @if (loading) { <p role="status">{{ 'DENTISTRY.PROFORMAS.CARGANDO' | translate }}</p> }
       @if (error) {
@@ -22,7 +26,13 @@
           <table class="table table-striped align-middle mb-2">
             <thead><tr>
               <th>{{ 'DENTISTRY.PROFORMAS.COL_NUMERO' | translate }}</th><th>{{ 'DENTISTRY.PROFORMAS.COL_FECHA' | translate }}</th>
-              <th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_TOTAL' | translate }}</th><th>{{ 'DENTISTRY.PROFORMAS.COL_ESTADO' | translate }}</th>
+              <th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_TOTAL' | translate }}</th>
+              @if (receivablesEnabled) {
+                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_ACEPTADO' | translate }}</th>
+                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_COBRADO' | translate }}</th>
+                <th class="text-end">{{ 'DENTISTRY.PROFORMAS.COL_SALDO' | translate }}</th>
+              }
+              <th>{{ 'DENTISTRY.PROFORMAS.COL_ESTADO' | translate }}</th>
               <th>{{ 'DENTISTRY.PROFORMAS.COL_ACCIONES' | translate }}</th>
             </tr></thead>
             <tbody>
@@ -31,8 +41,19 @@
                   <td><a [routerLink]="['/pocketbiz/dentistry/proformas', row.id]"><strong>{{ row.number }}</strong></a> · v{{ row.version }}</td>
                   <td>{{ row.date | date: 'dd/MM/yyyy' }}</td>
                   <td class="text-end">{{ row.total | money }}</td>
+                  @if (receivablesEnabled) {
+                    @let c = collection(row);
+                    <td class="text-end">{{ c ? (row.accepted_total | money) : '—' }}</td>
+                    <td class="text-end">{{ c ? (c.paid | money) : '—' }}</td>
+                    <td class="text-end">{{ c ? (c.balance | money) : '—' }}</td>
+                  }
                   <td><span class="badge" [class]="classes[row.status]">{{ statusLabel(row.status) }}</span></td>
-                  <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', row.id]">{{ 'DENTISTRY.PROFORMAS.VER_DETALLE' | translate }}</a></td>
+                  <td class="text-nowrap">
+                    @if (canCollect(row)) {
+                      <button type="button" class="btn btn-sm btn-success me-1" (click)="collect(row, $event.currentTarget)">{{ 'DENTISTRY.PROFORMAS.COBRAR' | translate }}</button>
+                    }
+                    <a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', row.id]">{{ 'DENTISTRY.PROFORMAS.VER_DETALLE' | translate }}</a>
+                  </td>
                 </tr>
               }
             </tbody>
@@ -48,5 +69,6 @@
         </div>
       }
     </div>
+    <app-payment-dialog kind="dental" [number]="payNumber" (paid)="onPaid($event)" />
   </section>
 }
