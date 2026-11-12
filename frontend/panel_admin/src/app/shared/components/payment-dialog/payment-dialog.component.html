@@ -1,0 +1,79 @@
+<dialog #dlg aria-labelledby="pay-title" (cancel)="$event.preventDefault(); close()">
+  <form class="p-3 payment-dialog" [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+    <h4 id="pay-title">{{ 'RECEIVABLES.DLG_TITULO' | translate }} · {{ number() }}</h4>
+
+    @if (loading && !commitment) { <p role="status">{{ 'RECEIVABLES.CARGANDO' | translate }}</p> }
+    @if (loadError) {
+      <p class="alert alert-danger" role="alert">{{ loadError }}</p>
+      <button type="button" class="btn btn-light" (click)="close()">{{ 'RECEIVABLES.CANCELAR' | translate }}</button>
+    }
+
+    @if (commitment) {
+      <p class="mb-2"><small class="text-muted">{{ 'RECEIVABLES.SALDO_POR_COBRAR' | translate }}</small><br>
+        <strong class="fs-4">{{ commitment.totals.balance | money }}</strong></p>
+
+      @if (failure) { <p class="alert alert-danger" role="alert">{{ failure.message }}</p> }
+
+      <div class="mb-2">
+        <label for="pay-amount" class="form-label">{{ 'RECEIVABLES.MONTO' | translate }}</label>
+        <input #amountInput id="pay-amount" class="form-control" inputmode="decimal" formControlName="amount"
+               [class.is-invalid]="failure?.fields?.['amount']" autocomplete="off">
+        <div class="d-flex flex-wrap gap-2 mt-2" role="group" [attr.aria-label]="'RECEIVABLES.ATAJOS' | translate">
+          <button type="button" class="btn btn-sm btn-outline-primary" [class.active]="shortcut === 'total'"
+                  [attr.aria-pressed]="shortcut === 'total'" (click)="setShortcut('total')">
+            {{ 'RECEIVABLES.ATAJO_TOTAL' | translate: { amount: balanceText } }}</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" [class.active]="shortcut === 'half'"
+                  [attr.aria-pressed]="shortcut === 'half'" (click)="setShortcut('half')">{{ 'RECEIVABLES.ATAJO_MITAD' | translate }}</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" [class.active]="shortcut === 'other'"
+                  [attr.aria-pressed]="shortcut === 'other'" (click)="setShortcut('other')">{{ 'RECEIVABLES.ATAJO_OTRO' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="row g-2 mb-2">
+        <div class="col-md-4"><label for="pay-date" class="form-label">{{ 'RECEIVABLES.FECHA_PAGO' | translate }}</label>
+          <input id="pay-date" type="date" class="form-control" [max]="today" formControlName="payment_date"></div>
+        <div class="col-md-4"><label for="pay-method" class="form-label">{{ 'RECEIVABLES.METODO' | translate }}</label>
+          <select id="pay-method" class="form-select" formControlName="payment_method">
+            @for (method of methods; track method) { <option [value]="method">{{ methodLabel(method) }}</option> }
+          </select></div>
+        <div class="col-md-4"><label for="pay-ref" class="form-label">{{ 'RECEIVABLES.REFERENCIA' | translate }}</label>
+          <input id="pay-ref" class="form-control" [maxlength]="referenceMax" formControlName="reference" autocomplete="off"></div>
+      </div>
+
+      @if (!manual) {
+        <p class="mb-1"><strong>{{ 'RECEIVABLES.SE_APLICARA' | translate }}</strong></p>
+        @if (appliedRows.length) {
+          <ul class="mb-2">@for (row of appliedRows; track row.description) { <li>{{ row.description }}: {{ row.amount | money }}</li> }</ul>
+        } @else {
+          <p class="text-muted mb-2">—</p>
+        }
+      } @else {
+        <div class="table-responsive">
+          <table class="table align-middle" formArrayName="allocations">
+            <thead><tr><th>{{ 'RECEIVABLES.COL_TRATAMIENTO' | translate }}</th><th class="text-end">{{ 'RECEIVABLES.COL_SALDO' | translate }}</th><th>{{ 'RECEIVABLES.COL_IMPUTAR' | translate }}</th></tr></thead>
+            <tbody>
+              @for (line of payableLines; track line.line_id; let i = $index) {
+                <tr [formGroupName]="i">
+                  <td>{{ line.description }}@if (line.piece) { <small class="text-muted"> · {{ line.piece }}</small> }</td>
+                  <td class="text-end">{{ line.balance | money }}</td>
+                  <td><input class="form-control" inputmode="decimal" formControlName="amount" autocomplete="off"
+                             [attr.aria-label]="('RECEIVABLES.IMPUTAR_A' | translate) + ' ' + line.description"></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <button type="button" class="btn btn-sm btn-light mb-2" (click)="toggleManual()" [attr.aria-expanded]="manual">
+        {{ (manual ? 'RECEIVABLES.REPARTO_AUTO' : 'RECEIVABLES.DISTRIBUIR') | translate }}</button>
+
+      @if (form.controls.amount.value && validationError) { <p class="text-danger" role="alert">{{ validationError }}</p> }
+
+      <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary" [disabled]="!canConfirm">
+          {{ (saving ? 'RECEIVABLES.GUARDANDO' : 'RECEIVABLES.CONFIRMAR') | translate }}</button>
+        <button type="button" class="btn btn-light" [disabled]="saving" (click)="close()">{{ 'RECEIVABLES.CANCELAR' | translate }}</button>
+      </div>
+    }
+  </form>
+</dialog>

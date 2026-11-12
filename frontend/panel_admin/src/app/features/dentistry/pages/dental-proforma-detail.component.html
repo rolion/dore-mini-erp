@@ -21,8 +21,8 @@
             @if (can('edit')) {
               <a class="btn btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/proformas', p.id, 'editar']">{{ 'DENTISTRY.PROFORMAS.EDITAR' | translate }}</a>
             }
-            @if (p.collectible) {
-              <a class="btn btn-success" [routerLink]="['/pocketbiz/receivables/dental', p.number]">{{ 'DENTISTRY.PROFORMAS.COBRAR' | translate }}</a>
+            @if (collection.canCollect()) {
+              <button type="button" class="btn btn-success" (click)="collection.open($event.currentTarget)">{{ 'DENTISTRY.PROFORMAS.COBRAR' | translate }}</button>
             }
             @if (can('present')) {
               <button type="button" class="btn btn-primary" (click)="open(dlg)">{{ 'DENTISTRY.PROFORMAS.PRESENTAR' | translate }}</button>
@@ -37,6 +37,7 @@
           @if (p.status === 'superseded') {
             <p class="alert alert-info" role="status">{{ 'PROFORMA_DECISIONS.VERSION_ANTERIOR' | translate }}</p>
           }
+          <app-collection-panel #collection kind="dental" [number]="p.number" [status]="p.status" [acceptedTotal]="p.accepted_total" (paid)="reload()" />
           <dl class="row">
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.PACIENTE' | translate }}</dt><dd class="col-sm-9">{{ p.patient_name }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
@@ -48,7 +49,8 @@
           <app-proforma-decisions
             base="dentistry/proformas" [proformaId]="p.id" [status]="p.status" [lines]="lineViews()" [totals]="p.totals"
             [acceptanceStatus]="p.acceptance_status" [actions]="p.decision_actions" [history]="p.decision_history"
-            [pieceLabelKey]="'DENTISTRY.PROFORMAS.PIEZA_COL'" (changed)="reload()" />
+            [pieceLabelKey]="'DENTISTRY.PROFORMAS.PIEZA_COL'" (changed)="reload()"
+            [defaultAcceptor]="acceptor" [collection]="collection.state()" [collectible]="collection.canCollect()" (collect)="collection.open()" />
 
           <h5 class="mt-4">{{ 'DENTISTRY.PROFORMAS.VERSIONES' | translate }}</h5>
           <div class="table-responsive">

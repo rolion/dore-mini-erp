@@ -1,0 +1,25 @@
+dialog {
+  box-sizing: border-box;
+  inline-size: min(36rem, calc(100% - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  margin: auto;
+  overflow: auto;
+  border: 1px solid var(--bs-border-color, currentcolor);
+}
+
+:host-context(.dark) {
+  dialog {
+    background-color: #16192a; // mismo valor que $color-dark-primary de skins/_dark.scss
+    color: #96a2b4; // mismo valor que $color-font de skins/_dark.scss
+    border-color: #96a2b4;
+
+    &::backdrop {
+      background-color: rgb(0 0 0 / 60%);
+    }
+
+    // `text-muted` conserva el color del tema claro (3.89:1 sobre este fondo): se hereda el del diálogo (REV-04)
+    .text-muted {
+      color: inherit !important;
+    }
+  }
+}

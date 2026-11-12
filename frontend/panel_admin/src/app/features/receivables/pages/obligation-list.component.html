@@ -55,7 +55,7 @@
                     <td class="text-end">{{ row.paid | money }}</td>
                     <td class="text-end">{{ row.balance | money }}</td>
                     <td>{{ (row.last_payment_date | date: 'dd/MM/yyyy') || '—' }}</td>
-                    <td><span class="badge" [class]="classes[row.payment_status]">{{ statusLabel(row.payment_status) }}</span></td>
+                    <td><app-status-badge [tone]="tones[row.payment_status]" [label]="statusLabel(row.payment_status)" /></td>
                     <td><a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/receivables', row.kind, row.number]">{{ 'RECEIVABLES.VER_DETALLE' | translate }}</a></td>
                   </tr>
                 }

@@ -35,8 +35,8 @@ describe('ProformaDecisionsComponent', () => {
     const text = create().textContent ?? '';
     expect(text).toContain('Total propuesto');
     expect(text).toContain('Total aceptado');
-    expect(text).toContain('Pendiente de decisión');
-    expect(text).toContain('Pendiente');
+    expect(text).toContain('Sin decidir');
+    expect(text).not.toContain('El saldo de cobro no se calcula aquí');
   });
 
   it('only offers selection and actions when the server allows deciding on a presented proforma', () => {
@@ -54,9 +54,7 @@ describe('ProformaDecisionsComponent', () => {
     const dialog = root.querySelector('dialog') as HTMLDialogElement;
     component.openDecision('accepted', dialog);
     component.form.patchValue({ accepted_by_name: 'Rosa Pérez', medium: 'in_person' });
-    component.next();
-    expect(component.step()).toBe(2);
-    component.confirm(dialog);
+    component.submit(dialog); // un solo paso: valida y confirma
     const first = http.expectOne(r => r.url.endsWith('/quotations/proformas/p1/decisions/'));
     expect(first.request.body.line_ids).toEqual(['l1']);
     const key = first.request.body.idempotency_key as string;
@@ -101,5 +99,87 @@ describe('ProformaDecisionsComponent', () => {
     const locked = create({ status: 'draft', actions: [], lines: [{ ...LINES[0], decision: 'accepted', origin_line_id: 'o1', line_kind: 'carried' }] });
     expect(locked.textContent).toContain('Bloqueada');
     expect(locked.textContent).not.toContain('Imprimir');
+  });
+
+  it('«Aceptar todo» elige todas las líneas sin decidir y abre un diálogo de un solo paso (AC-01, AC-02)', () => {
+    const root = create({ defaultAcceptor: 'Rodrigo León' });
+    const component = fixture.componentInstance;
+    const dialog = root.querySelector('dialog') as HTMLDialogElement;
+    component.acceptAll(dialog);
+    fixture.detectChanges();
+    expect(component.chosen().map(l => l.id)).toEqual(['l1', 'l2']);
+    expect(component.mode()).toBe('accepted');
+    expect(dialog.querySelector('#pd-reason')).toBeNull(); // el motivo solo se pide al rechazar o rectificar
+    expect(dialog.querySelector('details #pd-ref')).not.toBeNull(); // referencia plegada bajo «Más datos»
+    expect(dialog.textContent).toContain('Bs 300.00');
+    component.form.patchValue({ medium: 'in_person' });
+    component.submit(dialog);
+    const request = http.expectOne(r => r.url.endsWith('/decisions/'));
+    expect(request.request.body.line_ids).toEqual(['l1', 'l2']);
+    request.flush({});
+  });
+
+  it('precarga quién acepta con el valor por defecto y sigue siendo obligatorio y editable (AC-03)', () => {
+    const root = create({ defaultAcceptor: 'Rodrigo León' });
+    const component = fixture.componentInstance;
+    const dialog = root.querySelector('dialog') as HTMLDialogElement;
+    component.acceptAll(dialog);
+    expect(component.form.controls.accepted_by_name.value).toBe('Rodrigo León');
+    component.form.patchValue({ accepted_by_name: '', medium: 'in_person' });
+    component.submit(dialog);
+    expect(component.fieldErrors()['accepted_by_name']).toBeTruthy();
+    component.form.patchValue({ accepted_by_name: 'Otra persona' });
+    component.submit(dialog);
+    const request = http.expectOne(r => r.url.endsWith('/decisions/'));
+    expect(request.request.body.accepted_by_name).toBe('Otra persona');
+    request.flush({});
+  });
+
+  it('el motivo solo aparece al rechazar', () => {
+    const root = create();
+    const component = fixture.componentInstance;
+    const dialog = root.querySelector('dialog') as HTMLDialogElement;
+    component.toggleAll(true);
+    component.openDecision('rejected', dialog);
+    fixture.detectChanges();
+    expect(dialog.querySelector('#pd-reason')).not.toBeNull();
+    expect(dialog.querySelector('#pd-name')).toBeNull();
+  });
+
+  it('tras aceptar ofrece «Cobrar ahora» con el saldo si hay cobro posible, y «Más tarde» lo oculta (AC-04)', () => {
+    const root = create({ collectible: true, collection: { paid: '0.00', balance: '300.00' } });
+    const component = fixture.componentInstance;
+    const dialog = root.querySelector('dialog') as HTMLDialogElement;
+    component.acceptAll(dialog);
+    component.form.patchValue({ medium: 'in_person', accepted_by_name: 'Rosa' });
+    component.submit(dialog);
+    http.expectOne(r => r.url.endsWith('/decisions/')).flush({});
+    fixture.detectChanges();
+    const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('.alert-success button'));
+    expect(buttons.map(b => b.textContent?.trim())).toEqual(['Cobrar ahora (Bs 300.00)', 'Más tarde']);
+    let collected = 0;
+    component.collect.subscribe(() => collected++);
+    buttons[0].click();
+    expect(collected).toBe(1);
+    buttons[1].click();
+    fixture.detectChanges();
+    expect(root.querySelectorAll('.alert-success button').length).toBe(0);
+  });
+
+  it('no ofrece «Cobrar ahora» si no es cobrable o tras rechazar; muestra Cobrado y Saldo solo con Cobros', () => {
+    const root = create({ collectible: false });
+    const component = fixture.componentInstance;
+    const dialog = root.querySelector('dialog') as HTMLDialogElement;
+    component.acceptAll(dialog);
+    component.form.patchValue({ medium: 'in_person', accepted_by_name: 'Rosa' });
+    component.submit(dialog);
+    http.expectOne(r => r.url.endsWith('/decisions/')).flush({});
+    fixture.detectChanges();
+    expect(root.querySelectorAll('.alert-success button').length).toBe(0);
+    expect(root.textContent).not.toContain('Saldo por cobrar');
+    fixture.componentRef.setInput('collection', { paid: '100.00', balance: '200.00' });
+    fixture.detectChanges();
+    expect(root.textContent).toContain('Saldo por cobrar');
+    expect(root.textContent).toContain('Bs 200.00');
   });
 });

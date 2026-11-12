@@ -63,6 +63,8 @@ Contraste: `#1677FF` sobre blanco da ≈3,9:1. Úsalo en botones con texto blanc
 | Paginación | modelo `Page` | `shared/models/page.ts` |
 | Botones de acción en tabla | clases `btn btn-tbl-edit btn-tbl-view\|update\|toggle h-auto` | `shared/styles/_table-actions.scss` |
 | Estado de pedido / de pago | `app-order-status-badge`, `app-payment-status-badge` | `features/sales/components/` |
+| Estado con icono + fondo tintado (decisión de proforma, aceptación, cobro) | `app-status-badge` (`tone`: `success\|warning\|danger\|info\|muted`, `label`) | `shared/components/status-badge` (nuevo en TASK-simplificar-flujo-proforma-cobro) |
+| Cobro de una proforma en un solo paso | `app-payment-dialog` (`kind`, `number`; `open()`; salida `paid`) y `app-collection-panel` (cobro en contexto de una proforma: estado, diálogo y comprobante) | `shared/components/payment-dialog`, `shared/components/collection-panel` |
 | Tabla | `ngx-datatable` con clase `material`, paginación externa | plantilla |
 | Selector con búsqueda | `ng-select` | plantilla |
 
@@ -81,6 +83,8 @@ Formato único: `<div class="badge-outline col-<color>">Texto</div>`.
 | Listo | `col-indigo` |
 | Pago parcial | `col-cyan` |
 | Reembolsado | `col-purple` |
+
+**`app-status-badge`** (clases Bootstrap 5.3 `bg-*-subtle text-*-emphasis`, sin HEX): muestra siempre icono + texto, con pares de color de contraste AA en tema claro y oscuro. Lo usan las decisiones de proforma (Sin decidir / Aceptada / Rechazada), la aceptación de la proforma y el estado de cobro (Por cobrar / Parcial / Pagado). El resto de pantallas conserva `badge-outline col-*` y migra a este componente cuando se toque.
 
 ### Botones
 
@@ -175,6 +179,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - **Pestaña con resumen y alta por diálogo** (referencia: `features/purchases/components/purchase-payments-tab`): una pestaña de documentos hijos puede abrir el alta en un `NgbModal` (`backdrop: 'static'`) en lugar de una pantalla; el diálogo hace él mismo la llamada, muestra el dato de contexto que limita el alta (p. ej. el saldo), conserva lo escrito y no se cierra ante un error del servidor, y reutiliza una clave de idempotencia generada al abrir. Al terminar, la pestaña se recarga y el detalle relee el documento (las acciones salen de `allowed_actions`).
 
 ### Detalle con selección de líneas y registro de decisión (referencia: `features/quotations/pages/proforma-detail`, `features/dentistry/pages/dental-proforma-detail`)
+- **Actualización (TASK-simplificar-flujo-proforma-cobro):** «Aceptar todo» abre el diálogo con todas las líneas sin decidir; el diálogo de decisión es de **un solo paso** (frase de resumen + lista + campos + un «Confirmar» con el aviso de irreversibilidad), con *quién acepta* precargado (responsable si el paciente es menor), *Referencia/evidencia* plegada en «Más datos» y *Motivo* solo al rechazar o rectificar. Tras aceptar, si hay saldo y Cobros está habilitado, el mensaje de éxito ofrece **«Cobrar ahora (Bs X)»** / «Más tarde». El `dl` de totales añade **Cobrado** y **Saldo por cobrar** (con Cobros habilitado). Cobro: `app-payment-dialog` (saldo, atajos Total / 50 % / Otro, reparto automático en orden con «Se aplicará a…», «Distribuir por tratamiento» plegado, una confirmación). Ficha del paciente: columnas Aceptado · Cobrado · Saldo y «Cobrar» por fila.
 - Plantilla Detalle con tabla de líneas que ofrece casillas (solo para líneas pendientes y si el servidor permite la acción, con `aria-label` por fila) y una columna **Decisión** con badge de texto (Pendiente gris, Aceptada verde, Rechazada rojo) y fecha. Los importes propuesto, aceptado y pendiente se muestran separados en un `dl`, nunca mezclados con el saldo financiero.
 - «Registrar decisión» abre un `NgbModal` (`backdrop: 'static'`) en dos pasos: datos (aceptan/rechazan, nombre, medio, referencia, motivo) y **resumen** con exactamente las líneas elegidas y su importe; la clave de idempotencia se genera al abrir y se reutiliza en cada reintento. Rectificar usa el diálogo de acción irreversible con motivo. Componentes compartidos en `shared/components/proforma-decisions/` (`decision-dialog`, `rectify-dialog`, `decision-history`).
 - Historial embebido (tabla apilada, 10 por página) y versiones anteriores en solo lectura con `alert alert-info`. Vista imprimible (`…/imprimir`) sin menú, con `@media print` y solo los campos que el servidor declara comerciales.

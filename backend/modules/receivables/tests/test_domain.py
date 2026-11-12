@@ -121,3 +121,13 @@ class ObligationDomainTests(SimpleTestCase):
         self.assertEqual(snap2.lines[0].lineage_id, first_line)
         statement = obligation.statement(snap2)
         self.assertEqual((statement.paid, statement.balance), (D('40.00'), D('60.00')))
+
+
+class ProformaIdTests(SimpleTestCase):
+    def test_snapshot_carries_the_id_of_the_current_version(self):  # AC-10 / API-01
+        common = dict(number='PRO-000001', customer_id=uuid4(), customer_name='Rosa', date=TODAY, lines=())
+        v1_id, v2_id = uuid4(), uuid4()
+        versions = [VersionData(version=1, status='superseded', proforma_id=v1_id, **common),
+                    VersionData(version=2, status='presented', proforma_id=v2_id, **common),
+                    VersionData(version=3, status='draft', proforma_id=uuid4(), **common)]
+        self.assertEqual(build_snapshots('quotation', versions)['PRO-000001'].proforma_id, v2_id)
