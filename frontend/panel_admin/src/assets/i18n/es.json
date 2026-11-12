@@ -2486,7 +2486,7 @@
     "TRATAMIENTOS": "Tratamientos",
     "SIN_LINEAS": "La proforma no tiene tratamientos.",
     "COL_DECISION": "Decisión",
-    "DECISION_PENDING": "Pendiente",
+    "DECISION_PENDING": "Sin decidir",
     "DECISION_ACCEPTED": "Aceptado",
     "DECISION_REJECTED": "Rechazado",
     "PAGOS": "Pagos registrados",

@@ -6,16 +6,17 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import { tr } from '../../../core/i18n/translate';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import {
-  ObligationSummary, PAYMENT_STATUSES, PaymentStatus, STATUS_CLASSES, statusLabel,
+  ObligationSummary, PAYMENT_STATUSES, PAYMENT_TONES, PaymentStatus, statusLabel,
 } from '../../../shared/models/receivable';
 import { ReceivablesApiService } from '../../../shared/services/receivables-api.service';
 
 /** Cobros: lista de obligaciones con filtros (plantilla «Lista de solo lectura con filtros»). */
 @Component({
   selector: 'app-obligation-list',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, TranslatePipe, StatusBadgeComponent],
   templateUrl: './obligation-list.component.html',
 })
 export class ObligationListComponent implements OnInit {
@@ -27,7 +28,7 @@ export class ObligationListComponent implements OnInit {
 
   readonly statuses = PAYMENT_STATUSES;
   readonly statusLabel = statusLabel;
-  readonly classes = STATUS_CLASSES;
+  readonly tones = PAYMENT_TONES;
   readonly filters = this.fb.group({ customer_id: '', date_from: '', date_to: '', status: '' });
 
   rows: ObligationSummary[] = [];

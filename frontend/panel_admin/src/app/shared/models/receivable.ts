@@ -1,4 +1,5 @@
 import { tr } from '../../core/i18n/translate';
+import type { StatusTone } from '../components/status-badge/status-badge.component';
 
 export type SourceKind = 'quotation' | 'dental';
 export type PaymentStatus = 'pending' | 'partial' | 'paid';
@@ -13,6 +14,13 @@ export const STATUS_CLASSES: Record<PaymentStatus, string> = {
   pending: 'col-orange',
   partial: 'col-blue',
   paid: 'col-green',
+};
+
+/** Tono de `app-status-badge` por estado de cobro (icono + fondo tintado + texto). */
+export const PAYMENT_TONES: Record<PaymentStatus, StatusTone> = {
+  pending: 'warning',
+  partial: 'info',
+  paid: 'success',
 };
 
 /** Se evalúan al usarlas (no en constantes de módulo): el catálogo de traducciones se carga al arrancar. */

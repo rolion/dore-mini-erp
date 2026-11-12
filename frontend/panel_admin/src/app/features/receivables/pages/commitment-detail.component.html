@@ -13,17 +13,20 @@
     }
     @if (receipt; as r) {
       <p class="alert alert-success" role="status">
-        {{ 'RECEIVABLES.EXITO' | translate: { receipt: r.receipt_number, amount: (r.amount | money) } }}</p>
+        {{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
     }
     @if (commitment; as c) {
       <div class="card">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
           <h2><strong>{{ c.number }}</strong> · v{{ c.version }}
-            <span class="badge ms-2" [class]="classes[c.payment_status]">{{ statusLabel(c.payment_status) }}</span></h2>
+            <span class="ms-2"><app-status-badge [tone]="tones[c.payment_status]" [label]="statusLabel(c.payment_status)" /></span></h2>
           <div class="d-flex gap-2">
-            <a class="btn btn-light" [routerLink]="originLink" [queryParams]="originQuery">{{ 'RECEIVABLES.IR_ORIGEN' | translate }}</a>
-            @if (canPay && step === 'closed') {
-              <button type="button" class="btn btn-primary" (click)="open()">{{ 'RECEIVABLES.REGISTRAR_PAGO' | translate }}</button>
+            @if (patientLink; as link) {
+              <a class="btn btn-light" [routerLink]="link">{{ 'RECEIVABLES.VOLVER_PACIENTE' | translate }}</a>
+            }
+            <a class="btn btn-light" [routerLink]="proformaLink">{{ 'RECEIVABLES.VOLVER_PROFORMA' | translate }}</a>
+            @if (canPay) {
+              <button type="button" class="btn btn-primary" (click)="openPayment($event.currentTarget)">{{ 'RECEIVABLES.REGISTRAR_PAGO' | translate }}</button>
             }
           </div>
         </div>
@@ -32,7 +35,7 @@
             <p class="alert alert-info" role="status">{{ 'RECEIVABLES.NO_VIGENTE' | translate }}</p>
           }
           <dl class="row">
-            <dt class="col-sm-3">{{ 'RECEIVABLES.CLIENTE' | translate }}</dt><dd class="col-sm-9">{{ c.customer_name }}</dd>
+            <dt class="col-sm-3">{{ (c.kind === 'dental' ? 'RECEIVABLES.PACIENTE' : 'RECEIVABLES.CLIENTE') | translate }}</dt><dd class="col-sm-9">{{ c.customer_name }}</dd>
             <dt class="col-sm-3">{{ 'RECEIVABLES.FECHA' | translate }}</dt><dd class="col-sm-9">{{ c.date | date: 'dd/MM/yyyy' }}</dd>
           </dl>
 
@@ -42,70 +45,6 @@
             <div class="col-6 col-md-3"><small class="text-muted">{{ 'RECEIVABLES.COBRADO' | translate }}</small><h4>{{ c.totals.paid | money }}</h4></div>
             <div class="col-6 col-md-3"><small class="text-muted">{{ 'RECEIVABLES.SALDO' | translate }}</small><h4>{{ c.totals.balance | money }}</h4></div>
           </div>
-
-          @if (step !== 'closed') {
-            <div class="card border mb-4">
-              <div class="card-body">
-                <h5>{{ (step === 'form' ? 'RECEIVABLES.FORM_TITULO' : 'RECEIVABLES.RESUMEN_TITULO') | translate }}</h5>
-                @if (failure) { <p class="alert alert-danger" role="alert">{{ failure.message }}</p> }
-                @if (step === 'form') {
-                  <form [formGroup]="form" (ngSubmit)="review()" novalidate>
-                    <div class="row g-2">
-                      <div class="col-md-3"><label for="p-amount">{{ 'RECEIVABLES.MONTO' | translate }}</label>
-                        <input id="p-amount" class="form-control" inputmode="decimal" formControlName="amount"
-                               [class.is-invalid]="failure?.fields?.['amount']"></div>
-                      <div class="col-md-3"><label for="p-date">{{ 'RECEIVABLES.FECHA_PAGO' | translate }}</label>
-                        <input id="p-date" type="date" class="form-control" [max]="today" formControlName="payment_date"></div>
-                      <div class="col-md-3"><label for="p-method">{{ 'RECEIVABLES.METODO' | translate }}</label>
-                        <select id="p-method" class="form-select" formControlName="payment_method">
-                          @for (method of methods; track method) { <option [value]="method">{{ methodLabel(method) }}</option> }
-                        </select></div>
-                      <div class="col-md-3"><label for="p-ref">{{ 'RECEIVABLES.REFERENCIA' | translate }}</label>
-                        <input id="p-ref" class="form-control" [maxlength]="referenceMax" formControlName="reference"></div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                      <h6 class="mb-0">{{ 'RECEIVABLES.DISTRIBUCION' | translate }}</h6>
-                      <button type="button" class="btn btn-sm btn-outline-primary" (click)="distributeInOrder()" [disabled]="!amountCents">{{ 'RECEIVABLES.REPARTIR' | translate }}</button>
-                    </div>
-                    <div class="table-responsive">
-                      <table class="table align-middle" formArrayName="allocations">
-                        <thead><tr><th>{{ 'RECEIVABLES.COL_TRATAMIENTO' | translate }}</th><th class="text-end">{{ 'RECEIVABLES.COL_SALDO' | translate }}</th><th>{{ 'RECEIVABLES.COL_IMPUTAR' | translate }}</th></tr></thead>
-                        <tbody>
-                          @for (line of payableLines; track line.line_id; let i = $index) {
-                            <tr [formGroupName]="i">
-                              <td>{{ line.description }}@if (line.piece) { <small class="text-muted"> · {{ line.piece }}</small> }</td>
-                              <td class="text-end">{{ line.balance | money }}</td>
-                              <td><input class="form-control" inputmode="decimal" formControlName="amount" [attr.aria-label]="('RECEIVABLES.IMPUTAR_A' | translate) + ' ' + line.description"></td>
-                            </tr>
-                          }
-                        </tbody>
-                      </table>
-                    </div>
-                    @if (form.touched && distributionError) { <p class="text-danger" role="alert">{{ distributionError }}</p> }
-                    <div class="d-flex gap-2">
-                      <button type="submit" class="btn btn-primary">{{ 'RECEIVABLES.REVISAR' | translate }}</button>
-                      <button type="button" class="btn btn-light" (click)="cancel()">{{ 'RECEIVABLES.CANCELAR' | translate }}</button>
-                    </div>
-                  </form>
-                } @else {
-                  <dl class="row">
-                    <dt class="col-sm-3">{{ 'RECEIVABLES.MONTO' | translate }}</dt><dd class="col-sm-9"><strong>{{ form.controls.amount.value | money }}</strong></dd>
-                    <dt class="col-sm-3">{{ 'RECEIVABLES.FECHA_PAGO' | translate }}</dt><dd class="col-sm-9">{{ form.controls.payment_date.value | date: 'dd/MM/yyyy' }}</dd>
-                    <dt class="col-sm-3">{{ 'RECEIVABLES.METODO' | translate }}</dt><dd class="col-sm-9">{{ methodLabel(form.controls.payment_method.value) }}</dd>
-                    <dt class="col-sm-3">{{ 'RECEIVABLES.REFERENCIA' | translate }}</dt><dd class="col-sm-9">{{ form.controls.reference.value || '—' }}</dd>
-                  </dl>
-                  <ul>
-                    @for (row of summaryRows; track row.description) { <li>{{ row.description }}: {{ row.amount | money }}</li> }
-                  </ul>
-                  <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-primary" [disabled]="saving" (click)="confirm()">
-                      {{ (saving ? 'RECEIVABLES.GUARDANDO' : 'RECEIVABLES.CONFIRMAR') | translate }}</button>
-                    <button type="button" class="btn btn-light" [disabled]="saving" (click)="back()">{{ 'RECEIVABLES.VOLVER' | translate }}</button>
-                  </div>
-                }
-              </div>
-            </div>
-          }
 
           <h5>{{ 'RECEIVABLES.TRATAMIENTOS' | translate }}</h5>
           @if (!c.lines.length) { <p>{{ 'RECEIVABLES.SIN_LINEAS' | translate }}</p> }
@@ -160,6 +99,7 @@
           }
         </div>
       </div>
+      <app-payment-dialog [kind]="c.kind" [number]="c.number" (paid)="onPaid($event)" />
     }
   </div>
 </section>
