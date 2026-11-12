@@ -2393,6 +2393,7 @@
     "P_CONDICIONES": "Condiciones"
   },
   "RECEIVABLES": {
+    "E_MONTO_SUPERA": "El monto supera el saldo por cobrar.",
     "DLG_TITULO": "Registrar cobro",
     "SALDO_POR_COBRAR": "Saldo por cobrar",
     "ATAJOS": "Atajos de monto",

@@ -107,7 +107,7 @@ export class PaymentDialogComponent {
   get validationError(): string {
     const amount = this.amountCents;
     if (amount === null || amount <= 0) return tr('RECEIVABLES.E_AMOUNT');
-    if (amount > this.balanceCents) return tr('RECEIVABLES.E_SUPERA_SALDO');
+    if (amount > this.balanceCents) return tr('RECEIVABLES.E_MONTO_SUPERA');
     if (this.manual) {
       const lines = this.payableLines;
       for (let i = 0; i < lines.length; i++) {
@@ -171,7 +171,7 @@ export class PaymentDialogComponent {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => (this.saving = false)))
       .subscribe({
         next: (result) => {
-          this.close();
+          this.dismiss(); // `saving` sigue en true hasta `finalize`: `close()` no cerraría (REV-01)
           this.paid.emit(result);
         },
         error: (failure: ReceivableFailure) => {
@@ -182,8 +182,12 @@ export class PaymentDialogComponent {
       });
   }
 
+  /** Cancelar: no se puede cerrar mientras se guarda. */
   close(): void {
-    if (this.saving) return;
+    if (!this.saving) this.dismiss();
+  }
+
+  private dismiss(): void {
     this.dialog.nativeElement.close();
     this.opener?.focus();
   }

@@ -13,6 +13,8 @@
 | 2026-11-12 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN, diseño SI; sin decisiones de negocio abiertas | delivery-start |
 | 2026-11-12 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
 | 2026-11-12 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
+| 2026-11-12 | REVIEW → ENGINEERING | Quality Gate FAIL (1.ª ronda): REV-01 High (diálogo de cobro no se cierra tras pagar), REV-02 Medium, REV-03 Low | delivery-publish |
+| 2026-11-12 | ENGINEERING → REVIEW | REV-01..03 corregidos; segunda ronda del Quality Gate | delivery-build |
 
 ## Investigación
 
@@ -93,7 +95,9 @@ No aplica según veredicto (sin ADR).
 **Verificación propia (no es el Quality Gate).** Backend con PostgreSQL: `manage.py test` completo → `Ran 1502 tests ... OK`. Frontend: `ng lint`, `ng build`, `i18n:check` y `ng test` → 1344 correctas y 1 fallo previo e independiente (`screens-i18n.spec.ts`, «Entregue/Entregado»; también falla en `main`).
 
 ## Review
-_Pendiente_
+**Ronda 1 — FAIL.** Hallazgos: [REV-01](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-01.md) High (el diálogo de cobro no se cerraba tras un pago exitoso: `close()` salía por `saving` aún en `true`), [REV-02](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-02.md) Medium (enlace «Distribuir por tratamiento» ilegible en tema oscuro), [REV-03](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-03.md) Low (mensaje de monto mayor al saldo hablaba de «imputación»). Evidencia: backend 1502 pruebas OK; frontend lint/build/i18n OK; `ng test` con el fallo previo de `screens-i18n` y un segundo fallo intermitente no identificado en 1 de 4 ejecuciones.
+**Correcciones:** REV-01 (`dismiss()` cierra sin la guarda de `saving`; la prueba ahora comprueba cierre y foco y falla con el código anterior), REV-02 (botón `btn-light`), REV-03 (mensaje «El monto supera el saldo por cobrar.»).
+**Ronda 2:** pendiente.
 
 ## Publicación
 _Pendiente_

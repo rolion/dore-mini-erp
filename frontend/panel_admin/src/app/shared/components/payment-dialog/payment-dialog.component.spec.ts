@@ -66,12 +66,16 @@ describe('PaymentDialogComponent', () => {
   it('un monto mayor que el saldo no se puede confirmar', () => {
     const { dialog } = create();
     dialog.form.patchValue({ amount: '300.01' });
-    expect(dialog.validationError).not.toBe('');
+    expect(dialog.validationError).toBe('El monto supera el saldo por cobrar.'); // REV-03: no habla de «imputación»
     expect(dialog.canConfirm).toBeFalse();
   });
 
   it('confirma en un solo paso con imputaciones explícitas y una sola petición aunque se pulse dos veces (AC-05, AC-06)', () => {
     const { fixture, dialog } = create();
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    dialog.open(opener);
+    http.expectOne((req) => req.url.endsWith('/commitments/quotation/PRO-000001/')).flush(COMMITMENT);
     dialog.setShortcut('half');
     dialog.confirm();
     dialog.confirm();
@@ -87,6 +91,11 @@ describe('PaymentDialogComponent', () => {
     request.flush(registered);
     fixture.detectChanges();
     expect(fixture.componentInstance.result?.payment.receipt_number).toBe('CB-000001');
+    // REV-01: tras el pago el diálogo se cierra (antes quedaba abierto con datos obsoletos)
+    expect((fixture.nativeElement as HTMLElement).querySelector('dialog')?.open).toBeFalse();
+    expect(dialog.saving).toBeFalse();
+    expect(document.activeElement).toBe(opener); // el foco vuelve al botón que abrió el diálogo
+    opener.remove();
   });
 
   it('distribución manual: la suma debe igualar el monto y envía lo editado', () => {

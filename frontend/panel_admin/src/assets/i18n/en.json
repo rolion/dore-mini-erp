@@ -2393,6 +2393,7 @@
     "P_CONDICIONES": "Terms"
   },
   "RECEIVABLES": {
+    "E_MONTO_SUPERA": "The amount exceeds the balance to collect.",
     "DLG_TITULO": "Record payment",
     "SALDO_POR_COBRAR": "Balance to collect",
     "ATAJOS": "Amount shortcuts",

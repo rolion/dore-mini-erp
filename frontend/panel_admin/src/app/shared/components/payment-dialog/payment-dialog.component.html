@@ -64,7 +64,7 @@
           </table>
         </div>
       }
-      <button type="button" class="btn btn-link p-0 mb-2" (click)="toggleManual()" [attr.aria-expanded]="manual">
+      <button type="button" class="btn btn-sm btn-light mb-2" (click)="toggleManual()" [attr.aria-expanded]="manual">
         {{ (manual ? 'RECEIVABLES.REPARTO_AUTO' : 'RECEIVABLES.DISTRIBUIR') | translate }}</button>
 
       @if (form.controls.amount.value && validationError) { <p class="text-danger" role="alert">{{ validationError }}</p> }
