@@ -61,7 +61,8 @@ def detail_data(view: CommitmentView) -> dict:
     snapshot, obligation, statement = view.snapshot, view.obligation, view.statement
     can_pay = snapshot.collectible and statement.balance > 0
     return {'kind': snapshot.kind, 'number': snapshot.number, 'version': snapshot.version,
-            'status': snapshot.status, 'customer_id': str(snapshot.customer_id),
+            'status': snapshot.status,
+            'proforma_id': str(snapshot.proforma_id) if snapshot.proforma_id else None, 'customer_id': str(snapshot.customer_id),
             'customer_name': snapshot.customer_name, 'date': snapshot.date.isoformat(), 'currency': CURRENCY,
             'payment_status': statement.payment_status, 'totals': totals_data(statement),
             'lines': [{'line_id': str(l.line_id), 'description': l.description, 'piece': l.piece,

@@ -9,8 +9,8 @@ import { tr } from '../../../core/i18n/translate';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import {
   ObligationSummary, PAYMENT_STATUSES, PaymentStatus, STATUS_CLASSES, statusLabel,
-} from '../models/receivable';
-import { ReceivablesApiService } from '../services/receivables-api.service';
+} from '../../../shared/models/receivable';
+import { ReceivablesApiService } from '../../../shared/services/receivables-api.service';
 
 /** Cobros: lista de obligaciones con filtros (plantilla «Lista de solo lectura con filtros»). */
 @Component({

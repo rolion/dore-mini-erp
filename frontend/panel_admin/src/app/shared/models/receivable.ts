@@ -1,4 +1,4 @@
-import { tr } from '../../../core/i18n/translate';
+import { tr } from '../../core/i18n/translate';
 
 export type SourceKind = 'quotation' | 'dental';
 export type PaymentStatus = 'pending' | 'partial' | 'paid';
@@ -85,6 +85,8 @@ export interface Commitment {
   version: number;
   status: string;
   customer_id: string;
+  /** Id de la versión vigente de la proforma (para volver a ella); `null` si el servidor no lo informa. */
+  proforma_id: string | null;
   customer_name: string;
   date: string;
   currency: string;

@@ -85,6 +85,7 @@ class ReceivablesApiTests(TransactionTestCase):
                          ('150.00', '50.00', 'partial'))
         self.assertEqual(len(body['payments']), 2)
         self.assertEqual(ObligationModel.objects.count(), 1)
+        self.assertEqual(self.detail(p['number']).json()['proforma_id'], p['id'])  # AC-10 / API-01
 
     # AC-02
     def test_double_submit_does_not_duplicate_income(self):
@@ -151,6 +152,7 @@ class ReceivablesApiTests(TransactionTestCase):
         self.assertEqual(self.pay(p['number'], [(line_v2, '40.00')]).status_code, 201)
         self.assertEqual(ObligationModel.objects.count(), 1)
         self.assertEqual(self.detail(p['number']).json()['totals']['paid'], '100.00')
+        self.assertEqual(self.detail(p['number']).json()['proforma_id'], v2['id'])  # sigue la versión vigente
 
     # AC-06
     def test_line_with_payments_cannot_be_rectified_to_rejected(self):
@@ -214,6 +216,7 @@ class ReceivablesApiTests(TransactionTestCase):
         self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(response.json()['totals']['balance'], '70.00')
         self.assertEqual(response.json()['lines'][0]['piece'], '18')
+        self.assertEqual(response.json()['proforma_id'], p['id'])
         blocked = self.client.post(f"{DENTAL}proformas/{p['id']}/lines/{p['lines'][0]['id']}/rectify/", {
             'idempotency_key': str(uuid4()), 'decision': 'rejected', 'reason': 'x'}, format='json')
         self.assertEqual(blocked.status_code, 409, blocked.content)

@@ -10,8 +10,8 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import {
   CollectionPayment, Commitment, CommitmentLine, PAYMENT_METHODS, PaymentMethod, REFERENCE_MAX_LENGTH,
   ReceivableFailure, SourceKind, STATUS_CLASSES, fromCents, localToday, methodLabel, statusLabel, toCents,
-} from '../models/receivable';
-import { ReceivablesApiService } from '../services/receivables-api.service';
+} from '../../../shared/models/receivable';
+import { ReceivablesApiService } from '../../../shared/services/receivables-api.service';
 
 type Step = 'closed' | 'form' | 'summary';
 

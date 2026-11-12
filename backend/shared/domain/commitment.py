@@ -32,6 +32,7 @@ class CommitmentSnapshot:
     customer_name: str
     date: date
     lines: tuple[CommitmentLine, ...]
+    proforma_id: UUID | None = None  # id de la versión vigente de la proforma (para volver a ella)
 
     @property
     def collectible(self) -> bool:
@@ -51,6 +52,7 @@ class VersionData:
     customer_name: str
     date: date
     lines: tuple[tuple[UUID, UUID | None, str, str, Decimal, str, bool], ...]
+    proforma_id: UUID | None = None
 
 
 def build_snapshots(kind: str, versions: list[VersionData]) -> dict[str, CommitmentSnapshot]:
@@ -74,5 +76,5 @@ def build_snapshots(kind: str, versions: list[VersionData]) -> dict[str, Commitm
         lines = tuple(CommitmentLine(line_id, root(line_id), description, piece, amount, decision, collected)
                       for line_id, _origin, description, piece, amount, decision, collected in chosen.lines)
         result[number] = CommitmentSnapshot(kind, number, chosen.version, chosen.status, chosen.customer_id,
-                                            chosen.customer_name, chosen.date, lines)
+                                            chosen.customer_name, chosen.date, lines, chosen.proforma_id)
     return result

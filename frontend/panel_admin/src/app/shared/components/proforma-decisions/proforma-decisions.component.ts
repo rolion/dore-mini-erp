@@ -6,11 +6,12 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import {
-  ACCEPTANCE_CLASSES, ACCEPTANCE_MEDIA, AcceptanceStatus, DECISION_CLASSES, DECISION_NAME_MAX, DECISION_REASON_MAX,
+  ACCEPTANCE_MEDIA, ACCEPTANCE_TONES, AcceptanceStatus, DECISION_NAME_MAX, DECISION_REASON_MAX, DECISION_TONES,
   DECISION_REFERENCE_MAX, DecisionAction, DecisionBody, DecisionFailure, DecisionHistoryItem, DecisionLineView,
   ProformaTotals, acceptanceLabel, decisionLabel, lineKindLabel, mediumLabel,
 } from '../../models/proforma-decisions';
 import { MoneyPipe } from '../../pipes/money.pipe';
+import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 import { ProformaApiBase, ProformaDecisionsApiService } from '../../services/proforma-decisions-api.service';
 import { sumMoney } from '../../utils/decimal-sum';
 
@@ -21,7 +22,7 @@ import { sumMoney } from '../../utils/decimal-sum';
  */
 @Component({
   selector: 'app-proforma-decisions',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, TranslatePipe, StatusBadgeComponent],
   templateUrl: './proforma-decisions.component.html',
   styleUrl: './proforma-decisions.component.scss',
 })
@@ -40,7 +41,14 @@ export class ProformaDecisionsComponent {
   readonly history = input<DecisionHistoryItem[]>([]);
   /** Clave de traducción del encabezado de la columna de pieza/referencia; `null` si no hay columna. */
   readonly pieceLabelKey = input<string | null>(null);
+  /** Quién acepta por defecto: el responsable del paciente menor, o el propio paciente/cliente (siempre editable). */
+  readonly defaultAcceptor = input<string>('');
+  /** Importe cobrado y saldo (solo si el módulo Cobros está habilitado); `null` oculta esas filas. */
+  readonly collection = input<{ paid: string; balance: string } | null>(null);
+  /** Hay saldo por cobrar y el módulo Cobros está habilitado: tras aceptar se ofrece «Cobrar ahora». */
+  readonly collectible = input<boolean>(false);
   readonly changed = output<void>();
+  readonly collect = output<void>();
 
   readonly media = ACCEPTANCE_MEDIA;
   readonly nameMax = DECISION_NAME_MAX;
@@ -50,17 +58,18 @@ export class ProformaDecisionsComponent {
   readonly acceptanceLabel = acceptanceLabel;
   readonly mediumLabel = mediumLabel;
   readonly lineKindLabel = lineKindLabel;
-  readonly decisionClasses = DECISION_CLASSES;
-  readonly acceptanceClasses = ACCEPTANCE_CLASSES;
+  readonly decisionTones = DECISION_TONES;
+  readonly acceptanceTones = ACCEPTANCE_TONES;
 
   readonly selected = signal<ReadonlySet<string>>(new Set());
-  readonly step = signal<1 | 2>(1);
   readonly mode = signal<'accepted' | 'rejected'>('accepted');
   readonly rectifyTarget = signal<DecisionLineView | null>(null);
   readonly saving = signal(false);
   readonly error = signal('');
   readonly fieldErrors = signal<Record<string, string>>({});
   readonly success = signal('');
+  /** La última operación fue una aceptación: habilita el CTA «Cobrar ahora». */
+  readonly justAccepted = signal(false);
   readonly historyPage = signal(1);
   readonly pageSize = 10;
 
@@ -110,10 +119,18 @@ export class ProformaDecisionsComponent {
     this.mode.set(mode);
     this.rectifyTarget.set(null);
     this.resetDialog();
+    this.justAccepted.set(false);
     dialog.showModal();
   }
 
-  next(): void {
+  /** «Aceptar todo»: elige todas las líneas sin decidir y abre el diálogo de aceptación. */
+  acceptAll(dialog: HTMLDialogElement): void {
+    this.selected.set(new Set(this.pendingLines().map(line => line.id)));
+    this.openDecision('accepted', dialog);
+  }
+
+  /** Valida los datos de la decisión; devuelve `true` si se puede confirmar. */
+  private validDecision(): boolean {
     this.fieldErrors.set({});
     const value = this.form.getRawValue();
     const errors: Record<string, string> = {};
@@ -121,7 +138,7 @@ export class ProformaDecisionsComponent {
     if (this.mode() === 'accepted' && !value.medium) errors['medium'] = 'PROFORMA_DECISIONS.E_MEDIUM';
     if (this.form.invalid) errors['form'] = 'PROFORMA_DECISIONS.ERR_REVISA';
     this.fieldErrors.set(errors);
-    if (Object.keys(errors).length === 0) this.step.set(2);
+    return Object.keys(errors).length === 0;
   }
 
   readonly titleKey = computed(() => this.rectifyTarget() ? 'PROFORMA_DECISIONS.DLG_RECTIFICAR'
@@ -129,8 +146,7 @@ export class ProformaDecisionsComponent {
 
   submit(dialog: HTMLDialogElement): void {
     if (this.rectifyTarget()) this.confirmRectify(dialog);
-    else if (this.step() === 1) this.next();
-    else this.confirm(dialog);
+    else if (this.validDecision()) this.confirm(dialog);
   }
 
   confirm(dialog: HTMLDialogElement): void {
@@ -144,7 +160,6 @@ export class ProformaDecisionsComponent {
     this.rectifyTarget.set(line);
     this.mode.set(line.decision === 'accepted' ? 'rejected' : 'accepted');
     this.resetDialog();
-    this.step.set(1);
     dialog.showModal();
   }
 
@@ -180,10 +195,9 @@ export class ProformaDecisionsComponent {
   }
 
   private resetDialog(): void {
-    this.form.reset({ accepted_by_name: '', medium: '', reference: '', reason: '' });
+    this.form.reset({ accepted_by_name: this.defaultAcceptor(), medium: '', reference: '', reason: '' });
     this.fieldErrors.set({});
     this.error.set('');
-    this.step.set(1);
     this.idempotencyKey = crypto.randomUUID(); // se reutiliza en cada reintento de esta confirmación
   }
 
@@ -195,6 +209,7 @@ export class ProformaDecisionsComponent {
         dialog.close();
         this.selected.set(new Set());
         this.success.set(successKey);
+        this.justAccepted.set(this.mode() === 'accepted' && !this.rectifyTarget());
         this.changed.emit();
       },
       error: (failure: DecisionFailure) => {

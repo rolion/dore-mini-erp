@@ -3,11 +3,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { provideTestTranslations } from '../../../core/i18n/testing';
-import { Commitment } from '../models/receivable';
+import { Commitment } from '../../../shared/models/receivable';
 import { CommitmentDetailComponent } from './commitment-detail.component';
 
 const COMMITMENT: Commitment = {
-  kind: 'quotation', number: 'PRO-000001', version: 1, status: 'presented', customer_id: 'c1',
+  kind: 'quotation', number: 'PRO-000001', version: 1, status: 'presented', customer_id: 'c1', proforma_id: 'p1',
   customer_name: 'Rosa Pérez', date: '2026-11-03', currency: 'BOB', payment_status: 'pending',
   totals: { proposed: '350.00', accepted: '300.00', pending: '0.00', rejected: '50.00', paid: '0.00', balance: '300.00' },
   lines: [
