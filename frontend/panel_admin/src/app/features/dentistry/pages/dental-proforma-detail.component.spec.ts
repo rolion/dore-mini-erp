@@ -2,8 +2,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { provideTestTranslations } from '../../../core/i18n/testing';
+import { ModulesService } from '../../../core/service/modules.service';
+import { Commitment } from '../../../shared/models/receivable';
 import { DentalProforma } from '../models/dental-proforma';
 import { DentalProformaDetailComponent } from './dental-proforma-detail.component';
 
@@ -24,15 +26,26 @@ const PROFORMA = (status: DentalProforma['status'], actions: DentalProforma['all
 describe('DentalProformaDetailComponent', () => {
   let http: HttpTestingController;
 
-  function create(proforma: DentalProforma) {
+  const PATIENT = (birth: string | null, responsible: string) => ({ id: 'c-1', customer: { id: 'c-1', name: 'Ana', birth_date: birth,
+    responsible_name: responsible, responsible_phone: '' } });
+  const COMMITMENT = (balance: string): Commitment => ({
+    kind: 'dental', number: 'ODO-000001', version: 1, status: 'presented', customer_id: 'c-1', proforma_id: 'p1',
+    customer_name: 'Ana', date: '2026-11-04', currency: 'BOB', payment_status: 'pending',
+    totals: { proposed: '250.00', accepted: '250.00', pending: '0.00', rejected: '0.00', paid: '0.00', balance },
+    lines: [], payments: [], allowed_actions: ['register_payment'],
+  });
+
+  function create(proforma: DentalProforma, enabled: string[] = [], patient = PATIENT(null, '')) {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), ...provideTestTranslations(),
+        { provide: ModulesService, useValue: { enabledKeys$: new BehaviorSubject<ReadonlySet<string> | null>(new Set(enabled)) } },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ proformaId: 'p1' })) } }],
     });
     http = TestBed.inject(HttpTestingController);
     const fixture = TestBed.createComponent(DentalProformaDetailComponent);
     fixture.detectChanges();
     http.expectOne(r => r.url.endsWith('/dentistry/proformas/p1/')).flush(proforma);
+    http.expectOne(r => r.url.endsWith('/dentistry/patients/c-1/')).flush(patient);
     fixture.detectChanges();
     return fixture;
   }
@@ -75,5 +88,38 @@ describe('DentalProformaDetailComponent', () => {
     fixture.componentInstance.newVersion();
     http.expectOne(r => r.url.endsWith('/new-version/')).flush({ ...PROFORMA('draft', ['edit', 'present']), id: 'p2', version: 2 });
     expect(navigate).toHaveBeenCalledWith(['/pocketbiz/dentistry/proformas', 'p2', 'editar']);
+  });
+
+  it('precarga como quien acepta al responsable si el paciente es menor, y al paciente si no (AC-03)', () => {
+    const minor = create(PROFORMA('presented', []), [], PATIENT('2020-06-04', 'rodrigo leon'));
+    expect(minor.componentInstance.acceptor).toBe('rodrigo leon');
+    TestBed.resetTestingModule();
+    const adult = create(PROFORMA('presented', []), [], PATIENT('1990-01-01', 'otra persona'));
+    expect(adult.componentInstance.acceptor).toBe('Ana');
+  });
+
+  it('con Cobros habilitado muestra Cobrado y Saldo y «Cobrar» abre el diálogo sin navegar (AC-07, AC-08)', () => {
+    const presented = { ...PROFORMA('presented', []), collectible: true, accepted_total: '250.00' };
+    const fixture = create(presented, ['receivables']);
+    http.expectOne(r => r.url.endsWith('/receivables/commitments/dental/ODO-000001/')).flush(COMMITMENT('250.00'));
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Saldo por cobrar');
+    expect(root.textContent).not.toContain('El saldo de cobro no se calcula aquí');
+    const button = Array.from(root.querySelectorAll<HTMLButtonElement>('.card-header button')).find(b => b.textContent?.trim() === 'Cobrar');
+    expect(button).toBeDefined();
+    button?.click();
+    http.expectOne(r => r.url.endsWith('/receivables/commitments/dental/ODO-000001/')).flush(COMMITMENT('250.00'));
+    fixture.detectChanges();
+    expect(root.querySelector('app-payment-dialog dialog')).not.toBeNull();
+    expect(root.querySelector('a[href*="receivables"]')).toBeNull();
+  });
+
+  it('sin el módulo Cobros no hay botón «Cobrar» ni lecturas de cobro (AC-07)', () => {
+    const presented = { ...PROFORMA('presented', []), collectible: true, accepted_total: '250.00' };
+    const fixture = create(presented, []);
+    http.expectNone(r => r.url.includes('/receivables/'));
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Cobrar');
+    expect((fixture.nativeElement as HTMLElement).textContent).not.toContain('Saldo por cobrar');
   });
 });

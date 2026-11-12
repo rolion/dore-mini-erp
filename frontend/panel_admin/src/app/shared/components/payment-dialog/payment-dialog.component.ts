@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, ViewChild, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -22,7 +21,7 @@ type Shortcut = 'total' | 'half' | 'other';
  */
 @Component({
   selector: 'app-payment-dialog',
-  imports: [ReactiveFormsModule, MoneyPipe, DatePipe, TranslatePipe],
+  imports: [ReactiveFormsModule, MoneyPipe, TranslatePipe],
   templateUrl: './payment-dialog.component.html',
   styleUrl: './payment-dialog.component.scss',
 })
