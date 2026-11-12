@@ -171,7 +171,7 @@ export class PaymentDialogComponent {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => (this.saving = false)))
       .subscribe({
         next: (result) => {
-          this.dismiss(); // `saving` sigue en true hasta `finalize`: `close()` no cerraría (REV-01)
+          this.dismiss(true); // `saving` sigue en true hasta `finalize`: `close()` no cerraría (REV-01)
           this.paid.emit(result);
         },
         error: (failure: ReceivableFailure) => {
@@ -184,12 +184,27 @@ export class PaymentDialogComponent {
 
   /** Cancelar: no se puede cerrar mientras se guarda. */
   close(): void {
-    if (!this.saving) this.dismiss();
+    if (!this.saving) this.dismiss(false);
   }
 
-  private dismiss(): void {
+  /**
+   * Cierra el diálogo y devuelve el foco. Tras un pago el foco va al mensaje del comprobante (`data-payment-receipt`):
+   * es el resultado de la acción y existe aunque el botón que abrió el diálogo desaparezca por haberse saldado la deuda
+   * (REV-05). Si no hay comprobante en la página, o se cancela, vuelve al botón que lo abrió.
+   */
+  private dismiss(afterPayment = false): void {
     this.dialog.nativeElement.close();
-    this.opener?.focus();
+    const opener = this.opener;
+    if (!afterPayment) {
+      opener?.focus();
+      return;
+    }
+    // El padre pinta el comprobante tras el evento `paid`: se enfoca en el siguiente ciclo.
+    setTimeout(() => {
+      const receipt = document.querySelector<HTMLElement>('[data-payment-receipt]');
+      if (receipt) receipt.focus();
+      else if (opener?.isConnected) opener.focus();
+    });
   }
 
   private load(afterLoad: () => void): void {

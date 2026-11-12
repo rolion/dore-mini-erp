@@ -11,7 +11,7 @@
     </div>
     <div class="card-body">
       @if (receipt; as r) {
-        <p class="alert alert-success" role="status">{{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
+        <p class="alert alert-success" role="status" data-payment-receipt tabindex="-1">{{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
       }
       @if (collectionsError) { <p class="small text-muted" role="status">{{ 'DENTISTRY.PROFORMAS.ERR_COBROS' | translate }}</p> }
       @if (!active) { <p class="alert alert-warning" role="status">{{ 'DENTISTRY.PROFORMAS.ARCHIVADO' | translate }}</p> }

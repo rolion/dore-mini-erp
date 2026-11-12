@@ -1,6 +1,6 @@
 # REV-2026-11-12-simplificar-flujo-proforma-cobro-04: El texto «Saldo por cobrar» del diálogo de cobro sigue bajo 4.5:1 en tema oscuro
 
-**Status:** Open
+**Status:** Resolved (corregido el 2026-11-12 y cubierto por prueba de componente; sin reverificar en navegador)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-12-simplificar-flujo-proforma-cobro.md (v1)

@@ -70,7 +70,7 @@ describe('PaymentDialogComponent', () => {
     expect(dialog.canConfirm).toBeFalse();
   });
 
-  it('confirma en un solo paso con imputaciones explícitas y una sola petición aunque se pulse dos veces (AC-05, AC-06)', () => {
+  it('confirma en un solo paso con imputaciones explícitas y una sola petición aunque se pulse dos veces (AC-05, AC-06)', async () => {
     const { fixture, dialog } = create();
     const opener = document.createElement('button');
     document.body.appendChild(opener);
@@ -94,7 +94,8 @@ describe('PaymentDialogComponent', () => {
     // REV-01: tras el pago el diálogo se cierra (antes quedaba abierto con datos obsoletos)
     expect((fixture.nativeElement as HTMLElement).querySelector('dialog')?.open).toBeFalse();
     expect(dialog.saving).toBeFalse();
-    expect(document.activeElement).toBe(opener); // el foco vuelve al botón que abrió el diálogo
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    expect(document.activeElement).toBe(opener); // sin comprobante en la página, el foco vuelve al botón que abrió el diálogo
     opener.remove();
   });
 
@@ -143,5 +144,28 @@ describe('PaymentDialogComponent', () => {
     expect(dialog.allocations.length).toBe(dialog.payableLines.length);
     expect(dialog.allocations.length).toBe(1);
     expect(dialog.allocations.at(0).value.amount).toBe('');
+  });
+
+  it('tras pagar el foco va al mensaje del comprobante aunque el botón que abrió el diálogo ya no exista (REV-05)', async () => {
+    const { fixture, dialog } = create();
+    const opener = document.createElement('button');
+    document.body.appendChild(opener);
+    dialog.open(opener);
+    http.expectOne((req) => req.url.endsWith('/commitments/quotation/PRO-000001/')).flush(COMMITMENT);
+    const receipt = document.createElement('p');
+    receipt.setAttribute('data-payment-receipt', '');
+    receipt.tabIndex = -1;
+    document.body.appendChild(receipt);
+    dialog.confirm();
+    opener.remove(); // el pago salda la deuda: el botón desaparece
+    http.expectOne((req) => req.url.endsWith('/payments/')).flush({
+      ...COMMITMENT, totals: { ...COMMITMENT.totals, paid: '300.00', balance: '0.00' },
+      payment: { id: 'pay1', receipt_number: 'CB-000002', amount: '300.00', payment_method: 'CASH', payment_date: '2026-11-12', reference: '', recorded_by_name: 'ana', created_at: null, allocations: [] },
+      replayed: false,
+    });
+    fixture.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+    expect(document.activeElement).toBe(receipt);
+    receipt.remove();
   });
 });

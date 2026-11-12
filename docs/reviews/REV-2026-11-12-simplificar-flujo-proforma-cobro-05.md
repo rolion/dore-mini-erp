@@ -1,6 +1,6 @@
 # REV-2026-11-12-simplificar-flujo-proforma-cobro-05: El foco queda en `body` cuando el cobro liquida el saldo y el botón que abrió el diálogo desaparece
 
-**Status:** Open
+**Status:** Resolved (corregido el 2026-11-12 y cubierto por prueba de componente; sin reverificar en navegador)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-12-simplificar-flujo-proforma-cobro.md (v1)

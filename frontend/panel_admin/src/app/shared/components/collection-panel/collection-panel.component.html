@@ -1,5 +1,5 @@
 @if (receipt(); as r) {
-  <p class="alert alert-success" role="status">
+  <p class="alert alert-success" role="status" data-payment-receipt tabindex="-1">
     {{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
 }
 <app-payment-dialog [kind]="kind()" [number]="number()" (paid)="onPaid($event)" />

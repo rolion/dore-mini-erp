@@ -16,5 +16,10 @@ dialog {
     &::backdrop {
       background-color: rgb(0 0 0 / 60%);
     }
+
+    // `text-muted` conserva el color del tema claro (3.89:1 sobre este fondo): se hereda el del diálogo (REV-04)
+    .text-muted {
+      color: inherit !important;
+    }
   }
 }

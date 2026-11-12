@@ -12,7 +12,7 @@
         <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">{{ 'RECEIVABLES.REINTENTAR' | translate }}</button></p>
     }
     @if (receipt; as r) {
-      <p class="alert alert-success" role="status">
+      <p class="alert alert-success" role="status" data-payment-receipt tabindex="-1">
         {{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
     }
     @if (commitment; as c) {
