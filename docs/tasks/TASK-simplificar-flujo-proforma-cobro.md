@@ -1,6 +1,6 @@
 # TASK-simplificar-flujo-proforma-cobro: Simplificar el flujo proforma → aceptación → cobro
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-simplificar-flujo-proforma-cobro (desde `task/TASK-cobrar-servicios-anticipos-pagos-parciales`, PR #61 aún sin mergear: depende del módulo `receivables`)
@@ -12,6 +12,7 @@
 | 2026-11-12 | (nuevo) → INVESTIGATION | Task creado desde la crítica de diseño del flujo proforma → cobro | delivery-start |
 | 2026-11-12 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN, diseño SI; sin decisiones de negocio abiertas | delivery-start |
 | 2026-11-12 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
+| 2026-11-12 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
 
 ## Investigación
 
@@ -74,7 +75,22 @@ No aplica según veredicto (sin ADR).
 `docs/plans/PLAN-2026-11-12-simplificar-flujo-proforma-cobro.md` (v1, COMPLETO). Specification readiness: **READY**.
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend: campo aditivo `proforma_id` en el detalle de Cobros (`shared/domain/commitment.py`, facades de `quotations` y `dentistry`, serializer). Frontend: el modelo y el servicio de Cobros pasan a `shared/`; nuevos `shared/components/{payment-dialog,collection-panel,status-badge}`, `shared/utils/{payment-allocation,default-acceptor}`; el diálogo de decisión (`proforma-decisions`) es de un solo paso con «Aceptar todo», precarga y CTA «Cobrar ahora»; los detalles de proforma (genérica y dental) cobran en contexto; la ficha del paciente muestra Aceptado/Cobrado/Saldo y «Cobrar»; Cobros usa el diálogo compartido, vuelve a la proforma/paciente y usa `app-status-badge`; menú plano; textos y `design-system.md` actualizados.
+
+**Cobertura.** AC-01..03 y AC-14: `proforma-decisions.component.spec.ts` + `default-acceptor.spec.ts` (INV-05). AC-04: `proforma-decisions` (CTA y «Más tarde»). AC-05/06 (INV-01, INV-03, INV-04): `payment-allocation.spec.ts` + `payment-dialog.component.spec.ts` (atajos, reparto, distribución manual, payload, doble envío, idempotencia, error, 409/REV-02). AC-07/08: specs de detalle de proforma dental y genérica (con y sin Cobros). AC-09: `patient-proformas.component.spec.ts`. AC-10 (API-01): `receivables/tests/test_api.py`, `test_domain.py` (`proforma_id`) y `commitment-detail.component.spec.ts`. AC-11: textos de los specs y `i18n:check`. AC-12: `sidebar-menu.spec.ts`. AC-13: `status-badge.component.spec.ts` (el contraste en navegador queda para el Quality Gate). AC-15: `i18n:check` y claves es/en/pt.
+
+**Desviaciones respecto al plan.**
+- Se añadió `shared/components/collection-panel` (no estaba en el plan): encapsula, para las dos proformas, la lectura del estado de cobro, el diálogo y el comprobante; evita duplicar esa lógica en dos páginas.
+- El diálogo de cobro carga el compromiso al abrirse (siempre saldo fresco, sirve a los cuatro puntos de entrada) en lugar de recibir las líneas por input.
+- `app-status-badge` usa clases de Bootstrap 5.3 (`bg-*-subtle text-*-emphasis`) y no una paleta propia, para no introducir HEX.
+- En la ficha del paciente, Cobrado/Saldo solo se calculan para la versión **presentada** de cada proforma (las demás filas muestran «—»), porque el cobro es por proforma vigente.
+- El modelo `Commitment` del frontend tiene `proforma_id` obligatorio (`string | null`).
+
+**Deuda técnica.** Claves i18n que quedaron sin uso (`RECEIVABLES.REVISAR/VOLVER/IR_ORIGEN`, `PROFORMA_DECISIONS.NOTA_SALDO` y similares) y el `app.routes`/estilos antiguos de `badge-outline` en el resto del sistema; la lista de obligaciones sigue paginada en memoria (PB-COB-001). Dos estilos de badge conviven hasta migrar el resto.
+
+**Pantallas.** Referencias: «Detalle con selección de líneas y registro de decisión», `purchase-payments-tab` (alta por diálogo con saldo e idempotencia) y la lista/detalle de Cobros. Componentes compartidos creados: `app-payment-dialog`, `app-collection-panel`, `app-status-badge`; reutilizados: `money`, `Page`, `ModulesService`.
+
+**Verificación propia (no es el Quality Gate).** Backend con PostgreSQL: `manage.py test` completo → `Ran 1502 tests ... OK`. Frontend: `ng lint`, `ng build`, `i18n:check` y `ng test` → 1344 correctas y 1 fallo previo e independiente (`screens-i18n.spec.ts`, «Entregue/Entregado»; también falla en `main`).
 
 ## Review
 _Pendiente_
