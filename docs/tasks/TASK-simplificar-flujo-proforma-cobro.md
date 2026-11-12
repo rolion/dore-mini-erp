@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-simplificar-flujo-proforma-cobro (desde `task/TASK-cobrar-servicios-anticipos-pagos-parciales`, PR #61 aún sin mergear: depende del módulo `receivables`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/65 (base: task/TASK-cobrar-servicios-anticipos-pagos-parciales, PR 61)
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
