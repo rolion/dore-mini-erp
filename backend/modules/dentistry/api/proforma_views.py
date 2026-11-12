@@ -121,7 +121,8 @@ def summary_data(proforma) -> dict:
             'patient_name': proforma.patient_name, 'date': proforma.date.isoformat(),
             'valid_until': proforma.valid_until.isoformat() if proforma.valid_until else None,
             'currency': CURRENCY, 'total': f'{proforma.total:.2f}',
-            'accepted_total': f"{proforma.totals['accepted']:.2f}", 'acceptance_status': proforma.acceptance_status}
+            'accepted_total': f"{proforma.totals['accepted']:.2f}", 'acceptance_status': proforma.acceptance_status,
+            'collectible': proforma.status == 'presented' and proforma.totals['accepted'] > 0}
 
 
 def detail_data(proforma, *, allowed_actions, can_edit, versions, decision_actions=()) -> dict:

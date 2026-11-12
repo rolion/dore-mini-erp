@@ -83,6 +83,18 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/quotations/pages/proforma-detail.component').then(m => m.ProformaDetailComponent),
             },
             {
+                path: 'receivables',
+                canActivate: [moduleGuard],
+                data: { module: 'receivables' },
+                loadComponent: () => import('./features/receivables/pages/obligation-list.component').then(m => m.ObligationListComponent),
+            },
+            {
+                path: 'receivables/:kind/:number',
+                canActivate: [moduleGuard],
+                data: { module: 'receivables' },
+                loadComponent: () => import('./features/receivables/pages/commitment-detail.component').then(m => m.CommitmentDetailComponent),
+            },
+            {
                 path: 'dentistry',
                 canActivate: [moduleGuard],
                 data: { module: 'dentistry' },

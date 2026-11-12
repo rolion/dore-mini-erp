@@ -18,7 +18,7 @@ def _decision(row: ProformaLineDecisionModel) -> Decision:
 
 def to_domain(row: ProformaModel) -> Proforma:
     lines = [ProformaLine(l.id, l.service_id, l.description, l.quantity, l.unit_price, l.treatment_item_id, l.piece,
-                          l.origin_line_id, l.line_kind, tuple(_decision(d) for d in l.decisions.all()))
+                          l.origin_line_id, l.line_kind, tuple(_decision(d) for d in l.decisions.all()), l.collected)
              for l in row.lines.all()]
     return Proforma(row.id, row.number, row.version, row.status, row.customer_id, row.customer_name, row.date,
                     row.valid_until, row.notes, lines, row.created_by)
@@ -63,6 +63,9 @@ class DjangoProformaRepository:
         row = self._qs().filter(number=number, version=version - 1).first()
         return {line.id: line for line in to_domain(row).lines} if row else {}
 
+    def versions_of(self, numbers) -> list[Proforma]:
+        return [to_domain(r) for r in self._qs().filter(number__in=list(numbers))]
+
     def draft_exists(self, number: str) -> bool:
         return ProformaModel.objects.filter(company_id=self.company_id, number=number, status=DRAFT).exists()
 
@@ -104,6 +107,8 @@ class DjangoProformaRepository:
                               'quantity': line.quantity, 'unit_price': line.unit_price,
                               'treatment_item_id': line.treatment_item_id, 'piece': line.piece,
                               'origin_line_id': line.origin_line_id, 'line_kind': line.line_kind})
+                if line.collected:  # monótona: nunca se reinicia desde el dominio
+                    ProformaLineModel.objects.filter(pk=line.id).update(collected=True)
                 self._save_decisions(proforma, line)
 
     def _save_decisions(self, proforma: Proforma, line: ProformaLine) -> None:
