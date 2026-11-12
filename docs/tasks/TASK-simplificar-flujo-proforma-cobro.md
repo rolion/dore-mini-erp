@@ -1,6 +1,6 @@
 # TASK-simplificar-flujo-proforma-cobro: Simplificar el flujo proforma → aceptación → cobro
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-simplificar-flujo-proforma-cobro (desde `task/TASK-cobrar-servicios-anticipos-pagos-parciales`, PR #61 aún sin mergear: depende del módulo `receivables`)
@@ -15,6 +15,7 @@
 | 2026-11-12 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
 | 2026-11-12 | REVIEW → ENGINEERING | Quality Gate FAIL (1.ª ronda): REV-01 High (diálogo de cobro no se cierra tras pagar), REV-02 Medium, REV-03 Low | delivery-publish |
 | 2026-11-12 | ENGINEERING → REVIEW | REV-01..03 corregidos; segunda ronda del Quality Gate | delivery-build |
+| 2026-11-12 | REVIEW → PUBLISH | Quality Gate ronda 2: PASS con limitaciones (REV-04/05 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -97,7 +98,7 @@ No aplica según veredicto (sin ADR).
 ## Review
 **Ronda 1 — FAIL.** Hallazgos: [REV-01](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-01.md) High (el diálogo de cobro no se cerraba tras un pago exitoso: `close()` salía por `saving` aún en `true`), [REV-02](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-02.md) Medium (enlace «Distribuir por tratamiento» ilegible en tema oscuro), [REV-03](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-03.md) Low (mensaje de monto mayor al saldo hablaba de «imputación»). Evidencia: backend 1502 pruebas OK; frontend lint/build/i18n OK; `ng test` con el fallo previo de `screens-i18n` y un segundo fallo intermitente no identificado en 1 de 4 ejecuciones.
 **Correcciones:** REV-01 (`dismiss()` cierra sin la guarda de `saving`; la prueba ahora comprueba cierre y foco y falla con el código anterior), REV-02 (botón `btn-light`), REV-03 (mensaje «El monto supera el saldo por cobrar.»).
-**Ronda 2:** pendiente.
+**Ronda 2 — PASS con limitaciones.** REV-01, REV-02 y REV-03 reverificados y resueltos (cierre y foco del diálogo en tres pantallas; contraste del enlace 1.14 → 13.95 en tema oscuro; mensaje de monto). Nuevos, Low y abiertos: [REV-04](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-04.md) (etiqueta pequeña «Saldo por cobrar» a 3.89:1 en tema oscuro) y [REV-05](docs/reviews/REV-2026-11-12-simplificar-flujo-proforma-cobro-05.md) (foco en `body` si el pago salda la deuda). Evidencia: backend 1502 pruebas OK, bandit sin hallazgos; frontend lint/build/i18n/audit OK; `ng test` 8 ejecuciones con fallos solo preexistentes de aislamiento de idioma entre specs (`screens-i18n`, `reception-quantities` de Compras), ajenos al diff. No verificado: «Aceptar todo» → «Cobrar ahora» en navegador, móvil 390 px reales, proforma dental con Cobros deshabilitado.
 
 ## Publicación
-_Pendiente_
+PR #65 listo para aprobación humana (no se mergea); apilado sobre el PR #61, que debe integrarse antes o retargetarse a `main`. Sin cambios sensibles propios: sin ADR, sin migraciones, sin cambios de autenticación/autorización (campo aditivo `proforma_id`). Pendiente de la persona que aprueba: revisar en navegador el flujo «Aceptar todo» → «Cobrar ahora» y el móvil a 390 px, y decidir si se corrigen REV-04/05 (Low) antes del merge.

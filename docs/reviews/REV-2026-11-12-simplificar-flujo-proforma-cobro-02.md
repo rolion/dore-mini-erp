@@ -1,6 +1,6 @@
 # REV-2026-11-12-simplificar-flujo-proforma-cobro-02: En tema oscuro el enlace «Distribuir por tratamiento» del diálogo de cobro es casi invisible
 
-**Status:** Resolved (corregido el 2026-11-12; pendiente de reverificación en el segundo Quality Gate)
+**Status:** Resolved (corregido y reverificado en la ronda 2 del Quality Gate, 2026-11-12)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-12-simplificar-flujo-proforma-cobro.md (v1)

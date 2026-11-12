@@ -1,6 +1,6 @@
 # REV-2026-11-12-simplificar-flujo-proforma-cobro-01: El diálogo de cobro no se cierra tras un pago exitoso y queda con datos obsoletos
 
-**Status:** Resolved (corregido el 2026-11-12; pendiente de reverificación en el segundo Quality Gate)
+**Status:** Resolved (corregido y reverificado en la ronda 2 del Quality Gate, 2026-11-12)
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-12-simplificar-flujo-proforma-cobro.md (v1)
