@@ -1,0 +1,45 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CUENTAS_Y_METODOS_DE_PAGO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CUENTAS_Y_METODOS_DE_PAGO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO' | translate }}</h4>
+          </div>
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'accounts'" role="tab" id="tab-accounts"
+                [attr.aria-selected]="tab === 'accounts'" aria-controls="panel-accounts"
+                (click)="select('accounts')">{{ 'ACCOUNTING.ACCOUNTS_TAB.CUENTAS' | translate }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'methods'" role="tab" id="tab-methods"
+                [attr.aria-selected]="tab === 'methods'" aria-controls="panel-methods"
+                (click)="select('methods')">{{ 'ACCOUNTING.METHODS_TAB.METODOS_DE_PAGO' | translate }}</button>
+            </li>
+          </ul>
+          @if (tab === 'accounts') {
+          <div id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts">
+            <app-accounts-tab />
+          </div>
+          } @else {
+          <div id="panel-methods" role="tabpanel" aria-labelledby="tab-methods">
+            <app-methods-tab />
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

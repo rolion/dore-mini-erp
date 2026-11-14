@@ -27,7 +27,7 @@ class ListModulesTests(ModulesApiTestCase):
     def test_defaults_on_first_access(self):  # AC-08, AC-09
         body = self.client.get(LIST_URL).json()
         self.assertEqual([m['key'] for m in body], ['access', 'catalog', 'services', 'personnel', 'agenda', 'customers',
-                                                    'quotations', 'receivables', 'dentistry', 'sales', 'expenses',
+                                                    'quotations', 'receivables', 'dentistry', 'sales', 'expenses', 'accounting',
                                                     'reporting', 'purchases', 'inventory', 'costing'])
         self.assertEqual(enabled_keys(self.client),
                          {'access', 'catalog', 'customers', 'sales', 'expenses', 'reporting'})

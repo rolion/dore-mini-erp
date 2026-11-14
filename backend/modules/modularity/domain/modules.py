@@ -27,6 +27,8 @@ MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
     ModuleDefinition('dentistry', 'Odontología', 'Pacientes y antecedentes odontológicos.', requires=('customers',)),
     ModuleDefinition('sales', 'Ventas', 'Pedidos, entrega y cobros.', requires=('catalog',), optional=('customers',)),
     ModuleDefinition('expenses', 'Gastos', 'Registro de gastos y categorías.'),
+    ModuleDefinition('accounting', 'Contabilidad', 'Cuentas destino y métodos de pago por empresa.',
+                     optional=('sales', 'receivables')),
     ModuleDefinition('reporting', 'Reportes', 'Dashboard y reportes de ventas y gastos.',
                      optional=('sales', 'expenses', 'customers')),
     ModuleDefinition('purchases', 'Compras', 'Compras a proveedores.', requires=('catalog', 'expenses')),
@@ -47,6 +49,14 @@ class UnknownModule(Exception):
 
 class BaseModuleError(Exception):
     """Los módulos base no se pueden deshabilitar."""
+
+
+class IncompleteConfiguration(Exception):
+    """Falta configuración previa para habilitar el módulo (nombres de lo que falta)."""
+
+    def __init__(self, names: list[str]):
+        super().__init__(names)
+        self.names = names
 
 
 class DependencyError(Exception):

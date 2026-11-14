@@ -1,0 +1,62 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>{{ 'ACCOUNTING.METHODS_TAB.METODOS_DE_PAGO' | translate }}</strong></h2>
+      <small class="text-muted">{{ 'ACCOUNTING.METHODS_TAB.CADA_METODO_TIENE_UNA_UNICA' | translate }}</small>
+    </div>
+  </div>
+  @if (loading && !rows.length) {
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else {
+  @if (!accounts.length) {
+  <div class="alert alert-info m-3" role="status" data-testid="no-accounts">{{ 'ACCOUNTING.METHODS_TAB.PRIMERO_CREA_UNA_CUENTA_EN' | translate }}</div>
+  }
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.METHODS_TAB.METODOS_DE_PAGO' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'COMMON.METODO' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.METHODS_TAB.CUENTA_DESTINO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ACTIVO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.method.code) {
+        <tr [formGroup]="row.form" [attr.data-testid]="'method-' + row.method.code">
+          <td [attr.data-label]="'COMMON.METODO' | translate"><strong>{{ row.method.label }}</strong></td>
+          <td [attr.data-label]="'ACCOUNTING.METHODS_TAB.CUENTA_DESTINO' | translate">
+            <select class="form-select form-control" formControlName="accountId"
+              [attr.aria-label]="('ACCOUNTING.METHODS_TAB.CUENTA_DESTINO' | translate) + ': ' + row.method.label">
+              <option value="">{{ 'ACCOUNTING.METHODS_TAB.SIN_CUENTA' | translate }}</option>
+              @for (account of options(row); track account.id) {
+              <option [value]="account.id">{{ account.name }} ({{ account.currency }}){{ account.isActive ? '' : ' · ' + ('COMMON.INACTIVO' | translate) }}</option>
+              }
+            </select>
+            @if (row.error) {
+            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            }
+          </td>
+          <td [attr.data-label]="'COMMON.ACTIVO' | translate">
+            <div class="form-check form-switch">
+              <input type="checkbox" class="form-check-input" role="switch" formControlName="isActive"
+                [attr.aria-label]="('COMMON.ACTIVO' | translate) + ': ' + row.method.label">
+            </div>
+          </td>
+          <td>
+            <button type="button" class="btn btn-primary btn-sm" (click)="save(row)"
+              [disabled]="row.form.pristine || row.saving">{{ 'COMMON.GUARDAR' | translate }}</button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

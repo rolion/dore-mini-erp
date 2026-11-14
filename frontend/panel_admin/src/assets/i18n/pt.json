@@ -1,5 +1,11 @@
 {
   "MENUITEMS": {
+    "ACCOUNTING": {
+      "TEXT": "Contabilidade",
+      "LIST": {
+        "SETTINGS": "Contas e Métodos de pagamento"
+      }
+    },
     "AGENDA": {
       "APPOINTMENTS": "Consultas",
       "SCHEDULE": "Horários e ausências",
@@ -2494,5 +2500,35 @@
     "SIN_PAGOS": "Ainda não há pagamentos registrados.",
     "COL_COMPROBANTE": "Comprovante",
     "COL_IMPUTACIONES": "Imputações"
+  },
+  "ACCOUNTING": {
+    "ACCOUNTING_SETTINGS": {
+      "CUENTAS_Y_METODOS_DE_PAGO": "Contas e Métodos de pagamento",
+      "CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO": "Contabilidade › Configuração › Contas e Métodos de pagamento"
+    },
+    "ACCOUNTS_TAB": {
+      "CUENTAS": "Contas",
+      "DONDE_SE_RECIBE_EL_DINERO": "Locais onde o dinheiro é recebido (caixa, banco…).",
+      "NUEVA_CUENTA": "Nova conta",
+      "SIN_CUENTAS": "Ainda não há contas. Crie a primeira com «+».",
+      "CUENTA_ACTIVADA": "Conta ativada",
+      "CUENTA_DESACTIVADA": "Conta desativada"
+    },
+    "ACCOUNT_DIALOG": {
+      "EDITAR_CUENTA": "Editar conta",
+      "EJEMPLO_CAJA_BANCO": "Ex.: Caixa, Banco principal",
+      "MONEDA": "Moeda",
+      "SOLO_LAS_CUENTAS_EN_BOB": "Somente contas em BOB podem receber pagamentos de vendas e orçamentos.",
+      "CUENTA_ACTUALIZADA": "Conta atualizada",
+      "CUENTA_CREADA": "Conta criada"
+    },
+    "METHODS_TAB": {
+      "METODOS_DE_PAGO": "Métodos de pagamento",
+      "CADA_METODO_TIENE_UNA_UNICA": "Cada método tem uma única conta de destino vigente; vários métodos podem compartilhar uma conta. A alteração afeta apenas os pagamentos seguintes.",
+      "PRIMERO_CREA_UNA_CUENTA_EN": "Primeiro crie uma conta na aba «Contas».",
+      "CUENTA_DESTINO": "Conta de destino",
+      "SIN_CUENTA": "Sem conta",
+      "METODO_ACTUALIZADO": "Método atualizado"
+    }
   }
 }

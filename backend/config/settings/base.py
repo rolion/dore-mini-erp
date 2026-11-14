@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'modules.receivables',
     'modules.reporting',
     'modules.modularity',
+    'modules.accounting',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

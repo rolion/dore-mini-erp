@@ -1,6 +1,6 @@
 # TASK-crear-cuentas-mapear-metodos-pago: Crear cuentas y mapear métodos de pago por empresa (PB-ACC-001)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-cuentas-mapear-metodos-pago
@@ -13,6 +13,7 @@
 | 2026-11-13 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (785c2bd) | delivery-start |
 | 2026-11-13 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (módulo nuevo, habilitación con precondición, contrato API, migración) | delivery-start |
 | 2026-11-13 | PLANNING → ENGINEERING | Specification READY: las decisiones abiertas se resolvieron con criterio propio y quedan registradas en el plan | delivery-start |
+| 2026-11-13 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,17 @@ No hay cuentas ni cajas; pagos solo con texto de método.
 `docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/accounting/`): dominio puro (`catalog.py`, `account.py`: INV-01..05, 07, EDGE-05), modelos `AccountModel`/`MethodMappingModel` con migración `0001_initial` (solo `CreateModel`, único `(company_id, method)` y nombre sin distinguir mayúsculas), repositorios por empresa, casos de uso, API `/api/accounting/accounts|payment-methods/` (API-01..03) sin exigir el módulo habilitado, y fachada `services.py` (`resolve_account`, `missing_method_labels`). Clave `accounting` en el catálogo de `modularity`; `EnableModule` acepta un verificador de precondiciones y la API responde 409 `incomplete_configuration` con los métodos faltantes (INV-08, API-04). Registro en `INSTALLED_APPS` y `config/urls.py`.
+**Frontend** (`features/accounting/`): `AccountingApiService`, página `AccountingSettingsComponent` con pestañas `AccountsTabComponent` (lista, filtro de estado, bloqueo 409) y `MethodsTabComponent` (5 filas, cuenta destino, estado, guardado por fila), `AccountDialogComponent`; ruta `accounting/settings` sin `moduleGuard`, ítem de menú Contabilidad, claves i18n es/en/pt (UI-01..04). Referencia: `inventory-configuration` (plantilla «listados en pestañas y diálogo»); se reutilizó el estilo de tabla apilada de `inventory/components/_inventory-table.scss`.
+**Cobertura:** AC-01..06 → `accounting/tests/test_api.py`; AC-08 y reglas → `test_domain.py`; AC-05 con regresión de Ventas/Cobros → suite completa; AC-07/UI → specs de `features/accounting` y `sidebar-menu.spec.ts`.
+**Desviaciones respecto al plan (con motivo):**
+1. La precondición de habilitación usa el puerto neutro `shared/enable_preconditions.py` en lugar de un adaptador `modularity → accounting.services`: el test de fronteras prohíbe que `modularity` importe módulos de negocio, y el patrón `shared/stock_history.py` ya existe. El ADR se actualizó (decisiones 5 y 7); no hay dependencia nueva entre módulos.
+2. `missing_methods` no recibe los flujos habilitados: Ventas y Cobros comparten catálogo, se validan todos los métodos activos.
+3. Selector de cuenta con `select` nativo (`form-select`) en lugar de `ng-select` del DDR (5 filas; más simple y accesible).
+4. Menú de dos niveles (Contabilidad › Cuentas y Métodos de pago) como el resto del menú; no existe un tercer nivel «Configuración». Registrado en design-system §6.
+5. UI-05 (enlace desde Módulos a la pantalla) no se implementó como enlace: el 409 de habilitar ya muestra el detalle «Falta configurar antes de habilitar: …» con los métodos faltantes mediante `ModulesService`.
+**Deuda técnica / limitaciones:** el bloqueo de cobros con método inactivo y el guardado de la cuenta en cada entrada quedan para las historias del libro de entradas. `screens-i18n.spec.ts` («labels coming from code follow the active language») es intermitente por orden aleatorio de pruebas (fallo ajeno a este cambio: se observó 2 de 3 corridas del subconjunto `core/i18n`).
+**Verificación propia (no es el Quality Gate):** backend suite completa 1531 tests OK (con `.env` copiado con autorización del usuario); frontend `ng lint` OK, `npm run i18n:check` OK (0 faltantes), `ng build` OK, Karma acotado `features/accounting` + `layout/sidebar` 23/23 OK. No se ejecutó la suite completa de Karma ni inspección visual en navegador.
 
 ## Review
 _Pendiente_

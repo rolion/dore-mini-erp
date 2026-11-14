@@ -13,9 +13,9 @@ describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
   it('has the business menu, Dentistry, Purchases, Inventory and Settings > Modules', () => {
-    expect(routes.length).toBe(14);
+    expect(routes.length).toBe(15);
 
-    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, settings, agenda, personnel, quotations, receivables] = routes;
+    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, accounting, settings, agenda, personnel, quotations, receivables] = routes;
     expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
@@ -53,6 +53,8 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/inventory/valuation',
       '/pocketbiz/inventory/settings',
     ]);
+    expect(accounting.module).toBeUndefined(); // se configura antes de habilitar el módulo (PB-ACC-001)
+    expect(accounting.submenu.map((item) => item.path)).toEqual(['/pocketbiz/accounting/settings']);
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
@@ -90,7 +92,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(37);
+    expect(titles.length).toBe(39);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
