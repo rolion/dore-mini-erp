@@ -16,7 +16,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'catalog': set(),
     'service_catalog': {'personnel'},
     'quotations': {'service_catalog', 'customers'},
-    'receivables': {'quotations', 'dentistry'},
+    'receivables': {'accounting', 'quotations', 'dentistry'},
     'inventory': {'catalog', 'modularity'},
     'costing': {'inventory'},
     'customers': set(),

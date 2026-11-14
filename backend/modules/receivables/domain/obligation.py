@@ -32,7 +32,11 @@ class ObligationValidationError(Exception):
 
 
 class ObligationStateError(Exception):
-    """Operación no permitida para el estado actual (se traduce a 409)."""
+    """Operación no permitida para el estado actual (se traduce a 409); `code` opcional para el cliente."""
+
+    def __init__(self, message: str = '', code: str = ''):
+        super().__init__(message)
+        self.code = code
 
 
 class CommitmentNotFound(Exception):
