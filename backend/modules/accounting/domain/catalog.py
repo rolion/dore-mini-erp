@@ -12,3 +12,7 @@ METHOD_CODES: tuple[str, ...] = tuple(code for code, _ in PAYMENT_METHODS)
 # Moneda de los flujos de cobro (Ventas y Cobros trabajan en bolivianos).
 FLOW_CURRENCY = 'BOB'
 CURRENCIES: tuple[str, ...] = ('BOB', 'USD')
+
+# Orígenes de una entrada: el tipo de pago que la genera (productos = pago de pedido; servicios = pago de proforma).
+ORIGIN_LABELS: dict[str, str] = {'PRODUCT': 'Productos', 'SERVICE': 'Servicios'}
+ORIGIN_KINDS: tuple[str, ...] = tuple(ORIGIN_LABELS)

@@ -3,7 +3,8 @@
     "ACCOUNTING": {
       "TEXT": "Accounting",
       "LIST": {
-        "SETTINGS": "Accounts and Payment methods"
+        "SETTINGS": "Accounts and Payment methods",
+        "ENTRIES": "Entries"
       }
     },
     "AGENDA": {
@@ -2537,6 +2538,33 @@
       "CUENTA_DESTINO": "Destination account",
       "SIN_CUENTA": "No account",
       "METODO_ACTUALIZADO": "Method updated"
+    },
+    "ENTRIES": {
+      "ENTRADAS": "Entries",
+      "ENTRADA": "Entry",
+      "COBROS_RECIBIDOS_NO_ES_SALDO": "Payments received. This is not an account balance, profit or accrual.",
+      "CUENTA": "Account",
+      "LA_FECHA_HASTA_NO_PUEDE": "The “To” date cannot be earlier than “From”.",
+      "PERIODO": "Period",
+      "TODAS_LAS_FECHAS": "All dates",
+      "COBERTURA_DEL_LIBRO": "Book coverage (payment date)",
+      "LOS_COBROS_ANTERIORES_NO_APARECEN": "Payments made before registration do not appear until they are regularized.",
+      "TOTALES_DEL_FILTRO": "Filter totals",
+      "SIN_REGISTROS": "No records",
+      "N_ENTRADAS": "{{count}} entries",
+      "PRODUCTOS": "Products",
+      "SERVICIOS": "Services",
+      "AUN_NO_HAY_ENTRADAS_REGISTRADAS": "There are no registered entries yet.",
+      "NO_HAY_ENTRADAS_QUE_COINCIDAN": "No entries match the filters.",
+      "FECHA_DEL_PAGO": "Payment date",
+      "FECHA_DE_REGISTRO": "Registered on",
+      "DOCUMENTO": "Document",
+      "COMPROBANTE": "Receipt",
+      "REGISTRADA_POR": "Registered by",
+      "VER_ENTRADA": "View entry",
+      "MODULO_DESHABILITADO": "module disabled",
+      "ID_DEL_PAGO_DE_ORIGEN": "Source payment ID",
+      "LAS_ENTRADAS_NO_SE_EDITAN": "Entries are neither edited nor deleted."
     }
   }
 }

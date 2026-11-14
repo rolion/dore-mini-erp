@@ -8,6 +8,7 @@ from modules.accounting.domain.account import (
     MethodNotFound,
 )
 from modules.accounting.domain.catalog import FLOW_CURRENCY, METHOD_LABELS
+from modules.accounting.domain.entry import EntryNotFound
 
 
 def _active_methods_using(mappings, account_id: UUID) -> list[str]:
@@ -50,17 +51,23 @@ class CreateAccount:
 
 
 class UpdateAccount:
-    def __init__(self, accounts, mappings):
+    def __init__(self, accounts, mappings, entries=None):
         self.accounts = accounts
         self.mappings = mappings
+        self.entries = entries
 
     def execute(self, account_id: UUID, name: object = None, currency: object = None) -> Account:
         self.mappings.lock_company()
         account = _require(self.accounts, account_id)
+        previous_currency = account.currency
         if name is not None:
             account.rename(name)
         if currency is not None:
             account.change_currency(currency)
+            if account.currency != previous_currency and self.entries and self.entries.has_entries_for_account(account.id):
+                raise AccountConflict(
+                    'account_has_entries',
+                    'No se puede cambiar la moneda: la cuenta ya tiene entradas registradas en el libro.')
             using = _active_methods_using(self.mappings, account.id)
             if account.currency != FLOW_CURRENCY and using:
                 raise AccountConflict(
@@ -137,3 +144,24 @@ def missing_methods(accounts, mappings) -> list[str]:
     """Códigos de los métodos activos sin un destino válido (cuenta activa en la moneda de los flujos)."""
     by_id = accounts.by_id()
     return [m.code for m in mappings.all() if not m.is_complete(by_id)]
+
+
+class ListEntries:
+    """Una página del libro y, sobre TODO el conjunto filtrado, totales por moneda y la cobertura del libro."""
+
+    def __init__(self, entries):
+        self.entries = entries
+
+    def execute(self, filters):
+        return self.entries.query(filters), self.entries.totals(filters), self.entries.coverage()
+
+
+class GetEntry:
+    def __init__(self, entries):
+        self.entries = entries
+
+    def execute(self, entry_id: UUID):
+        row = self.entries.get(entry_id)
+        if row is None:
+            raise EntryNotFound(str(entry_id))
+        return row

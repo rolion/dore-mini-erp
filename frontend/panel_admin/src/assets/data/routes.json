@@ -324,6 +324,17 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/accounting/entries",
+          "title": "MENUITEMS.ACCOUNTING.LIST.ENTRIES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
         }
       ],
       "module": "accounting"

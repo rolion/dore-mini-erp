@@ -106,6 +106,18 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/accounting/pages/accounting-settings/accounting-settings.component').then(m => m.AccountingSettingsComponent),
             },
             {
+                path: 'accounting/entries',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/entry-list/entry-list.component').then(m => m.EntryListComponent),
+            },
+            {
+                path: 'accounting/entries/:id',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/entry-detail/entry-detail.component').then(m => m.EntryDetailComponent),
+            },
+            {
                 path: 'personnel',
                 canActivate: [moduleGuard],
                 data: { module: 'personnel' },

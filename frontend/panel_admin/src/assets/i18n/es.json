@@ -3,7 +3,8 @@
     "ACCOUNTING": {
       "TEXT": "Contabilidad",
       "LIST": {
-        "SETTINGS": "Cuentas y Métodos de pago"
+        "SETTINGS": "Cuentas y Métodos de pago",
+        "ENTRIES": "Entradas"
       }
     },
     "AGENDA": {
@@ -2537,6 +2538,33 @@
       "CUENTA_DESTINO": "Cuenta destino",
       "SIN_CUENTA": "Sin cuenta",
       "METODO_ACTUALIZADO": "Método actualizado"
+    },
+    "ENTRIES": {
+      "ENTRADAS": "Entradas",
+      "ENTRADA": "Entrada",
+      "COBROS_RECIBIDOS_NO_ES_SALDO": "Cobros recibidos. No es saldo de cuenta, utilidad ni devengamiento.",
+      "CUENTA": "Cuenta",
+      "LA_FECHA_HASTA_NO_PUEDE": "La fecha «Hasta» no puede ser anterior a «Desde».",
+      "PERIODO": "Periodo",
+      "TODAS_LAS_FECHAS": "Todas las fechas",
+      "COBERTURA_DEL_LIBRO": "Cobertura del libro (fecha del pago)",
+      "LOS_COBROS_ANTERIORES_NO_APARECEN": "Los cobros anteriores al registro no aparecen hasta regularizarlos.",
+      "TOTALES_DEL_FILTRO": "Totales del filtro",
+      "SIN_REGISTROS": "Sin registros",
+      "N_ENTRADAS": "{{count}} entradas",
+      "PRODUCTOS": "Productos",
+      "SERVICIOS": "Servicios",
+      "AUN_NO_HAY_ENTRADAS_REGISTRADAS": "Aún no hay entradas registradas.",
+      "NO_HAY_ENTRADAS_QUE_COINCIDAN": "No hay entradas que coincidan con los filtros.",
+      "FECHA_DEL_PAGO": "Fecha del pago",
+      "FECHA_DE_REGISTRO": "Fecha de registro",
+      "DOCUMENTO": "Documento",
+      "COMPROBANTE": "Comprobante",
+      "REGISTRADA_POR": "Registrada por",
+      "VER_ENTRADA": "Ver entrada",
+      "MODULO_DESHABILITADO": "módulo deshabilitado",
+      "ID_DEL_PAGO_DE_ORIGEN": "ID del pago de origen",
+      "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan."
     }
   }
 }

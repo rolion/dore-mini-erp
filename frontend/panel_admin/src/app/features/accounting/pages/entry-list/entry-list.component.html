@@ -1,0 +1,185 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.ENTRIES.ENTRADAS' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'ACCOUNTING.ENTRIES.ENTRADAS' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'ACCOUNTING.ENTRIES.ENTRADAS' | translate }}</strong></h2>
+              </div>
+            </div>
+            <div class="alert alert-info m-2" role="note" data-testid="context-note">{{ 'ACCOUNTING.ENTRIES.COBROS_RECIBIDOS_NO_ES_SALDO' | translate }}</div>
+
+            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
+              <div class="col-md-2 col-6">
+                <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
+                <input id="filter-from" type="date" class="form-control" formControlName="dateFrom" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-md-2 col-6">
+                <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
+                <input id="filter-to" type="date" class="form-control" formControlName="dateTo" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-md-3 col-6">
+                <label for="filter-account">{{ 'ACCOUNTING.ENTRIES.CUENTA' | translate }}</label>
+                <select id="filter-account" class="form-select form-control" formControlName="accountId">
+                  <option value="">{{ 'COMMON.TODAS' | translate }}</option>
+                  @for (account of accounts; track account.id) {
+                  <option [value]="account.id">{{ account.name }} ({{ account.currency }})</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-2 col-6">
+                <label for="filter-method">{{ 'COMMON.METODO' | translate }}</label>
+                <select id="filter-method" class="form-select form-control" formControlName="method">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  @for (method of methods; track method.code) {
+                  <option [value]="method.code">{{ method.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-2 col-6">
+                <label for="filter-origin">{{ 'COMMON.ORIGEN' | translate }}</label>
+                <select id="filter-origin" class="form-select form-control" formControlName="origin">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  @for (origin of origins; track origin) {
+                  <option [value]="origin">{{ originLabel(origin) }}</option>
+                  }
+                </select>
+              </div>
+              @if (rangeInvalid) {
+              <div class="col-12">
+                <small class="form-text text-danger" data-testid="range-error">{{ 'ACCOUNTING.ENTRIES.LA_FECHA_HASTA_NO_PUEDE' | translate }}</small>
+              </div>
+              }
+              <div class="col-md-1 col-6 d-flex align-items-end">
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+            </form>
+
+            <div class="m-2" data-testid="period">
+              <small class="text-muted d-block">
+                {{ 'ACCOUNTING.ENTRIES.PERIODO' | translate }}:
+                @if (filters.dateFrom || filters.dateTo) {
+                {{ filters.dateFrom ? (filters.dateFrom | date: 'dd/MM/yyyy') : '…' }} – {{ filters.dateTo ? (filters.dateTo | date: 'dd/MM/yyyy') : '…' }}
+                } @else {
+                {{ 'ACCOUNTING.ENTRIES.TODAS_LAS_FECHAS' | translate }}
+                }
+              </small>
+              @if (coverage?.firstPaymentDate) {
+              <small class="text-muted d-block" data-testid="coverage">
+                {{ 'ACCOUNTING.ENTRIES.COBERTURA_DEL_LIBRO' | translate }}: {{ coverage?.firstPaymentDate | date: 'dd/MM/yyyy' }} – {{ coverage?.lastPaymentDate | date: 'dd/MM/yyyy' }}.
+                {{ 'ACCOUNTING.ENTRIES.LOS_COBROS_ANTERIORES_NO_APARECEN' | translate }}
+              </small>
+              }
+            </div>
+
+            @if (errorMessage) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            }
+
+            @if (loading && rows.length === 0) {
+            <p class="m-3 text-muted" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            }
+
+            @if (!errorMessage && !loading) {
+            <div class="m-2" data-testid="totals">
+              <h5>{{ 'ACCOUNTING.ENTRIES.TOTALES_DEL_FILTRO' | translate }}</h5>
+              @if (totals.length === 0) {
+              <p class="text-muted mb-0" data-testid="totals-empty">{{ 'ACCOUNTING.ENTRIES.SIN_REGISTROS' | translate }}</p>
+              }
+              @for (item of totals; track item.currency) {
+              <div class="row align-items-baseline mb-1" data-testid="total-row">
+                <div class="col-sm-2"><strong>{{ item.currency }}</strong></div>
+                <div class="col-sm-3 fs-5" data-testid="total-amount">{{ amount(item.amount, item.currency) }}</div>
+                <div class="col-sm-2 text-muted">{{ 'ACCOUNTING.ENTRIES.N_ENTRADAS' | translate: { count: item.count } }}</div>
+                <div class="col-sm-5 text-muted">
+                  {{ 'ACCOUNTING.ENTRIES.PRODUCTOS' | translate }} {{ amount(item.byOrigin.PRODUCT, item.currency) }} ·
+                  {{ 'ACCOUNTING.ENTRIES.SERVICIOS' | translate }} {{ amount(item.byOrigin.SERVICE, item.currency) }}
+                </div>
+              </div>
+              }
+            </div>
+            }
+
+            @if (emptyBook) {
+            <p class="text-center p-4 mb-0" data-testid="empty-book">{{ 'ACCOUNTING.ENTRIES.AUN_NO_HAY_ENTRADAS_REGISTRADAS' | translate }}</p>
+            } @else if (emptyWithFilters) {
+            <div class="text-center p-4" data-testid="empty-filtered">
+              <p class="mb-2">{{ 'ACCOUNTING.ENTRIES.NO_HAY_ENTRADAS_QUE_COINCIDAN' | translate }}</p>
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+            </div>
+            } @else if (rows.length > 0) {
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
+              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+              <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.FECHA_DEL_PAGO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.paymentDate | date: 'dd/MM/yyyy' }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.CUENTA' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.accountName }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'COMMON.METODO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="100">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.methodLabel }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'COMMON.ORIGEN' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <div class="badge-outline" data-testid="origin-badge" [class]="originClass(row.origin)">{{ originLabel(row.origin) }}</div>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.DOCUMENTO' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (link(row); as target) {
+                  <a [routerLink]="target" data-testid="source-link">{{ document(row) }}</a>
+                  } @else {
+                  <span data-testid="source-text">{{ document(row) }}</span>
+                  }
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.COMPROBANTE' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.receiptNumber || '—' }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'COMMON.MONTO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110" headerClass="text-end" cellClass="text-end">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <span class="d-block text-end text-nowrap" data-testid="amount">{{ amount(row.amount, row.currency) }}</span>
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.REGISTRADA_POR' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110">
+                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.recordedByName || '—' }}</ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [flexGrow]="0.5" [minWidth]="80">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/accounting/entries', row.id]"
+                    [title]="'ACCOUNTING.ENTRIES.VER_ENTRADA' | translate" [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_ENTRADA' | translate">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
