@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-conciliar-regularizar-pagos-historicos
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/71
 **Fuente:** https://trello.com/c/17DwVe39/21-pb-acc-004-conciliar-y-regularizar-pagos-hist%C3%B3ricos-de-productos-y-servicios
 
 ## Historial de transiciones
