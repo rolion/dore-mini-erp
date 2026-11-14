@@ -1,6 +1,6 @@
 # TASK-libro-entradas-filtros-totales: Libro de entradas con filtros, totales y origen (PB-ACC-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-libro-entradas-filtros-totales
@@ -14,6 +14,7 @@
 | 2026-11-14 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nueva tabla con restricción única y contrato transaccional entre módulos, migración, contrato API, pantalla nueva) | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: las ambigüedades se resolvieron con criterio propio y quedan registradas en el plan | delivery-start |
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS con reservas (3 hallazgos Low abiertos; revisión visual no verificada); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -92,7 +93,12 @@ No existe ninguna entrada ni listado; los pagos solo viven en pedidos y Cobros.
 **Verificación propia (no es el Quality Gate):** backend suite completa 1569 tests OK (con `.env` copiado a este worktree con autorización del usuario, sin leerlo; ignorado por git) y `makemigrations --check` sin cambios; frontend `ng lint` OK, `npm run i18n:check` 1903 claves usadas / 0 faltantes, `ng build` OK, Karma acotado (`features/accounting` + `layout/sidebar`) 49/49 OK. No se ejecutó la suite completa de Karma ni inspección visual en navegador.
 
 ## Review
-_Pendiente_
+**Veredicto: PASS con reservas** (2026-11-14, subagente aislado; sin hallazgos Critical/High).
+- Backend: suite completa 1569 tests OK; `makemigrations --check` sin cambios; bandit sobre `accounting` sin hallazgos. ruff y mypy no instalados: no ejecutados.
+- Frontend: `npm run lint` OK; `i18n:check` 1903 claves, 0 faltantes; `ng build` OK; `npm audit --omit=dev` 0 vulnerabilidades. Suite completa de Karma: 1 ejecución 1386 OK y 4 con 1 fallo en `screens-i18n.spec.ts` («labels coming from code follow the active language»), intermitente y preexistente (también falla en `main` por el orden aleatorio; el diff no la toca).
+- Límites DDD, alcance del diff (sin tocar reporting, sales ni receivables), `record_entry` (transacción exigida, bloqueo de cuenta, punto de guardado, conflicto), totales en SQL, aislamiento por empresa, ausencia de escritura (405) y migración aditiva: conformes. Las 5 desviaciones declaradas están justificadas.
+- Revisión visual en navegador: **no verificada** (solo lectura del código contra la checklist de design-system §8).
+- Hallazgos Low abiertos: [REV-01](../reviews/REV-2026-11-14-libro-entradas-filtros-totales-01.md) (EDGE-02: `account_id` bien formado pero inexistente da 200 vacío, sin fuga), [REV-02](../reviews/REV-2026-11-14-libro-entradas-filtros-totales-02.md) (API-03: `RecordedEntry` es un DTO plano, no `{entry, created}`; desviación no declarada), [REV-03](../reviews/REV-2026-11-14-libro-entradas-filtros-totales-03.md) (sin test directo de EDGE-03/EDGE-06; «no admin» y «sin texto libre» probados de forma débil).
 
 ## Publicación
-_Pendiente_
+PR #68 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración `accounting/0002_entry`, solo `CreateModel`, con restricción única y `CHECK`) y **arquitectura** (contrato transaccional entre módulos, ADR-libro-entradas-filtros-totales-registro-unico-y-contrato). No hay cambios de autenticación ni de infraestructura.
