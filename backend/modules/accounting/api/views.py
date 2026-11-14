@@ -5,6 +5,10 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.utils import timezone
+
+from modules.accounting.application.regularization_summary import build_summary
+from modules.accounting.application.regularize import RegularizationInProgress, RegularizeLedger
 from modules.accounting.application.use_cases import (
     ActivateAccount,
     ConfigureMethod,
@@ -24,6 +28,12 @@ from modules.accounting.domain.account import (
     MethodNotFound,
 )
 from modules.accounting.domain.entry import EntryNotFound
+from modules.accounting.domain.regularization import HistoricalMapping, RegularizationInputError, parse_mapping
+from modules.accounting.infrastructure.adapters import (
+    DjangoRegularizationLedger,
+    ReceivablesPaymentSource,
+    SalesPaymentSource,
+)
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
     DjangoEntryRepository,
@@ -37,6 +47,8 @@ from .serializers import (
     AccountInputSerializer,
     EntryFiltersSerializer,
     AccountUpdateSerializer,
+    RegularizationApplySerializer,
+    RegularizationInputSerializer,
     MethodInputSerializer,
     serialize_account,
     serialize_coverage,
@@ -182,3 +194,50 @@ class EntryDetailView(APIView):
         company_id = company_id_from(request)
         row = _run(GetEntry(DjangoEntryRepository(company_id)), entry_id)
         return Response(serialize_entry(row, module_gate.enabled_keys(company_id), detail=True))
+
+
+class _RegularizationView(APIView):
+    """Regularización de pagos históricos (PB-ACC-004): solo admin de la empresa de la sesión, con Contabilidad."""
+
+    required_modules = ('accounting',)
+    serializer_class = RegularizationInputSerializer
+    applies = False
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        company_id = company_id_from(request)
+        accounts = DjangoAccountRepository(company_id).by_id()
+        if not data['mapping']:
+            # Sin reglas todo queda pendiente: se puede previsualizar, pero no hay nada que aplicar.
+            if self.applies:
+                raise ValidationError({'mapping': ['Agrega al menos una regla de mapeo para aplicar.']})
+            mapping = HistoricalMapping({})
+        else:
+            try:
+                mapping = parse_mapping(data['mapping'], accounts)
+            except RegularizationInputError as exc:
+                raise ValidationError({'mapping': exc.errors}) from exc
+        use_case = RegularizeLedger(
+            {'PRODUCT': SalesPaymentSource(), 'SERVICE': ReceivablesPaymentSource()}, DjangoRegularizationLedger())
+        if self.applies:
+            user = request.user
+            executed_by = user.get_full_name().strip() or user.get_username()
+            try:
+                report = use_case.apply(company_id, data['date_from'], data['date_to'], mapping, executed_by,
+                                        timezone.now())
+            except RegularizationInProgress as exc:
+                raise Conflict(str(exc), 'regularization_in_progress', []) from exc
+        else:
+            report = use_case.plan(company_id, data['date_from'], data['date_to'], mapping)
+        return Response(build_summary(report, accounts, self.applies))
+
+
+class RegularizationPreviewView(_RegularizationView):
+    """Previsualización: lee y compara; no escribe nada."""
+
+
+class RegularizationApplyView(_RegularizationView):
+    serializer_class = RegularizationApplySerializer
+    applies = True

@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'ACCOUNTING.REGULARIZATION.DIALOGO_TITULO' | translate }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <p data-testid="summary">{{ 'ACCOUNTING.REGULARIZATION.DIALOGO_TEXTO' | translate: { count: count, amount: amounts } }}</p>
+  <div class="alert alert-info mb-0" role="alert">{{ 'ACCOUNTING.REGULARIZATION.DIALOGO_EFECTO' | translate }}</div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+  <button type="button" class="btn btn-danger" data-testid="confirm" (click)="activeModal.close(true)">{{ 'ACCOUNTING.REGULARIZATION.DIALOGO_CONFIRMAR' | translate }}</button>
+</div>

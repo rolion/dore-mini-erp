@@ -1,0 +1,209 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.REGULARIZATION.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'ACCOUNTING.REGULARIZATION.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ 'ACCOUNTING.REGULARIZATION.TITULO' | translate }}</h4>
+          </div>
+          <div class="card-body">
+            <p class="text-muted">{{ 'ACCOUNTING.REGULARIZATION.SUBTITULO' | translate }}</p>
+
+            @if (setupError) {
+            <div class="alert alert-danger" role="alert" data-testid="setup-error">{{ setupError }}</div>
+            }
+            @if (loadingSetup) {
+            <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else {
+            <form [formGroup]="form" (ngSubmit)="preview()" novalidate>
+              <div class="row">
+                <div class="col-md-3 form-group">
+                  <label for="dateFrom">{{ 'COMMON.DESDE' | translate }}</label>
+                  <input id="dateFrom" type="date" class="form-control" formControlName="dateFrom" />
+                </div>
+                <div class="col-md-3 form-group">
+                  <label for="dateTo">{{ 'COMMON.HASTA' | translate }}</label>
+                  <input id="dateTo" type="date" class="form-control" formControlName="dateTo" />
+                </div>
+              </div>
+              @if (rangeInvalid) {
+              <small class="form-text text-danger" data-testid="range-error">{{ 'ACCOUNTING.REGULARIZATION.RANGO_INVALIDO' | translate }}</small>
+              }
+
+              <h5 class="mt-3">{{ 'ACCOUNTING.REGULARIZATION.MAPEO_TITULO' | translate }}</h5>
+              <p class="text-muted">{{ 'ACCOUNTING.REGULARIZATION.MAPEO_AYUDA' | translate }}</p>
+              @if (rules.length === 0) {
+              <p class="text-muted" data-testid="no-rules">{{ 'ACCOUNTING.REGULARIZATION.SIN_REGLAS' | translate }}</p>
+              }
+              <div formArrayName="rules">
+                @for (rule of rules.controls; track rule; let i = $index) {
+                <div class="row align-items-end mb-2" [formGroupName]="i" data-testid="rule">
+                  <div class="col-md-3 form-group mb-1">
+                    <label [for]="'method-' + i">{{ 'ACCOUNTING.REGULARIZATION.METODO' | translate }}</label>
+                    <select [id]="'method-' + i" class="form-control" formControlName="method">
+                      <option value="">{{ 'ACCOUNTING.REGULARIZATION.SELECCIONAR' | translate }}</option>
+                      @for (method of methods; track method.code) {
+                      <option [value]="method.code">{{ method.label }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-3 form-group mb-1">
+                    <label [for]="'account-' + i">{{ 'ACCOUNTING.REGULARIZATION.CUENTA' | translate }}</label>
+                    <select [id]="'account-' + i" class="form-control" formControlName="accountId">
+                      <option value="">{{ 'ACCOUNTING.REGULARIZATION.SELECCIONAR' | translate }}</option>
+                      @for (account of accounts; track account.id) {
+                      <option [value]="account.id">{{ account.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="col-md-2 form-group mb-1">
+                    <label [for]="'from-' + i">{{ 'COMMON.DESDE' | translate }}</label>
+                    <input [id]="'from-' + i" type="date" class="form-control" formControlName="from" />
+                  </div>
+                  <div class="col-md-2 form-group mb-1">
+                    <label [for]="'to-' + i">{{ 'COMMON.HASTA' | translate }}</label>
+                    <input [id]="'to-' + i" type="date" class="form-control" formControlName="to" />
+                  </div>
+                  <div class="col-md-2 mb-1">
+                    <button type="button" class="btn btn-light" (click)="removeRule(i)">{{ 'ACCOUNTING.REGULARIZATION.QUITAR_REGLA' | translate }}</button>
+                  </div>
+                </div>
+                }
+              </div>
+              @if (incompleteRules) {
+              <small class="form-text text-danger" data-testid="incomplete-rules">{{ 'ACCOUNTING.REGULARIZATION.REGLA_INCOMPLETA' | translate }}</small>
+              }
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="button" class="btn btn-light" data-testid="add-rule" (click)="addRule()">+ {{ 'ACCOUNTING.REGULARIZATION.AGREGAR_REGLA' | translate }}</button>
+                <button type="submit" class="btn btn-primary" data-testid="preview" [disabled]="previewing || rangeInvalid || incompleteRules">
+                  {{ (previewing ? 'ACCOUNTING.REGULARIZATION.PREVISUALIZANDO' : 'ACCOUNTING.REGULARIZATION.PREVISUALIZAR') | translate }}
+                </button>
+              </div>
+            </form>
+            }
+
+            @if (errors.length) {
+            <div class="alert mt-3" [class.alert-warning]="inProgress" [class.alert-danger]="!inProgress" role="alert" data-testid="errors">
+              @for (message of errors; track message) {
+              <div>{{ message }}</div>
+              }
+            </div>
+            }
+          </div>
+        </div>
+
+        @if (summary) {
+        <div class="card" data-testid="summary">
+          <div class="card-header"><h4>{{ 'ACCOUNTING.REGULARIZATION.RESUMEN' | translate }}</h4></div>
+          <div class="card-body">
+            @if (applied) {
+            <div class="alert alert-success" role="status" data-testid="result">
+              {{ resultMessage }}
+              <a routerLink="/pocketbiz/accounting/entries" class="alert-link ms-2">{{ 'ACCOUNTING.REGULARIZATION.VER_ENTRADAS' | translate }}</a>
+            </div>
+            } @else {
+            <div class="alert alert-info" role="status">{{ 'ACCOUNTING.REGULARIZATION.AVISO_PREVISUALIZACION' | translate }}</div>
+            }
+            <div class="alert alert-info">{{ 'ACCOUNTING.REGULARIZATION.AVISO_IMPORTES' | translate }}</div>
+
+            @if (stale) {
+            <div class="alert alert-warning" role="alert" data-testid="stale">{{ 'ACCOUNTING.REGULARIZATION.CAMBIO_FORMULARIO' | translate }}</div>
+            }
+
+            @if (empty) {
+            <p class="text-muted" data-testid="empty">{{ 'ACCOUNTING.REGULARIZATION.VACIO' | translate }}</p>
+            } @else {
+            <div class="table-responsive">
+              <table class="table table-sm" data-testid="groups">
+                <thead>
+                  <tr>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ESTADO' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ORIGEN' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_CUENTA' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.REGULARIZATION.COL_CANTIDAD' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.REGULARIZATION.COL_IMPORTE' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (group of summary.groups; track $index) {
+                  <tr data-testid="group">
+                    <td>{{ statusLabel(group.status) }}</td>
+                    <td>{{ originLabel(group.origin) }}</td>
+                    <td>{{ group.account || ('ACCOUNTING.REGULARIZATION.SIN_CUENTA' | translate) }}</td>
+                    <td class="text-end">{{ group.count }}</td>
+                    <td class="text-end">{{ money(group.amount, group.currency) }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+
+            @if (absentEntries.length) {
+            <p class="text-muted" data-testid="absent">
+              {{ 'ACCOUNTING.REGULARIZATION.CAMPOS_AUSENTES' | translate }}:
+              @for (item of absentEntries; track item.name) {
+              <span class="me-2">{{ absentLabel(item.name) }}: {{ item.count }}</span>
+              }
+            </p>
+            }
+
+            @if (summary.details.length) {
+            <h5 class="mt-3">{{ 'ACCOUNTING.REGULARIZATION.REVISION_TITULO' | translate }}</h5>
+            <div class="table-responsive">
+              <table class="table table-sm" data-testid="details">
+                <thead>
+                  <tr>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ESTADO' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ORIGEN' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_DOCUMENTO' | translate }}</th>
+                    <th>{{ 'COMMON.FECHA' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_METODO' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.REGULARIZATION.COL_IMPORTE' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_MOTIVO' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (detail of summary.details; track detail.paymentId) {
+                  <tr data-testid="detail">
+                    <td>{{ statusLabel(detail.outcome || detail.status) }}</td>
+                    <td>{{ originLabel(detail.origin) }}</td>
+                    <td>{{ detail.documentRef || '—' }}</td>
+                    <td>{{ detail.paymentDate }}</td>
+                    <td>{{ methodLabel(detail.method) }}</td>
+                    <td class="text-end">{{ money(detail.amount, detail.currency) }}</td>
+                    <td>{{ reasonLabel(detail) }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+
+            @if (!applied) {
+            <div class="mt-3">
+              <button type="button" class="btn btn-warning" data-testid="apply" [disabled]="!canApply" (click)="confirmApply()">
+                {{ (applying ? 'ACCOUNTING.REGULARIZATION.APLICANDO' : 'ACCOUNTING.REGULARIZATION.APLICAR') | translate }}
+              </button>
+              @if (missingCount === 0 && !empty) {
+              <small class="form-text text-muted" data-testid="no-missing">{{ 'ACCOUNTING.REGULARIZATION.SIN_FALTANTES' | translate }}</small>
+              }
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

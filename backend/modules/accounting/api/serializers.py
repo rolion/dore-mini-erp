@@ -16,6 +16,27 @@ class AccountUpdateSerializer(serializers.Serializer):
     currency = serializers.CharField(max_length=3, required=False)
 
 
+class RegularizationInputSerializer(serializers.Serializer):
+    """Periodo y mapeo histórico explícito. La empresa nunca viene en el cuerpo: sale de la sesión."""
+    date_from = serializers.DateField(required=False, allow_null=True, default=None)
+    date_to = serializers.DateField(required=False, allow_null=True, default=None)
+    mapping = serializers.DictField(child=serializers.ListField(child=serializers.DictField()), allow_empty=True)
+
+    def validate(self, attrs):
+        if attrs['date_from'] and attrs['date_to'] and attrs['date_from'] > attrs['date_to']:
+            raise serializers.ValidationError({'date_from': ['La fecha inicial no puede ser posterior a la final.']})
+        return attrs
+
+
+class RegularizationApplySerializer(RegularizationInputSerializer):
+    confirm = serializers.BooleanField(default=False)
+
+    def validate_confirm(self, value):
+        if value is not True:
+            raise serializers.ValidationError('Confirma la regularización con confirm: true.')
+        return value
+
+
 class MethodInputSerializer(serializers.Serializer):
     account_id = serializers.UUIDField(allow_null=True)
     is_active = serializers.BooleanField(default=True)

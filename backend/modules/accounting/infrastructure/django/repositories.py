@@ -94,7 +94,8 @@ def _entry(model: EntryModel) -> Entry:
                  payment_date=model.payment_date, method=model.payment_method, origin_kind=model.origin_kind,
                  origin_id=model.origin_id, origin_document_ref=model.origin_document_ref,
                  receipt_number=model.receipt_number, recorded_by=model.recorded_by,
-                 recorded_by_name=model.recorded_by_name, created_at=model.created_at)
+                 recorded_by_name=model.recorded_by_name, created_at=model.created_at,
+                 regularized_at=model.regularized_at, regularized_by_name=model.regularized_by_name)
 
 
 @dataclass(frozen=True)
@@ -143,13 +144,23 @@ class DjangoEntryRepository:
                     amount=entry.amount, payment_date=entry.payment_date, payment_method=entry.method,
                     origin_kind=entry.origin_kind, origin_id=entry.origin_id,
                     origin_document_ref=entry.origin_document_ref, receipt_number=entry.receipt_number,
-                    recorded_by=entry.recorded_by, recorded_by_name=entry.recorded_by_name)
+                    recorded_by=entry.recorded_by, recorded_by_name=entry.recorded_by_name,
+                    regularized_at=entry.regularized_at, regularized_by_name=entry.regularized_by_name)
             return _entry(row), True
         except IntegrityError:
             existing = self._rows().filter(origin_kind=entry.origin_kind, origin_id=entry.origin_id).first()
             if existing is None:
                 raise
             return _entry(existing), False
+
+    def by_origin(self, origin_kind: str, origin_ids) -> dict[UUID, Entry]:
+        """Entradas de la empresa de ese origen para los IDs dados (lectura en bloques, sin N+1)."""
+        ids = list(origin_ids)
+        found: dict[UUID, Entry] = {}
+        for start in range(0, len(ids), 1000):
+            for row in self._rows().filter(origin_kind=origin_kind, origin_id__in=ids[start:start + 1000]):
+                found[row.origin_id] = _entry(row)
+        return found
 
     def get(self, entry_id: UUID) -> EntryModel | None:
         return self._rows().select_related('account').filter(pk=entry_id).first()
