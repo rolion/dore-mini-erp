@@ -30,7 +30,7 @@ def build_summary(report: Report, accounts: dict[UUID, Account], applied: bool) 
         {'status': item.status, 'outcome': item.outcome, 'origin': item.payment.origin_kind,
          'payment_id': str(item.payment.id), 'document_ref': item.payment.document_ref,
          'payment_date': item.payment.payment_date.isoformat(), 'method': item.payment.method,
-         'amount': _money(item.payment.amount), 'reason': item.reason, 'fields': list(item.fields),
+         'amount': _money(item.payment.amount), 'currency': item.currency, 'reason': item.reason, 'fields': list(item.fields),
          'error': item.error}
         for item in report.items if item.status in DETAIL_STATUSES or item.outcome == FAILED
     ]

@@ -15,6 +15,7 @@ import {
   RegularizationStatus,
   RegularizationSummary,
   RuleDraft,
+  isRulePartial,
   reasonLabel,
   statusAmounts,
   statusCount,
@@ -103,6 +104,11 @@ export class RegularizationComponent implements OnInit {
     return { dateFrom: value.dateFrom, dateTo: value.dateTo, rules: value.rules as RuleDraft[] };
   }
 
+  /** Hay filas a medias: se avisa y no se previsualiza, para no descartarlas en silencio. */
+  get incompleteRules(): boolean {
+    return this.input.rules.some(isRulePartial);
+  }
+
   get rangeInvalid(): boolean {
     const { dateFrom, dateTo } = this.input;
     return !!dateFrom && !!dateTo && dateFrom > dateTo;
@@ -148,7 +154,7 @@ export class RegularizationComponent implements OnInit {
   }
 
   preview(): void {
-    if (this.previewing || this.rangeInvalid) {
+    if (this.previewing || this.rangeInvalid || this.incompleteRules) {
       return;
     }
     const request = toRequest(this.input);

@@ -1,6 +1,6 @@
 # REV-2026-11-14-conciliar-regularizar-pagos-historicos-04: Reglas de mapeo incompletas se descartan en silencio al enviar
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-14-conciliar-regularizar-pagos-historicos.md (v2)
@@ -19,3 +19,6 @@ Una regla a medias desaparece del cuerpo; esos pagos salen como «pendientes» s
 
 ## Evidence
 `toRequest`: `if (!rule.method || !rule.accountId) { continue; }`. `parse_mapping`: `if not isinstance(raw, dict) or not raw: raise RegularizationInputError(...)`. `regularization.component.html`: `money(detail.amount, 'BOB')`.
+
+## Resolución
+Reglas a medias: la pantalla avisa y no previsualiza. Sin reglas: la API previsualiza (todo pendiente) y rechaza aplicar con 400. La tabla de revisión usa la moneda de cada pago (`currency` en el detalle). Los mensajes 400 del servidor salen en español también en en/pt: es el comportamiento de toda la API del proyecto, se acepta como limitación.

@@ -102,6 +102,17 @@ class RegularizationApiTests(APITestCase):
         response = self.client_a.post(PREVIEW, self.body(), format='json')
         self.assertEqual((response.status_code, response.json()['code']), (403, 'module_disabled'))
 
+    def test_empty_mapping_previews_everything_as_pending_but_cannot_apply(self):  # AC-14, REV-04
+        self.order_payment()
+        preview = self.client_a.post(PREVIEW, {'mapping': {}}, format='json')
+        self.assertEqual(preview.status_code, 200, preview.content)
+        data = preview.json()
+        self.assertEqual({g['status'] for g in data['groups']}, {'pending'})
+        self.assertEqual(data['details'][0]['currency'], 'BOB')
+        apply = self.client_a.post(APPLY, {'mapping': {}, 'confirm': True}, format='json')
+        self.assertEqual(apply.status_code, 400)
+        self.assertEqual(self.count(), 0)
+
     def test_validation_errors_and_conflict(self):  # AC-14
         self.order_payment()
         cases = [
@@ -111,6 +122,7 @@ class RegularizationApiTests(APITestCase):
             {'mapping': self.mapping, 'date_from': '2026-05-01', 'date_to': '2026-01-01'},
             {'mapping': self.mapping, 'date_from': 'ayer'},
             {},
+            {'mapping': {'CASH': []}},
         ]
         for body in cases:
             response = self.client_a.post(PREVIEW, body, format='json')

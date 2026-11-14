@@ -45,6 +45,7 @@ export interface SummaryDetail {
   paymentDate: string;
   method: string;
   amount: string;
+  currency: string;
   reason: string;
   fields: string[];
   error: string;
@@ -63,7 +64,7 @@ export interface SummaryDto {
   total_payments: number;
   groups: { status: RegularizationStatus; origin: EntryOrigin; account_id: string | null; account: string | null; currency: string; count: number; amount: string }[];
   absent_fields: Record<string, number>;
-  details: { status: string; outcome: string; origin: EntryOrigin; payment_id: string; document_ref: string; payment_date: string; method: string; amount: string; reason: string; fields: string[]; error: string }[];
+  details: { status: string; outcome: string; origin: EntryOrigin; payment_id: string; document_ref: string; payment_date: string; method: string; amount: string; currency: string; reason: string; fields: string[]; error: string }[];
 }
 
 export function toSummary(dto: SummaryDto): RegularizationSummary {
@@ -72,11 +73,16 @@ export function toSummary(dto: SummaryDto): RegularizationSummary {
     totalPayments: dto.total_payments,
     groups: dto.groups.map((g) => ({ status: g.status, origin: g.origin, accountId: g.account_id, account: g.account, currency: g.currency, count: g.count, amount: g.amount })),
     absentFields: dto.absent_fields,
-    details: dto.details.map((d) => ({ status: d.status, outcome: d.outcome, origin: d.origin, paymentId: d.payment_id, documentRef: d.document_ref, paymentDate: d.payment_date, method: d.method, amount: d.amount, reason: d.reason, fields: d.fields, error: d.error })),
+    details: dto.details.map((d) => ({ status: d.status, outcome: d.outcome, origin: d.origin, paymentId: d.payment_id, documentRef: d.document_ref, paymentDate: d.payment_date, method: d.method, amount: d.amount, currency: d.currency, reason: d.reason, fields: d.fields, error: d.error })),
   };
 }
 
-/** Cuerpo de la petición: una regla vacía (sin método o sin cuenta) no se envía. */
+/** Una regla a medias (método sin cuenta o cuenta sin método) no se envía: la pantalla lo avisa y no previsualiza. */
+export function isRulePartial(rule: RuleDraft): boolean {
+  return (!!rule.method) !== (!!rule.accountId) || (!rule.method && !rule.accountId && (!!rule.from || !!rule.to));
+}
+
+/** Cuerpo de la petición: las filas totalmente vacías no se envían. */
 export function toRequest(input: RegularizationInput): RegularizationRequest {
   const mapping: RegularizationRequest['mapping'] = {};
   for (const rule of input.rules) {

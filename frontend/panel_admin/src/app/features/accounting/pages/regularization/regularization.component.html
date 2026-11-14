@@ -80,9 +80,12 @@
                 </div>
                 }
               </div>
+              @if (incompleteRules) {
+              <small class="form-text text-danger" data-testid="incomplete-rules">{{ 'ACCOUNTING.REGULARIZATION.REGLA_INCOMPLETA' | translate }}</small>
+              }
               <div class="d-flex flex-wrap gap-2 mt-3">
                 <button type="button" class="btn btn-light" data-testid="add-rule" (click)="addRule()">+ {{ 'ACCOUNTING.REGULARIZATION.AGREGAR_REGLA' | translate }}</button>
-                <button type="submit" class="btn btn-primary" data-testid="preview" [disabled]="previewing || rangeInvalid">
+                <button type="submit" class="btn btn-primary" data-testid="preview" [disabled]="previewing || rangeInvalid || incompleteRules">
                   {{ (previewing ? 'ACCOUNTING.REGULARIZATION.PREVISUALIZANDO' : 'ACCOUNTING.REGULARIZATION.PREVISUALIZAR') | translate }}
                 </button>
               </div>
@@ -178,7 +181,7 @@
                     <td>{{ detail.documentRef || '—' }}</td>
                     <td>{{ detail.paymentDate }}</td>
                     <td>{{ methodLabel(detail.method) }}</td>
-                    <td class="text-end">{{ money(detail.amount, 'BOB') }}</td>
+                    <td class="text-end">{{ money(detail.amount, detail.currency) }}</td>
                     <td>{{ reasonLabel(detail) }}</td>
                   </tr>
                   }

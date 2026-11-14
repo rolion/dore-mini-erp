@@ -1,7 +1,7 @@
 import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { makeSummaryDto } from '../testing/regularization-fixtures';
-import { reasonLabel, statusAmounts, statusCount, toRequest, toSummary } from './regularization';
+import { isRulePartial, reasonLabel, statusAmounts, statusCount, toRequest, toSummary } from './regularization';
 
 describe('regularization model', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: provideTestTranslations() }));
@@ -34,5 +34,13 @@ describe('regularization model', () => {
     expect(reasonLabel(detail)).toBe('Método sin regla de mapeo');
     expect(reasonLabel({ ...detail, reason: '', fields: ['amount'] })).toContain('importe');
     expect(reasonLabel({ ...detail, error: 'rechazada' })).toBe('rechazada');
+  });
+
+  it('detects half-filled rules but not completely empty rows (REV-04)', () => {
+    expect(isRulePartial({ method: 'CASH', accountId: '', from: '', to: '' })).toBeTrue();
+    expect(isRulePartial({ method: '', accountId: 'a-1', from: '', to: '' })).toBeTrue();
+    expect(isRulePartial({ method: '', accountId: '', from: '2026-01-01', to: '' })).toBeTrue();
+    expect(isRulePartial({ method: '', accountId: '', from: '', to: '' })).toBeFalse();
+    expect(isRulePartial({ method: 'CASH', accountId: 'a-1', from: '', to: '' })).toBeFalse();
   });
 });

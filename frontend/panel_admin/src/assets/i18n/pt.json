@@ -2635,7 +2635,8 @@
         "CURRENCY": "moeda",
         "ORIGIN_DOCUMENT_REF": "documento",
         "ACCOUNT_ID": "conta"
-      }
+      },
+      "REGLA_INCOMPLETA": "Complete ou remova as regras incompletas: cada regra precisa de método e conta."
     }
   }
 }

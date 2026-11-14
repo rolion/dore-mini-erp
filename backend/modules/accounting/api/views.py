@@ -28,7 +28,7 @@ from modules.accounting.domain.account import (
     MethodNotFound,
 )
 from modules.accounting.domain.entry import EntryNotFound
-from modules.accounting.domain.regularization import RegularizationInputError, parse_mapping
+from modules.accounting.domain.regularization import HistoricalMapping, RegularizationInputError, parse_mapping
 from modules.accounting.infrastructure.adapters import (
     DjangoRegularizationLedger,
     ReceivablesPaymentSource,
@@ -209,10 +209,16 @@ class _RegularizationView(APIView):
         data = serializer.validated_data
         company_id = company_id_from(request)
         accounts = DjangoAccountRepository(company_id).by_id()
-        try:
-            mapping = parse_mapping(data['mapping'], accounts)
-        except RegularizationInputError as exc:
-            raise ValidationError({'mapping': exc.errors}) from exc
+        if not data['mapping']:
+            # Sin reglas todo queda pendiente: se puede previsualizar, pero no hay nada que aplicar.
+            if self.applies:
+                raise ValidationError({'mapping': ['Agrega al menos una regla de mapeo para aplicar.']})
+            mapping = HistoricalMapping({})
+        else:
+            try:
+                mapping = parse_mapping(data['mapping'], accounts)
+            except RegularizationInputError as exc:
+                raise ValidationError({'mapping': exc.errors}) from exc
         use_case = RegularizeLedger(
             {'PRODUCT': SalesPaymentSource(), 'SERVICE': ReceivablesPaymentSource()}, DjangoRegularizationLedger())
         if self.applies:

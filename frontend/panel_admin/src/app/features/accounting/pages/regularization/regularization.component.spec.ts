@@ -148,6 +148,26 @@ describe('RegularizationComponent', () => {
     expect(el.querySelector('[data-testid="errors"]')).not.toBeNull();
   });
 
+  it('warns about half-filled rules instead of dropping them silently, and previews without rules (REV-04)', () => {
+    const { component, el, fixture, regularization } = setup();
+    click(el, 'preview');
+    fixture.detectChanges();
+    expect(regularization.preview).toHaveBeenCalledWith({ date_from: null, date_to: null, mapping: {} });
+
+    click(el, 'add-rule');
+    component.rules.at(0).patchValue({ method: 'CASH' });
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="incomplete-rules"]')).not.toBeNull();
+    expect((el.querySelector('[data-testid="preview"]') as HTMLButtonElement).disabled).toBeTrue();
+    regularization.preview.calls.reset();
+    component.preview();
+    expect(regularization.preview).not.toHaveBeenCalled();
+
+    component.rules.at(0).patchValue({ accountId: 'a-1' });
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="incomplete-rules"]')).toBeNull();
+  });
+
   it('blocks previewing an inverted period (AC-14)', () => {
     const { component, el, fixture, regularization } = setup();
     component.form.patchValue({ dateFrom: '2026-05-01', dateTo: '2026-01-01' });

@@ -11,7 +11,7 @@ export function makeSummaryDto(overrides: Partial<SummaryDto> = {}): SummaryDto 
     ],
     absent_fields: { author: 2 },
     details: [
-      { status: 'pending', outcome: '', origin: 'PRODUCT', payment_id: 'p-6', document_ref: 'o-6', payment_date: '2026-03-10', method: 'CARD', amount: '30.00', reason: 'method_without_mapping', fields: [], error: '' },
+      { status: 'pending', outcome: '', origin: 'PRODUCT', payment_id: 'p-6', document_ref: 'o-6', payment_date: '2026-03-10', method: 'CARD', amount: '30.00', currency: 'BOB', reason: 'method_without_mapping', fields: [], error: '' },
     ],
     ...overrides,
   };

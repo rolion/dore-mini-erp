@@ -2635,7 +2635,8 @@
         "CURRENCY": "currency",
         "ORIGIN_DOCUMENT_REF": "document",
         "ACCOUNT_ID": "account"
-      }
+      },
+      "REGLA_INCOMPLETA": "Complete or remove the half-filled rules: each rule needs a method and an account."
     }
   }
 }
