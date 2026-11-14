@@ -17,7 +17,7 @@ def _version(proforma: Proforma) -> VersionData:
     lines = tuple((l.id, l.origin_line_id, l.description, l.piece, l.subtotal, l.decision, l.collected)
                   for l in proforma.lines)
     return VersionData(proforma.number, proforma.version, proforma.status, proforma.customer_id,
-                       proforma.customer_name, proforma.date, lines)
+                       proforma.customer_name, proforma.date, lines, proforma.id)
 
 
 def get_commitments(company_id: UUID, numbers: Iterable[str]) -> dict[str, CommitmentSnapshot]:

@@ -1,9 +1,9 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { tr } from '../../../core/i18n/translate';
-import { Page } from '../../../shared/models/page';
+import { environment } from '../../../environments/environment';
+import { tr } from '../../core/i18n/translate';
+import { Page } from '../models/page';
 import {
   Commitment, ObligationFilters, ObligationSummary, PaymentInput, PaymentRegistered, ReceivableFailure, SourceKind,
 } from '../models/receivable';

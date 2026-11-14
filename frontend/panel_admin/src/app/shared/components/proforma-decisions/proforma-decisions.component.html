@@ -7,18 +7,37 @@
   <dd class="col-sm-9">{{ totals().pending | money }}</dd>
   <dt class="col-sm-3">{{ 'PROFORMA_DECISIONS.ESTADO_ACEPTACION' | translate }}</dt>
   <dd class="col-sm-9">
-    <span class="badge" [class]="acceptanceClasses[acceptanceStatus()]">{{ acceptanceLabel(acceptanceStatus()) }}</span>
-    <small class="text-muted d-block">{{ 'PROFORMA_DECISIONS.NOTA_SALDO' | translate }}</small>
+    <app-status-badge [tone]="acceptanceTones[acceptanceStatus()]" [label]="acceptanceLabel(acceptanceStatus())" />
   </dd>
+  @if (collection(); as c) {
+    <dt class="col-sm-3">{{ 'PROFORMA_DECISIONS.TOTAL_COBRADO' | translate }}</dt>
+    <dd class="col-sm-9"><strong>{{ c.paid | money }}</strong></dd>
+    <dt class="col-sm-3">{{ 'PROFORMA_DECISIONS.TOTAL_SALDO' | translate }}</dt>
+    <dd class="col-sm-9"><strong>{{ c.balance | money }}</strong></dd>
+  }
 </dl>
 
-@if (success()) { <p class="alert alert-success" role="status">{{ success() | translate }}</p> }
+@if (success()) {
+  <div class="alert alert-success d-flex flex-wrap gap-2 justify-content-between align-items-center" role="status">
+    <span>{{ success() | translate }}</span>
+    @if (justAccepted() && collectible() && collection(); as c) {
+      <span class="d-flex gap-2">
+        <button type="button" class="btn btn-primary" (click)="collect.emit()">
+          {{ 'RECEIVABLES.COBRAR_AHORA' | translate: { amount: (c.balance | money) } }}</button>
+        <button type="button" class="btn btn-light" (click)="justAccepted.set(false)">{{ 'RECEIVABLES.MAS_TARDE' | translate }}</button>
+      </span>
+    }
+  </div>
+}
 
 <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-2">
   <h5 class="mb-0">{{ 'PROFORMA_DECISIONS.LINEAS' | translate }}</h5>
   <div class="d-flex flex-wrap gap-2">
     @if (canDecide()) {
-      <button type="button" class="btn btn-success" [disabled]="chosen().length === 0" (click)="openDecision('accepted', dlg)">
+      @if (pendingLines().length > 0) {
+        <button type="button" class="btn btn-success" (click)="acceptAll(dlg)">{{ 'PROFORMA_DECISIONS.ACEPTAR_TODO' | translate }}</button>
+      }
+      <button type="button" class="btn btn-outline-success" [disabled]="chosen().length === 0" (click)="openDecision('accepted', dlg)">
         {{ 'PROFORMA_DECISIONS.ACEPTAR_SELECCION' | translate }}</button>
       <button type="button" class="btn btn-outline-danger" [disabled]="chosen().length === 0" (click)="openDecision('rejected', dlg)">
         {{ 'PROFORMA_DECISIONS.RECHAZAR_SELECCION' | translate }}</button>
@@ -75,7 +94,7 @@
           <td class="text-end">{{ line.unit_price | money }}</td>
           <td class="text-end">{{ line.subtotal | money }}</td>
           <td>
-            <span class="badge" [class]="decisionClasses[line.decision ?? 'pending']">{{ decisionLabel(line.decision ?? 'pending') }}</span>
+            <app-status-badge [tone]="decisionTones[line.decision ?? 'pending']" [label]="decisionLabel(line.decision ?? 'pending')" />
             @if (line.decided_at) { <small class="d-block text-muted">{{ line.decided_at | date: 'dd/MM/yyyy' }}</small> }
             @if (line.authorized) { <small class="d-block">{{ 'PROFORMA_DECISIONS.AUTORIZADA' | translate }}</small> }
           </td>
@@ -116,7 +135,7 @@
           <td>{{ item.decided_at | date: 'dd/MM/yyyy HH:mm' }}</td>
           <td>{{ item.line_description }}</td>
           <td>
-            <span class="badge" [class]="decisionClasses[item.decision]">{{ decisionLabel(item.decision) }}</span>
+            <app-status-badge [tone]="decisionTones[item.decision]" [label]="decisionLabel(item.decision)" />
             @if (item.kind === 'rectification') { <small class="d-block">{{ 'PROFORMA_DECISIONS.ES_RECTIFICACION' | translate }}</small> }
             @if (item.kind === 'carried') { <small class="d-block text-muted">{{ 'PROFORMA_DECISIONS.ES_CONSERVADA' | translate }}</small> }
           </td>
@@ -145,42 +164,6 @@
     <h4 id="pd-title">{{ titleKey() | translate }}</h4>
     @if (rectifyTarget(); as target) {
       <p>{{ 'PROFORMA_DECISIONS.RECT_TEXTO' | translate: { name: target.description, from: decisionLabel(target.decision ?? 'pending'), to: decisionLabel(mode()) } }}</p>
-    }
-    @if (step() === 1) {
-      @if (mode() === 'accepted') {
-        <div class="mb-2">
-          <label class="form-label" for="pd-name">{{ 'PROFORMA_DECISIONS.F_NOMBRE' | translate }}</label>
-          <input id="pd-name" class="form-control" formControlName="accepted_by_name" [maxlength]="nameMax" autocomplete="off" />
-          @if (fieldErrors()['accepted_by_name']; as e) { <small class="text-danger">{{ e | translate }}</small> }
-        </div>
-        <div class="mb-2">
-          <label class="form-label" for="pd-medium">{{ 'PROFORMA_DECISIONS.F_MEDIO' | translate }}</label>
-          <select id="pd-medium" class="form-select" formControlName="medium">
-            <option value="">{{ 'PROFORMA_DECISIONS.F_ELEGIR' | translate }}</option>
-            @for (m of media; track m) { <option [value]="m">{{ mediumLabel(m) }}</option> }
-          </select>
-          @if (fieldErrors()['medium']; as e) { <small class="text-danger">{{ e | translate }}</small> }
-        </div>
-        <div class="mb-2">
-          <label class="form-label" for="pd-ref">{{ 'PROFORMA_DECISIONS.F_REFERENCIA' | translate }}</label>
-          <input id="pd-ref" class="form-control" formControlName="reference" [maxlength]="referenceMax" autocomplete="off" />
-          @if (fieldErrors()['reference']; as e) { <small class="text-danger">{{ e | translate }}</small> }
-        </div>
-      }
-      <div class="mb-2">
-        <label class="form-label" for="pd-reason">{{ (rectifyTarget() ? 'PROFORMA_DECISIONS.F_MOTIVO_RECT' : 'PROFORMA_DECISIONS.F_MOTIVO') | translate }}</label>
-        <textarea id="pd-reason" class="form-control" rows="2" formControlName="reason" [maxlength]="reasonMax"></textarea>
-        @if (fieldErrors()['reason']; as e) { <small class="text-danger">{{ e | translate }}</small> }
-      </div>
-      @if (rectifyTarget()) {
-        <p class="alert alert-info">{{ 'PROFORMA_DECISIONS.RECT_AVISO' | translate }}</p>
-        @if (error()) { <p class="alert alert-danger" role="alert">{{ error() }}</p> }
-      }
-      <div class="d-flex gap-2 mt-3">
-        <button type="submit" [class]="rectifyTarget() ? 'btn btn-warning' : 'btn btn-primary'" [disabled]="saving()">
-          {{ (rectifyTarget() ? (saving() ? 'PROFORMA_DECISIONS.REGISTRANDO' : 'PROFORMA_DECISIONS.RECTIFICAR') : 'PROFORMA_DECISIONS.REVISAR_RESUMEN') | translate }}</button>
-        <button type="button" class="btn btn-light" [disabled]="saving()" (click)="close(dlg)">{{ 'PROFORMA_DECISIONS.CANCELAR' | translate }}</button>
-      </div>
     } @else {
       <p>{{ (mode() === 'accepted' ? 'PROFORMA_DECISIONS.RESUMEN_ACEPTA' : 'PROFORMA_DECISIONS.RESUMEN_RECHAZA') | translate:
         { name: form.controls.accepted_by_name.value || '—', count: chosen().length, amount: (chosenAmount() | money) } }}</p>
@@ -188,13 +171,43 @@
         @for (line of chosen(); track line.id) { <li>{{ line.description }} — {{ line.subtotal | money }}</li> }
       </ul>
       <p class="fw-bold">{{ 'PROFORMA_DECISIONS.RESUMEN_TOTAL' | translate: { amount: (chosenAmount() | money) } }}</p>
-      <p class="alert alert-info">{{ 'PROFORMA_DECISIONS.AVISO_IRREVERSIBLE' | translate }}</p>
-      @if (error()) { <p class="alert alert-danger" role="alert">{{ error() }}</p> }
-      <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary" [disabled]="saving()">
-          {{ (saving() ? 'PROFORMA_DECISIONS.REGISTRANDO' : 'PROFORMA_DECISIONS.CONFIRMAR') | translate }}</button>
-        <button type="button" class="btn btn-light" [disabled]="saving()" (click)="step.set(1)">{{ 'PROFORMA_DECISIONS.VOLVER_EDITAR' | translate }}</button>
+    }
+    @if (mode() === 'accepted') {
+      <div class="mb-2">
+        <label class="form-label" for="pd-name">{{ 'PROFORMA_DECISIONS.F_NOMBRE' | translate }}</label>
+        <input id="pd-name" class="form-control" formControlName="accepted_by_name" [maxlength]="nameMax" autocomplete="off" />
+        @if (fieldErrors()['accepted_by_name']; as e) { <small class="text-danger" role="alert">{{ e | translate }}</small> }
+      </div>
+      <div class="mb-2">
+        <label class="form-label" for="pd-medium">{{ 'PROFORMA_DECISIONS.F_MEDIO' | translate }}</label>
+        <select id="pd-medium" class="form-select" formControlName="medium">
+          <option value="">{{ 'PROFORMA_DECISIONS.F_ELEGIR' | translate }}</option>
+          @for (m of media; track m) { <option [value]="m">{{ mediumLabel(m) }}</option> }
+        </select>
+        @if (fieldErrors()['medium']; as e) { <small class="text-danger" role="alert">{{ e | translate }}</small> }
+      </div>
+      <details class="mb-2">
+        <summary>{{ 'PROFORMA_DECISIONS.MAS_DATOS' | translate }}</summary>
+        <div class="mt-2">
+          <label class="form-label" for="pd-ref">{{ 'PROFORMA_DECISIONS.F_REFERENCIA' | translate }}</label>
+          <input id="pd-ref" class="form-control" formControlName="reference" [maxlength]="referenceMax" autocomplete="off" />
+          @if (fieldErrors()['reference']; as e) { <small class="text-danger" role="alert">{{ e | translate }}</small> }
+        </div>
+      </details>
+    }
+    @if (mode() === 'rejected' || rectifyTarget()) {
+      <div class="mb-2">
+        <label class="form-label" for="pd-reason">{{ (rectifyTarget() ? 'PROFORMA_DECISIONS.F_MOTIVO_RECT' : 'PROFORMA_DECISIONS.F_MOTIVO') | translate }}</label>
+        <textarea id="pd-reason" class="form-control" rows="2" formControlName="reason" [maxlength]="reasonMax"></textarea>
+        @if (fieldErrors()['reason']; as e) { <small class="text-danger" role="alert">{{ e | translate }}</small> }
       </div>
     }
+    <p class="alert alert-info">{{ (rectifyTarget() ? 'PROFORMA_DECISIONS.RECT_AVISO' : 'PROFORMA_DECISIONS.AVISO_IRREVERSIBLE') | translate }}</p>
+    @if (error()) { <p class="alert alert-danger" role="alert">{{ error() }}</p> }
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" [class]="rectifyTarget() ? 'btn btn-warning' : 'btn btn-primary'" [disabled]="saving()">
+        {{ (saving() ? 'PROFORMA_DECISIONS.REGISTRANDO' : (rectifyTarget() ? 'PROFORMA_DECISIONS.RECTIFICAR' : 'PROFORMA_DECISIONS.CONFIRMAR')) | translate }}</button>
+      <button type="button" class="btn btn-light" [disabled]="saving()" (click)="close(dlg)">{{ 'PROFORMA_DECISIONS.CANCELAR' | translate }}</button>
+    </div>
   </form>
 </dialog>

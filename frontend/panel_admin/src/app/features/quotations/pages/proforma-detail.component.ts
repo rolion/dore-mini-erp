@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { CollectionPanelComponent } from '../../../shared/components/collection-panel/collection-panel.component';
 import { ProformaDecisionsComponent } from '../../../shared/components/proforma-decisions/proforma-decisions.component';
 import { DecisionLineView } from '../../../shared/models/proforma-decisions';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
@@ -13,7 +14,7 @@ import { ProformasApiService } from '../services/proformas-api.service';
 /** Detalle de proforma con versiones y acciones según `allowed_actions` del servidor. */
 @Component({
   selector: 'app-proforma-detail',
-  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, ProformaDecisionsComponent],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, ProformaDecisionsComponent, CollectionPanelComponent],
   templateUrl: './proforma-detail.component.html',
   styleUrl: './proforma-detail.component.scss',
 })

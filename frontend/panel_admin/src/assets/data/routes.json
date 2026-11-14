@@ -421,28 +421,16 @@
       ]
     },
     {
-      "path": "",
+      "path": "/pocketbiz/receivables",
       "title": "MENUITEMS.RECEIVABLES.TEXT",
       "iconType": "feather",
       "icon": "dollar-sign",
-      "class": "menu-toggle",
+      "class": "",
       "groupTitle": false,
       "badge": "",
       "badgeClass": "",
-      "module": "receivables",
-      "submenu": [
-        {
-          "path": "/pocketbiz/receivables",
-          "title": "MENUITEMS.RECEIVABLES.TEXT",
-          "iconType": "",
-          "icon": "",
-          "class": "ml-menu",
-          "groupTitle": false,
-          "badge": "",
-          "badgeClass": "",
-          "submenu": []
-        }
-      ]
+      "submenu": [],
+      "module": "receivables"
     }
   ]
 }

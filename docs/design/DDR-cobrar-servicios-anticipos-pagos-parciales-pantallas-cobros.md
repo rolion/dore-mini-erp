@@ -1,6 +1,6 @@
 # DDR-cobrar-servicios-anticipos-pagos-parciales-pantallas-cobros: Pantallas de Cobros
 
-**Estado:** Propuesto
+**Estado:** Propuesto — **reemplazado parcialmente por** `DDR-simplificar-flujo-proforma-cobro-flujo-y-pantallas` (diálogo de decisión y diálogo de cobro)
 **Task relacionado:** TASK-cobrar-servicios-anticipos-pagos-parciales
 **Fecha:** 2026-11-04
 

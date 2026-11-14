@@ -18,8 +18,8 @@
             @if (can('edit')) {
               <a class="btn btn-outline-primary" [routerLink]="['/pocketbiz/quotations/proformas', p.id, 'editar']">{{ 'QUOTATIONS.PROFORMAS.EDITAR' | translate }}</a>
             }
-            @if (p.collectible) {
-              <a class="btn btn-success" [routerLink]="['/pocketbiz/receivables/quotation', p.number]">{{ 'QUOTATIONS.PROFORMAS.COBRAR' | translate }}</a>
+            @if (collection.canCollect()) {
+              <button type="button" class="btn btn-success" (click)="collection.open($event.currentTarget)">{{ 'QUOTATIONS.PROFORMAS.COBRAR' | translate }}</button>
             }
             @if (can('present')) {
               <button type="button" class="btn btn-primary" (click)="open(dlg)">{{ 'QUOTATIONS.PROFORMAS.PRESENTAR' | translate }}</button>
@@ -34,6 +34,7 @@
           @if (p.status === 'superseded') {
             <p class="alert alert-info" role="status">{{ 'PROFORMA_DECISIONS.VERSION_ANTERIOR' | translate }}</p>
           }
+          <app-collection-panel #collection kind="quotation" [number]="p.number" [status]="p.status" [acceptedTotal]="p.accepted_total" (paid)="reload()" />
           <dl class="row">
             <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.CLIENTE' | translate }}</dt><dd class="col-sm-9">{{ p.customer_name }}</dd>
             <dt class="col-sm-3">{{ 'QUOTATIONS.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
@@ -45,7 +46,8 @@
           <app-proforma-decisions
             base="quotations/proformas" [proformaId]="p.id" [status]="p.status" [lines]="lineViews()" [totals]="p.totals"
             [acceptanceStatus]="p.acceptance_status" [actions]="p.decision_actions" [history]="p.decision_history"
-            [pieceLabelKey]="'QUOTATIONS.PROFORMAS.REFERENCIA'" (changed)="reload()" />
+            [pieceLabelKey]="'QUOTATIONS.PROFORMAS.REFERENCIA'" (changed)="reload()"
+            [defaultAcceptor]="p.customer_name" [collection]="collection.state()" [collectible]="collection.canCollect()" (collect)="collection.open()" />
 
           <h5 class="mt-4">{{ 'QUOTATIONS.PROFORMAS.VERSIONES' | translate }}</h5>
           <div class="table-responsive">

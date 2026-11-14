@@ -1,4 +1,5 @@
 import { tr } from '../../core/i18n/translate';
+import type { StatusTone } from '../components/status-badge/status-badge.component';
 
 /** Tipos comunes de las decisiones del paciente sobre las líneas de una proforma (Cotizaciones y Odontología). */
 export type LineDecision = 'pending' | 'accepted' | 'rejected';
@@ -134,6 +135,20 @@ export const DECISION_CLASSES: Record<LineDecision, string> = {
   pending: 'col-grey',
   accepted: 'col-green',
   rejected: 'col-red',
+};
+
+/** Tonos de `app-status-badge` (icono + fondo tintado + texto). */
+export const DECISION_TONES: Record<LineDecision, StatusTone> = {
+  pending: 'muted',
+  accepted: 'success',
+  rejected: 'danger',
+};
+
+export const ACCEPTANCE_TONES: Record<AcceptanceStatus, StatusTone> = {
+  pending: 'muted',
+  partially_accepted: 'info',
+  accepted: 'success',
+  rejected: 'danger',
 };
 
 export const ACCEPTANCE_CLASSES: Record<AcceptanceStatus, string> = {

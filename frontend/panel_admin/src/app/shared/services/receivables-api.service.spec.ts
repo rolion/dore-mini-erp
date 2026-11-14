@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideTestTranslations } from '../../../core/i18n/testing';
+import { provideTestTranslations } from '../../core/i18n/testing';
 import { PaymentInput, ReceivableFailure } from '../models/receivable';
 import { ReceivablesApiService } from './receivables-api.service';
 
