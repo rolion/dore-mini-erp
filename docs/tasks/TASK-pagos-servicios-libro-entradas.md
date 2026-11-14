@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-pagos-servicios-libro-entradas
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/70
 **Fuente:** https://trello.com/c/9owWNvVx/17-pb-cob-002-integrar-pagos-de-servicios-con-el-nuevo-libro-de-entradas
 
 ## Historial de transiciones
