@@ -1,6 +1,6 @@
 # TASK-conciliar-regularizar-pagos-historicos: Conciliar y regularizar pagos históricos de productos y servicios (PB-ACC-004)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-conciliar-regularizar-pagos-historicos
@@ -17,6 +17,7 @@
 | 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 | 2026-11-14 | PUBLISH → PLANNING → ENGINEERING | La persona esperaba una sección en la UI y aprobó explícitamente («Sí, agregar UI») el cambio de Specification: API admin + pantalla; PLAN v2 y DDR | delivery-start |
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación de PLAN v2 (API admin y pantalla) completa | delivery-build |
+| 2026-11-14 | REVIEW → PUBLISH | Quality Gate v2 PASS (REV-03 Medium resuelto, REV-04 Low abierto); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -100,5 +101,11 @@ Duplicados por ejecuciones simultáneas o cruce con cobros nuevos (mitigado: blo
 
 - **Corrección posterior (2026-11-14):** REV-01 resuelto (`classify` compara también `origin_document_ref`: una entrada con otro documento es conflicto; prueba añadida y fixtures alineados) y REV-02 resuelto (se eliminó `regularization_stamp`). Verificado: `test_regularization` 20 OK.
 
+- **Quality Gate v2 (2026-11-14, subagente aislado; PLAN v2 con API y pantalla): PASS** sin hallazgos Critical/High.
+  - Backend: `modules.accounting modules.receivables modules.sales.tests.test_boundaries` → 134 tests OK (24 de regularización); `makemigrations --check` sin cambios; `bandit` sin issues.
+  - Frontend: `npm run lint` OK; `i18n:check` 1940 claves, 0 faltantes; `ng build` OK (solo avisos Sass preexistentes); Karma completo 1401/1401 OK; `npm audit`: 2 moderadas preexistentes (`hono`).
+  - Todos los AC-01..AC-17, API-01..03 y UI-01..05 con verificación. No verificado: revisión visual en navegador (exige usuarios y datos en la BD de desarrollo; plantilla y CSS revisados por lectura contra `design-system.md` §5), ruff/flake8/mypy (no instalados).
+  - Hallazgos: Medium [03](../reviews/REV-2026-11-14-conciliar-regularizar-pagos-historicos-03.md) (tras aplicar, una previsualización fallida dejaba el resumen anterior bajo «no se ha escrito nada») **resuelto** después del gate (`preview()` limpia el resumen al iniciar; prueba añadida, `regularization.component.spec` 8/8 y lint OK; el resto de la suite no cambió). Low [04](../reviews/REV-2026-11-14-conciliar-regularizar-pagos-historicos-04.md) **abierto**: reglas incompletas se descartan sin aviso, con cero reglas la UI recibe 400 aunque el comando permite previsualizar sin mapeo, los mensajes 400 del servidor salen en español en en/pt y la tabla de revisión fija la moneda BOB.
+
 ## Publicación
-PR #71 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `accounting/0003`) y **dinero / integración entre módulos** (ADR-conciliar-regularizar-pagos-historicos-comando-y-fuentes).
+PR #71 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `accounting/0003`), **dinero / integración entre módulos** (ADR-conciliar-regularizar-pagos-historicos-comando-y-fuentes) y **autorización** (API admin con confirmación explícita). Revisión visual en navegador pendiente de quien apruebe.

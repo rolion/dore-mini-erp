@@ -132,6 +132,22 @@ describe('RegularizationComponent', () => {
     });
   });
 
+  it('clears an applied summary when a new preview fails, so no false «nothing written» notice remains (REV-03)', async () => {
+    const { el, fixture, regularization } = setup();
+    click(el, 'preview');
+    fixture.detectChanges();
+    click(el, 'apply');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="result"]')).not.toBeNull();
+
+    regularization.preview.and.returnValue(throwError(() => new RegularizationError('Sin conexión', 0)));
+    click(el, 'preview');
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="summary"]')).toBeNull();
+    expect(el.querySelector('[data-testid="errors"]')).not.toBeNull();
+  });
+
   it('blocks previewing an inverted period (AC-14)', () => {
     const { component, el, fixture, regularization } = setup();
     component.form.patchValue({ dateFrom: '2026-05-01', dateTo: '2026-01-01' });

@@ -155,6 +155,8 @@ export class RegularizationComponent implements OnInit {
     this.previewing = true;
     this.errors = [];
     this.applied = false;
+    // Un resumen anterior (p. ej. el de una aplicación) no puede quedar bajo el aviso «no se ha escrito nada».
+    this.summary = null;
     this.regularization
       .preview(request)
       .pipe(
