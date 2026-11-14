@@ -1,6 +1,6 @@
 # TASK-libro-entradas-filtros-totales: Libro de entradas con filtros, totales y origen (PB-ACC-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-libro-entradas-filtros-totales
@@ -13,6 +13,7 @@
 | 2026-11-14 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (5194ccb, incluye PB-ACC-001) | delivery-start |
 | 2026-11-14 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (nueva tabla con restricción única y contrato transaccional entre módulos, migración, contrato API, pantalla nueva) | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: las ambigüedades se resolvieron con criterio propio y quedan registradas en el plan | delivery-start |
+| 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,17 @@ No existe ninguna entrada ni listado; los pagos solo viven en pedidos y Cobros.
 `docs/plans/PLAN-2026-11-14-libro-entradas-filtros-totales.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/accounting/`): dominio `Entry` inmutable y `EntryValidationError/EntryConflict/EntryContractError` (`domain/entry.py`, INV-01, 02, 05), orígenes en `domain/catalog.py`; `EntryModel` y migración `0002_entry` (solo `CreateModel`; único `(company_id, origin_kind, origin_id)`, `CHECK amount > 0`, índices; INV-04); `DjangoEntryRepository` (inserción con punto de guardado, consulta filtrada, totales por moneda y origen con agregación SQL, cobertura); fachada `services.record_entry` + DTO `EntryInput`/`RecordedEntry` (exige transacción abierta, bloquea la cuenta, idempotente y con conflicto; AC-01..04, INV-03, 06); guarda en `UpdateAccount`: una cuenta con entradas no cambia de moneda (INV-08); API de solo lectura `GET /api/accounting/entries/` (paginada 20, totales/periodo/cobertura) y `/entries/<id>/` con `required_modules=('accounting',)` (API-01, 02; AC-05..09).
+**Frontend** (`features/accounting/`): `models/entry.ts`, `EntriesApiService`, páginas `EntryListComponent` (filtros en la URL, totales por moneda, periodo y cobertura, estados cargando/vacío/vacío con filtros/error) y `EntryDetailComponent`; rutas con `moduleGuard('accounting')`, ítem de menú Entradas, claves i18n es/en/pt (UI-01..05). Referencia visual: «Lista de solo lectura con filtros» (`movement-list`/`purchase-list`) y Detalle (`product-detail`); no se creó ningún componente compartido (el bloque de totales vive en la página y se documenta como variante en design-system §5/§6).
+**Cobertura:** AC-01, 03, 04, 06 → `test_entry_service.py`; AC-01/INV-01, 02, 05 → `test_entry_domain.py`; AC-02 → `test_entry_concurrency.py` (hilos); AC-05, 07, 08, 09 y INV-08 → `test_entries_api.py`; fronteras → `sales/tests/test_boundaries.py` (accounting sin dependencias); AC-10/UI → specs de `entry-list`, `entry-detail`, servicio y modelo, y `sidebar-menu.spec.ts`.
+**Desviaciones respecto al plan (con motivo):**
+1. No se añadieron rutas de `accounting` a `modularity/tests/test_enforcement.py`: el gate del libro se verifica en `test_entries_api.py::test_accounting_disabled_blocks_the_book` (403 `module_disabled`); esa lista cubre rutas de módulos con ciclo de enable/disable propio y las vistas de configuración de `accounting` tampoco están en ella.
+2. Convención de `origin_document_ref` (sin cambio de esquema): para `PRODUCT` es el ID del pedido; para `SERVICE` es `<kind>/<number>` del compromiso de Cobros (p. ej. `quotation/PRO-0001`, `dental/…`), de modo que el enlace `receivables/:kind/:number` se arma sin importar `receivables`. Las integraciones (PB-ACC-003, PB-COB-002) deben respetarla.
+3. `MoneyPipe` solo formatea bolivianos («Bs»): los importes del libro usan `formatAmount(amount, currency)` (BOB con el mismo texto de `money`; otras monedas como «70.00 USD»).
+4. La API devuelve `source.id` (ID del pago de origen) solo en el detalle; el listado no lo expone.
+5. `sidebar-menu.spec.ts` se actualizó (39 → 40 títulos; submenú de Contabilidad con Entradas).
+**Deuda técnica / limitaciones:** el libro queda vacío hasta que PB-ACC-003/COB-002 llamen a `record_entry`; las etiquetas de método vienen del servidor en español (mismo patrón que la pestaña de métodos de PB-ACC-001). `screens-i18n.spec.ts` sigue siendo intermitente por orden aleatorio (ajeno, ya documentado en PB-ACC-001).
+**Verificación propia (no es el Quality Gate):** backend suite completa 1569 tests OK (con `.env` copiado a este worktree con autorización del usuario, sin leerlo; ignorado por git) y `makemigrations --check` sin cambios; frontend `ng lint` OK, `npm run i18n:check` 1903 claves usadas / 0 faltantes, `ng build` OK, Karma acotado (`features/accounting` + `layout/sidebar`) 49/49 OK. No se ejecutó la suite completa de Karma ni inspección visual en navegador.
 
 ## Review
 _Pendiente_
