@@ -86,7 +86,9 @@ No aplica.
 - Frontend: Karma completo 1387 OK; `npm run lint` OK; `i18n:check` 1903 claves, 0 faltantes; `ng build` OK (solo warnings SCSS preexistentes); `npm audit`: 2 moderadas preexistentes (`hono`), ajenas al diff.
 - Límites DDD OK (`sales → accounting` solo vía `services` desde infraestructura; dominio sin Django; empresa desde el usuario); atomicidad, carrera de idempotencia, replay sobre pedido saldado, sin consulta a accounting cuando está deshabilitado y sin movimientos de inventario, verificados con pruebas.
 - No verificado: revisión visual en navegador (sin pantallas nuevas) y ruff/flake8/mypy (no instalados).
-- Hallazgos abiertos: Low [01](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-01.md) (aserciones débiles y ramas sin prueba: `ledger_conflict`, EDGE-04, replay sobre cancelado, `deliver` en AC-03), Low [02](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-02.md) (`ddd.md` sin la dependencia `sales → accounting`).
+- Hallazgos (resueltos después, ver «Corrección posterior»): Low [01](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-01.md) (aserciones débiles y ramas sin prueba: `ledger_conflict`, EDGE-04, replay sobre cancelado, `deliver` en AC-03), Low [02](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-02.md) (`ddd.md` sin la dependencia `sales → accounting`).
+
+- **Corrección posterior (2026-11-14):** REV-01 y REV-02 resueltos (cuatro pruebas nuevas o reforzadas en `test_payment_ledger.py`; nota y mapa de dependencias en `ddd.md`). Verificado: suite de `modules.sales` 309 tests OK.
 
 ## Publicación
 PR #69 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `sales/0003`) y **dinero / integración entre módulos** (ADR-pagos-ventas-libro-entradas-integracion-e-idempotencia).

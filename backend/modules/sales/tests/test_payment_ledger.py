@@ -14,6 +14,7 @@ from modules.accounting.domain.account import Account
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
 from modules.accounting.tests.test_concurrency import _run_together
+from modules.catalog.infrastructure.django.models import ProductModel
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.inventory.infrastructure.django.models import StockMovementModel
 from modules.modularity.infrastructure.django.models import CompanyModuleModel, CompanySettingsModel
@@ -172,17 +173,55 @@ class PaymentLedgerApiTests(LedgerFixtures, SalesApiTestCase):
 
     def test_other_company_data_is_never_used(self):  # AC-10
         other = make_company('Empresa B')
-        enable(other, 'accounting', 'sales')
+        enable(other, 'accounting', 'sales', 'customers')
         client_b = APIClient()
         authenticate(client_b, make_admin(other, username='beto'))
         order = self.order_300()
+        # Un pedido de la empresa A no existe para la empresa B.
         response = client_b.post(url(order['id'], 'payments/'), {'amount': '10.00', 'payment_method': 'CASH'},
                                  format='json')
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(self.entries(other).count(), 0)
-        # Empresa B no mapeó CASH: su propio cobro se rechaza aunque la empresa A sí lo tenga configurado.
+        # Empresa B no mapeó CASH: su propio cobro se rechaza aunque A sí lo tenga configurado (no usa la cuenta de A).
+        product = ProductModel.objects.create(company_id=other.id, name='Pack B', description='',
+                                              sale_price=Decimal('50.00'), active=True, can_sell=True)
         order_b = client_b.post('/api/orders/', {'sales_channel': 'WHATSAPP'}, format='json').json()
-        self.assertEqual(order_b['status'], 'NEW')
+        client_b.post(url(order_b['id'], 'items/'), {'product_id': str(product.id), 'quantity': 1}, format='json')
+        rejected = client_b.post(url(order_b['id'], 'payments/'), {'amount': '10.00', 'payment_method': 'CASH'},
+                                 format='json')
+        self.assertEqual((rejected.status_code, rejected.json()['code']), (409, 'payment_method_without_account'))
+        # Con su propia cuenta, la entrada de B queda en B y nunca en la cuenta de A.
+        configure(other, 'CASH', DjangoAccountRepository(other.id).save(Account.create('Caja B', 'BOB')))
+        paid = client_b.post(url(order_b['id'], 'payments/'), {'amount': '10.00', 'payment_method': 'CASH'},
+                             format='json')
+        self.assertEqual(paid.status_code, 201, paid.content)
+        self.assertEqual((self.entries(other).count(), self.entries().count()), (1, 0))
+        self.assertNotEqual(self.entries(other).get().account_id, self.caja.id)
+
+    def test_ledger_conflict_is_a_409_and_persists_nothing(self):  # AC-07
+        order = self.order_300()
+        with mock.patch('modules.sales.infrastructure.adapters.accounting_services.record_entry',
+                        side_effect=accounting.EntryConflict(['amount'])):
+            response = self.pay(order, '10.00', expected_status=409)
+        self.assertEqual(response['code'], 'ledger_conflict')
+        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (0, 0))
+
+    def test_cancelled_order_rejects_new_key_but_replays_the_old_one(self):  # EDGE-01, EDGE-04
+        order = self.order_300()
+        key = str(uuid4())
+        self.pay(order, '100.00', idempotency_key=key)
+        self.act(order, 'cancel', {'reason': 'Ya no lo quiere'})
+        self.pay(order, '100.00', expected_status=200, idempotency_key=key)
+        rejected = self.pay(order, '50.00', expected_status=409, idempotency_key=str(uuid4()))
+        self.assertEqual(rejected['code'], 'order_cancelled')
+        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (1, 1))
+
+    def test_adding_items_and_delivering_create_no_entries(self):  # AC-03
+        order = self.order_300()
+        self.add_item(order, quantity=1)
+        self.act(order, 'prepare')
+        self.act(order, 'ready')
+        self.act(order, 'deliver')
+        self.assertEqual(self.entries().count(), 0)
 
     def test_unauthenticated_is_rejected(self):  # AC-10
         self.client.credentials()

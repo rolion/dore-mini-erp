@@ -1,6 +1,6 @@
 # REV-2026-11-14-pagos-ventas-libro-entradas-01: Aserciones débiles y ramas sin prueba en test_payment_ledger.py
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-14-pagos-ventas-libro-entradas.md (v1)
@@ -23,3 +23,6 @@ Cada AC/EDGE tiene una prueba que falla si la regla se rompe.
 
 ## Evidence
 `backend/modules/sales/tests/test_payment_ledger.py` líneas 173-185 (`test_other_company_data_is_never_used`), 137-152 (solo dos tipos de fallo del libro), 94-103 (replay solo sobre saldado). Búsqueda de `ledger_conflict`, `order_cancelled` en ese archivo: sin resultados.
+
+## Resolución
+Resuelto: se fortaleció `test_other_company_data_is_never_used` (cobro de B rechazado sin su mapeo y luego con su propia cuenta, sin tocar la de A) y se añadieron `test_ledger_conflict_is_a_409_and_persists_nothing`, `test_cancelled_order_rejects_new_key_but_replays_the_old_one` (EDGE-01/04) y `test_adding_items_and_delivering_create_no_entries` (AC-03). Nota: el sistema no tiene un permiso contable separado (todo cobro exige solo el permiso de Ventas), así que no hay un usuario «sin permisos contables» que probar.

@@ -1,6 +1,6 @@
 # REV-2026-11-14-pagos-ventas-libro-entradas-02: docs/architecture/ddd.md no refleja la nueva dependencia sales -> accounting
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-11-14-pagos-ventas-libro-entradas.md (v1)
@@ -19,3 +19,6 @@ Según el plan, ddd.md se actualiza cuando cambia el mapa de dependencias (prece
 
 ## Evidence
 `git diff --stat origin/main...HEAD` (20 archivos, ninguno es ddd.md); `grep -n "PB-ACC-003" docs/architecture/ddd.md` sin resultados.
+
+## Resolución
+Resuelto: `docs/architecture/ddd.md` documenta `sales → accounting`, el puerto `PaymentLedger`, la atomicidad y la idempotencia del pago (nota PB-ACC-003 y mapa de la sección 9).
