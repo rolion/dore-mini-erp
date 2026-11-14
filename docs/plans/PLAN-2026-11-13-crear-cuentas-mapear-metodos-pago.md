@@ -134,3 +134,6 @@ Ciclo de módulos (mitigado); catálogo de métodos duplicado (test AC-08).
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v1.1 [Specification] (2026-11-14, aprobado por el usuario en el chat):** INV-08, AC-05 y API-04 quedan sin efecto: habilitar `accounting` no requiere mapeo completo.

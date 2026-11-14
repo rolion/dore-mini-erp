@@ -30,3 +30,6 @@ Migración `accounting/0001_initial` solo `CreateModel` (aditiva); revertir = `m
 
 ## Consecuencias
 Un módulo más y una dependencia `modularity → accounting` por fachada. Las historias siguientes consumirán `resolve_account` sin cambiar el contrato. Compras y Gastos quedan sin mapeo hasta su historia de egresos.
+
+## Ajuste posterior (2026-11-14)
+Por indicación explícita del usuario, **habilitar y deshabilitar `accounting` no exige configuración previa** (se retira la precondición de la decisión 5: INV-08 y el 409 `incomplete_configuration` dejan de aplicarse). `accounting` ya no registra verificador; el puerto `shared/enable_preconditions.py` queda disponible y sin uso. La configuración de cuentas y métodos se hace con el módulo habilitado (el menú Contabilidad sigue al módulo).

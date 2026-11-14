@@ -120,25 +120,15 @@ class EnableAccountingTests(AccountingApiBase):
     def enable(self, client=None):
         return (client or self.client_a).post('/api/modules/accounting/enable/')
 
-    def test_blocked_until_every_active_method_has_a_destination(self):  # AC-05
-        response = self.enable()
-        self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.data['code'], 'incomplete_configuration')
-        self.assertEqual(response.data['missing'], ['Efectivo', 'QR', 'Transferencia', 'Tarjeta', 'Otro'])
-        caja = self.create(self.client_a, 'Caja')
-        for code in ('CASH', 'QR', 'BANK_TRANSFER', 'CARD'):
-            self.assign(self.client_a, code, caja)
-        response = self.enable()
-        self.assertEqual((response.status_code, response.data['missing']), (409, ['Otro']))
-        self.assign(self.client_a, 'OTHER', None, active=False)
+    def test_enabling_does_not_require_the_mapping(self):  # AC-05 (revisado)
         self.assertEqual(self.enable().status_code, 200)
         self.assertTrue(CompanyModuleModel.objects.filter(company_id=self.company_a.id, module_key='accounting').exists())
 
     def test_default_behaviour_is_unchanged_and_other_company_is_unaffected(self):
         keys = {m['key']: m['enabled'] for m in self.client_a.get('/api/modules/').data}
         self.assertFalse(keys['accounting'])
-        self.assertEqual(self.enable(self.client_b).status_code, 409)
-        self.assertFalse(CompanyModuleModel.objects.filter(module_key='accounting').exists())
+        self.assertEqual(self.enable(self.client_b).status_code, 200)
+        self.assertFalse(CompanyModuleModel.objects.filter(company_id=self.company_a.id, module_key='accounting').exists())
 
 
 class ConfigurationContractTests(AccountingApiBase):
