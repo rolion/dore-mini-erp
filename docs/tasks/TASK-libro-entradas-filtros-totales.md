@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-libro-entradas-filtros-totales
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/68
 **Fuente:** https://trello.com/c/Tgy6EJhx/19-pb-acc-002-crear-libro-de-entradas-con-filtros-totales-y-origen
 
 ## Historial de transiciones
