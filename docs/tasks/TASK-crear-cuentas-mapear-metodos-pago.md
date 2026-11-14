@@ -1,6 +1,6 @@
 # TASK-crear-cuentas-mapear-metodos-pago: Crear cuentas y mapear métodos de pago por empresa (PB-ACC-001)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-cuentas-mapear-metodos-pago
@@ -14,6 +14,7 @@
 | 2026-11-13 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (módulo nuevo, habilitación con precondición, contrato API, migración) | delivery-start |
 | 2026-11-13 | PLANNING → ENGINEERING | Specification READY: las decisiones abiertas se resolvieron con criterio propio y quedan registradas en el plan | delivery-start |
 | 2026-11-13 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-13 | REVIEW → PUBLISH | Quality Gate PASS (3 hallazgos Medium y 5 Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -83,7 +84,13 @@ No hay cuentas ni cajas; pagos solo con texto de método.
 **Verificación propia (no es el Quality Gate):** backend suite completa 1531 tests OK (con `.env` copiado con autorización del usuario); frontend `ng lint` OK, `npm run i18n:check` OK (0 faltantes), `ng build` OK, Karma acotado `features/accounting` + `layout/sidebar` 23/23 OK. No se ejecutó la suite completa de Karma ni inspección visual en navegador.
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-11-13, subagente aislado; sin hallazgos Critical/High).
+- Backend: suite completa 1531 tests OK; `makemigrations --check` sin cambios; bandit sobre `accounting` sin issues en código de producción (solo B106 por una contraseña de prueba en un test). ruff/flake8/mypy no instalados: no ejecutados.
+- Frontend: Karma acotado (`features/accounting` + `layout/sidebar`) 23/23 OK; `npm run lint` OK; `npm run i18n:check` 1872 claves, 0 faltantes (es/en/pt con 2153 claves iguales); `ng build` OK (solo warnings SCSS preexistentes).
+- Límites DDD: dominio sin Django, sin imports entre módulos de negocio ni de `accounts`, consultas por `company_id`, migración solo aditiva, test de fronteras OK.
+- Preexistente ajeno: `screens-i18n.spec.ts` («labels coming from code follow the active language») falla de forma intermitente también en el checkout principal sin estos cambios.
+- No verificado: revisión visual en navegador (móvil, escritorio, oscuro), suite completa de Karma, ruff/flake8/mypy.
+- Hallazgos abiertos: Medium [01](../reviews/REV-2026-11-13-crear-cuentas-mapear-metodos-pago-01.md) (test del contrato del gate), [02](../reviews/REV-2026-11-13-crear-cuentas-mapear-metodos-pago-02.md) (concurrencia EDGE-06), [03](../reviews/REV-2026-11-13-crear-cuentas-mapear-metodos-pago-03.md) (confirmación de desactivación UI-02). Low [04](../reviews/REV-2026-11-13-crear-cuentas-mapear-metodos-pago-04.md) a [08](../reviews/REV-2026-11-13-crear-cuentas-mapear-metodos-pago-08.md).
 
 ## Publicación
-_Pendiente_
+PR #67 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración `accounting/0001_initial`, solo esquema) y **autorización/habilitación de módulos** (precondición en `EnableModule`, ADR-crear-cuentas-mapear-metodos-pago-modulo-y-contrato).
