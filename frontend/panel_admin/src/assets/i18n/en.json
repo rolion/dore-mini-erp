@@ -4,14 +4,14 @@
       "TEXT": "Accounting",
       "LIST": {
         "SETTINGS": "Accounts and Payment methods",
-        "ENTRIES": "Entries"
+        "ENTRIES": "Entries",
+        "REGULARIZATION": "Regularize historical payments"
       }
     },
     "AGENDA": {
       "APPOINTMENTS": "Appointments",
       "SCHEDULE": "Hours and absences",
-      "TEXT": "Schedule",
-      "APPOINTMENTS": "Appointments"
+      "TEXT": "Schedule"
     },
     "RECEIVABLES": {
       "TEXT": "Collections"
@@ -2565,6 +2565,77 @@
       "MODULO_DESHABILITADO": "module disabled",
       "ID_DEL_PAGO_DE_ORIGEN": "Source payment ID",
       "LAS_ENTRADAS_NO_SE_EDITAN": "Entries are neither edited nor deleted."
+    },
+    "REGULARIZATION": {
+      "TITULO": "Regularize historical payments",
+      "SUBTITULO": "Fill in the ledger entries for earlier payments. It does not change payments, balances or existing entries.",
+      "RANGO_INVALIDO": "The start date cannot be after the end date.",
+      "MAPEO_TITULO": "Historical method mapping",
+      "MAPEO_AYUDA": "Say which account each payment method went to and for which period. A method or date without a rule stays pending: no account is assigned by default.",
+      "SIN_REGLAS": "No rules yet. Without rules, every payment stays pending.",
+      "METODO": "Method",
+      "CUENTA": "Account",
+      "SELECCIONAR": "Select…",
+      "AGREGAR_REGLA": "Add rule",
+      "QUITAR_REGLA": "Remove rule",
+      "PREVISUALIZAR": "Preview",
+      "PREVISUALIZANDO": "Previewing…",
+      "RESUMEN": "Summary",
+      "AVISO_PREVISUALIZACION": "Preview: nothing has been written.",
+      "AVISO_IMPORTES": "Amounts are recorded entries, not bank balance or profit.",
+      "CAMBIO_FORMULARIO": "You changed the period or the mapping: preview again before applying.",
+      "VACIO": "There are no payments to regularize in this period.",
+      "SIN_CUENTA": "No account",
+      "COL_ESTADO": "Status",
+      "COL_ORIGEN": "Source",
+      "COL_CUENTA": "Account",
+      "COL_CANTIDAD": "Count",
+      "COL_IMPORTE": "Amount",
+      "COL_DOCUMENTO": "Document",
+      "COL_METODO": "Method",
+      "COL_MOTIVO": "Reason",
+      "CAMPOS_AUSENTES": "Missing historical data (never invented)",
+      "REVISION_TITULO": "Cases that need review (not modified)",
+      "APLICAR": "Apply regularization",
+      "APLICANDO": "Applying…",
+      "SIN_FALTANTES": "There are no missing entries to create.",
+      "DIALOGO_TITULO": "Apply regularization",
+      "DIALOGO_TEXTO": "{{count}} entries will be created for {{amount}}.",
+      "DIALOGO_EFECTO": "It does not change payments, balances or existing entries, and it cannot be undone from the app.",
+      "DIALOGO_CONFIRMAR": "Create entries",
+      "RESULTADO": "Regularization applied: {{created}} created, {{existing}} already existed, {{failed}} failed.",
+      "VER_ENTRADAS": "View entries",
+      "EN_CURSO": "A regularization is already running for this company. Try again in a few minutes.",
+      "REVISA": "Check the period and the mapping.",
+      "DIFIERE": "Differs: {{fields}}",
+      "STATUS": {
+        "MISSING": "Missing (would be created)",
+        "CREATED": "Created",
+        "EXISTING": "Existing",
+        "PENDING": "Pending (no mapping)",
+        "CONFLICT": "Conflicts",
+        "DESTINATION_DIFFERENCE": "Destination differences",
+        "INVALID": "Invalid",
+        "FAILED": "Failed"
+      },
+      "AUSENTE": {
+        "AUTHOR": "Author",
+        "RECEIPT_NUMBER": "Receipt",
+        "DOCUMENT_REF": "Document"
+      },
+      "MOTIVO": {
+        "METHOD_WITHOUT_MAPPING": "Method without a mapping rule",
+        "DATE_OUTSIDE_MAPPING": "Date outside the method rules",
+        "UNKNOWN_ORIGIN_OR_METHOD": "Unknown source or method"
+      },
+      "CAMPO": {
+        "AMOUNT": "amount",
+        "PAYMENT_DATE": "date",
+        "METHOD": "method",
+        "CURRENCY": "currency",
+        "ORIGIN_DOCUMENT_REF": "document",
+        "ACCOUNT_ID": "account"
+      }
     }
   }
 }

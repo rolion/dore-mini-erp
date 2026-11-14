@@ -4,14 +4,14 @@
       "TEXT": "Contabilidade",
       "LIST": {
         "SETTINGS": "Contas e Métodos de pagamento",
-        "ENTRIES": "Entradas"
+        "ENTRIES": "Entradas",
+        "REGULARIZATION": "Regularizar pagamentos históricos"
       }
     },
     "AGENDA": {
-      "APPOINTMENTS": "Consultas",
+      "APPOINTMENTS": "Agendamentos",
       "SCHEDULE": "Horários e ausências",
-      "TEXT": "Agenda",
-      "APPOINTMENTS": "Agendamentos"
+      "TEXT": "Agenda"
     },
     "RECEIVABLES": {
       "TEXT": "Cobranças"
@@ -2565,6 +2565,77 @@
       "MODULO_DESHABILITADO": "módulo desabilitado",
       "ID_DEL_PAGO_DE_ORIGEN": "ID do pagamento de origem",
       "LAS_ENTRADAS_NO_SE_EDITAN": "As entradas não são editadas nem excluídas."
+    },
+    "REGULARIZATION": {
+      "TITULO": "Regularizar pagamentos históricos",
+      "SUBTITULO": "Complete no livro as entradas de pagamentos anteriores. Não altera pagamentos, saldos nem entradas existentes.",
+      "RANGO_INVALIDO": "A data inicial não pode ser posterior à final.",
+      "MAPEO_TITULO": "Mapeamento histórico de métodos",
+      "MAPEO_AYUDA": "Indique para qual conta foi cada método de pagamento e em que período. Um método ou uma data sem regra fica pendente: nenhuma conta é atribuída por padrão.",
+      "SIN_REGLAS": "Ainda não há regras. Sem regras, todos os pagamentos ficam pendentes.",
+      "METODO": "Método",
+      "CUENTA": "Conta",
+      "SELECCIONAR": "Selecione…",
+      "AGREGAR_REGLA": "Adicionar regra",
+      "QUITAR_REGLA": "Remover regra",
+      "PREVISUALIZAR": "Pré-visualizar",
+      "PREVISUALIZANDO": "Pré-visualizando…",
+      "RESUMEN": "Resumo",
+      "AVISO_PREVISUALIZACION": "Pré-visualização: nada foi gravado.",
+      "AVISO_IMPORTES": "Os valores são entradas registradas, não saldo bancário nem lucro.",
+      "CAMBIO_FORMULARIO": "Você alterou o período ou o mapeamento: pré-visualize novamente antes de aplicar.",
+      "VACIO": "Não há pagamentos para regularizar neste período.",
+      "SIN_CUENTA": "Sem conta",
+      "COL_ESTADO": "Estado",
+      "COL_ORIGEN": "Origem",
+      "COL_CUENTA": "Conta",
+      "COL_CANTIDAD": "Quantidade",
+      "COL_IMPORTE": "Valor",
+      "COL_DOCUMENTO": "Documento",
+      "COL_METODO": "Método",
+      "COL_MOTIVO": "Motivo",
+      "CAMPOS_AUSENTES": "Dados históricos ausentes (nunca inventados)",
+      "REVISION_TITULO": "Casos que exigem revisão (não são alterados)",
+      "APLICAR": "Aplicar regularização",
+      "APLICANDO": "Aplicando…",
+      "SIN_FALTANTES": "Não há entradas faltantes para criar.",
+      "DIALOGO_TITULO": "Aplicar regularização",
+      "DIALOGO_TEXTO": "Serão criadas {{count}} entradas por {{amount}}.",
+      "DIALOGO_EFECTO": "Não altera pagamentos, saldos nem entradas existentes e não pode ser desfeito pelo aplicativo.",
+      "DIALOGO_CONFIRMAR": "Criar entradas",
+      "RESULTADO": "Regularização aplicada: {{created}} criadas, {{existing}} já existiam, {{failed}} com erro.",
+      "VER_ENTRADAS": "Ver entradas",
+      "EN_CURSO": "Já há uma regularização em andamento para esta empresa. Tente novamente em alguns minutos.",
+      "REVISA": "Revise o período e o mapeamento.",
+      "DIFIERE": "Difere: {{fields}}",
+      "STATUS": {
+        "MISSING": "Faltantes (seriam criadas)",
+        "CREATED": "Criadas",
+        "EXISTING": "Existentes",
+        "PENDING": "Pendentes (sem mapeamento)",
+        "CONFLICT": "Conflitos",
+        "DESTINATION_DIFFERENCE": "Diferenças de destino",
+        "INVALID": "Inválidos",
+        "FAILED": "Com erro"
+      },
+      "AUSENTE": {
+        "AUTHOR": "Autor",
+        "RECEIPT_NUMBER": "Comprovante",
+        "DOCUMENT_REF": "Documento"
+      },
+      "MOTIVO": {
+        "METHOD_WITHOUT_MAPPING": "Método sem regra de mapeamento",
+        "DATE_OUTSIDE_MAPPING": "Data fora das regras do método",
+        "UNKNOWN_ORIGIN_OR_METHOD": "Origem ou método desconhecido"
+      },
+      "CAMPO": {
+        "AMOUNT": "valor",
+        "PAYMENT_DATE": "data",
+        "METHOD": "método",
+        "CURRENCY": "moeda",
+        "ORIGIN_DOCUMENT_REF": "documento",
+        "ACCOUNT_ID": "conta"
+      }
     }
   }
 }

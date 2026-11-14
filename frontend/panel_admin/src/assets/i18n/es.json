@@ -4,14 +4,14 @@
       "TEXT": "Contabilidad",
       "LIST": {
         "SETTINGS": "Cuentas y Métodos de pago",
-        "ENTRIES": "Entradas"
+        "ENTRIES": "Entradas",
+        "REGULARIZATION": "Regularizar pagos históricos"
       }
     },
     "AGENDA": {
       "APPOINTMENTS": "Citas",
       "SCHEDULE": "Horarios y ausencias",
-      "TEXT": "Agenda",
-      "APPOINTMENTS": "Citas"
+      "TEXT": "Agenda"
     },
     "RECEIVABLES": {
       "TEXT": "Cobros"
@@ -2565,6 +2565,77 @@
       "MODULO_DESHABILITADO": "módulo deshabilitado",
       "ID_DEL_PAGO_DE_ORIGEN": "ID del pago de origen",
       "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan."
+    },
+    "REGULARIZATION": {
+      "TITULO": "Regularizar pagos históricos",
+      "SUBTITULO": "Completa en el libro las entradas de pagos anteriores. No modifica pagos, saldos ni entradas existentes.",
+      "RANGO_INVALIDO": "La fecha inicial no puede ser posterior a la final.",
+      "MAPEO_TITULO": "Mapeo histórico de métodos",
+      "MAPEO_AYUDA": "Indica a qué cuenta fue cada método de pago y en qué periodo. Un método o una fecha sin regla queda pendiente: no se asigna ninguna cuenta por defecto.",
+      "SIN_REGLAS": "Aún no hay reglas. Sin reglas, todos los pagos quedan pendientes.",
+      "METODO": "Método",
+      "CUENTA": "Cuenta",
+      "SELECCIONAR": "Selecciona…",
+      "AGREGAR_REGLA": "Añadir regla",
+      "QUITAR_REGLA": "Quitar regla",
+      "PREVISUALIZAR": "Previsualizar",
+      "PREVISUALIZANDO": "Previsualizando…",
+      "RESUMEN": "Resumen",
+      "AVISO_PREVISUALIZACION": "Previsualización: no se ha escrito nada.",
+      "AVISO_IMPORTES": "Los importes son entradas registradas, no saldo bancario ni utilidad.",
+      "CAMBIO_FORMULARIO": "Cambiaste el periodo o el mapeo: vuelve a previsualizar antes de aplicar.",
+      "VACIO": "No hay pagos para regularizar en este periodo.",
+      "SIN_CUENTA": "Sin cuenta",
+      "COL_ESTADO": "Estado",
+      "COL_ORIGEN": "Origen",
+      "COL_CUENTA": "Cuenta",
+      "COL_CANTIDAD": "Cantidad",
+      "COL_IMPORTE": "Importe",
+      "COL_DOCUMENTO": "Documento",
+      "COL_METODO": "Método",
+      "COL_MOTIVO": "Motivo",
+      "CAMPOS_AUSENTES": "Datos históricos ausentes (no se inventan)",
+      "REVISION_TITULO": "Casos que requieren revisión (no se modifican)",
+      "APLICAR": "Aplicar regularización",
+      "APLICANDO": "Aplicando…",
+      "SIN_FALTANTES": "No hay entradas faltantes para crear.",
+      "DIALOGO_TITULO": "Aplicar regularización",
+      "DIALOGO_TEXTO": "Se crearán {{count}} entradas por {{amount}}.",
+      "DIALOGO_EFECTO": "No modifica pagos, saldos ni entradas existentes y no se puede deshacer desde la aplicación.",
+      "DIALOGO_CONFIRMAR": "Crear entradas",
+      "RESULTADO": "Regularización aplicada: {{created}} creadas, {{existing}} ya existían, {{failed}} con error.",
+      "VER_ENTRADAS": "Ver entradas",
+      "EN_CURSO": "Ya hay una regularización en curso para esta empresa. Inténtalo en unos minutos.",
+      "REVISA": "Revisa el periodo y el mapeo.",
+      "DIFIERE": "Difiere: {{fields}}",
+      "STATUS": {
+        "MISSING": "Faltantes (se crearían)",
+        "CREATED": "Creadas",
+        "EXISTING": "Existentes",
+        "PENDING": "Pendientes (sin mapeo)",
+        "CONFLICT": "Conflictos",
+        "DESTINATION_DIFFERENCE": "Diferencias de destino",
+        "INVALID": "No válidos",
+        "FAILED": "Con error"
+      },
+      "AUSENTE": {
+        "AUTHOR": "Autor",
+        "RECEIPT_NUMBER": "Comprobante",
+        "DOCUMENT_REF": "Documento"
+      },
+      "MOTIVO": {
+        "METHOD_WITHOUT_MAPPING": "Método sin regla de mapeo",
+        "DATE_OUTSIDE_MAPPING": "Fecha fuera de las reglas del método",
+        "UNKNOWN_ORIGIN_OR_METHOD": "Origen o método desconocido"
+      },
+      "CAMPO": {
+        "AMOUNT": "importe",
+        "PAYMENT_DATE": "fecha",
+        "METHOD": "método",
+        "CURRENCY": "moneda",
+        "ORIGIN_DOCUMENT_REF": "documento",
+        "ACCOUNT_ID": "cuenta"
+      }
     }
   }
 }
