@@ -1,0 +1,78 @@
+# TASK-crear-cuentas-mapear-metodos-pago: Crear cuentas y mapear métodos de pago por empresa (PB-ACC-001)
+
+**Etapa actual:** ENGINEERING
+**Veredicto de complejidad:** NEEDS_ARCHITECTURE
+**Diseño requerido:** SI
+**Rama:** task/TASK-crear-cuentas-mapear-metodos-pago
+**Pull Request:** _sin abrir todavía_
+**Fuente:** https://trello.com/c/38XLSMLH/18-pb-acc-001-crear-cuentas-y-mapear-m%C3%A9todos-de-pago-por-empresa
+
+## Historial de transiciones
+| Fecha (UTC) | Transición | Motivo | Origen |
+|---|---|---|---|
+| 2026-11-13 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (785c2bd) | delivery-start |
+| 2026-11-13 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (módulo nuevo, habilitación con precondición, contrato API, migración) | delivery-start |
+| 2026-11-13 | PLANNING → ENGINEERING | Specification READY: las decisiones abiertas se resolvieron con criterio propio y quedan registradas en el plan | delivery-start |
+
+## Investigación
+
+### Requerimiento
+Insumo de la tarjeta PB-ACC-001 (P1, orden 1; **no es una Specification aprobada**). Historia: como administrador, configurar dónde se recibe el dinero antes de habilitar el libro de entradas. Esperado: base del módulo `accounting` y su habilitación por empresa (perfiles de productos y de odontología); **cuentas destino** con nombre, moneda y estado activo/inactivo; **configuración método → cuenta** por empresa (varios métodos pueden usar una cuenta; cada método tiene un único destino vigente). Menú: Contabilidad → Configuración → Cuentas y Métodos de pago. Crear, editar, desactivar (las cuentas con historial no se eliminan). Rechazar referencias ajenas e incompatibilidad de moneda. Desactivar una cuenta usada por métodos activos exige reasignar o desactivar esos métodos. La cuenta se resuelve en servidor al cobrar; cambiar el mapeo solo afecta pagos posteriores. No crear cuentas ficticias ni mapear históricos. Habilitar accounting exige mapeo completo de los métodos activos de los flujos de cobro habilitados; con accounting deshabilitado se conserva el comportamiento actual. Fuera de alcance: partida doble, fiscal, egresos, transferencias, saldos iniciales, reversiones; no tocar el reporte ventas − gastos. Criterios: Empresa A (Efectivo→Caja, Transferencia/QR→Banco) y B con destinos propios; rechazar cuenta ajena, moneda incompatible y desactivación que deje métodos sin destino; cambiar Transferencia de Banco A a B conserva la cuenta de movimientos previos; permisos admin y estados de carga/vacío/error/éxito; habilitar exige configuración completa.
+
+### Hechos encontrados
+- Los dos flujos de cobro usan los **mismos códigos** `CASH, QR, BANK_TRANSFER, CARD, OTHER`, pero cada módulo tiene su propio enum: `backend/modules/sales/domain/enums.py:35-40` y `backend/modules/receivables/domain/obligation.py:19-25` («Mismos métodos que Ventas; todos se consideran activos»). Compras y Gastos tienen enums idénticos propios (`purchases/domain/enums.py:34`, `expenses/domain/enums.py:11`) pero son egresos: fuera de alcance. No existe un catálogo compartido ni un concepto de «método inactivo».
+- El pago se guarda como texto `payment_method` en `sales/infrastructure/django/models.py:63` y `receivables/infrastructure/django/models.py:33`; Ventas lo registra en `Order.register_payment` (`sales/domain/order.py:348`), Cobros en `Obligation.register_payment` (`receivables/domain/obligation.py:145`). Ninguno guarda cuenta.
+- Moneda: los flujos son fijos en `BOB` (`quotations/domain/proforma.py:7`, `receivables/api/serializers.py:6`); no hay multimoneda.
+- Catálogo de módulos en código: `modularity/domain/modules.py:16-33` (`MODULE_CATALOG`, `DEFAULT_ENABLED_KEYS` en `:39`); no existe `accounting`. `EnableModule` (`modularity/application/use_cases.py:51`) solo valida dependencias obligatorias. Habilitados por defecto: customers, sales, expenses, reporting; `accounting` no será de ellos (comportamiento actual intacto).
+- Gate por módulo: las vistas declaran `required_modules` (p. ej. `receivables/api/views.py:110`); el puerto lo resuelve `modularity/infrastructure/django/gate.py`. `test_enforcement.py` lista cada ruta de negocio con su módulo.
+- Aislamiento: `backend/shared/tenancy.py`, repositorios con `company_id` en el constructor, `company_id` UUID indexado sin FK entre módulos (`docs/architecture/ddd.md:844`). Permiso por defecto `CompanyAdminPermission` (admin de empresa activa).
+- Dependencias entre módulos permitidas solo vía `services.py`; un test de fronteras por módulo (`sales/tests/test_boundaries.py`) y `modularity` tratado como no-negocio (`ddd.md:846`).
+- Frontend: menú estático `assets/data/routes.json` con campo `module` (ej. `:433`); rutas con `data: { module }` (`app.routes.ts:86-94`); plantilla «Configuración con listados en pestañas y diálogo» (`features/inventory/pages/inventory-configuration`, `docs/design/design-system.md:141`) y diálogos de `features/inventory/components`.
+- No existe el concepto «perfil» de empresa: «productos» ≈ Ventas, «odontología» ≈ Cotizaciones/Odontología + Cobros.
+
+### Hipótesis / supuestos no confirmados (resueltos en el plan)
+- «Perfiles» = combinaciones de módulos habilitados (Ventas y/o Cobros); no se crea un modelo de perfil.
+- Los flujos de cobro habilitados son Ventas (`sales`) y Cobros (`receivables`).
+- Todos los métodos del catálogo están activos por defecto; el admin puede desactivar uno (p. ej. «Otro»).
+- La única moneda de los flujos es BOB; las cuentas pueden crearse en otra moneda pero no se pueden asignar a un método.
+
+### Módulos y dependencias relacionadas
+Nuevo `accounting`; `modularity` (catálogo, habilitación con precondición y gate); Ventas y Cobros solo como claves de flujo, sin cambios en sus APIs ni dominios en esta entrega; frontend `layout/sidebar`, `app.routes.ts`, `features/accounting` nuevo.
+
+### Implementaciones similares existentes
+Backend: `service_catalog`/`inventory` (catálogos con activar/desactivar, repositorio con `company_id`). Frontend: `features/inventory/pages/inventory-configuration`.
+
+### Comportamiento actual
+No hay cuentas ni cajas; pagos solo con texto de método.
+
+### Restricciones
+`CLAUDE.md`: `Decimal`, aislamiento por `company_id` desde el usuario, no editar migraciones aplicadas, i18n es/en/pt sin texto hardcodeado, DDD pragmático.
+
+### Riesgos identificados
+- Ciclo de dependencia `modularity` ↔ `accounting` (mitigado en el ADR con un puerto de precondición).
+- Mapeo incompleto si más adelante se habilita un flujo de cobro con accounting activo (se valida en la habilitación; el bloqueo posterior queda para las historias de entradas).
+- Divergencia entre los códigos de método de Ventas/Cobros y el catálogo de accounting (test de correspondencia).
+
+### Veredicto de complejidad
+**NEEDS_ARCHITECTURE** — módulo nuevo, migración, contrato API, precondición en la habilitación de módulos y nueva dependencia entre módulos.
+
+### Diseño requerido
+**SI** — pantalla nueva de configuración con diálogos y entrada de menú.
+
+## Diseño
+`docs/design/DDR-crear-cuentas-mapear-metodos-pago-pantalla-cuentas-metodos.md`
+
+## Arquitectura
+`docs/adr/ADR-crear-cuentas-mapear-metodos-pago-modulo-y-contrato.md`
+
+## Plan
+`docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md` (v1, COMPLETO) · Specification readiness: READY
+
+## Implementación
+_Pendiente_
+
+## Review
+_Pendiente_
+
+## Publicación
+_Pendiente_
