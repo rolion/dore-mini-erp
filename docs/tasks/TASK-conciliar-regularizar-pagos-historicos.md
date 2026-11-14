@@ -79,6 +79,7 @@ No aplica.
 **Auditoría SQL de entradas regularizadas:** `SELECT origin_kind, count(*), sum(amount) FROM accounting_entry WHERE company_id = '<uuid>' AND regularized_at IS NOT NULL GROUP BY 1;`
 **Deuda técnica / limitaciones:** el estado «anulado» no existe en los orígenes (se informa 0); el usuario de regularización es texto libre del operador; `.env` copiado al worktree con autorización de la persona (ignorado por git) y suite ejecutada con el venv del checkout principal.
 
+**Verificación propia (no es el Quality Gate):** `modules.accounting` (incluye 20 nuevas), `receivables`, `modularity`, `reporting` y `sales` OK salvo 1-3 pruebas intermitentes de reloj/orden (`shared.tests.test_test_runner`, `sales.tests.test_repository`: `test_item_order_is_preserved`, `test_saves_and_loads_the_whole_aggregate`, `test_payments_are_only_appended`) que fallan igual en el checkout principal sin estos cambios (ver TASK-pruebas-intermitentes). `makemigrations --check` sin cambios.
 
 ## Review
 _Pendiente_
