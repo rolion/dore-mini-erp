@@ -49,6 +49,7 @@ class PaymentInputSerializer(serializers.Serializer):
     payment_method = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     payment_date = serializers.DateField(required=False, allow_null=True)
     reference = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    idempotency_key = serializers.UUIDField(required=False, allow_null=True)
 
 
 # --- Salida ---------------------------------------------------------------------------------------------------

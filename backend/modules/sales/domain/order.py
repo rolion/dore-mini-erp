@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from hashlib import sha256
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -157,6 +158,14 @@ class Payment:
     payment_date: date
     reference: str = ''
     created_at: datetime | None = None
+    idempotency_key: UUID | None = None
+    request_digest: str = ''
+
+
+def payment_digest(amount: object, payment_method: object, payment_date: object, reference: object) -> str:
+    """Huella del contenido pedido de un pago: detecta que una misma clave llegue con otros datos."""
+    parts = ('' if value is None else str(value).strip() for value in (amount, payment_method, payment_date, reference))
+    return sha256('|'.join(parts).encode('utf-8')).hexdigest()
 
 
 @dataclass
@@ -345,8 +354,11 @@ class Order:
 
     # --- pagos ------------------------------------------------------------------------------------------------
 
+    def find_payment_by_key(self, key: UUID) -> Payment | None:
+        return next((payment for payment in self.payments if payment.idempotency_key == key), None)
+
     def register_payment(self, amount: object, payment_method: object, payment_date: object, reference: object,
-                         today: date) -> Payment:
+                         today: date, idempotency_key: UUID | None = None, request_digest: str = '') -> Payment:
         if self.status is OrderStatus.CANCELLED:
             raise OrderRuleViolation('order_cancelled', 'El pedido está cancelado: no admite nuevos pagos.')
         values, errors = _run_checks([
@@ -360,7 +372,8 @@ class Order:
         if errors:
             raise OrderValidationError(errors)
         payment = Payment(id=uuid4(), amount=values['amount'], payment_method=values['payment_method'],
-                          payment_date=values['payment_date'], reference=values['reference'])
+                          payment_date=values['payment_date'], reference=values['reference'],
+                          idempotency_key=idempotency_key, request_digest=request_digest)
         self.payments.append(payment)
         return payment
 

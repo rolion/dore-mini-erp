@@ -37,6 +37,8 @@ export class OrderPaymentsComponent {
   readonly formOpen = signal(false);
   /** Método sugerido por la configuración de Ventas; sin él, Efectivo como siempre. */
   private defaultMethod: PaymentMethod = 'CASH';
+  /** Clave del intento actual: igual en cada reintento; cambia si la persona modifica lo escrito o tras un pago. */
+  private attemptKey: string = crypto.randomUUID();
   readonly form = inject(FormBuilder).nonNullable.group({
     amount: ['', Validators.required],
     paymentMethod: ['CASH' as PaymentMethod, Validators.required],
@@ -45,6 +47,7 @@ export class OrderPaymentsComponent {
   });
 
   constructor() {
+    this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => (this.attemptKey = crypto.randomUUID()));
     inject(SalesSettingsService)
       .defaults()
       .pipe(takeUntilDestroyed())
@@ -88,6 +91,7 @@ export class OrderPaymentsComponent {
       paymentMethod: value.paymentMethod,
       paymentDate: value.paymentDate,
       reference: value.reference.trim(),
+      idempotencyKey: this.attemptKey,
     });
   }
 }

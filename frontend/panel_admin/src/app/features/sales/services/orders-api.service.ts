@@ -322,6 +322,7 @@ export class OrdersApiService {
       payment_method: input.paymentMethod,
       payment_date: input.paymentDate,
       reference: input.reference,
+      idempotency_key: input.idempotencyKey,
     };
     return this.request(this.http.post<OrderDto>(`${this.baseUrl}${orderId}/payments/`, body));
   }

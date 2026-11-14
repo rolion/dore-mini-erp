@@ -192,6 +192,8 @@ export interface PaymentInput {
   paymentMethod: PaymentMethod;
   paymentDate: string;
   reference: string;
+  /** Identifica el intento de cobro: se reutiliza en los reintentos para no duplicar el pago. */
+  idempotencyKey: string;
 }
 
 export type OrderDateField = 'order_date' | 'expected_delivery_date';

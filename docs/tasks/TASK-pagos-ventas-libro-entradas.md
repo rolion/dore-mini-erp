@@ -1,0 +1,94 @@
+# TASK-pagos-ventas-libro-entradas: Integrar pagos de Ventas con el libro de entradas (PB-ACC-003)
+
+**Etapa actual:** PUBLISH
+**Veredicto de complejidad:** NEEDS_ARCHITECTURE
+**Diseño requerido:** NO
+**Rama:** task/TASK-pagos-ventas-libro-entradas
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/69
+**Fuente:** https://trello.com/c/kFAIOGr7/20-pb-acc-003-integrar-pagos-de-ventas-con-el-libro-de-entradas
+
+## Historial de transiciones
+| Fecha (UTC) | Transición | Motivo | Origen |
+|---|---|---|---|
+| 2026-11-14 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (63dd4b9, incluye PB-ACC-001 y PB-ACC-002) | delivery-start |
+| 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, transacción entre dos módulos, migración sobre pagos); sin diseño visual nuevo | delivery-start |
+| 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta cubre las reglas; decisiones técnicas abiertas resueltas en el ADR | delivery-start |
+| 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
+
+## Investigación
+
+### Requerimiento
+Insumo de la tarjeta PB-ACC-003 (P1; **no es una Specification aprobada**). Historia: como responsable de caja, cada pago de un pedido genera una entrada única por el dinero recibido. Esperado: con accounting habilitado, resolver método → cuenta y guardar pago, saldos y entrada en una misma transacción; mantener validaciones (monto > 0, método válido, pago ≤ saldo); completar la idempotencia del registro de pagos (la unicidad de la entrada no evita dos pagos distintos ante un reintento); pago parcial genera solo su monto; crear, registrar venta, entregar o cancelar no generan entradas; sin mapeo o con fallo contable se rechaza el pago sin persistencia parcial y con mensaje accionable; se conservan cuenta y fecha efectiva; cobrar no toca stock; con accounting deshabilitado, flujo actual; cobrar no exige permiso de edición contable, sí el permiso del flujo de Ventas; sin reversiones ni reembolsos. Criterios: pedido de Bs 300 con pagos 100 y 200 → dos entradas, total 300, saldo cero; sin pago nuevo no hay entradas y los pagos no desaparecen al cancelar; doble envío / reintento tras pérdida de respuesta → un pago y una entrada; pagos concurrentes distintos no exceden el saldo; fallo o mapeo ausente revierte todo; verificar destino, fecha, permisos, empresa y funcionamiento con accounting deshabilitado. Dependencias: PB-ACC-001 y PB-ACC-002 (ambas en `main`). Fuera: partida doble, fiscal, egresos, transferencias, saldos iniciales, reversiones; no tocar el reporte ventas − gastos.
+
+### Hechos encontrados
+- `backend/modules/sales/application/commands.py:211-220` — `RegisterPayment` bloquea el pedido (`get_for_update`), llama a `Order.register_payment` y guarda; no hay clave de idempotencia ni integración contable.
+- `backend/modules/sales/domain/order.py:348-367` — `register_payment`: rechaza pedido cancelado (`order_cancelled`), valida monto > 0, método del enum, fecha no futura y monto ≤ saldo; `Payment` (`order.py:153-159`) no tiene clave de idempotencia ni usuario.
+- `backend/modules/sales/infrastructure/django/models.py:58-73` — `PaymentModel` sin `company_id` (hereda del pedido), sin clave de idempotencia.
+- `backend/modules/sales/infrastructure/django/repositories.py:36-69` — `get_for_update` bloquea la fila del pedido; `save` agrega pagos nuevos (`_append_new_payments`, solo inserta).
+- `backend/modules/sales/api/views.py:68-80,263-269` — `_run` envuelve toda mutación en `transaction.atomic()`; `OrderPaymentView` devuelve 201 con el pedido; `_actor` (`:131`) da usuario y nombre. Serializer de entrada: `sales/api/serializers.py:47-51`.
+- `backend/modules/sales/infrastructure/adapters.py:100-160` — patrón de integración opcional (`StockOutputAdapter`: `module_gate`, fachada de otro módulo, traducción de errores a `OrderRuleViolation`/`OrderValidationError`); puerto en `sales/application/ports.py`.
+- `backend/modules/accounting/services.py` — `resolve_account(company_id, method)` (cuenta vigente o `None`) y `record_entry(company_id, EntryInput)` (exige transacción abierta; idempotente por `(empresa, origin_kind, origin_id)`; `EntryValidationError`, `EntryConflict`, `EntryContractError`). `origin_kind='PRODUCT'` y `origin_id` = id del pago están previstos (ADR del libro, decisiones 2 y 4).
+- `backend/modules/sales/tests/test_boundaries.py:15-33` — dependencias permitidas: `sales` no incluye `accounting`; hay que añadirla (solo vía `services` desde infraestructura).
+- `backend/modules/receivables/api/views.py:139-153`, `receivables/application/collections.py:62-104` — patrón de idempotencia ya existente: `idempotency_key` UUID, huella (digest) del contenido, replay 200 / alta 201, 409 si la misma clave llega con otros datos. Se imita.
+- `backend/config/permissions.py` — el permiso por defecto de las vistas de Ventas (`CompanyModulePermission`) exige admin de empresa y `sales` habilitado; no hay permiso contable, y `record_entry` no es un endpoint, así que cobrar no exige nada contable.
+- Frontend: `features/sales/components/order-payments/order-payments.component.ts` emite `PaymentInput` sin clave; `features/purchases/components/payment-dialog/payment-dialog.component.ts:24` ya genera un `paymentId` al abrir y lo reutiliza en reintentos (patrón a seguir).
+
+### Hipótesis / supuestos no confirmados
+- La clave de idempotencia es opcional en el contrato (compatibilidad con clientes y pruebas actuales); el frontend de Ventas siempre la envía. Sin clave no hay deduplicación (comportamiento previo).
+- Moneda de los pagos de Ventas: `BOB`, única de los flujos (`quotations/domain/proforma.py:7`).
+
+### Módulos y dependencias relacionadas
+`sales` (dominio, comando, adaptador, API, migración), `accounting` (solo consumo vía `services`), `shared/module_gate`. Frontend `features/sales`.
+
+### Implementaciones similares existentes
+`receivables` (idempotencia y huella); `StockOutputAdapter` (integración opcional dentro de la transacción del comando).
+
+### Comportamiento actual
+Un pago de pedido se guarda sin cuenta ni entrada; reintentar el envío crea otro pago.
+
+### Restricciones
+`CLAUDE.md`: `Decimal`, `company_id` desde el usuario, no editar migraciones aplicadas (la nueva es aditiva), i18n es/en/pt, dominio sin Django, módulos solo por `services`.
+
+### Riesgos identificados
+- Reintento tras pérdida de respuesta o doble clic crea dos pagos (mitigado: clave de idempotencia).
+- Rollback parcial si la entrada falla después de guardar el pago (mitigado: todo en el `atomic` de `_run`; prueba de rollback).
+- Carrera entre pagos distintos (mitigado: bloqueo de la fila del pedido).
+
+### Veredicto de complejidad
+**NEEDS_ARCHITECTURE** — dinero, nueva dependencia sales → accounting, migración sobre pagos y contrato de la API de pagos.
+
+### Diseño requerido
+**NO** — no hay pantallas nuevas; solo se envía la clave y se muestra el mensaje 409 accionable con el patrón de error existente.
+
+## Diseño
+No aplica.
+
+## Arquitectura
+`docs/adr/ADR-pagos-ventas-libro-entradas-integracion-e-idempotencia.md`
+
+## Plan
+`docs/plans/PLAN-2026-11-14-pagos-ventas-libro-entradas.md` (v1, COMPLETO) · Specification readiness: READY
+
+## Implementación
+**Backend (`sales`):** dominio (`Payment.idempotency_key/request_digest`, `payment_digest`, `Order.find_payment_by_key`, INV-04); migración aditiva `0003_payment_idempotency` (dos columnas nullable y único parcial por pedido); puerto `PaymentLedger` y `PaymentLedgerAdapter` (resuelve la cuenta con `accounting.services.resolve_account` y registra con `record_entry`, origen `PRODUCT`; INV-02, INV-03, AC-06..08); `RegisterPayment` con replay, entrada y guardado dentro de la transacción de `_run` (AC-01, AC-04, AC-07, AC-09); API: `idempotency_key` opcional, 200 en replay y 409 con `payment_method_without_account`, `ledger_rejected`, `ledger_conflict`, `idempotency_key_reused` (API-01); `test_boundaries` permite `sales → accounting`.
+**Frontend (`features/sales`):** `PaymentInput.idempotencyKey`, enviada como `idempotency_key`; `OrderPaymentsComponent` genera la clave, la reutiliza en reintentos y la renueva al cambiar el formulario o tras un pago (AC-12). El 409 se muestra con el toast de error existente (mensaje del servidor); sin pantallas nuevas (UI-01).
+**Cobertura:** `sales/tests/test_payment_ledger.py` (API con BD real, aplicación con doble del libro y concurrencia con hilos) cubre AC-01..AC-11 y EDGE-01..05; specs de `order-payments`, `orders-api.service` y `order-detail` para AC-12.
+**Desviaciones respecto al plan:**
+1. El ADR dice «guardar y luego registrar la entrada»; se registra la entrada **antes** de `repository.save` (misma transacción), para que un rechazo del libro no deje nada guardado ni siquiera con repositorios sin transacción. El resultado observable es el mismo.
+2. `RegisterPayment` expone `replayed` en la instancia para que la vista responda 200/201 sin cambiar el tipo de retorno de `execute`.
+**Deuda técnica / limitaciones:** sin clave, un cliente de la API no tiene deduplicación (el frontend propio siempre la envía); en 409 el detalle del pedido se recarga (comportamiento existente de `OrderRuleError`); `.env` copiado al worktree con autorización de la persona (ignorado por git) y `node_modules` enlazado por junction al del checkout principal (sin instalar dependencias).
+**Verificación propia (no es el Quality Gate):** `ng lint` OK, `i18n:check` 0 faltantes, Karma de `features/sales` 213/213 OK; backend suite completa 1594 tests OK (incluye 22 nuevos de `test_payment_ledger.py`).
+
+## Review
+**Veredicto: PASS** (2026-11-14, subagente aislado; sin hallazgos Critical/High).
+- Backend: suite completa 1594 tests OK; `makemigrations --check` sin cambios; bandit sobre `modules/sales` sin issues.
+- Frontend: Karma completo 1387 OK; `npm run lint` OK; `i18n:check` 1903 claves, 0 faltantes; `ng build` OK (solo warnings SCSS preexistentes); `npm audit`: 2 moderadas preexistentes (`hono`), ajenas al diff.
+- Límites DDD OK (`sales → accounting` solo vía `services` desde infraestructura; dominio sin Django; empresa desde el usuario); atomicidad, carrera de idempotencia, replay sobre pedido saldado, sin consulta a accounting cuando está deshabilitado y sin movimientos de inventario, verificados con pruebas.
+- No verificado: revisión visual en navegador (sin pantallas nuevas) y ruff/flake8/mypy (no instalados).
+- Hallazgos (resueltos después, ver «Corrección posterior»): Low [01](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-01.md) (aserciones débiles y ramas sin prueba: `ledger_conflict`, EDGE-04, replay sobre cancelado, `deliver` en AC-03), Low [02](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-02.md) (`ddd.md` sin la dependencia `sales → accounting`).
+
+- **Corrección posterior (2026-11-14):** REV-01 y REV-02 resueltos (cuatro pruebas nuevas o reforzadas en `test_payment_ledger.py`; nota y mapa de dependencias en `ddd.md`). Verificado: suite de `modules.sales` 309 tests OK.
+
+## Publicación
+PR #69 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `sales/0003`) y **dinero / integración entre módulos** (ADR-pagos-ventas-libro-entradas-integracion-e-idempotencia).

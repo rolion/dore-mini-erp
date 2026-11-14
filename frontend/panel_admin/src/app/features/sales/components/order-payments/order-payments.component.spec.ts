@@ -105,7 +105,24 @@ describe('OrderPaymentsComponent', () => {
     component.form.setValue({ amount: ' 20.00 ', paymentMethod: 'QR', paymentDate: '02/10/2026', reference: ' ref ' });
     fixture.detectChanges();
     (fixture.debugElement.query(By.css('form button[type="submit"]')).nativeElement as HTMLButtonElement).click();
-    expect(emitted).toEqual([{ amount: '20.00', paymentMethod: 'QR', paymentDate: '02/10/2026', reference: 'ref' }]);
+    expect(emitted).toEqual([
+      { amount: '20.00', paymentMethod: 'QR', paymentDate: '02/10/2026', reference: 'ref', idempotencyKey: emitted[0].idempotencyKey },
+    ]);
+    expect(emitted[0].idempotencyKey).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('reuses the same idempotency key on retry and renews it when the form changes (AC-12)', () => {
+    render(makeOrder());
+    openForm();
+    const emitted: PaymentInput[] = [];
+    component.paymentSubmit.subscribe((input) => emitted.push(input));
+    component.form.patchValue({ amount: '20.00' });
+    component.submit();
+    component.submit();
+    expect(emitted[1].idempotencyKey).toBe(emitted[0].idempotencyKey);
+    component.form.patchValue({ amount: '25.00' });
+    component.submit();
+    expect(emitted[2].idempotencyKey).not.toBe(emitted[0].idempotencyKey);
   });
 
   it('does not emit without an amount or while busy (AC-12)', () => {

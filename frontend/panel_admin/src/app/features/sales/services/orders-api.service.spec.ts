@@ -156,11 +156,11 @@ describe('OrdersApiService', () => {
         'registerPayment',
         () =>
           service
-            .registerPayment('o-1', { amount: '20.00', paymentMethod: 'QR', paymentDate: '2026-10-02', reference: 'r' })
+            .registerPayment('o-1', { amount: '20.00', paymentMethod: 'QR', paymentDate: '2026-10-02', reference: 'r', idempotencyKey: 'k-1' })
             .subscribe(),
         'POST',
         '/api/orders/o-1/payments/',
-        { amount: '20.00', payment_method: 'QR', payment_date: '2026-10-02', reference: 'r' },
+        { amount: '20.00', payment_method: 'QR', payment_date: '2026-10-02', reference: 'r', idempotency_key: 'k-1' },
       ],
     ];
 

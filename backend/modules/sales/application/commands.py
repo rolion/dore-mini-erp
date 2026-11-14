@@ -2,11 +2,11 @@ from datetime import date
 from uuid import UUID
 
 from modules.sales.domain.exceptions import OrderNotFound, OrderRuleViolation, OrderValidationError
-from modules.sales.domain.order import UNSET, Order, validate_quantity
+from modules.sales.domain.order import UNSET, Order, payment_digest, validate_quantity
 from modules.sales.domain.repositories import OrderRepository
 
 from .delivery import controlled_lines
-from .ports import Actor, Clock, CustomerDirectory, ProductCatalog, SalesSettingsReader, StockOutput
+from .ports import Actor, Clock, CustomerDirectory, PaymentLedger, ProductCatalog, SalesSettingsReader, StockOutput
 
 
 def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
@@ -209,12 +209,30 @@ class CancelOrder:
 
 
 class RegisterPayment:
-    def __init__(self, repository: OrderRepository, clock: Clock):
+    """Registra un pago del pedido. Con Contabilidad habilitada crea su entrada en el libro antes de guardar, todo en
+    la transacción de quien llama (si algo falla no queda pago, saldo ni entrada). Idempotente por `idempotency_key`:
+    `replayed` indica que el intento ya estaba registrado y no se creó nada."""
+
+    def __init__(self, repository: OrderRepository, clock: Clock, ledger: PaymentLedger | None = None):
         self.repository = repository
         self.clock = clock
+        self.ledger = ledger
+        self.replayed = False
 
     def execute(self, order_id: UUID, amount: object = None, payment_method: object = None, payment_date: object = None,
-                reference: object = '') -> Order:
+                reference: object = '', idempotency_key: UUID | None = None, actor: Actor | None = None) -> Order:
+        self.replayed = False
         order = _load_for_update(self.repository, order_id)
-        order.register_payment(amount, payment_method, payment_date, reference, self.clock.today())
+        digest = payment_digest(amount, payment_method, payment_date, reference)
+        if idempotency_key is not None:
+            existing = order.find_payment_by_key(idempotency_key)
+            if existing is not None:
+                if existing.request_digest != digest:
+                    raise OrderRuleViolation('idempotency_key_reused', 'La clave de la operación ya se usó con otros datos.')
+                self.replayed = True
+                return order
+        payment = order.register_payment(amount, payment_method, payment_date, reference, self.clock.today(),
+                                         idempotency_key, digest)
+        if self.ledger is not None and self.ledger.is_available():
+            self.ledger.record(order.id, payment, actor or Actor(None, ''))
         return self.repository.save(order)
