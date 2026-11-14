@@ -1,0 +1,129 @@
+from django.db import transaction
+from rest_framework import status
+from rest_framework.exceptions import APIException, NotFound, ValidationError
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from modules.accounting.application.use_cases import (
+    ActivateAccount,
+    ConfigureMethod,
+    CreateAccount,
+    DeactivateAccount,
+    GetAccount,
+    ListAccounts,
+    ListMethods,
+    UpdateAccount,
+)
+from modules.accounting.domain.account import (
+    AccountConflict,
+    AccountNotFound,
+    AccountValidationError,
+    MethodNotFound,
+)
+from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
+from shared.tenancy import company_id_from
+
+from .serializers import (
+    AccountInputSerializer,
+    AccountUpdateSerializer,
+    MethodInputSerializer,
+    serialize_account,
+    serialize_method,
+)
+
+
+class Conflict(APIException):
+    """409 con `{detail, code, methods}`."""
+
+    status_code = status.HTTP_409_CONFLICT
+
+    def __init__(self, detail: str, code: str, methods: list[str]):
+        super().__init__({'detail': detail, 'code': code, 'methods': methods})
+
+
+def _repositories(request):
+    """Repositorios de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
+    company_id = company_id_from(request)
+    return DjangoAccountRepository(company_id), DjangoMethodMappingRepository(company_id)
+
+
+def _run(use_case, *args, **kwargs):
+    try:
+        with transaction.atomic():
+            return use_case.execute(*args, **kwargs)
+    except AccountValidationError as exc:
+        raise ValidationError(exc.errors) from exc
+    except AccountNotFound as exc:
+        raise NotFound('Cuenta no encontrada.') from exc
+    except MethodNotFound as exc:
+        raise NotFound('Método de pago no encontrado.') from exc
+    except AccountConflict as exc:
+        raise Conflict(str(exc), exc.code, exc.methods) from exc
+
+
+def _parse_active(raw: str | None) -> bool | None:
+    if raw is None or raw == '':
+        return None
+    if raw in ('true', 'false'):
+        return raw == 'true'
+    raise ValidationError({'active': ['Valor inválido: use "true" o "false".']})
+
+
+# La configuración no exige Contabilidad habilitada: hay que poder configurar antes de habilitarla.
+class _ConfigView(APIView):
+    required_modules = ()
+
+
+class AccountListCreateView(_ConfigView):
+    def get(self, request):
+        accounts, _ = _repositories(request)
+        result = _run(ListAccounts(accounts), _parse_active(request.query_params.get('active')))
+        return Response([serialize_account(a) for a in result])
+
+    def post(self, request):
+        serializer = AccountInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        accounts, _ = _repositories(request)
+        account = _run(CreateAccount(accounts), **serializer.validated_data)
+        return Response(serialize_account(account), status=status.HTTP_201_CREATED)
+
+
+class AccountDetailView(_ConfigView):
+    def get(self, request, account_id):
+        accounts, _ = _repositories(request)
+        return Response(serialize_account(_run(GetAccount(accounts), account_id)))
+
+    def patch(self, request, account_id):
+        serializer = AccountUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        accounts, mappings = _repositories(request)
+        account = _run(UpdateAccount(accounts, mappings), account_id, **serializer.validated_data)
+        return Response(serialize_account(account))
+
+
+class AccountActivateView(_ConfigView):
+    def post(self, request, account_id):
+        accounts, _ = _repositories(request)
+        return Response(serialize_account(_run(ActivateAccount(accounts), account_id)))
+
+
+class AccountDeactivateView(_ConfigView):
+    def post(self, request, account_id):
+        accounts, mappings = _repositories(request)
+        return Response(serialize_account(_run(DeactivateAccount(accounts, mappings), account_id)))
+
+
+class MethodListView(_ConfigView):
+    def get(self, request):
+        accounts, mappings = _repositories(request)
+        return Response([serialize_method(v) for v in _run(ListMethods(accounts, mappings))])
+
+
+class MethodDetailView(_ConfigView):
+    def put(self, request, code):
+        serializer = MethodInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        accounts, mappings = _repositories(request)
+        view = _run(ConfigureMethod(accounts, mappings), code.upper(), serializer.validated_data['account_id'],
+                    serializer.validated_data['is_active'])
+        return Response(serialize_method(view))

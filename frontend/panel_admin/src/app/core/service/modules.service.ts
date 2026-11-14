@@ -102,6 +102,7 @@ export class ModulesService {
       detail?: unknown;
       missing?: unknown;
       dependents?: unknown;
+      code?: unknown;
     };
     const detail = typeof body.detail === 'string' ? body.detail : '';
     const names = [body.missing, body.dependents].find(Array.isArray);
@@ -109,6 +110,7 @@ export class ModulesService {
       err.status === 0 ? MODULES_ERROR_MESSAGE() : detail || GENERIC_MESSAGE(),
       err.status,
       names ? names.map(String) : [],
+      typeof body.code === 'string' ? body.code : null,
     );
   }
 }

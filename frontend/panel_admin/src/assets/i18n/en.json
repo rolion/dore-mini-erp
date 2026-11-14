@@ -1,5 +1,11 @@
 {
   "MENUITEMS": {
+    "ACCOUNTING": {
+      "TEXT": "Accounting",
+      "LIST": {
+        "SETTINGS": "Accounts and Payment methods"
+      }
+    },
     "AGENDA": {
       "APPOINTMENTS": "Appointments",
       "SCHEDULE": "Hours and absences",
@@ -1826,6 +1832,7 @@
   },
   "SETTINGS": {
     "MODULE_CONFIRM_DIALOG": {
+      "IR_A_CUENTAS_Y_METODOS_DE_PAGO": "Go to Accounts and Payment methods",
       "MODULO": "Module",
       "EMPRESA": "Company",
       "REQUIERE": "Requires",
@@ -2494,5 +2501,42 @@
     "SIN_PAGOS": "No payments recorded yet.",
     "COL_COMPROBANTE": "Receipt",
     "COL_IMPUTACIONES": "Allocations"
+  },
+  "ACCOUNTING": {
+    "ACCOUNTING_SETTINGS": {
+      "CUENTAS_Y_METODOS_DE_PAGO": "Accounts and Payment methods",
+      "CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO": "Accounting › Settings › Accounts and Payment methods"
+    },
+    "ACCOUNTS_TAB": {
+      "CUENTAS": "Accounts",
+      "DONDE_SE_RECIBE_EL_DINERO": "Places where money is received (cash box, bank…).",
+      "NUEVA_CUENTA": "New account",
+      "SIN_CUENTAS": "No accounts yet. Create the first one with «+».",
+      "CUENTA_ACTIVADA": "Account activated",
+      "CUENTA_DESACTIVADA": "Account deactivated"
+    },
+    "ACCOUNT_DIALOG": {
+      "EDITAR_CUENTA": "Edit account",
+      "EJEMPLO_CAJA_BANCO": "E.g.: Cash box, Main bank",
+      "MONEDA": "Currency",
+      "SOLO_LAS_CUENTAS_EN_BOB": "Only BOB accounts can receive sales and quote payments.",
+      "CUENTA_ACTUALIZADA": "Account updated",
+      "CUENTA_CREADA": "Account created"
+    },
+    "DEACTIVATE_DIALOG": {
+      "TITULO": "Deactivate account",
+      "CONFIRMACION": "Deactivate the account «{{name}}»? It cannot be chosen as a destination until you reactivate it.",
+      "BLOQUEADA": "Cannot deactivate: the account is used by these active methods: {{methods}}. Reassign or deactivate them in the «Payment methods» tab.",
+      "DESACTIVAR": "Deactivate"
+    },
+    "METHODS_TAB": {
+      "MONEDA_NO_COMPATIBLE": "incompatible currency",
+      "METODOS_DE_PAGO": "Payment methods",
+      "CADA_METODO_TIENE_UNA_UNICA": "Each method has a single current destination account; several methods can share one. Changes only affect later payments.",
+      "PRIMERO_CREA_UNA_CUENTA_EN": "First create an account in the «Accounts» tab.",
+      "CUENTA_DESTINO": "Destination account",
+      "SIN_CUENTA": "No account",
+      "METODO_ACTUALIZADO": "Method updated"
+    }
   }
 }

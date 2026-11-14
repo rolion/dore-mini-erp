@@ -11,4 +11,6 @@ export interface RouteInfo {
   submenu: RouteInfo[];
   /** Clave del módulo que habilita este ítem; sin clave, el ítem siempre se muestra. */
   module?: string;
+  /** Solo lo ve quien administra la empresa (la API es la barrera real). */
+  adminOnly?: boolean;
 }

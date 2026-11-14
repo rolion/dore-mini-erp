@@ -305,6 +305,31 @@
     },
     {
       "path": "",
+      "title": "MENUITEMS.ACCOUNTING.TEXT",
+      "adminOnly": true,
+      "iconType": "feather",
+      "icon": "credit-card",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/pocketbiz/accounting/settings",
+          "title": "MENUITEMS.ACCOUNTING.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
+      "module": "accounting"
+    },
+    {
+      "path": "",
       "title": "MENUITEMS.SETTINGS.TEXT",
       "iconType": "feather",
       "icon": "settings",

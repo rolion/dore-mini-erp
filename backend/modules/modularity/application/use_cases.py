@@ -44,15 +44,19 @@ class ListModules:
 
 
 class EnableModule:
-    def __init__(self, repository, changes=None):
+    def __init__(self, repository, changes=None, preconditions=None):
         self.repository = repository
         self.changes = changes
+        self.preconditions = preconditions  # callable(key) -> nombres de lo que falta para habilitar
 
     def execute(self, key: str, actor: Actor | None = None) -> list[ModuleView]:
         enabled = domain.effective_enabled(self.repository.enabled_keys())
         domain.definition(key)
         if key not in enabled:
             domain.check_can_enable(key, enabled)
+            missing = self.preconditions(key) if self.preconditions else []
+            if missing:
+                raise domain.IncompleteConfiguration(missing)
             self.repository.enable(key)
             _record(self.changes, actor, key, True)
             enabled.add(key)

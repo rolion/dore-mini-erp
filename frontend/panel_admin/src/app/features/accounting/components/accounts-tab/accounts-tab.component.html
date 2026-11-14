@@ -1,0 +1,74 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>{{ 'ACCOUNTING.ACCOUNTS_TAB.CUENTAS' | translate }}</strong></h2>
+      <small class="text-muted">{{ 'ACCOUNTING.ACCOUNTS_TAB.DONDE_SE_RECIBE_EL_DINERO' | translate }}</small>
+    </div>
+    <div class="header-buttons-left">
+      <div class="d-flex align-items-center gap-2 ms-3">
+        <select class="form-select form-control w-auto" [formControl]="statusControl" [attr.aria-label]="'COMMON.FILTRAR_POR_ESTADO' | translate">
+          <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+          <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
+          <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+        </select>
+        <button type="button" class="btn btn-icon icon-left btn-primary rounded-button" (click)="openDialog()"
+          [title]="'ACCOUNTING.ACCOUNTS_TAB.NUEVA_CUENTA' | translate" [attr.aria-label]="'ACCOUNTING.ACCOUNTS_TAB.NUEVA_CUENTA' | translate">
+          <i class="material-icons">add</i>
+        </button>
+      </div>
+    </div>
+  </div>
+  @if (blockReason) {
+  <div class="alert alert-warning m-3" role="alert">{{ blockReason }}</div>
+  }
+  @if (loading && !rows.length) {
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else if (!rows.length) {
+  <p class="m-4">{{ 'ACCOUNTING.ACCOUNTS_TAB.SIN_CUENTAS' | translate }}</p>
+  } @else {
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.ACCOUNTS_TAB.CUENTAS' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (account of rows; track account.id) {
+        <tr>
+          <td [attr.data-label]="'COMMON.NOMBRE' | translate"><strong>{{ account.name }}</strong></td>
+          <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate">{{ account.currency }}</td>
+          <td [attr.data-label]="'COMMON.ESTADO' | translate">
+            @if (account.isActive) {
+            <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
+            } @else {
+            <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
+            }
+          </td>
+          <td>
+            <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto" (click)="openDialog(account)"
+              [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(account)"
+              [title]="account.isActive ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
+              [attr.aria-label]="account.isActive ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
+              <i class="fas" [class.fa-ban]="account.isActive" [class.fa-check]="!account.isActive"></i>
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

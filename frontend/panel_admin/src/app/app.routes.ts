@@ -101,6 +101,11 @@ export const APP_ROUTE: Route[] = [
                 loadChildren: () => import('./features/dentistry/dentistry.routes').then(m => m.DENTISTRY_ROUTES),
             },
             {
+                // Sin `moduleGuard`: la empresa configura sus cuentas antes de habilitar Contabilidad (DDR).
+                path: 'accounting/settings',
+                loadComponent: () => import('./features/accounting/pages/accounting-settings/accounting-settings.component').then(m => m.AccountingSettingsComponent),
+            },
+            {
                 path: 'personnel',
                 canActivate: [moduleGuard],
                 data: { module: 'personnel' },

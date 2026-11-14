@@ -38,6 +38,8 @@ export class ModulesApiError extends Error {
     readonly status: number,
     /** Nombres de módulos que faltan (al habilitar) o que lo requieren (al deshabilitar). */
     readonly names: string[] = [],
+    /** Código estable de un 409 (`incomplete_configuration`: falta configurar antes de habilitar). */
+    readonly code: string | null = null,
   ) {
     super(message);
     this.name = 'ModulesApiError';

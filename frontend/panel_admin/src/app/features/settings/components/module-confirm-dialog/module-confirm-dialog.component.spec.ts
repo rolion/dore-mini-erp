@@ -1,6 +1,7 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 import { AppModule, ModulesApiError } from '../../../../core/models/module';
@@ -32,7 +33,7 @@ describe('ModuleConfirmDialogComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [ModuleConfirmDialogComponent],
-      providers: [...provideTestTranslations(), 
+      providers: [...provideTestTranslations(), provideRouter([]),
         { provide: ModulesService, useValue: service },
         { provide: NgbActiveModal, useValue: activeModal },
         { provide: ToastrService, useValue: toastr },
@@ -64,6 +65,25 @@ describe('ModuleConfirmDialogComponent', () => {
     expect(service.enable).toHaveBeenCalledWith('sales');
     expect(toastr.success).toHaveBeenCalledWith('Módulo habilitado');
     expect(activeModal.close).toHaveBeenCalledWith(MODULE);
+  });
+
+  it('offers the accounting setup link when the 409 asks to configure first (REV-06)', () => {
+    service.enable.and.returnValue(
+      throwError(() => new ModulesApiError('Falta configurar antes de habilitar: Efectivo.', 409, ['Efectivo'], 'incomplete_configuration')),
+    );
+    fixture.detectChanges();
+    component.confirm();
+    fixture.detectChanges();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="accounting-setup-link"]');
+    expect(link?.getAttribute('href')).toContain('/pocketbiz/accounting/settings');
+  });
+
+  it('does not offer the link for other conflicts', () => {
+    service.enable.and.returnValue(throwError(() => new ModulesApiError('Faltan módulos.', 409, ['Gastos'])));
+    fixture.detectChanges();
+    component.confirm();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="accounting-setup-link"]')).toBeNull();
   });
 
   it('shows the server error and keeps the dialog open (AC-03)', () => {
