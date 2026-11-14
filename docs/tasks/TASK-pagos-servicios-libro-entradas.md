@@ -1,6 +1,6 @@
 # TASK-pagos-servicios-libro-entradas: Integrar pagos de servicios con el libro de entradas (PB-COB-002)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-pagos-servicios-libro-entradas
@@ -13,6 +13,7 @@
 | 2026-11-14 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (52579a2, incluye PB-ACC-001/002/003) | delivery-start |
 | 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, transacción entre dos módulos, nueva dependencia `receivables → accounting`); sin diseño visual nuevo | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta y el patrón de PB-ACC-003 cubren las reglas; decisiones técnicas en el ADR | delivery-start |
+| 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -71,7 +72,7 @@ Ver `docs/adr/ADR-pagos-servicios-libro-entradas-puerto-y-atomicidad.md`.
 Ver `docs/plans/PLAN-2026-11-14-pagos-servicios-libro-entradas.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+Según plan v1, sin desviaciones. `ObligationStateError.code` (API-01); puerto `PaymentLedger` en `CollectionService` y llamada tras `add_payment` (INV-02, INV-05, AC-03); `PaymentLedgerAdapter` con `module_gate`, `resolve_account` y `record_entry` (INV-03, AC-05..AC-07); la vista inyecta el adaptador y expone `code` en el 409; frontera `receivables → accounting`. Pruebas: `receivables/tests/test_payment_ledger.py` (AC-01..AC-10, concurrencia incluida). Suite completa del backend ejecutada por quien implementa: 1607 pruebas OK (no es el Quality Gate). Sin cambios de frontend ni migraciones. Deuda: ninguna.
 
 ## Review
 _Pendiente_

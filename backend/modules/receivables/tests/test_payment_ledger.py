@@ -13,7 +13,6 @@ from modules.accounting.application.use_cases import ConfigureMethod
 from modules.accounting.domain.account import Account
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
-from modules.accounts.testing import make_admin
 from modules.modularity.infrastructure.django.repositories import DjangoCompanyModuleRepository
 from modules.receivables.infrastructure.django.models import AllocationModel, PaymentModel
 from modules.receivables.tests.test_api import BASE, ReceivablesApiTests as _Base
@@ -66,7 +65,7 @@ class ServicePaymentLedgerTests(TransactionTestCase):
         entry = self.entries().get()
         self.assertEqual((entry.origin_kind, entry.origin_id, entry.origin_document_ref, entry.receipt_number),
                          ('SERVICE', payment.id, p['number'], payment.receipt_number))
-        self.assertEqual((entry.amount, entry.currency, entry.account_id, entry.method),
+        self.assertEqual((entry.amount, entry.currency, entry.account_id, entry.payment_method),
                          (Decimal('160.00'), 'BOB', self.caja.id, 'CASH'))
         self.assertEqual((str(entry.payment_date), entry.recorded_by), ('2026-11-10', self.admin.pk))
         self.assertEqual(AllocationModel.objects.count(), 2)
@@ -81,7 +80,7 @@ class ServicePaymentLedgerTests(TransactionTestCase):
         self.pay(p['number'], [(p['lines'][0]['id'], '40.00')])
         listing = self.client.get('/api/accounting/entries/').json()
         row = listing['results'][0]
-        self.assertEqual((row['source']['kind'], row['source']['receipt_number'], row['source']['document_ref']),
+        self.assertEqual((row['origin']['kind'], row['source']['receipt_number'], row['source']['document_ref']),
                          ('SERVICE', PaymentModel.objects.get().receipt_number, p['number']))
         self.assertNotIn('reference', row)
 
@@ -176,6 +175,10 @@ class ServicePaymentLedgerTests(TransactionTestCase):
         self.enable_accounting()
         p = self.quote()
         self.pay(p['number'], [(p['lines'][0]['id'], '30.00')])
+        modules = DjangoCompanyModuleRepository(self.other.company_id)
+        modules.enabled_keys()
+        for key in ('catalog', 'services', 'quotations', 'dentistry', 'receivables'):
+            modules.enable(key)
         other = APIClient()
         other.force_authenticate(self.other)
         self.assertEqual(self.pay(p['number'], [(p['lines'][0]['id'], '10.00')], client=other).status_code, 404)
