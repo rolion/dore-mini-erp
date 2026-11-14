@@ -90,5 +90,7 @@ No aplica.
 - No verificado: suite completa en este gate (se corrió en build: solo fallan 3-4 pruebas intermitentes preexistentes, también en el checkout principal); ruff/flake8/mypy (no instalados); UI (no aplica).
 - Hallazgos abiertos: Low [01](../reviews/REV-2026-11-14-conciliar-regularizar-pagos-historicos-01.md) (`classify` trata como existente una entrada con otro `origin_document_ref`, el ADR decía compararlo), Low [02](../reviews/REV-2026-11-14-conciliar-regularizar-pagos-historicos-02.md) (`regularization_stamp` es código muerto).
 
+- **Corrección posterior (2026-11-14):** REV-01 resuelto (`classify` compara también `origin_document_ref`: una entrada con otro documento es conflicto; prueba añadida y fixtures alineados) y REV-02 resuelto (se eliminó `regularization_stamp`). Verificado: `test_regularization` 20 OK.
+
 ## Publicación
 PR #71 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `accounting/0003`) y **dinero / integración entre módulos** (ADR-conciliar-regularizar-pagos-historicos-comando-y-fuentes).

@@ -41,7 +41,7 @@ def sp(**kw):
 def make_entry(account, payment, **kw):
     data = dict(id=uuid4(), account_id=account.id, currency='BOB', amount=payment.amount,
                 payment_date=payment.payment_date, method=payment.method, origin_kind=payment.origin_kind,
-                origin_id=payment.id)
+                origin_id=payment.id, origin_document_ref=payment.document_ref)
     data.update(kw)
     return Entry(**data)
 
@@ -92,6 +92,8 @@ class MappingAndClassifyTests(SimpleTestCase):
         other = classify(p, make_entry(self.banco, p), mapping)
         self.assertEqual((other.status, other.fields), (DESTINATION_DIFFERENCE, ('account_id',)))
         self.assertEqual(classify(sp(amount=Decimal('0')), None, mapping).status, INVALID)
+        other_doc = classify(p, make_entry(self.caja, p, origin_document_ref='otro'), mapping)  # REV-01
+        self.assertEqual((other_doc.status, other_doc.fields), (CONFLICT, ('origin_document_ref',)))
 
     def test_existing_without_mapping_is_not_flagged_for_destination(self):
         p = sp()
@@ -156,7 +158,8 @@ class RegularizeCommandTests(RegularizeBase, TestCase):
         existing = self.order_payment(amount='40.00', method='QR')
         EntryModel.objects.create(company_id=self.company.id, account_id=self.caja.id, currency='BOB',
                                   amount=Decimal('40.00'), payment_date=D, payment_method='QR',
-                                  origin_kind='PRODUCT', origin_id=existing.id)
+                                  origin_kind='PRODUCT', origin_id=existing.id,
+                                  origin_document_ref=str(existing.order_id))
         cancelled = self.order_payment(status='CANCELLED', amount='25.00')
         service = self.service_payment()
         return missing, existing, cancelled, service
@@ -237,7 +240,8 @@ class RegularizeCommandTests(RegularizeBase, TestCase):
         payment = self.order_payment(amount='100.00')
         entry = EntryModel.objects.create(company_id=self.company.id, account_id=self.caja.id, currency='BOB',
                                           amount=Decimal('90.00'), payment_date=D, payment_method='CASH',
-                                          origin_kind='PRODUCT', origin_id=payment.id)
+                                          origin_kind='PRODUCT', origin_id=payment.id,
+                                  origin_document_ref=str(payment.order_id))
         result = self.summary('--apply', '--executed-by', 'Admin', '--mapping', self.mapping_file())
         self.assertEqual(self.counts(result, 'conflict'), 1)
         self.assertEqual(result['details'][0]['fields'], ['amount'])
@@ -248,7 +252,8 @@ class RegularizeCommandTests(RegularizeBase, TestCase):
         payment = self.order_payment()
         entry = EntryModel.objects.create(company_id=self.company.id, account_id=self.banco.id, currency='BOB',
                                           amount=Decimal('100.00'), payment_date=D, payment_method='CASH',
-                                          origin_kind='PRODUCT', origin_id=payment.id)
+                                          origin_kind='PRODUCT', origin_id=payment.id,
+                                  origin_document_ref=str(payment.order_id))
         result = self.summary('--apply', '--executed-by', 'Admin', '--mapping', self.mapping_file())
         self.assertEqual(self.counts(result, 'destination_difference'), 1)
         entry.refresh_from_db()

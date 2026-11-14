@@ -3,7 +3,7 @@
 Sin Django. Nunca decide una cuenta por su cuenta: solo usa el mapeo histórico explícito que recibe.
 """
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
@@ -172,6 +172,7 @@ def classify(payment: SourcePayment, existing: Entry | None, mapping: Historical
         fields = tuple(name for name, ours, theirs in (
             ('amount', payment.amount, existing.amount), ('payment_date', payment.payment_date, existing.payment_date),
             ('method', payment.method, existing.method), ('currency', FLOW_CURRENCY, existing.currency),
+            ('origin_document_ref', payment.document_ref, existing.origin_document_ref),
         ) if ours != theirs)
         if fields:
             return Item(payment, CONFLICT, existing.account_id, fields=fields)
@@ -217,6 +218,3 @@ class Report:
                     counts[name] = counts.get(name, 0) + 1
         return counts
 
-
-def regularization_stamp(now: datetime, executed_by: str) -> tuple[datetime, str]:
-    return now, executed_by.strip()

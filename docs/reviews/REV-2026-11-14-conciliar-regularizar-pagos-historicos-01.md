@@ -1,6 +1,6 @@
 # REV-2026-11-14-conciliar-regularizar-pagos-historicos-01: «Existente» no compara documento ni comprobante (ADR decisión 5)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-14-conciliar-regularizar-pagos-historicos.md (v1)
