@@ -1,6 +1,6 @@
 # REV-2026-11-14-pagos-servicios-libro-entradas-02: Faltan pruebas unitarias con fakes y varios casos del plan
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-14-pagos-servicios-libro-entradas.md (v1)
@@ -19,3 +19,6 @@ Solo hay pruebas de integración; el no-llamado del ledger se infiere por conteo
 
 ## Evidence
 `git diff origin/main...HEAD --stat`: sin tests de `application` nuevos.
+
+## Resolución
+Añadidas `receivables/tests/test_collection_ledger.py` (fakes: orden, ledger no disponible, fallo, replay) y, en `test_payment_ledger.py`, mapeo/cuenta inactivos, `ledger_rejected`, Ventas deshabilitado, EDGE-02 y totales del libro.

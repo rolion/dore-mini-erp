@@ -73,16 +73,38 @@ class ServicePaymentLedgerTests(TransactionTestCase):
         self.pay(p['number'], [(p['lines'][1]['id'], '10.00')])
         self.assertEqual([e.account_id for e in self.entries()], [self.caja.id, self.banco.id])
 
-    # AC-02 (dental) y AC-10
-    def test_dental_payment_appears_in_the_ledger_api(self):
+    # AC-02 (proforma dental)
+    def test_dental_payment_creates_its_entry(self):
+        self.enable_accounting()
+        dental = '/api/dentistry/'
+        body = self.client.post(f'{dental}patients/{self.customer.pk}/proformas/', {'date': '2026-11-04', 'lines': [
+            {'service_id': str(self.a.pk), 'quantity': '1', 'dental_piece': '18'}]}, format='json').json()
+        p = self.client.post(f"{dental}proformas/{body['id']}/present/").json()
+        accept = self.client.post(f"{dental}proformas/{p['id']}/decisions/", {
+            'idempotency_key': str(uuid4()), 'decision': 'accepted', 'line_ids': [p['lines'][0]['id']],
+            'accepted_by_name': 'Rosa', 'medium': 'in_person'}, format='json')
+        self.assertEqual(accept.status_code, 201, accept.content)
+        response = self.pay(p['number'], [(p['lines'][0]['id'], '30.00')], kind='dental')
+        self.assertEqual(response.status_code, 201, response.content)
+        entry = self.entries().get()
+        self.assertEqual((entry.origin_kind, entry.origin_document_ref, entry.amount),
+                         ('SERVICE', p['number'], Decimal('30.00')))
+
+    # AC-10
+    def test_payments_appear_in_the_ledger_api_with_correct_totals(self):
         self.enable_accounting()
         p = self.quote()
         self.pay(p['number'], [(p['lines'][0]['id'], '40.00')])
+        self.pay(p['number'], [(p['lines'][1]['id'], '60.00')])
         listing = self.client.get('/api/accounting/entries/').json()
         row = listing['results'][0]
-        self.assertEqual((row['origin']['kind'], row['source']['receipt_number'], row['source']['document_ref']),
-                         ('SERVICE', PaymentModel.objects.get().receipt_number, p['number']))
+        self.assertEqual((row['origin']['kind'], row['source']['document_ref']), ('SERVICE', p['number']))
+        self.assertEqual({r['source']['receipt_number'] for r in listing['results']},
+                         set(PaymentModel.objects.values_list('receipt_number', flat=True)))
         self.assertNotIn('reference', row)
+        total = listing['totals'][0]
+        self.assertEqual((total['currency'], total['count'], total['amount'], total['by_origin']['SERVICE']),
+                         ('BOB', 2, '100.00', '100.00'))
 
     # AC-03
     def test_retry_and_double_submit_do_not_duplicate_payment_or_entry(self):
@@ -194,3 +216,51 @@ class ServicePaymentLedgerTests(TransactionTestCase):
         self.assertEqual(self.entries().count(), 0)
         self.assertEqual(self.pay(p['number'], [(line, '10.00')]).status_code, 201)
         self.assertEqual(self.entries().count(), 1)
+
+    # AC-05: mapeo inactivo y cuenta inactiva
+    def test_inactive_mapping_or_inactive_account_is_rejected_without_persisting(self):
+        self.enable_accounting()
+        p = self.quote()
+        line = p['lines'][0]['id']
+        configure(self.admin.company_id, 'QR', self.banco, active=False)
+        data = {'idempotency_key': str(uuid4()), 'amount': '30.00', 'payment_method': 'QR',
+                'allocations': [{'line_id': line, 'amount': '30.00'}]}
+        url = f"{BASE}commitments/quotation/{p['number']}/payments/"
+        response = self.client.post(url, data, format='json')
+        self.assertEqual((response.status_code, response.json()['code']), (409, 'payment_method_without_account'))
+        configure(self.admin.company_id, 'QR', self.banco)
+        with mock.patch.object(accounting, 'resolve_account', return_value=None):
+            self.assertEqual(self.client.post(url, {**data, 'idempotency_key': str(uuid4())},
+                                              format='json').status_code, 409)
+        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (0, 0))
+
+    # AC-06: la validación del libro
+    def test_ledger_validation_error_returns_ledger_rejected(self):
+        self.enable_accounting()
+        p = self.quote()
+        error = accounting.EntryValidationError({'currency': ['Moneda no válida.']})
+        with mock.patch.object(accounting, 'record_entry', side_effect=error):
+            response = self.pay(p['number'], [(p['lines'][0]['id'], '30.00')])
+        self.assertEqual((response.status_code, response.json()['code']), (409, 'ledger_rejected'))
+        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (0, 0))
+
+    # AC-09: sin Ventas habilitado el cobro funciona y no mueve stock ni ventas
+    def test_collecting_works_with_sales_disabled_and_creates_no_sales(self):
+        self.enable_accounting()
+        company = self.admin.company_id
+        DjangoCompanyModuleRepository(company).disable('sales')
+        self.assertNotIn('sales', DjangoCompanyModuleRepository(company).enabled_keys())
+        p = self.quote()
+        self.assertEqual(self.pay(p['number'], [(p['lines'][0]['id'], '30.00')]).status_code, 201)
+        self.assertEqual(self.entries().get().origin_kind, 'SERVICE')
+
+    # EDGE-02: lo cobrado no se pierde al intentar rechazar la línea
+    def test_rejecting_a_paid_line_is_blocked_and_keeps_payment_and_entry(self):
+        self.enable_accounting()
+        p = self.quote()
+        line = p['lines'][0]['id']
+        self.pay(p['number'], [(line, '30.00')])
+        blocked = self.client.post(f"/api/quotations/proformas/{p['id']}/lines/{line}/rectify/", {
+            'idempotency_key': str(uuid4()), 'decision': 'rejected', 'reason': 'x'}, format='json')
+        self.assertEqual(blocked.status_code, 409, blocked.content)
+        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (1, 1))

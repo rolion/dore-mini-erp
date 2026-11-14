@@ -1,10 +1,10 @@
 import hashlib
 import json
 from collections.abc import Callable
-from typing import Protocol
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Protocol
 from uuid import UUID
 
 from modules.receivables.domain.obligation import (

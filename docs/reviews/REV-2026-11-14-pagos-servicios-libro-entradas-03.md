@@ -1,6 +1,6 @@
 # REV-2026-11-14-pagos-servicios-libro-entradas-03: Imports sin ordenar en collections.py
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-14-pagos-servicios-libro-entradas.md (v1)
@@ -19,3 +19,6 @@ Orden no alfabético (cosmético).
 
 ## Evidence
 `backend/modules/receivables/application/collections.py` líneas 1-5.
+
+## Resolución
+Imports de `collections.py` reordenados.
