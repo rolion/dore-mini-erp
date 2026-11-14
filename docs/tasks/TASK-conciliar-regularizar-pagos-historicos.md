@@ -1,6 +1,6 @@
 # TASK-conciliar-regularizar-pagos-historicos: Conciliar y regularizar pagos históricos de productos y servicios (PB-ACC-004)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-conciliar-regularizar-pagos-historicos
@@ -14,6 +14,7 @@
 | 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, nueva dependencia accounting → sales/receivables, migración); sin UI | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta fija las reglas; las decisiones técnicas están en el ADR | delivery-start |
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -82,7 +83,12 @@ No aplica.
 **Verificación propia (no es el Quality Gate):** `modules.accounting` (incluye 20 nuevas), `receivables`, `modularity`, `reporting` y `sales` OK salvo 1-3 pruebas intermitentes de reloj/orden (`shared.tests.test_test_runner`, `sales.tests.test_repository`: `test_item_order_is_preserved`, `test_saves_and_loads_the_whole_aggregate`, `test_payments_are_only_appended`) que fallan igual en el checkout principal sin estos cambios (ver TASK-pruebas-intermitentes). `makemigrations --check` sin cambios.
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-11-14, subagente aislado; sin hallazgos Critical/High).
+- Backend: `modules.accounting modules.receivables modules.sales.tests.test_boundaries` → 130 tests OK (incluye las 20 nuevas); `makemigrations --check` sin cambios; `bandit` sobre `accounting`, `receivables/services.py`, `sales/services.py` sin issues.
+- Límites DDD OK (dominio y aplicación sin Django/infraestructura; `accounting → sales/receivables` solo por `services` desde `adapters.py`; consultas por `company_id`; `Decimal`).
+- Todos los AC-01..AC-10 con verificación; EDGE-01 y EDGE-02 solo por lectura de código.
+- No verificado: suite completa en este gate (se corrió en build: solo fallan 3-4 pruebas intermitentes preexistentes, también en el checkout principal); ruff/flake8/mypy (no instalados); UI (no aplica).
+- Hallazgos abiertos: Low [01](../reviews/REV-2026-11-14-conciliar-regularizar-pagos-historicos-01.md) (`classify` trata como existente una entrada con otro `origin_document_ref`, el ADR decía compararlo), Low [02](../reviews/REV-2026-11-14-conciliar-regularizar-pagos-historicos-02.md) (`regularization_stamp` es código muerto).
 
 ## Publicación
-_Pendiente_
+PR #71 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `accounting/0003`) y **dinero / integración entre módulos** (ADR-conciliar-regularizar-pagos-historicos-comando-y-fuentes).
