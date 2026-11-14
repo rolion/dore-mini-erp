@@ -1,8 +1,8 @@
 # TASK-conciliar-regularizar-pagos-historicos: Conciliar y regularizar pagos históricos de productos y servicios (PB-ACC-004)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
-**Diseño requerido:** NO
+**Diseño requerido:** SI
 **Rama:** task/TASK-conciliar-regularizar-pagos-historicos
 **Pull Request:** https://github.com/rolion/dore-mini-erp/pull/71
 **Fuente:** https://trello.com/c/17DwVe39/21-pb-acc-004-conciliar-y-regularizar-pagos-hist%C3%B3ricos-de-productos-y-servicios
@@ -15,6 +15,7 @@
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta fija las reglas; las decisiones técnicas están en el ADR | delivery-start |
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
+| 2026-11-14 | PUBLISH → PLANNING → ENGINEERING | La persona esperaba una sección en la UI y aprobó explícitamente («Sí, agregar UI») el cambio de Specification: API admin + pantalla; PLAN v2 y DDR | delivery-start |
 
 ## Investigación
 
@@ -37,7 +38,7 @@ Insumo de la tarjeta PB-ACC-004 (P1; **no es una Specification aprobada**). Hist
 - «Pagos de receivables» = pagos de proformas/obligaciones de Cobros (origen `SERVICE`).
 - Moneda de ambos orígenes `BOB` (única de los flujos); el informe igual agrupa por moneda.
 - El «usuario de regularización» puede ser un nombre libre dado por el operador (`--executed-by`): un comando no tiene sesión de usuario.
-- Interfaz = comando de servidor (la tarjeta dice «administrativo/command»); sin API ni pantalla.
+- ~~Interfaz = solo comando~~ (supuesto de v1, corregido: la persona esperaba una pantalla; v2 agrega API admin y pantalla, y mantiene el comando).
 
 ### Módulos y dependencias relacionadas
 `accounting` (dueño), `sales`, `receivables` (solo lectura por `services`), `shared/module_gate`.
@@ -61,13 +62,13 @@ Duplicados por ejecuciones simultáneas o cruce con cobros nuevos (mitigado: blo
 **NO** — sin pantallas; solo comando de servidor.
 
 ## Diseño
-No aplica.
+`docs/design/DDR-conciliar-regularizar-pagos-historicos-pantalla-regularizacion.md` (pantalla de dos pasos: configurar mapeo → previsualizar → aplicar con confirmación).
 
 ## Arquitectura
 `docs/adr/ADR-conciliar-regularizar-pagos-historicos-comando-y-fuentes.md`
 
 ## Plan
-`docs/plans/PLAN-2026-11-14-conciliar-regularizar-pagos-historicos.md` (v1, COMPLETO) · Specification readiness: READY
+`docs/plans/PLAN-2026-11-14-conciliar-regularizar-pagos-historicos.md` (v2, COMPLETO) · Specification readiness: READY (v2 agrega API-01..03, UI-01..05, AC-11..AC-17 con aprobación explícita)
 
 ## Implementación
 **Backend `accounting`:** dominio puro `domain/regularization.py` (mapeo por rangos, clasificación faltante/existente/pendiente/conflicto/diferencia de destino/inválido, informe agrupado; INV-02, INV-03, INV-06, INV-08, AC-02, AC-03, AC-07, AC-08); caso de uso `application/regularize.py` con puertos (plan sin escritura y aplicar con bloqueo por empresa y una transacción por entrada; INV-01, INV-07, AC-04, AC-10); adaptadores `infrastructure/adapters.py` (fachadas de Ventas y Cobros, bloqueo `pg_try_advisory_lock`, `record_entry`); comando `regularize_ledger` (`--company --from --to --mapping --apply --executed-by --json`; AC-01, AC-08, AC-09); migración aditiva `0003_entry_regularization` (`regularized_at`, `regularized_by_name`; INV-04) con `EntryInput`/`Entry` y repositorio (`by_origin`).
