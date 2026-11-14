@@ -26,7 +26,8 @@ def to_entity(model: OrderModel) -> Order:
         ],
         payments=[
             Payment(id=payment.id, amount=payment.amount, payment_method=PaymentMethod(payment.payment_method),
-                    payment_date=payment.payment_date, reference=payment.reference, created_at=payment.created_at)
+                    payment_date=payment.payment_date, reference=payment.reference, created_at=payment.created_at,
+                    idempotency_key=payment.idempotency_key, request_digest=payment.request_digest)
             for payment in model.payments.all()
         ],
         created_at=model.created_at,
@@ -81,5 +82,6 @@ def to_item_values(item: OrderItem, order_model: OrderModel) -> dict[str, object
 def to_payment_model(payment: Payment, order_model: OrderModel) -> PaymentModel:
     return PaymentModel(id=payment.id, order=order_model, amount=payment.amount,
                         payment_method=payment.payment_method.value, payment_date=payment.payment_date,
-                        reference=payment.reference)
+                        reference=payment.reference, idempotency_key=payment.idempotency_key,
+                        request_digest=payment.request_digest)
 

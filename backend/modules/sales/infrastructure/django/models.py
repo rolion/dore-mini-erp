@@ -63,6 +63,9 @@ class PaymentModel(models.Model):
     payment_method = models.CharField(max_length=20)
     payment_date = models.DateField()
     reference = models.CharField(max_length=100, blank=True, default='')
+    # Idempotencia: el mismo intento de cobro (clave + huella) no crea otro pago en el pedido.
+    idempotency_key = models.UUIDField(null=True, blank=True)
+    request_digest = models.CharField(max_length=64, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -70,4 +73,6 @@ class PaymentModel(models.Model):
         ordering = ['created_at', 'id']
         constraints = [
             models.CheckConstraint(condition=Q(amount__gt=0), name='sales_payment_amount_gt_0'),
+            models.UniqueConstraint(fields=['order', 'idempotency_key'], condition=Q(idempotency_key__isnull=False),
+                                    name='sales_payment_order_key_unique'),
         ]

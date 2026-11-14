@@ -11,6 +11,7 @@ from uuid import UUID
 from django.db import transaction
 from django.utils import timezone
 
+from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
 from modules.customers import services as customer_services
 from modules.inventory import services as inventory_services
@@ -35,6 +36,8 @@ from shared import module_gate
 
 CUSTOMERS_MODULE = 'customers'
 INVENTORY_MODULE = 'inventory'
+ACCOUNTING_MODULE = 'accounting'
+PAYMENT_CURRENCY = 'BOB'
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +164,42 @@ class StockOutputAdapter:
             requested=s.requested, available=s.available) for s in exc.shortages]
         return InsufficientStockForDelivery(
             str(exc), exc.warehouse_id, warehouse.name if warehouse else '', lines)
+
+
+class PaymentLedgerAdapter:
+    """Cada pago del pedido crea su entrada en el libro de Contabilidad (origen `PRODUCT`), si el módulo está habilitado."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+        self._available: bool | None = None
+
+    def is_available(self) -> bool:
+        if self._available is None:
+            self._available = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE)
+        return self._available
+
+    def record(self, order_id: UUID, payment, actor: Actor) -> None:
+        method = payment.payment_method.value
+        account = accounting_services.resolve_account(self.company_id, method)
+        if account is None:
+            raise OrderRuleViolation(
+                'payment_method_without_account',
+                'El método de pago no tiene una cuenta destino activa. Configúrala en Contabilidad → Cuentas y '
+                'Métodos de pago e inténtalo de nuevo.')
+        try:
+            accounting_services.record_entry(self.company_id, accounting_services.EntryInput(
+                account_id=account.account_id, currency=PAYMENT_CURRENCY, amount=payment.amount,
+                payment_date=payment.payment_date, method=method, origin_kind='PRODUCT', origin_id=payment.id,
+                origin_document_ref=str(order_id), recorded_by=actor.user_id, recorded_by_name=actor.user_name))
+        except accounting_services.EntryValidationError as exc:
+            raise OrderRuleViolation(
+                'ledger_rejected', 'Contabilidad rechazó la entrada del cobro: ' + _first_message(exc.errors)) from exc
+        except accounting_services.EntryConflict as exc:
+            raise OrderRuleViolation('ledger_conflict', str(exc)) from exc
+
+
+def _first_message(errors: dict[str, list[str]]) -> str:
+    return next((messages[0] for messages in errors.values() if messages), 'datos no válidos.')
 
 
 class SystemClock:

@@ -112,3 +112,13 @@ class StockOutput(Protocol):
         ...
 
     def output_for(self, order_id: UUID) -> StockOutputRecord | None: ...
+
+
+class PaymentLedger(Protocol):
+    """Integración opcional con Contabilidad: cada pago crea su entrada en el libro, dentro de la misma transacción."""
+
+    def is_available(self) -> bool: ...
+
+    def record(self, order_id: UUID, payment: object, actor: Actor) -> None:
+        """Resuelve la cuenta del método y registra la entrada; rechaza el pago (excepción de Ventas) si no puede."""
+        ...

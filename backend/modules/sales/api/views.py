@@ -31,6 +31,7 @@ from modules.sales.domain.exceptions import (
 )
 from modules.sales.infrastructure.adapters import (
     CustomerDirectoryAdapter,
+    PaymentLedgerAdapter,
     ProductCatalogAdapter,
     SalesSettingsAdapter,
     StockOutputAdapter,
@@ -265,5 +266,6 @@ class OrderPaymentView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(PaymentInputSerializer, request.data)
-        order = _run(RegisterPayment(_repository(request), SystemClock()), order_id=order_id, **data)
-        return _order_response(request, order, status.HTTP_201_CREATED)
+        use_case = RegisterPayment(_repository(request), SystemClock(), PaymentLedgerAdapter(company_id_from(request)))
+        order = _run(use_case, order_id=order_id, actor=_actor(request), **data)
+        return _order_response(request, order, status.HTTP_200_OK if use_case.replayed else status.HTTP_201_CREATED)

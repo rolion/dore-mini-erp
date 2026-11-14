@@ -590,7 +590,7 @@ describe('OrderDetailComponent', () => {
         of(makeOrder({ payments: [makePayment()], paidTotal: '20.00', balance: '50.00', paymentStatus: 'PARTIAL' })),
       );
       const element = setup();
-      const input = { amount: '20.00', paymentMethod: 'QR' as const, paymentDate: '2026-10-02', reference: 'ref-1' };
+      const input = { amount: '20.00', paymentMethod: 'QR' as const, paymentDate: '2026-10-02', reference: 'ref-1', idempotencyKey: 'k-1' };
       component.registerPayment(input);
       fixture.detectChanges();
       expect(api.registerPayment).toHaveBeenCalledOnceWith('o-1', input);

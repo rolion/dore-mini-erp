@@ -1,6 +1,6 @@
 # TASK-pagos-ventas-libro-entradas: Integrar pagos de Ventas con el libro de entradas (PB-ACC-003)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-pagos-ventas-libro-entradas
@@ -13,6 +13,7 @@
 | 2026-11-14 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (63dd4b9, incluye PB-ACC-001 y PB-ACC-002) | delivery-start |
 | 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, transacción entre dos módulos, migración sobre pagos); sin diseño visual nuevo | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta cubre las reglas; decisiones técnicas abiertas resueltas en el ADR | delivery-start |
+| 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,14 @@ No aplica.
 `docs/plans/PLAN-2026-11-14-pagos-ventas-libro-entradas.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend (`sales`):** dominio (`Payment.idempotency_key/request_digest`, `payment_digest`, `Order.find_payment_by_key`, INV-04); migración aditiva `0003_payment_idempotency` (dos columnas nullable y único parcial por pedido); puerto `PaymentLedger` y `PaymentLedgerAdapter` (resuelve la cuenta con `accounting.services.resolve_account` y registra con `record_entry`, origen `PRODUCT`; INV-02, INV-03, AC-06..08); `RegisterPayment` con replay, entrada y guardado dentro de la transacción de `_run` (AC-01, AC-04, AC-07, AC-09); API: `idempotency_key` opcional, 200 en replay y 409 con `payment_method_without_account`, `ledger_rejected`, `ledger_conflict`, `idempotency_key_reused` (API-01); `test_boundaries` permite `sales → accounting`.
+**Frontend (`features/sales`):** `PaymentInput.idempotencyKey`, enviada como `idempotency_key`; `OrderPaymentsComponent` genera la clave, la reutiliza en reintentos y la renueva al cambiar el formulario o tras un pago (AC-12). El 409 se muestra con el toast de error existente (mensaje del servidor); sin pantallas nuevas (UI-01).
+**Cobertura:** `sales/tests/test_payment_ledger.py` (API con BD real, aplicación con doble del libro y concurrencia con hilos) cubre AC-01..AC-11 y EDGE-01..05; specs de `order-payments`, `orders-api.service` y `order-detail` para AC-12.
+**Desviaciones respecto al plan:**
+1. El ADR dice «guardar y luego registrar la entrada»; se registra la entrada **antes** de `repository.save` (misma transacción), para que un rechazo del libro no deje nada guardado ni siquiera con repositorios sin transacción. El resultado observable es el mismo.
+2. `RegisterPayment` expone `replayed` en la instancia para que la vista responda 200/201 sin cambiar el tipo de retorno de `execute`.
+**Deuda técnica / limitaciones:** sin clave, un cliente de la API no tiene deduplicación (el frontend propio siempre la envía); en 409 el detalle del pedido se recarga (comportamiento existente de `OrderRuleError`); `.env` copiado al worktree con autorización de la persona (ignorado por git) y `node_modules` enlazado por junction al del checkout principal (sin instalar dependencias).
+**Verificación propia (no es el Quality Gate):** `ng lint` OK, `i18n:check` 0 faltantes, Karma de `features/sales` 213/213 OK; backend suite completa 1594 tests OK (incluye 22 nuevos de `test_payment_ledger.py`).
 
 ## Review
 _Pendiente_
