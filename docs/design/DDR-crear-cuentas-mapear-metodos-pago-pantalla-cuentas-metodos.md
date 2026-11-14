@@ -8,7 +8,7 @@
 La persona administradora debe definir cuentas destino y a cuál va cada método de pago antes de habilitar Contabilidad. Hay que reutilizar el estilo PocketBiz (`docs/design/design-system.md`).
 
 ## Pantallas/flujos afectados
-- Menú lateral nuevo: **Contabilidad → Configuración → Cuentas y Métodos de pago** (`/pocketbiz/accounting/settings`), ítem con `module: accounting`. Como la configuración debe poder hacerse antes de habilitar, la ruta y el ítem **no** se ocultan por el módulo `accounting` (se muestran a admin; el resto de Contabilidad futura sí lo respetará). La entrada del menú solo es visible para admin.
+- Menú lateral nuevo: **Contabilidad → Configuración → Cuentas y Métodos de pago** (`/pocketbiz/accounting/settings`), ítem con `module: accounting`. El ítem del menú sigue al módulo `accounting` (oculto si está deshabilitado) y solo es visible para admin. La ruta no lleva `moduleGuard`: la configuración previa a habilitar se alcanza desde Módulos, con el enlace del 409 `incomplete_configuration`. *(Ajuste posterior: antes el ítem era visible siempre; se corrigió porque seguía apareciendo con el módulo deshabilitado.)*
 - Pantalla con dos pestañas: **Cuentas** (lista + alta/edición en diálogo + activar/desactivar) y **Métodos de pago** (cinco filas fijas: método, cuenta destino en `ng-select`, estado activo, guardar por fila).
 - Pantalla de Módulos (`/settings/modules`): al intentar habilitar Contabilidad con mapeo incompleto se muestra el 409 con los métodos faltantes y un enlace a esta pantalla.
 

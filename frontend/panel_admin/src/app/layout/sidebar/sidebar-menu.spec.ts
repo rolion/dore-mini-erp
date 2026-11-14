@@ -53,10 +53,11 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/inventory/valuation',
       '/pocketbiz/inventory/settings',
     ]);
-    expect(accounting.module).toBeUndefined(); // se configura antes de habilitar el módulo (PB-ACC-001)
+    expect(accounting.module).toBe('accounting'); // el menú sigue al módulo; se configura desde Módulos (enlace del 409)
     expect(accounting.adminOnly).toBeTrue();
-    expect(visibleRoutes(routes, new Set(['customers']), false).some((route) => route.adminOnly)).toBeFalse();
-    expect(visibleRoutes(routes, new Set(['customers']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeTrue();
+    expect(visibleRoutes(routes, new Set(['customers', 'accounting']), false).some((route) => route.adminOnly)).toBeFalse();
+    expect(visibleRoutes(routes, new Set(['customers']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeFalse();
+    expect(visibleRoutes(routes, new Set(['customers', 'accounting']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeTrue();
     expect(accounting.submenu.map((item) => item.path)).toEqual(['/pocketbiz/accounting/settings']);
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
