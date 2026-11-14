@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-pagos-ventas-libro-entradas
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/69
 **Fuente:** https://trello.com/c/kFAIOGr7/20-pb-acc-003-integrar-pagos-de-ventas-con-el-libro-de-entradas
 
 ## Historial de transiciones
