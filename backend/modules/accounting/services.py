@@ -1,6 +1,6 @@
 """Fachada pública de Contabilidad (convención de `docs/architecture/ddd.md`): DTO inmutables, nunca modelos."""
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -65,6 +65,8 @@ class EntryInput:
     receipt_number: str = ''  # CB-NNNNNN cuando existe
     recorded_by: int | None = None
     recorded_by_name: str = ''
+    regularized_at: datetime | None = None  # solo regularización de pagos históricos
+    regularized_by_name: str = ''
 
 
 @dataclass(frozen=True)
@@ -96,7 +98,8 @@ def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
         account_id=data.account_id, currency=data.currency, amount=data.amount, payment_date=data.payment_date,
         method=data.method, origin_kind=data.origin_kind, origin_id=data.origin_id,
         origin_document_ref=data.origin_document_ref, receipt_number=data.receipt_number,
-        recorded_by=data.recorded_by, recorded_by_name=data.recorded_by_name)
+        recorded_by=data.recorded_by, recorded_by_name=data.recorded_by_name,
+        regularized_at=data.regularized_at, regularized_by_name=data.regularized_by_name)
     account = DjangoAccountRepository(company_id).get_for_update(entry.account_id)
     if account is None:
         raise EntryValidationError({'account_id': ['La cuenta no existe en esta empresa.']})

@@ -72,11 +72,15 @@ class Entry:
     recorded_by: int | None = None
     recorded_by_name: str = ''
     created_at: datetime | None = None
+    # Solo las entradas creadas por regularización de pagos históricos: cuándo y quién la ejecutó (no el autor del cobro).
+    regularized_at: datetime | None = None
+    regularized_by_name: str = ''
 
     @classmethod
     def record(cls, *, account_id: UUID, currency: object, amount: object, payment_date: object, method: object,
                origin_kind: object, origin_id: UUID, origin_document_ref: str = '', receipt_number: str = '',
-               recorded_by: int | None = None, recorded_by_name: str = '') -> 'Entry':
+               recorded_by: int | None = None, recorded_by_name: str = '',
+               regularized_at: datetime | None = None, regularized_by_name: str = '') -> 'Entry':
         if not isinstance(payment_date, date) or isinstance(payment_date, datetime):
             _fail('payment_date', 'La fecha del pago no es válida.')
         return cls(
@@ -84,7 +88,8 @@ class Entry:
             amount=_amount(amount), payment_date=payment_date, method=_choice('method', method, METHOD_CODES),
             origin_kind=_choice('origin_kind', origin_kind, ORIGIN_KINDS), origin_id=origin_id,
             origin_document_ref=origin_document_ref or '', receipt_number=receipt_number or '',
-            recorded_by=recorded_by, recorded_by_name=recorded_by_name or '')
+            recorded_by=recorded_by, recorded_by_name=recorded_by_name or '',
+            regularized_at=regularized_at, regularized_by_name=regularized_by_name or '')
 
     def differences(self, other: 'Entry') -> list[str]:
         """Campos de negocio que difieren de otra entrada del mismo origen (para detectar reintentos incompatibles)."""

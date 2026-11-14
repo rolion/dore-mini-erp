@@ -1,6 +1,6 @@
 # TASK-conciliar-regularizar-pagos-historicos: Conciliar y regularizar pagos históricos de productos y servicios (PB-ACC-004)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-conciliar-regularizar-pagos-historicos
@@ -13,6 +13,7 @@
 | 2026-11-14 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (f45b0cd, incluye PB-ACC-003 y PB-COB-002) | delivery-start |
 | 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, nueva dependencia accounting → sales/receivables, migración); sin UI | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta fija las reglas; las decisiones técnicas están en el ADR | delivery-start |
+| 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -68,7 +69,16 @@ No aplica.
 `docs/plans/PLAN-2026-11-14-conciliar-regularizar-pagos-historicos.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend `accounting`:** dominio puro `domain/regularization.py` (mapeo por rangos, clasificación faltante/existente/pendiente/conflicto/diferencia de destino/inválido, informe agrupado; INV-02, INV-03, INV-06, INV-08, AC-02, AC-03, AC-07, AC-08); caso de uso `application/regularize.py` con puertos (plan sin escritura y aplicar con bloqueo por empresa y una transacción por entrada; INV-01, INV-07, AC-04, AC-10); adaptadores `infrastructure/adapters.py` (fachadas de Ventas y Cobros, bloqueo `pg_try_advisory_lock`, `record_entry`); comando `regularize_ledger` (`--company --from --to --mapping --apply --executed-by --json`; AC-01, AC-08, AC-09); migración aditiva `0003_entry_regularization` (`regularized_at`, `regularized_by_name`; INV-04) con `EntryInput`/`Entry` y repositorio (`by_origin`).
+**Fachadas:** `sales.services.list_historical_payments` (incluye pedidos cancelados; INV-05) y nuevo `receivables/services.py`.
+**Pruebas:** `accounting/tests/test_regularization.py` (20: unitarias de mapeo y clasificación; integración con BD real del dataset de ambos orígenes, previsualización sin escritura, segunda pasada, campos conservados, aislamiento, conflictos, errores de uso, fallo parcial; concurrencia con hilos y carrera con un cobro nuevo). `test_boundaries` actualizado (`accounting → {sales, receivables}`, `accounting` como consumidor solo desde `adapters.py`); `ddd.md` con nota.
+**Desviaciones respecto al plan:**
+1. «Empresa inexistente» (AC-09) se detecta porque ninguna cuenta del mapeo le pertenece (accounting no puede importar `accounts`); sin `--mapping` en previsualización no hay validación de empresa y el informe sale vacío.
+2. `--mapping` es opcional en previsualización (todo queda pendiente con motivo) y obligatorio con `--apply`.
+3. El caso de uso AC-10 se prueba con un libro que rechaza una entrada (la BD no permite montos inválidos en pagos).
+**Auditoría SQL de entradas regularizadas:** `SELECT origin_kind, count(*), sum(amount) FROM accounting_entry WHERE company_id = '<uuid>' AND regularized_at IS NOT NULL GROUP BY 1;`
+**Deuda técnica / limitaciones:** el estado «anulado» no existe en los orígenes (se informa 0); el usuario de regularización es texto libre del operador; `.env` copiado al worktree con autorización de la persona (ignorado por git) y suite ejecutada con el venv del checkout principal.
+
 
 ## Review
 _Pendiente_
