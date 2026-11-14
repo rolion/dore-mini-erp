@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-cuentas-mapear-metodos-pago
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/67
 **Fuente:** https://trello.com/c/38XLSMLH/18-pb-acc-001-crear-cuentas-y-mapear-m%C3%A9todos-de-pago-por-empresa
 
 ## Historial de transiciones
