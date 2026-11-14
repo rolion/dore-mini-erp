@@ -1,6 +1,6 @@
 # TASK-pagos-ventas-libro-entradas: Integrar pagos de Ventas con el libro de entradas (PB-ACC-003)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-pagos-ventas-libro-entradas
@@ -14,6 +14,7 @@
 | 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, transacción entre dos módulos, migración sobre pagos); sin diseño visual nuevo | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta cubre las reglas; decisiones técnicas abiertas resueltas en el ADR | delivery-start |
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -80,7 +81,12 @@ No aplica.
 **Verificación propia (no es el Quality Gate):** `ng lint` OK, `i18n:check` 0 faltantes, Karma de `features/sales` 213/213 OK; backend suite completa 1594 tests OK (incluye 22 nuevos de `test_payment_ledger.py`).
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-11-14, subagente aislado; sin hallazgos Critical/High).
+- Backend: suite completa 1594 tests OK; `makemigrations --check` sin cambios; bandit sobre `modules/sales` sin issues.
+- Frontend: Karma completo 1387 OK; `npm run lint` OK; `i18n:check` 1903 claves, 0 faltantes; `ng build` OK (solo warnings SCSS preexistentes); `npm audit`: 2 moderadas preexistentes (`hono`), ajenas al diff.
+- Límites DDD OK (`sales → accounting` solo vía `services` desde infraestructura; dominio sin Django; empresa desde el usuario); atomicidad, carrera de idempotencia, replay sobre pedido saldado, sin consulta a accounting cuando está deshabilitado y sin movimientos de inventario, verificados con pruebas.
+- No verificado: revisión visual en navegador (sin pantallas nuevas) y ruff/flake8/mypy (no instalados).
+- Hallazgos abiertos: Low [01](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-01.md) (aserciones débiles y ramas sin prueba: `ledger_conflict`, EDGE-04, replay sobre cancelado, `deliver` en AC-03), Low [02](../reviews/REV-2026-11-14-pagos-ventas-libro-entradas-02.md) (`ddd.md` sin la dependencia `sales → accounting`).
 
 ## Publicación
-_Pendiente_
+PR #69 listo para aprobación humana; no se mergea. Cambios sensibles: **base de datos** (migración aditiva `sales/0003`) y **dinero / integración entre módulos** (ADR-pagos-ventas-libro-entradas-integracion-e-idempotencia).
