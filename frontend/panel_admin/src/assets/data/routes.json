@@ -306,6 +306,7 @@
     {
       "path": "",
       "title": "MENUITEMS.ACCOUNTING.TEXT",
+      "adminOnly": true,
       "iconType": "feather",
       "icon": "credit-card",
       "class": "menu-toggle",

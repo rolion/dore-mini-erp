@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-06: UI-05 (enlace desde Módulos) no implementado
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 Desviación 5 de `## Implementación`.
+
+## Resolution (2026-11-13)
+`ModulesApiError.code` y enlace «Ir a Cuentas y Métodos de pago» en el diálogo de módulos ante `incomplete_configuration`; specs.

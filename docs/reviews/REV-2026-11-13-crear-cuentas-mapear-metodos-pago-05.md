@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-05: Menú de Contabilidad visible sin restricción de rol
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 `visibleRoutes` solo distingue `personnel`.
+
+## Resolution (2026-11-13)
+`adminOnly` en `routes.json`/`RouteInfo` y filtro en `visibleRoutes`; spec del menú.

@@ -17,15 +17,15 @@
           <div class="card-header">
             <h4>{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO' | translate }}</h4>
           </div>
-          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist" (keydown)="onTabKeydown($event)">
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'accounts'" role="tab" id="tab-accounts"
-                [attr.aria-selected]="tab === 'accounts'" aria-controls="panel-accounts"
+                [attr.aria-selected]="tab === 'accounts'" [attr.tabindex]="tab === 'accounts' ? 0 : -1" aria-controls="panel-accounts"
                 (click)="select('accounts')">{{ 'ACCOUNTING.ACCOUNTS_TAB.CUENTAS' | translate }}</button>
             </li>
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'methods'" role="tab" id="tab-methods"
-                [attr.aria-selected]="tab === 'methods'" aria-controls="panel-methods"
+                [attr.aria-selected]="tab === 'methods'" [attr.tabindex]="tab === 'methods' ? 0 : -1" aria-controls="panel-methods"
                 (click)="select('methods')">{{ 'ACCOUNTING.METHODS_TAB.METODOS_DE_PAGO' | translate }}</button>
             </li>
           </ul>

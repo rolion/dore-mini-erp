@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-04: Falta spec del AccountDialogComponent
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 No existe `account-dialog.component.spec.ts`.
+
+## Resolution (2026-11-13)
+`account-dialog.component.spec.ts` (validación, creación, edición, errores de campo y 409).

@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-03: Desactivar cuenta sin confirmación previa (UI-02)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 `accounts-tab.component.ts` `toggleActive`; el motivo 409 sí se muestra vía `blockReason` con los métodos.
+
+## Resolution (2026-11-13)
+`DeactivateDialogComponent` confirma antes de desactivar y lista los métodos activos que usan la cuenta (bloquea); specs de pestaña y diálogo.

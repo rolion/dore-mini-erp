@@ -139,3 +139,31 @@ class EnableAccountingTests(AccountingApiBase):
         self.assertFalse(keys['accounting'])
         self.assertEqual(self.enable(self.client_b).status_code, 409)
         self.assertFalse(CompanyModuleModel.objects.filter(module_key='accounting').exists())
+
+
+class ConfigurationContractTests(AccountingApiBase):
+    def test_configuration_works_with_accounting_disabled(self):  # REV-01: se configura antes de habilitar
+        keys = {m['key']: m['enabled'] for m in self.client_a.get('/api/modules/').data}
+        self.assertFalse(keys['accounting'])
+        account = self.create(self.client_a, 'Caja')
+        self.assertEqual(self.assign(self.client_a, 'CASH', account).status_code, 200)
+        self.assertEqual(self.client_a.get(ACCOUNTS).status_code, 200)
+        self.assertEqual(self.client_a.get(METHODS).status_code, 200)
+
+    def test_disabling_the_module_keeps_the_configuration(self):  # INV-09
+        caja = self.create(self.client_a, 'Caja')
+        for code in ('CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER'):
+            self.assign(self.client_a, code, caja)
+        self.assertEqual(self.client_a.post('/api/modules/accounting/enable/').status_code, 200)
+        self.assertEqual(self.client_a.post('/api/modules/accounting/disable/').status_code, 200)
+        methods = self.client_a.get(METHODS).data
+        self.assertTrue(all(m['account']['name'] == 'Caja' for m in methods))
+        self.assertEqual(len(self.client_a.get(ACCOUNTS).data), 1)
+
+    def test_reactivating_a_method_with_an_unusable_account_is_rejected(self):  # EDGE-05
+        usd = self.create(self.client_a, 'Dólares', 'USD')
+        self.assertEqual(self.assign(self.client_a, 'CASH', usd, active=False).status_code, 200)  # inactivo: permitido
+        response = self.assign(self.client_a, 'CASH', usd, active=True)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('account_id', response.data)
+        self.assertFalse(self.client_a.get(METHODS).data[0]['is_active'])

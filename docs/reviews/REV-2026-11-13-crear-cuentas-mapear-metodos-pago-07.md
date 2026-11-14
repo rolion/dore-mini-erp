@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-07: Pestañas sin navegación con flechas del teclado
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 `accounting-settings.component.html`.
+
+## Resolution (2026-11-13)
+Navegación con flechas, Inicio y Fin y `tabindex` itinerante en las pestañas; spec.

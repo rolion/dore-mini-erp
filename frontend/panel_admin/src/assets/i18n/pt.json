@@ -1832,6 +1832,7 @@
   },
   "SETTINGS": {
     "MODULE_CONFIRM_DIALOG": {
+      "IR_A_CUENTAS_Y_METODOS_DE_PAGO": "Ir para Contas e Métodos de pagamento",
       "MODULO": "Módulo",
       "EMPRESA": "Empresa",
       "REQUIERE": "Requer",
@@ -2521,6 +2522,12 @@
       "SOLO_LAS_CUENTAS_EN_BOB": "Somente contas em BOB podem receber pagamentos de vendas e orçamentos.",
       "CUENTA_ACTUALIZADA": "Conta atualizada",
       "CUENTA_CREADA": "Conta criada"
+    },
+    "DEACTIVATE_DIALOG": {
+      "TITULO": "Desativar conta",
+      "CONFIRMACION": "Desativar a conta «{{name}}»? Ela não poderá ser escolhida como destino até que você a reative.",
+      "BLOQUEADA": "Não é possível desativar: a conta é usada por estes métodos ativos: {{methods}}. Reatribua-os ou desative-os na aba «Métodos de pagamento».",
+      "DESACTIVAR": "Desativar"
     },
     "METHODS_TAB": {
       "METODOS_DE_PAGO": "Métodos de pagamento",

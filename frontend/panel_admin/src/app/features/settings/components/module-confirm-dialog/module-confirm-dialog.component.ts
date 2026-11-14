@@ -2,6 +2,7 @@ import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { AppModule, ModulesApiError } from '../../../../core/models/module';
@@ -15,7 +16,7 @@ export type ModuleAction = 'enable' | 'disable';
  * quien lo abre fija `module`, `action` y `affected`; se cierra con el módulo actualizado.
  */
 @Component({
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, RouterLink],
   selector: 'app-module-confirm-dialog',
   templateUrl: './module-confirm-dialog.component.html',
 })
@@ -26,6 +27,8 @@ export class ModuleConfirmDialogComponent {
   affected: string[] = [];
   saving = false;
   serverError = '';
+  /** El 409 pide configurar Contabilidad antes de habilitarla: se ofrece ir a su pantalla. */
+  needsAccountingSetup = false;
 
   readonly activeModal = inject(NgbActiveModal);
   private modules = inject(ModulesService);
@@ -51,6 +54,7 @@ export class ModuleConfirmDialogComponent {
     }
     this.saving = true;
     this.serverError = '';
+    this.needsAccountingSetup = false;
     const request = this.isEnable ? this.modules.enable(this.module.key) : this.modules.disable(this.module.key);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
@@ -61,6 +65,7 @@ export class ModuleConfirmDialogComponent {
       error: (err: ModulesApiError) => {
         this.saving = false;
         this.serverError = err.message;
+        this.needsAccountingSetup = err.code === 'incomplete_configuration';
       },
     });
   }

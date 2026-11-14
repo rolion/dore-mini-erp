@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-02: Sin test de concurrencia (EDGE-06) ni de carrera desactivar vs. asignar
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 Implementación en `repositories.py:73-79`; sin test asociado.
+
+## Resolution (2026-11-13)
+`accounting/tests/test_concurrency.py`: `PUT` simultáneo y carrera desactivar vs. asignar.

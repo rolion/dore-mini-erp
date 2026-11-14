@@ -15,7 +15,29 @@ export type SettingsTab = 'accounts' | 'methods';
 export class AccountingSettingsComponent {
   tab: SettingsTab = 'accounts';
 
+  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods'];
+
   select(tab: SettingsTab): void {
     this.tab = tab;
+  }
+
+  /** Patrón WAI-ARIA de pestañas: flechas, Inicio y Fin mueven la selección y el foco. */
+  onTabKeydown(event: KeyboardEvent): void {
+    const last = this.tabs.length - 1;
+    const current = this.tabs.indexOf(this.tab);
+    const target: Record<string, number> = {
+      ArrowRight: current === last ? 0 : current + 1,
+      ArrowLeft: current === 0 ? last : current - 1,
+      Home: 0,
+      End: last,
+    };
+    const index = target[event.key];
+    if (index === undefined) {
+      return;
+    }
+    event.preventDefault();
+    this.select(this.tabs[index]);
+    const list = (event.currentTarget as HTMLElement).closest('[role="tablist"]');
+    list?.querySelector<HTMLElement>(`#tab-${this.tabs[index]}`)?.focus();
   }
 }

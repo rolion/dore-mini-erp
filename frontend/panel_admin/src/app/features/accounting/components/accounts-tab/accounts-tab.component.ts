@@ -9,6 +9,7 @@ import { tr } from '../../../../core/i18n/translate';
 import { Account, AccountingApiError } from '../../models/accounting';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
+import { DeactivateDialogComponent } from '../deactivate-dialog/deactivate-dialog.component';
 
 export type StatusFilter = 'all' | 'active' | 'inactive';
 
@@ -73,9 +74,34 @@ export class AccountsTabComponent implements OnInit {
     );
   }
 
+  /** Desactivar pide confirmación (con los métodos activos que la usan); activar es directo. */
   toggleActive(account: Account): void {
     this.blockReason = '';
-    const request = account.isActive ? this.api.deactivateAccount(account.id) : this.api.activateAccount(account.id);
+    if (!account.isActive) {
+      this.apply(this.api.activateAccount(account.id));
+      return;
+    }
+    this.api
+      .listMethods()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (methods) => this.confirmDeactivation(account, methods.filter((m) => m.isActive && m.account?.id === account.id).map((m) => m.label)),
+        error: (err: AccountingApiError) => this.toastr.error(err.message),
+      });
+  }
+
+  private confirmDeactivation(account: Account, usedBy: string[]): void {
+    const ref = this.modal.open(DeactivateDialogComponent, { centered: true });
+    const dialog = ref.componentInstance as DeactivateDialogComponent;
+    dialog.account = account;
+    dialog.methods = usedBy;
+    ref.result.then(
+      () => this.apply(this.api.deactivateAccount(account.id)),
+      () => undefined, // cancelado
+    );
+  }
+
+  private apply(request: ReturnType<AccountingApiService['activateAccount']>): void {
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
         this.toastr.success(updated.isActive ? tr('ACCOUNTING.ACCOUNTS_TAB.CUENTA_ACTIVADA') : tr('ACCOUNTING.ACCOUNTS_TAB.CUENTA_DESACTIVADA'));

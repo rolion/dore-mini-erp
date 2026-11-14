@@ -1,6 +1,6 @@
 # REV-2026-11-13-crear-cuentas-mapear-metodos-pago-01: Sin test que fije el contrato del gate de accounting
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-13-crear-cuentas-mapear-metodos-pago.md (v1)
@@ -19,3 +19,6 @@ Ver descripción.
 
 ## Evidence
 `grep accounting backend/modules/modularity/tests/test_enforcement.py` sin resultados.
+
+## Resolution (2026-11-13)
+Tests `ConfigurationContractTests` (configuración con el módulo deshabilitado).

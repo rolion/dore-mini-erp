@@ -34,7 +34,7 @@ function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolea
 /** Ítems visibles según los módulos habilitados, también dentro de los submenús (p. ej. «Valoración» con Costeo). */
 export function visibleRoutes(routes: RouteInfo[], enabled: ReadonlySet<string> | null, isAdmin = true): RouteInfo[] {
   return routes
-    .filter((item) => item && isVisible(item, enabled) && (item.module !== 'personnel' || isAdmin))
+    .filter((item) => item && isVisible(item, enabled) && (item.module !== 'personnel' || isAdmin) && (!item.adminOnly || isAdmin))
     .map((item) => ({ ...item, submenu: item.submenu.filter((sub) => isVisible(sub, enabled)) }));
 }
 
