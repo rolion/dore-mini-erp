@@ -1,6 +1,6 @@
 # TASK-pagos-servicios-libro-entradas: Integrar pagos de servicios con el libro de entradas (PB-COB-002)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-pagos-servicios-libro-entradas
@@ -14,6 +14,7 @@
 | 2026-11-14 | INVESTIGATION → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (dinero, transacción entre dos módulos, nueva dependencia `receivables → accounting`); sin diseño visual nuevo | delivery-start |
 | 2026-11-14 | PLANNING → ENGINEERING | Specification READY: la tarjeta y el patrón de PB-ACC-003 cubren las reglas; decisiones técnicas en el ADR | delivery-start |
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS con reservas (2 Medium y 1 Low abiertos, solo pruebas/estilo); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -75,7 +76,7 @@ Ver `docs/plans/PLAN-2026-11-14-pagos-servicios-libro-entradas.md` (v1, COMPLETO
 Según plan v1, sin desviaciones. `ObligationStateError.code` (API-01); puerto `PaymentLedger` en `CollectionService` y llamada tras `add_payment` (INV-02, INV-05, AC-03); `PaymentLedgerAdapter` con `module_gate`, `resolve_account` y `record_entry` (INV-03, AC-05..AC-07); la vista inyecta el adaptador y expone `code` en el 409; frontera `receivables → accounting`. Pruebas: `receivables/tests/test_payment_ledger.py` (AC-01..AC-10, concurrencia incluida). Suite completa del backend ejecutada por quien implementa: 1607 pruebas OK (no es el Quality Gate). Sin cambios de frontend ni migraciones. Deuda: ninguna.
 
 ## Review
-_Pendiente_
+**PASS con reservas** (subagente aislado). Backend: suite completa 1607 OK (corrida del implementador) y, en el Gate, 139 OK en `receivables`/`quotations`/`accounting` (incluye las 10 pruebas nuevas y la concurrencia); la suite completa del Gate se detuvo en 923 OK sin fallos por un bloqueo de BD, no se completó. Bandit sin hallazgos; ruff/flake8 no disponibles. Sin cambios de frontend ni migraciones. Hallazgos abiertos: [REV-01](../reviews/REV-2026-11-14-pagos-servicios-libro-entradas-01.md) (Medium, prueba dental), [REV-02](../reviews/REV-2026-11-14-pagos-servicios-libro-entradas-02.md) (Medium, pruebas unitarias/casos), [REV-03](../reviews/REV-2026-11-14-pagos-servicios-libro-entradas-03.md) (Low, imports).
 
 ## Publicación
-_Pendiente_
+PR #70 listo para aprobación humana; no se mergea. Toca dinero y una dependencia nueva entre módulos (ADR `ADR-pagos-servicios-libro-entradas-puerto-y-atomicidad`).
