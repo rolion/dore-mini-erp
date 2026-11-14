@@ -1,6 +1,6 @@
 # TASK-conciliar-regularizar-pagos-historicos: Conciliar y regularizar pagos históricos de productos y servicios (PB-ACC-004)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-conciliar-regularizar-pagos-historicos
@@ -16,6 +16,7 @@
 | 2026-11-14 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-11-14 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 | 2026-11-14 | PUBLISH → PLANNING → ENGINEERING | La persona esperaba una sección en la UI y aprobó explícitamente («Sí, agregar UI») el cambio de Specification: API admin + pantalla; PLAN v2 y DDR | delivery-start |
+| 2026-11-14 | ENGINEERING → REVIEW | Implementación de PLAN v2 (API admin y pantalla) completa | delivery-build |
 
 ## Investigación
 
@@ -82,6 +83,12 @@ Duplicados por ejecuciones simultáneas o cruce con cobros nuevos (mitigado: blo
 **Deuda técnica / limitaciones:** el estado «anulado» no existe en los orígenes (se informa 0); el usuario de regularización es texto libre del operador; `.env` copiado al worktree con autorización de la persona (ignorado por git) y suite ejecutada con el venv del checkout principal.
 
 **Verificación propia (no es el Quality Gate):** `modules.accounting` (incluye 20 nuevas), `receivables`, `modularity`, `reporting` y `sales` OK salvo 1-3 pruebas intermitentes de reloj/orden (`shared.tests.test_test_runner`, `sales.tests.test_repository`: `test_item_order_is_preserved`, `test_saves_and_loads_the_whole_aggregate`, `test_payments_are_only_appended`) que fallan igual en el checkout principal sin estos cambios (ver TASK-pruebas-intermitentes). `makemigrations --check` sin cambios.
+
+**Implementación v2 (API y pantalla, aprobada por la persona):**
+- **Backend:** `accounting/application/regularization_summary.py` (resumen compartido con el comando); `accounting/api` (`RegularizationPreviewView`, `RegularizationApplyView`, serializers con `confirm: true` obligatorio al aplicar, 400 con mensajes del mapeo, 409 `regularization_in_progress`; empresa de la sesión, ejecutor = usuario autenticado; AC-11..AC-14, API-01..API-03). Pruebas: `accounting/tests/test_regularization_api.py` (4, BD real) más las 20 anteriores: 24 OK.
+- **Frontend (`features/accounting`):** `models/regularization.ts`, `services/regularization-api.service.ts`, `pages/regularization` (periodo y reglas → previsualizar → resumen → aplicar con `regularization-confirm-dialog`), ruta `accounting/regularization` (`moduleGuard` accounting), ítem de menú en `routes.json`, claves `ACCOUNTING.REGULARIZATION.*` y `MENUITEMS.ACCOUNTING.LIST.REGULARIZATION` en es/en/pt (UI-01..UI-05, AC-15..AC-17). Pantalla de referencia: «Formulario con líneas y paso de resumen» (`stock-opening`) con el diálogo de acción irreversible; reutiliza `formatAmount`/`originLabel`, `NgbModal` y las alertas de Bootstrap; sin componentes compartidos nuevos. `design-system.md` §5/§6 actualizado.
+- **Desviaciones respecto al plan v2:** (1) el mapeo se edita como lista plana de reglas (método · cuenta · desde · hasta), no listas por método; mismo contrato, DDR ajustado. (2) Los JSON de i18n se re-serializaron por script y se colapsaron claves duplicadas ya existentes en es/pt (el último valor ya ganaba; sin cambio de comportamiento).
+- **Verificación propia (no es el Quality Gate):** `npm run lint` OK; `i18n:check` 1940 claves, 0 faltantes; Karma de `features/accounting` 70/71; el fallo es una prueba intermitente preexistente (`core/i18n/screens-i18n.spec.ts`: depende del orden y del idioma activo, falla con un valor distinto en cada corrida; los valores de las claves no cambiaron). Revisión visual en navegador: pendiente (la hace el Quality Gate si puede levantar la app).
 
 ## Review
 **Veredicto: PASS** (2026-11-14, subagente aislado; sin hallazgos Critical/High).
