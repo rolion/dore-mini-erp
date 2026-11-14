@@ -1,0 +1,7 @@
+// La plantilla pinta `alert-warning` en naranja con texto blanco (contraste bajo). En Contabilidad se usa un fondo
+// suave del mismo color y el texto heredado del contenedor, legible en tema claro y oscuro.
+.alert.alert-warning {
+  background-color: rgba(var(--bs-warning-rgb), 0.18);
+  border: 1px solid rgba(var(--bs-warning-rgb), 0.6);
+  color: inherit;
+}

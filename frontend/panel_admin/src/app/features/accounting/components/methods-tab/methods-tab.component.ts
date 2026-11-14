@@ -25,6 +25,7 @@ export interface MethodRow {
   imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class MethodsTabComponent implements OnInit {
+  readonly flowCurrency = FLOW_CURRENCY;
   rows: MethodRow[] = [];
   accounts: Account[] = [];
   loading = false;
@@ -59,10 +60,15 @@ export class MethodsTabComponent implements OnInit {
       });
   }
 
-  /** Cuentas activas en la moneda de los flujos, más la cuenta actual del método aunque ya no sea elegible. */
+  /** Cuentas activas, más la cuenta actual del método aunque ya no lo sea (las no elegibles se muestran deshabilitadas). */
   options(row: MethodRow): Account[] {
     const current = row.method.account;
-    return this.accounts.filter((a) => (a.isActive && a.currency === FLOW_CURRENCY) || a.id === current?.id);
+    return this.accounts.filter((a) => a.isActive || a.id === current?.id);
+  }
+
+  /** Solo una cuenta activa en la moneda de los flujos puede ser destino; la actual del método sigue seleccionable. */
+  isSelectable(row: MethodRow, account: Account): boolean {
+    return (account.isActive && account.currency === FLOW_CURRENCY) || account.id === row.method.account?.id;
   }
 
   save(row: MethodRow): void {

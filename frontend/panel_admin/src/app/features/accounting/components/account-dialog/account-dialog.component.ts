@@ -18,6 +18,7 @@ export type AccountField = 'name' | 'currency';
 @Component({
   selector: 'app-account-dialog',
   templateUrl: './account-dialog.component.html',
+  styleUrl: './account-dialog.component.scss',
   imports: [TranslatePipe, ReactiveFormsModule],
 })
 export class AccountDialogComponent {

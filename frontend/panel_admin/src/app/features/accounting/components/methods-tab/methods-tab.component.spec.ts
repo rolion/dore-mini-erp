@@ -29,12 +29,19 @@ describe('MethodsTabComponent', () => {
     return fixture;
   }
 
-  it('lists the methods and offers only active BOB accounts (UI-03)', () => {
+  it('lists the methods and shows non-BOB accounts disabled (UI-03)', () => {
     const fixture = create();
     const rows = fixture.nativeElement.querySelectorAll('tbody tr');
     expect(rows.length).toBe(2);
     const cash = fixture.componentInstance.rows[0];
-    expect(fixture.componentInstance.options(cash).map((a) => a.id)).toEqual(['a1']);
+    expect(fixture.componentInstance.options(cash).map((a) => a.id)).toEqual(['a1', 'a2']);
+    expect(fixture.componentInstance.isSelectable(cash, caja)).toBeTrue();
+    expect(fixture.componentInstance.isSelectable(cash, dolares)).toBeFalse();
+    const options = Array.from<HTMLOptionElement>(rows[0].querySelectorAll('option'));
+    const usd = options.find((o) => o.textContent?.includes('Dólares'));
+    expect(usd?.disabled).toBeTrue();
+    expect(usd?.textContent).toContain('moneda no compatible');
+    expect(options.find((o) => o.textContent?.includes('Caja'))?.disabled).toBeFalse();
   });
 
   it('shows the empty state when there are no accounts (AC-07)', () => {

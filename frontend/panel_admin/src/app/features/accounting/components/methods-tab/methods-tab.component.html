@@ -36,7 +36,7 @@
               [attr.aria-label]="('ACCOUNTING.METHODS_TAB.CUENTA_DESTINO' | translate) + ': ' + row.method.label">
               <option value="">{{ 'ACCOUNTING.METHODS_TAB.SIN_CUENTA' | translate }}</option>
               @for (account of options(row); track account.id) {
-              <option [value]="account.id">{{ account.name }} ({{ account.currency }}){{ account.isActive ? '' : ' · ' + ('COMMON.INACTIVO' | translate) }}</option>
+              <option [value]="account.id" [disabled]="!isSelectable(row, account)">{{ account.name }} ({{ account.currency }}){{ account.isActive ? '' : ' · ' + ('COMMON.INACTIVO' | translate) }}{{ account.currency === flowCurrency ? '' : ' · ' + ('ACCOUNTING.METHODS_TAB.MONEDA_NO_COMPATIBLE' | translate) }}</option>
               }
             </select>
             @if (row.error) {

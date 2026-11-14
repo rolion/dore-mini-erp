@@ -44,6 +44,18 @@
   }
 }
 
+// El encabezado de la plantilla tiene alto fijo (70 px): con título y descripción en varias líneas desbordaba y
+// pisaba las líneas de borde de la pestaña y de la tabla.
+@media (max-width: 767.98px) {
+  .ngxTableHeader {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 70px;
+    padding: 0.5rem 0;
+    gap: 0.5rem;
+  }
+}
+
 // El botón de acción no se parte en dos líneas cuando otra celda ensancha la fila.
 .inventory-table td[data-label='Acciones'] .btn {
   white-space: nowrap;

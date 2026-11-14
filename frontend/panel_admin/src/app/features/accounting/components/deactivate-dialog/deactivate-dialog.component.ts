@@ -11,6 +11,7 @@ import { Account } from '../../models/accounting';
 @Component({
   selector: 'app-deactivate-dialog',
   templateUrl: './deactivate-dialog.component.html',
+  styleUrl: './deactivate-dialog.component.scss',
   imports: [TranslatePipe],
 })
 export class DeactivateDialogComponent {

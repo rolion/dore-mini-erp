@@ -2530,6 +2530,7 @@
       "DESACTIVAR": "Desactivar"
     },
     "METHODS_TAB": {
+      "MONEDA_NO_COMPATIBLE": "moneda no compatible",
       "METODOS_DE_PAGO": "Métodos de pago",
       "CADA_METODO_TIENE_UNA_UNICA": "Cada método tiene una única cuenta destino vigente; varios métodos pueden compartir cuenta. El cambio solo afecta cobros posteriores.",
       "PRIMERO_CREA_UNA_CUENTA_EN": "Primero crea una cuenta en la pestaña «Cuentas».",
