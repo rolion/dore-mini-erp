@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Protocol
 from uuid import UUID
 
 from modules.receivables.domain.obligation import (
@@ -36,6 +37,14 @@ class PaymentResult:
     replayed: bool
 
 
+class PaymentLedger(Protocol):
+    """Puerto del libro de entradas: lo implementa un adaptador; puede no estar disponible."""
+
+    def is_available(self) -> bool: ...
+
+    def record(self, kind: str, number: str, payment: Payment, actor_id: int | None, actor_name: str) -> None: ...
+
+
 def _digest(kind: str, number: str, data: PaymentInput) -> str:
     body = [kind, number, str(data.amount), data.payment_method, str(data.payment_date), data.reference.strip(),
             sorted((str(line_id), str(value)) for line_id, value in data.allocations)]
@@ -46,11 +55,13 @@ class CollectionService:
     """Casos de uso de Cobros: consultar un compromiso, registrar pagos y listar obligaciones."""
 
     def __init__(self, repository, source_for: Callable, *, today: Callable[[], date], now: Callable[[], datetime],
-                 user_id: int | None = None, user_name: str = ''):
+                 user_id: int | None = None, user_name: str = '',
+                 ledger: PaymentLedger | None = None):
         self.repository = repository
         self.source_for = source_for
         self.today, self.now = today, now
         self.user_id, self.user_name = user_id, user_name
+        self.ledger = ledger
 
     def _source(self, kind: str):
         source = self.source_for(kind)
@@ -88,6 +99,8 @@ class CollectionService:
             receipt_number=self.repository.next_receipt(), recorded_by=self.user_id,
             recorded_by_name=self.user_name, idempotency_key=data.idempotency_key, now=self.now())
         self.repository.add_payment(obligation, payment, digest)
+        if self.ledger is not None and self.ledger.is_available():
+            self.ledger.record(kind, number, payment, self.user_id, self.user_name)
         source.mark_collected(a.line_id for a in payment.allocations)
         view = CommitmentView(snapshot, obligation, build_statement(snapshot, obligation.payments))
         return PaymentResult(view, payment, False)

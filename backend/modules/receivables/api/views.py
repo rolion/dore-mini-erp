@@ -14,7 +14,7 @@ from modules.receivables.application.collections import CollectionService
 from modules.receivables.domain.obligation import (
     KINDS, PAID, PARTIAL, PENDING, CommitmentNotFound, ObligationStateError, ObligationValidationError,
 )
-from modules.receivables.infrastructure.adapters import source_for
+from modules.receivables.infrastructure.adapters import PaymentLedgerAdapter, source_for
 from modules.receivables.infrastructure.django.repositories import DjangoObligationRepository
 from shared.tenancy import company_id_from
 
@@ -65,7 +65,7 @@ def _service(request) -> CollectionService:
     return CollectionService(
         DjangoObligationRepository(company_id), lambda kind: source_for(kind, company_id),
         today=dj_timezone.localdate, now=lambda: datetime.now(timezone.utc),
-        user_id=request.user.pk, user_name=_user_name(request.user))
+        user_id=request.user.pk, user_name=_user_name(request.user), ledger=PaymentLedgerAdapter(company_id))
 
 
 def _run(callback):
@@ -77,7 +77,7 @@ def _run(callback):
     except ObligationValidationError as exc:
         raise ValidationError(exc.errors) from exc
     except ObligationStateError as exc:
-        raise Conflict(str(exc)) from exc
+        raise Conflict({'detail': str(exc), 'code': exc.code} if exc.code else str(exc)) from exc
 
 
 def _date_param(request, name):
