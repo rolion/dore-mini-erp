@@ -1,5 +1,7 @@
 # Production Docker deployment
 
+> Para el deploy automático en cada merge a `main`, ver [github-actions.md](github-actions.md). Esta guía describe el procedimiento manual equivalente.
+
 This stack builds two images: Django/Gunicorn and Angular production/Nginx. Existing nginx-proxy terminates HTTPS and routes both www.pocketbiz.website and app.pocketbiz.website to frontend port 80. Frontend serves the SPA, forwards /api and /admin to backend, and serves collected Django static files. No host ports, database service or replacement public proxy are created.
 
 ## Host prerequisites
