@@ -20,7 +20,7 @@ from modules.accounting.infrastructure.django.repositories import (
     DjangoMethodMappingRepository,
 )
 
-__all__ = ['AccountRef', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryValidationError',
+__all__ = ['AccountRef', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError',
            'RecordedEntry', 'missing_method_labels', 'record_entry', 'resolve_account']
 
 
@@ -68,12 +68,18 @@ class EntryInput:
 
 
 @dataclass(frozen=True)
-class RecordedEntry:
-    entry_id: UUID
+class EntryRef:
+    """La entrada registrada, como DTO inmutable (nunca el agregado ni el modelo)."""
+    id: UUID
     account_id: UUID
     currency: str
     amount: Decimal
     payment_date: date
+
+
+@dataclass(frozen=True)
+class RecordedEntry:
+    entry: EntryRef
     created: bool  # False: ya existía (reintento idempotente)
 
 
@@ -101,4 +107,4 @@ def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
         differences = entry.differences(stored)
         if differences:
             raise EntryConflict(differences)
-    return RecordedEntry(stored.id, stored.account_id, stored.currency, stored.amount, stored.payment_date, created)
+    return RecordedEntry(EntryRef(stored.id, stored.account_id, stored.currency, stored.amount, stored.payment_date), created)

@@ -162,6 +162,8 @@ class EntryListView(APIView):
         serializer = EntryFiltersSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
         filters = EntryFilters(**serializer.validated_data)
+        if filters.account_id and DjangoAccountRepository(company_id).get(filters.account_id) is None:
+            raise ValidationError({'account_id': ['La cuenta no existe en esta empresa.']})
         rows, totals, coverage = ListEntries(DjangoEntryRepository(company_id)).execute(filters)
         paginator = EntryPagination()
         page = paginator.paginate_queryset(rows, request, view=self)

@@ -1,6 +1,6 @@
 # REV-2026-11-14-libro-entradas-filtros-totales-02: RecordedEntry no coincide con la forma declarada en API-03 y no está en Desviaciones
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-14-libro-entradas-filtros-totales.md (v1)
@@ -19,3 +19,6 @@ Forma distinta y sin declarar. Funcionalmente suficiente (id, cuenta, moneda, mo
 
 ## Evidence
 `backend/modules/accounting/services.py`: `class RecordedEntry: entry_id, account_id, currency, amount, payment_date, created`; `return RecordedEntry(stored.id, stored.account_id, ...)`. Los tests usan `result.entry_id` / `result.created`.
+
+## Resolution
+`record_entry` devuelve `RecordedEntry{entry: EntryRef, created}` como declara API-03 (la implementación se alineó con la Specification; no hay cambio de contrato). Tests actualizados a `result.entry.id`.

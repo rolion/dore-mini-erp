@@ -37,7 +37,7 @@ class RecordEntryTests(TestCase):
     def test_valid_entry_is_stored_with_all_its_fields(self):  # AC-01
         result = services.record_entry(self.company.id, entry_input(self.caja, receipt_number='CB-000001'))
         self.assertTrue(result.created)
-        row = EntryModel.objects.get(pk=result.entry_id)
+        row = EntryModel.objects.get(pk=result.entry.id)
         self.assertEqual((row.company_id, row.account_id, row.currency), (self.company.id, self.caja.id, 'BOB'))
         self.assertEqual((row.amount, row.payment_date, row.payment_method), (Decimal('100.00'), date(2026, 11, 1), 'CASH'))
         self.assertEqual((row.origin_kind, row.origin_document_ref, row.receipt_number), ('PRODUCT', 'pedido-1', 'CB-000001'))
@@ -65,7 +65,7 @@ class RecordEntryTests(TestCase):
         first = services.record_entry(self.company.id, data)
         second = services.record_entry(self.company.id, data)
         self.assertEqual((first.created, second.created), (True, False))
-        self.assertEqual(first.entry_id, second.entry_id)
+        self.assertEqual(first.entry.id, second.entry.id)
         self.assertEqual(EntryModel.objects.count(), 1)
 
     def test_retry_with_incompatible_data_is_a_conflict(self):  # AC-03
@@ -125,7 +125,7 @@ class RecordEntryTests(TestCase):
         result = services.record_entry(self.company.id, entry_input(self.caja, account_id=resolved.account_id))
         ConfigureMethod(self.accounts, mappings).execute('CASH', banco.id, True)
         self.assertEqual(services.resolve_account(self.company.id, 'CASH').account_id, banco.id)
-        self.assertEqual(EntryModel.objects.get(pk=result.entry_id).account_id, self.caja.id)
+        self.assertEqual(EntryModel.objects.get(pk=result.entry.id).account_id, self.caja.id)
 
     def test_account_with_entries_cannot_change_currency(self):  # INV-08
         services.record_entry(self.company.id, entry_input(self.caja))

@@ -1,6 +1,6 @@
 # REV-2026-11-14-libro-entradas-filtros-totales-03: Huecos de verificación en edge cases y permisos (EDGE-03, EDGE-06, AC-07 no-admin, AC-08 texto libre)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-14-libro-entradas-filtros-totales.md (v1)
@@ -24,3 +24,6 @@ Comportamiento correcto por lectura del código (DRF devuelve 404 en página inv
 
 ## Evidence
 `grep` sobre `backend/modules/accounting/tests/test_entries_api.py` y specs de `features/accounting`: no hay referencias a `page=` fuera de rango, a cuenta desactivada con entradas ni a un usuario de empresa no admin. Suite backend 1569 OK; Karma de las 4 specs de entradas OK.
+
+## Resolution
+Tests nuevos en `test_entries_api.py`: página fuera de rango → 404 (EDGE-03), entradas de una cuenta desactivada siguen visibles (EDGE-06), miembro no admin de la empresa → 403 en lista y detalle (AC-07) y conjunto exacto de claves del listado (AC-08).

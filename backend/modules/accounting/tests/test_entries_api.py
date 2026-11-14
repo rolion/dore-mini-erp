@@ -102,6 +102,18 @@ class ListTests(EntriesApiBase):
                        {'origin': 'ORDER'}, {'account_id': 'no-uuid'}):
             self.assertEqual(self.client_a.get(ENTRIES, params).status_code, 400, params)
 
+    def test_page_out_of_range_is_a_404(self):  # EDGE-03
+        self.seed(3)
+        self.assertEqual(self.client_a.get(ENTRIES, {'page': 2}).status_code, 404)
+        self.assertEqual(self.client_a.get(ENTRIES, {'page': 1}).status_code, 200)
+
+    def test_entries_of_an_inactive_account_stay_visible(self):  # EDGE-06
+        self.record(self.company_a, self.caja, '10.00', date(2026, 11, 1))
+        self.assertEqual(self.client_a.post(f'/api/accounting/accounts/{self.caja.id}/deactivate/').status_code, 200)
+        data = self.client_a.get(ENTRIES).data
+        self.assertEqual((data['count'], data['results'][0]['account']['name']), (1, 'Caja'))
+        self.assertEqual(data['totals'][0]['amount'], '10.00')
+
     def test_rows_show_origin_link_data_and_no_free_text(self):  # AC-08
         self.seed(0)
         row = next(r for r in self.client_a.get(ENTRIES).data['results'] if r['origin']['kind'] == 'SERVICE')
@@ -109,7 +121,10 @@ class ListTests(EntriesApiBase):
                                          'available': True})
         self.assertEqual((row['amount'], row['method_label'], row['origin']['label']), ('300.50', 'QR', 'Servicios'))
         self.assertEqual(row['account']['name'], 'Banco')
-        self.assertNotIn('reference', row)
+        # conjunto exacto de claves: ningún texto libre del pago puede colarse en el listado
+        self.assertEqual(set(row), {'id', 'account', 'currency', 'amount', 'payment_date', 'created_at', 'method',
+                                    'method_label', 'recorded_by_name', 'origin', 'source'})
+        self.assertEqual(set(row['source']), {'document_ref', 'receipt_number', 'available'})
 
     def test_source_link_is_unavailable_when_the_origin_module_is_disabled(self):  # AC-07
         self.seed(0)
@@ -123,21 +138,28 @@ class DetailAndAccessTests(EntriesApiBase):
     def test_detail_returns_the_entry_and_hides_other_companies(self):  # AC-07
         mine = self.record(self.company_a, self.caja, '10.00', date(2026, 11, 1))
         theirs = self.record(self.company_b, self.account(self.company_b, 'Caja', 'BOB'), '5.00', date(2026, 11, 1))
-        detail = self.client_a.get(f'{ENTRIES}{mine.entry_id}/')
+        detail = self.client_a.get(f'{ENTRIES}{mine.entry.id}/')
         self.assertEqual(detail.status_code, 200)
         self.assertIn('id', detail.data['source'])
-        self.assertEqual(self.client_a.get(f'{ENTRIES}{theirs.entry_id}/').status_code, 404)
+        self.assertEqual(self.client_a.get(f'{ENTRIES}{theirs.entry.id}/').status_code, 404)
         self.assertEqual(self.client_a.get(f'{ENTRIES}{uuid4()}/').status_code, 404)
 
     def test_each_company_only_sees_its_own_entries(self):  # AC-07
         self.record(self.company_a, self.caja, '10.00', date(2026, 11, 1))
         self.record(self.company_b, self.account(self.company_b, 'Caja', 'BOB'), '5.00', date(2026, 11, 1))
         self.assertEqual(self.client_b.get(ENTRIES).data['totals'][0]['amount'], '5.00')
-        # filtrar por una cuenta ajena no devuelve nada ajeno
-        self.assertEqual(self.client_b.get(ENTRIES, {'account_id': str(self.caja.id)}).data['count'], 0)
+        # filtrar por una cuenta ajena o inexistente se rechaza y no revela nada de la otra empresa (EDGE-02)
+        for account_id in (self.caja.id, uuid4()):
+            response = self.client_b.get(ENTRIES, {'account_id': str(account_id)})
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('account_id', response.json())
 
     def test_non_admin_and_anonymous_users_are_rejected(self):  # AC-07
         self.assertIn(APIClient().get(ENTRIES).status_code, (401, 403))
+        entry = self.record(self.company_a, self.caja, '10.00', date(2026, 11, 1))
+        member = self.login(make_admin(self.company_a, 'mario', role='member'))  # miembro de la empresa sin rol admin
+        self.assertEqual(member.get(ENTRIES).status_code, 403)
+        self.assertEqual(member.get(f'{ENTRIES}{entry.entry.id}/').status_code, 403)
         loner = APIClient()
         authenticate(loner, get_user_model().objects.create_user(username='solo', password='x-Pass-123'))
         self.assertEqual(loner.get(ENTRIES).status_code, 403)
@@ -150,7 +172,7 @@ class DetailAndAccessTests(EntriesApiBase):
 
     def test_there_are_no_manual_write_endpoints(self):  # AC-08
         entry = self.record(self.company_a, self.caja, '10.00', date(2026, 11, 1))
-        for url in (ENTRIES, f'{ENTRIES}{entry.entry_id}/'):
+        for url in (ENTRIES, f'{ENTRIES}{entry.entry.id}/'):
             for method in ('post', 'put', 'patch', 'delete'):
                 self.assertEqual(getattr(self.client_a, method)(url, {}, format='json').status_code, 405,
                                  f'{method} {url}')
