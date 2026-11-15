@@ -19,6 +19,7 @@ import {
   documentLabel,
   formatAmount,
   originLabel,
+  receiptLink,
   sourceLink,
 } from '../../models/entry';
 import { AccountingApiService } from '../../services/accounting-api.service';
@@ -184,6 +185,10 @@ export class EntryListComponent implements OnInit {
 
   link(entry: Entry): string[] | null {
     return sourceLink(entry);
+  }
+
+  receiptTarget(entry: Entry): string[] | null {
+    return receiptLink(entry);
   }
 
   private accountName(id: string): string {

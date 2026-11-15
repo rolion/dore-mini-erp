@@ -20,7 +20,7 @@
                 <h2><strong>{{ 'ACCOUNTING.ENTRIES.ENTRADAS' | translate }}</strong></h2>
               </div>
             </div>
-            <div class="alert alert-info m-2" role="note" data-testid="context-note">{{ 'ACCOUNTING.ENTRIES.COBROS_RECIBIDOS_NO_ES_SALDO' | translate }}</div>
+            <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle m-2" role="note" data-testid="context-note">{{ 'ACCOUNTING.ENTRIES.COBROS_RECIBIDOS_NO_ES_SALDO' | translate }}</div>
 
             <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
               <div class="col-md-2 col-6">
@@ -70,7 +70,7 @@
             </form>
 
             <div class="m-2" data-testid="period">
-              <small class="text-muted d-block">
+              <small class="text-body-secondary d-block">
                 {{ 'ACCOUNTING.ENTRIES.PERIODO' | translate }}:
                 @if (filters.dateFrom || filters.dateTo) {
                 {{ filters.dateFrom ? (filters.dateFrom | date: 'dd/MM/yyyy') : '…' }} – {{ filters.dateTo ? (filters.dateTo | date: 'dd/MM/yyyy') : '…' }}
@@ -79,7 +79,7 @@
                 }
               </small>
               @if (coverage?.firstPaymentDate) {
-              <small class="text-muted d-block" data-testid="coverage">
+              <small class="text-body-secondary d-block" data-testid="coverage">
                 {{ 'ACCOUNTING.ENTRIES.COBERTURA_DEL_LIBRO' | translate }}: {{ coverage?.firstPaymentDate | date: 'dd/MM/yyyy' }} – {{ coverage?.lastPaymentDate | date: 'dd/MM/yyyy' }}.
                 {{ 'ACCOUNTING.ENTRIES.LOS_COBROS_ANTERIORES_NO_APARECEN' | translate }}
               </small>
@@ -150,14 +150,21 @@
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.DOCUMENTO' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (link(row); as target) {
-                  <a [routerLink]="target" data-testid="source-link">{{ document(row) }}</a>
+                  <a class="link-primary" [routerLink]="target" data-testid="source-link">{{ document(row) }}</a>
                   } @else {
                   <span data-testid="source-text">{{ document(row) }}</span>
                   }
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.COMPROBANTE' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105">
-                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.receiptNumber || '—' }}</ng-template>
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  @if (receiptTarget(row); as target) {
+                  <a class="link-primary" [routerLink]="target" data-testid="receipt-link"
+                    [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_COBRO_N' | translate: { receipt: row.receiptNumber }">{{ row.receiptNumber }}</a>
+                  } @else {
+                  <span data-testid="receipt-text">{{ row.receiptNumber || '—' }}</span>
+                  }
+                </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.MONTO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>

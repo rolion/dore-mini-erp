@@ -1,6 +1,6 @@
 # TASK-refinar-ux-libro-entradas-enlaces: Refinar UX del libro de Entradas (enlace al cobro y legibilidad)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-refinar-ux-libro-entradas-enlaces
@@ -12,6 +12,7 @@
 | 2026-11-15 | (nuevo) → INVESTIGATION | Task creado a partir de la crítica de diseño de Contabilidad › Entradas; `main` al día (6b4f7d1) | delivery-start |
 | 2026-11-15 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: solo frontend del módulo `accounting`, sin contrato API ni reglas de dominio nuevas | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; el alcance se acotó con criterio propio (ver plan) | delivery-start |
+| 2026-11-15 | ENGINEERING → REVIEW | Implementación según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -67,7 +68,15 @@ No aplica según veredicto.
 Ver `docs/plans/PLAN-2026-11-15-refinar-ux-libro-entradas-enlaces.md` (v1, COMPACTO).
 
 ## Implementación
-_Pendiente_
+Solo frontend de `accounting`; pantallas de referencia: lista de solo lectura con filtros y detalle (sin cambios de estructura).
+- **AC-01/02:** `receiptLink()` en `models/entry.ts` (solo servicios con comprobante, reutiliza `sourceLink`); Comprobante enlazado en lista (`receipt-link`) y detalle; botón primario «Ver cobro»/«Ver pedido» junto a «Volver» en el detalle.
+- **AC-03:** enlaces con `link-primary` y `aria-label` traducido (`VER_COBRO_N`).
+- **AC-04:** aviso de contexto con `bg-info-subtle text-info-emphasis border-info-subtle`.
+- **AC-05:** textos auxiliares (periodo, cobertura, ID de origen, nota del detalle) pasan de `text-muted` a `text-body-secondary`. **No se midió el contraste real en el navegador.**
+- **AC-07:** claves `VER_COBRO`, `VER_PEDIDO`, `VER_COBRO_N` en es/en/pt; `npm run i18n:check` sin faltantes.
+- **Pruebas:** `entry.spec.ts` (receiptLink), lista (enlace CB y aviso tenue), detalle (enlace, botón, origen no disponible); se ajustó la prueba existente que prohibía `.btn-primary` en el detalle. Resultado local: lint OK; Karma, 83 pruebas de `accounting` y `core/i18n` OK.
+- **Desviaciones:** (1) AC-06 (alineación de «Monto») **no se tocó**: la cabecera ya tiene `headerClass="text-end"`, el defecto no está confirmado y requiere revisión visual. (2) Medición previa del paso 1 del plan no realizada (no se levantó la app con backend). (3) `npm run build` no se ejecutó. (4) Para correr pruebas se creó una junction `node_modules` hacia el checkout principal (no versionada, sin dependencias nuevas).
+- **Deuda:** no existe ruta por pago en `receivables`; el enlace lleva al detalle del cobro.
 
 ## Review
 _Pendiente_

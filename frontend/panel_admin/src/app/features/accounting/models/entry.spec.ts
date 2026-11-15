@@ -2,7 +2,7 @@ import { provideTestTranslations } from '../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { TranslateService } from '@ngx-translate/core';
 import { makeEntry } from '../testing/entry-fixtures';
-import { documentLabel, formatAmount, sourceLink } from './entry';
+import { documentLabel, formatAmount, receiptLink, sourceLink } from './entry';
 
 describe('entry model helpers', () => {
   beforeEach(() => {
@@ -21,6 +21,15 @@ describe('entry model helpers', () => {
     expect(sourceLink(makeEntry({ sourceAvailable: false }))).toBeNull();
     expect(sourceLink(makeEntry({ origin: 'SERVICE', documentRef: 'sin-barra' }))).toBeNull();
     expect(sourceLink(makeEntry({ documentRef: '' }))).toBeNull();
+  });
+
+  it('links the receipt to the collection only for services with a receipt (AC-01)', () => {
+    const service = { origin: 'SERVICE' as const, documentRef: 'quotation/PRO-1', receiptNumber: 'CB-000001' };
+    expect(receiptLink(makeEntry(service))).toEqual(['/pocketbiz/receivables', 'quotation', 'PRO-1']);
+    expect(receiptLink(makeEntry({ ...service, receiptNumber: '' }))).toBeNull();
+    expect(receiptLink(makeEntry({ ...service, sourceAvailable: false }))).toBeNull();
+    expect(receiptLink(makeEntry({ ...service, documentRef: 'sin-barra' }))).toBeNull();
+    expect(receiptLink(makeEntry({ documentRef: 'o-1', receiptNumber: 'CB-000001' }))).toBeNull();
   });
 
   it('shows the proforma number for services and a short id for orders', () => {
