@@ -32,8 +32,18 @@ describe('EntryDetailComponent', () => {
     expect(api.get).toHaveBeenCalledWith('e-1');
     expect(el.querySelector('[data-testid="amount"]')?.textContent).toContain('300.50');
     expect(el.querySelector('[data-testid="source-link"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="source-link"]')?.getAttribute('aria-label')).toContain('o-1');
     expect(el.textContent).toContain('CB-000001');
-    expect(el.querySelector('.btn-primary, .btn-danger, .btn-warning')).toBeNull();
+    expect(el.querySelector('.btn-danger, .btn-warning')).toBeNull();
+    expect(el.querySelector('[data-testid="view-source"]')?.textContent).toContain('Ver pedido');
+  });
+
+  it('shows the receipt as text and offers no "Ver cobro" for services (link deferred, REV-06)', () => {
+    const { fixture } = create(of(makeEntry({ origin: 'SERVICE', documentRef: 'quotation/PRO-1', receiptNumber: 'CB-000002' })));
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="receipt-link"]')).toBeNull();
+    expect(el.querySelector('[data-testid="view-source"]')).toBeNull();
+    expect(el.textContent).toContain('CB-000002');
   });
 
   it('shows plain text when the source module is disabled', () => {

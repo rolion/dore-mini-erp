@@ -20,7 +20,7 @@
                 <h2><strong>{{ 'ACCOUNTING.ENTRIES.ENTRADAS' | translate }}</strong></h2>
               </div>
             </div>
-            <div class="alert alert-info m-2" role="note" data-testid="context-note">{{ 'ACCOUNTING.ENTRIES.COBROS_RECIBIDOS_NO_ES_SALDO' | translate }}</div>
+            <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle m-2" role="note" data-testid="context-note">{{ 'ACCOUNTING.ENTRIES.COBROS_RECIBIDOS_NO_ES_SALDO' | translate }}</div>
 
             <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
               <div class="col-md-2 col-6">
@@ -70,7 +70,7 @@
             </form>
 
             <div class="m-2" data-testid="period">
-              <small class="text-muted d-block">
+              <small class="text-body-secondary d-block">
                 {{ 'ACCOUNTING.ENTRIES.PERIODO' | translate }}:
                 @if (filters.dateFrom || filters.dateTo) {
                 {{ filters.dateFrom ? (filters.dateFrom | date: 'dd/MM/yyyy') : '…' }} – {{ filters.dateTo ? (filters.dateTo | date: 'dd/MM/yyyy') : '…' }}
@@ -79,7 +79,7 @@
                 }
               </small>
               @if (coverage?.firstPaymentDate) {
-              <small class="text-muted d-block" data-testid="coverage">
+              <small class="text-body-secondary d-block" data-testid="coverage">
                 {{ 'ACCOUNTING.ENTRIES.COBERTURA_DEL_LIBRO' | translate }}: {{ coverage?.firstPaymentDate | date: 'dd/MM/yyyy' }} – {{ coverage?.lastPaymentDate | date: 'dd/MM/yyyy' }}.
                 {{ 'ACCOUNTING.ENTRIES.LOS_COBROS_ANTERIORES_NO_APARECEN' | translate }}
               </small>
@@ -94,21 +94,21 @@
             }
 
             @if (loading && rows.length === 0) {
-            <p class="m-3 text-muted" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            <p class="m-3 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
             }
 
             @if (!errorMessage && !loading) {
             <div class="m-2" data-testid="totals">
               <h5>{{ 'ACCOUNTING.ENTRIES.TOTALES_DEL_FILTRO' | translate }}</h5>
               @if (totals.length === 0) {
-              <p class="text-muted mb-0" data-testid="totals-empty">{{ 'ACCOUNTING.ENTRIES.SIN_REGISTROS' | translate }}</p>
+              <p class="text-body-secondary mb-0" data-testid="totals-empty">{{ 'ACCOUNTING.ENTRIES.SIN_REGISTROS' | translate }}</p>
               }
               @for (item of totals; track item.currency) {
               <div class="row align-items-baseline mb-1" data-testid="total-row">
                 <div class="col-sm-2"><strong>{{ item.currency }}</strong></div>
                 <div class="col-sm-3 fs-5" data-testid="total-amount">{{ amount(item.amount, item.currency) }}</div>
-                <div class="col-sm-2 text-muted">{{ 'ACCOUNTING.ENTRIES.N_ENTRADAS' | translate: { count: item.count } }}</div>
-                <div class="col-sm-5 text-muted">
+                <div class="col-sm-2 text-body-secondary">{{ 'ACCOUNTING.ENTRIES.N_ENTRADAS' | translate: { count: item.count } }}</div>
+                <div class="col-sm-5 text-body-secondary">
                   {{ 'ACCOUNTING.ENTRIES.PRODUCTOS' | translate }} {{ amount(item.byOrigin.PRODUCT, item.currency) }} ·
                   {{ 'ACCOUNTING.ENTRIES.SERVICIOS' | translate }} {{ amount(item.byOrigin.SERVICE, item.currency) }}
                 </div>
@@ -130,7 +130,7 @@
               <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
             </div>
             } @else if (rows.length > 0) {
-            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
+            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex" [scrollbarH]="true"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.FECHA_DEL_PAGO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110">
@@ -150,14 +150,17 @@
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.DOCUMENTO' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (link(row); as target) {
-                  <a [routerLink]="target" data-testid="source-link">{{ document(row) }}</a>
+                  <a class="link-primary" [routerLink]="target" data-testid="source-link"
+                    [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_DOCUMENTO_N' | translate: { document: document(row) }">{{ document(row) }}</a>
                   } @else {
                   <span data-testid="source-text">{{ document(row) }}</span>
                   }
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.COMPROBANTE' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105">
-                <ng-template let-row="row" ngx-datatable-cell-template>{{ row.receiptNumber || '—' }}</ng-template>
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{ row.receiptNumber || '—' }}
+                </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.MONTO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>

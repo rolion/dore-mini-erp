@@ -1,0 +1,21 @@
+$dark-link-rgb: 110, 168, 254; // --bs-link-color-rgb del tema oscuro de Bootstrap 5.3 (≥ 4,5:1 sobre $color-dark-primary #16192a)
+
+// Enlaces del libro de Entradas: subrayado al pasar el cursor y al enfocar (no dependen solo del color)
+// y color legible en tema oscuro (el `link-primary` de Bootstrap solo se adapta con data-bs-theme).
+@mixin entry-links {
+  a.link-primary:hover,
+  a.link-primary:focus-visible {
+    text-decoration: underline;
+  }
+
+  :host-context(.dark) a.link-primary {
+    // `.link-primary` fija el color con !important a partir de --bs-primary-rgb: se ajusta la variable, no el color.
+    --bs-primary-rgb: #{$dark-link-rgb};
+
+    // El color de :hover de Bootstrap es un azul oscuro fijo (ilegible sobre fondo oscuro): se mantiene el claro.
+    &:hover,
+    &:focus-visible {
+      color: rgb(var(--bs-primary-rgb)) !important;
+    }
+  }
+}

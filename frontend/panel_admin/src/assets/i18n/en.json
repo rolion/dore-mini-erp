@@ -2564,7 +2564,9 @@
       "VER_ENTRADA": "View entry",
       "MODULO_DESHABILITADO": "module disabled",
       "ID_DEL_PAGO_DE_ORIGEN": "Source payment ID",
-      "LAS_ENTRADAS_NO_SE_EDITAN": "Entries are neither edited nor deleted."
+      "LAS_ENTRADAS_NO_SE_EDITAN": "Entries are neither edited nor deleted.",
+      "VER_PEDIDO": "View order",
+      "VER_DOCUMENTO_N": "View document {{document}}"
     },
     "REGULARIZATION": {
       "TITULO": "Regularize historical payments",

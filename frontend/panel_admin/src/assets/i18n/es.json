@@ -2564,7 +2564,9 @@
       "VER_ENTRADA": "Ver entrada",
       "MODULO_DESHABILITADO": "módulo deshabilitado",
       "ID_DEL_PAGO_DE_ORIGEN": "ID del pago de origen",
-      "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan."
+      "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan.",
+      "VER_PEDIDO": "Ver pedido",
+      "VER_DOCUMENTO_N": "Ver documento {{document}}"
     },
     "REGULARIZATION": {
       "TITULO": "Regularizar pagos históricos",

@@ -12,7 +12,7 @@
   <div class="section-body">
     <div class="card">
       @if (loading) {
-      <p class="m-4 text-muted" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+      <p class="m-4 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
       } @else if (errorMessage) {
       <div class="alert alert-danger m-4" role="alert" data-testid="detail-error">
         {{ errorMessage }}
@@ -40,23 +40,31 @@
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.DOCUMENTO' | translate }}</dt>
         <dd class="col-sm-9">
           @if (link; as target) {
-          <a [routerLink]="target" data-testid="source-link">{{ entry.documentRef }}</a>
+          <a class="link-primary" [routerLink]="target" data-testid="source-link"
+            [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_DOCUMENTO_N' | translate: { document: entry.documentRef }">{{ entry.documentRef }}</a>
           } @else if (entry.documentRef) {
           <span data-testid="source-text">{{ entry.documentRef }}
-            @if (!entry.sourceAvailable) { <small class="text-muted">({{ 'ACCOUNTING.ENTRIES.MODULO_DESHABILITADO' | translate }})</small> }
+            @if (!entry.sourceAvailable) { <small class="text-body-secondary">({{ 'ACCOUNTING.ENTRIES.MODULO_DESHABILITADO' | translate }})</small> }
           </span>
           } @else {
           —
           }
         </dd>
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.COMPROBANTE' | translate }}</dt>
-        <dd class="col-sm-9">{{ entry.receiptNumber || '—' }}</dd>
+        <dd class="col-sm-9">
+          {{ entry.receiptNumber || '—' }}
+        </dd>
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.ID_DEL_PAGO_DE_ORIGEN' | translate }}</dt>
-        <dd class="col-sm-9"><small class="text-muted">{{ entry.sourceId }}</small></dd>
+        <dd class="col-sm-9"><small class="text-body-secondary">{{ entry.sourceId }}</small></dd>
       </dl>
       <div class="m-4">
-        <small class="text-muted d-block mb-2">{{ 'ACCOUNTING.ENTRIES.LAS_ENTRADAS_NO_SE_EDITAN' | translate }}</small>
-        <a class="btn btn-light" routerLink="/pocketbiz/accounting/entries" data-testid="back">{{ 'COMMON.VOLVER' | translate }}</a>
+        <small class="text-body-secondary d-block mb-2">{{ 'ACCOUNTING.ENTRIES.LAS_ENTRADAS_NO_SE_EDITAN' | translate }}</small>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-light" routerLink="/pocketbiz/accounting/entries" data-testid="back">{{ 'COMMON.VOLVER' | translate }}</a>
+          @if (entry.origin === 'PRODUCT' && link; as target) {
+          <a class="btn btn-primary" [routerLink]="target" data-testid="view-source">{{ 'ACCOUNTING.ENTRIES.VER_PEDIDO' | translate }}</a>
+          }
+        </div>
       </div>
       }
     </div>

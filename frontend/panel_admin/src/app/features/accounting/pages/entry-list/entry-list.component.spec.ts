@@ -109,7 +109,16 @@ describe('EntryListComponent', () => {
   it('links to the document only when it is available, and offers no write actions (UI-04)', async () => {
     await setup({}, makeEntryPage([makeEntry({ documentRef: 'o-1' }), makeEntry({ id: 'e-2', sourceAvailable: false })]));
     expect(root().querySelectorAll('[data-testid="source-link"]').length).toBe(1);
+    expect(byId('source-link')?.getAttribute('aria-label')).toContain('o-1');
     expect(root().querySelectorAll('[data-testid="source-text"]').length).toBe(1);
     expect(root().querySelector('a[href$="/new"], .btn-tbl-update, .btn-tbl-delete')).toBeNull();
+  });
+
+  it('uses the soft alert style for the context note (AC-04)', async () => {
+    await setup();
+    const note = byId('context-note')?.classList;
+    expect(note).toContain('bg-info-subtle');
+    expect(note).toContain('text-info-emphasis');
+    expect(note).toContain('border-info-subtle');
   });
 });
