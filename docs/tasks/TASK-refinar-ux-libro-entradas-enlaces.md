@@ -1,6 +1,6 @@
 # TASK-refinar-ux-libro-entradas-enlaces: Refinar UX del libro de Entradas (enlace al cobro y legibilidad)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-refinar-ux-libro-entradas-enlaces
@@ -13,6 +13,7 @@
 | 2026-11-15 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN: solo frontend del módulo `accounting`, sin contrato API ni reglas de dominio nuevas | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; el alcance se acotó con criterio propio (ver plan) | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación según plan v1 | delivery-build |
+| 2026-11-15 | REVIEW → PUBLISH | Quality Gate PASS con reservas (1 Medium y 4 Low abiertos; revisión visual y contraste no verificados); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -75,11 +76,16 @@ Solo frontend de `accounting`; pantallas de referencia: lista de solo lectura co
 - **AC-05:** textos auxiliares (periodo, cobertura, ID de origen, nota del detalle) pasan de `text-muted` a `text-body-secondary`. **No se midió el contraste real en el navegador.**
 - **AC-07:** claves `VER_COBRO`, `VER_PEDIDO`, `VER_COBRO_N` en es/en/pt; `npm run i18n:check` sin faltantes.
 - **Pruebas:** `entry.spec.ts` (receiptLink), lista (enlace CB y aviso tenue), detalle (enlace, botón, origen no disponible); se ajustó la prueba existente que prohibía `.btn-primary` en el detalle. Resultado local: lint OK; Karma, 83 pruebas de `accounting` y `core/i18n` OK.
-- **Desviaciones:** (1) AC-06 (alineación de «Monto») **no se tocó**: la cabecera ya tiene `headerClass="text-end"`, el defecto no está confirmado y requiere revisión visual. (2) Medición previa del paso 1 del plan no realizada (no se levantó la app con backend). (3) `npm run build` no se ejecutó. (4) Para correr pruebas se creó una junction `node_modules` hacia el checkout principal (no versionada, sin dependencias nuevas).
+- **Desviaciones:** (1) AC-06 (alineación de «Monto») **no se tocó**: la cabecera ya tiene `headerClass="text-end"`, el defecto no está confirmado y requiere revisión visual. (2) Medición previa del paso 1 del plan no realizada (no se levantó la app con backend). (3) `npm run build` no se ejecutó en la implementación (el Quality Gate lo ejecutó y pasa). (4) Para correr pruebas se creó una junction `node_modules` hacia el checkout principal (no versionada, sin dependencias nuevas).
 - **Deuda:** no existe ruta por pago en `receivables`; el enlace lleva al detalle del cobro.
 
 ## Review
-_Pendiente_
+**PASS con reservas.** Suite completa 1413/1413, lint, i18n:check y build OK; `npm audit`: 2 moderate preexistentes (hono), ajenos al diff. Sin Critical/High. Revisión visual, contraste (AC-05) y AC-06 no verificados.
+- docs/reviews/REV-2026-11-15-refinar-ux-libro-entradas-enlaces-01.md (Low, IMPLEMENTATION)
+- docs/reviews/REV-2026-11-15-refinar-ux-libro-entradas-enlaces-02.md (Medium, PLAN)
+- docs/reviews/REV-2026-11-15-refinar-ux-libro-entradas-enlaces-03.md (Low, PLAN)
+- docs/reviews/REV-2026-11-15-refinar-ux-libro-entradas-enlaces-04.md (Low, IMPLEMENTATION)
+- docs/reviews/REV-2026-11-15-refinar-ux-libro-entradas-enlaces-05.md (Low, SPECIFICATION)
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana (no se mergea). Decisión pendiente: aceptar REV-02 (contraste sin medir) o exigir medición en navegador antes del merge.
