@@ -8,7 +8,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from .account import Account
-from .catalog import FLOW_CURRENCY, METHOD_CODES, ORIGIN_KINDS
+from .catalog import FLOW_CURRENCY, METHOD_CODES, METHOD_LABELS, ORIGIN_KINDS
 from .entry import Entry, EntryValidationError
 
 MISSING, EXISTING, PENDING, CONFLICT, DESTINATION_DIFFERENCE, INVALID = (
@@ -102,12 +102,13 @@ def parse_mapping(raw: object, accounts: dict[UUID, Account]) -> HistoricalMappi
         if method not in METHOD_CODES:
             errors.append(f'{method}: método desconocido (use {", ".join(METHOD_CODES)}).')
             continue
+        name = METHOD_LABELS[method]  # los mensajes nombran el método como lo ve la persona, no por su código
         if not isinstance(entries, list) or not entries:
-            errors.append(f'{method}: debe ser una lista con al menos una regla.')
+            errors.append(f'{name}: debe ser una lista con al menos una regla.')
             continue
         parsed: list[MappingRule] = []
         for index, item in enumerate(entries, 1):
-            label = f'{method}[{index}]'
+            label = f'{name}[{index}]'
             if not isinstance(item, dict):
                 errors.append(f'{label}: la regla debe ser un objeto.')
                 continue
@@ -131,7 +132,7 @@ def parse_mapping(raw: object, accounts: dict[UUID, Account]) -> HistoricalMappi
         ordered = sorted(parsed, key=lambda r: r.date_from or date.min)
         for before, after in zip(ordered, ordered[1:]):
             if (before.date_to or date.max) >= (after.date_from or date.min):
-                errors.append(f'{method}: las reglas se solapan en el tiempo.')
+                errors.append(f'{name}: las reglas se solapan en el tiempo.')
                 break
         rules[method] = ordered
     if errors:

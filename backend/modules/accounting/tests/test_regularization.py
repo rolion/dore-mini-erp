@@ -82,6 +82,12 @@ class MappingAndClassifyTests(SimpleTestCase):
             with self.assertRaises(RegularizationInputError, msg=raw):
                 parse_mapping(raw, self.accounts)
 
+    def test_input_errors_name_the_method_as_the_person_sees_it(self):  # AC-09
+        raw = {'CASH': [{'account_id': str(self.caja.id)}, {'account_id': str(self.banco.id), 'from': '2026-02-01'}]}
+        with self.assertRaises(RegularizationInputError) as ctx:
+            parse_mapping(raw, self.accounts)
+        self.assertEqual(ctx.exception.errors, ['Efectivo: las reglas se solapan en el tiempo.'])
+
     def test_classification(self):  # AC-01, AC-07
         mapping = parse_mapping({'CASH': [{'account_id': str(self.caja.id)}]}, self.accounts)
         p = sp()

@@ -18,6 +18,7 @@ describe('RegularizationConfirmDialogComponent', () => {
     expect(el.querySelector('[data-testid="summary"]')?.textContent).toContain('3');
     expect(el.querySelector('[data-testid="summary"]')?.textContent).toContain('Bs 175.00');
     expect(el.textContent).toContain('No modifica pagos');
+    expect(el.querySelector('.alert')?.classList).toContain('text-info-emphasis');
     (el.querySelector('[data-testid="confirm"]') as HTMLButtonElement).click();
     expect(activeModal.close).toHaveBeenCalledWith(true);
   });
