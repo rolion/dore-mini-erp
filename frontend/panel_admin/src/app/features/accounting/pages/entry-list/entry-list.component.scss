@@ -1,10 +1,7 @@
 @use '../../../../shared/styles/table-actions';
+@use '../../styles/entry-links';
 
-// Enlaces del libro: subrayado al pasar el cursor y al enfocar (no dependen solo del color).
-a.link-primary:hover,
-a.link-primary:focus-visible {
-  text-decoration: underline;
-}
+@include entry-links.entry-links;
 
 // El contenido de una columna a la derecha ocupa todo el ancho de la celda para alinearse con su cabecera.
 :host ::ng-deep datatable-body-cell.text-end .datatable-body-cell-label {

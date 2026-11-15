@@ -103,3 +103,6 @@ Por instrucción explícita de la persona («de momento omite la liga hacia el c
 - Quality Gate (subagente aislado) tras el recorte: **PASS con reservas**. Lint, i18n:check (1949/0) y build OK; `npm audit`: 2 moderate preexistentes (hono); sin restos del enlace al cobro; sin scope creep. Suite: 1410 pruebas, con la prueba ajena intermitente fallando 3 de 4 ejecuciones (REV-09).
 - Revisión visual en la app real contra API simulada: escritorio claro OK (contrastes 4,59 a 7,65:1, «Monto» alineado, `CB-…` como texto); detalle en móvil OK; **hallazgos:** REV-07 (High, preexistente: en móvil la lista no deja llegar al botón del detalle), REV-08 (Medium: enlaces 3,87:1 en tema oscuro), REV-09 (Low, prueba intermitente ajena).
 - Pendiente de decisión: REV-07 (fuera del alcance) y REV-08.
+
+### Corrección REV-08 (2026-11-15)
+Parcial de estilos `accounting/styles/_entry-links.scss` (subrayado hover/foco + color de enlace en tema oscuro, 7,21:1 medido). Lint OK, build OK, pruebas de `accounting` 61/61. REV-08 Resolved. Siguen abiertos REV-07 (móvil, fuera del alcance) y REV-09 (prueba ajena intermitente); REV-06 diferido.
