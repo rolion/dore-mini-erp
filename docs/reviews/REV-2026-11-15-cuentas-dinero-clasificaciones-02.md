@@ -1,6 +1,6 @@
 # REV-2026-11-15-cuentas-dinero-clasificaciones-02: EDGE-02 y edición de cuenta legada en UI sin prueba directa
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-15-cuentas-dinero-clasificaciones.md (v1)
@@ -19,3 +19,6 @@ Ramas implementadas pero sin test directo. Comportamiento observado en código c
 
 ## Evidence
 `grep IntegrityError backend/modules/accounting/tests/test_classifications.py` -> sin coincidencias. `account-dialog.component.spec.ts` solo usa `kind: 'BANK'` al editar (línea 82) y no hay caso `kind: null`.
+
+## Resolución
+Resuelto: `ConcurrentDuplicateTests` (EDGE-02, `IntegrityError` → error de validación) en `test_classifications.py` y spec de edición de cuenta legada con `kind: null` en `account-dialog.component.spec.ts`.

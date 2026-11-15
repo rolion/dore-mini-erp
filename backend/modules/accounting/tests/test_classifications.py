@@ -3,7 +3,9 @@ from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
-from django.db import transaction
+from unittest import mock
+
+from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient, APITestCase
 
@@ -131,6 +133,17 @@ class ClassificationApiTests(ApiBase):
         self.assertNotIn('direction', account)
         self.assertNotIn('kind', c)
         self.assertNotIn('method', c)
+
+
+class ConcurrentDuplicateTests(TestCase):
+    def test_unique_constraint_race_becomes_a_validation_error(self):  # EDGE-02
+        company = make_company('A')
+        repository = DjangoClassificationRepository(company.id)
+        with mock.patch.object(ClassificationModel.objects, 'update_or_create', side_effect=IntegrityError):
+            with self.assertRaises(AccountValidationError) as raised:
+                repository.save(Classification.create('Ventas', 'INCOME'))
+        self.assertIn('name', raised.exception.errors)
+        self.assertFalse(ClassificationModel.objects.exists())
 
 
 class FacadeTests(TestCase):

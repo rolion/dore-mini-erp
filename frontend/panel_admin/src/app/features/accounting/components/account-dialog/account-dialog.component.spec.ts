@@ -65,6 +65,19 @@ describe('AccountDialogComponent', () => {
     expect(fixture.componentInstance.isEdit).toBeTrue();
   });
 
+  it('asks a legacy account without kind to pick one before saving (AC-05)', () => {
+    const fixture = create();
+    const legacy: Account = { id: 'a1', name: 'Vieja', currency: 'BOB', kind: null, isActive: true };
+    fixture.componentInstance.edit(legacy);
+    fixture.componentInstance.onSubmit();
+    expect(fixture.componentInstance.form.controls.kind.invalid).toBeTrue();
+    expect(api.updateAccount).not.toHaveBeenCalled();
+    api.updateAccount.and.returnValue(of({ ...legacy, kind: 'CASH' }));
+    fixture.componentInstance.form.patchValue({ kind: 'CASH' });
+    fixture.componentInstance.onSubmit();
+    expect(api.updateAccount).toHaveBeenCalledWith('a1', { name: 'Vieja', currency: 'BOB', kind: 'CASH' });
+  });
+
   it('shows the server field error and keeps the dialog open', () => {
     const fixture = create();
     api.createAccount.and.returnValue(throwError(() => new AccountingApiError('Revisa', 400, { name: ['Ya existe una cuenta con ese nombre.'] })));

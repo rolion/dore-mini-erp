@@ -1,6 +1,6 @@
 # REV-2026-11-15-cuentas-dinero-clasificaciones-01: AC-04 sin el test de migración que el plan prometía
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-15-cuentas-dinero-clasificaciones.md (v1)
@@ -19,3 +19,6 @@ AC-04 se cubre solo por la regresión de la suite completa (1663 OK). La migraci
 
 ## Evidence
 `git diff origin/main...HEAD -- backend/modules/accounting/migrations/0004_account_kind_classification.py`: solo `migrations.AddField(... kind ... null=True)` y `migrations.CreateModel(ClassificationModel)`. `manage.py makemigrations --check --dry-run` -> "No changes detected". `manage.py test` -> "Ran 1663 tests in 242.104s OK".
+
+## Resolución
+Resuelto: se añadió `backend/modules/accounting/tests/test_migration_0004.py`, que crea cuenta y entrada con el esquema 0003, migra a 0004 y verifica que referencias y montos se conservan (y que revertir los conserva).
