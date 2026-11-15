@@ -1,6 +1,6 @@
 # TASK-cuentas-dinero-clasificaciones: Cuentas de dinero y clasificaciones de ingresos/egresos (CONT-01)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cuentas-dinero-clasificaciones
@@ -14,6 +14,7 @@
 | 2026-11-15 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (modelo nuevo + migración sobre `accounting_account`, contrato API, fachada entre módulos) | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY: las decisiones abiertas se resolvieron con criterio propio y quedan en el plan | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-15 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -83,7 +84,8 @@ Las cuentas reciben cobros según el mapeo método → cuenta; las entradas guar
 **Deuda técnica:** coexistencia de `ExpenseCategory` y clasificaciones EXPENSE; cuentas legadas «Sin tipo» hasta editarlas.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado). Backend `manage.py test`: 1663 OK; `makemigrations --check`: sin cambios; `check` OK; bandit sobre `accounting`: sin hallazgos. Frontend: lint OK, `i18n:check` 1968 claves 0 faltantes, `tsc` sin errores, `ng test` 1419/1420 (único fallo `screens-i18n.spec.ts`, ajeno al diff y reproducido también en `main` limpio), `npm run build` OK; `npm audit`: 2 moderadas transitivas ajenas al diff. Límites DDD, aislamiento por `company_id`, migración aditiva y alcance conformes al plan. **Revisión visual en navegador: no verificada** (solo revisión estática del checklist de diseño).
+Hallazgos abiertos (Low): `docs/reviews/REV-2026-11-15-cuentas-dinero-clasificaciones-01.md` (PLAN: AC-04 sin test de migración dedicado; cubierto por regresión) y `-02.md` (IMPLEMENTATION: sin prueba directa de EDGE-02 ni de edición de cuenta legada sin tipo).
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana (no se mergea desde el flujo). Señalar al revisor: cambio de **base de datos** (migración `0004` aditiva, rollback `migrate accounting 0003`) y de **contrato API** (el alta de cuentas exige `kind`), respaldados por `docs/adr/ADR-cuentas-dinero-clasificaciones-modelo-y-contrato.md`.
