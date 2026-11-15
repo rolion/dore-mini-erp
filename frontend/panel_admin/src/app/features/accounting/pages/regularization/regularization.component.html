@@ -120,6 +120,12 @@
             </div>
             }
 
+            <ul class="small text-muted list-unstyled mb-3" data-testid="scope">
+              @for (line of scopeLines; track $index) {
+              <li>{{ line }}</li>
+              }
+            </ul>
+
             @if (stale) {
             <div class="alert alert-warning" role="alert" data-testid="stale">{{ 'ACCOUNTING.REGULARIZATION.CAMBIO_FORMULARIO' | translate }}</div>
             }
@@ -184,7 +190,7 @@
                     <td>{{ statusLabel(detail.outcome || detail.status) }}</td>
                     <td>{{ originLabel(detail.origin) }}</td>
                     <td>{{ detail.documentRef || '—' }}</td>
-                    <td>{{ detail.paymentDate }}</td>
+                    <td>{{ detail.paymentDate | date: 'dd/MM/yyyy' }}</td>
                     <td>{{ methodLabel(detail.method) }}</td>
                     <td class="text-end">{{ money(detail.amount, detail.currency) }}</td>
                     <td>{{ reasonLabel(detail) }}</td>

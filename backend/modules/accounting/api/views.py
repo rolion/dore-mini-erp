@@ -231,7 +231,7 @@ class _RegularizationView(APIView):
                 raise Conflict(str(exc), 'regularization_in_progress', []) from exc
         else:
             report = use_case.plan(company_id, data['date_from'], data['date_to'], mapping)
-        return Response(build_summary(report, accounts, self.applies))
+        return Response(build_summary(report, accounts, self.applies, data['date_from'], data['date_to'], mapping))
 
 
 class RegularizationPreviewView(_RegularizationView):

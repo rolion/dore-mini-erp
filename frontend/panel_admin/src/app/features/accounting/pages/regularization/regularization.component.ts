@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -43,7 +44,7 @@ type RuleForm = FormGroup<{
 @Component({
   selector: 'app-regularization',
   templateUrl: './regularization.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, StatusBadgeComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, StatusBadgeComponent, DatePipe],
 })
 export class RegularizationComponent implements OnInit {
   readonly originLabel = originLabel;
@@ -214,6 +215,32 @@ export class RegularizationComponent implements OnInit {
         },
         error: (err: RegularizationError) => this.fail(err),
       });
+  }
+
+  /** Alcance de lo revisado (AC-08): periodo, reglas aplicadas y métodos que quedaron sin regla. */
+  get scopeLines(): string[] {
+    if (!this.summary) {
+      return [];
+    }
+    const day = (iso: string | null): string => (iso ? iso.split('-').reverse().join('/') : tr('ACCOUNTING.REGULARIZATION.SIN_LIMITE'));
+    const { dateFrom, dateTo } = this.summary.period;
+    const lines = [
+      dateFrom || dateTo
+        ? tr('ACCOUNTING.REGULARIZATION.PERIODO', { from: day(dateFrom), to: day(dateTo) })
+        : tr('ACCOUNTING.REGULARIZATION.SIN_PERIODO'),
+    ];
+    for (const coverage of this.summary.mappingCoverage) {
+      for (const rule of coverage.rules) {
+        const span = rule.from || rule.to ? ` (${day(rule.from)} – ${day(rule.to)})` : '';
+        lines.push(`${this.methodLabel(coverage.method)} → ${rule.account ?? '—'}${span}`);
+      }
+    }
+    if (this.summary.unmappedMethods.length) {
+      lines.push(tr('ACCOUNTING.REGULARIZATION.METODOS_SIN_REGLA', {
+        methods: this.summary.unmappedMethods.map((m) => this.methodLabel(m)).join(', '),
+      }));
+    }
+    return lines;
   }
 
   /** Titular del resultado de la previsualización: cuántos pagos se revisaron y qué pasará con cada grupo. */

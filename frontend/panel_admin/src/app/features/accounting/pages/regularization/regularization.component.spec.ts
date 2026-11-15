@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { of, throwError } from 'rxjs';
+import { NEVER, Observable, of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { AccountingApiError, PaymentMethod } from '../../models/accounting';
 import { RegularizationError, toSummary } from '../../models/regularization';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { RegularizationApiService } from '../../services/regularization-api.service';
@@ -16,9 +17,9 @@ describe('RegularizationComponent', () => {
     { id: 'a-9', name: 'Dólares', currency: 'USD', isActive: true },
   ];
 
-  function setup(modalResult: Promise<boolean> = Promise.resolve(true)) {
+  function setup(modalResult: Promise<boolean> = Promise.resolve(true), loadMethods: Observable<PaymentMethod[]> = of(methods)) {
     const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listMethods', 'listAccounts']);
-    api.listMethods.and.returnValue(of(methods));
+    api.listMethods.and.returnValue(loadMethods);
     api.listAccounts.and.returnValue(of(accounts));
     const regularization = jasmine.createSpyObj<RegularizationApiService>('RegularizationApiService', ['preview', 'apply']);
     regularization.preview.and.returnValue(of(toSummary(makeSummaryDto())));
@@ -81,6 +82,38 @@ describe('RegularizationComponent', () => {
     expect(el.querySelector('[data-testid="headline"]')?.closest('.alert')?.classList).toContain('text-info-emphasis');
     expect(el.querySelector('[data-testid="groups-note"]')?.textContent).toContain('no es una lista de ingresos');
     expect((el.querySelector('[data-testid="apply"]') as HTMLButtonElement).textContent).toContain('crear 3 entradas');
+  });
+
+  it('shows the loading state and then a load error without the form (AC-17, UI-05, REV-2026-11-15-03)', () => {
+    const loading = setup(undefined, NEVER);
+    expect(loading.el.querySelector('[data-testid="loading"]')).not.toBeNull();
+    expect(loading.el.querySelector('form')).toBeNull();
+    TestBed.resetTestingModule();
+    const failed = setup(undefined, throwError(() => new AccountingApiError('No se pudo cargar.', 500)));
+    expect(failed.el.querySelector('[data-testid="setup-error"]')?.textContent).toContain('No se pudo cargar.');
+    expect(failed.el.querySelector('[data-testid="loading"]')).toBeNull();
+  });
+
+  it('states the period, the rules applied and the methods without a rule (AC-08, REV-2026-11-15-01)', () => {
+    const { el, fixture, regularization } = setup();
+    click(el, 'preview');
+    fixture.detectChanges();
+    const scope = el.querySelector('[data-testid="scope"]')?.textContent ?? '';
+    expect(scope).toContain('01/03/2026 a 31/03/2026');
+    expect(scope).toContain('Efectivo → Caja');
+    expect(scope).toContain('Métodos sin regla (sus pagos quedan pendientes): QR, CARD');
+    regularization.preview.and.returnValue(of(toSummary(makeSummaryDto({ period: { date_from: null, date_to: null }, mapping_coverage: [], unmapped_methods: [] }))));
+    click(el, 'preview');
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="scope"]')?.textContent).toContain('sin filtro');
+  });
+
+  it('shows the payment date of the cases to review as dd/MM/yyyy (REV-2026-11-15-02)', () => {
+    const { el, fixture } = setup();
+    click(el, 'preview');
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="detail"]')?.textContent).toContain('10/03/2026');
+    expect(el.querySelector('[data-testid="detail"]')?.textContent).not.toContain('2026-03-10');
   });
 
   it('applies only after confirmation and shows the result with a link to the entries (AC-16)', async () => {

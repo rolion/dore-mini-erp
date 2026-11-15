@@ -69,6 +69,9 @@ class RegularizationApiTests(APITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         data = response.json()
         self.assertEqual((data['mode'], data['total_payments']), ('preview', 3))
+        self.assertEqual(data['period'], {'date_from': None, 'date_to': None})  # AC-08
+        self.assertEqual([c['method'] for c in data['mapping_coverage']], ['CASH', 'QR'])
+        self.assertEqual(data['unmapped_methods'], ['BANK_TRANSFER', 'CARD', 'OTHER'])
         missing = [g for g in data['groups'] if g['status'] == 'missing']
         self.assertEqual(sum(g['count'] for g in missing), 3)
         self.assertEqual({g['origin'] for g in missing}, {'PRODUCT', 'SERVICE'})

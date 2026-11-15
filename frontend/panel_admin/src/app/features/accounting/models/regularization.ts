@@ -52,9 +52,26 @@ export interface SummaryDetail {
   error: string;
 }
 
+export interface CoverageRule {
+  accountId: string;
+  account: string | null;
+  from: string | null;
+  to: string | null;
+}
+
+export interface MethodCoverage {
+  method: string;
+  rules: CoverageRule[];
+}
+
 export interface RegularizationSummary {
   mode: 'preview' | 'apply';
   totalPayments: number;
+  /** Periodo aplicado (fecha del pago); sin fechas = sin filtro. */
+  period: { dateFrom: string | null; dateTo: string | null };
+  /** Reglas que se aplicaron por método, y métodos que quedaron sin regla (sus pagos quedan pendientes). */
+  mappingCoverage: MethodCoverage[];
+  unmappedMethods: string[];
   groups: SummaryGroup[];
   absentFields: Record<string, number>;
   details: SummaryDetail[];
@@ -63,6 +80,9 @@ export interface RegularizationSummary {
 export interface SummaryDto {
   mode: 'preview' | 'apply';
   total_payments: number;
+  period: { date_from: string | null; date_to: string | null };
+  mapping_coverage: { method: string; rules: { account_id: string; account: string | null; from: string | null; to: string | null }[] }[];
+  unmapped_methods: string[];
   groups: { status: RegularizationStatus; origin: EntryOrigin; account_id: string | null; account: string | null; currency: string; count: number; amount: string }[];
   absent_fields: Record<string, number>;
   details: { status: string; outcome: string; origin: EntryOrigin; payment_id: string; document_ref: string; payment_date: string; method: string; amount: string; currency: string; reason: string; fields: string[]; error: string }[];
@@ -72,6 +92,12 @@ export function toSummary(dto: SummaryDto): RegularizationSummary {
   return {
     mode: dto.mode,
     totalPayments: dto.total_payments,
+    period: { dateFrom: dto.period.date_from, dateTo: dto.period.date_to },
+    mappingCoverage: dto.mapping_coverage.map((c) => ({
+      method: c.method,
+      rules: c.rules.map((r) => ({ accountId: r.account_id, account: r.account, from: r.from, to: r.to })),
+    })),
+    unmappedMethods: dto.unmapped_methods,
     groups: dto.groups.map((g) => ({ status: g.status, origin: g.origin, accountId: g.account_id, account: g.account, currency: g.currency, count: g.count, amount: g.amount })),
     absentFields: dto.absent_fields,
     details: dto.details.map((d) => ({ status: d.status, outcome: d.outcome, origin: d.origin, paymentId: d.payment_id, documentRef: d.document_ref, paymentDate: d.payment_date, method: d.method, amount: d.amount, currency: d.currency, reason: d.reason, fields: d.fields, error: d.error })),

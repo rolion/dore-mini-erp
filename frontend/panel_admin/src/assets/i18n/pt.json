@@ -2649,7 +2649,11 @@
         "INVALID": "Inválido, não é alterado",
         "FAILED": "Com erro"
       },
-      "APLICAR_SIN_CANTIDAD": "Aplicar regularização"
+      "APLICAR_SIN_CANTIDAD": "Aplicar regularização",
+      "PERIODO": "Período revisado (data do pagamento): {{from}} a {{to}}",
+      "SIN_PERIODO": "Período revisado: sem filtro (todos os pagamentos)",
+      "SIN_LIMITE": "sem limite",
+      "METODOS_SIN_REGLA": "Métodos sem regra (seus pagamentos ficam pendentes): {{methods}}"
     }
   }
 }

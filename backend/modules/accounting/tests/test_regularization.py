@@ -22,6 +22,7 @@ from modules.accounting.domain.regularization import (
 )
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository
+from modules.accounting.tests.test_entries_api import enable
 from modules.accounts.testing import make_company
 from modules.receivables.infrastructure.django.models import ObligationModel
 from modules.receivables.infrastructure.django.models import PaymentModel as ServicePayment
@@ -278,6 +279,36 @@ class RegularizeCommandTests(RegularizeBase, TestCase):
         text = self.run_command('--mapping', self.mapping_file())
         self.assertIn('PREVISUALIZACIÓN', text)
         self.assertIn('no saldo bancario', text)
+
+    def test_report_states_the_period_and_the_mapping_coverage(self):  # AC-08, REV-2026-11-15-01
+        self.order_payment(amount='20.00', day=date(2026, 3, 5))
+        mapping = self.mapping_file({'CASH': [{'account_id': str(self.caja.id), 'from': '2026-01-01', 'to': '2026-12-31'}]})
+        result = self.summary('--mapping', mapping, '--from', '2026-03-01', '--to', '2026-03-31')
+        self.assertEqual(result['period'], {'date_from': '2026-03-01', 'date_to': '2026-03-31'})
+        self.assertEqual(result['mapping_coverage'], [{'method': 'CASH', 'rules': [
+            {'account_id': str(self.caja.id), 'account': 'Caja', 'from': '2026-01-01', 'to': '2026-12-31'}]}])
+        self.assertEqual(result['unmapped_methods'], ['QR', 'BANK_TRANSFER', 'CARD', 'OTHER'])
+        text = self.run_command('--mapping', mapping, '--from', '2026-03-01', '--to', '2026-03-31')
+        self.assertIn('Periodo: 2026-03-01 a 2026-03-31', text)
+        self.assertIn('Regla: Efectivo → Caja (2026-01-01 a 2026-12-31)', text)
+        self.assertIn('Métodos sin regla (quedan pendientes): QR', text)
+        self.assertIn('Periodo: sin filtro', self.run_command())
+
+    def test_report_declares_when_accounting_is_disabled_but_still_works(self):  # EDGE-05, REV-2026-11-15-01
+        self.order_payment()
+        result = self.summary('--mapping', self.mapping_file())
+        self.assertFalse(result['accounting_enabled'])
+        self.assertIn('Contabilidad está deshabilitada', self.run_command('--mapping', self.mapping_file()))
+        enable(self.company, 'accounting')
+        self.assertTrue(self.summary('--mapping', self.mapping_file())['accounting_enabled'])
+        self.assertNotIn('deshabilitada', self.run_command('--mapping', self.mapping_file()))
+
+    def test_company_without_payments_reports_empty_and_exits_cleanly(self):  # EDGE-02, REV-2026-11-15-03
+        result = self.summary('--mapping', self.mapping_file())
+        self.assertEqual((result['total_payments'], result['groups'], result['details']), (0, [], []))
+        self.assertIn('Pagos revisados: 0', self.run_command('--mapping', self.mapping_file(), '--apply',
+                                                            '--executed-by', 'Ana'))
+        self.assertEqual(self.count(), 0)
 
     def test_usage_errors_write_nothing(self):  # AC-09
         self.order_payment()

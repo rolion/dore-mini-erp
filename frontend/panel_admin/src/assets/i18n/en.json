@@ -2649,7 +2649,11 @@
         "INVALID": "Invalid, untouched",
         "FAILED": "Failed"
       },
-      "APLICAR_SIN_CANTIDAD": "Apply regularization"
+      "APLICAR_SIN_CANTIDAD": "Apply regularization",
+      "PERIODO": "Period reviewed (payment date): {{from}} to {{to}}",
+      "SIN_PERIODO": "Period reviewed: no filter (all payments)",
+      "SIN_LIMITE": "no limit",
+      "METODOS_SIN_REGLA": "Methods without a rule (their payments stay pending): {{methods}}"
     }
   }
 }

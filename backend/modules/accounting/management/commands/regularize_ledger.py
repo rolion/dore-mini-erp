@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from modules.accounting.application.regularization_summary import build_summary
 from modules.accounting.application.regularize import RegularizationInProgress, RegularizeLedger
+from modules.accounting.domain.catalog import METHOD_LABELS
 from modules.accounting.domain.regularization import (
     FAILED,
     HistoricalMapping,
@@ -23,6 +24,7 @@ from modules.accounting.infrastructure.adapters import (
     SalesPaymentSource,
 )
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository
+from shared import module_gate
 
 EXIT_WITH_ERRORS = 2
 ORIGIN_LABELS = {'PRODUCT': 'Productos (pedidos)', 'SERVICE': 'Servicios (proformas)'}
@@ -42,9 +44,31 @@ def _date(value: str | None, flag: str) -> date | None:
         raise CommandError(f'{flag}: fecha no válida «{value}» (use AAAA-MM-DD).') from None
 
 
+def _period_line(period: dict) -> str:
+    start, end = period['date_from'], period['date_to']
+    if not start and not end:
+        return 'Periodo: sin filtro (todos los pagos)'
+    return f'Periodo: {start or "el inicio"} a {end or "hoy"} (fecha del pago)'
+
+
+def _coverage_lines(summary: dict) -> list[str]:
+    lines = []
+    for entry in summary['mapping_coverage']:
+        for rule in entry['rules']:
+            span = f' ({rule["from"] or "siempre"} a {rule["to"] or "siempre"})' if rule['from'] or rule['to'] else ''
+            lines.append(f'Regla: {METHOD_LABELS[entry["method"]]} → {rule["account"] or "—"}{span}')
+    if summary['unmapped_methods']:
+        lines.append('Métodos sin regla (quedan pendientes): ' + ', '.join(METHOD_LABELS[m] for m in summary['unmapped_methods']))
+    return lines
+
+
 def render(summary: dict) -> str:
     lines = [f'Regularización del libro — modo: {"APLICAR" if summary["mode"] == "apply" else "PREVISUALIZACIÓN (no se escribió nada)"}',
-             f'Pagos revisados: {summary["total_payments"]}', '']
+             f'Pagos revisados: {summary["total_payments"]}', _period_line(summary['period'])]
+    if not summary['accounting_enabled']:
+        lines.append('AVISO: Contabilidad está deshabilitada para esta empresa; la regularización se hace igual.')
+    lines += _coverage_lines(summary)
+    lines.append('')
     for status in ('missing', 'created', 'existing', 'pending', 'conflict', 'destination_difference', 'invalid', 'failed'):
         rows = [g for g in summary['groups'] if g['status'] == status]
         if not rows:
@@ -104,7 +128,8 @@ class Command(BaseCommand):
             raise CommandError(str(exc)) from exc
         except RegularizationInputError as exc:
             raise CommandError('; '.join(exc.errors)) from exc
-        summary = build_summary(report, accounts, apply)
+        summary = build_summary(report, accounts, apply, date_from, date_to, mapping,
+                                module_gate.is_enabled(company_id, 'accounting'))
         self.stdout.write(json.dumps(summary, ensure_ascii=False, indent=2) if options['json'] else render(summary))
         if any(item.outcome == FAILED for item in report.items):
             raise SystemExit(EXIT_WITH_ERRORS)
