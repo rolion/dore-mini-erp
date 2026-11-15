@@ -1,0 +1,66 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>{{ 'ACCOUNTING.EXPENSE_CONFIG.EGRESOS' | translate }}</strong></h2>
+      <small class="text-muted">{{ 'ACCOUNTING.EXPENSE_CONFIG.AYUDA' | translate }}</small>
+    </div>
+  </div>
+  @for (warning of warnings; track warning) {
+  <div class="alert alert-warning m-3" role="status">{{ warning }}</div>
+  }
+  @if (loading && !rows.length) {
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else if (rows.length <= 1 && !warnings.length) {
+  <p class="m-4">{{ 'ACCOUNTING.EXPENSE_CONFIG.SIN_CATEGORIAS' | translate }}</p>
+  } @else {
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.EXPENSE_CONFIG.EGRESOS' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'ACCOUNTING.EXPENSE_CONFIG.CATEGORIA' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.EXPENSE_CONFIG.CLASIFICACION_DE_EGRESO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.id ?? 'payments') {
+        <tr>
+          <td [attr.data-label]="'ACCOUNTING.EXPENSE_CONFIG.CATEGORIA' | translate"><strong>{{ row.label }}</strong></td>
+          <td [attr.data-label]="'ACCOUNTING.EXPENSE_CONFIG.CLASIFICACION_DE_EGRESO' | translate">
+            <select class="form-select form-control" [attr.aria-label]="row.label" [disabled]="row.saving"
+              (change)="onChange(row, $any($event.target).value)">
+              <option value="" [selected]="!row.classification">{{ 'ACCOUNTING.EXPENSE_CONFIG.SIN_CLASIFICACION' | translate }}</option>
+              @for (option of optionsFor(row); track option.id) {
+              <option [value]="option.id" [selected]="row.classification?.id === option.id">{{ option.name }}</option>
+              }
+            </select>
+            @if (row.error) {
+            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            }
+          </td>
+          <td [attr.data-label]="'COMMON.ESTADO' | translate">
+            @switch (status(row)) {
+            @case ('configured') {
+            <div class="badge-outline col-green">{{ 'ACCOUNTING.EXPENSE_CONFIG.CONFIGURADA' | translate }}</div>
+            }
+            @case ('inactive') {
+            <div class="badge-outline col-red">{{ 'ACCOUNTING.EXPENSE_CONFIG.INACTIVA' | translate }}</div>
+            }
+            @default {
+            <div class="badge-outline col-orange">{{ 'ACCOUNTING.EXPENSE_CONFIG.PENDIENTE' | translate }}</div>
+            }
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

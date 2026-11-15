@@ -1,10 +1,10 @@
 # TASK-categorias-gastos-clasificacion-egreso: Clasificación de egreso por categoría de Gastos y para pagos a proveedores (CONT-03)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** ENGINEERING (implementación escrita; pruebas de backend con BD pendientes de ejecutar)
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-categorias-gastos-clasificacion-egreso (base: `origin/accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/76
 **Fuente:** https://trello.com/c/x0qPnHlK/4-cont-03-configurar-clasificaci%C3%B3n-de-categor%C3%ADas-de-gastos-y-pagos-a-proveedores
 
 ## Historial de transiciones
@@ -74,7 +74,11 @@ Ver [ADR-categorias-gastos-clasificacion-egreso-propiedad-y-snapshot](../adr/ADR
 [PLAN-2026-11-15-categorias-gastos-clasificacion-egreso](../plans/PLAN-2026-11-15-categorias-gastos-clasificacion-egreso.md) (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+**Backend.** `accounting.services.describe_classifications` (AC-02, INV-01). `expenses`: `classification_id` en categoría y gasto (migración `0003`), puerto `ClassificationGateway` + adaptador `AccountingClassifications`, `SetCategoryClassification`, `resolve_classification` en `CreateExpense`/`UpdateExpense` (AC-01, AC-03, AC-06, INV-02/03), `PUT /api/expense-categories/<id>/classification/` y `classification` en categorías y gastos (API-01/02/04/05). `purchases`: tabla `purchases_settings` y `classification_id` en pagos (migración `0008`), `SetPaymentClassification`/`GetPaymentClassification`, `RegisterPayment` con instantánea y regla de cobertura, `GET/PUT /api/purchases/payment-classification/` (AC-02, AC-04, AC-07, INV-04, API-03). Fronteras: `ALLOWED_DEPENDENCIES`/`CONSUMERS` actualizados.
+**Frontend.** Pestaña «Egresos» (`expense-config-tab`, plantilla de configuración con listados en pestañas; reutiliza `AccountingApiService.listClassifications`, badges y `form-select`), servicio `ExpenseConfigApiService`, línea «Clasificación» en el detalle del gasto, claves i18n es/en/pt `ACCOUNTING.EXPENSE_CONFIG` (AC-08, UI-01, UI-02).
+**Pruebas.** Backend: `test_classification_application` (sin BD, pasan), `test_classification_api` (expenses) y `test_payment_classification_api` (purchases) escritas pero **no ejecutadas** (sin credenciales de PostgreSQL en este worktree); `test_boundaries` y las pruebas de dominio/aplicación de Gastos pasan. Frontend: 149 specs de `accounting` y `expenses` OK, `lint` e `i18n:check` OK.
+**Desviaciones.** UI-03 (enlace «Configurar en Contabilidad → Egresos» en formularios de gasto/pago): el mensaje de la API ya indica la ruta en texto; el enlace queda como mejora. La API de errores de registro devuelve `code` junto a `category_id`/`non_field_errors`.
+**Deuda técnica.** Ejecutar y ajustar las pruebas de API y las regresiones de backend (accounting, receivables, sales, expenses, purchases, reporting); `EXPENSE_KEYS`/`PAYMENT_FIELDS` ya incluyen `classification`.
 
 ## Review
 _Pendiente_

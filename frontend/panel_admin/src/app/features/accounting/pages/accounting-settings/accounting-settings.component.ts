@@ -3,21 +3,22 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AccountsTabComponent } from '../../components/accounts-tab/accounts-tab.component';
 import { ClassificationsTabComponent } from '../../components/classifications-tab/classifications-tab.component';
+import { ExpenseConfigTabComponent } from '../../components/expense-config-tab/expense-config-tab.component';
 import { CutoffTabComponent } from '../../components/cutoff-tab/cutoff-tab.component';
 import { MethodsTabComponent } from '../../components/methods-tab/methods-tab.component';
 
-export type SettingsTab = 'accounts' | 'methods' | 'classifications' | 'cutoff';
+export type SettingsTab = 'accounts' | 'methods' | 'classifications' | 'expenses' | 'cutoff';
 
 /** Contabilidad › Configuración › Cuentas y Métodos de pago: dos pestañas (cuentas destino y mapeo de métodos). */
 @Component({
   selector: 'app-accounting-settings',
   templateUrl: './accounting-settings.component.html',
-  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, ClassificationsTabComponent, CutoffTabComponent],
+  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, ClassificationsTabComponent, ExpenseConfigTabComponent, CutoffTabComponent],
 })
 export class AccountingSettingsComponent {
   tab: SettingsTab = 'accounts';
 
-  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'classifications', 'cutoff'];
+  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'classifications', 'expenses', 'cutoff'];
 
   select(tab: SettingsTab): void {
     this.tab = tab;

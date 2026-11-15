@@ -43,6 +43,8 @@ export interface Expense {
   notes: string;
   status: ExpenseStatus;
   voidedAt: string | null;
+  /** Clasificación de egreso aplicada al registrar; `null` en gastos anteriores a CONT-03. */
+  classification?: { id: string; name: string; active: boolean } | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,6 +72,7 @@ export interface ExpenseDto {
   notes?: string;
   status: ExpenseStatus;
   voided_at: string | null;
+  classification?: { id: string; name: string; active: boolean } | null;
   created_at: string;
   updated_at: string;
 }

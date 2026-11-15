@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { of } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { AccountingApiService } from '../../services/accounting-api.service';
+import { ExpenseConfigApiService } from '../../services/expense-config-api.service';
 import { AccountingSettingsComponent } from './accounting-settings.component';
 
 describe('AccountingSettingsComponent', () => {
@@ -36,6 +37,7 @@ describe('AccountingSettingsComponent', () => {
     TestBed.configureTestingModule({
       imports: [AccountingSettingsComponent],
       providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
+        { provide: ExpenseConfigApiService, useValue: jasmine.createSpyObj<ExpenseConfigApiService>('ExpenseConfigApiService', { listCategories: of([]), getPaymentClassification: of(null) }) },
         { provide: NgbModal, useValue: {} }, { provide: ToastrService, useValue: {} }],
     });
     const fixture = TestBed.createComponent(AccountingSettingsComponent);
@@ -50,6 +52,9 @@ describe('AccountingSettingsComponent', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('classifications');
     (fixture.nativeElement.querySelector('#tab-classifications') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('expenses');
+    (fixture.nativeElement.querySelector('#tab-expenses') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('cutoff');
     (fixture.nativeElement.querySelector('#tab-cutoff') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
