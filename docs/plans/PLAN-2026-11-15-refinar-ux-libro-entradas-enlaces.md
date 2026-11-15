@@ -44,3 +44,4 @@ Pruebas de componente (Karma, `provideTestTranslations()`) y unidad del modelo. 
 
 ## Changelog
 - **v2** (2026-11-15): [Specification] AC-01 (Comprobante `CB-…` enlaza al cobro) diferido y AC-02 reducido (sin «Ver cobro»; «Ver pedido» solo productos), por instrucción explícita de la persona («de momento omite la liga hacia el cobro»). Motivo: REV-06, el backend guarda el número de la proforma sin `kind`, por lo que el enlace no se genera con datos reales. Se retiró `receiptLink` y las claves `VER_COBRO`/`VER_COBRO_N`.
+- **v2 (adenda, sin cambio de Specification)** (2026-11-15): [Implementation Plan] REV-07 se corrige en este PR con `scrollbarH` en la tabla de la lista (desplazamiento horizontal en móvil), por indicación de la persona; la tabla apilada del DDR original queda como mejora futura.

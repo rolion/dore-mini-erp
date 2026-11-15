@@ -106,3 +106,6 @@ Por instrucción explícita de la persona («de momento omite la liga hacia el c
 
 ### Corrección REV-08 (2026-11-15)
 Parcial de estilos `accounting/styles/_entry-links.scss` (subrayado hover/foco + color de enlace en tema oscuro, 7,21:1 medido). Lint OK, build OK, pruebas de `accounting` 61/61. REV-08 Resolved. Siguen abiertos REV-07 (móvil, fuera del alcance) y REV-09 (prueba ajena intermitente); REV-06 diferido.
+
+### Corrección REV-07 (2026-11-15)
+`[scrollbarH]="true"` en `entry-list.component.html`: en móvil la tabla se desplaza y el botón del detalle es alcanzable (medido en navegador, API simulada, 375x812); escritorio sin cambios. Lint OK, build OK, suite completa 1410/1410 (dos ejecuciones). No es la tabla apilada del DDR original: queda como mejora futura. Quedan abiertos: REV-09 (prueba ajena intermitente); REV-06 diferido. No se repitió el Quality Gate tras las correcciones REV-07/08.
