@@ -109,3 +109,6 @@ Parcial de estilos `accounting/styles/_entry-links.scss` (subrayado hover/foco +
 
 ### Corrección REV-07 (2026-11-15)
 `[scrollbarH]="true"` en `entry-list.component.html`: en móvil la tabla se desplaza y el botón del detalle es alcanzable (medido en navegador, API simulada, 375x812); escritorio sin cambios. Lint OK, build OK, suite completa 1410/1410 (dos ejecuciones). No es la tabla apilada del DDR original: queda como mejora futura. Quedan abiertos: REV-09 (prueba ajena intermitente); REV-06 diferido. No se repitió el Quality Gate tras las correcciones REV-07/08.
+
+### Tercera pasada del Quality Gate (2026-11-15)
+**PASS** (subagente aislado, tras REV-07/08): suite 1410/1410 (la prueba intermitente no falló esta vez), lint, i18n:check (1949/0) y build OK; `npm audit` solo 2 moderate preexistentes (hono); sin restos del enlace al cobro, sin scope creep, sin secretos. Hallazgos Low: REV-10 (`text-muted` restantes en estados de carga/vacío, Open); formato multilínea de Comprobante (residuo sin efecto, se acepta); tema oscuro emulado a mano y tabla con desplazamiento en vez de apilada (ya declarados en REV-07/08). Abiertos: REV-09 y REV-10; REV-06 diferido. A la espera de aprobación humana.
