@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cuentas-dinero-clasificaciones
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/74
 **Fuente:** https://trello.com/c/ZmEEzqym/1-cont-01-definir-y-adaptar-cuentas-de-dinero-y-clasificaciones-de-ingresos-egresos
 
 ## Historial de transiciones
