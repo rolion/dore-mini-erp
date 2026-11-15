@@ -98,3 +98,8 @@ App real (`npm start`) contra un servidor API simulado local con datos de prueba
 
 ### Alcance reducido (2026-11-15)
 Por instrucción explícita de la persona («de momento omite la liga hacia el cobro») se retiró el enlace de Comprobante y el botón «Ver cobro» (PLAN v2; REV-06 queda *Deferred*). Se conservan: botón «Ver pedido» (productos), `aria-label` en Documento, aviso tenue, textos secundarios, alineación de «Monto» y subrayado en hover/foco. Lint OK, i18n:check OK, suite completa 1410/1410 (la prueba intermitente de `core/i18n` falló en una ejecución y pasó en la siguiente). Revisión visual posterior a este recorte: no repetida.
+
+### Segunda pasada del Quality Gate y revisión visual (2026-11-15)
+- Quality Gate (subagente aislado) tras el recorte: **PASS con reservas**. Lint, i18n:check (1949/0) y build OK; `npm audit`: 2 moderate preexistentes (hono); sin restos del enlace al cobro; sin scope creep. Suite: 1410 pruebas, con la prueba ajena intermitente fallando 3 de 4 ejecuciones (REV-09).
+- Revisión visual en la app real contra API simulada: escritorio claro OK (contrastes 4,59 a 7,65:1, «Monto» alineado, `CB-…` como texto); detalle en móvil OK; **hallazgos:** REV-07 (High, preexistente: en móvil la lista no deja llegar al botón del detalle), REV-08 (Medium: enlaces 3,87:1 en tema oscuro), REV-09 (Low, prueba intermitente ajena).
+- Pendiente de decisión: REV-07 (fuera del alcance) y REV-08.
