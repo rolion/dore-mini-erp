@@ -39,6 +39,20 @@ Ejecutada el 2026-11-15 en el navegador integrado (backend y `ng serve` locales,
 | Regularización (4 pagos históricos sin entrada) | OK: sin reglas, 4 «requieren revisión»; con regla Efectivo→Caja, «3 se crearían, 5 ya están registrados, 1 sin regla»; diálogo de confirmación; aplicar creó 3 (libro Bs 660.00); repetir creó 0 y totales iguales |
 | Odontología con Ventas deshabilitado | OK: cobro dental 100 (efectivo) y 80 (QR) → 201; `/api/orders/` responde 403; el menú no muestra Ventas, Gastos ni Reportes; libro con 2 entradas Servicios (Bs 180.00) |
 
-**Hallazgo de la preparación (no del producto):** al sembrar la empresa de prueba con `enabled_keys()` se habilitan todos los módulos por defecto; hubo que borrar los módulos sobrantes para probar Ventas deshabilitado.
+**Segunda pasada (2026-11-15, mismos datos de prueba):**
 
-**No verificado:** filtros del libro en la pantalla (cubiertos por pruebas de backend), cambio de mapeo desde la pantalla de cuentas, tema oscuro y móvil, reporte ventas − gastos en pantalla, módulo accounting deshabilitado en pantalla, usuario no admin.
+| Paso | Resultado |
+|---|---|
+| Filtros del libro en pantalla (empresa de productos, 8 entradas) | OK: Origen=Servicios → Bs 300.00 · 3; Método=QR → Bs 200.00 · 1; Cuenta=Caja → Bs 460.00 · 7; fechas 10/03/2026–10/03/2026 → Bs 60.00 · 3 (totales y filas coinciden; la URL refleja el filtro) |
+| Cambiar el mapeo de Efectivo a Banco en «Cuentas y Métodos de pago» | OK: la API devuelve Efectivo → Banco |
+| Pedido creado y cobrado con los formularios reales de Ventas (150 efectivo, doble clic en «Registrar») | OK: 1 pago, 1 entrada nueva en **Banco**; las anteriores siguen en Caja |
+| Proforma cobrada con el formulario real de Cobros (250 distribuido en 2 tratamientos, doble clic en «Confirmar cobro») | OK: 1 pago, 2 imputaciones, 1 entrada de Bs 250 en Banco, saldo 0 |
+| Libro tras ambos cobros | Bs 1060.00 · 10 entradas (Productos 510 · Servicios 550) |
+| Reporte ventas − gastos en pantalla | OK: «Total de ventas Bs 450.00» (suma de los pedidos no cancelados, 2 pedidos), gastos Bs 0.00, texto «No equivale a lo cobrado»; no depende de las entradas del libro (1060) |
+| `accounting` deshabilitado | OK: cobro de un pedido → 201 y pagado; el libro responde 403; reactivado el módulo, siguen 10 entradas (no se creó ninguna) |
+| Usuario no admin (miembro) | OK: `entries`, `regularization/preview` y `apply` → 403; la pantalla lo lleva a «Módulo no habilitado» y el menú solo muestra Catálogo y Configuración |
+| Móvil (375 px) | OK con reserva: totales, filtros y tabla legibles; la tabla se desplaza en horizontal (las columnas de monto y autor quedan fuera de la vista) |
+
+**Observaciones:** (1) el usuario no admin ve «Módulo no habilitado» en vez de un aviso de falta de permiso; la API es la barrera real (403). (2) Hallazgo de la preparación (no del producto): al sembrar la empresa de prueba con `enabled_keys()` se habilitan todos los módulos por defecto; hubo que borrar los sobrantes para probar Ventas deshabilitado.
+
+**No verificado:** tema oscuro (el conmutador propio de la plantilla no se ejercitó; forzar la clase del `body` no cambió el aspecto), paginación en pantalla con más de 20 entradas (solo hay 10; cubierta por pruebas de backend), cobros con Ventas deshabilitado por los formularios (se hizo por API).

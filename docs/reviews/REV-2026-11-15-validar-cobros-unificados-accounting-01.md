@@ -1,6 +1,6 @@
 # REV-2026-11-15-validar-cobros-unificados-accounting-01: AC-10 sin corrida en navegador
 
-**Status:** Resolved (parcial)
+**Status:** Resolved
 **Severity:** Medium
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-15-validar-cobros-unificados-accounting.md (v1)
@@ -19,3 +19,5 @@ Informe del Quality Gate (2026-11-15): «AC-10 no cumplido en navegador»; backe
 
 ## Resolución
 Guía ejecutada en el navegador el 2026-11-15 (resultados en `docs/tests/MANUAL-validar-cobros-unificados-accounting.md`): libro, regularización y perfil odontológico con Ventas deshabilitado OK. Los cobros se crearon por API, no por los formularios; quedan sin verificar en pantalla los puntos listados en la guía.
+
+Segunda pasada el mismo día: filtros, cambio de mapeo, cobros con formularios reales, reporte, accounting deshabilitado, usuario no admin y móvil verificados; solo quedan el tema oscuro y la paginación con más de 20 entradas (declarados en la guía).
