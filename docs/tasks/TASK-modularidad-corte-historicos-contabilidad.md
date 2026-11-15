@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-modularidad-corte-historicos-contabilidad (creada sobre `task/TASK-cuentas-dinero-clasificaciones`, a pedido del usuario)
-**Pull Request:** _se registra al abrirlo_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/75 (base: task/TASK-cuentas-dinero-clasificaciones)
 **Fuente:** https://trello.com/c/Bkogz7vS/2-cont-06-definir-e-implementar-modularidad-fecha-de-corte-y-tratamiento-de-hist%C3%B3ricos
 
 ## Historial de transiciones
