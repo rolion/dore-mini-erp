@@ -77,7 +77,7 @@ No aplica según veredicto.
 **Veredicto: PASS** (2026-11-15, subagente aislado; sin Critical/High).
 - Backend: 5 módulos afectados 595 OK; suite completa `Ran 1648 tests ... OK`; `makemigrations --check` sin cambios; bandit: 3 Medium en `accounting` sin investigar (código no modificado por el diff). Sin secretos; diff = 5 archivos dentro del plan.
 - No verificado: Karma/frontend (no cambió) y corrida en navegador.
-- Hallazgos: [REV-01](../reviews/REV-2026-11-15-validar-cobros-unificados-accounting-01.md) **Medium** abierto (AC-10 sin corrida en navegador; aceptado, queda para quien apruebe). Resueltos tras el gate: F2 Low (la prueba de mapeo ya no depende del orden por reloj; 3 tests OK) y F3 Low (el runbook documenta el JSON de `--mapping` y que `--apply` exige `--executed-by`). F4 Low (código 409 del runbook) no contrastado contra la vista; respaldado por pruebas existentes.
+- Hallazgos: [REV-01](../reviews/REV-2026-11-15-validar-cobros-unificados-accounting-01.md) **Medium** resuelto parcialmente tras el gate (AC-10: guía ejecutada en navegador con cobros por API; ver resultados en la guía). Resueltos tras el gate: F2 Low (la prueba de mapeo ya no depende del orden por reloj; 3 tests OK) y F3 Low (el runbook documenta el JSON de `--mapping` y que `--apply` exige `--executed-by`). F4 Low (código 409 del runbook) no contrastado contra la vista; respaldado por pruebas existentes.
 
 ## Publicación
-PR #72 listo para aprobación humana; no se mergea. Sin cambios sensibles (solo pruebas y documentación). Pendiente: ejecutar la guía manual en navegador (REV-01).
+PR #72 listo para aprobación humana; no se mergea. Sin cambios sensibles (solo pruebas y documentación). La guía manual se ejecutó en navegador (2026-11-15) con cobros creados por API; quedan sin verificar en pantalla los puntos que lista la guía. Verificación propia posterior al gate, no repetida por un revisor aislado.

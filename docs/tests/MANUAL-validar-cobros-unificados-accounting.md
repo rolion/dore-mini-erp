@@ -27,4 +27,18 @@ Entorno de desarrollo con datos de prueba; **nunca** producción. Idioma es, usu
 - [ ] Con `accounting` deshabilitado: cobrar un pedido y una proforma funciona como antes, sin entradas.
 
 ## Resultado de la corrida
-_Sin ejecutar en navegador durante la construcción (el worktree no tenía dependencias del frontend ni datos de desarrollo). Cubierto por pruebas de integración de backend; la ejecución visual queda a cargo de quien apruebe o del Quality Gate._
+Ejecutada el 2026-11-15 en el navegador integrado (backend y `ng serve` locales, BD de desarrollo, empresas de prueba «ACC005 Productos» y «ACC005 Odontologia», usuarios de prueba, 800×600, tema claro).
+
+**Cómo se hizo:** los cobros y las proformas se crearon por la API autenticada desde la consola del navegador (no con los formularios de Ventas y Cobros); las pantallas de Contabilidad se recorrieron con clics reales.
+
+| Paso | Resultado |
+|---|---|
+| A. Pedido Bs 300 cobrado 100 (efectivo) + 200 (QR); reintento del cobro de 200 | OK: pedido pagado, un solo pago por clave, 2 entradas Productos (Caja 100, Banco 200) |
+| B. Proforma Bs 300 cobrada 100+50+150; reintento del último | OK: `paid`, 3 entradas Servicios, reintento 200 sin entrada nueva |
+| Libro | OK: «Bs 600.00 · 5 entradas · Productos Bs 300.00 · Servicios Bs 300.00»; texto «Cobros recibidos. No es saldo de cuenta, utilidad ni devengamiento.»; la nota del pedido no aparece |
+| Regularización (4 pagos históricos sin entrada) | OK: sin reglas, 4 «requieren revisión»; con regla Efectivo→Caja, «3 se crearían, 5 ya están registrados, 1 sin regla»; diálogo de confirmación; aplicar creó 3 (libro Bs 660.00); repetir creó 0 y totales iguales |
+| Odontología con Ventas deshabilitado | OK: cobro dental 100 (efectivo) y 80 (QR) → 201; `/api/orders/` responde 403; el menú no muestra Ventas, Gastos ni Reportes; libro con 2 entradas Servicios (Bs 180.00) |
+
+**Hallazgo de la preparación (no del producto):** al sembrar la empresa de prueba con `enabled_keys()` se habilitan todos los módulos por defecto; hubo que borrar los módulos sobrantes para probar Ventas deshabilitado.
+
+**No verificado:** filtros del libro en la pantalla (cubiertos por pruebas de backend), cambio de mapeo desde la pantalla de cuentas, tema oscuro y móvil, reporte ventas − gastos en pantalla, módulo accounting deshabilitado en pantalla, usuario no admin.
