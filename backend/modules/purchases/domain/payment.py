@@ -18,6 +18,8 @@ class Payment:
     user_id: UUID | None
     user_name: str
     status: PaymentRecordStatus = PaymentRecordStatus.CONFIRMED
+    # Instantánea de la clasificación de «pagos a proveedores» al registrar; nula en pagos anteriores.
+    classification_id: UUID | None = None
     created_at: datetime | None = None
 
     @property

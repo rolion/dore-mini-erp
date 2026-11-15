@@ -21,15 +21,15 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'costing': {'inventory'},
     'customers': set(),
     'dentistry': {'customers', 'service_catalog'},
-    'expenses': set(),
-    'purchases': {'catalog', 'inventory'},
+    'expenses': {'accounting'},
+    'purchases': {'accounting', 'catalog', 'inventory'},
     'sales': {'accounting', 'catalog', 'customers', 'inventory', 'modularity'},
     'reporting': {'sales', 'expenses', 'customers'},
 }
 # Módulos no-negocio que un módulo de negocio puede leer (solo por su fachada `services`): la configuración.
 NON_BUSINESS_ALLOWED = {'modularity'}
 # Módulos que consumen a otros: solo desde sus adaptadores de infraestructura.
-CONSUMERS = ('accounting', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables')
+CONSUMERS = ('accounting', 'expenses', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables')
 
 
 def source_files(base: Path):

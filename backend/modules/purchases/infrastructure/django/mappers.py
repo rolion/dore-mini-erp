@@ -97,4 +97,4 @@ def payment_to_entity(model: PaymentModel) -> Payment:
         id=model.id, purchase_id=model.purchase_id, amount=model.amount,
         payment_method=PaymentMethod(model.payment_method), payment_date=model.payment_date,
         user_id=model.user_id, user_name=model.user_name, status=PaymentRecordStatus(model.status),
-        created_at=model.created_at)
+        classification_id=model.classification_id, created_at=model.created_at)

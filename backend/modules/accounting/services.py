@@ -26,9 +26,9 @@ from modules.accounting.infrastructure.django.repositories import (
 )
 from shared import module_gate
 
-__all__ = ['AccountRef', 'AccountValidationError', 'ClassificationRef', 'CoverageRef', 'EntryConflict',
+__all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef', 'EntryConflict',
            'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError', 'RecordedEntry', 'missing_method_labels', 'record_entry',
-           'coverage_status', 'resolve_account', 'validate_classification', 'validate_money_account']
+           'coverage_status', 'describe_classifications', 'resolve_account', 'validate_classification', 'validate_money_account']
 
 
 @dataclass(frozen=True)
@@ -80,6 +80,24 @@ def validate_classification(company_id: UUID, classification_id: UUID, direction
         raise AccountValidationError({'classification_id': ['La clasificación no existe en esta empresa.']})
     classification.ensure_usable(direction)
     return ClassificationRef(classification.id, classification.name, classification.direction)
+
+
+@dataclass(frozen=True)
+class ClassificationInfo:
+    """Clasificación tal como está hoy (nombre, dirección y estado), para mostrar o revalidar una asociación."""
+    classification_id: UUID
+    name: str
+    direction: str
+    is_active: bool
+
+
+def describe_classifications(company_id: UUID, classification_ids) -> dict[UUID, ClassificationInfo]:
+    """Clasificaciones de la empresa entre los ids pedidos; los ajenos o inexistentes no aparecen."""
+    wanted = set(classification_ids)
+    if not wanted:
+        return {}
+    return {c.id: ClassificationInfo(c.id, c.name, c.direction, c.is_active)
+            for c in DjangoClassificationRepository(company_id).list() if c.id in wanted}
 
 
 @dataclass(frozen=True)
