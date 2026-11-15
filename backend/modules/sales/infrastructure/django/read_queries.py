@@ -9,7 +9,7 @@ from django.db.models import Count, Exists, F, OuterRef, QuerySet, Sum
 
 from modules.sales.domain.enums import OrderStatus
 
-from .models import OrderItemModel, OrderModel
+from .models import OrderItemModel, OrderModel, PaymentModel
 
 OPEN_STATUSES = (OrderStatus.NEW.value, OrderStatus.IN_PREPARATION.value, OrderStatus.READY.value)
 
@@ -83,3 +83,13 @@ def pending_collection(company_id: UUID) -> QuerySet:
 
 def collection_balance(queryset: QuerySet):
     return queryset.aggregate(balance=Sum(F('total') - F('paid_total')))['balance']
+
+
+def payments_between(company_id: UUID, date_from: date | None, date_to: date | None) -> QuerySet:
+    """Todos los pagos de la empresa por fecha efectiva, incluidos los de pedidos cancelados (dinero ya recibido)."""
+    rows = PaymentModel.objects.filter(order__company_id=company_id).select_related('order')
+    if date_from:
+        rows = rows.filter(payment_date__gte=date_from)
+    if date_to:
+        rows = rows.filter(payment_date__lte=date_to)
+    return rows.order_by('payment_date', 'created_at', 'id')

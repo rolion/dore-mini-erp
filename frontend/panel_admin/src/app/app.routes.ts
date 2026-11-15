@@ -112,6 +112,12 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/accounting/pages/entry-list/entry-list.component').then(m => m.EntryListComponent),
             },
             {
+                path: 'accounting/regularization',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/regularization/regularization.component').then(m => m.RegularizationComponent),
+            },
+            {
                 path: 'accounting/entries/:id',
                 canActivate: [moduleGuard],
                 data: { module: 'accounting' },

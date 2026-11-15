@@ -122,3 +122,25 @@ def get_pending_collection(company_id: UUID, limit: int = DEFAULT_LIMIT) -> Pend
     queryset = read_queries.pending_collection(company_id)
     return PendingOrders(count=queryset.count(), balance_total=read_queries.collection_balance(queryset) or ZERO,
                          rows=_pending_rows(queryset, limit))
+
+
+@dataclass(frozen=True)
+class HistoricalPayment:
+    """Pago de un pedido tal como está guardado. Ventas no guarda autor ni comprobante del cobro."""
+    id: UUID
+    amount: Decimal
+    method: str
+    payment_date: date
+    document_ref: str  # ID del pedido
+    reference: str
+    document_state: str  # estado del pedido (p. ej. CANCELLED: el pago conservado sigue siendo dinero recibido)
+
+
+def list_historical_payments(company_id: UUID, date_from: date | None = None,
+                             date_to: date | None = None) -> tuple[HistoricalPayment, ...]:
+    """Pagos de la empresa por fecha efectiva (inclusive), también los de pedidos cancelados. Solo lectura."""
+    return tuple(
+        HistoricalPayment(id=p.id, amount=p.amount, method=p.payment_method, payment_date=p.payment_date,
+                          document_ref=str(p.order_id), reference=p.reference, document_state=p.order.status)
+        for p in read_queries.payments_between(company_id, date_from, date_to)
+    )

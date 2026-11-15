@@ -58,7 +58,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(visibleRoutes(routes, new Set(['customers', 'accounting']), false).some((route) => route.adminOnly)).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers', 'accounting']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeTrue();
-    expect(accounting.submenu.map((item) => item.path)).toEqual(['/pocketbiz/accounting/settings', '/pocketbiz/accounting/entries']);
+    expect(accounting.submenu.map((item) => item.path)).toEqual(['/pocketbiz/accounting/settings', '/pocketbiz/accounting/entries', '/pocketbiz/accounting/regularization']);
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
@@ -96,7 +96,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(40);
+    expect(titles.length).toBe(41);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

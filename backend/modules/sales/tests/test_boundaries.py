@@ -10,7 +10,7 @@ NON_BUSINESS = {'accounts', 'modularity'}
 
 # Dependencias permitidas entre módulos de negocio, siempre y solo a través de `modules.<otro>.services`.
 ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
-    'accounting': set(),
+    'accounting': {'receivables', 'sales'},
     'agenda': {'personnel', 'customers', 'service_catalog'},
     'personnel': set(),
     'catalog': set(),
@@ -29,7 +29,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
 # Módulos no-negocio que un módulo de negocio puede leer (solo por su fachada `services`): la configuración.
 NON_BUSINESS_ALLOWED = {'modularity'}
 # Módulos que consumen a otros: solo desde sus adaptadores de infraestructura.
-CONSUMERS = ('sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables')
+CONSUMERS = ('accounting', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables')
 
 
 def source_files(base: Path):

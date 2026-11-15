@@ -9,6 +9,8 @@ from .views import (
     EntryListView,
     MethodDetailView,
     MethodListView,
+    RegularizationApplyView,
+    RegularizationPreviewView,
 )
 
 urlpatterns = [
@@ -19,6 +21,8 @@ urlpatterns = [
          name='accounting-account-deactivate'),
     path('entries/', EntryListView.as_view(), name='accounting-entry-list'),
     path('entries/<uuid:entry_id>/', EntryDetailView.as_view(), name='accounting-entry-detail'),
+    path('regularization/preview/', RegularizationPreviewView.as_view(), name='accounting-regularization-preview'),
+    path('regularization/apply/', RegularizationApplyView.as_view(), name='accounting-regularization-apply'),
     path('payment-methods/', MethodListView.as_view(), name='accounting-method-list'),
     path('payment-methods/<str:code>/', MethodDetailView.as_view(), name='accounting-method-detail'),
 ]

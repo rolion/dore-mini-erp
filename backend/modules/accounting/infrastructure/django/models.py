@@ -59,6 +59,9 @@ class EntryModel(models.Model):
     recorded_by = models.BigIntegerField(null=True, blank=True)
     recorded_by_name = models.CharField(max_length=150, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
+    # Regularización de pagos históricos (PB-ACC-004): fecha y ejecutor aparte del autor del cobro original.
+    regularized_at = models.DateTimeField(null=True, blank=True)
+    regularized_by_name = models.CharField(max_length=150, blank=True, default='')
 
     class Meta:
         db_table = 'accounting_entry'
