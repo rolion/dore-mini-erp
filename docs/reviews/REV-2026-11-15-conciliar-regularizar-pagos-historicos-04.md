@@ -1,6 +1,6 @@
 # REV-2026-11-15-conciliar-regularizar-pagos-historicos-04: DDR y design-system no reflejan el alcance del resumen, la columna «Qué pasa» ni la alerta tenue
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-14-conciliar-regularizar-pagos-historicos.md (v2)
@@ -23,3 +23,6 @@ Tras los ajustes de UX y la corrección de REV-2026-11-15-01, la pantalla tiene:
 - `grep -rln "bg-info-subtle" frontend/panel_admin/src/app` → los tres archivos anteriores.
 - `docs/design/DDR-conciliar-regularizar-pagos-historicos-pantalla-regularizacion.md`: líneas «Estado: Propuesto» y paso 2 «Resumen» sin mención de titular/«Qué pasa»/alcance.
 - Impacto: documental; no afecta al comportamiento ni a los datos.
+
+## Resolución
+`design-system.md` (variante «de operación con previsualización obligatoria») describe ahora el titular, la lista de alcance, la columna «Qué pasa» y la fecha `dd/MM/yyyy`, y tiene una entrada propia para la **alerta tenue** como patrón admitido (con la deuda de migrar las demás pantallas). El DDR incorpora el paso «Resumen» final, la sección «Revisión del resumen (2026-11-15)» y la deuda visual aceptada. El estado del DDR sigue «Propuesto» hasta que se apruebe el PR.
