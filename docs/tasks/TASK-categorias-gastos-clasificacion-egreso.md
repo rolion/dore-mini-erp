@@ -1,6 +1,6 @@
 # TASK-categorias-gastos-clasificacion-egreso: Clasificación de egreso por categoría de Gastos y para pagos a proveedores (CONT-03)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-categorias-gastos-clasificacion-egreso (base: `origin/accounting`)
@@ -14,6 +14,7 @@
 | 2026-11-15 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
+| 2026-11-15 | REVIEW → ENGINEERING | Quality Gate FAIL: build no ejecutado, 1 prueba Karma preexistente en rojo, REV-01..04 abiertos | delivery-publish |
 
 ## Investigación
 
@@ -82,7 +83,15 @@ Ver [ADR-categorias-gastos-clasificacion-egreso-propiedad-y-snapshot](../adr/ADR
 **Deuda técnica.** Enlace de ayuda UI-03 (ver desviaciones).
 
 ## Review
-_Pendiente_
+**Veredicto: FAIL (sin hallazgos Critical/High en la implementación).**
+- Backend (BD real): `manage.py test` completo **1718 OK**; `makemigrations --check` sin cambios; `bandit` sin hallazgos. `ruff`/`flake8`/`mypy` no disponibles (no ejecutados).
+- Frontend: `lint` y `i18n:check` OK; Karma completo **1438 OK / 1 fallo** (`screens-i18n.spec.ts:60`, «Expected 'Delivered' to be 'Entregado'»), que también falla en un checkout limpio de `origin/accounting` (preexistente, depende del idioma del navegador headless); `npm audit --omit=dev`: 0 vulnerabilidades.
+- **`npm run build`: no realizado.** El revisor dañó `node_modules` de la copia principal al borrar un worktree temporal con una junction hacia ella; hay que reinstalar (`npm ci`) y volver a correrlo.
+- Fronteras DDD, aislamiento por empresa, idempotencia de pagos y N+1: conformes. Inspección visual en navegador: **no verificada**.
+- Hallazgos: [REV-01](../reviews/REV-2026-11-15-categorias-gastos-clasificacion-egreso-01.md) (Medium, PLAN: UI-03 sin implementar), [REV-02](../reviews/REV-2026-11-15-categorias-gastos-clasificacion-egreso-02.md) (Low: truncado a 100 categorías), [REV-03](../reviews/REV-2026-11-15-categorias-gastos-clasificacion-egreso-03.md) (Low: claves i18n de Clientes), [REV-04](../reviews/REV-2026-11-15-categorias-gastos-clasificacion-egreso-04.md) (Low: pruebas faltantes). Menores sin REV: nombre vacío del DTO si la clasificación no existe y orden de campos en `CategorySerializer` (cosméticos).
+- Pendiente de decisión humana: autorizar o no el fallo preexistente de Karma, reinstalar dependencias, y aceptar UI-03 como deuda (cambio de Specification) o implementarlo.
+
+
 
 ## Publicación
 _Pendiente_
