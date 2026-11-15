@@ -8,6 +8,11 @@ export function registerTranslator(service: TranslateService): void {
   translator = service;
 }
 
+/** Solo pruebas: olvida el traductor registrado para que una prueba no herede el idioma de la anterior. */
+export function unregisterTranslator(): void {
+  translator = null;
+}
+
 /** Solo pruebas: catálogo usado por `tr` cuando no hay `TranslateService` registrado. */
 export function registerFallbackCatalog(catalog: Record<string, unknown>): void {
   fallbackCatalog = catalog;

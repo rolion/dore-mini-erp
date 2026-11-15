@@ -73,7 +73,7 @@ export class ExpenseConfigTabComponent implements OnInit {
   /** Opciones del selector: las activas de egreso y, si la asociada ya no lo es, esa para no perder el valor mostrado. */
   optionsFor(row: ConfigRow): { id: string; name: string }[] {
     const current = row.classification;
-    const extra = current && !this.options.some((o) => o.id === current.id) ? [{ id: current.id, name: current.name }] : [];
+    const extra = current && !this.options.some((o) => o.id === current.id) ? [{ id: current.id, name: current.name || tr('ACCOUNTING.EXPENSE_CONFIG.CLASIFICACION_NO_DISPONIBLE') }] : [];
     return [...this.options.map((o) => ({ id: o.id, name: o.name })), ...extra];
   }
 

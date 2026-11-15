@@ -63,7 +63,7 @@ class RegisterPayment:
             return existing, False
         payment = purchase.register_payment(payment_id, amount, payment_method, payment_date, today,
                                             self.payments.paid_total(purchase_id), actor.user_id, actor.user_name)
-        payment.classification_id = self._classification(payment.payment_date)
+        payment.assign_classification(self._classification(payment.payment_date))
         saved = self.payments.save(payment)
         self.purchases.save(purchase)
         return saved, True

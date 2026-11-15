@@ -2715,7 +2715,8 @@
       "CLASIFICACION_GUARDADA": "Classification saved",
       "CONFIGURAR_EN_CONTABILIDAD": "Configure in Accounting → Expenses",
       "ERROR_DE_RED": "Could not reach the server. Check your connection.",
-      "ERROR_INESPERADO": "An unexpected error occurred. Please try again."
+      "ERROR_INESPERADO": "An unexpected error occurred. Please try again.",
+      "CLASIFICACION_NO_DISPONIBLE": "Classification unavailable"
     }
   }
 }

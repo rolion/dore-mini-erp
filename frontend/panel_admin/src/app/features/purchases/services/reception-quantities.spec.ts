@@ -1,3 +1,4 @@
+import '../../../core/i18n/testing'; // idioma por defecto estable para `tr` (ver testing.ts)
 import { isPositive, isReceivable, pendingAfter, positiveQuantity, quantityError } from './reception-quantities';
 
 describe('reception quantities (AC-20)', () => {

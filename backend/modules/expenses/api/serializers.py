@@ -41,11 +41,11 @@ class CategorySerializer(serializers.Serializer):
     name = serializers.CharField(read_only=True)
     active = serializers.BooleanField(read_only=True)
     classification = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
 
     def get_classification(self, obj):
         return _classification(obj.classification_id, self.context.get('classifications', {}))
-    created_at = serializers.DateTimeField(read_only=True)
-    updated_at = serializers.DateTimeField(read_only=True)
 
 
 class _CategoryRefSerializer(serializers.Serializer):

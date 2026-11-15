@@ -22,6 +22,10 @@ class Payment:
     classification_id: UUID | None = None
     created_at: datetime | None = None
 
+    def assign_classification(self, classification_id: UUID | None) -> None:
+        """Fija la instantánea de la clasificación al registrar; después el pago no cambia."""
+        self.classification_id = classification_id
+
     @property
     def reference(self) -> str:
         """Referencia interna provisional derivada del id (la numeración correlativa es otra task)."""

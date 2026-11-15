@@ -72,6 +72,21 @@ describe('ExpenseFormComponent', () => {
       expect(methods).toEqual(['Efectivo', 'QR', 'Transferencia', 'Tarjeta', 'Otro']);
     });
 
+    it('shows the help link under the category on a classification error and hides it when editing (CONT-03, UI-03)', () => {
+      api.create.and.returnValue(
+        throwError(() => new ExpensesApiError('Revisa los datos ingresados.', 400, { categoryId: ['La categoría «Empaque» no tiene clasificación de egreso.'] }, 'classification_not_configured')),
+      );
+      fillValid();
+      component.onSubmit();
+      fixture.detectChanges();
+      const hint = () => (fixture.nativeElement as HTMLElement).querySelector('[data-testid="classification-hint"]');
+      expect(text()).toContain('no tiene clasificación de egreso');
+      expect(hint()).not.toBeNull();
+      component.form.patchValue({ categoryId: 'cat-1' });
+      fixture.detectChanges();
+      expect(hint()).toBeNull();
+    });
+
     it('blocks saving without the required data (AC-22)', () => {
       expect(component.form.invalid).toBeTrue();
       component.onSubmit();

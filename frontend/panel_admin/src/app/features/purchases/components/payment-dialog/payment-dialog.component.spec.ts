@@ -1,5 +1,6 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NEVER, of, throwError } from 'rxjs';
 
@@ -24,7 +25,7 @@ describe('PaymentDialogComponent', () => {
     modal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     await TestBed.configureTestingModule({
       imports: [PaymentDialogComponent],
-      providers: [...provideTestTranslations(), 
+      providers: [...provideTestTranslations(), provideRouter([]),
         { provide: PaymentsApiService, useValue: api },
         { provide: PurchasesApiService, useValue: purchasesApi },
         { provide: NgbActiveModal, useValue: modal },
@@ -43,6 +44,29 @@ describe('PaymentDialogComponent', () => {
     component.form.patchValue({ amount, paymentMethod: method });
     fixture.detectChanges();
   }
+
+  it('shows the help link on a classification error and closes the dialog when followed (CONT-03, UI-03)', () => {
+    api.create.and.returnValue(
+      throwError(() => new PaymentApiError('Falta la clasificación de pagos a proveedores.', 400, {}, 'classification_not_configured')),
+    );
+    fill('10.00');
+    component.submit();
+    fixture.detectChanges();
+    expect(byId('general-error')?.textContent).toContain('Falta la clasificación');
+    const link = byId('classification-hint') as HTMLAnchorElement | null;
+    expect(link).not.toBeNull();
+    link?.addEventListener('click', (event) => event.preventDefault());
+    link?.click();
+    expect(modal.dismiss).toHaveBeenCalled();
+  });
+
+  it('shows no help link for other errors (CONT-03)', () => {
+    api.create.and.returnValue(throwError(() => new PaymentApiError('Ocurrió un error inesperado.', 500)));
+    fill('10.00');
+    component.submit();
+    fixture.detectChanges();
+    expect(byId('classification-hint')).toBeNull();
+  });
 
   it('shows the current balance next to the amount and today as the default date (AC-17)', () => {
     expect(byId('balance')?.textContent).toContain('Bs 25.00');
