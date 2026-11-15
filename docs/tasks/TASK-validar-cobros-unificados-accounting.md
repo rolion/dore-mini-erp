@@ -1,6 +1,6 @@
 # TASK-validar-cobros-unificados-accounting: Validar cobros unificados y preparar la activación de accounting (PB-ACC-005)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-validar-cobros-unificados-accounting
@@ -13,6 +13,7 @@
 | 2026-11-15 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta; `main` al día (6b4f7d1, incluye PB-ACC-001..004 y PB-COB-002) | delivery-start |
 | 2026-11-15 | INVESTIGATION → PLANNING | NEEDS_PLAN: sin decisión arquitectónica nueva ni pantallas; es validación, pruebas de brechas y runbook | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY: la tarjeta fija los criterios; sin decisiones de negocio abiertas | delivery-start |
+| 2026-11-15 | ENGINEERING → REVIEW | Pruebas de brechas, runbook y guía manual completos | delivery-build |
 
 ## Investigación
 
@@ -63,7 +64,13 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-15-validar-cobros-unificados-accounting.md` (v1, COMPLETO por frontera cruzada) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Matriz de cobertura (revisión de lo existente → brechas):** atomicidad, idempotencia, concurrencia, mapeo ausente, fallo contable, aislamiento, accounting deshabilitado y Ventas deshabilitado ya estaban cubiertos (`sales/tests/test_payment_ledger.py`, `receivables/tests/test_payment_ledger.py`, `accounting/tests/test_entries_api.py`, `test_regularization*.py`, `reporting/tests/test_api.py:184`); «stock no cambia» ya tenía prueba en Ventas (`test_payment_ledger.py:84`). Brechas completadas con `backend/modules/accounting/tests/test_unified_journey.py` (3 pruebas, BD real):
+- AC-01, AC-05, AC-07: pedido 100+200 y proforma 100+50+150 en la misma empresa → 5 entradas, total 600 (PRODUCT 300 / SERVICE 300), reintentos sin duplicados, totales iguales en todas las páginas, una entrada por pago, stock sin cambio, notas y saldos ausentes del libro, tablero ventas − gastos idéntico antes/después.
+- AC-04: cambio de mapeo conserva destinos históricos y aplica al siguiente pago en ambos orígenes.
+- AC-06: regularización repetida no cambia totales ni pagos; listado y totales coinciden con cada filtro recorriendo todas las páginas.
+**Documentos:** `docs/deployment/activar-accounting.md` (AC-09), `docs/tests/MANUAL-validar-cobros-unificados-accounting.md` (AC-10).
+**Desviaciones:** AC-10 queda como guía sin corrida en navegador: el worktree no tiene dependencias del frontend ni datos de desarrollo; se declara en la guía. Sin cambios de código de producto; no se encontraron defectos.
+**Verificación propia (no es el Quality Gate):** `modules.accounting modules.receivables modules.sales modules.reporting modules.modularity` → 595 OK. `.env` copiado al worktree con autorización de la persona (ignorado por git).
 
 ## Review
 _Pendiente_
