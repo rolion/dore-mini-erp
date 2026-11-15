@@ -140,10 +140,11 @@ class UnifiedJourneyTests(TransactionTestCase):
         configure(self.admin.company_id, 'CASH', self.banco)
         self.pay_order(order_id, '50.00', 'CASH')
         self.pay_service(p['number'], [(a, '60.00')])
-        rows = EntryModel.objects.order_by('created_at')
-        self.assertEqual([(r.origin_kind, r.amount, r.account_id) for r in rows], [
+        rows = EntryModel.objects.all()
+        self.assertEqual({(r.origin_kind, r.amount, r.account_id) for r in rows}, {
             ('PRODUCT', Decimal('100.00'), self.caja.id), ('SERVICE', Decimal('40.00'), self.caja.id),
-            ('PRODUCT', Decimal('50.00'), self.banco.id), ('SERVICE', Decimal('60.00'), self.banco.id)])
+            ('PRODUCT', Decimal('50.00'), self.banco.id), ('SERVICE', Decimal('60.00'), self.banco.id)})
+        self.assertEqual(rows.count(), 4)
 
     # AC-06
     def test_repeated_regularization_keeps_totals_and_filters_match_every_page(self):

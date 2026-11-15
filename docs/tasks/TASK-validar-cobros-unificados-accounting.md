@@ -1,6 +1,6 @@
 # TASK-validar-cobros-unificados-accounting: Validar cobros unificados y preparar la activación de accounting (PB-ACC-005)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-validar-cobros-unificados-accounting
@@ -14,6 +14,7 @@
 | 2026-11-15 | INVESTIGATION → PLANNING | NEEDS_PLAN: sin decisión arquitectónica nueva ni pantallas; es validación, pruebas de brechas y runbook | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY: la tarjeta fija los criterios; sin decisiones de negocio abiertas | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Pruebas de brechas, runbook y guía manual completos | delivery-build |
+| 2026-11-15 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium abierto, aceptado); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -73,7 +74,10 @@ No aplica según veredicto.
 **Verificación propia (no es el Quality Gate):** `modules.accounting modules.receivables modules.sales modules.reporting modules.modularity` → 595 OK. `.env` copiado al worktree con autorización de la persona (ignorado por git).
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (2026-11-15, subagente aislado; sin Critical/High).
+- Backend: 5 módulos afectados 595 OK; suite completa `Ran 1648 tests ... OK`; `makemigrations --check` sin cambios; bandit: 3 Medium en `accounting` sin investigar (código no modificado por el diff). Sin secretos; diff = 5 archivos dentro del plan.
+- No verificado: Karma/frontend (no cambió) y corrida en navegador.
+- Hallazgos: [REV-01](../reviews/REV-2026-11-15-validar-cobros-unificados-accounting-01.md) **Medium** abierto (AC-10 sin corrida en navegador; aceptado, queda para quien apruebe). Resueltos tras el gate: F2 Low (la prueba de mapeo ya no depende del orden por reloj; 3 tests OK) y F3 Low (el runbook documenta el JSON de `--mapping` y que `--apply` exige `--executed-by`). F4 Low (código 409 del runbook) no contrastado contra la vista; respaldado por pruebas existentes.
 
 ## Publicación
-_Pendiente_
+PR #72 listo para aprobación humana; no se mergea. Sin cambios sensibles (solo pruebas y documentación). Pendiente: ejecutar la guía manual en navegador (REV-01).
