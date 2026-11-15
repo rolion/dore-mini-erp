@@ -1,6 +1,6 @@
 # TASK-categorias-gastos-clasificacion-egreso: Clasificación de egreso por categoría de Gastos y para pagos a proveedores (CONT-03)
 
-**Etapa actual:** ENGINEERING (implementación escrita; pruebas de backend con BD pendientes de ejecutar)
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-categorias-gastos-clasificacion-egreso (base: `origin/accounting`)
@@ -76,9 +76,9 @@ Ver [ADR-categorias-gastos-clasificacion-egreso-propiedad-y-snapshot](../adr/ADR
 ## Implementación
 **Backend.** `accounting.services.describe_classifications` (AC-02, INV-01). `expenses`: `classification_id` en categoría y gasto (migración `0003`), puerto `ClassificationGateway` + adaptador `AccountingClassifications`, `SetCategoryClassification`, `resolve_classification` en `CreateExpense`/`UpdateExpense` (AC-01, AC-03, AC-06, INV-02/03), `PUT /api/expense-categories/<id>/classification/` y `classification` en categorías y gastos (API-01/02/04/05). `purchases`: tabla `purchases_settings` y `classification_id` en pagos (migración `0008`), `SetPaymentClassification`/`GetPaymentClassification`, `RegisterPayment` con instantánea y regla de cobertura, `GET/PUT /api/purchases/payment-classification/` (AC-02, AC-04, AC-07, INV-04, API-03). Fronteras: `ALLOWED_DEPENDENCIES`/`CONSUMERS` actualizados.
 **Frontend.** Pestaña «Egresos» (`expense-config-tab`, plantilla de configuración con listados en pestañas; reutiliza `AccountingApiService.listClassifications`, badges y `form-select`), servicio `ExpenseConfigApiService`, línea «Clasificación» en el detalle del gasto, claves i18n es/en/pt `ACCOUNTING.EXPENSE_CONFIG` (AC-08, UI-01, UI-02).
-**Pruebas.** Backend: `test_classification_application` (sin BD, pasan), `test_classification_api` (expenses) y `test_payment_classification_api` (purchases) escritas pero **no ejecutadas** (sin credenciales de PostgreSQL en este worktree); `test_boundaries` y las pruebas de dominio/aplicación de Gastos pasan. Frontend: 149 specs de `accounting` y `expenses` OK, `lint` e `i18n:check` OK.
+**Pruebas.** Backend (BD real): suite completa 1718 pruebas; 2 fallos iniciales corregidos y re-ejecutados en `accounting`, `accounts`, `purchases` y `expenses` (604 OK): (1) guarda de `company_id` indexado → `purchases_settings.company_id` con `db_index` + restricción única (migración regenerada); (2) `test_coverage.PurchasePaymentIndependenceTests` (CONT-06 AC-02) ahora configura la clasificación de pagos a proveedores antes de pagar, porque con Contabilidad cubriendo el pago CONT-03 exige esa configuración. Frontend: 149 specs de `accounting` y `expenses` OK, `lint` e `i18n:check` OK. El quality gate lo ejecuta `delivery-publish`.
 **Desviaciones.** UI-03 (enlace «Configurar en Contabilidad → Egresos» en formularios de gasto/pago): el mensaje de la API ya indica la ruta en texto; el enlace queda como mejora. La API de errores de registro devuelve `code` junto a `category_id`/`non_field_errors`.
-**Deuda técnica.** Ejecutar y ajustar las pruebas de API y las regresiones de backend (accounting, receivables, sales, expenses, purchases, reporting); `EXPENSE_KEYS`/`PAYMENT_FIELDS` ya incluyen `classification`.
+**Deuda técnica.** Enlace de ayuda UI-03 (ver desviaciones).
 
 ## Review
 _Pendiente_

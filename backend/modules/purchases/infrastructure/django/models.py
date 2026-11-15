@@ -137,10 +137,11 @@ class SettingsModel(models.Model):
     """Ajustes de Compras de una empresa (una fila por empresa)."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company_id = models.UUIDField(unique=True)
+    company_id = models.UUIDField(db_index=True)
     # Clasificación de egreso de «pagos a proveedores» (UUID sin FK entre módulos; la valida Contabilidad).
     payment_classification_id = models.UUIDField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'purchases_settings'
+        constraints = [models.UniqueConstraint(fields=['company_id'], name='purchases_settings_company_uniq')]
