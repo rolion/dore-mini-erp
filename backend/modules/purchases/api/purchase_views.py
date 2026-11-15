@@ -17,6 +17,7 @@ from modules.purchases.application.purchase_commands import (
 )
 from modules.purchases.application.purchase_queries import GetPurchase, ListPurchases
 from modules.purchases.domain.exceptions import (
+    PaymentClassificationError,
     PurchaseCancellationBlocked,
     PurchaseInvalidTransition,
     PaymentConflict,
@@ -108,6 +109,8 @@ def _run(callable_, **kwargs):
     try:
         with transaction.atomic():
             return callable_(**kwargs)
+    except PaymentClassificationError as exc:
+        raise ValidationError({**exc.errors, 'code': exc.code}) from exc
     except PurchaseValidationError as exc:
         raise ValidationError(exc.errors) from exc
     except PurchaseNotFound as exc:

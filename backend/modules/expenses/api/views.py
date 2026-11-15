@@ -12,17 +12,19 @@ from modules.expenses.application.commands import (
     CreateExpenseCategory,
     DeactivateExpenseCategory,
     RenameExpenseCategory,
+    SetCategoryClassification,
     UpdateExpense,
     VoidExpense,
 )
 from modules.expenses.application.queries import GetExpense, GetExpenseCategory, ListExpenseCategories, ListExpenses
 from modules.expenses.domain.exceptions import (
     ExpenseCategoryNotFound,
+    ExpenseClassificationError,
     ExpenseNotFound,
     ExpenseRuleViolation,
     ExpenseValidationError,
 )
-from modules.expenses.infrastructure.adapters import SystemClock
+from modules.expenses.infrastructure.adapters import AccountingClassifications, SystemClock
 from modules.expenses.infrastructure.django.repositories import (
     DjangoExpenseCategoryRepository,
     DjangoExpenseRepository,
@@ -32,6 +34,7 @@ from shared.tenancy import company_id_from
 from .filters import parse_expense_filters
 from .pagination import CategoryPagination, ExpensePagination
 from .serializers import (
+    CategoryClassificationInputSerializer,
     CategoryInputSerializer,
     CategorySerializer,
     ExpenseInputSerializer,
@@ -68,6 +71,8 @@ def _run(use_case, mutates: bool = True, **kwargs):
             with transaction.atomic():
                 return use_case.execute(**kwargs)
         return use_case.execute(**kwargs)
+    except ExpenseClassificationError as exc:
+        raise ValidationError({**exc.errors, 'code': exc.code}) from exc
     except ExpenseValidationError as exc:
         raise ValidationError(exc.errors) from exc
     except ExpenseRuleViolation as exc:
@@ -93,9 +98,26 @@ def _categories(request) -> DjangoExpenseCategoryRepository:
     return DjangoExpenseCategoryRepository(company_id_from(request))
 
 
+def _classifications(request) -> AccountingClassifications:
+    return AccountingClassifications(company_id_from(request))
+
+
+def _context(request, expenses, categories) -> dict:
+    """Contexto de los serializers: categorías y clasificaciones de la página, en una consulta por lote."""
+    ids = {e.classification_id for e in expenses if e.classification_id is not None}
+    return {'categories': categories, 'classifications': _classifications(request).describe(ids)}
+
+
 def _expense_response(request, expense, http_status: int = status.HTTP_200_OK) -> Response:
     categories = _categories(request).get_many([expense.category_id])
-    return Response(ExpenseSerializer(expense, context={'categories': categories}).data, status=http_status)
+    context = _context(request, [expense], categories)
+    return Response(ExpenseSerializer(expense, context=context).data, status=http_status)
+
+
+def _category_response(request, category, http_status: int = status.HTTP_200_OK) -> Response:
+    ids = [category.classification_id] if category.classification_id else []
+    context = {'classifications': _classifications(request).describe(ids)}
+    return Response(CategorySerializer(category, context=context).data, status=http_status)
 
 
 def _parse_active(raw: str | None) -> bool | None:
@@ -116,12 +138,12 @@ class ExpenseListCreateView(APIView):
         page = paginator.paginate_queryset(expenses, request, view=self)
         paginator.total_amount = repository.total_active(filters)
         categories = _categories(request).get_many({e.category_id for e in page})
-        data = ExpenseSummarySerializer(page, many=True, context={'categories': categories}).data
+        data = ExpenseSummarySerializer(page, many=True, context=_context(request, page, categories)).data
         return paginator.get_paginated_response(data)
 
     def post(self, request):
         values = _validated(ExpenseInputSerializer, request.data)
-        use_case = CreateExpense(_expenses(request), _categories(request))
+        use_case = CreateExpense(_expenses(request), _categories(request), _classifications(request))
         expense = _run(use_case, **values)
         return _expense_response(request, expense, status.HTTP_201_CREATED)
 
@@ -137,7 +159,7 @@ class ExpenseDetailView(APIView):
 
     def patch(self, request, expense_id: str):
         values = _validated(ExpenseInputSerializer, request.data, partial=True)
-        use_case = UpdateExpense(_expenses(request), _categories(request))
+        use_case = UpdateExpense(_expenses(request), _categories(request), _classifications(request))
         expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND), **values)
         return _expense_response(request, expense)
 
@@ -159,12 +181,14 @@ class CategoryListCreateView(APIView):
                           active=active, search=search)
         paginator = CategoryPagination()
         page = paginator.paginate_queryset(categories, request, view=self)
-        return paginator.get_paginated_response(CategorySerializer(page, many=True).data)
+        ids = {c.classification_id for c in page if c.classification_id is not None}
+        context = {'classifications': _classifications(request).describe(ids)}
+        return paginator.get_paginated_response(CategorySerializer(page, many=True, context=context).data)
 
     def post(self, request):
         values = _validated(CategoryInputSerializer, request.data)
         category = _run(CreateExpenseCategory(_categories(request)), **values)
-        return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
+        return _category_response(request, category, status.HTTP_201_CREATED)
 
 
 class CategoryDetailView(APIView):
@@ -172,13 +196,13 @@ class CategoryDetailView(APIView):
     def get(self, request, category_id: str):
         category = _run(GetExpenseCategory(_categories(request)), mutates=False,
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
-        return Response(CategorySerializer(category).data)
+        return _category_response(request, category)
 
     def patch(self, request, category_id: str):
         values = _validated(CategoryInputSerializer, request.data, partial=True)
         category = _run(RenameExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND), **values)
-        return Response(CategorySerializer(category).data)
+        return _category_response(request, category)
 
 
 class CategoryActivateView(APIView):
@@ -186,7 +210,7 @@ class CategoryActivateView(APIView):
     def post(self, request, category_id: str):
         category = _run(ActivateExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
-        return Response(CategorySerializer(category).data)
+        return _category_response(request, category)
 
 
 class CategoryDeactivateView(APIView):
@@ -194,4 +218,17 @@ class CategoryDeactivateView(APIView):
     def post(self, request, category_id: str):
         category = _run(DeactivateExpenseCategory(_categories(request)),
                         category_id=_uuid(category_id, CATEGORY_NOT_FOUND))
-        return Response(CategorySerializer(category).data)
+        return _category_response(request, category)
+
+
+class CategoryClassificationView(APIView):
+    """Asocia (o quita) la clasificación de egreso de una categoría; no reclasifica gastos ya registrados."""
+
+    required_modules = ('expenses',)
+
+    def put(self, request, category_id: str):
+        values = _validated(CategoryClassificationInputSerializer, request.data)
+        use_case = SetCategoryClassification(_categories(request), _classifications(request))
+        category = _run(use_case, category_id=_uuid(category_id, CATEGORY_NOT_FOUND),
+                        classification_id=values['classification_id'])
+        return _category_response(request, category)

@@ -2700,6 +2700,23 @@
       "SIN_PERIODO": "Período revisado: sem filtro (todos os pagamentos)",
       "SIN_LIMITE": "sem limite",
       "METODOS_SIN_REGLA": "Métodos sem regra (seus pagamentos ficam pendentes): {{methods}}"
+    },
+    "EXPENSE_CONFIG": {
+      "EGRESOS": "Saídas",
+      "AYUDA": "Associe a cada categoria de Despesas e aos pagamentos a fornecedores a classificação de saída aplicada às novas operações. Alterá-la não modifica o que já foi registrado.",
+      "CATEGORIA": "Categoria",
+      "CLASIFICACION_DE_EGRESO": "Classificação de saída",
+      "SIN_CLASIFICACION": "Sem classificação",
+      "PAGOS_A_PROVEEDORES": "Pagamentos a fornecedores",
+      "SIN_CATEGORIAS": "Ainda não há categorias de despesas ativas.",
+      "CONFIGURADA": "Configurada",
+      "PENDIENTE": "Pendente",
+      "INACTIVA": "Inativa",
+      "CLASIFICACION_GUARDADA": "Classificação salva",
+      "CONFIGURAR_EN_CONTABILIDAD": "Configurar em Contabilidade → Saídas",
+      "ERROR_DE_RED": "Não foi possível conectar ao servidor. Verifique sua conexão.",
+      "ERROR_INESPERADO": "Ocorreu um erro inesperado. Tente novamente.",
+      "CLASIFICACION_NO_DISPONIBLE": "Classificação indisponível"
     }
   }
 }

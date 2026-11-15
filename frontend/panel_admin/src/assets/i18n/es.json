@@ -2700,6 +2700,23 @@
       "SIN_PERIODO": "Periodo revisado: sin filtro (todos los pagos)",
       "SIN_LIMITE": "sin límite",
       "METODOS_SIN_REGLA": "Métodos sin regla (sus pagos quedan pendientes): {{methods}}"
+    },
+    "EXPENSE_CONFIG": {
+      "EGRESOS": "Egresos",
+      "AYUDA": "Asocia a cada categoría de Gastos y a los pagos a proveedores la clasificación de egreso que se aplicará a las operaciones nuevas. Cambiarla no modifica lo ya registrado.",
+      "CATEGORIA": "Categoría",
+      "CLASIFICACION_DE_EGRESO": "Clasificación de egreso",
+      "SIN_CLASIFICACION": "Sin clasificación",
+      "PAGOS_A_PROVEEDORES": "Pagos a proveedores",
+      "SIN_CATEGORIAS": "Aún no hay categorías de gastos activas.",
+      "CONFIGURADA": "Configurada",
+      "PENDIENTE": "Pendiente",
+      "INACTIVA": "Inactiva",
+      "CLASIFICACION_GUARDADA": "Clasificación guardada",
+      "CONFIGURAR_EN_CONTABILIDAD": "Configurar en Contabilidad → Egresos",
+      "ERROR_DE_RED": "No se pudo conectar con el servidor. Revisa tu conexión.",
+      "ERROR_INESPERADO": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+      "CLASIFICACION_NO_DISPONIBLE": "Clasificación no disponible"
     }
   }
 }

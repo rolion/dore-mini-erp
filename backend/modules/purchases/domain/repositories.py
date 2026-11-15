@@ -108,3 +108,11 @@ class SupplierRepository(Protocol):
     def list(self, search: str | None = None, active: bool | None = None) -> Sequence[Supplier]:
         """Proveedores ordenados por nombre e id; `search` es coincidencia parcial por nombre o identificación."""
         ...
+
+
+class PurchaseSettingsRepository(Protocol):
+    """Ajustes de Compras de la empresa."""
+
+    def payment_classification_id(self) -> UUID | None: ...
+
+    def set_payment_classification(self, classification_id: UUID | None) -> None: ...

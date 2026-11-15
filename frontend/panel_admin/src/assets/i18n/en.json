@@ -2700,6 +2700,23 @@
       "SIN_PERIODO": "Period reviewed: no filter (all payments)",
       "SIN_LIMITE": "no limit",
       "METODOS_SIN_REGLA": "Methods without a rule (their payments stay pending): {{methods}}"
+    },
+    "EXPENSE_CONFIG": {
+      "EGRESOS": "Expenses",
+      "AYUDA": "Assign to each expense category and to supplier payments the expense classification applied to new operations. Changing it does not alter what is already recorded.",
+      "CATEGORIA": "Category",
+      "CLASIFICACION_DE_EGRESO": "Expense classification",
+      "SIN_CLASIFICACION": "No classification",
+      "PAGOS_A_PROVEEDORES": "Supplier payments",
+      "SIN_CATEGORIAS": "There are no active expense categories yet.",
+      "CONFIGURADA": "Configured",
+      "PENDIENTE": "Pending",
+      "INACTIVA": "Inactive",
+      "CLASIFICACION_GUARDADA": "Classification saved",
+      "CONFIGURAR_EN_CONTABILIDAD": "Configure in Accounting → Expenses",
+      "ERROR_DE_RED": "Could not reach the server. Check your connection.",
+      "ERROR_INESPERADO": "An unexpected error occurred. Please try again.",
+      "CLASIFICACION_NO_DISPONIBLE": "Classification unavailable"
     }
   }
 }

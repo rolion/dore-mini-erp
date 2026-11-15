@@ -11,6 +11,8 @@ class ExpenseCategoryModel(models.Model):
     company_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=100)
     active = models.BooleanField(default=True, db_index=True)
+    # Clasificación de egreso de Contabilidad (UUID sin FK entre módulos); la valida `accounting.services`.
+    classification_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -37,6 +39,8 @@ class ExpenseModel(models.Model):
     notes = models.TextField(blank=True, default='')
     status = models.CharField(max_length=10, db_index=True)
     voided_at = models.DateTimeField(null=True, blank=True)
+    # Instantánea de la clasificación al registrar el gasto; nula en gastos anteriores.
+    classification_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

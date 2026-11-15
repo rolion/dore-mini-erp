@@ -27,6 +27,7 @@ export function toExpense(dto: ExpenseDto): Expense {
     notes: dto.notes ?? '',
     status: dto.status,
     voidedAt: dto.voided_at,
+    classification: dto.classification ?? null,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };

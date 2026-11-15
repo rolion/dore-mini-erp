@@ -18,7 +18,13 @@ class Payment:
     user_id: UUID | None
     user_name: str
     status: PaymentRecordStatus = PaymentRecordStatus.CONFIRMED
+    # Instantánea de la clasificación de «pagos a proveedores» al registrar; nula en pagos anteriores.
+    classification_id: UUID | None = None
     created_at: datetime | None = None
+
+    def assign_classification(self, classification_id: UUID | None) -> None:
+        """Fija la instantánea de la clasificación al registrar; después el pago no cambia."""
+        self.classification_id = classification_id
 
     @property
     def reference(self) -> str:

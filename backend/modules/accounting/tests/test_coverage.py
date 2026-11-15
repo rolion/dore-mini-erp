@@ -289,6 +289,12 @@ class PurchasePaymentIndependenceTests(PaymentApiTestCase):
     def test_paying_after_enabling_accounting_still_works_and_adds_no_entry(self):  # AC-02
         purchase = self.confirmed_purchase()
         self.assertEqual(self.client.post(ENABLE).status_code, 200)
+        # CONT-03: con Contabilidad cubriendo el pago hace falta la clasificación de pagos a proveedores.
+        supplier = self.client.post('/api/accounting/classifications/',
+                                    {'name': 'Pago a proveedores', 'direction': 'EXPENSE'}, format='json').json()
+        configured = self.client.put('/api/purchases/payment-classification/',
+                                     {'classification_id': supplier['id']}, format='json')
+        self.assertEqual(configured.status_code, 200, configured.content)
         self.pay(purchase, '20.00')
         self.assertEqual(EntryModel.objects.count(), 0)
 

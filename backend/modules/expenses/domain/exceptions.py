@@ -28,3 +28,15 @@ class ExpenseCategoryNotFound(Exception):
     def __init__(self, category_id: UUID):
         super().__init__(f'Categoría {category_id} no encontrada.')
         self.category_id = category_id
+
+
+NOT_CONFIGURED = 'classification_not_configured'
+INVALID = 'classification_invalid'
+
+
+class ExpenseClassificationError(ExpenseValidationError):
+    """Con Contabilidad cubriendo la operación, la categoría no tiene una clasificación de egreso utilizable."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__({'category_id': [message]})
+        self.code = code

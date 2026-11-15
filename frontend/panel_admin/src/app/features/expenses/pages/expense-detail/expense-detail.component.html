@@ -33,6 +33,8 @@
                 <small class="text-muted">{{ 'EXPENSES.EXPENSE_DETAIL.INACTIVA' | translate }}</small>
                 }
               </dd>
+              <dt class="col-sm-3">{{ 'ACCOUNTING.EXPENSE_CONFIG.CLASIFICACION_DE_EGRESO' | translate }}</dt>
+              <dd class="col-sm-9" data-testid="classification">{{ e.classification ? (e.classification.name || ('ACCOUNTING.EXPENSE_CONFIG.CLASIFICACION_NO_DISPONIBLE' | translate)) : ('ACCOUNTING.EXPENSE_CONFIG.SIN_CLASIFICACION' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.METODO_DE_PAGO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="payment-method">{{ paymentLabels[e.paymentMethod] }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.PROVEEDOR' | translate }}</dt>
