@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -15,7 +15,7 @@ export function isClassificationErrorCode(code: string | null | undefined): bool
   imports: [RouterLink, TranslatePipe],
   template: `
     @if (visible()) {
-    <a class="d-inline-block mt-1" routerLink="/pocketbiz/accounting/settings" [queryParams]="{ tab: 'expenses' }" data-testid="classification-hint">
+    <a class="d-inline-block mt-1" routerLink="/pocketbiz/accounting/settings" [queryParams]="{ tab: 'expenses' }" data-testid="classification-hint" (click)="followed.emit()">
       {{ 'ACCOUNTING.EXPENSE_CONFIG.CONFIGURAR_EN_CONTABILIDAD' | translate }}
     </a>
     }
@@ -23,6 +23,8 @@ export function isClassificationErrorCode(code: string | null | undefined): bool
 })
 export class ClassificationHintComponent {
   readonly code = input<string | null>(null);
+  /** Se emite al pulsar el enlace (p. ej. para cerrar un diálogo antes de navegar). */
+  readonly followed = output<void>();
 
   visible(): boolean {
     return isClassificationErrorCode(this.code());

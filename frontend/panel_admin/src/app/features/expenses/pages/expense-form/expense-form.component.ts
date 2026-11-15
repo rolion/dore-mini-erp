@@ -98,7 +98,10 @@ export class ExpenseFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => (this.serverErrors = {}));
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.serverErrors = {};
+      this.errorCode = null;
+    });
     this.expenseId = this.route.snapshot.paramMap.get('id');
     this.loading = true;
     this.categoriesApi

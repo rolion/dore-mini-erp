@@ -21,6 +21,17 @@ describe('ClassificationHintComponent', () => {
     }
   });
 
+  it('emits followed when the link is pressed (F-01)', () => {
+    TestBed.configureTestingModule({ imports: [ClassificationHintComponent], providers: [...provideTestTranslations(), provideRouter([])] });
+    const fixture = TestBed.createComponent(ClassificationHintComponent);
+    fixture.componentRef.setInput('code', 'classification_invalid');
+    let followed = 0;
+    fixture.componentInstance.followed.subscribe(() => followed++);
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('a') as HTMLAnchorElement).click();
+    expect(followed).toBe(1);
+  });
+
   it('shows nothing for other codes', () => {
     expect(render('already_voided').querySelector('a')).toBeNull();
     TestBed.resetTestingModule();

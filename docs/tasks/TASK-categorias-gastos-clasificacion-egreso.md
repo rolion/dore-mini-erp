@@ -1,6 +1,6 @@
 # TASK-categorias-gastos-clasificacion-egreso: Clasificación de egreso por categoría de Gastos y para pagos a proveedores (CONT-03)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-categorias-gastos-clasificacion-egreso (base: `origin/accounting`)
@@ -16,6 +16,7 @@
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 | 2026-11-15 | REVIEW → ENGINEERING | Quality Gate FAIL: build no ejecutado, 1 prueba Karma preexistente en rojo, REV-01..04 abiertos | delivery-publish |
 | 2026-11-15 | ENGINEERING → REVIEW | REV-01..04 corregidos; re-verificación pendiente | delivery-build |
+| 2026-11-15 | REVIEW → PUBLISH | Quality Gate 2.ª pasada PASS con observaciones; F-01/F-02 corregidos; prueba visual | delivery-publish |
 
 ## Investigación
 
@@ -96,4 +97,8 @@ Ver [ADR-categorias-gastos-clasificacion-egreso-propiedad-y-snapshot](../adr/ADR
 
 
 ## Publicación
-_Pendiente_
+**Quality Gate, 2.ª pasada: PASS con observaciones** (subagente aislado). Backend completo 1724 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; frontend `lint`, `i18n:check`, `build` y `npm audit --omit=dev` (0) OK; REV-01..04 resueltos. Karma completo: 1444 OK en corridas con orden favorable; `screens-i18n.spec.ts`, `payment-amounts.spec.ts` y `reception quantities` fallan de forma intermitente por el estado global del traductor de pruebas (`core/i18n/translate.ts`, sin limpiar entre specs). El diff no toca esos archivos; no se confirmó contra la base por ejecución. **Recomendación:** task aparte con `registerTranslator` limpio en un `afterEach` global.
+**Hallazgos de la 2.ª pasada corregidos:** F-01 (el enlace del diálogo de pago ahora cierra el modal: `followed` → `activeModal.dismiss()`), F-02 (`errorCode` se reinicia al editar y el enlace solo aparece con el error de categoría), con prueba de `followed`. Menores aceptados: F-04 (`classification_id` del pago se asigna directo, no es un estado de ciclo de vida), orden de campos de `CategorySerializer`, nombre vacío del DTO si la clasificación no existe; hueco: sin pruebas de integración del cableado del enlace en `expense-form`/`payment-dialog`.
+**Revisión visual (navegador integrado, app local con BD descartable ya eliminada):** pestaña «Egresos» en escritorio (tabla, selectores, badges Pendiente/Configurada; guardar por fila), en móvil 375 px y en tema oscuro; error de categoría sin clasificación con enlace «Configurar en Contabilidad → Egresos» en el formulario de gasto; detalle del gasto con «Clasificación de egreso». Hallazgo corregido: en móvil la tabla desbordaba porque la pestaña no usaba los estilos compartidos `inventory-table` (ahora se apila como «Clasificaciones»). No verificado visualmente: el diálogo de pago de compra (F-01 probado solo con pruebas unitarias) y viewport tablet.
+**Cambio sensible:** toca base de datos (migraciones aditivas `expenses` 0003 y `purchases` 0008) y fronteras entre módulos (ADR); requiere aprobación humana. Riesgo de despliegue: con Contabilidad habilitada y sin asociaciones no se podrán registrar gastos ni pagos con cobertura hasta configurar.
+

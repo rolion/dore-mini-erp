@@ -22,6 +22,7 @@ export interface ConfigRow {
 @Component({
   selector: 'app-expense-config-tab',
   templateUrl: './expense-config-tab.component.html',
+  styleUrl: './expense-config-tab.component.scss',
   imports: [TranslatePipe],
 })
 export class ExpenseConfigTabComponent implements OnInit {
