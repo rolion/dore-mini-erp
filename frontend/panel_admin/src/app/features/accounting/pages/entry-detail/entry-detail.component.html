@@ -12,7 +12,7 @@
   <div class="section-body">
     <div class="card">
       @if (loading) {
-      <p class="m-4 text-muted" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+      <p class="m-4 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
       } @else if (errorMessage) {
       <div class="alert alert-danger m-4" role="alert" data-testid="detail-error">
         {{ errorMessage }}

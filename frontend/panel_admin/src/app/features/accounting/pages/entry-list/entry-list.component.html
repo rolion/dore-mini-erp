@@ -94,21 +94,21 @@
             }
 
             @if (loading && rows.length === 0) {
-            <p class="m-3 text-muted" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            <p class="m-3 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
             }
 
             @if (!errorMessage && !loading) {
             <div class="m-2" data-testid="totals">
               <h5>{{ 'ACCOUNTING.ENTRIES.TOTALES_DEL_FILTRO' | translate }}</h5>
               @if (totals.length === 0) {
-              <p class="text-muted mb-0" data-testid="totals-empty">{{ 'ACCOUNTING.ENTRIES.SIN_REGISTROS' | translate }}</p>
+              <p class="text-body-secondary mb-0" data-testid="totals-empty">{{ 'ACCOUNTING.ENTRIES.SIN_REGISTROS' | translate }}</p>
               }
               @for (item of totals; track item.currency) {
               <div class="row align-items-baseline mb-1" data-testid="total-row">
                 <div class="col-sm-2"><strong>{{ item.currency }}</strong></div>
                 <div class="col-sm-3 fs-5" data-testid="total-amount">{{ amount(item.amount, item.currency) }}</div>
-                <div class="col-sm-2 text-muted">{{ 'ACCOUNTING.ENTRIES.N_ENTRADAS' | translate: { count: item.count } }}</div>
-                <div class="col-sm-5 text-muted">
+                <div class="col-sm-2 text-body-secondary">{{ 'ACCOUNTING.ENTRIES.N_ENTRADAS' | translate: { count: item.count } }}</div>
+                <div class="col-sm-5 text-body-secondary">
                   {{ 'ACCOUNTING.ENTRIES.PRODUCTOS' | translate }} {{ amount(item.byOrigin.PRODUCT, item.currency) }} ·
                   {{ 'ACCOUNTING.ENTRIES.SERVICIOS' | translate }} {{ amount(item.byOrigin.SERVICE, item.currency) }}
                 </div>

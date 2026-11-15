@@ -112,3 +112,6 @@ Parcial de estilos `accounting/styles/_entry-links.scss` (subrayado hover/foco +
 
 ### Tercera pasada del Quality Gate (2026-11-15)
 **PASS** (subagente aislado, tras REV-07/08): suite 1410/1410 (la prueba intermitente no falló esta vez), lint, i18n:check (1949/0) y build OK; `npm audit` solo 2 moderate preexistentes (hono); sin restos del enlace al cobro, sin scope creep, sin secretos. Hallazgos Low: REV-10 (`text-muted` restantes en estados de carga/vacío, Open); formato multilínea de Comprobante (residuo sin efecto, se acepta); tema oscuro emulado a mano y tabla con desplazamiento en vez de apilada (ya declarados en REV-07/08). Abiertos: REV-09 y REV-10; REV-06 diferido. A la espera de aprobación humana.
+
+### Corrección REV-10 (2026-11-15)
+`text-muted` → `text-body-secondary` en los estados de carga/vacío y el desglose de totales de lista y detalle. Lint y build OK. REV-10 Resolved; abierto solo REV-09 (prueba ajena intermitente); REV-06 diferido. Cambio de color de texto sin lógica: el Quality Gate no se repitió.
