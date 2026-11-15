@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-refinar-ux-libro-entradas-enlaces
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/73
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
