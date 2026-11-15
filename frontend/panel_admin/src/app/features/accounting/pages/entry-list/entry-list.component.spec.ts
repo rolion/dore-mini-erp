@@ -18,7 +18,7 @@ describe('EntryListComponent', () => {
     api = jasmine.createSpyObj<EntriesApiService>('EntriesApiService', ['list']);
     api.list.and.returnValue(of(page));
     const accounting = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
-    accounting.listAccounts.and.returnValue(of([{ id: 'a-1', name: 'Caja', currency: 'BOB', isActive: true }]));
+    accounting.listAccounts.and.returnValue(of([{ id: 'a-1', name: 'Caja', currency: 'BOB', kind: 'BANK', isActive: true }]));
     accounting.listMethods.and.returnValue(of([{ code: 'CASH', label: 'Efectivo', isActive: true, account: null }]));
     await TestBed.configureTestingModule({
       imports: [EntryListComponent],

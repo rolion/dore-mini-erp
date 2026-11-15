@@ -12,6 +12,8 @@ class AccountModel(models.Model):
     name = models.CharField(max_length=80)
     currency = models.CharField(max_length=3)
     is_active = models.BooleanField(default=True)
+    # Caja/Banco/Billetera; nulo en cuentas anteriores a su introducción.
+    kind = models.CharField(max_length=10, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -20,6 +22,26 @@ class AccountModel(models.Model):
         ordering = ['name', 'id']
         constraints = [
             models.UniqueConstraint(Lower('name'), 'company_id', name='accounting_account_name_ci_uniq'),
+        ]
+
+
+class ClassificationModel(models.Model):
+    """Clasificación de ingresos o egresos de una empresa (por qué se mueve el dinero)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    name = models.CharField(max_length=80)
+    direction = models.CharField(max_length=10)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'accounting_classification'
+        ordering = ['name', 'id']
+        constraints = [
+            models.UniqueConstraint(Lower('name'), 'company_id', 'direction',
+                                    name='accounting_classification_name_dir_ci_uniq'),
         ]
 
 

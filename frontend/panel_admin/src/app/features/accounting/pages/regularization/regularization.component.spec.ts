@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { NEVER, Observable, of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
-import { AccountingApiError, PaymentMethod } from '../../models/accounting';
+import { Account, AccountingApiError, PaymentMethod } from '../../models/accounting';
 import { RegularizationError, toSummary } from '../../models/regularization';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { RegularizationApiService } from '../../services/regularization-api.service';
@@ -12,9 +12,9 @@ import { RegularizationComponent } from './regularization.component';
 
 describe('RegularizationComponent', () => {
   const methods = [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null }, { code: 'QR', label: 'QR', isActive: true, account: null }];
-  const accounts = [
-    { id: 'a-1', name: 'Caja', currency: 'BOB', isActive: true },
-    { id: 'a-9', name: 'Dólares', currency: 'USD', isActive: true },
+  const accounts: Account[] = [
+    { id: 'a-1', name: 'Caja', currency: 'BOB', kind: 'BANK', isActive: true },
+    { id: 'a-9', name: 'Dólares', currency: 'USD', kind: 'BANK', isActive: true },
   ];
 
   function setup(modalResult: Promise<boolean> = Promise.resolve(true), loadMethods: Observable<PaymentMethod[]> = of(methods)) {

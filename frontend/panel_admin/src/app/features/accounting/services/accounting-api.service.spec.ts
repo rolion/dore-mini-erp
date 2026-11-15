@@ -23,7 +23,7 @@ describe('AccountingApiService', () => {
     const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
     expect(req.request.params.get('active')).toBe('true');
     req.flush([{ id: 'a1', name: 'Caja', currency: 'BOB', is_active: true }]);
-    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', isActive: true }]);
+    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, isActive: true }]);
   });
 
   it('configures a method with account_id and is_active', () => {
@@ -50,7 +50,7 @@ describe('AccountingApiService', () => {
 
   it('maps field errors of a 400', () => {
     let error: AccountingApiError | undefined;
-    service.createAccount({ name: '', currency: 'BOB' }).subscribe({ error: (e: AccountingApiError) => (error = e) });
+    service.createAccount({ name: '', currency: 'BOB', kind: 'BANK' }).subscribe({ error: (e: AccountingApiError) => (error = e) });
     http.expectOne((r) => r.url.endsWith('/accounting/accounts/')).flush({ name: ['Ya existe.'] }, { status: 400, statusText: 'Bad Request' });
     expect(error?.fieldErrors['name']).toEqual(['Ya existe.']);
   });

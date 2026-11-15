@@ -13,12 +13,17 @@ from modules.accounting.application.use_cases import (
     ActivateAccount,
     ConfigureMethod,
     CreateAccount,
+    CreateClassification,
     DeactivateAccount,
     GetAccount,
+    GetClassification,
     GetEntry,
     ListAccounts,
+    ListClassifications,
     ListEntries,
     ListMethods,
+    RenameClassification,
+    SetClassificationActive,
     UpdateAccount,
 )
 from modules.accounting.domain.account import (
@@ -27,6 +32,8 @@ from modules.accounting.domain.account import (
     AccountValidationError,
     MethodNotFound,
 )
+from modules.accounting.domain.catalog import DIRECTIONS
+from modules.accounting.domain.classification import ClassificationNotFound
 from modules.accounting.domain.entry import EntryNotFound
 from modules.accounting.domain.regularization import HistoricalMapping, RegularizationInputError, parse_mapping
 from modules.accounting.infrastructure.adapters import (
@@ -36,6 +43,7 @@ from modules.accounting.infrastructure.adapters import (
 )
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
+    DjangoClassificationRepository,
     DjangoEntryRepository,
     DjangoMethodMappingRepository,
     EntryFilters,
@@ -47,10 +55,13 @@ from .serializers import (
     AccountInputSerializer,
     EntryFiltersSerializer,
     AccountUpdateSerializer,
+    ClassificationInputSerializer,
+    ClassificationUpdateSerializer,
     RegularizationApplySerializer,
     RegularizationInputSerializer,
     MethodInputSerializer,
     serialize_account,
+    serialize_classification,
     serialize_coverage,
     serialize_entry,
     serialize_totals,
@@ -83,6 +94,8 @@ def _run(use_case, *args, **kwargs):
         raise NotFound('Cuenta no encontrada.') from exc
     except MethodNotFound as exc:
         raise NotFound('Método de pago no encontrado.') from exc
+    except ClassificationNotFound as exc:
+        raise NotFound('Clasificación no encontrada.') from exc
     except EntryNotFound as exc:
         raise NotFound('Entrada no encontrada.') from exc
     except AccountConflict as exc:
@@ -140,6 +153,50 @@ class AccountDeactivateView(_ConfigView):
     def post(self, request, account_id):
         accounts, mappings = _repositories(request)
         return Response(serialize_account(_run(DeactivateAccount(accounts, mappings), account_id)))
+
+
+class ClassificationListCreateView(_ConfigView):
+    def get(self, request):
+        direction = request.query_params.get('direction') or None
+        if direction is not None and direction not in DIRECTIONS:
+            raise ValidationError({'direction': [f'Valor inválido; use uno de: {", ".join(DIRECTIONS)}.']})
+        repository = DjangoClassificationRepository(company_id_from(request))
+        result = _run(ListClassifications(repository), _parse_active(request.query_params.get('active')), direction)
+        return Response([serialize_classification(c) for c in result])
+
+    def post(self, request):
+        serializer = ClassificationInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        repository = DjangoClassificationRepository(company_id_from(request))
+        created = _run(CreateClassification(repository), **serializer.validated_data)
+        return Response(serialize_classification(created), status=status.HTTP_201_CREATED)
+
+
+class ClassificationDetailView(_ConfigView):
+    def get(self, request, classification_id):
+        repository = DjangoClassificationRepository(company_id_from(request))
+        return Response(serialize_classification(_run(GetClassification(repository), classification_id)))
+
+    def patch(self, request, classification_id):
+        serializer = ClassificationUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        repository = DjangoClassificationRepository(company_id_from(request))
+        updated = _run(RenameClassification(repository), classification_id, serializer.validated_data['name'])
+        return Response(serialize_classification(updated))
+
+
+class ClassificationActivateView(_ConfigView):
+    def post(self, request, classification_id):
+        repository = DjangoClassificationRepository(company_id_from(request))
+        return Response(serialize_classification(
+            _run(SetClassificationActive(repository, True), classification_id)))
+
+
+class ClassificationDeactivateView(_ConfigView):
+    def post(self, request, classification_id):
+        repository = DjangoClassificationRepository(company_id_from(request))
+        return Response(serialize_classification(
+            _run(SetClassificationActive(repository, False), classification_id)))
 
 
 class MethodListView(_ConfigView):

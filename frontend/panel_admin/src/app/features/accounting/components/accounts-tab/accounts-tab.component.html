@@ -37,6 +37,7 @@
       <thead>
         <tr>
           <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.TIPO' | translate }}</th>
           <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate }}</th>
           <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
           <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
@@ -46,6 +47,9 @@
         @for (account of rows; track account.id) {
         <tr>
           <td [attr.data-label]="'COMMON.NOMBRE' | translate"><strong>{{ account.name }}</strong></td>
+          <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.TIPO' | translate">
+            {{ account.kind ? ('ACCOUNTING.ACCOUNT_DIALOG.TIPO_' + account.kind | translate) : ('ACCOUNTING.ACCOUNT_DIALOG.SIN_TIPO' | translate) }}
+          </td>
           <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate">{{ account.currency }}</td>
           <td [attr.data-label]="'COMMON.ESTADO' | translate">
             @if (account.isActive) {

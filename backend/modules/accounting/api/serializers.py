@@ -9,11 +9,35 @@ from modules.accounting.domain.catalog import METHOD_CODES, METHOD_LABELS, ORIGI
 class AccountInputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
     currency = serializers.CharField(max_length=3)
+    kind = serializers.CharField(max_length=10)  # obligatorio al crear; el dominio valida el valor
 
 
 class AccountUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False, required=False)
     currency = serializers.CharField(max_length=3, required=False)
+    kind = serializers.CharField(max_length=10, required=False)
+
+
+class ClassificationInputSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
+    direction = serializers.CharField(max_length=10)
+
+
+class ClassificationUpdateSerializer(serializers.Serializer):
+    """Solo el nombre: la dirección es inmutable (cualquier otro campo se rechaza)."""
+    name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
+
+    def to_internal_value(self, data):
+        extra = set(data) - set(self.fields)
+        if extra:
+            raise serializers.ValidationError({field: ['Este campo no se puede modificar.'] for field in extra})
+        return super().to_internal_value(data)
+
+
+def serialize_classification(classification) -> dict:
+    return {'id': str(classification.id), 'name': classification.name, 'direction': classification.direction,
+            'is_active': classification.is_active, 'created_at': classification.created_at,
+            'updated_at': classification.updated_at}
 
 
 class RegularizationInputSerializer(serializers.Serializer):
@@ -43,7 +67,7 @@ class MethodInputSerializer(serializers.Serializer):
 
 
 def serialize_account(account) -> dict:
-    return {'id': str(account.id), 'name': account.name, 'currency': account.currency,
+    return {'id': str(account.id), 'name': account.name, 'currency': account.currency, 'kind': account.kind,
             'is_active': account.is_active, 'created_at': account.created_at, 'updated_at': account.updated_at}
 
 

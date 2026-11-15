@@ -1,6 +1,6 @@
 # TASK-cuentas-dinero-clasificaciones: Cuentas de dinero y clasificaciones de ingresos/egresos (CONT-01)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cuentas-dinero-clasificaciones
@@ -13,6 +13,7 @@
 | 2026-11-15 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; `main` al día (3c81fee) | delivery-start |
 | 2026-11-15 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (modelo nuevo + migración sobre `accounting_account`, contrato API, fachada entre módulos) | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY: las decisiones abiertas se resolvieron con criterio propio y quedan en el plan | delivery-start |
+| 2026-11-15 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -74,7 +75,12 @@ Las cuentas reciben cobros según el mapeo método → cuenta; las entradas guar
 `docs/plans/PLAN-2026-11-15-cuentas-dinero-clasificaciones.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/accounting/`): `Account.kind` (`CASH/BANK/WALLET`, nulo en legadas; INV-02) y agregado `Classification` (`domain/classification.py`; INV-03, INV-04, `ensure_usable` INV-05); `ClassificationModel` + migración `0004_account_kind_classification` (solo `AddField` anulable y `CreateModel`); `DjangoClassificationRepository` por empresa; casos de uso de clasificaciones; API `/api/accounting/classifications/` (list/create, detalle GET/PATCH solo nombre, activate/deactivate) y `kind` en cuentas (alta obligatoria en el serializer, PATCH opcional) (API-01..05); fachada `validate_money_account` y `validate_classification` en `services.py` (AC-01..03). `EntryModel` y `record_entry` sin cambios (AC-04).
+**Frontend** (`features/accounting/`): `kind` en modelos y servicio, columna «Tipo» y selector obligatorio en el diálogo de cuenta, pestaña `ClassificationsTabComponent` y `ClassificationDialogComponent`, tercera pestaña en `AccountingSettingsComponent`, claves i18n es/en/pt (UI-01..03). Referencia: plantilla «listados en pestañas y diálogo» (`inventory-configuration`), reutilizando estilos de `AccountsTabComponent`; sin componentes compartidos nuevos.
+**Cobertura:** AC-01..03, 05..07 → `accounting/tests/test_classifications.py` (dominio, API con dos empresas, fachada); AC-04 → `test_unified_journey`, `test_entries_api` y pagos de Ventas/Cobros dentro de la suite completa; UI → specs de `classifications-tab`, `classification-dialog`, `account-dialog`, `accounting-settings`.
+**Desviaciones respecto al plan:** (1) `Account.create` mantiene `kind` opcional en el dominio (muchos tests y fixtures crean cuentas sin tipo); la obligatoriedad al crear se aplica en el serializer de la API, único punto de alta real. (2) No hubo test de migración de datos dedicado: la migración es aditiva y la regresión de entradas lo cubre.
+**Ejecución propia (no es el Quality Gate):** `manage.py test` completo 1663 OK; `ng test` 1419/1420 (falla `screens-i18n.spec.ts` «Entregue/Entregado», que también falla en `main` limpio); `npm run lint` e `i18n:check` OK.
+**Deuda técnica:** coexistencia de `ExpenseCategory` y clasificaciones EXPENSE; cuentas legadas «Sin tipo» hasta editarlas.
 
 ## Review
 _Pendiente_

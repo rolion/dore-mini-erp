@@ -11,7 +11,7 @@ describe('DeactivateDialogComponent', () => {
       providers: [...provideTestTranslations(), { provide: NgbActiveModal, useValue: activeModal }],
     });
     const fixture = TestBed.createComponent(DeactivateDialogComponent);
-    fixture.componentInstance.account = { id: 'a1', name: 'Banco', currency: 'BOB', isActive: true };
+    fixture.componentInstance.account = { id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', isActive: true };
     fixture.componentInstance.methods = methods;
     fixture.detectChanges();
     return { fixture, activeModal, el: fixture.nativeElement as HTMLElement };

@@ -44,6 +44,9 @@ describe('AccountingSettingsComponent', () => {
     expect(fixture.nativeElement.querySelector('#tab-accounts').getAttribute('tabindex')).toBe('-1');
     (fixture.nativeElement.querySelector('#tab-methods') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('classifications');
+    (fixture.nativeElement.querySelector('#tab-classifications') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('accounts');
   });
 });

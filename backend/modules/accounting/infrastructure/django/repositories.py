@@ -8,16 +8,17 @@ from django.db.models import Count, Max, Min, Sum
 
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES
+from modules.accounting.domain.classification import Classification
 from modules.accounting.domain.entry import Entry
 
-from .models import AccountModel, EntryModel, MethodMappingModel
+from .models import AccountModel, ClassificationModel, EntryModel, MethodMappingModel
 
 DUPLICATE_NAME = 'Ya existe una cuenta con ese nombre.'
 
 
 def _account(model: AccountModel) -> Account:
     return Account(id=model.id, name=model.name, currency=model.currency, is_active=model.is_active,
-                   created_at=model.created_at, updated_at=model.updated_at)
+                   created_at=model.created_at, updated_at=model.updated_at, kind=model.kind)
 
 
 class DjangoAccountRepository:
@@ -54,10 +55,55 @@ class DjangoAccountRepository:
             with transaction.atomic():
                 AccountModel.objects.update_or_create(
                     id=account.id, company_id=self.company_id,
-                    defaults={'name': account.name, 'currency': account.currency, 'is_active': account.is_active})
+                    defaults={'name': account.name, 'currency': account.currency, 'is_active': account.is_active,
+                              'kind': account.kind})
         except IntegrityError:  # carrera con otra petición: la restricción única manda
             raise AccountValidationError({'name': [DUPLICATE_NAME]}) from None
         return _account(self._accounts().get(pk=account.id))
+
+
+DUPLICATE_CLASSIFICATION = 'Ya existe una clasificación con ese nombre y dirección.'
+
+
+def _classification(model: ClassificationModel) -> Classification:
+    return Classification(id=model.id, name=model.name, direction=model.direction, is_active=model.is_active,
+                          created_at=model.created_at, updated_at=model.updated_at)
+
+
+class DjangoClassificationRepository:
+    """Repositorio de clasificaciones acotado a una empresa."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _rows(self):
+        return ClassificationModel.objects.filter(company_id=self.company_id)
+
+    def get(self, classification_id: UUID) -> Classification | None:
+        model = self._rows().filter(pk=classification_id).first()
+        return _classification(model) if model else None
+
+    def list(self, is_active: bool | None = None, direction: str | None = None) -> list[Classification]:
+        queryset = self._rows().order_by('name', 'id')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active)
+        if direction is not None:
+            queryset = queryset.filter(direction=direction)
+        return [_classification(model) for model in queryset]
+
+    def save(self, classification: Classification) -> Classification:
+        if self._rows().exclude(pk=classification.id).filter(
+                name__iexact=classification.name, direction=classification.direction).exists():
+            raise AccountValidationError({'name': [DUPLICATE_CLASSIFICATION]})
+        try:
+            with transaction.atomic():
+                ClassificationModel.objects.update_or_create(
+                    id=classification.id, company_id=self.company_id,
+                    defaults={'name': classification.name, 'direction': classification.direction,
+                              'is_active': classification.is_active})
+        except IntegrityError:
+            raise AccountValidationError({'name': [DUPLICATE_CLASSIFICATION]}) from None
+        return _classification(self._rows().get(pk=classification.id))
 
 
 class DjangoMethodMappingRepository:

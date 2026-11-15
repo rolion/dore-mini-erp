@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from .catalog import CURRENCIES, FLOW_CURRENCY
+from .catalog import ACCOUNT_KINDS, CURRENCIES, FLOW_CURRENCY
 
 NAME_MAX_LENGTH = 80
 
@@ -47,6 +47,12 @@ def validate_currency(currency: object) -> str:
     return currency.strip().upper()
 
 
+def validate_kind(kind: object) -> str:
+    if not isinstance(kind, str) or kind.strip().upper() not in ACCOUNT_KINDS:
+        raise AccountValidationError({'kind': [f'El tipo debe ser uno de: {", ".join(ACCOUNT_KINDS)}.']})
+    return kind.strip().upper()
+
+
 @dataclass
 class Account:
     id: UUID
@@ -55,13 +61,19 @@ class Account:
     is_active: bool = True
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    # Caja/Banco/Billetera; nulo solo en cuentas anteriores a su introducción. No restringe la dirección del dinero.
+    kind: str | None = None
 
     @classmethod
-    def create(cls, name: object, currency: object) -> 'Account':
-        return cls(id=uuid4(), name=validate_name(name), currency=validate_currency(currency))
+    def create(cls, name: object, currency: object, kind: object = None) -> 'Account':
+        return cls(id=uuid4(), name=validate_name(name), currency=validate_currency(currency),
+                   kind=validate_kind(kind) if kind is not None else None)
 
     def rename(self, name: object) -> None:
         self.name = validate_name(name)
+
+    def change_kind(self, kind: object) -> None:
+        self.kind = validate_kind(kind)
 
     def change_currency(self, currency: object) -> None:
         self.currency = validate_currency(currency)
