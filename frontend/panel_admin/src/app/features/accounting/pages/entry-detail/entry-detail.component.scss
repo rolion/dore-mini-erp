@@ -1,0 +1,5 @@
+// Enlaces del detalle: subrayado al pasar el cursor y al enfocar (no dependen solo del color).
+a.link-primary:hover,
+a.link-primary:focus-visible {
+  text-decoration: underline;
+}

@@ -12,6 +12,7 @@ import { EntriesApiService } from '../../services/entries-api.service';
 @Component({
   selector: 'app-entry-detail',
   templateUrl: './entry-detail.component.html',
+  styleUrl: './entry-detail.component.scss',
   imports: [TranslatePipe, RouterLink, DatePipe],
 })
 export class EntryDetailComponent implements OnInit {

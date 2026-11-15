@@ -92,3 +92,6 @@ PR listo para aprobación humana (no se mergea). Decisión pendiente: aceptar RE
 
 ### Corrección posterior al Quality Gate (2026-11-15)
 REV-01, 04 y 05 resueltos; REV-02 con contraste calculado (no medido en navegador) y último `text-muted` migrado; REV-03 sigue abierto (requiere navegador). Suite completa 1413/1413 (una prueba ajena de `core/i18n/screens-i18n.spec.ts` es intermitente por orden aleatorio: falló en 3 de 6 ejecuciones y pasó en las demás; preexistente, fuera de alcance).
+
+### Verificación visual (2026-11-15)
+App real (`npm start`) contra un servidor API simulado local con datos de prueba (no hay backend ni credenciales). Resultado: enlaces azules con subrayado al pasar el cursor, aviso tenue, textos auxiliares ≥ 4,59:1 en tema claro, botón «Ver cobro» en el detalle. Se corrigió la alineación de «Monto» (REV-03) y se añadió subrayado en hover/focus (scss). **Hallazgo nuevo REV-06 (High, SPECIFICATION):** con datos reales de servicios el backend guarda solo el número (`ODO-000002`) y `sourceLink` necesita `kind/number`, por lo que el enlace al cobro no se genera. Requiere decisión de contrato/datos. Tema oscuro y móvil no verificados.

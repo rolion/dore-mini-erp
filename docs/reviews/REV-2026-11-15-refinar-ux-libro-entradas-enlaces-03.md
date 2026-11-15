@@ -1,6 +1,6 @@
 # REV-2026-11-15-refinar-ux-libro-entradas-enlaces-03: AC-06 (alineación de «Monto») ni hecho ni descartado con evidencia
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-15-refinar-ux-libro-entradas-enlaces.md (v1)
@@ -22,3 +22,6 @@ Desviación declarada en el TASK; queda como seguimiento explícito.
 
 ## Resolution
 Sin cambios: requiere navegador; sigue como seguimiento.
+
+## Resolution
+Defecto confirmado en navegador: el contenido de la celda no ocupaba el ancho de la columna (cifras 46 px a la izquierda de la cabecera «Monto»). Corregido con `:host ::ng-deep datatable-body-cell.text-end .datatable-body-cell-label { display:block; width:100% }`; cifras y cabecera quedan a la misma x (1180/1180).
