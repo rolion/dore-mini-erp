@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-validar-cobros-unificados-accounting
-**Pull Request:** _se asigna al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/72
 **Fuente:** https://trello.com/c/F2bSta2n/22-pb-acc-005-validar-cobros-unificados-y-preparar-activaci%C3%B3n-de-accounting
 
 ## Historial de transiciones
