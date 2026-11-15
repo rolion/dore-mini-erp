@@ -1,6 +1,6 @@
 # REV-2026-11-15-modularidad-corte-historicos-contabilidad-04: Encabezado «Periodos sin cobertura» desproporcionado en «Corte y cobertura»
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-15-modularidad-corte-historicos-contabilidad.md (v1)
@@ -19,3 +19,6 @@ Encabezado grande, visible en escritorio y móvil.
 
 ## Evidence
 Prueba visual en el navegador integrado (2026-11-15): captura de «Corte y cobertura» en escritorio y a 390 px muestra «Periodos sin cobertura» claramente más grande que «Corte y cobertura».
+
+## Resolución
+Resuelto: el encabezado usa `h3.h6` (tamaño subordinado al título de la pestaña). Verificado en el navegador.

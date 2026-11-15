@@ -30,6 +30,7 @@ Los egresos (CONT-02, GAS-01, COM-01) se sumarán a un libro que hoy solo regist
 Migración `accounting/0005` aditiva (dos tablas nuevas y una columna con defecto 0): revertir = `migrate accounting 0004`. El cambio de catálogo es solo código (más permisivo). El puerto de ciclo de vida sin registros se comporta como hoy. Sin datos destructivos.
 
 ## Consecuencias
+- **Granularidad por día (decisión aceptada, REV-02):** los periodos sin cobertura se calculan por día local (`TIME_ZONE`), porque las operaciones llevan fecha efectiva sin hora. Un hueco cubre `[día de deshabilitación, día de reactivación)`: las operaciones nuevas fechadas ese día de deshabilitación se consideran **sin cobertura** (criterio conservador) y deshabilitar y rehabilitar el mismo día no deja hueco, porque la cobertura se reanuda ese mismo día. Los movimientos ya creados antes de deshabilitar no cambian.
 - Contabilidad pasa a tener un estado propio de corte y cobertura que CONT-02..05 consumirán por `coverage_status`.
 - Las empresas nuevas habilitan sin fricción (corte = hoy); las existentes se completan al primer acceso.
 - El bloqueo al deshabilitar es efectivo cuando existan egresos (CONT-02); hasta entonces el contrato queda probado con dobles.

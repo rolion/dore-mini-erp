@@ -6,6 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subject, catchError, finalize, switchMap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { Account, AccountingApiError } from '../../models/accounting';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
@@ -18,7 +19,7 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-accounts-tab',
   templateUrl: './accounts-tab.component.html',
   styleUrl: './accounts-tab.component.scss',
-  imports: [TranslatePipe, ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
 })
 export class AccountsTabComponent implements OnInit {
   readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });

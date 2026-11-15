@@ -19,3 +19,6 @@ Se renderiza el valor tal cual llega de la API (p. ej. 250.00).
 
 ## Evidence
 frontend/panel_admin/src/app/features/accounting/components/accounts-tab/accounts-tab.component.html (<td> con {{ account.openingBalance }}); existe shared/pipes/money.pipe.ts. Revisión visual no verificada (no se levantó la app).
+
+## Resolución
+Resuelto: la columna «Apertura» usa el pipe `money` para cuentas BOB y muestra importe + moneda para las demás. Spec: `shows the opening balance formatted as money…` en `accounts-tab.component.spec.ts`.

@@ -130,6 +130,24 @@ class LifecycleTests(Base):
         self.assertEqual(services.coverage_status(self.company.id, during).reason, 'in_gap')
         self.assertEqual(EntryModel.objects.count(), 0)
 
+    def test_disabling_a_legacy_company_before_any_access_still_records_its_coverage(self):  # REV-01
+        from modules.modularity.infrastructure.django.models import CompanyModuleModel
+        CompanyModuleModel.objects.create(company_id=self.company.id, module_key='accounting')
+        self.assertFalse(SettingsModel.objects.filter(company_id=self.company.id).exists())
+        self.disable()
+        self.assertTrue(SettingsModel.objects.filter(company_id=self.company.id).exists())
+        closed = CoveragePeriodModel.objects.filter(company_id=self.company.id)
+        self.assertEqual((closed.count(), closed.filter(ended_at=None).count()), (1, 0))
+        self.enable()
+        self.assertEqual(CoveragePeriodModel.objects.filter(company_id=self.company.id).count(), 2)
+
+    def test_gaps_have_day_granularity_same_day_toggle_leaves_none(self):  # REV-02 (decisión documentada en el ADR)
+        self.enable()
+        self.disable()
+        self.enable()
+        self.assertEqual(self.client_a.get(SETTINGS).json()['gaps'], [])
+        self.assertTrue(services.coverage_status(self.company.id, TODAY).covered)
+
     def test_other_company_is_isolated(self):  # EDGE-04
         self.enable()
         self.assertIsNone(self.client_b.get(SETTINGS).json()['cutoff_date'])

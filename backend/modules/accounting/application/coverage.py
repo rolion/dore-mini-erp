@@ -45,10 +45,18 @@ class OnAccountingEnabled(EnsureSettings):
 
 
 class OnAccountingDisabled:
-    def __init__(self, coverage):
+    """Gancho de deshabilitación: completa el corte y el tramo de una empresa anterior que aún no los tenía y lo cierra.
+
+    Así la reactivación posterior deja un periodo sin cobertura aunque nadie hubiera entrado antes a Contabilidad.
+    """
+
+    def __init__(self, coverage, entries, today: date):
         self.coverage = coverage
+        self.entries = entries
+        self.today = today
 
     def execute(self) -> None:
+        EnsureSettings(self.coverage, self.entries, self.today).execute()
         self.coverage.close_period()
 
 

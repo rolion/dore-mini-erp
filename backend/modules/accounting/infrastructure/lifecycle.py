@@ -28,7 +28,8 @@ def on_enabled(company_id: UUID) -> None:
 
 
 def on_disabled(company_id: UUID) -> None:
-    OnAccountingDisabled(DjangoCoverageRepository(company_id)).execute()
+    OnAccountingDisabled(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
+                         timezone.localdate()).execute()
 
 
 def disable_blockers(company_id: UUID) -> list[str]:

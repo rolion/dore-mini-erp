@@ -52,7 +52,13 @@
             {{ account.kind ? ('ACCOUNTING.ACCOUNT_DIALOG.TIPO_' + account.kind | translate) : ('ACCOUNTING.ACCOUNT_DIALOG.SIN_TIPO' | translate) }}
           </td>
           <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate">{{ account.currency }}</td>
-          <td [attr.data-label]="'ACCOUNTING.CUTOFF.APERTURA' | translate">{{ account.openingBalance }}</td>
+          <td [attr.data-label]="'ACCOUNTING.CUTOFF.APERTURA' | translate">
+            @if (account.currency === 'BOB') {
+            {{ account.openingBalance | money }}
+            } @else {
+            {{ account.openingBalance }} {{ account.currency }}
+            }
+          </td>
           <td [attr.data-label]="'COMMON.ESTADO' | translate">
             @if (account.isActive) {
             <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>

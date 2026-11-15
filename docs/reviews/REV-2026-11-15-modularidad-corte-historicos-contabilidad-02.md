@@ -19,3 +19,6 @@ Una operación fechada en el mismo día de una desactivación breve se considera
 
 ## Evidence
 backend/modules/accounting/domain/coverage.py: gaps() y coverage_status(); DjangoCoverageRepository.periods() convierte a timezone.localtime(...).date(). La conversión usa la zona local (correcto), pero se pierde la hora. La limitación no figura en '## Implementación' del TASK.
+
+## Resolución
+Resuelto por documentación (criterio del propio hallazgo): la granularidad por día queda registrada como decisión en el ADR (`## Consecuencias`) y probada con `test_gaps_have_day_granularity_same_day_toggle_leaves_none`; no se registra el hueco intradía porque las operaciones solo tienen fecha.
