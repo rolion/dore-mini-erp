@@ -54,14 +54,28 @@ export interface EntryPageDto {
   results: EntryDto[];
   totals: CurrencyTotalDto[];
   period: { date_from: string | null; date_to: string | null };
-  coverage: { first_payment_date: string | null; last_payment_date: string | null; first_recorded_at: string | null };
+  coverage: {
+    first_payment_date: string | null;
+    last_payment_date: string | null;
+    first_recorded_at: string | null;
+    cutoff_date?: string | null;
+    gaps?: { from: string; to: string }[];
+  };
 }
 
 export interface EntryPage {
   count: number;
   results: Entry[];
   totals: CurrencyTotal[];
-  coverage: { firstPaymentDate: string | null; lastPaymentDate: string | null; firstRecordedAt: string | null };
+  coverage: EntryCoverage;
+}
+
+export interface EntryCoverage {
+  firstPaymentDate: string | null;
+  lastPaymentDate: string | null;
+  firstRecordedAt: string | null;
+  cutoffDate: string | null;
+  gaps: { from: string; to: string }[];
 }
 
 export interface EntryListFilters {
@@ -103,6 +117,8 @@ export function toEntryPage(dto: EntryPageDto): EntryPage {
       firstPaymentDate: dto.coverage.first_payment_date,
       lastPaymentDate: dto.coverage.last_payment_date,
       firstRecordedAt: dto.coverage.first_recorded_at,
+      cutoffDate: dto.coverage.cutoff_date ?? null,
+      gaps: dto.coverage.gaps ?? [],
     },
   };
 }

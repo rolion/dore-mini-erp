@@ -23,7 +23,7 @@ describe('AccountingApiService', () => {
     const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
     expect(req.request.params.get('active')).toBe('true');
     req.flush([{ id: 'a1', name: 'Caja', currency: 'BOB', is_active: true }]);
-    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, isActive: true }]);
+    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, openingBalance: '0.00', isActive: true }]);
   });
 
   it('configures a method with account_id and is_active', () => {

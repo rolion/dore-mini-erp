@@ -8,7 +8,7 @@ import { AccountingApiService } from '../../services/accounting-api.service';
 import { DeactivateDialogComponent } from '../deactivate-dialog/deactivate-dialog.component';
 import { AccountsTabComponent } from './accounts-tab.component';
 
-const banco: Account = { id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', isActive: true };
+const banco: Account = { id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true };
 
 describe('AccountsTabComponent', () => {
   let api: jasmine.SpyObj<AccountingApiService>;

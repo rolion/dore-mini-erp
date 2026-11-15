@@ -44,30 +44,45 @@ describe('AccountDialogComponent', () => {
     expect(api.createAccount).not.toHaveBeenCalled();
   });
 
+  it('rejects a negative or malformed opening balance and sends a valid one (AC-09)', () => {
+    const fixture = create();
+    const saved: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'CASH', openingBalance: '150.50', isActive: true };
+    api.createAccount.and.returnValue(of(saved));
+    for (const bad of ['-5', '1.234', 'abc', '']) {
+      fixture.componentInstance.form.patchValue({ name: 'Caja', kind: 'CASH', openingBalance: bad });
+      fixture.componentInstance.onSubmit();
+      expect(fixture.componentInstance.form.controls.openingBalance.invalid).toBeTrue();
+    }
+    expect(api.createAccount).not.toHaveBeenCalled();
+    fixture.componentInstance.form.patchValue({ openingBalance: '150.50' });
+    fixture.componentInstance.onSubmit();
+    expect(api.createAccount).toHaveBeenCalledWith({ name: 'Caja', currency: 'BOB', kind: 'CASH', openingBalance: '150.50' });
+  });
+
   it('creates a trimmed account and closes with it', () => {
     const fixture = create();
-    const saved: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'BANK', isActive: true };
+    const saved: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true };
     api.createAccount.and.returnValue(of(saved));
     fixture.componentInstance.form.patchValue({ name: '  Caja  ', currency: 'BOB', kind: 'BANK' });
     fixture.componentInstance.onSubmit();
-    expect(api.createAccount).toHaveBeenCalledWith({ name: 'Caja', currency: 'BOB', kind: 'BANK' });
+    expect(api.createAccount).toHaveBeenCalledWith({ name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00' });
     expect(activeModal.close).toHaveBeenCalledWith(saved);
   });
 
   it('edits an existing account', () => {
     const fixture = create();
-    const account: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'BANK', isActive: true };
+    const account: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true };
     fixture.componentInstance.edit(account);
     api.updateAccount.and.returnValue(of({ ...account, name: 'Caja chica' }));
     fixture.componentInstance.form.patchValue({ name: 'Caja chica' });
     fixture.componentInstance.onSubmit();
-    expect(api.updateAccount).toHaveBeenCalledWith('a1', { name: 'Caja chica', currency: 'BOB', kind: 'BANK' });
+    expect(api.updateAccount).toHaveBeenCalledWith('a1', { name: 'Caja chica', currency: 'BOB', kind: 'BANK', openingBalance: '0.00' });
     expect(fixture.componentInstance.isEdit).toBeTrue();
   });
 
   it('asks a legacy account without kind to pick one before saving (AC-05)', () => {
     const fixture = create();
-    const legacy: Account = { id: 'a1', name: 'Vieja', currency: 'BOB', kind: null, isActive: true };
+    const legacy: Account = { id: 'a1', name: 'Vieja', currency: 'BOB', kind: null, openingBalance: '0.00', isActive: true };
     fixture.componentInstance.edit(legacy);
     fixture.componentInstance.onSubmit();
     expect(fixture.componentInstance.form.controls.kind.invalid).toBeTrue();
@@ -75,7 +90,7 @@ describe('AccountDialogComponent', () => {
     api.updateAccount.and.returnValue(of({ ...legacy, kind: 'CASH' }));
     fixture.componentInstance.form.patchValue({ kind: 'CASH' });
     fixture.componentInstance.onSubmit();
-    expect(api.updateAccount).toHaveBeenCalledWith('a1', { name: 'Vieja', currency: 'BOB', kind: 'CASH' });
+    expect(api.updateAccount).toHaveBeenCalledWith('a1', { name: 'Vieja', currency: 'BOB', kind: 'CASH', openingBalance: '0.00' });
   });
 
   it('shows the server field error and keeps the dialog open', () => {
@@ -92,7 +107,7 @@ describe('AccountDialogComponent', () => {
   it('shows the 409 reason when the currency change is blocked', () => {
     const fixture = create();
     api.updateAccount.and.returnValue(throwError(() => new AccountingApiError('La usan los métodos QR.', 409, {}, 'account_in_use', ['QR'])));
-    fixture.componentInstance.edit({ id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', isActive: true });
+    fixture.componentInstance.edit({ id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true });
     fixture.componentInstance.form.patchValue({ currency: 'USD' });
     fixture.componentInstance.onSubmit();
     fixture.detectChanges();

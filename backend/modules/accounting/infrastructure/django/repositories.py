@@ -5,20 +5,30 @@ from uuid import UUID
 
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Max, Min, Sum
+from django.utils import timezone
 
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES
 from modules.accounting.domain.classification import Classification
+from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
 
-from .models import AccountModel, ClassificationModel, EntryModel, MethodMappingModel
+from .models import (
+    AccountModel,
+    ClassificationModel,
+    CoveragePeriodModel,
+    EntryModel,
+    MethodMappingModel,
+    SettingsModel,
+)
 
 DUPLICATE_NAME = 'Ya existe una cuenta con ese nombre.'
 
 
 def _account(model: AccountModel) -> Account:
     return Account(id=model.id, name=model.name, currency=model.currency, is_active=model.is_active,
-                   created_at=model.created_at, updated_at=model.updated_at, kind=model.kind)
+                   created_at=model.created_at, updated_at=model.updated_at, kind=model.kind,
+                   opening_balance=model.opening_balance)
 
 
 class DjangoAccountRepository:
@@ -56,7 +66,7 @@ class DjangoAccountRepository:
                 AccountModel.objects.update_or_create(
                     id=account.id, company_id=self.company_id,
                     defaults={'name': account.name, 'currency': account.currency, 'is_active': account.is_active,
-                              'kind': account.kind})
+                              'kind': account.kind, 'opening_balance': account.opening_balance})
         except IntegrityError:  # carrera con otra petición: la restricción única manda
             raise AccountValidationError({'name': [DUPLICATE_NAME]}) from None
         return _account(self._accounts().get(pk=account.id))
@@ -133,6 +143,49 @@ class DjangoMethodMappingRepository:
     def lock_company(self) -> None:
         """Serializa cambios de cuentas/mapeo de la empresa (bloquea sus cuentas) dentro de una transacción."""
         list(AccountModel.objects.select_for_update().filter(company_id=self.company_id).values_list('id', flat=True))
+
+
+class DjangoCoverageRepository:
+    """Ajustes de corte y tramos de cobertura de una empresa; toda consulta filtra por `company_id`."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def cutoff_date(self) -> date | None:
+        return SettingsModel.objects.filter(company_id=self.company_id).values_list('cutoff_date', flat=True).first()
+
+    def create_cutoff(self, cutoff: date) -> date:
+        """Crea el corte si no existe (idempotente: nunca pisa uno existente) y devuelve el vigente."""
+        row, _ = SettingsModel.objects.get_or_create(company_id=self.company_id, defaults={'cutoff_date': cutoff})
+        return row.cutoff_date
+
+    def set_cutoff(self, cutoff: date) -> None:
+        SettingsModel.objects.filter(company_id=self.company_id).update(cutoff_date=cutoff)
+
+    def periods(self) -> list[Period]:
+        return [Period(timezone.localtime(row.started_at).date(),
+                       timezone.localtime(row.ended_at).date() if row.ended_at else None)
+                for row in CoveragePeriodModel.objects.filter(company_id=self.company_id)]
+
+    def first_started_on(self) -> date | None:
+        periods = self.periods()
+        return periods[0].started_on if periods else None
+
+    def has_open_period(self) -> bool:
+        return CoveragePeriodModel.objects.filter(company_id=self.company_id, ended_at__isnull=True).exists()
+
+    def open_period(self) -> None:
+        """Abre un tramo si no hay uno abierto (idempotente; la restricción única parcial resuelve las carreras)."""
+        try:
+            with transaction.atomic():
+                CoveragePeriodModel.objects.get_or_create(company_id=self.company_id, ended_at__isnull=True,
+                                                          defaults={'started_at': timezone.now()})
+        except IntegrityError:
+            pass
+
+    def close_period(self) -> None:
+        CoveragePeriodModel.objects.filter(company_id=self.company_id, ended_at__isnull=True).update(
+            ended_at=timezone.now())
 
 
 def _entry(model: EntryModel) -> Entry:
@@ -213,6 +266,12 @@ class DjangoEntryRepository:
 
     def has_entries_for_account(self, account_id: UUID) -> bool:
         return self._rows().filter(account_id=account_id).exists()
+
+    def has_entries(self) -> bool:
+        return self._rows().exists()
+
+    def first_payment_date(self) -> date | None:
+        return self._rows().aggregate(first=Min('payment_date'))['first']
 
     def query(self, filters: EntryFilters):
         rows = self._rows().select_related('account')

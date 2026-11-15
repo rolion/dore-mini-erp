@@ -1,6 +1,6 @@
 # TASK-modularidad-corte-historicos-contabilidad: Modularidad, fecha de corte y tratamiento de históricos de Contabilidad (CONT-06)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-modularidad-corte-historicos-contabilidad (creada sobre `task/TASK-cuentas-dinero-clasificaciones`, a pedido del usuario)
@@ -13,6 +13,7 @@
 | 2026-11-15 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta de Trello; rama base = rama actual (CONT-01, PR 74 sin mergear) | delivery-start |
 | 2026-11-15 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (ciclo de vida de módulos, tablas nuevas, dependencias entre módulos, contrato API) | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY: tres decisiones de negocio respondidas por el usuario (corte, apertura, desactivación); el resto con criterio propio, en el plan | delivery-start |
+| 2026-11-15 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -73,7 +74,12 @@ Con Contabilidad deshabilitada, Gastos y Compras funcionan (no la usan). No hay 
 `docs/plans/PLAN-2026-11-15-modularidad-corte-historicos-contabilidad.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+**Backend:** `shared/module_lifecycle.py` (puerto neutro: `on_enabled`, `on_disabled`, `disable_blockers`) usado por `EnableModule`/`DisableModule` en la misma transacción; `DisableBlocked` → 409 `disable_blocked` (AC-08, INV-05). Catálogo: `purchases.requires=('catalog',)`, `optional=('expenses',)` (AC-04, API-06). `accounting`: `domain/coverage.py` (corte, `Period`/`Gap`, `coverage_status`; INV-01, INV-02, INV-04), `Account.opening_balance` (`validate_opening_balance`; INV-03), `application/coverage.py` (`EnsureSettings`, `OnAccountingEnabled/Disabled`, `GetSettings`, `UpdateCutoff`, `GetCoverageStatus`, `DisableBlockers`), modelos `SettingsModel`/`CoveragePeriodModel` + `opening_balance` con migración `0005_coverage_settings_opening_balance` (único parcial de un tramo abierto), `DjangoCoverageRepository`, ganchos registrados en `apps.ready`, API `GET/PATCH /api/accounting/settings/`, `opening_balance` en cuentas, `coverage` del libro con `cutoff_date` y `gaps` (API-01..05), y fachada `coverage_status` (AC-07, AC-11).
+**Frontend** (`features/accounting`): `CutoffTabComponent` (cuarta pestaña «Corte y cobertura»), «Saldo de apertura» en el diálogo de cuenta y columna «Apertura», aviso `coverage-gaps` en el libro; i18n es/en/pt (UI-01..04). Referencia: plantilla «listados en pestañas y diálogo» y `AccountsTabComponent`; sin componentes compartidos nuevos. El 409 `disable_blocked` llega como `detail` del servidor y el servicio de módulos ya lo muestra.
+**Cobertura de pruebas:** `accounting/tests/test_coverage.py` (AC-01..12, EDGE-01/04), tests de `modularity` ajustados a las reglas nuevas, `test_entries_api` (coverage ampliado) y specs de `cutoff-tab`, `account-dialog`, `entry-list` y `accounting-settings`.
+**Desviaciones respecto al plan:** (1) el bloqueo de deshabilitar usa `DjangoOutflowLedger.open_count()`, que devuelve 0 hasta CONT-02 (no existen egresos); el contrato se prueba con un doble (`mock.patch`). (2) La prueba del ADR «migración `0005` con datos previos» se cubre con la suite completa y la migración es aditiva; no se escribió un test de migración dedicado. (3) `ensure` perezoso también corre al leer `coverage_status` (idempotente, en transacción).
+**Ejecución propia (no es el Quality Gate):** `manage.py test` completo 1691 OK; `ng test` 1430 OK; `npm run lint` e `i18n:check` (1984 claves) OK.
+**Deuda técnica:** ciclo accounting ⇄ sales/receivables preexistente; ingresos con fecha anterior al corte siguen generando entrada (decisión abierta no bloqueante).
 
 ## Review
 _Pendiente_

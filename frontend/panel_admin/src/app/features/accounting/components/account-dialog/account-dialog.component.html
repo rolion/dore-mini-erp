@@ -42,6 +42,14 @@
       <small class="form-text text-danger d-block">{{ serverErrors.currency }}</small>
       }
     </div>
+    <div class="form-group mt-3">
+      <label for="account-opening">{{ 'ACCOUNTING.ACCOUNT_DIALOG.SALDO_DE_APERTURA' | translate }}</label>
+      <input id="account-opening" type="text" inputmode="decimal" class="form-control" formControlName="openingBalance">
+      <small class="form-text text-muted d-block">{{ 'ACCOUNTING.ACCOUNT_DIALOG.SALDO_DE_APERTURA_AYUDA' | translate }}</small>
+      @if (hasError('openingBalance')) {
+      <small class="form-text text-danger d-block">{{ serverErrors.openingBalance || ('ACCOUNTING.ACCOUNT_DIALOG.SALDO_DE_APERTURA_INVALIDO' | translate) }}</small>
+      }
+    </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>

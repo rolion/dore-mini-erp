@@ -6,8 +6,8 @@ import { Account, AccountingApiError, PaymentMethod } from '../../models/account
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { MethodsTabComponent } from './methods-tab.component';
 
-const caja: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'BANK', isActive: true };
-const dolares: Account = { id: 'a2', name: 'Dólares', currency: 'USD', kind: 'BANK', isActive: true };
+const caja: Account = { id: 'a1', name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true };
+const dolares: Account = { id: 'a2', name: 'Dólares', currency: 'USD', kind: 'BANK', openingBalance: '0.00', isActive: true };
 const methods = (): PaymentMethod[] => [
   { code: 'CASH', label: 'Efectivo', isActive: true, account: null },
   { code: 'QR', label: 'QR', isActive: true, account: caja },

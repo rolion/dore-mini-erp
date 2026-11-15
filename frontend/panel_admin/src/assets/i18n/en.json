@@ -2529,7 +2529,10 @@
       "TIPO_BANK": "Bank",
       "TIPO_WALLET": "Wallet",
       "SIN_TIPO": "No type",
-      "EL_TIPO_ES_OBLIGATORIO": "The type is required."
+      "EL_TIPO_ES_OBLIGATORIO": "The type is required.",
+      "SALDO_DE_APERTURA": "Opening balance",
+      "SALDO_DE_APERTURA_AYUDA": "Account amount at the cutoff date. It cannot be changed once the account has movements.",
+      "SALDO_DE_APERTURA_INVALIDO": "Enter an amount of 0 or more with up to 2 decimals."
     },
     "CLASSIFICATIONS": {
       "CLASIFICACIONES": "Classifications",
@@ -2549,6 +2552,21 @@
       "CLASIFICACION_DESACTIVADA": "Classification deactivated",
       "EJEMPLO": "E.g.: Sales, Rent",
       "DIRECCION_FIJA": "The direction cannot be changed after creation."
+    },
+    "CUTOFF": {
+      "CORTE_Y_COBERTURA": "Cutoff and coverage",
+      "DESDE_CUANDO_CUENTA": "Since when Accounting counts your company’s movements.",
+      "SIN_HABILITAR": "Accounting is not enabled yet. Enabling it sets the cutoff date.",
+      "NOTA_NO_RETROACTIVO": "Anything recorded before the cutoff or during a deactivation is not accounted for automatically.",
+      "FECHA_DE_CORTE": "Cutoff date",
+      "CORTE_BLOQUEADO": "It cannot be changed: there are already movements.",
+      "HABILITADA_DESDE": "Enabled since",
+      "PERIODOS_SIN_COBERTURA": "Periods without coverage",
+      "SIN_PERIODOS_SIN_COBERTURA": "No periods without coverage.",
+      "CORTE_ACTUALIZADO": "Cutoff date updated",
+      "APERTURA": "Opening",
+      "AVISO_COBERTURA_PARCIAL": "Coverage is partial: there were periods with Accounting disabled.",
+      "VER_CORTE_Y_COBERTURA": "See cutoff and coverage"
     },
     "DEACTIVATE_DIALOG": {
       "TITULO": "Deactivate account",

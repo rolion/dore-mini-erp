@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from django.utils import timezone
 
+from modules.accounting.application.coverage import GetSettings, UpdateCutoff
 from modules.accounting.application.regularization_summary import build_summary
 from modules.accounting.application.regularize import RegularizationInProgress, RegularizeLedger
 from modules.accounting.application.use_cases import (
@@ -44,6 +45,7 @@ from modules.accounting.infrastructure.adapters import (
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
     DjangoClassificationRepository,
+    DjangoCoverageRepository,
     DjangoEntryRepository,
     DjangoMethodMappingRepository,
     EntryFilters,
@@ -59,6 +61,7 @@ from .serializers import (
     ClassificationUpdateSerializer,
     RegularizationApplySerializer,
     RegularizationInputSerializer,
+    SettingsUpdateSerializer,
     MethodInputSerializer,
     serialize_account,
     serialize_classification,
@@ -66,6 +69,7 @@ from .serializers import (
     serialize_entry,
     serialize_totals,
     serialize_method,
+    serialize_settings,
 )
 
 
@@ -155,6 +159,26 @@ class AccountDeactivateView(_ConfigView):
         return Response(serialize_account(_run(DeactivateAccount(accounts, mappings), account_id)))
 
 
+def _coverage_use_case(request, use_case_class):
+    """Caso de uso de corte/cobertura de la empresa del usuario (si Contabilidad está habilitada o no)."""
+    company_id = company_id_from(request)
+    return use_case_class(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
+                          timezone.localdate(), module_gate.is_enabled(company_id, 'accounting'))
+
+
+class SettingsView(_ConfigView):
+    """Corte y cobertura de Contabilidad: se consulta aunque el módulo esté deshabilitado."""
+
+    def get(self, request):
+        return Response(serialize_settings(_run(_coverage_use_case(request, GetSettings))))
+
+    def patch(self, request):
+        serializer = SettingsUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        use_case = _coverage_use_case(request, UpdateCutoff)
+        return Response(serialize_settings(_run(use_case, serializer.validated_data['cutoff_date'])))
+
+
 class ClassificationListCreateView(_ConfigView):
     def get(self, request):
         direction = request.query_params.get('direction') or None
@@ -240,7 +264,9 @@ class EntryListView(APIView):
         response = paginator.get_paginated_response([serialize_entry(row, enabled) for row in page])
         response.data['totals'] = serialize_totals(totals)
         response.data['period'] = {'date_from': filters.date_from, 'date_to': filters.date_to}
-        response.data['coverage'] = serialize_coverage(coverage)
+        settings_view = GetSettings(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
+                                    timezone.localdate(), True).execute()
+        response.data['coverage'] = serialize_coverage(coverage, settings_view)
         return response
 
 
