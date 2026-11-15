@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AccountsTabComponent } from '../../components/accounts-tab/accounts-tab.component';
 import { ClassificationsTabComponent } from '../../components/classifications-tab/classifications-tab.component';
@@ -16,9 +16,14 @@ export type SettingsTab = 'accounts' | 'methods' | 'classifications' | 'expenses
   imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, ClassificationsTabComponent, ExpenseConfigTabComponent, CutoffTabComponent],
 })
 export class AccountingSettingsComponent {
-  tab: SettingsTab = 'accounts';
-
   readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'classifications', 'expenses', 'cutoff'];
+  /** Pestaña inicial: `?tab=expenses` abre «Egresos» (enlace de ayuda de los formularios de Gastos y Compras). */
+  tab: SettingsTab = this.initialTab();
+
+  private initialTab(): SettingsTab {
+    const requested = inject(ActivatedRoute).snapshot.queryParamMap.get('tab');
+    return this.tabs.find((tab) => tab === requested) ?? 'accounts';
+  }
 
   select(tab: SettingsTab): void {
     this.tab = tab;

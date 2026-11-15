@@ -2712,7 +2712,10 @@
       "CONFIGURADA": "Configurada",
       "PENDIENTE": "Pendiente",
       "INACTIVA": "Inactiva",
-      "CLASIFICACION_GUARDADA": "Clasificación guardada"
+      "CLASIFICACION_GUARDADA": "Clasificación guardada",
+      "CONFIGURAR_EN_CONTABILIDAD": "Configurar en Contabilidad → Egresos",
+      "ERROR_DE_RED": "No se pudo conectar con el servidor. Revisa tu conexión.",
+      "ERROR_INESPERADO": "Ocurrió un error inesperado. Inténtalo de nuevo."
     }
   }
 }

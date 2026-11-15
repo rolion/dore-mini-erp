@@ -1,6 +1,6 @@
 # TASK-categorias-gastos-clasificacion-egreso: Clasificación de egreso por categoría de Gastos y para pagos a proveedores (CONT-03)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-categorias-gastos-clasificacion-egreso (base: `origin/accounting`)
@@ -15,6 +15,7 @@
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 | 2026-11-15 | REVIEW → ENGINEERING | Quality Gate FAIL: build no ejecutado, 1 prueba Karma preexistente en rojo, REV-01..04 abiertos | delivery-publish |
+| 2026-11-15 | ENGINEERING → REVIEW | REV-01..04 corregidos; re-verificación pendiente | delivery-build |
 
 ## Investigación
 
@@ -80,7 +81,8 @@ Ver [ADR-categorias-gastos-clasificacion-egreso-propiedad-y-snapshot](../adr/ADR
 **Frontend.** Pestaña «Egresos» (`expense-config-tab`, plantilla de configuración con listados en pestañas; reutiliza `AccountingApiService.listClassifications`, badges y `form-select`), servicio `ExpenseConfigApiService`, línea «Clasificación» en el detalle del gasto, claves i18n es/en/pt `ACCOUNTING.EXPENSE_CONFIG` (AC-08, UI-01, UI-02).
 **Pruebas.** Backend (BD real): suite completa 1718 pruebas; 2 fallos iniciales corregidos y re-ejecutados en `accounting`, `accounts`, `purchases` y `expenses` (604 OK): (1) guarda de `company_id` indexado → `purchases_settings.company_id` con `db_index` + restricción única (migración regenerada); (2) `test_coverage.PurchasePaymentIndependenceTests` (CONT-06 AC-02) ahora configura la clasificación de pagos a proveedores antes de pagar, porque con Contabilidad cubriendo el pago CONT-03 exige esa configuración. Frontend: 149 specs de `accounting` y `expenses` OK, `lint` e `i18n:check` OK. El quality gate lo ejecuta `delivery-publish`.
 **Desviaciones.** UI-03 (enlace «Configurar en Contabilidad → Egresos» en formularios de gasto/pago): el mensaje de la API ya indica la ruta en texto; el enlace queda como mejora. La API de errores de registro devuelve `code` junto a `category_id`/`non_field_errors`.
-**Deuda técnica.** Enlace de ayuda UI-03 (ver desviaciones).
+**Correcciones tras el Quality Gate (REV-01..04).** REV-01: `app-classification-hint` compartido (enlace «Configurar en Contabilidad → Egresos» con `?tab=expenses`) en el formulario de gasto y el diálogo de pago; `ExpensesApiError`/`PaymentApiError` conservan `code`; la página de configuración abre la pestaña pedida (UI-03 ya no es desviación). REV-02: `listCategories` recorre todas las páginas. REV-03: claves i18n propias `ACCOUNTING.EXPENSE_CONFIG.ERROR_*`. REV-04: pruebas de `describe_classifications`, reintento idempotente de pago, gasto anulado, edición sin cambio de categoría, Contabilidad deshabilitada, UI-02, estado «Inactiva», paginación y código de error. Verificado: backend `accounting`+`expenses`+`purchases`+`accounts` 610 OK; frontend `lint`, `i18n:check` (1998 claves) y `npm run build` OK; Karma 1442 OK y 2 fallos de idioma global (`screens-i18n.spec.ts` y `payment-amounts.spec.ts`) en archivos que el diff no toca.
+**Deuda técnica.** Ninguna propia; los 2 fallos de Karma dependen del estado global de idioma de las pruebas (preexistente; no confirmado en la base para `payment-amounts`).
 
 ## Review
 **Veredicto: FAIL (sin hallazgos Critical/High en la implementación).**

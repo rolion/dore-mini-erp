@@ -1,6 +1,6 @@
 # REV-2026-11-15-categorias-gastos-clasificacion-egreso-04: Faltan pruebas para edge cases y UI-02 del plan
 
-**Status:** Open
+**Status:** Resolved (pendiente de re-verificación por el Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-15-categorias-gastos-clasificacion-egreso.md (v1)

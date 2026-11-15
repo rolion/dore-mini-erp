@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { finalize } from 'rxjs';
+import { ClassificationHintComponent } from '../../../../shared/components/classification-hint/classification-hint.component';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import {
   PAYMENT_METHODS,
@@ -26,7 +27,7 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-payment-dialog',
   templateUrl: './payment-dialog.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe, ClassificationHintComponent],
 })
 export class PaymentDialogComponent {
   readonly methods = PAYMENT_METHODS;
@@ -45,6 +46,7 @@ export class PaymentDialogComponent {
   touched = false;
   serverErrors: PaymentFieldErrors = {};
   generalError = '';
+  errorCode: string | null = null;
 
   private paymentId: string = crypto.randomUUID();
   /** Se emite cuando se relee la compra tras un rechazo (saldo desactualizado), para refrescar el fondo. */
@@ -121,6 +123,7 @@ export class PaymentDialogComponent {
     this.submitting = true;
     this.serverErrors = {};
     this.generalError = '';
+    this.errorCode = null;
     this.api
       .create(this.purchase.id, {
         paymentId: this.paymentId,
@@ -136,6 +139,7 @@ export class PaymentDialogComponent {
         next: (payment: Payment) => this.activeModal.close(payment),
         error: (err: PaymentApiError) => {
           this.serverErrors = err.fieldErrors;
+          this.errorCode = err.code;
           const hasField = !!(err.fieldErrors.amount || err.fieldErrors.paymentMethod || err.fieldErrors.paymentDate);
           this.generalError = hasField ? '' : err.message;
           // El saldo pudo cambiar en otra parte: se relee la compra para mostrar el vigente, sin tocar lo escrito.

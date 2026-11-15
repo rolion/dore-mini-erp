@@ -1,4 +1,6 @@
 """CONT-03: clasificación de pagos a proveedores (BD real)."""
+from uuid import uuid4
+
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
@@ -67,6 +69,17 @@ class PaymentSnapshotTests(PaymentClassificationTestCase):
         self.configure(second['id'])
         self.configure(None)
         self.assertEqual(str(PaymentModel.objects.get(pk=paid['id']).classification_id), first['id'])
+
+    def test_retrying_a_payment_keeps_its_original_classification(self):  # edge: reintento idempotente
+        first, second = self.classification('Proveedores'), self.classification('Otros')
+        self.configure(first['id'])
+        purchase = self.confirmed_purchase()
+        payment_id = uuid4()
+        original = self.pay(purchase, '20.00', payment_id=payment_id)
+        self.configure(second['id'])
+        retried = self.pay(purchase, '20.00', expected=200, payment_id=payment_id)
+        self.assertEqual(retried['classification']['id'], original['classification']['id'])
+        self.assertEqual(PaymentModel.objects.count(), 1)
 
     def test_payment_without_configuration_is_saved_when_accounting_is_off(self):  # AC-07
         self.assertIsNone(self.pay(self.confirmed_purchase())['classification'])

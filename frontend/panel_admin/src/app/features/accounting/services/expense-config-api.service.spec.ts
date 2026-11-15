@@ -25,6 +25,18 @@ describe('ExpenseConfigApiService', () => {
     expect(result).toEqual([{ id: 'k1', name: 'Alquiler', classification: null }]);
   });
 
+  it('follows every page of categories (REV-02)', () => {
+    let result: { id: string }[] = [];
+    service.listCategories().subscribe((rows) => (result = rows));
+    http.expectOne((r) => r.params.get('page') === '1').flush({
+      count: 101, next: 'http://x/?page=2', previous: null, results: [{ id: 'k1', name: 'A', classification: null }],
+    });
+    http.expectOne((r) => r.params.get('page') === '2').flush({
+      count: 101, next: null, previous: 'http://x/?page=1', results: [{ id: 'k2', name: 'B', classification: null }],
+    });
+    expect(result.map((c) => c.id)).toEqual(['k1', 'k2']);
+  });
+
   it('sets and clears the category classification with PUT', () => {
     service.setCategoryClassification('k1', 'c1').subscribe();
     const req = http.expectOne((r) => r.url.endsWith('/expense-categories/k1/classification/'));

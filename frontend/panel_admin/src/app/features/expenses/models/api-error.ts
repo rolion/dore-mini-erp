@@ -59,7 +59,7 @@ export function toApiError(status: number, body: unknown): ExpensesApiError {
     return new ExpensesApiError(NETWORK_ERROR_MESSAGE(), 0);
   }
   if (status === 400) {
-    return new ExpensesApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(body));
+    return new ExpensesApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(body), detailOf(body).code);
   }
   const { detail, code } = detailOf(body);
   if (status === 404) {

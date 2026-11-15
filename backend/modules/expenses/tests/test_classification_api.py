@@ -94,6 +94,28 @@ class AssociationApiTests(ClassificationApiTestCase):
         self.assertEqual(response.status_code, 404)
 
 
+class SnapshotApiTests(ClassificationApiTestCase):
+    def test_voided_expense_keeps_its_snapshot(self):  # INV-02
+        rent, category = self.classification(), self.category()
+        self.associate(category, rent['id'])
+        recorded = self.expense(category)
+        voided = self.client.post(f'{EXPENSES}{recorded["id"]}/void/').json()
+        self.assertEqual(voided['classification']['id'], rent['id'])
+
+    def test_editing_without_changing_category_keeps_the_snapshot(self):  # INV-02
+        first, second = self.classification('Alquiler'), self.classification('Local')
+        category = self.category()
+        self.associate(category, first['id'])
+        recorded = self.expense(category)
+        self.associate(category, second['id'])
+        edited = self.client.patch(f'{EXPENSES}{recorded["id"]}/', {'description': 'Otro'}, format='json').json()
+        self.assertEqual(edited['classification']['id'], first['id'])
+
+    def test_disabled_accounting_saves_without_configuration(self):  # AC-06
+        category = self.category()
+        self.assertIsNone(self.expense(category)['classification'])
+
+
 class CoverageApiTests(ClassificationApiTestCase):
     def setUp(self):
         super().setUp()

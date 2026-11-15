@@ -53,6 +53,8 @@ describe('ExpenseConfigTabComponent', () => {
     expect(fixture.componentInstance.status(rows[1])).toBe('pending');
     expect(fixture.componentInstance.status(rows[2])).toBe('inactive');
     expect(fixture.nativeElement.querySelectorAll('tbody tr').length).toBe(3);
+    const badges = Array.from(fixture.nativeElement.querySelectorAll('.badge-outline')).map((b) => (b as HTMLElement).textContent?.trim());
+    expect(badges).toEqual(['Pendiente', 'Pendiente', 'Inactiva']);
   });
 
   it('saves a category classification on change (AC-08)', () => {

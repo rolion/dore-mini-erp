@@ -2712,7 +2712,10 @@
       "CONFIGURADA": "Configurada",
       "PENDIENTE": "Pendente",
       "INACTIVA": "Inativa",
-      "CLASIFICACION_GUARDADA": "Classificação salva"
+      "CLASIFICACION_GUARDADA": "Classificação salva",
+      "CONFIGURAR_EN_CONTABILIDAD": "Configurar em Contabilidade → Saídas",
+      "ERROR_DE_RED": "Não foi possível conectar ao servidor. Verifique sua conexão.",
+      "ERROR_INESPERADO": "Ocorreu um erro inesperado. Tente novamente."
     }
   }
 }

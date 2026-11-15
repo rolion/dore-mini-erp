@@ -1,6 +1,6 @@
 # REV-2026-11-15-categorias-gastos-clasificacion-egreso-02: La pestaña Egresos trunca silenciosamente a 100 categorías
 
-**Status:** Open
+**Status:** Resolved (pendiente de re-verificación por el Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-15-categorias-gastos-clasificacion-egreso.md (v1)

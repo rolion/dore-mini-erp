@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { EMPTY, Observable, catchError, expand, map, reduce, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { tr } from '../../../core/i18n/translate';
 import { Page } from '../../../shared/models/page';
@@ -29,9 +29,9 @@ export function firstMessage(body: unknown): string | null {
 
 function toError(err: HttpErrorResponse): ExpenseConfigError {
   if (err.status === 0) {
-    return new ExpenseConfigError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON'), 0);
+    return new ExpenseConfigError(tr('ACCOUNTING.EXPENSE_CONFIG.ERROR_DE_RED'), 0);
   }
-  return new ExpenseConfigError(firstMessage(err.error) ?? tr('CUSTOMERS.CUSTOMERS_API_SERVICE.OCURRIO_UN_ERROR_INESPERADO_INTENTALO'), err.status);
+  return new ExpenseConfigError(firstMessage(err.error) ?? tr('ACCOUNTING.EXPENSE_CONFIG.ERROR_INESPERADO'), err.status);
 }
 
 /** Configuración de la clasificación de egreso de las categorías de Gastos y de los pagos a proveedores. */
@@ -41,11 +41,23 @@ export class ExpenseConfigApiService {
   private readonly categoriesUrl = `${environment.apiUrl}/expense-categories/`;
   private readonly paymentUrl = `${environment.apiUrl}/purchases/payment-classification/`;
 
-  /** Categorías activas (hasta 100 por página, el máximo del servidor). */
+  /** Todas las categorías activas: recorre las páginas del servidor (máximo 100 por página). */
   listCategories(): Observable<CategoryConfig[]> {
-    return this.http.get<Page<CategoryConfigDto>>(this.categoriesUrl, { params: { active: 'true', page_size: '100' } }).pipe(
-      map((page) => page.results.map((c) => ({ id: c.id, name: c.name, classification: c.classification }))),
+    return this.categoriesPage(1).pipe(
+      expand((result) => (result.hasNext ? this.categoriesPage(result.page + 1) : EMPTY)),
+      reduce((all, result) => [...all, ...result.rows], [] as CategoryConfig[]),
       catchError((err: HttpErrorResponse) => throwError(() => toError(err))),
+    );
+  }
+
+  private categoriesPage(page: number): Observable<{ page: number; hasNext: boolean; rows: CategoryConfig[] }> {
+    const params = { active: 'true', page_size: '100', page: String(page) };
+    return this.http.get<Page<CategoryConfigDto>>(this.categoriesUrl, { params }).pipe(
+      map((body) => ({
+        page,
+        hasNext: !!body.next,
+        rows: body.results.map((c) => ({ id: c.id, name: c.name, classification: c.classification })),
+      })),
     );
   }
 
