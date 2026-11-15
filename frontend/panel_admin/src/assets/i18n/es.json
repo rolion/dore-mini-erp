@@ -2648,7 +2648,8 @@
         "DESTINATION_DIFFERENCE": "Ya existe en otra cuenta, no se toca",
         "INVALID": "No válido, no se toca",
         "FAILED": "Con error"
-      }
+      },
+      "APLICAR_SIN_CANTIDAD": "Aplicar regularización"
     }
   }
 }

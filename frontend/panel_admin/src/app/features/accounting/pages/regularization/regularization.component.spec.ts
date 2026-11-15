@@ -77,6 +77,8 @@ describe('RegularizationComponent', () => {
     expect(headline).toContain('1 requieren revisión');
     const actions = Array.from(el.querySelectorAll('[data-testid="group"]')).map((row) => row.querySelector('app-status-badge')?.textContent?.trim());
     expect(actions).toEqual(['Se creará', 'Se creará', 'Sin regla, no se toca']);
+    expect(el.querySelector('[data-testid="groups"] thead')?.textContent).not.toContain('Estado');
+    expect(el.querySelector('[data-testid="headline"]')?.closest('.alert')?.classList).toContain('text-info-emphasis');
     expect(el.querySelector('[data-testid="groups-note"]')?.textContent).toContain('no es una lista de ingresos');
     expect((el.querySelector('[data-testid="apply"]') as HTMLButtonElement).textContent).toContain('crear 3 entradas');
   });
@@ -120,6 +122,7 @@ describe('RegularizationComponent', () => {
     fixture.detectChanges();
     expect((el.querySelector('[data-testid="apply"]') as HTMLButtonElement).disabled).toBeTrue();
     expect(el.querySelector('[data-testid="no-missing"]')).not.toBeNull();
+    expect((el.querySelector('[data-testid="apply"]') as HTMLButtonElement).textContent?.trim()).toBe('Aplicar regularización');
   });
 
   it('shows the empty state, validation errors and the in-progress conflict (AC-17, UI-05)', () => {

@@ -112,7 +112,7 @@
               <a routerLink="/pocketbiz/accounting/entries" class="alert-link ms-2">{{ 'ACCOUNTING.REGULARIZATION.VER_ENTRADAS' | translate }}</a>
             </div>
             } @else {
-            <div class="alert alert-info" role="status">
+            <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="status">
               {{ 'ACCOUNTING.REGULARIZATION.AVISO_PREVISUALIZACION' | translate }}
               @if (!empty) {
               <strong class="d-block mt-1" data-testid="headline">{{ headline }}</strong>
@@ -132,7 +132,6 @@
                 <thead>
                   <tr>
                     <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ACCION' | translate }}</th>
-                    <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ESTADO' | translate }}</th>
                     <th>{{ 'ACCOUNTING.REGULARIZATION.COL_ORIGEN' | translate }}</th>
                     <th>{{ 'ACCOUNTING.REGULARIZATION.COL_CUENTA' | translate }}</th>
                     <th class="text-end">{{ 'ACCOUNTING.REGULARIZATION.COL_CANTIDAD' | translate }}</th>
@@ -143,7 +142,6 @@
                   @for (group of summary.groups; track $index) {
                   <tr data-testid="group">
                     <td><app-status-badge [tone]="actionTone(group.status)" [label]="actionLabel(group.status)" /></td>
-                    <td>{{ statusLabel(group.status) }}</td>
                     <td>{{ originLabel(group.origin) }}</td>
                     <td>{{ group.account || ('ACCOUNTING.REGULARIZATION.SIN_CUENTA' | translate) }}</td>
                     <td class="text-end">{{ group.count }}</td>
@@ -200,7 +198,7 @@
             @if (!applied) {
             <div class="mt-3">
               <button type="button" class="btn btn-warning" data-testid="apply" [disabled]="!canApply" (click)="confirmApply()">
-                {{ (applying ? 'ACCOUNTING.REGULARIZATION.APLICANDO' : 'ACCOUNTING.REGULARIZATION.APLICAR') | translate: { count: missingCount } }}
+                {{ (applying ? 'ACCOUNTING.REGULARIZATION.APLICANDO' : missingCount ? 'ACCOUNTING.REGULARIZATION.APLICAR' : 'ACCOUNTING.REGULARIZATION.APLICAR_SIN_CANTIDAD') | translate: { count: missingCount } }}
               </button>
               @if (missingCount === 0 && !empty) {
               <small class="form-text text-muted" data-testid="no-missing">{{ 'ACCOUNTING.REGULARIZATION.SIN_FALTANTES' | translate }}</small>
