@@ -5,14 +5,17 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { tr } from '../../../../core/i18n/translate';
-import { ACCOUNT_NAME_MAX_LENGTH, Account, AccountingApiError, CURRENCIES } from '../../models/accounting';
+import { ACCOUNT_KINDS, ACCOUNT_NAME_MAX_LENGTH, Account, AccountKind, AccountingApiError, CURRENCIES } from '../../models/accounting';
 import { AccountingApiService } from '../../services/accounting-api.service';
 
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
 }
 
-export type AccountField = 'name' | 'currency';
+export type AccountField = 'name' | 'currency' | 'kind' | 'openingBalance';
+
+/** Decimal no negativo con hasta 2 decimales. */
+export const OPENING_BALANCE_PATTERN = /^\d{1,10}(\.\d{1,2})?$/;
 
 /** Alta y edición de una cuenta destino en un diálogo; se cierra devolviendo la cuenta guardada. */
 @Component({
@@ -24,9 +27,12 @@ export type AccountField = 'name' | 'currency';
 export class AccountDialogComponent {
   readonly nameMaxLength = ACCOUNT_NAME_MAX_LENGTH;
   readonly currencies = CURRENCIES;
+  readonly kinds = ACCOUNT_KINDS;
   readonly form = inject(FormBuilder).nonNullable.group({
     name: ['', [notBlank, Validators.maxLength(ACCOUNT_NAME_MAX_LENGTH)]],
     currency: ['BOB', Validators.required],
+    kind: ['' as AccountKind | '', Validators.required],
+    openingBalance: ['0.00', [Validators.required, Validators.pattern(OPENING_BALANCE_PATTERN)]],
   });
 
   /** Cuenta que se edita; `null` para crear. Lo fija quien abre el diálogo. */
@@ -54,7 +60,7 @@ export class AccountDialogComponent {
 
   edit(account: Account): void {
     this.account = account;
-    this.form.setValue({ name: account.name, currency: account.currency });
+    this.form.setValue({ name: account.name, currency: account.currency, kind: account.kind ?? '', openingBalance: account.openingBalance });
   }
 
   hasError(field: AccountField): boolean {
@@ -68,7 +74,10 @@ export class AccountDialogComponent {
       return;
     }
     const value = this.form.getRawValue();
-    const input = { name: value.name.trim(), currency: value.currency };
+    if (value.kind === '') {
+      return;
+    }
+    const input = { name: value.name.trim(), currency: value.currency, kind: value.kind, openingBalance: value.openingBalance };
     this.saving = true;
     const request = this.account ? this.api.updateAccount(this.account.id, input) : this.api.createAccount(input);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -84,7 +93,7 @@ export class AccountDialogComponent {
           return;
         }
         const errors: Partial<Record<AccountField, string>> = {};
-        for (const field of ['name', 'currency'] as const) {
+        for (const field of ['name', 'currency', 'kind', 'openingBalance'] as const) {
           const messages = err.fieldErrors[field];
           if (messages?.length) {
             errors[field] = messages.join(' ');

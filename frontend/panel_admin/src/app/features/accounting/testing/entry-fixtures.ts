@@ -32,7 +32,7 @@ export function makeEntryPage(results: Entry[] = [makeEntry()], overrides: Parti
     totals: results.length
       ? [{ currency: 'BOB', count: results.length, amount: '300.50', byOrigin: { PRODUCT: '300.50', SERVICE: '0.00' } }]
       : [],
-    coverage: { firstPaymentDate: '2026-10-05', lastPaymentDate: '2026-11-01', firstRecordedAt: '2026-11-02T10:00:00Z' },
+    coverage: { firstPaymentDate: '2026-10-05', lastPaymentDate: '2026-11-01', firstRecordedAt: '2026-11-02T10:00:00Z', cutoffDate: '2026-10-01', gaps: [] },
     ...overrides,
   };
 }

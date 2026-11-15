@@ -4,10 +4,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from django.db import connection
+from django.db import connection, transaction
+from django.utils import timezone
 
+from modules.accounting.application.coverage import GetCoverageStatus
 from modules.accounting.application.use_cases import missing_methods
 from modules.accounting.domain.catalog import METHOD_LABELS
+from modules.accounting.domain.account import AccountValidationError
 from modules.accounting.domain.entry import (
     Entry,
     EntryConflict,
@@ -16,12 +19,16 @@ from modules.accounting.domain.entry import (
 )
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
+    DjangoClassificationRepository,
+    DjangoCoverageRepository,
     DjangoEntryRepository,
     DjangoMethodMappingRepository,
 )
+from shared import module_gate
 
-__all__ = ['AccountRef', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError',
-           'RecordedEntry', 'missing_method_labels', 'record_entry', 'resolve_account']
+__all__ = ['AccountRef', 'AccountValidationError', 'ClassificationRef', 'CoverageRef', 'EntryConflict',
+           'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError', 'RecordedEntry', 'missing_method_labels', 'record_entry',
+           'coverage_status', 'resolve_account', 'validate_classification', 'validate_money_account']
 
 
 @dataclass(frozen=True)
@@ -43,6 +50,58 @@ def resolve_account(company_id: UUID, method: str) -> AccountRef | None:
     if account is None or not account.can_receive:
         return None
     return AccountRef(account.id, account.name, account.currency)
+
+
+@dataclass(frozen=True)
+class ClassificationRef:
+    classification_id: UUID
+    name: str
+    direction: str  # 'INCOME' o 'EXPENSE'
+
+
+def validate_money_account(company_id: UUID, account_id: UUID) -> AccountRef:
+    """Valida una cuenta de dinero elegida para un uso NUEVO, sea un cobro o un pago (no distingue dirección).
+
+    Lanza `AccountValidationError` si no existe en la empresa o está inactiva. Los registros anteriores de una cuenta
+    desactivada no se tocan.
+    """
+    account = DjangoAccountRepository(company_id).get(account_id)
+    if account is None:
+        raise AccountValidationError({'account_id': ['La cuenta no existe en esta empresa.']})
+    if not account.is_active:
+        raise AccountValidationError({'account_id': ['La cuenta está inactiva.']})
+    return AccountRef(account.id, account.name, account.currency)
+
+
+def validate_classification(company_id: UUID, classification_id: UUID, direction: str) -> ClassificationRef:
+    """Valida una clasificación para un uso nuevo: de la empresa, activa y de la dirección (`INCOME`/`EXPENSE`)."""
+    classification = DjangoClassificationRepository(company_id).get(classification_id)
+    if classification is None:
+        raise AccountValidationError({'classification_id': ['La clasificación no existe en esta empresa.']})
+    classification.ensure_usable(direction)
+    return ClassificationRef(classification.id, classification.name, classification.direction)
+
+
+@dataclass(frozen=True)
+class CoverageRef:
+    """¿Una operación con esa fecha efectiva debe crear movimiento? `reason`: accounting_disabled, before_cutoff, in_gap."""
+    enabled: bool
+    cutoff_date: date | None
+    covered: bool
+    reason: str | None = None
+
+
+def coverage_status(company_id: UUID, effective_date: date) -> CoverageRef:
+    """Decisión única de cobertura: solo si `covered` se crea movimiento (con cuenta y clasificación válidas).
+
+    Sin cobertura (módulo deshabilitado, fecha anterior al corte o dentro de un periodo sin cobertura) la operación de
+    origen se guarda sin movimiento y sin error. Completa de forma perezosa el corte de empresas anteriores.
+    """
+    with transaction.atomic():
+        status = GetCoverageStatus(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
+                                   timezone.localdate(), module_gate.is_enabled(company_id, 'accounting')
+                                   ).execute(effective_date)
+    return CoverageRef(status.enabled, status.cutoff_date, status.covered, status.reason)
 
 
 def missing_method_labels(company_id: UUID) -> list[str]:

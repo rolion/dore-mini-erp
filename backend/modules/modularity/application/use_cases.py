@@ -44,10 +44,11 @@ class ListModules:
 
 
 class EnableModule:
-    def __init__(self, repository, changes=None, preconditions=None):
+    def __init__(self, repository, changes=None, preconditions=None, on_enabled=None):
         self.repository = repository
         self.changes = changes
         self.preconditions = preconditions  # callable(key) -> nombres de lo que falta para habilitar
+        self.on_enabled = on_enabled  # callable(key): gancho del ciclo de vida, en la misma transacción
 
     def execute(self, key: str, actor: Actor | None = None) -> list[ModuleView]:
         enabled = domain.effective_enabled(self.repository.enabled_keys())
@@ -58,22 +59,31 @@ class EnableModule:
             if missing:
                 raise domain.IncompleteConfiguration(missing)
             self.repository.enable(key)
+            if self.on_enabled:
+                self.on_enabled(key)
             _record(self.changes, actor, key, True)
             enabled.add(key)
         return _views(enabled)
 
 
 class DisableModule:
-    def __init__(self, repository, changes=None):
+    def __init__(self, repository, changes=None, blockers=None, on_disabled=None):
         self.repository = repository
         self.changes = changes
+        self.blockers = blockers  # callable(key) -> motivos que impiden deshabilitar
+        self.on_disabled = on_disabled  # callable(key): gancho del ciclo de vida, en la misma transacción
 
     def execute(self, key: str, actor: Actor | None = None) -> list[ModuleView]:
         enabled = domain.effective_enabled(self.repository.enabled_keys())
         domain.definition(key)
         if key in enabled:
             domain.check_can_disable(key, enabled)
+            blocking = self.blockers(key) if self.blockers else []
+            if blocking:
+                raise domain.DisableBlocked(blocking)
             self.repository.disable(key)
+            if self.on_disabled:
+                self.on_disabled(key)
             _record(self.changes, actor, key, False)
             enabled.discard(key)
         return _views(enabled)

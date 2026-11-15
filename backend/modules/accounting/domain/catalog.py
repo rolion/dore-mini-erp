@@ -13,6 +13,14 @@ METHOD_CODES: tuple[str, ...] = tuple(code for code, _ in PAYMENT_METHODS)
 FLOW_CURRENCY = 'BOB'
 CURRENCIES: tuple[str, ...] = ('BOB', 'USD')
 
+# Tipos de cuenta de dinero (dónde se mueve el dinero). Distintos del método de pago (cómo se paga).
+ACCOUNT_KIND_LABELS: dict[str, str] = {'CASH': 'Caja', 'BANK': 'Banco', 'WALLET': 'Billetera'}
+ACCOUNT_KINDS: tuple[str, ...] = tuple(ACCOUNT_KIND_LABELS)
+
+# Dirección de una clasificación (por qué se mueve el dinero).
+DIRECTION_LABELS: dict[str, str] = {'INCOME': 'Ingreso', 'EXPENSE': 'Egreso'}
+DIRECTIONS: tuple[str, ...] = tuple(DIRECTION_LABELS)
+
 # Orígenes de una entrada: el tipo de pago que la genera (productos = pago de pedido; servicios = pago de proforma).
 ORIGIN_LABELS: dict[str, str] = {'PRODUCT': 'Productos', 'SERVICE': 'Servicios'}
 ORIGIN_KINDS: tuple[str, ...] = tuple(ORIGIN_LABELS)

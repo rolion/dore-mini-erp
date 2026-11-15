@@ -18,7 +18,7 @@ describe('EntryListComponent', () => {
     api = jasmine.createSpyObj<EntriesApiService>('EntriesApiService', ['list']);
     api.list.and.returnValue(of(page));
     const accounting = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
-    accounting.listAccounts.and.returnValue(of([{ id: 'a-1', name: 'Caja', currency: 'BOB', isActive: true }]));
+    accounting.listAccounts.and.returnValue(of([{ id: 'a-1', name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true }]));
     accounting.listMethods.and.returnValue(of([{ code: 'CASH', label: 'Efectivo', isActive: true, account: null }]));
     await TestBed.configureTestingModule({
       imports: [EntryListComponent],
@@ -41,6 +41,17 @@ describe('EntryListComponent', () => {
 
   const root = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const byId = (id: string): HTMLElement | null => root().querySelector(`[data-testid="${id}"]`);
+
+  it('warns about partial coverage when there are periods without coverage (UI-03)', async () => {
+    const page = makeEntryPage();
+    await setup({}, { ...page, coverage: { ...page.coverage, gaps: [{ from: '2026-11-03', to: '2026-11-08' }] } });
+    expect(byId('coverage-gaps')?.textContent).toContain('cobertura es parcial');
+  });
+
+  it('shows no coverage warning without gaps', async () => {
+    await setup();
+    expect(byId('coverage-gaps')).toBeNull();
+  });
 
   it('shows rows, totals per currency, period, coverage and the context note (UI-02, UI-03)', async () => {
     await setup();

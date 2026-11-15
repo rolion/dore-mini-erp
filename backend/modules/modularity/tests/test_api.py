@@ -73,14 +73,11 @@ class EnableDisableTests(ModulesApiTestCase):
         self.assertNotIn('inventory', enabled_keys(self.client))
 
     def test_enable_with_missing_dependencies_returns_names(self):  # AC-03
-        self.client.post(action_url('reporting', 'disable'))
-        self.client.post(action_url('sales', 'disable'))
-        self.client.post(action_url('expenses', 'disable'))
-        response = self.client.post(action_url('purchases', 'enable'))
+        response = self.client.post(action_url('costing', 'enable'))
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json()['missing'], ['Gastos'])
-        self.assertIn('Gastos', response.json()['detail'])
-        self.assertNotIn('purchases', enabled_keys(self.client))
+        self.assertEqual(response.json()['missing'], ['Inventario'])
+        self.assertIn('Inventario', response.json()['detail'])
+        self.assertNotIn('costing', enabled_keys(self.client))
 
     def test_enable_is_idempotent(self):  # EDGE-02
         self.assertEqual(self.client.post(action_url('sales', 'enable')).status_code, 200)
@@ -95,11 +92,19 @@ class EnableDisableTests(ModulesApiTestCase):
         self.assertEqual(self.client.post(action_url('customers', 'disable')).status_code, 200)  # EDGE-02
 
     def test_disable_blocked_by_dependents(self):  # INV-03, AC-05
-        self.client.post(action_url('purchases', 'enable'))
-        response = self.client.post(action_url('expenses', 'disable'))
+        self.client.post(action_url('inventory', 'enable'))
+        self.client.post(action_url('costing', 'enable'))
+        response = self.client.post(action_url('inventory', 'disable'))
         self.assertEqual(response.status_code, 409)
-        self.assertEqual(response.json()['dependents'], ['Compras'])
-        self.assertIn('expenses', enabled_keys(self.client))
+        self.assertEqual(response.json()['dependents'], ['Costeo'])
+        self.assertIn('inventory', enabled_keys(self.client))
+
+    def test_purchases_enable_without_expenses_and_expenses_disable_unblocked(self):  # CONT-06 AC-04
+        self.client.post(action_url('reporting', 'disable'))
+        self.client.post(action_url('expenses', 'disable'))
+        self.assertEqual(self.client.post(action_url('purchases', 'enable')).status_code, 200)
+        self.assertNotIn('expenses', enabled_keys(self.client))
+        self.assertIn('purchases', enabled_keys(self.client))
 
     def test_reporting_sources_can_be_disabled_with_reporting_enabled(self):  # PB-REP-001 AC-11
         for key in ('sales', 'expenses'):

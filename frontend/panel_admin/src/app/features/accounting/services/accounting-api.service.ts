@@ -2,14 +2,47 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Account, AccountDto, AccountInput, PaymentMethod, PaymentMethodDto, toApiError } from '../models/accounting';
+import {
+  Account,
+  AccountDto,
+  AccountInput,
+  AccountingSettings,
+  AccountingSettingsDto,
+  Classification,
+  ClassificationDto,
+  ClassificationInput,
+  Direction,
+  PaymentMethod,
+  PaymentMethodDto,
+  toApiError,
+} from '../models/accounting';
 
 export function toAccount(dto: AccountDto): Account {
-  return { id: dto.id, name: dto.name, currency: dto.currency, isActive: dto.is_active };
+  return {
+    id: dto.id,
+    name: dto.name,
+    currency: dto.currency,
+    kind: dto.kind ?? null,
+    openingBalance: dto.opening_balance ?? '0.00',
+    isActive: dto.is_active,
+  };
+}
+
+export function toSettings(dto: AccountingSettingsDto): AccountingSettings {
+  return { cutoffDate: dto.cutoff_date, enabledAt: dto.enabled_at, locked: dto.locked, gaps: dto.gaps };
+}
+
+export function toClassification(dto: ClassificationDto): Classification {
+  return { id: dto.id, name: dto.name, direction: dto.direction, isActive: dto.is_active };
 }
 
 export function toPaymentMethod(dto: PaymentMethodDto): PaymentMethod {
   return { code: dto.code, label: dto.label, isActive: dto.is_active, account: dto.account ? toAccount(dto.account) : null };
+}
+
+function toAccountBody(input: Partial<AccountInput>): Record<string, string | undefined> {
+  const { openingBalance, ...rest } = input;
+  return openingBalance === undefined ? rest : { ...rest, opening_balance: openingBalance };
 }
 
 /** Cuentas destino y mapeo método de pago → cuenta de la empresa (API `/api/accounting/`). */
@@ -25,11 +58,11 @@ export class AccountingApiService {
   }
 
   createAccount(input: AccountInput): Observable<Account> {
-    return this.request(this.http.post<AccountDto>(`${this.baseUrl}accounts/`, input), toAccount);
+    return this.request(this.http.post<AccountDto>(`${this.baseUrl}accounts/`, toAccountBody(input)), toAccount);
   }
 
   updateAccount(id: string, input: Partial<AccountInput>): Observable<Account> {
-    return this.request(this.http.patch<AccountDto>(`${this.baseUrl}accounts/${id}/`, input), toAccount);
+    return this.request(this.http.patch<AccountDto>(`${this.baseUrl}accounts/${id}/`, toAccountBody(input)), toAccount);
   }
 
   activateAccount(id: string): Observable<Account> {
@@ -38,6 +71,37 @@ export class AccountingApiService {
 
   deactivateAccount(id: string): Observable<Account> {
     return this.request(this.http.post<AccountDto>(`${this.baseUrl}accounts/${id}/deactivate/`, {}), toAccount);
+  }
+
+  getSettings(): Observable<AccountingSettings> {
+    return this.request(this.http.get<AccountingSettingsDto>(`${this.baseUrl}settings/`), toSettings);
+  }
+
+  updateCutoff(cutoffDate: string): Observable<AccountingSettings> {
+    return this.request(this.http.patch<AccountingSettingsDto>(`${this.baseUrl}settings/`, { cutoff_date: cutoffDate }), toSettings);
+  }
+
+  listClassifications(filters: { active?: boolean; direction?: Direction } = {}): Observable<Classification[]> {
+    let params = new HttpParams();
+    if (filters.active !== undefined) params = params.set('active', String(filters.active));
+    if (filters.direction) params = params.set('direction', filters.direction);
+    return this.request(this.http.get<ClassificationDto[]>(`${this.baseUrl}classifications/`, { params }), (rows) => rows.map(toClassification));
+  }
+
+  createClassification(input: ClassificationInput): Observable<Classification> {
+    return this.request(this.http.post<ClassificationDto>(`${this.baseUrl}classifications/`, input), toClassification);
+  }
+
+  renameClassification(id: string, name: string): Observable<Classification> {
+    return this.request(this.http.patch<ClassificationDto>(`${this.baseUrl}classifications/${id}/`, { name }), toClassification);
+  }
+
+  activateClassification(id: string): Observable<Classification> {
+    return this.request(this.http.post<ClassificationDto>(`${this.baseUrl}classifications/${id}/activate/`, {}), toClassification);
+  }
+
+  deactivateClassification(id: string): Observable<Classification> {
+    return this.request(this.http.post<ClassificationDto>(`${this.baseUrl}classifications/${id}/deactivate/`, {}), toClassification);
   }
 
   listMethods(): Observable<PaymentMethod[]> {

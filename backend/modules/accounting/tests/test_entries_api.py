@@ -94,8 +94,10 @@ class ListTests(EntriesApiBase):
     def test_empty_book_returns_empty_totals_and_null_coverage(self):  # AC-09
         data = self.client_a.get(ENTRIES).data
         self.assertEqual((data['count'], data['results'], data['totals']), (0, [], []))
-        self.assertEqual(data['coverage'], {'first_payment_date': None, 'last_payment_date': None,
-                                            'first_recorded_at': None})
+        coverage = data['coverage']
+        self.assertEqual((coverage['first_payment_date'], coverage['last_payment_date'],
+                          coverage['first_recorded_at']), (None, None, None))
+        self.assertEqual(coverage['gaps'], [])  # CONT-06 API-04: el corte y los huecos se añaden al bloque
 
     def test_invalid_filters_are_rejected(self):  # EDGE-01, EDGE-02
         for params in ({'date_from': '2026-12-01', 'date_to': '2026-11-01'}, {'date_from': 'x'}, {'method': 'CHEQUE'},

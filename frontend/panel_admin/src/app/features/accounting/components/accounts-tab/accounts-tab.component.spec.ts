@@ -8,7 +8,7 @@ import { AccountingApiService } from '../../services/accounting-api.service';
 import { DeactivateDialogComponent } from '../deactivate-dialog/deactivate-dialog.component';
 import { AccountsTabComponent } from './accounts-tab.component';
 
-const banco: Account = { id: 'a1', name: 'Banco', currency: 'BOB', isActive: true };
+const banco: Account = { id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true };
 
 describe('AccountsTabComponent', () => {
   let api: jasmine.SpyObj<AccountingApiService>;
@@ -39,6 +39,16 @@ describe('AccountsTabComponent', () => {
   it('shows the empty state (UI-04)', () => {
     const fixture = create([]);
     expect(fixture.nativeElement.textContent).toContain('Aún no hay cuentas');
+  });
+
+  it('shows the opening balance formatted as money, with the currency for non-BOB accounts (REV-03)', () => {
+    const fixture = create([
+      { ...banco, openingBalance: '1000.50' },
+      { ...banco, id: 'a2', name: 'Dólares', currency: 'USD', openingBalance: '20.00' },
+    ]);
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Bs 1000.50');
+    expect(text).toContain('20.00 USD');
   });
 
   it('lists accounts filtered by active by default', () => {

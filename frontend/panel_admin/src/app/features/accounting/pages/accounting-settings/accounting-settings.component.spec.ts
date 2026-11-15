@@ -9,9 +9,11 @@ import { AccountingSettingsComponent } from './accounting-settings.component';
 
 describe('AccountingSettingsComponent', () => {
   it('shows the accounts tab first and switches to payment methods (UI-01)', () => {
-    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
+    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods', 'listClassifications', 'getSettings']);
     api.listAccounts.and.returnValue(of([]));
     api.listMethods.and.returnValue(of([]));
+    api.listClassifications.and.returnValue(of([]));
+    api.getSettings.and.returnValue(of({ cutoffDate: null, enabledAt: null, locked: false, gaps: [] }));
     TestBed.configureTestingModule({
       imports: [AccountingSettingsComponent],
       providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
@@ -26,9 +28,11 @@ describe('AccountingSettingsComponent', () => {
   });
 
   it('moves between tabs with the arrow keys (REV-07)', () => {
-    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
+    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods', 'listClassifications', 'getSettings']);
     api.listAccounts.and.returnValue(of([]));
     api.listMethods.and.returnValue(of([]));
+    api.listClassifications.and.returnValue(of([]));
+    api.getSettings.and.returnValue(of({ cutoffDate: null, enabledAt: null, locked: false, gaps: [] }));
     TestBed.configureTestingModule({
       imports: [AccountingSettingsComponent],
       providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
@@ -43,6 +47,12 @@ describe('AccountingSettingsComponent', () => {
     expect(fixture.nativeElement.querySelector('#tab-methods').getAttribute('tabindex')).toBe('0');
     expect(fixture.nativeElement.querySelector('#tab-accounts').getAttribute('tabindex')).toBe('-1');
     (fixture.nativeElement.querySelector('#tab-methods') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('classifications');
+    (fixture.nativeElement.querySelector('#tab-classifications') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('cutoff');
+    (fixture.nativeElement.querySelector('#tab-cutoff') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('accounts');
   });

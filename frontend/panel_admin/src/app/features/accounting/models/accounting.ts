@@ -5,22 +5,78 @@ export const ACCOUNT_NAME_MAX_LENGTH = 80;
 export const CURRENCIES = ['BOB', 'USD'] as const;
 export const FLOW_CURRENCY = 'BOB';
 
+/** Dónde se mueve el dinero. No restringe si la cuenta recibe o paga. */
+export const ACCOUNT_KINDS = ['CASH', 'BANK', 'WALLET'] as const;
+export type AccountKind = (typeof ACCOUNT_KINDS)[number];
+
 export interface Account {
   id: string;
   name: string;
   currency: string;
+  /** `null` en cuentas anteriores a la introducción del tipo. */
+  kind: AccountKind | null;
+  /** Monto a la fecha de corte, decimal en texto (nunca float). */
+  openingBalance: string;
   isActive: boolean;
 }
 
 export interface AccountInput {
   name: string;
   currency: string;
+  kind: AccountKind;
+  openingBalance?: string;
 }
 
 export interface AccountDto {
   id: string;
   name: string;
   currency: string;
+  kind?: AccountKind | null;
+  opening_balance?: string;
+  is_active: boolean;
+}
+
+export interface Gap {
+  from: string;
+  to: string;
+}
+
+/** Corte y cobertura de Contabilidad de la empresa. */
+export interface AccountingSettings {
+  cutoffDate: string | null;
+  enabledAt: string | null;
+  /** Hay movimientos: la fecha de corte ya no cambia. */
+  locked: boolean;
+  gaps: Gap[];
+}
+
+export interface AccountingSettingsDto {
+  cutoff_date: string | null;
+  enabled_at: string | null;
+  locked: boolean;
+  gaps: Gap[];
+}
+
+/** Por qué se mueve el dinero: de ingreso o de egreso. La dirección no cambia tras crearla. */
+export const DIRECTIONS = ['INCOME', 'EXPENSE'] as const;
+export type Direction = (typeof DIRECTIONS)[number];
+
+export interface Classification {
+  id: string;
+  name: string;
+  direction: Direction;
+  isActive: boolean;
+}
+
+export interface ClassificationInput {
+  name: string;
+  direction: Direction;
+}
+
+export interface ClassificationDto {
+  id: string;
+  name: string;
+  direction: Direction;
   is_active: boolean;
 }
 
@@ -56,7 +112,15 @@ export class AccountingApiError extends Error {
   }
 }
 
-const FIELD_MAP: Record<string, string> = { name: 'name', currency: 'currency', account_id: 'accountId' };
+const FIELD_MAP: Record<string, string> = {
+  name: 'name',
+  currency: 'currency',
+  kind: 'kind',
+  direction: 'direction',
+  opening_balance: 'openingBalance',
+  cutoff_date: 'cutoffDate',
+  account_id: 'accountId',
+};
 
 function toFieldErrors(body: unknown): FieldErrors {
   const errors: FieldErrors = {};
