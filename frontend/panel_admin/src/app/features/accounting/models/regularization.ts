@@ -1,4 +1,5 @@
 import { tr } from '../../../core/i18n/translate';
+import { StatusTone } from '../../../shared/components/status-badge/status-badge.component';
 import { EntryOrigin } from './entry';
 
 export const REGULARIZATION_STATUSES = [
@@ -112,6 +113,31 @@ export function statusAmounts(summary: RegularizationSummary, status: Regulariza
 
 export function statusLabel(status: string): string {
   return tr(`ACCOUNTING.REGULARIZATION.STATUS.${status.toUpperCase()}`);
+}
+
+/** Tono del badge de «qué pasa»: solo lo que se crea (o se creó) va en verde; lo demás no se toca. */
+export function actionTone(status: string): StatusTone {
+  switch (status) {
+    case 'missing':
+    case 'created':
+      return 'success';
+    case 'existing':
+      return 'muted';
+    case 'failed':
+      return 'danger';
+    default:
+      return 'warning';
+  }
+}
+
+/** Texto corto de lo que ocurre con los pagos de un estado. */
+export function actionLabel(status: string): string {
+  return tr(`ACCOUNTING.REGULARIZATION.ACCION.${status.toUpperCase()}`);
+}
+
+/** Pagos de la previsualización que no se tocan y requieren revisión (sin regla, conflicto, no válidos). */
+export function reviewCount(summary: RegularizationSummary): number {
+  return (['pending', 'conflict', 'invalid'] as const).reduce((total, status) => total + statusCount(summary, status), 0);
 }
 
 export function reasonLabel(detail: SummaryDetail): string {

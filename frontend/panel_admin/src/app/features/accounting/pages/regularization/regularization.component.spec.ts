@@ -68,6 +68,19 @@ describe('RegularizationComponent', () => {
     expect(regularization.apply).not.toHaveBeenCalled();
   });
 
+  it('states the result in a headline and labels what happens to each group (UI-03)', () => {
+    const { el, fixture } = setup();
+    click(el, 'preview');
+    fixture.detectChanges();
+    const headline = el.querySelector('[data-testid="headline"]')?.textContent ?? '';
+    expect(headline).toContain('Se revisaron 4 pagos: 3 se crearían');
+    expect(headline).toContain('1 requieren revisión');
+    const actions = Array.from(el.querySelectorAll('[data-testid="group"]')).map((row) => row.querySelector('app-status-badge')?.textContent?.trim());
+    expect(actions).toEqual(['Se creará', 'Se creará', 'Sin regla, no se toca']);
+    expect(el.querySelector('[data-testid="groups-note"]')?.textContent).toContain('no es una lista de ingresos');
+    expect((el.querySelector('[data-testid="apply"]') as HTMLButtonElement).textContent).toContain('crear 3 entradas');
+  });
+
   it('applies only after confirmation and shows the result with a link to the entries (AC-16)', async () => {
     const { el, fixture, regularization, modal, dialog } = setup();
     click(el, 'preview');

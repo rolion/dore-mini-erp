@@ -2571,7 +2571,7 @@
       "SUBTITULO": "Complete no livro as entradas de pagamentos anteriores. Não altera pagamentos, saldos nem entradas existentes.",
       "RANGO_INVALIDO": "A data inicial não pode ser posterior à final.",
       "MAPEO_TITULO": "Mapeamento histórico de métodos",
-      "MAPEO_AYUDA": "Indique para qual conta foi cada método de pagamento e em que período. Um método ou uma data sem regra fica pendente: nenhuma conta é atribuída por padrão.",
+      "MAPEO_AYUDA": "Todos os pagamentos do período são revisados, seja qual for o método. Cada regra só indica para qual conta vai um método (e a partir de que data). Um método ou data sem regra fica pendente: nenhuma conta é atribuída por padrão.",
       "SIN_REGLAS": "Ainda não há regras. Sem regras, todos os pagamentos ficam pendentes.",
       "METODO": "Método",
       "CUENTA": "Conta",
@@ -2582,21 +2582,20 @@
       "PREVISUALIZANDO": "Pré-visualizando…",
       "RESUMEN": "Resumo",
       "AVISO_PREVISUALIZACION": "Pré-visualização: nada foi gravado.",
-      "AVISO_IMPORTES": "Os valores são entradas registradas, não saldo bancário nem lucro.",
       "CAMBIO_FORMULARIO": "Você alterou o período ou o mapeamento: pré-visualize novamente antes de aplicar.",
       "VACIO": "Não há pagamentos para regularizar neste período.",
       "SIN_CUENTA": "Sem conta",
       "COL_ESTADO": "Estado",
       "COL_ORIGEN": "Origem",
       "COL_CUENTA": "Conta",
-      "COL_CANTIDAD": "Quantidade",
+      "COL_CANTIDAD": "Pagamentos",
       "COL_IMPORTE": "Valor",
       "COL_DOCUMENTO": "Documento",
       "COL_METODO": "Método",
       "COL_MOTIVO": "Motivo",
-      "CAMPOS_AUSENTES": "Dados históricos ausentes (nunca inventados)",
+      "CAMPOS_AUSENTES": "Pagamentos sem dado original (registrados sem ele)",
       "REVISION_TITULO": "Casos que exigem revisão (não são alterados)",
-      "APLICAR": "Aplicar regularização",
+      "APLICAR": "Aplicar: criar {{count}} lançamentos",
       "APLICANDO": "Aplicando…",
       "SIN_FALTANTES": "Não há entradas faltantes para criar.",
       "DIALOGO_TITULO": "Aplicar regularização",
@@ -2636,7 +2635,20 @@
         "ORIGIN_DOCUMENT_REF": "documento",
         "ACCOUNT_ID": "conta"
       },
-      "REGLA_INCOMPLETA": "Complete ou remova as regras incompletas: cada regra precisa de método e conta."
+      "REGLA_INCOMPLETA": "Complete ou remova as regras incompletas: cada regra precisa de método e conta.",
+      "TITULAR": "{{total}} pagamentos revisados: {{missing}} seriam criados, {{existing}} já estão registrados, {{destination}} já têm lançamento em outra conta e {{review}} precisam de revisão.",
+      "NOTA_GRUPOS": "Cada linha agrupa pagamentos por estado, origem e conta; não é uma lista de receitas. Só os «Será criado» geram lançamentos; o restante não é modificado. Os valores são lançamentos registrados, não saldo bancário nem lucro.",
+      "COL_ACCION": "O que acontece",
+      "ACCION": {
+        "MISSING": "Será criado",
+        "CREATED": "Criado",
+        "EXISTING": "Já existe, não é alterado",
+        "PENDING": "Sem regra, não é alterado",
+        "CONFLICT": "Conflito, não é alterado",
+        "DESTINATION_DIFFERENCE": "Já existe em outra conta, não é alterado",
+        "INVALID": "Inválido, não é alterado",
+        "FAILED": "Com erro"
+      }
     }
   }
 }

@@ -2571,7 +2571,7 @@
       "SUBTITULO": "Fill in the ledger entries for earlier payments. It does not change payments, balances or existing entries.",
       "RANGO_INVALIDO": "The start date cannot be after the end date.",
       "MAPEO_TITULO": "Historical method mapping",
-      "MAPEO_AYUDA": "Say which account each payment method went to and for which period. A method or date without a rule stays pending: no account is assigned by default.",
+      "MAPEO_AYUDA": "All payments in the period are reviewed, whatever their method. Each rule only says which account a method goes to (and from which date). A method or date without a rule stays pending: no account is assigned by default.",
       "SIN_REGLAS": "No rules yet. Without rules, every payment stays pending.",
       "METODO": "Method",
       "CUENTA": "Account",
@@ -2582,21 +2582,20 @@
       "PREVISUALIZANDO": "Previewing…",
       "RESUMEN": "Summary",
       "AVISO_PREVISUALIZACION": "Preview: nothing has been written.",
-      "AVISO_IMPORTES": "Amounts are recorded entries, not bank balance or profit.",
       "CAMBIO_FORMULARIO": "You changed the period or the mapping: preview again before applying.",
       "VACIO": "There are no payments to regularize in this period.",
       "SIN_CUENTA": "No account",
       "COL_ESTADO": "Status",
       "COL_ORIGEN": "Source",
       "COL_CUENTA": "Account",
-      "COL_CANTIDAD": "Count",
+      "COL_CANTIDAD": "Payments",
       "COL_IMPORTE": "Amount",
       "COL_DOCUMENTO": "Document",
       "COL_METODO": "Method",
       "COL_MOTIVO": "Reason",
-      "CAMPOS_AUSENTES": "Missing historical data (never invented)",
+      "CAMPOS_AUSENTES": "Payments missing original data (recorded without it)",
       "REVISION_TITULO": "Cases that need review (not modified)",
-      "APLICAR": "Apply regularization",
+      "APLICAR": "Apply: create {{count}} entries",
       "APLICANDO": "Applying…",
       "SIN_FALTANTES": "There are no missing entries to create.",
       "DIALOGO_TITULO": "Apply regularization",
@@ -2636,7 +2635,20 @@
         "ORIGIN_DOCUMENT_REF": "document",
         "ACCOUNT_ID": "account"
       },
-      "REGLA_INCOMPLETA": "Complete or remove the half-filled rules: each rule needs a method and an account."
+      "REGLA_INCOMPLETA": "Complete or remove the half-filled rules: each rule needs a method and an account.",
+      "TITULAR": "{{total}} payments reviewed: {{missing}} would be created, {{existing}} are already recorded, {{destination}} already have an entry in another account and {{review}} need review.",
+      "NOTA_GRUPOS": "Each row groups payments by status, origin and account; it is not a list of income. Only “Will be created” rows generate entries; the rest is not modified. Amounts are recorded entries, not bank balance or profit.",
+      "COL_ACCION": "What happens",
+      "ACCION": {
+        "MISSING": "Will be created",
+        "CREATED": "Created",
+        "EXISTING": "Already exists, untouched",
+        "PENDING": "No rule, untouched",
+        "CONFLICT": "Conflict, untouched",
+        "DESTINATION_DIFFERENCE": "Exists in another account, untouched",
+        "INVALID": "Invalid, untouched",
+        "FAILED": "Failed"
+      }
     }
   }
 }

@@ -6,6 +6,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize, forkJoin } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
 import { RegularizationConfirmDialogComponent } from '../../components/regularization-confirm-dialog/regularization-confirm-dialog.component';
 import { Account, AccountingApiError, FLOW_CURRENCY, PaymentMethod } from '../../models/accounting';
 import { formatAmount, originLabel } from '../../models/entry';
@@ -15,8 +16,11 @@ import {
   RegularizationStatus,
   RegularizationSummary,
   RuleDraft,
+  actionLabel,
+  actionTone,
   isRulePartial,
   reasonLabel,
+  reviewCount,
   statusAmounts,
   statusCount,
   statusLabel,
@@ -39,12 +43,14 @@ type RuleForm = FormGroup<{
 @Component({
   selector: 'app-regularization',
   templateUrl: './regularization.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, StatusBadgeComponent],
 })
 export class RegularizationComponent implements OnInit {
   readonly originLabel = originLabel;
   readonly statusLabel = statusLabel;
   readonly reasonLabel = reasonLabel;
+  readonly actionLabel = actionLabel;
+  readonly actionTone = actionTone;
 
   methods: PaymentMethod[] = [];
   accounts: Account[] = [];
@@ -208,6 +214,20 @@ export class RegularizationComponent implements OnInit {
         },
         error: (err: RegularizationError) => this.fail(err),
       });
+  }
+
+  /** Titular del resultado de la previsualización: cuántos pagos se revisaron y qué pasará con cada grupo. */
+  get headline(): string {
+    if (!this.summary) {
+      return '';
+    }
+    return tr('ACCOUNTING.REGULARIZATION.TITULAR', {
+      total: this.summary.totalPayments,
+      missing: this.missingCount,
+      existing: this.count('existing'),
+      destination: this.count('destination_difference'),
+      review: reviewCount(this.summary),
+    });
   }
 
   get resultMessage(): string {
