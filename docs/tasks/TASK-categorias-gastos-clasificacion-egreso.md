@@ -1,6 +1,6 @@
 # TASK-categorias-gastos-clasificacion-egreso: Clasificación de egreso por categoría de Gastos y para pagos a proveedores (CONT-03)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-categorias-gastos-clasificacion-egreso (base: `origin/accounting`)
@@ -13,6 +13,7 @@
 | 2026-11-15 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta CONT-03 | delivery-start |
 | 2026-11-15 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
+| 2026-11-15 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 
 ## Investigación
 
