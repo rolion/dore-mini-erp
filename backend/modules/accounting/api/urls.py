@@ -15,6 +15,7 @@ from .views import (
     MethodListView,
     RegularizationApplyView,
     RegularizationPreviewView,
+    SettingsView,
 )
 
 urlpatterns = [
@@ -23,6 +24,7 @@ urlpatterns = [
     path('accounts/<uuid:account_id>/activate/', AccountActivateView.as_view(), name='accounting-account-activate'),
     path('accounts/<uuid:account_id>/deactivate/', AccountDeactivateView.as_view(),
          name='accounting-account-deactivate'),
+    path('settings/', SettingsView.as_view(), name='accounting-settings'),
     path('classifications/', ClassificationListCreateView.as_view(), name='accounting-classification-list'),
     path('classifications/<uuid:classification_id>/', ClassificationDetailView.as_view(),
          name='accounting-classification-detail'),

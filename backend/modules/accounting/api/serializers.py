@@ -10,12 +10,14 @@ class AccountInputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
     currency = serializers.CharField(max_length=3)
     kind = serializers.CharField(max_length=10)  # obligatorio al crear; el dominio valida el valor
+    opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
 class AccountUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False, required=False)
     currency = serializers.CharField(max_length=3, required=False)
     kind = serializers.CharField(max_length=10, required=False)
+    opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
 class ClassificationInputSerializer(serializers.Serializer):
@@ -68,7 +70,8 @@ class MethodInputSerializer(serializers.Serializer):
 
 def serialize_account(account) -> dict:
     return {'id': str(account.id), 'name': account.name, 'currency': account.currency, 'kind': account.kind,
-            'is_active': account.is_active, 'created_at': account.created_at, 'updated_at': account.updated_at}
+            'opening_balance': str(account.opening_balance), 'is_active': account.is_active,
+            'created_at': account.created_at, 'updated_at': account.updated_at}
 
 
 def serialize_method(view) -> dict:
@@ -126,6 +129,22 @@ def serialize_totals(totals) -> list[dict]:
              'by_origin': {kind: str(t.by_origin.get(kind, Decimal('0.00'))) for kind in ORIGIN_KINDS}} for t in totals]
 
 
-def serialize_coverage(coverage) -> dict:
-    return {'first_payment_date': coverage.first_payment_date, 'last_payment_date': coverage.last_payment_date,
+def serialize_gaps(gaps) -> list[dict]:
+    return [{'from': gap.from_on, 'to': gap.to_on} for gap in gaps]
+
+
+def serialize_coverage(coverage, settings=None) -> dict:
+    data = {'first_payment_date': coverage.first_payment_date, 'last_payment_date': coverage.last_payment_date,
             'first_recorded_at': coverage.first_recorded_at}
+    if settings is not None:
+        data.update({'cutoff_date': settings.cutoff_date, 'gaps': serialize_gaps(settings.gaps)})
+    return data
+
+
+class SettingsUpdateSerializer(serializers.Serializer):
+    cutoff_date = serializers.DateField()
+
+
+def serialize_settings(view) -> dict:
+    return {'cutoff_date': view.cutoff_date, 'enabled_at': view.enabled_at, 'locked': view.locked,
+            'gaps': serialize_gaps(view.gaps)}

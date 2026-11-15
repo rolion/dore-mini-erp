@@ -6,6 +6,8 @@ import {
   Account,
   AccountDto,
   AccountInput,
+  AccountingSettings,
+  AccountingSettingsDto,
   Classification,
   ClassificationDto,
   ClassificationInput,
@@ -16,7 +18,18 @@ import {
 } from '../models/accounting';
 
 export function toAccount(dto: AccountDto): Account {
-  return { id: dto.id, name: dto.name, currency: dto.currency, kind: dto.kind ?? null, isActive: dto.is_active };
+  return {
+    id: dto.id,
+    name: dto.name,
+    currency: dto.currency,
+    kind: dto.kind ?? null,
+    openingBalance: dto.opening_balance ?? '0.00',
+    isActive: dto.is_active,
+  };
+}
+
+export function toSettings(dto: AccountingSettingsDto): AccountingSettings {
+  return { cutoffDate: dto.cutoff_date, enabledAt: dto.enabled_at, locked: dto.locked, gaps: dto.gaps };
 }
 
 export function toClassification(dto: ClassificationDto): Classification {
@@ -25,6 +38,11 @@ export function toClassification(dto: ClassificationDto): Classification {
 
 export function toPaymentMethod(dto: PaymentMethodDto): PaymentMethod {
   return { code: dto.code, label: dto.label, isActive: dto.is_active, account: dto.account ? toAccount(dto.account) : null };
+}
+
+function toAccountBody(input: Partial<AccountInput>): Record<string, string | undefined> {
+  const { openingBalance, ...rest } = input;
+  return openingBalance === undefined ? rest : { ...rest, opening_balance: openingBalance };
 }
 
 /** Cuentas destino y mapeo método de pago → cuenta de la empresa (API `/api/accounting/`). */
@@ -40,11 +58,11 @@ export class AccountingApiService {
   }
 
   createAccount(input: AccountInput): Observable<Account> {
-    return this.request(this.http.post<AccountDto>(`${this.baseUrl}accounts/`, input), toAccount);
+    return this.request(this.http.post<AccountDto>(`${this.baseUrl}accounts/`, toAccountBody(input)), toAccount);
   }
 
   updateAccount(id: string, input: Partial<AccountInput>): Observable<Account> {
-    return this.request(this.http.patch<AccountDto>(`${this.baseUrl}accounts/${id}/`, input), toAccount);
+    return this.request(this.http.patch<AccountDto>(`${this.baseUrl}accounts/${id}/`, toAccountBody(input)), toAccount);
   }
 
   activateAccount(id: string): Observable<Account> {
@@ -53,6 +71,14 @@ export class AccountingApiService {
 
   deactivateAccount(id: string): Observable<Account> {
     return this.request(this.http.post<AccountDto>(`${this.baseUrl}accounts/${id}/deactivate/`, {}), toAccount);
+  }
+
+  getSettings(): Observable<AccountingSettings> {
+    return this.request(this.http.get<AccountingSettingsDto>(`${this.baseUrl}settings/`), toSettings);
+  }
+
+  updateCutoff(cutoffDate: string): Observable<AccountingSettings> {
+    return this.request(this.http.patch<AccountingSettingsDto>(`${this.baseUrl}settings/`, { cutoff_date: cutoffDate }), toSettings);
   }
 
   listClassifications(filters: { active?: boolean; direction?: Direction } = {}): Observable<Classification[]> {

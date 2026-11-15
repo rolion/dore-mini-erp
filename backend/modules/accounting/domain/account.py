@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 
 from .catalog import ACCOUNT_KINDS, CURRENCIES, FLOW_CURRENCY
@@ -47,6 +48,27 @@ def validate_currency(currency: object) -> str:
     return currency.strip().upper()
 
 
+OPENING_MAX = Decimal(10) ** 10
+ZERO = Decimal('0.00')
+
+
+def validate_opening_balance(value: object) -> Decimal:
+    """Saldo de apertura: decimal ≥ 0 con a lo sumo 2 decimales (nunca float)."""
+    if isinstance(value, (float, bool)):
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura debe ser un decimal.']})
+    try:
+        amount = value if isinstance(value, Decimal) else Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura no es válido.']}) from None
+    if not amount.is_finite() or amount < 0:
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura no puede ser negativo.']})
+    if amount != amount.quantize(Decimal('0.01')):
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura admite como máximo 2 decimales.']})
+    if amount >= OPENING_MAX:
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura es demasiado grande.']})
+    return amount.quantize(Decimal('0.01'))
+
+
 def validate_kind(kind: object) -> str:
     if not isinstance(kind, str) or kind.strip().upper() not in ACCOUNT_KINDS:
         raise AccountValidationError({'kind': [f'El tipo debe ser uno de: {", ".join(ACCOUNT_KINDS)}.']})
@@ -63,11 +85,18 @@ class Account:
     updated_at: datetime | None = None
     # Caja/Banco/Billetera; nulo solo en cuentas anteriores a su introducción. No restringe la dirección del dinero.
     kind: str | None = None
+    # Monto de la cuenta a la fecha de corte; cambia solo mientras la cuenta no tiene movimientos.
+    opening_balance: Decimal = ZERO
 
     @classmethod
-    def create(cls, name: object, currency: object, kind: object = None) -> 'Account':
+    def create(cls, name: object, currency: object, kind: object = None,
+               opening_balance: object = None) -> 'Account':
         return cls(id=uuid4(), name=validate_name(name), currency=validate_currency(currency),
-                   kind=validate_kind(kind) if kind is not None else None)
+                   kind=validate_kind(kind) if kind is not None else None,
+                   opening_balance=validate_opening_balance(opening_balance) if opening_balance is not None else ZERO)
+
+    def set_opening_balance(self, value: object) -> None:
+        self.opening_balance = validate_opening_balance(value)
 
     def rename(self, name: object) -> None:
         self.name = validate_name(name)

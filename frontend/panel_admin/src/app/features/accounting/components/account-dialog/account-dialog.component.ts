@@ -12,7 +12,10 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
 }
 
-export type AccountField = 'name' | 'currency' | 'kind';
+export type AccountField = 'name' | 'currency' | 'kind' | 'openingBalance';
+
+/** Decimal no negativo con hasta 2 decimales. */
+export const OPENING_BALANCE_PATTERN = /^\d{1,10}(\.\d{1,2})?$/;
 
 /** Alta y edición de una cuenta destino en un diálogo; se cierra devolviendo la cuenta guardada. */
 @Component({
@@ -29,6 +32,7 @@ export class AccountDialogComponent {
     name: ['', [notBlank, Validators.maxLength(ACCOUNT_NAME_MAX_LENGTH)]],
     currency: ['BOB', Validators.required],
     kind: ['' as AccountKind | '', Validators.required],
+    openingBalance: ['0.00', [Validators.required, Validators.pattern(OPENING_BALANCE_PATTERN)]],
   });
 
   /** Cuenta que se edita; `null` para crear. Lo fija quien abre el diálogo. */
@@ -56,7 +60,7 @@ export class AccountDialogComponent {
 
   edit(account: Account): void {
     this.account = account;
-    this.form.setValue({ name: account.name, currency: account.currency, kind: account.kind ?? '' });
+    this.form.setValue({ name: account.name, currency: account.currency, kind: account.kind ?? '', openingBalance: account.openingBalance });
   }
 
   hasError(field: AccountField): boolean {
@@ -73,7 +77,7 @@ export class AccountDialogComponent {
     if (value.kind === '') {
       return;
     }
-    const input = { name: value.name.trim(), currency: value.currency, kind: value.kind };
+    const input = { name: value.name.trim(), currency: value.currency, kind: value.kind, openingBalance: value.openingBalance };
     this.saving = true;
     const request = this.account ? this.api.updateAccount(this.account.id, input) : this.api.createAccount(input);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -89,7 +93,7 @@ export class AccountDialogComponent {
           return;
         }
         const errors: Partial<Record<AccountField, string>> = {};
-        for (const field of ['name', 'currency', 'kind'] as const) {
+        for (const field of ['name', 'currency', 'kind', 'openingBalance'] as const) {
           const messages = err.fieldErrors[field];
           if (messages?.length) {
             errors[field] = messages.join(' ');

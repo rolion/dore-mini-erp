@@ -7,6 +7,7 @@ from modules.modularity.application.use_cases import DisableModule, EnableModule
 from modules.modularity.domain.modules import (
     BaseModuleError,
     DependencyError,
+    DisableBlocked,
     IncompleteConfiguration,
     UnknownModule,
 )
@@ -14,7 +15,7 @@ from modules.modularity.infrastructure.django.repositories import (
     DjangoCompanyModuleRepository,
     DjangoSettingChangeRepository,
 )
-from shared import enable_preconditions
+from shared import enable_preconditions, module_lifecycle
 from shared.tenancy import company_id_from
 
 from .serializers import serialize_module
@@ -25,6 +26,7 @@ BASE_MODULE = 'Los módulos base no se pueden deshabilitar.'
 MISSING = 'Faltan módulos por habilitar: {}.'
 INCOMPLETE = 'Falta configurar antes de habilitar: {}.'
 DEPENDENTS = 'No se puede deshabilitar: lo requieren {}.'
+BLOCKED = 'No se puede deshabilitar: {}'
 
 
 class DependencyConflict(APIException):
@@ -51,6 +53,9 @@ def _run(use_case, *args):
     except IncompleteConfiguration as exc:
         raise DependencyConflict(INCOMPLETE.format(', '.join(exc.names)),
                                  {'code': 'incomplete_configuration', 'missing': exc.names}) from exc
+    except DisableBlocked as exc:
+        raise DependencyConflict(BLOCKED.format(' '.join(exc.blockers)),
+                                 {'code': 'disable_blocked', 'blockers': exc.blockers}) from exc
     except DependencyError as exc:
         template, field = (MISSING, 'missing') if exc.kind == 'missing' else (DEPENDENTS, 'dependents')
         raise DependencyConflict(template.format(', '.join(exc.names)), {field: exc.names}) from exc
@@ -78,6 +83,10 @@ class _ModuleActionView(_ConflictAwareView):
         use_case = self.use_case(DjangoCompanyModuleRepository(company_id), DjangoSettingChangeRepository(company_id))
         if isinstance(use_case, EnableModule):
             use_case.preconditions = lambda module_key: enable_preconditions.missing(company_id, module_key)
+            use_case.on_enabled = lambda module_key: module_lifecycle.enabled(company_id, module_key)
+        else:
+            use_case.blockers = lambda module_key: module_lifecycle.disable_blockers(company_id, module_key)
+            use_case.on_disabled = lambda module_key: module_lifecycle.disabled(company_id, module_key)
         views = _run(use_case, key, actor_from(request))
         return Response(serialize_module(next(v for v in views if v.definition.key == key)))
 

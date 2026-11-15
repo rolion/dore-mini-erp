@@ -12,6 +12,7 @@ import {
   ENTRY_ORIGINS,
   EMPTY_ENTRY_FILTERS,
   Entry,
+  EntryCoverage,
   EntryListFilters,
   EntryOrigin,
   CurrencyTotal,
@@ -41,7 +42,7 @@ export class EntryListComponent implements OnInit {
   rows: Entry[] = [];
   total = 0;
   totals: CurrencyTotal[] = [];
-  coverage: { firstPaymentDate: string | null; lastPaymentDate: string | null; firstRecordedAt: string | null } | null = null;
+  coverage: EntryCoverage | null = null;
   /** Página actual base 0, como espera ngx-datatable. */
   pageIndex = 0;
   loading = false;

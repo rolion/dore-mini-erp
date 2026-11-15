@@ -39,6 +39,7 @@
           <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
           <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.TIPO' | translate }}</th>
           <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.CUTOFF.APERTURA' | translate }}</th>
           <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
           <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
         </tr>
@@ -51,6 +52,13 @@
             {{ account.kind ? ('ACCOUNTING.ACCOUNT_DIALOG.TIPO_' + account.kind | translate) : ('ACCOUNTING.ACCOUNT_DIALOG.SIN_TIPO' | translate) }}
           </td>
           <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate">{{ account.currency }}</td>
+          <td [attr.data-label]="'ACCOUNTING.CUTOFF.APERTURA' | translate">
+            @if (account.currency === 'BOB') {
+            {{ account.openingBalance | money }}
+            } @else {
+            {{ account.openingBalance }} {{ account.currency }}
+            }
+          </td>
           <td [attr.data-label]="'COMMON.ESTADO' | translate">
             @if (account.isActive) {
             <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>

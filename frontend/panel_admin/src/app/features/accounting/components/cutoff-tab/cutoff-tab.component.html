@@ -1,0 +1,51 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>{{ 'ACCOUNTING.CUTOFF.CORTE_Y_COBERTURA' | translate }}</strong></h2>
+      <small class="text-muted">{{ 'ACCOUNTING.CUTOFF.DESDE_CUANDO_CUENTA' | translate }}</small>
+    </div>
+  </div>
+  @if (loading && !settings) {
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else if (settings && !enabled) {
+  <p class="m-4">{{ 'ACCOUNTING.CUTOFF.SIN_HABILITAR' | translate }}</p>
+  } @else if (settings) {
+  <div class="m-3">
+    <div class="alert alert-warning" role="alert">{{ 'ACCOUNTING.CUTOFF.NOTA_NO_RETROACTIVO' | translate }}</div>
+    <form class="form-group" (ngSubmit)="save()" novalidate>
+      <label for="cutoff-date">{{ 'ACCOUNTING.CUTOFF.FECHA_DE_CORTE' | translate }}</label>
+      <div class="d-flex align-items-center gap-2">
+        <input id="cutoff-date" type="date" class="form-control w-auto" [formControl]="cutoffControl">
+        @if (!settings.locked) {
+        <button type="submit" class="btn btn-primary" [disabled]="cutoffControl.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
+        }
+      </div>
+      @if (settings.locked) {
+      <small class="form-text text-muted d-block" data-testid="locked">{{ 'ACCOUNTING.CUTOFF.CORTE_BLOQUEADO' | translate }}</small>
+      }
+      @if (serverError) {
+      <small class="form-text text-danger d-block" data-testid="cutoff-error">{{ serverError }}</small>
+      }
+    </form>
+    <p class="mt-3 mb-1">
+      <strong>{{ 'ACCOUNTING.CUTOFF.HABILITADA_DESDE' | translate }}:</strong>
+      {{ settings.enabledAt ? (settings.enabledAt | date: 'dd/MM/yyyy') : '—' }}
+    </p>
+    <h3 class="h6 mt-3">{{ 'ACCOUNTING.CUTOFF.PERIODOS_SIN_COBERTURA' | translate }}</h3>
+    @if (!settings.gaps.length) {
+    <p data-testid="no-gaps">{{ 'ACCOUNTING.CUTOFF.SIN_PERIODOS_SIN_COBERTURA' | translate }}</p>
+    } @else {
+    <ul data-testid="gaps">
+      @for (gap of settings.gaps; track gap.from) {
+      <li>{{ gap.from | date: 'dd/MM/yyyy' }} – {{ gap.to | date: 'dd/MM/yyyy' }}</li>
+      }
+    </ul>
+    }
+  </div>
+  }
+</div>

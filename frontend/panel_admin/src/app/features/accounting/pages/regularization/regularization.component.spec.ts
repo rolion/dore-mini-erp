@@ -13,8 +13,8 @@ import { RegularizationComponent } from './regularization.component';
 describe('RegularizationComponent', () => {
   const methods = [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null }, { code: 'QR', label: 'QR', isActive: true, account: null }];
   const accounts: Account[] = [
-    { id: 'a-1', name: 'Caja', currency: 'BOB', kind: 'BANK', isActive: true },
-    { id: 'a-9', name: 'Dólares', currency: 'USD', kind: 'BANK', isActive: true },
+    { id: 'a-1', name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true },
+    { id: 'a-9', name: 'Dólares', currency: 'USD', kind: 'BANK', openingBalance: '0.00', isActive: true },
   ];
 
   function setup(modalResult: Promise<boolean> = Promise.resolve(true), loadMethods: Observable<PaymentMethod[]> = of(methods)) {

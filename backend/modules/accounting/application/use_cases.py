@@ -47,8 +47,9 @@ class CreateAccount:
     def __init__(self, accounts):
         self.accounts = accounts
 
-    def execute(self, name: object, currency: object, kind: object = None) -> Account:
-        return self.accounts.save(Account.create(name, currency, kind))
+    def execute(self, name: object, currency: object, kind: object = None,
+                opening_balance: object = None) -> Account:
+        return self.accounts.save(Account.create(name, currency, kind, opening_balance))
 
 
 class UpdateAccount:
@@ -58,10 +59,18 @@ class UpdateAccount:
         self.entries = entries
 
     def execute(self, account_id: UUID, name: object = None, currency: object = None,
-                kind: object = None) -> Account:
+                kind: object = None, opening_balance: object = None) -> Account:
         self.mappings.lock_company()
         account = _require(self.accounts, account_id)
         previous_currency = account.currency
+        if opening_balance is not None:
+            previous_balance = account.opening_balance
+            account.set_opening_balance(opening_balance)
+            if account.opening_balance != previous_balance and self.entries \
+                    and self.entries.has_entries_for_account(account.id):
+                raise AccountConflict(
+                    'account_has_entries',
+                    'No se puede cambiar el saldo de apertura: la cuenta ya tiene movimientos registrados.')
         if name is not None:
             account.rename(name)
         if kind is not None:

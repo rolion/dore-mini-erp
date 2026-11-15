@@ -33,6 +33,11 @@
                 [attr.aria-selected]="tab === 'classifications'" [attr.tabindex]="tab === 'classifications' ? 0 : -1" aria-controls="panel-classifications"
                 (click)="select('classifications')">{{ 'ACCOUNTING.CLASSIFICATIONS.CLASIFICACIONES' | translate }}</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'cutoff'" role="tab" id="tab-cutoff"
+                [attr.aria-selected]="tab === 'cutoff'" [attr.tabindex]="tab === 'cutoff' ? 0 : -1" aria-controls="panel-cutoff"
+                (click)="select('cutoff')">{{ 'ACCOUNTING.CUTOFF.CORTE_Y_COBERTURA' | translate }}</button>
+            </li>
           </ul>
           @if (tab === 'accounts') {
           <div id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts">
@@ -42,9 +47,13 @@
           <div id="panel-methods" role="tabpanel" aria-labelledby="tab-methods">
             <app-methods-tab />
           </div>
-          } @else {
+          } @else if (tab === 'classifications') {
           <div id="panel-classifications" role="tabpanel" aria-labelledby="tab-classifications">
             <app-classifications-tab />
+          </div>
+          } @else {
+          <div id="panel-cutoff" role="tabpanel" aria-labelledby="tab-cutoff">
+            <app-cutoff-tab />
           </div>
           }
         </div>
