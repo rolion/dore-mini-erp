@@ -1,6 +1,6 @@
 # REV-2026-11-15-refinar-ux-libro-entradas-enlaces-01: Enlaces de Documento sin aria-label
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-15-refinar-ux-libro-entradas-enlaces.md (v1)
@@ -19,3 +19,6 @@ Solo Comprobante (receipt-link) tiene [attr.aria-label]; source-link no, y ningu
 
 ## Evidence
 entry-list.component.html y entry-detail.component.html: `source-link` sin `[attr.aria-label]`. El texto visible ya es legible, por eso Low.
+
+## Resolution
+Corregido: `aria-label` `VER_DOCUMENTO_N` en lista y detalle, con prueba.

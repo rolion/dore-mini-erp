@@ -32,6 +32,7 @@ describe('EntryDetailComponent', () => {
     expect(api.get).toHaveBeenCalledWith('e-1');
     expect(el.querySelector('[data-testid="amount"]')?.textContent).toContain('300.50');
     expect(el.querySelector('[data-testid="source-link"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="source-link"]')?.getAttribute('aria-label')).toContain('o-1');
     expect(el.textContent).toContain('CB-000001');
     expect(el.querySelector('.btn-danger, .btn-warning')).toBeNull();
     expect(el.querySelector('[data-testid="view-source"]')?.textContent).toContain('Ver pedido');

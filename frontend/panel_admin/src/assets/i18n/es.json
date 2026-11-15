@@ -2567,6 +2567,7 @@
       "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan.",
       "VER_COBRO": "Ver cobro",
       "VER_PEDIDO": "Ver pedido",
+      "VER_DOCUMENTO_N": "Ver documento {{document}}",
       "VER_COBRO_N": "Ver cobro {{receipt}}"
     },
     "REGULARIZATION": {

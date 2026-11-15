@@ -40,10 +40,11 @@
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.DOCUMENTO' | translate }}</dt>
         <dd class="col-sm-9">
           @if (link; as target) {
-          <a class="link-primary" [routerLink]="target" data-testid="source-link">{{ entry.documentRef }}</a>
+          <a class="link-primary" [routerLink]="target" data-testid="source-link"
+            [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_DOCUMENTO_N' | translate: { document: entry.documentRef }">{{ entry.documentRef }}</a>
           } @else if (entry.documentRef) {
           <span data-testid="source-text">{{ entry.documentRef }}
-            @if (!entry.sourceAvailable) { <small class="text-muted">({{ 'ACCOUNTING.ENTRIES.MODULO_DESHABILITADO' | translate }})</small> }
+            @if (!entry.sourceAvailable) { <small class="text-body-secondary">({{ 'ACCOUNTING.ENTRIES.MODULO_DESHABILITADO' | translate }})</small> }
           </span>
           } @else {
           —

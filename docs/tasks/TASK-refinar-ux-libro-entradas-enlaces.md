@@ -89,3 +89,6 @@ Solo frontend de `accounting`; pantallas de referencia: lista de solo lectura co
 
 ## Publicación
 PR listo para aprobación humana (no se mergea). Decisión pendiente: aceptar REV-02 (contraste sin medir) o exigir medición en navegador antes del merge.
+
+### Corrección posterior al Quality Gate (2026-11-15)
+REV-01, 04 y 05 resueltos; REV-02 con contraste calculado (no medido en navegador) y último `text-muted` migrado; REV-03 sigue abierto (requiere navegador). Suite completa 1413/1413 (una prueba ajena de `core/i18n/screens-i18n.spec.ts` es intermitente por orden aleatorio: falló en 3 de 6 ejecuciones y pasó en las demás; preexistente, fuera de alcance).

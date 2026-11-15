@@ -19,3 +19,6 @@ Se cambió text-muted por text-body-secondary sin medición; `<small class="text
 
 ## Evidence
 Sin medición en navegador (no se levantó la app). Declarado como desviación en el TASK; el aprobador humano decide si lo acepta o exige medir.
+
+## Resolution
+Parcialmente resuelto: el último `text-muted` migrado a `text-body-secondary`. El tema no sobrescribe `--bs-secondary-color` (Bootstrap 5.3): rgba(33,37,41,.75) sobre blanco ≈ 6,8:1 (claro) y rgba(222,226,230,.75) sobre #191d21 ≈ 9:1 (oscuro), calculado, no medido en navegador.

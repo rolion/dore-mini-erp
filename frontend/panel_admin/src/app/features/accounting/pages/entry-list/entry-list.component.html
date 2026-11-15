@@ -150,7 +150,8 @@
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.DOCUMENTO' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   @if (link(row); as target) {
-                  <a class="link-primary" [routerLink]="target" data-testid="source-link">{{ document(row) }}</a>
+                  <a class="link-primary" [routerLink]="target" data-testid="source-link"
+                    [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_DOCUMENTO_N' | translate: { document: document(row) }">{{ document(row) }}</a>
                   } @else {
                   <span data-testid="source-text">{{ document(row) }}</span>
                   }

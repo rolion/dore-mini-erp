@@ -19,3 +19,6 @@ No se tocó; la cabecera ya tiene headerClass="text-end".
 
 ## Evidence
 Desviación declarada en el TASK; queda como seguimiento explícito.
+
+## Resolution
+Sin cambios: requiere navegador; sigue como seguimiento.

@@ -1,6 +1,6 @@
 # REV-2026-11-15-refinar-ux-libro-entradas-enlaces-05: TASK desactualizado: el build sí pasa
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-15-refinar-ux-libro-entradas-enlaces.md (v1)
@@ -19,3 +19,6 @@ Dice «npm run build no se ejecutó».
 
 ## Evidence
 Quality Gate: `Application bundle generation complete. [18.018 seconds]`.
+
+## Resolution
+Corregido: el TASK ya indica que el build pasa.
