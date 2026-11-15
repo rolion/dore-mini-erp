@@ -1,6 +1,6 @@
 # TASK-modularidad-corte-historicos-contabilidad: Modularidad, fecha de corte y tratamiento de históricos de Contabilidad (CONT-06)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-modularidad-corte-historicos-contabilidad (creada sobre `task/TASK-cuentas-dinero-clasificaciones`, a pedido del usuario)
@@ -14,6 +14,7 @@
 | 2026-11-15 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (ciclo de vida de módulos, tablas nuevas, dependencias entre módulos, contrato API) | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY: tres decisiones de negocio respondidas por el usuario (corte, apertura, desactivación); el resto con criterio propio, en el plan | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-15 | REVIEW → PUBLISH | Quality Gate PASS (4 hallazgos Low abiertos); a la espera de aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -82,7 +83,9 @@ Con Contabilidad deshabilitada, Gastos y Compras funcionan (no la usan). No hay 
 **Deuda técnica:** ciclo accounting ⇄ sales/receivables preexistente; ingresos con fecha anterior al corte siguen generando entrada (decisión abierta no bloqueante).
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado). Backend `manage.py test`: 1691 OK; `check` y `makemigrations --check`: sin cambios. Frontend: lint OK, `i18n:check` 1984 claves 0 faltantes, `tsc` sin errores, `ng test` 1430/1430, `npm run build` OK. `npm audit`: 2 moderadas transitivas ya existentes; `bandit` no concluyente (sin evidencia de que esté instalado). Límites DDD, atomicidad del ciclo de vida, aislamiento por empresa, zona horaria y migración `0005` aditiva conformes; los 53 archivos del diff están dentro del plan; cada AC tiene prueba.
+**Revisión visual (navegador integrado, app local real, empresa de prueba):** «Corte y cobertura» sin habilitar muestra el aviso; tras habilitar Contabilidad desde Módulos aparece el corte de hoy, la nota de no retroactividad y «sin periodos sin cobertura»; el saldo de apertura rechaza `-5` y guarda `1000.50` (se ve en la columna «Apertura»); en móvil (390 px) el contenido es legible. No probado en tema oscuro ni la deshabilitación/reactivación desde el panel (cubierto por pruebas de integración).
+Hallazgos Low abiertos: REV-01 (IMPLEMENTATION: deshabilitar antes del primer acceso de una empresa anterior pierde el hueco), REV-02 (IMPLEMENTATION: los huecos se calculan por día local; deshabilitar y rehabilitar el mismo día no deja hueco), REV-03 (DESIGN: columna «Apertura» sin el pipe `money`), REV-04 (DESIGN: encabezado «Periodos sin cobertura» desproporcionado), en `docs/reviews/`. INV-05 solo está probado con un doble hasta CONT-02.
 
 ## Publicación
-_Pendiente_
+PR 75 listo para aprobación humana (no se mergea desde el flujo); apilado sobre el PR 74 (CONT-01): debe mergearse después de él o retargetearse a `main`. Señalar al revisor: cambios de **base de datos** (migración `0005` aditiva, rollback `migrate accounting 0004`) y de **contrato API** (campos y endpoint nuevos, 409 `disable_blocked`, Compras ya no requiere Gastos), respaldados por `docs/adr/ADR-modularidad-corte-historicos-contabilidad-ciclo-de-vida-y-corte.md`.
