@@ -38,17 +38,8 @@ describe('EntryDetailComponent', () => {
     expect(el.querySelector('[data-testid="view-source"]')?.textContent).toContain('Ver pedido');
   });
 
-  it('links the receipt and offers "Ver cobro" for a service with a receipt (AC-02, AC-03)', () => {
+  it('shows the receipt as text and offers no "Ver cobro" for services (link deferred, REV-06)', () => {
     const { fixture } = create(of(makeEntry({ origin: 'SERVICE', documentRef: 'quotation/PRO-1', receiptNumber: 'CB-000002' })));
-    const el = fixture.nativeElement as HTMLElement;
-    const receipt = el.querySelector('[data-testid="receipt-link"]');
-    expect(receipt?.getAttribute('href')).toContain('/receivables/quotation/PRO-1');
-    expect(receipt?.getAttribute('aria-label')).toContain('CB-000002');
-    expect(el.querySelector('[data-testid="view-source"]')?.textContent).toContain('Ver cobro');
-  });
-
-  it('shows neither receipt link nor action button when the source is unavailable (AC-02)', () => {
-    const { fixture } = create(of(makeEntry({ origin: 'SERVICE', documentRef: 'quotation/PRO-1', receiptNumber: 'CB-000002', sourceAvailable: false })));
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('[data-testid="receipt-link"]')).toBeNull();
     expect(el.querySelector('[data-testid="view-source"]')).toBeNull();

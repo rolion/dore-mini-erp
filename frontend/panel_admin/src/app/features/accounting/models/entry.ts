@@ -130,14 +130,6 @@ export function sourceLink(entry: Entry): string[] | null {
   return kind && number ? ['/pocketbiz/receivables', kind, number] : null;
 }
 
-/**
- * Enlace al cobro (módulo Cobros) desde el comprobante `CB-NNNNNN`: solo servicios con comprobante.
- * Apunta al detalle del cobro, donde el comprobante figura en «Pagos» (no existe ruta por pago).
- */
-export function receiptLink(entry: Entry): string[] | null {
-  return entry.origin === 'SERVICE' && entry.receiptNumber ? sourceLink(entry) : null;
-}
-
 /** Texto del documento de origen: para servicios es el número de proforma (`kind/number` → `number`). */
 export function documentLabel(entry: Entry): string {
   if (!entry.documentRef) {

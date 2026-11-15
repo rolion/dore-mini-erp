@@ -1,4 +1,4 @@
-# TASK-refinar-ux-libro-entradas-enlaces: Refinar UX del libro de Entradas (enlace al cobro y legibilidad)
+# TASK-refinar-ux-libro-entradas-enlaces: Refinar UX del libro de Entradas (legibilidad; enlace al cobro diferido)
 
 **Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
@@ -95,3 +95,6 @@ REV-01, 04 y 05 resueltos; REV-02 con contraste calculado (no medido en navegado
 
 ### Verificación visual (2026-11-15)
 App real (`npm start`) contra un servidor API simulado local con datos de prueba (no hay backend ni credenciales). Resultado: enlaces azules con subrayado al pasar el cursor, aviso tenue, textos auxiliares ≥ 4,59:1 en tema claro, botón «Ver cobro» en el detalle. Se corrigió la alineación de «Monto» (REV-03) y se añadió subrayado en hover/focus (scss). **Hallazgo nuevo REV-06 (High, SPECIFICATION):** con datos reales de servicios el backend guarda solo el número (`ODO-000002`) y `sourceLink` necesita `kind/number`, por lo que el enlace al cobro no se genera. Requiere decisión de contrato/datos. Tema oscuro y móvil no verificados.
+
+### Alcance reducido (2026-11-15)
+Por instrucción explícita de la persona («de momento omite la liga hacia el cobro») se retiró el enlace de Comprobante y el botón «Ver cobro» (PLAN v2; REV-06 queda *Deferred*). Se conservan: botón «Ver pedido» (productos), `aria-label` en Documento, aviso tenue, textos secundarios, alineación de «Monto» y subrayado en hover/foco. Lint OK, i18n:check OK, suite completa 1410/1410 (la prueba intermitente de `core/i18n` falló en una ejecución y pasó en la siguiente). Revisión visual posterior a este recorte: no repetida.

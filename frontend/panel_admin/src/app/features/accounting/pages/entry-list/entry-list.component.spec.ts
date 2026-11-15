@@ -114,18 +114,6 @@ describe('EntryListComponent', () => {
     expect(root().querySelector('a[href$="/new"], .btn-tbl-update, .btn-tbl-delete')).toBeNull();
   });
 
-  it('links the receipt (CB) to the collection only for services with a receipt (AC-01, AC-03)', async () => {
-    await setup({}, makeEntryPage([
-      makeEntry({ origin: 'SERVICE', documentRef: 'quotation/PRO-1', receiptNumber: 'CB-000002' }),
-      makeEntry({ id: 'e-2', documentRef: 'o-1', receiptNumber: '' }),
-    ]));
-    const links = root().querySelectorAll('[data-testid="receipt-link"]');
-    expect(links.length).toBe(1);
-    expect(links[0].getAttribute('href')).toContain('/receivables/quotation/PRO-1');
-    expect(links[0].getAttribute('aria-label')).toContain('CB-000002');
-    expect(root().querySelectorAll('[data-testid="receipt-text"]').length).toBe(1);
-  });
-
   it('uses the soft alert style for the context note (AC-04)', async () => {
     await setup();
     const note = byId('context-note')?.classList;

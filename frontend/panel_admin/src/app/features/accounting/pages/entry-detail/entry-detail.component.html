@@ -52,12 +52,7 @@
         </dd>
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.COMPROBANTE' | translate }}</dt>
         <dd class="col-sm-9">
-          @if (receiptTarget; as target) {
-          <a class="link-primary" [routerLink]="target" data-testid="receipt-link"
-            [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_COBRO_N' | translate: { receipt: entry.receiptNumber }">{{ entry.receiptNumber }}</a>
-          } @else {
           {{ entry.receiptNumber || '—' }}
-          }
         </dd>
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.ID_DEL_PAGO_DE_ORIGEN' | translate }}</dt>
         <dd class="col-sm-9"><small class="text-body-secondary">{{ entry.sourceId }}</small></dd>
@@ -66,8 +61,8 @@
         <small class="text-body-secondary d-block mb-2">{{ 'ACCOUNTING.ENTRIES.LAS_ENTRADAS_NO_SE_EDITAN' | translate }}</small>
         <div class="d-flex flex-wrap gap-2">
           <a class="btn btn-light" routerLink="/pocketbiz/accounting/entries" data-testid="back">{{ 'COMMON.VOLVER' | translate }}</a>
-          @if (link; as target) {
-          <a class="btn btn-primary" [routerLink]="target" data-testid="view-source">{{ (entry.origin === 'SERVICE' ? 'ACCOUNTING.ENTRIES.VER_COBRO' : 'ACCOUNTING.ENTRIES.VER_PEDIDO') | translate }}</a>
+          @if (entry.origin === 'PRODUCT' && link; as target) {
+          <a class="btn btn-primary" [routerLink]="target" data-testid="view-source">{{ 'ACCOUNTING.ENTRIES.VER_PEDIDO' | translate }}</a>
           }
         </div>
       </div>

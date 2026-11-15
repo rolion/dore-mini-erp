@@ -159,12 +159,7 @@
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.COMPROBANTE' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  @if (receiptTarget(row); as target) {
-                  <a class="link-primary" [routerLink]="target" data-testid="receipt-link"
-                    [attr.aria-label]="'ACCOUNTING.ENTRIES.VER_COBRO_N' | translate: { receipt: row.receiptNumber }">{{ row.receiptNumber }}</a>
-                  } @else {
-                  <span data-testid="receipt-text">{{ row.receiptNumber || '—' }}</span>
-                  }
+                  {{ row.receiptNumber || '—' }}
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.MONTO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110" headerClass="text-end" cellClass="text-end">

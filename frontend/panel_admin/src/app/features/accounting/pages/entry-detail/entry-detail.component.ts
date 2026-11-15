@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, switchMap } from 'rxjs';
 import { AccountingApiError } from '../../models/accounting';
-import { Entry, ORIGIN_CLASSES, formatAmount, originLabel, receiptLink, sourceLink } from '../../models/entry';
+import { Entry, ORIGIN_CLASSES, formatAmount, originLabel, sourceLink } from '../../models/entry';
 import { EntriesApiService } from '../../services/entries-api.service';
 
 /** Detalle de una entrada del libro (solo lectura). */
@@ -59,10 +59,6 @@ export class EntryDetailComponent implements OnInit {
 
   get link(): string[] | null {
     return this.entry ? sourceLink(this.entry) : null;
-  }
-
-  get receiptTarget(): string[] | null {
-    return this.entry ? receiptLink(this.entry) : null;
   }
 
   private show(entry: Entry): void {

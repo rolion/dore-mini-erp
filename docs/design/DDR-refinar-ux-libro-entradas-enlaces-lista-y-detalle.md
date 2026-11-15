@@ -1,6 +1,6 @@
 # DDR-refinar-ux-libro-entradas-enlaces-lista-y-detalle: Enlace al cobro y legibilidad en Entradas (lista y detalle)
 
-**Estado:** Propuesto
+**Estado:** Propuesto (actualizado 2026-11-15: el enlace al cobro desde Comprobante y el botón «Ver cobro» están **diferidos** por REV-06; se conserva el botón «Ver pedido» y el resto)
 **Task relacionado:** TASK-refinar-ux-libro-entradas-enlaces
 **Fecha:** 2026-11-15
 

@@ -1,4 +1,4 @@
-# PLAN-2026-11-15-refinar-ux-libro-entradas-enlaces (v1)
+# PLAN-2026-11-15-refinar-ux-libro-entradas-enlaces (v2)
 
 **Task:** TASK-refinar-ux-libro-entradas-enlaces · **Modo:** COMPACTO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-refinar-ux-libro-entradas-enlaces-lista-y-detalle / Ninguno
@@ -9,8 +9,8 @@ Hacer navegable el origen de cada entrada (el código `CB-…` enlaza al cobro) 
 # Specification
 - **Expected behavior:** desde la lista y el detalle, la persona llega con un clic al cobro (servicios) o al pedido (productos) cuando el servidor lo declara disponible, y los enlaces, avisos y textos auxiliares son legibles.
 - **Acceptance criteria:**
-  - AC-01 En la lista, `Comprobante` es un enlace a `/pocketbiz/receivables/<kind>/<number>` cuando hay `receiptNumber`, `sourceAvailable` y `documentRef` con forma `kind/number`; en otro caso texto o «—» (sin enlace).
-  - AC-02 En el detalle, `Comprobante` es enlace en las mismas condiciones y hay un botón «Ver cobro» (servicios) / «Ver pedido» (productos) junto a «Volver» solo si `sourceLink` existe.
+  - ~~AC-01~~ **Diferido (v2, aprobado por la persona):** En la lista, `Comprobante` es un enlace a `/pocketbiz/receivables/<kind>/<number>` cuando hay `receiptNumber`, `sourceAvailable` y `documentRef` con forma `kind/number`; en otro caso texto o «—» (sin enlace).
+  - **AC-02 (v2):** En el detalle, `Comprobante` queda como texto (enlace diferido, ver AC-01) y el botón «Ver pedido» aparece solo para productos con origen disponible. ~~Versión v1:~~  `Comprobante` es enlace en las mismas condiciones y hay un botón «Ver cobro» (servicios) / «Ver pedido» (productos) junto a «Volver» solo si `sourceLink` existe.
   - AC-03 Los enlaces de Documento y Comprobante se ven como enlaces (color primario, subrayado en hover y foco) y tienen `aria-label` traducido.
   - AC-04 El aviso de contexto usa el estilo de alerta tenue del sistema.
   - AC-05 Textos auxiliares (periodo, cobertura, pie, nota, ID de origen) con contraste ≥ 4,5:1.
@@ -23,7 +23,7 @@ Hacer navegable el origen de cada entrada (el código `CB-…` enlaza al cobro) 
 Pruebas de componente (Karma, `provideTestTranslations()`) y unidad del modelo. **E2E: NO** (cambio de presentación sin flujo crítico nuevo).
 | AC | Verificación |
 |---|---|
-| AC-01 | unidad `sourceLink`/nuevo `receiptLink` (servicio con/sin `CB`, no disponible, mal formado, producto) + componente lista (`receipt-link`) |
+| AC-01 (diferido) | unidad `sourceLink`/nuevo `receiptLink` (servicio con/sin `CB`, no disponible, mal formado, producto) + componente lista (`receipt-link`) |
 | AC-02 | componente detalle: enlace y botón presentes/ausentes según el caso |
 | AC-03 | componente: enlaces con `aria-label`; revisión visual en navegador (color/subrayado) |
 | AC-04 | componente: `context-note` con clases `bg-info-subtle text-info-emphasis` |
@@ -41,3 +41,6 @@ Pruebas de componente (Karma, `provideTestTranslations()`) y unidad del modelo. 
   5. Claves i18n es/en/pt y pruebas (AC-07).
   6. `npm run lint`, `npm test`, `npm run i18n:check`, `npm run build`; revisión visual (claro y oscuro).
 - **Risks / New dependencies:** sin dependencias. Riesgo: el estilo de enlace puede ser global del tema; limitar el cambio a esta pantalla y documentarlo.
+
+## Changelog
+- **v2** (2026-11-15): [Specification] AC-01 (Comprobante `CB-…` enlaza al cobro) diferido y AC-02 reducido (sin «Ver cobro»; «Ver pedido» solo productos), por instrucción explícita de la persona («de momento omite la liga hacia el cobro»). Motivo: REV-06, el backend guarda el número de la proforma sin `kind`, por lo que el enlace no se genera con datos reales. Se retiró `receiptLink` y las claves `VER_COBRO`/`VER_COBRO_N`.
