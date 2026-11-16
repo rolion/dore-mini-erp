@@ -1,6 +1,6 @@
 # TASK-incorporar-egresos-reversion-libro: Egresos, reversión e idempotencia en el libro de Contabilidad (CONT-02)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-incorporar-egresos-reversion-libro (base: `accounting`)
@@ -15,6 +15,7 @@
 | 2026-11-15 | ARCHITECTURE → DESIGN → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
 | 2026-11-15 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-15 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -102,7 +103,9 @@ Desviaciones respecto al plan:
 Deuda técnica: los enlaces al documento de origen de `EXPENSE`/`PURCHASE_PAYMENT` quedan en `null` hasta GAS-01/COM-01. UI: pantalla de referencia seguida = lista y detalle de Entradas existentes; sin componentes compartidos nuevos.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-15). Sin hallazgos Critical/High/Medium; 5 hallazgos Low abiertos y no bloqueantes: REV-2026-11-15-incorporar-egresos-reversion-libro-01..05 (`docs/reviews/`).
+
+Evidencia: backend completo `Ran 1747 tests ... OK`; pruebas nuevas `Ran 22 tests ... OK`; `makemigrations --check`: No changes detected; frontend `TOTAL: 1454 SUCCESS` (cobertura líneas 88,18 %); `npm run lint` sin errores; `i18n:check` 2011 claves, 0 faltantes; `npm run build` OK; bandit sin hallazgos; `npm audit --omit=dev`: 0 vulnerabilidades; sin secretos en el diff. Revisión visual en navegador (móvil/escritorio/tema oscuro): **no verificada**. Migración 0006 inversa: no ejecutada.
 
 ## Publicación
-_Pendiente_
+PR #77 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migración `0006` sobre el libro) y contrato de `accounting.services`; respaldo: ADR-incorporar-egresos-reversion-libro-direccion-operacion-y-reversion. Hacer backup antes de desplegar (el deploy ya lo hace) y publicar antes de que GAS-01/COM-01 escriban egresos.
