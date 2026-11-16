@@ -13,6 +13,10 @@ export type AccountKind = (typeof ACCOUNT_KINDS)[number];
 export const ACCOUNT_CLASSES = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE', 'COST'] as const;
 export type AccountClassCode = (typeof ACCOUNT_CLASSES)[number];
 
+/** Código de cuenta: hasta 20 dígitos (por ahora solo numérico, p. ej. 111001); los espacios de los bordes se recortan. */
+export const ACCOUNT_CODE_MAX_LENGTH = 20;
+export const ACCOUNT_CODE_PATTERN = /^\s*\d+\s*$/;
+
 /** Estado de una clasificación contable en la empresa: solo se habilita o deshabilita. */
 export interface AccountClassState {
   code: AccountClassCode;
@@ -25,8 +29,14 @@ export interface Account {
   currency: string;
   /** `null` en cuentas anteriores a la introducción del tipo. */
   kind: AccountKind | null;
-  /** Clasificación contable; `null` hasta que se asigne. */
+  /** Clasificación contable; `null` solo en cuentas anteriores que aún no la tienen. */
   accountClass?: AccountClassCode | null;
+  /** Código del plan de cuentas (único por empresa); `null` en cuentas anteriores. */
+  code?: string | null;
+  /** La cuenta ya tiene asientos: su clasificación y su marca de correctora no cambian. */
+  hasEntries?: boolean;
+  /** Cuenta correctora: su saldo normal es contrario al de su clasificación. */
+  isContra?: boolean;
   /** Monto a la fecha de corte, decimal en texto (nunca float). */
   openingBalance: string;
   isActive: boolean;
@@ -35,9 +45,12 @@ export interface Account {
 export interface AccountInput {
   name: string;
   currency: string;
-  kind: AccountKind;
+  code?: string;
+  /** Tipo de cuenta de dinero (Caja/Banco/Billetera); solo con clasificación Activo. `null` lo quita. */
+  kind?: AccountKind | null;
   openingBalance?: string;
   accountClass?: AccountClassCode | null;
+  isContra?: boolean;
 }
 
 export interface AccountDto {
@@ -46,6 +59,9 @@ export interface AccountDto {
   currency: string;
   kind?: AccountKind | null;
   account_class?: AccountClassCode | null;
+  code?: string | null;
+  is_contra?: boolean;
+  has_entries?: boolean;
   opening_balance?: string;
   is_active: boolean;
 }
@@ -133,6 +149,7 @@ const FIELD_MAP: Record<string, string> = {
   direction: 'direction',
   opening_balance: 'openingBalance',
   account_class: 'accountClass',
+  code: 'code',
   cutoff_date: 'cutoffDate',
   account_id: 'accountId',
 };

@@ -224,9 +224,11 @@ class DisableBlockersTests(Base):
 class OpeningBalanceApiTests(Base):
     def test_opening_balance_is_stored_validated_and_locked_by_movements(self):  # AC-09
         created = self.client_a.post(ACCOUNTS, {'name': 'Banco', 'currency': 'BOB', 'kind': 'BANK',
+                                                'code': '102', 'account_class': 'ASSET',
                                                 'opening_balance': '1000.50'}, format='json')
         self.assertEqual((created.status_code, created.json()['opening_balance']), (201, '1000.50'))
-        default = self.client_a.post(ACCOUNTS, {'name': 'Caja', 'currency': 'BOB', 'kind': 'CASH'}, format='json')
+        default = self.client_a.post(ACCOUNTS, {'name': 'Caja', 'currency': 'BOB', 'kind': 'CASH', 'code': '101',
+                                                'account_class': 'ASSET'}, format='json')
         self.assertEqual(default.json()['opening_balance'], '0.00')
         url = f'{ACCOUNTS}{created.json()["id"]}/'
         self.assertEqual(self.client_a.patch(url, {'opening_balance': '-5'}, format='json').status_code, 400)

@@ -26,6 +26,9 @@ export function toAccount(dto: AccountDto): Account {
     currency: dto.currency,
     kind: dto.kind ?? null,
     accountClass: dto.account_class ?? null,
+    code: dto.code ?? null,
+    isContra: dto.is_contra ?? false,
+    hasEntries: dto.has_entries ?? false,
     openingBalance: dto.opening_balance ?? '0.00',
     isActive: dto.is_active,
   };
@@ -43,11 +46,12 @@ export function toPaymentMethod(dto: PaymentMethodDto): PaymentMethod {
   return { code: dto.code, label: dto.label, isActive: dto.is_active, account: dto.account ? toAccount(dto.account) : null };
 }
 
-function toAccountBody(input: Partial<AccountInput>): Record<string, string | null | undefined> {
-  const { openingBalance, accountClass, ...rest } = input;
-  const body: Record<string, string | null | undefined> = { ...rest };
+function toAccountBody(input: Partial<AccountInput>): Record<string, string | boolean | null | undefined> {
+  const { openingBalance, accountClass, isContra, ...rest } = input;
+  const body: Record<string, string | boolean | null | undefined> = { ...rest };
   if (openingBalance !== undefined) body['opening_balance'] = openingBalance;
   if (accountClass !== undefined) body['account_class'] = accountClass;
+  if (isContra !== undefined) body['is_contra'] = isContra;
   return body;
 }
 
@@ -57,9 +61,10 @@ export class AccountingApiService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/accounting/`;
 
-  listAccounts(active?: boolean): Observable<Account[]> {
+  listAccounts(active?: boolean, accountClass?: AccountClassCode): Observable<Account[]> {
     let params = new HttpParams();
     if (active !== undefined) params = params.set('active', String(active));
+    if (accountClass) params = params.set('account_class', accountClass);
     return this.request(this.http.get<AccountDto[]>(`${this.baseUrl}accounts/`, { params }), (rows) => rows.map(toAccount));
   }
 

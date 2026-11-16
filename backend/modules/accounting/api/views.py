@@ -35,7 +35,7 @@ from modules.accounting.domain.account import (
     AccountValidationError,
     MethodNotFound,
 )
-from modules.accounting.domain.account_class import AccountClassNotFound
+from modules.accounting.domain.account_class import AccountClassNotFound, parse_account_class
 from modules.accounting.domain.catalog import DIRECTIONS
 from modules.accounting.domain.classification import ClassificationNotFound
 from modules.accounting.domain.entry import EntryNotFound
@@ -121,16 +121,31 @@ def _parse_active(raw: str | None) -> bool | None:
     raise ValidationError({'active': ['Valor inválido: use "true" o "false".']})
 
 
+def _parse_account_class(raw: str | None) -> str | None:
+    if raw is None or raw == '':
+        return None
+    try:
+        return parse_account_class(raw)
+    except AccountClassNotFound:
+        raise ValidationError({'account_class': ['Clasificación contable desconocida.']}) from None
+
+
 # La configuración no exige Contabilidad habilitada: hay que poder configurar antes de habilitarla.
 class _ConfigView(APIView):
     required_modules = ()
 
 
+def _has_entries(request, account_id) -> bool:
+    return DjangoEntryRepository(company_id_from(request)).has_entries_for_account(account_id)
+
+
 class AccountListCreateView(_ConfigView):
     def get(self, request):
         accounts, _ = _repositories(request)
-        result = _run(ListAccounts(accounts), _parse_active(request.query_params.get('active')))
-        return Response([serialize_account(a) for a in result])
+        result = _run(ListAccounts(accounts), _parse_active(request.query_params.get('active')),
+                      _parse_account_class(request.query_params.get('account_class')))
+        with_entries = DjangoEntryRepository(company_id_from(request)).account_ids_with_entries()
+        return Response([serialize_account(a, a.id in with_entries) for a in result])
 
     def post(self, request):
         serializer = AccountInputSerializer(data=request.data)
@@ -144,7 +159,8 @@ class AccountListCreateView(_ConfigView):
 class AccountDetailView(_ConfigView):
     def get(self, request, account_id):
         accounts, _ = _repositories(request)
-        return Response(serialize_account(_run(GetAccount(accounts), account_id)))
+        account = _run(GetAccount(accounts), account_id)
+        return Response(serialize_account(account, _has_entries(request, account.id)))
 
     def patch(self, request, account_id):
         serializer = AccountUpdateSerializer(data=request.data)
@@ -153,19 +169,21 @@ class AccountDetailView(_ConfigView):
         entries = DjangoEntryRepository(company_id_from(request))
         classes = DjangoAccountClassRepository(company_id_from(request))
         account = _run(UpdateAccount(accounts, mappings, entries, classes), account_id, **serializer.validated_data)
-        return Response(serialize_account(account))
+        return Response(serialize_account(account, entries.has_entries_for_account(account.id)))
 
 
 class AccountActivateView(_ConfigView):
     def post(self, request, account_id):
         accounts, _ = _repositories(request)
-        return Response(serialize_account(_run(ActivateAccount(accounts), account_id)))
+        account = _run(ActivateAccount(accounts), account_id)
+        return Response(serialize_account(account, _has_entries(request, account.id)))
 
 
 class AccountDeactivateView(_ConfigView):
     def post(self, request, account_id):
         accounts, mappings = _repositories(request)
-        return Response(serialize_account(_run(DeactivateAccount(accounts, mappings), account_id)))
+        account = _run(DeactivateAccount(accounts, mappings), account_id)
+        return Response(serialize_account(account, _has_entries(request, account.id)))
 
 
 def _coverage_use_case(request, use_case_class):
