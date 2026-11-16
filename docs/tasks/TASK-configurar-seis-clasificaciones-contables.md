@@ -1,6 +1,6 @@
 # TASK-configurar-seis-clasificaciones-contables: Configurar las seis clasificaciones contables (CONT-08)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** PUBLISHED
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-seis-clasificaciones-contables (base: `accounting`)
@@ -17,6 +17,7 @@
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium y REV-02 Low abiertos, no bloqueantes) | delivery-publish |
+| 2026-11-16 | PUBLISH → PUBLISHED | PR mergeado a `accounting` por el dueño (aprobación humana) | delivery-publish |
 
 ## Investigación
 
