@@ -1,6 +1,6 @@
 # REV-2026-11-16-periodos-fiscales-por-empresa-09: Sin restricción de exclusión en base de datos
 
-**Status:** Open (no bloqueante)
+**Status:** Closed (informativo: decisión consciente del ADR)
 **Severity:** Low
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md (v1)

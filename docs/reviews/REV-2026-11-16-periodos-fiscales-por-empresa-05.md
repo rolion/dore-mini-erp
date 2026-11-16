@@ -1,6 +1,6 @@
 # REV-2026-11-16-periodos-fiscales-por-empresa-05: Desviaciones menores no declaradas
 
-**Status:** Open (no bloqueante)
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md (v1)

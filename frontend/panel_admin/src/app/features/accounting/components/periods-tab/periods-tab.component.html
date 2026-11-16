@@ -24,7 +24,10 @@
     <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
   </div>
   } @else if (!rows.length) {
-  <p class="m-4">{{ 'ACCOUNTING.FISCAL_PERIODS.SIN_PERIODOS' | translate }}</p>
+  <div class="m-4">
+    <p>{{ 'ACCOUNTING.FISCAL_PERIODS.SIN_PERIODOS' | translate }}</p>
+    <button type="button" class="btn btn-primary" data-testid="create-first" (click)="openDialog()">{{ 'ACCOUNTING.FISCAL_PERIODS.CREAR_PERIODO' | translate }}</button>
+  </div>
   } @else {
   <div class="table-responsive">
     <table class="table align-middle inventory-table">

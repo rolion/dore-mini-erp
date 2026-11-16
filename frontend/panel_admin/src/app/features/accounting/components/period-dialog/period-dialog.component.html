@@ -14,7 +14,7 @@
       @if (hasError('name')) {
       <small class="form-text text-danger">
         {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
-        ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_NO_PUEDE_SUPERAR' | translate: { n: nameMaxLength }) : ('CUSTOMERS.CUSTOMER_QUICK_CREATE.EL_NOMBRE_ES_OBLIGATORIO' | translate)) }}
+        ('ACCOUNTING.FISCAL_PERIODS.NOMBRE_LARGO' | translate: { n: nameMaxLength }) : ('ACCOUNTING.FISCAL_PERIODS.NOMBRE_OBLIGATORIO' | translate)) }}
       </small>
       }
     </div>

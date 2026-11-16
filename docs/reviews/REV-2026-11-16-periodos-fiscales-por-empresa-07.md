@@ -1,6 +1,6 @@
 # REV-2026-11-16-periodos-fiscales-por-empresa-07: Claves i18n de otro feature para errores de nombre
 
-**Status:** Open (no bloqueante)
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md (v1)

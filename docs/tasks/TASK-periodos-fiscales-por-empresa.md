@@ -90,7 +90,7 @@ Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 - **Frontend** (AC-10, UI-01/02): tercera pestaña «Períodos fiscales» en `accounting-settings` (plantilla «Configuración con listados en pestañas y diálogo», referencia `accounts-tab`/`account-dialog`/`deactivate-dialog`), `periods-tab`, `period-dialog`, `period-status-dialog`, servicio y modelo, claves i18n es/en/pt (`ACCOUNTING.FISCAL_PERIODS`). Sin componentes compartidos nuevos.
 - **Docs**: nota en `docs/architecture/ddd.md`.
 
-**Desviaciones:** ninguna de alcance. Detalles: la lista del repositorio se llama `all()` (no `list()`, que sombrea el builtin en la clase); `FiscalPeriod.create` valida el nombre con `validate_name` de cuentas, por lo que ese error es `AccountValidationError` (superclase de `FiscalPeriodValidationError`) y la API lo traduce igual a 400.
+**Desviaciones:** ninguna de alcance. Nombres y ubicaciones distintos del plan: el puerto `PeriodUsage` vive en `application/fiscal_periods.py` (no en un `ports.py` aparte) y la excepción del contrato se llama `FiscalPeriodContractError` (el plan decía `PeriodContractError`). Detalles: la lista del repositorio se llama `all()` (no `list()`, que sombrea el builtin en la clase); `FiscalPeriod.create` valida el nombre con `validate_name` de cuentas, por lo que ese error es `AccountValidationError` (superclase de `FiscalPeriodValidationError`) y la API lo traduce igual a 400.
 
 **Pruebas añadidas:** `test_fiscal_period_domain`, `test_fiscal_periods_api`, `test_fiscal_period_facade`, `test_fiscal_period_concurrency` (backend); specs del servicio, pestaña, diálogos y ajuste del spec de pestañas (3 pestañas) en el frontend.
 
@@ -105,7 +105,7 @@ Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 - DDD/aislamiento: dominio sin Django, consultas filtradas por `company_id`, sin importar `accounts`.
 - Conformidad: AC-01..AC-10, INV y API verificados; AC-08/AC-09 con asientos reales quedan para CONT-02 (declarado).
 - Visual: checklist §8 revisada sobre el código; **verificación en navegador no realizada**.
-- Hallazgos abiertos no bloqueantes: REV-2026-11-16-periodos-fiscales-por-empresa-01 a -09 (Medium: 01 prueba de concurrencia con `sleep`, 02 prueba de 403 por rol; el resto Low).
+- Hallazgos: REV-2026-11-16-periodos-fiscales-por-empresa-01 a -09, todos cerrados (01–07 corregidos; 08 y 09 informativos, sin acción: coherentes con INV-05 y con la decisión del ADR).
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/82 listo para aprobación humana (no se mergea). Cambio con migración de base de datos (ADR `ADR-periodos-fiscales-por-empresa-agregado-y-bloqueo`): requiere aprobación explícita de una persona.

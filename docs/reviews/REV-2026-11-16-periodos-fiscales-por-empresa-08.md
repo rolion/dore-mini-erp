@@ -1,6 +1,6 @@
 # REV-2026-11-16-periodos-fiscales-por-empresa-08: PATCH de un período cerrado con límites idénticos responde 409
 
-**Status:** Open (no bloqueante)
+**Status:** Closed (informativo, sin acción: coherente con INV-05)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md (v1)

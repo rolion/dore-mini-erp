@@ -39,6 +39,12 @@ describe('PeriodsTabComponent', () => {
     expect(create([]).nativeElement.textContent).toContain('Aún no hay períodos fiscales');
   });
 
+  it('offers a create button in the empty state (UI-01)', () => {
+    const fixture = create([]);
+    fixture.nativeElement.querySelector('[data-testid="create-first"]').click();
+    expect(modal.open).toHaveBeenCalled();
+  });
+
   it('shows an error with retry', () => {
     const fixture = create('error');
     expect(fixture.nativeElement.textContent).toContain('No se pudo cargar.');
