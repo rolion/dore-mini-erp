@@ -102,7 +102,7 @@ Cuentas del plan con código único por empresa, clasificación obligatoria, tip
 
 **UI:** pantalla de referencia `accounts-tab`/`account-dialog` (plantilla de configuración con listados); badges y tabla existentes, sin componentes compartidos nuevos.
 
-**Deuda técnica:** el selector de métodos de pago mostrará también cuentas que no son de dinero hasta CONT-12; el bloqueo por asientos usa entradas de una cuenta hasta CONT-02.
+**Deuda técnica:** el campo «Tipo» (Caja/Banco/Billetera) se conserva en el formulario por ahora; el dueño decidió quitarlo por completo más adelante (2026-11-16), lo que obligará a decidir cómo CONT-12 elige la cuenta de dinero de cada método de pago; el selector de métodos de pago mostrará también cuentas que no son de dinero hasta CONT-12; el bloqueo por asientos usa entradas de una cuenta hasta CONT-02.
 
 ## Review
 **Resultado: PASS** (subagente aislado, solo desde artefactos y diff contra la base del PR).
