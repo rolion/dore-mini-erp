@@ -1,4 +1,4 @@
-# PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado (v1)
+# PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado (v2)
 
 **Task:** TASK-administrar-cuentas-codigo-clasificacion-estado · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** [DDR](../design/DDR-administrar-cuentas-codigo-clasificacion-estado-lista-y-formulario-de-cuentas.md) · [ADR](../adr/ADR-administrar-cuentas-codigo-clasificacion-estado-modelo-de-cuenta.md)
@@ -67,6 +67,7 @@ Mismos permisos que la configuración de Contabilidad (`_ConfigView`, administra
 ## API contract
 - API-01: `POST/PATCH /api/accounting/accounts/` aceptan `code`, `account_class`, `is_contra`, `kind` (opcional).
 - API-02: `GET` devuelve `code`, `account_class`, `is_contra`, `kind`; filtro `?account_class=`; orden por código.
+- API-04: en PATCH, `kind: null` explícito quita el tipo de cuenta de dinero; `kind` ausente no cambia nada (REV-01).
 - API-03: errores 400 por campo; 409 `account_has_entries` y `account_in_use`.
 - Compatibilidad: el alta pasa a exigir `code` y `account_class` (único cliente: el panel, actualizado en el mismo PR).
 
@@ -144,3 +145,6 @@ Ver ADR.
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-16): [Specification] Se añade API-04 (`kind: null` quita el tipo de dinero) y el mensaje del error de `kind` junto a la clasificación, para cerrar REV-01. Cambio de contrato aprobado por el usuario en el chat («Sí, corrígelo»). Solicitado por delivery-publish, REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01.

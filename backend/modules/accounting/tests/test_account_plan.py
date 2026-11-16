@@ -133,7 +133,8 @@ class UpdateTests(ApiBase):
         self.assertEqual(no.status_code, 400)  # conserva kind → inconsistente
         self.assertIn('kind', no.data)
         self.assertEqual(AccountModel.objects.get(pk=account['id']).account_class, 'ASSET')
-        released = self.client_a.patch(url, {'account_class': 'EXPENSE', 'kind': None}, format='json')  # REV-01
+        payload = {'account_class': 'EXPENSE', 'kind': None}  # REV-01: null explícito quita el tipo
+        released = self.client_a.patch(url, payload, format='json')
         self.assertEqual((released.status_code, released.data['account_class'], released.data['kind']), (200, 'EXPENSE', None))
         self.client_a.post('/api/accounting/account-classes/EXPENSE/disable/')
         other = self.create(self.client_a, 'Otra', '102').data

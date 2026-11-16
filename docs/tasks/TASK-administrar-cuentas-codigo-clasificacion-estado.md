@@ -17,6 +17,7 @@
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos, no bloqueantes) | delivery-publish |
+| 2026-11-16 | PUBLISH (sin cambio) | REV-01 corregido; re-revisión PASS; REV-01 cerrado | delivery-build / delivery-publish |
 
 ## Investigación
 
@@ -110,6 +111,7 @@ Cuentas del plan con código único por empresa, clasificación obligatoria, tip
 - AC-01..AC-12, INV-01..07 y API-01..03 con verificación real; DDD y migración aditiva conformes; sin secretos ni artefactos; sin scope creep.
 - Hallazgos abiertos, no bloqueantes: [REV-01](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01.md) (Medium, IMPLEMENTATION: el tipo de dinero no se puede quitar y bloquea reclasificar cuentas anteriores sin mensaje visible), [REV-02](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-02.md) (Low, DESIGN: desviación declarada de UI-02) y [REV-03](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-03.md) (Low: clave i18n sin uso).
 - No verificado: revisión visual en navegador; carga con datos reales de producción; interacción con CONT-02, CONT-04 y CONT-12.
+- **Re-revisión tras la corrección de REV-01** (commit `6b47154`, subagente aislado): PASS. Backend suite completa 1795 OK; frontend 1471 OK, lint, i18n y build limpios. **REV-01 cerrado.** Quedan abiertos REV-02 y REV-03 (Low). El PLAN pasó a v2 (API-04) con aprobación del usuario.
 
 ## Publicación
-PR #80 (base `task/TASK-configurar-seis-clasificaciones-contables`, apilado sobre el #79) listo para aprobación humana; no se mergea. Al mergear el #79 a `accounting`, hay que cambiar la base de este PR a `accounting`. Cambio sensible: contrato de datos de Contabilidad (ADR `modelo-de-cuenta`) con migración aditiva `0008`. Decisión pendiente: corregir REV-01 antes del merge o aceptarlo.
+PR #80 (base `task/TASK-configurar-seis-clasificaciones-contables`, apilado sobre el #79) listo para aprobación humana; no se mergea. Al mergear el #79 a `accounting`, hay que cambiar la base de este PR a `accounting`. Cambio sensible: contrato de datos de Contabilidad (ADR `modelo-de-cuenta`) con migración aditiva `0008`. REV-01 corregido y cerrado; quedan REV-02 y REV-03 (Low).

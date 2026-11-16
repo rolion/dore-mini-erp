@@ -1,6 +1,6 @@
 # REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01: El tipo de dinero no se puede quitar y bloquea reclasificar cuentas anteriores
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md (v1)
@@ -19,6 +19,9 @@ El servidor responde 400 en `kind`. Como el selector de tipo está oculto fuera 
 
 ## Evidence
 `application/use_cases.py` (`if kind is not None`), `account-dialog.component.ts` (spread condicionado de `kind`), y la prueba `test_change_class_without_entries_and_kind_consistency`, que documenta el 400. Informe del Quality Gate, hallazgo 1.
+
+## Resolution
+Corregido en el commit `6b47154`: `kind: null` explícito en PATCH quita el tipo (sentinela `UNSET` en `UpdateAccount`, `Account.clear_kind`); el diálogo envía `kind: null` cuando la cuenta pierde su tipo y muestra el error de `kind` junto a la clasificación. Re-revisión independiente: PASS (backend 1795 OK, frontend 1471 OK).
 
 ## Suggested fix
 Aceptar `kind: null` explícito en PATCH como «quitar el tipo» (distinguiendo ausente de nulo en el serializer), o mostrar el error de `kind` junto al selector de clasificación.
