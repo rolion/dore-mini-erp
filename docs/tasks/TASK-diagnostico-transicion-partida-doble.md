@@ -1,6 +1,6 @@
 # TASK-diagnostico-transicion-partida-doble: Diagnóstico y contrato de transición de accounting a partida doble (CONT-07)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-diagnostico-transicion-partida-doble (base: `accounting`)
@@ -16,6 +16,7 @@
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-16 | REVIEW (sin cambio) | Quality Gate sin PASS: REV-01 abierto (verificación no ejecutable aquí) | delivery-publish |
+| 2026-11-16 | REVIEW → PUBLISH | REV-01 cerrado con el ensayo en copia; Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -105,19 +106,20 @@ No aplica (sin UI).
 ## Implementación
 Comando `diagnose_ledger_transition` de solo lectura (AC-01..AC-06, INV-01..INV-06): dominio `domain/transition.py` (clasificación y mapeo), caso de uso `application/transition_diagnosis.py`, lector `DjangoTransitionReader` en `infrastructure/adapters.py` y comando en `management/commands/`. Documento `docs/deployment/transicion-partida-doble.md` (AC-07). Sin migraciones.
 
-**Desviaciones del plan:** (1) Gastos y Compras no se leen por fachada: `sales/tests/test_boundaries.py` hace que `expenses`/`purchases` dependan de `accounting` y no al revés. Las entradas de egreso quedan `pendiente/origen_no_verificable` (sin entradas de egreso locales) y el puerto de verificación se deja para la Etapa 2. (2) El ensayo en copia restaurada de la base local (parte de AC-08) queda como paso manual documentado.
+**Desviaciones del plan:** (1) Gastos y Compras no se leen por fachada: `sales/tests/test_boundaries.py` hace que `expenses`/`purchases` dependan de `accounting` y no al revés. Las entradas de egreso quedan `pendiente/origen_no_verificable` (sin entradas de egreso locales) y el puerto de verificación se deja para la Etapa 2. (2) El ensayo en copia restaurada de la base local (parte de AC-08) se ejecutó tras la implementación (ver `## Review`).
 
-**Verificación propia:** 15 pruebas de `test_transition_diagnosis` en verde (7 unitarias del dominio y 8 de integración del comando); regresión `modules.accounting` + `test_boundaries`: 181 pruebas OK; `makemigrations --check`: sin cambios. La creación de la base de pruebas aplicó la cadena completa de migraciones desde cero (aceptación 1 de la tarjeta). **No ejecutado:** el ensayo con `pg_dump`/`pg_restore` sobre una copia de la base local (aceptación 2, AC-08); no se manipulan credenciales de la base desde esta sesión.
+**Verificación propia:** 15 pruebas de `test_transition_diagnosis` en verde (7 unitarias del dominio y 8 de integración del comando); regresión `modules.accounting` + `test_boundaries`: 181 pruebas OK; `makemigrations --check`: sin cambios. La creación de la base de pruebas aplicó la cadena completa de migraciones desde cero (aceptación 1 de la tarjeta). El ensayo con `pg_dump`/`pg_restore` en copia (aceptación 2, AC-08) se ejecutó después: ver `## Review`.
 
 **Deuda técnica:** puerto de verificación de egresos (Etapa 2).
 
 ## Review
-**Resultado: NO APROBADO todavía (sin PASS).** Quality Gate ejecutado por quien implementó, con aislamiento procedimental (revisión solo desde artefactos y diff `origin/accounting...HEAD`, 9 archivos, todos dentro del plan).
+**Resultado: PASS.** Quality Gate ejecutado por quien implementó, con aislamiento procedimental (revisión solo desde artefactos y diff `origin/accounting...HEAD`, 9 archivos, todos dentro del plan).
 - Pruebas: `test_transition_diagnosis` 15/15 OK; regresión `modules.accounting` + `test_boundaries` 181/181 OK; `makemigrations --check`: sin cambios.
 - Seguridad: `bandit` sin hallazgos en los 4 archivos nuevos/modificados; sin secretos en el diff (`backend/.env` está ignorado por git).
 - No realizado: `ruff`/`flake8`/`mypy` (no instalados ni configurados); cobertura de backend (sin `coverage.py`; se revisó a mano que cada regla de `classify_entry`, `classify_opening` y `parse_transition_mapping` tiene prueba); frontend no aplica (no hay cambios).
 - Límites DDD: `domain/transition.py` sin Django; toda consulta del lector filtra por `company_id` (`company_ids()` es la única global, de solo lectura y necesaria para recorrer empresas); sin imports de infraestructura de otros módulos.
-- Hallazgo abierto: [REV-2026-11-16-diagnostico-transicion-partida-doble-01](../reviews/REV-2026-11-16-diagnostico-transicion-partida-doble-01.md) (Medium): el ensayo con `pg_dump`/`pg_restore` (AC-08, aceptación 2) no se pudo ejecutar por falta de herramientas de PostgreSQL.
+- Hallazgo [REV-2026-11-16-diagnostico-transicion-partida-doble-01](../reviews/REV-2026-11-16-diagnostico-transicion-partida-doble-01.md) (Medium): **cerrado**; el ensayo `pg_dump` → `pg_restore` → `migrate` en copia se ejecutó con éxito (diagnóstico idéntico antes y después).
+- Limitación conocida (Low): el diagnóstico sin `--company` solo recorre empresas con datos de Contabilidad; una empresa con pagos y sin datos se consulta con `--company`.
 
 ## Publicación
-_Pendiente_
+PR #78 (base `accounting`) listo para aprobación humana; no se mergea. Cambio sensible: toca el contrato de datos de la transición contable (ADR `ADR-diagnostico-transicion-partida-doble-estrategia-y-contrato`), aunque esta etapa solo lee datos. La copia `doredb_copia` y el volcado quedan en la máquina local para el ensayo.

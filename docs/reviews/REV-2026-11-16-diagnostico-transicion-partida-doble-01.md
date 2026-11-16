@@ -1,6 +1,6 @@
 # REV-2026-11-16-diagnostico-transicion-partida-doble-01: Ensayo en copia de la base local no ejecutado
 
-**Status:** Open
+**Status:** Closed (2026-11-16)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-diagnostico-transicion-partida-doble.md (v1)
@@ -21,3 +21,6 @@ No se pudo ejecutar: la máquina no tiene `pg_dump`, `pg_restore`, `createdb` ni
 `which pg_dump pg_restore createdb psql` → `no pg_dump in (...)`, idem para los otros tres.
 `manage.py test modules.accounting modules.sales.tests.test_boundaries` → `Ran 181 tests ... OK`.
 `manage.py makemigrations --check --dry-run` → `No changes detected`.
+
+## Resolución
+Ensayo ejecutado con PostgreSQL 16: `pg_dump` → `pg_restore` en `doredb_copia` → diagnóstico antes (idéntico a la original) → `migrate` («No migrations to apply») → diagnóstico después (idéntico). 32 entradas, 4 448,50. Ver `docs/deployment/transicion-partida-doble.md`.

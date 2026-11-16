@@ -64,8 +64,10 @@ Base `doredb`, 2026-11-16; `accounting` 0001–0006 aplicadas.
 | Pagos de compras / gastos | 12 = 818,50 / 1 = 270,00, sin movimiento ni clasificación |
 | Empresas con entradas y sin corte | 3 de 5 (19 entradas) |
 
-La causa de los 21 pagos sin entrada **no está confirmada** (hipótesis: anteriores al corte o de empresas sin cobertura). El diagnóstico los separa por empresa (`source_without_entry`: `sin_entrada` frente a `anterior_al_corte`) y es el paso que la confirma.
+**Los 21 pagos sin entrada** (diagnóstico, 2026-11-16): 11 de ventas (1 085,50) y 2 de cobros (165,00) están en empresas con datos de Contabilidad y se informan como `sin_entrada`; los otros 8 de cobros (825,00) son de una empresa **sin ningún dato de Contabilidad** (sin cuentas, entradas ni corte): el recorrido sin `--company` no la incluye, pero `--company <uuid>` sí la diagnostica. Ninguno es anterior al corte.
+
+Resultado del diagnóstico sobre la copia (sin mapeo): 32 entradas, 0 convertibles, 0 históricas, 32 pendientes: 19 `sin_corte` (3 empresas bloqueadas) y 13 `cuenta_sin_codigo`.
 
 ## Estado de la verificación
 - Pruebas del diagnóstico (7 unitarias y 8 de integración) y regresión de `accounting` (181): en verde. La base de pruebas se crea desde cero aplicando toda la cadena de migraciones sin errores.
-- **Pendiente (manual):** el ensayo con `pg_dump`/`pg_restore` sobre una copia de la base local y la comparación del diagnóstico antes/después (pasos 1, 2 y 5 del procedimiento).
+- **Ensayo en copia (2026-11-16):** `pg_dump -Fc` de `doredb` (237 602 bytes) → `createdb doredb_copia` → `pg_restore`; el diagnóstico de la copia es idéntico al de la original; `migrate` en la copia: «No migrations to apply»; el diagnóstico tras `migrate` es idéntico (mismos 32 movimientos y 4 448,50). La base original solo se leyó.
