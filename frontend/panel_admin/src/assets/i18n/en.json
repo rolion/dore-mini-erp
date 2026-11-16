@@ -2504,6 +2504,33 @@
     "COL_IMPUTACIONES": "Allocations"
   },
   "ACCOUNTING": {
+    "FISCAL_PERIODS": {
+      "TAB": "Fiscal periods",
+      "TITULO": "Fiscal periods",
+      "DESCRIPCION": "Date ranges in which entries can be recorded. A closed period accepts no new entries.",
+      "NUEVO_PERIODO": "New period",
+      "EDITAR_PERIODO": "Edit period",
+      "SIN_PERIODOS": "There are no fiscal periods yet. Without an open period no entries can be recorded; create the first one with «+».",
+      "INICIO": "Start",
+      "FIN": "End",
+      "ABIERTO": "Open",
+      "CERRADO": "Closed",
+      "CERRAR": "Close period",
+      "REABRIR": "Reopen period",
+      "EJEMPLO": "E.g.: Year 2026",
+      "FECHA_OBLIGATORIA": "The date is required.",
+      "FIN_ANTERIOR": "The end date cannot be earlier than the start date.",
+      "CREADO": "Period created",
+      "ACTUALIZADO": "Period updated",
+      "CERRADO_OK": "Period closed",
+      "REABIERTO_OK": "Period reopened",
+      "CERRAR_CONFIRMACION": "Close the period «{{name}}»?",
+      "CERRAR_EFECTO": "No entries dated within the period can be recorded and its data cannot be changed. Closing does not create income-closing entries. You can reopen it.",
+      "REABRIR_CONFIRMACION": "Reopen the period «{{name}}»?",
+      "REABRIR_EFECTO": "It will accept entries and changes to its data again.",
+      "CERRADO_POR": "Closed by {{user}}",
+      "ERROR_SUPERPOSICION": "The range overlaps another period of the company."
+    },
     "ACCOUNTING_SETTINGS": {
       "CUENTAS_Y_METODOS_DE_PAGO": "Accounts and Payment methods",
       "CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO": "Accounting › Settings › Accounts and Payment methods"

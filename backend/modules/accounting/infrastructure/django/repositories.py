@@ -1,16 +1,18 @@
+import hashlib
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.db.models import Count, Max, Min, Sum
 
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES
 from modules.accounting.domain.entry import Entry
+from modules.accounting.domain.fiscal_period import FiscalPeriod
 
-from .models import AccountModel, EntryModel, MethodMappingModel
+from .models import AccountModel, EntryModel, FiscalPeriodModel, MethodMappingModel
 
 DUPLICATE_NAME = 'Ya existe una cuenta con ese nombre.'
 
@@ -198,3 +200,69 @@ class DjangoEntryRepository:
         aggregate = self._rows().aggregate(first=Min('payment_date'), last=Max('payment_date'),
                                            recorded=Min('created_at'))
         return Coverage(aggregate['first'], aggregate['last'], aggregate['recorded'])
+
+
+_PERIOD_LOCK_NAMESPACE = 0x4650  # "FP": períodos fiscales
+DUPLICATE_PERIOD_NAME = 'Ya existe un período con ese nombre.'
+
+
+def _period(model: FiscalPeriodModel) -> FiscalPeriod:
+    return FiscalPeriod(
+        id=model.id, name=model.name, start_date=model.start_date, end_date=model.end_date, status=model.status,
+        closed_at=model.closed_at, closed_by_name=model.closed_by_name, reopened_at=model.reopened_at,
+        reopened_by_name=model.reopened_by_name, created_at=model.created_at, updated_at=model.updated_at)
+
+
+class DjangoFiscalPeriodRepository:
+    """Repositorio de períodos acotado a una empresa: toda consulta filtra por `company_id`."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _rows(self):
+        return FiscalPeriodModel.objects.filter(company_id=self.company_id)
+
+    def lock_company(self) -> None:
+        """Serializa altas y cambios de límites de la empresa hasta el fin de la transacción (no hay filas que bloquear)."""
+        key = int.from_bytes(hashlib.sha256(self.company_id.bytes).digest()[:4], 'big', signed=True)
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT pg_advisory_xact_lock(%s, %s)', [_PERIOD_LOCK_NAMESPACE, key])
+
+    def all(self) -> list[FiscalPeriod]:
+        return [_period(m) for m in self._rows().order_by('-start_date', 'id')]
+
+    def get(self, period_id: UUID) -> FiscalPeriod | None:
+        model = self._rows().filter(pk=period_id).first()
+        return _period(model) if model else None
+
+    def get_for_update(self, period_id: UUID) -> FiscalPeriod | None:
+        model = self._rows().select_for_update().filter(pk=period_id).first()
+        return _period(model) if model else None
+
+    def find_containing_for_update(self, day: date) -> FiscalPeriod | None:
+        """El período que contiene la fecha, con su fila bloqueada hasta el fin de la transacción."""
+        model = self._rows().select_for_update().filter(start_date__lte=day, end_date__gte=day).first()
+        return _period(model) if model else None
+
+    def find_containing(self, day: date) -> FiscalPeriod | None:
+        model = self._rows().filter(start_date__lte=day, end_date__gte=day).first()
+        return _period(model) if model else None
+
+    def overlapping(self, start: date, end: date, exclude_id: UUID | None = None) -> list[FiscalPeriod]:
+        rows = self._rows().filter(start_date__lte=end, end_date__gte=start).order_by('start_date')
+        if exclude_id is not None:
+            rows = rows.exclude(pk=exclude_id)
+        return [_period(m) for m in rows]
+
+    def save(self, period: FiscalPeriod) -> FiscalPeriod:
+        if self._rows().exclude(pk=period.id).filter(name__iexact=period.name).exists():
+            raise AccountValidationError({'name': [DUPLICATE_PERIOD_NAME]})
+        try:
+            with transaction.atomic():
+                FiscalPeriodModel.objects.update_or_create(id=period.id, company_id=self.company_id, defaults={
+                    'name': period.name, 'start_date': period.start_date, 'end_date': period.end_date,
+                    'status': period.status, 'closed_at': period.closed_at, 'closed_by_name': period.closed_by_name,
+                    'reopened_at': period.reopened_at, 'reopened_by_name': period.reopened_by_name})
+        except IntegrityError:
+            raise AccountValidationError({'name': [DUPLICATE_PERIOD_NAME]}) from None
+        return _period(self._rows().get(pk=period.id))

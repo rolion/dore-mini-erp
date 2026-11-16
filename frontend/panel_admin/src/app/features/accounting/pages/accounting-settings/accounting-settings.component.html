@@ -28,14 +28,23 @@
                 [attr.aria-selected]="tab === 'methods'" [attr.tabindex]="tab === 'methods' ? 0 : -1" aria-controls="panel-methods"
                 (click)="select('methods')">{{ 'ACCOUNTING.METHODS_TAB.METODOS_DE_PAGO' | translate }}</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'periods'" role="tab" id="tab-periods"
+                [attr.aria-selected]="tab === 'periods'" [attr.tabindex]="tab === 'periods' ? 0 : -1" aria-controls="panel-periods"
+                (click)="select('periods')">{{ 'ACCOUNTING.FISCAL_PERIODS.TAB' | translate }}</button>
+            </li>
           </ul>
           @if (tab === 'accounts') {
           <div id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts">
             <app-accounts-tab />
           </div>
-          } @else {
+          } @else if (tab === 'methods') {
           <div id="panel-methods" role="tabpanel" aria-labelledby="tab-methods">
             <app-methods-tab />
+          </div>
+          } @else {
+          <div id="panel-periods" role="tabpanel" aria-labelledby="tab-periods">
+            <app-periods-tab />
           </div>
           }
         </div>

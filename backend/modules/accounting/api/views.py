@@ -7,6 +7,14 @@ from rest_framework.views import APIView
 
 from django.utils import timezone
 
+from modules.accounting.application.fiscal_periods import (
+    CloseFiscalPeriod,
+    CreateFiscalPeriod,
+    GetFiscalPeriod,
+    ListFiscalPeriods,
+    ReopenFiscalPeriod,
+    UpdateFiscalPeriod,
+)
 from modules.accounting.application.regularization_summary import build_summary
 from modules.accounting.application.regularize import RegularizationInProgress, RegularizeLedger
 from modules.accounting.application.use_cases import (
@@ -28,15 +36,18 @@ from modules.accounting.domain.account import (
     MethodNotFound,
 )
 from modules.accounting.domain.entry import EntryNotFound
+from modules.accounting.domain.fiscal_period import FiscalPeriodConflict, FiscalPeriodNotFound
 from modules.accounting.domain.regularization import HistoricalMapping, RegularizationInputError, parse_mapping
 from modules.accounting.infrastructure.adapters import (
     DjangoRegularizationLedger,
+    NoJournalPeriodUsage,
     ReceivablesPaymentSource,
     SalesPaymentSource,
 )
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
     DjangoEntryRepository,
+    DjangoFiscalPeriodRepository,
     DjangoMethodMappingRepository,
     EntryFilters,
 )
@@ -46,6 +57,9 @@ from shared.tenancy import company_id_from
 from .serializers import (
     AccountInputSerializer,
     EntryFiltersSerializer,
+    FiscalPeriodInputSerializer,
+    FiscalPeriodUpdateSerializer,
+    serialize_fiscal_period,
     AccountUpdateSerializer,
     RegularizationApplySerializer,
     RegularizationInputSerializer,
@@ -67,6 +81,15 @@ class Conflict(APIException):
         super().__init__({'detail': detail, 'code': code, 'methods': methods})
 
 
+class PeriodConflict(APIException):
+    """409 con `{detail, code, periods}`."""
+
+    status_code = status.HTTP_409_CONFLICT
+
+    def __init__(self, detail: str, code: str, periods: list[str]):
+        super().__init__({'detail': detail, 'code': code, 'periods': periods})
+
+
 def _repositories(request):
     """Repositorios de la empresa del usuario autenticado (nunca de un dato enviado por el cliente)."""
     company_id = company_id_from(request)
@@ -85,6 +108,10 @@ def _run(use_case, *args, **kwargs):
         raise NotFound('Método de pago no encontrado.') from exc
     except EntryNotFound as exc:
         raise NotFound('Entrada no encontrada.') from exc
+    except FiscalPeriodNotFound as exc:
+        raise NotFound('Período fiscal no encontrado.') from exc
+    except FiscalPeriodConflict as exc:
+        raise PeriodConflict(str(exc), exc.code, exc.periods) from exc
     except AccountConflict as exc:
         raise Conflict(str(exc), exc.code, exc.methods) from exc
 
@@ -140,6 +167,51 @@ class AccountDeactivateView(_ConfigView):
     def post(self, request, account_id):
         accounts, mappings = _repositories(request)
         return Response(serialize_account(_run(DeactivateAccount(accounts, mappings), account_id)))
+
+
+def _actor(request) -> str:
+    user = request.user
+    return user.get_full_name().strip() or user.get_username()
+
+
+class FiscalPeriodListCreateView(_ConfigView):
+    def get(self, request):
+        periods = DjangoFiscalPeriodRepository(company_id_from(request))
+        return Response([serialize_fiscal_period(p) for p in _run(ListFiscalPeriods(periods))])
+
+    def post(self, request):
+        serializer = FiscalPeriodInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        periods = DjangoFiscalPeriodRepository(company_id_from(request))
+        period = _run(CreateFiscalPeriod(periods), **serializer.validated_data)
+        return Response(serialize_fiscal_period(period), status=status.HTTP_201_CREATED)
+
+
+class FiscalPeriodDetailView(_ConfigView):
+    def get(self, request, period_id):
+        periods = DjangoFiscalPeriodRepository(company_id_from(request))
+        return Response(serialize_fiscal_period(_run(GetFiscalPeriod(periods), period_id)))
+
+    def patch(self, request, period_id):
+        serializer = FiscalPeriodUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        periods = DjangoFiscalPeriodRepository(company_id_from(request))
+        period = _run(UpdateFiscalPeriod(periods, NoJournalPeriodUsage()), period_id, **serializer.validated_data)
+        return Response(serialize_fiscal_period(period))
+
+
+class FiscalPeriodCloseView(_ConfigView):
+    def post(self, request, period_id):
+        periods = DjangoFiscalPeriodRepository(company_id_from(request))
+        period = _run(CloseFiscalPeriod(periods), period_id, _actor(request), timezone.now())
+        return Response(serialize_fiscal_period(period))
+
+
+class FiscalPeriodReopenView(_ConfigView):
+    def post(self, request, period_id):
+        periods = DjangoFiscalPeriodRepository(company_id_from(request))
+        period = _run(ReopenFiscalPeriod(periods), period_id, _actor(request), timezone.now())
+        return Response(serialize_fiscal_period(period))
 
 
 class MethodListView(_ConfigView):

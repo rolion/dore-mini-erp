@@ -3,19 +3,20 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AccountsTabComponent } from '../../components/accounts-tab/accounts-tab.component';
 import { MethodsTabComponent } from '../../components/methods-tab/methods-tab.component';
+import { PeriodsTabComponent } from '../../components/periods-tab/periods-tab.component';
 
-export type SettingsTab = 'accounts' | 'methods';
+export type SettingsTab = 'accounts' | 'methods' | 'periods';
 
-/** Contabilidad › Configuración › Cuentas y Métodos de pago: dos pestañas (cuentas destino y mapeo de métodos). */
+/** Contabilidad › Configuración › Cuentas y Métodos de pago: tres pestañas (cuentas destino, mapeo de métodos y períodos fiscales). */
 @Component({
   selector: 'app-accounting-settings',
   templateUrl: './accounting-settings.component.html',
-  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent],
+  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, PeriodsTabComponent],
 })
 export class AccountingSettingsComponent {
   tab: SettingsTab = 'accounts';
 
-  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods'];
+  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'periods'];
 
   select(tab: SettingsTab): void {
     this.tab = tab;

@@ -56,7 +56,13 @@ export class AccountingApiError extends Error {
   }
 }
 
-const FIELD_MAP: Record<string, string> = { name: 'name', currency: 'currency', account_id: 'accountId' };
+const FIELD_MAP: Record<string, string> = {
+  name: 'name',
+  currency: 'currency',
+  account_id: 'accountId',
+  start_date: 'startDate',
+  end_date: 'endDate',
+};
 
 function toFieldErrors(body: unknown): FieldErrors {
   const errors: FieldErrors = {};
