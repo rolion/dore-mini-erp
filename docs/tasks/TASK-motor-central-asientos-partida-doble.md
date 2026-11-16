@@ -1,6 +1,6 @@
 # TASK-motor-central-asientos-partida-doble: Motor central de asientos con partida doble, reversión e idempotencia (CONT-02)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-motor-central-asientos-partida-doble
@@ -13,6 +13,7 @@
 | 2026-11-16 | (nuevo) → INVESTIGATION | Task creado; base = rama `accounting` (fast-forward a `origin/accounting`, PR #82) | delivery-start |
 | 2026-11-16 | INVESTIGATION → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño NO (solo backend; UI en CONT-11) | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -90,6 +91,8 @@ Implementado según PLAN v1 (sin cambios de Specification).
 - **Docs**: nota en `docs/architecture/ddd.md`; aviso de transición en el docstring de `record_entry`.
 
 **Desviaciones:** (1) la CHECK de reversión exige `reverses` ⇒ sin origen y con motivo, y una reversión conserva el `source` de su original (el plan decía «MANUAL ⇒ sin origen; AUTOMATIC ⇒ origen completo» solo para originales). (2) La descripción de la reversión es «Reversión: <original>». (3) La moneda del asiento no se recibe: se deriva de sus cuentas. (4) Un reintento de un evento ya existente se resuelve antes de validar cuentas y períodos (no se revalida).
+
+**Corridas propias (no son el Quality Gate):** `test_journal_*` 48 OK (dominio, servicio, adaptador, concurrencia); `makemigrations --check` sin cambios; suite completa 1879 con 3 fallos ajenos al diff (`sales.test_repository` ×2 por orden de filas con marcas de tiempo idénticas y `shared.test_test_runner` por resolución del reloj en Windows; los de ventas pasan aislados) y 1 error de mi prueba de concurrencia, ya corregido.
 
 **Pruebas añadidas:** `test_journal_domain`, `test_journal_service`, `test_journal_period_usage`, `test_journal_concurrency` y `journal_support` (ayudas).
 
