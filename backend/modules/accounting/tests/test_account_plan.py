@@ -21,18 +21,18 @@ SEQ = itertools.count(1)
 
 class DomainTests(SimpleTestCase):
     def test_code_rules(self):  # INV-01
-        self.assertEqual(validate_code('  1.1.01 '), '1.1.01')
-        self.assertEqual(validate_code('A_b-2'), 'A_b-2')
-        for bad in ('', '   ', None, 'x' * 21, '1 1', 'ñ1', '1/2'):
+        self.assertEqual(validate_code('  111001 '), '111001')
+        self.assertEqual(validate_code('001'), '001')  # los ceros a la izquierda se conservan
+        for bad in ('', '   ', None, '1' * 21, '1 1', '1.1.1.001', 'A1', '1-2', '１２', '1/2'):
             with self.assertRaises(AccountValidationError) as raised:
                 validate_code(bad)
             self.assertIn('code', raised.exception.errors)
 
     def test_kind_only_for_asset(self):  # INV-04
-        asset = Account.create('Caja', 'BOB', 'CASH', code='1.1.01')
+        asset = Account.create('Caja', 'BOB', 'CASH', code='111001')
         asset.account_class = 'ASSET'
         asset.ensure_consistent()
-        expense = Account.create('Alquiler', 'BOB', 'CASH', code='6.1.02')
+        expense = Account.create('Alquiler', 'BOB', 'CASH', code='611002')
         expense.account_class = 'EXPENSE'
         with self.assertRaises(AccountValidationError) as raised:
             expense.ensure_consistent()
@@ -54,7 +54,7 @@ class ApiBase(APITestCase):
         return client
 
     def create(self, client, name='Caja', code=None, account_class='ASSET', **extra):
-        payload = {'name': name, 'currency': 'BOB', 'code': code or f'T{next(SEQ)}', 'account_class': account_class, **extra}
+        payload = {'name': name, 'currency': 'BOB', 'code': code or str(next(SEQ) + 900000), 'account_class': account_class, **extra}
         return client.post(ACCOUNTS, payload, format='json')
 
     def add_entry(self, account_id, company):
@@ -71,31 +71,42 @@ class CreateTests(ApiBase):
             dup = self.create(self.client_a, 'Otra', repeated)
             self.assertEqual(dup.status_code, 400)
             self.assertIn('code', dup.data)
-        self.assertEqual(self.create(self.client_a, 'Otra 2', 'A1').status_code, 201)
-        self.assertEqual(self.create(self.client_a, 'Otra 3', 'a1').status_code, 400)  # sin distinguir mayúsculas
+        self.assertEqual(self.create(self.client_a, 'Otra 2', '1001').status_code, 201)
+        self.assertEqual(self.create(self.client_a, 'Otra 3', '001').status_code, 201)  # '001' y '1' son códigos distintos
+        self.assertEqual(self.create(self.client_a, 'Otra 4', '1').status_code, 201)
         self.assertEqual(self.create(self.client_b, 'Caja', '101', kind='CASH').status_code, 201)  # otra empresa
+
+    def test_code_is_numeric_only_and_each_company_can_use_the_same_one(self):  # INV-01, AC-01
+        for bad in ('1.1.1.001', 'A111', '111-001', '11 1001'):
+            rejected = self.create(self.client_a, 'Caja', bad)
+            self.assertEqual(rejected.status_code, 400, bad)
+            self.assertIn('code', rejected.data)
+        caja_a = self.create(self.client_a, 'Caja', '111001', kind='CASH')
+        caja_b = self.create(self.client_b, 'Caja', '111001', kind='CASH')  # otra empresa, mismo código
+        self.assertEqual((caja_a.status_code, caja_b.status_code, caja_b.data['code']), (201, 201, '111001'))
+        self.assertEqual(self.create(self.client_a, 'Caja chica', '111001').status_code, 400)  # misma empresa
 
     def test_requires_code_and_classification_enabled(self):  # AC-02
         base = {'name': 'X', 'currency': 'BOB'}
         no_code = self.client_a.post(ACCOUNTS, {**base, 'account_class': 'ASSET'}, format='json')
-        no_class = self.client_a.post(ACCOUNTS, {**base, 'code': 'X1'}, format='json')
+        no_class = self.client_a.post(ACCOUNTS, {**base, 'code': '999001'}, format='json')
         self.assertIn('code', no_code.data)
         self.assertIn('account_class', no_class.data)
         self.assertEqual((no_code.status_code, no_class.status_code), (400, 400))
         self.client_a.post('/api/accounting/account-classes/COST/disable/')
-        disabled = self.create(self.client_a, 'Costos', 'X2', 'COST')
+        disabled = self.create(self.client_a, 'Costos', '999002', 'COST')
         self.assertEqual(disabled.status_code, 400)
         self.assertIn('account_class', disabled.data)
         self.assertEqual(AccountModel.objects.filter(company_id=self.company_a.id).count(), 0)
 
     def test_kind_only_with_asset_and_contra_flag(self):  # AC-05, AC-06
-        bad = self.create(self.client_a, 'Alquiler', '6.1.02', 'EXPENSE', kind='CASH')
+        bad = self.create(self.client_a, 'Alquiler', '611002', 'EXPENSE', kind='CASH')
         self.assertEqual(bad.status_code, 400)
         self.assertIn('kind', bad.data)
-        self.assertEqual(self.create(self.client_a, 'Alquiler', '6.1.02', 'EXPENSE').status_code, 201)
-        contra = self.create(self.client_a, 'Depreciación acumulada', '1.2.05', is_contra=True)
+        self.assertEqual(self.create(self.client_a, 'Alquiler', '611002', 'EXPENSE').status_code, 201)
+        contra = self.create(self.client_a, 'Depreciación acumulada', '121005', is_contra=True)
         self.assertEqual((contra.status_code, contra.data['is_contra'], contra.data['kind']), (201, True, None))
-        self.assertFalse(self.create(self.client_a, 'Equipos', '1.2.02').data['is_contra'])
+        self.assertFalse(self.create(self.client_a, 'Equipos', '121002').data['is_contra'])
 
     def test_race_on_duplicate_code_is_a_400_not_a_500(self):  # EDGE
         self.create(self.client_a, 'Caja', '101')
@@ -112,14 +123,14 @@ class UpdateTests(ApiBase):
         blocked = self.client_a.patch(url, {'account_class': 'LIABILITY'}, format='json')
         self.assertEqual((blocked.status_code, blocked.data['code']), (409, 'account_has_entries'))
         self.assertEqual(AccountModel.objects.get(pk=account['id']).account_class, 'ASSET')
-        renamed = self.client_a.patch(url, {'name': 'Caja chica', 'code': '1.1.01'}, format='json')
-        self.assertEqual((renamed.status_code, renamed.data['name'], renamed.data['code']), (200, 'Caja chica', '1.1.01'))
+        renamed = self.client_a.patch(url, {'name': 'Caja chica', 'code': '111001'}, format='json')
+        self.assertEqual((renamed.status_code, renamed.data['name'], renamed.data['code']), (200, 'Caja chica', '111001'))
         same = self.client_a.patch(url, {'account_class': 'ASSET'}, format='json')
         self.assertEqual(same.status_code, 200)  # no es un cambio
         self.assertEqual(EntryModel.objects.filter(pk=entry.pk).values().get(), before)
 
     def test_contra_flag_locked_by_entries(self):  # AC-06
-        account = self.create(self.client_a, 'Depreciación', '1.2.05').data
+        account = self.create(self.client_a, 'Depreciación', '121005').data
         url = f'{ACCOUNTS}{account["id"]}/'
         self.assertTrue(self.client_a.patch(url, {'is_contra': True}, format='json').data['is_contra'])
         self.add_entry(account['id'], self.company_a)
@@ -165,10 +176,10 @@ class KindClearingTests(ApiBase):
     def test_legacy_money_account_can_be_reclassified_outside_asset(self):
         legacy = AccountModel.objects.create(company_id=self.company_a.id, name='Vieja', currency='BOB', kind='BANK')
         url = f'{ACCOUNTS}{legacy.id}/'
-        stuck = self.client_a.patch(url, {'code': 'V1', 'account_class': 'EXPENSE'}, format='json')
+        stuck = self.client_a.patch(url, {'code': '5001', 'account_class': 'EXPENSE'}, format='json')
         self.assertEqual(stuck.status_code, 400)
         self.assertIn('kind', stuck.data)
-        done = self.client_a.patch(url, {'code': 'V1', 'account_class': 'EXPENSE', 'kind': None}, format='json')
+        done = self.client_a.patch(url, {'code': '5001', 'account_class': 'EXPENSE', 'kind': None}, format='json')
         self.assertEqual((done.status_code, done.data['account_class'], done.data['kind']), (200, 'EXPENSE', None))
 
 
@@ -195,8 +206,8 @@ class StateAndLegacyTests(ApiBase):
         self.assertEqual((listed['code'], listed['account_class']), (None, None))
         self.assertEqual(services.validate_money_account(self.company_a.id, legacy.id).name, 'Vieja')
         self.add_entry(legacy.id, self.company_a)
-        done = self.client_a.patch(f'{ACCOUNTS}{legacy.id}/', {'code': '1.1.02', 'account_class': 'ASSET'}, format='json')
-        self.assertEqual((done.status_code, done.data['code'], done.data['account_class']), (200, '1.1.02', 'ASSET'))
+        done = self.client_a.patch(f'{ACCOUNTS}{legacy.id}/', {'code': '111002', 'account_class': 'ASSET'}, format='json')
+        self.assertEqual((done.status_code, done.data['code'], done.data['account_class']), (200, '111002', 'ASSET'))
 
     def test_deactivating_an_account_used_by_a_method_is_still_blocked(self):  # AC-09, INV-07
         account = self.create(self.client_a, 'Banco', '102', kind='BANK').data
@@ -210,14 +221,14 @@ class StateAndLegacyTests(ApiBase):
 
 class ListTests(ApiBase):
     def test_orders_by_code_filters_by_class_and_isolates_companies(self):  # AC-10
-        self.create(self.client_a, 'Alquiler', '6.1.02', 'EXPENSE')
-        self.create(self.client_a, 'Caja', '1.1.01', kind='CASH')
-        self.create(self.client_a, 'Banco', '1.1.02', kind='BANK')
+        self.create(self.client_a, 'Alquiler', '611002', 'EXPENSE')
+        self.create(self.client_a, 'Caja', '111001', kind='CASH')
+        self.create(self.client_a, 'Banco', '111002', kind='BANK')
         AccountModel.objects.create(company_id=self.company_a.id, name='Anterior', currency='BOB')
-        self.create(self.client_b, 'Ajena', '1.1.01')
+        self.create(self.client_b, 'Ajena', '111001')
         rows = self.client_a.get(ACCOUNTS).data
-        self.assertEqual([r['code'] for r in rows], ['1.1.01', '1.1.02', '6.1.02', None])
-        self.assertEqual([r['code'] for r in self.client_a.get(ACCOUNTS, {'account_class': 'asset'}).data], ['1.1.01', '1.1.02'])
+        self.assertEqual([r['code'] for r in rows], ['111001', '111002', '611002', None])
+        self.assertEqual([r['code'] for r in self.client_a.get(ACCOUNTS, {'account_class': 'asset'}).data], ['111001', '111002'])
         self.assertEqual(self.client_a.get(ACCOUNTS, {'account_class': 'OTHER'}).status_code, 400)
         foreign = self.client_b.get(ACCOUNTS).data[0]
         self.assertEqual(self.client_a.get(f'{ACCOUNTS}{foreign["id"]}/').status_code, 404)

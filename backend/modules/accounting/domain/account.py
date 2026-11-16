@@ -8,7 +8,7 @@ from .catalog import ACCOUNT_KINDS, CURRENCIES, FLOW_CURRENCY
 
 NAME_MAX_LENGTH = 80
 CODE_MAX_LENGTH = 20
-CODE_PATTERN = re.compile(r'^[A-Za-z0-9._-]+$')
+CODE_PATTERN = re.compile(r'^[0-9]+$')  # por ahora solo numérico; el formato lo elige cada empresa (p. ej. 111001)
 
 
 class AccountValidationError(Exception):
@@ -46,14 +46,14 @@ def validate_name(name: object) -> str:
 
 
 def validate_code(code: object) -> str:
-    """Código de cuenta: recortado, de 1 a 20 caracteres de letras, dígitos, `.`, `-` y `_` (sin espacios)."""
+    """Código de cuenta: recortado, de 1 a 20 dígitos (solo numérico por ahora; se conservan los ceros a la izquierda)."""
     if not isinstance(code, str) or not code.strip():
         raise AccountValidationError({'code': ['El código es obligatorio.']})
     code = code.strip()
     if len(code) > CODE_MAX_LENGTH:
         raise AccountValidationError({'code': [f'El código no puede superar {CODE_MAX_LENGTH} caracteres.']})
     if not CODE_PATTERN.match(code):
-        raise AccountValidationError({'code': ['El código solo admite letras, dígitos, punto, guion y guion bajo.']})
+        raise AccountValidationError({'code': ['El código solo admite dígitos (por ejemplo, 111001).']})
     return code
 
 

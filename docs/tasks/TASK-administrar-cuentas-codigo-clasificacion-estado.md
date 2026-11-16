@@ -48,7 +48,7 @@ Aclaraciones del dueño (2026-11-16):
 
 ### Hipótesis / supuestos no confirmados
 - «Asientos confirmados» equivale hoy a las entradas del libro de una sola cuenta (`accounting_entry`); cuando CONT-02 introduzca asientos con líneas, la comprobación se apoyará en las líneas de la cuenta.
-- El código admite letras, dígitos, punto, guion y guion bajo, hasta 20 caracteres, sin espacios, y es único sin distinguir mayúsculas. Es decisión de este TASK, no del dueño.
+- ~~El código admitía letras, dígitos, punto, guion y guion bajo.~~ **Actualizado (2026-11-16, decisión del dueño):** el formato es libre para cada empresa y por ahora solo numérico (p. ej. `111001`, hasta 20 dígitos); es único dentro de la empresa y otra empresa puede repetirlo.
 
 ### Módulos y dependencias relacionadas
 `accounting` (dueño). Los módulos que crean cobros/pagos consumen la fachada (`resolve_account`, `validate_money_account`), que no cambia.

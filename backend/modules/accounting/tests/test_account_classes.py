@@ -46,7 +46,7 @@ class ApiBase(APITestCase):
         return client
 
     def create_account(self, client, name='Caja', **extra):
-        payload = {'name': name, 'currency': 'BOB', 'code': f'C{next(CODES)}', 'account_class': 'ASSET', **extra}
+        payload = {'name': name, 'currency': 'BOB', 'code': str(next(CODES) + 900000), 'account_class': 'ASSET', **extra}
         if payload['account_class'] == 'ASSET':
             payload.setdefault('kind', 'CASH')  # solo las cuentas de Activo pueden ser de dinero
         return client.post(ACCOUNTS, payload, format='json')
@@ -112,7 +112,7 @@ class AccountClassificationTests(ApiBase):
     def test_account_exposes_and_accepts_enabled_class(self):  # API-03, CONT-09 AC-02
         created = self.create_account(self.client_a, account_class='asset')
         self.assertEqual((created.status_code, created.data['account_class']), (201, 'ASSET'))
-        missing = self.client_a.post(ACCOUNTS, {'name': 'Sin clase', 'currency': 'BOB', 'code': 'SC'}, format='json')
+        missing = self.client_a.post(ACCOUNTS, {'name': 'Sin clase', 'currency': 'BOB', 'code': '999'}, format='json')
         self.assertEqual(missing.status_code, 400)  # CONT-09: la clasificación es obligatoria al crear
         self.assertIn('account_class', missing.data)
         bad = self.create_account(self.client_a, 'Mala', account_class='OTHER')

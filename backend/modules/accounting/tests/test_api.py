@@ -26,7 +26,7 @@ class AccountingApiBase(APITestCase):
         return client
 
     def create(self, client, name, currency='BOB', kind='BANK'):
-        code = f'C{next(CODES)}'
+        code = str(next(CODES) + 900000)
         response = client.post(ACCOUNTS, {'name': name, 'currency': currency, 'kind': kind, 'code': code,
                                           'account_class': 'ASSET'}, format='json')
         self.assertEqual(response.status_code, 201, response.data)
@@ -72,7 +72,7 @@ class AccountTests(AccountingApiBase):
 
     def test_duplicate_names_are_rejected_case_insensitively(self):  # EDGE-01
         self.create(self.client_a, 'Caja')
-        response = self.client_a.post(ACCOUNTS, {'name': ' caja ', 'currency': 'BOB', 'kind': 'CASH', 'code': 'otro',
+        response = self.client_a.post(ACCOUNTS, {'name': ' caja ', 'currency': 'BOB', 'kind': 'CASH', 'code': '999',
                                                  'account_class': 'ASSET'}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn('name', response.data)

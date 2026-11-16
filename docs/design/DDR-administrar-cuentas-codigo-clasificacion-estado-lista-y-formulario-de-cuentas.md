@@ -10,7 +10,7 @@ La persona administra el plan de cuentas de su empresa: crea, edita y habilita o
 ## Pantallas/flujos afectados
 1. **Contabilidad › Configuración › Cuentas (`accounts-tab`)**: lista con columnas Código, Nombre, Clasificación, Tipo de dinero (si lo tiene), Moneda, Apertura, Estado y Acciones; filtros por estado (los actuales) y por clasificación. Orden por código; las cuentas sin código van al final con «Sin código». Una cuenta correctora lleva la etiqueta «Correctora» junto al nombre.
 2. **Diálogo de cuenta (`account-dialog`)**:
-   - **Código** (obligatorio, con ayuda del formato) y **Nombre** (obligatorio).
+   - **Código** (obligatorio, solo números, p. ej. «111001»; la ayuda aclara que es único en la empresa y que otra empresa puede repetirlo) y **Nombre** (obligatorio).
    - **Clasificación** (obligatoria): solo las habilitadas; al editar, la actual aparece aunque esté deshabilitada. Con asientos, el campo está deshabilitado y un texto explica por qué.
    - **Cuenta de dinero** (tipo Caja/Banco/Billetera, opcional): visible solo con Activo.
    - **Cuenta correctora**: casilla, con ayuda «Su saldo normal es contrario al de su clasificación». Con asientos, deshabilitada.

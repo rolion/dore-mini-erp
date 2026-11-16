@@ -33,8 +33,8 @@ describe('AccountDialogComponent', () => {
     return fixture;
   }
 
-  const base = { code: '1.1.01', name: 'Caja', currency: 'BOB', accountClass: 'ASSET' as const };
-  const saved: Account = { id: 'a1', name: 'Caja', code: '1.1.01', currency: 'BOB', kind: 'CASH', accountClass: 'ASSET', openingBalance: '0.00', isActive: true };
+  const base = { code: '111001', name: 'Caja', currency: 'BOB', accountClass: 'ASSET' as const };
+  const saved: Account = { id: 'a1', name: 'Caja', code: '111001', currency: 'BOB', kind: 'CASH', accountClass: 'ASSET', openingBalance: '0.00', isActive: true };
 
   it('does not submit a blank name or a blank code', () => {
     const fixture = create();
@@ -48,10 +48,12 @@ describe('AccountDialogComponent', () => {
 
   it('validates the code format and requires a classification (AC-02)', () => {
     const fixture = create();
-    fixture.componentInstance.form.patchValue({ ...base, code: '1 1', accountClass: '' });
+    fixture.componentInstance.form.patchValue({ ...base, code: '1.1.1.001', accountClass: '' });
     expect(fixture.componentInstance.form.controls.code.invalid).toBeTrue();
     expect(fixture.componentInstance.form.controls.accountClass.invalid).toBeTrue();
-    fixture.componentInstance.form.patchValue({ code: 'A.b-1_2' });
+    fixture.componentInstance.form.patchValue({ code: 'A111' });
+    expect(fixture.componentInstance.form.controls.code.invalid).toBeTrue();
+    fixture.componentInstance.form.patchValue({ code: '0111001' });
     expect(fixture.componentInstance.form.controls.code.valid).toBeTrue();
     fixture.componentInstance.onSubmit();
     expect(api.createAccount).not.toHaveBeenCalled();
@@ -108,10 +110,10 @@ describe('AccountDialogComponent', () => {
   it('sends the contra flag and the money type (AC-06)', () => {
     const fixture = create();
     api.createAccount.and.returnValue(of(saved));
-    fixture.componentInstance.form.patchValue({ ...base, code: '1.2.05', name: 'Depreciación acumulada', isContra: true, kind: 'CASH' });
+    fixture.componentInstance.form.patchValue({ ...base, code: '121005', name: 'Depreciación acumulada', isContra: true, kind: 'CASH' });
     fixture.componentInstance.onSubmit();
     expect(api.createAccount).toHaveBeenCalledWith({
-      code: '1.2.05',
+      code: '121005',
       name: 'Depreciación acumulada',
       currency: 'BOB',
       accountClass: 'ASSET',
@@ -142,7 +144,7 @@ describe('AccountDialogComponent', () => {
     fixture.componentInstance.form.patchValue({ name: 'Caja chica' });
     fixture.componentInstance.onSubmit();
     expect(api.updateAccount).toHaveBeenCalledWith('a1', {
-      code: '1.1.01',
+      code: '111001',
       name: 'Caja chica',
       currency: 'BOB',
       accountClass: 'ASSET',
@@ -161,10 +163,10 @@ describe('AccountDialogComponent', () => {
     expect(fixture.componentInstance.form.controls.code.invalid).toBeTrue();
     expect(fixture.componentInstance.form.controls.accountClass.invalid).toBeTrue();
     expect(api.updateAccount).not.toHaveBeenCalled();
-    api.updateAccount.and.returnValue(of({ ...legacy, code: '1.1.02', accountClass: 'ASSET' }));
-    fixture.componentInstance.form.patchValue({ code: '1.1.02', accountClass: 'ASSET' });
+    api.updateAccount.and.returnValue(of({ ...legacy, code: '111002', accountClass: 'ASSET' }));
+    fixture.componentInstance.form.patchValue({ code: '111002', accountClass: 'ASSET' });
     fixture.componentInstance.onSubmit();
-    expect(api.updateAccount).toHaveBeenCalledWith('a1', { code: '1.1.02', name: 'Vieja', currency: 'BOB', accountClass: 'ASSET', isContra: false, openingBalance: '0.00' });
+    expect(api.updateAccount).toHaveBeenCalledWith('a1', { code: '111002', name: 'Vieja', currency: 'BOB', accountClass: 'ASSET', isContra: false, openingBalance: '0.00' });
   });
 
   it('shows the server field errors for a repeated code and keeps the dialog open (AC-01)', () => {
@@ -204,7 +206,7 @@ describe('AccountDialogComponent', () => {
       { code: 'COST', enabled: false },
     ];
     const fixture = create();
-    fixture.componentInstance.edit({ id: 'a1', name: 'Costos', code: '5.1.01', currency: 'BOB', kind: null, accountClass: 'COST', openingBalance: '0.00', isActive: true });
+    fixture.componentInstance.edit({ id: 'a1', name: 'Costos', code: '511001', currency: 'BOB', kind: null, accountClass: 'COST', openingBalance: '0.00', isActive: true });
     expect(fixture.componentInstance.classOptions).toEqual([
       { code: 'ASSET', disabled: false },
       { code: 'COST', disabled: true },

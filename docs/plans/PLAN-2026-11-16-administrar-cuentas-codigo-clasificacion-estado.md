@@ -1,4 +1,4 @@
-# PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado (v2)
+# PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado (v3)
 
 **Task:** TASK-administrar-cuentas-codigo-clasificacion-estado · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** [DDR](../design/DDR-administrar-cuentas-codigo-clasificacion-estado-lista-y-formulario-de-cuentas.md) · [ADR](../adr/ADR-administrar-cuentas-codigo-clasificacion-estado-modelo-de-cuenta.md)
@@ -33,7 +33,7 @@ Sin código; `kind` obligatorio al crear (`api/serializers.py:16-20`); clasifica
 - Las cuentas inactivas siguen en listados y saldos y no se aceptan para usos nuevos.
 
 ## Domain rules / invariants
-- INV-01: `code` obligatorio al crear, recortado, 1-20 caracteres de `[A-Za-z0-9._-]`.
+- INV-01: `code` obligatorio al crear, recortado, 1-20 dígitos (solo numérico por ahora; ceros a la izquierda conservados).
 - INV-02: `(company_id, lower(code))` único cuando `code` no es nulo.
 - INV-03: `account_class` obligatoria al crear, del catálogo y habilitada (nuevo valor).
 - INV-04: `kind` solo si `account_class` = `ASSET`.
@@ -42,7 +42,7 @@ Sin código; `kind` obligatorio al crear (`api/serializers.py:16-20`); clasifica
 - INV-07 (existente): desactivar una cuenta usada por métodos activos se rechaza.
 
 ## Acceptance criteria
-- AC-01: crear `101` / `Caja` / Activo funciona; el mismo código en la misma empresa (también en otra capitalización) da 400 en `code`; en otra empresa se acepta.
+- AC-01: crear `101` / `Caja` / Activo funciona; el mismo código en la misma empresa (también con espacios en los bordes) da 400 en `code`; en otra empresa se acepta (p. ej. `111001` Caja en dos empresas).
 - AC-02: crear sin código o sin clasificación da 400 en el campo; con clasificación deshabilitada da 400 en `account_class`.
 - AC-03: deshabilitar Caja la quita de los selectores de usos nuevos (`validate_money_account` la rechaza) y mantiene sus entradas y su saldo; sigue en el listado.
 - AC-04: con entradas, cambiar la clasificación da 409 `account_has_entries`; cambiar el nombre da 200 y las entradas siguen idénticas.
@@ -57,7 +57,7 @@ Sin código; `kind` obligatorio al crear (`api/serializers.py:16-20`); clasifica
 
 ## Edge cases / Error cases
 - `account_class: null` en PATCH no cambia nada.
-- Código con espacios internos o caracteres no permitidos: 400.
+- Código con espacios, puntos, letras u otros caracteres no numéricos (p. ej. `1.1.1.001`): 400.
 - Carrera al crear dos cuentas con el mismo código: gana la restricción única (400, no 500).
 - Cambiar la clasificación de Activo a otra con `kind` presente: 400 en `kind`.
 
@@ -148,3 +148,4 @@ Ninguna.
 
 ## Changelog
 - **v2** (2026-11-16): [Specification] Se añade API-04 (`kind: null` quita el tipo de dinero) y el mensaje del error de `kind` junto a la clasificación, para cerrar REV-01. Cambio de contrato aprobado por el usuario en el chat («Sí, corrígelo»). Solicitado por delivery-publish, REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01.
+- **v3** (2026-11-16): [Specification] INV-01 y AC-01: el código de cuenta pasa a ser solo numérico (p. ej. `111001`) en lugar de alfanumérico con signos; sigue siendo único por empresa y repetible entre empresas. Cambio pedido por el usuario en el chat. Los códigos con puntos del plan de cuentas inicial (p. ej. `1.1.01`) deberán cargarse como dígitos.

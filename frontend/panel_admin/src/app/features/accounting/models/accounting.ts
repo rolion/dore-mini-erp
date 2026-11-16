@@ -13,9 +13,9 @@ export type AccountKind = (typeof ACCOUNT_KINDS)[number];
 export const ACCOUNT_CLASSES = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE', 'COST'] as const;
 export type AccountClassCode = (typeof ACCOUNT_CLASSES)[number];
 
-/** Código de cuenta: hasta 20 caracteres de letras, dígitos, punto, guion y guion bajo; los espacios de los bordes se recortan. */
+/** Código de cuenta: hasta 20 dígitos (por ahora solo numérico, p. ej. 111001); los espacios de los bordes se recortan. */
 export const ACCOUNT_CODE_MAX_LENGTH = 20;
-export const ACCOUNT_CODE_PATTERN = /^\s*[A-Za-z0-9._-]+\s*$/;
+export const ACCOUNT_CODE_PATTERN = /^\s*\d+\s*$/;
 
 /** Estado de una clasificación contable en la empresa: solo se habilita o deshabilita. */
 export interface AccountClassState {

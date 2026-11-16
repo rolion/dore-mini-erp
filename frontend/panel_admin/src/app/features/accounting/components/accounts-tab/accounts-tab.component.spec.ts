@@ -53,11 +53,11 @@ describe('AccountsTabComponent', () => {
 
   it('shows code, classification and the contra badge, and "Sin código" for legacy accounts (UI-01)', () => {
     const fixture = create([
-      { ...banco, code: '1.2.05', name: 'Depreciación acumulada', accountClass: 'ASSET', kind: null, isContra: true },
+      { ...banco, code: '121005', name: 'Depreciación acumulada', accountClass: 'ASSET', kind: null, isContra: true },
       { ...banco, id: 'a2', name: 'Vieja', code: null, accountClass: null },
     ]);
     const text = fixture.nativeElement.textContent as string;
-    expect(text).toContain('1.2.05');
+    expect(text).toContain('121005');
     expect(text).toContain('Activo');
     expect(text).toContain('Correctora');
     expect(text).toContain('Sin código');
