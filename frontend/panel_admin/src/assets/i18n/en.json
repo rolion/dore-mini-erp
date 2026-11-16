@@ -2610,7 +2610,19 @@
       "ID_DEL_PAGO_DE_ORIGEN": "Source payment ID",
       "LAS_ENTRADAS_NO_SE_EDITAN": "Entries are neither edited nor deleted.",
       "VER_PEDIDO": "View order",
-      "VER_DOCUMENTO_N": "View document {{document}}"
+      "VER_DOCUMENTO_N": "View document {{document}}",
+      "DIRECCION": "Direction",
+      "INGRESO": "Income",
+      "EGRESO": "Expense",
+      "EGRESOS": "Expenses",
+      "NETO": "Net",
+      "GASTOS": "Expenses",
+      "PAGOS_DE_COMPRAS": "Purchase payments",
+      "REVERSION": "Reversal",
+      "CLASIFICACION": "Classification",
+      "MOVIMIENTO_ORIGINAL": "Original movement",
+      "REVERTIDO_POR": "Reversed by",
+      "VER_MOVIMIENTO": "View movement"
     },
     "REGULARIZATION": {
       "TITULO": "Regularize historical payments",

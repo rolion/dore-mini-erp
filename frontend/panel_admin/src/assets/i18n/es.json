@@ -2610,7 +2610,19 @@
       "ID_DEL_PAGO_DE_ORIGEN": "ID del pago de origen",
       "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan.",
       "VER_PEDIDO": "Ver pedido",
-      "VER_DOCUMENTO_N": "Ver documento {{document}}"
+      "VER_DOCUMENTO_N": "Ver documento {{document}}",
+      "DIRECCION": "Dirección",
+      "INGRESO": "Ingreso",
+      "EGRESO": "Egreso",
+      "EGRESOS": "Egresos",
+      "NETO": "Neto",
+      "GASTOS": "Gastos",
+      "PAGOS_DE_COMPRAS": "Pagos de compras",
+      "REVERSION": "Reversión",
+      "CLASIFICACION": "Clasificación",
+      "MOVIMIENTO_ORIGINAL": "Movimiento original",
+      "REVERTIDO_POR": "Revertido por",
+      "VER_MOVIMIENTO": "Ver movimiento"
     },
     "REGULARIZATION": {
       "TITULO": "Regularizar pagos históricos",

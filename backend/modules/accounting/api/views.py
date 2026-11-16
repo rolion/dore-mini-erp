@@ -239,6 +239,10 @@ class MethodDetailView(_ConfigView):
         return Response(serialize_method(view))
 
 
+def _classification_names(company_id) -> dict:
+    return {c.id: c.name for c in DjangoClassificationRepository(company_id).list()}
+
+
 class EntryPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
@@ -261,7 +265,8 @@ class EntryListView(APIView):
         paginator = EntryPagination()
         page = paginator.paginate_queryset(rows, request, view=self)
         enabled = module_gate.enabled_keys(company_id)
-        response = paginator.get_paginated_response([serialize_entry(row, enabled) for row in page])
+        names = _classification_names(company_id)
+        response = paginator.get_paginated_response([serialize_entry(row, enabled, names) for row in page])
         response.data['totals'] = serialize_totals(totals)
         response.data['period'] = {'date_from': filters.date_from, 'date_to': filters.date_to}
         settings_view = GetSettings(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
@@ -276,7 +281,8 @@ class EntryDetailView(APIView):
     def get(self, request, entry_id):
         company_id = company_id_from(request)
         row = _run(GetEntry(DjangoEntryRepository(company_id)), entry_id)
-        return Response(serialize_entry(row, module_gate.enabled_keys(company_id), detail=True))
+        return Response(serialize_entry(row, module_gate.enabled_keys(company_id), _classification_names(company_id),
+                                        detail=True))
 
 
 class _RegularizationView(APIView):

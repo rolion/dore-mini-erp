@@ -1,6 +1,6 @@
 # TASK-incorporar-egresos-reversion-libro: Egresos, reversión e idempotencia en el libro de Contabilidad (CONT-02)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-incorporar-egresos-reversion-libro (base: `accounting`)
@@ -14,6 +14,7 @@
 | 2026-11-15 | INVESTIGATION → ARCHITECTURE | Cambio de contrato y de esquema del libro | delivery-start |
 | 2026-11-15 | ARCHITECTURE → DESIGN → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-15 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
+| 2026-11-15 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -84,7 +85,21 @@ Ver `docs/adr/ADR-incorporar-egresos-reversion-libro-direccion-operacion-y-rever
 `docs/plans/PLAN-2026-11-15-incorporar-egresos-reversion-libro.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Resumen: el libro registra egresos y reversiones con dirección, operación y clasificación; saldo por cuenta; lectura ampliada en API y UI.
+
+- **Dominio** (`accounting/domain/{catalog,entry}.py`): `ORIGIN_DIRECTION`, `Entry.direction/operation/classification_id/reverses_id`, `Entry.reverse()`, `effect` — INV-01, INV-02, INV-03 (exigencia de clasificación), INV-05, EDGE-01.
+- **Persistencia**: modelo y migración `0006` (backfill `INCOME`/`RECORD`, unicidad `(empresa, origen, operación)`, `CheckConstraint` de vínculo de reversión, `OneToOne reverses`, `origin_kind` a 20) — INV-04, AC-06.
+- **Repositorio/fachada**: `insert` idempotente por operación, `get_by_origin`, `net_by_account`; `record_entry` extendido (valida clasificación de egreso salvo reintento), `reverse_entry`, `account_balances` — AC-01..AC-05, INV-07, EDGE-02..06.
+- **API de lectura**: `direction`, `operation`, `classification`, `reversal_of`, `reversed_by`, filtro `direction`, totales `expense` y `by_direction` — AC-07, API-01/02.
+- **Frontend**: modelos, filtro de dirección, signo de egresos, insignia de reversión, totales de egresos y neto, detalle con clasificación y enlaces; i18n es/en/pt — AC-08, UI-01..04.
+- **Pruebas**: `test_entry_expenses.py`, `test_entry_expenses_api.py`, `test_migration_0006.py`; specs de `entry.ts`, lista y detalle. Corridas propias: backend completo 1747 OK; frontend `accounting` 96 OK; `ng lint` e `i18n:check` OK (no es el Quality Gate).
+
+Desviaciones respecto al plan:
+- `reverse_entry` serializa bloqueando la fila de la cuenta (no la del original); ADR actualizado.
+- `by_origin` de los totales sigue solo con PRODUCT/SERVICE (ingresos); el resto va en `expense` y `by_direction`.
+- No se actualizó `docs/architecture/ddd.md` (paso 8 del plan): no hubo cambio de convención.
+
+Deuda técnica: los enlaces al documento de origen de `EXPENSE`/`PURCHASE_PAYMENT` quedan en `null` hasta GAS-01/COM-01. UI: pantalla de referencia seguida = lista y detalle de Entradas existentes; sin componentes compartidos nuevos.
 
 ## Review
 _Pendiente_

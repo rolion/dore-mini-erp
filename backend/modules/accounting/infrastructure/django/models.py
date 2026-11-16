@@ -95,7 +95,7 @@ class MethodMappingModel(models.Model):
 
 
 class EntryModel(models.Model):
-    """Entrada del libro: dinero recibido por un pago de origen. Solo se inserta; nunca se actualiza ni se borra."""
+    """Entrada del libro: movimiento de dinero de un origen (ingreso o egreso). Solo se inserta; nunca se actualiza ni se borra."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company_id = models.UUIDField(db_index=True)
@@ -106,7 +106,7 @@ class EntryModel(models.Model):
     payment_date = models.DateField()
     payment_method = models.CharField(max_length=20)
     # Pago de origen por UUID (sin FK entre módulos) y datos de trazabilidad en texto.
-    origin_kind = models.CharField(max_length=10)
+    origin_kind = models.CharField(max_length=20)
     origin_id = models.UUIDField()
     origin_document_ref = models.CharField(max_length=60, blank=True, default='')
     receipt_number = models.CharField(max_length=20, blank=True, default='')
@@ -116,13 +116,25 @@ class EntryModel(models.Model):
     # Regularización de pagos históricos (PB-ACC-004): fecha y ejecutor aparte del autor del cobro original.
     regularized_at = models.DateTimeField(null=True, blank=True)
     regularized_by_name = models.CharField(max_length=150, blank=True, default='')
+    # INCOME (cobro) o EXPENSE (gasto, pago de compra); la deriva el origen.
+    direction = models.CharField(max_length=10, default='INCOME')
+    # RECORD (original) o REVERSAL (movimiento opuesto vinculado al original).
+    operation = models.CharField(max_length=10, default='RECORD')
+    # Clasificación (por qué se mueve el dinero); obligatoria en egresos. Solo UUID: es un dato del mismo módulo.
+    classification_id = models.UUIDField(null=True, blank=True)
+    reverses = models.OneToOneField('self', null=True, blank=True, on_delete=models.PROTECT,
+                                    related_name='reversed_by_entry')
 
     class Meta:
         db_table = 'accounting_entry'
         ordering = ['-payment_date', '-created_at', 'id']
         constraints = [
             models.CheckConstraint(condition=Q(amount__gt=0), name='accounting_entry_amount_gt_0'),
-            models.UniqueConstraint(fields=['company_id', 'origin_kind', 'origin_id'], name='accounting_entry_origin_uniq'),
+            models.UniqueConstraint(fields=['company_id', 'origin_kind', 'origin_id', 'operation'],
+                                    name='accounting_entry_origin_op_uniq'),
+            models.CheckConstraint(
+                condition=(Q(operation='RECORD', reverses__isnull=True) | Q(operation='REVERSAL', reverses__isnull=False)),
+                name='accounting_entry_reversal_link'),
         ]
         indexes = [
             models.Index(fields=['company_id', 'payment_date'], name='accounting_entry_date'),

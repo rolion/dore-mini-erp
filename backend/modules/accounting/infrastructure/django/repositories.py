@@ -4,11 +4,11 @@ from decimal import Decimal
 from uuid import UUID
 
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Max, Min, Sum
+from django.db.models import Count, Max, Min, Q, Sum
 from django.utils import timezone
 
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
-from modules.accounting.domain.catalog import METHOD_CODES
+from modules.accounting.domain.catalog import METHOD_CODES, OPERATION_RECORD
 from modules.accounting.domain.classification import Classification
 from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
@@ -194,7 +194,9 @@ def _entry(model: EntryModel) -> Entry:
                  origin_id=model.origin_id, origin_document_ref=model.origin_document_ref,
                  receipt_number=model.receipt_number, recorded_by=model.recorded_by,
                  recorded_by_name=model.recorded_by_name, created_at=model.created_at,
-                 regularized_at=model.regularized_at, regularized_by_name=model.regularized_by_name)
+                 regularized_at=model.regularized_at, regularized_by_name=model.regularized_by_name,
+                 direction=model.direction, operation=model.operation, classification_id=model.classification_id,
+                 reverses_id=model.reverses_id)
 
 
 @dataclass(frozen=True)
@@ -204,14 +206,23 @@ class EntryFilters:
     account_id: UUID | None = None
     method: str | None = None
     origin: str | None = None
+    direction: str | None = None
 
 
 @dataclass(frozen=True)
 class CurrencyTotal:
+    """Totales de una moneda. `amount`/`by_origin` son los ingresos originales (compatibles con la API anterior)."""
     currency: str
     count: int
     amount: Decimal
     by_origin: dict[str, Decimal]
+    expense: Decimal = Decimal('0.00')
+    reversed_income: Decimal = Decimal('0.00')  # cobros revertidos
+    reversed_expense: Decimal = Decimal('0.00')  # egresos revertidos (devuelven dinero)
+
+    @property
+    def net(self) -> Decimal:
+        return self.amount - self.expense - self.reversed_income + self.reversed_expense
 
 
 @dataclass(frozen=True)
@@ -244,10 +255,13 @@ class DjangoEntryRepository:
                     origin_kind=entry.origin_kind, origin_id=entry.origin_id,
                     origin_document_ref=entry.origin_document_ref, receipt_number=entry.receipt_number,
                     recorded_by=entry.recorded_by, recorded_by_name=entry.recorded_by_name,
-                    regularized_at=entry.regularized_at, regularized_by_name=entry.regularized_by_name)
+                    regularized_at=entry.regularized_at, regularized_by_name=entry.regularized_by_name,
+                    direction=entry.direction, operation=entry.operation, classification_id=entry.classification_id,
+                    reverses_id=entry.reverses_id)
             return _entry(row), True
         except IntegrityError:
-            existing = self._rows().filter(origin_kind=entry.origin_kind, origin_id=entry.origin_id).first()
+            existing = self._rows().filter(origin_kind=entry.origin_kind, origin_id=entry.origin_id,
+                                           operation=entry.operation).first()
             if existing is None:
                 raise
             return _entry(existing), False
@@ -257,12 +271,27 @@ class DjangoEntryRepository:
         ids = list(origin_ids)
         found: dict[UUID, Entry] = {}
         for start in range(0, len(ids), 1000):
-            for row in self._rows().filter(origin_kind=origin_kind, origin_id__in=ids[start:start + 1000]):
+            for row in self._rows().filter(origin_kind=origin_kind, operation=OPERATION_RECORD,
+                                           origin_id__in=ids[start:start + 1000]):
                 found[row.origin_id] = _entry(row)
         return found
 
+    def get_by_origin(self, origin_kind: str, origin_id: UUID, operation: str) -> Entry | None:
+        row = self._rows().filter(origin_kind=origin_kind, origin_id=origin_id, operation=operation).first()
+        return _entry(row) if row else None
+
+    def net_by_account(self, account_ids=None) -> dict[UUID, Decimal]:
+        """Efecto neto de los movimientos por cuenta: ingresos suman y egresos restan (incluidas las reversiones)."""
+        rows = self._rows()
+        if account_ids is not None:
+            rows = rows.filter(account_id__in=list(account_ids))
+        grouped = rows.order_by().values('account_id').annotate(
+            income=Sum('amount', filter=Q(direction='INCOME')), expense=Sum('amount', filter=Q(direction='EXPENSE')))
+        zero = Decimal('0.00')
+        return {row['account_id']: (row['income'] or zero) - (row['expense'] or zero) for row in grouped}
+
     def get(self, entry_id: UUID) -> EntryModel | None:
-        return self._rows().select_related('account').filter(pk=entry_id).first()
+        return self._rows().select_related('account', 'reverses', 'reversed_by_entry').filter(pk=entry_id).first()
 
     def has_entries_for_account(self, account_id: UUID) -> bool:
         return self._rows().filter(account_id=account_id).exists()
@@ -274,7 +303,7 @@ class DjangoEntryRepository:
         return self._rows().aggregate(first=Min('payment_date'))['first']
 
     def query(self, filters: EntryFilters):
-        rows = self._rows().select_related('account')
+        rows = self._rows().select_related('account', 'reverses', 'reversed_by_entry')
         if filters.date_from:
             rows = rows.filter(payment_date__gte=filters.date_from)
         if filters.date_to:
@@ -285,18 +314,31 @@ class DjangoEntryRepository:
             rows = rows.filter(payment_method=filters.method)
         if filters.origin:
             rows = rows.filter(origin_kind=filters.origin)
+        if filters.direction:
+            rows = rows.filter(direction=filters.direction)
         return rows
 
     def totals(self, filters: EntryFilters) -> list[CurrencyTotal]:
         """Totales de TODO el conjunto filtrado (no de una página), por moneda y sin conversión."""
-        grouped = (self.query(filters).order_by().values('currency', 'origin_kind')
+        grouped = (self.query(filters).order_by().values('currency', 'origin_kind', 'direction', 'operation')
                    .annotate(total=Sum('amount'), n=Count('id')))
         by_currency: dict[str, dict] = {}
+        zero = Decimal('0.00')
         for row in grouped:
-            bucket = by_currency.setdefault(row['currency'], {'count': 0, 'by_origin': {}})
+            bucket = by_currency.setdefault(row['currency'], {
+                'count': 0, 'by_origin': {}, 'expense': zero, 'reversed_income': zero, 'reversed_expense': zero})
             bucket['count'] += row['n']
-            bucket['by_origin'][row['origin_kind']] = row['total']
-        return [CurrencyTotal(currency, data['count'], sum(data['by_origin'].values(), Decimal('0')), data['by_origin'])
+            if row['operation'] == OPERATION_RECORD:
+                if row['direction'] == 'INCOME':
+                    bucket['by_origin'][row['origin_kind']] = bucket['by_origin'].get(row['origin_kind'], zero) + row['total']
+                else:
+                    bucket['expense'] += row['total']
+            elif row['direction'] == 'EXPENSE':  # reversión de un ingreso
+                bucket['reversed_income'] += row['total']
+            else:  # reversión de un egreso
+                bucket['reversed_expense'] += row['total']
+        return [CurrencyTotal(currency, data['count'], sum(data['by_origin'].values(), zero), data['by_origin'],
+                              data['expense'], data['reversed_income'], data['reversed_expense'])
                 for currency, data in sorted(by_currency.items())]
 
     def coverage(self) -> Coverage:
