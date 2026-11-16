@@ -2586,7 +2586,7 @@
     "ENTRIES": {
       "ENTRADAS": "Entries",
       "ENTRADA": "Entry",
-      "COBROS_RECIBIDOS_NO_ES_SALDO": "Payments received. This is not an account balance, profit or accrual.",
+      "COBROS_RECIBIDOS_NO_ES_SALDO": "Payments received and made. This is not an account balance, profit or accrual.",
       "CUENTA": "Account",
       "LA_FECHA_HASTA_NO_PUEDE": "The “To” date cannot be earlier than “From”.",
       "PERIODO": "Period",
@@ -2607,7 +2607,7 @@
       "REGISTRADA_POR": "Registered by",
       "VER_ENTRADA": "View entry",
       "MODULO_DESHABILITADO": "module disabled",
-      "ID_DEL_PAGO_DE_ORIGEN": "Source payment ID",
+      "ID_DEL_PAGO_DE_ORIGEN": "Source payment or expense ID",
       "LAS_ENTRADAS_NO_SE_EDITAN": "Entries are neither edited nor deleted.",
       "VER_PEDIDO": "View order",
       "VER_DOCUMENTO_N": "View document {{document}}",

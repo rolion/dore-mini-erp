@@ -2586,7 +2586,7 @@
     "ENTRIES": {
       "ENTRADAS": "Entradas",
       "ENTRADA": "Entrada",
-      "COBROS_RECIBIDOS_NO_ES_SALDO": "Cobros recibidos. No es saldo de cuenta, utilidad ni devengamiento.",
+      "COBROS_RECIBIDOS_NO_ES_SALDO": "Cobros y pagos registrados. No es saldo de cuenta, utilidad ni devengamiento.",
       "CUENTA": "Cuenta",
       "LA_FECHA_HASTA_NO_PUEDE": "La fecha «Hasta» no puede ser anterior a «Desde».",
       "PERIODO": "Periodo",
@@ -2607,7 +2607,7 @@
       "REGISTRADA_POR": "Registrada por",
       "VER_ENTRADA": "Ver entrada",
       "MODULO_DESHABILITADO": "módulo deshabilitado",
-      "ID_DEL_PAGO_DE_ORIGEN": "ID del pago de origen",
+      "ID_DEL_PAGO_DE_ORIGEN": "ID del pago o gasto de origen",
       "LAS_ENTRADAS_NO_SE_EDITAN": "Las entradas no se editan ni se eliminan.",
       "VER_PEDIDO": "Ver pedido",
       "VER_DOCUMENTO_N": "Ver documento {{document}}",
