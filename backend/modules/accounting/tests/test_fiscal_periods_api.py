@@ -80,7 +80,7 @@ class FiscalPeriodApiTests(AccountingApiBase):
         q2 = self.create(self.client_a, 'Q2', '2026-04-01', '2026-06-30').data['id']
         self.assertEqual(self.client_a.patch(f'{URL}{q2}/', {'start_date': '2026-03-31'}, format='json').status_code, 409)
         ok = self.client_a.patch(f'{URL}{q2}/', {'end_date': '2026-07-31'}, format='json')
-        self.assertEqual((ok.status_code, ok.data['end_date']), (200, '2026-07-31'))
+        self.assertEqual((ok.status_code, str(ok.data['end_date'])), (200, '2026-07-31'))
         self.assertEqual(self.client_a.patch(f'{URL}{q2}/', {'end_date': '2026-03-01'}, format='json').status_code, 400)
 
     def test_limits_change_is_blocked_when_entries_would_fall_outside(self):  # AC-08
@@ -96,7 +96,7 @@ class FiscalPeriodApiTests(AccountingApiBase):
             usage.entries_outside.reset_mock()
             self.client_a.patch(f'{URL}{period_id}/', {'name': 'Solo nombre'}, format='json')
             usage.entries_outside.assert_not_called()
-        self.assertEqual(self.client_a.get(f'{URL}{period_id}/').data['end_date'], '2026-06-30')
+        self.assertEqual(str(self.client_a.get(f'{URL}{period_id}/').data['end_date']), '2026-06-30')
 
     def test_requires_authentication_and_a_company(self):  # Authorization
         self.assertEqual(APIClient().get(URL).status_code, 401)

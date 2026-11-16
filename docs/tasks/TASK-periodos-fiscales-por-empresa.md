@@ -1,6 +1,6 @@
 # TASK-periodos-fiscales-por-empresa: Crear y cerrar períodos fiscales por empresa (CONT-10)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-periodos-fiscales-por-empresa
@@ -13,6 +13,7 @@
 | 2026-11-16 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-16 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI; decisiones de negocio resueltas por la persona (reapertura, cobros actuales) | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,23 @@ No hay períodos; ninguna fecha se valida contra períodos.
 `docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (sin cambios de Specification ni de plan).
+
+- **Dominio** `accounting/domain/fiscal_period.py`: agregado `FiscalPeriod` (INV-01..05), errores y excepciones del contrato (`DateOutsideFiscalPeriod`, `FiscalPeriodClosed`, `FiscalPeriodContractError`).
+- **Infraestructura**: `FiscalPeriodModel` + migración `0004_fiscal_period` (checks de fechas y estado, único `(company_id, lower(name))`, índice); `DjangoFiscalPeriodRepository` con bloqueo advisory por empresa y `FOR UPDATE` (INV-03, INV-08); `NoJournalPeriodUsage` (puerto `PeriodUsage`, AC-08).
+- **Aplicación** `application/fiscal_periods.py`: crear, editar (solapamiento + puerto de uso), cerrar, reabrir, listar, obtener (AC-01..05, AC-08, INV-07).
+- **Fachada** `services.py`: `lock_open_period`, `period_for`, `PeriodRef` (AC-06, AC-07, INV-08).
+- **API** `/api/accounting/fiscal-periods/` (API-01..05) con el permiso por defecto (admin de empresa): cerrar y reabrir solo administradores.
+- **Frontend** (AC-10, UI-01/02): tercera pestaña «Períodos fiscales» en `accounting-settings` (plantilla «Configuración con listados en pestañas y diálogo», referencia `accounts-tab`/`account-dialog`/`deactivate-dialog`), `periods-tab`, `period-dialog`, `period-status-dialog`, servicio y modelo, claves i18n es/en/pt (`ACCOUNTING.FISCAL_PERIODS`). Sin componentes compartidos nuevos.
+- **Docs**: nota en `docs/architecture/ddd.md`.
+
+**Desviaciones:** ninguna de alcance. Detalles: la lista del repositorio se llama `all()` (no `list()`, que sombrea el builtin en la clase); `FiscalPeriod.create` valida el nombre con `validate_name` de cuentas, por lo que ese error es `AccountValidationError` (superclase de `FiscalPeriodValidationError`) y la API lo traduce igual a 400.
+
+**Pruebas añadidas:** `test_fiscal_period_domain`, `test_fiscal_periods_api`, `test_fiscal_period_facade`, `test_fiscal_period_concurrency` (backend); specs del servicio, pestaña, diálogos y ajuste del spec de pestañas (3 pestañas) en el frontend.
+
+**Corridas propias (no son el Quality Gate):** backend `manage.py test` 1678 OK, `makemigrations --check` sin cambios; frontend `ng test` 1430 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` OK.
+
+**Deuda / pendiente para CONT-02:** cablear el adaptador real de `PeriodUsage` (hoy `NoJournalPeriodUsage` devuelve 0) y probar AC-08/AC-09 con asientos reales; renumerar la migración si otra rama de accounting ya usó `0004`.
 
 ## Review
 _Pendiente_

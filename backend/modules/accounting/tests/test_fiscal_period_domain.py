@@ -2,6 +2,7 @@
 from datetime import date, datetime, timezone
 from unittest import TestCase
 
+from modules.accounting.domain.account import AccountValidationError
 from modules.accounting.domain.fiscal_period import (
     CLOSED,
     OPEN,
@@ -34,7 +35,7 @@ class FiscalPeriodDomainTests(TestCase):
         for args in (('x', '2026-01-01', date(2026, 1, 2)), ('x', date(2026, 1, 1), None),
                      ('x', datetime(2026, 1, 1), date(2026, 1, 2)), ('', date(2026, 1, 1), date(2026, 1, 2)),
                      ('n' * 81, date(2026, 1, 1), date(2026, 1, 2))):
-            with self.assertRaises(FiscalPeriodValidationError):
+            with self.assertRaises(AccountValidationError):
                 FiscalPeriod.create(*args)
 
     def test_overlap_is_inclusive(self):  # INV-03
