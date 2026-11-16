@@ -81,7 +81,19 @@ No aplica (sin UI).
 `docs/plans/PLAN-2026-11-16-motor-central-asientos-partida-doble.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (sin cambios de Specification).
+
+- **Dominio** `accounting/domain/journal.py`: `JournalEntry.post/reverse/differences`, `JournalLine`, `JournalLineInput`, errores `JournalValidationError`, `JournalConflict`, `JournalEntryNotFound` (INV-01..03, INV-09; AC-01, AC-02, AC-05, AC-06).
+- **Infraestructura**: `JournalEntryModel` y `JournalLineModel` + migración `0010_journal_entry` (checks de total, origen, forma de reversión y lado de la línea; único parcial `(company_id, origin_kind, origin_id)`; 1:1 de `reverses`); `DjangoJournalRepository` (inserción atómica en punto de guardado, bloqueo del original, saldos, conteo fuera de rango) (INV-06, INV-07, INV-11).
+- **Fachada** `services.py`: `post_journal_entry`, `reverse_journal_entry`, `get_journal_entry`, `journal_balances` y DTO (API-01..04; AC-03, AC-04, AC-07, AC-09, AC-10, AC-12).
+- **Períodos**: `JournalPeriodUsage` reemplaza a `NoJournalPeriodUsage` y se cablea en `api/views.py` (AC-08).
+- **Docs**: nota en `docs/architecture/ddd.md`; aviso de transición en el docstring de `record_entry`.
+
+**Desviaciones:** (1) la CHECK de reversión exige `reverses` ⇒ sin origen y con motivo, y una reversión conserva el `source` de su original (el plan decía «MANUAL ⇒ sin origen; AUTOMATIC ⇒ origen completo» solo para originales). (2) La descripción de la reversión es «Reversión: <original>». (3) La moneda del asiento no se recibe: se deriva de sus cuentas. (4) Un reintento de un evento ya existente se resuelve antes de validar cuentas y períodos (no se revalida).
+
+**Pruebas añadidas:** `test_journal_domain`, `test_journal_service`, `test_journal_period_usage`, `test_journal_concurrency` y `journal_support` (ayudas).
+
+**Deuda / pendiente:** API HTTP y UI (CONT-11); migrar llamantes (VEN-01, SRV-01, COM-01/02, INV-01, GAS-01/02); saldos con signo y reportes (CONT-04/05); endurecer inmutabilidad y balance con triggers si se requiere.
 
 ## Review
 _Pendiente_

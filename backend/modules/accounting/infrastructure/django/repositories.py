@@ -15,6 +15,7 @@ from modules.accounting.domain.classification import Classification
 from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
 from modules.accounting.domain.fiscal_period import FiscalPeriod
+from modules.accounting.domain.journal import JournalEntry, JournalLine
 
 from .models import (
     AccountClassSettingModel,
@@ -23,6 +24,8 @@ from .models import (
     CoveragePeriodModel,
     EntryModel,
     FiscalPeriodModel,
+    JournalEntryModel,
+    JournalLineModel,
     MethodMappingModel,
     SettingsModel,
 )
@@ -455,3 +458,93 @@ class DjangoFiscalPeriodRepository:
         except IntegrityError:
             raise AccountValidationError({'name': [DUPLICATE_PERIOD_NAME]}) from None
         return _period(self._rows().get(pk=period.id))
+
+
+def _journal(model: JournalEntryModel) -> JournalEntry:
+    reversed_by = getattr(model, 'reversed_by_entry', None)
+    return JournalEntry(
+        id=model.id, accounting_date=model.accounting_date, description=model.description, source=model.source,
+        currency=model.currency, origin_kind=model.origin_kind, origin_id=model.origin_id, period_id=model.period_id,
+        created_by=model.created_by, created_by_name=model.created_by_name, created_at=model.created_at,
+        reverses_id=model.reverses_id, reversal_reason=model.reversal_reason,
+        reversed_by_id=reversed_by.id if reversed_by else None,
+        lines=tuple(JournalLine(line.account_id, line.debit, line.credit, line.memo, line.position)
+                    for line in model.lines.all()))
+
+
+class DjangoJournalRepository:
+    """Libro de asientos de una empresa: toda consulta filtra por `company_id`. Solo inserta y lee."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _rows(self):
+        return JournalEntryModel.objects.filter(company_id=self.company_id)
+
+    def insert(self, entry: JournalEntry) -> tuple[JournalEntry, bool]:
+        """Inserta cabecera y todas las líneas, o devuelve el asiento existente del mismo evento: `(asiento, creado)`.
+
+        Va en un punto de guardado: si una línea falla, cabecera y líneas se deshacen juntas; si salta la unicidad del
+        evento o de la reversión (reintento o carrera) la transacción del llamante sigue siendo utilizable.
+        """
+        try:
+            with transaction.atomic():
+                JournalEntryModel.objects.create(
+                    id=entry.id, company_id=self.company_id, accounting_date=entry.accounting_date,
+                    description=entry.description, source=entry.source, origin_kind=entry.origin_kind,
+                    origin_id=entry.origin_id, currency=entry.currency, total=entry.total_debit,
+                    period_id=entry.period_id, created_by=entry.created_by, created_by_name=entry.created_by_name,
+                    reverses_id=entry.reverses_id, reversal_reason=entry.reversal_reason)
+                JournalLineModel.objects.bulk_create([
+                    JournalLineModel(entry_id=entry.id, company_id=self.company_id, position=line.position,
+                                     account_id=line.account_id, debit=line.debit, credit=line.credit, memo=line.memo)
+                    for line in entry.lines])
+        except IntegrityError:
+            existing = None
+            if entry.origin_id is not None:
+                existing = self.get_by_origin(entry.origin_kind, entry.origin_id)
+            elif entry.reverses_id is not None:
+                existing = self.reversal_of(entry.reverses_id)
+            if existing is None:
+                raise
+            return existing, False
+        return self.get(entry.id), True
+
+    def _queryset(self):
+        return self._rows().select_related('reversed_by_entry').prefetch_related('lines')
+
+    def get(self, entry_id: UUID) -> JournalEntry | None:
+        model = self._queryset().filter(pk=entry_id).first()
+        return _journal(model) if model else None
+
+    def get_for_update(self, entry_id: UUID) -> JournalEntry | None:
+        """Bloquea la fila de la cabecera: serializa las reversiones del mismo asiento."""
+        locked = self._rows().select_for_update().filter(pk=entry_id).values_list('pk', flat=True).first()
+        return self.get(locked) if locked else None
+
+    def get_by_origin(self, origin_kind: str, origin_id: UUID) -> JournalEntry | None:
+        model = self._queryset().filter(origin_kind=origin_kind, origin_id=origin_id).first()
+        return _journal(model) if model else None
+
+    def reversal_of(self, entry_id: UUID) -> JournalEntry | None:
+        model = self._queryset().filter(reverses_id=entry_id).first()
+        return _journal(model) if model else None
+
+    def legacy_origin_exists(self, origin_kind: str, origin_id: UUID) -> bool:
+        """¿El libro de entradas anterior ya registró ese origen? (evita contabilizarlo dos veces)."""
+        return EntryModel.objects.filter(company_id=self.company_id, origin_kind=origin_kind,
+                                         origin_id=origin_id).exists()
+
+    def totals_by_account(self, account_ids=None) -> dict[UUID, tuple[Decimal, Decimal]]:
+        """Suma de Debe y de Haber por cuenta de la empresa (incluidas las reversiones)."""
+        rows = JournalLineModel.objects.filter(company_id=self.company_id)
+        if account_ids is not None:
+            rows = rows.filter(account_id__in=list(account_ids))
+        zero = Decimal('0.00')
+        return {row['account_id']: (row['debit'] or zero, row['credit'] or zero)
+                for row in rows.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))}
+
+    def count_outside(self, period_id: UUID, start: date, end: date) -> int:
+        """Asientos del período cuya fecha contable quedaría fuera del rango `[start, end]`."""
+        return self._rows().filter(period_id=period_id).filter(
+            Q(accounting_date__lt=start) | Q(accounting_date__gt=end)).count()

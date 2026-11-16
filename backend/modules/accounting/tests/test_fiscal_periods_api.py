@@ -87,7 +87,7 @@ class FiscalPeriodApiTests(AccountingApiBase):
         period_id = self.create(self.client_a).data['id']
         usage = mock.Mock()
         usage.entries_outside.return_value = 2
-        with mock.patch('modules.accounting.api.views.NoJournalPeriodUsage', return_value=usage):
+        with mock.patch('modules.accounting.api.views.JournalPeriodUsage', return_value=usage):
             blocked = self.client_a.patch(f'{URL}{period_id}/', {'end_date': '2026-06-30'}, format='json')
             self.assertEqual((blocked.status_code, blocked.data['code']), (409, 'period_has_entries'))
             usage.entries_outside.return_value = 0

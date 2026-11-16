@@ -193,3 +193,73 @@ class FiscalPeriodModel(models.Model):
             models.UniqueConstraint(Lower('name'), 'company_id', name='accounting_fiscal_period_name_ci_uniq'),
         ]
         indexes = [models.Index(fields=['company_id', 'start_date'], name='accounting_fperiod_start')]
+
+
+class JournalEntryModel(models.Model):
+    """Cabecera de un asiento de partida doble (CONT-02). Solo se inserta; nunca se actualiza ni se borra."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    accounting_date = models.DateField()
+    description = models.CharField(max_length=200)
+    # MANUAL (sin origen) o AUTOMATIC (con origen); una reversión conserva el de su original.
+    source = models.CharField(max_length=10)
+    # Referencia única de evento de un asiento automático: tipo + id en el módulo de origen (sin FK entre módulos).
+    origin_kind = models.CharField(max_length=30, null=True, blank=True)
+    origin_id = models.UUIDField(null=True, blank=True)
+    currency = models.CharField(max_length=3)
+    # Suma del Debe (= suma del Haber).
+    total = models.DecimalField(max_digits=12, decimal_places=2)
+    period = models.ForeignKey(FiscalPeriodModel, on_delete=models.PROTECT, related_name='+')
+    created_by = models.BigIntegerField(null=True, blank=True)
+    created_by_name = models.CharField(max_length=150, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    # Solo en reversiones: el asiento original (a lo sumo una reversión por original) y su motivo.
+    reverses = models.OneToOneField('self', null=True, blank=True, on_delete=models.PROTECT,
+                                    related_name='reversed_by_entry')
+    reversal_reason = models.CharField(max_length=200, blank=True, default='')
+
+    class Meta:
+        db_table = 'accounting_journal_entry'
+        ordering = ['-accounting_date', '-created_at', '-id']
+        constraints = [
+            models.CheckConstraint(condition=Q(total__gt=0), name='accounting_journal_total_gt_0'),
+            models.CheckConstraint(condition=Q(source__in=['MANUAL', 'AUTOMATIC']), name='accounting_journal_source'),
+            models.CheckConstraint(
+                condition=(Q(origin_kind__isnull=True, origin_id__isnull=True)
+                           | Q(origin_kind__isnull=False, origin_id__isnull=False)),
+                name='accounting_journal_origin_pair'),
+            models.CheckConstraint(
+                condition=(Q(reverses__isnull=True, reversal_reason='')
+                           | (Q(reverses__isnull=False, origin_id__isnull=True) & ~Q(reversal_reason=''))),
+                name='accounting_journal_reversal_shape'),
+            models.UniqueConstraint(fields=['company_id', 'origin_kind', 'origin_id'],
+                                    condition=Q(origin_id__isnull=False), name='accounting_journal_origin_uniq'),
+        ]
+        indexes = [
+            models.Index(fields=['company_id', 'accounting_date'], name='accounting_journal_date'),
+            models.Index(fields=['company_id', 'period'], name='accounting_journal_period'),
+        ]
+
+
+class JournalLineModel(models.Model):
+    """Línea de un asiento: una cuenta con Debe o Haber. Solo se inserta."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    entry = models.ForeignKey(JournalEntryModel, on_delete=models.PROTECT, related_name='lines')
+    company_id = models.UUIDField()
+    position = models.PositiveSmallIntegerField()
+    account = models.ForeignKey(AccountModel, on_delete=models.PROTECT, related_name='+')
+    debit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    credit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    memo = models.CharField(max_length=200, blank=True, default='')
+
+    class Meta:
+        db_table = 'accounting_journal_line'
+        ordering = ['position']
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(debit__gt=0, credit=0) | Q(debit=0, credit__gt=0)), name='accounting_journal_line_side'),
+            models.UniqueConstraint(fields=['entry', 'position'], name='accounting_journal_line_position_uniq'),
+        ]
+        indexes = [models.Index(fields=['company_id', 'account'], name='accounting_jline_account')]
