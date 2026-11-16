@@ -1,6 +1,6 @@
 # TASK-administrar-cuentas-codigo-clasificacion-estado: Administrar cuentas con código, nombre, clasificación y estado (CONT-09)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-administrar-cuentas-codigo-clasificacion-estado (base: `task/TASK-configurar-seis-clasificaciones-contables`, PR #79 de CONT-08 aún sin mergear)
@@ -15,6 +15,7 @@
 | 2026-11-16 | DESIGN → ARCHITECTURE | Cambia el contrato de la cuenta (código, clasificación obligatoria, tipo de dinero opcional) | delivery-start |
 | 2026-11-16 | ARCHITECTURE → PLANNING | DDR y ADR escritos | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,25 @@ Las cuentas son destinos de cobros y pagos: nombre, moneda, tipo Caja/Banco/Bill
 `docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md` (v1) · Modo: COMPLETO · Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Cuentas del plan con código único por empresa, clasificación obligatoria, tipo de dinero opcional (solo Activo) y marca de cuenta correctora.
+
+- **Dominio** (`domain/account.py`): `validate_code` (INV-01), `code`, `is_contra`, `ensure_consistent` (INV-04).
+- **Datos** (migración `0008_account_code_contra`): `code` nulable, `is_contra` y restricción única parcial `(company_id, lower(code))` (INV-02). Aditiva.
+- **Casos de uso** (`application/use_cases.py`): `CreateAccount` exige código y clasificación habilitada; `UpdateAccount` bloquea el cambio de clasificación y de `is_contra` con entradas (409 `account_has_entries`, INV-05), permite renombrar y recodificar; `null` en PATCH = sin cambio. `DeactivateAccount` sin cambios (INV-07).
+- **Repositorio:** unicidad de código y nombre con errores por campo; las carreras devuelven 400, no 500; listado por código (nulos al final) y filtro por clasificación.
+- **API:** `code`, `account_class`, `is_contra`, `kind` opcional (API-01..03).
+- **Frontend:** columnas Código y Clasificación, etiqueta «Correctora», «Sin código», filtro por clasificación; diálogo con código, clasificación, tipo de dinero (solo Activo) y casilla correctora; es/en/pt.
+- **Cobertura de AC:** AC-01..AC-10 en `test_account_plan.py` y `test_account_classes.py`; AC-11 con la prueba de migración; AC-12 en los specs de lista, diálogo y servicio.
+
+**Desviaciones del plan:**
+1. El DDR pedía deshabilitar en el diálogo los campos de clasificación y correctora cuando la cuenta tiene asientos. El API de cuentas no expone si hay asientos (calcularlo por cuenta sería N+1), así que el bloqueo lo informa el servidor con el 409 `account_has_entries`, que el diálogo muestra como aviso. La ayuda de ambos campos ya lo explica.
+2. Se actualizaron pruebas existentes (`test_api`, `test_classifications`, `test_coverage`, `test_account_classes` y los specs del frontend) al nuevo contrato de alta (código y clasificación obligatorios, tipo opcional).
+
+**Verificación propia (no es el Quality Gate):** backend completo 1793 OK; `makemigrations --check` sin cambios; frontend `ng test` 1468 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` correcto.
+
+**UI:** pantalla de referencia `accounts-tab`/`account-dialog` (plantilla de configuración con listados); badges y tabla existentes, sin componentes compartidos nuevos.
+
+**Deuda técnica:** el selector de métodos de pago mostrará también cuentas que no son de dinero hasta CONT-12; el bloqueo por asientos usa entradas de una cuenta hasta CONT-02.
 
 ## Review
 _Pendiente_

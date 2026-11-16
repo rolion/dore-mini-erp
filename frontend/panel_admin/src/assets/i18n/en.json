@@ -2514,7 +2514,12 @@
       "NUEVA_CUENTA": "New account",
       "SIN_CUENTAS": "No accounts yet. Create the first one with «+».",
       "CUENTA_ACTIVADA": "Account activated",
-      "CUENTA_DESACTIVADA": "Account deactivated"
+      "CUENTA_DESACTIVADA": "Account deactivated",
+      "CODIGO": "Code",
+      "SIN_CODIGO": "No code",
+      "CORRECTORA": "Contra",
+      "FILTRAR_POR_CLASIFICACION": "Filter by classification",
+      "TODAS_LAS_CLASIFICACIONES": "All classifications"
     },
     "ACCOUNT_DIALOG": {
       "EDITAR_CUENTA": "Edit account",
@@ -2536,7 +2541,17 @@
       "CLASIFICACION_CONTABLE": "Accounting classification",
       "SIN_CLASIFICACION": "No classification",
       "DESHABILITADA_SUFIJO": "(disabled)",
-      "CLASIFICACION_AYUDA": "Optional for now. Only enabled classifications are offered."
+      "CLASIFICACION_AYUDA": "Only enabled classifications are offered. It cannot be changed once the account has entries.",
+      "CODIGO": "Code",
+      "EJEMPLO_CODIGO": "E.g. 1.1.01",
+      "CODIGO_AYUDA": "Unique in your company. Letters, digits, dot, hyphen and underscore; up to 20 characters.",
+      "EL_CODIGO_NO_ES_VALIDO": "Enter a valid code, without spaces.",
+      "ELIGE_UNA_CLASIFICACION": "Choose a classification",
+      "LA_CLASIFICACION_ES_OBLIGATORIA": "The classification is required.",
+      "NO_ES_CUENTA_DE_DINERO": "Not a money account",
+      "TIPO_AYUDA": "Only for accounts that hold money (Cash, Bank, Wallet).",
+      "CUENTA_CORRECTORA": "Contra account",
+      "CORRECTORA_AYUDA": "Its normal balance is opposite to its classification (for example, Accumulated depreciation). It cannot be changed once the account has entries."
     },
     "CLASSIFICATIONS": {
       "CLASIFICACIONES": "Classifications",

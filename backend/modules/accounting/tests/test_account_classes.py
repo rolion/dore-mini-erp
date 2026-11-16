@@ -1,4 +1,5 @@
 """CONT-08: seis clasificaciones contables fijas, habilitables por empresa (AC-01..AC-08; INV-01..INV-04)."""
+import itertools
 from datetime import date
 from decimal import Decimal
 from uuid import uuid4
@@ -15,6 +16,7 @@ from modules.accounting.domain.account_class import ACCOUNT_CLASSES, AccountClas
 from modules.accounting.infrastructure.django.models import AccountClassSettingModel, AccountModel, EntryModel
 from modules.accounts.testing import authenticate, make_admin, make_company
 
+CODES = itertools.count(1)
 ACCOUNTS = '/api/accounting/accounts/'
 CLASSES = '/api/accounting/account-classes/'
 SIX = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE', 'COST']
@@ -44,7 +46,10 @@ class ApiBase(APITestCase):
         return client
 
     def create_account(self, client, name='Caja', **extra):
-        return client.post(ACCOUNTS, {'name': name, 'currency': 'BOB', 'kind': 'CASH', **extra}, format='json')
+        payload = {'name': name, 'currency': 'BOB', 'code': f'C{next(CODES)}', 'account_class': 'ASSET', **extra}
+        if payload['account_class'] == 'ASSET':
+            payload.setdefault('kind', 'CASH')  # solo las cuentas de Activo pueden ser de dinero
+        return client.post(ACCOUNTS, payload, format='json')
 
     def set_state(self, client, code, action):
         return client.post(f'{CLASSES}{code}/{action}/')
@@ -104,10 +109,12 @@ class ToggleTests(ApiBase):
 
 
 class AccountClassificationTests(ApiBase):
-    def test_account_exposes_and_accepts_enabled_class(self):  # API-03
+    def test_account_exposes_and_accepts_enabled_class(self):  # API-03, CONT-09 AC-02
         created = self.create_account(self.client_a, account_class='asset')
         self.assertEqual((created.status_code, created.data['account_class']), (201, 'ASSET'))
-        self.assertIsNone(self.create_account(self.client_a, 'Sin clase').data['account_class'])
+        missing = self.client_a.post(ACCOUNTS, {'name': 'Sin clase', 'currency': 'BOB', 'code': 'SC'}, format='json')
+        self.assertEqual(missing.status_code, 400)  # CONT-09: la clasificación es obligatoria al crear
+        self.assertIn('account_class', missing.data)
         bad = self.create_account(self.client_a, 'Mala', account_class='OTHER')
         self.assertEqual(bad.status_code, 400)
 
@@ -116,7 +123,7 @@ class AccountClassificationTests(ApiBase):
         self.set_state(self.client_a, 'EXPENSE', 'disable')
         response = self.client_a.patch(f'{ACCOUNTS}{account["id"]}/', {'account_class': 'EXPENSE'}, format='json')
         self.assertEqual(response.status_code, 400)
-        self.assertIsNone(AccountModel.objects.get(pk=account['id']).account_class)
+        self.assertEqual(AccountModel.objects.get(pk=account['id']).account_class, 'ASSET')
 
     def test_existing_account_of_disabled_class_keeps_everything(self):  # AC-03, INV-03, INV-04
         account = self.create_account(self.client_a, 'Costos', account_class='COST').data

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from django.db import IntegrityError, transaction
 from django.db.models import Count, Max, Min, Q, Sum
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
@@ -24,12 +25,14 @@ from .models import (
 )
 
 DUPLICATE_NAME = 'Ya existe una cuenta con ese nombre.'
+DUPLICATE_CODE = 'Ya existe una cuenta con ese código.'
 
 
 def _account(model: AccountModel) -> Account:
     return Account(id=model.id, name=model.name, currency=model.currency, is_active=model.is_active,
                    created_at=model.created_at, updated_at=model.updated_at, kind=model.kind,
-                   opening_balance=model.opening_balance, account_class=model.account_class)
+                   opening_balance=model.opening_balance, account_class=model.account_class,
+                   code=model.code, is_contra=model.is_contra)
 
 
 class DjangoAccountRepository:
@@ -50,27 +53,40 @@ class DjangoAccountRepository:
         model = self._accounts().select_for_update().filter(pk=account_id).first()
         return _account(model) if model else None
 
-    def list(self, is_active: bool | None = None) -> list[Account]:
-        queryset = self._accounts().order_by('name', 'id')
+    def list(self, is_active: bool | None = None, account_class: str | None = None) -> list[Account]:
+        queryset = self._accounts().order_by(Lower('code').asc(nulls_last=True), 'name', 'id')
         if is_active is not None:
             queryset = queryset.filter(is_active=is_active)
+        if account_class is not None:
+            queryset = queryset.filter(account_class=account_class)
         return [_account(model) for model in queryset]
 
     def by_id(self) -> dict[UUID, Account]:
         return {account.id: account for account in self.list()}
 
+    def _conflicts(self, account: Account) -> dict:
+        others = self._accounts().exclude(pk=account.id)
+        errors: dict = {}
+        if others.filter(name__iexact=account.name).exists():
+            errors['name'] = [DUPLICATE_NAME]
+        if account.code is not None and others.filter(code__iexact=account.code).exists():
+            errors['code'] = [DUPLICATE_CODE]
+        return errors
+
     def save(self, account: Account) -> Account:
-        if self._accounts().exclude(pk=account.id).filter(name__iexact=account.name).exists():
-            raise AccountValidationError({'name': [DUPLICATE_NAME]})
+        errors = self._conflicts(account)
+        if errors:
+            raise AccountValidationError(errors)
         try:
             with transaction.atomic():
                 AccountModel.objects.update_or_create(
                     id=account.id, company_id=self.company_id,
                     defaults={'name': account.name, 'currency': account.currency, 'is_active': account.is_active,
                               'kind': account.kind, 'opening_balance': account.opening_balance,
-                              'account_class': account.account_class})
+                              'account_class': account.account_class, 'code': account.code,
+                              'is_contra': account.is_contra})
         except IntegrityError:  # carrera con otra petición: la restricción única manda
-            raise AccountValidationError({'name': [DUPLICATE_NAME]}) from None
+            raise AccountValidationError(self._conflicts(account) or {'name': [DUPLICATE_NAME]}) from None
         return _account(self._accounts().get(pk=account.id))
 
 

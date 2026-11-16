@@ -35,7 +35,7 @@ from modules.accounting.domain.account import (
     AccountValidationError,
     MethodNotFound,
 )
-from modules.accounting.domain.account_class import AccountClassNotFound
+from modules.accounting.domain.account_class import AccountClassNotFound, parse_account_class
 from modules.accounting.domain.catalog import DIRECTIONS
 from modules.accounting.domain.classification import ClassificationNotFound
 from modules.accounting.domain.entry import EntryNotFound
@@ -121,6 +121,15 @@ def _parse_active(raw: str | None) -> bool | None:
     raise ValidationError({'active': ['Valor inválido: use "true" o "false".']})
 
 
+def _parse_account_class(raw: str | None) -> str | None:
+    if raw is None or raw == '':
+        return None
+    try:
+        return parse_account_class(raw)
+    except AccountClassNotFound:
+        raise ValidationError({'account_class': ['Clasificación contable desconocida.']}) from None
+
+
 # La configuración no exige Contabilidad habilitada: hay que poder configurar antes de habilitarla.
 class _ConfigView(APIView):
     required_modules = ()
@@ -129,7 +138,8 @@ class _ConfigView(APIView):
 class AccountListCreateView(_ConfigView):
     def get(self, request):
         accounts, _ = _repositories(request)
-        result = _run(ListAccounts(accounts), _parse_active(request.query_params.get('active')))
+        result = _run(ListAccounts(accounts), _parse_active(request.query_params.get('active')),
+                      _parse_account_class(request.query_params.get('account_class')))
         return Response([serialize_account(a) for a in result])
 
     def post(self, request):

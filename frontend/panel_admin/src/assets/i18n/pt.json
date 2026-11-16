@@ -2514,7 +2514,12 @@
       "NUEVA_CUENTA": "Nova conta",
       "SIN_CUENTAS": "Ainda não há contas. Crie a primeira com «+».",
       "CUENTA_ACTIVADA": "Conta ativada",
-      "CUENTA_DESACTIVADA": "Conta desativada"
+      "CUENTA_DESACTIVADA": "Conta desativada",
+      "CODIGO": "Código",
+      "SIN_CODIGO": "Sem código",
+      "CORRECTORA": "Retificadora",
+      "FILTRAR_POR_CLASIFICACION": "Filtrar por classificação",
+      "TODAS_LAS_CLASIFICACIONES": "Todas as classificações"
     },
     "ACCOUNT_DIALOG": {
       "EDITAR_CUENTA": "Editar conta",
@@ -2536,7 +2541,17 @@
       "CLASIFICACION_CONTABLE": "Classificação contábil",
       "SIN_CLASIFICACION": "Sem classificação",
       "DESHABILITADA_SUFIJO": "(desabilitada)",
-      "CLASIFICACION_AYUDA": "Opcional por enquanto. Só são oferecidas as classificações habilitadas."
+      "CLASIFICACION_AYUDA": "Só são oferecidas as classificações habilitadas. Não pode ser alterada se a conta já tiver lançamentos.",
+      "CODIGO": "Código",
+      "EJEMPLO_CODIGO": "Ex.: 1.1.01",
+      "CODIGO_AYUDA": "Único na sua empresa. Letras, dígitos, ponto, hífen e sublinhado; até 20 caracteres.",
+      "EL_CODIGO_NO_ES_VALIDO": "Informe um código válido, sem espaços.",
+      "ELIGE_UNA_CLASIFICACION": "Escolha uma classificação",
+      "LA_CLASIFICACION_ES_OBLIGATORIA": "A classificação é obrigatória.",
+      "NO_ES_CUENTA_DE_DINERO": "Não é conta de dinheiro",
+      "TIPO_AYUDA": "Só para contas que movimentam dinheiro (Caixa, Banco, Carteira).",
+      "CUENTA_CORRECTORA": "Conta retificadora",
+      "CORRECTORA_AYUDA": "Seu saldo normal é contrário ao da sua classificação (por exemplo, Depreciação acumulada). Não pode ser alterada se a conta já tiver lançamentos."
     },
     "CLASSIFICATIONS": {
       "CLASIFICACIONES": "Classificações",

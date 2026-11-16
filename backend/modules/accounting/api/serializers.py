@@ -16,16 +16,21 @@ from modules.accounting.domain.catalog import (
 class AccountInputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
     currency = serializers.CharField(max_length=3)
-    kind = serializers.CharField(max_length=10)  # obligatorio al crear; el dominio valida el valor
+    # El dominio valida formato; `code` y `account_class` son obligatorios al crear (lo exige el caso de uso).
+    code = serializers.CharField(max_length=64, required=False, allow_null=True)
     account_class = serializers.CharField(max_length=10, required=False, allow_null=True)
+    kind = serializers.CharField(max_length=10, required=False, allow_null=True)  # solo cuentas de dinero (Activo)
+    is_contra = serializers.BooleanField(required=False)
     opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
 class AccountUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False, required=False)
     currency = serializers.CharField(max_length=3, required=False)
-    kind = serializers.CharField(max_length=10, required=False)
+    code = serializers.CharField(max_length=64, required=False, allow_null=True)
+    kind = serializers.CharField(max_length=10, required=False, allow_null=True)
     account_class = serializers.CharField(max_length=10, required=False, allow_null=True)
+    is_contra = serializers.BooleanField(required=False)
     opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
@@ -79,7 +84,8 @@ class MethodInputSerializer(serializers.Serializer):
 
 def serialize_account(account) -> dict:
     return {'id': str(account.id), 'name': account.name, 'currency': account.currency, 'kind': account.kind,
-            'account_class': account.account_class, 'opening_balance': str(account.opening_balance),
+            'code': account.code, 'is_contra': account.is_contra, 'account_class': account.account_class,
+            'opening_balance': str(account.opening_balance),
             'is_active': account.is_active,
             'created_at': account.created_at, 'updated_at': account.updated_at}
 
