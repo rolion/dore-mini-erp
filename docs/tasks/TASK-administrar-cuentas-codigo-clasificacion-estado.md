@@ -1,6 +1,6 @@
 # TASK-administrar-cuentas-codigo-clasificacion-estado: Administrar cuentas con código, nombre, clasificación y estado (CONT-09)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** PUBLISHED
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-administrar-cuentas-codigo-clasificacion-estado (base: `task/TASK-configurar-seis-clasificaciones-contables`, PR #79 de CONT-08 aún sin mergear)
@@ -21,6 +21,7 @@
 | 2026-11-16 | PUBLISH (sin cambio) | Quality Gate repetido sobre el estado actual con el código numérico (PLAN v3): PASS | delivery-publish |
 | 2026-11-16 | PUBLISH (sin cambio) | REV-02..05 corregidos (PLAN v4); re-revisión: FAIL condicional por N-01 | delivery-build / delivery-publish |
 | 2026-11-16 | PUBLISH (sin cambio) | N-01 corregido; revisión final: PASS | delivery-build / delivery-publish |
+| 2026-11-16 | PUBLISH → PUBLISHED | PR mergeado a `accounting` por el dueño (aprobación humana) | delivery-publish |
 
 ## Investigación
 
