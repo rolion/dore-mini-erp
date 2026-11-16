@@ -54,6 +54,8 @@ class Expense:
     notes: str = ''
     status: ExpenseStatus = ExpenseStatus.ACTIVE
     voided_at: datetime | None = None
+    # Instantánea de la clasificación de egreso al crear/cambiar de categoría; `None` en gastos anteriores.
+    classification_id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -87,6 +89,9 @@ class Expense:
         )
         for name, value in values.items():
             setattr(self, name, value)
+
+    def assign_classification(self, classification_id: UUID | None) -> None:
+        self.classification_id = classification_id
 
     def void(self, now: datetime) -> None:
         """Anula el gasto: deja de sumar en los reportes. Es irreversible."""

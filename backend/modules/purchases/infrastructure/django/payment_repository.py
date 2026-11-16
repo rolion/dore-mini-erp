@@ -32,7 +32,7 @@ class DjangoPaymentRepository:
                     id=payment.id, company_id=self.company_id, purchase_id=payment.purchase_id,
                     amount=payment.amount, payment_method=payment.payment_method.value,
                     payment_date=payment.payment_date, status=payment.status.value, user_id=payment.user_id,
-                    user_name=payment.user_name)
+                    user_name=payment.user_name, classification_id=payment.classification_id)
         except IntegrityError as exc:
             raise PaymentConflict() from exc
         return payment_to_entity(model)

@@ -31,7 +31,7 @@ MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
                      optional=('sales', 'receivables')),
     ModuleDefinition('reporting', 'Reportes', 'Dashboard y reportes de ventas y gastos.',
                      optional=('sales', 'expenses', 'customers')),
-    ModuleDefinition('purchases', 'Compras', 'Compras a proveedores.', requires=('catalog', 'expenses')),
+    ModuleDefinition('purchases', 'Compras', 'Compras a proveedores.', requires=('catalog',), optional=('expenses',)),
     ModuleDefinition('inventory', 'Inventario', 'Existencias de productos.',
                      requires=('catalog',), optional=('sales', 'purchases')),
     ModuleDefinition('costing', 'Costeo', 'Valoración y costo de las existencias.', requires=('inventory',)),
@@ -57,6 +57,14 @@ class IncompleteConfiguration(Exception):
     def __init__(self, names: list[str]):
         super().__init__(names)
         self.names = names
+
+
+class DisableBlocked(Exception):
+    """Hay datos que impiden deshabilitar el módulo (motivos legibles)."""
+
+    def __init__(self, blockers: list[str]):
+        super().__init__(blockers)
+        self.blockers = blockers
 
 
 class DependencyError(Exception):

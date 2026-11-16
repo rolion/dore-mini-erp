@@ -19,15 +19,33 @@ class CategoryInputSerializer(serializers.Serializer):
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
+class CategoryClassificationInputSerializer(serializers.Serializer):
+    classification_id = serializers.UUIDField(allow_null=True)
+
+
 # --- Salida ---------------------------------------------------------------------------------------------------
+
+
+def _classification(classification_id, classifications):
+    """`{id, name, active}` de la clasificación (el contexto trae las de la página), o `None` si no hay."""
+    if classification_id is None:
+        return None
+    info = classifications.get(classification_id)
+    if info is None:
+        return {'id': classification_id, 'name': '', 'active': False}
+    return {'id': info.id, 'name': info.name, 'active': info.active}
 
 
 class CategorySerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     name = serializers.CharField(read_only=True)
     active = serializers.BooleanField(read_only=True)
+    classification = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
+
+    def get_classification(self, obj):
+        return _classification(obj.classification_id, self.context.get('classifications', {}))
 
 
 class _CategoryRefSerializer(serializers.Serializer):
@@ -48,8 +66,12 @@ class ExpenseSummarySerializer(serializers.Serializer):
     supplier_name = serializers.CharField(read_only=True)
     status = serializers.SerializerMethodField()
     voided_at = serializers.DateTimeField(read_only=True)
+    classification = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
+
+    def get_classification(self, obj):
+        return _classification(obj.classification_id, self.context.get('classifications', {}))
 
     def get_category(self, obj):
         category = self.context.get('categories', {}).get(obj.category_id)

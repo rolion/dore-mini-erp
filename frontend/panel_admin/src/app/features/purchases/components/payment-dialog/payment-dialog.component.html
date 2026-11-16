@@ -6,7 +6,7 @@
   <div class="modal-body">
     <div class="alert alert-info" data-testid="balance">{{ 'PURCHASES.PAYMENT_DIALOG.SALDO_ACTUAL' | translate }} <strong>{{ balance | money }}</strong></div>
     @if (generalError) {
-    <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }}</div>
+    <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }} <app-classification-hint [code]="errorCode" (followed)="activeModal.dismiss()" /></div>
     }
     <div class="form-group mb-3">
       <label for="payment-date">{{ 'COMMON.FECHA' | translate }} <span class="text-danger">*</span></label>

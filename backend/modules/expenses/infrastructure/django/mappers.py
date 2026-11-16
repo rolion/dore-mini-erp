@@ -6,12 +6,13 @@ from .models import ExpenseCategoryModel, ExpenseModel
 
 
 def category_to_entity(model: ExpenseCategoryModel) -> ExpenseCategory:
-    return ExpenseCategory(id=model.id, name=model.name, active=model.active, created_at=model.created_at,
+    return ExpenseCategory(id=model.id, name=model.name, active=model.active,
+                           classification_id=model.classification_id, created_at=model.created_at,
                            updated_at=model.updated_at)
 
 
 def category_to_values(category: ExpenseCategory) -> dict[str, object]:
-    return {'name': category.name, 'active': category.active}
+    return {'name': category.name, 'active': category.active, 'classification_id': category.classification_id}
 
 
 def expense_to_entity(model: ExpenseModel) -> Expense:
@@ -26,6 +27,7 @@ def expense_to_entity(model: ExpenseModel) -> Expense:
         notes=model.notes,
         status=ExpenseStatus(model.status),
         voided_at=model.voided_at,
+        classification_id=model.classification_id,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
@@ -42,4 +44,5 @@ def expense_to_values(expense: Expense) -> dict[str, object]:
         'notes': expense.notes,
         'status': expense.status.value,
         'voided_at': expense.voided_at,
+        'classification_id': expense.classification_id,
     }

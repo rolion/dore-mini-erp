@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('accounting', '0003_entry_regularization'),
+        ('accounting', '0008_account_code_contra'),
     ]
 
     operations = [

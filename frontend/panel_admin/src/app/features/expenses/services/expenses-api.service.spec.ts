@@ -103,6 +103,17 @@ describe('ExpensesApiService', () => {
     req.flush({ ...DTO, status: 'VOIDED', voided_at: '2026-10-06T10:00:00Z' });
   });
 
+  it('keeps the stable code of a classification error (UI-03)', () => {
+    let received: ExpensesApiError | undefined;
+    service.create(INPUT).subscribe({ error: (e: ExpensesApiError) => (received = e) });
+    http.expectOne('/api/expenses/').flush(
+      { category_id: ['Falta la clasificación.'], code: 'classification_not_configured' },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    expect(received?.code).toBe('classification_not_configured');
+    expect(received?.fieldErrors['categoryId']).toEqual(['Falta la clasificación.']);
+  });
+
   it('turns 400 into field errors with form field names (AC-04)', () => {
     let error: ExpensesApiError | null = null;
     service.create(INPUT).subscribe({ error: (err: ExpensesApiError) => (error = err) });

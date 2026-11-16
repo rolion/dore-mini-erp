@@ -4,20 +4,23 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { of } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
-import { FiscalPeriodsApiService } from '../../services/fiscal-periods-api.service';
 import { AccountingApiService } from '../../services/accounting-api.service';
+import { FiscalPeriodsApiService } from '../../services/fiscal-periods-api.service';
+import { ExpenseConfigApiService } from '../../services/expense-config-api.service';
 import { AccountingSettingsComponent } from './accounting-settings.component';
 
 describe('AccountingSettingsComponent', () => {
   it('shows the accounts tab first and switches to payment methods (UI-01)', () => {
-    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
-    const periods = jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', ['list']);
-    periods.list.and.returnValue(of([]));
+    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods', 'listClassifications', 'listAccountClasses', 'getSettings']);
     api.listAccounts.and.returnValue(of([]));
     api.listMethods.and.returnValue(of([]));
+    api.listClassifications.and.returnValue(of([]));
+    api.listAccountClasses.and.returnValue(of([{ code: 'ASSET', enabled: true }]));
+    api.getSettings.and.returnValue(of({ cutoffDate: null, enabledAt: null, locked: false, gaps: [] }));
     TestBed.configureTestingModule({
       imports: [AccountingSettingsComponent],
-      providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api }, { provide: FiscalPeriodsApiService, useValue: periods },
+      providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
+        { provide: FiscalPeriodsApiService, useValue: jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', { list: of([]) }) },
         { provide: NgbModal, useValue: {} }, { provide: ToastrService, useValue: {} }],
     });
     const fixture = TestBed.createComponent(AccountingSettingsComponent);
@@ -29,14 +32,17 @@ describe('AccountingSettingsComponent', () => {
   });
 
   it('moves between tabs with the arrow keys (REV-07)', () => {
-    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
-    const periods = jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', ['list']);
-    periods.list.and.returnValue(of([]));
+    const api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods', 'listClassifications', 'listAccountClasses', 'getSettings']);
     api.listAccounts.and.returnValue(of([]));
     api.listMethods.and.returnValue(of([]));
+    api.listClassifications.and.returnValue(of([]));
+    api.listAccountClasses.and.returnValue(of([{ code: 'ASSET', enabled: true }]));
+    api.getSettings.and.returnValue(of({ cutoffDate: null, enabledAt: null, locked: false, gaps: [] }));
     TestBed.configureTestingModule({
       imports: [AccountingSettingsComponent],
-      providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api }, { provide: FiscalPeriodsApiService, useValue: periods },
+      providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
+        { provide: ExpenseConfigApiService, useValue: jasmine.createSpyObj<ExpenseConfigApiService>('ExpenseConfigApiService', { listCategories: of([]), getPaymentClassification: of(null) }) },
+        { provide: FiscalPeriodsApiService, useValue: jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', { list: of([]) }) },
         { provide: NgbModal, useValue: {} }, { provide: ToastrService, useValue: {} }],
     });
     const fixture = TestBed.createComponent(AccountingSettingsComponent);
@@ -48,6 +54,18 @@ describe('AccountingSettingsComponent', () => {
     expect(fixture.nativeElement.querySelector('#tab-methods').getAttribute('tabindex')).toBe('0');
     expect(fixture.nativeElement.querySelector('#tab-accounts').getAttribute('tabindex')).toBe('-1');
     (fixture.nativeElement.querySelector('#tab-methods') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('classifications');
+    (fixture.nativeElement.querySelector('#tab-classifications') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('accountClasses');
+    (fixture.nativeElement.querySelector('#tab-accountClasses') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('expenses');
+    (fixture.nativeElement.querySelector('#tab-expenses') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('cutoff');
+    (fixture.nativeElement.querySelector('#tab-cutoff') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('periods');
     (fixture.nativeElement.querySelector('#tab-periods') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));

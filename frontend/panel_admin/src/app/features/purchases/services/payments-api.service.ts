@@ -31,7 +31,9 @@ function toError(err: HttpErrorResponse): PaymentApiError {
   if (err.status === 0) return new PaymentApiError(PAYMENT_NETWORK_ERROR_MESSAGE(), 0);
   if (err.status === 400) {
     const general = messages((err.error as Record<string, unknown> | null)?.['non_field_errors']);
-    return new PaymentApiError(general ?? PAYMENT_VALIDATION_ERROR_MESSAGE(), 400, toPaymentFieldErrors(err.error));
+    const code = (err.error as { code?: unknown } | null)?.code;
+    return new PaymentApiError(general ?? PAYMENT_VALIDATION_ERROR_MESSAGE(), 400, toPaymentFieldErrors(err.error),
+      typeof code === 'string' ? code : null);
   }
   if (err.status === 404) return new PaymentApiError(PAYMENT_NOT_FOUND_MESSAGE(), 404);
   if (err.status === 409) {

@@ -61,6 +61,8 @@ export class PaymentApiError extends Error {
     message: string,
     readonly status: number,
     readonly fieldErrors: PaymentFieldErrors = {},
+    /** Código estable de la API (p. ej. `classification_not_configured`). */
+    readonly code: string | null = null,
   ) {
     super(message);
     this.name = 'PaymentApiError';

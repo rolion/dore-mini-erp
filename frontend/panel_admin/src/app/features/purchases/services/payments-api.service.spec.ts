@@ -65,6 +65,17 @@ describe('PaymentsApiService', () => {
     expect(payment?.reference).toBe('PAG-1A2B3C4D');
   });
 
+  it('keeps the stable code of a classification error (CONT-03, UI-03)', () => {
+    let error: PaymentApiError | undefined;
+    service.create('c-1', INPUT).subscribe({ error: (e: PaymentApiError) => (error = e) });
+    http.expectOne((r) => r.method === 'POST').flush(
+      { non_field_errors: ['Falta la clasificación de pagos a proveedores.'], code: 'classification_not_configured' },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    expect(error?.code).toBe('classification_not_configured');
+    expect(error?.message).toBe('Falta la clasificación de pagos a proveedores.');
+  });
+
   it('maps field errors of a 400 (AC-03, AC-04)', () => {
     let error: PaymentApiError | undefined;
     service.create('c-1', INPUT).subscribe({ error: (e: PaymentApiError) => (error = e) });

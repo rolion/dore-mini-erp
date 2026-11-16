@@ -81,6 +81,9 @@
                   @if (hasError('categoryId')) {
                   <small class="form-text text-danger">{{ serverErrors.categoryId || ('EXPENSES.EXPENSE_FORM.LA_CATEGORIA_ES_OBLIGATORIA' | translate) }}</small>
                   }
+                  @if (serverErrors.categoryId) {
+                  <app-classification-hint [code]="errorCode" />
+                  }
                 </div>
                 <div class="form-group col-md-6">
                   <label for="expense-supplier">{{ 'COMMON.PROVEEDOR' | translate }}</label>

@@ -31,7 +31,7 @@
                 <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo" [class.is-invalid]="rangeInvalid">
               </div>
-              <div class="col-md-3 col-6">
+              <div class="col-md-2 col-6">
                 <label for="filter-account">{{ 'ACCOUNTING.ENTRIES.CUENTA' | translate }}</label>
                 <select id="filter-account" class="form-select form-control" formControlName="accountId">
                   <option value="">{{ 'COMMON.TODAS' | translate }}</option>
@@ -58,6 +58,15 @@
                   }
                 </select>
               </div>
+              <div class="col-md-2 col-6">
+                <label for="filter-direction">{{ 'ACCOUNTING.ENTRIES.DIRECCION' | translate }}</label>
+                <select id="filter-direction" class="form-select form-control" formControlName="direction">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  @for (direction of directions; track direction) {
+                  <option [value]="direction">{{ directionLabel(direction) }}</option>
+                  }
+                </select>
+              </div>
               @if (rangeInvalid) {
               <div class="col-12">
                 <small class="form-text text-danger" data-testid="range-error">{{ 'ACCOUNTING.ENTRIES.LA_FECHA_HASTA_NO_PUEDE' | translate }}</small>
@@ -78,6 +87,12 @@
                 {{ 'ACCOUNTING.ENTRIES.TODAS_LAS_FECHAS' | translate }}
                 }
               </small>
+              @if (coverage?.gaps?.length) {
+              <div class="alert alert-warning mt-2 mb-0" role="alert" data-testid="coverage-gaps">
+                {{ 'ACCOUNTING.CUTOFF.AVISO_COBERTURA_PARCIAL' | translate }}
+                <a routerLink="/pocketbiz/accounting/settings">{{ 'ACCOUNTING.CUTOFF.VER_CORTE_Y_COBERTURA' | translate }}</a>
+              </div>
+              }
               @if (coverage?.firstPaymentDate) {
               <small class="text-body-secondary d-block" data-testid="coverage">
                 {{ 'ACCOUNTING.ENTRIES.COBERTURA_DEL_LIBRO' | translate }}: {{ coverage?.firstPaymentDate | date: 'dd/MM/yyyy' }} – {{ coverage?.lastPaymentDate | date: 'dd/MM/yyyy' }}.
@@ -112,6 +127,10 @@
                   {{ 'ACCOUNTING.ENTRIES.PRODUCTOS' | translate }} {{ amount(item.byOrigin.PRODUCT, item.currency) }} ·
                   {{ 'ACCOUNTING.ENTRIES.SERVICIOS' | translate }} {{ amount(item.byOrigin.SERVICE, item.currency) }}
                 </div>
+                <div class="col-12 text-body-secondary" data-testid="total-expense">
+                  {{ 'ACCOUNTING.ENTRIES.EGRESOS' | translate }} {{ amount(item.expense, item.currency) }} ·
+                  {{ 'ACCOUNTING.ENTRIES.NETO' | translate }} {{ amount(item.net, item.currency) }}
+                </div>
               </div>
               }
             </div>
@@ -145,6 +164,9 @@
               <ngx-datatable-column [name]="'COMMON.ORIGEN' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="105">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <div class="badge-outline" data-testid="origin-badge" [class]="originClass(row.origin)">{{ originLabel(row.origin) }}</div>
+                  @if (row.operation === 'REVERSAL') {
+                  <div class="badge-outline col-red mt-1" data-testid="reversal-badge">{{ 'ACCOUNTING.ENTRIES.REVERSION' | translate }}</div>
+                  }
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.DOCUMENTO' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="110">
@@ -164,7 +186,7 @@
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.MONTO' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110" headerClass="text-end" cellClass="text-end">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <span class="d-block text-end text-nowrap" data-testid="amount">{{ amount(row.amount, row.currency) }}</span>
+                  <span class="d-block text-end text-nowrap" data-testid="amount">{{ signed(row) }}</span>
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'ACCOUNTING.ENTRIES.REGISTRADA_POR' | translate" [sortable]="false" [flexGrow]="1" [minWidth]="110">

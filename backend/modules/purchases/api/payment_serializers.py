@@ -43,7 +43,8 @@ class PaymentInputSerializer(serializers.Serializer):
     payment_date = LenientDateField(required=False, allow_null=True)
 
 
-def payment_representation(payment) -> dict:
+def payment_representation(payment, classifications: dict | None = None) -> dict:
+    info = (classifications or {}).get(payment.classification_id) if payment.classification_id else None
     return {
         'id': payment.id,
         'reference': payment.reference,
@@ -51,6 +52,13 @@ def payment_representation(payment) -> dict:
         'payment_method': payment.payment_method.value,
         'payment_date': payment.payment_date.isoformat(),
         'status': payment.status.value,
+        'classification': (None if payment.classification_id is None else
+                           {'id': payment.classification_id, 'name': info.name if info else '',
+                            'active': info.active if info else False}),
         'user_name': payment.user_name,
         'created_at': payment.created_at,
     }
+
+
+class PaymentClassificationInputSerializer(serializers.Serializer):
+    classification_id = serializers.UUIDField(allow_null=True)

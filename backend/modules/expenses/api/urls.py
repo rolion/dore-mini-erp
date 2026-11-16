@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     CategoryActivateView,
+    CategoryClassificationView,
     CategoryDeactivateView,
     CategoryDetailView,
     CategoryListCreateView,
@@ -20,6 +21,8 @@ expense_urlpatterns = [
 category_urlpatterns = [
     path('', CategoryListCreateView.as_view(), name='expense-category-list'),
     path('<str:category_id>/', CategoryDetailView.as_view(), name='expense-category-detail'),
+    path('<str:category_id>/classification/', CategoryClassificationView.as_view(),
+         name='expense-category-classification'),
     path('<str:category_id>/activate/', CategoryActivateView.as_view(), name='expense-category-activate'),
     path('<str:category_id>/deactivate/', CategoryDeactivateView.as_view(), name='expense-category-deactivate'),
 ]

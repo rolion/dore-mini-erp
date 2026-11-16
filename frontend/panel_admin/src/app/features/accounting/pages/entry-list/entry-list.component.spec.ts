@@ -18,7 +18,7 @@ describe('EntryListComponent', () => {
     api = jasmine.createSpyObj<EntriesApiService>('EntriesApiService', ['list']);
     api.list.and.returnValue(of(page));
     const accounting = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'listMethods']);
-    accounting.listAccounts.and.returnValue(of([{ id: 'a-1', name: 'Caja', currency: 'BOB', isActive: true }]));
+    accounting.listAccounts.and.returnValue(of([{ id: 'a-1', name: 'Caja', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true }]));
     accounting.listMethods.and.returnValue(of([{ code: 'CASH', label: 'Efectivo', isActive: true, account: null }]));
     await TestBed.configureTestingModule({
       imports: [EntryListComponent],
@@ -42,6 +42,17 @@ describe('EntryListComponent', () => {
   const root = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const byId = (id: string): HTMLElement | null => root().querySelector(`[data-testid="${id}"]`);
 
+  it('warns about partial coverage when there are periods without coverage (UI-03)', async () => {
+    const page = makeEntryPage();
+    await setup({}, { ...page, coverage: { ...page.coverage, gaps: [{ from: '2026-11-03', to: '2026-11-08' }] } });
+    expect(byId('coverage-gaps')?.textContent).toContain('cobertura es parcial');
+  });
+
+  it('shows no coverage warning without gaps', async () => {
+    await setup();
+    expect(byId('coverage-gaps')).toBeNull();
+  });
+
   it('shows rows, totals per currency, period, coverage and the context note (UI-02, UI-03)', async () => {
     await setup();
     expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ page: 1, pageSize: 20 }));
@@ -55,8 +66,8 @@ describe('EntryListComponent', () => {
   it('shows one totals row per currency without mixing them', async () => {
     const page = makeEntryPage([makeEntry()], {
       totals: [
-        { currency: 'BOB', count: 2, amount: '550.50', byOrigin: { PRODUCT: '250.00', SERVICE: '300.50' } },
-        { currency: 'USD', count: 1, amount: '70.00', byOrigin: { PRODUCT: '70.00', SERVICE: '0.00' } },
+        { currency: 'BOB', count: 2, amount: '550.50', byOrigin: { PRODUCT: '250.00', SERVICE: '300.50' }, expense: '0.00', net: '550.50' },
+        { currency: 'USD', count: 1, amount: '70.00', byOrigin: { PRODUCT: '70.00', SERVICE: '0.00' }, expense: '0.00', net: '70.00' },
       ],
     });
     await setup({}, page);
@@ -112,6 +123,27 @@ describe('EntryListComponent', () => {
     expect(byId('source-link')?.getAttribute('aria-label')).toContain('o-1');
     expect(root().querySelectorAll('[data-testid="source-text"]').length).toBe(1);
     expect(root().querySelector('a[href$="/new"], .btn-tbl-update, .btn-tbl-delete')).toBeNull();
+  });
+
+  it('shows expenses with sign, the reversal badge and the expense and net totals (UI-01..UI-03)', async () => {
+    const rows = [
+      makeEntry({ id: 'e-2', origin: 'EXPENSE', direction: 'EXPENSE', amount: '100.00', documentRef: 'gasto-1' }),
+      makeEntry({ id: 'e-3', origin: 'EXPENSE', direction: 'INCOME', operation: 'REVERSAL', amount: '100.00', reversalOf: 'e-2' }),
+    ];
+    const page = makeEntryPage(rows);
+    await setup({}, { ...page, totals: [{ ...page.totals[0], expense: '100.00', net: '-100.00' }] });
+    const amounts = Array.from(root().querySelectorAll('[data-testid="amount"]')).map((el) => el.textContent?.trim() ?? '');
+    expect(amounts[0]).toContain('−');
+    expect(amounts[1]).not.toContain('−');
+    expect(byId('reversal-badge')).not.toBeNull();
+    expect(byId('total-expense')?.textContent).toContain('100.00');
+    expect(byId('total-expense')?.textContent).toContain('-100.00');
+  });
+
+  it('sends the direction filter from the URL to the API and offers both directions', async () => {
+    await setup({ direction: 'EXPENSE' });
+    expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ direction: 'EXPENSE' }));
+    expect(root().querySelectorAll('#filter-direction option').length).toBe(3);
   });
 
   it('uses the soft alert style for the context note (AC-04)', async () => {

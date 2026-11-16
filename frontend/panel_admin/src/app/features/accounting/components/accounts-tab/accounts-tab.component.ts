@@ -6,7 +6,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subject, catchError, finalize, switchMap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
-import { Account, AccountingApiError } from '../../models/accounting';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { ACCOUNT_CLASSES, Account, AccountClassCode, AccountingApiError } from '../../models/accounting';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { AccountDialogComponent } from '../account-dialog/account-dialog.component';
 import { DeactivateDialogComponent } from '../deactivate-dialog/deactivate-dialog.component';
@@ -18,10 +19,12 @@ export type StatusFilter = 'all' | 'active' | 'inactive';
   selector: 'app-accounts-tab',
   templateUrl: './accounts-tab.component.html',
   styleUrl: './accounts-tab.component.scss',
-  imports: [TranslatePipe, ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
 })
 export class AccountsTabComponent implements OnInit {
   readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });
+  readonly classControl = new FormControl<AccountClassCode | 'all'>('all', { nonNullable: true });
+  readonly classes = ACCOUNT_CLASSES;
 
   rows: Account[] = [];
   loading = false;
@@ -41,7 +44,7 @@ export class AccountsTabComponent implements OnInit {
         switchMap(() => {
           this.loading = true;
           this.errorMessage = '';
-          return this.api.listAccounts(this.activeFilter()).pipe(
+          return this.api.listAccounts(this.activeFilter(), this.classFilter()).pipe(
             catchError((err: AccountingApiError) => {
               this.errorMessage = err.message;
               this.rows = [];
@@ -54,6 +57,7 @@ export class AccountsTabComponent implements OnInit {
       )
       .subscribe((accounts) => (this.rows = accounts));
     this.statusControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reload$.next());
+    this.classControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reload$.next());
     this.reload$.next();
   }
 
@@ -126,5 +130,10 @@ export class AccountsTabComponent implements OnInit {
       default:
         return undefined;
     }
+  }
+
+  private classFilter(): AccountClassCode | undefined {
+    const value = this.classControl.value;
+    return value === 'all' ? undefined : value;
   }
 }

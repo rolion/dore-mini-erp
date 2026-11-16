@@ -16,6 +16,7 @@ class ExpenseCategory:
     id: UUID
     name: str
     active: bool = True
+    classification_id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -31,3 +32,7 @@ class ExpenseCategory:
 
     def deactivate(self) -> None:
         self.active = False
+
+    def set_classification(self, classification_id: UUID | None) -> None:
+        """Asocia (o quita con `None`) la clasificación de egreso; la validez la comprueba quien llama."""
+        self.classification_id = classification_id

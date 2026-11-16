@@ -25,7 +25,8 @@ class CatalogTests(SimpleTestCase):
         self.assertEqual(requires['expenses'], set())
         self.assertEqual(requires['reporting'], set())  # PB-REP-001: fuentes opcionales
         self.assertEqual(set(d.BY_KEY['reporting'].optional), {'sales', 'expenses', 'customers'})
-        self.assertEqual(requires['purchases'], {'catalog', 'expenses'})
+        self.assertEqual(requires['purchases'], {'catalog'})  # CONT-06: sin dependencia funcional de Gastos
+        self.assertEqual(set(d.BY_KEY['purchases'].optional), {'expenses'})
         self.assertEqual(requires['inventory'], {'catalog'})
         self.assertEqual(requires['costing'], {'inventory'})
         self.assertNotIn('costing', d.DEFAULT_ENABLED_KEYS)
@@ -36,8 +37,8 @@ class RuleTests(SimpleTestCase):
     def test_enable_reports_missing_dependency_names(self):  # INV-02, AC-03
         enabled = d.effective_enabled(set())
         with self.assertRaises(d.DependencyError) as ctx:
-            d.check_can_enable('purchases', enabled)
-        self.assertEqual(ctx.exception.names, ['Gastos'])
+            d.check_can_enable('costing', enabled)
+        self.assertEqual(ctx.exception.names, ['Inventario'])
         self.assertEqual(ctx.exception.kind, 'missing')
 
     def test_quotations_requires_services_and_customers(self):  # PB-COT-001 AC-10
@@ -55,10 +56,10 @@ class RuleTests(SimpleTestCase):
             d.check_can_disable('catalog', d.effective_enabled(set()))
 
     def test_cannot_disable_required_module(self):  # INV-03, AC-05
-        enabled = d.effective_enabled({'expenses', 'purchases'})
+        enabled = d.effective_enabled({'inventory', 'costing'})
         with self.assertRaises(d.DependencyError) as ctx:
-            d.check_can_disable('expenses', enabled)
-        self.assertEqual(ctx.exception.names, ['Compras'])
+            d.check_can_disable('inventory', enabled)
+        self.assertEqual(ctx.exception.names, ['Costeo'])
         self.assertEqual(ctx.exception.kind, 'dependents')
 
     def test_reporting_sources_can_be_disabled_while_it_is_enabled(self):  # PB-REP-001 AC-11
@@ -70,3 +71,7 @@ class RuleTests(SimpleTestCase):
     def test_unknown_key(self):  # EDGE-01
         with self.assertRaises(d.UnknownModule):
             d.definition('nope')
+
+    def test_purchases_can_be_enabled_and_expenses_disabled_independently(self):  # CONT-06 AC-04
+        d.check_can_enable('purchases', d.effective_enabled(set()))
+        d.check_can_disable('expenses', d.effective_enabled({'expenses', 'purchases'}))

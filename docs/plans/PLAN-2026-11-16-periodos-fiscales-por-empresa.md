@@ -127,7 +127,7 @@ Ver ADR decisiones 1-8.
 
 ## Implementation steps
 1. Dominio `FiscalPeriod` + errores y pruebas unitarias (INV-01..05, AC-02, AC-05).
-2. Modelo, migración `0004`, repositorio con bloqueo advisory y `FOR UPDATE` (INV-03, INV-08).
+2. Modelo, migración `0009`, repositorio con bloqueo advisory y `FOR UPDATE` (INV-03, INV-08).
 3. Casos de uso: crear, editar, cerrar, reabrir, listar, obtener, con puerto `PeriodUsage` (AC-01, AC-03, AC-05, AC-08).
 4. Fachada `lock_open_period`/`period_for` y pruebas (AC-06, AC-07).
 5. API, serializers, URLs y pruebas (AC-01..05, permisos).
@@ -136,7 +136,7 @@ Ver ADR decisiones 1-8.
 8. Actualizar `ddd.md`; suite backend + `npm test`, `npm run lint`, `npm run i18n:check`, `npm run build`.
 
 ## Database / migrations
-Migración nueva `0004_fiscal_period` (tabla, checks, único `(company_id, lower(name))`, índice). No toca migraciones aplicadas. Si otra rama de accounting ya tomó el número 0004, renumerar al integrar.
+Migración nueva `0009_fiscal_period` (tabla, checks, único `(company_id, lower(name))`, índice). No toca migraciones aplicadas. Si otra rama de accounting ya tomó el número 0004, renumerar al integrar.
 
 ## Risks
 - Bloqueo advisory: usar el patrón de namespace de `adapters.py` y liberarlo con `xact` (fin de transacción) para no filtrar bloqueos.

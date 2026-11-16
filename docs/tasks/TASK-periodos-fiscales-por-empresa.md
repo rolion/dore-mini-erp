@@ -83,7 +83,7 @@ No hay períodos; ninguna fecha se valida contra períodos.
 Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 
 - **Dominio** `accounting/domain/fiscal_period.py`: agregado `FiscalPeriod` (INV-01..05), errores y excepciones del contrato (`DateOutsideFiscalPeriod`, `FiscalPeriodClosed`, `FiscalPeriodContractError`).
-- **Infraestructura**: `FiscalPeriodModel` + migración `0004_fiscal_period` (checks de fechas y estado, único `(company_id, lower(name))`, índice); `DjangoFiscalPeriodRepository` con bloqueo advisory por empresa y `FOR UPDATE` (INV-03, INV-08); `NoJournalPeriodUsage` (puerto `PeriodUsage`, AC-08).
+- **Infraestructura**: `FiscalPeriodModel` + migración `0009_fiscal_period` (checks de fechas y estado, único `(company_id, lower(name))`, índice); `DjangoFiscalPeriodRepository` con bloqueo advisory por empresa y `FOR UPDATE` (INV-03, INV-08); `NoJournalPeriodUsage` (puerto `PeriodUsage`, AC-08).
 - **Aplicación** `application/fiscal_periods.py`: crear, editar (solapamiento + puerto de uso), cerrar, reabrir, listar, obtener (AC-01..05, AC-08, INV-07).
 - **Fachada** `services.py`: `lock_open_period`, `period_for`, `PeriodRef` (AC-06, AC-07, INV-08).
 - **API** `/api/accounting/fiscal-periods/` (API-01..05) con el permiso por defecto (admin de empresa): cerrar y reabrir solo administradores.
@@ -95,6 +95,8 @@ Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 **Pruebas añadidas:** `test_fiscal_period_domain`, `test_fiscal_periods_api`, `test_fiscal_period_facade`, `test_fiscal_period_concurrency` (backend); specs del servicio, pestaña, diálogos y ajuste del spec de pestañas (3 pestañas) en el frontend.
 
 **Corridas propias (no son el Quality Gate):** backend `manage.py test` 1678 OK, `makemigrations --check` sin cambios; frontend `ng test` 1430 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` OK.
+
+**Base de la rama:** la tarea debía partir de la rama `accounting` (no de `main`); se integró `origin/accounting` en esta rama con un merge (sin reescribir historia), la migración pasó a `0009_fiscal_period` (depende de `0008_account_code_contra`) y el PR se re-apuntó a `accounting`. Tras el merge: backend 1835 pruebas OK, frontend 1496 OK, lint, `i18n:check` y build OK. La pestaña «Períodos fiscales» queda al final de las pestañas de Configuración.
 
 **Deuda / pendiente para CONT-02:** cablear el adaptador real de `PeriodUsage` (hoy `NoJournalPeriodUsage` devuelve 0) y probar AC-08/AC-09 con asientos reales; renumerar la migración si otra rama de accounting ya usó `0004`.
 

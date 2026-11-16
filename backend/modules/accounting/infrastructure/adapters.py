@@ -7,9 +7,12 @@ from django.db import connection, transaction
 
 from modules.accounting import services as accounting
 from modules.accounting.application.regularize import LedgerRejected
+from modules.accounting.application.transition_diagnosis import AccountFact
 from modules.accounting.domain.entry import Entry
 from modules.accounting.domain.regularization import Item, SourcePayment
-from modules.accounting.infrastructure.django.repositories import DjangoEntryRepository
+from modules.accounting.domain.transition import EntryFact
+from modules.accounting.infrastructure.django.models import AccountModel, EntryModel, SettingsModel
+from modules.accounting.infrastructure.django.repositories import DjangoCoverageRepository, DjangoEntryRepository
 from modules.receivables import services as receivables
 from modules.sales import services as sales
 
@@ -76,3 +79,26 @@ class NoJournalPeriodUsage:
 
     def entries_outside(self, company_id: UUID, period_id: UUID, start_date: date, end_date: date) -> int:
         return 0
+
+
+class DjangoTransitionReader:
+    """Lectura del libro para el diagnóstico de transición: solo `SELECT`, siempre filtrado por `company_id`."""
+
+    def company_ids(self) -> list[UUID]:
+        ids = set(AccountModel.objects.values_list('company_id', flat=True))
+        ids |= set(EntryModel.objects.values_list('company_id', flat=True))
+        ids |= set(SettingsModel.objects.values_list('company_id', flat=True))
+        return sorted(ids, key=str)
+
+    def cutoff(self, company_id: UUID) -> date | None:
+        return DjangoCoverageRepository(company_id).cutoff_date()
+
+    def accounts(self, company_id: UUID) -> list[AccountFact]:
+        with_entries = set(EntryModel.objects.filter(company_id=company_id).values_list('account_id', flat=True))
+        return [AccountFact(a.id, a.kind, a.opening_balance, a.is_active, a.id in with_entries)
+                for a in AccountModel.objects.filter(company_id=company_id)]
+
+    def entries(self, company_id: UUID) -> list[EntryFact]:
+        return [EntryFact(e.id, e.origin_kind, e.origin_id, e.operation, e.direction, e.amount, e.currency,
+                          e.payment_date, e.account_id, e.classification_id, e.regularized_at is not None)
+                for e in EntryModel.objects.filter(company_id=company_id)]

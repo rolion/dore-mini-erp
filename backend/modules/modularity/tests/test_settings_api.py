@@ -245,7 +245,8 @@ class HistoryTests(SettingsApiTestCase):
         self.assertEqual(self.client.get(history_url('modules'), {'setting': 'module.sales'}).json()['count'], 0)
 
     def test_rejected_module_change_leaves_no_record(self):  # AC-05
-        self.client.post('/api/modules/purchases/enable/')
+        self.client.post('/api/modules/inventory/enable/')
+        self.client.post('/api/modules/costing/enable/')
         before = self.client.get(history_url('modules')).json()['count']
-        self.assertEqual(self.client.post('/api/modules/expenses/disable/').status_code, 409)  # lo requiere Compras
+        self.assertEqual(self.client.post('/api/modules/inventory/disable/').status_code, 409)  # lo requiere Costeo
         self.assertEqual(self.client.get(history_url('modules')).json()['count'], before)

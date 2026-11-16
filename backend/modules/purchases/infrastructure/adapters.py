@@ -5,12 +5,15 @@ Es el único lugar de Purchases que conoce a Catalog e Inventory, y solo por su 
 from collections.abc import Iterable
 from uuid import UUID
 
+from datetime import date
 from decimal import Decimal
 
+from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
 from modules.inventory import services as inventory_services
 from modules.purchases.application.ports import (
     Actor,
+    ClassificationInfo,
     ProductInfo,
     StockEntryMovement,
     StockProductInfo,
@@ -92,3 +95,24 @@ class StockEntryAdapter:
                                    m.reversed_by_reference)
                 for m in inventory_services.list_movements_for_source(
                     self.company_id, self.SOURCE_TYPE, str(receipt_id))]
+
+
+class AccountingClassifications:
+    """Clasificaciones y cobertura de Contabilidad, solo por su fachada `services`."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def validate_expense_classification(self, classification_id: UUID) -> ClassificationInfo:
+        try:
+            ref = accounting_services.validate_classification(self.company_id, classification_id, 'EXPENSE')
+        except accounting_services.AccountValidationError as exc:
+            raise PurchaseValidationError(exc.errors) from exc
+        return ClassificationInfo(ref.classification_id, ref.name, ref.direction, True)
+
+    def describe(self, classification_ids: Iterable[UUID]) -> dict[UUID, ClassificationInfo]:
+        found = accounting_services.describe_classifications(self.company_id, classification_ids)
+        return {k: ClassificationInfo(v.classification_id, v.name, v.direction, v.is_active) for k, v in found.items()}
+
+    def is_covered(self, on: date) -> bool:
+        return accounting_services.coverage_status(self.company_id, on).covered

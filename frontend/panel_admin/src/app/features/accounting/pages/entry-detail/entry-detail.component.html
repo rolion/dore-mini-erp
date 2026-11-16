@@ -25,10 +25,25 @@
       <div class="card-header">
         <h4 class="mb-0" data-testid="amount">{{ amountText }}</h4>
         <span class="badge-outline" [class]="originClass" data-testid="origin-badge">{{ originText }}</span>
+        @if (entry.operation === 'REVERSAL') {
+        <span class="badge-outline col-red ms-2" data-testid="reversal-badge">{{ 'ACCOUNTING.ENTRIES.REVERSION' | translate }}</span>
+        }
       </div>
       <dl class="row m-4">
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.CUENTA' | translate }}</dt>
         <dd class="col-sm-9">{{ entry.accountName }} ({{ entry.currency }})</dd>
+        @if (entry.classificationName) {
+        <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.CLASIFICACION' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="classification">{{ entry.classificationName }}</dd>
+        }
+        @if (entry.reversalOf) {
+        <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.MOVIMIENTO_ORIGINAL' | translate }}</dt>
+        <dd class="col-sm-9"><a class="link-primary" [routerLink]="['/pocketbiz/accounting/entries', entry.reversalOf]" data-testid="original-link">{{ 'ACCOUNTING.ENTRIES.VER_MOVIMIENTO' | translate }}</a></dd>
+        }
+        @if (entry.reversedBy) {
+        <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.REVERTIDO_POR' | translate }}</dt>
+        <dd class="col-sm-9"><a class="link-primary" [routerLink]="['/pocketbiz/accounting/entries', entry.reversedBy]" data-testid="reversal-link">{{ 'ACCOUNTING.ENTRIES.VER_MOVIMIENTO' | translate }}</a></dd>
+        }
         <dt class="col-sm-3">{{ 'COMMON.METODO' | translate }}</dt>
         <dd class="col-sm-9">{{ entry.methodLabel }}</dd>
         <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.FECHA_DEL_PAGO' | translate }}</dt>

@@ -1,4 +1,5 @@
 import { tr } from '../../../../core/i18n/translate';
+import { ClassificationHintComponent } from '../../../../shared/components/classification-hint/classification-hint.component';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -52,7 +53,7 @@ function positiveAmount(control: AbstractControl<string>): ValidationErrors | nu
 @Component({
   selector: 'app-expense-form',
   templateUrl: './expense-form.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, ClassificationHintComponent],
 })
 export class ExpenseFormComponent implements OnInit {
   readonly descriptionMaxLength = DESCRIPTION_MAX_LENGTH;
@@ -76,6 +77,8 @@ export class ExpenseFormComponent implements OnInit {
   loading = false;
   categoryOptions: CategoryOption[] = [];
   /** Errores de validación devueltos por el servidor, por campo; se limpian al editar. */
+  /** Código de la última respuesta 400 (p. ej. `classification_not_configured`), para mostrar la ayuda. */
+  errorCode: string | null = null;
   serverErrors: Partial<Record<FormField, string>> = {};
 
   private api = inject(ExpensesApiService);
@@ -95,7 +98,10 @@ export class ExpenseFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => (this.serverErrors = {}));
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.serverErrors = {};
+      this.errorCode = null;
+    });
     this.expenseId = this.route.snapshot.paramMap.get('id');
     this.loading = true;
     this.categoriesApi
@@ -193,6 +199,7 @@ export class ExpenseFormComponent implements OnInit {
   }
 
   private showServerError(err: ExpensesApiError): void {
+    this.errorCode = err.code;
     const errors: Partial<Record<FormField, string>> = {};
     for (const field of Object.keys(this.form.controls) as FormField[]) {
       const messages = err.fieldErrors[field];
