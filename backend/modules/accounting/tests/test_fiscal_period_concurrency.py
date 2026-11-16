@@ -1,4 +1,5 @@
 """CONT-10: serialización de cierre y contabilización, y de altas solapadas (AC-09)."""
+import threading
 import time
 from datetime import date, datetime, timezone
 
@@ -22,39 +23,35 @@ class CloseVsPostingTests(TransactionTestCase):
         self.period = CreateFiscalPeriod(self.repo).execute('Q2', date(2026, 4, 1), date(2026, 6, 30))
         self.events = []
 
-    def post(self, hold: float = 0.0):
+    def post(self, locked: threading.Event | None = None, hold: float = 0.0):
         def job():
             services.lock_open_period(self.company.id, DAY)
-            time.sleep(hold)  # el asiento se «inserta» mientras sostiene el bloqueo del período
+            if locked:
+                locked.set()  # el asiento ya tiene el bloqueo del período
+            time.sleep(hold)  # el asiento se «inserta» mientras lo sostiene
             self.events.append('posted')
         return job
 
-    def close(self, delay: float = 0.0):
+    def close(self, wait_for: threading.Event | None = None):
         def job():
-            time.sleep(delay)
+            if wait_for:
+                self.assertTrue(wait_for.wait(timeout=10))
             CloseFiscalPeriod(self.repo).execute(self.period.id, 'Ana', datetime(2026, 5, 11, tzinfo=timezone.utc))
             self.events.append('closed')
         return job
 
     def test_closing_waits_for_the_posting_in_flight(self):  # AC-09
-        outcomes = _run_together(self.post(hold=0.6), self.close(delay=0.2))
+        locked = threading.Event()  # el cierre arranca solo cuando el asiento ya tiene el bloqueo: sin depender de tiempos
+        outcomes = _run_together(self.post(locked, hold=0.5), self.close(locked))
         self.assertEqual(outcomes, [None, None])
         self.assertEqual(self.events, ['posted', 'closed'])
-
-    def test_a_posting_that_starts_after_the_close_is_rejected(self):  # AC-09
-        outcomes = _run_together(self.close(), self.post(hold=0.0))
-        # Con salida en carrera pura: o el asiento entró antes del cierre, o se rechazó; nunca después.
-        if self.events == ['closed']:
-            self.assertIsInstance(outcomes[1], FiscalPeriodClosed)
-        else:
-            self.assertEqual(self.events, ['posted', 'closed'])
-        self.assertEqual(FiscalPeriodModel.objects.get(pk=self.period.id).status, 'CLOSED')
 
     def test_a_posting_after_a_committed_close_is_rejected(self):  # AC-09
         _run_together(self.close())
         outcomes = _run_together(self.post())
         self.assertIsInstance(outcomes[0], FiscalPeriodClosed)
         self.assertEqual(self.events, ['closed'])
+        self.assertEqual(FiscalPeriodModel.objects.get(pk=self.period.id).status, 'CLOSED')
 
 
 class OverlappingCreationTests(TransactionTestCase):

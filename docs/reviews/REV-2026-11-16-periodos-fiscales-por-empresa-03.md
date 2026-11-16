@@ -1,6 +1,6 @@
 # REV-2026-11-16-periodos-fiscales-por-empresa-03: Aserción debilitada en la carrera cierre vs. asiento
 
-**Status:** Open (no bloqueante)
+**Status:** Resolved (corregido en la rama; ver commit)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md (v1)

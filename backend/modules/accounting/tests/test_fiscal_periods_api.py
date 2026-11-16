@@ -8,7 +8,7 @@ from rest_framework.test import APIClient
 
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.tests.test_api import AccountingApiBase
-from modules.accounts.testing import authenticate
+from modules.accounts.testing import authenticate, make_admin
 
 URL = '/api/accounting/fiscal-periods/'
 
@@ -97,6 +97,17 @@ class FiscalPeriodApiTests(AccountingApiBase):
             self.client_a.patch(f'{URL}{period_id}/', {'name': 'Solo nombre'}, format='json')
             usage.entries_outside.assert_not_called()
         self.assertEqual(str(self.client_a.get(f'{URL}{period_id}/').data['end_date']), '2026-06-30')
+
+    def test_non_admin_members_cannot_use_any_endpoint(self):  # Authorization
+        period_id = self.create(self.client_a).data['id']
+        member = self.login(make_admin(self.company_a, 'mario', role='member'))
+        self.assertEqual(member.get(URL).status_code, 403)
+        self.assertEqual(self.create(member, 'otro', '2027-01-01', '2027-12-31').status_code, 403)
+        self.assertEqual(member.patch(f'{URL}{period_id}/', {'name': 'x'}, format='json').status_code, 403)
+        self.assertEqual(member.post(f'{URL}{period_id}/close/').status_code, 403)
+        self.client_a.post(f'{URL}{period_id}/close/')
+        self.assertEqual(member.post(f'{URL}{period_id}/reopen/').status_code, 403)
+        self.assertEqual(self.client_a.get(f'{URL}{period_id}/').data['status'], 'CLOSED')
 
     def test_requires_authentication_and_a_company(self):  # Authorization
         self.assertEqual(APIClient().get(URL).status_code, 401)

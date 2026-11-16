@@ -1,6 +1,6 @@
 # REV-2026-11-16-periodos-fiscales-por-empresa-01: Prueba de concurrencia dependiente de tiempos
 
-**Status:** Open (no bloqueante)
+**Status:** Resolved (corregido en la rama; ver commit)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md (v1)
