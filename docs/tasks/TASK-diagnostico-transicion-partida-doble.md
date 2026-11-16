@@ -101,7 +101,13 @@ No aplica (sin UI).
 `docs/plans/PLAN-2026-11-16-diagnostico-transicion-partida-doble.md` (v1) · Modo: COMPLETO · Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Comando `diagnose_ledger_transition` de solo lectura (AC-01..AC-06, INV-01..INV-06): dominio `domain/transition.py` (clasificación y mapeo), caso de uso `application/transition_diagnosis.py`, lector `DjangoTransitionReader` en `infrastructure/adapters.py` y comando en `management/commands/`. Documento `docs/deployment/transicion-partida-doble.md` (AC-07). Sin migraciones.
+
+**Desviaciones del plan:** (1) Gastos y Compras no se leen por fachada: `sales/tests/test_boundaries.py` hace que `expenses`/`purchases` dependan de `accounting` y no al revés. Las entradas de egreso quedan `pendiente/origen_no_verificable` (sin entradas de egreso locales) y el puerto de verificación se deja para la Etapa 2. (2) El ensayo en copia de la base local (AC-08) no se ejecutó.
+
+**Verificación propia:** las 7 pruebas unitarias del dominio (`ClassifyTests`, `ParseMappingTests`) pasan. Las 8 pruebas de integración de `DiagnoseCommandTests` están escritas e importan bien, pero **no se ejecutaron**: el worktree no tiene `DATABASE_URL` y no se leen `.env`. Tampoco `migrate` en base nueva ni el ensayo con `pg_dump`/`pg_restore` (AC-08).
+
+**Deuda técnica:** puerto de verificación de egresos (Etapa 2).
 
 ## Review
 _Pendiente_
