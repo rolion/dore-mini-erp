@@ -3,16 +3,21 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
-import { Account, AccountingApiError } from '../../models/accounting';
+import { Account, AccountClassState, AccountingApiError } from '../../models/accounting';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { AccountDialogComponent } from './account-dialog.component';
 
+let classStates: AccountClassState[] = [];
+
 describe('AccountDialogComponent', () => {
+  beforeEach(() => (classStates = []));
+
   let api: jasmine.SpyObj<AccountingApiService>;
   let activeModal: jasmine.SpyObj<NgbActiveModal>;
 
   function create() {
-    api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['createAccount', 'updateAccount']);
+    api = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['createAccount', 'updateAccount', 'listAccountClasses']);
+    api.listAccountClasses.and.returnValue(of(classStates));
     activeModal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     TestBed.configureTestingModule({
       imports: [AccountDialogComponent],
@@ -112,5 +117,32 @@ describe('AccountDialogComponent', () => {
     fixture.componentInstance.onSubmit();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.alert-warning').textContent).toContain('La usan los métodos QR.');
+  });
+
+  it('offers only enabled classifications and sends the chosen one (AC-02, AC-07)', () => {
+    classStates = [
+      { code: 'ASSET', enabled: true },
+      { code: 'COST', enabled: false },
+    ];
+    const fixture = create();
+    const codes = fixture.componentInstance.classOptions.map((o) => o.code);
+    expect(codes).toEqual(['ASSET']);
+    api.createAccount.and.returnValue(of({ id: 'a1', name: 'Caja', currency: 'BOB', kind: 'CASH', openingBalance: '0.00', isActive: true }));
+    fixture.componentInstance.form.patchValue({ name: 'Caja', kind: 'CASH', accountClass: 'ASSET' });
+    fixture.componentInstance.onSubmit();
+    expect(api.createAccount).toHaveBeenCalledWith({ name: 'Caja', currency: 'BOB', kind: 'CASH', openingBalance: '0.00', accountClass: 'ASSET' });
+  });
+
+  it('keeps the current disabled classification of an existing account selectable (AC-03)', () => {
+    classStates = [
+      { code: 'ASSET', enabled: true },
+      { code: 'COST', enabled: false },
+    ];
+    const fixture = create();
+    fixture.componentInstance.edit({ id: 'a1', name: 'Costos', currency: 'BOB', kind: 'BANK', accountClass: 'COST', openingBalance: '0.00', isActive: true });
+    expect(fixture.componentInstance.classOptions).toEqual([
+      { code: 'ASSET', disabled: false },
+      { code: 'COST', disabled: true },
+    ]);
   });
 });

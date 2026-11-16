@@ -11,6 +11,7 @@ from modules.accounting.application.coverage import GetCoverageStatus
 from modules.accounting.application.use_cases import missing_methods
 from modules.accounting.domain.catalog import METHOD_LABELS, OPERATION_RECORD, OPERATION_REVERSAL
 from modules.accounting.domain.account import AccountValidationError
+from modules.accounting.domain.account_class import ensure_enabled, validate_account_class as _parse_account_class
 from modules.accounting.domain.entry import (
     Entry,
     EntryConflict,
@@ -19,6 +20,7 @@ from modules.accounting.domain.entry import (
     EntryValidationError,
 )
 from modules.accounting.infrastructure.django.repositories import (
+    DjangoAccountClassRepository,
     DjangoAccountRepository,
     DjangoClassificationRepository,
     DjangoCoverageRepository,
@@ -29,7 +31,7 @@ from shared import module_gate
 
 __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef', 'EntryConflict',
            'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError', 'RecordedEntry', 'missing_method_labels', 'record_entry',
-           'coverage_status', 'describe_classifications', 'resolve_account', 'validate_classification', 'validate_money_account']
+           'coverage_status', 'describe_classifications', 'resolve_account', 'validate_account_class', 'validate_classification', 'validate_money_account']
 
 
 @dataclass(frozen=True)
@@ -81,6 +83,16 @@ def validate_classification(company_id: UUID, classification_id: UUID, direction
         raise AccountValidationError({'classification_id': ['La clasificación no existe en esta empresa.']})
     classification.ensure_usable(direction)
     return ClassificationRef(classification.id, classification.name, classification.direction)
+
+
+def validate_account_class(company_id: UUID, code: str) -> str:
+    """Valida una clasificación contable (ASSET…COST) para un uso NUEVO: del catálogo y habilitada en la empresa.
+
+    Devuelve el código normalizado o lanza `AccountValidationError`. Lo ya clasificado no se revalida.
+    """
+    parsed = _parse_account_class(code)
+    ensure_enabled(parsed, DjangoAccountClassRepository(company_id).disabled())
+    return parsed
 
 
 @dataclass(frozen=True)

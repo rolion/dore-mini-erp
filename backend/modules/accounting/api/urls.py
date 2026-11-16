@@ -2,6 +2,9 @@ from django.urls import path
 
 from .views import (
     AccountActivateView,
+    AccountClassDisableView,
+    AccountClassEnableView,
+    AccountClassListView,
     AccountDeactivateView,
     AccountDetailView,
     AccountListCreateView,
@@ -25,6 +28,11 @@ urlpatterns = [
     path('accounts/<uuid:account_id>/deactivate/', AccountDeactivateView.as_view(),
          name='accounting-account-deactivate'),
     path('settings/', SettingsView.as_view(), name='accounting-settings'),
+    path('account-classes/', AccountClassListView.as_view(), name='accounting-account-class-list'),
+    path('account-classes/<str:code>/enable/', AccountClassEnableView.as_view(),
+         name='accounting-account-class-enable'),
+    path('account-classes/<str:code>/disable/', AccountClassDisableView.as_view(),
+         name='accounting-account-class-disable'),
     path('classifications/', ClassificationListCreateView.as_view(), name='accounting-classification-list'),
     path('classifications/<uuid:classification_id>/', ClassificationDetailView.as_view(),
          name='accounting-classification-detail'),

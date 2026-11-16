@@ -2532,7 +2532,11 @@
       "EL_TIPO_ES_OBLIGATORIO": "O tipo é obrigatório.",
       "SALDO_DE_APERTURA": "Saldo de abertura",
       "SALDO_DE_APERTURA_AYUDA": "Valor da conta na data de corte. Não pode ser alterado quando a conta já tem movimentos.",
-      "SALDO_DE_APERTURA_INVALIDO": "Informe um valor de 0 ou mais com até 2 casas decimais."
+      "SALDO_DE_APERTURA_INVALIDO": "Informe um valor de 0 ou mais com até 2 casas decimais.",
+      "CLASIFICACION_CONTABLE": "Classificação contábil",
+      "SIN_CLASIFICACION": "Sem classificação",
+      "DESHABILITADA_SUFIJO": "(desabilitada)",
+      "CLASIFICACION_AYUDA": "Opcional por enquanto. Só são oferecidas as classificações habilitadas."
     },
     "CLASSIFICATIONS": {
       "CLASIFICACIONES": "Classificações",
@@ -2729,6 +2733,26 @@
       "ERROR_DE_RED": "Não foi possível conectar ao servidor. Verifique sua conexão.",
       "ERROR_INESPERADO": "Ocorreu um erro inesperado. Tente novamente.",
       "CLASIFICACION_NO_DISPONIBLE": "Classificação indisponível"
+    },
+    "ACCOUNT_CLASSES": {
+      "TITULO": "Classificações contábeis",
+      "AYUDA": "As seis classificações são fixas: você só pode habilitá-las ou desabilitá-las. Desabilitar uma não altera contas existentes nem saldos.",
+      "DIFERENCIA": "Não é o mesmo que a aba “Classificações”, que descreve o motivo de um movimento de dinheiro.",
+      "CLASIFICACION": "Classificação",
+      "HABILITAR": "Habilitar",
+      "DESHABILITAR": "Desabilitar",
+      "HABILITADA": "Habilitada",
+      "DESHABILITADA": "Desabilitada",
+      "HABILITADA_OK": "Classificação habilitada",
+      "DESHABILITADA_OK": "Classificação desabilitada",
+      "ASSET": "Ativo",
+      "LIABILITY": "Passivo",
+      "EQUITY": "Patrimônio",
+      "INCOME": "Receitas",
+      "EXPENSE": "Despesas",
+      "COST": "Custos",
+      "HABILITAR_X": "Habilitar {{name}}",
+      "DESHABILITAR_X": "Desabilitar {{name}}"
     }
   }
 }

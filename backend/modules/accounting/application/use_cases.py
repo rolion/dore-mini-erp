@@ -7,6 +7,12 @@ from modules.accounting.domain.account import (
     AccountNotFound,
     MethodNotFound,
 )
+from modules.accounting.domain.account_class import (
+    ACCOUNT_CLASSES,
+    ensure_enabled,
+    parse_account_class,
+    validate_account_class,
+)
 from modules.accounting.domain.catalog import FLOW_CURRENCY, METHOD_LABELS
 from modules.accounting.domain.classification import Classification, ClassificationNotFound
 from modules.accounting.domain.entry import EntryNotFound
@@ -43,23 +49,37 @@ class GetAccount:
         return _require(self.accounts, account_id)
 
 
+def _classify(account: Account, account_class: object, account_classes) -> None:
+    """Clasifica la cuenta: un valor nuevo debe estar habilitado; repetir el actual no se revalida."""
+    code = validate_account_class(account_class)
+    if code == account.account_class:
+        return
+    ensure_enabled(code, account_classes.disabled())
+    account.classify(code)
+
+
 class CreateAccount:
-    def __init__(self, accounts):
+    def __init__(self, accounts, account_classes=None):
         self.accounts = accounts
+        self.account_classes = account_classes
 
     def execute(self, name: object, currency: object, kind: object = None,
-                opening_balance: object = None) -> Account:
-        return self.accounts.save(Account.create(name, currency, kind, opening_balance))
+                opening_balance: object = None, account_class: object = None) -> Account:
+        account = Account.create(name, currency, kind, opening_balance)
+        if account_class is not None:
+            _classify(account, account_class, self.account_classes)
+        return self.accounts.save(account)
 
 
 class UpdateAccount:
-    def __init__(self, accounts, mappings, entries=None):
+    def __init__(self, accounts, mappings, entries=None, account_classes=None):
         self.accounts = accounts
         self.mappings = mappings
         self.entries = entries
+        self.account_classes = account_classes
 
     def execute(self, account_id: UUID, name: object = None, currency: object = None,
-                kind: object = None, opening_balance: object = None) -> Account:
+                kind: object = None, opening_balance: object = None, account_class: object = None) -> Account:
         self.mappings.lock_company()
         account = _require(self.accounts, account_id)
         previous_currency = account.currency
@@ -75,6 +95,8 @@ class UpdateAccount:
             account.rename(name)
         if kind is not None:
             account.change_kind(kind)
+        if account_class is not None:
+            _classify(account, account_class, self.account_classes)
         if currency is not None:
             account.change_currency(currency)
             if account.currency != previous_currency and self.entries and self.entries.has_entries_for_account(account.id):
@@ -232,3 +254,33 @@ class GetEntry:
         if row is None:
             raise EntryNotFound(str(entry_id))
         return row
+
+
+@dataclass(frozen=True)
+class AccountClassView:
+    code: str
+    enabled: bool
+
+
+class ListAccountClasses:
+    """Siempre las seis, en orden fijo, con su estado en la empresa."""
+
+    def __init__(self, account_classes):
+        self.account_classes = account_classes
+
+    def execute(self) -> list[AccountClassView]:
+        disabled = self.account_classes.disabled()
+        return [AccountClassView(code, code not in disabled) for code in ACCOUNT_CLASSES]
+
+
+class SetAccountClassEnabled:
+    """Habilita o deshabilita (idempotente); no toca cuentas, entradas ni saldos."""
+
+    def __init__(self, account_classes, enabled: bool):
+        self.account_classes = account_classes
+        self.enabled = enabled
+
+    def execute(self, code: object) -> AccountClassView:
+        parsed = parse_account_class(code)
+        self.account_classes.set_enabled(parsed, self.enabled)
+        return AccountClassView(parsed, self.enabled)

@@ -1,6 +1,6 @@
 # TASK-configurar-seis-clasificaciones-contables: Configurar las seis clasificaciones contables (CONT-08)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-seis-clasificaciones-contables (base: `accounting`)
@@ -15,6 +15,7 @@
 | 2026-11-16 | DESIGN → ARCHITECTURE | Contrato nuevo de datos y fachada que consumirá CONT-09 | delivery-start |
 | 2026-11-16 | ARCHITECTURE → PLANNING | DDR y ADR escritos | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -74,7 +75,22 @@ No hay seis clasificaciones. La cuenta no se clasifica contablemente; las clasif
 `docs/plans/PLAN-2026-11-16-configurar-seis-clasificaciones-contables.md` (v1) · Modo: COMPLETO · Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Catálogo fijo de seis clasificaciones contables por empresa con habilitar/deshabilitar, validación para cuentas nuevas y pestaña de Configuración.
+
+- **Dominio** (`domain/account_class.py`, `domain/account.py`): catálogo exacto y ordenado (INV-01), normalización y validación del código, `ensure_enabled`, `Account.classify`.
+- **Datos** (`models.py`, migración `0007_account_class`): tabla `accounting_account_class_setting` (sin fila = habilitada, INV-02) y columna nulable `accounting_account.account_class`. Solo aditiva.
+- **Casos de uso y fachada** (`use_cases.py`, `services.py`): `ListAccountClasses`, `SetAccountClassEnabled` (idempotente, sin efectos en cuentas ni entradas, INV-03) y `services.validate_account_class` para CONT-09. Crear/editar cuenta clasifica solo si el valor es nuevo y está habilitado; repetir el actual no se revalida (INV-04).
+- **API** (`/api/accounting/account-classes/`, `…/<code>/enable|disable/`; `account_class` en cuentas): API-01..03. Mismos permisos que la configuración.
+- **Frontend**: pestaña `account-classes-tab` (plantilla de configuración con listados, badges y botón de texto con `aria-label`), selector en `account-dialog` con solo las habilitadas (la actual de la cuenta se conserva marcada «deshabilitada»), servicio, modelos y claves es/en/pt.
+- **Cobertura de AC:** AC-01/04/05/06 en `test_account_classes.py`; AC-02 (dos empresas) y AC-03 (cuenta con entrada, fila y saldo idénticos antes y después) también ahí; AC-08 con la prueba de migración con datos y reversión; AC-07 en las pruebas de pestaña, diálogo y servicio.
+
+**Desviaciones del plan:** ninguna de alcance. Se actualizaron los specs existentes de `accounting-settings` y `account-dialog` (la API simulada necesitaba `listAccountClasses` y la navegación por flechas incluye la pestaña nueva).
+
+**Verificación propia (no es el Quality Gate):** backend `modules.accounting` + `test_boundaries` 195 OK; `makemigrations --check` sin cambios; `flake8`/`mypy` sin hallazgos en lo nuevo. Frontend: `ng test` 1463 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` correcto. Para ejecutarlo se copió `backend/.env` al worktree (ignorado por git, sin leerlo) y se hizo `npm ci` con el lockfile (sin dependencias nuevas).
+
+**UI:** pantalla de referencia `classifications-tab` (plantilla de configuración con listados); se reutilizaron badges `badge-outline` y la tabla `inventory-table`; no se crearon componentes compartidos.
+
+**Deuda técnica:** dos pestañas con nombre parecido hasta CONT-11 (mitigado con texto de ayuda); `account_class` sigue opcional hasta CONT-09.
 
 ## Review
 _Pendiente_

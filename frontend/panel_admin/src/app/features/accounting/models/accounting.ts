@@ -9,12 +9,24 @@ export const FLOW_CURRENCY = 'BOB';
 export const ACCOUNT_KINDS = ['CASH', 'BANK', 'WALLET'] as const;
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];
 
+/** Las seis clasificaciones contables fijas, en orden de presentación (CONT-08). */
+export const ACCOUNT_CLASSES = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE', 'COST'] as const;
+export type AccountClassCode = (typeof ACCOUNT_CLASSES)[number];
+
+/** Estado de una clasificación contable en la empresa: solo se habilita o deshabilita. */
+export interface AccountClassState {
+  code: AccountClassCode;
+  enabled: boolean;
+}
+
 export interface Account {
   id: string;
   name: string;
   currency: string;
   /** `null` en cuentas anteriores a la introducción del tipo. */
   kind: AccountKind | null;
+  /** Clasificación contable; `null` hasta que se asigne. */
+  accountClass?: AccountClassCode | null;
   /** Monto a la fecha de corte, decimal en texto (nunca float). */
   openingBalance: string;
   isActive: boolean;
@@ -25,6 +37,7 @@ export interface AccountInput {
   currency: string;
   kind: AccountKind;
   openingBalance?: string;
+  accountClass?: AccountClassCode | null;
 }
 
 export interface AccountDto {
@@ -32,6 +45,7 @@ export interface AccountDto {
   name: string;
   currency: string;
   kind?: AccountKind | null;
+  account_class?: AccountClassCode | null;
   opening_balance?: string;
   is_active: boolean;
 }
@@ -118,6 +132,7 @@ const FIELD_MAP: Record<string, string> = {
   kind: 'kind',
   direction: 'direction',
   opening_balance: 'openingBalance',
+  account_class: 'accountClass',
   cutoff_date: 'cutoffDate',
   account_id: 'accountId',
 };

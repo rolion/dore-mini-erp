@@ -87,6 +87,8 @@ class Account:
     kind: str | None = None
     # Monto de la cuenta a la fecha de corte; cambia solo mientras la cuenta no tiene movimientos.
     opening_balance: Decimal = ZERO
+    # Clasificación contable (CONT-08); nula hasta que CONT-09 la haga obligatoria.
+    account_class: str | None = None
 
     @classmethod
     def create(cls, name: object, currency: object, kind: object = None,
@@ -94,6 +96,10 @@ class Account:
         return cls(id=uuid4(), name=validate_name(name), currency=validate_currency(currency),
                    kind=validate_kind(kind) if kind is not None else None,
                    opening_balance=validate_opening_balance(opening_balance) if opening_balance is not None else ZERO)
+
+    def classify(self, code: str) -> None:
+        """Asigna una clasificación ya validada del catálogo."""
+        self.account_class = code
 
     def set_opening_balance(self, value: object) -> None:
         self.opening_balance = validate_opening_balance(value)

@@ -13,6 +13,8 @@ from modules.accounting.application.regularize import RegularizationInProgress, 
 from modules.accounting.application.use_cases import (
     ActivateAccount,
     ConfigureMethod,
+    ListAccountClasses,
+    SetAccountClassEnabled,
     CreateAccount,
     CreateClassification,
     DeactivateAccount,
@@ -33,6 +35,7 @@ from modules.accounting.domain.account import (
     AccountValidationError,
     MethodNotFound,
 )
+from modules.accounting.domain.account_class import AccountClassNotFound
 from modules.accounting.domain.catalog import DIRECTIONS
 from modules.accounting.domain.classification import ClassificationNotFound
 from modules.accounting.domain.entry import EntryNotFound
@@ -43,6 +46,7 @@ from modules.accounting.infrastructure.adapters import (
     SalesPaymentSource,
 )
 from modules.accounting.infrastructure.django.repositories import (
+    DjangoAccountClassRepository,
     DjangoAccountRepository,
     DjangoClassificationRepository,
     DjangoCoverageRepository,
@@ -64,6 +68,7 @@ from .serializers import (
     SettingsUpdateSerializer,
     MethodInputSerializer,
     serialize_account,
+    serialize_account_class,
     serialize_classification,
     serialize_coverage,
     serialize_entry,
@@ -98,6 +103,8 @@ def _run(use_case, *args, **kwargs):
         raise NotFound('Cuenta no encontrada.') from exc
     except MethodNotFound as exc:
         raise NotFound('Método de pago no encontrado.') from exc
+    except AccountClassNotFound as exc:
+        raise NotFound('Clasificación contable no encontrada.') from exc
     except ClassificationNotFound as exc:
         raise NotFound('Clasificación no encontrada.') from exc
     except EntryNotFound as exc:
@@ -129,7 +136,8 @@ class AccountListCreateView(_ConfigView):
         serializer = AccountInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         accounts, _ = _repositories(request)
-        account = _run(CreateAccount(accounts), **serializer.validated_data)
+        account = _run(CreateAccount(accounts, DjangoAccountClassRepository(company_id_from(request))),
+                       **serializer.validated_data)
         return Response(serialize_account(account), status=status.HTTP_201_CREATED)
 
 
@@ -143,7 +151,8 @@ class AccountDetailView(_ConfigView):
         serializer.is_valid(raise_exception=True)
         accounts, mappings = _repositories(request)
         entries = DjangoEntryRepository(company_id_from(request))
-        account = _run(UpdateAccount(accounts, mappings, entries), account_id, **serializer.validated_data)
+        classes = DjangoAccountClassRepository(company_id_from(request))
+        account = _run(UpdateAccount(accounts, mappings, entries, classes), account_id, **serializer.validated_data)
         return Response(serialize_account(account))
 
 
@@ -164,6 +173,28 @@ def _coverage_use_case(request, use_case_class):
     company_id = company_id_from(request)
     return use_case_class(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
                           timezone.localdate(), module_gate.is_enabled(company_id, 'accounting'))
+
+
+class AccountClassListView(_ConfigView):
+    def get(self, request):
+        repository = DjangoAccountClassRepository(company_id_from(request))
+        return Response([serialize_account_class(v) for v in _run(ListAccountClasses(repository))])
+
+
+class _AccountClassToggleView(_ConfigView):
+    enabled = True
+
+    def post(self, request, code):
+        repository = DjangoAccountClassRepository(company_id_from(request))
+        return Response(serialize_account_class(_run(SetAccountClassEnabled(repository, self.enabled), code)))
+
+
+class AccountClassEnableView(_AccountClassToggleView):
+    enabled = True
+
+
+class AccountClassDisableView(_AccountClassToggleView):
+    enabled = False
 
 
 class SettingsView(_ConfigView):

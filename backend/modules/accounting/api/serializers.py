@@ -17,6 +17,7 @@ class AccountInputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
     currency = serializers.CharField(max_length=3)
     kind = serializers.CharField(max_length=10)  # obligatorio al crear; el dominio valida el valor
+    account_class = serializers.CharField(max_length=10, required=False, allow_null=True)
     opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
@@ -24,6 +25,7 @@ class AccountUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False, required=False)
     currency = serializers.CharField(max_length=3, required=False)
     kind = serializers.CharField(max_length=10, required=False)
+    account_class = serializers.CharField(max_length=10, required=False, allow_null=True)
     opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
@@ -77,7 +79,8 @@ class MethodInputSerializer(serializers.Serializer):
 
 def serialize_account(account) -> dict:
     return {'id': str(account.id), 'name': account.name, 'currency': account.currency, 'kind': account.kind,
-            'opening_balance': str(account.opening_balance), 'is_active': account.is_active,
+            'account_class': account.account_class, 'opening_balance': str(account.opening_balance),
+            'is_active': account.is_active,
             'created_at': account.created_at, 'updated_at': account.updated_at}
 
 
@@ -168,3 +171,7 @@ class SettingsUpdateSerializer(serializers.Serializer):
 def serialize_settings(view) -> dict:
     return {'cutoff_date': view.cutoff_date, 'enabled_at': view.enabled_at, 'locked': view.locked,
             'gaps': serialize_gaps(view.gaps)}
+
+
+def serialize_account_class(view) -> dict:
+    return {'code': view.code, 'enabled': view.enabled}

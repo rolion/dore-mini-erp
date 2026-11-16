@@ -14,6 +14,7 @@ from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
 
 from .models import (
+    AccountClassSettingModel,
     AccountModel,
     ClassificationModel,
     CoveragePeriodModel,
@@ -28,7 +29,7 @@ DUPLICATE_NAME = 'Ya existe una cuenta con ese nombre.'
 def _account(model: AccountModel) -> Account:
     return Account(id=model.id, name=model.name, currency=model.currency, is_active=model.is_active,
                    created_at=model.created_at, updated_at=model.updated_at, kind=model.kind,
-                   opening_balance=model.opening_balance)
+                   opening_balance=model.opening_balance, account_class=model.account_class)
 
 
 class DjangoAccountRepository:
@@ -66,10 +67,30 @@ class DjangoAccountRepository:
                 AccountModel.objects.update_or_create(
                     id=account.id, company_id=self.company_id,
                     defaults={'name': account.name, 'currency': account.currency, 'is_active': account.is_active,
-                              'kind': account.kind, 'opening_balance': account.opening_balance})
+                              'kind': account.kind, 'opening_balance': account.opening_balance,
+                              'account_class': account.account_class})
         except IntegrityError:  # carrera con otra petición: la restricción única manda
             raise AccountValidationError({'name': [DUPLICATE_NAME]}) from None
         return _account(self._accounts().get(pk=account.id))
+
+
+class DjangoAccountClassRepository:
+    """Estado de las seis clasificaciones contables de una empresa (sin fila = habilitada)."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def disabled(self) -> frozenset[str]:
+        rows = AccountClassSettingModel.objects.filter(company_id=self.company_id, is_enabled=False)
+        return frozenset(rows.values_list('code', flat=True))
+
+    def set_enabled(self, code: str, enabled: bool) -> None:
+        try:
+            with transaction.atomic():
+                AccountClassSettingModel.objects.update_or_create(
+                    company_id=self.company_id, code=code, defaults={'is_enabled': enabled})
+        except IntegrityError:  # carrera al crear la fila: la restricción única manda; se actualiza la existente
+            AccountClassSettingModel.objects.filter(company_id=self.company_id, code=code).update(is_enabled=enabled)
 
 
 DUPLICATE_CLASSIFICATION = 'Ya existe una clasificación con ese nombre y dirección.'
