@@ -121,7 +121,8 @@ class CreateTests(ApiBase):
         self.create(self.client_a, 'Caja', '777')
         repository = DjangoAccountRepository(self.company_a.id)
         racing = Account.create('Banco', 'BOB', code='777')
-        with mock.patch.object(DjangoAccountRepository, '_conflicts', side_effect=[{}, {'code': ['Ya existe una cuenta con ese código.']}]):
+        duplicate = {'code': ['Ya existe una cuenta con ese código.']}
+        with mock.patch.object(DjangoAccountRepository, '_conflicts', side_effect=[{}, duplicate]):
             with self.assertRaises(AccountValidationError) as raised:
                 repository.save(racing)
         self.assertEqual(raised.exception.errors, {'code': ['Ya existe una cuenta con ese código.']})
@@ -188,7 +189,8 @@ class HasEntriesTests(ApiBase):
         flags = {a['id']: a['has_entries'] for a in self.client_a.get(ACCOUNTS).data}
         self.assertEqual(flags, {with_entries['id']: True, free['id']: False})
         self.assertTrue(self.client_a.get(f'{ACCOUNTS}{with_entries["id"]}/').data['has_entries'])
-        self.assertTrue(self.client_a.patch(f'{ACCOUNTS}{with_entries["id"]}/', {'name': 'Caja 2'}, format='json').data['has_entries'])
+        renamed = self.client_a.patch(f'{ACCOUNTS}{with_entries["id"]}/', {'name': 'Caja 2'}, format='json')
+        self.assertTrue(renamed.data['has_entries'])
         self.assertTrue(self.client_a.post(f'{ACCOUNTS}{with_entries["id"]}/deactivate/').data['has_entries'])
         self.assertFalse(self.client_a.get(f'{ACCOUNTS}{free["id"]}/').data['has_entries'])
 

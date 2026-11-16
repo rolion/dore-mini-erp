@@ -102,11 +102,6 @@ export class AccountDialogComponent {
     return this.form.controls.accountClass.value === 'ASSET';
   }
 
-  /** La cuenta ya tiene asientos: sus campos bloqueados se explican en la ayuda del formulario. */
-  get locked(): boolean {
-    return this.account?.hasEntries === true;
-  }
-
   get isEdit(): boolean {
     return this.account !== null;
   }
@@ -120,9 +115,12 @@ export class AccountDialogComponent {
 
   edit(account: Account): void {
     this.account = account;
-    // Con asientos, la clasificación y la marca de correctora no cambian (el servidor también lo rechaza).
+    // Con asientos, la clasificación ya asignada y la marca de correctora no cambian (el servidor también lo rechaza).
+    // Una cuenta anterior con asientos y sin clasificación sí puede completarla: el servidor lo permite.
     if (account.hasEntries) {
-      this.form.controls.accountClass.disable();
+      if (account.accountClass) {
+        this.form.controls.accountClass.disable();
+      }
       this.form.controls.isContra.disable();
     }
     this.form.setValue({

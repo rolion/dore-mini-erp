@@ -85,7 +85,6 @@ describe('AccountDialogComponent', () => {
     const withEntries: Account = { ...saved, isContra: true, hasEntries: true };
     fixture.componentInstance.edit(withEntries);
     fixture.detectChanges();
-    expect(fixture.componentInstance.locked).toBeTrue();
     expect(fixture.componentInstance.form.controls.accountClass.disabled).toBeTrue();
     expect(fixture.componentInstance.form.controls.isContra.disabled).toBeTrue();
     expect(fixture.nativeElement.querySelector('#account-class').disabled).toBeTrue();
@@ -97,10 +96,22 @@ describe('AccountDialogComponent', () => {
     expect([body.accountClass, body.isContra, body.name]).toEqual(['ASSET', true, 'Caja chica']);
   });
 
+  it('lets a legacy account with entries but no classification complete it, keeping the contra flag locked (REV-02)', () => {
+    const fixture = create();
+    const legacy: Account = { id: 'a1', name: 'Vieja', code: null, currency: 'BOB', kind: 'BANK', accountClass: null, openingBalance: '0.00', isActive: true, hasEntries: true };
+    fixture.componentInstance.edit(legacy);
+    expect(fixture.componentInstance.form.controls.accountClass.enabled).toBeTrue();
+    expect(fixture.componentInstance.form.controls.isContra.disabled).toBeTrue();
+    api.updateAccount.and.returnValue(of({ ...legacy, code: '111002', accountClass: 'ASSET' }));
+    fixture.componentInstance.form.patchValue({ code: '111002', accountClass: 'ASSET' });
+    fixture.componentInstance.onSubmit();
+    expect(api.updateAccount).toHaveBeenCalled();
+    expect(api.updateAccount.calls.mostRecent().args[1].accountClass).toBe('ASSET');
+  });
+
   it('keeps the classification and the contra flag editable when the account has no entries (REV-02)', () => {
     const fixture = create();
     fixture.componentInstance.edit({ ...saved, hasEntries: false });
-    expect(fixture.componentInstance.locked).toBeFalse();
     expect(fixture.componentInstance.form.controls.accountClass.enabled).toBeTrue();
     expect(fixture.componentInstance.form.controls.isContra.enabled).toBeTrue();
   });
