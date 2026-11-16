@@ -2504,6 +2504,36 @@
     "COL_IMPUTACIONES": "Imputaciones"
   },
   "ACCOUNTING": {
+    "FISCAL_PERIODS": {
+      "TAB": "Períodos fiscales",
+      "TITULO": "Períodos fiscales",
+      "DESCRIPCION": "Rangos de fechas en los que se pueden registrar asientos. Un período cerrado no admite asientos nuevos.",
+      "NUEVO_PERIODO": "Nuevo período",
+      "CREAR_PERIODO": "Crear período",
+      "NOMBRE_OBLIGATORIO": "El nombre es obligatorio.",
+      "NOMBRE_LARGO": "El nombre no puede superar {{n}} caracteres.",
+      "EDITAR_PERIODO": "Editar período",
+      "SIN_PERIODOS": "Aún no hay períodos fiscales. Sin un período abierto no se podrán registrar asientos.",
+      "INICIO": "Inicio",
+      "FIN": "Fin",
+      "ABIERTO": "Abierto",
+      "CERRADO": "Cerrado",
+      "CERRAR": "Cerrar período",
+      "REABRIR": "Reabrir período",
+      "EJEMPLO": "Ej.: Año 2026",
+      "FECHA_OBLIGATORIA": "La fecha es obligatoria.",
+      "FIN_ANTERIOR": "La fecha de fin no puede ser anterior a la de inicio.",
+      "CREADO": "Período creado",
+      "ACTUALIZADO": "Período actualizado",
+      "CERRADO_OK": "Período cerrado",
+      "REABIERTO_OK": "Período reabierto",
+      "CERRAR_CONFIRMACION": "¿Cerrar el período «{{name}}»?",
+      "CERRAR_EFECTO": "No se podrán registrar asientos con fecha dentro del período ni modificar sus datos. Cerrar no genera asientos de cierre de resultados. Podrás reabrirlo.",
+      "REABRIR_CONFIRMACION": "¿Reabrir el período «{{name}}»?",
+      "REABRIR_EFECTO": "Volverá a admitir asientos y cambios en sus datos.",
+      "CERRADO_POR": "Cerrado por {{user}}",
+      "ERROR_SUPERPOSICION": "El rango se superpone con otro período de la empresa."
+    },
     "ACCOUNTING_SETTINGS": {
       "CUENTAS_Y_METODOS_DE_PAGO": "Cuentas y Métodos de pago",
       "CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO": "Contabilidad › Configuración › Cuentas y Métodos de pago"

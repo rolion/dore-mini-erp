@@ -74,6 +74,13 @@ class DjangoRegularizationLedger:
         return result.created
 
 
+class NoJournalPeriodUsage:
+    """Todavía no hay asientos (motor CONT-02): ningún asiento queda fuera de un período. CONT-02 lo reemplaza."""
+
+    def entries_outside(self, company_id: UUID, period_id: UUID, start_date: date, end_date: date) -> int:
+        return 0
+
+
 class DjangoTransitionReader:
     """Lectura del libro para el diagnóstico de transición: solo `SELECT`, siempre filtrado por `company_id`."""
 

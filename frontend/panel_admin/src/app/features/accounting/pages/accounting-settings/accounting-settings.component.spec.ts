@@ -5,6 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 import { of } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { AccountingApiService } from '../../services/accounting-api.service';
+import { FiscalPeriodsApiService } from '../../services/fiscal-periods-api.service';
 import { ExpenseConfigApiService } from '../../services/expense-config-api.service';
 import { AccountingSettingsComponent } from './accounting-settings.component';
 
@@ -19,6 +20,7 @@ describe('AccountingSettingsComponent', () => {
     TestBed.configureTestingModule({
       imports: [AccountingSettingsComponent],
       providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
+        { provide: FiscalPeriodsApiService, useValue: jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', { list: of([]) }) },
         { provide: NgbModal, useValue: {} }, { provide: ToastrService, useValue: {} }],
     });
     const fixture = TestBed.createComponent(AccountingSettingsComponent);
@@ -40,6 +42,7 @@ describe('AccountingSettingsComponent', () => {
       imports: [AccountingSettingsComponent],
       providers: [...provideTestTranslations(), provideRouter([]), { provide: AccountingApiService, useValue: api },
         { provide: ExpenseConfigApiService, useValue: jasmine.createSpyObj<ExpenseConfigApiService>('ExpenseConfigApiService', { listCategories: of([]), getPaymentClassification: of(null) }) },
+        { provide: FiscalPeriodsApiService, useValue: jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', { list: of([]) }) },
         { provide: NgbModal, useValue: {} }, { provide: ToastrService, useValue: {} }],
     });
     const fixture = TestBed.createComponent(AccountingSettingsComponent);
@@ -63,6 +66,9 @@ describe('AccountingSettingsComponent', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('cutoff');
     (fixture.nativeElement.querySelector('#tab-cutoff') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('periods');
+    (fixture.nativeElement.querySelector('#tab-periods') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     fixture.detectChanges();
     expect(fixture.componentInstance.tab).toBe('accounts');
   });

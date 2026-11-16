@@ -48,6 +48,11 @@
                 [attr.aria-selected]="tab === 'cutoff'" [attr.tabindex]="tab === 'cutoff' ? 0 : -1" aria-controls="panel-cutoff"
                 (click)="select('cutoff')">{{ 'ACCOUNTING.CUTOFF.CORTE_Y_COBERTURA' | translate }}</button>
             </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'periods'" role="tab" id="tab-periods"
+                [attr.aria-selected]="tab === 'periods'" [attr.tabindex]="tab === 'periods' ? 0 : -1" aria-controls="panel-periods"
+                (click)="select('periods')">{{ 'ACCOUNTING.FISCAL_PERIODS.TAB' | translate }}</button>
+            </li>
           </ul>
           @if (tab === 'accounts') {
           <div id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts">
@@ -69,9 +74,13 @@
           <div id="panel-expenses" role="tabpanel" aria-labelledby="tab-expenses">
             <app-expense-config-tab />
           </div>
-          } @else {
+          } @else if (tab === 'cutoff') {
           <div id="panel-cutoff" role="tabpanel" aria-labelledby="tab-cutoff">
             <app-cutoff-tab />
+          </div>
+          } @else {
+          <div id="panel-periods" role="tabpanel" aria-labelledby="tab-periods">
+            <app-periods-tab />
           </div>
           }
         </div>

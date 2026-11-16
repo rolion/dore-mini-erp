@@ -181,3 +181,22 @@ def serialize_settings(view) -> dict:
 
 def serialize_account_class(view) -> dict:
     return {'code': view.code, 'enabled': view.enabled}
+
+
+class FiscalPeriodInputSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+
+
+class FiscalPeriodUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False, required=False)
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+
+
+def serialize_fiscal_period(period) -> dict:
+    return {'id': str(period.id), 'name': period.name, 'start_date': period.start_date, 'end_date': period.end_date,
+            'status': period.status, 'closed_at': period.closed_at, 'closed_by_name': period.closed_by_name,
+            'reopened_at': period.reopened_at, 'reopened_by_name': period.reopened_by_name,
+            'created_at': period.created_at, 'updated_at': period.updated_at}

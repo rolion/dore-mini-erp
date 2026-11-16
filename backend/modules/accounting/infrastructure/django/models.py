@@ -165,3 +165,31 @@ class EntryModel(models.Model):
             models.Index(fields=['company_id', 'payment_date'], name='accounting_entry_date'),
             models.Index(fields=['company_id', 'account'], name='accounting_entry_account'),
         ]
+
+
+class FiscalPeriodModel(models.Model):
+    """Período fiscal de una empresa: rango inclusivo de fechas con estado abierto/cerrado."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    name = models.CharField(max_length=80)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    status = models.CharField(max_length=6, default='OPEN')
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by_name = models.CharField(max_length=150, blank=True, default='')
+    reopened_at = models.DateTimeField(null=True, blank=True)
+    reopened_by_name = models.CharField(max_length=150, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'accounting_fiscal_period'
+        ordering = ['-start_date', 'id']
+        constraints = [
+            models.CheckConstraint(condition=Q(start_date__lte=models.F('end_date')),
+                                   name='accounting_fiscal_period_dates'),
+            models.CheckConstraint(condition=Q(status__in=['OPEN', 'CLOSED']), name='accounting_fiscal_period_status'),
+            models.UniqueConstraint(Lower('name'), 'company_id', name='accounting_fiscal_period_name_ci_uniq'),
+        ]
+        indexes = [models.Index(fields=['company_id', 'start_date'], name='accounting_fperiod_start')]

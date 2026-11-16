@@ -19,19 +19,28 @@ from modules.accounting.domain.entry import (
     EntryNotFound,
     EntryValidationError,
 )
+from modules.accounting.domain.fiscal_period import (
+    DateOutsideFiscalPeriod,
+    FiscalPeriodClosed,
+    FiscalPeriodContractError,
+)
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountClassRepository,
     DjangoAccountRepository,
     DjangoClassificationRepository,
     DjangoCoverageRepository,
     DjangoEntryRepository,
+    DjangoFiscalPeriodRepository,
     DjangoMethodMappingRepository,
 )
 from shared import module_gate
 
-__all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef', 'EntryConflict',
-           'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError', 'RecordedEntry', 'missing_method_labels', 'record_entry',
-           'coverage_status', 'describe_classifications', 'resolve_account', 'validate_account_class', 'validate_classification', 'validate_money_account']
+__all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef',
+           'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef',
+           'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError', 'PeriodRef', 'RecordedEntry',
+           'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications', 'lock_open_period',
+           'period_for', 'resolve_account', 'validate_account_class', 'validate_classification',
+           'validate_money_account']
 
 
 @dataclass(frozen=True)
@@ -253,3 +262,42 @@ def account_balances(company_id: UUID, account_ids=None) -> dict[UUID, Decimal]:
     accounts = [a for a in DjangoAccountRepository(company_id).list() if wanted is None or a.id in wanted]
     net = DjangoEntryRepository(company_id).net_by_account([a.id for a in accounts])
     return {a.id: a.opening_balance + net.get(a.id, Decimal('0.00')) for a in accounts}
+
+
+@dataclass(frozen=True)
+class PeriodRef:
+    id: UUID
+    name: str
+    start_date: date
+    end_date: date
+    is_open: bool
+
+
+def _period_ref(period) -> PeriodRef:
+    return PeriodRef(period.id, period.name, period.start_date, period.end_date, period.is_open)
+
+
+def period_for(company_id: UUID, accounting_date: date) -> PeriodRef | None:
+    """El período fiscal de la empresa que contiene la fecha (abierto o cerrado), sin bloquear; `None` si no hay."""
+    period = DjangoFiscalPeriodRepository(company_id).find_containing(accounting_date)
+    return _period_ref(period) if period else None
+
+
+def lock_open_period(company_id: UUID, accounting_date: date) -> PeriodRef:
+    """Exige que la fecha contable esté en un período abierto y lo bloquea hasta el fin de la transacción del llamante.
+
+    Todo asiento (manual, automático o reversión, esta con su fecha explícita) debe llamarla antes de insertarse, dentro
+    de su transacción: cerrar el período espera a que esa transacción termine, y si el cierre gana, el asiento ve el
+    período cerrado. Lanza `FiscalPeriodContractError` fuera de una transacción, `DateOutsideFiscalPeriod` sin período
+    y `FiscalPeriodClosed` si el período está cerrado.
+    """
+    if not connection.in_atomic_block:
+        raise FiscalPeriodContractError('lock_open_period debe ejecutarse dentro de la transacción del asiento.')
+    if not isinstance(accounting_date, date) or isinstance(accounting_date, datetime):
+        raise FiscalPeriodContractError('La fecha contable debe ser una fecha (date).')
+    period = DjangoFiscalPeriodRepository(company_id).find_containing_for_update(accounting_date)
+    if period is None:
+        raise DateOutsideFiscalPeriod(accounting_date)
+    if not period.is_open:
+        raise FiscalPeriodClosed(period.name, accounting_date)
+    return _period_ref(period)

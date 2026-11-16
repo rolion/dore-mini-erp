@@ -152,6 +152,8 @@ const FIELD_MAP: Record<string, string> = {
   code: 'code',
   cutoff_date: 'cutoffDate',
   account_id: 'accountId',
+  start_date: 'startDate',
+  end_date: 'endDate',
 };
 
 function toFieldErrors(body: unknown): FieldErrors {

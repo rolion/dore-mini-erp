@@ -2504,6 +2504,36 @@
     "COL_IMPUTACIONES": "Imputações"
   },
   "ACCOUNTING": {
+    "FISCAL_PERIODS": {
+      "TAB": "Períodos fiscais",
+      "TITULO": "Períodos fiscais",
+      "DESCRIPCION": "Intervalos de datas em que se podem registrar lançamentos. Um período fechado não aceita novos lançamentos.",
+      "NUEVO_PERIODO": "Novo período",
+      "CREAR_PERIODO": "Criar período",
+      "NOMBRE_OBLIGATORIO": "O nome é obrigatório.",
+      "NOMBRE_LARGO": "O nome não pode ultrapassar {{n}} caracteres.",
+      "EDITAR_PERIODO": "Editar período",
+      "SIN_PERIODOS": "Ainda não há períodos fiscais. Sem um período aberto não será possível registrar lançamentos.",
+      "INICIO": "Início",
+      "FIN": "Fim",
+      "ABIERTO": "Aberto",
+      "CERRADO": "Fechado",
+      "CERRAR": "Fechar período",
+      "REABRIR": "Reabrir período",
+      "EJEMPLO": "Ex.: Ano 2026",
+      "FECHA_OBLIGATORIA": "A data é obrigatória.",
+      "FIN_ANTERIOR": "A data de fim não pode ser anterior à de início.",
+      "CREADO": "Período criado",
+      "ACTUALIZADO": "Período atualizado",
+      "CERRADO_OK": "Período fechado",
+      "REABIERTO_OK": "Período reaberto",
+      "CERRAR_CONFIRMACION": "Fechar o período «{{name}}»?",
+      "CERRAR_EFECTO": "Não será possível registrar lançamentos com data dentro do período nem alterar seus dados. Fechar não gera lançamentos de encerramento de resultados. Você poderá reabri-lo.",
+      "REABRIR_CONFIRMACION": "Reabrir o período «{{name}}»?",
+      "REABRIR_EFECTO": "Voltará a aceitar lançamentos e alterações nos seus dados.",
+      "CERRADO_POR": "Fechado por {{user}}",
+      "ERROR_SUPERPOSICION": "O intervalo se sobrepõe a outro período da empresa."
+    },
     "ACCOUNTING_SETTINGS": {
       "CUENTAS_Y_METODOS_DE_PAGO": "Contas e Métodos de pagamento",
       "CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO": "Contabilidade › Configuração › Contas e Métodos de pagamento"
