@@ -1,0 +1,87 @@
+# TASK-periodos-fiscales-por-empresa: Crear y cerrar períodos fiscales por empresa (CONT-10)
+
+**Etapa actual:** ENGINEERING
+**Veredicto de complejidad:** NEEDS_ARCHITECTURE
+**Diseño requerido:** SI
+**Rama:** task/TASK-periodos-fiscales-por-empresa
+**Pull Request:** _sin abrir todavía_
+**Fuente:** https://trello.com/c/tW9uE3gz/13-cont-10-crear-y-cerrar-per%C3%ADodos-fiscales-por-empresa
+
+## Historial de transiciones
+| Fecha (UTC) | Transición | Motivo | Origen |
+|---|---|---|---|
+| 2026-11-16 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
+| 2026-11-16 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI; decisiones de negocio resueltas por la persona (reapertura, cobros actuales) | delivery-start |
+| 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+
+## Investigación
+
+### Requerimiento
+Tarjeta Trello CONT-10 (insumo, no Specification aprobada). Objetivo: administrar períodos fiscales desde Configuración.
+- Nombre, inicio, fin y estado abierto/cerrado; inicio ≤ fin y períodos sin superposición por empresa.
+- Todo asiento nuevo debe tener fecha en período abierto; misma regla para automáticos y reversiones.
+- Bloquear cambios de límites que dejen asientos fuera de su período. Cerrar no genera asientos de cierre de resultados.
+- Una reversión de un asiento de período cerrado se registra en un período abierto con fecha explícita; no altera el original.
+- Serializar cierre y contabilización para impedir inserciones simultáneas en un período que acaba de cerrar.
+- Pruebas de aceptación de la tarjeta: (1) rechazar fechas fuera de período, períodos solapados y registros en período cerrado; (2) mismos rangos permitidos en empresas distintas; (3) cierre concurrente con contabilización no deja un asiento insertado tras el cierre.
+- Dependencia: CONT-07 (hecha). Reglas transversales: API y UI, aislamiento por empresa, permisos existentes, decimales/moneda existentes.
+
+**Decisiones de la persona (2026-11-16):**
+1. Un período cerrado **puede reabrirse**, solo por administrador (la API de negocio ya es solo admin; ver Restricciones).
+2. Los cobros actuales (`record_entry`: Ventas/Servicios) **no** exigen período: la regla rige para los asientos del motor CONT-02.
+
+### Hechos encontrados
+- Contabilidad hoy es un libro de **entradas de una sola cuenta** (no hay asientos, líneas ni reversión): `backend/modules/accounting/domain/entry.py:59` (`Entry`, con `payment_date`), `infrastructure/django/models.py:43` (`EntryModel`, inmutable). El motor de partida doble es CONT-02 (por hacer), que depende de períodos: su cabecera lleva «período» y valida «período abierto».
+- No existe ningún concepto de período fiscal en el código (búsqueda de `período fiscal|FiscalPeriod|journal`: sin resultados fuera de iconos).
+- Fachada pública `backend/modules/accounting/services.py:88` (`record_entry`) exige transacción abierta (`connection.in_atomic_block`) y lanza `EntryContractError`; patrón a seguir para el contrato de períodos.
+- Aislamiento por empresa: repositorios `Django…Repository(company_id)` (`infrastructure/django/repositories.py:23`); bloqueo por empresa con `select_for_update` sobre cuentas (`repositories.py:87`) y bloqueo advisory por empresa con namespace en `infrastructure/adapters.py:49`.
+- Vistas de configuración: `_ConfigView` con `required_modules = ()` (`api/views.py:101`) para configurar sin tener Contabilidad habilitada; errores de negocio como 409 con `code` (`api/views.py:61`). Rutas en `api/urls.py:16`.
+- Permiso por defecto de la API: `CompanyModulePermission` → `CompanyAdminPermission` (rol `ADMIN`, empresa activa): `config/permissions.py`, `modules/accounts/api/permissions.py:11`. Un `createsuperuser` sin empresa recibe 403 en la API de negocio.
+- Frontend: configuración de Contabilidad en `features/accounting/pages/accounting-settings` con pestañas Cuentas / Métodos (`accounting-settings.component.ts:7`), ruta `accounting/settings` (`app.routes.ts:105`); servicios API en `features/accounting/services/`.
+- Migraciones accounting: 0001, 0002, 0003 (`backend/modules/accounting/migrations/`). Las tarjetas CONT-08/09 (clasificaciones, cuentas con código) viven en otras ramas y pueden añadir migraciones: la numeración de la nueva puede requerir ajuste al integrar.
+- Pruebas de concurrencia reutilizables: `tests/test_concurrency.py::_run_together`, `tests/test_entry_concurrency.py`.
+
+### Hipótesis / supuestos no confirmados
+- «Asientos fuera de su período» se evalúa por **fecha contable**: un cambio de límites es inválido si algún asiento hoy dentro del período quedaría fuera del nuevo rango. Como aún no hay asientos, se define un puerto de uso y CONT-02 aporta el adaptador real.
+- Un período cerrado no se edita (ni nombre ni límites); hay que reabrirlo. No se pide eliminar períodos; no se incluye.
+
+### Módulos y dependencias relacionadas
+`accounting` (nuevo agregado `FiscalPeriod`). Consumidores futuros: CONT-02 (motor de asientos, vía `accounting.services`), CONT-11 (menú Configuración → Períodos fiscales), CONT-12. Sin dependencias nuevas entre módulos.
+
+### Implementaciones similares existentes
+Cuentas (`Account`, `CreateAccount`/`UpdateAccount`, `AccountConflict`) y su pestaña/diálogo (`accounts-tab`, `account-dialog`, `deactivate-dialog`).
+
+### Comportamiento actual
+No hay períodos; ninguna fecha se valida contra períodos.
+
+### Restricciones
+`CLAUDE.md`: aislamiento por `company_id`, dominio sin Django, módulos sin importarse infraestructura, nunca editar migraciones aplicadas, i18n es/en/pt, sin dependencias nuevas sin aviso.
+
+### Riesgos identificados
+- Carrera cierre/contabilización y creación simultánea de períodos solapados (mitigado en el ADR).
+- Colisión de numeración de migraciones con otras ramas de accounting.
+- Que el puerto de «uso del período» quede sin adaptador real hasta CONT-02 (declarado en Out of scope).
+
+### Veredicto de complejidad
+**NEEDS_ARCHITECTURE** — nueva tabla y migración, contrato de concurrencia que consumirá otro módulo-épica (CONT-02) y serialización con bloqueos en base de datos.
+
+### Diseño requerido
+**SI** — pestaña nueva con listado, diálogos y acciones de cierre/reapertura.
+
+## Diseño
+`docs/design/DDR-periodos-fiscales-por-empresa-pestana-periodos-fiscales.md`
+
+## Arquitectura
+`docs/adr/ADR-periodos-fiscales-por-empresa-agregado-y-bloqueo.md`
+
+## Plan
+`docs/plans/PLAN-2026-11-16-periodos-fiscales-por-empresa.md` (v1, COMPLETO) · Specification readiness: READY
+
+## Implementación
+_Pendiente_
+
+## Review
+_Pendiente_
+
+## Publicación
+_Pendiente_
