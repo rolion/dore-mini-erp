@@ -1,6 +1,6 @@
 # TASK-configurar-seis-clasificaciones-contables: Configurar las seis clasificaciones contables (CONT-08)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-seis-clasificaciones-contables (base: `accounting`)
@@ -16,6 +16,7 @@
 | 2026-11-16 | ARCHITECTURE → PLANNING | DDR y ADR escritos | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium y REV-02 Low abiertos, no bloqueantes) | delivery-publish |
 
 ## Investigación
 
@@ -93,7 +94,12 @@ Catálogo fijo de seis clasificaciones contables por empresa con habilitar/desha
 **Deuda técnica:** dos pestañas con nombre parecido hasta CONT-11 (mitigado con texto de ayuda); `account_class` sigue opcional hasta CONT-09.
 
 ## Review
-_Pendiente_
+**Resultado: PASS** (subagente aislado, solo desde artefactos y diff `origin/accounting...HEAD`, 30 archivos, todos dentro del plan).
+- Backend: `modules.accounting` + `test_boundaries` 195 OK; `makemigrations --check` sin cambios; bandit sin hallazgos; flake8 solo E501 en líneas preexistentes y en la migración autogenerada; mypy sin errores nuevos.
+- Frontend: `ng test` 1463 OK; `ng lint` limpio; `i18n:check` 0 faltantes (es/en/pt con 2354 claves idénticas); `ng build` correcto; `npm audit`: 2 moderadas preexistentes en `hono`.
+- AC-01..AC-08, INV-01..04, API-01..03 y UI-01..03 con verificación real; DDD y migración aditiva conformes; sin secretos ni artefactos en el diff.
+- Hallazgos abiertos no bloqueantes: [REV-01](../reviews/REV-2026-11-16-configurar-seis-clasificaciones-contables-01.md) (Medium, DESIGN: no se puede volver a «sin clasificación») y [REV-02](../reviews/REV-2026-11-16-configurar-seis-clasificaciones-contables-02.md) (Low, AC-06 sin prueba con rol no administrador).
+- No verificado: revisión visual en navegador (móvil/escritorio, claro/oscuro); migración sobre datos reales; concurrencia bajo carga.
 
 ## Publicación
-_Pendiente_
+PR #79 (base `accounting`) listo para aprobación humana; no se mergea. Cambio sensible: contrato de datos de Contabilidad (ADR `catalogo-fijo-y-validacion`), con una migración aditiva `0007`. Decisión pendiente para CONT-09: REV-01.
