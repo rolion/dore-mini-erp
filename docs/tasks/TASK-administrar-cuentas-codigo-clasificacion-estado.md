@@ -18,6 +18,7 @@
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos, no bloqueantes) | delivery-publish |
 | 2026-11-16 | PUBLISH (sin cambio) | REV-01 corregido; re-revisión PASS; REV-01 cerrado | delivery-build / delivery-publish |
+| 2026-11-16 | PUBLISH (sin cambio) | Quality Gate repetido sobre el estado actual con el código numérico (PLAN v3): PASS | delivery-publish |
 
 ## Investigación
 
@@ -81,7 +82,7 @@ Las cuentas son destinos de cobros y pagos: nombre, moneda, tipo Caja/Banco/Bill
 `docs/adr/ADR-administrar-cuentas-codigo-clasificacion-estado-modelo-de-cuenta.md`.
 
 ## Plan
-`docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md` (v1) · Modo: COMPLETO · Specification readiness: READY.
+`docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md` (v3) · Modo: COMPLETO · Specification readiness: READY.
 
 ## Implementación
 Cuentas del plan con código único por empresa, clasificación obligatoria, tipo de dinero opcional (solo Activo) y marca de cuenta correctora.
@@ -112,6 +113,8 @@ Cuentas del plan con código único por empresa, clasificación obligatoria, tip
 - Hallazgos abiertos, no bloqueantes: [REV-01](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01.md) (Medium, IMPLEMENTATION: el tipo de dinero no se puede quitar y bloquea reclasificar cuentas anteriores sin mensaje visible), [REV-02](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-02.md) (Low, DESIGN: desviación declarada de UI-02) y [REV-03](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-03.md) (Low: clave i18n sin uso).
 - No verificado: revisión visual en navegador; carga con datos reales de producción; interacción con CONT-02, CONT-04 y CONT-12.
 - **Re-revisión tras la corrección de REV-01** (commit `6b47154`, subagente aislado): PASS. Backend suite completa 1795 OK; frontend 1471 OK, lint, i18n y build limpios. **REV-01 cerrado.** Quedan abiertos REV-02 y REV-03 (Low). El PLAN pasó a v2 (API-04) con aprobación del usuario.
+
+- **Quality Gate repetido sobre el estado actual** (PLAN v3, código numérico, REV-01 corregido): **PASS**. Backend suite completa 1796 OK; `makemigrations --check` sin cambios; bandit sin hallazgos; mypy sin errores nuevos en los archivos modificados. Frontend `ng test` 1471 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` correcto; `npm audit`: 2 moderadas sin relación con el diff. Todos los AC, INV y API-01..04 con verificación real; el diff no contiene la guía ni el script de limpieza; ADR, DDR, PLAN y textos i18n coherentes con el código numérico. Hallazgos nuevos, todos Low: [REV-04](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-04.md) (la prueba de carrera no ejerce `IntegrityError`) y [REV-05](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-05.md) (longitud del código sin recortar en el cliente). REV-02 y REV-03 siguen abiertos. No verificado: revisión visual en navegador, carga con datos reales de producción, interacción con CONT-02, CONT-04 y CONT-12.
 
 ## Publicación
 PR #80 (base `task/TASK-configurar-seis-clasificaciones-contables`, apilado sobre el #79) listo para aprobación humana; no se mergea. Al mergear el #79 a `accounting`, hay que cambiar la base de este PR a `accounting`. Cambio sensible: contrato de datos de Contabilidad (ADR `modelo-de-cuenta`) con migración aditiva `0008`. REV-01 corregido y cerrado; quedan REV-02 y REV-03 (Low).
