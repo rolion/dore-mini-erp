@@ -1,6 +1,6 @@
 # TASK-motor-central-asientos-partida-doble: Motor central de asientos con partida doble, reversión e idempotencia (CONT-02)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-motor-central-asientos-partida-doble
@@ -14,6 +14,7 @@
 | 2026-11-16 | INVESTIGATION → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño NO (solo backend; UI en CONT-11) | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
+| 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (3 hallazgos Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -90,7 +91,7 @@ Implementado según PLAN v1 (sin cambios de Specification).
 - **Períodos**: `JournalPeriodUsage` reemplaza a `NoJournalPeriodUsage` y se cablea en `api/views.py` (AC-08).
 - **Docs**: nota en `docs/architecture/ddd.md`; aviso de transición en el docstring de `record_entry`.
 
-**Desviaciones:** (1) la CHECK de reversión exige `reverses` ⇒ sin origen y con motivo, y una reversión conserva el `source` de su original (el plan decía «MANUAL ⇒ sin origen; AUTOMATIC ⇒ origen completo» solo para originales). (2) La descripción de la reversión es «Reversión: <original>». (3) La moneda del asiento no se recibe: se deriva de sus cuentas. (4) Un reintento de un evento ya existente se resuelve antes de validar cuentas y períodos (no se revalida).
+**Desviaciones:** (1) la CHECK de reversión exige `reverses` ⇒ sin origen y con motivo, y una reversión conserva el `source` de su original (el plan decía «MANUAL ⇒ sin origen; AUTOMATIC ⇒ origen completo» solo para originales). (2) La descripción de la reversión es «Reversión: <original>». (3) La moneda del asiento no se recibe: se deriva de sus cuentas. (4) La orquestación vive en `services.py` y no en un `application/journal.py` aparte (REV-02): los casos de uso son delgados y reutilizan los puertos de la fachada. (5) No se añadió `test_migration_0010.py` (REV-01): la aplicación y reversión de `0010` se verificó a mano en el Quality Gate. (6) Un reintento de un evento ya existente se resuelve antes de validar cuentas y períodos (no se revalida).
 
 **Corridas propias (no son el Quality Gate):** `test_journal_*` 48 OK (dominio, servicio, adaptador, concurrencia); `makemigrations --check` sin cambios; suite completa 1879 con 3 fallos ajenos al diff (`sales.test_repository` ×2 por orden de filas con marcas de tiempo idénticas y `shared.test_test_runner` por resolución del reloj en Windows; los de ventas pasan aislados) y 1 error de mi prueba de concurrencia, ya corregido.
 
@@ -99,7 +100,13 @@ Implementado según PLAN v1 (sin cambios de Specification).
 **Deuda / pendiente:** API HTTP y UI (CONT-11); migrar llamantes (VEN-01, SRV-01, COM-01/02, INV-01, GAS-01/02); saldos con signo y reportes (CONT-04/05); endurecer inmutabilidad y balance con triggers si se requiere.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-16). Sin hallazgos Critical/High.
+- Backend: pruebas nuevas 44 OK (dominio, servicio, adaptador de períodos, concurrencia); `manage.py test` de accounting, sales, receivables, expenses, purchases, modularity y shared: 1181 con 3 fallos ajenos al diff (reloj de Windows en `shared`, orden por marcas de tiempo idénticas en `modularity.HistoryTests`; `sales.test_repository` falla también aislado por lo mismo, sin comparar con la base). La parte `accounting` sin fallos.
+- `makemigrations --check` sin cambios; `0010` depende solo de `0009`; aplicada y revertida (`migrate accounting 0009` y de nuevo) sobre una base temporal descartada. bandit sin avisos en código nuevo.
+- DDD/aislamiento: dominio sin Django, consultas por `company_id`, sin importar infraestructura entre módulos.
+- Visual: el diff no toca frontend; no se ejecutó navegador ni pruebas de frontend.
+- Hallazgos Low abiertos: REV-2026-11-16-motor-central-asientos-partida-doble-01 (falta `test_migration_0010`), -02 (sin `application/journal.py`), -03 (E741/F401 en código nuevo).
+- Observación sin REV: la comprobación `origin_in_legacy_ledger` no se bloquea frente a un `record_entry` simultáneo (transición, ADR).
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/83 (base `accounting`) listo para aprobación humana (no se mergea). Cambio con migración de base de datos y decisión arquitectónica (ADR `ADR-motor-central-asientos-partida-doble-modelo-y-contrato`): requiere aprobación explícita de una persona.
