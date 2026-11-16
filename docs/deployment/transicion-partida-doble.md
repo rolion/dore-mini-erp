@@ -42,13 +42,14 @@ Base nueva desde el código de `accounting`: `python manage.py migrate` aplica `
 - `origen_no_verificable`: Contabilidad no puede leer Gastos ni Compras (la dependencia es en sentido contrario); sus entradas de egreso quedan pendientes hasta que la Etapa 2 defina el puerto de verificación. Hoy no existen entradas de egreso locales.
 - Apertura: cada `opening_balance > 0` se convertirá en un asiento balanceado en la fecha de corte (cuenta de Activo contra `opening_equity`); pendiente por `sin_corte`, `cuenta_sin_codigo` o `sin_cuenta_patrimonio`.
 
-## Decisiones del dueño (no bloquean la Etapa 1)
-1. Códigos de las cuentas de dinero.
-2. Contrapartida de cobros: ¿Ingresos o, si es anticipo, Pasivo? (el libro no distingue anticipo de pago final).
-3. Contrapartida de gastos y pagos de compras (Gastos o Costos).
-4. Cuenta de Patrimonio para las aperturas.
-5. Fecha de corte de las empresas con entradas y sin corte.
-6. Qué empresas y datos son de prueba (no se borra nada sin esta decisión).
+## Decisiones del dueño
+**Resueltas (2026-11-16):**
+- Todos los datos locales son de prueba: no hay nada que conservar; aun así no se borra nada sin pedido explícito.
+- Las 3 empresas con entradas y sin fecha de corte (19 entradas) **se dejan bloqueadas**: no se fija corte ni se convierten.
+- La contrapartida de cobros y de gastos/compras queda **pendiente**; los movimientos siguen como `pendiente` hasta que se decida.
+- Los códigos de las cuentas de dinero no se definen ahora: se fijan en la Etapa 2 con el esquema de CONT-09.
+
+**Abiertas (Etapa 2):** códigos de las cuentas de dinero; contrapartida de cobros (¿Ingresos o Pasivo si es anticipo?) y de gastos/pagos de compras (¿Gastos o Costos?); cuenta de Patrimonio para las aperturas.
 
 ## Conciliación de la base local (solo lectura, antes de cualquier transformación)
 Base `doredb`, 2026-11-16; `accounting` 0001–0006 aplicadas.

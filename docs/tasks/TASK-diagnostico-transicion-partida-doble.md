@@ -122,4 +122,6 @@ Comando `diagnose_ledger_transition` de solo lectura (AC-01..AC-06, INV-01..INV-
 - Limitación conocida (Low): el diagnóstico sin `--company` solo recorre empresas con datos de Contabilidad; una empresa con pagos y sin datos se consulta con `--company`.
 
 ## Publicación
+Decisiones del dueño (2026-11-16): todos los datos locales son de prueba; las 3 empresas sin corte se dejan bloqueadas; la contrapartida de cobros y de gastos/compras queda pendiente; los códigos de cuenta se fijan en la Etapa 2.
+
 PR #78 (base `accounting`) listo para aprobación humana; no se mergea. Cambio sensible: toca el contrato de datos de la transición contable (ADR `ADR-diagnostico-transicion-partida-doble-estrategia-y-contrato`), aunque esta etapa solo lee datos. La copia `doredb_copia` y el volcado quedan en la máquina local para el ensayo.
