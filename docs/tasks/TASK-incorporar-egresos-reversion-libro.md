@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-incorporar-egresos-reversion-libro (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/77
 **Fuente:** https://trello.com/c/hRlnoPrC
 
 ## Historial de transiciones
