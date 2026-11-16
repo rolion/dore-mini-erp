@@ -50,6 +50,10 @@ class GetAccount:
         return _require(self.accounts, account_id)
 
 
+# `kind` ausente = sin cambio; `kind=None` explícito = quitar el tipo de cuenta de dinero.
+UNSET = object()
+
+
 def _classify(account: Account, account_class: object, account_classes) -> None:
     """Clasifica la cuenta: un valor nuevo debe estar habilitado; repetir el actual no se revalida."""
     code = validate_account_class(account_class)
@@ -93,7 +97,7 @@ class UpdateAccount:
         return bool(self.entries and self.entries.has_entries_for_account(account.id))
 
     def execute(self, account_id: UUID, name: object = None, currency: object = None,
-                kind: object = None, opening_balance: object = None, account_class: object = None,
+                kind: object = UNSET, opening_balance: object = None, account_class: object = None,
                 code: object = None, is_contra: bool | None = None) -> Account:
         self.mappings.lock_company()
         account = _require(self.accounts, account_id)
@@ -109,8 +113,8 @@ class UpdateAccount:
             account.rename(name)
         if code is not None:
             account.change_code(code)
-        if kind is not None:
-            account.change_kind(kind)
+        if kind is not UNSET:
+            account.clear_kind() if kind is None else account.change_kind(kind)
         if account_class is not None:
             previous_class = account.account_class
             _classify(account, account_class, self.account_classes)

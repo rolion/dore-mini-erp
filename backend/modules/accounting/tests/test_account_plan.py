@@ -133,6 +133,8 @@ class UpdateTests(ApiBase):
         self.assertEqual(no.status_code, 400)  # conserva kind → inconsistente
         self.assertIn('kind', no.data)
         self.assertEqual(AccountModel.objects.get(pk=account['id']).account_class, 'ASSET')
+        released = self.client_a.patch(url, {'account_class': 'EXPENSE', 'kind': None}, format='json')  # REV-01
+        self.assertEqual((released.status_code, released.data['account_class'], released.data['kind']), (200, 'EXPENSE', None))
         self.client_a.post('/api/accounting/account-classes/EXPENSE/disable/')
         other = self.create(self.client_a, 'Otra', '102').data
         disabled = self.client_a.patch(f'{ACCOUNTS}{other["id"]}/', {'account_class': 'EXPENSE'}, format='json')
@@ -148,6 +150,25 @@ class UpdateTests(ApiBase):
         self.assertIn('code', dup.data)
         same = self.client_a.patch(url, {'account_class': None, 'code': None}, format='json')
         self.assertEqual((same.status_code, same.data['code'], same.data['account_class']), (200, '102', 'ASSET'))
+
+
+class KindClearingTests(ApiBase):
+    def test_explicit_null_clears_the_money_type_and_absent_keeps_it(self):  # REV-01
+        account = self.create(self.client_a, 'Caja', '101', kind='CASH').data
+        url = f'{ACCOUNTS}{account["id"]}/'
+        self.assertEqual(self.client_a.patch(url, {'name': 'Caja 2'}, format='json').data['kind'], 'CASH')
+        cleared = self.client_a.patch(url, {'kind': None}, format='json')
+        self.assertEqual((cleared.status_code, cleared.data['kind']), (200, None))
+        self.assertIsNone(AccountModel.objects.get(pk=account['id']).kind)
+
+    def test_legacy_money_account_can_be_reclassified_outside_asset(self):
+        legacy = AccountModel.objects.create(company_id=self.company_a.id, name='Vieja', currency='BOB', kind='BANK')
+        url = f'{ACCOUNTS}{legacy.id}/'
+        stuck = self.client_a.patch(url, {'code': 'V1', 'account_class': 'EXPENSE'}, format='json')
+        self.assertEqual(stuck.status_code, 400)
+        self.assertIn('kind', stuck.data)
+        done = self.client_a.patch(url, {'code': 'V1', 'account_class': 'EXPENSE', 'kind': None}, format='json')
+        self.assertEqual((done.status_code, done.data['account_class'], done.data['kind']), (200, 'EXPENSE', None))
 
 
 class StateAndLegacyTests(ApiBase):

@@ -78,6 +78,33 @@ describe('AccountDialogComponent', () => {
     expect(api.createAccount.calls.mostRecent().args[0].kind).toBeUndefined();
   });
 
+  it('removes the money type of an existing account when it is reclassified outside Activo (REV-01)', () => {
+    const fixture = create();
+    fixture.componentInstance.edit(saved);
+    api.updateAccount.and.returnValue(of({ ...saved, accountClass: 'EXPENSE', kind: null }));
+    fixture.componentInstance.form.patchValue({ accountClass: 'EXPENSE' });
+    fixture.componentInstance.onSubmit();
+    expect(api.updateAccount.calls.mostRecent().args[1].kind).toBeNull();
+  });
+
+  it('removes the money type when "No es cuenta de dinero" is chosen on an Activo account (REV-01)', () => {
+    const fixture = create();
+    fixture.componentInstance.edit(saved);
+    api.updateAccount.and.returnValue(of({ ...saved, kind: null }));
+    fixture.componentInstance.form.patchValue({ kind: '' });
+    fixture.componentInstance.onSubmit();
+    expect(api.updateAccount.calls.mostRecent().args[1].kind).toBeNull();
+  });
+
+  it('shows a kind error next to the classification when the money type is hidden (REV-01)', () => {
+    const fixture = create();
+    fixture.componentInstance.form.patchValue({ ...base, accountClass: 'EXPENSE' });
+    api.createAccount.and.returnValue(throwError(() => new AccountingApiError('Revisa', 400, { kind: ['Solo aplica a cuentas de Activo.'] })));
+    fixture.componentInstance.onSubmit();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Solo aplica a cuentas de Activo.');
+  });
+
   it('sends the contra flag and the money type (AC-06)', () => {
     const fixture = create();
     api.createAccount.and.returnValue(of(saved));

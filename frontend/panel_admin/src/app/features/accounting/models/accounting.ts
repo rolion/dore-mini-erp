@@ -44,8 +44,8 @@ export interface AccountInput {
   name: string;
   currency: string;
   code?: string;
-  /** Tipo de cuenta de dinero (Caja/Banco/Billetera); solo con clasificación Activo. */
-  kind?: AccountKind;
+  /** Tipo de cuenta de dinero (Caja/Banco/Billetera); solo con clasificación Activo. `null` lo quita. */
+  kind?: AccountKind | null;
   openingBalance?: string;
   accountClass?: AccountClassCode | null;
   isContra?: boolean;

@@ -138,6 +138,10 @@ class Account:
     def rename(self, name: object) -> None:
         self.name = validate_name(name)
 
+    def clear_kind(self) -> None:
+        """Deja de ser cuenta de dinero (sin tipo Caja/Banco/Billetera)."""
+        self.kind = None
+
     def change_kind(self, kind: object) -> None:
         self.kind = validate_kind(kind)
 

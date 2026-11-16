@@ -39,6 +39,9 @@
       @if (hasError('accountClass')) {
       <small class="form-text text-danger d-block">{{ serverErrors.accountClass || ('ACCOUNTING.ACCOUNT_DIALOG.LA_CLASIFICACION_ES_OBLIGATORIA' | translate) }}</small>
       }
+      @if (!showKind && serverErrors.kind) {
+      <small class="form-text text-danger d-block">{{ serverErrors.kind }}</small>
+      }
     </div>
     @if (showKind) {
     <div class="form-group mt-3">

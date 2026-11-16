@@ -84,6 +84,14 @@ export class AccountDialogComponent {
     });
   }
 
+  /** Tipo de dinero a enviar: el elegido (solo Activo); `null` para quitarlo si la cuenta lo tenía; nada si no cambia. */
+  private kindChange(accountClass: AccountClassCode | '', kind: AccountKind | ''): { kind?: AccountKind | null } {
+    if (accountClass === 'ASSET' && kind !== '') {
+      return { kind };
+    }
+    return this.account?.kind ? { kind: null } : {};
+  }
+
   /** El tipo de cuenta de dinero solo se ofrece con clasificación Activo. */
   get showKind(): boolean {
     return this.form.controls.accountClass.value === 'ASSET';
@@ -134,7 +142,7 @@ export class AccountDialogComponent {
       accountClass: value.accountClass,
       isContra: value.isContra,
       openingBalance: value.openingBalance,
-      ...(value.accountClass === 'ASSET' && value.kind !== '' ? { kind: value.kind } : {}),
+      ...this.kindChange(value.accountClass, value.kind),
     };
     this.saving = true;
     const request = this.account ? this.api.updateAccount(this.account.id, body) : this.api.createAccount(body);
