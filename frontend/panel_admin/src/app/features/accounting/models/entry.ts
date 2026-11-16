@@ -1,7 +1,12 @@
 import { tr } from '../../../core/i18n/translate';
 
-export type EntryOrigin = 'PRODUCT' | 'SERVICE';
-export const ENTRY_ORIGINS: readonly EntryOrigin[] = ['PRODUCT', 'SERVICE'];
+export type EntryOrigin = 'PRODUCT' | 'SERVICE' | 'EXPENSE' | 'PURCHASE_PAYMENT';
+export const ENTRY_ORIGINS: readonly EntryOrigin[] = ['PRODUCT', 'SERVICE', 'EXPENSE', 'PURCHASE_PAYMENT'];
+/** Orígenes de ingresos: los únicos que desglosa `by_origin` de los totales. */
+export type IncomeOrigin = 'PRODUCT' | 'SERVICE';
+export type EntryDirection = 'INCOME' | 'EXPENSE';
+export const ENTRY_DIRECTIONS: readonly EntryDirection[] = ['INCOME', 'EXPENSE'];
+export type EntryOperation = 'RECORD' | 'REVERSAL';
 
 export interface EntryDto {
   id: string;
@@ -15,6 +20,11 @@ export interface EntryDto {
   recorded_by_name: string;
   origin: { kind: EntryOrigin; label: string };
   source: { id?: string; document_ref: string; receipt_number: string; available: boolean };
+  direction?: EntryDirection;
+  operation?: EntryOperation;
+  classification?: { id: string; name: string } | null;
+  reversal_of?: string | null;
+  reversed_by?: string | null;
 }
 
 export interface Entry {
@@ -33,20 +43,30 @@ export interface Entry {
   documentRef: string;
   receiptNumber: string;
   sourceAvailable: boolean;
+  direction: EntryDirection;
+  operation: EntryOperation;
+  classificationName: string;
+  reversalOf: string | null;
+  reversedBy: string | null;
 }
 
 export interface CurrencyTotalDto {
   currency: string;
   count: number;
   amount: string;
-  by_origin: Record<EntryOrigin, string>;
+  by_origin: Record<IncomeOrigin, string>;
+  expense?: string;
+  by_direction?: { net: string };
 }
 
 export interface CurrencyTotal {
   currency: string;
   count: number;
+  /** Ingresos originales (cobros). */
   amount: string;
-  byOrigin: Record<EntryOrigin, string>;
+  byOrigin: Record<IncomeOrigin, string>;
+  expense: string;
+  net: string;
 }
 
 export interface EntryPageDto {
@@ -84,9 +104,10 @@ export interface EntryListFilters {
   accountId: string;
   method: string;
   origin: EntryOrigin | '';
+  direction: EntryDirection | '';
 }
 
-export const EMPTY_ENTRY_FILTERS: EntryListFilters = { dateFrom: '', dateTo: '', accountId: '', method: '', origin: '' };
+export const EMPTY_ENTRY_FILTERS: EntryListFilters = { dateFrom: '', dateTo: '', accountId: '', method: '', origin: '', direction: '' };
 
 export function toEntry(dto: EntryDto): Entry {
   return {
@@ -105,6 +126,11 @@ export function toEntry(dto: EntryDto): Entry {
     documentRef: dto.source.document_ref,
     receiptNumber: dto.source.receipt_number,
     sourceAvailable: dto.source.available,
+    direction: dto.direction ?? 'INCOME',
+    operation: dto.operation ?? 'RECORD',
+    classificationName: dto.classification?.name ?? '',
+    reversalOf: dto.reversal_of ?? null,
+    reversedBy: dto.reversed_by ?? null,
   };
 }
 
@@ -112,7 +138,14 @@ export function toEntryPage(dto: EntryPageDto): EntryPage {
   return {
     count: dto.count,
     results: dto.results.map(toEntry),
-    totals: dto.totals.map((t) => ({ currency: t.currency, count: t.count, amount: t.amount, byOrigin: t.by_origin })),
+    totals: dto.totals.map((t) => ({
+      currency: t.currency,
+      count: t.count,
+      amount: t.amount,
+      byOrigin: t.by_origin,
+      expense: t.expense ?? '0.00',
+      net: t.by_direction?.net ?? t.amount,
+    })),
     coverage: {
       firstPaymentDate: dto.coverage.first_payment_date,
       lastPaymentDate: dto.coverage.last_payment_date,
@@ -123,10 +156,34 @@ export function toEntryPage(dto: EntryPageDto): EntryPage {
   };
 }
 
-export const ORIGIN_CLASSES: Readonly<Record<EntryOrigin, string>> = { PRODUCT: 'col-blue', SERVICE: 'col-green' };
+export const ORIGIN_CLASSES: Readonly<Record<EntryOrigin, string>> = {
+  PRODUCT: 'col-blue',
+  SERVICE: 'col-green',
+  EXPENSE: 'col-orange',
+  PURCHASE_PAYMENT: 'col-orange',
+};
 
 export function originLabel(origin: EntryOrigin): string {
-  return origin === 'PRODUCT' ? tr('ACCOUNTING.ENTRIES.PRODUCTOS') : tr('ACCOUNTING.ENTRIES.SERVICIOS');
+  switch (origin) {
+    case 'PRODUCT':
+      return tr('ACCOUNTING.ENTRIES.PRODUCTOS');
+    case 'SERVICE':
+      return tr('ACCOUNTING.ENTRIES.SERVICIOS');
+    case 'EXPENSE':
+      return tr('ACCOUNTING.ENTRIES.GASTOS');
+    case 'PURCHASE_PAYMENT':
+      return tr('ACCOUNTING.ENTRIES.PAGOS_DE_COMPRAS');
+  }
+}
+
+export function directionLabel(direction: EntryDirection): string {
+  return direction === 'INCOME' ? tr('ACCOUNTING.ENTRIES.INGRESO') : tr('ACCOUNTING.ENTRIES.EGRESO');
+}
+
+/** Importe con signo: los egresos restan dinero de la cuenta (una reversión de egreso lo devuelve). */
+export function signedAmount(entry: Entry): string {
+  const text = formatAmount(entry.amount, entry.currency);
+  return entry.direction === 'EXPENSE' ? `−${text}` : text;
 }
 
 /** Importe con su moneda, tal como lo entrega el servidor: nunca se convierte ni se suma entre monedas. */
@@ -138,6 +195,9 @@ export function formatAmount(amount: string, currency: string): string {
 export function sourceLink(entry: Entry): string[] | null {
   if (!entry.sourceAvailable || !entry.documentRef) {
     return null;
+  }
+  if (entry.origin === 'EXPENSE' || entry.origin === 'PURCHASE_PAYMENT') {
+    return null; // sin pantalla de destino hasta que Gastos y Compras registren sus movimientos (GAS-01, COM-01)
   }
   if (entry.origin === 'PRODUCT') {
     return ['/pocketbiz/sales/orders', entry.documentRef];
@@ -151,5 +211,8 @@ export function documentLabel(entry: Entry): string {
   if (!entry.documentRef) {
     return '—';
   }
-  return entry.origin === 'SERVICE' ? (entry.documentRef.split('/')[1] ?? entry.documentRef) : entry.documentRef.slice(0, 8);
+  if (entry.origin === 'SERVICE') {
+    return entry.documentRef.split('/')[1] ?? entry.documentRef;
+  }
+  return entry.origin === 'PRODUCT' ? entry.documentRef.slice(0, 8) : entry.documentRef;
 }

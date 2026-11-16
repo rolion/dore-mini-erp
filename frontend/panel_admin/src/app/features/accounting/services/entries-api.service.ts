@@ -26,6 +26,7 @@ export class EntriesApiService {
     set('account_id', query.accountId);
     set('method', query.method);
     set('origin', query.origin);
+    set('direction', query.direction);
     set('page', query.page);
     set('page_size', query.pageSize);
     return this.http.get<EntryPageDto>(this.baseUrl, { params }).pipe(map(toEntryPage), catchError(this.fail));

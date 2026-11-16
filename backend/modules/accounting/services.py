@@ -9,12 +9,13 @@ from django.utils import timezone
 
 from modules.accounting.application.coverage import GetCoverageStatus
 from modules.accounting.application.use_cases import missing_methods
-from modules.accounting.domain.catalog import METHOD_LABELS
+from modules.accounting.domain.catalog import METHOD_LABELS, OPERATION_RECORD, OPERATION_REVERSAL
 from modules.accounting.domain.account import AccountValidationError
 from modules.accounting.domain.entry import (
     Entry,
     EntryConflict,
     EntryContractError,
+    EntryNotFound,
     EntryValidationError,
 )
 from modules.accounting.infrastructure.django.repositories import (
@@ -136,14 +137,15 @@ class EntryInput:
     amount: Decimal
     payment_date: date
     method: str
-    origin_kind: str  # 'PRODUCT' (pago de pedido) o 'SERVICE' (pago de proforma)
-    origin_id: UUID  # ID del pago en su módulo de origen
+    origin_kind: str  # 'PRODUCT' (pago de pedido), 'SERVICE' (pago de proforma), 'EXPENSE' o 'PURCHASE_PAYMENT'
+    origin_id: UUID  # ID del pago o del gasto en su módulo de origen
     origin_document_ref: str = ''  # ID del pedido o número de proforma
     receipt_number: str = ''  # CB-NNNNNN cuando existe
     recorded_by: int | None = None
     recorded_by_name: str = ''
     regularized_at: datetime | None = None  # solo regularización de pagos históricos
     regularized_by_name: str = ''
+    classification_id: UUID | None = None  # obligatoria en egresos (EXPENSE, PURCHASE_PAYMENT): de egreso y activa
 
 
 @dataclass(frozen=True)
@@ -154,6 +156,8 @@ class EntryRef:
     currency: str
     amount: Decimal
     payment_date: date
+    direction: str = 'INCOME'
+    operation: str = 'RECORD'
 
 
 @dataclass(frozen=True)
@@ -162,12 +166,18 @@ class RecordedEntry:
     created: bool  # False: ya existía (reintento idempotente)
 
 
-def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
-    """Registra la entrada de un pago dentro de la transacción del llamante (que la confirma o la revierte).
+def _ref(entry: Entry) -> EntryRef:
+    return EntryRef(entry.id, entry.account_id, entry.currency, entry.amount, entry.payment_date,
+                    entry.direction, entry.operation)
 
-    Idempotente por `(empresa, origin_kind, origin_id)`: repetir con los mismos datos devuelve la existente
-    (`created=False`); con datos distintos lanza `EntryConflict`. Lanza `EntryContractError` si no hay transacción
-    abierta y `EntryValidationError` si el monto, la cuenta o la moneda no son válidos.
+
+def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
+    """Registra el movimiento de un origen (cobro o egreso) dentro de la transacción del llamante.
+
+    Idempotente por `(empresa, origen)`: repetir con los mismos datos devuelve el existente (`created=False`); con
+    datos distintos lanza `EntryConflict`. Lanza `EntryContractError` si no hay transacción abierta y
+    `EntryValidationError` si el monto, la cuenta, la moneda o (en egresos) la clasificación no son válidos.
+    La dirección la deriva el origen: `PRODUCT`/`SERVICE` son ingresos; `EXPENSE`/`PURCHASE_PAYMENT`, egresos.
     """
     if not connection.in_atomic_block:
         raise EntryContractError('record_entry debe ejecutarse dentro de la transacción del pago.')
@@ -176,15 +186,58 @@ def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
         method=data.method, origin_kind=data.origin_kind, origin_id=data.origin_id,
         origin_document_ref=data.origin_document_ref, receipt_number=data.receipt_number,
         recorded_by=data.recorded_by, recorded_by_name=data.recorded_by_name,
-        regularized_at=data.regularized_at, regularized_by_name=data.regularized_by_name)
+        regularized_at=data.regularized_at, regularized_by_name=data.regularized_by_name,
+        classification_id=data.classification_id)
+    entries = DjangoEntryRepository(company_id)
     account = DjangoAccountRepository(company_id).get_for_update(entry.account_id)
     if account is None:
         raise EntryValidationError({'account_id': ['La cuenta no existe en esta empresa.']})
     if account.currency != entry.currency:
         raise EntryValidationError({'currency': [f'La moneda debe ser la de la cuenta ({account.currency}).']})
-    stored, created = DjangoEntryRepository(company_id).insert(entry)
+    already = entries.get_by_origin(entry.origin_kind, entry.origin_id, entry.operation)
+    if already is None and entry.direction == 'EXPENSE':
+        # Un reintento no se revalida: la clasificación pudo desactivarse después de registrar el egreso.
+        try:
+            validate_classification(company_id, entry.classification_id, 'EXPENSE')
+        except AccountValidationError as exc:
+            raise EntryValidationError(exc.errors) from exc
+    stored, created = entries.insert(entry)
     if not created:
         differences = entry.differences(stored)
         if differences:
             raise EntryConflict(differences)
-    return RecordedEntry(EntryRef(stored.id, stored.account_id, stored.currency, stored.amount, stored.payment_date), created)
+    return RecordedEntry(_ref(stored), created)
+
+
+def reverse_entry(company_id: UUID, origin_kind: str, origin_id: UUID, reversal_date: date,
+                  recorded_by: int | None = None, recorded_by_name: str = '') -> RecordedEntry:
+    """Revierte el movimiento de un origen con otro de dirección opuesta, mismo monto, moneda y cuenta.
+
+    El original no se modifica ni se borra. Idempotente: si ya fue revertido devuelve la reversión existente
+    (`created=False`) sin tocar de nuevo el saldo. Corre dentro de la transacción del llamante y bloquea la cuenta (como
+    `record_entry`), de modo que dos reversiones simultáneas crean una sola. Permite cuentas inactivas: restituye.
+    Lanza `EntryNotFound` si el origen no tiene movimiento y `EntryContractError` fuera de una transacción.
+    """
+    if not connection.in_atomic_block:
+        raise EntryContractError('reverse_entry debe ejecutarse dentro de la transacción de la anulación.')
+    entries = DjangoEntryRepository(company_id)
+    original = entries.get_by_origin(origin_kind, origin_id, OPERATION_RECORD)
+    if original is None:
+        raise EntryNotFound(f'{origin_kind}:{origin_id}')
+    DjangoAccountRepository(company_id).get_for_update(original.account_id)
+    existing = entries.get_by_origin(origin_kind, origin_id, OPERATION_REVERSAL)
+    if existing is not None:
+        return RecordedEntry(_ref(existing), False)
+    stored, created = entries.insert(original.reverse(reversal_date, recorded_by, recorded_by_name))
+    return RecordedEntry(_ref(stored), created)
+
+
+def account_balances(company_id: UUID, account_ids=None) -> dict[UUID, Decimal]:
+    """Saldo actual por cuenta de la empresa: apertura + ingresos − egresos (las reversiones cuentan con su dirección).
+
+    Sin `account_ids` devuelve todas las cuentas; los ids de otra empresa no aparecen en el resultado.
+    """
+    wanted = None if account_ids is None else set(account_ids)
+    accounts = [a for a in DjangoAccountRepository(company_id).list() if wanted is None or a.id in wanted]
+    net = DjangoEntryRepository(company_id).net_by_account([a.id for a in accounts])
+    return {a.id: a.opening_balance + net.get(a.id, Decimal('0.00')) for a in accounts}

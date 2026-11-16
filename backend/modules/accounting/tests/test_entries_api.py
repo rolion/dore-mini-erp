@@ -125,7 +125,8 @@ class ListTests(EntriesApiBase):
         self.assertEqual(row['account']['name'], 'Banco')
         # conjunto exacto de claves: ningún texto libre del pago puede colarse en el listado
         self.assertEqual(set(row), {'id', 'account', 'currency', 'amount', 'payment_date', 'created_at', 'method',
-                                    'method_label', 'recorded_by_name', 'origin', 'source'})
+                                    'method_label', 'recorded_by_name', 'origin', 'source', 'direction', 'operation',
+                                    'classification', 'reversal_of', 'reversed_by'})
         self.assertEqual(set(row['source']), {'document_ref', 'receipt_number', 'available'})
 
     def test_source_link_is_unavailable_when_the_origin_module_is_disabled(self):  # AC-07

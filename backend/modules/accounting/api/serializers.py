@@ -3,7 +3,14 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from modules.accounting.domain.account import NAME_MAX_LENGTH
-from modules.accounting.domain.catalog import METHOD_CODES, METHOD_LABELS, ORIGIN_KINDS, ORIGIN_LABELS
+from modules.accounting.domain.catalog import (
+    DIRECTIONS,
+    ENTRY_ORIGIN_KINDS,
+    ENTRY_ORIGIN_LABELS,
+    METHOD_CODES,
+    METHOD_LABELS,
+    ORIGIN_KINDS,
+)
 
 
 class AccountInputSerializer(serializers.Serializer):
@@ -89,7 +96,8 @@ class EntryFiltersSerializer(serializers.Serializer):
     date_to = serializers.DateField(required=False)
     account_id = serializers.UUIDField(required=False)
     method = serializers.ChoiceField(choices=METHOD_CODES, required=False)
-    origin = serializers.ChoiceField(choices=ORIGIN_KINDS, required=False)
+    origin = serializers.ChoiceField(choices=ENTRY_ORIGIN_KINDS, required=False)
+    direction = serializers.ChoiceField(choices=DIRECTIONS, required=False)
 
     def validate(self, attrs):
         if attrs.get('date_from') and attrs.get('date_to') and attrs['date_from'] > attrs['date_to']:
@@ -98,10 +106,10 @@ class EntryFiltersSerializer(serializers.Serializer):
 
 
 # Módulo propietario de cada origen: solo si está habilitado se ofrece el enlace al documento.
-ORIGIN_MODULES = {'PRODUCT': 'sales', 'SERVICE': 'receivables'}
+ORIGIN_MODULES = {'PRODUCT': 'sales', 'SERVICE': 'receivables', 'EXPENSE': 'expenses', 'PURCHASE_PAYMENT': 'purchases'}
 
 
-def serialize_entry(row, enabled: frozenset[str], *, detail: bool = False) -> dict:
+def serialize_entry(row, enabled: frozenset[str], classifications: dict | None = None, *, detail: bool = False) -> dict:
     data = {
         'id': str(row.id),
         'account': {'id': str(row.account_id), 'name': row.account.name, 'currency': row.account.currency},
@@ -112,7 +120,14 @@ def serialize_entry(row, enabled: frozenset[str], *, detail: bool = False) -> di
         'method': row.payment_method,
         'method_label': METHOD_LABELS.get(row.payment_method, row.payment_method),
         'recorded_by_name': row.recorded_by_name,
-        'origin': {'kind': row.origin_kind, 'label': ORIGIN_LABELS.get(row.origin_kind, row.origin_kind)},
+        'origin': {'kind': row.origin_kind, 'label': ENTRY_ORIGIN_LABELS.get(row.origin_kind, row.origin_kind)},
+        'direction': row.direction,
+        'operation': row.operation,
+        'classification': ({'id': str(row.classification_id),
+                            'name': (classifications or {}).get(row.classification_id, '')}
+                           if row.classification_id else None),
+        'reversal_of': str(row.reverses_id) if row.reverses_id else None,
+        'reversed_by': str(row.reversed_by_entry.id) if hasattr(row, 'reversed_by_entry') else None,
         'source': {
             'document_ref': row.origin_document_ref,
             'receipt_number': row.receipt_number,
@@ -125,8 +140,13 @@ def serialize_entry(row, enabled: frozenset[str], *, detail: bool = False) -> di
 
 
 def serialize_totals(totals) -> list[dict]:
+    """`amount` y `by_origin` son los ingresos (compatibles con la API anterior); `by_direction` añade el resto."""
     return [{'currency': t.currency, 'count': t.count, 'amount': str(t.amount),
-             'by_origin': {kind: str(t.by_origin.get(kind, Decimal('0.00'))) for kind in ORIGIN_KINDS}} for t in totals]
+             'by_origin': {kind: str(t.by_origin.get(kind, Decimal('0.00'))) for kind in ORIGIN_KINDS},
+             'expense': str(t.expense),
+             'by_direction': {'income': str(t.amount), 'expense': str(t.expense),
+                              'reversed_income': str(t.reversed_income), 'reversed_expense': str(t.reversed_expense),
+                              'net': str(t.net)}} for t in totals]
 
 
 def serialize_gaps(gaps) -> list[dict]:
