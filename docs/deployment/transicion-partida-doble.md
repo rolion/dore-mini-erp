@@ -67,5 +67,5 @@ Base `doredb`, 2026-11-16; `accounting` 0001–0006 aplicadas.
 La causa de los 21 pagos sin entrada **no está confirmada** (hipótesis: anteriores al corte o de empresas sin cobertura). El diagnóstico los separa por empresa (`source_without_entry`: `sin_entrada` frente a `anterior_al_corte`) y es el paso que la confirma.
 
 ## Estado de la verificación
-- Pruebas unitarias del dominio del diagnóstico: ejecutadas y en verde.
-- Pruebas de integración del comando, `migrate` en base nueva y ensayo en copia restaurada (aceptaciones 1 y 2 de la tarjeta): **pendientes de ejecutar** en un entorno con acceso a PostgreSQL de pruebas (esta sesión no tiene credenciales de base y no se leen los `.env`).
+- Pruebas del diagnóstico (7 unitarias y 8 de integración) y regresión de `accounting` (181): en verde. La base de pruebas se crea desde cero aplicando toda la cadena de migraciones sin errores.
+- **Pendiente (manual):** el ensayo con `pg_dump`/`pg_restore` sobre una copia de la base local y la comparación del diagnóstico antes/después (pasos 1, 2 y 5 del procedimiento).
