@@ -1,6 +1,6 @@
 # TASK-diagnostico-transicion-partida-doble: Diagnóstico y contrato de transición de accounting a partida doble (CONT-07)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-diagnostico-transicion-partida-doble (base: `accounting`)
@@ -14,6 +14,8 @@
 | 2026-11-16 | INVESTIGATION → ARCHITECTURE | Transición de datos financieros con migraciones y varios módulos | delivery-start |
 | 2026-11-16 | ARCHITECTURE → PLANNING | ADR escrito (DDR no aplica: sin pantallas) | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-16 | REVIEW (sin cambio) | Quality Gate sin PASS: REV-01 abierto (verificación no ejecutable aquí) | delivery-publish |
 
 ## Investigación
 
@@ -110,7 +112,12 @@ Comando `diagnose_ledger_transition` de solo lectura (AC-01..AC-06, INV-01..INV-
 **Deuda técnica:** puerto de verificación de egresos (Etapa 2).
 
 ## Review
-_Pendiente_
+**Resultado: NO APROBADO todavía (sin PASS).** Quality Gate ejecutado por quien implementó, con aislamiento procedimental (revisión solo desde artefactos y diff `origin/accounting...HEAD`, 9 archivos, todos dentro del plan).
+- Pruebas: `test_transition_diagnosis` 15/15 OK; regresión `modules.accounting` + `test_boundaries` 181/181 OK; `makemigrations --check`: sin cambios.
+- Seguridad: `bandit` sin hallazgos en los 4 archivos nuevos/modificados; sin secretos en el diff (`backend/.env` está ignorado por git).
+- No realizado: `ruff`/`flake8`/`mypy` (no instalados ni configurados); cobertura de backend (sin `coverage.py`; se revisó a mano que cada regla de `classify_entry`, `classify_opening` y `parse_transition_mapping` tiene prueba); frontend no aplica (no hay cambios).
+- Límites DDD: `domain/transition.py` sin Django; toda consulta del lector filtra por `company_id` (`company_ids()` es la única global, de solo lectura y necesaria para recorrer empresas); sin imports de infraestructura de otros módulos.
+- Hallazgo abierto: [REV-2026-11-16-diagnostico-transicion-partida-doble-01](../reviews/REV-2026-11-16-diagnostico-transicion-partida-doble-01.md) (Medium): el ensayo con `pg_dump`/`pg_restore` (AC-08, aceptación 2) no se pudo ejecutar por falta de herramientas de PostgreSQL.
 
 ## Publicación
 _Pendiente_
