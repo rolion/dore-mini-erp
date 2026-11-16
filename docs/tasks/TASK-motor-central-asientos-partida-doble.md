@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-motor-central-asientos-partida-doble
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/83
 **Fuente:** https://trello.com/c/hRlnoPrC/3-cont-02-implementar-motor-central-de-asientos-con-partida-doble-reversi%C3%B3n-e-idempotencia
 
 ## Historial de transiciones
