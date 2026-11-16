@@ -1,6 +1,6 @@
 # TASK-administrar-cuentas-codigo-clasificacion-estado: Administrar cuentas con código, nombre, clasificación y estado (CONT-09)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-administrar-cuentas-codigo-clasificacion-estado (base: `task/TASK-configurar-seis-clasificaciones-contables`, PR #79 de CONT-08 aún sin mergear)
@@ -16,6 +16,7 @@
 | 2026-11-16 | ARCHITECTURE → PLANNING | DDR y ADR escritos | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos, no bloqueantes) | delivery-publish |
 
 ## Investigación
 
@@ -103,7 +104,12 @@ Cuentas del plan con código único por empresa, clasificación obligatoria, tip
 **Deuda técnica:** el selector de métodos de pago mostrará también cuentas que no son de dinero hasta CONT-12; el bloqueo por asientos usa entradas de una cuenta hasta CONT-02.
 
 ## Review
-_Pendiente_
+**Resultado: PASS** (subagente aislado, solo desde artefactos y diff contra la base del PR).
+- Backend: suite completa 1793 OK; `makemigrations --check` sin cambios; flake8 solo E501 y un F401 preexistente; mypy solo `import-untyped` (101 líneas sin desglosar); bandit sin hallazgos (sin línea de resumen).
+- Frontend: `ng test` 1468 OK; `ng lint` limpio; `i18n:check` 0 faltantes; `ng build` correcto; `npm audit`: 2 moderadas sin relación con el diff.
+- AC-01..AC-12, INV-01..07 y API-01..03 con verificación real; DDD y migración aditiva conformes; sin secretos ni artefactos; sin scope creep.
+- Hallazgos abiertos, no bloqueantes: [REV-01](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01.md) (Medium, IMPLEMENTATION: el tipo de dinero no se puede quitar y bloquea reclasificar cuentas anteriores sin mensaje visible), [REV-02](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-02.md) (Low, DESIGN: desviación declarada de UI-02) y [REV-03](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-03.md) (Low: clave i18n sin uso).
+- No verificado: revisión visual en navegador; carga con datos reales de producción; interacción con CONT-02, CONT-04 y CONT-12.
 
 ## Publicación
-_Pendiente_
+PR #80 (base `task/TASK-configurar-seis-clasificaciones-contables`, apilado sobre el #79) listo para aprobación humana; no se mergea. Al mergear el #79 a `accounting`, hay que cambiar la base de este PR a `accounting`. Cambio sensible: contrato de datos de Contabilidad (ADR `modelo-de-cuenta`) con migración aditiva `0008`. Decisión pendiente: corregir REV-01 antes del merge o aceptarlo.
