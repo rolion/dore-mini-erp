@@ -1,4 +1,5 @@
 """PB-ACC-001: API de cuentas, mapeo método → cuenta y precondición de habilitación (AC-01..06)."""
+import itertools
 from rest_framework.test import APIClient, APITestCase
 
 from modules.accounting import services
@@ -6,6 +7,7 @@ from modules.accounting.infrastructure.django.models import AccountModel
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.modularity.infrastructure.django.models import CompanyModuleModel
 
+CODES = itertools.count(1)
 ACCOUNTS = '/api/accounting/accounts/'
 METHODS = '/api/accounting/payment-methods/'
 
@@ -24,7 +26,9 @@ class AccountingApiBase(APITestCase):
         return client
 
     def create(self, client, name, currency='BOB', kind='BANK'):
-        response = client.post(ACCOUNTS, {'name': name, 'currency': currency, 'kind': kind}, format='json')
+        code = str(next(CODES) + 900000)
+        response = client.post(ACCOUNTS, {'name': name, 'currency': currency, 'kind': kind, 'code': code,
+                                          'account_class': 'ASSET'}, format='json')
         self.assertEqual(response.status_code, 201, response.data)
         return response.data
 
@@ -68,7 +72,8 @@ class AccountTests(AccountingApiBase):
 
     def test_duplicate_names_are_rejected_case_insensitively(self):  # EDGE-01
         self.create(self.client_a, 'Caja')
-        response = self.client_a.post(ACCOUNTS, {'name': ' caja ', 'currency': 'BOB', 'kind': 'CASH'}, format='json')
+        response = self.client_a.post(ACCOUNTS, {'name': ' caja ', 'currency': 'BOB', 'kind': 'CASH', 'code': '999',
+                                                 'account_class': 'ASSET'}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertIn('name', response.data)
         self.create(self.client_b, 'Caja')  # otra empresa puede repetirlo

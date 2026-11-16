@@ -1,0 +1,50 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>{{ 'ACCOUNTING.ACCOUNT_CLASSES.TITULO' | translate }}</strong></h2>
+      <small class="text-muted d-block">{{ 'ACCOUNTING.ACCOUNT_CLASSES.AYUDA' | translate }}</small>
+      <small class="text-muted d-block">{{ 'ACCOUNTING.ACCOUNT_CLASSES.DIFERENCIA' | translate }}</small>
+    </div>
+  </div>
+  @if (loading && !rows.length) {
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else {
+  <div class="table-responsive" aria-live="polite">
+    <table class="table align-middle inventory-table">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.ACCOUNT_CLASSES.TITULO' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'ACCOUNTING.ACCOUNT_CLASSES.CLASIFICACION' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.code) {
+        <tr>
+          <td [attr.data-label]="'ACCOUNTING.ACCOUNT_CLASSES.CLASIFICACION' | translate"><strong>{{ 'ACCOUNTING.ACCOUNT_CLASSES.' + row.code | translate }}</strong></td>
+          <td [attr.data-label]="'COMMON.ESTADO' | translate">
+            @if (row.enabled) {
+            <div class="badge-outline col-green">{{ 'ACCOUNTING.ACCOUNT_CLASSES.HABILITADA' | translate }}</div>
+            } @else {
+            <div class="badge-outline col-red">{{ 'ACCOUNTING.ACCOUNT_CLASSES.DESHABILITADA' | translate }}</div>
+            }
+          </td>
+          <td>
+            <button type="button" class="btn btn-light h-auto" [disabled]="busyCode !== null" (click)="toggle(row)"
+              [attr.aria-label]="(row.enabled ? 'ACCOUNTING.ACCOUNT_CLASSES.DESHABILITAR_X' : 'ACCOUNTING.ACCOUNT_CLASSES.HABILITAR_X') | translate: { name: ('ACCOUNTING.ACCOUNT_CLASSES.' + row.code | translate) }">
+              {{ (row.enabled ? 'ACCOUNTING.ACCOUNT_CLASSES.DESHABILITAR' : 'ACCOUNTING.ACCOUNT_CLASSES.HABILITAR') | translate }}
+            </button>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

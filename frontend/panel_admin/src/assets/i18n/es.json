@@ -2514,7 +2514,12 @@
       "NUEVA_CUENTA": "Nueva cuenta",
       "SIN_CUENTAS": "Aún no hay cuentas. Crea la primera con «+».",
       "CUENTA_ACTIVADA": "Cuenta activada",
-      "CUENTA_DESACTIVADA": "Cuenta desactivada"
+      "CUENTA_DESACTIVADA": "Cuenta desactivada",
+      "CODIGO": "Código",
+      "SIN_CODIGO": "Sin código",
+      "CORRECTORA": "Correctora",
+      "FILTRAR_POR_CLASIFICACION": "Filtrar por clasificación",
+      "TODAS_LAS_CLASIFICACIONES": "Todas las clasificaciones"
     },
     "ACCOUNT_DIALOG": {
       "EDITAR_CUENTA": "Editar cuenta",
@@ -2528,11 +2533,24 @@
       "TIPO_CASH": "Caja",
       "TIPO_BANK": "Banco",
       "TIPO_WALLET": "Billetera",
-      "SIN_TIPO": "Sin tipo",
       "EL_TIPO_ES_OBLIGATORIO": "El tipo es obligatorio.",
       "SALDO_DE_APERTURA": "Saldo de apertura",
       "SALDO_DE_APERTURA_AYUDA": "Monto de la cuenta a la fecha de corte. No se puede cambiar cuando la cuenta ya tiene movimientos.",
-      "SALDO_DE_APERTURA_INVALIDO": "Ingresa un monto de 0 o más con hasta 2 decimales."
+      "SALDO_DE_APERTURA_INVALIDO": "Ingresa un monto de 0 o más con hasta 2 decimales.",
+      "CLASIFICACION_CONTABLE": "Clasificación contable",
+      "SIN_CLASIFICACION": "Sin clasificación",
+      "DESHABILITADA_SUFIJO": "(deshabilitada)",
+      "CLASIFICACION_AYUDA": "Solo se ofrecen las clasificaciones habilitadas. No se puede cambiar si la cuenta ya tiene asientos.",
+      "CODIGO": "Código",
+      "EJEMPLO_CODIGO": "Ej.: 111001",
+      "CODIGO_AYUDA": "Único en tu empresa (otra empresa puede usar el mismo). Solo números, hasta 20 dígitos; tú eliges el formato.",
+      "EL_CODIGO_NO_ES_VALIDO": "Ingresa un código numérico, sin espacios ni puntos.",
+      "ELIGE_UNA_CLASIFICACION": "Elige una clasificación",
+      "LA_CLASIFICACION_ES_OBLIGATORIA": "La clasificación es obligatoria.",
+      "NO_ES_CUENTA_DE_DINERO": "No es cuenta de dinero",
+      "TIPO_AYUDA": "Solo para cuentas que mueven dinero (Caja, Banco, Billetera).",
+      "CUENTA_CORRECTORA": "Cuenta correctora",
+      "CORRECTORA_AYUDA": "Su saldo normal es contrario al de su clasificación (por ejemplo, Depreciación acumulada). No se puede cambiar si la cuenta ya tiene asientos."
     },
     "CLASSIFICATIONS": {
       "CLASIFICACIONES": "Clasificaciones",
@@ -2729,6 +2747,26 @@
       "ERROR_DE_RED": "No se pudo conectar con el servidor. Revisa tu conexión.",
       "ERROR_INESPERADO": "Ocurrió un error inesperado. Inténtalo de nuevo.",
       "CLASIFICACION_NO_DISPONIBLE": "Clasificación no disponible"
+    },
+    "ACCOUNT_CLASSES": {
+      "TITULO": "Clasificaciones contables",
+      "AYUDA": "Las seis clasificaciones son fijas: solo puedes habilitarlas o deshabilitarlas. Deshabilitar una no modifica cuentas existentes ni saldos.",
+      "DIFERENCIA": "No es lo mismo que la pestaña «Clasificaciones», que describe el motivo de un movimiento de dinero.",
+      "CLASIFICACION": "Clasificación",
+      "HABILITAR": "Habilitar",
+      "DESHABILITAR": "Deshabilitar",
+      "HABILITADA": "Habilitada",
+      "DESHABILITADA": "Deshabilitada",
+      "HABILITADA_OK": "Clasificación habilitada",
+      "DESHABILITADA_OK": "Clasificación deshabilitada",
+      "ASSET": "Activo",
+      "LIABILITY": "Pasivo",
+      "EQUITY": "Patrimonio",
+      "INCOME": "Ingresos",
+      "EXPENSE": "Gastos",
+      "COST": "Costos",
+      "HABILITAR_X": "Habilitar {{name}}",
+      "DESHABILITAR_X": "Deshabilitar {{name}}"
     }
   }
 }

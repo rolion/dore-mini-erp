@@ -16,14 +16,21 @@ from modules.accounting.domain.catalog import (
 class AccountInputSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False)
     currency = serializers.CharField(max_length=3)
-    kind = serializers.CharField(max_length=10)  # obligatorio al crear; el dominio valida el valor
+    # El dominio valida formato; `code` y `account_class` son obligatorios al crear (lo exige el caso de uso).
+    code = serializers.CharField(max_length=64, required=False, allow_null=True)
+    account_class = serializers.CharField(max_length=10, required=False, allow_null=True)
+    kind = serializers.CharField(max_length=10, required=False, allow_null=True)  # solo cuentas de dinero (Activo)
+    is_contra = serializers.BooleanField(required=False)
     opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
 class AccountUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=NAME_MAX_LENGTH, trim_whitespace=False, required=False)
     currency = serializers.CharField(max_length=3, required=False)
-    kind = serializers.CharField(max_length=10, required=False)
+    code = serializers.CharField(max_length=64, required=False, allow_null=True)
+    kind = serializers.CharField(max_length=10, required=False, allow_null=True)
+    account_class = serializers.CharField(max_length=10, required=False, allow_null=True)
+    is_contra = serializers.BooleanField(required=False)
     opening_balance = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 
@@ -75,9 +82,11 @@ class MethodInputSerializer(serializers.Serializer):
     is_active = serializers.BooleanField(default=True)
 
 
-def serialize_account(account) -> dict:
+def serialize_account(account, has_entries: bool = False) -> dict:
     return {'id': str(account.id), 'name': account.name, 'currency': account.currency, 'kind': account.kind,
-            'opening_balance': str(account.opening_balance), 'is_active': account.is_active,
+            'code': account.code, 'is_contra': account.is_contra, 'account_class': account.account_class,
+            'has_entries': has_entries, 'opening_balance': str(account.opening_balance),
+            'is_active': account.is_active,
             'created_at': account.created_at, 'updated_at': account.updated_at}
 
 
@@ -168,3 +177,7 @@ class SettingsUpdateSerializer(serializers.Serializer):
 def serialize_settings(view) -> dict:
     return {'cutoff_date': view.cutoff_date, 'enabled_at': view.enabled_at, 'locked': view.locked,
             'gaps': serialize_gaps(view.gaps)}
+
+
+def serialize_account_class(view) -> dict:
+    return {'code': view.code, 'enabled': view.enabled}

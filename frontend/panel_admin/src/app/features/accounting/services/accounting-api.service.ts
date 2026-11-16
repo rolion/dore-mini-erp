@@ -4,6 +4,8 @@ import { Observable, catchError, map, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   Account,
+  AccountClassCode,
+  AccountClassState,
   AccountDto,
   AccountInput,
   AccountingSettings,
@@ -23,6 +25,10 @@ export function toAccount(dto: AccountDto): Account {
     name: dto.name,
     currency: dto.currency,
     kind: dto.kind ?? null,
+    accountClass: dto.account_class ?? null,
+    code: dto.code ?? null,
+    isContra: dto.is_contra ?? false,
+    hasEntries: dto.has_entries ?? false,
     openingBalance: dto.opening_balance ?? '0.00',
     isActive: dto.is_active,
   };
@@ -40,9 +46,13 @@ export function toPaymentMethod(dto: PaymentMethodDto): PaymentMethod {
   return { code: dto.code, label: dto.label, isActive: dto.is_active, account: dto.account ? toAccount(dto.account) : null };
 }
 
-function toAccountBody(input: Partial<AccountInput>): Record<string, string | undefined> {
-  const { openingBalance, ...rest } = input;
-  return openingBalance === undefined ? rest : { ...rest, opening_balance: openingBalance };
+function toAccountBody(input: Partial<AccountInput>): Record<string, string | boolean | null | undefined> {
+  const { openingBalance, accountClass, isContra, ...rest } = input;
+  const body: Record<string, string | boolean | null | undefined> = { ...rest };
+  if (openingBalance !== undefined) body['opening_balance'] = openingBalance;
+  if (accountClass !== undefined) body['account_class'] = accountClass;
+  if (isContra !== undefined) body['is_contra'] = isContra;
+  return body;
 }
 
 /** Cuentas destino y mapeo método de pago → cuenta de la empresa (API `/api/accounting/`). */
@@ -51,9 +61,10 @@ export class AccountingApiService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/accounting/`;
 
-  listAccounts(active?: boolean): Observable<Account[]> {
+  listAccounts(active?: boolean, accountClass?: AccountClassCode): Observable<Account[]> {
     let params = new HttpParams();
     if (active !== undefined) params = params.set('active', String(active));
+    if (accountClass) params = params.set('account_class', accountClass);
     return this.request(this.http.get<AccountDto[]>(`${this.baseUrl}accounts/`, { params }), (rows) => rows.map(toAccount));
   }
 
@@ -79,6 +90,15 @@ export class AccountingApiService {
 
   updateCutoff(cutoffDate: string): Observable<AccountingSettings> {
     return this.request(this.http.patch<AccountingSettingsDto>(`${this.baseUrl}settings/`, { cutoff_date: cutoffDate }), toSettings);
+  }
+
+  listAccountClasses(): Observable<AccountClassState[]> {
+    return this.request(this.http.get<AccountClassState[]>(`${this.baseUrl}account-classes/`), (rows) => rows);
+  }
+
+  setAccountClassEnabled(code: AccountClassCode, enabled: boolean): Observable<AccountClassState> {
+    const action = enabled ? 'enable' : 'disable';
+    return this.request(this.http.post<AccountClassState>(`${this.baseUrl}account-classes/${code}/${action}/`, {}), (row) => row);
   }
 
   listClassifications(filters: { active?: boolean; direction?: Direction } = {}): Observable<Classification[]> {

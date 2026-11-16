@@ -23,7 +23,7 @@ describe('AccountingApiService', () => {
     const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
     expect(req.request.params.get('active')).toBe('true');
     req.flush([{ id: 'a1', name: 'Caja', currency: 'BOB', is_active: true }]);
-    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, openingBalance: '0.00', isActive: true }]);
+    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, accountClass: null, code: null, isContra: false, hasEntries: false, openingBalance: '0.00', isActive: true }]);
   });
 
   it('configures a method with account_id and is_active', () => {
@@ -53,5 +53,41 @@ describe('AccountingApiService', () => {
     service.createAccount({ name: '', currency: 'BOB', kind: 'BANK' }).subscribe({ error: (e: AccountingApiError) => (error = e) });
     http.expectOne((r) => r.url.endsWith('/accounting/accounts/')).flush({ name: ['Ya existe.'] }, { status: 400, statusText: 'Bad Request' });
     expect(error?.fieldErrors['name']).toEqual(['Ya existe.']);
+  });
+
+  it('lists and toggles the accounting classifications', () => {
+    let rows: unknown;
+    service.listAccountClasses().subscribe((r) => (rows = r));
+    http.expectOne((r) => r.url.endsWith('/accounting/account-classes/')).flush([{ code: 'ASSET', enabled: true }]);
+    expect(rows).toEqual([{ code: 'ASSET', enabled: true }]);
+
+    service.setAccountClassEnabled('COST', false).subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/accounting/account-classes/COST/disable/'));
+    expect(req.request.method).toBe('POST');
+    req.flush({ code: 'COST', enabled: false });
+    service.setAccountClassEnabled('COST', true).subscribe();
+    http.expectOne((r) => r.url.endsWith('/accounting/account-classes/COST/enable/')).flush({ code: 'COST', enabled: true });
+  });
+
+  it('sends account_class and maps its field error', () => {
+    let error: AccountingApiError | undefined;
+    service.createAccount({ name: 'Costos', currency: 'BOB', kind: 'BANK', accountClass: 'COST' }).subscribe({ error: (e: AccountingApiError) => (error = e) });
+    const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
+    expect(req.request.body).toEqual({ name: 'Costos', currency: 'BOB', kind: 'BANK', account_class: 'COST' });
+    req.flush({ account_class: ['La clasificación contable está deshabilitada.'] }, { status: 400, statusText: 'Bad Request' });
+    expect(error?.fieldErrors['accountClass']).toEqual(['La clasificación contable está deshabilitada.']);
+  });
+
+  it('filters accounts by classification and sends code and contra flag', () => {
+    service.listAccounts(undefined, 'ASSET').subscribe();
+    const list = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
+    expect(list.request.params.get('account_class')).toBe('ASSET');
+    list.flush([]);
+    let created: unknown;
+    service.createAccount({ name: 'Depreciación', currency: 'BOB', code: '121005', accountClass: 'ASSET', isContra: true }).subscribe((a) => (created = a));
+    const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/') && r.method === 'POST');
+    expect(req.request.body).toEqual({ name: 'Depreciación', currency: 'BOB', code: '121005', account_class: 'ASSET', is_contra: true });
+    req.flush({ id: 'a1', name: 'Depreciación', currency: 'BOB', code: '121005', account_class: 'ASSET', is_contra: true, has_entries: true, is_active: true });
+    expect((created as { hasEntries: boolean }).hasEntries).toBeTrue();
   });
 });

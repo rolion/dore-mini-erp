@@ -1,22 +1,23 @@
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
+import { AccountClassesTabComponent } from '../../components/account-classes-tab/account-classes-tab.component';
 import { AccountsTabComponent } from '../../components/accounts-tab/accounts-tab.component';
 import { ClassificationsTabComponent } from '../../components/classifications-tab/classifications-tab.component';
 import { ExpenseConfigTabComponent } from '../../components/expense-config-tab/expense-config-tab.component';
 import { CutoffTabComponent } from '../../components/cutoff-tab/cutoff-tab.component';
 import { MethodsTabComponent } from '../../components/methods-tab/methods-tab.component';
 
-export type SettingsTab = 'accounts' | 'methods' | 'classifications' | 'expenses' | 'cutoff';
+export type SettingsTab = 'accounts' | 'methods' | 'classifications' | 'accountClasses' | 'expenses' | 'cutoff';
 
 /** Contabilidad › Configuración › Cuentas y Métodos de pago: dos pestañas (cuentas destino y mapeo de métodos). */
 @Component({
   selector: 'app-accounting-settings',
   templateUrl: './accounting-settings.component.html',
-  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, ClassificationsTabComponent, ExpenseConfigTabComponent, CutoffTabComponent],
+  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, ClassificationsTabComponent, AccountClassesTabComponent, ExpenseConfigTabComponent, CutoffTabComponent],
 })
 export class AccountingSettingsComponent {
-  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'classifications', 'expenses', 'cutoff'];
+  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'classifications', 'accountClasses', 'expenses', 'cutoff'];
   /** Pestaña inicial: `?tab=expenses` abre «Egresos» (enlace de ayuda de los formularios de Gastos y Compras). */
   tab: SettingsTab = this.initialTab();
 

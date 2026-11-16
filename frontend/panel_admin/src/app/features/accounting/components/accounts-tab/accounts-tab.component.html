@@ -6,6 +6,12 @@
     </div>
     <div class="header-buttons-left">
       <div class="d-flex align-items-center gap-2 ms-3">
+        <select class="form-select form-control w-auto" [formControl]="classControl" [attr.aria-label]="'ACCOUNTING.ACCOUNTS_TAB.FILTRAR_POR_CLASIFICACION' | translate">
+          <option value="all">{{ 'ACCOUNTING.ACCOUNTS_TAB.TODAS_LAS_CLASIFICACIONES' | translate }}</option>
+          @for (code of classes; track code) {
+          <option [value]="code">{{ 'ACCOUNTING.ACCOUNT_CLASSES.' + code | translate }}</option>
+          }
+        </select>
         <select class="form-select form-control w-auto" [formControl]="statusControl" [attr.aria-label]="'COMMON.FILTRAR_POR_ESTADO' | translate">
           <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
           <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
@@ -36,7 +42,9 @@
       <caption class="visually-hidden">{{ 'ACCOUNTING.ACCOUNTS_TAB.CUENTAS' | translate }}</caption>
       <thead>
         <tr>
+          <th scope="col">{{ 'ACCOUNTING.ACCOUNTS_TAB.CODIGO' | translate }}</th>
           <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.ACCOUNT_CLASSES.CLASIFICACION' | translate }}</th>
           <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.TIPO' | translate }}</th>
           <th scope="col">{{ 'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate }}</th>
           <th scope="col">{{ 'ACCOUNTING.CUTOFF.APERTURA' | translate }}</th>
@@ -47,9 +55,18 @@
       <tbody>
         @for (account of rows; track account.id) {
         <tr>
-          <td [attr.data-label]="'COMMON.NOMBRE' | translate"><strong>{{ account.name }}</strong></td>
+          <td [attr.data-label]="'ACCOUNTING.ACCOUNTS_TAB.CODIGO' | translate">{{ account.code ?? ('ACCOUNTING.ACCOUNTS_TAB.SIN_CODIGO' | translate) }}</td>
+          <td [attr.data-label]="'COMMON.NOMBRE' | translate">
+            <strong>{{ account.name }}</strong>
+            @if (account.isContra) {
+            <span class="badge-outline col-orange ms-1">{{ 'ACCOUNTING.ACCOUNTS_TAB.CORRECTORA' | translate }}</span>
+            }
+          </td>
+          <td [attr.data-label]="'ACCOUNTING.ACCOUNT_CLASSES.CLASIFICACION' | translate">
+            {{ account.accountClass ? ('ACCOUNTING.ACCOUNT_CLASSES.' + account.accountClass | translate) : ('ACCOUNTING.ACCOUNT_DIALOG.SIN_CLASIFICACION' | translate) }}
+          </td>
           <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.TIPO' | translate">
-            {{ account.kind ? ('ACCOUNTING.ACCOUNT_DIALOG.TIPO_' + account.kind | translate) : ('ACCOUNTING.ACCOUNT_DIALOG.SIN_TIPO' | translate) }}
+            {{ account.kind ? ('ACCOUNTING.ACCOUNT_DIALOG.TIPO_' + account.kind | translate) : '—' }}
           </td>
           <td [attr.data-label]="'ACCOUNTING.ACCOUNT_DIALOG.MONEDA' | translate">{{ account.currency }}</td>
           <td [attr.data-label]="'ACCOUNTING.CUTOFF.APERTURA' | translate">

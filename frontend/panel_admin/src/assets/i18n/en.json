@@ -2514,7 +2514,12 @@
       "NUEVA_CUENTA": "New account",
       "SIN_CUENTAS": "No accounts yet. Create the first one with «+».",
       "CUENTA_ACTIVADA": "Account activated",
-      "CUENTA_DESACTIVADA": "Account deactivated"
+      "CUENTA_DESACTIVADA": "Account deactivated",
+      "CODIGO": "Code",
+      "SIN_CODIGO": "No code",
+      "CORRECTORA": "Contra",
+      "FILTRAR_POR_CLASIFICACION": "Filter by classification",
+      "TODAS_LAS_CLASIFICACIONES": "All classifications"
     },
     "ACCOUNT_DIALOG": {
       "EDITAR_CUENTA": "Edit account",
@@ -2528,11 +2533,24 @@
       "TIPO_CASH": "Cash box",
       "TIPO_BANK": "Bank",
       "TIPO_WALLET": "Wallet",
-      "SIN_TIPO": "No type",
       "EL_TIPO_ES_OBLIGATORIO": "The type is required.",
       "SALDO_DE_APERTURA": "Opening balance",
       "SALDO_DE_APERTURA_AYUDA": "Account amount at the cutoff date. It cannot be changed once the account has movements.",
-      "SALDO_DE_APERTURA_INVALIDO": "Enter an amount of 0 or more with up to 2 decimals."
+      "SALDO_DE_APERTURA_INVALIDO": "Enter an amount of 0 or more with up to 2 decimals.",
+      "CLASIFICACION_CONTABLE": "Accounting classification",
+      "SIN_CLASIFICACION": "No classification",
+      "DESHABILITADA_SUFIJO": "(disabled)",
+      "CLASIFICACION_AYUDA": "Only enabled classifications are offered. It cannot be changed once the account has entries.",
+      "CODIGO": "Code",
+      "EJEMPLO_CODIGO": "E.g. 111001",
+      "CODIGO_AYUDA": "Unique in your company (another company may use the same one). Digits only, up to 20; you choose the format.",
+      "EL_CODIGO_NO_ES_VALIDO": "Enter a numeric code, without spaces or dots.",
+      "ELIGE_UNA_CLASIFICACION": "Choose a classification",
+      "LA_CLASIFICACION_ES_OBLIGATORIA": "The classification is required.",
+      "NO_ES_CUENTA_DE_DINERO": "Not a money account",
+      "TIPO_AYUDA": "Only for accounts that hold money (Cash, Bank, Wallet).",
+      "CUENTA_CORRECTORA": "Contra account",
+      "CORRECTORA_AYUDA": "Its normal balance is opposite to its classification (for example, Accumulated depreciation). It cannot be changed once the account has entries."
     },
     "CLASSIFICATIONS": {
       "CLASIFICACIONES": "Classifications",
@@ -2729,6 +2747,26 @@
       "ERROR_DE_RED": "Could not reach the server. Check your connection.",
       "ERROR_INESPERADO": "An unexpected error occurred. Please try again.",
       "CLASIFICACION_NO_DISPONIBLE": "Classification unavailable"
+    },
+    "ACCOUNT_CLASSES": {
+      "TITULO": "Accounting classifications",
+      "AYUDA": "The six classifications are fixed: you can only enable or disable them. Disabling one does not change existing accounts or balances.",
+      "DIFERENCIA": "This is not the same as the “Classifications” tab, which describes the reason for a money movement.",
+      "CLASIFICACION": "Classification",
+      "HABILITAR": "Enable",
+      "DESHABILITAR": "Disable",
+      "HABILITADA": "Enabled",
+      "DESHABILITADA": "Disabled",
+      "HABILITADA_OK": "Classification enabled",
+      "DESHABILITADA_OK": "Classification disabled",
+      "ASSET": "Asset",
+      "LIABILITY": "Liability",
+      "EQUITY": "Equity",
+      "INCOME": "Income",
+      "EXPENSE": "Expenses",
+      "COST": "Costs",
+      "HABILITAR_X": "Enable {{name}}",
+      "DESHABILITAR_X": "Disable {{name}}"
     }
   }
 }

@@ -70,11 +70,10 @@ class ApiBase(APITestCase):
 
 
 class AccountKindApiTests(ApiBase):
-    def test_kind_required_on_create_and_editable(self):  # AC-05
-        self.assertEqual(self.client_a.post(ACCOUNTS, {'name': 'Caja', 'currency': 'BOB'}, format='json').status_code, 400)
-        bad = self.client_a.post(ACCOUNTS, {'name': 'Caja', 'currency': 'BOB', 'kind': 'X'}, format='json')
-        self.assertEqual(bad.status_code, 400)
-        created = self.client_a.post(ACCOUNTS, {'name': 'Caja', 'currency': 'BOB', 'kind': 'CASH'}, format='json')
+    def test_kind_is_optional_validated_and_editable(self):  # AC-05
+        base = {'name': 'Caja', 'currency': 'BOB', 'code': '101', 'account_class': 'ASSET'}
+        self.assertEqual(self.client_a.post(ACCOUNTS, {**base, 'kind': 'X'}, format='json').status_code, 400)
+        created = self.client_a.post(ACCOUNTS, {**base, 'kind': 'CASH'}, format='json')
         self.assertEqual((created.status_code, created.data['kind']), (201, 'CASH'))
         patched = self.client_a.patch(f'{ACCOUNTS}{created.data["id"]}/', {'kind': 'WALLET'}, format='json')
         self.assertEqual(patched.data['kind'], 'WALLET')
@@ -128,7 +127,8 @@ class ClassificationApiTests(ApiBase):
         self.assertIn(APIClient().get(CLASSIFICATIONS).status_code, (401, 403))
 
     def test_contract_keeps_account_method_and_classification_apart(self):  # AC-07
-        account = self.client_a.post(ACCOUNTS, {'name': 'Banco', 'currency': 'BOB', 'kind': 'BANK'}, format='json').data
+        account = self.client_a.post(ACCOUNTS, {'name': 'Banco', 'currency': 'BOB', 'kind': 'BANK', 'code': '102',
+                                                'account_class': 'ASSET'}, format='json').data
         c = self.create_classification(self.client_a, 'Ventas', 'INCOME')
         self.assertNotIn('direction', account)
         self.assertNotIn('kind', c)

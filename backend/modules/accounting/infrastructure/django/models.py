@@ -14,6 +14,12 @@ class AccountModel(models.Model):
     is_active = models.BooleanField(default=True)
     # Caja/Banco/Billetera; nulo en cuentas anteriores a su introducción.
     kind = models.CharField(max_length=10, null=True, blank=True)
+    # Una de las seis clasificaciones contables (CONT-08); nula hasta que CONT-09 la haga obligatoria.
+    account_class = models.CharField(max_length=10, null=True, blank=True)
+    # Código del plan de cuentas (CONT-09); nulo en cuentas anteriores.
+    code = models.CharField(max_length=20, null=True, blank=True)
+    # Cuenta correctora (saldo normal contrario al de su clasificación).
+    is_contra = models.BooleanField(default=False)
     # Monto a la fecha de corte; editable solo mientras la cuenta no tiene movimientos.
     opening_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -24,7 +30,26 @@ class AccountModel(models.Model):
         ordering = ['name', 'id']
         constraints = [
             models.UniqueConstraint(Lower('name'), 'company_id', name='accounting_account_name_ci_uniq'),
+            models.UniqueConstraint(Lower('code'), 'company_id', condition=Q(code__isnull=False),
+                                    name='accounting_account_code_ci_uniq'),
             models.CheckConstraint(condition=Q(opening_balance__gte=0), name='accounting_account_opening_gte_0'),
+        ]
+
+
+class AccountClassSettingModel(models.Model):
+    """Estado por empresa de una clasificación contable fija; sin fila = habilitada."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    code = models.CharField(max_length=10)
+    is_enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'accounting_account_class_setting'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'code'], name='accounting_account_class_company_uniq'),
         ]
 
 
