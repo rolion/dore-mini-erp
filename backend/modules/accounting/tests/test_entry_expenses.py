@@ -123,6 +123,12 @@ class ExpenseEntryTests(TestCase):
             self.assertIn('classification_id', ctx.exception.errors)
         self.assertEqual(EntryModel.objects.count(), 0)
 
+    def test_expense_currency_must_match_the_account_currency(self):  # EDGE-02
+        with self.assertRaises(EntryValidationError) as ctx:
+            services.record_entry(self.company.id, expense_input(self.banco, self.alquiler.id, currency='USD'))
+        self.assertIn('currency', ctx.exception.errors)
+        self.assertEqual(EntryModel.objects.count(), 0)
+
     def test_account_of_another_company_is_rejected(self):  # AC-05
         foreign = DjangoAccountRepository(self.other.id).save(Account.create('Ajena', 'BOB'))
         with self.assertRaises(EntryValidationError):

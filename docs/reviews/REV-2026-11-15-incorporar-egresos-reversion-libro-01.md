@@ -1,6 +1,6 @@
 # REV-2026-11-15-incorporar-egresos-reversion-libro-01: ADR desactualizado respecto a la implementación
 
-**Status:** Open (no bloqueante)
+**Status:** Resolved (no bloqueante)
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-15-incorporar-egresos-reversion-libro.md (v1)

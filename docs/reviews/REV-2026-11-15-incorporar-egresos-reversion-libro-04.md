@@ -1,6 +1,6 @@
 # REV-2026-11-15-incorporar-egresos-reversion-libro-04: Falta test explícito de moneda distinta de la cuenta en egresos
 
-**Status:** Open (no bloqueante)
+**Status:** Resolved (no bloqueante)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-15-incorporar-egresos-reversion-libro.md (v1)
