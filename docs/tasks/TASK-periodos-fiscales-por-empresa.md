@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-periodos-fiscales-por-empresa
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/82
 **Fuente:** https://trello.com/c/tW9uE3gz/13-cont-10-crear-y-cerrar-per%C3%ADodos-fiscales-por-empresa
 
 ## Historial de transiciones
