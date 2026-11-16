@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-administrar-cuentas-codigo-clasificacion-estado (base: `task/TASK-configurar-seis-clasificaciones-contables`, PR #79 de CONT-08 aún sin mergear)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/80
 **Fuente:** https://trello.com/c/6XUugVjJ
 
 ## Historial de transiciones
