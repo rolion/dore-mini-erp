@@ -44,7 +44,7 @@ Administrar períodos desde Contabilidad › Configuración › Períodos fiscal
 - AC-04: mismos rangos y nombres en empresas distintas; lista/detalle/acciones de otra empresa responden 404.
 - AC-05: cerrar y reabrir (estados, usuario y fecha registrados); cerrado rechaza editar (409 `period_closed`); transición inválida 409 `period_invalid_state`; cerrar no crea asientos.
 - AC-06: `lock_open_period` acepta fecha en período abierto; rechaza fecha sin período (`DateOutsideFiscalPeriod`) y en período cerrado (`FiscalPeriodClosed`); una fecha explícita en un período abierto se acepta aunque el período del original esté cerrado (reversión).
-- AC-07: `lock_open_period` fuera de transacción falla con `PeriodContractError`.
+- AC-07: `lock_open_period` fuera de transacción falla con `FiscalPeriodContractError`.
 - AC-08: cambiar límites se rechaza (409 `period_has_entries`) si el puerto de uso reporta asientos que quedarían fuera; se permite si siguen cubiertos.
 - AC-09: cierre concurrente con contabilización: tras ambos, o el asiento existe y el cierre ocurrió después, o el asiento fue rechazado; jamás hay asiento posterior al cierre. Creación concurrente de dos períodos solapados de la misma empresa: solo uno persiste.
 - AC-10: UI de la pestaña (listar, crear, editar, cerrar, reabrir) con estados cargando/vacío/error/éxito, errores del servidor en el diálogo y textos i18n es/en/pt.
@@ -121,7 +121,7 @@ Seguir ADR: agregado sin Django, repositorio `DjangoFiscalPeriodRepository(compa
 Ver ADR decisiones 1-8.
 
 ## Files/components affected
-- Backend: `accounting/domain/fiscal_period.py` (nuevo), `application/fiscal_periods.py` y `application/ports.py` (nuevos), `infrastructure/django/models.py` (+`FiscalPeriodModel`), `infrastructure/django/repositories.py` (+repositorio), `infrastructure/adapters.py` (+`NoJournalPeriodUsage`), `api/serializers.py`, `api/views.py`, `api/urls.py`, `services.py` (+`lock_open_period`, `period_for`, `PeriodRef`, excepciones), `migrations/0004_fiscal_period.py`, tests nuevos en `accounting/tests/`.
+- Backend: `accounting/domain/fiscal_period.py` (nuevo), `application/fiscal_periods.py` (nuevo; incluye el puerto `PeriodUsage`), `infrastructure/django/models.py` (+`FiscalPeriodModel`), `infrastructure/django/repositories.py` (+repositorio), `infrastructure/adapters.py` (+`NoJournalPeriodUsage`), `api/serializers.py`, `api/views.py`, `api/urls.py`, `services.py` (+`lock_open_period`, `period_for`, `PeriodRef`, excepciones), `migrations/0004_fiscal_period.py`, tests nuevos en `accounting/tests/`.
 - Frontend: `features/accounting/models/fiscal-period.ts`, `services/fiscal-periods-api.service.ts`, `components/periods-tab`, `components/period-dialog`, `components/period-status-dialog`, `pages/accounting-settings` (tercera pestaña), `testing/fiscal-period-fixtures.ts`, `assets/i18n/{es,en,pt}.json`.
 - Docs: nota en `docs/architecture/ddd.md` (módulo accounting).
 
@@ -136,7 +136,7 @@ Ver ADR decisiones 1-8.
 8. Actualizar `ddd.md`; suite backend + `npm test`, `npm run lint`, `npm run i18n:check`, `npm run build`.
 
 ## Database / migrations
-Migración nueva `0009_fiscal_period` (tabla, checks, único `(company_id, lower(name))`, índice). No toca migraciones aplicadas. Si otra rama de accounting ya tomó el número 0004, renumerar al integrar.
+Migración nueva `0009_fiscal_period` (tabla, checks, único `(company_id, lower(name))`, índice). No toca migraciones aplicadas. (Nota v1: al integrar la rama `accounting` la migración quedó como `0009_fiscal_period`, dependiente de `0008`.)
 
 ## Risks
 - Bloqueo advisory: usar el patrón de namespace de `adapters.py` y liberarlo con `xact` (fin de transacción) para no filtrar bloqueos.
