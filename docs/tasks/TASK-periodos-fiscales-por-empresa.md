@@ -1,6 +1,6 @@
 # TASK-periodos-fiscales-por-empresa: Crear y cerrar períodos fiscales por empresa (CONT-10)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-periodos-fiscales-por-empresa
@@ -14,6 +14,7 @@
 | 2026-11-16 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI; decisiones de negocio resueltas por la persona (reapertura, cobros actuales) | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
+| 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -98,7 +99,13 @@ Implementado según PLAN v1 (sin cambios de Specification ni de plan).
 **Deuda / pendiente para CONT-02:** cablear el adaptador real de `PeriodUsage` (hoy `NoJournalPeriodUsage` devuelve 0) y probar AC-08/AC-09 con asientos reales; renumerar la migración si otra rama de accounting ya usó `0004`.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-16). Sin hallazgos Critical/High.
+- Backend: `manage.py test modules.accounting` 120 OK; suite completa 1678 OK; `makemigrations --check` sin cambios; bandit sin hallazgos; ruff/flake8 solo estilo (sin configuración de lint en el repo); mypy no concluyente (`import-untyped`).
+- Frontend: `ng test` 1430 OK (con cobertura: líneas 88,35 %, ramas 77,89 %); en una de tres corridas falló `screens-i18n.spec.ts:58-65` (flake preexistente por orden aleatorio, ajeno al diff); `ng lint` limpio; `i18n:check` 0 faltantes; `ng build` OK; `npm audit`: 2 moderadas transitivas (hono), ajenas al cambio.
+- DDD/aislamiento: dominio sin Django, consultas filtradas por `company_id`, sin importar `accounts`.
+- Conformidad: AC-01..AC-10, INV y API verificados; AC-08/AC-09 con asientos reales quedan para CONT-02 (declarado).
+- Visual: checklist §8 revisada sobre el código; **verificación en navegador no realizada**.
+- Hallazgos abiertos no bloqueantes: REV-2026-11-16-periodos-fiscales-por-empresa-01 a -09 (Medium: 01 prueba de concurrencia con `sleep`, 02 prueba de 403 por rol; el resto Low).
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/82 listo para aprobación humana (no se mergea). Cambio con migración de base de datos (ADR `ADR-periodos-fiscales-por-empresa-agregado-y-bloqueo`): requiere aprobación explícita de una persona.
