@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-diagnostico-transicion-partida-doble (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/78
 **Fuente:** https://trello.com/c/uVkvCkVl
 
 ## Historial de transiciones
