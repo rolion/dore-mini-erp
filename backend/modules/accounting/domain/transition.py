@@ -91,7 +91,8 @@ def parse_transition_mapping(raw: object, account_ids: set[UUID]) -> TransitionM
         equity = _code(equity, 'opening_equity', errors)
     shared = set(money.values()) & ({equity} | set(counterparts.values()) if equity else set(counterparts.values()))
     if shared:
-        errors.append(f'Un código no puede ser a la vez de una cuenta de dinero y de una contrapartida: {", ".join(sorted(shared))}.')
+        errors.append('Un código no puede ser a la vez de una cuenta de dinero y de una contrapartida: '
+                      f'{", ".join(sorted(shared))}.')
     if errors:
         raise TransitionMappingError(errors)
     return TransitionMapping(money, counterparts, equity)

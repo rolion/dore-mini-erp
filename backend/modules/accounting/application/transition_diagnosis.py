@@ -89,8 +89,9 @@ class DiagnoseTransition:
             if verdict.reason:
                 reasons[verdict.reason] = reasons.get(verdict.reason, 0) + 1
             if verdict.state == PENDING:
-                details.append({'entry_id': str(entry.id), 'origin': entry.origin_kind, 'origin_id': str(entry.origin_id),
-                                'operation': entry.operation, 'payment_date': entry.payment_date.isoformat(),
+                details.append({'entry_id': str(entry.id), 'origin': entry.origin_kind,
+                                'origin_id': str(entry.origin_id), 'operation': entry.operation,
+                                'payment_date': entry.payment_date.isoformat(),
                                 'amount': _money(entry.amount), 'reason': verdict.reason})
 
         entered = {(e.origin_kind, e.origin_id) for e in entries}
@@ -104,10 +105,10 @@ class DiagnoseTransition:
 
         openings = []
         for account in accounts:
-            verdict = classify_opening(account.opening_balance, account.id, cutoff, mapping)
-            if verdict:
+            opening = classify_opening(account.opening_balance, account.id, cutoff, mapping)
+            if opening:
                 openings.append({'account_id': str(account.id), 'amount': _money(account.opening_balance),
-                                 'state': verdict.state, 'reason': verdict.reason})
+                                 'state': opening.state, 'reason': opening.reason})
         return {
             'company_id': str(company_id),
             'cutoff_date': cutoff.isoformat() if cutoff else None,

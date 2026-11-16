@@ -32,11 +32,12 @@ def fact(**kw):
     return EntryFact(**data)
 
 
+SOURCE_100 = SourceFact(Decimal('100.00'))
 FULL = TransitionMapping({ACCOUNT: '101'}, {'PRODUCT': '401'}, '301')
 
 
 class ClassifyTests(SimpleTestCase):
-    def verdict(self, entry=None, source=SourceFact(Decimal('100.00')), verifiable=True, cutoff=CUTOFF, mapping=FULL):
+    def verdict(self, entry=None, source=SOURCE_100, verifiable=True, cutoff=CUTOFF, mapping=FULL):
         return classify_entry(entry or fact(), source, verifiable, cutoff, {ACCOUNT}, mapping)
 
     def test_without_rules_nothing_is_convertible(self):  # AC-02

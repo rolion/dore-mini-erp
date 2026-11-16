@@ -30,8 +30,9 @@ def render(report: dict) -> str:
     if report['blocked_without_cutoff']:
         lines.append('  BLOQUEADA: tiene entradas y no tiene fecha de corte; nada se puede convertir.')
     a, e = report['accounts'], report['entries']
-    lines.append(f'  Cuentas: {a["total"]} (activas {a["active"]}, con tipo {a["with_kind"]}, sin tipo {a["without_kind"]}, '
-                 f'con movimientos {a["with_entries"]}) · apertura total {a["opening_total"]}')
+    lines.append(f'  Cuentas: {a["total"]} (activas {a["active"]}, con tipo {a["with_kind"]}, '
+                 f'sin tipo {a["without_kind"]}, con movimientos {a["with_entries"]}) · '
+                 f'apertura total {a["opening_total"]}')
     lines.append(f'  Entradas: {e["total"]} · {e["amount"]} · regularizadas {e["regularized"]} · '
                  f'sin clasificación {e["without_classification"]}')
     for shape, row in e['by_shape'].items():
@@ -53,7 +54,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--company', help='UUID de la empresa. Sin esta opción, diagnostica todas (una por una).')
-        parser.add_argument('--mapping', help='JSON {money_accounts, counterparts, opening_equity} (solo con --company).')
+        parser.add_argument('--mapping',
+                            help='JSON {money_accounts, counterparts, opening_equity} (solo con --company).')
         parser.add_argument('--json', action='store_true', help='Resultado en JSON (incluye el detalle de pendientes).')
 
     def handle(self, *args, **options):
