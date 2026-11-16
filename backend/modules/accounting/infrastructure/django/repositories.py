@@ -330,6 +330,10 @@ class DjangoEntryRepository:
     def get(self, entry_id: UUID) -> EntryModel | None:
         return self._rows().select_related('account', 'reverses', 'reversed_by_entry').filter(pk=entry_id).first()
 
+    def account_ids_with_entries(self) -> set[UUID]:
+        """Cuentas de la empresa que ya tienen entradas, en una sola consulta (para marcar las bloqueadas en listados)."""
+        return set(self._rows().values_list('account_id', flat=True).distinct())
+
     def has_entries_for_account(self, account_id: UUID) -> bool:
         return self._rows().filter(account_id=account_id).exists()
 

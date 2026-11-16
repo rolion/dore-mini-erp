@@ -1,4 +1,4 @@
-# PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado (v3)
+# PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado (v4)
 
 **Task:** TASK-administrar-cuentas-codigo-clasificacion-estado · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** [DDR](../design/DDR-administrar-cuentas-codigo-clasificacion-estado-lista-y-formulario-de-cuentas.md) · [ADR](../adr/ADR-administrar-cuentas-codigo-clasificacion-estado-modelo-de-cuenta.md)
@@ -66,14 +66,14 @@ Mismos permisos que la configuración de Contabilidad (`_ConfigView`, administra
 
 ## API contract
 - API-01: `POST/PATCH /api/accounting/accounts/` aceptan `code`, `account_class`, `is_contra`, `kind` (opcional).
-- API-02: `GET` devuelve `code`, `account_class`, `is_contra`, `kind`; filtro `?account_class=`; orden por código.
-- API-04: en PATCH, `kind: null` explícito quita el tipo de cuenta de dinero; `kind` ausente no cambia nada (REV-01).
+- API-02: `GET` devuelve `code`, `account_class`, `is_contra`, `kind` y `has_entries` (la cuenta ya tiene asientos, calculado con una sola consulta por listado); filtro `?account_class=`; orden por código.
 - API-03: errores 400 por campo; 409 `account_has_entries` y `account_in_use`.
+- API-04: en PATCH, `kind: null` explícito quita el tipo de cuenta de dinero; `kind` ausente no cambia nada (REV-01).
 - Compatibilidad: el alta pasa a exigir `code` y `account_class` (único cliente: el panel, actualizado en el mismo PR).
 
 ## UI behavior
 - UI-01: lista según el DDR (columnas, filtro, etiqueta «Correctora», «Sin código»).
-- UI-02: diálogo con código, nombre, clasificación (solo habilitadas), cuenta de dinero (solo con Activo) y casilla correctora; campos bloqueados con asientos.
+- UI-02: diálogo con código, nombre, clasificación (solo habilitadas), cuenta de dinero (solo con Activo) y casilla correctora; clasificación y correctora deshabilitadas cuando `has_entries` es verdadero.
 - UI-03: estados cargando/vacío/error/éxito y textos es/en/pt.
 
 ## Non-functional requirements
@@ -149,3 +149,4 @@ Ninguna.
 ## Changelog
 - **v2** (2026-11-16): [Specification] Se añade API-04 (`kind: null` quita el tipo de dinero) y el mensaje del error de `kind` junto a la clasificación, para cerrar REV-01. Cambio de contrato aprobado por el usuario en el chat («Sí, corrígelo»). Solicitado por delivery-publish, REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-01.
 - **v3** (2026-11-16): [Specification] INV-01 y AC-01: el código de cuenta pasa a ser solo numérico (p. ej. `111001`) en lugar de alfanumérico con signos; sigue siendo único por empresa y repetible entre empresas. Cambio pedido por el usuario en el chat. Los códigos con puntos del plan de cuentas inicial (p. ej. `1.1.01`) deberán cargarse como dígitos.
+- **v4** (2026-11-16): [Specification] API-02 añade `has_entries` (contrato de lectura, retrocompatible) para cumplir UI-02 con los campos bloqueados cuando la cuenta tiene asientos (REV-02). [Implementation Plan] Se corrigen REV-03 (clave i18n sin uso), REV-04 (prueba directa de la rama `IntegrityError`) y REV-05 (longitud del código medida tras recortar). Solicitado por el usuario en el chat («corrige los hallazgos»).

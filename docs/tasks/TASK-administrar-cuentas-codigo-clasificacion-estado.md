@@ -19,6 +19,7 @@
 | 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos, no bloqueantes) | delivery-publish |
 | 2026-11-16 | PUBLISH (sin cambio) | REV-01 corregido; re-revisión PASS; REV-01 cerrado | delivery-build / delivery-publish |
 | 2026-11-16 | PUBLISH (sin cambio) | Quality Gate repetido sobre el estado actual con el código numérico (PLAN v3): PASS | delivery-publish |
+| 2026-11-16 | PUBLISH (sin cambio) | REV-02..05 corregidos (PLAN v4); re-revisión independiente pendiente | delivery-build |
 
 ## Investigación
 
@@ -96,7 +97,7 @@ Cuentas del plan con código único por empresa, clasificación obligatoria, tip
 - **Cobertura de AC:** AC-01..AC-10 en `test_account_plan.py` y `test_account_classes.py`; AC-11 con la prueba de migración; AC-12 en los specs de lista, diálogo y servicio.
 
 **Desviaciones del plan:**
-1. El DDR pedía deshabilitar en el diálogo los campos de clasificación y correctora cuando la cuenta tiene asientos. El API de cuentas no expone si hay asientos (calcularlo por cuenta sería N+1), así que el bloqueo lo informa el servidor con el 409 `account_has_entries`, que el diálogo muestra como aviso. La ayuda de ambos campos ya lo explica.
+1. ~~El diálogo no bloqueaba campos por asientos.~~ **Resuelta (REV-02):** el API expone `has_entries` (una consulta por listado) y el diálogo deshabilita la clasificación y la casilla correctora; el 409 del servidor sigue siendo la barrera real.
 2. Se actualizaron pruebas existentes (`test_api`, `test_classifications`, `test_coverage`, `test_account_classes` y los specs del frontend) al nuevo contrato de alta (código y clasificación obligatorios, tipo opcional).
 
 **Verificación propia (no es el Quality Gate):** backend completo 1793 OK; `makemigrations --check` sin cambios; frontend `ng test` 1468 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` correcto.
@@ -115,6 +116,7 @@ Cuentas del plan con código único por empresa, clasificación obligatoria, tip
 - **Re-revisión tras la corrección de REV-01** (commit `6b47154`, subagente aislado): PASS. Backend suite completa 1795 OK; frontend 1471 OK, lint, i18n y build limpios. **REV-01 cerrado.** Quedan abiertos REV-02 y REV-03 (Low). El PLAN pasó a v2 (API-04) con aprobación del usuario.
 
 - **Quality Gate repetido sobre el estado actual** (PLAN v3, código numérico, REV-01 corregido): **PASS**. Backend suite completa 1796 OK; `makemigrations --check` sin cambios; bandit sin hallazgos; mypy sin errores nuevos en los archivos modificados. Frontend `ng test` 1471 OK, `ng lint` limpio, `i18n:check` 0 faltantes, `ng build` correcto; `npm audit`: 2 moderadas sin relación con el diff. Todos los AC, INV y API-01..04 con verificación real; el diff no contiene la guía ni el script de limpieza; ADR, DDR, PLAN y textos i18n coherentes con el código numérico. Hallazgos nuevos, todos Low: [REV-04](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-04.md) (la prueba de carrera no ejerce `IntegrityError`) y [REV-05](../reviews/REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-05.md) (longitud del código sin recortar en el cliente). REV-02 y REV-03 siguen abiertos. No verificado: revisión visual en navegador, carga con datos reales de producción, interacción con CONT-02, CONT-04 y CONT-12.
+- **Corrección de REV-02 a REV-05** (PLAN v4): `has_entries` en el API y campos bloqueados en el diálogo; clave i18n sin uso eliminada; prueba directa de la rama `IntegrityError`; longitud del código medida tras recortar. Los cuatro REV quedan cerrados, a la espera de la re-revisión independiente.
 
 ## Publicación
-PR #80 (base `task/TASK-configurar-seis-clasificaciones-contables`, apilado sobre el #79) listo para aprobación humana; no se mergea. Al mergear el #79 a `accounting`, hay que cambiar la base de este PR a `accounting`. Cambio sensible: contrato de datos de Contabilidad (ADR `modelo-de-cuenta`) con migración aditiva `0008`. REV-01 corregido y cerrado; quedan REV-02 y REV-03 (Low).
+PR #80 (base `task/TASK-configurar-seis-clasificaciones-contables`, apilado sobre el #79) listo para aprobación humana; no se mergea. Al mergear el #79 a `accounting`, hay que cambiar la base de este PR a `accounting`. Cambio sensible: contrato de datos de Contabilidad (ADR `modelo-de-cuenta`) con migración aditiva `0008`. REV-01 a REV-05 corregidos y cerrados (PLAN v4); pendiente la re-revisión independiente de esas correcciones.

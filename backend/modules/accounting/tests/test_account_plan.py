@@ -1,17 +1,20 @@
 """CONT-09: plan de cuentas con código, clasificación obligatoria, tipo de dinero opcional y cuenta correctora."""
 import itertools
+from unittest import mock
 from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.test.utils import CaptureQueriesContext
 from django.test import SimpleTestCase, TransactionTestCase
 from rest_framework.test import APIClient, APITestCase
 
 from modules.accounting import services
 from modules.accounting.domain.account import Account, AccountValidationError, validate_code
 from modules.accounting.infrastructure.django.models import AccountModel, EntryModel
+from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository
 from modules.accounts.testing import authenticate, make_admin, make_company
 
 ACCOUNTS = '/api/accounting/accounts/'
@@ -108,10 +111,22 @@ class CreateTests(ApiBase):
         self.assertEqual((contra.status_code, contra.data['is_contra'], contra.data['kind']), (201, True, None))
         self.assertFalse(self.create(self.client_a, 'Equipos', '121002').data['is_contra'])
 
-    def test_race_on_duplicate_code_is_a_400_not_a_500(self):  # EDGE
+    def test_duplicate_code_is_a_400_for_sequential_requests(self):  # EDGE
         self.create(self.client_a, 'Caja', '101')
         again = self.create(self.client_a, 'Caja 2', '101')
         self.assertEqual(again.status_code, 400)
+
+    def test_race_on_duplicate_code_is_resolved_by_the_unique_constraint(self):  # EDGE, REV-04
+        """La comprobación previa no ve el duplicado (otra petición lo inserta a la vez): manda la restricción única."""
+        self.create(self.client_a, 'Caja', '777')
+        repository = DjangoAccountRepository(self.company_a.id)
+        racing = Account.create('Banco', 'BOB', code='777')
+        with mock.patch.object(DjangoAccountRepository, '_conflicts', side_effect=[{}, {'code': ['Ya existe una cuenta con ese código.']}]):
+            with self.assertRaises(AccountValidationError) as raised:
+                repository.save(racing)
+        self.assertEqual(raised.exception.errors, {'code': ['Ya existe una cuenta con ese código.']})
+        self.assertEqual(AccountModel.objects.filter(company_id=self.company_a.id, code='777').count(), 1)
+        self.assertFalse(AccountModel.objects.filter(pk=racing.id).exists())
 
 
 class UpdateTests(ApiBase):
@@ -162,6 +177,34 @@ class UpdateTests(ApiBase):
         self.assertIn('code', dup.data)
         same = self.client_a.patch(url, {'account_class': None, 'code': None}, format='json')
         self.assertEqual((same.status_code, same.data['code'], same.data['account_class']), (200, '102', 'ASSET'))
+
+
+class HasEntriesTests(ApiBase):
+    def test_accounts_expose_whether_they_have_entries(self):  # UI-02, REV-02
+        with_entries = self.create(self.client_a, 'Caja', '111001', kind='CASH').data
+        free = self.create(self.client_a, 'Banco', '111002', kind='BANK').data
+        self.assertFalse(with_entries['has_entries'])
+        self.add_entry(with_entries['id'], self.company_a)
+        flags = {a['id']: a['has_entries'] for a in self.client_a.get(ACCOUNTS).data}
+        self.assertEqual(flags, {with_entries['id']: True, free['id']: False})
+        self.assertTrue(self.client_a.get(f'{ACCOUNTS}{with_entries["id"]}/').data['has_entries'])
+        self.assertTrue(self.client_a.patch(f'{ACCOUNTS}{with_entries["id"]}/', {'name': 'Caja 2'}, format='json').data['has_entries'])
+        self.assertTrue(self.client_a.post(f'{ACCOUNTS}{with_entries["id"]}/deactivate/').data['has_entries'])
+        self.assertFalse(self.client_a.get(f'{ACCOUNTS}{free["id"]}/').data['has_entries'])
+
+    def test_listing_uses_a_constant_number_of_queries(self):  # sin N+1
+        def queries():
+            with CaptureQueriesContext(connection) as ctx:
+                self.assertEqual(self.client_a.get(ACCOUNTS).status_code, 200)
+            return len(ctx)
+
+        first = self.create(self.client_a, 'Cuenta 0', '500000').data
+        self.add_entry(first['id'], self.company_a)
+        one_account = queries()
+        for n in range(1, 7):
+            account = self.create(self.client_a, f'Cuenta {n}', str(500000 + n)).data
+            self.add_entry(account['id'], self.company_a)
+        self.assertEqual(queries(), one_account)
 
 
 class KindClearingTests(ApiBase):

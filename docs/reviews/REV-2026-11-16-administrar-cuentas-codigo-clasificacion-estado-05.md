@@ -1,6 +1,6 @@
 # REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-05: El frontend valida la longitud del código sin recortar
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md (v3)
@@ -19,3 +19,6 @@ Aceptar en el cliente un código de 20 dígitos aunque lleve espacios en los bor
 
 ## Evidence
 Informe del Quality Gate repetido, hallazgo 2. Observaciones menores sin REV propio: el serializer admite 64 caracteres y el mensaje de longitud sale del dominio; en el PLAN, API-04 está listado antes de API-03.
+
+## Resolution
+Corregido: el formulario mide la longitud del código tras recortar (`maxTrimmedLength`), con prueba para 20 y 21 dígitos.

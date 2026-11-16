@@ -23,7 +23,7 @@ describe('AccountingApiService', () => {
     const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
     expect(req.request.params.get('active')).toBe('true');
     req.flush([{ id: 'a1', name: 'Caja', currency: 'BOB', is_active: true }]);
-    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, accountClass: null, code: null, isContra: false, openingBalance: '0.00', isActive: true }]);
+    expect(result).toEqual([{ id: 'a1', name: 'Caja', currency: 'BOB', kind: null, accountClass: null, code: null, isContra: false, hasEntries: false, openingBalance: '0.00', isActive: true }]);
   });
 
   it('configures a method with account_id and is_active', () => {
@@ -83,9 +83,11 @@ describe('AccountingApiService', () => {
     const list = http.expectOne((r) => r.url.endsWith('/accounting/accounts/'));
     expect(list.request.params.get('account_class')).toBe('ASSET');
     list.flush([]);
-    service.createAccount({ name: 'Depreciación', currency: 'BOB', code: '1.2.05', accountClass: 'ASSET', isContra: true }).subscribe();
+    let created: unknown;
+    service.createAccount({ name: 'Depreciación', currency: 'BOB', code: '121005', accountClass: 'ASSET', isContra: true }).subscribe((a) => (created = a));
     const req = http.expectOne((r) => r.url.endsWith('/accounting/accounts/') && r.method === 'POST');
-    expect(req.request.body).toEqual({ name: 'Depreciación', currency: 'BOB', code: '1.2.05', account_class: 'ASSET', is_contra: true });
-    req.flush({ id: 'a1', name: 'Depreciación', currency: 'BOB', code: '1.2.05', account_class: 'ASSET', is_contra: true, is_active: true });
+    expect(req.request.body).toEqual({ name: 'Depreciación', currency: 'BOB', code: '121005', account_class: 'ASSET', is_contra: true });
+    req.flush({ id: 'a1', name: 'Depreciación', currency: 'BOB', code: '121005', account_class: 'ASSET', is_contra: true, has_entries: true, is_active: true });
+    expect((created as { hasEntries: boolean }).hasEntries).toBeTrue();
   });
 });

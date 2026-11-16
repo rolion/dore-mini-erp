@@ -33,6 +33,8 @@ export interface Account {
   accountClass?: AccountClassCode | null;
   /** Código del plan de cuentas (único por empresa); `null` en cuentas anteriores. */
   code?: string | null;
+  /** La cuenta ya tiene asientos: su clasificación y su marca de correctora no cambian. */
+  hasEntries?: boolean;
   /** Cuenta correctora: su saldo normal es contrario al de su clasificación. */
   isContra?: boolean;
   /** Monto a la fecha de corte, decimal en texto (nunca float). */
@@ -59,6 +61,7 @@ export interface AccountDto {
   account_class?: AccountClassCode | null;
   code?: string | null;
   is_contra?: boolean;
+  has_entries?: boolean;
   opening_balance?: string;
   is_active: boolean;
 }

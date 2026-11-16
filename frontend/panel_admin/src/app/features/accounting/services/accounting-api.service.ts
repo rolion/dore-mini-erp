@@ -28,6 +28,7 @@ export function toAccount(dto: AccountDto): Account {
     accountClass: dto.account_class ?? null,
     code: dto.code ?? null,
     isContra: dto.is_contra ?? false,
+    hasEntries: dto.has_entries ?? false,
     openingBalance: dto.opening_balance ?? '0.00',
     isActive: dto.is_active,
   };

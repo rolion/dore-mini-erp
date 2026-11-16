@@ -21,6 +21,11 @@ import {
 } from '../../models/accounting';
 import { AccountingApiService } from '../../services/accounting-api.service';
 
+/** Longitud máxima del valor recortado (el servidor recorta antes de validar). */
+function maxTrimmedLength(max: number): (control: AbstractControl<string>) => ValidationErrors | null {
+  return (control) => (control.value.trim().length > max ? { maxlength: { requiredLength: max, actualLength: control.value.trim().length } } : null);
+}
+
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {
   return control.value.trim() ? null : { required: true };
 }
@@ -43,7 +48,7 @@ export class AccountDialogComponent {
   readonly kinds = ACCOUNT_KINDS;
   readonly codeMaxLength = ACCOUNT_CODE_MAX_LENGTH;
   readonly form = inject(FormBuilder).nonNullable.group({
-    code: ['', [notBlank, Validators.maxLength(ACCOUNT_CODE_MAX_LENGTH), Validators.pattern(ACCOUNT_CODE_PATTERN)]],
+    code: ['', [notBlank, maxTrimmedLength(ACCOUNT_CODE_MAX_LENGTH), Validators.pattern(ACCOUNT_CODE_PATTERN)]],
     name: ['', [notBlank, Validators.maxLength(ACCOUNT_NAME_MAX_LENGTH)]],
     currency: ['BOB', Validators.required],
     accountClass: ['' as AccountClassCode | '', Validators.required],
@@ -97,6 +102,11 @@ export class AccountDialogComponent {
     return this.form.controls.accountClass.value === 'ASSET';
   }
 
+  /** La cuenta ya tiene asientos: sus campos bloqueados se explican en la ayuda del formulario. */
+  get locked(): boolean {
+    return this.account?.hasEntries === true;
+  }
+
   get isEdit(): boolean {
     return this.account !== null;
   }
@@ -110,6 +120,11 @@ export class AccountDialogComponent {
 
   edit(account: Account): void {
     this.account = account;
+    // Con asientos, la clasificación y la marca de correctora no cambian (el servidor también lo rechaza).
+    if (account.hasEntries) {
+      this.form.controls.accountClass.disable();
+      this.form.controls.isContra.disable();
+    }
     this.form.setValue({
       code: account.code ?? '',
       name: account.name,

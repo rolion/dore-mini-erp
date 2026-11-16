@@ -2533,7 +2533,6 @@
       "TIPO_CASH": "Cash box",
       "TIPO_BANK": "Bank",
       "TIPO_WALLET": "Wallet",
-      "SIN_TIPO": "No type",
       "EL_TIPO_ES_OBLIGATORIO": "The type is required.",
       "SALDO_DE_APERTURA": "Opening balance",
       "SALDO_DE_APERTURA_AYUDA": "Account amount at the cutoff date. It cannot be changed once the account has movements.",

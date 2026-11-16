@@ -82,10 +82,10 @@ class MethodInputSerializer(serializers.Serializer):
     is_active = serializers.BooleanField(default=True)
 
 
-def serialize_account(account) -> dict:
+def serialize_account(account, has_entries: bool = False) -> dict:
     return {'id': str(account.id), 'name': account.name, 'currency': account.currency, 'kind': account.kind,
             'code': account.code, 'is_contra': account.is_contra, 'account_class': account.account_class,
-            'opening_balance': str(account.opening_balance),
+            'has_entries': has_entries, 'opening_balance': str(account.opening_balance),
             'is_active': account.is_active,
             'created_at': account.created_at, 'updated_at': account.updated_at}
 

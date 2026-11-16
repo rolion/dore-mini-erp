@@ -80,6 +80,40 @@ describe('AccountDialogComponent', () => {
     expect(api.createAccount.calls.mostRecent().args[0].kind).toBeUndefined();
   });
 
+  it('locks the classification and the contra flag when the account has entries and still submits them unchanged (REV-02)', () => {
+    const fixture = create();
+    const withEntries: Account = { ...saved, isContra: true, hasEntries: true };
+    fixture.componentInstance.edit(withEntries);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.locked).toBeTrue();
+    expect(fixture.componentInstance.form.controls.accountClass.disabled).toBeTrue();
+    expect(fixture.componentInstance.form.controls.isContra.disabled).toBeTrue();
+    expect(fixture.nativeElement.querySelector('#account-class').disabled).toBeTrue();
+    expect(fixture.nativeElement.querySelector('#account-contra').disabled).toBeTrue();
+    api.updateAccount.and.returnValue(of({ ...withEntries, name: 'Caja chica' }));
+    fixture.componentInstance.form.patchValue({ name: 'Caja chica' });
+    fixture.componentInstance.onSubmit();
+    const body = api.updateAccount.calls.mostRecent().args[1];
+    expect([body.accountClass, body.isContra, body.name]).toEqual(['ASSET', true, 'Caja chica']);
+  });
+
+  it('keeps the classification and the contra flag editable when the account has no entries (REV-02)', () => {
+    const fixture = create();
+    fixture.componentInstance.edit({ ...saved, hasEntries: false });
+    expect(fixture.componentInstance.locked).toBeFalse();
+    expect(fixture.componentInstance.form.controls.accountClass.enabled).toBeTrue();
+    expect(fixture.componentInstance.form.controls.isContra.enabled).toBeTrue();
+  });
+
+  it('measures the code length after trimming (REV-05)', () => {
+    const fixture = create();
+    const twenty = '12345678901234567890';
+    fixture.componentInstance.form.patchValue({ code: ` ${twenty} ` });
+    expect(fixture.componentInstance.form.controls.code.valid).toBeTrue();
+    fixture.componentInstance.form.patchValue({ code: `${twenty}1` });
+    expect(fixture.componentInstance.form.controls.code.invalid).toBeTrue();
+  });
+
   it('removes the money type of an existing account when it is reclassified outside Activo (REV-01)', () => {
     const fixture = create();
     fixture.componentInstance.edit(saved);

@@ -1,6 +1,6 @@
 # REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-02: Campos no se bloquean en el diálogo cuando hay asientos
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md (v1)
@@ -19,3 +19,6 @@ Se habilitan y el servidor rechaza el cambio con un aviso visible. Desviación d
 
 ## Evidence
 `## Implementación` del TASK, desviación 1. Mejora futura: campo `has_entries` en el listado (una consulta agregada). Informe del Quality Gate, hallazgo 2.
+
+## Resolution
+Corregido: `GET /api/accounting/accounts/` y el detalle devuelven `has_entries` (listado con una sola consulta, probado sin N+1) y el diálogo deshabilita la clasificación y la casilla correctora cuando es verdadero; sus valores se envían sin cambio y el 409 `account_has_entries` sigue siendo la barrera real. PLAN v4.

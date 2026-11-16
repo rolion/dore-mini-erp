@@ -2533,7 +2533,6 @@
       "TIPO_CASH": "Caja",
       "TIPO_BANK": "Banco",
       "TIPO_WALLET": "Billetera",
-      "SIN_TIPO": "Sin tipo",
       "EL_TIPO_ES_OBLIGATORIO": "El tipo es obligatorio.",
       "SALDO_DE_APERTURA": "Saldo de apertura",
       "SALDO_DE_APERTURA_AYUDA": "Monto de la cuenta a la fecha de corte. No se puede cambiar cuando la cuenta ya tiene movimientos.",

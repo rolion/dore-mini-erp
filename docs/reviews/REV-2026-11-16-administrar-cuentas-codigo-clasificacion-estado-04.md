@@ -1,6 +1,6 @@
 # REV-2026-11-16-administrar-cuentas-codigo-clasificacion-estado-04: La prueba de carrera por código duplicado no ejerce la rama de IntegrityError
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-administrar-cuentas-codigo-clasificacion-estado.md (v3)
@@ -19,3 +19,6 @@ La rama de `IntegrityError` no tiene prueba directa; el código es correcto por 
 
 ## Evidence
 Informe del Quality Gate repetido, hallazgo 1. Hay un patrón de `mock` imitable en `tests/test_classifications.py:142`.
+
+## Resolution
+Corregido: nueva prueba que simula la carrera (la comprobación previa no ve el duplicado) y verifica que `except IntegrityError` devuelve el 400 por campo y no persiste la cuenta.
