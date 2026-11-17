@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-03: Alerta contable de Ventas no unificada con la compartida
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos.md (v1)
@@ -19,3 +19,5 @@ Ver descripción.
 
 ## Evidence
 Quality Gate (subagente aislado, 2026-11-17). Deuda aceptada y anotada en `design-system.md` §10 y en el TASK.
+
+Resuelto: el detalle del pedido y el diálogo de entrega de Ventas usan `app-posting-issues-alert` (con `titleKey`/`linkKey`/`settingsLink`); se conservan los `data-testid`. Se quitó la deuda de `design-system.md` §10.

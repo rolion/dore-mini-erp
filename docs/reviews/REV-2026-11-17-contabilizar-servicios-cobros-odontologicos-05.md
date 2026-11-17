@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-05: Línea larga en `detail_data`
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos.md (v1)
@@ -19,3 +19,5 @@ Ver descripción.
 
 ## Evidence
 Quality Gate (subagente aislado, 2026-11-17). Cosmético.
+
+Resuelto: líneas largas partidas en `serializers.py`, `views.py` y `obligation.py` (ninguna línea nueva supera 120 caracteres; migración autogenerada excluida).

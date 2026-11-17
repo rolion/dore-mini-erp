@@ -18,7 +18,9 @@ from modules.receivables.infrastructure.adapters import ServicePostingAdapter, s
 from modules.receivables.infrastructure.django.repositories import DjangoObligationRepository
 from shared.tenancy import company_id_from
 
-from .serializers import PaymentInputSerializer, RenderServiceSerializer, detail_data, payment_data, service_data, summary_data
+from .serializers import (
+    PaymentInputSerializer, RenderServiceSerializer, detail_data, payment_data, service_data, summary_data,
+)
 
 # Módulos de cada fuente, igual que en sus propias APIs.
 SOURCE_MODULES = {'quotation': ('quotations',), 'dental': ('dentistry', 'customers', 'services')}

@@ -200,7 +200,7 @@ class Obligation:
     def mark_rendered(self, snapshot: CommitmentSnapshot, line_id: UUID, *, service_date: date | None, today: date,
                       recorded_by: int | None = None, recorded_by_name: str = '',
                       now: datetime | None = None) -> tuple[RenderedService, bool]:
-        """Marca un tratamiento aceptado como prestado. Devuelve (prestación, creada); repetir no crea otra (INV-01)."""
+        """Marca un tratamiento aceptado como prestado. Devuelve (prestación, creada); repetir no crea otra."""
         line = next((l for l in snapshot.lines if l.line_id == line_id), None)
         if line is None:
             raise ObligationValidationError({'line_id': ['La línea no pertenece a la proforma.']})
@@ -210,7 +210,8 @@ class Obligation:
         if not snapshot.collectible:
             raise ObligationStateError('Solo se puede prestar un tratamiento de una proforma presentada vigente.')
         if line.decision != ACCEPTED:
-            raise ObligationValidationError({'line_id': [f'«{line.description}» no está aceptado: no se puede prestar.']})
+            message = f'«{line.description}» no está aceptado: no se puede prestar.'
+            raise ObligationValidationError({'line_id': [message]})
         when = today if service_date is None else service_date
         if when > today:
             raise ObligationValidationError({'service_date': ['La fecha de prestación no puede ser futura.']})

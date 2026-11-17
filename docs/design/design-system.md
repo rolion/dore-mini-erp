@@ -249,7 +249,6 @@ Una pantalla nueva o modificada pasa si:
 
 ## 10. Deuda visual conocida
 
-- Ventas (`features/sales`: detalle de pedido y diálogo de entrega) repite su propio aviso de configuración contable incompleta en lugar de usar `app-posting-issues-alert` (TASK-contabilizar-servicios-cobros-odontologicos); unificarlo es un cambio mecánico pendiente.
 - La plantilla conserva pantallas demo (calendario, tablas avanzadas, etc.) con la marca y el estilo originales; no son parte del producto.
 - Los skins alternativos del panel de configuración conservan sus propios colores y pueden alejarse de la paleta de marca.
 - Hay textos de la plantilla Oreva sin traducir fuera de las pantallas del producto (por ejemplo "Welcome to Oreva" en el header).
