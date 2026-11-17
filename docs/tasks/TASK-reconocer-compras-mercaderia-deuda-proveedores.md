@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reconocer-compras-mercaderia-deuda-proveedores
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/89
 **Fuente:** https://trello.com/c/tocsSz1L/19-com-02-reconocer-compras-de-mercader%C3%ADa-y-deuda-con-proveedores
 
 ## Historial de transiciones
