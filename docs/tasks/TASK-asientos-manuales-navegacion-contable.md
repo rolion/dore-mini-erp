@@ -96,7 +96,7 @@ Implementado según PLAN v1 (sin cambios de Specification).
 - REV-01 (Medium, SPECIFICATION/frontend; **resuelto**, enlace en Configuración): «Regularizar pagos históricos» queda sin enlace visible (solo por URL); AC-09 pedía que siguiera accesible.
 - REV-02 (Low, PLAN): no se crearon `application/journal_queries.py` ni `test_journal_listing.py`; sin prueba de número de consultas.
 - REV-03 (Low, IMPLEMENTATION; **resuelto**, redirección de `?tab=`): enlaces antiguos `/accounting/settings?tab=methods|expenses|cutoff` caen en Clasificaciones.
-- Verificación visual en navegador: **no verificada**.
+- **Revisión visual en navegador** (2026-11-17, escritorio 1440 px, móvil 375 px, tema claro y oscuro; servidores locales y empresa de prueba): lista, formulario (diferencia 1 bloquea, diferencia 0 confirma), detalle, diálogo de reversión, Cuentas, Saldos, Configuración y «Otras configuraciones» se ven y funcionan según el DDR. Hallazgos nuevos: REV-04 (Low, texto secundario ilegible en tema oscuro), REV-05 (Medium, importes del formulario fuera de pantalla en móvil), REV-06 (Low, texto que alude a una pestaña movida).
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/84 (base `accounting`) listo para aprobación humana; no se mergea. Sin migración ni ADR. Pendiente antes del merge: decidir si se corrige REV-01 y revisar visualmente en el navegador.
+PR https://github.com/rolion/dore-mini-erp/pull/84 (base `accounting`) listo para aprobación humana; no se mergea. Sin migración ni ADR. Pendiente antes del merge: decidir sobre REV-02 y los hallazgos visuales REV-04..06.
