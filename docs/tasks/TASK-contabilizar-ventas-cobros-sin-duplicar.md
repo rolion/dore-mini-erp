@@ -1,6 +1,6 @@
 # TASK-contabilizar-ventas-cobros-sin-duplicar: Contabilizar ventas y cobros por partida doble sin duplicar ingresos (VEN-01)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-ventas-cobros-sin-duplicar
@@ -18,6 +18,7 @@
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01..02 Medium y REV-03..09 Low abiertos) | delivery-publish |
 | 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido por la persona: reconocer al entregar y anticipos de clientes; PLAN v3, ADR nuevo | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v3; pruebas propias en verde | delivery-build |
+| 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (PLAN v3; 0 Critical/High; REV-10/11 Medium y Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -122,11 +123,10 @@ Implementado según **PLAN v3** (reconocer al entregar y anticipos de clientes),
 **Deuda técnica / pendiente:** decisiones pendientes de negocio (pedidos con cobros sin asiento entregados con cobertura; pedidos reconocidos al confirmar y cancelados con cobros: hoy se bloquean); mensajes de configuración faltante solo en español; el aviso de «método inactivo» y el panel de Ventas (REV-03..09 y mejora del mensaje) siguen pendientes; revisión visual pendiente para `delivery-publish`.
 
 ## Review
-**Quality Gate: PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 1986 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; flake8/ruff no instalados (no realizado; revisión manual de líneas >120). Frontend: `npm run lint` OK, `i18n:check` 2178 claves y 0 faltantes, `npm run build` OK, `ng test` 1574 de 1574 OK; `npm audit` 2 moderate preexistentes (`hono`). Fronteras DDD, aislamiento por empresa y forma del 409 verificados. **Revisión visual: no verificada** (no se levantó la app).
-- REV-01 (Medium, SPECIFICATION; **resuelto**): cobro de un pedido NEW antes de la cobertura y confirmación posterior sobrestimaba Cuentas por cobrar. Aprobado por la persona (opción A): se bloquea confirmar con cobros previos (PLAN v2, AC-15). **Esta corrección se hizo después del Quality Gate y no se repitió el Gate formal** (ver verificación propia en Publicación).
-- REV-02 (Medium, ARCHITECTURE; **resuelto**): con Contabilidad deshabilitada tras reconocer, se levanta el bloqueo de total/cancelación; documentado como consecuencia aceptada en el ADR (decisión 10).
-- REV-03..09 (Low; **abiertos**): pruebas unitarias con puertos falsos, casos EDGE/AC sin prueba explícita, spec del cobro con `issues`, enlace sin pestaña, líneas >120, texto del ADR, parámetro sin uso.
-
+**Quality Gate (PLAN v3): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2026 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; flake8/ruff no instalados (no realizado; revisión manual de líneas >120). Frontend: `npm run lint` OK, `i18n:check` 2180 claves y 0 faltantes, `npm run build` OK, `ng test` 1590 de 1590 OK; `npm audit` 2 moderate preexistentes (`hono`). Fronteras DDD, aislamiento por empresa, forma del 409 y los puntos (a)-(l) verificados. **Revisión visual: no verificada** (no se levantó la aplicación con sesión).
+- Resueltos: REV-01 (PLAN v2, ya reemplazado por v3), REV-02 (ADR), REV-03 (pruebas con puerto falso).
+- Abiertos Medium (huecos de pruebas, no de comportamiento): REV-10 (falla del asiento con salida de almacén), REV-11 (cobro concurrente con la entrega); REV-05 (spec del cobro con `issues`) sigue abierto como Low.
+- Abiertos Low: REV-04, 05, 06, 07, 08, 09, 12, 13, 14, 15.
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/87 (base `accounting`; CONT-12, PR #86, ya está integrado en `accounting`) listo para aprobación humana; no se mergea. Incluye ADR y cambios de reglas de estado de pedidos contabilizados: lo aprueba una persona. Sin hallazgos Medium abiertos (REV-01 y REV-02 resueltos); quedan REV-03..09 (Low). Revisión visual y flake8 no realizados. Verificación propia tras PLAN v2: backend 1987 pruebas OK (incluye AC-15); el Quality Gate formal no se repitió.
+PR https://github.com/rolion/dore-mini-erp/pull/87 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al entregar y anticipos de clientes) y cambia reglas de pedidos contabilizados: lo aprueba una persona. Sin migraciones. Pendientes: decisiones de negocio (cobros sin asiento entregados con cobertura; pedidos reconocidos al confirmar y cancelados con cobros), hallazgos REV-10/11 (Medium, pruebas) y Low, revisión visual y flake8 no realizados.

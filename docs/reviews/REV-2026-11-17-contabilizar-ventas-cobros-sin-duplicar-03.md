@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-03: Faltan pruebas unitarias con puertos falsos
 
-**Status:** Open
+**Status:** Resolved (Gate v3: `test_sales_posting_application.py` con puerto falso)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)
