@@ -258,8 +258,8 @@ class ConfigureMethod:
             raise MethodNotFound(code)
         account = _require(self.accounts, account_id) if account_id else None
         if account is not None and is_active and account.id != mapping.account_id:
-            # Uso nuevo y activo: el método apunta a una cuenta de dinero (Caja/Banco/Billetera de Activo). Lo ya configurado no
-            # se revalida aquí (cambiar solo el estado del método no exige reclasificar cuentas heredadas).
+            # Uso nuevo y activo: el método apunta a una cuenta de dinero (Caja/Banco/Billetera de Activo).
+            # Lo ya configurado no se revalida (cambiar solo el estado no exige reclasificar cuentas heredadas).
             validate_account_for_role(ROLES['MONEY'], account, frozenset())
         mapping.configure(account, is_active)
         self.mappings.save(mapping)

@@ -59,7 +59,8 @@ class Event:
     credit_role: str
 
     def __post_init__(self):
-        assert len(self.code) <= ORIGIN_KIND_MAX and self.debit_role in ROLES and self.credit_role in ROLES
+        if len(self.code) > ORIGIN_KIND_MAX or self.debit_role not in ROLES or self.credit_role not in ROLES:
+            raise ValueError(f'Evento mal definido: {self.code}')
 
     @property
     def lines(self) -> tuple[tuple[str, Role], tuple[str, Role]]:

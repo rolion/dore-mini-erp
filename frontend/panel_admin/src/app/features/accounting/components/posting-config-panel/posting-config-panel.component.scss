@@ -1,10 +1,28 @@
 @use '../../../inventory/components/inventory-table';
 
-.preview-table th,
-.preview-table td {
-  vertical-align: middle;
+.preview-table {
+  // La plantilla fija un ancho mínimo para tablas: aquí el texto debe poder partirse en pantallas estrechas.
+  min-width: 0;
+  width: 100%;
+
+  th,
+  td {
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .side-col {
-  width: 6rem;
+  width: 4.5rem;
+}
+
+// En móvil las filas de `inventory-table` se apilan; la etiqueta de la fila (th) se apila con ellas, sin bordes sueltos.
+@media (max-width: 767.98px) {
+  .inventory-table th[scope='row'] {
+    display: block;
+    width: 100%;
+    border: 0;
+    padding: 0.125rem 0;
+  }
 }

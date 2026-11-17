@@ -11,7 +11,12 @@ from django.utils import timezone
 from modules.accounting import services
 from modules.accounting.application.use_cases import ConfigureMethod
 from modules.accounting.domain.classification import Classification
-from modules.accounting.infrastructure.django.models import AccountModel, JournalEntryModel
+from modules.accounting.infrastructure.django.models import (
+    AccountModel,
+    CoveragePeriodModel,
+    JournalEntryModel,
+    SettingsModel,
+)
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
     DjangoClassificationRepository,
@@ -112,6 +117,24 @@ class CoverageTests(PostingBase):
         self.assertEqual((readiness.required, readiness.reason), (False, 'before_cutoff'))
 
 
+    def test_a_date_inside_a_gap_between_two_coverage_periods_is_not_posted(self):  # AC-08
+        self.configure_sales()
+        now = timezone.now()
+        SettingsModel.objects.create(company_id=self.company.id, cutoff_date=TODAY - timedelta(days=60))
+        CoveragePeriodModel.objects.create(company_id=self.company.id, started_at=now - timedelta(days=60),
+                                           ended_at=now - timedelta(days=20))
+        CoveragePeriodModel.objects.create(company_id=self.company.id, started_at=now - timedelta(days=5))
+        in_gap = TODAY - timedelta(days=10)
+        readiness = services.check_posting_ready(self.company.id, 'SALE_RECOGNITION', in_gap)
+        self.assertEqual((readiness.required, readiness.reason), (False, 'in_gap'))
+        result = services.post_automatic_entry(self.company.id, 'SALE_RECOGNITION', uuid4(), in_gap, 'Hueco',
+                                               Decimal('10'))
+        self.assertEqual((result.posted, result.reason), (False, 'in_gap'))
+        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id).count(), 0)
+        covered = services.check_posting_ready(self.company.id, 'SALE_RECOGNITION', TODAY)  # tramo vigente: sí exige
+        self.assertTrue(covered.required and covered.ready)
+
+
 class PostTests(PostingBase):
     def test_missing_configuration_with_coverage_is_never_skipped_silently(self):  # AC-06, INV-03
         with self.assertRaises(services.PostingConfigurationMissing) as raised:
@@ -188,6 +211,20 @@ class HistoryTests(PostingBase):
         self.assertTrue(reversal.created)
         self.assertEqual([(x.account_id, x.debit, x.credit) for x in reversal.entry.lines],
                          [(account, credit, debit) for account, debit, credit in original])
+
+    def test_a_retry_after_the_configuration_changed_still_returns_the_existing_entry(self):  # AC-09, INV-06
+        self.configure_sales()
+        self.configure_method('CASH', self.banco)
+        origin = uuid4()
+        paid = self.post('SALE_PAYMENT', origin=origin, method='CASH')
+        self.configure_method('CASH', self.caja)  # Banco → Caja después de contabilizar
+        services.set_role_account(self.company.id, 'RECEIVABLE', None)  # y se quita una cuenta
+        again = self.post('SALE_PAYMENT', origin=origin, method='CASH')
+        self.assertEqual((again.posted, again.created, again.entry.id), (True, False, paid.entry.id))
+        self.assertEqual([line.account_id for line in again.entry.lines], [self.banco.id, self.cxc.id])
+        with self.assertRaises(services.JournalConflict):  # distinto importe sigue siendo conflicto
+            self.post('SALE_PAYMENT', origin=origin, method='CASH', amount='99.00')
+        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id).count(), 1)
 
     def test_reversing_an_event_that_was_never_posted_returns_nothing(self):  # AC-08
         self.assertIsNone(services.reverse_automatic_entry(self.company.id, 'SALE_RECOGNITION', uuid4(), TODAY, 'x'))

@@ -29,6 +29,7 @@ from modules.accounting.domain.entry import (
     EntryValidationError,
 )
 from modules.accounting.domain.journal import (
+    ORIGIN_CONFLICT,
     JournalConflict,
     JournalEntry,
     JournalEntryNotFound,
@@ -60,15 +61,17 @@ from modules.accounting.infrastructure.django.repositories import (
 from shared import module_gate
 
 __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef',
-           'AutomaticPosting', 'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef',
-           'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError', 'JournalBalance',
-           'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef', 'JournalLineInput',
-           'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry', 'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue',
-           'PostingNotFound', 'PostingReadiness', 'check_posting_ready', 'describe_posting_config',
-           'post_automatic_entry', 'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
-           'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications', 'get_journal_entry',
-           'journal_balances', 'lock_open_period', 'period_for', 'post_journal_entry', 'resolve_account',
-           'reverse_journal_entry', 'validate_account_class', 'validate_classification', 'validate_money_account']
+           'AutomaticPosting', 'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput',
+           'EntryRef', 'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError',
+           'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
+           'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
+           'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
+           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'post_automatic_entry',
+           'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
+           'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications',
+           'get_journal_entry', 'journal_balances', 'lock_open_period', 'period_for', 'post_journal_entry',
+           'resolve_account', 'reverse_journal_entry', 'validate_account_class', 'validate_classification',
+           'validate_money_account']
 
 
 @dataclass(frozen=True)
@@ -532,6 +535,15 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     """
     _require_transaction('post_automatic_entry')
     definition = get_event(event)
+    existing = DjangoJournalRepository(company_id).get_by_origin(definition.code, origin_id)
+    if existing is not None:
+        # Reintento: el asiento ya existe y no se revalida contra la configuración ni la cobertura de hoy (INV-06).
+        differences = [name for name, same in (('accounting_date', existing.accounting_date == accounting_date),
+                                               ('amount', existing.total_debit == amount)) if not same]
+        if differences:
+            raise JournalConflict(ORIGIN_CONFLICT, 'El evento ya tiene un asiento con otros datos: '
+                                  f'{", ".join(differences)}.', differences)
+        return AutomaticPosting(True, None, _journal_ref(existing), False)
     coverage = coverage_status(company_id, accounting_date)
     if not coverage.covered:
         return AutomaticPosting(False, coverage.reason)

@@ -116,3 +116,15 @@ class AssignTests(PostingApiBase):
         self.assertIn(APIClient().get(URL, {'module': 'sales'}).status_code, (401, 403))
         self.assertIn(APIClient().put(f'{URL}roles/RECEIVABLE/', {'account_id': None}, format='json').status_code,
                       (401, 403))
+
+    def test_a_user_without_a_company_is_forbidden_on_every_route(self):  # AC-11
+        from django.contrib.auth import get_user_model
+
+        from modules.accounts.testing import authenticate
+        lone = APIClient()
+        authenticate(lone, get_user_model().objects.create_user(username='solo', password='x-Pass-123'))
+        self.assertEqual(lone.get(URL, {'module': 'sales'}).status_code, 403)
+        self.assertEqual(lone.put(f'{URL}roles/RECEIVABLE/', {'account_id': None}, format='json').status_code, 403)
+        self.assertEqual(lone.put(f'{URL}categories/{"0" * 8}-0000-0000-0000-{"0" * 12}/', {'account_id': None},
+                                  format='json').status_code, 403)
+        self.assertEqual(APIClient().get(URL, {'module': 'sales'}).status_code, 401)

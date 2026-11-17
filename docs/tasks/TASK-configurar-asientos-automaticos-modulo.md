@@ -14,6 +14,8 @@
 | 2026-11-16 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (tabla nueva, contrato de fachada usado por 5 módulos), diseño SI; 1 decisión de alcance resuelta por la persona | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
+| 2026-11-16 | REVIEW (1.ª pasada) | Quality Gate PASS (0 Critical/High; REV-01 Medium, REV-02..05 Low abiertos) | delivery-publish |
+| 2026-11-16 | REVIEW (corrección) | REV-01..04 corregidos; REV-05 (Specification) abierto a la espera de aprobación; se repite el Quality Gate | delivery-publish |
 
 ## Investigación
 
@@ -108,7 +110,12 @@ Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó
 **Pruebas añadidas (corridas propias, no son el Quality Gate):** backend `test_posting_domain` (3), `test_posting_service` (28), `test_posting_config_api` (9); suite completa del backend 1959 OK, `makemigrations --check` sin cambios; frontend `posting-config-api.service.spec`, `posting-config-panel.component.spec` (14), `expense-settings`, `module-settings` y `sidebar-menu` actualizados; suite completa 1570 OK, `ng lint` OK, `i18n:check` 0 faltantes, `ng build` OK.
 
 ## Review
-_Pendiente_
+**Quality Gate 1.ª pasada: PASS** (subagente aislado, 2026-11-16). Backend: `manage.py test` 1959 OK, `makemigrations --check` sin cambios, flake8 con avisos E501 nuevos (corregidos), bandit B101 Low (corregido). Frontend: lint OK, `i18n:check` 2174 claves y 0 faltantes, `ng build` OK, suite completa 1570 OK. Revisión visual parcial: Gastos (escritorio 1024 px, claro, guardado persistente) y Ventas (375 px, tema oscuro emulado); Compras e Inventario solo por specs.
+- REV-01 (Medium, IMPLEMENTATION; **resuelto**): el reintento idempotente de `post_automatic_entry` fallaba si la configuración había cambiado.
+- REV-02 (Low, IMPLEMENTATION; **resuelto**): faltaban pruebas de AC-08 (hueco) y AC-11 (403/401).
+- REV-03 (Low, DESIGN; **resuelto**, pendiente de confirmar en navegador): recorte de la vista previa y bordes sueltos a 375 px.
+- REV-04 (Low, IMPLEMENTATION; **resuelto**): E501 y `assert` en código nuevo.
+- REV-05 (Low, SPECIFICATION; **abierto**): la forma real de API-01 difiere de la documentada (`issues` trae `subject`/`module`, `preview` trae `role` y `account{}`), y los mensajes de faltantes vienen del backend solo en español. Requiere aprobación para actualizar la Specification (PLAN v2).
 
 ## Publicación
 _Pendiente_
