@@ -67,14 +67,17 @@ export class CommitmentDetailComponent implements OnInit {
     return this.kind === 'dental' && this.commitment ? ['/pocketbiz/dentistry/patients', this.commitment.customer_id] : null;
   }
 
-  load(): void {
+  load(afterLoad?: () => void): void {
     this.loading = true;
     this.error = '';
     this.api
       .get(this.kind, this.number)
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => (this.loading = false)))
       .subscribe({
-        next: (commitment) => (this.commitment = commitment),
+        next: (commitment) => {
+          this.commitment = commitment;
+          if (afterLoad) setTimeout(afterLoad); // tras pintar la tabla y el aviso
+        },
         error: (failure: ReceivableFailure) => (this.error = failure.message),
       });
   }
@@ -97,7 +100,7 @@ export class CommitmentDetailComponent implements OnInit {
   onRendered(result: ServiceRendered): void {
     this.renderedName = result.service.description;
     this.receipt = null;
-    this.load();
+    this.load(() => document.querySelector<HTMLElement>('[data-service-result]')?.focus());
   }
 
   methodOf(payment: CollectionPayment): string {

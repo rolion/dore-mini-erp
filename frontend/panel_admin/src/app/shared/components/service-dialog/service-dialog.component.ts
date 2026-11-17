@@ -63,7 +63,7 @@ export class ServiceDialogComponent {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => (this.saving = false)))
       .subscribe({
         next: (result) => {
-          this.dismiss(); // `saving` sigue en true hasta `finalize`: se cierra sin pasar por `close()`
+          this.dismiss(true); // `saving` sigue en true hasta `finalize`: se cierra sin pasar por `close()`
           this.rendered.emit(result);
         },
         error: (failure: ReceivableFailure) => (this.failure = failure),
@@ -75,14 +75,9 @@ export class ServiceDialogComponent {
     if (!this.saving) this.dismiss();
   }
 
-  private dismiss(): void {
+  /** Tras marcar el tratamiento el botón desaparece: el foco lo lleva el padre al aviso de resultado, al recargar. */
+  private dismiss(afterService = false): void {
     this.dialog.nativeElement.close();
-    const opener = this.opener;
-    // El padre repinta la tabla tras `rendered`: el foco vuelve al botón si sigue, o al aviso de resultado.
-    setTimeout(() => {
-      const status = document.querySelector<HTMLElement>('[data-service-result]');
-      if (opener?.isConnected) opener.focus();
-      else status?.focus();
-    });
+    if (!afterService) this.opener?.focus();
   }
 }

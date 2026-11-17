@@ -22,7 +22,7 @@
       <p class="mb-2"><small class="text-muted">{{ 'RECEIVABLES.SRV_ADVERTENCIA' | translate }}</small></p>
 
       @if (failure) {
-        <p class="alert alert-danger mb-2" role="alert">{{ failure.message }}</p>
+        @if (!failure.issues?.length) { <p class="alert alert-danger mb-2" role="alert">{{ failure.message }}</p> }
         <app-posting-issues-alert [issues]="failure.issues ?? []" (navigate)="close()" />
       }
 
