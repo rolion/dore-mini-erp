@@ -6,7 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Observable, finalize, forkJoin } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { Account, AccountClassCode, AccountingApiError, FLOW_CURRENCY } from '../../models/accounting';
-import { PostingConfig, PostingIssue, PostingModule, PreviewLine, accountLabel } from '../../models/posting-config';
+import { PostingCategory, PostingConfig, PostingIssue, PostingModule, PreviewLine, accountLabel } from '../../models/posting-config';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { PostingConfigApiService } from '../../services/posting-config-api.service';
 
@@ -44,6 +44,8 @@ export interface ConfigRow {
 })
 export class PostingConfigPanelComponent implements OnInit {
   @Input({ required: true }) module!: PostingModule;
+  /** Categorías de Gastos (solo en el módulo Gastos): las entrega su pantalla de configuración; Contabilidad solo guarda sus cuentas. */
+  @Input() categories: PostingCategory[] = [];
 
   config: PostingConfig | null = null;
   accounts: Account[] = [];
@@ -93,11 +95,28 @@ export class PostingConfigPanelComponent implements OnInit {
     return row.control.value !== row.original;
   }
 
+  /** Categorías de gasto activas sin cuenta, o con una cuenta que ya no sirve: Contabilidad no las conoce, las detecta el panel. */
+  get categoryIssues(): PostingIssue[] {
+    return this.categoryRows
+      .filter((row) => row.isActive && (row.original === '' || !!row.issue))
+      .map((row) => ({
+        code: 'category_unconfigured',
+        role: 'EXPENSE_BY_CATEGORY',
+        subject: row.label,
+        module: this.module,
+        message: row.issue ?? tr('ACCOUNTING.POSTING.CATEGORY_MISSING', { p0: row.label }),
+      }));
+  }
+
+  /** La configuración del módulo está completa (eventos, métodos y categorías de gasto). */
+  get complete(): boolean {
+    return !!this.config?.ready && !this.categoryIssues.length;
+  }
+
   /** Faltantes actuales del módulo (con Contabilidad habilitada): una línea por mensaje distinto. */
   get issues(): PostingIssue[] {
     const seen = new Set<string>();
-    return (this.config?.events ?? [])
-      .flatMap((event) => event.issues)
+    return [...(this.config?.events ?? []).flatMap((event) => event.issues), ...this.categoryIssues]
       .filter((issue) => !seen.has(issue.message) && !!seen.add(issue.message));
   }
 
@@ -178,12 +197,14 @@ export class PostingConfigPanelComponent implements OnInit {
     this.methodRows = config.methods.map((m) =>
       build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', isActive: m.isActive, sharedWith: [], issue: m.issue }, m.account?.id),
     );
-    this.categoryRows = config.categories.map((c) =>
-      build(
-        { kind: 'category', id: c.classificationId, label: c.name, accountClass: 'EXPENSE', isActive: c.isActive, sharedWith: [], issue: c.issue },
-        c.account?.id,
-      ),
-    );
+    const configured = new Map(config.categories.map((c) => [c.categoryId, c]));
+    this.categoryRows = this.categories.map((category) => {
+      const stored = configured.get(category.id);
+      return build(
+        { kind: 'category', id: category.id, label: category.name, accountClass: 'EXPENSE', isActive: category.isActive, sharedWith: [], issue: stored?.issue ?? null },
+        stored?.account?.id,
+      );
+    });
   }
 
   /** Texto de la pista bajo el selector: qué clasificación se necesita. */

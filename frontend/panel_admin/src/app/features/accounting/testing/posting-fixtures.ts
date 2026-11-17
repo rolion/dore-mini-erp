@@ -1,5 +1,5 @@
 import { Account } from '../models/accounting';
-import { PostingConfig, PostingModule } from '../models/posting-config';
+import { PostingCategory, PostingConfig, PostingModule } from '../models/posting-config';
 
 export const caja: Account = { id: 'm1', name: 'Caja', code: '110101', currency: 'BOB', kind: 'CASH', accountClass: 'ASSET', openingBalance: '0.00', isActive: true };
 export const banco: Account = { id: 'm2', name: 'Banco', code: '110102', currency: 'BOB', kind: 'BANK', accountClass: 'ASSET', openingBalance: '0.00', isActive: true };
@@ -69,9 +69,13 @@ export function expensesConfig(module: PostingModule = 'expenses'): PostingConfi
     ],
     roles: [],
     methods: [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: null }],
-    categories: [
-      { classificationId: 'c1', name: 'Servicios básicos', isActive: true, account: null, issue: null },
-      { classificationId: 'c2', name: 'Alquiler', isActive: false, account: null, issue: null },
-    ],
+    categories: [],
   };
 }
+
+/** Categorías de Gastos que su pantalla entrega al panel (Contabilidad no las conoce). */
+export const EXPENSE_CATEGORIES: PostingCategory[] = [
+  { id: 'c1', name: 'Servicios básicos', isActive: true },
+  { id: 'c2', name: 'Alquiler', isActive: false },
+  { id: 'c3', name: 'Pago a proveedores', isActive: true },
+];

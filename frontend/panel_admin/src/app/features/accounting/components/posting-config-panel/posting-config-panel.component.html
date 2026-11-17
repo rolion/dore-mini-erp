@@ -14,7 +14,7 @@
   <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="status" data-testid="posting-disabled">
     {{ 'ACCOUNTING.POSTING.ACCOUNTING_DISABLED' | translate }}
   </div>
-  } @else if (!config.ready) {
+  } @else if (!complete) {
   <div class="alert alert-warning" role="alert" data-testid="posting-missing">
     <strong>{{ 'ACCOUNTING.POSTING.MISSING_TITLE' | translate: { p0: issues.length } }}</strong>
     <ul class="mb-0 mt-1">
@@ -158,8 +158,8 @@
             </select>
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
-            } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
+            } @else if (row.isActive && !isDirty(row) && (row.issue || row.original === '')) {
+            <small class="form-text posting-warn d-block">{{ row.issue ?? ('ACCOUNTING.POSTING.CATEGORY_MISSING_ROW' | translate) }}</small>
             }
           </td>
           <td class="text-nowrap">

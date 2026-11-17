@@ -748,7 +748,8 @@
       "ANULADO": "Voided"
     },
     "SETTINGS": {
-      "TITLE": "Expenses settings"
+      "TITLE": "Expenses settings",
+      "LOAD_ERROR": "The expense categories could not be loaded."
     }
   },
   "INVENTORY": {
@@ -2958,7 +2959,9 @@
         "INCOME": "Income",
         "EXPENSE": "Expense",
         "COST": "Cost"
-      }
+      },
+      "CATEGORY_MISSING": "The expense account of the category “{{p0}}” is missing.",
+      "CATEGORY_MISSING_ROW": "This category has no expense account yet."
     }
   }
 }

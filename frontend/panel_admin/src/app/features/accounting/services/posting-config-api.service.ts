@@ -31,9 +31,9 @@ export class PostingConfigApiService {
     return this.request(this.http.put<RoleRowDto>(`${this.url}roles/${role}/`, { account_id: accountId }), toRoleRow);
   }
 
-  setCategoryAccount(classificationId: string, accountId: string | null): Observable<CategoryRow> {
+  setCategoryAccount(categoryId: string, accountId: string | null): Observable<CategoryRow> {
     return this.request(
-      this.http.put<CategoryRowDto>(`${this.url}categories/${classificationId}/`, { account_id: accountId }),
+      this.http.put<CategoryRowDto>(`${this.url}categories/${categoryId}/`, { account_id: accountId }),
       toCategoryRow,
     );
   }

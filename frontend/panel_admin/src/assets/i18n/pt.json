@@ -748,7 +748,8 @@
       "ANULADO": "Anulado"
     },
     "SETTINGS": {
-      "TITLE": "Configuração de Despesas"
+      "TITLE": "Configuração de Despesas",
+      "LOAD_ERROR": "Não foi possível carregar as categorias de despesa."
     }
   },
   "INVENTORY": {
@@ -2958,7 +2959,9 @@
         "INCOME": "Receitas",
         "EXPENSE": "Despesas",
         "COST": "Custos"
-      }
+      },
+      "CATEGORY_MISSING": "Falta a conta de despesa da categoria «{{p0}}».",
+      "CATEGORY_MISSING_ROW": "Esta categoria ainda não tem conta de despesa."
     }
   }
 }

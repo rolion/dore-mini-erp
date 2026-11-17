@@ -1,4 +1,6 @@
 """CONT-12: API de configuración de asientos automáticos (API-01..04; AC-01..04, AC-10, AC-11)."""
+from uuid import uuid4
+
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
@@ -6,7 +8,6 @@ from rest_framework.test import APIClient
 from modules.accounting.tests.test_api import ACCOUNTS, AccountingApiBase
 
 URL = '/api/accounting/posting-config/'
-CLASSIFICATIONS = '/api/accounting/classifications/'
 
 
 class PostingApiBase(AccountingApiBase):
@@ -42,8 +43,9 @@ class ReadTests(PostingApiBase):
         self.assertEqual(self.client_a.get(URL).status_code, 404)
 
     def test_reading_does_not_scale_with_categories(self):  # NFR
-        for index in range(6):
-            self.client_a.post(CLASSIFICATIONS, {'name': f'Categoría {index}', 'direction': 'EXPENSE'}, format='json')
+        expense = self.make(self.client_a, 'Gastos', 'EXPENSE')
+        for _ in range(6):
+            self.client_a.put(f'{URL}categories/{uuid4()}/', {'account_id': expense['id']}, format='json')
         with CaptureQueriesContext(connection) as queries:
             response = self.client_a.get(URL, {'module': 'expenses'})
         self.assertEqual(len(response.json()['categories']), 6)
@@ -79,21 +81,26 @@ class AssignTests(PostingApiBase):
         for role in ('NOPE', 'MONEY', 'EXPENSE_BY_CATEGORY'):
             self.assertEqual(self.put_role(self.client_a, role, None).status_code, 404)
 
-    def test_category_account_must_be_an_expense_account_for_an_expense_category(self):  # AC-03
+    def test_a_category_of_expenses_gets_an_expense_account_and_can_be_cleared(self):  # AC-02, AC-03
         expense = self.make(self.client_a, 'Gasto luz', 'EXPENSE')
         income = self.make(self.client_a, 'Ingresos', 'INCOME')
-        category = self.client_a.post(CLASSIFICATIONS, {'name': 'Luz', 'direction': 'EXPENSE'}, format='json').json()
-        revenue = self.client_a.post(CLASSIFICATIONS, {'name': 'Cuotas', 'direction': 'INCOME'}, format='json').json()
-        url = f'{URL}categories/{category["id"]}/'
-        self.assertEqual(self.client_a.put(url, {'account_id': income['id']}, format='json').status_code, 400)
+        theirs = self.make(self.client_b, 'Gasto B', 'EXPENSE')
+        category = uuid4()
+        url = f'{URL}categories/{category}/'
+        for account in (income, theirs):
+            response = self.client_a.put(url, {'account_id': account['id']}, format='json')
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('account_id', response.json())
         ok = self.client_a.put(url, {'account_id': expense['id']}, format='json')
-        self.assertEqual((ok.status_code, ok.data['account']['name']), (200, 'Gasto luz'))
+        self.assertEqual((ok.status_code, ok.data['category_id'], ok.data['account']['name']),
+                         (200, str(category), 'Gasto luz'))
         listed = self.client_a.get(URL, {'module': 'expenses'}).json()['categories']
-        self.assertEqual([(c['name'], c['account']['id']) for c in listed], [('Luz', expense['id'])])
-        self.assertEqual(self.client_a.put(f'{URL}categories/{revenue["id"]}/', {'account_id': None},
-                                           format='json').status_code, 400)
-        theirs = self.client_b.post(CLASSIFICATIONS, {'name': 'Otra', 'direction': 'EXPENSE'}, format='json').json()
-        self.assertEqual(self.client_a.put(f'{URL}categories/{theirs["id"]}/', {'account_id': None},
+        self.assertEqual([(c['category_id'], c['account']['id']) for c in listed], [(str(category), expense['id'])])
+        self.assertEqual(self.client_b.get(URL, {'module': 'expenses'}).json()['categories'], [])  # AC-10
+        cleared = self.client_a.put(url, {'account_id': None}, format='json')
+        self.assertEqual((cleared.status_code, cleared.data['account']), (200, None))
+        self.assertEqual(self.client_a.get(URL, {'module': 'expenses'}).json()['categories'], [])
+        self.assertEqual(self.client_a.put(f'{URL}categories/not-a-uuid/', {'account_id': None},
                                            format='json').status_code, 404)
 
     def test_a_method_only_accepts_asset_accounts_whatever_their_type(self):  # AC-04

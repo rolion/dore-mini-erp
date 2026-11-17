@@ -25,8 +25,7 @@ def serialize_method_row(row) -> dict:
 
 
 def serialize_category_row(row) -> dict:
-    return {'classification_id': str(row.classification_id), 'name': row.name, 'is_active': row.is_active,
-            'account': _account(row.account), 'issue': row.issue}
+    return {'category_id': str(row.category_id), 'account': _account(row.account), 'issue': row.issue}
 
 
 def serialize_event(event) -> dict:

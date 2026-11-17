@@ -3,17 +3,17 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { Account, AccountingApiError } from '../../models/accounting';
-import { PostingConfig, PostingModule } from '../../models/posting-config';
+import { PostingCategory, PostingConfig, PostingModule } from '../../models/posting-config';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { PostingConfigApiService } from '../../services/posting-config-api.service';
-import { ALL_ACCOUNTS, caja, expensesConfig, gastoLuz, ingresos, salesConfig } from '../../testing/posting-fixtures';
+import { ALL_ACCOUNTS, EXPENSE_CATEGORIES, caja, expensesConfig, gastoLuz, ingresos, salesConfig } from '../../testing/posting-fixtures';
 import { PostingConfigPanelComponent } from './posting-config-panel.component';
 
 describe('PostingConfigPanelComponent', () => {
   let api: jasmine.SpyObj<PostingConfigApiService>;
   let accounting: jasmine.SpyObj<AccountingApiService>;
 
-  function create(module: PostingModule, config: PostingConfig, accounts: Account[] = ALL_ACCOUNTS): ComponentFixture<PostingConfigPanelComponent> {
+  function create(module: PostingModule, config: PostingConfig, accounts: Account[] = ALL_ACCOUNTS, categories: PostingCategory[] = []): ComponentFixture<PostingConfigPanelComponent> {
     api = jasmine.createSpyObj<PostingConfigApiService>('PostingConfigApiService', ['get', 'setRoleAccount', 'setCategoryAccount']);
     accounting = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'configureMethod']);
     api.get.and.returnValue(of(config));
@@ -29,6 +29,7 @@ describe('PostingConfigPanelComponent', () => {
     });
     const fixture = TestBed.createComponent(PostingConfigPanelComponent);
     fixture.componentRef.setInput('module', module);
+    fixture.componentRef.setInput('categories', categories);
     fixture.detectChanges();
     return fixture;
   }
@@ -149,8 +150,9 @@ describe('PostingConfigPanelComponent', () => {
     expect(el(fixture).querySelector('[data-testid="no-money-options"]')).not.toBeNull();
   });
 
-  it('lists expense categories with expense accounts, dims inactive ones and shows the preview by category (UI-01)', () => {
-    const fixture = create('expenses', expensesConfig());
+  it('lists the categories of Expenses with expense accounts, dims inactive ones and shows the preview by category (UI-01)', () => {
+    const fixture = create('expenses', expensesConfig(), ALL_ACCOUNTS, EXPENSE_CATEGORIES);
+    expect(el(fixture).querySelectorAll('[data-testid^="row-category:"]').length).toBe(3);
     const names = Array.from(select(fixture, 'category:c1').options).map((o) => o.textContent?.trim());
     expect(names).toEqual(['Sin cuenta', '510001 · Gasto de luz']);
     expect(el(fixture).querySelector('[data-testid="row-category:c2"]')!.textContent).toContain('Categoría inactiva');
@@ -158,14 +160,32 @@ describe('PostingConfigPanelComponent', () => {
     expect(preview).toContain('Según la categoría del gasto');
     expect(preview).toContain('Según el método de pago');
     expect(el(fixture).querySelector('[data-testid="posting-roles"]')).toBeNull();
-    api.setCategoryAccount.and.returnValue(of({ classificationId: 'c1', name: 'x', isActive: true, account: null, issue: null }));
+    api.setCategoryAccount.and.returnValue(of({ categoryId: 'c1', account: null, issue: null }));
     choose(fixture, 'category:c1', gastoLuz.id);
     el(fixture).querySelector<HTMLButtonElement>('[data-testid="row-category:c1"] button')!.click();
     expect(api.setCategoryAccount).toHaveBeenCalledOnceWith('c1', gastoLuz.id);
   });
 
+  it('warns about every active category without an expense account, by name, and ignores inactive ones', () => {
+    const fixture = create('expenses', { ...expensesConfig(), ready: true }, ALL_ACCOUNTS, EXPENSE_CATEGORIES);
+    const warning = el(fixture).querySelector('[data-testid="posting-missing"]')!;
+    expect(warning.textContent).toContain('Falta configurar 2 cuenta(s)');
+    expect(warning.textContent).toContain('«Servicios básicos»');
+    expect(warning.textContent).toContain('«Pago a proveedores»');
+    expect(warning.textContent).not.toContain('Alquiler');
+  });
+
+  it('shows the configured category account and the ready state once every active category has one', () => {
+    const config = expensesConfig();
+    config.ready = true;
+    config.categories = ['c1', 'c3'].map((id) => ({ categoryId: id, account: { id: gastoLuz.id, code: '510001', name: 'Gasto de luz', isActive: true }, issue: null }));
+    const fixture = create('expenses', config, ALL_ACCOUNTS, EXPENSE_CATEGORIES);
+    expect(select(fixture, 'category:c3').value).toBe(gastoLuz.id);
+    expect(el(fixture).querySelector('[data-testid="posting-ready"]')).not.toBeNull();
+  });
+
   it('offers to create a category when there are none', () => {
-    const fixture = create('expenses', { ...expensesConfig(), categories: [] });
+    const fixture = create('expenses', expensesConfig());
     expect(el(fixture).querySelector('[data-testid="no-categories"]')).not.toBeNull();
   });
 

@@ -467,8 +467,7 @@ class PostingConfigRef:
 
 def _posting_sources(company_id: UUID):
     return (DjangoAccountRepository(company_id), DjangoAccountClassRepository(company_id),
-            DjangoPostingConfigRepository(company_id), DjangoMethodMappingRepository(company_id),
-            DjangoClassificationRepository(company_id))
+            DjangoPostingConfigRepository(company_id), DjangoMethodMappingRepository(company_id))
 
 
 def describe_posting_config(company_id: UUID, module: str) -> PostingConfigRef:
@@ -480,14 +479,15 @@ def describe_posting_config(company_id: UUID, module: str) -> PostingConfigRef:
 def set_role_account(company_id: UUID, role: str, account_id: UUID | None) -> None:
     """Asigna o quita la cuenta de un rol. Solo afecta a operaciones futuras; los asientos guardan sus cuentas."""
     with transaction.atomic():
-        accounts, classes, posting, _, _ = _posting_sources(company_id)
+        accounts, classes, posting, _ = _posting_sources(company_id)
         SetRoleAccount(accounts, classes, posting).execute(role, account_id)
 
 
-def set_category_account(company_id: UUID, classification_id: UUID, account_id: UUID | None) -> None:
+def set_category_account(company_id: UUID, category_id: UUID, account_id: UUID | None) -> None:
+    """Asigna o quita la cuenta de gasto de una categoría de Gastos (id opaco, sin verificar en Contabilidad)."""
     with transaction.atomic():
-        accounts, classes, posting, _, classifications = _posting_sources(company_id)
-        SetCategoryAccount(accounts, classes, classifications, posting).execute(classification_id, account_id)
+        accounts, classes, posting, _ = _posting_sources(company_id)
+        SetCategoryAccount(accounts, classes, posting).execute(category_id, account_id)
 
 
 @dataclass(frozen=True)
@@ -503,7 +503,7 @@ class PostingReadiness:
 
 
 def check_posting_ready(company_id: UUID, event: str, accounting_date: date, *, method: str | None = None,
-                        classification_id: UUID | None = None) -> PostingReadiness:
+                        category_id: UUID | None = None, category_label: str = '') -> PostingReadiness:
     """Verificación previa a confirmar una operación: muestra la configuración faltante antes de escribir nada.
 
     Sin cobertura (Contabilidad deshabilitada, anterior al corte o en un hueco) nunca exige cuentas.
@@ -512,7 +512,8 @@ def check_posting_ready(company_id: UUID, event: str, accounting_date: date, *, 
     coverage = coverage_status(company_id, accounting_date)
     if not coverage.covered:
         return PostingReadiness(False, (), coverage.reason)
-    _, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, classification_id)
+    _, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
+                              category_label)
     return PostingReadiness(True, tuple(issues))
 
 
@@ -525,7 +526,8 @@ class AutomaticPosting:
 
 
 def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounting_date: date, description: str,
-                         amount: Decimal, *, method: str | None = None, classification_id: UUID | None = None,
+                         amount: Decimal, *, method: str | None = None, category_id: UUID | None = None,
+                         category_label: str = '',
                          created_by: int | None = None, created_by_name: str = '') -> AutomaticPosting:
     """Contabiliza un evento con las cuentas configuradas, dentro de la transacción del llamante.
 
@@ -547,8 +549,8 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     coverage = coverage_status(company_id, accounting_date)
     if not coverage.covered:
         return AutomaticPosting(False, coverage.reason)
-    accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method,
-                                     classification_id)
+    accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
+                                     category_label)
     if issues:
         raise PostingConfigurationMissing(issues)
     debit_role, credit_role = definition.debit_role, definition.credit_role

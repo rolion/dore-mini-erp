@@ -31,7 +31,7 @@ describe('PostingConfigApiService', () => {
       events: [{ code: 'SALE_RECOGNITION', label: 'x', issues: [], preview: [{ side: 'CREDIT', role: 'SALES_INCOME', label: 'Ingresos', account, status: 'ok' }] }],
       roles: [{ role: 'SALES_INCOME', label: 'Ingresos', account_class: 'INCOME', account, issue: null, shared_with: [] }],
       methods: [{ code: 'CASH', label: 'Efectivo', is_active: true, account: null, issue: 'falta' }],
-      categories: [{ classification_id: 'c1', name: 'Luz', is_active: false, account: null, issue: null }],
+      categories: [{ category_id: 'c1', account, issue: null }],
     });
     expect(result).toEqual({
       module: 'sales',
@@ -41,7 +41,7 @@ describe('PostingConfigApiService', () => {
       events: [{ code: 'SALE_RECOGNITION', label: 'x', issues: [], preview: [{ side: 'CREDIT', role: 'SALES_INCOME', label: 'Ingresos', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, status: 'ok' }] }],
       roles: [{ role: 'SALES_INCOME', label: 'Ingresos', accountClass: 'INCOME', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, issue: null, sharedWith: [] }],
       methods: [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: 'falta' }],
-      categories: [{ classificationId: 'c1', name: 'Luz', isActive: false, account: null, issue: null }],
+      categories: [{ categoryId: 'c1', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, issue: null }],
     });
   });
 
@@ -53,7 +53,7 @@ describe('PostingConfigApiService', () => {
     service.setCategoryAccount('c1', null).subscribe();
     const category = http.expectOne((r) => r.method === 'PUT' && r.url.endsWith('/posting-config/categories/c1/'));
     expect(category.request.body).toEqual({ account_id: null });
-    category.flush({ classification_id: 'c1', name: 'Luz', is_active: true, account: null, issue: null });
+    category.flush({ category_id: 'c1', account: null, issue: null });
   });
 
   it('turns a 400 into a field error and a 404 into a message (AC-03)', () => {

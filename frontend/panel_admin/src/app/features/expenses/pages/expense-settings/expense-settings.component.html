@@ -17,7 +17,16 @@
           <div class="card-header">
             <h4>{{ 'EXPENSES.SETTINGS.TITLE' | translate }}</h4>
           </div>
-          <app-posting-config-panel module="expenses" />
+          @if (categories) {
+          <app-posting-config-panel module="expenses" [categories]="categories" />
+          } @else if (loadFailed) {
+          <div class="m-4">
+            <div class="alert alert-danger" role="alert">{{ 'EXPENSES.SETTINGS.LOAD_ERROR' | translate }}</div>
+            <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+          </div>
+          } @else {
+          <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+          }
         </div>
       </div>
     </div>

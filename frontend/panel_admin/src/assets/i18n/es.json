@@ -748,7 +748,8 @@
       "ANULADO": "Anulado"
     },
     "SETTINGS": {
-      "TITLE": "Configuración de Gastos"
+      "TITLE": "Configuración de Gastos",
+      "LOAD_ERROR": "No se pudieron cargar las categorías de gasto."
     }
   },
   "INVENTORY": {
@@ -2958,7 +2959,9 @@
         "INCOME": "Ingresos",
         "EXPENSE": "Gastos",
         "COST": "Costos"
-      }
+      },
+      "CATEGORY_MISSING": "Falta la cuenta de gasto de la categoría «{{p0}}».",
+      "CATEGORY_MISSING_ROW": "Falta la cuenta de gasto de esta categoría."
     }
   }
 }

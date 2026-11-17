@@ -1,4 +1,4 @@
-# PLAN-2026-11-16-configurar-asientos-automaticos-modulo (v2)
+# PLAN-2026-11-16-configurar-asientos-automaticos-modulo (v3)
 
 **Task:** TASK-configurar-asientos-automaticos-modulo · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-configurar-asientos-automaticos-modulo-panel-cuentas-por-evento.md` · `docs/adr/ADR-configurar-asientos-automaticos-modulo-catalogo-modelo-y-fachada.md`
@@ -36,7 +36,7 @@ Existe el motor y el mapeo método → cuenta sin validar clasificación (`api/v
 
 ## Domain rules / invariants
 - **INV-01** (nueva) El catálogo de eventos/roles es fijo; ninguna API crea, edita o borra eventos o líneas.
-- **INV-02** (nueva) Una cuenta asignada a un rol cumple: de la empresa, activa, clasificación habilitada e igual a la del rol. Categoría: de la empresa, EXPENSE y activa. Método: cuenta de Activo (sin exigir tipo de cuenta), activa y en BOB. Se valida al asignar y al resolver cada evento.
+- **INV-02** (nueva) Una cuenta asignada a un rol cumple: de la empresa, activa, clasificación habilitada e igual a la del rol. Categoría de Gastos: su cuenta es de Gastos (el id de la categoría es opaco para Contabilidad). Método: cuenta de Activo (sin exigir tipo de cuenta), activa y en BOB. Se valida al asignar y al resolver cada evento.
 - **INV-03** (nueva) Un evento contabilizable con configuración incompleta no se omite: error `PostingConfigurationMissing`; sin cobertura, no se exige configuración y no se crea asiento.
 - **INV-04** (existente, CONT-02) Idempotencia por `(empresa, origen)`; reversión con cuentas originales; fecha en período abierto.
 - **INV-05** (existente) Dinero en `Decimal`, moneda BOB de los flujos, sin conversión.
@@ -45,7 +45,7 @@ Existe el motor y el mapeo método → cuenta sin validar clasificación (`api/v
 ## Acceptance criteria
 - **AC-01** `GET posting-config/?module=sales|purchases|inventory|expenses|receivables` devuelve solo los eventos de ese módulo con vista previa y estado; módulo desconocido → 404.
 - **AC-02** Asignar un rol con una cuenta válida lo guarda (y quitarla con `null`); la vista previa y `ready` reflejan el cambio.
-- **AC-03** (tarjeta AC-4) Cuenta de **otra empresa**, inexistente, inactiva, de **clasificación inválida** para el rol, o categoría que no es de gasto → 400 por `account_id` con mensaje accionable; no se guarda.
+- **AC-03** (tarjeta AC-4) Cuenta de **otra empresa**, inexistente, inactiva, de **clasificación inválida** para el rol, o, para una categoría de Gastos, una cuenta que no es de Gastos → 400 por `account_id` con mensaje accionable; no se guarda.
 - **AC-04** El mapeo de método a cuenta (`PUT payment-methods/<code>/`) rechaza cuentas que no sean de Activo (sin exigir tipo Caja/Banco/Billetera); lo ya configurado sigue resolviendo.
 - **AC-05** (tarjeta AC-1) Con un asiento ya contabilizado, cambiar el mapeo (p. ej. Banco → Caja) no modifica sus líneas; `reverse_automatic_entry` revierte con las cuentas originales aunque estén deshabilitadas o ya no estén en la configuración.
 - **AC-06** (tarjeta AC-2) Con Contabilidad habilitada y cobertura, configuración incompleta: `check_posting_ready` → `ready=False` con issues; `post_automatic_entry` lanza `PostingConfigurationMissing` y no crea asiento.
@@ -61,7 +61,7 @@ Existe el motor y el mapeo método → cuenta sin validar clasificación (`api/v
 ## Edge cases / Error cases
 - **EDGE-01** Rol compartido (INVENTORY, RECEIVABLE): cambiarlo desde un módulo cambia el otro; la UI lo indica.
 - **EDGE-02** Método inactivo o sin cuenta usado en un evento con método → issue `method_unconfigured` con el nombre del método.
-- **EDGE-03** Categoría de gasto sin cuenta, desactivada o de otra empresa → issue `category_unconfigured`/error de validación.
+- **EDGE-03** Categoría de gasto sin cuenta → issue `category_unconfigured` (con su nombre si el módulo lo informa); sin categoría en la operación → `category_required`.
 - **EDGE-04** Empresa sin cuentas de la clasificación requerida: el selector queda vacío y enlaza a Cuentas.
 - **EDGE-05** Importe ≤ 0 o no `Decimal`, o fecha fuera de período abierto: error del motor (400 `JournalValidationError`, `DateOutsideFiscalPeriod`, `FiscalPeriodClosed`) sin asiento parcial.
 - **EDGE-06** Empresa con cuentas heredadas sin clasificar: no se pueden elegir para roles nuevos; mensaje indica clasificarlas en Cuentas.
@@ -72,7 +72,7 @@ Permiso por defecto de la API (administrador de la empresa activa). La empresa s
 ## API contract
 - **API-01** `GET /api/accounting/posting-config/?module=<clave>` → `200 {module, accounting_enabled, ready, events:[{code, label, preview:[{side:'DEBIT'|'CREDIT', label, account_label, status}], issues:[{code, role, label, message}]}], roles:[{role, label, account_class, shared_with:[…], account:{id,code,name,is_active}|null, issue}], methods:[{code,label,is_active,account|null,issue}], categories:[{classification_id,name,is_active,account|null,issue}]}`; `methods`/`categories` solo si el módulo tiene esas líneas. 404 módulo desconocido.
 - **API-02** `PUT /api/accounting/posting-config/roles/<role>/` `{account_id: uuid|null}` → `200` (la fila del rol); 400 `{account_id:[…]}`; 404 rol desconocido.
-- **API-03** `PUT /api/accounting/posting-config/categories/<classification_id>/` `{account_id: uuid|null}` → `200`; 400/404 como API-02.
+- **API-03** `PUT /api/accounting/posting-config/categories/<category_id>/` `{account_id: uuid|null}` → `200 {category_id, account, issue}`; 400 como API-02; el id de la categoría es opaco (cualquier UUID; no hay 404 por categoría).
 - **API-04** (cambio de comportamiento) `PUT /api/accounting/payment-methods/<code>/`: nuevo 400 por `account_id` si la cuenta no es de Activo (el tipo de cuenta no se exige). Forma de respuesta sin cambios.
 - **Fachada (no HTTP)** `describe_posting_config`, `check_posting_ready`, `post_automatic_entry`, `reverse_automatic_entry`, `set_role_account`, `set_category_account` (ADR §5). Compatibilidad: todo es aditivo salvo API-04.
 
@@ -116,7 +116,7 @@ Suites de `accounting`, `modularity`, `shared` (fronteras) y frontend completa; 
 |---|---|
 | AC-01 | `test_posting_config_api` (módulos, 404) |
 | AC-02 | `test_posting_config_api` (PUT roles, `null`, vista previa/`ready`) |
-| AC-03 | `test_posting_config_api` (ajena, inexistente, inactiva, clase inválida, categoría no EXPENSE) |
+| AC-03 | `test_posting_config_api` (ajena, inexistente, inactiva, clase inválida, cuenta que no es de Gastos para una categoría) |
 | AC-04 | `test_posting_config_api` + `test_api.py` (método: no Activo → 400; Activo sin tipo → 200) |
 | AC-05 | `test_posting_service` (cambio de mapeo, líneas intactas, reversión con cuentas originales deshabilitadas) |
 | AC-06 | `test_posting_service` (`check_posting_ready`, `PostingConfigurationMissing`, sin asiento) |
@@ -170,4 +170,5 @@ Ninguna.
 
 ## Changelog
 - **v1** (2026-11-16): versión inicial.
+- **v3** (2026-11-17): [Specification] la cuenta de gasto se configura **por categoría de Gastos** y no por clasificación de egreso: INV-02 (categoría), AC-03, EDGE-03, API-01 (`categories:[{category_id, account, issue}]`, solo las con cuenta) y API-03 (`categories/<category_id>/`, id opaco). La fachada recibe `category_id`/`category_label` en lugar de `classification_id`. [Implementation Plan] `ExpenseSettingsComponent` carga las categorías de Gastos y las entrega al panel; Contabilidad no importa Gastos. Cambio **solicitado explícitamente por la persona en el chat** (elegida la opción «por categoría de Gastos»).
 - **v2** (2026-11-17): [Specification] INV-02, AC-04 y API-04: el mapeo de método de pago (rol `MONEY`) ya no exige tipo de cuenta Caja/Banco/Billetera; basta clasificación Activo, moneda BOB, cuenta activa y con código. Cambio **solicitado explícitamente por la persona en el chat** (el tipo de cuenta se retirará eventualmente). [Implementation Plan] sin cambios de pasos; se ajustan pruebas y textos de la UI.

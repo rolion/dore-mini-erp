@@ -59,12 +59,18 @@ export interface MethodRow {
   issue: string | null;
 }
 
+/** Cuenta de gasto configurada para una categoría de Gastos (Contabilidad solo conoce su id). */
 export interface CategoryRow {
-  classificationId: string;
-  name: string;
-  isActive: boolean;
+  categoryId: string;
   account: PostingAccount | null;
   issue: string | null;
+}
+
+/** Categoría de Gastos que el módulo anfitrión entrega al panel (nombre y estado son de Gastos). */
+export interface PostingCategory {
+  id: string;
+  name: string;
+  isActive: boolean;
 }
 
 export interface PostingConfig {
@@ -105,9 +111,7 @@ export interface MethodRowDto {
 }
 
 export interface CategoryRowDto {
-  classification_id: string;
-  name: string;
-  is_active: boolean;
+  category_id: string;
   account: PostingAccountDto | null;
   issue: string | null;
 }
@@ -141,9 +145,7 @@ export const toRoleRow = (dto: RoleRowDto): RoleRow => ({
 });
 
 export const toCategoryRow = (dto: CategoryRowDto): CategoryRow => ({
-  classificationId: dto.classification_id,
-  name: dto.name,
-  isActive: dto.is_active,
+  categoryId: dto.category_id,
   account: account(dto.account),
   issue: dto.issue,
 });

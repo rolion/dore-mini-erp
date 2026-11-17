@@ -1,10 +1,9 @@
 """Casos de uso de la configuración de asientos automáticos (CONT-12): describir, asignar y resolver cuentas."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from uuid import UUID
 
-from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
+from modules.accounting.domain.account import Account, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES, METHOD_LABELS
-from modules.accounting.domain.classification import Classification, ClassificationNotFound
 from modules.accounting.domain.posting import (
     CREDIT,
     DEBIT,
@@ -56,9 +55,8 @@ class MethodRow:
 
 @dataclass(frozen=True)
 class CategoryRow:
-    classification_id: UUID
-    name: str
-    is_active: bool
+    """Cuenta de gasto configurada para una categoría de Gastos (id opaco: Contabilidad no conoce sus categorías)."""
+    category_id: UUID
     account: AccountInfo | None
     issue: str | None
 
@@ -98,24 +96,19 @@ class Context:
     roles: dict[str, UUID]
     categories: dict[UUID, UUID]
     methods: dict[str, MethodMapping]
-    classifications: dict[UUID, Classification]
-    expense_categories: list[Classification] = field(default_factory=list)
 
 
-def load_context(accounts, classes, posting, mappings, classifications) -> Context:
-    by_id = classifications.list()
+def load_context(accounts, classes, posting, mappings) -> Context:
     return Context(
         accounts=accounts.by_id(), disabled=classes.disabled(), roles=posting.roles(),
-        categories=posting.categories(), methods={m.code: m for m in mappings.all()},
-        classifications={c.id: c for c in by_id},
-        expense_categories=[c for c in by_id if c.direction == 'EXPENSE'])
+        categories=posting.categories(), methods={m.code: m for m in mappings.all()})
 
 
 def _info(account: Account | None) -> AccountInfo | None:
     return AccountInfo(account.id, account.code, account.name, account.is_active) if account else None
 
 
-def _resolve_line(role: Role, event: Event, ctx: Context, method, classification_id):
+def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, category_label=''):
     """`(account_id | None, issue | None)` de una línea del evento."""
     module = event.module
     if role.source == SOURCE_ROLE:
@@ -135,28 +128,28 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, classification
                 f'Configúrela en {location(module)}.')
         account_id = mapping.account_id
     else:
-        category = ctx.classifications.get(classification_id) if classification_id else None
-        if category is None or category.direction != 'EXPENSE':
+        if category_id is None:
             return None, PostingIssue('category_required', role.code, role.label, module,
-                                      'Indique una categoría de gasto válida para la operación.')
-        subject = f'{role.label} · {category.name}'
-        account_id = ctx.categories.get(category.id)
+                                      'Indique la categoría del gasto de la operación.')
+        named = f' «{category_label}»' if category_label else ''
+        subject = f'{role.label} · {category_label}' if category_label else role.label
+        account_id = ctx.categories.get(category_id)
         if account_id is None:
             return None, PostingIssue(
                 'category_unconfigured', role.code, subject, module,
-                f'Falta la cuenta de gasto de la categoría «{category.name}». Configúrela en {location(module)}.')
+                f'Falta la cuenta de gasto de la categoría{named}. Configúrela en {location(module)}.')
     problem = account_problem(role, ctx.accounts.get(account_id), ctx.disabled)
     if problem:
         return None, issue_invalid(role, subject, module, problem)
     return account_id, None
 
 
-def resolve_event(event: Event, ctx: Context, method=None, classification_id=None):
+def resolve_event(event: Event, ctx: Context, method=None, category_id=None, category_label=''):
     """Cuentas por rol de un evento concreto (método/categoría de la operación) y los faltantes que impiden usarlo."""
     accounts: dict[str, UUID] = {}
     issues: list[PostingIssue] = []
     for _, role in event.lines:
-        account_id, issue = _resolve_line(role, event, ctx, method, classification_id)
+        account_id, issue = _resolve_line(role, event, ctx, method, category_id, category_label)
         if issue:
             issues.append(issue)
         else:
@@ -176,11 +169,7 @@ def event_issues(event: Event, ctx: Context) -> list[PostingIssue]:
                 if mapping.is_active:
                     _, issue = _resolve_line(role, event, ctx, mapping.code, None)
                     found += [issue] if issue else []
-        else:
-            for category in ctx.expense_categories:
-                if category.is_active:
-                    _, issue = _resolve_line(role, event, ctx, None, category.id)
-                    found += [issue] if issue else []
+        # Las categorías de gasto son de Gastos: se verifican por operación (con su categoría), no aquí.
     return found
 
 
@@ -201,8 +190,8 @@ def _preview(event: Event, ctx: Context) -> tuple[PreviewLine, ...]:
 
 
 class DescribePostingConfig:
-    def __init__(self, accounts, classes, posting, mappings, classifications):
-        self.sources = (accounts, classes, posting, mappings, classifications)
+    def __init__(self, accounts, classes, posting, mappings):
+        self.sources = (accounts, classes, posting, mappings)
 
     def execute(self, module: str) -> ConfigView:
         events = events_for(module)
@@ -232,12 +221,9 @@ class DescribePostingConfig:
         if roles_of(module, SOURCE_CATEGORY):
             role = roles_of(module, SOURCE_CATEGORY)[0]
             rows = []
-            for category in ctx.expense_categories:
-                account_id = ctx.categories.get(category.id)
-                account = ctx.accounts.get(account_id) if account_id else None
-                issue = (account_problem(role, account, ctx.disabled) if account_id else
-                         ('Falta la cuenta de gasto de esta categoría.' if category.is_active else None))
-                rows.append(CategoryRow(category.id, category.name, category.is_active, _info(account), issue))
+            for category_id, account_id in sorted(ctx.categories.items(), key=lambda item: str(item[0])):
+                account = ctx.accounts.get(account_id)
+                rows.append(CategoryRow(category_id, _info(account), account_problem(role, account, ctx.disabled)))
             categories = tuple(rows)
         return ConfigView(module, not any(v.issues for v in views), views, tuple(roles), methods, categories)
 
@@ -258,20 +244,17 @@ class SetRoleAccount:
 
 
 class SetCategoryAccount:
-    def __init__(self, accounts, classes, classifications, posting):
-        self.accounts, self.classes = accounts, classes
-        self.classifications, self.posting = classifications, posting
+    """Asigna (o quita) la cuenta de gasto de una categoría de Gastos. El id es opaco: Contabilidad no importa Gastos,
+    así que no lo verifica; cada empresa solo ve y usa sus propias asignaciones."""
 
-    def execute(self, classification_id: UUID, account_id: UUID | None) -> None:
-        category = self.classifications.get(classification_id)
-        if category is None:
-            raise ClassificationNotFound(str(classification_id))
-        if category.direction != 'EXPENSE':
-            raise AccountValidationError({'classification_id': ['La categoría no es de gasto.']})
+    def __init__(self, accounts, classes, posting):
+        self.accounts, self.classes, self.posting = accounts, classes, posting
+
+    def execute(self, category_id: UUID, account_id: UUID | None) -> None:
         if account_id is not None:
             validate_account_for_role(get_role('EXPENSE_BY_CATEGORY'), self.accounts.get(account_id),
                                       self.classes.disabled())
-        self.posting.set('CATEGORY', str(category.id), account_id)
+        self.posting.set('CATEGORY', str(category_id), account_id)
 
 
 __all__ = ['AccountInfo', 'CategoryRow', 'ConfigView', 'Context', 'CREDIT', 'DEBIT', 'DescribePostingConfig',

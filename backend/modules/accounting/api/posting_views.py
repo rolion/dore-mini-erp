@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 
 from modules.accounting import services
 from modules.accounting.domain.account import AccountValidationError
-from modules.accounting.domain.classification import ClassificationNotFound
 from modules.accounting.domain.posting import PostingNotFound, get_role, modules_using
 from shared.tenancy import company_id_from
 
@@ -28,8 +27,6 @@ def _call(function, *args):
         raise ValidationError(exc.errors) from exc
     except PostingNotFound as exc:
         raise NotFound('No existe en la configuración de asientos automáticos.') from exc
-    except ClassificationNotFound as exc:
-        raise NotFound('Categoría no encontrada.') from exc
 
 
 class _PostingView(APIView):
@@ -55,11 +52,14 @@ class PostingRoleView(_PostingView):
 
 
 class PostingCategoryView(_PostingView):
-    def put(self, request, classification_id):
+    """Cuenta de gasto de una categoría de Gastos. El id de la categoría es opaco para Contabilidad."""
+
+    def put(self, request, category_id):
         serializer = PostingAccountInputSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         company_id = company_id_from(request)
-        _call(services.set_category_account, company_id, classification_id, serializer.validated_data['account_id'])
+        _call(services.set_category_account, company_id, category_id, serializer.validated_data['account_id'])
         ref = services.describe_posting_config(company_id, 'expenses')
-        return Response(serialize_category_row(
-            next(c for c in ref.config.categories if c.classification_id == classification_id)))
+        row = next((c for c in ref.config.categories if c.category_id == category_id), None)
+        return Response(serialize_category_row(row) if row else
+                        {'category_id': str(category_id), 'account': None, 'issue': None})

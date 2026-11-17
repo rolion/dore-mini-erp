@@ -10,7 +10,6 @@ from django.utils import timezone
 
 from modules.accounting import services
 from modules.accounting.application.use_cases import ConfigureMethod
-from modules.accounting.domain.classification import Classification
 from modules.accounting.infrastructure.django.models import (
     AccountModel,
     CoveragePeriodModel,
@@ -19,7 +18,6 @@ from modules.accounting.infrastructure.django.models import (
 )
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
-    DjangoClassificationRepository,
     DjangoMethodMappingRepository,
 )
 from modules.accounting.tests.journal_support import make_account, make_period, money_account
@@ -175,23 +173,23 @@ class PostTests(PostingBase):
                                           TODAY + timedelta(days=400), 'Futura', Decimal('5'))
 
     def test_expense_uses_the_account_of_its_category_and_the_money_account_of_the_method(self):  # AC-02
-        category = DjangoClassificationRepository(self.company.id).save(Classification.create('Servicios', 'EXPENSE'))
-        services.set_category_account(self.company.id, category.id, self.gasto.id)
+        category = uuid4()
+        services.set_category_account(self.company.id, category, self.gasto.id)
         self.configure_method('CASH', self.caja)
-        result = self.post('EXPENSE_RECORD', method='CASH', classification_id=category.id)
+        result = self.post('EXPENSE_RECORD', method='CASH', category_id=category)
         self.assertEqual([(line.account_id, line.debit, line.credit) for line in result.entry.lines],
                          [(self.gasto.id, Decimal('100.00'), 0), (self.caja.id, 0, Decimal('100.00'))])
         with self.assertRaises(services.PostingConfigurationMissing) as raised:
-            self.post('EXPENSE_RECORD', method='CASH', classification_id=uuid4())
+            self.post('EXPENSE_RECORD', method='CASH')
         self.assertEqual(raised.exception.issues[0].code, 'category_required')
 
     def test_a_category_without_account_is_reported_with_its_name(self):  # EDGE-03
-        category = DjangoClassificationRepository(self.company.id).save(Classification.create('Servicios', 'EXPENSE'))
         self.configure_method('CASH', self.caja)
         readiness = services.check_posting_ready(self.company.id, 'EXPENSE_RECORD', TODAY, method='CASH',
-                                                 classification_id=category.id)
+                                                 category_id=uuid4(), category_label='Servicios básicos')
         self.assertEqual([i.code for i in readiness.issues], ['category_unconfigured'])
-        self.assertIn('«Servicios»', readiness.issues[0].message)
+        self.assertIn('«Servicios básicos»', readiness.issues[0].message)
+        self.assertIn('Gastos › Configuración › Asientos automáticos', readiness.issues[0].message)
 
 
 class HistoryTests(PostingBase):
@@ -274,17 +272,16 @@ class AssignmentTests(PostingBase):
         self.assertIsNone(roles['RECEIVABLE'].account)
         self.assertEqual(roles['SALES_INCOME'].account.id, self.ingresos.id)
 
-    def test_category_must_be_an_expense_classification_of_the_company(self):  # AC-03
-        income = DjangoClassificationRepository(self.company.id).save(Classification.create('Ventas', 'INCOME'))
-        with self.assertRaises(services.AccountValidationError):
-            services.set_category_account(self.company.id, income.id, self.gasto.id)
-        theirs = DjangoClassificationRepository(self.other.id).save(Classification.create('Otra', 'EXPENSE'))
-        from modules.accounting.domain.classification import ClassificationNotFound
-        with self.assertRaises(ClassificationNotFound):
-            services.set_category_account(self.company.id, theirs.id, self.gasto.id)
-        mine = DjangoClassificationRepository(self.company.id).save(Classification.create('Luz', 'EXPENSE'))
-        with self.assertRaises(services.AccountValidationError):
-            services.set_category_account(self.company.id, mine.id, self.ingresos.id)
+    def test_a_category_account_must_be_an_expense_account_and_can_be_cleared(self):  # AC-03
+        category = uuid4()
+        for account in (self.ingresos, self.caja, make_account(self.other.id, 'Gasto ajeno', 'EXPENSE', '510001')):
+            with self.assertRaises(services.AccountValidationError):
+                services.set_category_account(self.company.id, category, account.id)
+        services.set_category_account(self.company.id, category, self.gasto.id)
+        rows = services.describe_posting_config(self.company.id, 'expenses').config.categories
+        self.assertEqual([(r.category_id, r.account.id) for r in rows], [(category, self.gasto.id)])
+        services.set_category_account(self.company.id, category, None)
+        self.assertEqual(services.describe_posting_config(self.company.id, 'expenses').config.categories, ())
 
 
 class DescribeTests(PostingBase):
@@ -316,9 +313,8 @@ class DescribeTests(PostingBase):
         self.assertTrue(services.describe_posting_config(self.company.id, 'sales').config.ready)
 
     def test_reading_does_not_scale_queries_with_methods_or_categories(self):  # NFR
-        repo = DjangoClassificationRepository(self.company.id)
-        for index in range(6):
-            repo.save(Classification.create(f'Categoría {index}', 'EXPENSE'))
+        for _ in range(6):
+            services.set_category_account(self.company.id, uuid4(), self.gasto.id)
         with CaptureQueriesContext(connection) as queries:
             services.describe_posting_config(self.company.id, 'expenses')
         self.assertLessEqual(len(queries), 8)
