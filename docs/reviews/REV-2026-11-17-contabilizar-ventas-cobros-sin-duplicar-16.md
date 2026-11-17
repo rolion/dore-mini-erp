@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-16: La alerta de faltantes contables tiene contraste insuficiente
 
-**Status:** Open
+**Status:** Resolved (estilo tenue y color explícito en tema oscuro en `order-detail` y `delivery-dialog`; medido en el navegador: 17,85:1 en tema claro y 10,78:1 en oscuro, enlace incluido)
 **Severity:** Medium
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3.1)

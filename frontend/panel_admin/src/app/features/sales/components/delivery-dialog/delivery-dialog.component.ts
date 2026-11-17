@@ -28,6 +28,7 @@ export const STALE_ORDER = 'stale';
 @Component({
   selector: 'app-delivery-dialog',
   templateUrl: './delivery-dialog.component.html',
+  styleUrl: './delivery-dialog.component.scss',
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class DeliveryDialogComponent {

@@ -52,6 +52,7 @@ const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
 @Component({
   selector: 'app-order-detail',
   templateUrl: './order-detail.component.html',
+  styleUrl: './order-detail.component.scss',
   imports: [TranslatePipe, 
     RouterLink,
     DatePipe,
