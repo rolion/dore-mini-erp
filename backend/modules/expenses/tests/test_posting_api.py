@@ -221,5 +221,17 @@ class PostingOptionsTests(PostingApiBase):
         none = client.get(OPTIONS, {'expense_date': TODAY.isoformat()}).json()
         self.assertEqual((none['covered'], none['issues'], none['expense_accounts']), (False, [], []))
 
+    def test_a_category_of_another_company_is_not_resolved_and_the_method_is_bounded(self):  # AC-11, REV-03
+        enable(self.other, 'accounting', 'expenses')
+        client = APIClient()
+        authenticate(client, make_admin(self.other, username='beto'))
+        foreign = client.post(CATEGORIES, {'name': 'Ajena'}, format='json').json()
+        body = self.client.get(OPTIONS, {'expense_date': TODAY.isoformat(), 'category_id': foreign['id'],
+                                         'payment_method': 'BANK_TRANSFER'}).json()
+        self.assertIsNone(body['expense_account'])
+        self.assertEqual([i['code'] for i in body['issues']], ['category_required'])
+        long = self.client.get(OPTIONS, {'expense_date': TODAY.isoformat(), 'payment_method': 'X' * 21})
+        self.assertEqual((long.status_code, list(long.json())), (400, ['payment_method']))
+
     def test_requires_a_date(self):
         self.assertEqual(self.client.get(OPTIONS).status_code, 400)

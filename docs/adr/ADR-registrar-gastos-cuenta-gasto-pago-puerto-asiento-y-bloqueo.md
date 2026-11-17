@@ -9,7 +9,7 @@ Gastos debe contabilizar con el evento `EXPENSE_RECORD` (Debe cuenta de gasto / 
 
 ## Decisión
 1. **Fachada de Contabilidad (aditiva, retrocompatible):**
-   - `post_automatic_entry(..., account_overrides: dict[str, UUID] | None = None)`: claves = códigos de rol (`EXPENSE_BY_CATEGORY`, `MONEY`). Cada cuenta se valida con `account_problem_info` contra el rol (empresa, activa, BOB, con código, clase correcta, clase habilitada); un problema se reporta como `PostingIssue` (`account_invalid`) y el comando lanza `PostingConfigurationMissing`. Sin override rige la configuración.
+   - `post_automatic_entry(..., account_overrides: dict[str, UUID] | None = None)`: claves = códigos de rol (`EXPENSE_BY_CATEGORY`, `MONEY`). Cada cuenta se valida con `account_problem_info` contra el rol (empresa, activa, BOB, con código, clase correcta, clase habilitada); un problema se reporta como `PostingIssue` (`account_invalid`) y el comando lanza `PostingConfigurationMissing`. La cuenta del rol de pago (`MONEY`) elegida a mano, además, debe ser de dinero (Caja/Banco/Billetera): `money_account_problem` rechaza otros Activos (v2 del PLAN, REV-02). Sin override rige la configuración.
    - `validate_posting_account(company_id, role, account_id)` → `AccountRef` o `AccountValidationError`, para rechazar con error por campo antes de escribir.
    - `posting_options(company_id, event, accounting_date, method, category_id)` → cobertura, cuentas por defecto resueltas (o faltantes) y cuentas elegibles por rol, para el formulario. Solo lectura.
 2. **Gastos (`expenses`):**

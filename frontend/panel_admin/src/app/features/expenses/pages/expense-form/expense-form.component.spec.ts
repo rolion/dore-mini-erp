@@ -131,6 +131,18 @@ describe('ExpenseFormComponent', () => {
       expect(second.idempotencyKey).toBe(first.idempotencyKey);
     });
 
+    it('renews the key when the data changes between attempts, and only then (REV-04)', () => {
+      api.create.and.returnValue(throwError(() => new ExpensesApiError('x', 409, {}, 'idempotency_key_reused')));
+      fillValid();
+      component.onSubmit();
+      component.onSubmit();
+      component.form.patchValue({ amount: '46.00' });
+      component.onSubmit();
+      const [first, same, changed] = api.create.calls.allArgs().map((args) => args[0].idempotencyKey);
+      expect(same).toBe(first);
+      expect(changed).not.toBe(first);
+    });
+
     it('blocks saving and explains what is missing when covered without accounts (GAS-01, AC-07)', () => {
       api.postingOptions.and.returnValue(
         of(

@@ -1,4 +1,4 @@
-# PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago (v1)
+# PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago (v2)
 
 **Task:** TASK-registrar-gastos-cuenta-gasto-pago · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-registrar-gastos-cuenta-gasto-pago-formulario-y-detalle · ADR-registrar-gastos-cuenta-gasto-pago-puerto-asiento-y-bloqueo
@@ -35,7 +35,7 @@ Ver TASK «Hechos encontrados»: sin asiento, clasificación exigida con cobertu
 ## Domain rules / invariants
 - **INV-01** Debe = Haber = `amount` del gasto; sin líneas de importe cero.
 - **INV-02** Un gasto genera a lo sumo un asiento `EXPENSE_RECORD` (`origin_id` = id del gasto).
-- **INV-03** Cuenta de gasto: clase Gastos, de la empresa, activa, BOB, habilitada. Cuenta de pago: clase Activo, mismas condiciones.
+- **INV-03** Cuenta de gasto: clase Gastos, de la empresa, activa, BOB, habilitada. Cuenta de pago: clase Activo y **de dinero** (Caja, Banco o Billetera: `kind` informado), mismas condiciones; la regla de dinero aplica a la cuenta elegida por la persona y a las elegibles que ofrece `posting-options` (la cuenta por defecto sale de la configuración de métodos de pago de CONT-12, que ya la valida).
 - **INV-04** Un reintento con la misma `idempotency_key` y los mismos datos no crea otro gasto ni asiento; con otros datos → conflicto.
 - **INV-05** Un gasto contabilizado no cambia sus campos financieros; la corrección es anular y registrar de nuevo.
 - **INV-06** La reversión de la anulación es única (idempotente) y no borra el asiento original.
@@ -107,7 +107,7 @@ Suite completa de `accounting`, `expenses`, `reporting`, `sales`, `receivables`;
 | AC | Verification |
 |---|---|
 | AC-01 | API integración con asiento real |
-| AC-02 | Fachada + API (cuenta ajena/inactiva/clase/moneda) |
+| AC-02 | Fachada + API (cuenta ajena/inactiva/clase/moneda; Activo que no es de dinero, p. ej. Cuentas por cobrar, como cuenta de pago) |
 | AC-03 | Caso de uso + API: período cerrado / fuera de período / config faltante → sin gasto |
 | AC-04 | Caso de uso (misma/otra huella) + TransactionTestCase concurrente |
 | AC-05 | API: cambiar config tras crear; gasto y asiento intactos |
@@ -152,3 +152,6 @@ Contrato extendido de `post_automatic_entry` (mitigado: parámetro opcional); cl
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-17): [Specification] INV-03 y AC-02: la cuenta de pago elegida debe ser de dinero (Caja/Banco/Billetera), no cualquier Activo; documenta lo ya implementado (REV-2026-11-17-registrar-gastos-cuenta-gasto-pago-02). Aprobado por la persona al pedir corregir los hallazgos REV-01..04. [Implementation Plan] REV-01: prueba `TransactionTestCase` de concurrencia (`test_posting_concurrency.py`); REV-03: `payment_method` de `posting-options` acotado a 20 caracteres y prueba de aislamiento; REV-04: el formulario renueva la clave de idempotencia cuando cambian los datos entre intentos.

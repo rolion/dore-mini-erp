@@ -1,6 +1,6 @@
 # REV-2026-11-17-registrar-gastos-cuenta-gasto-pago-01: Falta la prueba de concurrencia real (TransactionTestCase) exigida por el Test Specification
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md (v1)

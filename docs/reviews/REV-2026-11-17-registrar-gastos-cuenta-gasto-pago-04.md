@@ -1,6 +1,6 @@
 # REV-2026-11-17-registrar-gastos-cuenta-gasto-pago-04: La clave de idempotencia del formulario no se renueva: tras editar datos y reintentar un alta ya aceptada queda en 409 sin salida
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md (v1)

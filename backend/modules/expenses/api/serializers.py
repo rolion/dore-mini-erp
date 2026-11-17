@@ -26,7 +26,7 @@ class ExpenseCreateSerializer(ExpenseInputSerializer):
 class PostingOptionsQuerySerializer(serializers.Serializer):
     expense_date = serializers.DateField()
     category_id = serializers.UUIDField(required=False, allow_null=True)
-    payment_method = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    payment_method = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=20)
 
 
 class CategoryInputSerializer(serializers.Serializer):

@@ -1,6 +1,6 @@
 # REV-2026-11-17-registrar-gastos-cuenta-gasto-pago-03: posting-options: parametro payment_method sin limite de longitud y sin prueba de aislamiento de categoria ajena
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md (v1)

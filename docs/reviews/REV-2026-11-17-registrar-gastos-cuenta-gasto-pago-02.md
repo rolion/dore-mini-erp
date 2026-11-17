@@ -1,6 +1,6 @@
 # REV-2026-11-17-registrar-gastos-cuenta-gasto-pago-02: La Specification (INV-03) y el ADR dicen cuenta de pago de clase Activo; la implementacion exige cuenta de dinero
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md (v1)

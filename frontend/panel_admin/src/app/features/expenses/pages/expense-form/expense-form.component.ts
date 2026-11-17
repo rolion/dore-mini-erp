@@ -114,8 +114,12 @@ export class ExpenseFormComponent implements OnInit {
   private router = inject(Router);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
-  /** Un envío = una clave: reintentar el mismo formulario no duplica el gasto ni el asiento. */
-  private readonly idempotencyKey = crypto.randomUUID();
+  /**
+   * Un envío = una clave: reintentar los mismos datos no duplica el gasto ni el asiento. Si la persona cambia algún
+   * dato entre intentos es un envío nuevo y la clave se renueva (así un 409 de clave reutilizada no la deja atascada).
+   */
+  private idempotencyKey = crypto.randomUUID();
+  private lastSubmission = '';
 
   get isEdit(): boolean {
     return this.expenseId !== null;
@@ -197,6 +201,11 @@ export class ExpenseFormComponent implements OnInit {
       input.paymentAccountId = value.paymentAccountId;
     }
     if (!this.isEdit) {
+      const signature = JSON.stringify(input);
+      if (this.lastSubmission && signature !== this.lastSubmission) {
+        this.idempotencyKey = crypto.randomUUID();
+      }
+      this.lastSubmission = signature;
       input.idempotencyKey = this.idempotencyKey;
     }
     this.saving = true;

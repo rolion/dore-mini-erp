@@ -15,6 +15,7 @@
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY (decisiones por defecto registradas en el PLAN); PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate sin Critical/High; todas las pruebas pasan; revisión visual no verificada; REV-01..04 abiertos | delivery-publish |
+| 2026-11-17 | PUBLISH (corrección) | REV-01..04 resueltos a pedido de la persona; PLAN v2 (INV-03 aprobado por la persona) | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,7 @@ Ver `docs/design/DDR-registrar-gastos-cuenta-gasto-pago-formulario-y-detalle.md`
 Ver `docs/adr/ADR-registrar-gastos-cuenta-gasto-pago-puerto-asiento-y-bloqueo.md`.
 
 ## Plan
-`docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md` (v1, COMPLETO). Specification readiness: READY.
+`docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md` (v2, COMPLETO). Specification readiness: READY.
 
 ## Implementación
 Resumen: un gasto con Contabilidad cubriendo su fecha se contabiliza en la misma transacción con el evento `EXPENSE_RECORD` (Debe cuenta de gasto / Haber Caja-Banco), con cuentas por defecto o elegidas, idempotencia y bloqueo posterior; sin cobertura el flujo operativo no cambia.
@@ -99,6 +100,8 @@ Desviaciones respecto al plan:
 - Los faltantes de configuración se envían con `module`, `params` y `problem` para reutilizar `issueText` y traducirlos.
 - Se eliminaron `ExpenseClassificationError` y sus códigos (ya sin uso).
 - Concurrencia: cubierta con prueba de aplicación que simula la carrera (la restricción única y el punto de guardado en el repositorio la resuelven); no hay `TransactionTestCase` multihilo.
+
+Correcciones posteriores al Quality Gate (REV-01..04, resueltos; el Gate no se repitió): prueba multihilo `expenses/tests/test_posting_concurrency.py` (REV-01); INV-03/AC-02 del PLAN v2 y ADR actualizados a «cuenta de dinero» (REV-02); `payment_method` de `posting-options` acotado a 20 caracteres y prueba de aislamiento de categoría ajena (REV-03); el formulario renueva la clave de idempotencia cuando cambian los datos entre intentos (REV-04). Esto elimina la desviación «sin TransactionTestCase multihilo».
 
 Deuda técnica: la pantalla y el endpoint de clasificación de egreso de la categoría se conservan sin uso en el alta (candidatos a retiro en otra tarea). Revisión visual en navegador: no realizada en esta etapa.
 
