@@ -251,6 +251,17 @@ class WithoutCoverageTests(SalesApiTestCase):
         self.assertEqual([(r.origin_kind, r.account_id, r.amount) for r in rows],
                          [('PRODUCT', caja.id, Decimal('40.00'))])
 
+    def test_confirming_with_coverage_an_order_paid_before_it_is_rejected(self):  # REV-01 (PLAN v2), AC-15
+        enable(self.company, 'sales', 'customers')
+        order = self.order_with_item(price='100.00', quantity=1)
+        self.pay(order, '40.00')  # sin cobertura: no queda en ningún libro de partida doble
+        setup_company_accounting(self.company)
+        body = self.act(order, 'prepare', expected_status=409)
+        self.assertEqual(body['code'], 'order_has_prior_payments')
+        self.assertEqual(self.get(order)['status'], 'NEW')
+        self.assertEqual(JournalEntryModel.objects.count(), 0)
+        self.act(order, 'cancel', {'reason': 'Se recrea'})  # la salida indicada funciona
+
     def test_another_company_without_configuration_does_not_affect_this_one(self):  # AC-13
         setup_company_accounting(self.company)
         other = make_company('Empresa B')

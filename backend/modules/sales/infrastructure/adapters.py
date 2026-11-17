@@ -193,6 +193,12 @@ class SalesPostingAdapter:
     def recognize(self, order, actor: Actor, today: date) -> None:
         if not self._enabled():
             return
+        if order.payments and accounting_services.coverage_status(self.company_id, today).covered:
+            # Cobros hechos sin cobertura (libro anterior o ninguno): reconocer el total los dejaría sin acreditar.
+            raise OrderRuleViolation(
+                'order_has_prior_payments',
+                'El pedido tiene cobros registrados antes de la cobertura contable y no puede confirmarse: su venta '
+                'se contabiliza al confirmar. Cancela el pedido y créalo de nuevo.')
         with _posting_errors():
             accounting_services.post_automatic_entry(
                 self.company_id, SALE_RECOGNITION, order.id, today, f'Venta {order.code}', order.total,

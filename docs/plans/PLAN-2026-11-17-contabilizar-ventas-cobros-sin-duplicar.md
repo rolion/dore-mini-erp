@@ -1,4 +1,4 @@
-# PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar (v1)
+# PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar (v2)
 
 **Task:** TASK-contabilizar-ventas-cobros-sin-duplicar · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-contabilizar-ventas-cobros-sin-duplicar-errores-accionables-en-detalle-de-pedido.md` · `docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-puerto-reconocimiento-y-cobro.md`
@@ -57,10 +57,12 @@ Sin cobertura (Contabilidad deshabilitada, antes del corte, hueco): todo funcion
 - **AC-11** Sin Contabilidad habilitada o sin cobertura: ningún asiento, ninguna exigencia de cuentas, mismas respuestas que hoy.
 - **AC-12** Entregar un pedido no crea asientos (costo = INV-01).
 - **AC-13** Aislamiento por empresa: configuración y asientos de una empresa no afectan a otra.
+- **AC-15** (v2) Confirmar con cobertura un pedido que ya tiene cobros (hechos sin cobertura) → 409 `order_has_prior_payments`; el pedido sigue NUEVO y no hay asiento. Sin cobertura se confirma como hoy.
 - **AC-14** Frontend: el detalle muestra el rechazo con `detail` y, para configuración faltante, la lista de `issues` y el enlace a la configuración de Ventas; es/en/pt, accesible, usable a 375 px y en tema oscuro.
 
 ## Edge cases / Error cases
 - **EDGE-01** Pedido con total 0 (descuento = subtotal): se confirma sin asiento; no admite cobros (saldo 0).
+- **EDGE-07** (v2) Pedido NUEVO cobrado antes de la cobertura y confirmado después: se bloquea (AC-15); la salida es cancelarlo y crearlo de nuevo.
 - **EDGE-02** Pedido confirmado antes de la cobertura y cobrado después: camino actual, sin reconocimiento (no se «completa» retroactivamente).
 - **EDGE-03** Cobro con fecha anterior a la del reconocimiento: permitido si el período está abierto y hay cobertura.
 - **EDGE-04** Cuenta configurada que se deshabilita entre confirmar y cobrar: el cobro se bloquea con mensaje accionable; la reversión usa cuentas originales.
@@ -72,7 +74,7 @@ Sin cambios: permisos y `required_modules = ('sales',)` existentes; la empresa s
 
 ## API contract
 Compatible hacia atrás; solo respuestas 409 nuevas con la forma existente `{code, detail}`:
-- **API-01** `POST /api/orders/<id>/prepare/` (confirmar): 409 `posting_configuration_missing` (`+ issues:[{code, subject, message}]`) o error del motor traducido.
+- **API-01** `POST /api/orders/<id>/prepare/` (confirmar): 409 `order_has_prior_payments` (v2), 409 `posting_configuration_missing` (`+ issues:[{code, subject, message}]`) o error del motor traducido.
 - **API-02** `POST /api/orders/<id>/payments/`: 409 `posting_configuration_missing`, `order_not_confirmed`, `payment_date_not_covered`, o error del motor; 200 en replay, 201 al crear (sin cambios).
 - **API-03** `POST/PATCH/DELETE` de ítems y `POST discount/`: 409 `order_total_locked` (solo pedido reconocido).
 - **API-04** `POST /api/orders/<id>/cancel/`: 409 `order_has_payments_posted` (solo reconocido con cobros).
@@ -116,6 +118,7 @@ Suites `sales`, `accounting`, `receivables`, `reporting`, `shared`/fronteras y f
 | AC-10 | `test_sales_posting` + `test_payment_ledger` (entradas del libro anterior vs asientos) |
 | AC-11 | `test_payment_ledger`/`test_api` existentes en verde + prueba sin módulo/sin cobertura |
 | AC-12 | `test_sales_posting` (entregar no crea asientos) |
+| AC-15 | `test_sales_posting.test_confirming_with_coverage_an_order_paid_before_it_is_rejected` |
 | AC-13 | `test_sales_posting` (dos empresas) |
 | AC-14 | specs de `order-detail`/`order-payments`, `i18n:check`, revisión visual |
 
@@ -154,3 +157,6 @@ Ninguna (`makemigrations --check` sin cambios). Nunca editar migraciones aplicad
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-17): [Specification] AC-15, EDGE-07 y API-01: confirmar con cobertura un pedido con cobros previos se rechaza (409 `order_has_prior_payments`). Cambio **solicitado explícitamente por la persona en el chat** (opción A de REV-01). [Implementation Plan] sin cambios de pasos: la comprobación vive en `SalesPostingAdapter.recognize`.

@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-01: Cobro previo a la cobertura y confirmación posterior duplican el camino
 
-**Status:** Open
+**Status:** Resolved (PLAN v2, opción A aprobada por la persona)
 **Severity:** Medium
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)
