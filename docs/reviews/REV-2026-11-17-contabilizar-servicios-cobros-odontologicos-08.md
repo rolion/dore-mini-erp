@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-08: Sin prueba del texto nuevo del mensaje de rectificación
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos.md (v1)
@@ -19,3 +19,5 @@ Ver descripción.
 
 ## Evidence
 Quality Gate, 2.ª pasada (subagente aislado, HEAD b778d3d). Pendiente.
+
+Resuelto: `test_a_rendered_line_cannot_be_rejected...` (cotizaciones) y `test_a_rendered_dental_line_cannot_be_rejected_and_says_why` (Odontología) afirman el texto «ya fue prestada».

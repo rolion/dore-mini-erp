@@ -5,9 +5,11 @@ Líneas de la proforma de prueba: Limpieza 100, Corona 200, Blanqueamiento 50 (s
 import threading
 from datetime import timedelta
 from decimal import Decimal
+from unittest import mock
 from uuid import uuid4
 
 from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.test import TransactionTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -19,10 +21,9 @@ from modules.accounting.infrastructure.django.models import (
 )
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository
 from modules.accounting.tests.journal_support import make_account, make_period, money_account
-from modules.accounts.testing import make_admin
 from modules.modularity.infrastructure.django.repositories import DjangoCompanyModuleRepository
 from modules.receivables.infrastructure.django.models import PaymentModel, RenderedServiceModel
-from modules.receivables.tests.test_api import BASE, QUOTES, ReceivablesApiTests as _Base
+from modules.receivables.tests.test_api import BASE, DENTAL, QUOTES, ReceivablesApiTests as _Base
 from modules.receivables.tests.test_payment_ledger import configure
 
 TODAY = timezone.localdate()
@@ -323,6 +324,7 @@ class ServicePostingTests(TransactionTestCase):
         blocked = self.client.post(f"{QUOTES}{p['id']}/lines/{corona}/rectify/", {
             'idempotency_key': str(uuid4()), 'decision': 'rejected', 'reason': 'x'}, format='json')
         self.assertEqual(blocked.status_code, 409, blocked.content)
+        self.assertIn('ya fue prestada', blocked.json()['detail'])  # REV-08: el mensaje cubre las líneas solo prestadas
         self.assertEqual(self.render(p['number'], rejected).status_code, 400)
         self.assertEqual(self.render(p['number'], str(uuid4())).status_code, 400)
         future = self.render(p['number'], p['lines'][0]['id'], service_date=str(TODAY + timedelta(days=1)))
@@ -351,3 +353,74 @@ class ServicePostingTests(TransactionTestCase):
         self.assertEqual((line['rendered'], line['service_date'], line['can_render']),
                          (True, str(TODAY - timedelta(days=1)), False))
         self.assertEqual(view['totals']['recognized'], '200.00')
+
+    # --- Odontología: proforma con pieza dental -----------------------------------------------------------------
+    def dental_accepted(self):
+        body = self.client.post(f'{DENTAL}patients/{self.customer.pk}/proformas/', {'date': str(TODAY), 'lines': [
+            {'service_id': str(self.a.pk), 'quantity': '1', 'dental_piece': '18'},
+            {'service_id': str(self.b.pk), 'quantity': '1', 'dental_piece': '19'}]}, format='json').json()
+        p = self.client.post(f"{DENTAL}proformas/{body['id']}/present/").json()
+        accepted = self.client.post(f"{DENTAL}proformas/{p['id']}/decisions/", {
+            'idempotency_key': str(uuid4()), 'decision': 'accepted', 'line_ids': [l['id'] for l in p['lines']],
+            'accepted_by_name': 'Rosa', 'medium': 'in_person'}, format='json')
+        self.assertEqual(accepted.status_code, 201, accepted.content)
+        return p
+
+    # REV-08: el mensaje de rectificación también es veraz en Odontología
+    def test_a_rendered_dental_line_cannot_be_rejected_and_says_why(self):
+        p = self.dental_accepted()
+        line = p['lines'][0]['id']
+        self.assertEqual(self.render(p['number'], line, kind='dental').status_code, 201)
+        blocked = self.client.post(f"{DENTAL}proformas/{p['id']}/lines/{line}/rectify/", {
+            'idempotency_key': str(uuid4()), 'decision': 'rejected', 'reason': 'x'}, format='json')
+        self.assertEqual(blocked.status_code, 409, blocked.content)
+        self.assertIn('ya fue prestada', blocked.json()['detail'])
+
+    # REV-09 / AC-12: el permiso clínico rige también la prestación de una proforma odontológica
+    def test_rendering_a_dental_service_requires_clinical_access(self):
+        p = self.dental_accepted()
+        line = p['lines'][0]['id']
+        with mock.patch('config.permissions.has_clinical_access', return_value=False):
+            denied = self.render(p['number'], line, kind='dental')
+        self.assertEqual(denied.status_code, 403)
+        self.assertEqual((RenderedServiceModel.objects.count(), self.books.journal().count()), (0, 0))
+        allowed = self.render(p['number'], line, kind='dental')
+        self.assertEqual(allowed.status_code, 201, allowed.content)
+        self.assertEqual(self.books.journal('SERVICE_RECOGNITION').count(), 1)
+
+    # REV-10 / EDGE-04: la prestación sigue ligada a la línea de origen al versionar la proforma
+    def test_a_rendered_line_stays_rendered_after_a_new_version(self):
+        b = self.books
+        p = self.quote(accept=(0, 1), reject=(2,))
+        limpieza = p['lines'][0]['id']
+        service = self.render(p['number'], limpieza).json()['service']
+        v2 = self.client.post(f"{QUOTES}{p['id']}/new-version/").json()
+        self.assertEqual(self.client.post(f"{QUOTES}{v2['id']}/present/").status_code, 200)
+        view = self.detail(p['number']).json()
+        line_v2 = next(l for l in view['lines'] if l['description'] == 'Limpieza')
+        self.assertEqual((view['version'], line_v2['rendered'], line_v2['can_render'], view['totals']['recognized']),
+                         (2, True, False, '100.00'))
+        again = self.render(p['number'], line_v2['line_id'])  # la línea nueva es la misma prestación
+        self.assertEqual((again.status_code, again.json()['service']['id']), (200, service['id']))
+        paid = self.pay(p['number'], [(line_v2['line_id'], '100.00')])
+        self.assertEqual(paid.status_code, 201, paid.content)
+        self.assertEqual((b.journal('SERVICE_RECOGNITION').count(), b.journal('SERVICE_PAYMENT').count()), (1, 1))
+        self.assertEqual(b.net(b.ingresos), (ZERO, D('100.00')))
+
+    # REV-10 / NFR: el detalle no hace más consultas cuando crecen los pagos y las prestaciones (sin N+1)
+    def test_detail_queries_do_not_grow_with_payments_and_services(self):
+        p = self.accepted()
+        limpieza, corona, blanq = (line['id'] for line in p['lines'])
+
+        def detail_queries():
+            with CaptureQueriesContext(connection) as captured:
+                self.assertEqual(self.detail(p['number']).status_code, 200)
+            return len(captured)
+
+        self.assertEqual(self.pay(p['number'], [(limpieza, '10.00')]).status_code, 201)
+        baseline = detail_queries()
+        self.render(p['number'], corona)
+        self.render(p['number'], blanq)
+        for _ in range(3):
+            self.assertEqual(self.pay(p['number'], [(corona, '10.00'), (blanq, '5.00')]).status_code, 201)
+        self.assertEqual(detail_queries(), baseline)

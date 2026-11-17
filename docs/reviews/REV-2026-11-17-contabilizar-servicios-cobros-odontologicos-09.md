@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-09: Sin prueba del permiso clínico sobre `services/`
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos.md (v1)
@@ -19,3 +19,5 @@ Ver descripción.
 
 ## Evidence
 Quality Gate, 2.ª pasada (subagente aislado, HEAD b778d3d). Pendiente.
+
+Resuelto: `test_rendering_a_dental_service_requires_clinical_access` (403 sin acceso clínico, sin prestación ni asiento; 201 con él).

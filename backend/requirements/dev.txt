@@ -1,2 +1,4 @@
 -r base.txt
 bandit==1.9.4
+ruff==0.17.5
+flake8==7.5.0

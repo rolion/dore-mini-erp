@@ -104,7 +104,8 @@ class CollectionLedgerTests(SimpleTestCase):
         data = self.data()
         result = self.service.register_payment('quotation', 'PRO-000001', data)
         row = type('Row', (), {'id': result.payment.id,
-                               'obligation': type('O', (), {'source_kind': 'quotation', 'source_number': 'PRO-000001'})})
+                               'obligation': type(
+                                   'O', (), {'source_kind': 'quotation', 'source_number': 'PRO-000001'})})
         from modules.receivables.application.collections import _digest
         self.repository.keys[data.idempotency_key] = (row, _digest('quotation', 'PRO-000001', data))
         self.events.clear()

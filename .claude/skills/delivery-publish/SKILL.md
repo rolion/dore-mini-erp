@@ -27,7 +27,7 @@ El agente (o, si no hay subagentes disponibles, tú, dejando constancia de que e
 - Nunca declares «pasa» un nivel que no ejecutaste.
 
 **b. Verificación técnica (evidencia real de cada comando)**
-- Lint: `ruff`/`flake8` si están configurados; `npm run lint` en frontend.
+- Lint: desde `backend/`, `ruff check` y `flake8` sobre los `.py` cambiados (`git diff --name-only origin/<base>...HEAD -- '*.py'`, sin migraciones; config en `ruff.toml` y `.flake8`; la deuda previa del repositorio no bloquea); `npm run lint` en frontend.
 - Type checking y build: `npm run build` como mínimo; `mypy` si está configurado.
 - Cobertura: en frontend con `--code-coverage`; en backend, si `coverage.py` no está, revisa manualmente que cada rama nueva tenga un test y dilo así (no instales nada).
 - Seguridad: `bandit` en `backend/`, `npm audit` en frontend, si están disponibles. Si no hay ninguna, es una verificación no realizada, no un PASS silencioso.

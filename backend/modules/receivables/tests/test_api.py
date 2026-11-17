@@ -72,8 +72,9 @@ class ReceivablesApiTests(TransactionTestCase):
     def test_advance_and_installment_leave_the_balance(self):
         p = self.quote(accept=(1,), reject=(2,))  # solo Corona (200) aceptado; Limpieza pendiente; Blanq. rechazado
         view = self.detail(p['number']).json()
-        self.assertEqual(view['totals'], {'proposed': '350.00', 'accepted': '200.00', 'pending': '100.00',
-                                          'rejected': '50.00', 'paid': '0.00', 'balance': '200.00', 'recognized': '0.00'})
+        self.assertEqual(view['totals'], {
+            'proposed': '350.00', 'accepted': '200.00', 'pending': '100.00', 'rejected': '50.00', 'paid': '0.00',
+            'balance': '200.00', 'recognized': '0.00'})
         line = p['lines'][1]['id']
         first = self.pay(p['number'], [(line, '120.00')])
         self.assertEqual(first.status_code, 201, first.content)
@@ -178,7 +179,8 @@ class ReceivablesApiTests(TransactionTestCase):
                          {p['number']: 'paid', q['number']: 'partial'})
         self.assertEqual(len(self.client.get(f'{BASE}obligations/?status=partial').json()['results']), 1)
         self.assertEqual(len(self.client.get(f'{BASE}obligations/?customer_id={uuid4()}').json()['results']), 0)
-        self.assertEqual(len(self.client.get(f'{BASE}obligations/?customer_id={self.customer.pk}').json()['results']), 2)
+        listing = self.client.get(f'{BASE}obligations/?customer_id={self.customer.pk}')
+        self.assertEqual(len(listing.json()['results']), 2)
         self.assertEqual(self.client.get(f'{BASE}obligations/?date_from=2999-01-01').json()['count'], 0)
         self.assertEqual(self.client.get(f'{BASE}obligations/?status=nope').status_code, 400)
 
@@ -220,7 +222,6 @@ class ReceivablesApiTests(TransactionTestCase):
         blocked = self.client.post(f"{DENTAL}proformas/{p['id']}/lines/{p['lines'][0]['id']}/rectify/", {
             'idempotency_key': str(uuid4()), 'decision': 'rejected', 'reason': 'x'}, format='json')
         self.assertEqual(blocked.status_code, 409, blocked.content)
-
 
     # REV-01: «hoy» respeta TIME_ZONE y no el día UTC
     @override_settings(TIME_ZONE='Pacific/Kiritimati')  # UTC+14

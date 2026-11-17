@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-07: Alerta compartida: margen y estilo distintos a los de Ventas
 
-**Status:** Resolved (parcial)
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos.md (v1)
