@@ -15,6 +15,7 @@
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (sin Critical/High; REV-01 Medium y REV-02/03 Low abiertos) | delivery-publish |
+| 2026-11-17 | PUBLISH (re-verificación) | Segunda pasada del Quality Gate PASS tras corregir REV-01..06; sin hallazgos nuevos | delivery-publish |
 
 ## Investigación
 
@@ -98,6 +99,9 @@ Implementado según PLAN v1 (sin cambios de Specification).
 - REV-02 (Low, PLAN): no se crearon `application/journal_queries.py` ni `test_journal_listing.py`; sin prueba de número de consultas.
 - REV-03 (Low, IMPLEMENTATION; **resuelto**, redirección de `?tab=`): enlaces antiguos `/accounting/settings?tab=methods|expenses|cutoff` caen en Clasificaciones.
 - **Revisión visual en navegador** (2026-11-17, escritorio 1440 px, móvil 375 px, tema claro y oscuro; servidores locales y empresa de prueba): lista, formulario (diferencia 1 bloquea, diferencia 0 confirma), detalle, diálogo de reversión, Cuentas, Saldos, Configuración y «Otras configuraciones» se ven y funcionan según el DDR. Hallazgos nuevos: REV-04 (Low, texto secundario ilegible en tema oscuro), REV-05 (Medium, importes del formulario fuera de pantalla en móvil; **resuelto**), REV-06 (Low, texto que alude a una pestaña movida; **resuelto**). REV-04 y REV-02 también resueltos: sin hallazgos abiertos.
+
+## Review (segunda pasada)
+**Quality Gate: PASS** (subagente aislado, 2026-11-17, tras corregir REV-01..06). Backend: `accounting` 314 OK, `modularity`+`shared` 106 OK, `makemigrations --check` sin cambios, flake8 solo con 2 avisos preexistentes (`repositories.py`), bandit sin hallazgos. Frontend: lint OK, `i18n:check` 2126 claves y 0 faltantes, `ng build` OK, suite completa 1535 OK. REV-01..06 comprobados contra el código y resueltos de verdad; sin hallazgos nuevos. Verificación en navegador no repetida en esta pasada (la hizo a mano una sesión previa: escritorio, 375 px y tema oscuro).
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/84 (base `accounting`) listo para aprobación humana; no se mergea. Sin migración ni ADR. Sin hallazgos abiertos (REV-01..06 resueltos).
