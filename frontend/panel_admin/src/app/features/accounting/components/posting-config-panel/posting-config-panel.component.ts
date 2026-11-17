@@ -7,9 +7,11 @@ import { Observable, finalize, forkJoin } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { Account, AccountClassCode, AccountingApiError, FLOW_CURRENCY, ProblemInfo } from '../../models/accounting';
 import { PostingAccount, PostingCategory, PostingConfig, PostingIssue, PostingModule, PreviewLine, accountLabel } from '../../models/posting-config';
-import { issueText, problemText } from '../../models/posting-messages';
+import { issueText, methodName, moduleName, problemText } from '../../models/posting-messages';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { PostingConfigApiService } from '../../services/posting-config-api.service';
+
+const ISSUES_VISIBLE = 10;
 
 export type RowKind = 'role' | 'method' | 'category';
 
@@ -35,6 +37,8 @@ export interface ConfigRow {
   saving: boolean;
   saved: boolean;
   error: string;
+  /** Causa estructurada del último error de guardado: se traduce al mostrarla, no al producirse. */
+  errorProblem: ProblemInfo | null;
 }
 
 /**
@@ -113,15 +117,28 @@ export class PostingConfigPanelComponent implements OnInit {
   get categoryIssues(): PostingIssue[] {
     return this.categoryRows
       .filter((row) => row.isActive && (row.original === '' || !!row.issue))
-      .map((row) => ({
-        code: 'category_row',
-        role: 'EXPENSE_BY_CATEGORY',
-        subject: row.label,
-        module: this.module,
-        message: row.issue ? this.rowIssue(row) : tr('ACCOUNTING.POSTING.CATEGORY_MISSING', { p0: row.label }),
-        params: {},
-        problem: null,
-      }));
+      .map((row): PostingIssue =>
+        row.issue
+          ? {
+              // Cuenta guardada que ya no sirve: nombra la categoría (así dos categorías con la misma cuenta no se funden).
+              code: 'account_invalid',
+              role: 'EXPENSE_BY_CATEGORY',
+              subject: `${tr('ACCOUNTING.POSTING.ROLES.EXPENSE_BY_CATEGORY')} · ${row.label}`,
+              module: this.module,
+              message: `${row.issue} (${row.label})`,
+              params: {},
+              problem: row.problem,
+            }
+          : {
+              code: 'category_row',
+              role: 'EXPENSE_BY_CATEGORY',
+              subject: row.label,
+              module: this.module,
+              message: tr('ACCOUNTING.POSTING.CATEGORY_MISSING', { p0: row.label }),
+              params: {},
+              problem: null,
+            },
+      );
   }
 
   /** La configuración del módulo está completa (eventos, métodos y categorías de gasto). */
@@ -139,6 +156,33 @@ export class PostingConfigPanelComponent implements OnInit {
   /** Aviso de un faltante en el idioma activo (con el mensaje del servidor como respaldo). */
   issueText(issue: PostingIssue): string {
     return issueText(issue);
+  }
+
+  /** Los primeros faltantes se ven siempre; el resto va plegado (con muchas categorías la lista sería enorme). */
+  get issuesHead(): PostingIssue[] {
+    return this.issues.slice(0, ISSUES_VISIBLE);
+  }
+
+  get issuesRest(): PostingIssue[] {
+    return this.issues.slice(ISSUES_VISIBLE);
+  }
+
+  moduleName(module: string, fallback?: string): string {
+    return moduleName(module, fallback);
+  }
+
+  methodName(code: string, fallback: string): string {
+    return methodName(code, fallback);
+  }
+
+  /** Módulos que comparten el rol, con su nombre en el idioma activo. */
+  sharedNames(row: ConfigRow): string {
+    return row.sharedWith.map((module) => moduleName(module)).join(', ');
+  }
+
+  /** Error de guardado de la fila en el idioma activo. */
+  rowError(row: ConfigRow): string {
+    return problemText(row.errorProblem, row.error);
   }
 
   /** Problema de la cuenta guardada en una fila, en el idioma activo. */
@@ -171,6 +215,7 @@ export class PostingConfigPanelComponent implements OnInit {
     row.saving = true;
     row.saved = false;
     row.error = '';
+    row.errorProblem = null;
     this.send(row, accountId)
       .pipe(
         finalize(() => (row.saving = false)),
@@ -181,8 +226,10 @@ export class PostingConfigPanelComponent implements OnInit {
           row.saved = true;
           this.refresh();
         },
-        error: (err: AccountingApiError) =>
-          (row.error = problemText(err.problem, err.fieldErrors['accountId']?.join(' ') || err.message)),
+        error: (err: AccountingApiError) => {
+          row.error = err.fieldErrors['accountId']?.join(' ') || err.message;
+          row.errorProblem = err.problem;
+        },
       });
   }
 
@@ -203,7 +250,7 @@ export class PostingConfigPanelComponent implements OnInit {
 
   private apply(config: PostingConfig, keepEdits = false): void {
     const edits = new Map<string, ConfigRow>([...this.roleRows, ...this.methodRows, ...this.categoryRows].map((r) => [r.key, r]));
-    const build = (row: Omit<ConfigRow, 'key' | 'control' | 'original' | 'saving' | 'saved' | 'error'>, accountId: string | undefined): ConfigRow => {
+    const build = (row: Omit<ConfigRow, 'key' | 'control' | 'original' | 'saving' | 'saved' | 'error' | 'errorProblem'>, accountId: string | undefined): ConfigRow => {
       const key = `${row.kind}:${row.id}`;
       const previous = keepEdits ? edits.get(key) : undefined;
       const original = accountId ?? '';
@@ -212,12 +259,12 @@ export class PostingConfigPanelComponent implements OnInit {
         // Se actualiza la misma fila (no una copia): un guardado en curso termina sobre ella.
         return Object.assign(previous, row, { original });
       }
-      return { ...row, key, original, control: new FormControl(original, { nonNullable: true }), saving: false, saved: false, error: '' };
+      return { ...row, key, original, control: new FormControl(original, { nonNullable: true }), saving: false, saved: false, error: '', errorProblem: null };
     };
     this.config = config;
     this.roleRows = config.roles.map((r) =>
       build(
-        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue, problem: r.problem, current: r.account },
+        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.module), issue: r.issue, problem: r.problem, current: r.account },
         r.account?.id,
       ),
     );

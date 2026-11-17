@@ -97,7 +97,7 @@ class AssignTests(PostingApiBase):
                          ('role_unconfigured', 'RECEIVABLE', 'sales', None))
         self.assertIn('Configúrela en Ventas', first['message'])
         method = next(i for i in body['events'][1]['issues'] if i['code'] == 'method_unconfigured')
-        self.assertEqual(method['params'], {'method': 'Efectivo'})
+        self.assertEqual(method['params'], {'method': 'Efectivo', 'method_code': 'CASH'})
         income = self.make(self.client_a, 'Ingresos viejos', 'INCOME')
         self.put_role(self.client_a, 'SALES_INCOME', income)
         self.client_a.post(f'{ACCOUNTS}{income["id"]}/deactivate/')

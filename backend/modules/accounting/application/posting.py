@@ -129,7 +129,8 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, c
             return None, PostingIssue(
                 'method_unconfigured', role.code, subject, module,
                 f'Falta la cuenta de Activo del método «{METHOD_LABELS[mapping.code]}». '
-                f'Configúrela en {location(module)}.', {'method': METHOD_LABELS[mapping.code]})
+                f'Configúrela en {location(module)}.',
+                {'method': METHOD_LABELS[mapping.code], 'method_code': mapping.code})
         account_id = mapping.account_id
     else:
         if category_id is None:

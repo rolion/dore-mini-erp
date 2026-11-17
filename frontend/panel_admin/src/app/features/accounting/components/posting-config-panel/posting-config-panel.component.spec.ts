@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { TranslateService } from '@ngx-translate/core';
 import { of, throwError } from 'rxjs';
 import { AppLanguage } from '../../../../core/i18n/language.config';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
@@ -186,6 +187,50 @@ describe('PostingConfigPanelComponent', () => {
     expect(el(fixture).querySelector('[data-testid="row-role:SALES_INCOME"] [role="alert"]')!.textContent).toContain(
       'A conta «Gastos» é de Despesas; é necessária uma conta de Receitas.',
     );
+  });
+
+  it('shows module names, shared modules and payment methods in the active language (REV-14)', () => {
+    const fixture = create('sales', salesConfig(), ALL_ACCOUNTS, [], 'en');
+    const text = el(fixture).textContent ?? '';
+    expect(text).toContain('Choose the accounts Sales will use');
+    expect(el(fixture).querySelector('[data-testid="row-role:RECEIVABLE"]')!.textContent).toContain('Shared with: Collections.');
+    expect(el(fixture).querySelector('[data-testid="row-method:CASH"]')!.textContent).toContain('Cash');
+    expect(text).not.toContain('Ventas');
+    expect(text).not.toContain('Efectivo');
+  });
+
+  it('keeps a save error as its cause so it is re-translated when the language changes (REV-15)', () => {
+    const fixture = create('sales', salesConfig(), ALL_ACCOUNTS);
+    api.setRoleAccount.and.returnValue(
+      throwError(() => new AccountingApiError('Revisa', 400, { accountId: ['x'] }, null, [], { code: 'account_inactive', params: { account: 'Vieja' } })),
+    );
+    choose(fixture, 'role:SALES_INCOME', ingresos.id);
+    el(fixture).querySelector<HTMLButtonElement>('[data-testid="row-role:SALES_INCOME"] button')!.click();
+    fixture.detectChanges();
+    const alert = () => el(fixture).querySelector('[data-testid="row-role:SALES_INCOME"] [role="alert"]')!.textContent ?? '';
+    expect(alert()).toContain('está deshabilitada');
+    TestBed.inject(TranslateService).use('en');
+    fixture.detectChanges();
+    expect(alert()).toContain('is disabled; choose another one or enable it in Accounts.');
+  });
+
+  it('names each category with an invalid account and folds a long list of notices (REV-16)', () => {
+    const categories = Array.from({ length: 12 }, (_, i) => ({ id: `k${i}`, name: `Categoría ${i}`, isActive: true }));
+    const config = expensesConfig();
+    config.categories = categories.slice(0, 2).map((c) => ({
+      categoryId: c.id,
+      account: { id: 'g9', code: '5100', name: 'Gasto luz', isActive: false },
+      issue: 'La cuenta «Gasto luz» está deshabilitada; elija otra o actívela en Cuentas.',
+      problem: { code: 'account_inactive', params: { account: 'Gasto luz' } },
+    }));
+    const fixture = create('expenses', config, ALL_ACCOUNTS, categories);
+    const warning = el(fixture).querySelector('[data-testid="posting-missing"]')!;
+    expect(warning.textContent).toContain('Falta configurar 12 cuenta(s)');
+    expect(warning.textContent).toContain('Categoría 0');
+    expect(warning.textContent).toContain('Categoría 1');
+    const more = warning.querySelector('[data-testid="posting-missing-more"]')!;
+    expect(more.textContent).toContain('Ver 2 más');
+    expect(warning.querySelectorAll('li').length).toBe(12);
   });
 
   it('tells which other modules share a role', () => {

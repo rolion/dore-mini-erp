@@ -140,5 +140,13 @@ B. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se confi
 - REV-05 (Low, SPECIFICATION; **resuelto** tras la aprobación explícita de la persona, PLAN v4): Specification alineada con la API real y avisos traducidos.
 - **Sin repetir el Quality Gate** tras estas correcciones (paginación, opción marcada, estilos de texto, pruebas y documentos); se repitieron backend (1964 OK), frontend (1576 OK), lint, `i18n:check` y build. La revisión visual de la 3.ª pasada no se repitió sobre la opción marcada («ya no es válida») ni la paginación.
 
+## Review (cuarta pasada)
+**Quality Gate: PASS** (subagente aislado, 2026-11-17, con revisión visual), sobre las correcciones REV-09..13 y los avisos traducibles (PLAN v4). Backend: `manage.py test` 1966 OK; flake8 solo con avisos preexistentes o generados; bandit sin incidencias. Frontend: lint OK, `i18n:check` 2176 claves y 0 faltantes, `ng build` OK, suite 1583 OK. Revisión visual (navegador integrado, escritorio 1280 px y 375 px, claro y oscuro): opción «ya no es válida» en el selector, Gastos con 105 categorías (todas listadas, una de la 2.ª página guardada y persistente, error de carga con «Reintentar»), avisos y filas en inglés y portugués, regresión visual sin desbordes y contraste medido (oscuro: `.posting-warn` 4,53:1, texto secundario 6,73:1).
+- REV-14 (Medium, IMPLEMENTATION; **resuelto**): módulo, módulos compartidos y métodos de pago sin traducir en en/pt.
+- REV-15 (Low; **resuelto**): el error de guardado no se retraducía al cambiar de idioma.
+- REV-16 (Low; **resuelto**): el aviso de una categoría con cuenta inválida no la nombraba y la lista no se plegaba.
+- Nota sin REV propio: a 375 px el texto «ya no es válida» del selector cerrado se recorta; el aviso de debajo lo explica.
+- **Sin repetir el Quality Gate** tras estas correcciones; se repitieron backend (1966 OK), frontend, lint, `i18n:check` y build, y hay pruebas automáticas para cada una (panel en inglés, retraducción de errores, plegado de faltantes). **No se volvió a revisar visualmente en el navegador.**
+
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/86 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (modelo de datos nuevo, migración `0011`): lo aprueba una persona. Sin hallazgos abiertos (REV-05 resuelto en PLAN v4).

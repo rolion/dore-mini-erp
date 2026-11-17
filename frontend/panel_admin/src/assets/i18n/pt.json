@@ -2987,7 +2987,15 @@
         "CATEGORY_REQUIRED": "Informe a categoria da despesa da operação.",
         "METHOD_REQUIRED": "Informe um método de pagamento válido para a operação.",
         "ACCOUNT_INVALID": "{{problem}} Corrija «{{subject}}» em {{where}}."
-      }
+      },
+      "METHODS_LABEL": {
+        "CASH": "Dinheiro",
+        "QR": "QR",
+        "BANK_TRANSFER": "Transferência",
+        "CARD": "Cartão",
+        "OTHER": "Outro"
+      },
+      "MISSING_MORE": "Ver mais {{p0}}"
     }
   }
 }

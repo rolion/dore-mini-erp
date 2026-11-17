@@ -3,7 +3,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { provideTestTranslations } from '../../../core/i18n/testing';
 import { AppLanguage } from '../../../core/i18n/language.config';
 import { PostingIssue } from './posting-config';
-import { issueText, problemText } from './posting-messages';
+import { issueText, methodName, moduleName, problemText } from './posting-messages';
 
 const issue = (overrides: Partial<PostingIssue>): PostingIssue => ({
   code: 'role_unconfigured',
@@ -37,8 +37,8 @@ describe('posting messages (REV-05)', () => {
 
   it('translates method and category issues with their names', () => {
     use('en');
-    expect(issueText(issue({ code: 'method_unconfigured', role: 'MONEY', params: { method: 'Efectivo' } }))).toBe(
-      'The Asset account of the method “Efectivo” is missing. Set it in Sales › Settings › Automatic entries.',
+    expect(issueText(issue({ code: 'method_unconfigured', role: 'MONEY', params: { method: 'Transferencia', method_code: 'BANK_TRANSFER' } }))).toBe(
+      'The Asset account of the method “Bank transfer” is missing. Set it in Sales › Settings › Automatic entries.',
     );
     expect(issueText(issue({ code: 'category_unconfigured', module: 'expenses', params: { category: 'Luz' } }))).toContain('category “Luz” is missing');
     expect(issueText(issue({ code: 'category_unconfigured', module: 'expenses', params: { category: '' } }))).toContain('of the category is missing');
@@ -58,5 +58,13 @@ describe('posting messages (REV-05)', () => {
     expect(issueText(issue({ code: 'something_new', message: 'Mensaje del servidor' }))).toBe('Mensaje del servidor');
     expect(problemText({ code: 'brand_new', params: {}, message: 'Respaldo' })).toBe('Respaldo');
     expect(problemText(null, 'sin causa')).toBe('sin causa');
+  });
+
+  it('translates module and payment method names, with the server text as fallback (REV-14)', () => {
+    use('pt');
+    expect(moduleName('sales', 'Ventas')).toBe('Vendas');
+    expect(moduleName('receivables', 'Cobros')).toBe('Cobranças');
+    expect(methodName('CASH', 'Efectivo')).toBe('Dinheiro');
+    expect(methodName('NEW_METHOD', 'Nuevo')).toBe('Nuevo');
   });
 });
