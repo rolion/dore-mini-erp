@@ -1,6 +1,6 @@
 # TASK-reconocer-compras-mercaderia-deuda-proveedores: Reconocer compras de mercadería y deuda con proveedores (COM-02)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reconocer-compras-mercaderia-deuda-proveedores
@@ -18,6 +18,7 @@
 | 2026-11-17 | PUBLISH (corrección) | REV-01..04 resueltos a pedido de la persona | delivery-build |
 | 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido y aprobado por la persona: incorporar COM-01 (asiento del pago y anticipos a proveedores); PLAN v2, ADR y DDR nuevos | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v2; pruebas propias en verde | delivery-build |
+| 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS sobre PLAN v2 (0 Critical/High; REV-05 Medium y REV-06..08 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -138,5 +139,12 @@ Hallazgos (ninguno Critical/High); **todos resueltos después del Gate** (ver Re
 - [REV-03](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-03.md) Medium: faltan pruebas de la Test Specification (unit de `receipt_amount`, comandos con puerto falso, serializer, `RevertStockShortage`, `ledger_*`, `in_gap`).
 - [REV-04](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-04.md) Low: el TASK decía «SCSS copiado» pero el componente hace `@use` del parcial de Contabilidad (corregido en este TASK).
 
+**Quality Gate (PLAN v2): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2104 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; migración `0009` verificada reversible; prueba temporal de conservación con 25 semillas aleatorias (recibir/pagar/revertir) OK. Frontend: `npm run lint` OK, `i18n:check` 2197 claves y 0 faltantes, `ng test` 1606 de 1606 OK, `ng build` OK; `npm audit` 3 altas preexistentes en `@angular/localize` (el diff no agrega dependencias); `ruff` con configuración ad hoc solo con avisos de estilo; mypy/flake8 no ejecutados. Reparto deuda/anticipo bajo el bloqueo de la compra, idempotencia por evento, vista previa sin escritura y fronteras DDD verificados. **Revisión visual: no verificada.**
+Hallazgos abiertos de v2 (ninguno Critical/High):
+- [REV-05](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-05.md) Medium: las alertas del diálogo de pago usan el naranja con texto blanco de la plantilla (sin el parcial `alert-warning` del DDR); contraste AA no cumplido según el código.
+- [REV-06](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-06.md) Low: el diálogo se aparta del DDR (botón no se deshabilita con faltantes previstos, `issues` de la vista previa sin enlace, fallo de la vista previa tragado, aviso de carga no accesible, `sideLabels` sin uso).
+- [REV-07](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-07.md) Low: higiene de lint en Python nuevo (líneas largas, imports sin uso).
+- [REV-08](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-08.md) Low, SPECIFICATION: el reparto cuenta como deuda reconocida también recepciones sin asiento (históricas o previas al corte); un pago posterior puede dejar Cuentas por pagar deudor. Pendiente de decisión.
+
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/89 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al recibir) y cambia reglas de recepción/reversión con cobertura contable: lo aprueba una persona. Sin migraciones. Pendientes: revisión visual, mypy y npm audit no realizados.
+PR https://github.com/rolion/dore-mini-erp/pull/89 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al recibir) y cambia reglas de recepción/reversión con cobertura contable: lo aprueba una persona. Sin migraciones. Pendientes (v2): REV-05..08 abiertos; revisión visual, mypy y npm audit no realizados.
