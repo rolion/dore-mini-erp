@@ -2,6 +2,7 @@
 from rest_framework import serializers
 
 from modules.accounting.domain.journal import DESCRIPTION_MAX, MEMO_MAX, REASON_MAX, SOURCES
+from modules.accounting.domain.posting import PostingNotFound, get_event
 
 from .serializers import ORIGIN_MODULES
 
@@ -44,7 +45,15 @@ class JournalReverseSerializer(serializers.Serializer):
 def _origin(kind, origin_id, enabled, detail: bool):
     if origin_id is None:
         return None
-    data = {'kind': kind, 'available': ORIGIN_MODULES.get(kind) in enabled}
+    try:
+        event = get_event(kind)  # los asientos automáticos llevan el código de su evento como origen
+    except PostingNotFound:
+        event = None
+    module = event.module if event else ORIGIN_MODULES.get(kind)
+    data = {'kind': kind, 'available': module in enabled}
+    if event:
+        data['label'] = event.label
+        data['module'] = event.module
     if detail:
         data['id'] = str(origin_id)
     return data

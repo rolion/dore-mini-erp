@@ -1,6 +1,6 @@
 # TASK-reconocer-compras-mercaderia-deuda-proveedores: Reconocer compras de mercadería y deuda con proveedores (COM-02)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reconocer-compras-mercaderia-deuda-proveedores
@@ -17,6 +17,7 @@
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-03 Medium y REV-01/02/04 Low abiertos) | delivery-publish |
 | 2026-11-17 | PUBLISH (corrección) | REV-01..04 resueltos a pedido de la persona | delivery-build |
 | 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido y aprobado por la persona: incorporar COM-01 (asiento del pago y anticipos a proveedores); PLAN v2, ADR y DDR nuevos | delivery-start |
+| 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v2; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -112,6 +113,22 @@ Implementado según **PLAN v1**, sin cambios de Specification.
 **Deuda técnica / pendiente:** los mensajes de `issues` llegan solo en español (deuda ya declarada en CONT-12); el SCSS del aviso se repite entre Ventas y Compras (candidato a `shared/`); la reversión usa la fecha de hoy.
 
 **Verificación propia (no es el Quality Gate):** backend `manage.py test` 2052 OK, `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 2184 claves y 0 faltantes, `ng test` 1598 OK, `ng build` OK. Pruebas corridas con el `.venv` del checkout principal y un `.env` copiado (no versionado) con base de pruebas `test_com02`.
+
+### Implementación v2 (PLAN v2: COM-01 incorporado)
+Implementado según **PLAN v2**, sin cambios adicionales de Specification.
+
+- **Contabilidad** (`accounting/domain/posting.py`, `services.py`; AC-15..19, AC-17): rol `SUPPLIER_ADVANCES` (Activo), evento `PURCHASE_ADVANCE` y segunda línea de Haber (`Event.extra_credit_role`) en `PURCHASE_RECOGNITION`; `post_automatic_entry` generaliza `advance_applied` a Debe o Haber (sin líneas de importe cero, cuentas solo si la línea existe); fachada nueva `preview_automatic_entry` y `automatic_entries_for` (+ `DjangoJournalRepository.by_origins`); `origin.label/module` del evento en el serializer de asientos (API-05).
+- **Compras, dominio y datos** (INV-06..09, AC-21): `split_payment` (deuda/anticipo), `Purchase.received_value`, `Payment.debt_amount/advance_amount` + `allocate`, `Receipt.advance_applied`; migración aditiva `purchases/0009_payment_advances` (los pagos existentes pasan a `debt_amount = amount`); repositorios con `debt_paid_total`, `advance_total`, `advance_applied_total`.
+- **Compras, aplicación** (AC-11..16, 20): `RegisterPayment` (reparto, asientos `PURCHASE_PAYMENT`/`PURCHASE_ADVANCE` atómicos, clasificación opcional que ya no bloquea) y `RegisterReception` (aplica anticipos pendientes al reconocer); `PreviewPayment`; puerto y adaptador ampliados (`covers`, `record_payment`, `preview_payment`, `payment_entries`).
+- **API** (API-03/04): `GET /api/purchases/{id}/payments/preview/` y campos `debt_amount`, `advance_amount`, `accounting_entries` en pagos.
+- **Frontend** (UI-04..06): diálogo de pago con «Asiento previsto» y alerta accionable, pestaña de pagos con enlaces a los asientos y marca de anticipo, Movimientos muestra la etiqueta del evento; claves es/en/pt (incluye rol y evento en el panel de configuración); `track $index` en las líneas del panel (había claves duplicadas con eventos de dos líneas del mismo lado).
+- **Pruebas:** `purchases/tests/test_payment_posting.py` (19, con hilos y Contabilidad real), `payment_support.py`, `accounting/tests/test_supplier_advances.py` (11), unit de reparto en `test_purchase_posting_unit.py`; ajustadas las pruebas de clasificación (`test_payment_classification_api.py`), de campos de pago y de catálogo; specs de payment-dialog, purchase-payments-tab, payments-api.service y journal-detail.
+
+**Desviaciones respecto al plan:** (1) la migración es `0009` (ya existía `0008_payment_classification`); ADR y PLAN corregidos. (2) La columna «Asiento contable» de la pestaña de pagos se muestra cuando algún pago tiene asiento (la API de pagos no expone si Contabilidad está habilitada); los pagos sin asiento de esa lista dicen «Sin asiento contable». (3) El diálogo de pago ya no usa `ClassificationHintComponent` (el error de clasificación no existe más).
+
+**Deuda técnica / pendiente:** el SCSS de aviso sigue duplicado entre Ventas y Compras; la clasificación de egreso de pagos queda sin uso obligatorio (candidata a retiro); los pagos anteriores al corte con compras recibidas después no se reflejan en el libro (ADR §10); `PaymentClassificationError` y sus constantes quedaron sin uso.
+
+**Verificación propia (no es el Quality Gate):** backend `manage.py test` 2104 OK, `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 2197 claves y 0 faltantes, `ng test` 1606 OK, `ng build` OK.
 
 ## Review
 **Quality Gate (PLAN v1): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2052 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, 0 líneas nuevas >120 caracteres. Frontend: `npm run lint` OK, `i18n:check` 2184 claves y 0 faltantes, `ng test` 1598 de 1598 OK, `ng build` OK. `ruff`/`flake8` solo con avisos de estilo (no comparados con la base); `mypy` y `npm audit` no ejecutados. Fronteras DDD, orden transaccional, AC-01..AC-09, INV, API y UI verificados. **Revisión visual: no verificada** (no se levantó la aplicación con sesión).

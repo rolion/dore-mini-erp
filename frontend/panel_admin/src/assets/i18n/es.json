@@ -1308,6 +1308,12 @@
   },
   "PURCHASES": {
     "PAYMENT_DIALOG": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar la contabilidad de Compras.",
+      "CALCULANDO_ASIENTO": "Calculando asiento…",
+      "ASIENTO_PREVISTO": "Asiento previsto",
+      "ESTE_PAGO_NO_GENERA_ASIENTO": "Este pago no genera asiento contable.",
+      "LIQUIDA_DEUDA": "Liquida deuda",
+      "ANTICIPO_A_PROVEEDOR": "Anticipo a proveedor",
       "SALDO_ACTUAL": "Saldo actual:",
       "MONTO_BS": "Monto (Bs)",
       "PAGAR_EL_SALDO_COMPLETO": "Pagar el saldo completo",
@@ -1328,6 +1334,11 @@
       "CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS": "Confirmar no modifica las existencias; el stock cambia al recibir la mercadería."
     },
     "PURCHASE_PAYMENTS_TAB": {
+      "ASIENTO_CONTABLE": "Asiento contable",
+      "SIN_ASIENTO_CONTABLE": "Sin asiento contable",
+      "ASIENTO_DE_DEUDA": "Asiento de deuda",
+      "ASIENTO_DE_ANTICIPO": "Asiento de anticipo",
+      "INCLUYE_ANTICIPO": "Incluye anticipo: {{amount}}",
       "RESUMEN_DE_PAGOS": "Resumen de pagos",
       "TOTAL_DE_LA_COMPRA": "Total de la compra",
       "TOTAL_PAGADO": "Total pagado",
@@ -2939,6 +2950,7 @@
       "NOT_VALID": "ya no es válida",
       "UNCONFIGURED": "Sin configurar",
       "ROLES": {
+        "SUPPLIER_ADVANCES": "Anticipos a proveedores",
         "CUSTOMER_ADVANCES": "Anticipos de clientes",
         "SALES_INCOME": "Ingresos por ventas",
         "SERVICE_INCOME": "Ingresos por servicios",
@@ -2950,6 +2962,7 @@
         "EXPENSE_BY_CATEGORY": "Cuenta de gasto de la categoría"
       },
       "EVENTS": {
+        "PURCHASE_ADVANCE": "Pagar por adelantado a un proveedor",
         "SALE_ADVANCE": "Cobrar un pedido por adelantado",
         "SALE_DELIVERY": "Reconocer la entrega de un pedido",
         "SALE_RECOGNITION": "Reconocer una venta",

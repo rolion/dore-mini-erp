@@ -19,7 +19,9 @@ from modules.purchases.application.receipt_commands import (
 from modules.purchases.application.receipt_queries import ReceiptDetail
 from modules.purchases.domain.enums import ReceiptStatus
 from modules.purchases.domain.exceptions import PostingRejected, StockShortage
-from modules.purchases.domain.purchase import ItemDraft, Purchase
+from modules.purchases.domain.enums import PaymentMethod
+from modules.purchases.domain.payment import Payment
+from modules.purchases.domain.purchase import ItemDraft, Purchase, split_payment
 from modules.purchases.domain.receipt import Receipt
 from modules.purchases.infrastructure.adapters import _posting_errors
 from modules.purchases.tests.test_receipt_application import ACTOR, NOW, TODAY, ReceptionCase
@@ -73,7 +75,10 @@ class FakePosting:
     def is_available(self):
         return self.enabled
 
-    def recognize_receipt(self, purchase, receipt, amount, actor):
+    def covers(self, on):
+        return self.enabled
+
+    def recognize_receipt(self, purchase, receipt, amount, actor, advance_applied=D('0')):
         if self.reject:
             raise self.reject
         self.calls.append(('recognize', receipt.id, amount))
@@ -241,3 +246,27 @@ class ReceiptRepresentationTests(SimpleTestCase):
     def test_without_entry_it_is_null(self):  # AC-08, API-02
         body = receipt_representation(self.detail(None, False))
         self.assertEqual((body['accounting_entry'], body['accounting_enabled']), (None, False))
+
+
+class PaymentSplitTests(SimpleTestCase):
+    def test_a_payment_settles_recognized_debt_first_and_the_excess_is_an_advance(self):  # AC-15, INV-06
+        self.assertEqual(split_payment(D('300'), D('1000'), D('0')), (D('300'), D('0')))
+        self.assertEqual(split_payment(D('500'), D('400'), D('0')), (D('400'), D('100')))
+        self.assertEqual(split_payment(D('400'), D('0'), D('0')), (D('0'), D('400')))
+        self.assertEqual(split_payment(D('500'), D('1000'), D('600')), (D('400'), D('100')))
+
+    def test_nothing_is_due_once_everything_recognized_is_paid(self):  # INV-08
+        self.assertEqual(split_payment(D('100'), D('400'), D('500')), (D('0'), D('100')))
+
+    def test_received_value_uses_the_line_price_with_line_rounding(self):  # INV-08
+        purchase = purchase_of('10', '5.00')
+        self.assertEqual(purchase.received_value({purchase.items[0].id: D('4')}), D('20.00'))
+        self.assertEqual(purchase.received_value({}), D('0'))
+
+    def test_a_payment_defaults_to_debt_paid_and_allocate_splits_it(self):  # AC-21, INV-06
+        payment = Payment(uuid4(), uuid4(), D('500.00'), PaymentMethod.CASH, TODAY, None, 'Ana')
+        self.assertEqual((payment.debt_amount, payment.advance_amount), (D('500.00'), D('0')))
+        payment.allocate(D('400.00'))
+        self.assertEqual((payment.debt_amount, payment.advance_amount), (D('400.00'), D('100.00')))
+        with self.assertRaises(ValueError):
+            payment.allocate(D('600.00'))

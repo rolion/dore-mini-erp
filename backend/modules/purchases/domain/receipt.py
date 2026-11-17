@@ -41,6 +41,11 @@ class Receipt:
     reverted_by_user_id: UUID | None = None
     reverted_by_name: str = ''
     revert_reason: str = ''
+    # Anticipos a proveedores que aplicó el reconocimiento de esta recepción (0 si no hubo).
+    advance_applied: Decimal = Decimal('0')
+
+    def apply_advance(self, amount: Decimal) -> None:
+        self.advance_applied = amount
 
     @property
     def reference(self) -> str:

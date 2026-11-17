@@ -16,7 +16,7 @@ from modules.purchases.domain.exceptions import (
 )
 from modules.purchases.domain.purchase import ZERO, Purchase, ReceiptLineDraft
 from modules.purchases.domain.receipt import Receipt
-from modules.purchases.domain.repositories import PurchaseRepository, ReceiptRepository
+from modules.purchases.domain.repositories import PaymentRepository, PurchaseRepository, ReceiptRepository
 
 from .ports import Actor, ProductCatalog, PurchasePosting, StockEntry, StockWarehouse
 
@@ -61,12 +61,14 @@ class RegisterReception:
     """
 
     def __init__(self, purchases: PurchaseRepository, receipts: ReceiptRepository, products: ProductCatalog,
-                 stock: StockEntry, posting: PurchasePosting | None = None):
+                 stock: StockEntry, posting: PurchasePosting | None = None,
+                 payments: PaymentRepository | None = None):
         self.purchases = purchases
         self.receipts = receipts
         self.products = products
         self.stock = stock
         self.posting = posting
+        self.payments = payments
 
     def execute(self, purchase_id: UUID, receipt_id: UUID, receipt_date: object, lines: Sequence[ReceiptLineInput],
                 warehouse_id: UUID | None, actor: Actor, today: date) -> tuple[Receipt, bool]:
@@ -84,12 +86,21 @@ class RegisterReception:
         receipt = purchase.receive(receipt_id, receipt_date, today, self.receipts.received_totals(purchase_id),
                                    drafts, actor.user_id, actor.user_name)
         amount = self._recognized_amount(purchase, receipt)
+        advance = self._advance_to_apply(purchase, receipt, amount)
+        receipt.apply_advance(advance)
         self._enter_stock(receipt, warehouse_id, actor)
         saved = self.receipts.save(receipt)
         self.purchases.save(purchase)
         if amount > 0:
-            self.posting.recognize_receipt(purchase, saved, amount, actor)
+            self.posting.recognize_receipt(purchase, saved, amount, actor, advance)
         return saved, True
+
+    def _advance_to_apply(self, purchase: Purchase, receipt: Receipt, amount: Decimal) -> Decimal:
+        """Anticipos a proveedores pendientes que este reconocimiento aplica (solo con cobertura de la fecha)."""
+        if amount <= 0 or self.payments is None or not self.posting.covers(receipt.receipt_date):
+            return ZERO
+        pending = self.payments.advance_total(purchase.id) - self.receipts.advance_applied_total(purchase.id)
+        return min(amount, max(pending, ZERO))
 
     def _recognized_amount(self, purchase: Purchase, receipt: Receipt) -> Decimal:
         """Importe a reconocer (0 si no se contabiliza); se calcula antes de guardar la nueva recepción."""

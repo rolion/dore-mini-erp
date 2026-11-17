@@ -288,15 +288,11 @@ class PurchasePaymentIndependenceTests(PaymentApiTestCase):
         self.assertEqual(self.detail(purchase)['paid_total'], '20.00')
         self.assertEqual(EntryModel.objects.count(), before)
 
-    def test_paying_after_enabling_accounting_still_works_and_adds_no_entry(self):  # AC-02
+    def test_paying_after_enabling_accounting_still_works_and_adds_no_legacy_entry(self):  # AC-02
+        from modules.purchases.tests.payment_support import PaymentBooks
         purchase = self.confirmed_purchase()
         self.assertEqual(self.client.post(ENABLE).status_code, 200)
-        # CONT-03: con Contabilidad cubriendo el pago hace falta la clasificación de pagos a proveedores.
-        supplier = self.client.post('/api/accounting/classifications/',
-                                    {'name': 'Pago a proveedores', 'direction': 'EXPENSE'}, format='json').json()
-        configured = self.client.put('/api/purchases/payment-classification/',
-                                     {'classification_id': supplier['id']}, format='json')
-        self.assertEqual(configured.status_code, 200, configured.content)
+        PaymentBooks(self.company)  # COM-02 v2: el pago se contabiliza por partida doble, no en el libro anterior
         self.pay(purchase, '20.00')
         self.assertEqual(EntryModel.objects.count(), 0)
 

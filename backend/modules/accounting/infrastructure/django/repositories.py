@@ -545,6 +545,13 @@ class DjangoJournalRepository:
         model = self._queryset().filter(origin_kind=origin_kind, origin_id=origin_id).first()
         return _journal(model) if model else None
 
+    def by_origins(self, origin_kind: str, origin_ids: list[UUID]) -> dict[UUID, JournalEntry]:
+        """Los asientos de la empresa de ese tipo de evento, por `origin_id` (una consulta)."""
+        if not origin_ids:
+            return {}
+        models = self._queryset().filter(origin_kind=origin_kind, origin_id__in=origin_ids)
+        return {model.origin_id: _journal(model) for model in models}
+
     def origins_with(self, origin_kind: str, origin_ids: list[UUID]) -> set[UUID]:
         """Los `origin_ids` de la empresa que ya tienen un asiento de ese tipo de evento."""
         if not origin_ids:

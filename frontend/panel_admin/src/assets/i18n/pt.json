@@ -1308,6 +1308,12 @@
   },
   "PURCHASES": {
     "PAYMENT_DIALOG": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar a contabilidade de Compras.",
+      "CALCULANDO_ASIENTO": "Calculando lançamento…",
+      "ASIENTO_PREVISTO": "Lançamento previsto",
+      "ESTE_PAGO_NO_GENERA_ASIENTO": "Este pagamento não gera lançamento contábil.",
+      "LIQUIDA_DEUDA": "Liquida dívida",
+      "ANTICIPO_A_PROVEEDOR": "Adiantamento a fornecedor",
       "SALDO_ACTUAL": "Saldo atual:",
       "MONTO_BS": "Valor (Bs)",
       "PAGAR_EL_SALDO_COMPLETO": "Pagar o saldo completo",
@@ -1328,6 +1334,11 @@
       "CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS": "Confirmar não altera o estoque; o estoque muda ao receber a mercadoria."
     },
     "PURCHASE_PAYMENTS_TAB": {
+      "ASIENTO_CONTABLE": "Lançamento contábil",
+      "SIN_ASIENTO_CONTABLE": "Sem lançamento contábil",
+      "ASIENTO_DE_DEUDA": "Lançamento de dívida",
+      "ASIENTO_DE_ANTICIPO": "Lançamento de adiantamento",
+      "INCLUYE_ANTICIPO": "Inclui adiantamento: {{amount}}",
       "RESUMEN_DE_PAGOS": "Resumo de pagamentos",
       "TOTAL_DE_LA_COMPRA": "Total da compra",
       "TOTAL_PAGADO": "Total pago",
@@ -2939,6 +2950,7 @@
       "NOT_VALID": "não é mais válida",
       "UNCONFIGURED": "Não configurada",
       "ROLES": {
+        "SUPPLIER_ADVANCES": "Adiantamentos a fornecedores",
         "CUSTOMER_ADVANCES": "Adiantamentos de clientes",
         "SALES_INCOME": "Receitas de vendas",
         "SERVICE_INCOME": "Receitas de serviços",
@@ -2950,6 +2962,7 @@
         "EXPENSE_BY_CATEGORY": "Conta de despesa da categoria"
       },
       "EVENTS": {
+        "PURCHASE_ADVANCE": "Pagar um fornecedor antecipadamente",
         "SALE_ADVANCE": "Receber um pedido antecipadamente",
         "SALE_DELIVERY": "Reconhecer a entrega de um pedido",
         "SALE_RECOGNITION": "Reconhecer uma venda",

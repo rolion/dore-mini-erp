@@ -120,28 +120,6 @@ class RecognitionTests(PostingTestCase):
         self.receive(purchase, [(self.item_id(purchase, self.boxes), '5')])
         self.assertEqual(self.journal().count(), 0)
 
-    def test_payment_does_not_post_recognition_nor_expense(self):  # AC-03
-        purchase = self.purchase_of('100', '10.00')
-        self.receive(purchase, [(self.item_id(purchase, self.boxes), '100')])
-        classification = self.client.post(CLASSIFICATIONS, {'name': 'Pago a proveedores', 'direction': 'EXPENSE'},
-                                          format='json').json()
-        self.client.put(SETTING, {'classification_id': classification['id']}, format='json')
-        paid = self.client.post(purchase_url(purchase['id'], 'payments/'), {
-            'payment_id': str(uuid4()), 'amount': '300.00', 'payment_method': 'CASH',
-            'payment_date': TODAY.isoformat()}, format='json')
-        self.assertEqual(paid.status_code, 201, paid.content)
-        self.assertEqual(self.journal().count(), 1)  # sin segundo reconocimiento
-        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id).count(), 1)
-        # El asiento del pago es de COM-01: aplicado por la fachada deja Proveedores en 700 sin tocar Inventario.
-        money = money_account(DjangoAccountRepository(self.company.id), 'Caja', '110102', 'CASH')
-        with transaction.atomic():
-            ConfigureMethod(DjangoAccountRepository(self.company.id),
-                            DjangoMethodMappingRepository(self.company.id)).execute('CASH', money.id, True)
-            accounting.post_automatic_entry(self.company.id, 'PURCHASE_PAYMENT', uuid4(), TODAY, 'Pago', Decimal('300'),
-                                            method='CASH')
-        self.assertEqual(self.net(self.payable_account), (Decimal('300.00'), Decimal('1000.00')))
-        self.assertEqual(self.net(self.inventory_account), (Decimal('1000.00'), ZERO))
-
 
 class IdempotencyAndAtomicityTests(PostingTestCase):
     def test_retrying_the_same_reception_does_not_duplicate_the_entry(self):  # AC-04

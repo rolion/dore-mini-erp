@@ -17,7 +17,10 @@ from modules.inventory import services as inventory_services
 from modules.purchases.application.ports import (
     Actor,
     ClassificationInfo,
+    PaymentPreview,
+    PaymentPreviewLine,
     PostedEntry,
+    PostedPaymentEntry,
     ProductInfo,
     StockEntryMovement,
     StockProductInfo,
@@ -29,6 +32,8 @@ from shared import module_gate
 INVENTORY_MODULE = 'inventory'
 ACCOUNTING_MODULE = 'accounting'
 PURCHASE_RECOGNITION = 'PURCHASE_RECOGNITION'
+PURCHASE_PAYMENT = 'PURCHASE_PAYMENT'
+PURCHASE_ADVANCE = 'PURCHASE_ADVANCE'
 
 
 class ProductCatalogAdapter:
@@ -136,14 +141,59 @@ class PurchasePostingAdapter:
             self._available = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE)
         return self._available
 
-    def recognize_receipt(self, purchase, receipt, amount: Decimal, actor: Actor) -> None:
+    def covers(self, on: date) -> bool:
+        return self.is_available() and accounting_services.coverage_status(self.company_id, on).covered
+
+    def recognize_receipt(self, purchase, receipt, amount: Decimal, actor: Actor,
+                          advance_applied: Decimal = Decimal('0')) -> None:
         if not self.is_available():
             return
         with _posting_errors():
             accounting_services.post_automatic_entry(
                 self.company_id, PURCHASE_RECOGNITION, receipt.id, receipt.receipt_date,
                 f'Compra {purchase.reference} - recepcion {receipt.reference}', amount,
+                advance_applied=advance_applied if advance_applied > 0 else None,
                 created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def record_payment(self, purchase, payment, debt: Decimal, advance: Decimal, actor: Actor) -> None:
+        if not self.is_available():
+            return
+        method = payment.payment_method.value
+        for event, amount, label in ((PURCHASE_PAYMENT, debt, 'Pago'), (PURCHASE_ADVANCE, advance, 'Anticipo')):
+            if amount <= 0:
+                continue
+            with _posting_errors():
+                accounting_services.post_automatic_entry(
+                    self.company_id, event, payment.id, payment.payment_date,
+                    f'{label} {payment.reference} de la compra {purchase.reference}', amount, method=method,
+                    created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def preview_payment(self, purchase, amount: Decimal, method: str, on: date, debt: Decimal,
+                        advance: Decimal) -> PaymentPreview:
+        if not self.covers(on):
+            return PaymentPreview(False, debt, advance)
+        lines: list[PaymentPreviewLine] = []
+        issues: list[dict] = []
+        for event, part in ((PURCHASE_PAYMENT, debt), (PURCHASE_ADVANCE, advance)):
+            if part <= 0:
+                continue
+            preview = accounting_services.preview_automatic_entry(self.company_id, event, on, part, method=method)
+            lines += [PaymentPreviewLine(line.side, line.role, line.account_name, line.amount)
+                      for line in preview.lines]
+            issues += [{'code': i.code, 'role': i.role, 'subject': i.subject, 'message': i.message,
+                        'params': i.params} for i in preview.issues]
+        return PaymentPreview(True, debt, advance, tuple(lines), tuple(issues))
+
+    def payment_entries(self, payment_ids: Iterable[UUID]) -> dict[UUID, list[PostedPaymentEntry]]:
+        ids = list(payment_ids)
+        found: dict[UUID, list[PostedPaymentEntry]] = {}
+        if not ids or not self.is_available():
+            return found
+        for event, kind in ((PURCHASE_PAYMENT, 'debt'), (PURCHASE_ADVANCE, 'advance')):
+            for payment_id, entry in accounting_services.automatic_entries_for(self.company_id, event, ids).items():
+                found.setdefault(payment_id, []).append(
+                    PostedPaymentEntry(entry.id, kind, entry.accounting_date, entry.total))
+        return found
 
     def reverse_receipt(self, purchase, receipt, reason: str, actor: Actor) -> None:
         # Aunque Contabilidad esté deshabilitada hoy, un asiento ya publicado se revierte con la recepción.

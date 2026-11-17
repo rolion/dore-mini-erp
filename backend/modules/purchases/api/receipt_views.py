@@ -10,7 +10,7 @@ from modules.purchases.infrastructure.adapters import ProductCatalogAdapter, Pur
 from shared.tenancy import company_id_from
 
 from .pagination import SupplierPagination
-from .purchase_views import REQUIRED_MODULES, _purchases, _receipts, _run
+from .purchase_views import REQUIRED_MODULES, _payments, _purchases, _receipts, _run
 from .receipt_serializers import (
     ReceiptInputSerializer,
     ReceiptRevertSerializer,
@@ -57,7 +57,7 @@ class ReceiptListCreateView(APIView):
         data = serializer.validated_data
         use_case = RegisterReception(_purchases(request), _receipts(request),
                                      ProductCatalogAdapter(company_id_from(request)), _stock(request),
-                                     _posting(request))
+                                     _posting(request), _payments(request))
         receipt, created = _run(
             use_case.execute, purchase_id=purchase_id, receipt_id=data['receipt_id'],
             receipt_date=data.get('receipt_date'), warehouse_id=data.get('warehouse_id'), actor=_actor(request),

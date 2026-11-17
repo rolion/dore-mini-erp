@@ -9,6 +9,7 @@ from modules.expenses.infrastructure.django.models import ExpenseModel
 from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.tests.test_enforcement import set_enabled
 from modules.purchases.infrastructure.django.models import PaymentModel
+from modules.purchases.tests.payment_support import PaymentBooks
 from modules.purchases.tests.test_payment_api import PaymentApiTestCase, purchase_url
 
 SETTING = '/api/purchases/payment-classification/'
@@ -86,21 +87,22 @@ class PaymentSnapshotTests(PaymentClassificationTestCase):
 
 
 class CoverageTests(PaymentClassificationTestCase):
+    """COM-02 v2: la clasificación ya no se exige; con Contabilidad cubriendo, el pago necesita la cuenta del método."""
+
     def setUp(self):
         super().setUp()
-        set_enabled(self.company, (*DEFAULT_ENABLED_KEYS, 'purchases', 'accounting'))
+        self.books = PaymentBooks(self.company)
 
-    def test_covered_payment_without_configuration_is_rejected(self):  # AC-07
+    def test_covered_payment_without_configuration_is_saved_without_classification(self):  # AC-20
         purchase = self.confirmed_purchase()
-        body = self.pay(purchase, expected=400)
-        self.assertEqual(body['code'], 'classification_not_configured')
-        self.assertEqual(PaymentModel.objects.count(), 0)
+        self.assertIsNone(self.pay(purchase)['classification'])
+        self.assertEqual(PaymentModel.objects.count(), 1)
 
-    def test_covered_payment_with_inactive_classification_is_rejected(self):  # AC-07
+    def test_covered_payment_with_inactive_classification_is_saved_without_snapshot(self):  # AC-20
         supplier = self.classification()
         self.configure(supplier['id'])
         self.client.post(f'{CLASSIFICATIONS}{supplier["id"]}/deactivate/')
-        self.assertEqual(self.pay(self.confirmed_purchase(), expected=400)['code'], 'classification_invalid')
+        self.assertIsNone(self.pay(self.confirmed_purchase())['classification'])
 
     def test_covered_payment_with_configuration_is_saved(self):  # AC-04, AC-07
         supplier = self.classification()

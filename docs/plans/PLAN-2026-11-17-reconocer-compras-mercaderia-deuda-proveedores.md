@@ -155,7 +155,7 @@ Puerto `PurchasePosting` en `purchases/application/ports.py` implementado por `P
 `Purchase.receipt_amount(receipt)` calcula el importe en el dominio. `RegisterReception` y `RevertReception` reciben el puerto opcional; el adaptador comprueba que Contabilidad esté habilitada, usa `post_automatic_entry`/`reverse_automatic_entry` y traduce errores a una excepción de Compras (`PostingRejected(code, message, extra)`) que `_run` convierte en 409.
 
 ## Files/components affected
-**v2 adicional:** backend `accounting/domain/posting.py` (rol, evento, `extra_credit_role`), `accounting/services.py` (aplicación del anticipo, `preview_automatic_entry`, `automatic_entries_for`), `purchases/domain` (`Payment`, reparto deuda/anticipo, `Receipt.advance_applied`), `payment_commands.py`, `receipt_commands.py`, adaptador, vistas y serializers de pagos, migración `purchases 0008`, etiqueta de origen en el serializer de asientos; frontend `payment-dialog`, `purchase-payments-tab`, modelos/servicios de pagos, detalle de asiento, i18n es/en/pt, fixtures del panel de configuración.
+**v2 adicional:** backend `accounting/domain/posting.py` (rol, evento, `extra_credit_role`), `accounting/services.py` (aplicación del anticipo, `preview_automatic_entry`, `automatic_entries_for`), `purchases/domain` (`Payment`, reparto deuda/anticipo, `Receipt.advance_applied`), `payment_commands.py`, `receipt_commands.py`, adaptador, vistas y serializers de pagos, migración `purchases 0009`, etiqueta de origen en el serializer de asientos; frontend `payment-dialog`, `purchase-payments-tab`, modelos/servicios de pagos, detalle de asiento, i18n es/en/pt, fixtures del panel de configuración.
 
 - Backend: `purchases/domain/purchase.py`, `purchases/domain/exceptions.py`, `purchases/application/ports.py`, `receipt_commands.py`, `receipt_queries.py`, `purchases/infrastructure/adapters.py`, `purchases/api/purchase_views.py` (`_run`), `receipt_views.py`, `receipt_serializers.py`; tests nuevos en `purchases/tests/` y ajustes de fakes existentes.
 - Frontend: `features/purchases/models/receipt.ts`, servicio de recepciones, `reception-form`, `receipt-revert-dialog`, `reception-detail`, `assets/i18n/{es,en,pt}.json`, specs.
@@ -173,7 +173,7 @@ Puerto `PurchasePosting` en `purchases/application/ports.py` implementado por `P
 7. Documentar en el panel/TASK el saldo deudor temporal por pagos anticipados.
 
 ## Database / migrations
-**v2:** `purchases 0008` aditiva: `purchases_payment.debt_amount`, `advance_amount`; `purchases_receipt.advance_applied` (Decimal 12,2, default 0) y actualización de datos `debt_amount = amount` en pagos existentes. Reversible (`migrate purchases 0007`). `accounting` sin migraciones.
+**v2:** `purchases 0009` aditiva: `purchases_payment.debt_amount`, `advance_amount`; `purchases_receipt.advance_applied` (Decimal 12,2, default 0) y actualización de datos `debt_amount = amount` en pagos existentes. Reversible (`migrate purchases 0008`). `accounting` sin migraciones.
 
 ## Risks
 - Cambio de reglas: con cobertura, recibir exige configuración (documentado, acotado).
@@ -185,4 +185,4 @@ Puerto `PurchasePosting` en `purchases/application/ports.py` implementado por `P
 Ninguna.
 
 ## Changelog
-- **v2** (2026-11-17): [Specification] Se incorpora COM-01: asiento del pago, anticipos a proveedores, vista previa y vínculo, clasificación de egreso opcional, etiqueta de origen en Movimientos (AC-11..AC-21, INV-06..09, API-03..05, UI-04..06). Aprobado explícitamente por la persona (pidió ampliar la tarea y eligió: anticipos a proveedores, cuenta por método de pago, dejar de exigir la clasificación). [Implementation Plan] pasos 8-14 y migración `purchases 0008`. La contabilidad de Inventario (INV-01) sigue fuera de alcance.
+- **v2** (2026-11-17): [Specification] Se incorpora COM-01: asiento del pago, anticipos a proveedores, vista previa y vínculo, clasificación de egreso opcional, etiqueta de origen en Movimientos (AC-11..AC-21, INV-06..09, API-03..05, UI-04..06). Aprobado explícitamente por la persona (pidió ampliar la tarea y eligió: anticipos a proveedores, cuenta por método de pago, dejar de exigir la clasificación). [Implementation Plan] pasos 8-14 y migración `purchases 0009`. La contabilidad de Inventario (INV-01) sigue fuera de alcance.

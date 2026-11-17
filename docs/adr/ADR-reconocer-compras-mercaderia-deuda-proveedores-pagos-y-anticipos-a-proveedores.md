@@ -28,7 +28,7 @@ La persona amplió COM-02 con COM-01 (Trello «Registrar pagos de compras contra
 - **Selector de cuenta de salida por pago:** más validaciones y campo nuevo de API sin beneficio claro; descartada por la persona.
 
 ## Estrategia de rollback / mitigación
-Migración aditiva `purchases 0008` (solo `AddField` y una actualización de datos): revertir con `migrate purchases 0007` borra las tres columnas; los asientos ya publicados son inmutables y no se tocan. Antes de desplegar con cobertura activa, configurar el rol «Anticipos a proveedores» (y Cuentas por pagar e Inventario); sin él, pagar se rechaza con un mensaje accionable (solo cuando el pago genera anticipo; un pago que solo liquida deuda no lo exige). Para neutralizar el efecto: deshabilitar Contabilidad o fijar el corte posterior a la fecha de operación.
+Migración aditiva `purchases 0009` (solo `AddField` y una actualización de datos): revertir con `migrate purchases 0008` borra las tres columnas; los asientos ya publicados son inmutables y no se tocan. Antes de desplegar con cobertura activa, configurar el rol «Anticipos a proveedores» (y Cuentas por pagar e Inventario); sin él, pagar se rechaza con un mensaje accionable (solo cuando el pago genera anticipo; un pago que solo liquida deuda no lo exige). Para neutralizar el efecto: deshabilitar Contabilidad o fijar el corte posterior a la fecha de operación.
 
 ## Consecuencias
 - Con cobertura, pagar exige cuenta de Caja/Banco para el método y, si hay anticipo, el rol Anticipos a proveedores.

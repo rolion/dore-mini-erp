@@ -81,6 +81,10 @@ class ReceiptRepository(Protocol):
         """Acumulado de recepciones confirmadas por línea de la compra."""
         ...
 
+    def advance_applied_total(self, purchase_id: UUID) -> Decimal:
+        """Anticipos a proveedores aplicados por las recepciones confirmadas."""
+        ...
+
 
 class PaymentRepository(Protocol):
     def get(self, payment_id: UUID) -> Payment | None:
@@ -95,6 +99,14 @@ class PaymentRepository(Protocol):
 
     def paid_total(self, purchase_id: UUID) -> Decimal:
         """Suma de los pagos confirmados de la compra."""
+        ...
+
+    def debt_paid_total(self, purchase_id: UUID) -> Decimal:
+        """Suma de lo que los pagos confirmados liquidaron de deuda reconocida."""
+        ...
+
+    def advance_total(self, purchase_id: UUID) -> Decimal:
+        """Suma de los anticipos a proveedores de los pagos confirmados."""
         ...
 
 

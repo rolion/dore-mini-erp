@@ -88,6 +88,8 @@ class ReceiptModel(models.Model):
     reverted_by_user_id = models.UUIDField(null=True, blank=True)
     reverted_by_name = models.CharField(max_length=200, blank=True, default='')
     revert_reason = models.CharField(max_length=200, blank=True, default='')
+    # Anticipos a proveedores que aplicó el reconocimiento de esta recepción.
+    advance_applied = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
         db_table = 'purchases_receipt'
@@ -122,6 +124,9 @@ class PaymentModel(models.Model):
     status = models.CharField(max_length=20, default='confirmed')
     # Instantánea de la clasificación de pagos a proveedores al registrar; nula en pagos anteriores.
     classification_id = models.UUIDField(null=True, blank=True)
+    # Reparto del pago: deuda reconocida liquidada y anticipo a proveedores (`debt_amount + advance_amount = amount`).
+    debt_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    advance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     user_id = models.UUIDField(null=True, blank=True)
     user_name = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)

@@ -43,6 +43,7 @@ ROLES: dict[str, Role] = {r.code: r for r in (
     Role('RECEIVABLE', 'Cuentas por cobrar', ASSET),
     Role('CUSTOMER_ADVANCES', 'Anticipos de clientes', LIABILITY),
     Role('INVENTORY', 'Inventario', ASSET),
+    Role('SUPPLIER_ADVANCES', 'Anticipos a proveedores', ASSET),
     Role('COST_OF_SALES', 'Costo de ventas', COST),
     Role('PAYABLE', 'Cuentas por pagar (proveedores)', LIABILITY),
     Role('MONEY', 'Cuenta de Activo del método de pago', ASSET, SOURCE_METHOD),
@@ -59,11 +60,14 @@ class Event:
     credit_role: str
     # Segunda línea de Debe opcional (p. ej. los anticipos aplicados al reconocer la entrega de un pedido).
     extra_debit_role: str | None = None
+    # Segunda línea de Haber opcional (p. ej. los anticipos a proveedores aplicados al reconocer una compra).
+    extra_credit_role: str | None = None
     # `False`: evento histórico; sigue reconocido (cobrar, revertir) pero ya no se configura ni se muestra.
     active: bool = True
 
     def __post_init__(self):
-        roles = (self.debit_role, self.credit_role, *([self.extra_debit_role] if self.extra_debit_role else []))
+        extras = [role for role in (self.extra_debit_role, self.extra_credit_role) if role]
+        roles = (self.debit_role, self.credit_role, *extras)
         if len(self.code) > ORIGIN_KIND_MAX or any(role not in ROLES for role in roles):
             raise ValueError(f'Evento mal definido: {self.code}')
 
@@ -72,7 +76,10 @@ class Event:
         debits = [(DEBIT, ROLES[self.debit_role])]
         if self.extra_debit_role:
             debits.append((DEBIT, ROLES[self.extra_debit_role]))
-        return (*debits, (CREDIT, ROLES[self.credit_role]))
+        credits = [(CREDIT, ROLES[self.credit_role])]
+        if self.extra_credit_role:
+            credits.append((CREDIT, ROLES[self.extra_credit_role]))
+        return (*debits, *credits)
 
     @property
     def role_codes(self) -> tuple[str, ...]:
@@ -91,8 +98,10 @@ EVENTS: tuple[Event, ...] = (
     Event('SERVICE_PAYMENT', 'receivables', 'Cobrar un servicio', 'MONEY', 'RECEIVABLE'),
     Event('INVENTORY_SALE_COST', 'inventory', 'Costo de ventas por salida de inventario', 'COST_OF_SALES',
           'INVENTORY'),
-    Event('PURCHASE_RECOGNITION', 'purchases', 'Reconocer una compra de mercadería', 'INVENTORY', 'PAYABLE'),
+    Event('PURCHASE_RECOGNITION', 'purchases', 'Reconocer una compra de mercadería', 'INVENTORY', 'PAYABLE',
+          extra_credit_role='SUPPLIER_ADVANCES'),
     Event('PURCHASE_PAYMENT', 'purchases', 'Pagar a un proveedor', 'PAYABLE', 'MONEY'),
+    Event('PURCHASE_ADVANCE', 'purchases', 'Pagar por adelantado a un proveedor', 'SUPPLIER_ADVANCES', 'MONEY'),
     Event('EXPENSE_RECORD', 'expenses', 'Registrar un gasto', 'EXPENSE_BY_CATEGORY', 'MONEY'),
 )
 _BY_CODE = {e.code: e for e in EVENTS}

@@ -43,6 +43,9 @@
           <th scope="col" class="text-end">{{ 'COMMON.MONTO' | translate }}</th>
           <th scope="col">{{ 'COMMON.METODO' | translate }}</th>
           <th scope="col">{{ 'PURCHASES.PURCHASE_PAYMENTS_TAB.REGISTRADO_POR' | translate }}</th>
+          @if (showEntries) {
+          <th scope="col">{{ 'PURCHASES.PURCHASE_PAYMENTS_TAB.ASIENTO_CONTABLE' | translate }}</th>
+          }
         </tr>
       </thead>
       <tbody>
@@ -50,9 +53,23 @@
         <tr data-testid="payment-row">
           <td>{{ payment.paymentDate | date: 'dd/MM/yyyy' }}</td>
           <td>{{ payment.reference }}</td>
-          <td class="text-end text-nowrap">{{ payment.amount | money }}</td>
+          <td class="text-end text-nowrap">
+            {{ payment.amount | money }}
+            @if (hasAdvance(payment)) {
+            <small class="d-block text-body-secondary" data-testid="advance-note">{{ 'PURCHASES.PURCHASE_PAYMENTS_TAB.INCLUYE_ANTICIPO' | translate: { amount: (payment.advanceAmount | money) } }}</small>
+            }
+          </td>
           <td>{{ methodLabels[payment.paymentMethod] }}</td>
           <td>{{ payment.userName || '—' }}</td>
+          @if (showEntries) {
+          <td data-testid="payment-entries">
+            @for (entry of payment.accountingEntries; track entry.id) {
+            <a class="d-block" data-testid="payment-entry-link" [routerLink]="['/pocketbiz/accounting/journal', entry.id]">{{ entryLabel(entry.kind) }}</a>
+            } @empty {
+            <span class="text-body-secondary" data-testid="no-payment-entry">{{ 'PURCHASES.PURCHASE_PAYMENTS_TAB.SIN_ASIENTO_CONTABLE' | translate }}</span>
+            }
+          </td>
+          }
         </tr>
         }
       </tbody>

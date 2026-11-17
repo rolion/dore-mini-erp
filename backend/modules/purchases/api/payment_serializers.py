@@ -43,7 +43,26 @@ class PaymentInputSerializer(serializers.Serializer):
     payment_date = LenientDateField(required=False, allow_null=True)
 
 
-def payment_representation(payment, classifications: dict | None = None) -> dict:
+class PaymentPreviewQuerySerializer(serializers.Serializer):
+    """Mismos campos y tolerancia que el alta: las reglas las aplica el dominio."""
+
+    amount = RawField(required=False, allow_null=True)
+    payment_method = RawField(required=False, allow_null=True)
+    payment_date = LenientDateField(required=False, allow_null=True)
+
+
+def preview_representation(preview) -> dict:
+    return {
+        'covered': preview.covered,
+        'debt_amount': money(preview.debt_amount),
+        'advance_amount': money(preview.advance_amount),
+        'lines': [{'side': line.side, 'role': line.role, 'account': {'name': line.account_name},
+                   'amount': money(line.amount)} for line in preview.lines],
+        'issues': list(preview.issues),
+    }
+
+
+def payment_representation(payment, classifications: dict | None = None, entries=()) -> dict:
     info = (classifications or {}).get(payment.classification_id) if payment.classification_id else None
     return {
         'id': payment.id,
@@ -57,6 +76,10 @@ def payment_representation(payment, classifications: dict | None = None) -> dict
                             'active': info.active if info else False}),
         'user_name': payment.user_name,
         'created_at': payment.created_at,
+        'debt_amount': money(payment.debt_amount),
+        'advance_amount': money(payment.advance_amount),
+        'accounting_entries': [{'id': e.id, 'kind': e.kind, 'accounting_date': e.accounting_date.isoformat(),
+                                'total': money(e.total)} for e in entries],
     }
 
 

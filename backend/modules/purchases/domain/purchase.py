@@ -150,6 +150,13 @@ class ReceiptLineDraft:
     allows_fractions: bool = True
 
 
+def split_payment(amount: Decimal, received_value: Decimal, debt_paid: Decimal) -> tuple[Decimal, Decimal]:
+    """`(deuda, anticipo)` de un pago: lo que liquida deuda reconocida pendiente y el exceso, que es anticipo."""
+    due = max(received_value - debt_paid, ZERO)
+    debt = min(amount, due)
+    return debt, amount - debt
+
+
 def compute_reception_status(items: list[PurchaseItem], received: Mapping[UUID, Decimal]) -> ReceptionStatus:
     """`received` si todas las líneas están completas, `partial` si alguna recibió algo, si no `not_received`."""
     if items and all(received.get(item.id, ZERO) >= item.quantity for item in items):
@@ -450,6 +457,10 @@ class Purchase:
         value = sum((compute_subtotal(quantity, by_id[item_id].unit_price) for item_id, quantity in after.items()),
                     ZERO)
         return value - recognized
+
+    def received_value(self, received: Mapping[UUID, Decimal]) -> Decimal:
+        """Valor de lo recibido (recepciones vigentes) al precio de cada línea, con el redondeo por línea."""
+        return sum((compute_subtotal(received.get(item.id, ZERO), item.unit_price) for item in self.items), ZERO)
 
     def recompute_reception(self, received: Mapping[UUID, Decimal]) -> None:
         """Recalcula `reception_status` con lo recibido por las recepciones que siguen confirmadas."""

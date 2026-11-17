@@ -67,7 +67,8 @@ __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'Classi
            'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
            'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
            'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'automatic_entry_origins',
-           'find_automatic_entry',
+           'find_automatic_entry', 'automatic_entries_for', 'preview_automatic_entry', 'PostingPreview',
+           'PostingPreviewLine',
            'post_automatic_entry',
            'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
            'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications',
@@ -537,9 +538,9 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     omite en silencio). Idempotente por `(empresa, evento, origin_id)` mediante el motor: `origin_kind` = código del
     evento. Lanza `EntryContractError` fuera de una transacción.
 
-    Los eventos con una segunda línea de Debe (`SALE_DELIVERY`) reciben en `advance_applied` el importe de esa línea
-    (anticipos aplicados); la línea principal lleva el resto y ninguna línea de importe cero se genera. Una cuenta
-    solo se exige si su línea existe.
+    Los eventos con una segunda línea (de Debe en `SALE_DELIVERY`, de Haber en `PURCHASE_RECOGNITION`) reciben en
+    `advance_applied` el importe de esa línea (anticipos aplicados); la línea principal lleva el resto y ninguna línea
+    de importe cero se genera. Una cuenta solo se exige si su línea existe.
     """
     _require_transaction('post_automatic_entry')
     definition = get_event(event)
@@ -556,35 +557,107 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     coverage = coverage_status(company_id, accounting_date)
     if not coverage.covered:
         return AutomaticPosting(False, coverage.reason)
-    main = amount - extra
-    skipped = frozenset(([definition.extra_debit_role] if definition.extra_debit_role and extra == 0 else [])
-                        + ([definition.debit_role] if definition.extra_debit_role and main == 0 else []))
+    skipped = _skipped_roles(definition, amount, extra)
     accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
                                      category_label, skipped)
     if issues:
         raise PostingConfigurationMissing(issues)
-    lines = [JournalLineInput(accounts[definition.debit_role], debit=main)] if main > 0 else []
-    if extra > 0:
-        lines.append(JournalLineInput(accounts[definition.extra_debit_role], debit=extra))
-    lines.append(JournalLineInput(accounts[definition.credit_role], credit=amount))
+    lines = [line for _, line in _event_lines(definition, accounts, amount, extra)]
     posted = post_journal_entry(company_id, JournalEntryInput(
         accounting_date, description, lines, origin_kind=definition.code, origin_id=origin_id,
         created_by=created_by, created_by_name=created_by_name))
     return AutomaticPosting(True, None, posted.entry, posted.created)
 
 
+def _skipped_roles(definition, amount: Decimal, extra: Decimal) -> frozenset[str]:
+    """Roles cuya línea no existe (importe cero): no se exige su cuenta."""
+    main = amount - extra
+    skipped: list[str] = []
+    if definition.extra_debit_role:
+        skipped += [definition.extra_debit_role] if extra == 0 else []
+        skipped += [definition.debit_role] if main == 0 else []
+    if definition.extra_credit_role:
+        skipped += [definition.extra_credit_role] if extra == 0 else []
+        skipped += [definition.credit_role] if main == 0 else []
+    return frozenset(skipped)
+
+
+def _event_lines(definition, accounts: dict, amount: Decimal, extra: Decimal) -> list[tuple[str, JournalLineInput]]:
+    """`(rol, línea)` del asiento: la segunda línea (Debe o Haber) lleva `extra` y la principal el resto; sin ceros."""
+    main = amount - extra
+    lines: list[tuple[str, JournalLineInput]] = []
+
+    def add(role: str, **side):
+        lines.append((role, JournalLineInput(accounts[role], **side)))
+
+    if definition.extra_credit_role:  # un solo Debe por el total; el Haber se reparte
+        add(definition.debit_role, debit=amount)
+        if main > 0:
+            add(definition.credit_role, credit=main)
+        if extra > 0:
+            add(definition.extra_credit_role, credit=extra)
+        return lines
+    if main > 0:
+        add(definition.debit_role, debit=main)
+    if extra > 0:
+        add(definition.extra_debit_role, debit=extra)
+    add(definition.credit_role, credit=amount)
+    return lines
+
+
 def _extra_debit(definition, amount: Decimal, advance_applied: Decimal | None) -> Decimal:
-    """Importe de la segunda línea de Debe (0 si no aplica); valida que sea coherente con el total."""
+    """Importe de la segunda línea (Debe o Haber; 0 si no aplica); valida que sea coherente con el total."""
     if advance_applied is None:
         return Decimal('0')
-    if not definition.extra_debit_role:
-        raise JournalValidationError({'advance_applied': ['El evento no admite una segunda línea de Debe.']})
+    if not (definition.extra_debit_role or definition.extra_credit_role):
+        raise JournalValidationError({'advance_applied': ['El evento no admite una segunda línea.']})
     if isinstance(advance_applied, (float, bool)) or not isinstance(advance_applied, Decimal):
         raise JournalValidationError({'advance_applied': ['El importe debe ser un decimal.']})
     if advance_applied < 0 or advance_applied > amount:
         raise JournalValidationError(
             {'advance_applied': ['El importe aplicado no puede ser negativo ni superar el total.']})
     return advance_applied
+
+
+@dataclass(frozen=True)
+class PostingPreviewLine:
+    side: str  # DEBIT | CREDIT
+    role: str
+    account_id: UUID
+    account_name: str
+    amount: Decimal
+
+
+@dataclass(frozen=True)
+class PostingPreview:
+    """Asiento que se crearía (sin escribir nada): líneas con nombre de cuenta, faltantes y cobertura."""
+    covered: bool
+    reason: str | None = None
+    lines: tuple[PostingPreviewLine, ...] = ()
+    issues: tuple[PostingIssue, ...] = ()
+
+
+def preview_automatic_entry(company_id: UUID, event: str, accounting_date: date, amount: Decimal, *,
+                            method: str | None = None, advance_applied: Decimal | None = None) -> PostingPreview:
+    """Vista previa de `post_automatic_entry`: no escribe. Sin cobertura no hay asiento (`covered=False`)."""
+    definition = get_event(event)
+    extra = _extra_debit(definition, amount, advance_applied)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return PostingPreview(False, coverage.reason)
+    ctx = load_context(*_posting_sources(company_id))
+    accounts, issues = resolve_event(definition, ctx, method, None, '', _skipped_roles(definition, amount, extra))
+    if issues:
+        return PostingPreview(True, None, (), tuple(issues))
+    return PostingPreview(True, None, tuple(PostingPreviewLine(
+        'DEBIT' if line.debit else 'CREDIT', role, line.account_id, ctx.accounts[line.account_id].name,
+        line.debit or line.credit) for role, line in _event_lines(definition, accounts, amount, extra)))
+
+
+def automatic_entries_for(company_id: UUID, event: str, origin_ids) -> dict[UUID, JournalEntryRef]:
+    """Asientos de un evento por `origin_id` (una consulta; solo de la empresa)."""
+    found = DjangoJournalRepository(company_id).by_origins(get_event(event).code, list(origin_ids))
+    return {origin_id: _journal_ref(entry) for origin_id, entry in found.items()}
 
 
 def find_automatic_entry(company_id: UUID, event: str, origin_id: UUID) -> JournalEntryRef | None:
