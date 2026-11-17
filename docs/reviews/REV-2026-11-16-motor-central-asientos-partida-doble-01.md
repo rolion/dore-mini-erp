@@ -1,6 +1,6 @@
 # REV-2026-11-16-motor-central-asientos-partida-doble-01: Falta la prueba de migración 0010 prevista en el PLAN
 
-**Status:** Fixed (pendiente de verificación en el gate)
+**Status:** Resolved (verificado en el segundo Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-motor-central-asientos-partida-doble.md (v1)

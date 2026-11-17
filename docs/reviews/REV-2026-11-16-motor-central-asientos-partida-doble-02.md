@@ -1,6 +1,6 @@
 # REV-2026-11-16-motor-central-asientos-partida-doble-02: Capa application/journal.py del PLAN no implementada y no declarada como desviación
 
-**Status:** Fixed (pendiente de verificación en el gate)
+**Status:** Resolved (verificado en el segundo Quality Gate)
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-16-motor-central-asientos-partida-doble.md (v1)

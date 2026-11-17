@@ -88,6 +88,7 @@ Implementado según PLAN v1 (sin cambios de Specification).
 
 - **Dominio** `accounting/domain/journal.py`: `JournalEntry.post/reverse/differences`, `JournalLine`, `JournalLineInput`, errores `JournalValidationError`, `JournalConflict`, `JournalEntryNotFound` (INV-01..03, INV-09; AC-01, AC-02, AC-05, AC-06).
 - **Infraestructura**: `JournalEntryModel` y `JournalLineModel` + migración `0010_journal_entry` (checks de total, origen, forma de reversión y lado de la línea; único parcial `(company_id, origin_kind, origin_id)`; 1:1 de `reverses`); `DjangoJournalRepository` (inserción atómica en punto de guardado, bloqueo del original, saldos, conteo fuera de rango) (INV-06, INV-07, INV-11).
+- **Casos de uso** `application/journal.py`: `PostJournalEntry` y `ReverseJournalEntry` con puertos (repositorio, cuentas, bloqueo de período).
 - **Fachada** `services.py`: `post_journal_entry`, `reverse_journal_entry`, `get_journal_entry`, `journal_balances` y DTO (API-01..04; AC-03, AC-04, AC-07, AC-09, AC-10, AC-12).
 - **Períodos**: `JournalPeriodUsage` reemplaza a `NoJournalPeriodUsage` y se cablea en `api/views.py` (AC-08).
 - **Docs**: nota en `docs/architecture/ddd.md`; aviso de transición en el docstring de `record_entry`.
@@ -96,18 +97,18 @@ Implementado según PLAN v1 (sin cambios de Specification).
 
 **Corridas propias (no son el Quality Gate):** `test_journal_*` 48 OK (dominio, servicio, adaptador, concurrencia); `makemigrations --check` sin cambios; suite completa 1879 con 3 fallos ajenos al diff (`sales.test_repository` ×2 por orden de filas con marcas de tiempo idénticas y `shared.test_test_runner` por resolución del reloj en Windows; los de ventas pasan aislados) y 1 error de mi prueba de concurrencia, ya corregido.
 
-**Pruebas añadidas:** `test_journal_domain`, `test_journal_service`, `test_journal_period_usage`, `test_journal_concurrency` y `journal_support` (ayudas).
+**Pruebas añadidas:** `test_journal_domain`, `test_journal_service`, `test_journal_period_usage`, `test_journal_concurrency`, `test_migration_0010` y `journal_support` (ayudas).
 
 **Deuda / pendiente:** API HTTP y UI (CONT-11); migrar llamantes (VEN-01, SRV-01, COM-01/02, INV-01, GAS-01/02); saldos con signo y reportes (CONT-04/05); endurecer inmutabilidad y balance con triggers si se requiere.
 
 ## Review
-**Quality Gate: PASS** (subagente aislado, 2026-11-16). Sin hallazgos Critical/High.
-- Backend: pruebas nuevas 44 OK (dominio, servicio, adaptador de períodos, concurrencia); `manage.py test` de accounting, sales, receivables, expenses, purchases, modularity y shared: 1181 con 3 fallos ajenos al diff (reloj de Windows en `shared`, orden por marcas de tiempo idénticas en `modularity.HistoryTests`; `sales.test_repository` falla también aislado por lo mismo, sin comparar con la base). La parte `accounting` sin fallos.
-- `makemigrations --check` sin cambios; `0010` depende solo de `0009`; aplicada y revertida (`migrate accounting 0009` y de nuevo) sobre una base temporal descartada. bandit sin avisos en código nuevo.
-- DDD/aislamiento: dominio sin Django, consultas por `company_id`, sin importar infraestructura entre módulos.
-- Visual: el diff no toca frontend; no se ejecutó navegador ni pruebas de frontend.
-- Hallazgos Low abiertos: REV-2026-11-16-motor-central-asientos-partida-doble-01 (falta `test_migration_0010`), -02 (sin `application/journal.py`), -03 (E741/F401 en código nuevo).
-- Observación sin REV: la comprobación `origin_in_legacy_ledger` no se bloquea frente a un `record_entry` simultáneo (transición, ADR).
+**Quality Gate: PASS** (subagente aislado, 2026-11-16; repetido tras corregir REV-01..03). Sin hallazgos Critical/High.
+- Backend: `accounting` 291 pruebas OK (46 nuevas, incluida `test_migration_0010`); regresión de sales, receivables, expenses, purchases, modularity y shared: 892 OK, sin fallos.
+- `makemigrations --check` sin cambios; `0010` aplica y revierte en la base de test; flake8 sin avisos en código no migratorio; bandit sin avisos.
+- DDD/aislamiento: `domain/` y `application/` sin Django, consultas por `company_id`, sin importar infraestructura entre módulos, `services.py` como fachada fina.
+- Visual: el diff no toca frontend; no aplica.
+- Hallazgos: REV-01, REV-02 y REV-03 resueltos y verificados en el código. REV-04 (TASK desactualizado, Low) corregido en este mismo documento.
+- Observaciones sin REV: la comprobación `origin_in_legacy_ledger` no se bloquea frente a un `record_entry` simultáneo (transición, ADR); INV-08 (inmutabilidad) se cubre por diseño, sin prueba explícita.
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/83 (base `accounting`) listo para aprobación humana (no se mergea). Cambio con migración de base de datos y decisión arquitectónica (ADR `ADR-motor-central-asientos-partida-doble-modelo-y-contrato`): requiere aprobación explícita de una persona.
