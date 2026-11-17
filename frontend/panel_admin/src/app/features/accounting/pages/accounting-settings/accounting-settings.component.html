@@ -1,52 +1,27 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style ">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CUENTAS_Y_METODOS_DE_PAGO' | translate }}</h5>
+      <h5 class="page-title m-b-0">{{ 'MENUITEMS.ACCOUNTING.LIST.SETTINGS' | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main">
         <i class="fas fa-home font-17"></i></a>
     </li>
     <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
-    <li class="breadcrumb-item">{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CUENTAS_Y_METODOS_DE_PAGO' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.LIST.SETTINGS' | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row clearfix">
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="card">
           <div class="card-header">
-            <h4>{{ 'ACCOUNTING.ACCOUNTING_SETTINGS.CONTABILIDAD_CUENTAS_Y_METODOS_DE_PAGO' | translate }}</h4>
+            <h4>{{ 'MENUITEMS.ACCOUNTING.LIST.SETTINGS' | translate }}</h4>
           </div>
           <ul class="nav nav-tabs px-3 pt-2" role="tablist" (keydown)="onTabKeydown($event)">
             <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link" [class.active]="tab === 'accounts'" role="tab" id="tab-accounts"
-                [attr.aria-selected]="tab === 'accounts'" [attr.tabindex]="tab === 'accounts' ? 0 : -1" aria-controls="panel-accounts"
-                (click)="select('accounts')">{{ 'ACCOUNTING.ACCOUNTS_TAB.CUENTAS' | translate }}</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link" [class.active]="tab === 'methods'" role="tab" id="tab-methods"
-                [attr.aria-selected]="tab === 'methods'" [attr.tabindex]="tab === 'methods' ? 0 : -1" aria-controls="panel-methods"
-                (click)="select('methods')">{{ 'ACCOUNTING.METHODS_TAB.METODOS_DE_PAGO' | translate }}</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link" [class.active]="tab === 'classifications'" role="tab" id="tab-classifications"
-                [attr.aria-selected]="tab === 'classifications'" [attr.tabindex]="tab === 'classifications' ? 0 : -1" aria-controls="panel-classifications"
-                (click)="select('classifications')">{{ 'ACCOUNTING.CLASSIFICATIONS.CLASIFICACIONES' | translate }}</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link" [class.active]="tab === 'accountClasses'" role="tab" id="tab-accountClasses"
-                [attr.aria-selected]="tab === 'accountClasses'" [attr.tabindex]="tab === 'accountClasses' ? 0 : -1" aria-controls="panel-accountClasses"
-                (click)="select('accountClasses')">{{ 'ACCOUNTING.ACCOUNT_CLASSES.TITULO' | translate }}</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link" [class.active]="tab === 'expenses'" role="tab" id="tab-expenses"
-                [attr.aria-selected]="tab === 'expenses'" [attr.tabindex]="tab === 'expenses' ? 0 : -1" aria-controls="panel-expenses"
-                (click)="select('expenses')">{{ 'ACCOUNTING.EXPENSE_CONFIG.EGRESOS' | translate }}</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button type="button" class="nav-link" [class.active]="tab === 'cutoff'" role="tab" id="tab-cutoff"
-                [attr.aria-selected]="tab === 'cutoff'" [attr.tabindex]="tab === 'cutoff' ? 0 : -1" aria-controls="panel-cutoff"
-                (click)="select('cutoff')">{{ 'ACCOUNTING.CUTOFF.CORTE_Y_COBERTURA' | translate }}</button>
+              <button type="button" class="nav-link" [class.active]="tab === 'classes'" role="tab" id="tab-classes"
+                [attr.aria-selected]="tab === 'classes'" [attr.tabindex]="tab === 'classes' ? 0 : -1" aria-controls="panel-classes"
+                (click)="select('classes')">{{ 'ACCOUNTING.ACCOUNT_CLASSES.TITULO' | translate }}</button>
             </li>
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'periods'" role="tab" id="tab-periods"
@@ -54,29 +29,9 @@
                 (click)="select('periods')">{{ 'ACCOUNTING.FISCAL_PERIODS.TAB' | translate }}</button>
             </li>
           </ul>
-          @if (tab === 'accounts') {
-          <div id="panel-accounts" role="tabpanel" aria-labelledby="tab-accounts">
-            <app-accounts-tab />
-          </div>
-          } @else if (tab === 'methods') {
-          <div id="panel-methods" role="tabpanel" aria-labelledby="tab-methods">
-            <app-methods-tab />
-          </div>
-          } @else if (tab === 'classifications') {
-          <div id="panel-classifications" role="tabpanel" aria-labelledby="tab-classifications">
-            <app-classifications-tab />
-          </div>
-          } @else if (tab === 'accountClasses') {
-          <div id="panel-accountClasses" role="tabpanel" aria-labelledby="tab-accountClasses">
+          @if (tab === 'classes') {
+          <div id="panel-classes" role="tabpanel" aria-labelledby="tab-classes">
             <app-account-classes-tab />
-          </div>
-          } @else if (tab === 'expenses') {
-          <div id="panel-expenses" role="tabpanel" aria-labelledby="tab-expenses">
-            <app-expense-config-tab />
-          </div>
-          } @else if (tab === 'cutoff') {
-          <div id="panel-cutoff" role="tabpanel" aria-labelledby="tab-cutoff">
-            <app-cutoff-tab />
           </div>
           } @else {
           <div id="panel-periods" role="tabpanel" aria-labelledby="tab-periods">
@@ -84,6 +39,10 @@
           </div>
           }
         </div>
+        <small class="text-body-secondary d-block mt-2" data-testid="other-settings">
+          {{ 'ACCOUNTING.SETTINGS_HUB.OTRAS_CONFIGURACIONES_NOTA' | translate }}
+          <a routerLink="/pocketbiz/accounting/settings/legacy" data-testid="legacy-link">{{ 'ACCOUNTING.SETTINGS_HUB.OTRAS_CONFIGURACIONES' | translate }}</a>
+        </small>
       </div>
     </div>
   </div>

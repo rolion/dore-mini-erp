@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .journal_views import JournalEntryDetailView, JournalEntryListCreateView, JournalEntryReverseView
 from .views import (
     AccountActivateView,
     AccountClassDisableView,
@@ -50,6 +51,10 @@ urlpatterns = [
          name='accounting-classification-activate'),
     path('classifications/<uuid:classification_id>/deactivate/', ClassificationDeactivateView.as_view(),
          name='accounting-classification-deactivate'),
+    path('journal-entries/', JournalEntryListCreateView.as_view(), name='accounting-journal-list'),
+    path('journal-entries/<uuid:entry_id>/', JournalEntryDetailView.as_view(), name='accounting-journal-detail'),
+    path('journal-entries/<uuid:entry_id>/reverse/', JournalEntryReverseView.as_view(),
+         name='accounting-journal-reverse'),
     path('entries/', EntryListView.as_view(), name='accounting-entry-list'),
     path('entries/<uuid:entry_id>/', EntryDetailView.as_view(), name='accounting-entry-detail'),
     path('regularization/preview/', RegularizationPreviewView.as_view(), name='accounting-regularization-preview'),

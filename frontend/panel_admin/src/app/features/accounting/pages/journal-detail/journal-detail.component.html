@@ -1,0 +1,132 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.JOURNAL.ASIENTO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/accounting/journal">{{ 'ACCOUNTING.JOURNAL.MOVIMIENTOS' | translate }}</a></li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      @if (loading) {
+      <p class="m-4 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+      } @else if (errorMessage) {
+      <div class="alert alert-danger m-4" role="alert" data-testid="detail-error">
+        {{ errorMessage }}
+        @if (!notFound) {
+        <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        }
+      </div>
+      <div class="m-4"><a class="btn btn-light" routerLink="/pocketbiz/accounting/journal">{{ 'COMMON.VOLVER' | translate }}</a></div>
+      } @else if (entry; as e) {
+      @if (justCreated) {
+      <div class="alert alert-success m-4 mb-0" role="status" data-testid="created-alert">{{ 'ACCOUNTING.JOURNAL.ASIENTO_REGISTRADO' | translate }}</div>
+      }
+      @if (createdReversalId) {
+      <div class="alert alert-success m-4 mb-0" role="status" data-testid="reversed-alert">
+        {{ 'ACCOUNTING.JOURNAL.ASIENTO_REVERTIDO' | translate }}
+        <a class="alert-link ms-1" [routerLink]="['/pocketbiz/accounting/journal', createdReversalId]" data-testid="reversal-created-link">{{ 'ACCOUNTING.JOURNAL.VER_REVERSION' | translate }}</a>
+      </div>
+      }
+      <div class="card-header">
+        <h4 class="mb-0" data-testid="title">{{ e.description }}</h4>
+        <span class="badge-outline" [class]="originClass" data-testid="source-badge">{{ originText }}</span>
+        @if (e.isReversal) {
+        <span class="badge-outline col-red ms-2" data-testid="reversal-badge">{{ 'ACCOUNTING.ENTRIES.REVERSION' | translate }}</span>
+        } @else if (e.reversedById) {
+        <span class="badge-outline col-grey ms-2" data-testid="reversed-badge">{{ 'ACCOUNTING.JOURNAL.REVERTIDO' | translate }}</span>
+        }
+      </div>
+      <dl class="row m-4">
+        <dt class="col-sm-3">{{ 'ACCOUNTING.JOURNAL.FECHA_CONTABLE' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="date">{{ e.accountingDate | date: 'dd/MM/yyyy' }}</dd>
+        <dt class="col-sm-3">{{ 'ACCOUNTING.JOURNAL.PERIODO' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="period">{{ e.period?.name || '—' }}</dd>
+        <dt class="col-sm-3">{{ 'ACCOUNTING.JOURNAL.MONEDA' | translate }}</dt>
+        <dd class="col-sm-9">{{ e.currency }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.ORIGEN' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="origin">
+          @if (e.origin === null) {
+          {{ 'ACCOUNTING.JOURNAL.ASIENTO_MANUAL' | translate }}
+          } @else if (originLink; as target) {
+          <a class="link-primary" [routerLink]="target" data-testid="origin-link">{{ 'ACCOUNTING.JOURNAL.VER_DOCUMENTO_DE_ORIGEN' | translate }}</a>
+          } @else {
+          <span data-testid="origin-text">{{ e.origin.kind }}
+            @if (!e.origin.available) { <small class="text-body-secondary">({{ 'ACCOUNTING.ENTRIES.MODULO_DESHABILITADO' | translate }})</small> }
+          </span>
+          }
+        </dd>
+        <dt class="col-sm-3">{{ 'ACCOUNTING.JOURNAL.USUARIO' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="user">{{ e.createdByName || '—' }}</dd>
+        <dt class="col-sm-3">{{ 'ACCOUNTING.ENTRIES.FECHA_DE_REGISTRO' | translate }}</dt>
+        <dd class="col-sm-9">{{ e.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      </dl>
+
+      <div class="table-responsive mx-4">
+        <table class="table" data-testid="lines">
+          <thead>
+            <tr>
+              <th>{{ 'ACCOUNTING.JOURNAL.CUENTA' | translate }}</th>
+              <th class="text-end">{{ 'ACCOUNTING.JOURNAL.DEBE' | translate }}</th>
+              <th class="text-end">{{ 'ACCOUNTING.JOURNAL.HABER' | translate }}</th>
+              <th>{{ 'ACCOUNTING.JOURNAL.NOTA' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of e.lines; track line.position) {
+            <tr data-testid="line">
+              <td>{{ line.account.code }} · {{ line.account.name }}</td>
+              <td class="text-end">{{ line.debit }}</td>
+              <td class="text-end">{{ line.credit }}</td>
+              <td>{{ line.memo || '—' }}</td>
+            </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="fw-bold" data-testid="totals">
+              <td>{{ 'ACCOUNTING.JOURNAL.TOTAL' | translate }}</td>
+              <td class="text-end" data-testid="total-debit">{{ e.totalDebit }}</td>
+              <td class="text-end" data-testid="total-credit">{{ e.totalCredit }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      @if (e.reversesId || e.reversedById) {
+      <div class="m-4" data-testid="reversal-block">
+        <h5>{{ 'ACCOUNTING.JOURNAL.REVERSION' | translate }}</h5>
+        <dl class="row mb-0">
+          @if (e.reversesId) {
+          <dt class="col-sm-3">{{ 'ACCOUNTING.JOURNAL.REVIERTE_A' | translate }}</dt>
+          <dd class="col-sm-9"><a class="link-primary" [routerLink]="['/pocketbiz/accounting/journal', e.reversesId]" data-testid="original-link">{{ 'ACCOUNTING.JOURNAL.VER_ASIENTO' | translate }}</a></dd>
+          <dt class="col-sm-3">{{ 'COMMON.MOTIVO' | translate }}</dt>
+          <dd class="col-sm-9" data-testid="reason">{{ e.reversalReason }}</dd>
+          }
+          @if (e.reversedById) {
+          <dt class="col-sm-3">{{ 'ACCOUNTING.JOURNAL.REVERTIDO_POR' | translate }}</dt>
+          <dd class="col-sm-9"><a class="link-primary" [routerLink]="['/pocketbiz/accounting/journal', e.reversedById]" data-testid="reversal-link">{{ 'ACCOUNTING.JOURNAL.VER_REVERSION' | translate }}</a></dd>
+          }
+        </dl>
+      </div>
+      }
+
+      <div class="m-4">
+        <small class="text-body-secondary d-block mb-2" data-testid="immutable-note">{{ 'ACCOUNTING.JOURNAL.LOS_ASIENTOS_NO_SE_EDITAN' | translate }}</small>
+        @if (!e.canReverse) {
+        <small class="text-body-secondary d-block mb-2" data-testid="cannot-reverse">{{ (e.isReversal ? 'ACCOUNTING.JOURNAL.NO_REVERTIBLE_REVERSION' : 'ACCOUNTING.JOURNAL.NO_REVERTIBLE_YA_REVERTIDO') | translate }}</small>
+        }
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-light" routerLink="/pocketbiz/accounting/journal" data-testid="back">{{ 'COMMON.VOLVER' | translate }}</a>
+          @if (e.canReverse) {
+          <button type="button" class="btn btn-warning" data-testid="reverse" (click)="openReverse()">{{ 'ACCOUNTING.JOURNAL.REVERTIR_ASIENTO' | translate }}</button>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</section>

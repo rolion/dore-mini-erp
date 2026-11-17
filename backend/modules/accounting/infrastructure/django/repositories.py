@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from django.db import IntegrityError, connection, transaction
-from django.db.models import Count, Max, Min, Q, Sum
+from django.db.models import Count, Exists, Max, Min, OuterRef, Q, Sum
 from django.db.models.functions import Lower
 from django.utils import timezone
 
@@ -472,6 +472,16 @@ def _journal(model: JournalEntryModel) -> JournalEntry:
                     for line in model.lines.all()))
 
 
+@dataclass(frozen=True)
+class JournalFilters:
+    """Filtros del libro de asientos; todos opcionales."""
+    date_from: date | None = None
+    date_to: date | None = None
+    account_id: UUID | None = None
+    source: str | None = None
+    origin_kind: str | None = None
+
+
 class DjangoJournalRepository:
     """Libro de asientos de una empresa: toda consulta filtra por `company_id`. Solo inserta y lee."""
 
@@ -516,6 +526,22 @@ class DjangoJournalRepository:
     def get(self, entry_id: UUID) -> JournalEntry | None:
         model = self._queryset().filter(pk=entry_id).first()
         return _journal(model) if model else None
+
+    def search(self, filters: JournalFilters):
+        """Cabeceras de la empresa filtradas, en orden total estable: fecha contable, creación e id, descendentes."""
+        rows = self._rows().select_related('reversed_by_entry')
+        if filters.date_from:
+            rows = rows.filter(accounting_date__gte=filters.date_from)
+        if filters.date_to:
+            rows = rows.filter(accounting_date__lte=filters.date_to)
+        if filters.source:
+            rows = rows.filter(source=filters.source)
+        if filters.origin_kind:
+            rows = rows.filter(origin_kind=filters.origin_kind)
+        if filters.account_id:
+            rows = rows.filter(Exists(JournalLineModel.objects.filter(
+                company_id=self.company_id, entry_id=OuterRef('pk'), account_id=filters.account_id)))
+        return rows.order_by('-accounting_date', '-created_at', '-id')
 
     def get_for_update(self, entry_id: UUID) -> JournalEntry | None:
         """Bloquea la fila de la cabecera: serializa las reversiones del mismo asiento."""

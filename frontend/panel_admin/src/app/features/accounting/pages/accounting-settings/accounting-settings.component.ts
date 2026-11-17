@@ -2,29 +2,24 @@ import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AccountClassesTabComponent } from '../../components/account-classes-tab/account-classes-tab.component';
-import { AccountsTabComponent } from '../../components/accounts-tab/accounts-tab.component';
-import { ClassificationsTabComponent } from '../../components/classifications-tab/classifications-tab.component';
-import { ExpenseConfigTabComponent } from '../../components/expense-config-tab/expense-config-tab.component';
-import { CutoffTabComponent } from '../../components/cutoff-tab/cutoff-tab.component';
 import { PeriodsTabComponent } from '../../components/periods-tab/periods-tab.component';
-import { MethodsTabComponent } from '../../components/methods-tab/methods-tab.component';
 
-export type SettingsTab = 'accounts' | 'methods' | 'classifications' | 'accountClasses' | 'expenses' | 'cutoff' | 'periods';
+export type SettingsTab = 'classes' | 'periods';
 
-/** Contabilidad › Configuración › Cuentas y Métodos de pago: dos pestañas (cuentas destino y mapeo de métodos). */
+/** Contabilidad › Configuración: Clasificaciones contables y Períodos fiscales; el resto enlaza a la pantalla heredada. */
 @Component({
   selector: 'app-accounting-settings',
   templateUrl: './accounting-settings.component.html',
-  imports: [TranslatePipe, RouterLink, AccountsTabComponent, MethodsTabComponent, ClassificationsTabComponent, AccountClassesTabComponent, ExpenseConfigTabComponent, CutoffTabComponent, PeriodsTabComponent],
+  imports: [TranslatePipe, RouterLink, AccountClassesTabComponent, PeriodsTabComponent],
 })
 export class AccountingSettingsComponent {
-  readonly tabs: readonly SettingsTab[] = ['accounts', 'methods', 'classifications', 'accountClasses', 'expenses', 'cutoff', 'periods'];
-  /** Pestaña inicial: `?tab=expenses` abre «Egresos» (enlace de ayuda de los formularios de Gastos y Compras). */
+  readonly tabs: readonly SettingsTab[] = ['classes', 'periods'];
+  /** Pestaña inicial: `?tab=periods` abre «Períodos fiscales». */
   tab: SettingsTab = this.initialTab();
 
   private initialTab(): SettingsTab {
     const requested = inject(ActivatedRoute).snapshot.queryParamMap.get('tab');
-    return this.tabs.find((tab) => tab === requested) ?? 'accounts';
+    return this.tabs.find((tab) => tab === requested) ?? 'classes';
   }
 
   select(tab: SettingsTab): void {

@@ -1,0 +1,123 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.JOURNAL.NUEVO_ASIENTO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/accounting/journal">{{ 'ACCOUNTING.JOURNAL.MOVIMIENTOS' | translate }}</a></li>
+  </ul>
+  <div class="section-body">
+    <form class="card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="card-header"><h4 class="mb-0">{{ 'ACCOUNTING.JOURNAL.NUEVO_ASIENTO' | translate }}</h4></div>
+      <div class="card-body">
+        @if (accountsError) {
+        <div class="alert alert-danger" role="alert" data-testid="accounts-error">{{ accountsError }}</div>
+        } @else if (!loadingAccounts && accounts.length < minLines) {
+        <div class="alert alert-warning" role="alert" data-testid="few-accounts">
+          {{ 'ACCOUNTING.JOURNAL.NECESITA_DOS_CUENTAS' | translate }}
+          <a class="alert-link" routerLink="/pocketbiz/accounting/accounts">{{ 'ACCOUNTING.JOURNAL.IR_A_CUENTAS' | translate }}</a>
+        </div>
+        }
+        @if (errorMessage) {
+        <div class="alert alert-danger" role="alert" data-testid="form-error">{{ errorMessage }}</div>
+        }
+        <div class="row g-3 mb-3">
+          <div class="col-md-3">
+            <label for="entry-date">{{ 'ACCOUNTING.JOURNAL.FECHA_CONTABLE' | translate }} <span class="text-danger">*</span></label>
+            <input id="entry-date" type="date" class="form-control" formControlName="accountingDate"
+              [class.is-invalid]="fieldError('accounting_date') || (attempted && !form.controls.accountingDate.value)">
+            @if (fieldError('accounting_date'); as message) {
+            <small class="text-danger d-block" data-testid="date-error">{{ message }}</small>
+            }
+          </div>
+          <div class="col-md-9">
+            <label for="entry-description">{{ 'COMMON.DESCRIPCION' | translate }} <span class="text-danger">*</span></label>
+            <input id="entry-description" type="text" class="form-control" formControlName="description" [attr.maxlength]="descriptionMax"
+              [class.is-invalid]="fieldError('description') || (attempted && !form.controls.description.value.trim())">
+            @if (fieldError('description'); as message) {
+            <small class="text-danger d-block" data-testid="description-error">{{ message }}</small>
+            }
+          </div>
+        </div>
+
+        <div class="table-responsive" formArrayName="lines">
+          <table class="table align-middle" data-testid="lines">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'ACCOUNTING.JOURNAL.CUENTA' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'ACCOUNTING.JOURNAL.DEBE' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'ACCOUNTING.JOURNAL.HABER' | translate }}</th>
+                <th scope="col"><span class="visually-hidden">{{ 'COMMON.ACCIONES' | translate }}</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines.controls; track line; let i = $index) {
+              <tr [formGroupName]="i" data-testid="line" [class.table-warning]="problem(i) || serverLineError(i)">
+                <td>
+                  <select class="form-select form-control" formControlName="accountId" [attr.aria-label]="('ACCOUNTING.JOURNAL.CUENTA_DE_LA_LINEA_N' | translate: { n: i + 1 })">
+                    <option value="">{{ 'ACCOUNTING.JOURNAL.SELECCIONA_UNA_CUENTA' | translate }}</option>
+                    @for (account of accounts; track account.id) {
+                    <option [value]="account.id">{{ account.code }} · {{ account.name }} ({{ account.currency }})</option>
+                    }
+                  </select>
+                  @if (problem(i) || serverLineError(i); as message) {
+                  <small class="text-danger d-block" data-testid="line-error">{{ message }}</small>
+                  }
+                </td>
+                <td>
+                  <input type="text" inputmode="decimal" class="form-control text-end" formControlName="debit" autocomplete="off"
+                    [attr.aria-label]="('ACCOUNTING.JOURNAL.DEBE_DE_LA_LINEA_N' | translate: { n: i + 1 })" (input)="onAmountInput(i, 'debit')">
+                </td>
+                <td>
+                  <input type="text" inputmode="decimal" class="form-control text-end" formControlName="credit" autocomplete="off"
+                    [attr.aria-label]="('ACCOUNTING.JOURNAL.HABER_DE_LA_LINEA_N' | translate: { n: i + 1 })" (input)="onAmountInput(i, 'credit')">
+                </td>
+                <td class="text-end">
+                  <button type="button" class="btn btn-light btn-sm" data-testid="remove-line" [disabled]="!canRemove"
+                    [attr.aria-label]="('ACCOUNTING.JOURNAL.QUITAR_LINEA_N' | translate: { n: i + 1 })" (click)="removeLine(i)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr class="fw-bold" data-testid="totals">
+                <td class="text-end">{{ 'ACCOUNTING.JOURNAL.TOTALES' | translate }}</td>
+                <td class="text-end" data-testid="total-debit">{{ totals.debit }}</td>
+                <td class="text-end" data-testid="total-credit">{{ totals.credit }}</td>
+                <td></td>
+              </tr>
+              <tr data-testid="difference-row">
+                <td class="text-end">{{ 'ACCOUNTING.JOURNAL.DIFERENCIA' | translate }}</td>
+                <td colspan="2" class="text-end" data-testid="difference" [class.text-success]="totals.balanced" [class.text-danger]="!totals.balanced">
+                  {{ totals.difference }}
+                  @if (totals.balanced) { <span>— {{ 'ACCOUNTING.JOURNAL.CUADRA' | translate }}</span> } @else { <span>— {{ 'ACCOUNTING.JOURNAL.NO_CUADRA_CORTO' | translate }}</span> }
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        @if (linesError) {
+        <div class="alert alert-warning" role="alert" data-testid="lines-error">{{ linesError }}</div>
+        }
+        <button type="button" class="btn btn-light" data-testid="add-line" (click)="addLine()">+ {{ 'ACCOUNTING.JOURNAL.AGREGAR_LINEA' | translate }}</button>
+      </div>
+      <div class="card-footer">
+        @if (attempted && blockers.length) {
+        <ul class="text-danger small mb-2" data-testid="blockers">
+          @for (blocker of blockers; track blocker) { <li>{{ blocker }}</li> }
+        </ul>
+        }
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary" data-testid="confirm" [disabled]="!canSubmit">{{ saving ? ('ACCOUNTING.JOURNAL.REGISTRANDO' | translate) : ('ACCOUNTING.JOURNAL.CONFIRMAR_ASIENTO' | translate) }}</button>
+          <a class="btn btn-light" routerLink="/pocketbiz/accounting/journal" data-testid="cancel">{{ 'COMMON.CANCELAR' | translate }}</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>

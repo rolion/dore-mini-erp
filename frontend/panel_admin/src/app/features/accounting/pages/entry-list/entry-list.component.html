@@ -90,7 +90,7 @@
               @if (coverage?.gaps?.length) {
               <div class="alert alert-warning mt-2 mb-0" role="alert" data-testid="coverage-gaps">
                 {{ 'ACCOUNTING.CUTOFF.AVISO_COBERTURA_PARCIAL' | translate }}
-                <a routerLink="/pocketbiz/accounting/settings">{{ 'ACCOUNTING.CUTOFF.VER_CORTE_Y_COBERTURA' | translate }}</a>
+                <a routerLink="/pocketbiz/accounting/settings/legacy" [queryParams]="{ tab: 'cutoff' }">{{ 'ACCOUNTING.CUTOFF.VER_CORTE_Y_COBERTURA' | translate }}</a>
               </div>
               }
               @if (coverage?.firstPaymentDate) {
