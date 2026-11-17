@@ -1,6 +1,6 @@
 # ADR-reconocer-compras-mercaderia-deuda-proveedores-evento-recepcion-y-asiento: Reconocer la compra al recibir la mercadería, con un asiento por recepción
 
-**Estado:** Propuesto
+**Estado:** Propuesto (decisión 7 reemplazada por `ADR-reconocer-compras-mercaderia-deuda-proveedores-pagos-y-anticipos-a-proveedores.md`)
 **Task relacionado:** TASK-reconocer-compras-mercaderia-deuda-proveedores
 **Fecha:** 2026-11-17
 

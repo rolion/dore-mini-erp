@@ -1,6 +1,6 @@
 # TASK-reconocer-compras-mercaderia-deuda-proveedores: Reconocer compras de mercadería y deuda con proveedores (COM-02)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reconocer-compras-mercaderia-deuda-proveedores
@@ -16,6 +16,7 @@
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-03 Medium y REV-01/02/04 Low abiertos) | delivery-publish |
 | 2026-11-17 | PUBLISH (corrección) | REV-01..04 resueltos a pedido de la persona | delivery-build |
+| 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido y aprobado por la persona: incorporar COM-01 (asiento del pago y anticipos a proveedores); PLAN v2, ADR y DDR nuevos | delivery-start |
 
 ## Investigación
 
@@ -28,6 +29,22 @@ Tarjeta Trello COM-02 (insumo, no Specification aprobada). Aclaración de la per
 - Sin Gastos operativos por comprar mercadería; mantener políticas de costo e impuestos sin ampliar alcance tributario; guardado atómico e idempotente; enlace compra/recepción/asiento; preservar el corte de CONT-07.
 - Aceptación: (1) compra 1.000 → Inventario Debe 1.000 / Proveedores Haber 1.000; (2) pagar 300 deja Proveedores 700 sin segundo inventario ni gasto; (3) reintentar recepción y reconocer por ambos módulos no duplica; (4) borrador no altera cuentas; fallo del asiento no deja reconocimiento parcial.
 - Dependencias: CONT-12, CONT-10. Coordinación INV-01 ↔ COM-02 sobre un único evento y dueño del asiento de recepción. Transversal: API y UI, aislamiento por empresa, `Decimal`, BOB, sin conversión de divisas.
+
+### Actualización 2026-11-17 — incorporar COM-01 (PLAN v2)
+Tarjeta Trello COM-01 «Registrar pagos de compras contra cuentas por pagar» (https://trello.com/c/o5x7iTs7/7-com-01-registrar-pagos-de-compras-contra-cuentas-por-pagar), insumo: pago posterior de deuda reconocida = Debe Cuentas por pagar / Haber Caja o Banco (pagos parciales con cuentas distintas); anticipo antes de recibir como Activo «Anticipos a proveedores» aplicado al reconocer la compra; pago, pendiente y asiento atómicos y únicos, control concurrente del saldo; pagar no recibe stock ni crea gastos; mostrar asiento previsto y vínculo pago/asiento; adaptar anulaciones sin inventar reembolsos. Aceptación: deuda 1.000 pagada Caja 300 + Banco 700 → dos asientos y deuda cero; Inventario y Gastos no cambian y los reintentos no duplican; dos pagos simultáneos no exceden el saldo; falla contable revierte el pago y cuenta ajena/inactiva se rechaza; el pago de anticipos no crea gasto ni reduce deuda inexistente. Dependencias: COM-02, CONT-12, CONT-10.
+
+**Decisiones de la persona (2026-11-17):** incluir el asiento del pago en esta tarea; anticipos a proveedores como flujo real; cuenta de salida por el método de pago (sin selector por pago); dejar de exigir la clasificación de egreso.
+
+**Hechos nuevos (verificados en el código):**
+- `RegisterPayment` solo valida el saldo, guarda el pago y la clasificación; no llama a Contabilidad y exige la clasificación de egreso cuando hay cobertura (`purchases/application/payment_commands.py:36-69`).
+- Se puede pagar desde que la compra está confirmada, incluso sin recepciones (`Purchase.can_pay`, `purchase.py:338-342`); el monto no supera `total − pagado` (`purchase.py:452-461`); el bloqueo de la compra serializa pagos (`payment_commands.py:56`).
+- Los métodos de Compras (`CASH, QR, BANK_TRANSFER, CARD, OTHER`, `purchases/domain/enums.py:36-42`) coinciden con los códigos de Contabilidad (`accounting/domain/catalog.py:7-9`) y el mapeo método → cuenta ya se resuelve con el rol `MONEY` (`accounting/domain/posting.py:48`).
+- El catálogo tiene `PURCHASE_PAYMENT` (Debe `PAYABLE` / Haber `MONEY`) pero no hay rol de anticipos a proveedores; `Event` solo admite una segunda línea de Debe (`posting.py:52-75`) y `post_automatic_entry` solo aplica `advance_applied` a esa línea (`accounting/services.py:530-587`).
+- No existen anulaciones de pagos (`PaymentRecordStatus.VOIDED` no lo produce ningún flujo) y cancelar una compra con pagos está bloqueado (`purchase.py:327-330`): no hay reembolsos que adaptar.
+- Diálogo de pago y pestaña de pagos: `features/purchases/components/payment-dialog` y `purchase-payments-tab` (usa `ClassificationHintComponent` para el error de clasificación).
+- El detalle de un asiento de Compras muestra el origen como código técnico «PURCHASE_RECOGNITION (módulo deshabilitado)» (observado por la persona en su entorno): la pantalla no conoce los orígenes de eventos automáticos.
+
+**Decisiones por criterio (en ADR/PLAN v2):** el pago se reparte en deuda reconocida (`PURCHASE_PAYMENT`) y exceso (`PURCHASE_ADVANCE`); lo pagado y lo aplicado se guardan en columnas de Compras (migración aditiva) en lugar de leerse del libro; pagos sin cobertura se guardan como deuda pagada sin asiento; los pagos históricos cuentan como deuda pagada.
 
 ### Hechos encontrados
 - **El catálogo ya tiene los eventos:** `PURCHASE_RECOGNITION` (Debe `INVENTORY` / Haber `PAYABLE`) y `PURCHASE_PAYMENT` (Debe `PAYABLE` / Haber `MONEY`) y los roles `INVENTORY` (Activo) y `PAYABLE` (Pasivo) (`backend/modules/accounting/domain/posting.py:45-47, 94-95`). Nadie los usa; el panel de configuración es dirigido por datos (CONT-12).
@@ -45,7 +62,7 @@ Tarjeta Trello COM-02 (insumo, no Specification aprobada). Aclaración de la per
 - El evento de reconocimiento es la **recepción** (la tarjeta descarta borrador y pedido; no dice cuál otro). Se documenta en el ADR; si la persona prefiere «al confirmar», es un cambio de Specification.
 - Se reconoce también sin Inventario habilitado y para líneas sin control de stock.
 - La fecha contable es la fecha de la recepción; la reversión usa la fecha de hoy (patrón de Ventas).
-- Pagos anticipados dejan Proveedores deudor temporalmente; no se crea cuenta de anticipos.
+- (v1, reemplazado en v2) Los pagos anticipados dejaban Proveedores deudor; ahora son anticipos a proveedores.
 - Las recepciones históricas no se regularizan aquí.
 
 ### Módulos y dependencias relacionadas
@@ -71,12 +88,14 @@ Doble asiento con INV-01 (mitigado por ADR §2 y prueba de origen); recibir exig
 
 ## Diseño
 `docs/design/DDR-reconocer-compras-mercaderia-deuda-proveedores-errores-accionables-y-asiento-en-recepcion.md`
+`docs/design/DDR-reconocer-compras-mercaderia-deuda-proveedores-dialogo-de-pago-asiento-previsto-y-vinculo.md` (v2)
 
 ## Arquitectura
-`docs/adr/ADR-reconocer-compras-mercaderia-deuda-proveedores-evento-recepcion-y-asiento.md`
+`docs/adr/ADR-reconocer-compras-mercaderia-deuda-proveedores-evento-recepcion-y-asiento.md` (decisión 7 reemplazada)
+`docs/adr/ADR-reconocer-compras-mercaderia-deuda-proveedores-pagos-y-anticipos-a-proveedores.md` (v2)
 
 ## Plan
-`docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md` (v1, COMPLETO) · Specification readiness: READY
+`docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md` (v2, COMPLETO) · Specification readiness: READY
 
 ## Implementación
 Implementado según **PLAN v1**, sin cambios de Specification.
