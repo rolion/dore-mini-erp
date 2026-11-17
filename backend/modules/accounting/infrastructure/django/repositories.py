@@ -28,6 +28,7 @@ from .models import (
     JournalEntryModel,
     JournalLineModel,
     MethodMappingModel,
+    PostingAccountModel,
     SettingsModel,
 )
 
@@ -565,3 +566,31 @@ class DjangoJournalRepository:
         """Asientos del período cuya fecha contable quedaría fuera del rango `[start, end]`."""
         return self._rows().filter(period_id=period_id).filter(
             Q(accounting_date__lt=start) | Q(accounting_date__gt=end)).count()
+
+
+class DjangoPostingConfigRepository:
+    """Cuentas por rol y por categoría de gasto de una empresa (CONT-12); toda consulta filtra por `company_id`."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _rows(self):
+        return PostingAccountModel.objects.filter(company_id=self.company_id)
+
+    def roles(self) -> dict[str, UUID]:
+        return {row.key: row.account_id for row in self._rows().filter(scope='ROLE')}
+
+    def categories(self) -> dict[UUID, UUID]:
+        return {UUID(row.key): row.account_id for row in self._rows().filter(scope='CATEGORY')}
+
+    def set(self, scope: str, key: str, account_id: UUID | None) -> None:
+        """Asigna la cuenta (o quita la asignación con `None`). No toca asientos: ellos guardan sus propias cuentas."""
+        if account_id is None:
+            self._rows().filter(scope=scope, key=key).delete()
+            return
+        try:
+            with transaction.atomic():
+                PostingAccountModel.objects.update_or_create(
+                    company_id=self.company_id, scope=scope, key=key, defaults={'account_id': account_id})
+        except IntegrityError:  # carrera al crear la fila: se actualiza la existente
+            self._rows().filter(scope=scope, key=key).update(account_id=account_id)
