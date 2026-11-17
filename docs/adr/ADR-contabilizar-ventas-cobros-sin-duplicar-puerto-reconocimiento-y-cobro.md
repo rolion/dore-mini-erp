@@ -1,6 +1,6 @@
 # ADR-contabilizar-ventas-cobros-sin-duplicar-puerto-reconocimiento-y-cobro: Puerto de contabilización de Ventas, reconocimiento al confirmar y cobro sin doble camino
 
-**Estado:** Propuesto
+**Estado:** Propuesto — decisiones 2, 3, 5 y 6 y la nota 2b **reemplazadas por** `ADR-contabilizar-ventas-cobros-sin-duplicar-reconocimiento-al-entregar-y-anticipos.md` (2026-11-17); el resto sigue vigente
 **Task relacionado:** TASK-contabilizar-ventas-cobros-sin-duplicar
 **Fecha:** 2026-11-17
 

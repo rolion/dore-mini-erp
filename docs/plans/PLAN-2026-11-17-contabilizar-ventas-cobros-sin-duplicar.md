@@ -1,162 +1,184 @@
-# PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar (v2)
+# PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar (v3)
 
 **Task:** TASK-contabilizar-ventas-cobros-sin-duplicar · **Modo:** COMPLETO · **Specification readiness:** READY
-**DDRs / ADRs:** `docs/design/DDR-contabilizar-ventas-cobros-sin-duplicar-errores-accionables-en-detalle-de-pedido.md` · `docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-puerto-reconocimiento-y-cobro.md`
+**DDRs / ADRs:** `docs/design/DDR-contabilizar-ventas-cobros-sin-duplicar-errores-accionables-en-detalle-de-pedido.md` · `docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-reconocimiento-al-entregar-y-anticipos.md` (vigente) · `docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-puerto-reconocimiento-y-cobro.md` (decisiones 1, 4, 7, 8, 9, 10 vigentes; 2, 3, 5, 6 reemplazadas)
 
 ## Objective
-Contabilizar por partida doble el reconocimiento de la venta (al confirmar el pedido) y cada cobro (contra Cuentas por cobrar) usando la configuración y la fachada de CONT-12, sin duplicar ingresos ni escribir un mismo importe por dos caminos, con atomicidad, idempotencia y los controles de saldo y concurrencia existentes.
+Contabilizar Ventas por partida doble reconociendo el ingreso **al entregar** y registrando los cobros anteriores a la entrega como **anticipos de clientes** (Pasivo), sin duplicar ingresos, con atomicidad, idempotencia y los controles de saldo y concurrencia existentes. Alcance contable: Caja/Bancos, Anticipos de clientes, Cuentas por cobrar e Ingresos por ventas; sin costo de ventas ni inventario contable.
 
 ## Context
-Base: `task/TASK-configurar-asientos-automaticos-modulo` (PR #86; no está en `main`). Ver TASK (hechos con `archivo:línea`, decisiones de la persona) y ADR.
+Base: `accounting` (CONT-12 integrado). Ver TASK (hechos con `archivo:línea`, decisiones de la persona) y ADRs. v1/v2 reconocían al confirmar; v3 cambia esa regla por pedido expreso de la persona (2026-11-17).
 
 # Specification
 
 ## Domain context
-`sales` (pedido, cobros) consume `accounting` solo por `accounting.services` desde su infraestructura. Costo/stock = INV-01 (no se toca).
+`sales` (pedido, cobros, entrega) consume `accounting` solo por `accounting.services` desde su infraestructura. `accounting` amplía su catálogo de eventos (rol y eventos nuevos). La salida física de almacén de la entrega se conserva intacta; costo/stock = INV-01.
 
 ## Ubiquitous language
 | Término | Significado | Fuente |
 |---|---|---|
-| Reconocimiento | Asiento `SALE_RECOGNITION`: Debe Cuentas por cobrar / Haber Ingresos por ventas, una vez por pedido | CONT-12, `domain/posting.py:70` |
-| Cobro | Asiento `SALE_PAYMENT`: Debe cuenta de dinero del método / Haber Cuentas por cobrar, uno por pago | `posting.py:71` |
-| Pedido reconocido | Pedido con asiento de reconocimiento (`find_automatic_entry`) | ADR §3 |
-| Cobertura | `coverage_status(fecha)`: si la operación debe crear asiento | `services.py:165` |
-| Libro anterior | Entradas de una cuenta (`record_entry`, origen `PRODUCT`) | `services.py:226` |
+| Anticipo de cliente | Cobro registrado antes de entregar: Debe Caja/Bancos / Haber Anticipos de clientes (Pasivo), un asiento por pago (`SALE_ADVANCE`) | ADR v2 §1 |
+| Reconocimiento de entrega | Asiento `SALE_DELIVERY` al entregar: Haber Ingresos por el total; Debe Anticipos aplicados + Debe Cuentas por cobrar (saldo) | ADR v2 §1, §6 |
+| Cobro posterior | Cobro con el pedido reconocido: Debe Caja/Bancos / Haber Cuentas por cobrar (`SALE_PAYMENT`) | CONT-12 |
+| Reconocido al confirmar | Pedido con asiento `SALE_RECOGNITION` (lógica anterior, histórico) | ADR v2 §3 |
+| Cobro sin asiento | Cobro hecho fuera de cobertura (libro anterior o ninguno) | ADR v2 §5 |
+| Cobertura | `coverage_status(fecha)`: si la operación debe crear asiento | `accounting/services.py:165` |
 
 ## Current behavior
-Ver TASK › Hechos. Confirmar no contabiliza; cada cobro crea una entrada del libro anterior si Contabilidad está habilitada (`adapters.py:169-198`); se puede cobrar un pedido NEW; el total es editable hasta READY; cancelar conserva los pagos.
+Ver TASK › Hechos. Con cobertura, confirmar crea `SALE_RECOGNITION` (CxC/Ingresos por el total) y los cobros crean `SALE_PAYMENT`; un pedido NUEVO no se puede cobrar; el total se bloquea tras reconocer; cancelar sin cobros revierte el reconocimiento; confirmar un pedido con cobros previos se rechaza (v2).
 
 ## Expected behavior
-Con **cobertura** de la fecha de la operación:
-- **Confirmar** (NEW → IN_PREPARATION) crea un único asiento de reconocimiento por el total del pedido (con descuento), fechado hoy. Total 0 → sin asiento.
-- **Cobrar** un pedido reconocido crea un asiento de cobro por el monto del pago, fechado en `payment_date`, y **no** una entrada en el libro anterior. Pagos parciales y mixtos = un asiento por pago.
-- **Cobrar un pedido NEW** se rechaza (confirmar primero).
-- **Pedido reconocido**: no cambia su total; no se cancela con cobros; si se cancela sin cobros, se revierte el reconocimiento con las cuentas originales.
-- Configuración faltante o inválida bloquea confirmar/cobrar con mensaje accionable (nunca se omite en silencio).
-Sin cobertura (Contabilidad deshabilitada, antes del corte, hueco): todo funciona como hoy, sin exigir cuentas. Un pedido confirmado antes de la cobertura se cobra por el camino actual (libro anterior si el módulo está habilitado).
+Con **cobertura** de la fecha de la operación y Contabilidad habilitada:
+- **NUEVO** (crear/editar): sin asiento. Cobrar → 409 `order_not_confirmed`.
+- **Confirmar** (NUEVO → EN PREPARACIÓN) y **marcar listo**: sin asiento, sin exigir configuración ni cobros.
+- **Cobrar en EN PREPARACIÓN / LISTO** (pedido no reconocido): un asiento por pago, Debe cuenta del método / Haber Anticipos de clientes. Se conserva el límite del saldo comercial.
+- **Entregar** (LISTO → ENTREGADO): un único asiento: Haber Ingresos por el total con descuento; Debe Anticipos de clientes por los anticipos del pedido y Debe Cuentas por cobrar por el resto; sin líneas de importe cero; no mueve Caja/Bancos. Con la salida de almacén existente en la misma transacción.
+- **Cobrar con el pedido entregado** (o reconocido): Debe método / Haber Cuentas por cobrar; no toca Ingresos ni Anticipos.
+- El pedido nunca exige pagos para confirmar, prepararse, marcarse listo ni entregarse.
+- **Total estable** tras confirmar (409 `order_total_locked`).
+- **Cancelar** sin entregar y sin cobros contabilizados: sin asiento; con cobros contabilizados: 409; entregados: no cancelables (sin cambio).
+- **Transición:** un pedido con reconocimiento anterior no se reconoce otra vez (sus cobros siguen contra CxC y cancelar sin cobros revierte su reconocimiento); un pedido con cobros sin asiento no se entrega con cobertura (409); un pedido con anticipos cuya entrega no tiene cobertura no se entrega (409).
+Sin cobertura o sin el módulo: funcionamiento actual (libro anterior o nada).
 
 ## Domain rules / invariants
-- **INV-01** (nueva) Un pedido tiene como máximo un asiento de reconocimiento (`origin_id` = id del pedido).
-- **INV-02** (nueva) Cada cobro tiene como máximo un asiento (`origin_id` = id del pago) y **nunca** además una entrada del libro anterior.
-- **INV-03** (nueva) Reconocimiento y cobros nunca duplican el ingreso: Ingresos = Σ reconocimientos (no Σ cobros); Cuentas por cobrar = reconocido − cobrado.
-- **INV-04** (existente) Saldo: un pago no supera el saldo pendiente; la fila del pedido se bloquea (`select_for_update`); el pago es idempotente por `idempotency_key`.
-- **INV-05** (existente, CONT-02/12) Importes `Decimal` > 0 en BOB; fecha en período abierto; idempotencia y reversión con cuentas originales.
-- **INV-06** (nueva) Todo es atómico: si falla el asiento no queda confirmación, pago ni saldo cambiado.
+- **INV-01** (nueva) Un pedido tiene como máximo un asiento de entrega (`origin_id` = id del pedido) y solo si no tiene `SALE_RECOGNITION`.
+- **INV-02** (nueva) Cada cobro tiene como máximo un asiento (`SALE_ADVANCE` o `SALE_PAYMENT`, `origin_id` = id del pago) y nunca además una entrada del libro anterior.
+- **INV-03** (nueva) Ingresos = total del pedido (una vez); anticipos aplicados = Σ cobros con `SALE_ADVANCE` (≤ total); Cuentas por cobrar al entregar = total − anticipos; ningún anticipo se aplica dos veces.
+- **INV-04** (existente) Un pago no supera el saldo comercial pendiente; la fila del pedido se bloquea; idempotente por `idempotency_key`.
+- **INV-05** (existente, CONT-02/12) Importes `Decimal` > 0 en BOB, partida doble, fecha en período abierto, idempotencia por `(empresa, origen)`, reversión con cuentas originales.
+- **INV-06** (existente) Atomicidad: entrega + salida de almacén + asiento, y cobro + asiento, son todo o nada.
+- **INV-07** (nueva) Ningún asiento lleva líneas de importe cero.
 
 ## Acceptance criteria
-- **AC-01** (tarjeta 1) Venta de 1.000 a crédito confirmada y cobro de 300: Ingresos (Haber) 1.000; Cuentas por cobrar (Debe 1.000, Haber 300) = 700; Caja/Banco (Debe) 300.
-- **AC-02** (tarjeta 2) Venta de 500 confirmada y cobrada completa: Ingresos 500, Cuentas por cobrar 0, Caja 500 (Ingresos no es 1.000).
-- **AC-03** (tarjeta 3) Reintento del mismo cobro (misma `idempotency_key`) y de confirmaciones repetidas no duplican asientos; dos cobros concurrentes que sumen más que el saldo: solo entra lo que cabe, sin exceder el saldo ni duplicar.
-- **AC-04** Pagos mixtos (varios métodos) y parciales: un asiento por pago con la cuenta de su método; `origin_id` enlaza pago y pedido.
-- **AC-05** Configuración faltante/inválida o cuenta deshabilitada al confirmar o cobrar → 409 `posting_configuration_missing` con `issues`; el pedido/pago no cambia y no hay asiento.
-- **AC-06** Con cobertura, cobrar un pedido NEW → 409 `order_not_confirmed`; sin cobertura sigue permitido como hoy.
-- **AC-07** Pedido reconocido: agregar/quitar/cambiar ítems y descuento → 409 `order_total_locked`; notas, cliente y fechas siguen editables.
-- **AC-08** Cancelar: pedido reconocido sin cobros → estado CANCELLED y reversión del reconocimiento (cuentas originales); con cobros → 409 `order_has_payments_posted` sin cambios; pedido no reconocido → como hoy.
-- **AC-09** Fecha de cobro sin cobertura en un pedido reconocido → 409 `payment_date_not_covered`; período cerrado → 409 con mensaje del motor; nada se guarda.
-- **AC-10** Camino único: cobros de pedidos reconocidos no crean entrada en el libro anterior; cobros de pedidos no reconocidos (confirmados antes de la cobertura) siguen en el libro anterior; ningún cobro en ambos.
-- **AC-11** Sin Contabilidad habilitada o sin cobertura: ningún asiento, ninguna exigencia de cuentas, mismas respuestas que hoy.
-- **AC-12** Entregar un pedido no crea asientos (costo = INV-01).
-- **AC-13** Aislamiento por empresa: configuración y asientos de una empresa no afectan a otra.
-- **AC-15** (v2) Confirmar con cobertura un pedido que ya tiene cobros (hechos sin cobertura) → 409 `order_has_prior_payments`; el pedido sigue NUEVO y no hay asiento. Sin cobertura se confirma como hoy.
-- **AC-14** Frontend: el detalle muestra el rechazo con `detail` y, para configuración faltante, la lista de `issues` y el enlace a la configuración de Ventas; es/en/pt, accesible, usable a 375 px y en tema oscuro.
+- **AC-01** Configuración: la configuración de Ventas ofrece **Anticipos de clientes** (Pasivo; sin código ni id fijo). Una cuenta ajena, inactiva o que no es de Pasivo → 400. El panel muestra el rol y los eventos «Cobrar un pedido por adelantado», «Reconocer la entrega de un pedido» y «Cobrar una venta»; el reconocimiento al confirmar ya no se muestra.
+- **AC-02** NUEVO: crear/editar sin asiento; cobrar → 409 `order_not_confirmed` (con cobertura), sin cobertura como antes.
+- **AC-03** Confirmar y marcar listo no crean asientos ni exigen configuración; ningún estado exige pagos.
+- **AC-04** Cobro en EN PREPARACIÓN o LISTO (parcial, completo, mixto): un asiento `SALE_ADVANCE` por pago con la cuenta de su método (300 en efectivo → Debe Caja 300 / Haber Anticipos 300); sin Anticipos o sin cuenta del método → 409 `posting_configuration_missing`; no se supera el saldo.
+- **AC-05** Entrega sin pagos previos (1.000): Debe Cuentas por cobrar 1.000 / Haber Ingresos 1.000.
+- **AC-06** Entrega con anticipo de 300: Debe Anticipos 300, Debe Cuentas por cobrar 700 / Haber Ingresos 1.000.
+- **AC-07** Entrega pagada completa por adelantado: Debe Anticipos 1.000 / Haber Ingresos 1.000; sin línea de cuentas por cobrar.
+- **AC-08** Entregar no mueve Caja/Bancos; reconoce el ingreso una sola vez; repetir la entrega o competir entre dos entregas no duplica el asiento ni aplica anticipos dos veces; un cobro concurrente con la entrega se serializa (queda como anticipo aplicado o como cobro posterior, nunca perdido).
+- **AC-09** Cobro tras la entrega (700 en banco): Debe Bancos 700 / Haber Cuentas por cobrar 700; no afecta Ingresos ni Anticipos. Venta de 25 sin anticipo cobrada al entregar: entrega (CxC 25 / Ingresos 25) y luego cobro (Caja 25 / CxC 25) → Caja 25, Ingresos 25, CxC 0; entregar sin cobrar deja la cuenta por cobrar pendiente.
+- **AC-10** Pedido con reconocimiento anterior (`SALE_RECOGNITION`): al entregar no se reconoce otra vez (sin asiento nuevo); sus cobros siguen Debe método / Haber CxC; cancelar sin cobros revierte su reconocimiento original.
+- **AC-11** Cancelar: pedido sin entregar y sin cobros → sin asiento; con cobros contabilizados → 409 `order_has_payments_posted`; entregado → sin cambio.
+- **AC-12** Total estable: con cobertura, productos/cantidades/descuento de un pedido confirmado → 409 `order_total_locked`; notas, cliente y fechas siguen editables; sin cobertura, como antes.
+- **AC-13** Transición: entregar con cobertura un pedido con algún cobro sin asiento → 409 `order_has_unposted_payments` (nada cambia); entregar sin cobertura un pedido con anticipos contabilizados → 409 `delivery_date_not_covered`; entregar sin cobertura sin anticipos → como antes, sin asiento; los pedidos entregados sin asiento se cobran por el libro anterior como antes. No se modifica ningún asiento histórico.
+- **AC-14** Atomicidad y validación previa: configuración incompleta, período cerrado o error del motor en un cobro o en la entrega → 409 accionable y no queda pago, entrega, salida de almacén ni asiento.
+- **AC-15** Sin Contabilidad o sin cobertura: sin asientos ni exigencias (cobros por el libro anterior si el módulo está habilitado).
+- **AC-16** Trazabilidad e integridad: anticipo con `origin_id` = id del pago, entrega con `origin_id` = id del pedido; aislamiento por empresa y permisos existentes.
+- **AC-17** Frontend: el detalle del pedido y el diálogo de entrega muestran los rechazos (`detail` e `issues`) con enlace a la configuración de Ventas; es/en/pt, accesible, usable a 375 px y en tema oscuro.
 
 ## Edge cases / Error cases
-- **EDGE-01** Pedido con total 0 (descuento = subtotal): se confirma sin asiento; no admite cobros (saldo 0).
-- **EDGE-07** (v2) Pedido NUEVO cobrado antes de la cobertura y confirmado después: se bloquea (AC-15); la salida es cancelarlo y crearlo de nuevo.
-- **EDGE-02** Pedido confirmado antes de la cobertura y cobrado después: camino actual, sin reconocimiento (no se «completa» retroactivamente).
-- **EDGE-03** Cobro con fecha anterior a la del reconocimiento: permitido si el período está abierto y hay cobertura.
-- **EDGE-04** Cuenta configurada que se deshabilita entre confirmar y cobrar: el cobro se bloquea con mensaje accionable; la reversión usa cuentas originales.
-- **EDGE-05** Reenvío de un cobro ya contabilizado (replay) responde 200 sin crear nada, aunque la configuración haya cambiado (idempotencia previa a la validación).
-- **EDGE-06** Método de pago sin cuenta de dinero configurada: `posting_configuration_missing` (con cobertura); sin cobertura, comportamiento actual (`payment_method_without_account` solo si el módulo está habilitado y camino anterior).
+- **EDGE-01** Pedido de total 0: se entrega sin asiento; no admite cobros.
+- **EDGE-02** Cobro en preparación/listo con fecha del cobro sin cobertura → 409 `payment_date_not_covered`.
+- **EDGE-03** Fecha de entrega efectiva en período cerrado o fuera de período → 409 `fiscal_period_unavailable`; nada cambia.
+- **EDGE-04** Cuenta configurada deshabilitada entre el anticipo y la entrega → 409 de configuración al entregar; la reversión de lo ya contabilizado usa cuentas originales.
+- **EDGE-05** Replay de un cobro (misma `idempotency_key`): 200 sin crear nada, aunque la configuración haya cambiado.
+- **EDGE-06** Método de pago inactivo o sin cuenta: mismo error de configuración (con cobertura).
+- **EDGE-07** Pedido entregado antes de la cobertura y cobrado después: libro anterior, sin asiento nuevo (histórico).
+- **EDGE-08** Cobros fuera de cobertura en un pedido que se confirma o prepara con cobertura: se rechaza la entrega con cobertura (AC-13); la salida (cobrar de nuevo o regularizar) es una **decisión pendiente** (ver TASK).
 
 ## Authorization / permissions
-Sin cambios: permisos y `required_modules = ('sales',)` existentes; la empresa sale del usuario autenticado (`company_id_from`). No hay endpoints nuevos.
+Sin cambios: permisos y `required_modules = ('sales',)`; la empresa sale del usuario autenticado. Configuración de cuentas: permiso por defecto de CONT-12.
 
 ## API contract
-Compatible hacia atrás; solo respuestas 409 nuevas con la forma existente `{code, detail}`:
-- **API-01** `POST /api/orders/<id>/prepare/` (confirmar): 409 `order_has_prior_payments` (v2), 409 `posting_configuration_missing` (`+ issues:[{code, subject, message}]`) o error del motor traducido.
-- **API-02** `POST /api/orders/<id>/payments/`: 409 `posting_configuration_missing`, `order_not_confirmed`, `payment_date_not_covered`, o error del motor; 200 en replay, 201 al crear (sin cambios).
-- **API-03** `POST/PATCH/DELETE` de ítems y `POST discount/`: 409 `order_total_locked` (solo pedido reconocido).
-- **API-04** `POST /api/orders/<id>/cancel/`: 409 `order_has_payments_posted` (solo reconocido con cobros).
-Sin cambios en las rutas de configuración de CONT-12.
+Compatible hacia atrás; solo respuestas 409 con la forma existente `{code, detail}` (+ `issues` en configuración):
+- **API-01** `POST /api/orders/<id>/prepare/` y `.../ready/`: sin errores contables nuevos (se eliminan `posting_configuration_missing` y `order_has_prior_payments` de v1/v2 en `prepare`).
+- **API-02** `POST /api/orders/<id>/payments/`: 409 `order_not_confirmed`, `posting_configuration_missing`, `payment_date_not_covered`, `fiscal_period_unavailable`, `ledger_*`; 200 replay, 201 al crear.
+- **API-03** `POST /api/orders/<id>/deliver/`: 409 `posting_configuration_missing`, `order_has_unposted_payments`, `delivery_date_not_covered`, `fiscal_period_unavailable`, `ledger_*` (además de los existentes de stock).
+- **API-04** `POST/PATCH/DELETE` de ítems y `POST discount/`: 409 `order_total_locked`.
+- **API-05** `POST /api/orders/<id>/cancel/`: 409 `order_has_payments_posted`.
+- **API-06** Configuración (CONT-12): `GET /api/accounting/posting-config/?module=sales` incluye el rol `CUSTOMER_ADVANCES` y los eventos nuevos; `PUT .../roles/CUSTOMER_ADVANCES/` con la validación de Pasivo. Sin cambio de forma.
+- **Fachada:** `post_automatic_entry(..., advance_applied=None)` y `automatic_entry_origins(company_id, event, origin_ids)` (aditivas).
 
 ## UI behavior
-Según DDR (UI-01): alerta tenue en el detalle del pedido con `detail`/`issues` y enlace «Ir a Configuración de Ventas»; sin pantallas nuevas ni cambios en `design-system.md`.
+Según DDR (actualizado): sin pantallas nuevas; el diálogo de entrega y el detalle muestran los rechazos accionables; el panel de configuración se actualiza por datos.
+- **UI-01** Diálogo de entrega: `alert-error` con el mensaje del servidor y, para `posting_configuration_missing`, enlace a la configuración de Ventas.
+- **UI-02** Detalle del pedido: alerta con `issues` (ya implementada) para el cobro.
 
 ## Non-functional requirements
-Confirmar y cobrar ≤ consultas razonables (cobertura + resolución del evento ≤ 8 consultas añadidas por operación, sin N+1). Todo filtrado por `company_id`. Sin dependencias nuevas.
+Entrega o cobro: ≤ 10 consultas contables añadidas, sin N+1 por pago (una consulta para los orígenes de anticipos). Todo filtrado por `company_id`. Sin dependencias nuevas.
 
 ## Out of scope
-Costo de ventas e inventario (INV-01); reembolsos y devoluciones; anticipos de clientes; impuestos; conversión de divisas; asiento directo Caja/Ingresos; endpoint de verificación previa; migración de cobros históricos al motor; Servicios/Cobros (`receivables`); traducir los mensajes de Contabilidad.
+Costo de ventas e inventario contable; reembolsos, devoluciones y anulaciones de pedidos entregados; impuestos; conversión de divisas; acción «Entregar y cobrar» (no existe en la interfaz); migración o ajuste automático de asientos históricos; regularización de cobros sin asiento; traducción de los mensajes de Contabilidad; endpoint de verificación previa.
 
 ## Open questions
-- (No bloquea) ¿La fecha contable del reconocimiento debería ser `order_date` en lugar de la fecha de confirmación? Hoy: confirmación.
+- **Decisión pendiente (no bloquea):** ¿cómo se resuelven los pedidos con cobros fuera de cobertura que se entregan con cobertura (hoy se bloquean con 409)? Opciones: asiento manual de regularización del anticipo, reconocer solo el saldo, o registrar el cobro de nuevo.
+- **Decisión pendiente (no bloquea):** ¿qué tratamiento tienen los pedidos ya reconocidos al confirmar y cancelados con cobros? Hoy se bloquea la cancelación.
+- Criterio adoptado: la fecha contable de la entrega es la fecha de entrega efectiva; el bloqueo de total aplica con cobertura.
 
 # Test Specification
 
 ## Unit tests
-Comandos con puertos falsos (`sales/tests/fakes.py`): orden de operaciones, camino por reconocimiento, bloqueos de total, cancelación, replay, total 0.
+Dominio de Contabilidad (`domain/posting.py`, sin BD): catálogo con el rol y eventos nuevos, `extra_debit_role`, evento histórico oculto de `events_for`, `modules_using`. Comandos de Ventas con puertos falsos (`sales/tests/fakes.py`): ruteo de cobros, entrega con y sin anticipos, cancelaciones, bloqueos.
 
-## Integration tests (backend, `sales/tests/test_sales_posting.py` + ajustes)
-Con Contabilidad real (cuentas por rol, métodos, período abierto y `journal_balances`): AC-01, AC-02, AC-04, AC-05..AC-12 vía API; concurrencia con hilos (`TransactionTestCase`, patrón de `accounting/tests/test_concurrency.py`) para AC-03; aislamiento con dos empresas (AC-13). Ajustes a `test_payment_ledger.py` (camino anterior sin cobertura) y `test_boundaries.py` sin cambios (solo `services`). Fachada: prueba de `find_automatic_entry` en `accounting/tests/test_posting_service.py`.
+## Integration tests (backend)
+Contabilidad real (cuentas por rol, métodos, período abierto, `journal_balances`) en `sales/tests/test_sales_posting.py` (reescrito para v3): AC-02..AC-16, incluida concurrencia con hilos (`TransactionTestCase`) para AC-08. `accounting/tests/test_posting_service.py` y `test_posting_config_api.py`: AC-01, `post_automatic_entry` con `advance_applied`, `automatic_entry_origins`. Ajustes a `test_payment_ledger.py`, `test_unified_journey.py` (corte futuro, libro anterior) y a las pruebas de CONT-12 que listan los eventos de Ventas.
 
 ## Frontend tests
-Specs de `order-detail` y `order-payments` (alerta con `detail` e `issues`, enlace, reintento); `i18n:check`; `ng lint`, `ng build`, suite completa.
+Spec del diálogo de entrega con `posting_configuration_missing`, spec del detalle (cobro), `i18n:check`, lint, build, suite completa.
 
 ## E2E
-**NO** — el flujo se verifica por integración backend con Contabilidad real y specs de componentes; revisión visual en navegador (375 px, tema oscuro) durante la publicación.
+**NO** — el flujo se verifica por integración backend con Contabilidad real y specs de componentes; revisión visual en navegador durante la publicación.
 
 ## Regression tests
-Suites `sales`, `accounting`, `receivables`, `reporting`, `shared`/fronteras y frontend completa.
+Suites `sales`, `accounting`, `receivables`, `reporting`, `inventory` (salida al entregar), `shared` (fronteras) y frontend completa.
 
 ## Acceptance criteria mapping
 | AC | Verification |
 |---|---|
-| AC-01, AC-02, AC-04 | `test_sales_posting` (saldos por `journal_balances` y líneas de los asientos) |
-| AC-03 | `test_sales_posting` (replay y confirmación repetida) + prueba de concurrencia con hilos |
-| AC-05, AC-06, AC-07, AC-08, AC-09 | `test_sales_posting` vía API (409 con `code`, sin cambios ni asientos) |
-| AC-10 | `test_sales_posting` + `test_payment_ledger` (entradas del libro anterior vs asientos) |
-| AC-11 | `test_payment_ledger`/`test_api` existentes en verde + prueba sin módulo/sin cobertura |
-| AC-12 | `test_sales_posting` (entregar no crea asientos) |
-| AC-15 | `test_sales_posting.test_confirming_with_coverage_an_order_paid_before_it_is_rejected` |
-| AC-13 | `test_sales_posting` (dos empresas) |
-| AC-14 | specs de `order-detail`/`order-payments`, `i18n:check`, revisión visual |
+| AC-01 | `test_posting_config_api` + `test_posting_domain` (rol Pasivo, eventos visibles/ocultos) |
+| AC-02, AC-03 | `test_sales_posting` (NUEVO, confirmar, listo: sin asientos) |
+| AC-04 | `test_sales_posting` (anticipos parciales/mixtos, configuración faltante) |
+| AC-05, AC-06, AC-07 | `test_sales_posting` (saldos con `journal_balances` y líneas del asiento) |
+| AC-08 | `test_sales_posting` (reintento, entrega repetida) + concurrencia con hilos |
+| AC-09 | `test_sales_posting` (cobro posterior; ejemplo de 25) |
+| AC-10 | `test_sales_posting` (pedido con `SALE_RECOGNITION` sembrado: sin re-reconocer, cobros, cancelar) |
+| AC-11 | `test_sales_posting` (cancelar sin/con cobros, entregado) |
+| AC-12 | `test_sales_posting` (bloqueo con cobertura; sin cobertura libre) |
+| AC-13 | `test_sales_posting` (cobros sin asiento, fecha de entrega sin cobertura, histórico) |
+| AC-14 | `test_sales_posting` (período cerrado, cuenta deshabilitada, sin residuos) |
+| AC-15 | `test_sales_posting` + `test_payment_ledger` (sin módulo / corte futuro) |
+| AC-16 | `test_sales_posting` (`origin_id`, dos empresas) |
+| AC-17 | specs de `delivery-dialog`/`order-detail`, `i18n:check`, revisión visual |
 
 # Implementation Plan
 
 ## Architecture considerations
-Puerto `SalesPosting` en `sales/application`, adaptador en `sales/infrastructure/adapters.py`; dominio `Order` sin cambios; sin migraciones. Cumple `docs/architecture/ddd.md` (solo fachada `services`).
+Dominio de Contabilidad: catálogo ampliado y compatible; fachada aditiva; puerto `SalesPosting` de Ventas rediseñado (`recognition_state`, `locks_total`, `has_posted_payments`, `record_payment`, `recognize_delivery`, `reverse_recognition`). Dominio `Order` sin cambios. Sin migraciones. Cumple `docs/architecture/ddd.md`.
 
 ## Proposed solution
-Ver ADR §1-9.
+Ver ADR v2 (§1-§10).
 
 ## Files/components affected
-- Backend: `accounting/services.py` (+ `find_automatic_entry`, `__all__`) y su prueba; `sales/application/ports.py` (puerto), `commands.py` (Start/Add/Change/Remove/Discount/Cancel/Register), `sales/infrastructure/adapters.py` (`SalesPostingAdapter`, camino anterior detrás del puerto), `sales/api/views.py` (cablear adaptador; 409 con `issues`), `sales/tests/fakes.py` y pruebas nuevas/ajustadas.
-- Frontend: `features/sales/pages/order-detail`, `components/order-payments`, `models`/servicio (tipo del error con `issues`), `assets/i18n/{es,en,pt}.json`, specs.
-- Docs: TASK/ADR/DDR/PLAN; `docs/architecture/ddd.md` solo si cambia algo de fronteras (no se espera).
+- Backend `accounting/`: `domain/posting.py` (rol, eventos, `extra_debit_role`, `active`), `application/posting.py` (líneas extra en vista previa), `services.py` (`advance_applied`, `automatic_entry_origins`), tests.
+- Backend `sales/`: `application/ports.py`, `application/commands.py` (`StartOrderPreparation` sin contabilidad, `DeliverOrder`, `RegisterPayment`, `CancelOrder`, bloqueos), `infrastructure/adapters.py`, `api/views.py`, `tests/fakes.py` y pruebas.
+- Frontend: `features/sales/components/delivery-dialog` (+ spec), detalle del pedido (sin cambios de lógica), `assets/i18n/{es,en,pt}.json`.
+- Docs: TASK/ADR/DDR/PLAN.
 
 ## Implementation steps
-1. **Fachada**: `find_automatic_entry` en `accounting.services` + prueba. → INV-01/02.
-2. **Puerto y adaptador** `SalesPosting` (covers, recognize, is_recognized, record_payment, reverse_recognition; traducción de `PostingConfigurationMissing`, `JournalValidationError`, `JournalConflict`, `DateOutsideFiscalPeriod`/`FiscalPeriodClosed` a `OrderRuleViolation` con `issues`); camino anterior (`record_entry`) detrás del mismo puerto. → AC-05, AC-09, AC-10.
-3. **Reconocer al confirmar** (`StartOrderPreparation`): verificación previa → transición → asiento. → AC-01, AC-02, EDGE-01.
-4. **Cobro** (`RegisterPayment`): decidir camino, `order_not_confirmed`, asiento o entrada anterior, `payment_date_not_covered`. → AC-01..AC-04, AC-06, AC-09, AC-10.
-5. **Bloqueos**: total bloqueado en ítems/descuento; cancelar con reversión o rechazo. → AC-07, AC-08.
-6. **Vistas**: cablear `SalesPostingAdapter`, mapear `issues` en el 409. → API-01..04.
-7. **Pruebas backend** (AC-01..AC-13 incluyendo hilos) + `makemigrations --check` + flake8.
-8. **Frontend**: tipo de error con `issues`, alerta en detalle y pagos, enlace, i18n es/en/pt, specs. → AC-14.
-9. Lint, `i18n:check`, `ng build`, suites completas; revisión visual en publicación.
+1. **Catálogo** (INV-01/07, AC-01): rol `CUSTOMER_ADVANCES`, eventos `SALE_ADVANCE` y `SALE_DELIVERY` (`extra_debit_role`), `SALE_RECOGNITION` histórico oculto; vista previa de tres líneas; pruebas.
+2. **Fachada** (INV-02/03/05/07): `advance_applied`, `automatic_entry_origins`; pruebas de líneas y de importes cero.
+3. **Puerto y adaptador** (AC-04..AC-16): `recognition_state`, ruteo de cobros, entrega, cancelación, bloqueo de total, traducción de errores.
+4. **Comandos**: quitar contabilidad de confirmar; `DeliverOrder` con asiento en la misma transacción; `RegisterPayment` con ruteo; `CancelOrder`; bloqueos. → AC-02..AC-13.
+5. **Vistas**: cablear el adaptador en entregar. → API-01..05.
+6. **Pruebas backend** (reescribir `test_sales_posting`; ajustar las de CONT-12) + `makemigrations --check`.
+7. **Frontend**: diálogo de entrega (rechazos con enlace), specs, i18n. → AC-17.
+8. Lint, `i18n:check`, `ng build`, suites completas; revisión visual en publicación.
 
 ## Database / migrations
-Ninguna (`makemigrations --check` sin cambios). Nunca editar migraciones aplicadas.
+Ninguna (`makemigrations --check` sin cambios).
 
 ## Risks
-- Cambios de reglas de estado solo con cobertura: documentados y probados (AC-06..AC-08).
-- Coexistencia de libros: el camino por reconocimiento es determinista; prueba AC-10.
-- Concurrencia: apoyada en el bloqueo del pedido + idempotencia por pago; prueba con hilos (puede requerir `TransactionTestCase`).
-- Orden de la verificación previa respecto de la transición para no dejar el pedido a medio confirmar: la transacción de `_run` lo deshace.
+- Cambio de reglas ya implementadas en v1/v2: el código y las pruebas se reescriben; riesgo de regresión en `test_payment_ledger` y `test_unified_journey` (corte futuro).
+- Pedidos bloqueados en la transición (AC-13): requiere decisión de negocio posterior.
+- Primer evento con dos líneas de Debe: afecta la vista previa del panel y `modules_using`.
+- Concurrencia entrega/cobro: se apoya en el bloqueo de la fila del pedido; prueba con hilos.
 
 ## New dependencies
 Ninguna.
 
 ## Changelog
-- **v2** (2026-11-17): [Specification] AC-15, EDGE-07 y API-01: confirmar con cobertura un pedido con cobros previos se rechaza (409 `order_has_prior_payments`). Cambio **solicitado explícitamente por la persona en el chat** (opción A de REV-01). [Implementation Plan] sin cambios de pasos: la comprobación vive en `SalesPostingAdapter.recognize`.
+- **v1** (2026-11-17): versión inicial (reconocimiento al confirmar).
+- **v2** (2026-11-17): [Specification] AC-15 y EDGE-07: confirmar con cobertura un pedido con cobros previos se rechaza (`order_has_prior_payments`). Cambio solicitado por la persona (opción A de REV-01).
+- **v3** (2026-11-17): [Specification] El ingreso se reconoce **al entregar** y los cobros previos son **anticipos de clientes**: nuevo rol Pasivo `CUSTOMER_ADVANCES` y eventos `SALE_ADVANCE` y `SALE_DELIVERY`; confirmar y marcar listo no contabilizan; reglas de transición (pedidos con reconocimiento anterior, cobros sin asiento, entrega sin cobertura); se elimina `order_has_prior_payments` de `prepare` (v2/AC-15 reemplazado por AC-13). Los AC se renumeran (AC-01..AC-17). [Implementation Plan] pasos reescritos; `SALE_RECOGNITION` queda como evento histórico. Cambio **solicitado explícitamente por la persona en el chat** (instrucción de rediseño del flujo contable de Ventas). Reemplaza parcialmente el ADR de v1.

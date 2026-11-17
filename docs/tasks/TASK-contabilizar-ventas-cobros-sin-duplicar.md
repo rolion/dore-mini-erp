@@ -1,6 +1,6 @@
 # TASK-contabilizar-ventas-cobros-sin-duplicar: Contabilizar ventas y cobros por partida doble sin duplicar ingresos (VEN-01)
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-ventas-cobros-sin-duplicar
@@ -16,6 +16,7 @@
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-17 | REVIEW (corrección) | REV-01 resuelto por PLAN v2 (AC-15) aprobado por la persona; sin repetir el Gate | delivery-start / delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01..02 Medium y REV-03..09 Low abiertos) | delivery-publish |
+| 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido por la persona: reconocer al entregar y anticipos de clientes; PLAN v3, ADR nuevo | delivery-start |
 
 ## Investigación
 
@@ -42,6 +43,21 @@ Tarjeta Trello VEN-01 (insumo, no Specification aprobada). Aclaración de la per
 - **Cobertura:** `coverage_status` decide por fecha si una operación debe contabilizarse (módulo deshabilitado, anterior al corte o hueco ⇒ no) (`services.py:165-175`); `post_automatic_entry` es idempotente por `(empresa, evento, origin_id)` y su reintento no se revalida (`services.py:540-548`).
 - **Fronteras:** `ALLOWED_DEPENDENCIES['sales']` ya incluye `accounting` (`sales/tests/test_boundaries.py:15-20`); solo desde `infrastructure/adapters.py` y por `services`.
 - **Frontend:** detalle de pedido y componente de pagos en `features/sales/pages/order-detail` y `components/order-payments` (clave de idempotencia por formulario según `ADR-pagos-ventas-libro-entradas-integracion-e-idempotencia`); los 409 de Ventas tienen la forma `{code, detail}` (`views.py:65-69, 95-96`).
+
+### Actualización 2026-11-17 — reconocimiento al entregar y anticipos (PLAN v3)
+Instrucción de la persona (cambio de Specification explícito): el ingreso se reconoce al **entregar** (LISTO → ENTREGADO) y los cobros anteriores a la entrega son **anticipos de clientes** (rol nuevo de Pasivo, configurable). Confirmar y marcar listo no generan asiento; el total sigue estable tras confirmar; cobrar un pedido NUEVO sigue rechazado; los cobros previos: Debe Caja/Bancos / Haber Anticipos; la entrega: Haber Ingresos por el total, Debe Anticipos por los vigentes del pedido y Debe Cuentas por cobrar por el resto (sin líneas de importe cero); cobros posteriores: Debe Caja/Bancos / Haber Cuentas por cobrar; cancelar sin entregar y sin cobros: sin asiento, con cobros: `order_has_payments_posted`. Transición explícita para pedidos con reconocimiento anterior y para cobros fuera de cobertura. Sin pagos obligatorios y sin «Entregar y cobrar» (no existe en la interfaz).
+
+**Hechos nuevos (verificados en el código):**
+- `Event` solo admite una línea de Debe y una de Haber (`accounting/domain/posting.py:52-66`) y `post_automatic_entry` arma exactamente dos líneas (`accounting/services.py:556-560`): la entrega necesita una línea extra de Debe y omitir líneas de importe cero.
+- El panel y la API de configuración son dirigidos por datos (rol/eventos del catálogo): el rol y los eventos nuevos aparecen sin tocar el componente (`accounting/application/posting.py:157-189`, fixtures del panel).
+- `DeliverOrder` ya ejecuta el cambio de estado y la salida de almacén dentro de la transacción con la fila del pedido bloqueada (`sales/application/commands.py:166-197`, `sales/api/views.py:234-241`); el asiento de entrega se suma ahí.
+- El estado contable de un pedido se puede deducir del libro por origen (`find_automatic_entry`, `services.py`), sin bandera ni migración: `SALE_RECOGNITION` ⇒ reconocido al confirmar (histórico), `SALE_DELIVERY` ⇒ reconocido al entregar.
+- No existe una acción «Entregar y cobrar» en el frontend ni en el backend (búsqueda en `features/sales` y `modules/sales`).
+- Pedidos entregados no se cancelan (`OPEN_STATUSES`, `sales/domain/order.py:30`, `345-353`).
+
+**Decisiones adoptadas por criterio (documentadas en ADR v2/PLAN v3):** fecha contable de la entrega = fecha de entrega efectiva; bloqueo de total con cobertura y estado ≠ NUEVO; ruteo de cada cobro por el estado contable del pedido; los casos sin tratamiento definido se **bloquean** con error claro (`order_has_unposted_payments`, `delivery_date_not_covered`).
+
+**Decisiones pendientes (no bloquean):** tratamiento de pedidos con cobros fuera de cobertura entregados con cobertura (hoy bloqueados); tratamiento de pedidos ya reconocidos al confirmar y cancelados con cobros (hoy bloqueado).
 
 ### Hipótesis / supuestos no confirmados
 - La fecha contable del reconocimiento es la **fecha de confirmación** (`Clock.today()`), no `order_date`; la del cobro es `payment_date`. Si la persona necesitara reconocer en `order_date`, es un cambio de Specification.
@@ -83,12 +99,14 @@ Con Contabilidad habilitada, cada cobro crea una entrada de una cuenta (libro an
 `docs/design/DDR-contabilizar-ventas-cobros-sin-duplicar-errores-accionables-en-detalle-de-pedido.md`
 
 ## Arquitectura
-`docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-puerto-reconocimiento-y-cobro.md`
+`docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-reconocimiento-al-entregar-y-anticipos.md` (vigente; reemplaza parcialmente a `docs/adr/ADR-contabilizar-ventas-cobros-sin-duplicar-puerto-reconocimiento-y-cobro.md`)
 
 ## Plan
-`docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md` (v2, COMPLETO) · Specification readiness: READY
+`docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md` (v3, COMPLETO) · Specification readiness: READY
 
 ## Implementación
+> **Nota (2026-11-17):** esta sección, `## Review` y `## Publicación` describen la implementación de PLAN v1/v2 (reconocer al confirmar). PLAN v3 las reemplaza: se reescribirán tras implementar v3.
+
 Implementado según PLAN v1, sin cambios de Specification.
 
 - **Fachada** (`accounting/services.py`): `find_automatic_entry` (INV-01/02).

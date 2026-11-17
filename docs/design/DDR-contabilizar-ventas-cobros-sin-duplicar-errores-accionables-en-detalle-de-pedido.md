@@ -25,3 +25,9 @@ Sin diferencias por rol (mismo permiso por defecto que Ventas). **El backend es 
 
 ## Consecuencias
 Los mensajes de configuración faltante llegan en español desde Contabilidad (deuda declarada en CONT-12 REV-05). Sin patrón nuevo ni cambio en `design-system.md`.
+
+## Actualización 2026-11-17 (PLAN v3)
+El reconocimiento pasa de confirmar a **entregar**: los rechazos por configuración incompleta ya no ocurren al confirmar sino al **cobrar por adelantado** (falta Anticipos de clientes o la cuenta del método) y al **entregar** (faltan Cuentas por cobrar, Ingresos o Anticipos). Nuevos rechazos accionables: `order_has_unposted_payments` y `delivery_date_not_covered` (al entregar), además de los ya previstos. Sin pantallas nuevas:
+- **Detalle del pedido:** la alerta con `issues` y enlace (ya implementada) cubre el cobro; no cambia.
+- **Diálogo de entrega:** muestra el rechazo en su alerta de error existente (`alert-error`) con el mensaje del servidor; para `posting_configuration_missing` el mensaje reúne los faltantes y el diálogo añade el mismo enlace «Ir a la configuración de Ventas».
+- **Panel «Asientos automáticos» de Ventas:** muestra por datos del servidor el rol nuevo «Anticipos de clientes» y los eventos «Cobrar un pedido por adelantado», «Reconocer la entrega de un pedido» y «Cobrar una venta» (el reconocimiento al confirmar deja de mostrarse). Sin cambios de componente.
