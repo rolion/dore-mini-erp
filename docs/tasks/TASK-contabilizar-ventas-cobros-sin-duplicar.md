@@ -1,6 +1,6 @@
 # TASK-contabilizar-ventas-cobros-sin-duplicar: Contabilizar ventas y cobros por partida doble sin duplicar ingresos (VEN-01)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-ventas-cobros-sin-duplicar
@@ -14,6 +14,7 @@
 | 2026-11-17 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (lógica financiera, frontera Ventas↔Contabilidad, cambios de reglas de estado); 4 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
+| 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01..02 Medium y REV-03..09 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -103,7 +104,11 @@ Implementado según PLAN v1, sin cambios de Specification.
 **Deuda técnica / pendiente:** mensajes de configuración faltante solo en español (deuda de CONT-12 REV-05); sin endpoint de verificación previa; revisión visual en navegador pendiente para `delivery-publish`.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 1986 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; flake8/ruff no instalados (no realizado; revisión manual de líneas >120). Frontend: `npm run lint` OK, `i18n:check` 2178 claves y 0 faltantes, `npm run build` OK, `ng test` 1574 de 1574 OK; `npm audit` 2 moderate preexistentes (`hono`). Fronteras DDD, aislamiento por empresa y forma del 409 verificados. **Revisión visual: no verificada** (no se levantó la app).
+- REV-01 (Medium, SPECIFICATION; **abierto**): cobro de un pedido NEW antes de la cobertura (libro anterior) y confirmación posterior con cobertura reconoce el total completo; Cuentas por cobrar queda sobrestimada. Requiere decisión de negocio y aprobación para cambiar la Specification.
+- REV-02 (Medium, ARCHITECTURE; **abierto**): con Contabilidad deshabilitada tras reconocer, se levanta el bloqueo de total/cancelación; documentar o decidir política.
+- REV-03..09 (Low; **abiertos**): pruebas unitarias con puertos falsos, casos EDGE/AC sin prueba explícita, spec del cobro con `issues`, enlace sin pestaña, líneas >120, texto del ADR, parámetro sin uso.
+
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/87 (base `task/TASK-configurar-asientos-automaticos-modulo`, PR #86) listo para aprobación humana; no se mergea. Incluye ADR y cambios de reglas de estado de pedidos contabilizados: lo aprueba una persona. Pendiente de decisión: REV-01 y REV-02 (Medium). Revisión visual y flake8 no realizados.
