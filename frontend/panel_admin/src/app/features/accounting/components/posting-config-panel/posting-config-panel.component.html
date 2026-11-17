@@ -1,0 +1,229 @@
+<div class="p-3">
+  @if (loading && !config) {
+  <p class="m-3">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (loadError) {
+  <div class="m-3">
+    <div class="alert alert-danger" role="alert">{{ loadError }}</div>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else if (config) {
+  <h5 class="mb-1">{{ 'ACCOUNTING.POSTING.TITLE' | translate }}</h5>
+  <p class="text-muted mb-3">{{ 'ACCOUNTING.POSTING.INTRO' | translate: { p0: config.moduleLabel } }}</p>
+
+  @if (!config.accountingEnabled) {
+  <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="status" data-testid="posting-disabled">
+    {{ 'ACCOUNTING.POSTING.ACCOUNTING_DISABLED' | translate }}
+  </div>
+  } @else if (!config.ready) {
+  <div class="alert alert-warning" role="alert" data-testid="posting-missing">
+    <strong>{{ 'ACCOUNTING.POSTING.MISSING_TITLE' | translate: { p0: issues.length } }}</strong>
+    <ul class="mb-0 mt-1">
+      @for (issue of issues; track issue.message) {
+      <li>{{ issue.message }}</li>
+      }
+    </ul>
+  </div>
+  } @else {
+  <div class="alert alert-success bg-success-subtle text-success-emphasis border-success-subtle" role="status" data-testid="posting-ready">
+    {{ 'ACCOUNTING.POSTING.READY' | translate }}
+  </div>
+  }
+  <p class="small text-body-secondary">{{ 'ACCOUNTING.POSTING.FUTURE_ONLY' | translate }}</p>
+
+  @if (roleRows.length) {
+  <h6 class="mt-4">{{ 'ACCOUNTING.POSTING.ACCOUNTS' | translate }}</h6>
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table" data-testid="posting-roles">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.POSTING.ACCOUNTS' | translate }}</caption>
+      <tbody>
+        @for (row of roleRows; track row.key) {
+        <tr [attr.data-testid]="'row-' + row.key">
+          <th scope="row" class="fw-normal">
+            <label [for]="'sel-' + row.key" class="fw-bold mb-0">{{ 'ACCOUNTING.POSTING.ROLES.' + row.id | translate }}</label>
+            @if (row.sharedWith.length) {
+            <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.SHARED' | translate: { p0: row.sharedWith.join(', ') } }}</small>
+            }
+          </th>
+          <td>
+            <select class="form-select" [id]="'sel-' + row.key" [formControl]="row.control"
+              [class.is-invalid]="!!row.error" [attr.aria-invalid]="!!row.error">
+              <option value="">{{ 'ACCOUNTING.POSTING.NO_ACCOUNT' | translate }}</option>
+              @for (account of options(row); track account.id) {
+              <option [value]="account.id">{{ label(account) }}</option>
+              }
+            </select>
+            <small class="form-text text-body-secondary d-block">{{ hint(row) }}</small>
+            @if (!options(row).length) {
+            <small class="form-text text-warning-emphasis d-block" data-testid="no-options">
+              {{ 'ACCOUNTING.POSTING.NO_OPTIONS' | translate }}
+              <a routerLink="/pocketbiz/accounting/accounts">{{ 'ACCOUNTING.POSTING.MANAGE_ACCOUNTS' | translate }}</a>
+            </small>
+            }
+            @if (row.error) {
+            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            } @else if (row.issue && !isDirty(row)) {
+            <small class="form-text text-warning-emphasis d-block">{{ row.issue }}</small>
+            }
+          </td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-primary btn-sm" (click)="save(row)" [disabled]="!isDirty(row) || row.saving">
+              {{ (row.saving ? 'ACCOUNTING.POSTING.SAVING' : 'COMMON.GUARDAR') | translate }}
+            </button>
+            @if (row.saved && !isDirty(row)) {
+            <small class="ms-2 text-success-emphasis" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  @if (methodRows.length) {
+  <h6 class="mt-4">{{ 'ACCOUNTING.POSTING.METHODS' | translate }}</h6>
+  <p class="small text-body-secondary">{{ 'ACCOUNTING.POSTING.METHODS_HINT' | translate }}</p>
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table" data-testid="posting-methods">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.POSTING.METHODS' | translate }}</caption>
+      <tbody>
+        @for (row of methodRows; track row.key) {
+        <tr [attr.data-testid]="'row-' + row.key">
+          <th scope="row" class="fw-normal">
+            <label [for]="'sel-' + row.key" class="fw-bold mb-0">{{ row.label }}</label>
+            @if (!row.isActive) {
+            <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.METHOD_INACTIVE' | translate }}</small>
+            }
+          </th>
+          <td>
+            <select class="form-select" [id]="'sel-' + row.key" [formControl]="row.control"
+              [class.is-invalid]="!!row.error" [attr.aria-invalid]="!!row.error">
+              <option value="">{{ 'ACCOUNTING.POSTING.NO_ACCOUNT' | translate }}</option>
+              @for (account of options(row); track account.id) {
+              <option [value]="account.id">{{ label(account) }}</option>
+              }
+            </select>
+            @if (row.error) {
+            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            } @else if (row.issue && !isDirty(row)) {
+            <small class="form-text text-warning-emphasis d-block">{{ row.issue }}</small>
+            }
+          </td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-primary btn-sm" (click)="save(row)" [disabled]="!isDirty(row) || row.saving">
+              {{ (row.saving ? 'ACCOUNTING.POSTING.SAVING' : 'COMMON.GUARDAR') | translate }}
+            </button>
+            @if (row.saved && !isDirty(row)) {
+            <small class="ms-2 text-success-emphasis" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!options(methodRows[0]).length) {
+  <small class="form-text text-warning-emphasis d-block" data-testid="no-money-options">
+    {{ 'ACCOUNTING.POSTING.NO_OPTIONS_MONEY' | translate }}
+    <a routerLink="/pocketbiz/accounting/accounts">{{ 'ACCOUNTING.POSTING.MANAGE_ACCOUNTS' | translate }}</a>
+  </small>
+  }
+  }
+
+  @if (config.module === 'expenses') {
+  <h6 class="mt-4">{{ 'ACCOUNTING.POSTING.CATEGORIES' | translate }}</h6>
+  @if (!categoryRows.length) {
+  <p class="text-muted" data-testid="no-categories">{{ 'ACCOUNTING.POSTING.NO_CATEGORIES' | translate }}
+    <a routerLink="/pocketbiz/expenses/categories">{{ 'ACCOUNTING.POSTING.CREATE_CATEGORY' | translate }}</a></p>
+  } @else {
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table" data-testid="posting-categories">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.POSTING.CATEGORIES' | translate }}</caption>
+      <tbody>
+        @for (row of categoryRows; track row.key) {
+        <tr [attr.data-testid]="'row-' + row.key" [class.text-body-secondary]="!row.isActive">
+          <th scope="row" class="fw-normal">
+            <label [for]="'sel-' + row.key" class="fw-bold mb-0">{{ row.label }}</label>
+            @if (!row.isActive) {
+            <small class="d-block">{{ 'ACCOUNTING.POSTING.CATEGORY_INACTIVE' | translate }}</small>
+            }
+          </th>
+          <td>
+            <select class="form-select" [id]="'sel-' + row.key" [formControl]="row.control"
+              [class.is-invalid]="!!row.error" [attr.aria-invalid]="!!row.error">
+              <option value="">{{ 'ACCOUNTING.POSTING.NO_ACCOUNT' | translate }}</option>
+              @for (account of options(row); track account.id) {
+              <option [value]="account.id">{{ label(account) }}</option>
+              }
+            </select>
+            @if (row.error) {
+            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            } @else if (row.issue && !isDirty(row)) {
+            <small class="form-text text-warning-emphasis d-block">{{ row.issue }}</small>
+            }
+          </td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-primary btn-sm" (click)="save(row)" [disabled]="!isDirty(row) || row.saving">
+              {{ (row.saving ? 'ACCOUNTING.POSTING.SAVING' : 'COMMON.GUARDAR') | translate }}
+            </button>
+            @if (row.saved && !isDirty(row)) {
+            <small class="ms-2 text-success-emphasis" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+  }
+
+  <h6 class="mt-4">{{ 'ACCOUNTING.POSTING.PREVIEW' | translate }}</h6>
+  <div class="row g-3">
+    @for (event of config.events; track event.code) {
+    <div class="col-12 col-xl-6">
+      <div class="card h-100 border" [attr.data-testid]="'event-' + event.code">
+        <div class="card-body">
+          <h6 class="card-title">{{ 'ACCOUNTING.POSTING.EVENTS.' + event.code | translate }}</h6>
+          <div class="table-responsive">
+            <table class="table table-sm mb-0 preview-table">
+              <caption class="visually-hidden">{{ 'ACCOUNTING.POSTING.EVENTS.' + event.code | translate }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col" class="side-col">{{ 'ACCOUNTING.POSTING.SIDE' | translate }}</th>
+                  <th scope="col">{{ 'ACCOUNTING.POSTING.ACCOUNT' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of event.preview; track line.side) {
+                <tr>
+                  <th scope="row" class="fw-normal">{{ (line.side === 'DEBIT' ? 'ACCOUNTING.POSTING.DEBIT' : 'ACCOUNTING.POSTING.CREDIT') | translate }}</th>
+                  <td>
+                    @if (line.status === 'by_method') {
+                    <span class="text-body-secondary">{{ 'ACCOUNTING.POSTING.BY_METHOD' | translate }}</span>
+                    } @else if (line.status === 'by_category') {
+                    <span class="text-body-secondary">{{ 'ACCOUNTING.POSTING.BY_CATEGORY' | translate }}</span>
+                    } @else {
+                    @let shown = previewAccount(line);
+                    @if (shown.state === 'ok') {
+                    <span>{{ shown.text }}</span>
+                    } @else if (shown.state === 'invalid') {
+                    <span class="text-warning-emphasis">{{ shown.text }} · {{ 'ACCOUNTING.POSTING.NOT_VALID' | translate }}</span>
+                    } @else {
+                    <span class="text-warning-emphasis">{{ 'ACCOUNTING.POSTING.UNCONFIGURED' | translate }}</span>
+                    }
+                    <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.ROLES.' + line.role | translate }}</small>
+                    }
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>

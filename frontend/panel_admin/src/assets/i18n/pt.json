@@ -50,7 +50,8 @@
       "TEXT": "Despesas",
       "LIST": {
         "EXPENSE": "Despesas",
-        "CATEGORY": "Categorias"
+        "CATEGORY": "Categorias",
+        "SETTINGS": "Configuração"
       }
     },
     "REPORTS": {
@@ -745,6 +746,9 @@
       "OTRO": "Outro",
       "VIGENTE": "Vigente",
       "ANULADO": "Anulado"
+    },
+    "SETTINGS": {
+      "TITLE": "Configuração de Despesas"
     }
   },
   "INVENTORY": {
@@ -2893,6 +2897,69 @@
       "SIN_REGISTROS": "Sem registros",
       "VER_MOVIMIENTOS": "Ver movimentos de {{name}}",
       "NOTA_APERTURA": "Os saldos vêm somente dos lançamentos. Com “De”, mostra-se o saldo inicial anterior a essa data; as aberturas são registradas como lançamentos."
+    },
+    "POSTING": {
+      "TAB": "Lançamentos automáticos",
+      "TITLE": "Lançamentos automáticos",
+      "INTRO": "Escolha as contas contábeis que {{p0}} usará em cada evento. Você verá o lançamento Débito/Crédito resultante.",
+      "ACCOUNTING_DISABLED": "A Contabilidade não está habilitada. Você pode deixar esta configuração preparada; nenhum lançamento é gerado enquanto estiver desabilitada e nada precisa ser configurado.",
+      "MISSING_TITLE": "Falta configurar {{p0}} conta(s). As operações integradas à Contabilidade não poderão ser confirmadas até completá-las:",
+      "READY": "Configuração completa.",
+      "FUTURE_ONLY": "As alterações valem apenas para novas operações; os lançamentos já registrados não são modificados.",
+      "ACCOUNTS": "Contas",
+      "NO_ACCOUNT": "Sem conta",
+      "HINT_MONEY": "Conta de Ativo do tipo Caixa, Banco ou Carteira, em BOB.",
+      "HINT_CLASS": "Conta de {{p0}}, em BOB.",
+      "SHARED": "Compartilhada com: {{p0}}.",
+      "NO_OPTIONS": "Não há contas ativas desta classificação.",
+      "NO_OPTIONS_MONEY": "Não há contas de dinheiro (Caixa, Banco ou Carteira) ativas em BOB.",
+      "MANAGE_ACCOUNTS": "Gerenciar contas",
+      "SAVING": "Salvando…",
+      "SAVED": "Salvo ✓",
+      "METHODS": "Conta de recebimento ou pagamento por método",
+      "METHODS_HINT": "O método de pagamento não é uma conta: escolha a conta Caixa ou Banco por onde o dinheiro entra ou sai. É compartilhada entre Vendas, Compras e Despesas.",
+      "METHOD_INACTIVE": "Método inativo",
+      "CATEGORIES": "Conta de despesa por categoria",
+      "NO_CATEGORIES": "Ainda não há categorias de despesa.",
+      "CREATE_CATEGORY": "Criar categoria",
+      "CATEGORY_INACTIVE": "Categoria inativa",
+      "PREVIEW": "Lançamentos previstos",
+      "SIDE": "Lado",
+      "ACCOUNT": "Conta",
+      "DEBIT": "Débito",
+      "CREDIT": "Crédito",
+      "BY_METHOD": "Depende do método de pagamento",
+      "BY_CATEGORY": "Depende da categoria da despesa",
+      "NOT_VALID": "não é mais válida",
+      "UNCONFIGURED": "Não configurada",
+      "ROLES": {
+        "SALES_INCOME": "Receitas de vendas",
+        "SERVICE_INCOME": "Receitas de serviços",
+        "RECEIVABLE": "Contas a receber",
+        "INVENTORY": "Estoque",
+        "COST_OF_SALES": "Custo das vendas",
+        "PAYABLE": "Contas a pagar (fornecedores)",
+        "MONEY": "Caixa ou banco do método de pagamento",
+        "EXPENSE_BY_CATEGORY": "Conta de despesa da categoria"
+      },
+      "EVENTS": {
+        "SALE_RECOGNITION": "Reconhecer uma venda",
+        "SALE_PAYMENT": "Receber uma venda",
+        "SERVICE_RECOGNITION": "Reconhecer um serviço",
+        "SERVICE_PAYMENT": "Receber um serviço",
+        "INVENTORY_SALE_COST": "Custo das vendas na saída de estoque",
+        "PURCHASE_RECOGNITION": "Reconhecer uma compra de mercadoria",
+        "PURCHASE_PAYMENT": "Pagar a um fornecedor",
+        "EXPENSE_RECORD": "Registrar uma despesa"
+      },
+      "CLASSES": {
+        "ASSET": "Ativo",
+        "LIABILITY": "Passivo",
+        "EQUITY": "Patrimônio",
+        "INCOME": "Receitas",
+        "EXPENSE": "Despesas",
+        "COST": "Custos"
+      }
     }
   }
 }

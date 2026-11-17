@@ -1,0 +1,10 @@
+@use '../../../inventory/components/inventory-table';
+
+.preview-table th,
+.preview-table td {
+  vertical-align: middle;
+}
+
+.side-col {
+  width: 6rem;
+}
