@@ -2939,7 +2939,7 @@
         "INVENTORY": "Inventory",
         "COST_OF_SALES": "Cost of sales",
         "PAYABLE": "Accounts payable (suppliers)",
-        "MONEY": "Cash or bank for the payment method",
+        "MONEY": "Asset account of the payment method",
         "EXPENSE_BY_CATEGORY": "Expense account of the category"
       },
       "EVENTS": {

@@ -2939,7 +2939,7 @@
         "INVENTORY": "Inventario",
         "COST_OF_SALES": "Costo de ventas",
         "PAYABLE": "Cuentas por pagar (proveedores)",
-        "MONEY": "Caja o banco del método de pago",
+        "MONEY": "Cuenta de Activo del método de pago",
         "EXPENSE_BY_CATEGORY": "Cuenta de gasto de la categoría"
       },
       "EVENTS": {

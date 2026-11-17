@@ -8,7 +8,7 @@
   </div>
   } @else if (config) {
   <h5 class="mb-1">{{ 'ACCOUNTING.POSTING.TITLE' | translate }}</h5>
-  <p class="text-muted mb-3">{{ 'ACCOUNTING.POSTING.INTRO' | translate: { p0: config.moduleLabel } }}</p>
+  <p class="text-body-secondary mb-3">{{ 'ACCOUNTING.POSTING.INTRO' | translate: { p0: config.moduleLabel } }}</p>
 
   @if (!config.accountingEnabled) {
   <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="status" data-testid="posting-disabled">
@@ -50,6 +50,9 @@
               <option value="">{{ 'ACCOUNTING.POSTING.NO_ACCOUNT' | translate }}</option>
               @for (account of options(row); track account.id) {
               <option [value]="account.id">{{ label(account) }}</option>
+              }
+              @if (staleOption(row); as stale) {
+              <option [value]="stale.id">{{ staleLabel(stale) }}</option>
               }
             </select>
             <small class="form-text text-body-secondary d-block">{{ hint(row) }}</small>
@@ -102,6 +105,9 @@
               @for (account of options(row); track account.id) {
               <option [value]="account.id">{{ label(account) }}</option>
               }
+              @if (staleOption(row); as stale) {
+              <option [value]="stale.id">{{ staleLabel(stale) }}</option>
+              }
             </select>
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
@@ -133,7 +139,7 @@
   @if (config.module === 'expenses') {
   <h6 class="mt-4">{{ 'ACCOUNTING.POSTING.CATEGORIES' | translate }}</h6>
   @if (!categoryRows.length) {
-  <p class="text-muted" data-testid="no-categories">{{ 'ACCOUNTING.POSTING.NO_CATEGORIES' | translate }}
+  <p class="text-body-secondary" data-testid="no-categories">{{ 'ACCOUNTING.POSTING.NO_CATEGORIES' | translate }}
     <a routerLink="/pocketbiz/expenses/categories">{{ 'ACCOUNTING.POSTING.CREATE_CATEGORY' | translate }}</a></p>
   } @else {
   <div class="table-responsive">
@@ -154,6 +160,9 @@
               <option value="">{{ 'ACCOUNTING.POSTING.NO_ACCOUNT' | translate }}</option>
               @for (account of options(row); track account.id) {
               <option [value]="account.id">{{ label(account) }}</option>
+              }
+              @if (staleOption(row); as stale) {
+              <option [value]="stale.id">{{ staleLabel(stale) }}</option>
               }
             </select>
             @if (row.error) {

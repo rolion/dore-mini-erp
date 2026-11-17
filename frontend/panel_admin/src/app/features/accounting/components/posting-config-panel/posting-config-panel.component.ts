@@ -6,7 +6,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Observable, finalize, forkJoin } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { Account, AccountClassCode, AccountingApiError, FLOW_CURRENCY } from '../../models/accounting';
-import { PostingCategory, PostingConfig, PostingIssue, PostingModule, PreviewLine, accountLabel } from '../../models/posting-config';
+import { PostingAccount, PostingCategory, PostingConfig, PostingIssue, PostingModule, PreviewLine, accountLabel } from '../../models/posting-config';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { PostingConfigApiService } from '../../services/posting-config-api.service';
 
@@ -24,6 +24,8 @@ export interface ConfigRow {
   isActive: boolean;
   /** Otros módulos que usan el mismo rol (se comparte la cuenta). */
   sharedWith: string[];
+  /** Cuenta guardada hoy (aunque ya no sea elegible: se muestra marcada en el selector). */
+  current: PostingAccount | null;
   control: FormControl<string>;
   original: string;
   issue: string | null;
@@ -89,6 +91,15 @@ export class PostingConfigPanelComponent implements OnInit {
 
   label(account: Account): string {
     return accountLabel(account);
+  }
+
+  /** La cuenta guardada que ya no es elegible (deshabilitada o reclasificada): el selector la muestra marcada en vez de quedar en blanco. */
+  staleOption(row: ConfigRow): PostingAccount | null {
+    return row.current && !this.options(row).some((a) => a.id === row.current?.id) ? row.current : null;
+  }
+
+  staleLabel(account: PostingAccount): string {
+    return `${accountLabel(account)} · ${tr('ACCOUNTING.POSTING.NOT_VALID')}`;
   }
 
   isDirty(row: ConfigRow): boolean {
@@ -190,18 +201,18 @@ export class PostingConfigPanelComponent implements OnInit {
     this.config = config;
     this.roleRows = config.roles.map((r) =>
       build(
-        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue },
+        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue, current: r.account },
         r.account?.id,
       ),
     );
     this.methodRows = config.methods.map((m) =>
-      build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', isActive: m.isActive, sharedWith: [], issue: m.issue }, m.account?.id),
+      build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', isActive: m.isActive, sharedWith: [], issue: m.issue, current: m.account }, m.account?.id),
     );
     const configured = new Map(config.categories.map((c) => [c.categoryId, c]));
     this.categoryRows = this.categories.map((category) => {
       const stored = configured.get(category.id);
       return build(
-        { kind: 'category', id: category.id, label: category.name, accountClass: 'EXPENSE', isActive: category.isActive, sharedWith: [], issue: stored?.issue ?? null },
+        { kind: 'category', id: category.id, label: category.name, accountClass: 'EXPENSE', isActive: category.isActive, sharedWith: [], issue: stored?.issue ?? null, current: stored?.account ?? null },
         stored?.account?.id,
       );
     });

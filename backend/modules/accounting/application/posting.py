@@ -124,7 +124,7 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, c
         if not mapping.is_active or mapping.account_id is None:
             return None, PostingIssue(
                 'method_unconfigured', role.code, subject, module,
-                f'Falta la cuenta Caja o Banco del método «{METHOD_LABELS[mapping.code]}». '
+                f'Falta la cuenta de Activo del método «{METHOD_LABELS[mapping.code]}». '
                 f'Configúrela en {location(module)}.')
         account_id = mapping.account_id
     else:
@@ -214,7 +214,7 @@ class DescribePostingConfig:
                 issue = None
                 if mapping.is_active:
                     issue = (account_problem(money, account, ctx.disabled) if account else
-                             'Falta la cuenta Caja o Banco de este método.')
+                             'Falta la cuenta de Activo de este método.')
                 rows.append(MethodRow(code, METHOD_LABELS[code], mapping.is_active, _info(account), issue))
             methods = tuple(rows)
         categories = ()

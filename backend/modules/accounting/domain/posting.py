@@ -44,7 +44,7 @@ ROLES: dict[str, Role] = {r.code: r for r in (
     Role('INVENTORY', 'Inventario', ASSET),
     Role('COST_OF_SALES', 'Costo de ventas', COST),
     Role('PAYABLE', 'Cuentas por pagar (proveedores)', LIABILITY),
-    Role('MONEY', 'Caja o banco del método de pago', ASSET, SOURCE_METHOD),
+    Role('MONEY', 'Cuenta de Activo del método de pago', ASSET, SOURCE_METHOD),
     Role('EXPENSE_BY_CATEGORY', 'Cuenta de gasto de la categoría', EXPENSE, SOURCE_CATEGORY),
 )}
 

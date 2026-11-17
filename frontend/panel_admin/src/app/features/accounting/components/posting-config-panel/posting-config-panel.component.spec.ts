@@ -139,6 +139,24 @@ describe('PostingConfigPanelComponent', () => {
     expect(el(fixture).querySelector('[data-testid="row-role:SALES_INCOME"]')!.textContent).toContain('está deshabilitada');
   });
 
+  it('keeps a saved account that is no longer eligible visible and marked in the selector (REV-11)', () => {
+    const config = salesConfig();
+    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada.' };
+    const fixture = create('sales', config);
+    const field = select(fixture, 'role:SALES_INCOME');
+    expect(field.value).toBe('old');
+    expect(field.selectedOptions[0].textContent).toContain('4100 · Vieja · ya no es válida');
+  });
+
+  it('reports a category whose saved account stopped being valid, by name (REV-13)', () => {
+    const config = expensesConfig();
+    config.categories = [{ categoryId: 'c1', account: { id: 'g9', code: '5100', name: 'Gasto luz', isActive: false }, issue: 'La cuenta «Gasto luz» está deshabilitada; elija otra o actívela en Cuentas.' }];
+    const fixture = create('expenses', config, ALL_ACCOUNTS, EXPENSE_CATEGORIES);
+    const warning = el(fixture).querySelector('[data-testid="posting-missing"]')!.textContent ?? '';
+    expect(warning).toContain('«Gasto luz» está deshabilitada');
+    expect(select(fixture, 'category:c1').selectedOptions[0].textContent).toContain('ya no es válida');
+  });
+
   it('tells which other modules share a role', () => {
     const fixture = create('sales', salesConfig());
     expect(el(fixture).querySelector('[data-testid="row-role:RECEIVABLE"]')!.textContent).toContain('Se comparte con: Cobros.');
