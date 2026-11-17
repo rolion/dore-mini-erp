@@ -51,7 +51,7 @@ from modules.accounting.domain.fiscal_period import FiscalPeriodConflict, Fiscal
 from modules.accounting.domain.regularization import HistoricalMapping, RegularizationInputError, parse_mapping
 from modules.accounting.infrastructure.adapters import (
     DjangoRegularizationLedger,
-    NoJournalPeriodUsage,
+    JournalPeriodUsage,
     ReceivablesPaymentSource,
     SalesPaymentSource,
 )
@@ -326,7 +326,7 @@ class FiscalPeriodDetailView(_ConfigView):
         serializer = FiscalPeriodUpdateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         periods = DjangoFiscalPeriodRepository(company_id_from(request))
-        period = _run(UpdateFiscalPeriod(periods, NoJournalPeriodUsage()), period_id, **serializer.validated_data)
+        period = _run(UpdateFiscalPeriod(periods, JournalPeriodUsage()), period_id, **serializer.validated_data)
         return Response(serialize_fiscal_period(period))
 
 

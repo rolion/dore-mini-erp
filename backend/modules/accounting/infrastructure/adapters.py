@@ -12,7 +12,11 @@ from modules.accounting.domain.entry import Entry
 from modules.accounting.domain.regularization import Item, SourcePayment
 from modules.accounting.domain.transition import EntryFact
 from modules.accounting.infrastructure.django.models import AccountModel, EntryModel, SettingsModel
-from modules.accounting.infrastructure.django.repositories import DjangoCoverageRepository, DjangoEntryRepository
+from modules.accounting.infrastructure.django.repositories import (
+    DjangoCoverageRepository,
+    DjangoEntryRepository,
+    DjangoJournalRepository,
+)
 from modules.receivables import services as receivables
 from modules.sales import services as sales
 
@@ -74,11 +78,11 @@ class DjangoRegularizationLedger:
         return result.created
 
 
-class NoJournalPeriodUsage:
-    """Todavía no hay asientos (motor CONT-02): ningún asiento queda fuera de un período. CONT-02 lo reemplaza."""
+class JournalPeriodUsage:
+    """Puerto `PeriodUsage` sobre el libro de asientos: cuenta los asientos del período que quedarían fuera del rango."""
 
     def entries_outside(self, company_id: UUID, period_id: UUID, start_date: date, end_date: date) -> int:
-        return 0
+        return DjangoJournalRepository(company_id).count_outside(period_id, start_date, end_date)
 
 
 class DjangoTransitionReader:
