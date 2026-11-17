@@ -21,6 +21,7 @@ from modules.accounting.domain.posting import (
     issue_invalid,
     issue_unconfigured,
     location,
+    money_account_problem,
     modules_using,
     roles_of,
     validate_account_for_role,
@@ -112,10 +113,15 @@ def _info(account: Account | None) -> AccountInfo | None:
     return AccountInfo(account.id, account.code, account.name, account.is_active) if account else None
 
 
-def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, category_label=''):
-    """`(account_id | None, issue | None)` de una línea del evento."""
+def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, category_label='', override=None):
+    """`(account_id | None, issue | None)` de una línea del evento.
+
+    `override`: cuenta elegida para esta operación; sustituye a la configurada y se valida contra el rol.
+    """
     module = event.module
-    if role.source == SOURCE_ROLE:
+    if override is not None:
+        account_id, subject = override, role.label
+    elif role.source == SOURCE_ROLE:
         account_id, subject = ctx.roles.get(role.code), role.label
         if account_id is None:
             return None, issue_unconfigured(role, module)
@@ -144,21 +150,24 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, c
                 'category_unconfigured', role.code, subject, module,
                 f'Falta la cuenta de gasto de la categoría{named}. Configúrela en {location(module)}.',
                 {'category': category_label})
-    problem = account_problem_info(role, ctx.accounts.get(account_id), ctx.disabled)
+    account = ctx.accounts.get(account_id)
+    problem = account_problem_info(role, account, ctx.disabled) or (
+        money_account_problem(role, account) if override is not None else None)
     if problem:
         return None, issue_invalid(role, subject, module, problem)
     return account_id, None
 
 
 def resolve_event(event: Event, ctx: Context, method=None, category_id=None, category_label='',
-                  skip_roles: frozenset[str] = frozenset()):
+                  skip_roles: frozenset[str] = frozenset(), overrides: dict[str, UUID] | None = None):
     """Cuentas por rol de un evento concreto (método/categoría de la operación) y los faltantes que impiden usarlo."""
     accounts: dict[str, UUID] = {}
     issues: list[PostingIssue] = []
     for _, role in event.lines:
         if role.code in skip_roles:
             continue
-        account_id, issue = _resolve_line(role, event, ctx, method, category_id, category_label)
+        account_id, issue = _resolve_line(role, event, ctx, method, category_id, category_label,
+                                          (overrides or {}).get(role.code))
         if issue:
             issues.append(issue)
         else:

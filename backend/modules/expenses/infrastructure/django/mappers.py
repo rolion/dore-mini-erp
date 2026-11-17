@@ -28,6 +28,9 @@ def expense_to_entity(model: ExpenseModel) -> Expense:
         status=ExpenseStatus(model.status),
         voided_at=model.voided_at,
         classification_id=model.classification_id,
+        expense_account_id=model.expense_account_id,
+        payment_account_id=model.payment_account_id,
+        idempotency_key=model.idempotency_key,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
@@ -45,4 +48,7 @@ def expense_to_values(expense: Expense) -> dict[str, object]:
         'status': expense.status.value,
         'voided_at': expense.voided_at,
         'classification_id': expense.classification_id,
+        'expense_account_id': expense.expense_account_id,
+        'payment_account_id': expense.payment_account_id,
+        'idempotency_key': expense.idempotency_key,
     }

@@ -8,12 +8,14 @@ from .views import (
     CategoryListCreateView,
     ExpenseDetailView,
     ExpenseListCreateView,
+    ExpensePostingOptionsView,
     ExpenseVoidView,
 )
 
 # Los ids van como `str` y la vista los convierte: un id mal formado responde 404 `{detail}`, no una página HTML.
 expense_urlpatterns = [
     path('', ExpenseListCreateView.as_view(), name='expense-list'),
+    path('posting-options/', ExpensePostingOptionsView.as_view(), name='expense-posting-options'),
     path('<str:expense_id>/', ExpenseDetailView.as_view(), name='expense-detail'),
     path('<str:expense_id>/void/', ExpenseVoidView.as_view(), name='expense-void'),
 ]

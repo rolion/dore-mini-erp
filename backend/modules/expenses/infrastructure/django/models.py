@@ -41,6 +41,10 @@ class ExpenseModel(models.Model):
     voided_at = models.DateTimeField(null=True, blank=True)
     # Instantánea de la clasificación al registrar el gasto; nula en gastos anteriores.
     classification_id = models.UUIDField(null=True, blank=True)
+    # Cuentas contables del asiento (UUID sin FK entre módulos); nulas si el gasto no se contabilizó.
+    expense_account_id = models.UUIDField(null=True, blank=True)
+    payment_account_id = models.UUIDField(null=True, blank=True)
+    idempotency_key = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -49,4 +53,6 @@ class ExpenseModel(models.Model):
         ordering = ['-expense_date', '-created_at', 'id']
         constraints = [
             models.CheckConstraint(condition=Q(amount__gt=0), name='expenses_expense_amount_gt_0'),
+            models.UniqueConstraint('company_id', 'idempotency_key', condition=Q(idempotency_key__isnull=False),
+                                    name='expenses_expense_company_idempotency_key_uniq'),
         ]

@@ -697,7 +697,14 @@
       "GASTO_ANULADO": "Despesa anulada",
       "ANULAR_EL_GASTO": "Anular a despesa \"{{p0}}\"?",
       "ESTE_GASTO_DEJARA_DE_SUMAR": "Esta despesa deixará de somar nos relatórios. Ela é mantida no histórico.",
-      "ANULAR_GASTO_2": "Anular despesa"
+      "ANULAR_GASTO_2": "Anular despesa",
+      "ASIENTO_CONTABLE": "Lançamento contábil",
+      "CONTABILIZADO": "Contabilizado",
+      "NO_CONTABILIZADO": "Sem lançamento contábil",
+      "DEBE": "Débito",
+      "HABER": "Crédito",
+      "VER_ASIENTO": "Ver lançamento",
+      "CORREGIR_ANULANDO": "Esta despesa está contabilizada. Para corrigir o valor, a data, a categoria, o método ou as contas, anule-a e registre-a novamente."
     },
     "EXPENSE_FORM": {
       "IR_A_CATEGORIAS": "Ir para Categorias",
@@ -717,7 +724,17 @@
       "PRIMERO_CREA_UNA_CATEGORIA": "Primeiro crie uma categoria",
       "GASTO_ACTUALIZADO": "Despesa atualizada",
       "GASTO_REGISTRADO": "Despesa registrada",
-      "EL_GASTO_ESTA_ANULADO_Y": "A despesa está anulada e não pode ser editada."
+      "EL_GASTO_ESTA_ANULADO_Y": "A despesa está anulada e não pode ser editada.",
+      "GASTO_CONTABILIZADO_AVISO": "Esta despesa já está contabilizada: o valor, a data, a categoria e a forma de pagamento não podem ser alterados. Para corrigi-los, anule a despesa e registre-a novamente.",
+      "CONTABILIDAD": "Contabilidade",
+      "CUENTA_DE_GASTO": "Conta de despesa",
+      "CUENTA_DE_PAGO": "Conta de pagamento (Caixa ou Banco)",
+      "POR_DEFECTO": "Padrão: {{account}}",
+      "ELIGE_UNA_CUENTA": "Escolha uma conta",
+      "CONFIGURAR_ASIENTOS": "Configurar lançamentos automáticos de Despesas",
+      "CUENTA": "Conta",
+      "DEBE": "Débito",
+      "HABER": "Crédito"
     },
     "EXPENSE_LIST": {
       "NUEVO_GASTO": "Nova despesa",

@@ -6,12 +6,7 @@ from django.test import SimpleTestCase
 
 from modules.expenses.application.commands import CreateExpense, SetCategoryClassification, UpdateExpense
 from modules.expenses.application.ports import ClassificationInfo
-from modules.expenses.domain.exceptions import (
-    INVALID,
-    NOT_CONFIGURED,
-    ExpenseClassificationError,
-    ExpenseValidationError,
-)
+from modules.expenses.domain.exceptions import ExpenseValidationError
 
 from .fakes import InMemoryCategoryRepository, InMemoryExpenseRepository
 
@@ -81,21 +76,16 @@ class AssociationTests(ClassificationTestCase):
 
 
 class CoverageTests(ClassificationTestCase):
-    def test_covered_without_association_blocks(self):  # AC-06
+    def test_covered_without_association_saves_with_an_empty_snapshot(self):  # GAS-01
         self.gateway.covered = True
-        with self.assertRaises(ExpenseClassificationError) as caught:
-            self.create()
-        self.assertEqual(caught.exception.code, NOT_CONFIGURED)
-        self.assertEqual(self.expenses.expenses, {})
+        self.assertIsNone(self.create().classification_id)
 
-    def test_covered_with_inactive_classification_blocks(self):  # AC-06
+    def test_covered_with_inactive_classification_saves_with_an_empty_snapshot(self):  # GAS-01
         info = self.gateway.add()
         self.associate(info)
         self.gateway.items[info.id] = ClassificationInfo(info.id, info.name, 'EXPENSE', False)
         self.gateway.covered = True
-        with self.assertRaises(ExpenseClassificationError) as caught:
-            self.create()
-        self.assertEqual(caught.exception.code, INVALID)
+        self.assertIsNone(self.create().classification_id)
 
     def test_uncovered_saves_without_snapshot_when_not_configured(self):  # AC-06
         self.assertIsNone(self.create().classification_id)
