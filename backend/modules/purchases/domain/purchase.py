@@ -436,6 +436,21 @@ class Purchase:
         return Receipt(id=receipt_id, purchase_id=self.id, receipt_date=when, user_id=user_id, user_name=user_name,
                        lines=lines)
 
+    def receipt_amount(self, receipt: Receipt, received_before: Mapping[UUID, Decimal]) -> Decimal:
+        """Importe que reconoce una recepción: lo recibido valorado al precio de la línea de la compra.
+
+        Se calcula como diferencia del subtotal acumulado de cada línea (`received_before` es lo ya recibido sin
+        esta recepción): la suma de las recepciones de una línea siempre es su subtotal, sin deriva de redondeo.
+        """
+        by_id = {item.id: item for item in self.items}
+        total = ZERO
+        for line in receipt.lines:
+            item = by_id[line.purchase_item_id]
+            before = received_before.get(item.id, ZERO)
+            after = compute_subtotal(before + line.quantity, item.unit_price)
+            total += after - compute_subtotal(before, item.unit_price)
+        return total
+
     def recompute_reception(self, received: Mapping[UUID, Decimal]) -> None:
         """Recalcula `reception_status` con lo recibido por las recepciones que siguen confirmadas."""
         self.reception_status = compute_reception_status(self.items, received)

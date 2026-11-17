@@ -18,7 +18,7 @@ from modules.purchases.domain.purchase import ZERO, Purchase, ReceiptLineDraft
 from modules.purchases.domain.receipt import Receipt
 from modules.purchases.domain.repositories import PurchaseRepository, ReceiptRepository
 
-from .ports import Actor, ProductCatalog, StockEntry, StockWarehouse
+from .ports import Actor, ProductCatalog, PurchasePosting, StockEntry, StockWarehouse
 
 WAREHOUSE_REQUIRED = 'Selecciona un almacén para los productos con control de stock.'
 WAREHOUSE_INVALID = 'El almacén no existe o está inactivo.'
@@ -55,16 +55,18 @@ def received_by_item(receipts: ReceiptRepository, purchase: Purchase) -> dict[UU
 class RegisterReception:
     """Registra una recepción de una compra confirmada y, con Inventario activo, las entradas de stock.
 
+    Con Contabilidad cubriendo la fecha, también reconoce la compra (Debe Inventario / Haber Cuentas por pagar).
     Todo ocurre en la transacción del llamador con la compra bloqueada: o se confirma todo o nada.
-    Repetir el mismo `receipt_id` devuelve la recepción ya registrada (`created=False`).
+    Repetir el mismo `receipt_id` devuelve la recepción ya registrada (`created=False`) sin tocar el asiento.
     """
 
     def __init__(self, purchases: PurchaseRepository, receipts: ReceiptRepository, products: ProductCatalog,
-                 stock: StockEntry):
+                 stock: StockEntry, posting: PurchasePosting | None = None):
         self.purchases = purchases
         self.receipts = receipts
         self.products = products
         self.stock = stock
+        self.posting = posting
 
     def execute(self, purchase_id: UUID, receipt_id: UUID, receipt_date: object, lines: Sequence[ReceiptLineInput],
                 warehouse_id: UUID | None, actor: Actor, today: date) -> tuple[Receipt, bool]:
@@ -79,11 +81,16 @@ class RegisterReception:
         fractions = allows_fractions_by_item(self.products, purchase)
         drafts = [ReceiptLineDraft(line.item_id, line.quantity, fractions.get(line.item_id, True))
                   for line in lines]
-        receipt = purchase.receive(receipt_id, receipt_date, today, self.receipts.received_totals(purchase_id),
-                                   drafts, actor.user_id, actor.user_name)
+        received_before = self.receipts.received_totals(purchase_id)
+        receipt = purchase.receive(receipt_id, receipt_date, today, received_before, drafts, actor.user_id,
+                                   actor.user_name)
         self._enter_stock(receipt, warehouse_id, actor)
         saved = self.receipts.save(receipt)
         self.purchases.save(purchase)
+        if self.posting is not None:
+            amount = purchase.receipt_amount(receipt, received_before)
+            if amount > 0:
+                self.posting.recognize_receipt(purchase, saved, amount, actor)
         return saved, True
 
     def _enter_stock(self, receipt: Receipt, warehouse_id: UUID | None, actor: Actor) -> None:
@@ -125,13 +132,16 @@ class RevertStockShortage(Exception):
 class RevertReception:
     """Revierte una recepción completa: sus entradas de stock (todas o ninguna) y el estado de la compra.
 
-    Con la compra bloqueada y en la transacción del llamador: o se revierte todo o nada. No toca los pagos.
+    Con la compra bloqueada y en la transacción del llamador: o se revierte todo o nada. No toca los pagos. Revierte
+    también el asiento de reconocimiento, si existe.
     """
 
-    def __init__(self, purchases: PurchaseRepository, receipts: ReceiptRepository, stock: StockEntry):
+    def __init__(self, purchases: PurchaseRepository, receipts: ReceiptRepository, stock: StockEntry,
+                 posting: PurchasePosting | None = None):
         self.purchases = purchases
         self.receipts = receipts
         self.stock = stock
+        self.posting = posting
 
     def execute(self, purchase_id: UUID, receipt_id: UUID, reason: object, actor: Actor, now: datetime) -> Receipt:
         purchase = self.purchases.get(purchase_id, for_update=True)
@@ -148,6 +158,8 @@ class RevertReception:
                 self.stock.reverse_entries(receipt.id, receipt.revert_reason, actor)
             except StockShortage as exc:
                 raise self._shortage(receipt, exc) from exc
+        if self.posting is not None:
+            self.posting.reverse_receipt(purchase, receipt, receipt.revert_reason, actor)
         self.receipts.mark_reverted(receipt)
         purchase.recompute_reception(self.receipts.received_totals(purchase_id))
         self.purchases.save(purchase)

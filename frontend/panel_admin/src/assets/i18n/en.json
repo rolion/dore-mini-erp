@@ -1458,6 +1458,8 @@
       "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\"."
     },
     "RECEPTION_DETAIL": {
+      "ASIENTO_CONTABLE": "Journal entry",
+      "SIN_ASIENTO_CONTABLE": "No journal entry",
       "DETALLE_DE_LA_RECEPCION": "Receipt details",
       "FECHA_DE_RECEPCION": "Receipt date",
       "REGISTRADA_POR": "Recorded by",
@@ -1480,6 +1482,8 @@
       "RECEPCION_REVERTIDA": "Receipt reversed"
     },
     "RECEPTION_FORM": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Purchases accounting setup is incomplete.",
+      "IR_A_CONFIGURACION_DE_COMPRAS": "Go to Purchases settings",
       "VOLVER_A_LA_COMPRA": "Back to the purchase",
       "RECEPCION_DE_LA_COMPRA": "Receipt of purchase {{p0}}",
       "FECHA_DE_RECEPCION": "Receipt date*",

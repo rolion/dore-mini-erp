@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from modules.purchases.application.ports import Actor
 from modules.purchases.application.receipt_commands import ReceiptLineInput, RegisterReception, RevertReception
 from modules.purchases.application.receipt_queries import GetReceipt, GetReceptionForm, ListReceipts
-from modules.purchases.infrastructure.adapters import ProductCatalogAdapter, StockEntryAdapter
+from modules.purchases.infrastructure.adapters import ProductCatalogAdapter, PurchasePostingAdapter, StockEntryAdapter
 from shared.tenancy import company_id_from
 
 from .pagination import SupplierPagination
@@ -22,6 +22,10 @@ from .receipt_serializers import (
 
 def _stock(request) -> StockEntryAdapter:
     return StockEntryAdapter(company_id_from(request))
+
+
+def _posting(request) -> PurchasePostingAdapter:
+    return PurchasePostingAdapter(company_id_from(request))
 
 
 def _actor(request) -> Actor:
@@ -52,13 +56,14 @@ class ReceiptListCreateView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         use_case = RegisterReception(_purchases(request), _receipts(request),
-                                     ProductCatalogAdapter(company_id_from(request)), _stock(request))
+                                     ProductCatalogAdapter(company_id_from(request)), _stock(request),
+                                     _posting(request))
         receipt, created = _run(
             use_case.execute, purchase_id=purchase_id, receipt_id=data['receipt_id'],
             receipt_date=data.get('receipt_date'), warehouse_id=data.get('warehouse_id'), actor=_actor(request),
             today=timezone.localdate(),
             lines=[ReceiptLineInput(line['item_id'], line['quantity']) for line in data.get('lines', [])])
-        detail = _run(GetReceipt(_purchases(request), _receipts(request), _stock(request)).execute,
+        detail = _run(GetReceipt(_purchases(request), _receipts(request), _stock(request), _posting(request)).execute,
                       purchase_id=purchase_id, receipt_id=receipt.id)
         return Response(receipt_representation(detail),
                         status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -68,7 +73,7 @@ class ReceiptDetailView(APIView):
     required_modules = REQUIRED_MODULES
 
     def get(self, request, purchase_id, receipt_id):
-        use_case = GetReceipt(_purchases(request), _receipts(request), _stock(request))
+        use_case = GetReceipt(_purchases(request), _receipts(request), _stock(request), _posting(request))
         return Response(receipt_representation(
             _run(use_case.execute, purchase_id=purchase_id, receipt_id=receipt_id)))
 
@@ -81,9 +86,9 @@ class ReceiptRevertView(APIView):
     def post(self, request, purchase_id, receipt_id):
         serializer = ReceiptRevertSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        _run(RevertReception(_purchases(request), _receipts(request), _stock(request)).execute,
+        _run(RevertReception(_purchases(request), _receipts(request), _stock(request), _posting(request)).execute,
              purchase_id=purchase_id, receipt_id=receipt_id, reason=serializer.validated_data.get('reason', ''),
              actor=_actor(request), now=timezone.now())
-        detail = _run(GetReceipt(_purchases(request), _receipts(request), _stock(request)).execute,
+        detail = _run(GetReceipt(_purchases(request), _receipts(request), _stock(request), _posting(request)).execute,
                       purchase_id=purchase_id, receipt_id=receipt_id)
         return Response(receipt_representation(detail))

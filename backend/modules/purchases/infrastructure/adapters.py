@@ -3,10 +3,13 @@
 Es el único lugar de Purchases que conoce a Catalog e Inventory, y solo por su `services.py`.
 """
 from collections.abc import Iterable
+from contextlib import contextmanager
 from uuid import UUID
 
 from datetime import date
 from decimal import Decimal
+
+from django.utils import timezone
 
 from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
@@ -14,15 +17,18 @@ from modules.inventory import services as inventory_services
 from modules.purchases.application.ports import (
     Actor,
     ClassificationInfo,
+    PostedEntry,
     ProductInfo,
     StockEntryMovement,
     StockProductInfo,
     StockWarehouse,
 )
-from modules.purchases.domain.exceptions import PurchaseValidationError, StockShortage
+from modules.purchases.domain.exceptions import PostingRejected, PurchaseValidationError, StockShortage
 from shared import module_gate
 
 INVENTORY_MODULE = 'inventory'
+ACCOUNTING_MODULE = 'accounting'
+PURCHASE_RECOGNITION = 'PURCHASE_RECOGNITION'
 
 
 class ProductCatalogAdapter:
@@ -116,3 +122,57 @@ class AccountingClassifications:
 
     def is_covered(self, on: date) -> bool:
         return accounting_services.coverage_status(self.company_id, on).covered
+
+
+class PurchasePostingAdapter:
+    """Contabiliza la recepción de mercadería en Contabilidad (solo por su fachada), si está habilitada."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+        self._available: bool | None = None
+
+    def is_available(self) -> bool:
+        if self._available is None:
+            self._available = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE)
+        return self._available
+
+    def recognize_receipt(self, purchase, receipt, amount: Decimal, actor: Actor) -> None:
+        if not self.is_available():
+            return
+        with _posting_errors():
+            accounting_services.post_automatic_entry(
+                self.company_id, PURCHASE_RECOGNITION, receipt.id, receipt.receipt_date,
+                f'Compra {purchase.reference} - recepcion {receipt.reference}', amount,
+                created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def reverse_receipt(self, purchase, receipt, reason: str, actor: Actor) -> None:
+        if not self.is_available():
+            return
+        with _posting_errors():
+            accounting_services.reverse_automatic_entry(
+                self.company_id, PURCHASE_RECOGNITION, receipt.id, timezone.localdate(),
+                f'Recepcion {receipt.reference} de la compra {purchase.reference} revertida: {reason}',
+                created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def entry_for(self, receipt_id: UUID) -> PostedEntry | None:
+        entry = accounting_services.find_automatic_entry(self.company_id, PURCHASE_RECOGNITION, receipt_id)
+        return None if entry is None else PostedEntry(entry.id, entry.accounting_date, entry.total)
+
+
+@contextmanager
+def _posting_errors():
+    """Traduce los rechazos del motor y de la configuración a errores de Compras (409 accionables)."""
+    try:
+        yield
+    except accounting_services.PostingConfigurationMissing as exc:
+        issues = [{'code': i.code, 'role': i.role, 'subject': i.subject, 'message': i.message, 'params': i.params}
+                  for i in exc.issues]
+        raise PostingRejected('posting_configuration_missing', '; '.join(i['message'] for i in issues),
+                              {'issues': issues}) from exc
+    except (accounting_services.FiscalPeriodClosed, accounting_services.DateOutsideFiscalPeriod) as exc:
+        raise PostingRejected('fiscal_period_unavailable', str(exc)) from exc
+    except accounting_services.JournalValidationError as exc:
+        message = next((m[0] for m in exc.errors.values() if m), 'datos no validos.')
+        raise PostingRejected('ledger_rejected', 'Contabilidad rechazo el asiento: ' + message) from exc
+    except accounting_services.JournalConflict as exc:
+        raise PostingRejected('ledger_conflict', str(exc)) from exc

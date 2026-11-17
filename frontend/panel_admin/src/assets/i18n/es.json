@@ -1458,6 +1458,8 @@
       "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra»."
     },
     "RECEPTION_DETAIL": {
+      "ASIENTO_CONTABLE": "Asiento contable",
+      "SIN_ASIENTO_CONTABLE": "Sin asiento contable",
       "DETALLE_DE_LA_RECEPCION": "Detalle de la recepción",
       "FECHA_DE_RECEPCION": "Fecha de recepción",
       "REGISTRADA_POR": "Registrada por",
@@ -1480,6 +1482,8 @@
       "RECEPCION_REVERTIDA": "Recepción revertida"
     },
     "RECEPTION_FORM": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar la contabilidad de Compras.",
+      "IR_A_CONFIGURACION_DE_COMPRAS": "Ir a la configuración de Compras",
       "VOLVER_A_LA_COMPRA": "Volver a la compra",
       "RECEPCION_DE_LA_COMPRA": "Recepción de la compra {{p0}}",
       "FECHA_DE_RECEPCION": "Fecha de recepción*",

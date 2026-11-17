@@ -1458,6 +1458,8 @@
       "AUN_NO_HAY_COMPRAS_CREA": "Ainda não há compras. Crie a primeira com \"Nova compra\"."
     },
     "RECEPTION_DETAIL": {
+      "ASIENTO_CONTABLE": "Lançamento contábil",
+      "SIN_ASIENTO_CONTABLE": "Sem lançamento contábil",
       "DETALLE_DE_LA_RECEPCION": "Detalhes do recebimento",
       "FECHA_DE_RECEPCION": "Data de recebimento",
       "REGISTRADA_POR": "Registrada por",
@@ -1480,6 +1482,8 @@
       "RECEPCION_REVERTIDA": "Recebimento estornado"
     },
     "RECEPTION_FORM": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar a contabilidade de Compras.",
+      "IR_A_CONFIGURACION_DE_COMPRAS": "Ir para a configuração de Compras",
       "VOLVER_A_LA_COMPRA": "Voltar à compra",
       "RECEPCION_DE_LA_COMPRA": "Recebimento da compra {{p0}}",
       "FECHA_DE_RECEPCION": "Data de recebimento*",

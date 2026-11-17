@@ -97,3 +97,32 @@ class ClassificationGateway(Protocol):
     def is_covered(self, on: date) -> bool:
         """¿Contabilidad debe crear movimiento para una operación con esa fecha efectiva?"""
         ...
+
+
+@dataclass(frozen=True)
+class PostedEntry:
+    """El asiento contable de una recepción (DTO de lectura)."""
+    id: UUID
+    accounting_date: date
+    total: Decimal
+
+
+class PurchasePosting(Protocol):
+    """Contabilización de la recepción de mercadería (COM-02); integración opcional con Contabilidad."""
+
+    def is_available(self) -> bool:
+        """¿Está habilitada Contabilidad? (solo para decidir si se muestra el asiento)."""
+        ...
+
+    def recognize_receipt(self, purchase, receipt, amount: Decimal, actor: Actor) -> None:
+        """Debe Inventario / Haber Cuentas por pagar por `amount`, dentro de la transacción del llamador.
+
+        Sin cobertura no hace nada; lanza `PostingRejected` si Contabilidad lo rechaza (configuración, período).
+        """
+        ...
+
+    def reverse_receipt(self, purchase, receipt, reason: str, actor: Actor) -> None:
+        """Revierte el asiento de la recepción con sus cuentas originales; sin asiento no hace nada."""
+        ...
+
+    def entry_for(self, receipt_id: UUID) -> PostedEntry | None: ...
