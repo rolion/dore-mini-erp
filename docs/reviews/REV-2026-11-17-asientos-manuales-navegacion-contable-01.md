@@ -1,6 +1,6 @@
 # REV-2026-11-17-asientos-manuales-navegacion-contable-01: Regularizar pagos históricos queda sin ningún enlace visible
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-17-asientos-manuales-navegacion-contable.md (v1)
@@ -19,3 +19,6 @@ La ruta existe en app.routes.ts, pero no hay ningún routerLink a ella. Solo Ent
 
 ## Evidence
 grep de 'accounting/regularization' en src/app (html/ts, sin specs): solo aparece la definición de ruta en app.routes.ts:150 y routes.json ya no contiene REGULARIZATION.
+
+## Resolución
+Corregido en delivery-build (2026-11-17): enlace a Regularizar en Configuración y redirección de marcadores `?tab=` antiguos, con pruebas.

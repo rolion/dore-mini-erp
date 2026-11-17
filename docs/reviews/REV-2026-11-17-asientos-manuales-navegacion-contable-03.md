@@ -1,6 +1,6 @@
 # REV-2026-11-17-asientos-manuales-navegacion-contable-03: Enlaces antiguos a /accounting/settings?tab=... caen en Clasificaciones sin aviso
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-asientos-manuales-navegacion-contable.md (v1)
@@ -19,3 +19,6 @@ initialTab() devuelve 'classes' para cualquier valor desconocido. Los enlaces in
 
 ## Evidence
 accounting-settings.component.ts: this.tabs.find(...) ?? 'classes'.
+
+## Resolución
+Corregido en delivery-build (2026-11-17): enlace a Regularizar en Configuración y redirección de marcadores `?tab=` antiguos, con pruebas.

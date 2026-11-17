@@ -93,9 +93,9 @@ Implementado según PLAN v1 (sin cambios de Specification).
 
 ## Review
 **Quality Gate: PASS** (subagente aislado, 2026-11-17). Backend: `accounting` 309 OK, `modularity`+`shared` 106 OK, `makemigrations --check` sin cambios, flake8 solo con 2 avisos preexistentes, bandit sin hallazgos. Frontend: lint OK, `i18n:check` 0 faltantes, `ng build` OK, suite completa 1533 OK. Todos los AC verificados salvo AC-09 parcial.
-- REV-01 (Medium, SPECIFICATION/frontend): «Regularizar pagos históricos» queda sin enlace visible (solo por URL); AC-09 pedía que siguiera accesible.
+- REV-01 (Medium, SPECIFICATION/frontend; **resuelto**, enlace en Configuración): «Regularizar pagos históricos» queda sin enlace visible (solo por URL); AC-09 pedía que siguiera accesible.
 - REV-02 (Low, PLAN): no se crearon `application/journal_queries.py` ni `test_journal_listing.py`; sin prueba de número de consultas.
-- REV-03 (Low, IMPLEMENTATION): enlaces antiguos `/accounting/settings?tab=methods|expenses|cutoff` caen en Clasificaciones.
+- REV-03 (Low, IMPLEMENTATION; **resuelto**, redirección de `?tab=`): enlaces antiguos `/accounting/settings?tab=methods|expenses|cutoff` caen en Clasificaciones.
 - Verificación visual en navegador: **no verificada**.
 
 ## Publicación
