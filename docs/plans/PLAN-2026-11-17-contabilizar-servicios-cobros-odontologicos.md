@@ -1,4 +1,4 @@
-# PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos (v1)
+# PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos (v1.1)
 
 **Task:** TASK-contabilizar-servicios-cobros-odontologicos · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-contabilizar-servicios-cobros-odontologicos-prestacion-y-errores-en-cobros.md` · `docs/adr/ADR-contabilizar-servicios-cobros-odontologicos-prestacion-asientos-y-enrutamiento-de-cobros.md`
