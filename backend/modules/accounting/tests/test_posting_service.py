@@ -37,12 +37,14 @@ class PostingBase(TestCase):
         self.banco = money_account(accounts, 'Banco', '110102')
         self.cxc = make_account(self.company.id, 'Cuentas por cobrar', 'ASSET', '112001')
         self.ingresos = make_account(self.company.id, 'Ingresos por ventas', 'INCOME', '410001')
+        self.anticipos = make_account(self.company.id, 'Anticipos de clientes', 'LIABILITY', '210001')
         self.gasto = make_account(self.company.id, 'Gasto de luz', 'EXPENSE', '510001')
         make_period(self.company.id, 'Año', TODAY - timedelta(days=200), TODAY + timedelta(days=100))
 
     def configure_sales(self):
         services.set_role_account(self.company.id, 'RECEIVABLE', self.cxc.id)
         services.set_role_account(self.company.id, 'SALES_INCOME', self.ingresos.id)
+        services.set_role_account(self.company.id, 'CUSTOMER_ADVANCES', self.anticipos.id)
 
     def configure_method(self, code, account):
         mappings = DjangoMethodMappingRepository(self.company.id)
@@ -288,10 +290,13 @@ class DescribeTests(PostingBase):
     def test_each_module_sees_only_its_events_with_a_debit_credit_preview(self):  # AC-01
         view = services.describe_posting_config(self.company.id, 'sales')
         self.assertTrue(view.accounting_enabled)
-        self.assertEqual([e.code for e in view.config.events], ['SALE_RECOGNITION', 'SALE_PAYMENT'])
+        self.assertEqual([e.code for e in view.config.events], ['SALE_ADVANCE', 'SALE_DELIVERY', 'SALE_PAYMENT'])
         self.assertEqual([(line.side, line.role, line.status) for line in view.config.events[0].preview],
-                         [('DEBIT', 'RECEIVABLE', 'missing'), ('CREDIT', 'SALES_INCOME', 'missing')])
-        self.assertEqual([line.status for line in view.config.events[1].preview], ['by_method', 'missing'])
+                         [('DEBIT', 'MONEY', 'by_method'), ('CREDIT', 'CUSTOMER_ADVANCES', 'missing')])
+        self.assertEqual([(line.side, line.role, line.status) for line in view.config.events[1].preview],
+                         [('DEBIT', 'RECEIVABLE', 'missing'), ('DEBIT', 'CUSTOMER_ADVANCES', 'missing'),
+                          ('CREDIT', 'SALES_INCOME', 'missing')])
+        self.assertEqual([line.status for line in view.config.events[2].preview], ['by_method', 'missing'])
         self.assertEqual(len(view.config.methods), 5)
         self.assertFalse(view.config.ready)
         self.assertEqual([e.code for e in services.describe_posting_config(self.company.id, 'inventory').config.events],
@@ -361,3 +366,83 @@ class FindTests(PostingBase):
         self.assertEqual(found.id, posted.entry.id)
         self.assertIsNone(services.find_automatic_entry(self.other.id, 'SALE_RECOGNITION', origin))
         self.assertIsNone(services.find_automatic_entry(self.company.id, 'SALE_PAYMENT', origin))
+
+
+class DeliveryEventTests(PostingBase):
+    """VEN-01: el evento de entrega aplica anticipos con una segunda línea de Debe y nunca genera líneas en cero."""
+
+    def deliver(self, amount, applied=None, origin=None):
+        return services.post_automatic_entry(self.company.id, 'SALE_DELIVERY', origin or uuid4(), TODAY, 'Entrega',
+                                             Decimal(amount), advance_applied=None if applied is None else Decimal(applied))
+
+    def lines(self, posted):
+        return sorted((line.account_id, line.debit, line.credit) for line in posted.entry.lines)
+
+    def test_without_advances_it_is_receivable_against_income(self):  # AC-05
+        services.set_role_account(self.company.id, 'RECEIVABLE', self.cxc.id)
+        services.set_role_account(self.company.id, 'SALES_INCOME', self.ingresos.id)  # sin Anticipos configurado
+        for applied in (None, '0'):
+            posted = self.deliver('1000.00', applied)
+            self.assertEqual(self.lines(posted), sorted([(self.cxc.id, Decimal('1000.00'), Decimal('0.00')),
+                                                         (self.ingresos.id, Decimal('0.00'), Decimal('1000.00'))]))
+
+    def test_with_an_advance_it_debits_advances_and_the_remaining_receivable(self):  # AC-06
+        self.configure_sales()
+        posted = self.deliver('1000.00', '300.00')
+        self.assertEqual(self.lines(posted), sorted([
+            (self.anticipos.id, Decimal('300.00'), Decimal('0.00')), (self.cxc.id, Decimal('700.00'), Decimal('0.00')),
+            (self.ingresos.id, Decimal('0.00'), Decimal('1000.00'))]))
+
+    def test_fully_prepaid_has_no_receivable_line_and_does_not_need_that_account(self):  # AC-07, INV-07
+        services.set_role_account(self.company.id, 'SALES_INCOME', self.ingresos.id)
+        services.set_role_account(self.company.id, 'CUSTOMER_ADVANCES', self.anticipos.id)  # sin CxC configurada
+        posted = self.deliver('1000.00', '1000.00')
+        self.assertEqual(len(posted.entry.lines), 2)
+        self.assertEqual(self.lines(posted), sorted([(self.anticipos.id, Decimal('1000.00'), Decimal('0.00')),
+                                                     (self.ingresos.id, Decimal('0.00'), Decimal('1000.00'))]))
+
+    def test_the_advances_account_is_required_only_when_advances_are_applied(self):  # AC-14
+        services.set_role_account(self.company.id, 'RECEIVABLE', self.cxc.id)
+        services.set_role_account(self.company.id, 'SALES_INCOME', self.ingresos.id)
+        with self.assertRaises(services.PostingConfigurationMissing) as caught:
+            self.deliver('1000.00', '300.00')
+        self.assertEqual([i.role for i in caught.exception.issues], ['CUSTOMER_ADVANCES'])
+        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_the_applied_amount_must_be_a_coherent_decimal(self):
+        self.configure_sales()
+        for applied in ('-1', '1000.01'):
+            with self.assertRaises(services.JournalValidationError):
+                self.deliver('1000.00', applied)
+        with self.assertRaises(services.JournalValidationError):
+            services.post_automatic_entry(self.company.id, 'SALE_DELIVERY', uuid4(), TODAY, 'x', Decimal('10'),
+                                          advance_applied=0.5)
+        with self.assertRaises(services.JournalValidationError):  # un evento de dos líneas no admite línea extra
+            services.post_automatic_entry(self.company.id, 'SALE_PAYMENT', uuid4(), TODAY, 'x', Decimal('10'),
+                                          method='CASH', advance_applied=Decimal('1'))
+
+    def test_repeating_the_delivery_does_not_apply_advances_twice(self):  # AC-08
+        self.configure_sales()
+        origin = uuid4()
+        first, again = self.deliver('1000.00', '300.00', origin), self.deliver('1000.00', '300.00', origin)
+        self.assertEqual((first.created, again.created, first.entry.id == again.entry.id), (True, False, True))
+        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id,
+                                                          origin_kind='SALE_DELIVERY').count(), 1)
+
+    def test_an_advance_is_money_against_the_advances_account(self):  # AC-04
+        self.configure_sales()
+        self.configure_method('CASH', self.caja)
+        posted = services.post_automatic_entry(self.company.id, 'SALE_ADVANCE', uuid4(), TODAY, 'Anticipo',
+                                               Decimal('300.00'), method='CASH')
+        self.assertEqual(self.lines(posted), sorted([(self.caja.id, Decimal('300.00'), Decimal('0.00')),
+                                                     (self.anticipos.id, Decimal('0.00'), Decimal('300.00'))]))
+
+    def test_origins_tells_which_payments_already_have_an_entry_in_this_company_only(self):  # AC-16
+        self.configure_sales()
+        self.configure_method('CASH', self.caja)
+        paid, unpaid = uuid4(), uuid4()
+        services.post_automatic_entry(self.company.id, 'SALE_ADVANCE', paid, TODAY, 'A', Decimal('1'), method='CASH')
+        self.assertEqual(services.automatic_entry_origins(self.company.id, 'SALE_ADVANCE', [paid, unpaid]), {paid})
+        self.assertEqual(services.automatic_entry_origins(self.other.id, 'SALE_ADVANCE', [paid]), set())
+        self.assertEqual(services.automatic_entry_origins(self.company.id, 'SALE_PAYMENT', [paid]), set())
+        self.assertEqual(services.automatic_entry_origins(self.company.id, 'SALE_ADVANCE', []), set())

@@ -41,6 +41,7 @@ ROLES: dict[str, Role] = {r.code: r for r in (
     Role('SALES_INCOME', 'Ingresos por ventas', INCOME),
     Role('SERVICE_INCOME', 'Ingresos por servicios', INCOME),
     Role('RECEIVABLE', 'Cuentas por cobrar', ASSET),
+    Role('CUSTOMER_ADVANCES', 'Anticipos de clientes', LIABILITY),
     Role('INVENTORY', 'Inventario', ASSET),
     Role('COST_OF_SALES', 'Costo de ventas', COST),
     Role('PAYABLE', 'Cuentas por pagar (proveedores)', LIABILITY),
@@ -56,19 +57,36 @@ class Event:
     label: str
     debit_role: str
     credit_role: str
+    # Segunda línea de Debe opcional (p. ej. los anticipos aplicados al reconocer la entrega de un pedido).
+    extra_debit_role: str | None = None
+    # `False`: evento histórico; sigue reconocido (cobrar, revertir) pero ya no se configura ni se muestra.
+    active: bool = True
 
     def __post_init__(self):
-        if len(self.code) > ORIGIN_KIND_MAX or self.debit_role not in ROLES or self.credit_role not in ROLES:
+        roles = (self.debit_role, self.credit_role, *([self.extra_debit_role] if self.extra_debit_role else []))
+        if len(self.code) > ORIGIN_KIND_MAX or any(role not in ROLES for role in roles):
             raise ValueError(f'Evento mal definido: {self.code}')
 
     @property
-    def lines(self) -> tuple[tuple[str, Role], tuple[str, Role]]:
-        return (DEBIT, ROLES[self.debit_role]), (CREDIT, ROLES[self.credit_role])
+    def lines(self) -> tuple[tuple[str, Role], ...]:
+        debits = [(DEBIT, ROLES[self.debit_role])]
+        if self.extra_debit_role:
+            debits.append((DEBIT, ROLES[self.extra_debit_role]))
+        return (*debits, (CREDIT, ROLES[self.credit_role]))
+
+    @property
+    def role_codes(self) -> tuple[str, ...]:
+        return tuple(role.code for _, role in self.lines)
 
 
 EVENTS: tuple[Event, ...] = (
-    Event('SALE_RECOGNITION', 'sales', 'Reconocer una venta', 'RECEIVABLE', 'SALES_INCOME'),
+    # Ventas (VEN-01): el ingreso se reconoce al entregar; lo cobrado antes es un anticipo de cliente.
+    Event('SALE_ADVANCE', 'sales', 'Cobrar un pedido por adelantado', 'MONEY', 'CUSTOMER_ADVANCES'),
+    Event('SALE_DELIVERY', 'sales', 'Reconocer la entrega de un pedido', 'RECEIVABLE', 'SALES_INCOME',
+          extra_debit_role='CUSTOMER_ADVANCES'),
     Event('SALE_PAYMENT', 'sales', 'Cobrar una venta', 'MONEY', 'RECEIVABLE'),
+    Event('SALE_RECOGNITION', 'sales', 'Reconocer una venta (al confirmar, histórico)', 'RECEIVABLE', 'SALES_INCOME',
+          active=False),
     Event('SERVICE_RECOGNITION', 'receivables', 'Reconocer un servicio', 'RECEIVABLE', 'SERVICE_INCOME'),
     Event('SERVICE_PAYMENT', 'receivables', 'Cobrar un servicio', 'MONEY', 'RECEIVABLE'),
     Event('INVENTORY_SALE_COST', 'inventory', 'Costo de ventas por salida de inventario', 'COST_OF_SALES',
@@ -87,7 +105,7 @@ def get_event(code: object) -> Event:
 
 
 def events_for(module: object) -> tuple[Event, ...]:
-    found = tuple(e for e in EVENTS if e.module == module)
+    found = tuple(e for e in EVENTS if e.module == module and e.active)
     if not found:
         raise PostingNotFound(str(module))
     return found
@@ -111,8 +129,8 @@ def roles_of(module: str, source: str) -> list[Role]:
 
 def modules_using(role_code: str) -> list[str]:
     """Módulos cuyos eventos usan el rol (para avisar que se comparte)."""
-    return [m for m in MODULE_LABELS if any(role_code in (e.debit_role, e.credit_role) for e in EVENTS
-                                            if e.module == m)]
+    return [m for m in MODULE_LABELS if any(role_code in e.role_codes for e in EVENTS
+                                            if e.module == m and e.active)]
 
 
 @dataclass(frozen=True)

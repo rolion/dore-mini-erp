@@ -18,6 +18,8 @@ from modules.customers import services as customer_services
 from modules.inventory import services as inventory_services
 from modules.modularity import services as modularity_services
 from modules.sales.application.ports import (
+    AT_CONFIRM,
+    AT_DELIVERY,
     Actor,
     CustomerInfo,
     ProductInfo,
@@ -40,7 +42,9 @@ CUSTOMERS_MODULE = 'customers'
 INVENTORY_MODULE = 'inventory'
 ACCOUNTING_MODULE = 'accounting'
 PAYMENT_CURRENCY = 'BOB'
-SALE_RECOGNITION = 'SALE_RECOGNITION'  # eventos del catálogo de Contabilidad (CONT-12)
+SALE_RECOGNITION = 'SALE_RECOGNITION'  # eventos del catálogo de Contabilidad (CONT-12 / VEN-01)
+SALE_ADVANCE = 'SALE_ADVANCE'
+SALE_DELIVERY = 'SALE_DELIVERY'
 SALE_PAYMENT = 'SALE_PAYMENT'
 
 logger = logging.getLogger(__name__)
@@ -173,8 +177,8 @@ class StockOutputAdapter:
 class SalesPostingAdapter:
     """Contabiliza Ventas en Contabilidad (solo por su fachada `services`), si el módulo está habilitado.
 
-    Reconocimiento al confirmar y un asiento por cobro (partida doble); los cobros de pedidos confirmados antes de la
-    cobertura siguen en el libro anterior (origen `PRODUCT`). Cada cobro sigue exactamente un camino.
+    Anticipos antes de entregar, reconocimiento al entregar y cobros contra Cuentas por cobrar; los cobros sin cobertura
+    de partida doble siguen en el libro anterior (origen `PRODUCT`). Cada cobro sigue exactamente un camino.
     """
 
     def __init__(self, company_id: UUID):
@@ -186,43 +190,83 @@ class SalesPostingAdapter:
             self._available = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE)
         return self._available
 
-    def is_recognized(self, order_id: UUID) -> bool:
-        return self._enabled() and accounting_services.find_automatic_entry(
-            self.company_id, SALE_RECOGNITION, order_id) is not None
+    def _covers(self, on: date) -> bool:
+        return accounting_services.coverage_status(self.company_id, on).covered
 
-    def recognize(self, order, actor: Actor, today: date) -> None:
+    def recognition_state(self, order_id: UUID) -> str | None:
         if not self._enabled():
-            return
-        if order.payments and accounting_services.coverage_status(self.company_id, today).covered:
-            # Cobros hechos sin cobertura (libro anterior o ninguno): reconocer el total los dejaría sin acreditar.
-            raise OrderRuleViolation(
-                'order_has_prior_payments',
-                'El pedido tiene cobros registrados antes de la cobertura contable y no puede confirmarse: su venta '
-                'se contabiliza al confirmar. Cancela el pedido y créalo de nuevo.')
-        with _posting_errors():
-            accounting_services.post_automatic_entry(
-                self.company_id, SALE_RECOGNITION, order.id, today, f'Venta {order.code}', order.total,
-                created_by=actor.user_id, created_by_name=actor.user_name)
+            return None
+        if accounting_services.find_automatic_entry(self.company_id, SALE_RECOGNITION, order_id) is not None:
+            return AT_CONFIRM
+        if accounting_services.find_automatic_entry(self.company_id, SALE_DELIVERY, order_id) is not None:
+            return AT_DELIVERY
+        return None
+
+    def locks_total(self, order) -> bool:
+        if not self._enabled():
+            return False
+        if self.recognition_state(order.id) == AT_CONFIRM:
+            return True
+        return order.status is not OrderStatus.NEW and self._covers(timezone.localdate())
+
+    def _posted(self, event: str, order) -> set[UUID]:
+        return accounting_services.automatic_entry_origins(self.company_id, event, [p.id for p in order.payments])
+
+    def has_posted_payments(self, order) -> bool:
+        if not self._enabled() or not order.payments:
+            return False
+        return bool(self._posted(SALE_ADVANCE, order) | self._posted(SALE_PAYMENT, order))
 
     def record_payment(self, order, payment, actor: Actor, today: date) -> None:
         if not self._enabled():
             return
-        if self.is_recognized(order.id):
-            with _posting_errors():
-                posted = accounting_services.post_automatic_entry(
-                    self.company_id, SALE_PAYMENT, payment.id, payment.payment_date, f'Cobro de la venta {order.code}',
-                    payment.amount, method=payment.payment_method.value, created_by=actor.user_id,
-                    created_by_name=actor.user_name)
-            if not posted.posted:
-                raise OrderRuleViolation(
-                    'payment_date_not_covered',
-                    'La fecha del cobro no tiene cobertura contable; usa una fecha posterior al corte de Contabilidad.')
+        if self.recognition_state(order.id) is not None:
+            self._post_payment(SALE_PAYMENT, order, payment, actor)  # Debe método / Haber Cuentas por cobrar
             return
-        if order.status is OrderStatus.NEW and accounting_services.coverage_status(self.company_id, today).covered:
-            raise OrderRuleViolation(
-                'order_not_confirmed', 'Confirma el pedido antes de registrar su cobro: la venta se contabiliza al '
-                                       'confirmarlo.')
+        if order.status is OrderStatus.NEW:
+            if self._covers(today):
+                raise OrderRuleViolation(
+                    'order_not_confirmed', 'Confirma el pedido antes de registrar su cobro.')
+        elif order.status in (OrderStatus.IN_PREPARATION, OrderStatus.READY) and self._covers(today):
+            self._post_payment(SALE_ADVANCE, order, payment, actor)  # Debe método / Haber Anticipos de clientes
+            return
         self._record_in_legacy_ledger(order.id, payment, actor)
+
+    def _post_payment(self, event: str, order, payment, actor: Actor) -> None:
+        with _posting_errors():
+            posted = accounting_services.post_automatic_entry(
+                self.company_id, event, payment.id, payment.payment_date, f'Cobro del pedido {order.code}',
+                payment.amount, method=payment.payment_method.value, created_by=actor.user_id,
+                created_by_name=actor.user_name)
+        if not posted.posted:
+            raise OrderRuleViolation(
+                'payment_date_not_covered',
+                'La fecha del cobro no tiene cobertura contable; usa una fecha posterior al corte de Contabilidad.')
+
+    def recognize_delivery(self, order, actor: Actor) -> None:
+        if not self._enabled() or order.total <= 0:
+            return
+        if self.recognition_state(order.id) == AT_CONFIRM:
+            return  # reconocido con la lógica anterior: no se reconoce otra vez
+        delivered_on = order.delivered_date
+        advances = self._posted(SALE_ADVANCE, order)
+        if not self._covers(delivered_on):
+            if advances:
+                raise OrderRuleViolation(
+                    'delivery_date_not_covered',
+                    'El pedido tiene anticipos contabilizados y la fecha de entrega no tiene cobertura contable; '
+                    'usa una fecha de entrega posterior al corte de Contabilidad.')
+            return
+        if any(payment.id not in advances for payment in order.payments):
+            raise OrderRuleViolation(
+                'order_has_unposted_payments',
+                'El pedido tiene cobros registrados sin asiento contable (hechos antes de la cobertura de '
+                'Contabilidad) y no puede entregarse hasta definir su tratamiento.')
+        applied = sum((payment.amount for payment in order.payments), Decimal('0'))
+        with _posting_errors():
+            accounting_services.post_automatic_entry(
+                self.company_id, SALE_DELIVERY, order.id, delivered_on, f'Entrega del pedido {order.code}', order.total,
+                advance_applied=applied, created_by=actor.user_id, created_by_name=actor.user_name)
 
     def reverse_recognition(self, order, reason: str, actor: Actor, today: date) -> None:
         if not self._enabled():
@@ -259,7 +303,8 @@ def _posting_errors():
     try:
         yield
     except accounting_services.PostingConfigurationMissing as exc:
-        issues = [{'code': i.code, 'subject': i.subject, 'message': i.message} for i in exc.issues]
+        issues = [{'code': i.code, 'role': i.role, 'subject': i.subject, 'message': i.message, 'params': i.params}
+                  for i in exc.issues]
         raise OrderRuleViolation('posting_configuration_missing', '; '.join(i['message'] for i in issues),
                                  {'issues': issues}) from exc
     except (accounting_services.FiscalPeriodClosed, accounting_services.DateOutsideFiscalPeriod) as exc:

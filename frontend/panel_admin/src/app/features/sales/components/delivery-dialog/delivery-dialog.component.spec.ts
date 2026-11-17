@@ -1,5 +1,6 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Subject, of, throwError } from 'rxjs';
 import { Order, OrderApiError, OrderRuleError } from '../../models/order';
@@ -36,7 +37,7 @@ describe('DeliveryDialogComponent', () => {
     modal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     TestBed.configureTestingModule({
       imports: [DeliveryDialogComponent],
-      providers: [...provideTestTranslations(), 
+      providers: [...provideTestTranslations(), provideRouter([]),
         { provide: OrdersApiService, useValue: api },
         { provide: NgbActiveModal, useValue: modal },
       ],
@@ -139,6 +140,18 @@ describe('DeliveryDialogComponent', () => {
     pending.complete();
     fixture.detectChanges();
     expect(component.saving).toBeFalse();
+  });
+
+  it('explains missing accounting configuration with a link to the settings and keeps the dialog open (409, VEN-01)', () => {
+    const issues = [{ code: 'role_unconfigured', subject: 'Ingresos por ventas', message: 'Falta configurar la cuenta «Ingresos por ventas».' }];
+    api.deliver.and.returnValue(throwError(() => new OrderRuleError('Falta configurar.', 'posting_configuration_missing', [], '', issues)));
+    setup();
+    component.confirm();
+    fixture.detectChanges();
+    expect(modal.close).not.toHaveBeenCalled();
+    expect(q('alert-error')).toBeNull();
+    expect(q('alert-posting-issues')?.textContent).toContain('Falta configurar la cuenta «Ingresos por ventas».');
+    expect(q('link-posting-settings')?.getAttribute('href')).toContain('/sales/settings');
   });
 
   it('keeps the dialog and the chosen data and shows the current balances after a 409 insufficient_stock (UI-04, AC-02)', () => {

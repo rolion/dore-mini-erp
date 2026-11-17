@@ -1,6 +1,6 @@
 # TASK-contabilizar-ventas-cobros-sin-duplicar: Contabilizar ventas y cobros por partida doble sin duplicar ingresos (VEN-01)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-ventas-cobros-sin-duplicar
@@ -17,6 +17,7 @@
 | 2026-11-17 | REVIEW (corrección) | REV-01 resuelto por PLAN v2 (AC-15) aprobado por la persona; sin repetir el Gate | delivery-start / delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01..02 Medium y REV-03..09 Low abiertos) | delivery-publish |
 | 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido por la persona: reconocer al entregar y anticipos de clientes; PLAN v3, ADR nuevo | delivery-start |
+| 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v3; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -105,22 +106,20 @@ Con Contabilidad habilitada, cada cobro crea una entrada de una cuenta (libro an
 `docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md` (v3, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-> **Nota (2026-11-17):** esta sección, `## Review` y `## Publicación` describen la implementación de PLAN v1/v2 (reconocer al confirmar). PLAN v3 las reemplaza: se reescribirán tras implementar v3.
+Implementado según **PLAN v3** (reconocer al entregar y anticipos de clientes), sin cambios adicionales de Specification. Las notas de implementación de v1/v2 (reconocer al confirmar) quedan reemplazadas.
 
-Implementado según PLAN v1, sin cambios de Specification.
+- **Catálogo de Contabilidad** (`accounting/domain/posting.py`; AC-01): rol `CUSTOMER_ADVANCES` (Pasivo, sin códigos ni IDs fijos), eventos `SALE_ADVANCE` y `SALE_DELIVERY` (primer evento con dos líneas de Debe: `Event.extra_debit_role`), `SALE_RECOGNITION` queda como evento histórico (`active=False`: no se muestra ni se configura, pero se reconoce para cobrar y revertir pedidos antiguos); `events_for`/`modules_using` ajustados. Resolución de cuentas solo para las líneas que existen (`resolve_event(..., skip_roles)`).
+- **Fachada** (`accounting/services.py`; INV-02/03/07, AC-06/07): `post_automatic_entry(..., advance_applied=None)` (línea extra y sin líneas de importe cero; valida coherencia del importe) y `automatic_entry_origins(...)` (una consulta, solo de la empresa; `DjangoJournalRepository.origins_with`). Sin migraciones.
+- **Puerto y adaptador de Ventas** (`sales/application/ports.py`, `sales/infrastructure/adapters.py`; AC-02..AC-16): `SalesPosting` rediseñado (`recognition_state`, `locks_total`, `has_posted_payments`, `record_payment`, `recognize_delivery`, `reverse_recognition`); estado contable deducido del libro (`AT_CONFIRM`/`AT_DELIVERY`), ruteo de cada cobro (cobro/anticipo/libro anterior), entrega con anticipos aplicados, bloqueos de transición (`order_has_unposted_payments`, `delivery_date_not_covered`) y traducción de errores del motor; los `issues` del 409 llevan `code`, `role`, `subject`, `message` y `params`.
+- **Comandos y vistas** (`commands.py`, `views.py`): `StartOrderPreparation` vuelve a no contabilizar; `DeliverOrder` reconoce en la misma transacción que la salida de almacén; `CancelOrder` bloquea con cobros contabilizados y revierte solo reconocimientos anteriores; el bloqueo de total usa `locks_total`.
+- **Frontend** (AC-17): el diálogo de entrega muestra los faltantes de configuración con enlace a la configuración de Ventas; el detalle del pedido ya lo hacía (v1). Panel de configuración sin cambios: muestra el rol y los eventos nuevos por datos.
+- **Pruebas:** `sales/tests/test_sales_posting.py` (reescrito: AC-02..AC-16 con Contabilidad real y concurrencia con hilos), `test_sales_posting_application.py` (comandos con puerto falso), `DeliveryEventTests` y ajustes en `accounting/tests/test_posting_*`; spec del diálogo de entrega.
 
-- **Fachada** (`accounting/services.py`): `find_automatic_entry` (INV-01/02).
-- **Puerto y adaptador** (`sales/application/ports.py`, `sales/infrastructure/adapters.py`): `SalesPosting` / `SalesPostingAdapter` reemplazan a `PaymentLedger`; reconocimiento, cobro por un único camino (asiento si el pedido está reconocido; libro anterior si es anterior a la cobertura), reversión y traducción de errores del motor (AC-01..AC-10).
-- **Comandos** (`sales/application/commands.py`): `StartOrderPreparation` reconoce al confirmar; `RegisterPayment` contabiliza antes de guardar; `AddOrderItem`/`ChangeOrderItemQuantity`/`RemoveOrderItem`/`ApplyOrderDiscount` bloquean el total reconocido (AC-07); `CancelOrder` revierte o rechaza con cobros (AC-08). `OrderRuleViolation` gana `extra` (para `issues`).
-- **Vistas** (`sales/api/views.py`): cablean el adaptador y exponen `extra` en el 409 (API-01..04).
-- **Frontend** (AC-14): `OrderRuleError.postingIssues`, alerta con enlace a la configuración de Ventas en el detalle (patrón de alerta existente; sin pantalla nueva), claves es/en/pt en `SALES.ORDER_DETAIL.*`.
-- **Pruebas:** `sales/tests/test_sales_posting.py` (AC-01..AC-13, con hilos), `FindTests` en `test_posting_service`, ajuste de `test_payment_ledger.py` (corte futuro para ejercitar el camino anterior); specs de `order-detail` y `orders-api.service`.
+**Desviaciones respecto al plan:** ninguna de alcance. Los `issues` del 409 incluyen además `role` y `params` (para que el cliente pueda traducirlos más adelante).
 
-**Desviaciones respecto al plan:** ninguna de alcance. `StartOrderPreparation`/`CancelOrder` reciben además `actor` (y `Clock`) para fechar y atribuir los asientos.
+**Verificación propia (no es el Quality Gate):** backend `manage.py test` 2018 OK (+8 de comandos con puerto falso), `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 2180 claves y 0 faltantes, suite completa 1590 OK, `ng build` OK.
 
-**Estado de verificación (propia, no es el Quality Gate):** backend `manage.py test` 1986 pruebas (las 2 que fallaron eran recorridos del libro anterior —`test_unified_journey` y `test_payment_ledger`— que ahora fijan un corte futuro para ejercitar ese camino; corregidas, `modules.sales` + recorrido en verde), `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 0 faltantes, suite completa 1574 OK.
-
-**Deuda técnica / pendiente:** mensajes de configuración faltante solo en español (deuda de CONT-12 REV-05); sin endpoint de verificación previa; revisión visual en navegador pendiente para `delivery-publish`.
+**Deuda técnica / pendiente:** decisiones pendientes de negocio (pedidos con cobros sin asiento entregados con cobertura; pedidos reconocidos al confirmar y cancelados con cobros: hoy se bloquean); mensajes de configuración faltante solo en español; el aviso de «método inactivo» y el panel de Ventas (REV-03..09 y mejora del mensaje) siguen pendientes; revisión visual pendiente para `delivery-publish`.
 
 ## Review
 **Quality Gate: PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 1986 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; flake8/ruff no instalados (no realizado; revisión manual de líneas >120). Frontend: `npm run lint` OK, `i18n:check` 2178 claves y 0 faltantes, `npm run build` OK, `ng test` 1574 de 1574 OK; `npm audit` 2 moderate preexistentes (`hono`). Fronteras DDD, aislamiento por empresa y forma del 409 verificados. **Revisión visual: no verificada** (no se levantó la app).

@@ -114,25 +114,37 @@ class StockOutput(Protocol):
     def output_for(self, order_id: UUID) -> StockOutputRecord | None: ...
 
 
+AT_CONFIRM = 'AT_CONFIRM'  # reconocido al confirmar (lógica anterior, histórico)
+AT_DELIVERY = 'AT_DELIVERY'  # reconocido al entregar
+
+
 class SalesPosting(Protocol):
-    """Integración opcional con Contabilidad: reconoce la venta, contabiliza cada cobro y revierte el reconocimiento.
+    """Integración opcional con Contabilidad: anticipos, reconocimiento al entregar, cobros y reversión.
 
     Todo ocurre dentro de la transacción de quien llama; rechaza la operación con una excepción de Ventas si no puede.
     Con el módulo deshabilitado o sin cobertura no hace nada nuevo (comportamiento anterior).
     """
 
-    def is_recognized(self, order_id: UUID) -> bool:
-        """¿El pedido ya tiene su asiento de reconocimiento (con Contabilidad habilitada)?"""
+    def recognition_state(self, order_id: UUID) -> str | None:
+        """`AT_CONFIRM`, `AT_DELIVERY` o `None` (sin reconocimiento o con Contabilidad deshabilitada)."""
         ...
 
-    def recognize(self, order: object, actor: Actor, today: date) -> None:
-        """Contabiliza el reconocimiento del pedido recién confirmado (total con descuento)."""
+    def locks_total(self, order: object) -> bool:
+        """¿El total del pedido debe permanecer estable (confirmado con cobertura o ya reconocido)?"""
+        ...
+
+    def has_posted_payments(self, order: object) -> bool:
+        """¿Algún cobro del pedido tiene asiento (anticipo o cobro)?"""
         ...
 
     def record_payment(self, order: object, payment: object, actor: Actor, today: date) -> None:
-        """Contabiliza un cobro por un único camino (asiento o, en pedidos anteriores a la cobertura, libro anterior)."""
+        """Contabiliza un cobro por un único camino (anticipo, cobro o, sin cobertura, libro anterior)."""
+        ...
+
+    def recognize_delivery(self, order: object, actor: Actor) -> None:
+        """Reconoce el ingreso al entregar y aplica los anticipos del pedido (una sola vez)."""
         ...
 
     def reverse_recognition(self, order: object, reason: str, actor: Actor, today: date) -> None:
-        """Revierte el reconocimiento del pedido con las cuentas originales."""
+        """Revierte el reconocimiento anterior (al confirmar) con las cuentas originales."""
         ...

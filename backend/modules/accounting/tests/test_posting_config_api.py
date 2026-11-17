@@ -59,7 +59,7 @@ class AssignTests(PostingApiBase):
         self.assertEqual(response.status_code, 200, response.data)
         self.assertEqual(response.data['account']['id'], income['id'])
         body = self.client_a.get(URL, {'module': 'sales'}).json()
-        credit = body['events'][0]['preview'][1]
+        credit = body['events'][1]['preview'][2]  # reconocer la entrega: Haber Ingresos
         self.assertEqual((credit['status'], credit['account']['name']), ('ok', 'Ingresos'))
         self.assertEqual(self.put_role(self.client_a, 'SALES_INCOME', None).data['account'], None)
 
@@ -92,11 +92,11 @@ class AssignTests(PostingApiBase):
 
     def test_issues_and_rows_expose_code_params_and_problem(self):  # REV-05
         body = self.client_a.get(URL, {'module': 'sales'}).json()
-        first = body['events'][0]['issues'][0]
+        first = next(i for i in body['events'][0]['issues'] if i['code'] == 'role_unconfigured')
         self.assertEqual((first['code'], first['role'], first['module'], first['problem']),
-                         ('role_unconfigured', 'RECEIVABLE', 'sales', None))
+                         ('role_unconfigured', 'CUSTOMER_ADVANCES', 'sales', None))
         self.assertIn('Configúrela en Ventas', first['message'])
-        method = next(i for i in body['events'][1]['issues'] if i['code'] == 'method_unconfigured')
+        method = next(i for i in body['events'][2]['issues'] if i['code'] == 'method_unconfigured')
         self.assertEqual(method['params'], {'method': 'Efectivo', 'method_code': 'CASH'})
         income = self.make(self.client_a, 'Ingresos viejos', 'INCOME')
         self.put_role(self.client_a, 'SALES_INCOME', income)

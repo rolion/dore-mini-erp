@@ -2,6 +2,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { EMPTY, catchError, finalize, switchMap, tap } from 'rxjs';
 import {
@@ -10,6 +11,7 @@ import {
   Order,
   OrderApiError,
   OrderRuleError,
+  PostingIssue,
   formatQuantity,
   todayIso,
 } from '../../models/order';
@@ -26,7 +28,7 @@ export const STALE_ORDER = 'stale';
 @Component({
   selector: 'app-delivery-dialog',
   templateUrl: './delivery-dialog.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class DeliveryDialogComponent {
   readonly today = todayIso();
@@ -44,6 +46,8 @@ export class DeliveryDialogComponent {
   saving = false;
   /** Mensaje del servidor de la última confirmación fallida (el diálogo conserva lo elegido). */
   errorMessage = '';
+  /** Faltantes de configuración contable que impidieron entregar (se explican con un enlace a la configuración). */
+  postingIssues: PostingIssue[] = [];
   serverErrors: { deliveredDate?: string; warehouseId?: string } = {};
 
   readonly activeModal = inject(NgbActiveModal);
@@ -120,6 +124,7 @@ export class DeliveryDialogComponent {
     const { deliveredDate, warehouseId } = this.form.getRawValue();
     this.saving = true;
     this.errorMessage = '';
+    this.postingIssues = [];
     this.serverErrors = {};
     this.api
       .deliver(order.id, deliveredDate, warehouseId)
@@ -154,6 +159,10 @@ export class DeliveryDialogComponent {
         deliveredDate: err.fieldErrors.deliveredDate?.join(' '),
         warehouseId: err.fieldErrors.warehouseId?.join(' '),
       };
+      return;
+    }
+    if (err instanceof OrderRuleError && err.postingIssues.length) {
+      this.postingIssues = err.postingIssues;
       return;
     }
     this.errorMessage = err.message;

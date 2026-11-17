@@ -6,7 +6,16 @@ from modules.sales.domain.order import UNSET, Order, payment_digest, validate_qu
 from modules.sales.domain.repositories import OrderRepository
 
 from .delivery import controlled_lines
-from .ports import Actor, Clock, CustomerDirectory, ProductCatalog, SalesPosting, SalesSettingsReader, StockOutput
+from .ports import (
+    AT_CONFIRM,
+    Actor,
+    Clock,
+    CustomerDirectory,
+    ProductCatalog,
+    SalesPosting,
+    SalesSettingsReader,
+    StockOutput,
+)
 
 
 def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
@@ -20,9 +29,9 @@ TOTAL_LOCKED_MESSAGE = ('El pedido ya está contabilizado: no se pueden cambiar 
                         'porque alterarían el total.')
 
 
-def _ensure_total_unlocked(posting: SalesPosting | None, order_id: UUID) -> None:
-    """Con el reconocimiento ya contabilizado el total no puede cambiar (no hay ajustes contables en esta entrega)."""
-    if posting is not None and posting.is_recognized(order_id):
+def _ensure_total_unlocked(posting: SalesPosting | None, order: Order) -> None:
+    """Con el pedido confirmado y cubierto por Contabilidad el total no puede cambiar (regla comercial estable)."""
+    if posting is not None and posting.locks_total(order):
         raise OrderRuleViolation('order_total_locked', TOTAL_LOCKED_MESSAGE)
 
 
@@ -100,7 +109,7 @@ class AddOrderItem:
     def execute(self, order_id: UUID, product_id: UUID, quantity: object) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.ensure_editable()
-        _ensure_total_unlocked(self.posting, order_id)
+        _ensure_total_unlocked(self.posting, order)
         errors: dict[str, list[str]] = {}
         product = self.products.get_product_for_sale(product_id)
         if product is None:
@@ -127,7 +136,7 @@ class ChangeOrderItemQuantity:
     def execute(self, order_id: UUID, item_id: UUID, quantity: object) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.ensure_editable()
-        _ensure_total_unlocked(self.posting, order_id)
+        _ensure_total_unlocked(self.posting, order)
         order.change_item_quantity(item_id, quantity)
         return self.repository.save(order)
 
@@ -140,7 +149,7 @@ class RemoveOrderItem:
     def execute(self, order_id: UUID, item_id: UUID) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.ensure_editable()
-        _ensure_total_unlocked(self.posting, order_id)
+        _ensure_total_unlocked(self.posting, order)
         order.remove_item(item_id)
         return self.repository.save(order)
 
@@ -155,7 +164,7 @@ class ApplyOrderDiscount:
     def execute(self, order_id: UUID, discount: object) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.ensure_editable()
-        _ensure_total_unlocked(self.posting, order_id)
+        _ensure_total_unlocked(self.posting, order)
         if self.settings is None:
             order.apply_discount(discount)
         else:
@@ -164,19 +173,14 @@ class ApplyOrderDiscount:
 
 
 class StartOrderPreparation:
-    """Confirma el pedido (NEW -> IN_PREPARATION) y, con cobertura de Contabilidad, reconoce la venta una sola vez
-    (Debe Cuentas por cobrar / Haber Ingresos por el total). Todo en la transacción de quien llama."""
+    """Confirma el pedido (NEW -> IN_PREPARATION). No genera asiento: el ingreso se reconoce al entregar."""
 
-    def __init__(self, repository: OrderRepository, clock: Clock | None = None, posting: SalesPosting | None = None):
+    def __init__(self, repository: OrderRepository):
         self.repository = repository
-        self.clock = clock
-        self.posting = posting
 
-    def execute(self, order_id: UUID, actor: Actor | None = None) -> Order:
+    def execute(self, order_id: UUID) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.start_preparation()
-        if self.posting is not None and self.clock is not None and order.total > 0:
-            self.posting.recognize(order, actor or Actor(None, ''), self.clock.today())
         return self.repository.save(order)
 
 
@@ -191,20 +195,24 @@ class MarkOrderReady:
 
 
 class DeliverOrder:
-    """Entrega el pedido (READY -> DELIVERED) y, con Inventario habilitado, registra la salida de sus productos
-    controlados en el almacén elegido. Todo ocurre en la transacción de quien llama: si algo falla, no se entrega
-    el pedido ni se registra ninguna salida."""
+    """Entrega el pedido (READY -> DELIVERED), registra la salida de sus productos controlados en el almacén elegido
+    (con Inventario habilitado) y, con cobertura de Contabilidad, reconoce el ingreso aplicando los anticipos. Todo
+    ocurre en la transacción de quien llama: si algo falla, no se entrega el pedido ni queda salida ni asiento."""
 
-    def __init__(self, repository: OrderRepository, clock: Clock, stock: StockOutput | None = None):
+    def __init__(self, repository: OrderRepository, clock: Clock, stock: StockOutput | None = None,
+                 posting: SalesPosting | None = None):
         self.repository = repository
         self.clock = clock
         self.stock = stock
+        self.posting = posting
 
     def execute(self, order_id: UUID, delivered_date: date | None = None, warehouse_id: UUID | None = None,
                 actor: Actor | None = None) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.deliver(delivered_date, self.clock.today())
         self._register_outputs(order, warehouse_id, actor)
+        if self.posting is not None:
+            self.posting.recognize_delivery(order, actor or Actor(None, ''))
         return self.repository.save(order)
 
     def _register_outputs(self, order: Order, warehouse_id: UUID | None, actor: Actor | None) -> None:
@@ -225,8 +233,9 @@ class DeliverOrder:
 
 
 class CancelOrder:
-    """Cancela el pedido. Un pedido contabilizado sin cobros revierte su reconocimiento con las cuentas originales; con
-    cobros no se cancela (no hay reembolsos). Sin reconocimiento se cancela como siempre."""
+    """Cancela el pedido. Con cobros contabilizados no se cancela (no hay reembolsos). Un pedido reconocido al confirmar
+    (lógica anterior) sin cobros revierte su reconocimiento con las cuentas originales; uno sin reconocer se cancela sin
+    asiento."""
 
     def __init__(self, repository: OrderRepository, clock: Clock, posting: SalesPosting | None = None):
         self.repository = repository
@@ -236,13 +245,15 @@ class CancelOrder:
     def execute(self, order_id: UUID, reason: object = None, actor: Actor | None = None) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.cancel(reason, self.clock.now())
-        if self.posting is not None and self.posting.is_recognized(order.id):
-            if order.payments:
+        if self.posting is not None:
+            state = self.posting.recognition_state(order.id)
+            if self.posting.has_posted_payments(order):
                 raise OrderRuleViolation(
                     'order_has_payments_posted',
-                    'El pedido ya está contabilizado y tiene cobros: no se puede cancelar hasta que exista el reembolso.')
-            self.posting.reverse_recognition(order, order.cancellation_reason, actor or Actor(None, ''),
-                                             self.clock.today())
+                    'El pedido tiene cobros contabilizados: no se puede cancelar hasta que exista el reembolso.')
+            if state == AT_CONFIRM:
+                self.posting.reverse_recognition(order, order.cancellation_reason, actor or Actor(None, ''),
+                                                 self.clock.today())
         return self.repository.save(order)
 
 

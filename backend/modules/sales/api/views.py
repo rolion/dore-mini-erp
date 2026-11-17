@@ -226,8 +226,7 @@ class OrderPrepareView(APIView):
     required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
-        use_case = StartOrderPreparation(_repository(request), SystemClock(), _posting(request))
-        return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request)))
+        return _order_response(request, _run(StartOrderPreparation(_repository(request)), order_id=order_id))
 
 
 class OrderReadyView(APIView):
@@ -242,7 +241,7 @@ class OrderDeliverView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DeliverSerializer, request.data)
-        use_case = DeliverOrder(_repository(request), SystemClock(), _stock(request))
+        use_case = DeliverOrder(_repository(request), SystemClock(), _stock(request), _posting(request))
         return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request), **data))
 
 
