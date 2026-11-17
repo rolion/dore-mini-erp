@@ -64,14 +64,14 @@ describe('PostingConfigPanelComponent', () => {
     expect(api.setRoleAccount).not.toHaveBeenCalled();
   });
 
-  it('lists only active BOB accounts of the right classification for each role and money accounts for methods', () => {
+  it('lists only active BOB accounts of the right classification for each role and Asset accounts for methods, whatever their type', () => {
     const inactive: Account = { ...ingresos, id: 'i2', name: 'Ingresos viejos', isActive: false };
     const usd: Account = { ...ingresos, id: 'i3', name: 'Ingresos USD', currency: 'USD' };
     const fixture = create('sales', salesConfig(), [...ALL_ACCOUNTS, inactive, usd]);
     const names = (key: string) => Array.from(select(fixture, key).options).map((o) => o.textContent?.trim());
     expect(names('role:SALES_INCOME')).toEqual(['Sin cuenta', '410001 · Ingresos por ventas']);
     expect(names('role:RECEIVABLE')).toEqual(['Sin cuenta', '110101 · Caja', '110102 · Banco', '112001 · Por cobrar']);
-    expect(names('method:CASH')).toEqual(['Sin cuenta', '110101 · Caja', '110102 · Banco']);
+    expect(names('method:CASH')).toEqual(['Sin cuenta', '110101 · Caja', '110102 · Banco', '112001 · Por cobrar']);
   });
 
   it('saves a role, refreshes the configuration and confirms (AC-02)', () => {

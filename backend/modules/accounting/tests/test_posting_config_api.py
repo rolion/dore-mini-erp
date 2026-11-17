@@ -96,12 +96,14 @@ class AssignTests(PostingApiBase):
         self.assertEqual(self.client_a.put(f'{URL}categories/{theirs["id"]}/', {'account_id': None},
                                            format='json').status_code, 404)
 
-    def test_a_method_only_accepts_cash_or_bank_asset_accounts(self):  # AC-04
+    def test_a_method_only_accepts_asset_accounts_whatever_their_type(self):  # AC-04
         bank = self.create(self.client_a, 'Banco')
         self.assertEqual(self.assign(self.client_a, 'QR', bank).status_code, 200)
+        untyped = self.make(self.client_a, 'Caja general', 'ASSET')  # Activo sin tipo Caja/Banco: sirve
+        self.assertEqual(self.assign(self.client_a, 'CARD', untyped).status_code, 200)
         income = self.make(self.client_a, 'Ingresos', 'INCOME')
-        receivable = self.make(self.client_a, 'Por cobrar', 'ASSET')  # Activo sin tipo Caja/Banco
-        for account in (income, receivable):
+        expense = self.make(self.client_a, 'Gastos', 'EXPENSE')
+        for account in (income, expense):
             response = self.assign(self.client_a, 'CASH', account)
             self.assertEqual(response.status_code, 400, response.data)
             self.assertIn('account_id', response.json())

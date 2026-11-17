@@ -42,6 +42,7 @@ class AccountProblemTests(SimpleTestCase):
     def test_valid_accounts_have_no_problem(self):  # INV-02
         self.assertIsNone(account_problem(ROLES['SALES_INCOME'], account('INCOME'), frozenset()))
         self.assertIsNone(account_problem(ROLES['MONEY'], account('ASSET', 'BANK'), frozenset()))
+        self.assertIsNone(account_problem(ROLES['MONEY'], account('ASSET'), frozenset()))  # sin tipo: sirve
 
     def test_each_rule_has_its_own_actionable_message(self):  # INV-02
         role = ROLES['SALES_INCOME']
@@ -51,4 +52,4 @@ class AccountProblemTests(SimpleTestCase):
         self.assertIn('clasificación', account_problem(role, account(None), frozenset()))
         self.assertIn('Ingresos', account_problem(role, account('EXPENSE'), frozenset()))
         self.assertIn('deshabilitada', account_problem(role, account('INCOME'), frozenset({'INCOME'})))
-        self.assertIn('Caja, Banco', account_problem(ROLES['MONEY'], account('ASSET'), frozenset()))
+        self.assertIn('Activo', account_problem(ROLES['MONEY'], account('INCOME'), frozenset()))

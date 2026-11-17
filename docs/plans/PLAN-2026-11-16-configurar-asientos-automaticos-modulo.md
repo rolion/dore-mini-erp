@@ -1,4 +1,4 @@
-# PLAN-2026-11-16-configurar-asientos-automaticos-modulo (v1)
+# PLAN-2026-11-16-configurar-asientos-automaticos-modulo (v2)
 
 **Task:** TASK-configurar-asientos-automaticos-modulo · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-configurar-asientos-automaticos-modulo-panel-cuentas-por-evento.md` · `docs/adr/ADR-configurar-asientos-automaticos-modulo-catalogo-modelo-y-fachada.md`
@@ -20,7 +20,7 @@ Bounded context `accounting` (config + fachada). Módulos relacionados solo en f
 | Evento | Hecho de negocio contabilizable; su código es el `origin_kind` del asiento | ADR §1 |
 | Rol | Función de una cuenta en un evento (Ingresos por ventas, Cuentas por cobrar…) con clasificación obligatoria | ADR §1 |
 | Mapeo | Cuenta elegida por la empresa para un rol, una categoría de gasto o un método de pago | ADR §2 |
-| Cuenta de dinero | Cuenta de Activo con tipo Caja/Banco/Billetera; **no** es el método de pago | tarjeta, `domain/account.py` |
+| Cuenta de dinero | Cuenta de Activo (caja, banco…) a la que apunta un método de pago; no se exige tipo de cuenta; **no** es el método de pago | tarjeta, `domain/account.py` |
 | Cobertura | Decisión de si una operación debe crear asiento (`coverage_status`) | `services.py:127` |
 | Configuración faltante | Rol/método/categoría sin cuenta o con cuenta no utilizable | ADR §4 |
 
@@ -29,14 +29,14 @@ Existe el motor y el mapeo método → cuenta sin validar clasificación (`api/v
 
 ## Expected behavior
 - Por módulo se listan solo sus eventos con vista previa Debe/Haber y el estado de la configuración.
-- La persona asigna cuentas por rol (y por categoría de gasto, y por método de pago a Caja/Banco de Activo); el servidor valida empresa, cuenta activa y clasificación.
+- La persona asigna cuentas por rol (y por categoría de gasto, y por método de pago a una cuenta de Activo); el servidor valida empresa, cuenta activa y clasificación.
 - Con Contabilidad habilitada y cobertura, `check_posting_ready` informa lo que falta con mensaje accionable y `post_automatic_entry` lo exige (nunca omite); sin cobertura no se exige ni se crea nada.
 - Cambiar la configuración no altera asientos existentes; la reversión usa las cuentas originales.
 - El asiento de un evento lleva `origin_kind` = código del evento y `origin_id` del evento del módulo; repetirlo no lo duplica.
 
 ## Domain rules / invariants
 - **INV-01** (nueva) El catálogo de eventos/roles es fijo; ninguna API crea, edita o borra eventos o líneas.
-- **INV-02** (nueva) Una cuenta asignada a un rol cumple: de la empresa, activa, clasificación habilitada e igual a la del rol. Categoría: de la empresa, EXPENSE y activa. Método: cuenta de Activo con tipo Caja/Banco/Billetera, activa y en BOB. Se valida al asignar y al resolver cada evento.
+- **INV-02** (nueva) Una cuenta asignada a un rol cumple: de la empresa, activa, clasificación habilitada e igual a la del rol. Categoría: de la empresa, EXPENSE y activa. Método: cuenta de Activo (sin exigir tipo de cuenta), activa y en BOB. Se valida al asignar y al resolver cada evento.
 - **INV-03** (nueva) Un evento contabilizable con configuración incompleta no se omite: error `PostingConfigurationMissing`; sin cobertura, no se exige configuración y no se crea asiento.
 - **INV-04** (existente, CONT-02) Idempotencia por `(empresa, origen)`; reversión con cuentas originales; fecha en período abierto.
 - **INV-05** (existente) Dinero en `Decimal`, moneda BOB de los flujos, sin conversión.
@@ -46,7 +46,7 @@ Existe el motor y el mapeo método → cuenta sin validar clasificación (`api/v
 - **AC-01** `GET posting-config/?module=sales|purchases|inventory|expenses|receivables` devuelve solo los eventos de ese módulo con vista previa y estado; módulo desconocido → 404.
 - **AC-02** Asignar un rol con una cuenta válida lo guarda (y quitarla con `null`); la vista previa y `ready` reflejan el cambio.
 - **AC-03** (tarjeta AC-4) Cuenta de **otra empresa**, inexistente, inactiva, de **clasificación inválida** para el rol, o categoría que no es de gasto → 400 por `account_id` con mensaje accionable; no se guarda.
-- **AC-04** El mapeo de método a cuenta (`PUT payment-methods/<code>/`) rechaza cuentas que no sean de Activo con tipo Caja/Banco/Billetera; lo ya configurado sigue resolviendo.
+- **AC-04** El mapeo de método a cuenta (`PUT payment-methods/<code>/`) rechaza cuentas que no sean de Activo (sin exigir tipo Caja/Banco/Billetera); lo ya configurado sigue resolviendo.
 - **AC-05** (tarjeta AC-1) Con un asiento ya contabilizado, cambiar el mapeo (p. ej. Banco → Caja) no modifica sus líneas; `reverse_automatic_entry` revierte con las cuentas originales aunque estén deshabilitadas o ya no estén en la configuración.
 - **AC-06** (tarjeta AC-2) Con Contabilidad habilitada y cobertura, configuración incompleta: `check_posting_ready` → `ready=False` con issues; `post_automatic_entry` lanza `PostingConfigurationMissing` y no crea asiento.
 - **AC-07** (tarjeta AC-2) Cuenta configurada luego deshabilitada o reclasificada: mismo bloqueo, con el nombre de la cuenta/rol y la ruta del módulo donde corregir.
@@ -73,7 +73,7 @@ Permiso por defecto de la API (administrador de la empresa activa). La empresa s
 - **API-01** `GET /api/accounting/posting-config/?module=<clave>` → `200 {module, accounting_enabled, ready, events:[{code, label, preview:[{side:'DEBIT'|'CREDIT', label, account_label, status}], issues:[{code, role, label, message}]}], roles:[{role, label, account_class, shared_with:[…], account:{id,code,name,is_active}|null, issue}], methods:[{code,label,is_active,account|null,issue}], categories:[{classification_id,name,is_active,account|null,issue}]}`; `methods`/`categories` solo si el módulo tiene esas líneas. 404 módulo desconocido.
 - **API-02** `PUT /api/accounting/posting-config/roles/<role>/` `{account_id: uuid|null}` → `200` (la fila del rol); 400 `{account_id:[…]}`; 404 rol desconocido.
 - **API-03** `PUT /api/accounting/posting-config/categories/<classification_id>/` `{account_id: uuid|null}` → `200`; 400/404 como API-02.
-- **API-04** (cambio de comportamiento) `PUT /api/accounting/payment-methods/<code>/`: nuevo 400 por `account_id` si la cuenta no es Caja/Banco/Billetera de Activo. Forma de respuesta sin cambios.
+- **API-04** (cambio de comportamiento) `PUT /api/accounting/payment-methods/<code>/`: nuevo 400 por `account_id` si la cuenta no es de Activo (el tipo de cuenta no se exige). Forma de respuesta sin cambios.
 - **Fachada (no HTTP)** `describe_posting_config`, `check_posting_ready`, `post_automatic_entry`, `reverse_automatic_entry`, `set_role_account`, `set_category_account` (ADR §5). Compatibilidad: todo es aditivo salvo API-04.
 
 ## UI behavior
@@ -94,7 +94,7 @@ Migrar Ventas/Cobros/Compras/Inventario/Gastos a contabilizar (VEN-01, COM-01/02
 # Test Specification
 
 ## Unit tests
-Dominio `domain/posting.py` (sin BD): catálogo coherente (código ≤ 30, cada rol existe, ninguna línea repetida), `validate_role_account`, `preview`, issues. Dominio de método (Activo + Caja/Banco).
+Dominio `domain/posting.py` (sin BD): catálogo coherente (código ≤ 30, cada rol existe, ninguna línea repetida), `validate_role_account`, `preview`, issues. Dominio de método (Activo; sin exigir tipo).
 
 ## Integration tests (backend, `accounting/tests/`)
 - `test_posting_config_api.py`: API-01..04, AC-01..04, AC-10, AC-11; número de consultas de API-01.
@@ -117,7 +117,7 @@ Suites de `accounting`, `modularity`, `shared` (fronteras) y frontend completa; 
 | AC-01 | `test_posting_config_api` (módulos, 404) |
 | AC-02 | `test_posting_config_api` (PUT roles, `null`, vista previa/`ready`) |
 | AC-03 | `test_posting_config_api` (ajena, inexistente, inactiva, clase inválida, categoría no EXPENSE) |
-| AC-04 | `test_posting_config_api` + `test_api.py` (método: no Activo/sin tipo → 400) |
+| AC-04 | `test_posting_config_api` + `test_api.py` (método: no Activo → 400; Activo sin tipo → 200) |
 | AC-05 | `test_posting_service` (cambio de mapeo, líneas intactas, reversión con cuentas originales deshabilitadas) |
 | AC-06 | `test_posting_service` (`check_posting_ready`, `PostingConfigurationMissing`, sin asiento) |
 | AC-07 | `test_posting_service` (cuenta desactivada/reclasificada; mensaje con rol y módulo) |
@@ -146,7 +146,7 @@ Ver ADR. Resumen: catálogo en código; tabla `accounting_posting_account` para 
 1. **Dominio** (INV-01/02): `domain/posting.py` con catálogo de roles/eventos, `PostingIssue`, `validate_role_account`, `build_preview`; tests unitarios. → AC-01, AC-03.
 2. **Persistencia**: modelo + migración `0011` + repositorio (`get/save/clear` por rol y categoría, lectura por módulo en una consulta). → AC-02, AC-10.
 3. **Casos de uso** `application/posting.py`: `DescribePostingConfig`, `SetRoleAccount`, `SetCategoryAccount`, `ResolveEvent` (valida en vivo), todo por `company_id`. → AC-02, AC-03, AC-06, AC-07.
-4. **Endurecer método → cuenta** (Activo + Caja/Banco/Billetera, solo usos nuevos); ajustar tests existentes. → AC-04.
+4. **Endurecer método → cuenta** (Activo, solo usos nuevos; sin exigir tipo); ajustar tests existentes. → AC-04.
 5. **Fachada** en `services.py`: `describe_posting_config`, `set_*`, `check_posting_ready`, `post_automatic_entry` (cobertura → resolución → `post_journal_entry`), `reverse_automatic_entry`, excepciones públicas. → AC-05..AC-09, INV-03/04/06.
 6. **API** (API-01..03) con serializers de forma, `_run` de errores, 404/400; rutas. → AC-01..AC-03, AC-11.
 7. **Pruebas backend** (ver mapeo) + `makemigrations --check`, flake8.
@@ -169,4 +169,5 @@ Ver ADR. Resumen: catálogo en código; tabla `accounting_posting_account` para 
 Ninguna.
 
 ## Changelog
-_v1 — versión inicial._
+- **v1** (2026-11-16): versión inicial.
+- **v2** (2026-11-17): [Specification] INV-02, AC-04 y API-04: el mapeo de método de pago (rol `MONEY`) ya no exige tipo de cuenta Caja/Banco/Billetera; basta clasificación Activo, moneda BOB, cuenta activa y con código. Cambio **solicitado explícitamente por la persona en el chat** (el tipo de cuenta se retirará eventualmente). [Implementation Plan] sin cambios de pasos; se ajustan pruebas y textos de la UI.

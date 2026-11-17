@@ -21,8 +21,6 @@ export interface ConfigRow {
   /** Texto propio (método o categoría); los roles se traducen por su código. */
   label: string;
   accountClass: AccountClassCode;
-  /** Exige tipo Caja/Banco/Billetera (cuenta de dinero). */
-  money: boolean;
   isActive: boolean;
   /** Otros módulos que usan el mismo rol (se comparte la cuenta). */
   sharedWith: string[];
@@ -80,10 +78,10 @@ export class PostingConfigPanelComponent implements OnInit {
       });
   }
 
-  /** Cuentas elegibles para la fila: activas, en BOB, de la clasificación del rol (y con tipo de dinero si aplica). */
+  /** Cuentas elegibles para la fila: activas, en BOB y de la clasificación del rol (el tipo de cuenta no importa). */
   options(row: ConfigRow): Account[] {
     return this.accounts.filter(
-      (a) => a.isActive && a.currency === FLOW_CURRENCY && a.accountClass === row.accountClass && (!row.money || !!a.kind),
+      (a) => a.isActive && a.currency === FLOW_CURRENCY && a.accountClass === row.accountClass,
     );
   }
 
@@ -173,16 +171,16 @@ export class PostingConfigPanelComponent implements OnInit {
     this.config = config;
     this.roleRows = config.roles.map((r) =>
       build(
-        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, money: false, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue },
+        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue },
         r.account?.id,
       ),
     );
     this.methodRows = config.methods.map((m) =>
-      build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', money: true, isActive: m.isActive, sharedWith: [], issue: m.issue }, m.account?.id),
+      build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', isActive: m.isActive, sharedWith: [], issue: m.issue }, m.account?.id),
     );
     this.categoryRows = config.categories.map((c) =>
       build(
-        { kind: 'category', id: c.classificationId, label: c.name, accountClass: 'EXPENSE', money: false, isActive: c.isActive, sharedWith: [], issue: c.issue },
+        { kind: 'category', id: c.classificationId, label: c.name, accountClass: 'EXPENSE', isActive: c.isActive, sharedWith: [], issue: c.issue },
         c.account?.id,
       ),
     );
@@ -190,8 +188,6 @@ export class PostingConfigPanelComponent implements OnInit {
 
   /** Texto de la pista bajo el selector: qué clasificación se necesita. */
   hint(row: ConfigRow): string {
-    return row.money
-      ? tr('ACCOUNTING.POSTING.HINT_MONEY')
-      : tr('ACCOUNTING.POSTING.HINT_CLASS', { p0: tr(`ACCOUNTING.POSTING.CLASSES.${row.accountClass}`) });
+    return tr('ACCOUNTING.POSTING.HINT_CLASS', { p0: tr(`ACCOUNTING.POSTING.CLASSES.${row.accountClass}`) });
   }
 }

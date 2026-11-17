@@ -102,6 +102,7 @@ Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó
 - **Pantallas de referencia:** «Configuración con listados en pestañas y diálogo» (`methods-tab`, `inventory-configuration`) y «Variante de operación con previsualización obligatoria» (`regularization`); componentes reutilizados: tablas `inventory-table`, `alert` tenue, `RouterLink` a Cuentas. Componente nuevo reutilizable: `app-posting-config-panel` (anotado en `design-system.md`).
 
 **Desviaciones respecto al plan:**
+0. **PLAN v2 (2026-11-17, a pedido de la persona):** el mapeo de métodos de pago ya no exige tipo de cuenta Caja/Banco/Billetera; basta Activo, BOB, activa y con código. Backend, panel (filtro del selector, textos es/en/pt) y pruebas ajustados.
 1. El endurecimiento del mapeo método→cuenta (API-04) obligó a corregir las cuentas de prueba de `sales`, `receivables` y `accounting` (ahora `money_account` en `tests/journal_support.py`: Activo, con código y tipo Caja/Banco). Es el efecto previsto del riesgo «endurecer método→cuenta» del PLAN.
 2. La validación del método se aplica solo cuando se asigna una cuenta nueva **y el método queda activo** (asignar una cuenta a un método inactivo sigue permitido, como antes).
 3. El panel no usa `ng-select` (select nativo, como el resto de Contabilidad), de acuerdo con el DDR.

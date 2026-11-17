@@ -7,7 +7,7 @@ El código del evento es el `origin_kind` del asiento (≤ 30 caracteres).
 from dataclasses import dataclass
 
 from .account import Account, AccountValidationError
-from .catalog import ACCOUNT_KINDS, FLOW_CURRENCY
+from .catalog import FLOW_CURRENCY
 from .account_class import ASSET, COST, EXPENSE, INCOME, LIABILITY
 from .journal import ORIGIN_KIND_MAX
 
@@ -35,7 +35,6 @@ class Role:
     label: str
     account_class: str
     source: str = SOURCE_ROLE
-    money: bool = False  # exige además tipo Caja/Banco/Billetera
 
 
 ROLES: dict[str, Role] = {r.code: r for r in (
@@ -45,7 +44,7 @@ ROLES: dict[str, Role] = {r.code: r for r in (
     Role('INVENTORY', 'Inventario', ASSET),
     Role('COST_OF_SALES', 'Costo de ventas', COST),
     Role('PAYABLE', 'Cuentas por pagar (proveedores)', LIABILITY),
-    Role('MONEY', 'Caja o banco del método de pago', ASSET, SOURCE_METHOD, money=True),
+    Role('MONEY', 'Caja o banco del método de pago', ASSET, SOURCE_METHOD),
     Role('EXPENSE_BY_CATEGORY', 'Cuenta de gasto de la categoría', EXPENSE, SOURCE_CATEGORY),
 )}
 
@@ -132,8 +131,6 @@ def account_problem(role: Role, account: Account | None, disabled_classes: froze
                 f'se requiere una cuenta de {CLASS_LABELS[role.account_class]}.')
     if account.account_class in disabled_classes:
         return f'La clasificación {CLASS_LABELS[account.account_class]} está deshabilitada.'
-    if role.money and account.kind not in ACCOUNT_KINDS:
-        return f'La cuenta {name} debe ser de tipo Caja, Banco o Billetera.'
     return None
 
 

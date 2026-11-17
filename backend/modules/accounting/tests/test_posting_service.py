@@ -256,11 +256,11 @@ class AssignmentTests(PostingBase):
         DjangoAccountClassRepository(self.company.id).set_enabled('INCOME', False)
         self.assertRejected('SALES_INCOME', self.ingresos.id, 'deshabilitada')
 
-    def test_a_money_account_needs_a_cash_or_bank_type(self):  # AC-04
-        with self.assertRaises(services.AccountValidationError):
-            self.configure_method('CASH', self.cxc)  # Activo pero sin tipo Caja/Banco
-        with self.assertRaises(services.AccountValidationError):
-            self.configure_method('CASH', self.ingresos)
+    def test_a_method_account_must_be_an_active_bob_asset_whatever_its_type(self):  # AC-04
+        self.configure_method('CASH', self.cxc)  # Activo sin tipo Caja/Banco: sirve
+        for account in (self.ingresos, self.gasto):
+            with self.assertRaises(services.AccountValidationError):
+                self.configure_method('QR', account)
 
     def test_roles_with_other_source_or_unknown_are_not_found(self):
         for role in ('NOPE', 'MONEY', 'EXPENSE_BY_CATEGORY'):
