@@ -1,6 +1,6 @@
 # TASK-configurar-asientos-automaticos-modulo: Configuración simple de asientos automáticos por módulo (CONT-12)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-asientos-automaticos-modulo
@@ -13,6 +13,7 @@
 | 2026-11-16 | (nuevo) → INVESTIGATION | Task creado; base = rama `accounting` (`origin/accounting`, PR #84 integrado), no `main` | delivery-start |
 | 2026-11-16 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (tabla nueva, contrato de fachada usado por 5 módulos), diseño SI; 1 decisión de alcance resuelta por la persona | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -87,7 +88,24 @@ Existe el motor y el mapeo método → cuenta (sin validar clasificación). No h
 `docs/plans/PLAN-2026-11-16-configurar-asientos-automaticos-modulo.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó con `origin/accounting` (PR #85) durante el trabajo; sin conflictos.
+
+- **Dominio** (`accounting/domain/posting.py`; INV-01/02, AC-01/03): catálogo fijo de 8 roles y 8 eventos (código = `origin_kind`), `account_problem`/`validate_account_for_role` (empresa, activa, BOB, con código y clasificación, clasificación habilitada, tipo Caja/Banco/Billetera para dinero), `PostingIssue` con mensaje que nombra el módulo donde corregir, `PostingConfigurationMissing`.
+- **Casos de uso** (`application/posting.py`; AC-02/06/07): `DescribePostingConfig` (vista previa Debe/Haber, faltantes por todos los métodos y categorías activos, roles compartidos), `SetRoleAccount`, `SetCategoryAccount`, `resolve_event` (en vivo, sin caché).
+- **Persistencia** (AC-10): `PostingAccountModel` + migración `0011_posting_account` (solo `CreateModel`) + `DjangoPostingConfigRepository` (todo por `company_id`).
+- **Fachada** (`services.py`; AC-05..AC-09): `describe_posting_config`, `set_role_account`, `set_category_account`, `check_posting_ready` (sin cobertura `required=False`), `post_automatic_entry` (cobertura → resolución → `post_journal_entry` con `origin_kind` = evento; nunca omite en silencio), `reverse_automatic_entry` (cuentas originales; `None` si nunca se contabilizó).
+- **API** (API-01..03; AC-01..04, AC-11): `GET posting-config/?module=`, `PUT posting-config/roles/<role>/`, `PUT posting-config/categories/<id>/`; sin `required_modules` (se configura antes de habilitar Contabilidad). **API-04:** `ConfigureMethod` valida un uso nuevo y activo del método (Activo con tipo Caja/Banco/Billetera, con código y clasificación); lo ya configurado no se revalida.
+- **Frontend** (AC-12..AC-14): `PostingConfigPanelComponent` (Reactive Forms por fila, vista previa en vivo, estados), `PostingConfigApiService`, modelos; pestaña «Asientos automáticos» en `module-settings` (Ventas, Compras, Inventario); página y ruta `/expenses/settings` + ítem de menú «Configuración» en Gastos; i18n es/en/pt (`ACCOUNTING.POSTING.*`); `design-system.md` §5/§6 actualizado.
+- **Pantallas de referencia:** «Configuración con listados en pestañas y diálogo» (`methods-tab`, `inventory-configuration`) y «Variante de operación con previsualización obligatoria» (`regularization`); componentes reutilizados: tablas `inventory-table`, `alert` tenue, `RouterLink` a Cuentas. Componente nuevo reutilizable: `app-posting-config-panel` (anotado en `design-system.md`).
+
+**Desviaciones respecto al plan:**
+1. El endurecimiento del mapeo método→cuenta (API-04) obligó a corregir las cuentas de prueba de `sales`, `receivables` y `accounting` (ahora `money_account` en `tests/journal_support.py`: Activo, con código y tipo Caja/Banco). Es el efecto previsto del riesgo «endurecer método→cuenta» del PLAN.
+2. La validación del método se aplica solo cuando se asigna una cuenta nueva **y el método queda activo** (asignar una cuenta a un método inactivo sigue permitido, como antes).
+3. El panel no usa `ng-select` (select nativo, como el resto de Contabilidad), de acuerdo con el DDR.
+
+**Deuda técnica / pendiente:** los módulos aún no llaman a `check_posting_ready`/`post_automatic_entry` (VEN-01, COM-01/02, INV-01 y gastos); Cobros/Servicios no tiene pantalla de configuración (su catálogo existe en backend); no hay historial de cambios de configuración (fuera de alcance). Revisión visual en navegador pendiente para `delivery-publish`.
+
+**Pruebas añadidas (corridas propias, no son el Quality Gate):** backend `test_posting_domain` (3), `test_posting_service` (28), `test_posting_config_api` (9); suite completa del backend 1959 OK, `makemigrations --check` sin cambios; frontend `posting-config-api.service.spec`, `posting-config-panel.component.spec` (14), `expense-settings`, `module-settings` y `sidebar-menu` actualizados; suite completa 1570 OK, `ng lint` OK, `i18n:check` 0 faltantes, `ng build` OK.
 
 ## Review
 _Pendiente_
