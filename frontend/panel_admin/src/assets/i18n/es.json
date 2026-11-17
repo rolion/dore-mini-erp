@@ -1693,6 +1693,8 @@
       "PEDIDO": "Pedido {{p0}}",
       "CANCELAR_PEDIDO": "Cancelar pedido",
       "VOLVER_A_PEDIDOS": "Volver a pedidos",
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar la contabilidad de Ventas.",
+      "IR_A_CONFIGURACION_DE_VENTAS": "Ir a la configuración de Ventas",
       "PEDIDO_CANCELADO": "Pedido cancelado.",
       "MOTIVO": "Motivo: {{p0}}",
       "LOS_PAGOS_REGISTRADOS_SE_CONSERVAN": "Los pagos registrados se conservan.",
@@ -2933,6 +2935,7 @@
       "NOT_VALID": "ya no es válida",
       "UNCONFIGURED": "Sin configurar",
       "ROLES": {
+        "CUSTOMER_ADVANCES": "Anticipos de clientes",
         "SALES_INCOME": "Ingresos por ventas",
         "SERVICE_INCOME": "Ingresos por servicios",
         "RECEIVABLE": "Cuentas por cobrar",
@@ -2943,6 +2946,8 @@
         "EXPENSE_BY_CATEGORY": "Cuenta de gasto de la categoría"
       },
       "EVENTS": {
+        "SALE_ADVANCE": "Cobrar un pedido por adelantado",
+        "SALE_DELIVERY": "Reconocer la entrega de un pedido",
         "SALE_RECOGNITION": "Reconocer una venta",
         "SALE_PAYMENT": "Cobrar una venta",
         "SERVICE_RECOGNITION": "Reconocer un servicio",

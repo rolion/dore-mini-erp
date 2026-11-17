@@ -29,6 +29,7 @@ import {
   OrderApiError,
   OrderItem,
   OrderRuleError,
+  PostingIssue,
   PaymentInput,
   SALES_CHANNEL_LABELS,
   hasBalance,
@@ -51,6 +52,7 @@ const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
 @Component({
   selector: 'app-order-detail',
   templateUrl: './order-detail.component.html',
+  styleUrl: './order-detail.component.scss',
   imports: [TranslatePipe, 
     RouterLink,
     DatePipe,
@@ -73,6 +75,8 @@ export class OrderDetailComponent implements OnInit {
   busy = false;
   /** Errores de validación del servidor de la última acción, por campo. */
   fieldErrors: FieldErrors = {};
+  /** Faltantes de configuración contable que bloquearon la última acción (confirmar o cobrar). */
+  postingIssues: PostingIssue[] = [];
 
   private api = inject(OrdersApiService);
   private route = inject(ActivatedRoute);
@@ -300,6 +304,7 @@ export class OrderDetailComponent implements OnInit {
     if (this.busy) return;
     this.busy = true;
     this.fieldErrors = {};
+    this.postingIssues = [];
     request()
       .pipe(
         finalize(() => (this.busy = false)),
@@ -320,7 +325,12 @@ export class OrderDetailComponent implements OnInit {
       this.fieldErrors = err.fieldErrors;
       return;
     }
-    this.toastr.error(err.message);
+    if (err instanceof OrderRuleError && err.postingIssues.length) {
+      // Se explica en una alerta con enlace a la configuración, no solo en un aviso pasajero.
+      this.postingIssues = err.postingIssues;
+    } else {
+      this.toastr.error(err.message);
+    }
     if (err instanceof OrderRuleError) {
       // El estado del pedido pudo cambiar (otra pestaña, otro usuario): se vuelve a leer del servidor.
       this.reload();

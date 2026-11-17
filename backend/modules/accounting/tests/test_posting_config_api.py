@@ -59,9 +59,24 @@ class AssignTests(PostingApiBase):
         self.assertEqual(response.status_code, 200, response.data)
         self.assertEqual(response.data['account']['id'], income['id'])
         body = self.client_a.get(URL, {'module': 'sales'}).json()
-        credit = body['events'][0]['preview'][1]
+        credit = body['events'][1]['preview'][2]  # reconocer la entrega: Haber Ingresos
         self.assertEqual((credit['status'], credit['account']['name']), ('ok', 'Ingresos'))
         self.assertEqual(self.put_role(self.client_a, 'SALES_INCOME', None).data['account'], None)
+
+    def test_the_customer_advances_role_accepts_a_liability_and_rejects_other_classes(self):  # VEN-01 AC-01
+        liability = self.make(self.client_a, 'Anticipos de clientes', 'LIABILITY')
+        saved = self.put_role(self.client_a, 'CUSTOMER_ADVANCES', liability)
+        self.assertEqual((saved.status_code, saved.data['account']['id']), (200, liability['id']))
+        wrong_accounts = (self.make(self.client_a, 'Ingresos varios', 'INCOME'),
+                          self.make(self.client_a, 'Caja general', 'ASSET'))
+        for wrong in wrong_accounts:
+            response = self.put_role(self.client_a, 'CUSTOMER_ADVANCES', wrong)
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('Pasivo', response.json()['account_id'][0])
+        body = self.client_a.get(URL, {'module': 'sales'}).json()
+        self.assertEqual([e['code'] for e in body['events']], ['SALE_ADVANCE', 'SALE_DELIVERY', 'SALE_PAYMENT'])
+        self.assertEqual(next(r for r in body['roles'] if r['role'] == 'CUSTOMER_ADVANCES')['account']['id'],
+                         liability['id'])
 
     def test_foreign_wrong_class_or_inactive_accounts_are_rejected_with_a_field_error(self):  # AC-03
         theirs = self.make(self.client_b, 'Ingresos B', 'INCOME')
@@ -92,11 +107,11 @@ class AssignTests(PostingApiBase):
 
     def test_issues_and_rows_expose_code_params_and_problem(self):  # REV-05
         body = self.client_a.get(URL, {'module': 'sales'}).json()
-        first = body['events'][0]['issues'][0]
+        first = next(i for i in body['events'][0]['issues'] if i['code'] == 'role_unconfigured')
         self.assertEqual((first['code'], first['role'], first['module'], first['problem']),
-                         ('role_unconfigured', 'RECEIVABLE', 'sales', None))
+                         ('role_unconfigured', 'CUSTOMER_ADVANCES', 'sales', None))
         self.assertIn('Configúrela en Ventas', first['message'])
-        method = next(i for i in body['events'][1]['issues'] if i['code'] == 'method_unconfigured')
+        method = next(i for i in body['events'][2]['issues'] if i['code'] == 'method_unconfigured')
         self.assertEqual(method['params'], {'method': 'Efectivo', 'method_code': 'CASH'})
         income = self.make(self.client_a, 'Ingresos viejos', 'INCOME')
         self.put_role(self.client_a, 'SALES_INCOME', income)

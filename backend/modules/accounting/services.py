@@ -66,7 +66,9 @@ __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'Classi
            'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
            'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
            'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
-           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'post_automatic_entry',
+           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'automatic_entry_origins',
+           'find_automatic_entry',
+           'post_automatic_entry',
            'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
            'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications',
            'get_journal_entry', 'journal_balances', 'lock_open_period', 'period_for', 'post_journal_entry',
@@ -527,16 +529,21 @@ class AutomaticPosting:
 
 def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounting_date: date, description: str,
                          amount: Decimal, *, method: str | None = None, category_id: UUID | None = None,
-                         category_label: str = '',
+                         category_label: str = '', advance_applied: Decimal | None = None,
                          created_by: int | None = None, created_by_name: str = '') -> AutomaticPosting:
     """Contabiliza un evento con las cuentas configuradas, dentro de la transacción del llamante.
 
     Sin cobertura no crea nada. Con cobertura y configuración incompleta lanza `PostingConfigurationMissing` (nunca
     omite en silencio). Idempotente por `(empresa, evento, origin_id)` mediante el motor: `origin_kind` = código del
     evento. Lanza `EntryContractError` fuera de una transacción.
+
+    Los eventos con una segunda línea de Debe (`SALE_DELIVERY`) reciben en `advance_applied` el importe de esa línea
+    (anticipos aplicados); la línea principal lleva el resto y ninguna línea de importe cero se genera. Una cuenta
+    solo se exige si su línea existe.
     """
     _require_transaction('post_automatic_entry')
     definition = get_event(event)
+    extra = _extra_debit(definition, amount, advance_applied)
     existing = DjangoJournalRepository(company_id).get_by_origin(definition.code, origin_id)
     if existing is not None:
         # Reintento: el asiento ya existe y no se revalida contra la configuración ni la cobertura de hoy (INV-06).
@@ -549,16 +556,46 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     coverage = coverage_status(company_id, accounting_date)
     if not coverage.covered:
         return AutomaticPosting(False, coverage.reason)
+    main = amount - extra
+    skipped = frozenset(([definition.extra_debit_role] if definition.extra_debit_role and extra == 0 else [])
+                        + ([definition.debit_role] if definition.extra_debit_role and main == 0 else []))
     accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
-                                     category_label)
+                                     category_label, skipped)
     if issues:
         raise PostingConfigurationMissing(issues)
-    debit_role, credit_role = definition.debit_role, definition.credit_role
+    lines = [JournalLineInput(accounts[definition.debit_role], debit=main)] if main > 0 else []
+    if extra > 0:
+        lines.append(JournalLineInput(accounts[definition.extra_debit_role], debit=extra))
+    lines.append(JournalLineInput(accounts[definition.credit_role], credit=amount))
     posted = post_journal_entry(company_id, JournalEntryInput(
-        accounting_date, description,
-        [JournalLineInput(accounts[debit_role], debit=amount), JournalLineInput(accounts[credit_role], credit=amount)],
-        origin_kind=definition.code, origin_id=origin_id, created_by=created_by, created_by_name=created_by_name))
+        accounting_date, description, lines, origin_kind=definition.code, origin_id=origin_id,
+        created_by=created_by, created_by_name=created_by_name))
     return AutomaticPosting(True, None, posted.entry, posted.created)
+
+
+def _extra_debit(definition, amount: Decimal, advance_applied: Decimal | None) -> Decimal:
+    """Importe de la segunda línea de Debe (0 si no aplica); valida que sea coherente con el total."""
+    if advance_applied is None:
+        return Decimal('0')
+    if not definition.extra_debit_role:
+        raise JournalValidationError({'advance_applied': ['El evento no admite una segunda línea de Debe.']})
+    if isinstance(advance_applied, (float, bool)) or not isinstance(advance_applied, Decimal):
+        raise JournalValidationError({'advance_applied': ['El importe debe ser un decimal.']})
+    if advance_applied < 0 or advance_applied > amount:
+        raise JournalValidationError(
+            {'advance_applied': ['El importe aplicado no puede ser negativo ni superar el total.']})
+    return advance_applied
+
+
+def find_automatic_entry(company_id: UUID, event: str, origin_id: UUID) -> JournalEntryRef | None:
+    """El asiento ya contabilizado de un evento (o `None`): permite a un módulo saber si un origen está reconocido."""
+    existing = DjangoJournalRepository(company_id).get_by_origin(get_event(event).code, origin_id)
+    return _journal_ref(existing) if existing is not None else None
+
+
+def automatic_entry_origins(company_id: UUID, event: str, origin_ids) -> set[UUID]:
+    """Cuáles de los `origin_ids` ya tienen asiento del evento (una consulta; solo de la empresa)."""
+    return DjangoJournalRepository(company_id).origins_with(get_event(event).code, list(origin_ids))
 
 
 def reverse_automatic_entry(company_id: UUID, event: str, origin_id: UUID, reversal_date: date, reason: str,

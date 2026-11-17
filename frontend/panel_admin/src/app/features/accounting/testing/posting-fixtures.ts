@@ -5,8 +5,9 @@ export const caja: Account = { id: 'm1', name: 'Caja', code: '110101', currency:
 export const banco: Account = { id: 'm2', name: 'Banco', code: '110102', currency: 'BOB', kind: 'BANK', accountClass: 'ASSET', openingBalance: '0.00', isActive: true };
 export const porCobrar: Account = { id: 'r1', name: 'Por cobrar', code: '112001', currency: 'BOB', kind: null, accountClass: 'ASSET', openingBalance: '0.00', isActive: true };
 export const ingresos: Account = { id: 'i1', name: 'Ingresos por ventas', code: '410001', currency: 'BOB', kind: null, accountClass: 'INCOME', openingBalance: '0.00', isActive: true };
+export const anticipos: Account = { id: 'a1', name: 'Anticipos de clientes', code: '210001', currency: 'BOB', kind: null, accountClass: 'LIABILITY', openingBalance: '0.00', isActive: true };
 export const gastoLuz: Account = { id: 'g1', name: 'Gasto de luz', code: '510001', currency: 'BOB', kind: null, accountClass: 'EXPENSE', openingBalance: '0.00', isActive: true };
-export const ALL_ACCOUNTS: Account[] = [caja, banco, porCobrar, ingresos, gastoLuz];
+export const ALL_ACCOUNTS: Account[] = [caja, banco, porCobrar, ingresos, anticipos, gastoLuz];
 
 /** Configuración de Ventas: todo sin configurar salvo lo que se pase en `overrides`. */
 export function salesConfig(overrides: Partial<PostingConfig> = {}): PostingConfig {
@@ -17,13 +18,23 @@ export function salesConfig(overrides: Partial<PostingConfig> = {}): PostingConf
     ready: false,
     events: [
       {
-        code: 'SALE_RECOGNITION',
-        label: 'Reconocer una venta',
+        code: 'SALE_ADVANCE',
+        label: 'Cobrar un pedido por adelantado',
+        issues: [],
+        preview: [
+          { side: 'DEBIT', role: 'MONEY', label: 'Caja o banco', account: null, status: 'by_method' },
+          { side: 'CREDIT', role: 'CUSTOMER_ADVANCES', label: 'Anticipos de clientes', account: null, status: 'missing' },
+        ],
+      },
+      {
+        code: 'SALE_DELIVERY',
+        label: 'Reconocer la entrega de un pedido',
         issues: [
           { code: 'role_unconfigured', role: 'RECEIVABLE', subject: 'Cuentas por cobrar', module: 'sales', message: 'Falta configurar la cuenta «Cuentas por cobrar». Configúrela en Ventas › Configuración › Asientos automáticos.', params: {}, problem: null },
         ],
         preview: [
           { side: 'DEBIT', role: 'RECEIVABLE', label: 'Cuentas por cobrar', account: null, status: 'missing' },
+          { side: 'DEBIT', role: 'CUSTOMER_ADVANCES', label: 'Anticipos de clientes', account: null, status: 'missing' },
           { side: 'CREDIT', role: 'SALES_INCOME', label: 'Ingresos por ventas', account: null, status: 'missing' },
         ],
       },
@@ -38,6 +49,7 @@ export function salesConfig(overrides: Partial<PostingConfig> = {}): PostingConf
       },
     ],
     roles: [
+      { role: 'CUSTOMER_ADVANCES', label: 'Anticipos de clientes', accountClass: 'LIABILITY', account: null, issue: null, problem: null, sharedWith: [] },
       { role: 'RECEIVABLE', label: 'Cuentas por cobrar', accountClass: 'ASSET', account: null, issue: null, problem: null, sharedWith: [{ module: 'receivables', label: 'Cobros' }] },
       { role: 'SALES_INCOME', label: 'Ingresos por ventas', accountClass: 'INCOME', account: null, issue: null, problem: null, sharedWith: [] },
     ],

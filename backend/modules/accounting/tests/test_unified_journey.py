@@ -5,17 +5,18 @@ tienen pruebas en `sales/tests/test_payment_ledger.py`, `receivables/tests/test_
 `accounting/tests/test_entries_api.py` y `test_regularization*.py` (ver la matriz del TASK).
 """
 import json
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 from django.db import transaction
 from django.db.models import Sum
 from django.test import TransactionTestCase
+from django.utils import timezone
 
 from modules.accounting.application.use_cases import ConfigureMethod
 from modules.accounting.tests.journal_support import money_account
-from modules.accounting.infrastructure.django.models import EntryModel
+from modules.accounting.infrastructure.django.models import EntryModel, SettingsModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
 from modules.catalog.infrastructure.django.models import ProductModel
 from modules.inventory.infrastructure.django.models import StockMovementModel
@@ -51,6 +52,8 @@ class UnifiedJourneyTests(TransactionTestCase):
         modules = DjangoCompanyModuleRepository(company)
         for key in ('sales', 'customers', 'expenses', 'reporting', 'accounting'):
             modules.enable(key)
+        # Corte futuro: hoy no tiene cobertura de partida doble; este recorrido es del libro de entradas anterior.
+        SettingsModel.objects.create(company_id=company, cutoff_date=timezone.localdate() + timedelta(days=30))
         accounts = DjangoAccountRepository(company)
         self.caja = money_account(accounts, 'Caja', '110101', 'CASH')
         self.banco = money_account(accounts, 'Banco', '110102')

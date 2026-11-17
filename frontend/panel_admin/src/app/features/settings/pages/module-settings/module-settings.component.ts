@@ -45,14 +45,16 @@ const POSTING_MODULES: readonly string[] = ['sales', 'purchases', 'inventory'];
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink, SettingsHistoryComponent, PostingConfigPanelComponent],
 })
 export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
-  readonly module: string = inject(ActivatedRoute).snapshot.data['settingsModule'] ?? '';
+  private readonly route = inject(ActivatedRoute);
+  readonly module: string = this.route.snapshot.data['settingsModule'] ?? '';
   readonly title = MODULE_TITLES[this.module] ?? this.module;
   readonly noSettingsMessage = NO_SETTINGS_MESSAGE();
   /** El módulo tiene eventos que se contabilizan: muestra la pestaña «Asientos automáticos». */
   readonly hasPosting = POSTING_MODULES.includes(this.module);
   readonly postingModule = this.module as PostingModule;
 
-  tab: Tab = 'general';
+  /** `?tab=posting` abre «Asientos automáticos» (enlaces de los avisos contables). */
+  tab: Tab = this.hasPosting && this.route.snapshot.queryParamMap?.get('tab') === 'posting' ? 'posting' : 'general';
   settings: Setting[] = [];
   form = new FormGroup<Record<string, FormControl<string>>>({});
   loading = false;

@@ -98,6 +98,18 @@
     @if (errorMessage) {
     <div class="alert alert-danger mt-3 mb-0" role="alert" data-testid="alert-error">{{ errorMessage }}</div>
     }
+    @if (postingIssues.length) {
+    <div class="alert alert-warning mt-3 mb-0" role="alert" data-testid="alert-posting-issues">
+      <strong>{{ 'SALES.ORDER_DETAIL.CONFIGURACION_CONTABLE_INCOMPLETA' | translate }}</strong>
+      <ul class="mb-1">
+        @for (issue of postingIssues; track $index) {
+        <li>{{ issue.message }}</li>
+        }
+      </ul>
+      <a routerLink="/pocketbiz/sales/settings" [queryParams]="{ tab: 'posting' }" class="alert-link" data-testid="link-posting-settings"
+        (click)="activeModal.dismiss()">{{ 'SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS' | translate }}</a>
+    </div>
+    }
     }
   </div>
   <div class="modal-footer">

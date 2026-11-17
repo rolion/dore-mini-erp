@@ -1693,6 +1693,8 @@
       "PEDIDO": "Order {{p0}}",
       "CANCELAR_PEDIDO": "Cancel order",
       "VOLVER_A_PEDIDOS": "Back to orders",
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Sales accounting setup is incomplete.",
+      "IR_A_CONFIGURACION_DE_VENTAS": "Go to Sales settings",
       "PEDIDO_CANCELADO": "Order cancelled.",
       "MOTIVO": "Reason: {{p0}}",
       "LOS_PAGOS_REGISTRADOS_SE_CONSERVAN": "Recorded payments are kept.",
@@ -2933,6 +2935,7 @@
       "NOT_VALID": "no longer valid",
       "UNCONFIGURED": "Not configured",
       "ROLES": {
+        "CUSTOMER_ADVANCES": "Customer advances",
         "SALES_INCOME": "Sales income",
         "SERVICE_INCOME": "Service income",
         "RECEIVABLE": "Accounts receivable",
@@ -2943,6 +2946,8 @@
         "EXPENSE_BY_CATEGORY": "Expense account of the category"
       },
       "EVENTS": {
+        "SALE_ADVANCE": "Collect an order in advance",
+        "SALE_DELIVERY": "Recognize the delivery of an order",
         "SALE_RECOGNITION": "Recognize a sale",
         "SALE_PAYMENT": "Collect a sale",
         "SERVICE_RECOGNITION": "Recognize a service",

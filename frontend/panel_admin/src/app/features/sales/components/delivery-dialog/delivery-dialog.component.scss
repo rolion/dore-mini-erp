@@ -1,0 +1,14 @@
+// Avisos legibles (contraste AA) en lugar del naranja con texto blanco de la plantilla; mismo estilo que Contabilidad.
+@use '../../../accounting/components/alert-warning';
+
+// La plantilla pinta `.alert-link` en blanco: sobre el fondo suave no se vería; el enlace hereda el color del texto.
+.alert.alert-warning .alert-link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+// En tema oscuro el texto heredado sigue siendo negro: se fija un color claro para mantener el contraste AA.
+:host-context(.dark) .alert.alert-warning {
+  color: #f6ebc4;
+}

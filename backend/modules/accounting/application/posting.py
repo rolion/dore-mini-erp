@@ -150,11 +150,14 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, c
     return account_id, None
 
 
-def resolve_event(event: Event, ctx: Context, method=None, category_id=None, category_label=''):
+def resolve_event(event: Event, ctx: Context, method=None, category_id=None, category_label='',
+                  skip_roles: frozenset[str] = frozenset()):
     """Cuentas por rol de un evento concreto (método/categoría de la operación) y los faltantes que impiden usarlo."""
     accounts: dict[str, UUID] = {}
     issues: list[PostingIssue] = []
     for _, role in event.lines:
+        if role.code in skip_roles:
+            continue
         account_id, issue = _resolve_line(role, event, ctx, method, category_id, category_label)
         if issue:
             issues.append(issue)

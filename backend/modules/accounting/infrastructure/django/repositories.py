@@ -545,6 +545,13 @@ class DjangoJournalRepository:
         model = self._queryset().filter(origin_kind=origin_kind, origin_id=origin_id).first()
         return _journal(model) if model else None
 
+    def origins_with(self, origin_kind: str, origin_ids: list[UUID]) -> set[UUID]:
+        """Los `origin_ids` de la empresa que ya tienen un asiento de ese tipo de evento."""
+        if not origin_ids:
+            return set()
+        return set(self._queryset().filter(origin_kind=origin_kind, origin_id__in=origin_ids)
+                   .values_list('origin_id', flat=True))
+
     def reversal_of(self, entry_id: UUID) -> JournalEntry | None:
         model = self._queryset().filter(reverses_id=entry_id).first()
         return _journal(model) if model else None
