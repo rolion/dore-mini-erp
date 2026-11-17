@@ -50,7 +50,7 @@ class JournalApiTests(AccountingApiBase):
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual((response.data['total'], response.data['source'], response.data['origin']),
                          ('500.00', 'MANUAL', None))
-        self.assertEqual([(l['account']['code'], l['debit'], l['credit']) for l in response.data['lines']],
+        self.assertEqual([(line['account']['code'], line['debit'], line['credit']) for line in response.data['lines']],
                          [('111001', '200.00', '0.00'), ('111002', '300.00', '0.00'), ('411001', '0.00', '500.00')])
         self.assertTrue(response.data['can_reverse'])
         self.assertEqual(response.data['period']['name'], 'Q2')
@@ -164,7 +164,7 @@ class JournalApiTests(AccountingApiBase):
         self.assertEqual(first.status_code, 201, first.data)
         self.assertEqual((first.data['reverses_id'], first.data['reversal_reason'], first.data['can_reverse']),
                          (entry_id, 'Error de captura', False))
-        self.assertEqual([(l['debit'], l['credit']) for l in first.data['lines']],
+        self.assertEqual([(line['debit'], line['credit']) for line in first.data['lines']],
                          [('0.00', '200.00'), ('0.00', '300.00'), ('500.00', '0.00')])
         again = self.client_a.post(f'{URL}{entry_id}/reverse/', payload, format='json')
         self.assertEqual((again.status_code, again.data['id']), (200, first.data['id']))
@@ -181,8 +181,9 @@ class JournalApiTests(AccountingApiBase):
                         {'reason': 'x'}, {'reversal_date': '2026-12-01', 'reason': 'x'}):
             self.assertEqual(self.client_a.post(url, payload, format='json').status_code, 400, payload)
         reversal = self.client_a.post(url, {'reversal_date': '2026-05-12', 'reason': 'x'}, format='json').data['id']
-        self.assertEqual(self.client_a.post(f'{URL}{reversal}/reverse/', {'reversal_date': '2026-05-13',
-                                                                         'reason': 'x'}, format='json').status_code, 400)
+        again = self.client_a.post(f'{URL}{reversal}/reverse/', {'reversal_date': '2026-05-13', 'reason': 'x'},
+                                   format='json')
+        self.assertEqual(again.status_code, 400)
 
     def test_reversal_in_a_closed_period_is_rejected(self):  # AC-07
         entry_id = self.post().data['id']

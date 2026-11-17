@@ -1,6 +1,6 @@
 # TASK-asientos-manuales-navegacion-contable: Simplificar navegación contable y registrar/consultar asientos manuales (CONT-11)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-asientos-manuales-navegacion-contable
@@ -13,6 +13,7 @@
 | 2026-11-17 | (nuevo) → INVESTIGATION | Task creado; base = rama `accounting` (`origin/accounting`, PR #83 ya integrado), no `main` | delivery-start |
 | 2026-11-17 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN, diseño SI; 3 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-17 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -77,7 +78,17 @@ No aplica según veredicto (sin ADR; el contrato del motor es el de CONT-02).
 `docs/plans/PLAN-2026-11-17-asientos-manuales-navegacion-contable.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (sin cambios de Specification).
+
+- **Backend** (`accounting`): `DjangoJournalRepository.search` + `JournalFilters` (orden total `-accounting_date,-created_at,-id`, `EXISTS` por cuenta, aislado por empresa; INV-04/05, AC-03/04); `api/journal_serializers.py` y `api/journal_views.py` con API-01..04 (lista paginada, alta manual atómica por `post_journal_entry`, detalle, reversión por `reverse_journal_entry`; 400 por campo, 404 ajeno, 405 en PUT/PATCH/DELETE; INV-06, AC-01/02/05/06/07); rutas `journal-entries/`. Sin migración.
+- **Frontend** (`features/accounting`): `models/journal.ts` (aritmética en centavos, bloqueos de confirmación, mapeo de errores), `journal-api.service.ts`, `journal-filters-state.ts`; páginas Movimientos (lista), Nuevo asiento (formulario con Total Debe/Haber/Diferencia), detalle con bloque Reversión, diálogo de reversión, Cuentas, Saldos «Próximamente» y Configuración (Clasificaciones contables + Períodos fiscales); la pantalla anterior pasa a `/accounting/settings/legacy` (Métodos de pago, Clasificaciones de ingreso/egreso, Egresos, Corte y cobertura). Menú: Cuentas, Movimientos, Saldos, Configuración (AC-08, AC-09, UI-01..06). Enlaces de `classification-hint`, diálogo de módulos y cobertura del libro apuntan a las nuevas rutas. i18n es/en/pt (AC-10).
+- **Pantallas de referencia:** «Lista de solo lectura con filtros» (`movement-list`/`entry-list`), «Formulario con líneas… variante de un solo paso con totales calculados» (`purchase-form`), Detalle y «Diálogo de acción irreversible con motivo» (`movement-reverse-dialog`); reutiliza `AccountsTabComponent`, `AccountClassesTabComponent`, `PeriodsTabComponent`.
+
+**Desviaciones:** (1) el selector de cuenta es un `select` nativo (como el filtro de `entry-list`), no `ng-select`. (2) `Entradas` y `Regularizar` siguen accesibles por URL; la lista de Movimientos enlaza a Entradas con una nota, y Configuración enlaza a «Otras configuraciones»; `Regularizar` solo por URL directa (sin enlace nuevo). (3) El filtro «origen» usa `source` (Manual/Automático); `origin_kind` queda disponible en la API pero sin control en la UI.
+
+**Pruebas añadidas:** backend `test_journal_api` (18); frontend `journal.spec`, `journal-api.service.spec`, specs de lista, formulario, detalle, diálogo, Configuración y Configuración heredada; `sidebar-menu.spec` actualizado. Corridas propias (no son el Quality Gate): `accounting` 309 OK, `makemigrations --check` sin cambios; frontend lint OK, `ng build` OK, `i18n:check` 0 faltantes, specs de accounting/layout/settings/shared en verde.
+
+**Deuda / pendiente:** idempotencia de asientos manuales (doble envío solo mitigado en UI); retirar la pantalla heredada con CONT-12/13; definir el vocabulario `origin_kind` de los módulos para los enlaces a origen; actualizar `design-system.md` §6 (submenú de Contabilidad) — hecho en este PR.
 
 ## Review
 _Pendiente_
