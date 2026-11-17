@@ -54,7 +54,7 @@ Cada pago crea una entrada del libro anterior (`origin_kind` `SERVICE`) (`receiv
 - **AC-13** Frontend: acción «Marcar como prestado» por tratamiento con diálogo de confirmación (fecha, advertencia irreversible), estado «Prestado» por fila, total «Reconocido» y alertas contables accionables en prestar y cobrar; todo en es/en/pt.
 
 ## Edge cases / Error cases
-- **EDGE-01** Fecha de prestación sin cobertura: se presta sin asiento si no hay anticipos; con anticipos ya contabilizados, `payment_date_not_covered`/`fiscal_period_unavailable` según el caso y no se presta.
+- **EDGE-01** Fecha de prestación sin cobertura: se presta sin asiento si no hay anticipos; con anticipos ya contabilizados, `service_date_not_covered` (o `fiscal_period_unavailable` si el período está cerrado) y no se presta.
 - **EDGE-02** Línea con cobros del libro anterior (sin asiento) prestada con cobertura: `service_has_unposted_payments` (decisión pendiente de negocio).
 - **EDGE-03** Cobro posterior a una línea prestada sin asiento (prestada antes de la cobertura): libro anterior.
 - **EDGE-04** Proforma que se versiona después de prestar: la prestación sigue ligada por `lineage_id`.
@@ -144,3 +144,6 @@ Ver ADR §1-8. Reutilizar el patrón de `SalesPostingAdapter` (`_posting_errors`
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v1.1** (2026-11-17): [Implementation Plan] EDGE-01 nombra el código `service_date_not_covered` (antes se decía `payment_date_not_covered`); sin cambio de comportamiento ni de Specification. Además se añadió la pantalla Cobros → Configuración (ruta `receivables/settings`) como paso implícito de AC-01. Solicitado por delivery-publish, REV-12.
