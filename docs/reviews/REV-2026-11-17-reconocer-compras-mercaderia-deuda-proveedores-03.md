@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-03: Pruebas de la Test Specification no escritas y no declaradas como desviación
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v1)
@@ -22,3 +22,6 @@ Sin prueba: (a) dominio `receipt_amount` aislado; (b) comandos con puerto falso;
 grep "def test_" backend/modules/purchases/tests/test_purchase_posting.py -> 17 pruebas, todas de integración
 ls backend/modules/purchases/tests | grep -i posting -> solo test_purchase_posting.py
 ```
+
+## Resolution
+Resuelto: `test_purchase_posting_unit.py` (dominio, comandos con puerto falso, `RevertStockShortage`, `ledger_*`, serializer) y prueba de hueco `in_gap` en integración. La prueba con hilos sigue declarada como desviación.

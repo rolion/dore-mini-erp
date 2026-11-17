@@ -146,13 +146,20 @@ class PurchasePostingAdapter:
                 created_by=actor.user_id, created_by_name=actor.user_name)
 
     def reverse_receipt(self, purchase, receipt, reason: str, actor: Actor) -> None:
-        if not self.is_available():
-            return
+        # Aunque Contabilidad esté deshabilitada hoy, un asiento ya publicado se revierte con la recepción.
         with _posting_errors():
             accounting_services.reverse_automatic_entry(
                 self.company_id, PURCHASE_RECOGNITION, receipt.id, timezone.localdate(),
                 f'Recepcion {receipt.reference} de la compra {purchase.reference} revertida: {reason}',
                 created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def recognized_totals(self, receipt_ids: Iterable[UUID]) -> dict[UUID, Decimal]:
+        found = {}
+        for receipt_id in receipt_ids:
+            entry = accounting_services.find_automatic_entry(self.company_id, PURCHASE_RECOGNITION, receipt_id)
+            if entry is not None:
+                found[receipt_id] = entry.total
+        return found
 
     def entry_for(self, receipt_id: UUID) -> PostedEntry | None:
         entry = accounting_services.find_automatic_entry(self.company_id, PURCHASE_RECOGNITION, receipt_id)

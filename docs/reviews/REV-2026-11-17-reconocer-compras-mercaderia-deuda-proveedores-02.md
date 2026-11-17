@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-02: Revertir una recepción con Contabilidad deshabilitada hoy deja el asiento sin revertir
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v1)
@@ -24,3 +24,6 @@ backend/modules/purchases/infrastructure/adapters.py  PurchasePostingAdapter.rev
         return
 ```
 Sin prueba que cubra deshabilitar Contabilidad entre recibir y revertir (la prueba existente cubre el caso inverso: recibir sin Contabilidad y revertir con ella).
+
+## Resolution
+Resuelto: `reverse_receipt` ya no depende de que Contabilidad esté habilitada hoy; prueba de integración.

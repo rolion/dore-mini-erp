@@ -15,6 +15,7 @@
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-03 Medium y REV-01/02/04 Low abiertos) | delivery-publish |
+| 2026-11-17 | PUBLISH (corrección) | REV-01..04 resueltos a pedido de la persona | delivery-build |
 
 ## Investigación
 
@@ -95,11 +96,11 @@ Implementado según **PLAN v1**, sin cambios de Specification.
 
 ## Review
 **Quality Gate (PLAN v1): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2052 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, 0 líneas nuevas >120 caracteres. Frontend: `npm run lint` OK, `i18n:check` 2184 claves y 0 faltantes, `ng test` 1598 de 1598 OK, `ng build` OK. `ruff`/`flake8` solo con avisos de estilo (no comparados con la base); `mypy` y `npm audit` no ejecutados. Fronteras DDD, orden transaccional, AC-01..AC-09, INV, API y UI verificados. **Revisión visual: no verificada** (no se levantó la aplicación con sesión).
-Hallazgos abiertos (ninguno Critical/High):
+Hallazgos (ninguno Critical/High); **todos resueltos después del Gate** (ver Resolution en cada REV; verificación propia: backend 2071 pruebas OK, `makemigrations --check` sin cambios; el Gate no se repitió):
 - [REV-01](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-01.md) Low: deriva de 1 centavo al revertir una recepción intermedia y volver a recibir con importes que redondean.
 - [REV-02](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-02.md) Low: revertir con Contabilidad deshabilitada hoy deja vivo el asiento de una recepción contabilizada antes.
 - [REV-03](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-03.md) Medium: faltan pruebas de la Test Specification (unit de `receipt_amount`, comandos con puerto falso, serializer, `RevertStockShortage`, `ledger_*`, `in_gap`).
 - [REV-04](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-04.md) Low: el TASK decía «SCSS copiado» pero el componente hace `@use` del parcial de Contabilidad (corregido en este TASK).
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/89 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al recibir) y cambia reglas de recepción/reversión con cobertura contable: lo aprueba una persona. Sin migraciones. Pendientes: REV-01..04 abiertos, revisión visual, mypy y npm audit no realizados.
+PR https://github.com/rolion/dore-mini-erp/pull/89 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al recibir) y cambia reglas de recepción/reversión con cobertura contable: lo aprueba una persona. Sin migraciones. Pendientes: revisión visual, mypy y npm audit no realizados.

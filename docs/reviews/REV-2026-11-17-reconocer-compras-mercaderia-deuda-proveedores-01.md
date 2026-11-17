@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-01: Deriva de centavos en el reconocimiento tras revertir una recepción que no es la última
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v1)
@@ -23,3 +23,6 @@ compute_subtotal(0.1,0.15)=0.02  (0.2)=0.03  (0.3)=0.05
 B = sub(0.2)-sub(0.1) = 0.01 ; C(before=0.1, qty 0.2) = sub(0.3)-sub(0.1) = 0.03 ; neto B+C = 0.04 vs total 0.05
 ```
 (razonamiento verificado con el cálculo del dominio; no hay prueba que cubra reversión intermedia + re-recepción). Solo con precios/cantidades fraccionarios que redondean; impacto de 1 centavo, escenario raro.
+
+## Resolution
+Resuelto: `Purchase.receipt_amount` valora contra los asientos vigentes (`recognized_totals` del puerto); pruebas de dominio, comandos e integración.

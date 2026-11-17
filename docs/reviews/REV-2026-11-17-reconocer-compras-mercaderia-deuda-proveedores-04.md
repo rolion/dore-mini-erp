@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-04: El TASK dice «SCSS copiado» pero el aviso importa el parcial de Contabilidad
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v1)
@@ -22,3 +22,6 @@ Inconsistencia documental menor; sin impacto funcional.
 frontend/panel_admin/src/app/features/purchases/pages/reception-form/reception-form.component.scss:2
 @use '../../../accounting/components/alert-warning';
 ```
+
+## Resolution
+Corregido en el TASK (el SCSS hace `@use` del parcial de Contabilidad).

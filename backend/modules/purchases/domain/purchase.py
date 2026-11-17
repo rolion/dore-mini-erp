@@ -436,20 +436,20 @@ class Purchase:
         return Receipt(id=receipt_id, purchase_id=self.id, receipt_date=when, user_id=user_id, user_name=user_name,
                        lines=lines)
 
-    def receipt_amount(self, receipt: Receipt, received_before: Mapping[UUID, Decimal]) -> Decimal:
-        """Importe que reconoce una recepción: lo recibido valorado al precio de la línea de la compra.
+    def receipt_amount(self, receipt: Receipt, posted: Mapping[UUID, Decimal], recognized: Decimal) -> Decimal:
+        """Importe que reconoce una recepción: valor de lo recibido contabilizado, menos lo ya reconocido.
 
-        Se calcula como diferencia del subtotal acumulado de cada línea (`received_before` es lo ya recibido sin
-        esta recepción): la suma de las recepciones de una línea siempre es su subtotal, sin deriva de redondeo.
+        `posted` es lo recibido por línea en las recepciones vigentes que ya tienen asiento y `recognized` la suma
+        de esos asientos. Así lo reconocido neto siempre iguala el valor acumulado de lo recibido (precio de línea,
+        redondeo por línea), aunque se haya revertido una recepción intermedia: sin deriva de centavos.
         """
         by_id = {item.id: item for item in self.items}
-        total = ZERO
+        after = dict(posted)
         for line in receipt.lines:
-            item = by_id[line.purchase_item_id]
-            before = received_before.get(item.id, ZERO)
-            after = compute_subtotal(before + line.quantity, item.unit_price)
-            total += after - compute_subtotal(before, item.unit_price)
-        return total
+            after[line.purchase_item_id] = after.get(line.purchase_item_id, ZERO) + line.quantity
+        value = sum((compute_subtotal(quantity, by_id[item_id].unit_price) for item_id, quantity in after.items()),
+                    ZERO)
+        return value - recognized
 
     def recompute_reception(self, received: Mapping[UUID, Decimal]) -> None:
         """Recalcula `reception_status` con lo recibido por las recepciones que siguen confirmadas."""

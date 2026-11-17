@@ -12,7 +12,11 @@ from django.utils import timezone
 from modules.accounting import services as accounting
 from modules.accounting.application.fiscal_periods import CloseFiscalPeriod
 from modules.accounting.application.use_cases import ConfigureMethod
-from modules.accounting.infrastructure.django.models import JournalEntryModel
+from modules.accounting.infrastructure.django.models import (
+    CoveragePeriodModel,
+    JournalEntryModel,
+    SettingsModel,
+)
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
     DjangoFiscalPeriodRepository,
@@ -44,10 +48,13 @@ class PostingTestCase(ReceiptApiTestCase):
         set_enabled(self.company, self.modules)
         self.inventory_account = make_account(self.company.id, 'Inventario', 'ASSET', '113001')
         self.payable_account = make_account(self.company.id, 'Proveedores', 'LIABILITY', '210101')
-        self.period = make_period(self.company.id, 'Año', TODAY - timedelta(days=200), TODAY + timedelta(days=100))
+        self.period = self.make_periods()
         if self.configured:
             accounting.set_role_account(self.company.id, 'INVENTORY', self.inventory_account.id)
             accounting.set_role_account(self.company.id, 'PAYABLE', self.payable_account.id)
+
+    def make_periods(self):
+        return make_period(self.company.id, 'Año', TODAY - timedelta(days=200), TODAY + timedelta(days=100))
 
     def journal(self):
         return JournalEntryModel.objects.filter(company_id=self.company.id, origin_kind=KIND)
@@ -188,6 +195,20 @@ class CoverageAndRejectionTests(PostingTestCase):
         self.assertEqual(self.purchase_detail(purchase)['reception_status'], 'not_received')
 
 
+class GapCoverageTests(PostingTestCase):
+    def test_a_reception_inside_a_coverage_gap_posts_nothing_and_succeeds(self):  # AC-06
+        now = timezone.now()
+        SettingsModel.objects.create(company_id=self.company.id, cutoff_date=TODAY - timedelta(days=60))
+        CoveragePeriodModel.objects.create(company_id=self.company.id, started_at=now - timedelta(days=30),
+                                           ended_at=now - timedelta(days=10))
+        CoveragePeriodModel.objects.create(company_id=self.company.id, started_at=now - timedelta(days=6))
+        during = (now - timedelta(days=8)).astimezone().date()
+        self.assertEqual(accounting.coverage_status(self.company.id, during).reason, 'in_gap')
+        purchase = self.purchase_of('10', '10.00')
+        self.receive_date(purchase, [(self.item_id(purchase, self.boxes), '10')], during)
+        self.assertEqual((self.journal().count(), ReceiptModel.objects.count()), (0, 1))
+
+
 class MissingConfigurationTests(PostingTestCase):
     configured = False
 
@@ -238,6 +259,24 @@ class ReversalTests(PostingTestCase):
         self.assertEqual(body['code'], 'fiscal_period_unavailable')
         self.assertEqual(ReceiptModel.objects.get(pk=receipt['id']).status, 'confirmed')
         self.assertEqual(self.purchase_detail(purchase)['reception_status'], 'received')
+
+    def test_reverting_after_disabling_accounting_still_reverses_the_existing_entry(self):  # REV-02
+        purchase = self.purchase_of('100', '10.00')
+        receipt = self.receive(purchase, [(self.item_id(purchase, self.boxes), '100')])
+        self.accounting_off()
+        self.revert(purchase, receipt)
+        self.accounting_on()
+        self.assertEqual(self.net(self.payable_account), (Decimal('1000.00'), Decimal('1000.00')))
+
+    def test_net_payable_equals_the_total_after_reverting_an_intermediate_reception(self):  # REV-01
+        purchase = self.purchase_of('0.3', '0.15', product=self.flour)
+        item = self.item_id(purchase, self.flour)
+        first = self.receive(purchase, [(item, '0.1')])
+        self.receive(purchase, [(item, '0.1')])
+        self.revert(purchase, first)
+        self.receive(purchase, [(item, '0.2')])
+        debit, credit = self.net(self.payable_account)
+        self.assertEqual(credit - debit, Decimal('0.05'))
 
     def accounting_off(self):
         set_enabled(self.company, DEFAULT_ENABLED_KEYS + ('purchases', 'inventory'))
