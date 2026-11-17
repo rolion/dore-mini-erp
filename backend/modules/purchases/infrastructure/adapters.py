@@ -10,6 +10,7 @@ from decimal import Decimal
 
 from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
+from modules.costing import services as costing_services
 from modules.inventory import services as inventory_services
 from modules.purchases.application.ports import (
     Actor,
@@ -23,6 +24,7 @@ from modules.purchases.domain.exceptions import PurchaseValidationError, StockSh
 from shared import module_gate
 
 INVENTORY_MODULE = 'inventory'
+COSTING_MODULE = 'costing'
 
 
 class ProductCatalogAdapter:
@@ -61,7 +63,7 @@ class StockEntryAdapter:
                 for w in inventory_services.list_active_warehouses(self.company_id)]
 
     def register_entries(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
-                         reference: str, actor: Actor) -> None:
+                         reference: str, actor: Actor, unit_costs: dict[UUID, Decimal] | None = None) -> None:
         for product_id, quantity in lines:
             try:
                 inventory_services.record_movement(
@@ -75,12 +77,25 @@ class StockEntryAdapter:
                     for key, messages in exc.errors.items()}) from exc
             except inventory_services.MovementConflict as exc:
                 raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
+        self._cost_entries(lines, receipt_id, unit_costs)
+
+    def _cost_entries(self, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
+                      unit_costs: dict[UUID, Decimal] | None) -> None:
+        """Traslada el precio acordado al costo promedio (INV-01). Sin Costeo adoptado no hace nada ni asienta."""
+        if not unit_costs or not module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            return
+        costing_services.cost_receipt(
+            self.company_id, source_type=self.SOURCE_TYPE, source_id=str(receipt_id),
+            lines=[(pid, qty, unit_costs[pid]) for pid, qty in lines if pid in unit_costs])
 
     def reverse_entries(self, receipt_id: UUID, reason: str, actor: Actor) -> None:
         try:
             inventory_services.reverse_source_movements(
                 self.company_id, self.SOURCE_TYPE, str(receipt_id), user_id=actor.user_id,
                 user_name=actor.user_name, reason=reason)
+            if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+                costing_services.reverse_receipt_cost(
+                    self.company_id, source_type=self.SOURCE_TYPE, source_id=str(receipt_id))
         except inventory_services.InsufficientStock as exc:
             raise StockShortage(exc.warehouse_id, [(s.product_id, s.requested, s.available)
                                                    for s in exc.shortages]) from exc

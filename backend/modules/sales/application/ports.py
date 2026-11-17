@@ -114,6 +114,14 @@ class StockOutput(Protocol):
     def output_for(self, order_id: UUID) -> StockOutputRecord | None: ...
 
 
+class DeliveryCosting(Protocol):
+    """Costo de ventas al entregar (INV-01): valoriza las salidas al costo promedio y asienta Costo de ventas /
+    Inventario en la transacción de quien llama. Rechaza la entrega con una excepción de Ventas si falta costo o
+    configuración; sin cobertura contable no asienta ni exige nada."""
+
+    def cost_delivery(self, order: object, lines: list[tuple[UUID, Decimal]], actor: Actor) -> None: ...
+
+
 AT_CONFIRM = 'AT_CONFIRM'  # reconocido al confirmar (lógica anterior, histórico)
 AT_DELIVERY = 'AT_DELIVERY'  # reconocido al entregar
 

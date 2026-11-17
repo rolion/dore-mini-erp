@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
+from modules.costing import services as costing_services
 from modules.customers import services as customer_services
 from modules.inventory import services as inventory_services
 from modules.modularity import services as modularity_services
@@ -41,6 +42,8 @@ from shared import module_gate
 CUSTOMERS_MODULE = 'customers'
 INVENTORY_MODULE = 'inventory'
 ACCOUNTING_MODULE = 'accounting'
+COSTING_MODULE = 'costing'
+INVENTORY_SALE_COST = 'INVENTORY_SALE_COST'  # evento del catálogo de Contabilidad (CONT-12 / INV-01)
 PAYMENT_CURRENCY = 'BOB'
 SALE_RECOGNITION = 'SALE_RECOGNITION'  # eventos del catálogo de Contabilidad (CONT-12 / VEN-01)
 SALE_ADVANCE = 'SALE_ADVANCE'
@@ -295,6 +298,56 @@ class SalesPostingAdapter:
                 'ledger_rejected', 'Contabilidad rechazó la entrada del cobro: ' + _first_message(exc.errors)) from exc
         except accounting_services.EntryConflict as exc:
             raise OrderRuleViolation('ledger_conflict', str(exc)) from exc
+
+
+class DeliveryCostingAdapter:
+    """Costo de ventas al entregar (INV-01), sobre las fachadas de Costeo y Contabilidad.
+
+    Con cobertura contable: valoriza al costo promedio y asienta `INVENTORY_SALE_COST` por el total, o rechaza la
+    entrega (nunca inventa un costo). Sin cobertura: registra el costo si Costeo lo tiene y sigue sin asiento.
+    """
+
+    SOURCE_TYPE = StockOutputAdapter.SOURCE_TYPE
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def cost_delivery(self, order, lines: list[tuple[UUID, Decimal]], actor: Actor) -> None:
+        covered = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE) and accounting_services.coverage_status(
+            self.company_id, order.delivered_date).covered
+        if not module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            if covered:
+                raise OrderRuleViolation('inventory_cost_unavailable', _COSTING_OFF)
+            return
+        try:
+            costed = costing_services.cost_outputs(
+                self.company_id, source_type=self.SOURCE_TYPE, source_id=str(order.id), lines=lines)
+        except costing_services.CostUnavailable as exc:
+            if not covered:
+                return
+            raise OrderRuleViolation('inventory_cost_unavailable', self._unavailable_message(exc),
+                                     {'product_ids': [str(pid) for pid in exc.product_ids]}) from exc
+        if not covered or costed.total <= 0:
+            return  # sin cobertura no hay asiento; un costo total cero (declarado) no genera movimiento
+        with _posting_errors():
+            accounting_services.post_automatic_entry(
+                self.company_id, INVENTORY_SALE_COST, order.id, order.delivered_date,
+                f'Costo de ventas del pedido {order.code}', costed.total, created_by=actor.user_id,
+                created_by_name=actor.user_name)
+
+    def _unavailable_message(self, exc) -> str:
+        if exc.reason == costing_services.CostUnavailable.NOT_ADOPTED:
+            return _COSTING_NOT_ADOPTED
+        names = inventory_services.get_product_names(self.company_id, exc.product_ids)
+        listed = ', '.join(names[pid][0] for pid in exc.product_ids if pid in names) or 'algunos productos'
+        return ('No se puede contabilizar el costo de ventas: no hay costo promedio para ' + listed
+                + '. Registra una compra recibida de esos productos o revisa la valoración inicial en Costeo.')
+
+
+_COSTING_OFF = ('No se puede contabilizar el costo de ventas: habilita Costeo y adopta la valoración inicial de '
+                'las existencias.')
+_COSTING_NOT_ADOPTED = ('No se puede contabilizar el costo de ventas: adopta la valoración inicial de las '
+                        'existencias en Costeo.')
 
 
 @contextmanager
