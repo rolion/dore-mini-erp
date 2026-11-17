@@ -23,10 +23,10 @@
       <div class="m-4"><a class="btn btn-light" routerLink="/pocketbiz/accounting/journal">{{ 'COMMON.VOLVER' | translate }}</a></div>
       } @else if (entry; as e) {
       @if (justCreated) {
-      <div class="alert alert-success m-4 mb-0" role="status" data-testid="created-alert">{{ 'ACCOUNTING.JOURNAL.ASIENTO_REGISTRADO' | translate }}</div>
+      <div class="alert alert-success bg-success-subtle text-success-emphasis border-success-subtle m-4 mb-0" role="status" data-testid="created-alert">{{ 'ACCOUNTING.JOURNAL.ASIENTO_REGISTRADO' | translate }}</div>
       }
       @if (createdReversalId) {
-      <div class="alert alert-success m-4 mb-0" role="status" data-testid="reversed-alert">
+      <div class="alert alert-success bg-success-subtle text-success-emphasis border-success-subtle m-4 mb-0" role="status" data-testid="reversed-alert">
         {{ 'ACCOUNTING.JOURNAL.ASIENTO_REVERTIDO' | translate }}
         <a class="alert-link ms-1" [routerLink]="['/pocketbiz/accounting/journal', createdReversalId]" data-testid="reversal-created-link">{{ 'ACCOUNTING.JOURNAL.VER_REVERSION' | translate }}</a>
       </div>

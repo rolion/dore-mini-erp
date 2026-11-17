@@ -9,6 +9,7 @@ from django.db.models import Count, Exists, Max, Min, OuterRef, Q, Sum
 from django.db.models.functions import Lower
 from django.utils import timezone
 
+from modules.accounting.application.journal_queries import JournalFilters
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES, OPERATION_RECORD
 from modules.accounting.domain.classification import Classification
@@ -470,16 +471,6 @@ def _journal(model: JournalEntryModel) -> JournalEntry:
         reversed_by_id=reversed_by.id if reversed_by else None,
         lines=tuple(JournalLine(line.account_id, line.debit, line.credit, line.memo, line.position)
                     for line in model.lines.all()))
-
-
-@dataclass(frozen=True)
-class JournalFilters:
-    """Filtros del libro de asientos; todos opcionales."""
-    date_from: date | None = None
-    date_to: date | None = None
-    account_id: UUID | None = None
-    source: str | None = None
-    origin_kind: str | None = None
 
 
 class DjangoJournalRepository:

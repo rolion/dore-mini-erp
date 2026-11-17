@@ -1,6 +1,6 @@
 # REV-2026-11-17-asientos-manuales-navegacion-contable-02: Casos de uso de lectura y prueba de listado del PLAN no creados; sin prueba de número de consultas
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-17-asientos-manuales-navegacion-contable.md (v1)
@@ -19,3 +19,6 @@ Funcionalmente correcto: search() usa select_related('reversed_by_entry') y el t
 
 ## Evidence
 ls backend/modules/accounting/application: sin journal_queries.py; backend/modules/accounting/tests/: sin test_journal_listing.py; journal_views.py:67-71 usa el repositorio en la vista.
+
+## Resolución
+Corregido (2026-11-17): `application/journal_queries.py` (`JournalFilters`, `ListJournalEntries`, `GetJournalEntry` con puerto de lectura) usado por las vistas, y `tests/test_journal_listing.py` (orden total, filtros, aislamiento por empresa, número de consultas constante). `accounting` 314 pruebas OK.

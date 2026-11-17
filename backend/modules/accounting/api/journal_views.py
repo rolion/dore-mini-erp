@@ -7,13 +7,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.accounting import services
+from modules.accounting.application.journal_queries import GetJournalEntry, JournalFilters, ListJournalEntries
 from modules.accounting.domain.fiscal_period import DateOutsideFiscalPeriod, FiscalPeriodClosed
 from modules.accounting.domain.journal import JournalConflict, JournalEntryNotFound, JournalValidationError
 from modules.accounting.infrastructure.django.repositories import (
     DjangoAccountRepository,
     DjangoFiscalPeriodRepository,
     DjangoJournalRepository,
-    JournalFilters,
 )
 from shared import module_gate
 from shared.tenancy import company_id_from
@@ -43,10 +43,10 @@ def _author(request) -> tuple[int, str]:
 
 
 def _detail(company_id, entry_id) -> dict:
-    journal = DjangoJournalRepository(company_id)
-    entry = journal.get(entry_id)
-    if entry is None:
-        raise NotFound('Asiento no encontrado.')
+    try:
+        entry = GetJournalEntry(DjangoJournalRepository(company_id)).execute(entry_id)
+    except JournalEntryNotFound as exc:
+        raise NotFound('Asiento no encontrado.') from exc
     period = DjangoFiscalPeriodRepository(company_id).get(entry.period_id) if entry.period_id else None
     accounts = DjangoAccountRepository(company_id).by_id()
     return serialize_journal_detail(entry, accounts, period, module_gate.enabled_keys(company_id))
@@ -75,7 +75,8 @@ class JournalEntryListCreateView(APIView):
         if filters.account_id and DjangoAccountRepository(company_id).get(filters.account_id) is None:
             raise ValidationError({'account_id': ['La cuenta no existe en esta empresa.']})
         paginator = JournalPagination()
-        page = paginator.paginate_queryset(DjangoJournalRepository(company_id).search(filters), request, view=self)
+        rows = ListJournalEntries(DjangoJournalRepository(company_id)).execute(filters)
+        page = paginator.paginate_queryset(rows, request, view=self)
         enabled = module_gate.enabled_keys(company_id)
         return paginator.get_paginated_response([serialize_journal_row(row, enabled) for row in page])
 
