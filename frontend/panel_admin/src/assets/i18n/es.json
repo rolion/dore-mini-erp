@@ -2935,6 +2935,7 @@
       "NOT_VALID": "ya no es válida",
       "UNCONFIGURED": "Sin configurar",
       "ROLES": {
+        "CUSTOMER_ADVANCES": "Anticipos de clientes",
         "SALES_INCOME": "Ingresos por ventas",
         "SERVICE_INCOME": "Ingresos por servicios",
         "RECEIVABLE": "Cuentas por cobrar",
@@ -2945,6 +2946,8 @@
         "EXPENSE_BY_CATEGORY": "Cuenta de gasto de la categoría"
       },
       "EVENTS": {
+        "SALE_ADVANCE": "Cobrar un pedido por adelantado",
+        "SALE_DELIVERY": "Reconocer la entrega de un pedido",
         "SALE_RECOGNITION": "Reconocer una venta",
         "SALE_PAYMENT": "Cobrar una venta",
         "SERVICE_RECOGNITION": "Reconocer un servicio",

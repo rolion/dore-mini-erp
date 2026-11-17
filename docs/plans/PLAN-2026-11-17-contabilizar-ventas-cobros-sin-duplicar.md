@@ -154,6 +154,7 @@ Ver ADR v2 (§1-§10).
 - Backend `accounting/`: `domain/posting.py` (rol, eventos, `extra_debit_role`, `active`), `application/posting.py` (líneas extra en vista previa), `services.py` (`advance_applied`, `automatic_entry_origins`), tests.
 - Backend `sales/`: `application/ports.py`, `application/commands.py` (`StartOrderPreparation` sin contabilidad, `DeliverOrder`, `RegisterPayment`, `CancelOrder`, bloqueos), `infrastructure/adapters.py`, `api/views.py`, `tests/fakes.py` y pruebas.
 - Frontend: `features/sales/components/delivery-dialog` (+ spec), detalle del pedido (sin cambios de lógica), `assets/i18n/{es,en,pt}.json`.
+- Además (hallazgos del Gate): `frontend/.../methods-tab/methods-tab.component.scss` (interruptor de métodos de pago clicable, pedido por la persona), `find_automatic_entry` en la fachada de Contabilidad (aditiva, con prueba), `module-settings` (`?tab=posting` abre «Asientos automáticos») y las claves i18n del rol y los eventos nuevos (`ACCOUNTING.POSTING.ROLES.CUSTOMER_ADVANCES`, `EVENTS.SALE_ADVANCE/SALE_DELIVERY`).
 - Docs: TASK/ADR/DDR/PLAN.
 
 ## Implementation steps
@@ -182,3 +183,4 @@ Ninguna.
 - **v1** (2026-11-17): versión inicial (reconocimiento al confirmar).
 - **v2** (2026-11-17): [Specification] AC-15 y EDGE-07: confirmar con cobertura un pedido con cobros previos se rechaza (`order_has_prior_payments`). Cambio solicitado por la persona (opción A de REV-01).
 - **v3** (2026-11-17): [Specification] El ingreso se reconoce **al entregar** y los cobros previos son **anticipos de clientes**: nuevo rol Pasivo `CUSTOMER_ADVANCES` y eventos `SALE_ADVANCE` y `SALE_DELIVERY`; confirmar y marcar listo no contabilizan; reglas de transición (pedidos con reconocimiento anterior, cobros sin asiento, entrega sin cobertura); se elimina `order_has_prior_payments` de `prepare` (v2/AC-15 reemplazado por AC-13). Los AC se renumeran (AC-01..AC-17). [Implementation Plan] pasos reescritos; `SALE_RECOGNITION` queda como evento histórico. Cambio **solicitado explícitamente por la persona en el chat** (instrucción de rediseño del flujo contable de Ventas). Reemplaza parcialmente el ADR de v1.
+- **v3.1** (2026-11-17): [Implementation Plan] «Files affected» ampliado con los archivos que el Quality Gate señaló fuera de lista (REV-13); sin cambios de Specification.

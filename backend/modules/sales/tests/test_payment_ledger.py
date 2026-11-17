@@ -247,8 +247,8 @@ class PaymentLedgerApplicationTests(TransactionTestCase):
     """Orden y atomicidad del comando con doble en memoria del libro (AC-06, AC-07, AC-09)."""
 
     class FakeLedger:
-        def __init__(self, available=True, error=None):
-            self.available, self.error, self.calls = available, error, []
+        def __init__(self, error=None):
+            self.error, self.calls = error, []
 
         def record_payment(self, order, payment, actor, today):
             self.calls.append((order.id, payment.amount))

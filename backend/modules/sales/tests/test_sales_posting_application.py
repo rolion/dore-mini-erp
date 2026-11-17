@@ -20,7 +20,8 @@ from modules.sales.tests.fakes import FakeCustomers, FakeProducts, FixedClock, I
 
 class FakePosting:
     def __init__(self, state=None, locked=False, posted_payments=False, error=None):
-        self.state, self.locked, self.posted_payments, self.error, self.calls = state, locked, posted_payments, error, []
+        self.state, self.locked, self.posted_payments = state, locked, posted_payments
+        self.error, self.calls = error, []
 
     def recognition_state(self, order_id):
         return self.state

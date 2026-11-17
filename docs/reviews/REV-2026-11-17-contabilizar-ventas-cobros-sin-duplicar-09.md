@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-09: Parámetro `available` sin uso en `FakeLedger`
 
-**Status:** Open
+**Status:** Resolved (parámetro sin uso eliminado de `FakeLedger`)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-04: Casos de la Specification sin prueba explícita
 
-**Status:** Open
+**Status:** Resolved (pruebas de total 0, replay con configuración cambiada y período cerrado al cobrar)
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

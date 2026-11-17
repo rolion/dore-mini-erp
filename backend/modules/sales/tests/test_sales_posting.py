@@ -4,6 +4,7 @@ Cada prueba usa Contabilidad real (cuentas por rol, métodos de pago, período a
 """
 from datetime import date, timedelta
 from decimal import Decimal
+from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 from django.db import transaction
@@ -22,10 +23,15 @@ from modules.accounting.infrastructure.django.repositories import DjangoAccountR
 from modules.accounting.tests.journal_support import make_account, make_period, money_account
 from modules.accounting.tests.test_concurrency import _run_together
 from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.inventory import services as inventory
+from modules.inventory.tests.test_movements import make_product, make_warehouse
 from modules.catalog.infrastructure.django.models import ProductModel
+from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.infrastructure.django.models import CompanyModuleModel
+from modules.modularity.tests.test_enforcement import set_enabled
 from modules.sales.application.commands import DeliverOrder, MarkOrderReady, RegisterPayment, StartOrderPreparation
 from modules.sales.application.ports import Actor
+from modules.sales.domain.enums import OrderStatus
 from modules.sales.domain.order import Order
 from modules.sales.infrastructure.adapters import SalesPostingAdapter, SystemClock
 from modules.sales.infrastructure.django.models import PaymentModel
@@ -194,6 +200,68 @@ class AdvanceTests(PostingApiBase):
         self.assertEqual((PaymentModel.objects.count(), self.books.journal().count()), (0, 0))
 
 
+class EdgeCaseTests(PostingApiBase):
+    def test_a_zero_total_order_is_delivered_without_an_entry_and_admits_no_payment(self):  # EDGE-01
+        order = self.order_with_item(price='100.00', quantity=1)
+        self.act(order, 'discount', {'discount': '100.00'})
+        self.act(order, 'prepare')
+        self.act(order, 'ready')
+        self.deliver(order)
+        self.assertEqual((self.get(order)['status'], self.books.journal().count()), ('DELIVERED', 0))
+        self.pay(order, '1.00', expected_status=400)
+
+    def test_replaying_a_payment_after_the_configuration_changed_creates_nothing(self):  # EDGE-05
+        order = self.confirmed('300.00')
+        key = str(uuid4())
+        self.pay(order, '100.00', idempotency_key=key)
+        accounting.set_role_account(self.company.id, 'CUSTOMER_ADVANCES', None)
+        self.pay(order, '100.00', expected_status=200, idempotency_key=key)
+        self.assertEqual((PaymentModel.objects.count(), self.books.journal('SALE_ADVANCE').count()), (1, 1))
+
+    def test_a_closed_period_blocks_the_payment_and_saves_nothing(self):  # AC-09 del plan v1, AC-14
+        order = self.confirmed('100.00')
+        FiscalPeriodModel.objects.filter(company_id=self.company.id).update(status='CLOSED')
+        body = self.pay(order, '10.00', expected_status=409)
+        self.assertEqual(body['code'], 'fiscal_period_unavailable')
+        self.assertEqual((PaymentModel.objects.count(), self.books.journal().count()), (0, 0))
+
+
+class DeliveryWithStockTests(SalesApiTestCase):
+    """AC-14 / INV-06: una falla del asiento al entregar no deja salida de almacén."""
+
+    def setUp(self):
+        super().setUp()
+        set_enabled(self.company, DEFAULT_ENABLED_KEYS + ('inventory', 'accounting'))
+        self.books = Books(self.company)
+        self.warehouse = make_warehouse(self.company, 'Central')
+        self.bags = make_product(self.company, 'Bolsas', allows_fractions=False, abbreviation='u')
+        inventory.record_movement(self.company.id, product_id=self.bags.id, warehouse_id=self.warehouse.id, kind='in',
+                                  quantity=Decimal('10'), user_id=None, user_name='ana')
+
+    def balance(self):
+        return inventory.get_balance(self.company.id, self.bags.id, self.warehouse.id)
+
+    def ready_order(self):
+        order = self.create()
+        self.add_item(order, self.bags, 2)
+        self.act(order, 'prepare')
+        self.act(order, 'ready')
+        return order
+
+    def test_an_accounting_failure_leaves_no_stock_output_and_the_order_undelivered(self):
+        order = self.ready_order()
+        accounting.set_role_account(self.company.id, 'SALES_INCOME', None)
+        body = self.act(order, 'deliver', {'warehouse_id': str(self.warehouse.id)}, 409)
+        self.assertEqual(body['code'], 'posting_configuration_missing')
+        self.assertEqual((self.balance(), self.get(order)['status'], self.books.journal().count()),
+                         (Decimal('10'), 'READY', 0))
+
+    def test_delivering_with_complete_configuration_moves_stock_and_posts_the_income(self):
+        order = self.ready_order()
+        self.act(order, 'deliver', {'warehouse_id': str(self.warehouse.id)})
+        self.assertEqual((self.balance(), self.books.journal('SALE_DELIVERY').count()), (Decimal('8'), 1))
+
+
 class DeliveryTests(PostingApiBase):
     def test_case_a_delivery_without_previous_payments(self):  # AC-05
         order = self.ready('500.00', 2)
@@ -329,6 +397,22 @@ class CancelAndLockTests(PostingApiBase):
         self.assertEqual(edited.status_code, 200, edited.content)
         self.assertEqual(self.get(order)['total'], '200.00')
 
+    def test_without_coverage_a_confirmed_order_can_still_change_its_total(self):  # AC-12
+        from modules.accounting.infrastructure.django.models import SettingsModel
+        SettingsModel.objects.create(company_id=self.company.id, cutoff_date=TODAY + timedelta(days=30))
+        order = self.confirmed('100.00', 2)
+        self.add_item(order, self.product(name='Otro'), 1)
+        self.act(order, 'discount', {'discount': '5.00'})
+
+    def test_a_recognized_at_confirm_order_keeps_its_total_even_while_new(self):  # AC-12 (rama AT_CONFIRM)
+        order_id = uuid4()
+        with transaction.atomic():
+            accounting.post_automatic_entry(self.company.id, 'SALE_RECOGNITION', order_id, TODAY, 'Histórica',
+                                            Decimal('50.00'))
+        adapter = SalesPostingAdapter(self.company.id)
+        self.assertTrue(adapter.locks_total(SimpleNamespace(id=order_id, status=OrderStatus.NEW)))
+        self.assertFalse(adapter.locks_total(SimpleNamespace(id=uuid4(), status=OrderStatus.NEW)))
+
     def test_a_new_order_can_still_change_its_total(self):  # AC-12
         order = self.order_with_item(price='100.00', quantity=2)
         self.add_item(order, self.product(name='Otro'), 1)
@@ -336,6 +420,12 @@ class CancelAndLockTests(PostingApiBase):
 
 
 class TransitionTests(PostingApiBase):
+    def snapshot(self):
+        """Asientos y líneas tal como están en el libro (para comprobar que nada histórico cambia)."""
+        return sorted((str(e.id), e.origin_kind, e.total, sorted((str(l.account_id), l.debit, l.credit)
+                                                                  for l in e.lines.all()))
+                      for e in self.books.journal())
+
     def seed_old_recognition(self, order):
         """Reconocimiento al confirmar de la lógica anterior (pedidos históricos)."""
         with transaction.atomic():
@@ -348,9 +438,11 @@ class TransitionTests(PostingApiBase):
         self.pay(order, '300.00', 'CASH')
         self.assertEqual(self.books.journal('SALE_PAYMENT').count(), 1)
         self.assertEqual(self.books.journal('SALE_ADVANCE').count(), 0)
+        before = self.snapshot()
         self.deliver(order)
         self.assertEqual(self.books.journal('SALE_DELIVERY').count(), 0)
         self.assertEqual(self.books.net(self.books.ingresos), (ZERO, Decimal('1000.00')))  # una sola vez
+        self.assertEqual(self.snapshot(), before)  # la entrega no toca ningún asiento histórico
 
     def test_cancelling_an_order_recognized_at_confirm_reverses_its_original_recognition(self):  # AC-10
         order = self.confirmed('100.00')
@@ -372,9 +464,11 @@ class TransitionTests(PostingApiBase):
         order = self.ready('100.00')
         self.pay(order, '40.00')
         enable(self.company, 'accounting')
+        before = self.snapshot()
         body = self.deliver(order, expected_status=409)
         self.assertEqual(body['code'], 'order_has_unposted_payments')
         self.assertEqual((self.get(order)['status'], self.books.journal().count()), ('READY', 0))
+        self.assertEqual(self.snapshot(), before)
 
     def test_a_delivery_without_coverage_and_with_advances_is_rejected(self):  # AC-13
         order = self.ready('100.00', order_date=str(YESTERDAY))
@@ -473,3 +567,24 @@ class PostingConcurrencyTests(TransactionTestCase):
         self.assertEqual(self.entries('SALE_DELIVERY'), 1)
         self.assertEqual(self.books.net(self.books.anticipos), (Decimal('100.00'), Decimal('100.00')))
         self.assertEqual(self.books.net(self.books.ingresos), (ZERO, Decimal('300.00')))
+
+    def test_a_payment_racing_a_delivery_is_never_lost(self):  # AC-08, REV-11
+        with transaction.atomic():
+            MarkOrderReady(self.repository).execute(self.order.id)
+
+        def deliver():
+            use_case = DeliverOrder(DjangoOrderRepository(self.company.id), SystemClock(), None, self.posting())
+            return use_case.execute(self.order.id, None, None, self.actor)
+
+        outcomes = _run_together(deliver, self.pay('100.00', uuid4()))
+        self.assertEqual(outcomes, [None, None])
+        self.assertEqual(PaymentModel.objects.count(), 1)
+        # Se serializan: o el cobro entró antes (anticipo aplicado a la entrega) o después (Debe método / Haber CxC).
+        advances, later = self.entries('SALE_ADVANCE'), self.entries('SALE_PAYMENT')
+        self.assertEqual((advances + later, self.entries('SALE_DELIVERY')), (1, 1))
+        if advances:
+            self.assertEqual(self.books.net(self.books.anticipos), (Decimal('100.00'), Decimal('100.00')))
+            self.assertEqual(self.books.net(self.books.cxc), (Decimal('200.00'), ZERO))
+        else:
+            self.assertEqual(self.books.net(self.books.anticipos), (ZERO, ZERO))
+            self.assertEqual(self.books.net(self.books.cxc), (Decimal('300.00'), Decimal('100.00')))

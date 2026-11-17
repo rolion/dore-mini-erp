@@ -19,6 +19,7 @@
 | 2026-11-17 | PUBLISH → PLANNING → ENGINEERING | Cambio de Specification pedido por la persona: reconocer al entregar y anticipos de clientes; PLAN v3, ADR nuevo | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v3; pruebas propias en verde | delivery-build |
 | 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (PLAN v3; 0 Critical/High; REV-10/11 Medium y Low abiertos) | delivery-publish |
+| 2026-11-17 | PUBLISH (corrección) | REV-04..15 resueltos a pedido de la persona; Gate formal no repetido | delivery-build |
 
 ## Investigación
 
@@ -125,8 +126,8 @@ Implementado según **PLAN v3** (reconocer al entregar y anticipos de clientes),
 ## Review
 **Quality Gate (PLAN v3): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2026 OK, `makemigrations --check` sin cambios, bandit sin hallazgos; flake8/ruff no instalados (no realizado; revisión manual de líneas >120). Frontend: `npm run lint` OK, `i18n:check` 2180 claves y 0 faltantes, `npm run build` OK, `ng test` 1590 de 1590 OK; `npm audit` 2 moderate preexistentes (`hono`). Fronteras DDD, aislamiento por empresa, forma del 409 y los puntos (a)-(l) verificados. **Revisión visual: no verificada** (no se levantó la aplicación con sesión).
 - Resueltos: REV-01 (PLAN v2, ya reemplazado por v3), REV-02 (ADR), REV-03 (pruebas con puerto falso).
-- Abiertos Medium (huecos de pruebas, no de comportamiento): REV-10 (falla del asiento con salida de almacén), REV-11 (cobro concurrente con la entrega); REV-05 (spec del cobro con `issues`) sigue abierto como Low.
-- Abiertos Low: REV-04, 05, 06, 07, 08, 09, 12, 13, 14, 15.
+- **Corrección posterior al Gate (2026-11-17):** REV-04..15 resueltos (ver cada REV): pruebas de borde, de entrega con salida de almacén y de cobro concurrente con la entrega, enlace a la pestaña «Asientos automáticos», líneas largas, ADR/PLAN reconciliados, fixtures. Además se corrigió un defecto hallado al alinear los fixtures: faltaban las claves i18n del rol «Anticipos de clientes» y de los eventos nuevos (el panel de configuración las traduce por clave). **El Quality Gate formal no se repitió tras esta corrección**; verificación propia: backend 2035 pruebas OK, `makemigrations --check` sin cambios, frontend lint OK, `i18n:check` 2180 claves, 1592 pruebas OK, build OK.
+- Sin hallazgos abiertos.
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/87 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al entregar y anticipos de clientes) y cambia reglas de pedidos contabilizados: lo aprueba una persona. Sin migraciones. Pendientes: decisiones de negocio (cobros sin asiento entregados con cobertura; pedidos reconocidos al confirmar y cancelados con cobros), hallazgos REV-10/11 (Medium, pruebas) y Low, revisión visual y flake8 no realizados.
+PR https://github.com/rolion/dore-mini-erp/pull/87 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al entregar y anticipos de clientes) y cambia reglas de pedidos contabilizados: lo aprueba una persona. Sin migraciones. Pendientes: decisiones de negocio (cobros sin asiento entregados con cobertura; pedidos reconocidos al confirmar y cancelados con cobros), revisión visual y flake8 no realizados; Quality Gate formal no repetido tras la corrección de REV-04..15.

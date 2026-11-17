@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-05: Falta spec del flujo de cobro con `issues` y `order-payments` no cambió
 
-**Status:** Open (Gate v3: el spec existente usa `prepare`, que ya no puede devolver `posting_configuration_missing`; falta el spec del cobro y actualizar el comentario de `PostingIssue`)
+**Status:** Resolved (spec del cobro con `issues` y comentario de `PostingIssue` corregido)
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-06: El enlace de la alerta no abre la pestaña «Asientos automáticos»
 
-**Status:** Open
+**Status:** Resolved (el enlace abre la pestaña «Asientos automáticos» (`?tab=posting`))
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

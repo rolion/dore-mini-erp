@@ -467,15 +467,28 @@ describe('OrderDetailComponent', () => {
       expect(component.busy).toBeFalse();
     });
 
-    it('explains missing accounting configuration in an alert with a link, without a toast (409, VEN-01)', () => {
-      const issues = [{ code: 'role_unconfigured', subject: 'Cuentas por cobrar', message: 'Falta configurar la cuenta «Cuentas por cobrar».' }];
-      api.prepare.and.returnValue(throwError(() => new OrderRuleError('Falta configurar.', 'posting_configuration_missing', [], '', issues)));
+    it('explains missing accounting configuration of a payment in an alert with a link, without a toast (409, VEN-01)', () => {
+      const issues = [{ code: 'role_unconfigured', subject: 'Anticipos de clientes', message: 'Falta configurar la cuenta «Anticipos de clientes».' }];
+      api.registerPayment.and.returnValue(throwError(() => new OrderRuleError('Falta configurar.', 'posting_configuration_missing', [], '', issues)));
       const element = setup();
-      component.runPrimary();
+      component.registerPayment({ amount: '10.00', paymentMethod: 'CASH', paymentDate: '2026-10-01', reference: '', idempotencyKey: 'k-1' });
       fixture.detectChanges();
       expect(toastr.error).not.toHaveBeenCalled();
-      expect(text(element, 'alert-posting-issues')).toContain('Falta configurar la cuenta «Cuentas por cobrar».');
-      expect(element.querySelector('[data-testid="link-posting-settings"]')?.getAttribute('href')).toContain('/sales/settings');
+      expect(text(element, 'alert-posting-issues')).toContain('Falta configurar la cuenta «Anticipos de clientes».');
+      const link = element.querySelector('[data-testid="link-posting-settings"]');
+      expect(link?.getAttribute('href')).toContain('/sales/settings');
+      expect(link?.getAttribute('href')).toContain('tab=posting');
+    });
+
+    it('clears the accounting alert when the next action starts', () => {
+      const issues = [{ code: 'role_unconfigured', subject: 'x', message: 'Falta algo.' }];
+      api.registerPayment.and.returnValue(throwError(() => new OrderRuleError('Falta.', 'posting_configuration_missing', [], '', issues)));
+      setup();
+      component.registerPayment({ amount: '10.00', paymentMethod: 'CASH', paymentDate: '2026-10-01', reference: '', idempotencyKey: 'k-1' });
+      expect(component.postingIssues.length).toBe(1);
+      api.applyDiscount.and.returnValue(of(makeOrder()));
+      component.applyDiscount('1.00');
+      expect(component.postingIssues).toEqual([]);
     });
 
     it('keeps field errors for the children and does not toast them (400)', () => {

@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-14: Nombre de prueba duplicado y falta la prueba de Pasivo para Anticipos de clientes
 
-**Status:** Open
+**Status:** Resolved (prueba de Pasivo para `CUSTOMER_ADVANCES` y nombre de prueba corregido)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3)

@@ -24,6 +24,12 @@ CONT-12 dejó la configuración y la fachada (`check_posting_ready`, `post_autom
 
 10. **Contabilidad deshabilitada después de reconocer (REV-02):** con el módulo deshabilitado Ventas es independiente (`is_recognized` devuelve falso): se levantan el bloqueo de total y de cancelación, los cobros no se contabilizan y cancelar no revierte el reconocimiento. Es una consecuencia aceptada de «módulo deshabilitado = nada cambia» y de «reactivar no contabiliza históricos» (CONT-12). Al rehabilitar, las diferencias entre pedidos y libro se corrigen con asientos manuales; no hay reconciliación automática.
 
+### Nota de reconciliación (2026-11-17, REV-08)
+Firmas y orden reales vigentes tras PLAN v3 (la decisión 1 habla de `covers`, `recognize` y `is_recognized`, y la 2 de una verificación previa con `check_posting_ready`):
+- Puerto `SalesPosting`: `recognition_state(order_id)`, `locks_total(order)`, `has_posted_payments(order)`, `record_payment(order, payment, actor, today)`, `recognize_delivery(order, actor)` y `reverse_recognition(order, reason, actor, today)`. No existe `covers`: la cobertura se consulta con `coverage_status` dentro del adaptador.
+- No hay verificación previa separada con `check_posting_ready`: `post_automatic_entry` valida la configuración antes de escribir y todo ocurre en la transacción de `_run`, de modo que cualquier error deshace el cambio de estado, el pago y el asiento (comportamiento equivalente, probado).
+- Vigente además: `ADR-contabilizar-ventas-cobros-sin-duplicar-reconocimiento-al-entregar-y-anticipos.md`.
+
 ## Alternativas consideradas
 - **Asiento directo Caja/Ingresos para cobros de pedidos sin reconocer** (tarjeta): descartado por la persona; añade un segundo camino al mismo importe y exige reconciliar al confirmar.
 - **Reconocer al entregar:** descartado por la persona (los cobros previos serían anticipos, sin cuenta de anticipos).

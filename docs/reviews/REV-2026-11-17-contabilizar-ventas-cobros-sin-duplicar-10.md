@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-10: Falta probar la falla del asiento al entregar con salida de almacén
 
-**Status:** Open
+**Status:** Resolved (prueba de entrega con salida de almacén y falla contable)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3)

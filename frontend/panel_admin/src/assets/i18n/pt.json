@@ -2935,6 +2935,7 @@
       "NOT_VALID": "não é mais válida",
       "UNCONFIGURED": "Não configurada",
       "ROLES": {
+        "CUSTOMER_ADVANCES": "Adiantamentos de clientes",
         "SALES_INCOME": "Receitas de vendas",
         "SERVICE_INCOME": "Receitas de serviços",
         "RECEIVABLE": "Contas a receber",
@@ -2945,6 +2946,8 @@
         "EXPENSE_BY_CATEGORY": "Conta de despesa da categoria"
       },
       "EVENTS": {
+        "SALE_ADVANCE": "Receber um pedido antecipadamente",
+        "SALE_DELIVERY": "Reconhecer a entrega de um pedido",
         "SALE_RECOGNITION": "Reconhecer uma venda",
         "SALE_PAYMENT": "Receber uma venda",
         "SERVICE_RECOGNITION": "Reconhecer um serviço",

@@ -35,7 +35,7 @@
         <li>{{ issue.message }}</li>
         }
       </ul>
-      <a routerLink="/pocketbiz/sales/settings" class="alert-link" data-testid="link-posting-settings">{{ 'SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS' | translate }}</a>
+      <a routerLink="/pocketbiz/sales/settings" [queryParams]="{ tab: 'posting' }" class="alert-link" data-testid="link-posting-settings">{{ 'SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS' | translate }}</a>
     </div>
     }
     @if (cancelled) {

@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-12: Pruebas de integración faltantes: edición libre sin cobertura y asientos históricos intactos
 
-**Status:** Open
+**Status:** Resolved (pruebas de edición libre sin cobertura, rama `AT_CONFIRM` de `locks_total` y asientos históricos intactos)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3)

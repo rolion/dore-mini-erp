@@ -66,7 +66,8 @@ __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'Classi
            'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
            'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
            'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
-           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'automatic_entry_origins', 'find_automatic_entry',
+           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'automatic_entry_origins',
+           'find_automatic_entry',
            'post_automatic_entry',
            'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
            'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications',
@@ -537,8 +538,8 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     evento. Lanza `EntryContractError` fuera de una transacción.
 
     Los eventos con una segunda línea de Debe (`SALE_DELIVERY`) reciben en `advance_applied` el importe de esa línea
-    (anticipos aplicados); la línea principal lleva el resto y ninguna línea de importe cero se genera. Una cuenta solo
-    se exige si su línea existe.
+    (anticipos aplicados); la línea principal lleva el resto y ninguna línea de importe cero se genera. Una cuenta
+    solo se exige si su línea existe.
     """
     _require_transaction('post_automatic_entry')
     definition = get_event(event)
@@ -581,7 +582,8 @@ def _extra_debit(definition, amount: Decimal, advance_applied: Decimal | None) -
     if isinstance(advance_applied, (float, bool)) or not isinstance(advance_applied, Decimal):
         raise JournalValidationError({'advance_applied': ['El importe debe ser un decimal.']})
     if advance_applied < 0 or advance_applied > amount:
-        raise JournalValidationError({'advance_applied': ['El importe aplicado no puede ser negativo ni superar el total.']})
+        raise JournalValidationError(
+            {'advance_applied': ['El importe aplicado no puede ser negativo ni superar el total.']})
     return advance_applied
 
 

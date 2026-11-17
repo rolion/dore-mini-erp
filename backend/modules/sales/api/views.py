@@ -194,7 +194,8 @@ class OrderItemListView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(OrderItemCreateSerializer, request.data)
-        order = _run(AddOrderItem(_repository(request), _products(request), _posting(request)), order_id=order_id, **data)
+        use_case = AddOrderItem(_repository(request), _products(request), _posting(request))
+        order = _run(use_case, order_id=order_id, **data)
         return _order_response(request, order, status.HTTP_201_CREATED)
 
 
@@ -203,7 +204,8 @@ class OrderItemDetailView(APIView):
     def patch(self, request, order_id, item_id):
         order_id, item_id = _uuid(order_id, ORDER_NOT_FOUND), _uuid(item_id, ITEM_NOT_FOUND)
         data = _validated(OrderItemUpdateSerializer, request.data)
-        order = _run(ChangeOrderItemQuantity(_repository(request), _posting(request)), order_id=order_id, item_id=item_id, **data)
+        use_case = ChangeOrderItemQuantity(_repository(request), _posting(request))
+        order = _run(use_case, order_id=order_id, item_id=item_id, **data)
         return _order_response(request, order)
 
     def delete(self, request, order_id, item_id):

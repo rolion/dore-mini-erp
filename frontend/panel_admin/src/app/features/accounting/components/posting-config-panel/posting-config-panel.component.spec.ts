@@ -48,21 +48,23 @@ describe('PostingConfigPanelComponent', () => {
   it('shows only the events of its module with a Debit/Credit preview (AC-12)', () => {
     const fixture = create('sales', salesConfig());
     const events = el(fixture).querySelectorAll('[data-testid^="event-"]');
-    expect(events.length).toBe(2);
-    expect(el(fixture).textContent).toContain('Reconocer una venta');
+    expect(events.length).toBe(3);
+    expect(el(fixture).textContent).toContain('Reconocer la entrega de un pedido');
     expect(el(fixture).textContent).toContain('Cobrar una venta');
     expect(el(fixture).textContent).not.toContain('Registrar un gasto');
-    const first = events[0].textContent ?? '';
-    expect(first).toContain('Debe');
-    expect(first).toContain('Haber');
-    expect(first).toContain('Sin configurar');
-    expect(events[1].textContent).toContain('Según el método de pago');
+    expect(el(fixture).textContent).toContain('Cobrar un pedido por adelantado');
+    const delivery = el(fixture).querySelector('[data-testid="event-SALE_DELIVERY"]')!.textContent ?? '';
+    expect(delivery).toContain('Debe');
+    expect(delivery).toContain('Haber');
+    expect(delivery).toContain('Sin configurar');
+    expect(delivery).toContain('Anticipos de clientes');  // la entrega aplica anticipos: segunda línea de Debe
+    expect(events[2].textContent).toContain('Según el método de pago');
   });
 
   it('recalculates the preview as soon as an account is chosen, before saving (AC-12)', () => {
     const fixture = create('sales', salesConfig());
     choose(fixture, 'role:SALES_INCOME', ingresos.id);
-    const first = el(fixture).querySelector('[data-testid="event-SALE_RECOGNITION"]')!.textContent ?? '';
+    const first = el(fixture).querySelector('[data-testid="event-SALE_DELIVERY"]')!.textContent ?? '';
     expect(first).toContain('410001 · Ingresos por ventas');
     expect(api.setRoleAccount).not.toHaveBeenCalled();
   });
@@ -73,6 +75,7 @@ describe('PostingConfigPanelComponent', () => {
     const fixture = create('sales', salesConfig(), [...ALL_ACCOUNTS, inactive, usd]);
     const names = (key: string) => Array.from(select(fixture, key).options).map((o) => o.textContent?.trim());
     expect(names('role:SALES_INCOME')).toEqual(['Sin cuenta', '410001 · Ingresos por ventas']);
+    expect(names('role:CUSTOMER_ADVANCES')).toEqual(['Sin cuenta', '210001 · Anticipos de clientes']);
     expect(names('role:RECEIVABLE')).toEqual(['Sin cuenta', '110101 · Caja', '110102 · Banco', '112001 · Por cobrar']);
     expect(names('method:CASH')).toEqual(['Sin cuenta', '110101 · Caja', '110102 · Banco', '112001 · Por cobrar']);
   });
@@ -81,7 +84,7 @@ describe('PostingConfigPanelComponent', () => {
     const fixture = create('sales', salesConfig());
     api.setRoleAccount.and.returnValue(of({ role: 'SALES_INCOME', label: 'x', accountClass: 'INCOME', account: { id: ingresos.id, code: '410001', name: 'x', isActive: true }, issue: null, problem: null, sharedWith: [] }));
     const updated = salesConfig();
-    updated.roles[1] = { ...updated.roles[1], account: { id: ingresos.id, code: '410001', name: 'Ingresos por ventas', isActive: true } };
+    updated.roles[2] = { ...updated.roles[2], account: { id: ingresos.id, code: '410001', name: 'Ingresos por ventas', isActive: true } };
     api.get.and.returnValue(of(updated));
     choose(fixture, 'role:SALES_INCOME', ingresos.id);
     const save = el(fixture).querySelector<HTMLButtonElement>('[data-testid="row-role:SALES_INCOME"] button')!;
@@ -90,7 +93,7 @@ describe('PostingConfigPanelComponent', () => {
     fixture.detectChanges();
     expect(api.setRoleAccount).toHaveBeenCalledOnceWith('SALES_INCOME', ingresos.id);
     expect(api.get).toHaveBeenCalledTimes(2);
-    expect(fixture.componentInstance.roleRows[1].saving).toBeFalse();
+    expect(fixture.componentInstance.roleRows[2].saving).toBeFalse();
     expect(el(fixture).querySelector('[data-testid="row-role:SALES_INCOME"]')!.textContent).toContain('Guardado');
   });
 
@@ -134,16 +137,16 @@ describe('PostingConfigPanelComponent', () => {
 
   it('marks a saved account that is no longer valid and still lets the person fix it', () => {
     const config = salesConfig();
-    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada; elija otra o actívela en Cuentas.', problem: null };
-    config.events[0].preview[1] = { side: 'CREDIT', role: 'SALES_INCOME', label: 'x', account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, status: 'invalid' };
+    config.roles[2] = { ...config.roles[2], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada; elija otra o actívela en Cuentas.', problem: null };
+    config.events[1].preview[2] = { side: 'CREDIT', role: 'SALES_INCOME', label: 'x', account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, status: 'invalid' };
     const fixture = create('sales', config);
-    expect(el(fixture).querySelector('[data-testid="event-SALE_RECOGNITION"]')!.textContent).toContain('4100 · Vieja · ya no es válida');
+    expect(el(fixture).querySelector('[data-testid="event-SALE_DELIVERY"]')!.textContent).toContain('4100 · Vieja · ya no es válida');
     expect(el(fixture).querySelector('[data-testid="row-role:SALES_INCOME"]')!.textContent).toContain('está deshabilitada');
   });
 
   it('keeps a saved account that is no longer eligible visible and marked in the selector (REV-11)', () => {
     const config = salesConfig();
-    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada.', problem: null };
+    config.roles[2] = { ...config.roles[2], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada.', problem: null };
     const fixture = create('sales', config);
     const field = select(fixture, 'role:SALES_INCOME');
     expect(field.value).toBe('old');
@@ -161,8 +164,8 @@ describe('PostingConfigPanelComponent', () => {
 
   it('shows the missing-configuration notices and row problems in the active language (REV-05)', () => {
     const config = salesConfig();
-    config.roles[1] = {
-      ...config.roles[1],
+    config.roles[2] = {
+      ...config.roles[2],
       account: { id: 'old', code: '4100', name: 'Vieja', isActive: false },
       issue: 'La cuenta «Vieja» está deshabilitada; elija otra o actívela en Cuentas.',
       problem: { code: 'account_inactive', params: { account: 'Vieja' } },
@@ -240,7 +243,7 @@ describe('PostingConfigPanelComponent', () => {
 
   it('explains an empty selector and links to accounts (EDGE-04)', () => {
     const fixture = create('sales', salesConfig(), []);
-    expect(el(fixture).querySelectorAll('[data-testid="no-options"]').length).toBe(2);
+    expect(el(fixture).querySelectorAll('[data-testid="no-options"]').length).toBe(3);
     expect(el(fixture).querySelector('[data-testid="no-money-options"]')).not.toBeNull();
   });
 

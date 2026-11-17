@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-08: El ADR no refleja las firmas ni el orden reales
 
-**Status:** Open
+**Status:** Resolved (nota de reconciliación en el ADR)
 **Severity:** Low
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

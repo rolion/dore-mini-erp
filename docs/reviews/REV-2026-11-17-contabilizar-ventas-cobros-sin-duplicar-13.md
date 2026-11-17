@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-13: Archivos fuera del PLAN v3
 
-**Status:** Open
+**Status:** Resolved («Files affected» ampliado en el PLAN (v3.1))
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3)

@@ -372,8 +372,9 @@ class DeliveryEventTests(PostingBase):
     """VEN-01: el evento de entrega aplica anticipos con una segunda línea de Debe y nunca genera líneas en cero."""
 
     def deliver(self, amount, applied=None, origin=None):
+        advance = None if applied is None else Decimal(applied)
         return services.post_automatic_entry(self.company.id, 'SALE_DELIVERY', origin or uuid4(), TODAY, 'Entrega',
-                                             Decimal(amount), advance_applied=None if applied is None else Decimal(applied))
+                                             Decimal(amount), advance_applied=advance)
 
     def lines(self, posted):
         return sorted((line.account_id, line.debit, line.credit) for line in posted.entry.lines)

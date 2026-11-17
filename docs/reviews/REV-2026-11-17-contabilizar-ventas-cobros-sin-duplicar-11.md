@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-11: Falta probar un cobro concurrente con la entrega
 
-**Status:** Open
+**Status:** Resolved (prueba de cobro concurrente con la entrega)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3)

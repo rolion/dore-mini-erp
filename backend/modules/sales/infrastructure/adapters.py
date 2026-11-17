@@ -310,7 +310,8 @@ def _posting_errors():
     except (accounting_services.FiscalPeriodClosed, accounting_services.DateOutsideFiscalPeriod) as exc:
         raise OrderRuleViolation('fiscal_period_unavailable', str(exc)) from exc
     except accounting_services.JournalValidationError as exc:
-        raise OrderRuleViolation('ledger_rejected', 'Contabilidad rechazó el asiento: ' + _first_message(exc.errors)) from exc
+        raise OrderRuleViolation(
+            'ledger_rejected', 'Contabilidad rechazó el asiento: ' + _first_message(exc.errors)) from exc
     except accounting_services.JournalConflict as exc:
         raise OrderRuleViolation('ledger_conflict', str(exc)) from exc
 

@@ -121,7 +121,8 @@ AT_DELIVERY = 'AT_DELIVERY'  # reconocido al entregar
 class SalesPosting(Protocol):
     """Integración opcional con Contabilidad: anticipos, reconocimiento al entregar, cobros y reversión.
 
-    Todo ocurre dentro de la transacción de quien llama; rechaza la operación con una excepción de Ventas si no puede.
+    Todo ocurre dentro de la transacción de quien llama; rechaza la operación con una excepción de Ventas si no
+    puede.
     Con el módulo deshabilitado o sin cobertura no hace nada nuevo (comportamiento anterior).
     """
 

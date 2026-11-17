@@ -234,8 +234,8 @@ class DeliverOrder:
 
 class CancelOrder:
     """Cancela el pedido. Con cobros contabilizados no se cancela (no hay reembolsos). Un pedido reconocido al confirmar
-    (lógica anterior) sin cobros revierte su reconocimiento con las cuentas originales; uno sin reconocer se cancela sin
-    asiento."""
+    (lógica anterior) sin cobros revierte su reconocimiento con las cuentas originales; uno sin reconocer se cancela
+    sin asiento."""
 
     def __init__(self, repository: OrderRepository, clock: Clock, posting: SalesPosting | None = None):
         self.repository = repository

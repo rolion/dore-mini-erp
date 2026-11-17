@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-15: Fixtures del panel aún modelan SALE_RECOGNITION como evento visible
 
-**Status:** Open
+**Status:** Resolved (fixtures del panel alineados con el catálogo vigente)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v3)

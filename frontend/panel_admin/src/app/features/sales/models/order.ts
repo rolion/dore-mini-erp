@@ -335,7 +335,7 @@ export class OrderApiError extends Error {
   }
 }
 
-/** Un faltante de configuración contable que impide confirmar o cobrar (409 `posting_configuration_missing`). */
+/** Un faltante de configuración contable que impide cobrar o entregar (409 `posting_configuration_missing`). */
 export interface PostingIssue {
   code: string;
   subject: string;

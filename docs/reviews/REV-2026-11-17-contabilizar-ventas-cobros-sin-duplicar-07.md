@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-07: Seis líneas nuevas superan 120 caracteres
 
-**Status:** Open
+**Status:** Resolved (líneas largas ajustadas (ninguna línea nueva supera 120))
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

@@ -63,6 +63,21 @@ class AssignTests(PostingApiBase):
         self.assertEqual((credit['status'], credit['account']['name']), ('ok', 'Ingresos'))
         self.assertEqual(self.put_role(self.client_a, 'SALES_INCOME', None).data['account'], None)
 
+    def test_the_customer_advances_role_accepts_a_liability_and_rejects_other_classes(self):  # VEN-01 AC-01
+        liability = self.make(self.client_a, 'Anticipos de clientes', 'LIABILITY')
+        saved = self.put_role(self.client_a, 'CUSTOMER_ADVANCES', liability)
+        self.assertEqual((saved.status_code, saved.data['account']['id']), (200, liability['id']))
+        wrong_accounts = (self.make(self.client_a, 'Ingresos varios', 'INCOME'),
+                          self.make(self.client_a, 'Caja general', 'ASSET'))
+        for wrong in wrong_accounts:
+            response = self.put_role(self.client_a, 'CUSTOMER_ADVANCES', wrong)
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('Pasivo', response.json()['account_id'][0])
+        body = self.client_a.get(URL, {'module': 'sales'}).json()
+        self.assertEqual([e['code'] for e in body['events']], ['SALE_ADVANCE', 'SALE_DELIVERY', 'SALE_PAYMENT'])
+        self.assertEqual(next(r for r in body['roles'] if r['role'] == 'CUSTOMER_ADVANCES')['account']['id'],
+                         liability['id'])
+
     def test_foreign_wrong_class_or_inactive_accounts_are_rejected_with_a_field_error(self):  # AC-03
         theirs = self.make(self.client_b, 'Ingresos B', 'INCOME')
         expense = self.make(self.client_a, 'Gastos', 'EXPENSE')

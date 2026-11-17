@@ -1,6 +1,6 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
@@ -116,6 +116,17 @@ describe('ModuleSettingsComponent', () => {
       expect(el().querySelector('app-posting-config-panel')).not.toBeNull();
       expect(el().textContent).toContain('Asientos previstos');
     }
+  });
+
+  it('opens the Asientos automáticos tab when the link asks for it (?tab=posting)', () => {
+    api.get.and.returnValue(of(SALES));
+    TestBed.overrideProvider(ActivatedRoute, {
+      useValue: { snapshot: { data: { settingsModule: 'sales' }, queryParamMap: convertToParamMap({ tab: 'posting' }) } },
+    });
+    fixture = TestBed.createComponent(ModuleSettingsComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('posting');
+    expect(el().querySelector('app-posting-config-panel')).not.toBeNull();
   });
 
   it('offers General and Historial de cambios tabs (AC-09)', () => {

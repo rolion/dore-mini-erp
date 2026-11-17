@@ -25,7 +25,7 @@ def account(account_class='ASSET', kind=None, active=True, code='1', currency='B
 
 
 class CatalogTests(SimpleTestCase):
-    def test_every_event_has_known_roles_and_a_valid_origin_kind_with_known_roles_and_a_valid_origin_kind(self):  # INV-01
+    def test_every_event_has_known_roles_and_a_valid_origin_kind(self):  # INV-01
         codes = [e.code for e in EVENTS]
         self.assertEqual(len(codes), len(set(codes)))
         for event in EVENTS:
