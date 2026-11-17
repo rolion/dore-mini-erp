@@ -14,7 +14,8 @@ from modules.accounting.domain.posting import (
     PostingIssue,
     PostingNotFound,
     Role,
-    account_problem,
+    Problem,
+    account_problem_info,
     events_for,
     get_role,
     issue_invalid,
@@ -42,6 +43,7 @@ class RoleRow:
     account: AccountInfo | None
     issue: str | None
     shared_with: tuple[str, ...] = ()  # otros módulos que usan el mismo rol
+    problem: Problem | None = None
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,7 @@ class MethodRow:
     is_active: bool
     account: AccountInfo | None
     issue: str | None
+    problem: Problem | None = None
 
 
 @dataclass(frozen=True)
@@ -59,6 +62,7 @@ class CategoryRow:
     category_id: UUID
     account: AccountInfo | None
     issue: str | None
+    problem: Problem | None = None
 
 
 @dataclass(frozen=True)
@@ -124,8 +128,9 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, c
         if not mapping.is_active or mapping.account_id is None:
             return None, PostingIssue(
                 'method_unconfigured', role.code, subject, module,
-                f'Falta la cuenta Caja o Banco del método «{METHOD_LABELS[mapping.code]}». '
-                f'Configúrela en {location(module)}.')
+                f'Falta la cuenta de Activo del método «{METHOD_LABELS[mapping.code]}». '
+                f'Configúrela en {location(module)}.',
+                {'method': METHOD_LABELS[mapping.code], 'method_code': mapping.code})
         account_id = mapping.account_id
     else:
         if category_id is None:
@@ -137,8 +142,9 @@ def _resolve_line(role: Role, event: Event, ctx: Context, method, category_id, c
         if account_id is None:
             return None, PostingIssue(
                 'category_unconfigured', role.code, subject, module,
-                f'Falta la cuenta de gasto de la categoría{named}. Configúrela en {location(module)}.')
-    problem = account_problem(role, ctx.accounts.get(account_id), ctx.disabled)
+                f'Falta la cuenta de gasto de la categoría{named}. Configúrela en {location(module)}.',
+                {'category': category_label})
+    problem = account_problem_info(role, ctx.accounts.get(account_id), ctx.disabled)
     if problem:
         return None, issue_invalid(role, subject, module, problem)
     return account_id, None
@@ -184,7 +190,7 @@ def _preview(event: Event, ctx: Context) -> tuple[PreviewLine, ...]:
             account_id = ctx.roles.get(role.code)
             account = ctx.accounts.get(account_id) if account_id else None
             status = ('missing' if account_id is None else
-                      'invalid' if account_problem(role, account, ctx.disabled) else 'ok')
+                      'invalid' if account_problem_info(role, account, ctx.disabled) else 'ok')
             lines.append(PreviewLine(side, role.code, role.label, _info(account), status))
     return tuple(lines)
 
@@ -201,9 +207,10 @@ class DescribePostingConfig:
         for role in roles_of(module, SOURCE_ROLE):
             account_id = ctx.roles.get(role.code)
             account = ctx.accounts.get(account_id) if account_id else None
-            problem = account_problem(role, account, ctx.disabled) if account_id else None
-            roles.append(RoleRow(role.code, role.label, role.account_class, _info(account), problem,
-                                 tuple(m for m in modules_using(role.code) if m != module)))
+            problem = account_problem_info(role, account, ctx.disabled) if account_id else None
+            roles.append(RoleRow(role.code, role.label, role.account_class, _info(account),
+                                 problem.message if problem else None,
+                                 tuple(m for m in modules_using(role.code) if m != module), problem))
         methods = ()
         if roles_of(module, SOURCE_METHOD):
             money = roles_of(module, SOURCE_METHOD)[0]
@@ -211,11 +218,12 @@ class DescribePostingConfig:
             for code in METHOD_CODES:
                 mapping = ctx.methods[code]
                 account = ctx.accounts.get(mapping.account_id) if mapping.account_id else None
-                issue = None
+                problem = None
                 if mapping.is_active:
-                    issue = (account_problem(money, account, ctx.disabled) if account else
-                             'Falta la cuenta Caja o Banco de este método.')
-                rows.append(MethodRow(code, METHOD_LABELS[code], mapping.is_active, _info(account), issue))
+                    problem = (account_problem_info(money, account, ctx.disabled) if account else
+                               Problem('method_account_missing', {}, 'Falta la cuenta de Activo de este método.'))
+                rows.append(MethodRow(code, METHOD_LABELS[code], mapping.is_active, _info(account),
+                                      problem.message if problem else None, problem))
             methods = tuple(rows)
         categories = ()
         if roles_of(module, SOURCE_CATEGORY):
@@ -223,7 +231,8 @@ class DescribePostingConfig:
             rows = []
             for category_id, account_id in sorted(ctx.categories.items(), key=lambda item: str(item[0])):
                 account = ctx.accounts.get(account_id)
-                rows.append(CategoryRow(category_id, _info(account), account_problem(role, account, ctx.disabled)))
+                problem = account_problem_info(role, account, ctx.disabled)
+                rows.append(CategoryRow(category_id, _info(account), problem.message if problem else None, problem))
             categories = tuple(rows)
         return ConfigView(module, not any(v.issues for v in views), views, tuple(roles), methods, categories)
 

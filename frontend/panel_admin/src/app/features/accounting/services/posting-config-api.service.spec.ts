@@ -29,9 +29,9 @@ describe('PostingConfigApiService', () => {
       accounting_enabled: true,
       ready: false,
       events: [{ code: 'SALE_RECOGNITION', label: 'x', issues: [], preview: [{ side: 'CREDIT', role: 'SALES_INCOME', label: 'Ingresos', account, status: 'ok' }] }],
-      roles: [{ role: 'SALES_INCOME', label: 'Ingresos', account_class: 'INCOME', account, issue: null, shared_with: [] }],
-      methods: [{ code: 'CASH', label: 'Efectivo', is_active: true, account: null, issue: 'falta' }],
-      categories: [{ category_id: 'c1', account, issue: null }],
+      roles: [{ role: 'SALES_INCOME', label: 'Ingresos', account_class: 'INCOME', account, issue: null, problem: null, shared_with: [] }],
+      methods: [{ code: 'CASH', label: 'Efectivo', is_active: true, account: null, issue: 'falta', problem: { code: 'method_account_missing', params: {} } }],
+      categories: [{ category_id: 'c1', account, issue: null, problem: null }],
     });
     expect(result).toEqual({
       module: 'sales',
@@ -39,9 +39,9 @@ describe('PostingConfigApiService', () => {
       accountingEnabled: true,
       ready: false,
       events: [{ code: 'SALE_RECOGNITION', label: 'x', issues: [], preview: [{ side: 'CREDIT', role: 'SALES_INCOME', label: 'Ingresos', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, status: 'ok' }] }],
-      roles: [{ role: 'SALES_INCOME', label: 'Ingresos', accountClass: 'INCOME', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, issue: null, sharedWith: [] }],
-      methods: [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: 'falta' }],
-      categories: [{ categoryId: 'c1', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, issue: null }],
+      roles: [{ role: 'SALES_INCOME', label: 'Ingresos', accountClass: 'INCOME', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, issue: null, problem: null, sharedWith: [] }],
+      methods: [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: 'falta', problem: { code: 'method_account_missing', params: {} } }],
+      categories: [{ categoryId: 'c1', account: { id: 'a1', code: '410001', name: 'Ingresos', isActive: true }, issue: null, problem: null }],
     });
   });
 
@@ -49,19 +49,20 @@ describe('PostingConfigApiService', () => {
     service.setRoleAccount('SALES_INCOME', 'a1').subscribe();
     const role = http.expectOne((r) => r.method === 'PUT' && r.url.endsWith('/posting-config/roles/SALES_INCOME/'));
     expect(role.request.body).toEqual({ account_id: 'a1' });
-    role.flush({ role: 'SALES_INCOME', label: 'x', account_class: 'INCOME', account, issue: null, shared_with: [] });
+    role.flush({ role: 'SALES_INCOME', label: 'x', account_class: 'INCOME', account, issue: null, problem: null, shared_with: [] });
     service.setCategoryAccount('c1', null).subscribe();
     const category = http.expectOne((r) => r.method === 'PUT' && r.url.endsWith('/posting-config/categories/c1/'));
     expect(category.request.body).toEqual({ account_id: null });
-    category.flush({ category_id: 'c1', account: null, issue: null });
+    category.flush({ category_id: 'c1', account: null, issue: null, problem: null });
   });
 
   it('turns a 400 into a field error and a 404 into a message (AC-03)', () => {
     let error: AccountingApiError | undefined;
     service.setRoleAccount('SALES_INCOME', 'x').subscribe({ error: (e: AccountingApiError) => (error = e) });
-    http.expectOne((r) => r.method === 'PUT').flush({ account_id: ['La cuenta no existe en esta empresa.'] }, { status: 400, statusText: 'Bad Request' });
+    http.expectOne((r) => r.method === 'PUT').flush({ account_id: ['La cuenta no existe en esta empresa.'], problem: { code: 'account_missing', params: {} } }, { status: 400, statusText: 'Bad Request' });
     expect(error?.status).toBe(400);
     expect(error?.fieldErrors['accountId']).toEqual(['La cuenta no existe en esta empresa.']);
+    expect(error?.problem).toEqual({ code: 'account_missing', params: {} });
     service.get('sales').subscribe({ error: (e: AccountingApiError) => (error = e) });
     http.expectOne((r) => r.method === 'GET').flush({ detail: 'No existe.' }, { status: 404, statusText: 'Not Found' });
     expect(error?.status).toBe(404);

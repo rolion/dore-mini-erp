@@ -17,6 +17,7 @@ from .posting_serializers import (
     serialize_category_row,
     serialize_posting_config,
     serialize_role_row,
+    validation_errors,
 )
 
 
@@ -24,7 +25,7 @@ def _call(function, *args):
     try:
         return function(*args)
     except AccountValidationError as exc:
-        raise ValidationError(exc.errors) from exc
+        raise ValidationError(validation_errors(exc)) from exc
     except PostingNotFound as exc:
         raise NotFound('No existe en la configuración de asientos automáticos.') from exc
 

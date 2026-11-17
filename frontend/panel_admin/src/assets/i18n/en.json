@@ -2941,7 +2941,7 @@
         "INVENTORY": "Inventory",
         "COST_OF_SALES": "Cost of sales",
         "PAYABLE": "Accounts payable (suppliers)",
-        "MONEY": "Cash or bank for the payment method",
+        "MONEY": "Asset account of the payment method",
         "EXPENSE_BY_CATEGORY": "Expense account of the category"
       },
       "EVENTS": {
@@ -2963,7 +2963,41 @@
         "COST": "Cost"
       },
       "CATEGORY_MISSING": "The expense account of the category “{{p0}}” is missing.",
-      "CATEGORY_MISSING_ROW": "This category has no expense account yet."
+      "CATEGORY_MISSING_ROW": "This category has no expense account yet.",
+      "WHERE": "{{p0}} › Settings › Automatic entries",
+      "MODULES": {
+        "sales": "Sales",
+        "receivables": "Collections",
+        "inventory": "Inventory",
+        "purchases": "Purchases",
+        "expenses": "Expenses"
+      },
+      "PROBLEMS": {
+        "ACCOUNT_MISSING": "The account does not exist in this company.",
+        "ACCOUNT_INACTIVE": "The account “{{account}}” is disabled; choose another one or enable it in Accounts.",
+        "CURRENCY": "The account “{{account}}” must be in {{currency}}.",
+        "NO_CODE_CLASS": "The account “{{account}}” has no code and accounting classification; complete it in Accounts.",
+        "WRONG_CLASS": "The account “{{account}}” is {{actual}}; a {{required}} account is required.",
+        "CLASS_DISABLED": "The classification {{class_code}} is disabled.",
+        "METHOD_ACCOUNT_MISSING": "This method has no Asset account yet."
+      },
+      "ISSUES": {
+        "ROLE_UNCONFIGURED": "The account “{{subject}}” is not configured. Set it in {{where}}.",
+        "METHOD_UNCONFIGURED": "The Asset account of the method “{{method}}” is missing. Set it in {{where}}.",
+        "CATEGORY_UNCONFIGURED": "The expense account of the category is missing. Set it in {{where}}.",
+        "CATEGORY_UNCONFIGURED_NAMED": "The expense account of the category “{{category}}” is missing. Set it in {{where}}.",
+        "CATEGORY_REQUIRED": "Provide the expense category of the operation.",
+        "METHOD_REQUIRED": "Provide a valid payment method for the operation.",
+        "ACCOUNT_INVALID": "{{problem}} Fix “{{subject}}” in {{where}}."
+      },
+      "METHODS_LABEL": {
+        "CASH": "Cash",
+        "QR": "QR",
+        "BANK_TRANSFER": "Bank transfer",
+        "CARD": "Card",
+        "OTHER": "Other"
+      },
+      "MISSING_MORE": "Show {{p0}} more"
     }
   }
 }

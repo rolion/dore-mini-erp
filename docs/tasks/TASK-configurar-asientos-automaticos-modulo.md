@@ -70,7 +70,7 @@ Existe el motor y el mapeo método → cuenta (sin validar clasificación). No h
 `CLAUDE.md`: `Decimal`, aislamiento por `company_id` (empresa del usuario, nunca del cliente), dominio sin Django, módulos de negocio no importan `accounts` ni infraestructura ajena (solo la fachada `accounting.services`), sin texto visible hardcodeado (claves es/en/pt, `tr()`), sin `any`, Reactive Forms, nunca editar una migración aplicada. Sin conversión de divisas: moneda de los flujos BOB.
 
 ### Riesgos identificados
-- Endurecer el mapeo de métodos (Activo + Caja/Banco/Billetera) puede dejar sin poder reasignar a empresas con cuentas heredadas sin clasificar → solo valida usos nuevos; la configuración existente sigue resolviendo; mensaje accionable apunta a clasificar la cuenta.
+- Endurecer el mapeo de métodos (Activo; originalmente también Caja/Banco/Billetera, retirado en PLAN v2) puede dejar sin poder reasignar a empresas con cuentas heredadas sin clasificar → solo valida usos nuevos; la configuración existente sigue resolviendo; mensaje accionable apunta a clasificar la cuenta.
 - Una cuenta configurada que luego se desactiva o reclasifica → la resolución lo detecta en cada evento y bloquea con mensaje accionable (no contabiliza mal en silencio).
 - Que los módulos migren con un `origin_kind` distinto del catálogo → el catálogo es la única fuente y `post_automatic_entry` solo acepta códigos del catálogo.
 - Coherencia con la deuda de `design-system.md` (alerta tenue, contraste AA): usar los patrones vigentes.
@@ -93,17 +93,18 @@ Existe el motor y el mapeo método → cuenta (sin validar clasificación). No h
 ## Implementación
 Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó con `origin/accounting` (PR #85) durante el trabajo; sin conflictos.
 
-- **Dominio** (`accounting/domain/posting.py`; INV-01/02, AC-01/03): catálogo fijo de 8 roles y 8 eventos (código = `origin_kind`), `account_problem`/`validate_account_for_role` (empresa, activa, BOB, con código y clasificación, clasificación habilitada, tipo Caja/Banco/Billetera para dinero), `PostingIssue` con mensaje que nombra el módulo donde corregir, `PostingConfigurationMissing`.
+- **Dominio** (`accounting/domain/posting.py`; INV-01/02, AC-01/03): catálogo fijo de 8 roles y 8 eventos (código = `origin_kind`), `account_problem`/`validate_account_for_role` (empresa, activa, BOB, con código y clasificación, clasificación habilitada; sin exigir tipo de cuenta), `PostingIssue` con mensaje que nombra el módulo donde corregir, `PostingConfigurationMissing`.
 - **Casos de uso** (`application/posting.py`; AC-02/06/07): `DescribePostingConfig` (vista previa Debe/Haber, faltantes por todos los métodos y categorías activos, roles compartidos), `SetRoleAccount`, `SetCategoryAccount`, `resolve_event` (en vivo, sin caché).
 - **Persistencia** (AC-10): `PostingAccountModel` + migración `0011_posting_account` (solo `CreateModel`) + `DjangoPostingConfigRepository` (todo por `company_id`).
 - **Fachada** (`services.py`; AC-05..AC-09): `describe_posting_config`, `set_role_account`, `set_category_account`, `check_posting_ready` (sin cobertura `required=False`), `post_automatic_entry` (cobertura → resolución → `post_journal_entry` con `origin_kind` = evento; nunca omite en silencio), `reverse_automatic_entry` (cuentas originales; `None` si nunca se contabilizó).
-- **API** (API-01..03; AC-01..04, AC-11): `GET posting-config/?module=`, `PUT posting-config/roles/<role>/`, `PUT posting-config/categories/<id>/`; sin `required_modules` (se configura antes de habilitar Contabilidad). **API-04:** `ConfigureMethod` valida un uso nuevo y activo del método (Activo con tipo Caja/Banco/Billetera, con código y clasificación); lo ya configurado no se revalida.
+- **API** (API-01..03; AC-01..04, AC-11): `GET posting-config/?module=`, `PUT posting-config/roles/<role>/`, `PUT posting-config/categories/<id>/`; sin `required_modules` (se configura antes de habilitar Contabilidad). **API-04:** `ConfigureMethod` valida un uso nuevo y activo del método (Activo, con código y clasificación; sin exigir tipo de cuenta, PLAN v2); lo ya configurado no se revalida.
 - **Frontend** (AC-12..AC-14): `PostingConfigPanelComponent` (Reactive Forms por fila, vista previa en vivo, estados), `PostingConfigApiService`, modelos; pestaña «Asientos automáticos» en `module-settings` (Ventas, Compras, Inventario); página y ruta `/expenses/settings` + ítem de menú «Configuración» en Gastos; i18n es/en/pt (`ACCOUNTING.POSTING.*`); `design-system.md` §5/§6 actualizado.
 - **Pantallas de referencia:** «Configuración con listados en pestañas y diálogo» (`methods-tab`, `inventory-configuration`) y «Variante de operación con previsualización obligatoria» (`regularization`); componentes reutilizados: tablas `inventory-table`, `alert` tenue, `RouterLink` a Cuentas. Componente nuevo reutilizable: `app-posting-config-panel` (anotado en `design-system.md`).
 
 **Desviaciones respecto al plan:**
-00. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se configura por categoría de Gastos (id opaco), no por clasificación de egreso: backend (`category_id`/`category_label` en la fachada, `PUT categories/<category_id>/`, `categories:[{category_id, account, issue}]`), panel (recibe las categorías de Gastos como `@Input`) y `ExpenseSettingsComponent` (las carga de la API de Gastos; máx. 100).
-0. **PLAN v2 (2026-11-17, a pedido de la persona):** el mapeo de métodos de pago ya no exige tipo de cuenta Caja/Banco/Billetera; basta Activo, BOB, activa y con código. Backend, panel (filtro del selector, textos es/en/pt) y pruebas ajustados.
+A. **PLAN v2 (2026-11-17, a pedido de la persona):** el mapeo de métodos de pago ya no exige tipo de cuenta Caja/Banco/Billetera; basta Activo, BOB, activa y con código. Backend, panel (filtro del selector, textos es/en/pt) y pruebas ajustados.
+C. **PLAN v4 (2026-11-17, aprobado por la persona al pedir arreglar REV-05):** Specification alineada con la API real (API-01/02) y avisos de configuración faltante, problemas de fila y errores 400 **traducidos** (el backend devuelve `code`/`params`/`problem`; el frontend traduce).
+B. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se configura por categoría de Gastos (id opaco), no por clasificación de egreso: backend (`category_id`/`category_label` en la fachada, `PUT categories/<category_id>/`, `categories:[{category_id, account, issue}]`), panel (recibe las categorías de Gastos como `@Input`) y `ExpenseSettingsComponent` (las carga de la API de Gastos; máx. 100).
 1. El endurecimiento del mapeo método→cuenta (API-04) obligó a corregir las cuentas de prueba de `sales`, `receivables` y `accounting` (ahora `money_account` en `tests/journal_support.py`: Activo, con código y tipo Caja/Banco). Es el efecto previsto del riesgo «endurecer método→cuenta» del PLAN.
 2. La validación del método se aplica solo cuando se asigna una cuenta nueva **y el método queda activo** (asignar una cuenta a un método inactivo sigue permitido, como antes).
 3. El panel no usa `ng-select` (select nativo, como el resto de Contabilidad), de acuerdo con el DDR.
@@ -118,7 +119,7 @@ Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó
 - REV-02 (Low, IMPLEMENTATION; **resuelto**): faltaban pruebas de AC-08 (hueco) y AC-11 (403/401).
 - REV-03 (Low, DESIGN; **resuelto**, pendiente de confirmar en navegador): recorte de la vista previa y bordes sueltos a 375 px.
 - REV-04 (Low, IMPLEMENTATION; **resuelto**): E501 y `assert` en código nuevo.
-- REV-05 (Low, SPECIFICATION; **abierto**): la forma real de API-01 difiere de la documentada (`issues` trae `subject`/`module`, `preview` trae `role` y `account{}`), y los mensajes de faltantes vienen del backend solo en español. Requiere aprobación para actualizar la Specification (PLAN v4).
+- REV-05 (Low, SPECIFICATION; **resuelto en PLAN v4**): la forma real de API-01 difiere de la documentada (`issues` trae `subject`/`module`, `preview` trae `role` y `account{}`), y los mensajes de faltantes vienen del backend solo en español. Requiere aprobación para actualizar la Specification (PLAN v4).
 
 ## Review (segunda pasada)
 **Quality Gate: PASS** (subagente aislado, 2026-11-16, tras corregir REV-01..04). Backend: `manage.py test` 1962 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, flake8 solo con avisos preexistentes más un E303 (REV-08). Frontend: lint OK, `i18n:check` 2174 claves y 0 faltantes, `ng build` OK, suite completa 1570 OK. REV-01..04 comprobados contra el código y resueltos; AC-08, AC-09 y AC-11 pasan a cumplidos.
@@ -126,8 +127,26 @@ Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó
 - REV-06 (Low, DESIGN; **resuelto**): barra vertical interna en la vista previa.
 - REV-07 (Medium, DESIGN; **resuelto**): contraste 2,18:1 de `text-warning-emphasis` en tema oscuro (estados «Sin configurar» y faltantes).
 - REV-08 (Low; **resuelto**): línea en blanco sobrante (E303) en una prueba.
-- REV-05 (Low, SPECIFICATION; **abierto**): forma real de API-01 distinta de la Specification y mensajes de faltantes solo en español; requiere aprobación para PLAN v2.
+- REV-05 (Low, SPECIFICATION; **resuelto en PLAN v4**).
 - **Sin repetir el Quality Gate:** REV-06, 07 y 08 se corrigieron después de la 2.ª pasada (CSS y una línea de prueba, sin lógica). Tras el cambio se volvió a pasar lint, build y la suite del frontend (1570 OK); **no se volvió a medir el contraste en el navegador ni en el conmutador real de tema oscuro**.
 
+## Review (tercera pasada)
+**Quality Gate: PASS** (subagente aislado, 2026-11-17), tras PLAN v2 (sin tipo de cuenta), PLAN v3 (cuenta de gasto por categoría de Gastos) y las correcciones de estilo. Backend: `manage.py test` 1962 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, flake8 solo con avisos preexistentes. Frontend: lint OK, `i18n:check` 2176 claves y 0 faltantes, `ng build` OK, suite 1572 OK. **Revisión visual completa** en el navegador integrado: Ventas, Compras, Inventario y Gastos, escritorio (1440 px) y 375 px, tema claro y oscuro con el conmutador real de la app; sin desbordes ni recortes, selectores con las cuentas correctas, guardado por fila persistente, vista previa en vivo, avisos de faltantes y estado completo; contraste medido (`.posting-warn` 4,53:1 en oscuro, «Guardado ✓» 6,73:1).
+- REV-09 (Medium, IMPLEMENTATION; **resuelto**): `ExpenseSettings` solo cargaba 100 categorías.
+- REV-10 (Low, DESIGN; **resuelto**): texto de apoyo con `text-muted` (2,5:1).
+- REV-11 (Low, DESIGN; **resuelto**): selector en blanco con una cuenta guardada que dejó de ser elegible.
+- REV-12 (Low, PLAN; **resuelto**): documentación y comentarios desactualizados.
+- REV-13 (Low, IMPLEMENTATION; **resuelto**): pruebas faltantes.
+- REV-05 (Low, SPECIFICATION; **resuelto** tras la aprobación explícita de la persona, PLAN v4): Specification alineada con la API real y avisos traducidos.
+- **Sin repetir el Quality Gate** tras estas correcciones (paginación, opción marcada, estilos de texto, pruebas y documentos); se repitieron backend (1964 OK), frontend (1576 OK), lint, `i18n:check` y build. La revisión visual de la 3.ª pasada no se repitió sobre la opción marcada («ya no es válida») ni la paginación.
+
+## Review (cuarta pasada)
+**Quality Gate: PASS** (subagente aislado, 2026-11-17, con revisión visual), sobre las correcciones REV-09..13 y los avisos traducibles (PLAN v4). Backend: `manage.py test` 1966 OK; flake8 solo con avisos preexistentes o generados; bandit sin incidencias. Frontend: lint OK, `i18n:check` 2176 claves y 0 faltantes, `ng build` OK, suite 1583 OK. Revisión visual (navegador integrado, escritorio 1280 px y 375 px, claro y oscuro): opción «ya no es válida» en el selector, Gastos con 105 categorías (todas listadas, una de la 2.ª página guardada y persistente, error de carga con «Reintentar»), avisos y filas en inglés y portugués, regresión visual sin desbordes y contraste medido (oscuro: `.posting-warn` 4,53:1, texto secundario 6,73:1).
+- REV-14 (Medium, IMPLEMENTATION; **resuelto**): módulo, módulos compartidos y métodos de pago sin traducir en en/pt.
+- REV-15 (Low; **resuelto**): el error de guardado no se retraducía al cambiar de idioma.
+- REV-16 (Low; **resuelto**): el aviso de una categoría con cuenta inválida no la nombraba y la lista no se plegaba.
+- Nota sin REV propio: a 375 px el texto «ya no es válida» del selector cerrado se recorta; el aviso de debajo lo explica.
+- **Sin repetir el Quality Gate** tras estas correcciones; se repitieron backend (1966 OK), frontend, lint, `i18n:check` y build, y hay pruebas automáticas para cada una (panel en inglés, retraducción de errores, plegado de faltantes). **No se volvió a revisar visualmente en el navegador.**
+
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/86 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (modelo de datos nuevo, migración `0011`): lo aprueba una persona. Pendiente de aprobación: REV-05 (cambio de Specification).
+PR https://github.com/rolion/dore-mini-erp/pull/86 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (modelo de datos nuevo, migración `0011`): lo aprueba una persona. Sin hallazgos abiertos (REV-05 resuelto en PLAN v4).

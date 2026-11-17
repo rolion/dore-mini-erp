@@ -20,7 +20,7 @@ export function salesConfig(overrides: Partial<PostingConfig> = {}): PostingConf
         code: 'SALE_RECOGNITION',
         label: 'Reconocer una venta',
         issues: [
-          { code: 'role_unconfigured', role: 'RECEIVABLE', subject: 'Cuentas por cobrar', module: 'sales', message: 'Falta configurar la cuenta «Cuentas por cobrar». Configúrela en Ventas › Configuración › Asientos automáticos.' },
+          { code: 'role_unconfigured', role: 'RECEIVABLE', subject: 'Cuentas por cobrar', module: 'sales', message: 'Falta configurar la cuenta «Cuentas por cobrar». Configúrela en Ventas › Configuración › Asientos automáticos.', params: {}, problem: null },
         ],
         preview: [
           { side: 'DEBIT', role: 'RECEIVABLE', label: 'Cuentas por cobrar', account: null, status: 'missing' },
@@ -38,12 +38,12 @@ export function salesConfig(overrides: Partial<PostingConfig> = {}): PostingConf
       },
     ],
     roles: [
-      { role: 'RECEIVABLE', label: 'Cuentas por cobrar', accountClass: 'ASSET', account: null, issue: null, sharedWith: [{ module: 'receivables', label: 'Cobros' }] },
-      { role: 'SALES_INCOME', label: 'Ingresos por ventas', accountClass: 'INCOME', account: null, issue: null, sharedWith: [] },
+      { role: 'RECEIVABLE', label: 'Cuentas por cobrar', accountClass: 'ASSET', account: null, issue: null, problem: null, sharedWith: [{ module: 'receivables', label: 'Cobros' }] },
+      { role: 'SALES_INCOME', label: 'Ingresos por ventas', accountClass: 'INCOME', account: null, issue: null, problem: null, sharedWith: [] },
     ],
     methods: [
-      { code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: null },
-      { code: 'QR', label: 'QR', isActive: true, account: null, issue: null },
+      { code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: null, problem: null },
+      { code: 'QR', label: 'QR', isActive: true, account: null, issue: null, problem: null },
     ],
     categories: [],
     ...overrides,
@@ -68,7 +68,7 @@ export function expensesConfig(module: PostingModule = 'expenses'): PostingConfi
       },
     ],
     roles: [],
-    methods: [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: null }],
+    methods: [{ code: 'CASH', label: 'Efectivo', isActive: true, account: null, issue: null, problem: null }],
     categories: [],
   };
 }

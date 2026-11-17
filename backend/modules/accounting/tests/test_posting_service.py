@@ -303,7 +303,7 @@ class DescribeTests(PostingBase):
         roles = {r.role: r for r in services.describe_posting_config(self.company.id, 'inventory').config.roles}
         self.assertEqual(roles['INVENTORY'].shared_with, ('purchases',))
 
-    def test_module_is_ready_only_with_every_active_method_and_category_configured(self):
+    def test_module_is_ready_only_with_every_active_method_configured(self):
         self.configure_sales()
         self.assertFalse(services.describe_posting_config(self.company.id, 'sales').config.ready)
         mappings = DjangoMethodMappingRepository(self.company.id)
@@ -318,6 +318,30 @@ class DescribeTests(PostingBase):
         with CaptureQueriesContext(connection) as queries:
             services.describe_posting_config(self.company.id, 'expenses')
         self.assertLessEqual(len(queries), 8)
+
+    def test_a_category_account_disabled_after_assigning_is_reported_and_blocks_the_expense(self):  # AC-07, EDGE-03
+        category = uuid4()
+        services.set_category_account(self.company.id, category, self.gasto.id)
+        self.configure_method('CASH', self.caja)
+        AccountModel.objects.filter(pk=self.gasto.id).update(is_active=False)
+        rows = services.describe_posting_config(self.company.id, 'expenses').config.categories
+        self.assertIn('deshabilitada', rows[0].issue)
+        readiness = services.check_posting_ready(self.company.id, 'EXPENSE_RECORD', TODAY, method='CASH',
+                                                 category_id=category, category_label='Servicios')
+        self.assertEqual([i.code for i in readiness.issues], ['account_invalid'])
+        self.assertIn('Gastos › Configuración', readiness.issues[0].message)
+        with self.assertRaises(services.PostingConfigurationMissing):
+            self.post('EXPENSE_RECORD', method='CASH', category_id=category)
+        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_category_accounts_are_isolated_by_company(self):  # AC-10
+        category = uuid4()
+        enable(self.other, 'accounting')  # con cobertura: lo exige
+        services.set_category_account(self.company.id, category, self.gasto.id)
+        self.assertEqual(services.describe_posting_config(self.other.id, 'expenses').config.categories, ())
+        with self.assertRaises(services.PostingConfigurationMissing):
+            services.post_automatic_entry(self.other.id, 'EXPENSE_RECORD', uuid4(), TODAY, 'x', Decimal('1'),
+                                          method='CASH', category_id=category)
 
     def test_company_isolation(self):  # AC-10
         self.configure_sales()

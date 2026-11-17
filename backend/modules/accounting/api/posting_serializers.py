@@ -13,19 +13,34 @@ def _account(info) -> dict | None:
             if info else None)
 
 
+def serialize_problem(problem) -> dict | None:
+    """Causa estructurada (`code` y `params`) para que el cliente traduzca; `message` va en español."""
+    return ({'code': problem.code, 'params': problem.params, 'message': problem.message} if problem else None)
+
+
+def validation_errors(exc) -> dict:
+    """Errores por campo de un 400; si la causa es una cuenta no válida para un rol, añade `problem` (code/params)."""
+    errors = dict(exc.errors)
+    problem = getattr(exc, 'problem', None)
+    if problem is not None:
+        errors['problem'] = {'code': problem.code, 'params': problem.params}
+    return errors
+
+
 def serialize_role_row(row) -> dict:
     return {'role': row.role, 'label': row.label, 'account_class': row.account_class,
-            'account': _account(row.account), 'issue': row.issue,
+            'account': _account(row.account), 'issue': row.issue, 'problem': serialize_problem(row.problem),
             'shared_with': [{'module': m, 'label': MODULE_LABELS[m]} for m in row.shared_with]}
 
 
 def serialize_method_row(row) -> dict:
     return {'code': row.code, 'label': row.label, 'is_active': row.is_active, 'account': _account(row.account),
-            'issue': row.issue}
+            'issue': row.issue, 'problem': serialize_problem(row.problem)}
 
 
 def serialize_category_row(row) -> dict:
-    return {'category_id': str(row.category_id), 'account': _account(row.account), 'issue': row.issue}
+    return {'category_id': str(row.category_id), 'account': _account(row.account), 'issue': row.issue,
+            'problem': serialize_problem(row.problem)}
 
 
 def serialize_event(event) -> dict:
@@ -33,8 +48,8 @@ def serialize_event(event) -> dict:
         'code': event.code, 'label': event.label,
         'preview': [{'side': line.side, 'role': line.role, 'label': line.label, 'account': _account(line.account),
                      'status': line.status} for line in event.preview],
-        'issues': [{'code': i.code, 'role': i.role, 'subject': i.subject, 'module': i.module, 'message': i.message}
-                   for i in event.issues],
+        'issues': [{'code': i.code, 'role': i.role, 'subject': i.subject, 'module': i.module, 'message': i.message,
+                    'params': i.params, 'problem': serialize_problem(i.problem)} for i in event.issues],
     }
 
 

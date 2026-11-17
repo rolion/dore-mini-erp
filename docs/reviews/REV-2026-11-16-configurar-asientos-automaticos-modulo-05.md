@@ -1,6 +1,6 @@
 # REV-2026-11-16-configurar-asientos-automaticos-modulo-05: Contrato API-01 difiere de la Specification y mensajes de faltantes solo en español
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-16-configurar-asientos-automaticos-modulo.md (v1)
@@ -19,3 +19,6 @@ Se devuelve issues[{code, role, subject, module, message}], preview[{side, role,
 
 ## Evidence
 curl GET /api/accounting/posting-config/?module=sales -> {"module":"sales","module_label":"Ventas",...,"issues":[{"code":"role_unconfigured","role":"RECEIVABLE","subject":"Cuentas por cobrar","module":"sales","message":"Falta configurar la cuenta ..."}]}. Actualizar API-01 (o el plan v2) y decidir si los mensajes se traducen por código en el frontend.
+
+## Resolution
+PLAN v4 (aprobado por la persona): API-01/API-02 describen la forma real; AC-14 exige avisos traducidos. El backend devuelve `Problem`/`PostingIssue` con `code`, `params` y `problem` (mensaje en español de respaldo) y los 400 incluyen `problem`; el frontend traduce con `posting-messages.ts` (es/en/pt). Pruebas: `test_posting_config_api` (problem en 400 y en issues/filas), `posting-messages.spec`, panel en en/pt.

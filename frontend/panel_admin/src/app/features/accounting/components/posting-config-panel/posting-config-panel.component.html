@@ -8,7 +8,7 @@
   </div>
   } @else if (config) {
   <h5 class="mb-1">{{ 'ACCOUNTING.POSTING.TITLE' | translate }}</h5>
-  <p class="text-muted mb-3">{{ 'ACCOUNTING.POSTING.INTRO' | translate: { p0: config.moduleLabel } }}</p>
+  <p class="text-body-secondary mb-3">{{ 'ACCOUNTING.POSTING.INTRO' | translate: { p0: moduleName(config.module, config.moduleLabel) } }}</p>
 
   @if (!config.accountingEnabled) {
   <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="status" data-testid="posting-disabled">
@@ -18,10 +18,20 @@
   <div class="alert alert-warning" role="alert" data-testid="posting-missing">
     <strong>{{ 'ACCOUNTING.POSTING.MISSING_TITLE' | translate: { p0: issues.length } }}</strong>
     <ul class="mb-0 mt-1">
-      @for (issue of issues; track issue.message) {
-      <li>{{ issue.message }}</li>
+      @for (issue of issuesHead; track issue.message) {
+      <li>{{ issueText(issue) }}</li>
       }
     </ul>
+    @if (issuesRest.length) {
+    <details class="mt-1" data-testid="posting-missing-more">
+      <summary>{{ 'ACCOUNTING.POSTING.MISSING_MORE' | translate: { p0: issuesRest.length } }}</summary>
+      <ul class="mb-0 mt-1">
+        @for (issue of issuesRest; track issue.message) {
+        <li>{{ issueText(issue) }}</li>
+        }
+      </ul>
+    </details>
+    }
   </div>
   } @else {
   <div class="alert alert-success bg-success-subtle text-success-emphasis border-success-subtle" role="status" data-testid="posting-ready">
@@ -41,7 +51,7 @@
           <th scope="row" class="fw-normal">
             <label [for]="'sel-' + row.key" class="fw-bold mb-0">{{ 'ACCOUNTING.POSTING.ROLES.' + row.id | translate }}</label>
             @if (row.sharedWith.length) {
-            <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.SHARED' | translate: { p0: row.sharedWith.join(', ') } }}</small>
+            <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.SHARED' | translate: { p0: sharedNames(row) } }}</small>
             }
           </th>
           <td>
@@ -50,6 +60,9 @@
               <option value="">{{ 'ACCOUNTING.POSTING.NO_ACCOUNT' | translate }}</option>
               @for (account of options(row); track account.id) {
               <option [value]="account.id">{{ label(account) }}</option>
+              }
+              @if (staleOption(row); as stale) {
+              <option [value]="stale.id">{{ staleLabel(stale) }}</option>
               }
             </select>
             <small class="form-text text-body-secondary d-block">{{ hint(row) }}</small>
@@ -60,9 +73,9 @@
             </small>
             }
             @if (row.error) {
-            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            <small class="form-text text-danger d-block" role="alert">{{ rowError(row) }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ rowIssue(row) }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -90,7 +103,7 @@
         @for (row of methodRows; track row.key) {
         <tr [attr.data-testid]="'row-' + row.key">
           <th scope="row" class="fw-normal">
-            <label [for]="'sel-' + row.key" class="fw-bold mb-0">{{ row.label }}</label>
+            <label [for]="'sel-' + row.key" class="fw-bold mb-0">{{ methodName(row.id, row.label) }}</label>
             @if (!row.isActive) {
             <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.METHOD_INACTIVE' | translate }}</small>
             }
@@ -102,11 +115,14 @@
               @for (account of options(row); track account.id) {
               <option [value]="account.id">{{ label(account) }}</option>
               }
+              @if (staleOption(row); as stale) {
+              <option [value]="stale.id">{{ staleLabel(stale) }}</option>
+              }
             </select>
             @if (row.error) {
-            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            <small class="form-text text-danger d-block" role="alert">{{ rowError(row) }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ rowIssue(row) }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -133,7 +149,7 @@
   @if (config.module === 'expenses') {
   <h6 class="mt-4">{{ 'ACCOUNTING.POSTING.CATEGORIES' | translate }}</h6>
   @if (!categoryRows.length) {
-  <p class="text-muted" data-testid="no-categories">{{ 'ACCOUNTING.POSTING.NO_CATEGORIES' | translate }}
+  <p class="text-body-secondary" data-testid="no-categories">{{ 'ACCOUNTING.POSTING.NO_CATEGORIES' | translate }}
     <a routerLink="/pocketbiz/expenses/categories">{{ 'ACCOUNTING.POSTING.CREATE_CATEGORY' | translate }}</a></p>
   } @else {
   <div class="table-responsive">
@@ -155,11 +171,14 @@
               @for (account of options(row); track account.id) {
               <option [value]="account.id">{{ label(account) }}</option>
               }
+              @if (staleOption(row); as stale) {
+              <option [value]="stale.id">{{ staleLabel(stale) }}</option>
+              }
             </select>
             @if (row.error) {
-            <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
+            <small class="form-text text-danger d-block" role="alert">{{ rowError(row) }}</small>
             } @else if (row.isActive && !isDirty(row) && (row.issue || row.original === '')) {
-            <small class="form-text posting-warn d-block">{{ row.issue ?? ('ACCOUNTING.POSTING.CATEGORY_MISSING_ROW' | translate) }}</small>
+            <small class="form-text posting-warn d-block">{{ row.issue ? rowIssue(row) : ('ACCOUNTING.POSTING.CATEGORY_MISSING_ROW' | translate) }}</small>
             }
           </td>
           <td class="text-nowrap">

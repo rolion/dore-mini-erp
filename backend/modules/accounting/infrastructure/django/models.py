@@ -272,7 +272,7 @@ class PostingAccountModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company_id = models.UUIDField(db_index=True)
     scope = models.CharField(max_length=10)
-    # Código del rol del catálogo, o id de la clasificación de gasto (texto).
+    # Código del rol del catálogo, o id (opaco) de la categoría de Gastos (texto).
     key = models.CharField(max_length=40)
     account = models.ForeignKey(AccountModel, on_delete=models.PROTECT, related_name='+')
     updated_at = models.DateTimeField(auto_now=True)

@@ -1,4 +1,4 @@
-import { AccountClassCode } from './accounting';
+import { AccountClassCode, ProblemInfo } from './accounting';
 
 /** Módulos que tienen eventos contabilizables (los mismos del catálogo del servidor). */
 export type PostingModule = 'sales' | 'receivables' | 'inventory' | 'purchases' | 'expenses';
@@ -27,7 +27,10 @@ export interface PostingIssue {
   role: string;
   subject: string;
   module: string;
+  /** Mensaje en español de respaldo; el panel arma el texto en el idioma activo con `code`, `params` y `problem`. */
   message: string;
+  params: Record<string, string>;
+  problem: ProblemInfo | null;
 }
 
 export interface PostingEvent {
@@ -48,6 +51,7 @@ export interface RoleRow {
   accountClass: AccountClassCode;
   account: PostingAccount | null;
   issue: string | null;
+  problem: ProblemInfo | null;
   sharedWith: SharedModule[];
 }
 
@@ -57,6 +61,7 @@ export interface MethodRow {
   isActive: boolean;
   account: PostingAccount | null;
   issue: string | null;
+  problem: ProblemInfo | null;
 }
 
 /** Cuenta de gasto configurada para una categoría de Gastos (Contabilidad solo conoce su id). */
@@ -64,6 +69,7 @@ export interface CategoryRow {
   categoryId: string;
   account: PostingAccount | null;
   issue: string | null;
+  problem: ProblemInfo | null;
 }
 
 /** Categoría de Gastos que el módulo anfitrión entrega al panel (nombre y estado son de Gastos). */
@@ -99,6 +105,7 @@ export interface RoleRowDto {
   account_class: AccountClassCode;
   account: PostingAccountDto | null;
   issue: string | null;
+  problem: ProblemInfo | null;
   shared_with: SharedModule[];
 }
 
@@ -108,12 +115,14 @@ export interface MethodRowDto {
   is_active: boolean;
   account: PostingAccountDto | null;
   issue: string | null;
+  problem: ProblemInfo | null;
 }
 
 export interface CategoryRowDto {
   category_id: string;
   account: PostingAccountDto | null;
   issue: string | null;
+  problem: ProblemInfo | null;
 }
 
 export interface PostingConfigDto {
@@ -141,6 +150,7 @@ export const toRoleRow = (dto: RoleRowDto): RoleRow => ({
   accountClass: dto.account_class,
   account: account(dto.account),
   issue: dto.issue,
+  problem: dto.problem,
   sharedWith: dto.shared_with,
 });
 
@@ -148,6 +158,7 @@ export const toCategoryRow = (dto: CategoryRowDto): CategoryRow => ({
   categoryId: dto.category_id,
   account: account(dto.account),
   issue: dto.issue,
+  problem: dto.problem,
 });
 
 export function toPostingConfig(dto: PostingConfigDto): PostingConfig {
@@ -169,6 +180,7 @@ export function toPostingConfig(dto: PostingConfigDto): PostingConfig {
       isActive: m.is_active,
       account: account(m.account),
       issue: m.issue,
+      problem: m.problem,
     })),
     categories: dto.categories.map(toCategoryRow),
   };

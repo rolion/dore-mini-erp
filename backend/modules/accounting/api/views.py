@@ -68,6 +68,7 @@ from modules.accounting.infrastructure.django.repositories import (
 from shared import module_gate
 from shared.tenancy import company_id_from
 
+from .posting_serializers import validation_errors
 from .serializers import (
     AccountInputSerializer,
     EntryFiltersSerializer,
@@ -121,7 +122,7 @@ def _run(use_case, *args, **kwargs):
         with transaction.atomic():
             return use_case.execute(*args, **kwargs)
     except AccountValidationError as exc:
-        raise ValidationError(exc.errors) from exc
+        raise ValidationError(validation_errors(exc)) from exc
     except AccountNotFound as exc:
         raise NotFound('Cuenta no encontrada.') from exc
     except MethodNotFound as exc:

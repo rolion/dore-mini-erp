@@ -4,7 +4,7 @@ No hay reglas definidas por la persona: cada módulo tiene eventos de dos línea
 nombra un *rol*. La empresa solo elige qué cuenta cumple cada rol (o cada categoría de gasto, o cada método de pago).
 El código del evento es el `origin_kind` del asiento (≤ 30 caracteres).
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .account import Account, AccountValidationError
 from .catalog import FLOW_CURRENCY
@@ -44,7 +44,7 @@ ROLES: dict[str, Role] = {r.code: r for r in (
     Role('INVENTORY', 'Inventario', ASSET),
     Role('COST_OF_SALES', 'Costo de ventas', COST),
     Role('PAYABLE', 'Cuentas por pagar (proveedores)', LIABILITY),
-    Role('MONEY', 'Caja o banco del método de pago', ASSET, SOURCE_METHOD),
+    Role('MONEY', 'Cuenta de Activo del método de pago', ASSET, SOURCE_METHOD),
     Role('EXPENSE_BY_CATEGORY', 'Cuenta de gasto de la categoría', EXPENSE, SOURCE_CATEGORY),
 )}
 
@@ -115,39 +115,73 @@ def modules_using(role_code: str) -> list[str]:
                                             if e.module == m)]
 
 
-def account_problem(role: Role, account: Account | None, disabled_classes: frozenset[str]) -> str | None:
-    """Por qué la cuenta no sirve para el rol (mensaje accionable) o `None` si sirve."""
+@dataclass(frozen=True)
+class Problem:
+    """Por qué una cuenta no sirve: `code` y `params` estables (el cliente traduce) y `message` en español."""
+    code: str  # account_missing | account_inactive | currency | no_code_class | wrong_class | class_disabled
+    params: dict = field(default_factory=dict)
+    message: str = ''
+
+
+def account_problem_info(role: Role, account: Account | None, disabled_classes: frozenset[str]) -> Problem | None:
+    """Por qué la cuenta no sirve para el rol (código, parámetros y mensaje accionable) o `None` si sirve."""
     if account is None:
-        return 'La cuenta no existe en esta empresa.'
+        return Problem('account_missing', {}, 'La cuenta no existe en esta empresa.')
     name = f'«{account.name}»'
     if not account.is_active:
-        return f'La cuenta {name} está deshabilitada; elija otra o actívela en Cuentas.'
+        return Problem('account_inactive', {'account': account.name},
+                       f'La cuenta {name} está deshabilitada; elija otra o actívela en Cuentas.')
     if account.currency != FLOW_CURRENCY:
-        return f'La cuenta {name} debe estar en {FLOW_CURRENCY}.'
+        return Problem('currency', {'account': account.name, 'currency': FLOW_CURRENCY},
+                       f'La cuenta {name} debe estar en {FLOW_CURRENCY}.')
     if account.account_class is None or account.code is None:
-        return f'La cuenta {name} no tiene código y clasificación contable; complétela en Cuentas.'
+        return Problem('no_code_class', {'account': account.name},
+                       f'La cuenta {name} no tiene código y clasificación contable; complétela en Cuentas.')
     if account.account_class != role.account_class:
-        return (f'La cuenta {name} es de {CLASS_LABELS.get(account.account_class, account.account_class)}; '
-                f'se requiere una cuenta de {CLASS_LABELS[role.account_class]}.')
+        return Problem('wrong_class', {'account': account.name, 'actual': account.account_class,
+                                       'required': role.account_class},
+                       f'La cuenta {name} es de {CLASS_LABELS.get(account.account_class, account.account_class)}; '
+                       f'se requiere una cuenta de {CLASS_LABELS[role.account_class]}.')
     if account.account_class in disabled_classes:
-        return f'La clasificación {CLASS_LABELS[account.account_class]} está deshabilitada.'
+        return Problem('class_disabled', {'class_code': account.account_class},
+                       f'La clasificación {CLASS_LABELS[account.account_class]} está deshabilitada.')
     return None
 
 
+def account_problem(role: Role, account: Account | None, disabled_classes: frozenset[str]) -> str | None:
+    """Mensaje en español de `account_problem_info`, o `None` si la cuenta sirve."""
+    problem = account_problem_info(role, account, disabled_classes)
+    return problem.message if problem else None
+
+
+class AccountProblemError(AccountValidationError):
+    """Cuenta no válida para un rol: además del mensaje por campo lleva el `Problem` estructurado."""
+
+    def __init__(self, problem: Problem):
+        super().__init__({'account_id': [problem.message]})
+        self.problem = problem
+
+
 def validate_account_for_role(role: Role, account: Account | None, disabled_classes: frozenset[str]) -> None:
-    problem = account_problem(role, account, disabled_classes)
+    problem = account_problem_info(role, account, disabled_classes)
     if problem:
-        raise AccountValidationError({'account_id': [problem]})
+        raise AccountProblemError(problem)
 
 
 @dataclass(frozen=True)
 class PostingIssue:
-    """Un faltante de configuración: `code` estable, el rol, lo que falta y qué hacer."""
-    code: str  # role_unconfigured | account_invalid | method_unconfigured | method_required | category_unconfigured
+    """Un faltante de configuración: `code` estable, el rol, lo que falta y qué hacer.
+
+    `params` (y `problem` en `account_invalid`) permiten al cliente traducir el aviso; `message` va en español.
+    """
+    code: str  # role_unconfigured | account_invalid | method_unconfigured | method_required | category_unconfigured |
+    #            category_required
     role: str
     subject: str  # rol, método o categoría afectado, legible
     module: str
     message: str
+    params: dict = field(default_factory=dict)
+    problem: Problem | None = None
 
 
 def location(module: str) -> str:
@@ -159,9 +193,9 @@ def issue_unconfigured(role: Role, module: str) -> PostingIssue:
                         f'Falta configurar la cuenta «{role.label}». Configúrela en {location(module)}.')
 
 
-def issue_invalid(role: Role, subject: str, module: str, problem: str) -> PostingIssue:
+def issue_invalid(role: Role, subject: str, module: str, problem: Problem) -> PostingIssue:
     return PostingIssue('account_invalid', role.code, subject, module,
-                        f'{problem} Corrija «{subject}» en {location(module)}.')
+                        f'{problem.message} Corrija «{subject}» en {location(module)}.', problem=problem)
 
 
 class PostingConfigurationMissing(Exception):
