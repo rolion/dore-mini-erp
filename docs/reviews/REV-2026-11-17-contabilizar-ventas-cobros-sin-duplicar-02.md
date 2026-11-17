@@ -1,6 +1,6 @@
 # REV-2026-11-17-contabilizar-ventas-cobros-sin-duplicar-02: Deshabilitar Contabilidad levanta el bloqueo de total y de cancelación de un pedido reconocido
 
-**Status:** Open
+**Status:** Resolved (documentado en ADR, decisión 10; aceptado por la persona)
 **Severity:** Medium
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md (v1)

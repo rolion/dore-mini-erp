@@ -22,6 +22,8 @@ CONT-12 dejó la configuración y la fachada (`check_posting_ready`, `post_autom
 8. **Frontera:** solo `infrastructure/adapters.py` importa `accounting.services` (ya permitido); `accounting` no importa `sales`. Ventas no guarda cuentas ni importes contables.
 9. **API:** misma forma de errores 409 `{code, detail}` de Ventas; `posting_configuration_missing` añade `issues:[{code, subject, message}]`. Ningún endpoint nuevo ni campo de petición nuevo.
 
+10. **Contabilidad deshabilitada después de reconocer (REV-02):** con el módulo deshabilitado Ventas es independiente (`is_recognized` devuelve falso): se levantan el bloqueo de total y de cancelación, los cobros no se contabilizan y cancelar no revierte el reconocimiento. Es una consecuencia aceptada de «módulo deshabilitado = nada cambia» y de «reactivar no contabiliza históricos» (CONT-12). Al rehabilitar, las diferencias entre pedidos y libro se corrigen con asientos manuales; no hay reconciliación automática.
+
 ## Alternativas consideradas
 - **Asiento directo Caja/Ingresos para cobros de pedidos sin reconocer** (tarjeta): descartado por la persona; añade un segundo camino al mismo importe y exige reconciliar al confirmar.
 - **Reconocer al entregar:** descartado por la persona (los cobros previos serían anticipos, sin cuenta de anticipos).
@@ -34,6 +36,7 @@ CONT-12 dejó la configuración y la fachada (`check_posting_ready`, `post_autom
 Sin migraciones. Con Contabilidad deshabilitada o sin cobertura nada cambia. Revertir el despliegue devuelve el comportamiento anterior; los asientos ya creados son válidos y se corrigen por reversión desde Contabilidad (los cobros ya contabilizados no se vuelven a escribir en el libro anterior). Empresas con Contabilidad habilitada pero sin cuentas configuradas quedan sin poder confirmar hasta configurarlas; el mensaje indica dónde (Ventas › Configuración › Asientos automáticos).
 
 ## Consecuencias
+- Deshabilitar Contabilidad deja de proteger los pedidos ya reconocidos (decisión 10); al rehabilitar puede requerirse un ajuste manual.
 - Con cobertura, confirmar y cobrar exigen la configuración de CONT-12; el rechazo es explícito, nunca silencioso.
 - Pedidos reconocidos no admiten cambios de total ni cancelación con cobros: reglas nuevas, solo con cobertura.
 - Convivencia temporal: cobros anteriores a la cobertura siguen en el libro anterior; los posteriores en partida doble (consistente con el corte de apertura).
