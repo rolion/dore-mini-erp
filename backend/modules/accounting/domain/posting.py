@@ -175,6 +175,14 @@ def account_problem_info(role: Role, account: Account | None, disabled_classes: 
     return None
 
 
+def money_account_problem(role: Role, account: Account | None) -> Problem | None:
+    """Una cuenta de dinero elegida a mano (rol por método) debe ser Caja/Banco/Billetera, no cualquier Activo."""
+    if role.source == SOURCE_METHOD and account is not None and account.kind is None:
+        return Problem('not_money_account', {'account': account.name},
+                       f'La cuenta «{account.name}» no es de dinero (Caja, Banco o Billetera); elija otra.')
+    return None
+
+
 def account_problem(role: Role, account: Account | None, disabled_classes: frozenset[str]) -> str | None:
     """Mensaje en español de `account_problem_info`, o `None` si la cuenta sirve."""
     problem = account_problem_info(role, account, disabled_classes)
@@ -189,8 +197,10 @@ class AccountProblemError(AccountValidationError):
         self.problem = problem
 
 
-def validate_account_for_role(role: Role, account: Account | None, disabled_classes: frozenset[str]) -> None:
-    problem = account_problem_info(role, account, disabled_classes)
+def validate_account_for_role(role: Role, account: Account | None, disabled_classes: frozenset[str],
+                              money_only: bool = False) -> None:
+    problem = account_problem_info(role, account, disabled_classes) or (
+        money_account_problem(role, account) if money_only else None)
     if problem:
         raise AccountProblemError(problem)
 

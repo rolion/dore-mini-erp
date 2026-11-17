@@ -121,23 +121,12 @@ class CoverageApiTests(ClassificationApiTestCase):
         super().setUp()
         set_enabled(self.company, (*DEFAULT_ENABLED_KEYS, 'accounting'))
 
-    def test_covered_expense_without_association_is_rejected(self):  # AC-06
+    def test_covered_expense_no_longer_requires_a_classification(self):  # GAS-01: lo exige la cuenta, no la clasificación
         category = self.category()
         body = self.expense(category, expected=400)
-        self.assertEqual(body['code'], 'classification_not_configured')
-        self.assertIn('Egresos', body['category_id'][0])
+        self.assertEqual(body['code'], 'posting_configuration_missing')
+        self.assertNotIn('classification', body['code'])
         self.assertEqual(ExpenseModel.objects.count(), 0)
-
-    def test_covered_expense_with_inactive_classification_is_rejected(self):  # AC-06
-        rent, category = self.classification(), self.category()
-        self.associate(category, rent['id'])
-        self.client.post(f'{CLASSIFICATIONS}{rent["id"]}/deactivate/')
-        self.assertEqual(self.expense(category, expected=400)['code'], 'classification_invalid')
-
-    def test_covered_expense_with_association_is_saved(self):  # AC-01, AC-06
-        rent, category = self.classification(), self.category()
-        self.associate(category, rent['id'])
-        self.assertEqual(self.expense(category)['classification']['id'], rent['id'])
 
     def test_expense_before_the_cutoff_is_saved_without_configuration(self):  # AC-06
         category = self.category()

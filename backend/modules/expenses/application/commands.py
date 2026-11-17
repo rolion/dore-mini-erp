@@ -2,17 +2,16 @@ from uuid import UUID
 
 from modules.expenses.domain.category import ExpenseCategory
 from modules.expenses.domain.exceptions import (
-    INVALID,
-    NOT_CONFIGURED,
     ExpenseCategoryNotFound,
-    ExpenseClassificationError,
+    ExpenseDuplicateKey,
     ExpenseNotFound,
+    ExpenseRuleViolation,
     ExpenseValidationError,
 )
 from modules.expenses.domain.expense import UNSET, Expense
 from modules.expenses.domain.repositories import ExpenseCategoryRepository, ExpenseRepository
 
-from .ports import ClassificationGateway, Clock
+from .ports import ClassificationGateway, Clock, ExpensePostingGateway
 
 DUPLICATE_NAME = 'Ya existe una categoría con ese nombre.'
 
@@ -27,60 +26,80 @@ def _category_errors(categories: ExpenseCategoryRepository, category_id: UUID) -
     return {}
 
 
-SETTINGS_HINT = 'Configúrela en Contabilidad → Configuración → Egresos.'
+def resolve_classification(category: ExpenseCategory, classifications: ClassificationGateway | None) -> UUID | None:
+    """Clasificación a guardar en el gasto (instantánea informativa de la asociación vigente de su categoría).
 
-
-def resolve_classification(category: ExpenseCategory, classifications: ClassificationGateway | None,
-                           expense_date) -> UUID | None:
-    """Clasificación a guardar en el gasto (instantánea de la asociación vigente de su categoría).
-
-    Con Contabilidad cubriendo la fecha, una categoría sin asociación utilizable impide registrar el gasto;
-    sin cobertura se guarda sin error y la instantánea queda vacía si la asociación no sirve.
+    Ya no se exige: la contabilización usa las cuentas del gasto (GAS-01). Si la asociación no sirve, queda vacía.
     """
-    if classifications is None:
+    if classifications is None or category.classification_id is None:
         return None
-    covered = classifications.is_covered(expense_date)
-    classification_id = category.classification_id
-    if classification_id is None:
-        if covered:
-            raise ExpenseClassificationError(
-                NOT_CONFIGURED, f'La categoría «{category.name}» no tiene clasificación de egreso. {SETTINGS_HINT}')
-        return None
-    info = classifications.describe([classification_id]).get(classification_id)
+    info = classifications.describe([category.classification_id]).get(category.classification_id)
     if info is None or not info.active or info.direction != 'EXPENSE':
-        if covered:
-            raise ExpenseClassificationError(
-                INVALID, f'La clasificación de la categoría «{category.name}» está inactiva o no es de egreso. '
-                         f'{SETTINGS_HINT}')
         return None
-    return classification_id
+    return category.classification_id
 
 
 class CreateExpense:
+    """Registra un gasto pagado. Con Contabilidad cubriendo la fecha lo contabiliza en la misma transacción.
+
+    Idempotente por `idempotency_key`: un reintento con los mismos datos devuelve el gasto existente
+    (`self.replayed`); con otros datos lanza `ExpenseRuleViolation('idempotency_key_reused')`.
+    """
+
     def __init__(self, expenses: ExpenseRepository, categories: ExpenseCategoryRepository,
-                 classifications: ClassificationGateway | None = None):
+                 classifications: ClassificationGateway | None = None, posting: ExpensePostingGateway | None = None):
         self.expenses = expenses
         self.categories = categories
         self.classifications = classifications
+        self.posting = posting
+        self.replayed = False
+
+    def _replay(self, existing: Expense, submitted: Expense, expense_account_id, payment_account_id) -> Expense:
+        if not existing.same_submission(submitted, expense_account_id, payment_account_id):
+            raise ExpenseRuleViolation('idempotency_key_reused', 'La clave de la operación ya se usó con otros datos.')
+        self.replayed = True
+        return existing
 
     def execute(self, description: object = None, amount: object = None, category_id: object = None,
                 expense_date: object = None, payment_method: object = None, supplier_name: object = '',
-                notes: object = '') -> Expense:
+                notes: object = '', expense_account_id: UUID | None = None, payment_account_id: UUID | None = None,
+                idempotency_key: UUID | None = None) -> Expense:
+        self.replayed = False
         errors: dict[str, list[str]] = {}
         expense = None
         try:
             expense = Expense.create(description=description, amount=amount, category_id=category_id,
                                      expense_date=expense_date, payment_method=payment_method,
-                                     supplier_name=supplier_name, notes=notes)
+                                     supplier_name=supplier_name, notes=notes, idempotency_key=idempotency_key)
         except ExpenseValidationError as exc:
             errors.update(exc.errors)
+        if expense is not None and idempotency_key is not None:
+            existing = self.expenses.find_by_key(idempotency_key)
+            if existing is not None:
+                return self._replay(existing, expense, expense_account_id, payment_account_id)
         if isinstance(category_id, UUID) and 'category_id' not in errors:
             errors.update(_category_errors(self.categories, category_id))
+        covered = (expense is not None and self.posting is not None and self.posting.is_covered(expense.expense_date))
+        if covered:
+            try:
+                self.posting.validate_accounts(expense_account_id, payment_account_id)
+            except ExpenseValidationError as exc:
+                errors.update(exc.errors)
         if errors:
             raise ExpenseValidationError(errors)
         category = self.categories.get(expense.category_id)
-        expense.assign_classification(resolve_classification(category, self.classifications, expense.expense_date))
-        return self.expenses.save(expense)
+        expense.assign_classification(resolve_classification(category, self.classifications))
+        try:
+            saved = self.expenses.save(expense)
+        except ExpenseDuplicateKey:  # carrera: otra petición con la misma clave ganó
+            return self._replay(self.expenses.find_by_key(idempotency_key), expense, expense_account_id,
+                                payment_account_id)
+        if covered:
+            accounts = self.posting.post(saved, category.name, expense_account_id, payment_account_id)
+            if accounts is not None:
+                saved.assign_posting(accounts.expense_account_id, accounts.payment_account_id)
+                saved = self.expenses.save(saved)
+        return saved
 
 
 class UpdateExpense:
@@ -114,21 +133,25 @@ class UpdateExpense:
             raise ExpenseValidationError(errors)
         if changes_category:
             category = self.categories.get(expense.category_id)
-            expense.assign_classification(
-                resolve_classification(category, self.classifications, expense.expense_date))
+            expense.assign_classification(resolve_classification(category, self.classifications))
         return self.expenses.save(expense)
 
 
 class VoidExpense:
-    def __init__(self, expenses: ExpenseRepository, clock: Clock):
+    """Anula el gasto; si está contabilizado, revierte su asiento en la misma transacción (si falla, no se anula)."""
+
+    def __init__(self, expenses: ExpenseRepository, clock: Clock, posting: ExpensePostingGateway | None = None):
         self.expenses = expenses
         self.clock = clock
+        self.posting = posting
 
     def execute(self, expense_id: UUID) -> Expense:
         expense = self.expenses.get_for_update(expense_id)
         if expense is None:
             raise ExpenseNotFound(expense_id)
         expense.void(self.clock.now())
+        if expense.is_posted and self.posting is not None:
+            self.posting.reverse(expense.id)
         return self.expenses.save(expense)
 
 

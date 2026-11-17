@@ -15,6 +15,20 @@ class ExpenseInputSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
+class ExpenseCreateSerializer(ExpenseInputSerializer):
+    """Alta: además de los datos del gasto, las cuentas elegidas (opcionales) y la clave de idempotencia."""
+
+    expense_account_id = serializers.UUIDField(required=False, allow_null=True)
+    payment_account_id = serializers.UUIDField(required=False, allow_null=True)
+    idempotency_key = serializers.UUIDField(required=False, allow_null=True)
+
+
+class PostingOptionsQuerySerializer(serializers.Serializer):
+    expense_date = serializers.DateField()
+    category_id = serializers.UUIDField(required=False, allow_null=True)
+    payment_method = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=20)
+
+
 class CategoryInputSerializer(serializers.Serializer):
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
@@ -34,6 +48,18 @@ def _classification(classification_id, classifications):
     if info is None:
         return {'id': classification_id, 'name': '', 'active': False}
     return {'id': info.id, 'name': info.name, 'active': info.active}
+
+
+def account_data(info) -> dict:
+    return {'id': info.id, 'code': info.code, 'name': info.name, 'active': info.is_active}
+
+
+def _account(account_id, accounts):
+    """`{id, code, name, active}` de la cuenta contable (el contexto trae las de la página), o `None`."""
+    if account_id is None:
+        return None
+    info = accounts.get(account_id)
+    return account_data(info) if info else {'id': account_id, 'code': None, 'name': '', 'active': False}
 
 
 class CategorySerializer(serializers.Serializer):
@@ -67,11 +93,23 @@ class ExpenseSummarySerializer(serializers.Serializer):
     status = serializers.SerializerMethodField()
     voided_at = serializers.DateTimeField(read_only=True)
     classification = serializers.SerializerMethodField()
+    posted = serializers.SerializerMethodField()
+    expense_account = serializers.SerializerMethodField()
+    payment_account = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
 
     def get_classification(self, obj):
         return _classification(obj.classification_id, self.context.get('classifications', {}))
+
+    def get_posted(self, obj) -> bool:
+        return obj.is_posted
+
+    def get_expense_account(self, obj):
+        return _account(obj.expense_account_id, self.context.get('accounts', {}))
+
+    def get_payment_account(self, obj):
+        return _account(obj.payment_account_id, self.context.get('accounts', {}))
 
     def get_category(self, obj):
         category = self.context.get('categories', {}).get(obj.category_id)
@@ -88,3 +126,7 @@ class ExpenseSummarySerializer(serializers.Serializer):
 
 class ExpenseSerializer(ExpenseSummarySerializer):
     notes = serializers.CharField(read_only=True)
+    journal_entry_id = serializers.SerializerMethodField()
+
+    def get_journal_entry_id(self, obj):
+        return self.context.get('journal_entry_id')

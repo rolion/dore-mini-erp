@@ -12,6 +12,7 @@ from modules.accounting.application.journal import PostJournalEntry, ReverseJour
 from modules.accounting.application.posting import (
     ConfigView,
     DescribePostingConfig,
+    AccountInfo,
     SetCategoryAccount,
     SetRoleAccount,
     load_context,
@@ -40,7 +41,11 @@ from modules.accounting.domain.posting import (
     PostingConfigurationMissing,
     PostingIssue,
     PostingNotFound,
+    account_problem_info,
     get_event,
+    money_account_problem,
+    get_role,
+    validate_account_for_role,
 )
 from modules.accounting.domain.fiscal_period import (
     DateOutsideFiscalPeriod,
@@ -60,13 +65,14 @@ from modules.accounting.infrastructure.django.repositories import (
 )
 from shared import module_gate
 
-__all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef',
+__all__ = ['AccountInfo', 'AccountRef', 'describe_accounts', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef',
            'AutomaticPosting', 'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput',
            'EntryRef', 'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError',
            'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
            'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
            'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
-           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'automatic_entry_origins',
+           'PostingReadiness', 'PostingOptions', 'posting_options', 'validate_posting_account', 'check_posting_ready',
+           'describe_posting_config', 'automatic_entry_origins',
            'find_automatic_entry', 'automatic_entries_for', 'preview_automatic_entry', 'PostingPreview',
            'PostingPreviewLine',
            'post_automatic_entry',
@@ -531,6 +537,7 @@ class AutomaticPosting:
 def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounting_date: date, description: str,
                          amount: Decimal, *, method: str | None = None, category_id: UUID | None = None,
                          category_label: str = '', advance_applied: Decimal | None = None,
+                         account_overrides: dict[str, UUID] | None = None,
                          created_by: int | None = None, created_by_name: str = '') -> AutomaticPosting:
     """Contabiliza un evento con las cuentas configuradas, dentro de la transacción del llamante.
 
@@ -541,6 +548,9 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
     Los eventos con una segunda línea (de Debe en `SALE_DELIVERY`, de Haber en `PURCHASE_RECOGNITION`) reciben en
     `advance_applied` el importe de esa línea (anticipos aplicados); la línea principal lleva el resto y ninguna línea
     de importe cero se genera. Una cuenta solo se exige si su línea existe.
+
+    `account_overrides` (código de rol → cuenta) elige las cuentas de esta operación en lugar de las configuradas; cada
+    una se valida contra su rol y, si no sirve, se informa como faltante (`PostingConfigurationMissing`).
     """
     _require_transaction('post_automatic_entry')
     definition = get_event(event)
@@ -559,7 +569,7 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
         return AutomaticPosting(False, coverage.reason)
     skipped = _skipped_roles(definition, amount, extra)
     accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
-                                     category_label, skipped)
+                                     category_label, skipped, account_overrides)
     if issues:
         raise PostingConfigurationMissing(issues)
     lines = [line for _, line in _event_lines(definition, accounts, amount, extra)]
@@ -683,3 +693,51 @@ def reverse_automatic_entry(company_id: UUID, event: str, origin_id: UUID, rever
     if original is None:
         return None
     return reverse_journal_entry(company_id, original.id, reversal_date, reason, created_by, created_by_name)
+
+
+def validate_posting_account(company_id: UUID, role: str, account_id: UUID) -> AccountRef:
+    """Valida una cuenta elegida para un rol de asiento automático (empresa, activa, BOB, clase y clasificación).
+
+    Lanza `AccountValidationError` (campo `account_id`) si no sirve. Uso nuevo: lo ya registrado no se revalida.
+    """
+    accounts, classes, _, _ = _posting_sources(company_id)
+    account = accounts.get(account_id)
+    validate_account_for_role(get_role(role), account, classes.disabled(), money_only=True)
+    return AccountRef(account.id, account.name, account.currency)
+
+
+@dataclass(frozen=True)
+class PostingOptions:
+    """Lo que un formulario necesita para contabilizar una operación: cobertura, cuentas por defecto y elegibles."""
+    covered: bool
+    reason: str | None
+    defaults: dict[str, AccountInfo]  # rol -> cuenta que regiría hoy (solo los roles que se resuelven)
+    issues: tuple[PostingIssue, ...]
+    eligible: dict[str, tuple[AccountInfo, ...]]  # rol -> cuentas activas utilizables para ese rol
+
+
+def posting_options(company_id: UUID, event: str, accounting_date: date, *, method: str | None = None,
+                    category_id: UUID | None = None, category_label: str = '') -> PostingOptions:
+    """Solo lectura. Sin cobertura no hay cuentas ni faltantes que mostrar."""
+    definition = get_event(event)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return PostingOptions(False, coverage.reason, {}, (), {})
+    ctx = load_context(*_posting_sources(company_id))
+    accounts, issues = resolve_event(definition, ctx, method, category_id, category_label)
+    info = {a.id: AccountInfo(a.id, a.code, a.name, a.is_active) for a in ctx.accounts.values()}
+    eligible: dict[str, tuple[AccountInfo, ...]] = {}
+    for _, role in definition.lines:
+        usable = [info[a.id] for a in ctx.accounts.values()
+                  if account_problem_info(role, a, ctx.disabled) is None and money_account_problem(role, a) is None]
+        eligible[role.code] = tuple(sorted(usable, key=lambda i: (i.code or '', i.name)))
+    return PostingOptions(True, None, {code: info[acc] for code, acc in accounts.items()}, tuple(issues), eligible)
+
+
+def describe_accounts(company_id: UUID, account_ids) -> dict[UUID, AccountInfo]:
+    """Cuentas de la empresa entre los ids pedidos (código y nombre), para mostrarlas; las ajenas no aparecen."""
+    wanted = set(account_ids)
+    if not wanted:
+        return {}
+    return {a.id: AccountInfo(a.id, a.code, a.name, a.is_active)
+            for a in DjangoAccountRepository(company_id).list() if a.id in wanted}
