@@ -112,4 +112,4 @@ Implementado según PLAN v1, sin cambios de Specification.
 
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/87 (base `task/TASK-configurar-asientos-automaticos-modulo`, PR #86) listo para aprobación humana; no se mergea. Incluye ADR y cambios de reglas de estado de pedidos contabilizados: lo aprueba una persona. Sin hallazgos Medium abiertos (REV-01 y REV-02 resueltos); quedan REV-03..09 (Low). Revisión visual y flake8 no realizados. Verificación propia tras PLAN v2: backend 1987 pruebas OK (incluye AC-15); el Quality Gate formal no se repitió.
+PR https://github.com/rolion/dore-mini-erp/pull/87 (base `accounting`; CONT-12, PR #86, ya está integrado en `accounting`) listo para aprobación humana; no se mergea. Incluye ADR y cambios de reglas de estado de pedidos contabilizados: lo aprueba una persona. Sin hallazgos Medium abiertos (REV-01 y REV-02 resueltos); quedan REV-03..09 (Low). Revisión visual y flake8 no realizados. Verificación propia tras PLAN v2: backend 1987 pruebas OK (incluye AC-15); el Quality Gate formal no se repitió.
