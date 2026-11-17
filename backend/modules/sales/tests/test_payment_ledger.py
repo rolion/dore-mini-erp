@@ -9,8 +9,8 @@ from django.test import TransactionTestCase
 from rest_framework.test import APIClient
 
 from modules.accounting import services as accounting
+from modules.accounting.tests.journal_support import money_account
 from modules.accounting.application.use_cases import ConfigureMethod
-from modules.accounting.domain.account import Account
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
 from modules.accounting.tests.test_concurrency import _run_together
@@ -45,8 +45,8 @@ class LedgerFixtures:
     def setup_accounting(self):
         enable(self.company, 'accounting', 'sales', 'customers')
         accounts = DjangoAccountRepository(self.company.id)
-        self.caja = accounts.save(Account.create('Caja', 'BOB'))
-        self.banco = accounts.save(Account.create('Banco', 'BOB'))
+        self.caja = money_account(accounts, 'Caja', '110101', 'CASH')
+        self.banco = money_account(accounts, 'Banco', '110102')
         configure(self.company, 'CASH', self.caja)
         configure(self.company, 'QR', self.banco)
 
@@ -190,7 +190,7 @@ class PaymentLedgerApiTests(LedgerFixtures, SalesApiTestCase):
                                  format='json')
         self.assertEqual((rejected.status_code, rejected.json()['code']), (409, 'payment_method_without_account'))
         # Con su propia cuenta, la entrada de B queda en B y nunca en la cuenta de A.
-        configure(other, 'CASH', DjangoAccountRepository(other.id).save(Account.create('Caja B', 'BOB')))
+        configure(other, 'CASH', money_account(DjangoAccountRepository(other.id), 'Caja B', '110101', 'CASH'))
         paid = client_b.post(url(order_b['id'], 'payments/'), {'amount': '10.00', 'payment_method': 'CASH'},
                              format='json')
         self.assertEqual(paid.status_code, 201, paid.content)

@@ -9,6 +9,14 @@ from django.utils import timezone
 
 from modules.accounting.application.coverage import GetCoverageStatus
 from modules.accounting.application.journal import PostJournalEntry, ReverseJournalEntry
+from modules.accounting.application.posting import (
+    ConfigView,
+    DescribePostingConfig,
+    SetCategoryAccount,
+    SetRoleAccount,
+    load_context,
+    resolve_event,
+)
 from modules.accounting.application.use_cases import missing_methods
 from modules.accounting.domain.catalog import METHOD_LABELS, OPERATION_RECORD, OPERATION_REVERSAL
 from modules.accounting.domain.account import AccountValidationError
@@ -27,6 +35,12 @@ from modules.accounting.domain.journal import (
     JournalLineInput,
     JournalValidationError,
 )
+from modules.accounting.domain.posting import (
+    PostingConfigurationMissing,
+    PostingIssue,
+    PostingNotFound,
+    get_event,
+)
 from modules.accounting.domain.fiscal_period import (
     DateOutsideFiscalPeriod,
     FiscalPeriodClosed,
@@ -41,14 +55,17 @@ from modules.accounting.infrastructure.django.repositories import (
     DjangoFiscalPeriodRepository,
     DjangoJournalRepository,
     DjangoMethodMappingRepository,
+    DjangoPostingConfigRepository,
 )
 from shared import module_gate
 
 __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef',
-           'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef',
+           'AutomaticPosting', 'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef',
            'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError', 'JournalBalance',
            'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef', 'JournalLineInput',
-           'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry', 'RecordedEntry',
+           'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry', 'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue',
+           'PostingNotFound', 'PostingReadiness', 'check_posting_ready', 'describe_posting_config',
+           'post_automatic_entry', 'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
            'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications', 'get_journal_entry',
            'journal_balances', 'lock_open_period', 'period_for', 'post_journal_entry', 'resolve_account',
            'reverse_journal_entry', 'validate_account_class', 'validate_classification', 'validate_money_account']
@@ -433,3 +450,112 @@ def journal_balances(company_id: UUID, account_ids=None) -> dict[UUID, JournalBa
     wanted = None if account_ids is None else set(account_ids)
     return {account_id: JournalBalance(debit, credit) for account_id, (debit, credit)
             in DjangoJournalRepository(company_id).totals_by_account(wanted).items()}
+
+
+# --- Asientos automáticos por evento (CONT-12) --------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PostingConfigRef:
+    """Configuración de los eventos de un módulo y si Contabilidad está habilitada para la empresa."""
+    accounting_enabled: bool
+    config: ConfigView
+
+
+def _posting_sources(company_id: UUID):
+    return (DjangoAccountRepository(company_id), DjangoAccountClassRepository(company_id),
+            DjangoPostingConfigRepository(company_id), DjangoMethodMappingRepository(company_id),
+            DjangoClassificationRepository(company_id))
+
+
+def describe_posting_config(company_id: UUID, module: str) -> PostingConfigRef:
+    """Eventos de un módulo con vista previa Debe/Haber, estado y faltantes (`PostingNotFound` si no hay)."""
+    return PostingConfigRef(module_gate.is_enabled(company_id, 'accounting'),
+                            DescribePostingConfig(*_posting_sources(company_id)).execute(module))
+
+
+def set_role_account(company_id: UUID, role: str, account_id: UUID | None) -> None:
+    """Asigna o quita la cuenta de un rol. Solo afecta a operaciones futuras; los asientos guardan sus cuentas."""
+    with transaction.atomic():
+        accounts, classes, posting, _, _ = _posting_sources(company_id)
+        SetRoleAccount(accounts, classes, posting).execute(role, account_id)
+
+
+def set_category_account(company_id: UUID, classification_id: UUID, account_id: UUID | None) -> None:
+    with transaction.atomic():
+        accounts, classes, posting, _, classifications = _posting_sources(company_id)
+        SetCategoryAccount(accounts, classes, classifications, posting).execute(classification_id, account_id)
+
+
+@dataclass(frozen=True)
+class PostingReadiness:
+    """¿Puede confirmarse? `required=False`: no se contabiliza (nada que exigir); `issues`: lo que falta."""
+    required: bool
+    issues: tuple[PostingIssue, ...] = ()
+    reason: str | None = None
+
+    @property
+    def ready(self) -> bool:
+        return not self.issues
+
+
+def check_posting_ready(company_id: UUID, event: str, accounting_date: date, *, method: str | None = None,
+                        classification_id: UUID | None = None) -> PostingReadiness:
+    """Verificación previa a confirmar una operación: muestra la configuración faltante antes de escribir nada.
+
+    Sin cobertura (Contabilidad deshabilitada, anterior al corte o en un hueco) nunca exige cuentas.
+    """
+    definition = get_event(event)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return PostingReadiness(False, (), coverage.reason)
+    _, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, classification_id)
+    return PostingReadiness(True, tuple(issues))
+
+
+@dataclass(frozen=True)
+class AutomaticPosting:
+    posted: bool  # False: la operación no se contabiliza (ver `reason`); el módulo sigue su curso sin asiento
+    reason: str | None = None  # accounting_disabled | before_cutoff | in_gap
+    entry: JournalEntryRef | None = None
+    created: bool = False  # False con `entry`: ya existía (reintento idempotente)
+
+
+def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounting_date: date, description: str,
+                         amount: Decimal, *, method: str | None = None, classification_id: UUID | None = None,
+                         created_by: int | None = None, created_by_name: str = '') -> AutomaticPosting:
+    """Contabiliza un evento con las cuentas configuradas, dentro de la transacción del llamante.
+
+    Sin cobertura no crea nada. Con cobertura y configuración incompleta lanza `PostingConfigurationMissing` (nunca
+    omite en silencio). Idempotente por `(empresa, evento, origin_id)` mediante el motor: `origin_kind` = código del
+    evento. Lanza `EntryContractError` fuera de una transacción.
+    """
+    _require_transaction('post_automatic_entry')
+    definition = get_event(event)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return AutomaticPosting(False, coverage.reason)
+    accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method,
+                                     classification_id)
+    if issues:
+        raise PostingConfigurationMissing(issues)
+    debit_role, credit_role = definition.debit_role, definition.credit_role
+    posted = post_journal_entry(company_id, JournalEntryInput(
+        accounting_date, description,
+        [JournalLineInput(accounts[debit_role], debit=amount), JournalLineInput(accounts[credit_role], credit=amount)],
+        origin_kind=definition.code, origin_id=origin_id, created_by=created_by, created_by_name=created_by_name))
+    return AutomaticPosting(True, None, posted.entry, posted.created)
+
+
+def reverse_automatic_entry(company_id: UUID, event: str, origin_id: UUID, reversal_date: date, reason: str,
+                            created_by: int | None = None, created_by_name: str = '') -> PostedJournalEntry | None:
+    """Revierte el asiento de un evento con sus cuentas originales (no consulta la configuración actual).
+
+    Devuelve `None` si el evento nunca se contabilizó (no hay nada que revertir).
+    """
+    _require_transaction('reverse_automatic_entry')
+    definition = get_event(event)
+    original = DjangoJournalRepository(company_id).get_by_origin(definition.code, origin_id)
+    if original is None:
+        return None
+    return reverse_journal_entry(company_id, original.id, reversal_date, reason, created_by, created_by_name)

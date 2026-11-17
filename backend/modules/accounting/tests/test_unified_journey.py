@@ -14,7 +14,7 @@ from django.db.models import Sum
 from django.test import TransactionTestCase
 
 from modules.accounting.application.use_cases import ConfigureMethod
-from modules.accounting.domain.account import Account
+from modules.accounting.tests.journal_support import money_account
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
 from modules.catalog.infrastructure.django.models import ProductModel
@@ -52,8 +52,8 @@ class UnifiedJourneyTests(TransactionTestCase):
         for key in ('sales', 'customers', 'expenses', 'reporting', 'accounting'):
             modules.enable(key)
         accounts = DjangoAccountRepository(company)
-        self.caja = accounts.save(Account.create('Caja', 'BOB'))
-        self.banco = accounts.save(Account.create('Banco', 'BOB'))
+        self.caja = money_account(accounts, 'Caja', '110101', 'CASH')
+        self.banco = money_account(accounts, 'Banco', '110102')
         configure(company, 'CASH', self.caja)
         configure(company, 'QR', self.banco)
 

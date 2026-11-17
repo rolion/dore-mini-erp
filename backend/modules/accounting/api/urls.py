@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .balance_views import BalanceListView
+from .posting_views import PostingCategoryView, PostingConfigView, PostingRoleView
 from .journal_views import JournalEntryDetailView, JournalEntryListCreateView, JournalEntryReverseView
 from .views import (
     AccountActivateView,
@@ -61,6 +62,10 @@ urlpatterns = [
     path('entries/<uuid:entry_id>/', EntryDetailView.as_view(), name='accounting-entry-detail'),
     path('regularization/preview/', RegularizationPreviewView.as_view(), name='accounting-regularization-preview'),
     path('regularization/apply/', RegularizationApplyView.as_view(), name='accounting-regularization-apply'),
+    path('posting-config/', PostingConfigView.as_view(), name='accounting-posting-config'),
+    path('posting-config/roles/<str:role>/', PostingRoleView.as_view(), name='accounting-posting-role'),
+    path('posting-config/categories/<uuid:classification_id>/', PostingCategoryView.as_view(),
+         name='accounting-posting-category'),
     path('payment-methods/', MethodListView.as_view(), name='accounting-method-list'),
     path('payment-methods/<str:code>/', MethodDetailView.as_view(), name='accounting-method-detail'),
 ]
