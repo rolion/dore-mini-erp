@@ -270,6 +270,30 @@ class ServicePostingTests(TransactionTestCase):
         self.assertEqual((blocked.status_code, blocked.json()['code']), (409, 'service_has_unposted_payments'))
         self.assertEqual((RenderedServiceModel.objects.count(), b.journal().count()), (0, 0))
 
+    # AC-09 / EDGE-01: prestar con anticipos contabilizados y una fecha sin cobertura se bloquea
+    def test_a_service_date_before_the_cutoff_is_rejected_when_the_line_has_advances(self):
+        b = self.books
+        p = self.accepted()
+        corona = p['lines'][1]['id']
+        self.assertEqual(self.pay(p['number'], [(corona, '50.00')]).status_code, 201)  # anticipo contabilizado
+        SettingsModel.objects.update_or_create(
+            company_id=b.company_id, defaults={'cutoff_date': TODAY - timedelta(days=5)})
+        blocked = self.render(p['number'], corona, service_date=str(TODAY - timedelta(days=10)))
+        self.assertEqual((blocked.status_code, blocked.json()['code']), (409, 'service_date_not_covered'))
+        self.assertEqual((RenderedServiceModel.objects.count(), b.journal('SERVICE_RECOGNITION').count()), (0, 0))
+
+    # AC-09: cobrar una línea reconocida con una fecha sin cobertura se bloquea y deshace el pago
+    def test_a_payment_date_before_the_cutoff_is_rejected_for_a_recognized_line(self):
+        b = self.books
+        p = self.accepted()
+        corona = p['lines'][1]['id']
+        self.assertEqual(self.render(p['number'], corona).status_code, 201)
+        SettingsModel.objects.update_or_create(
+            company_id=b.company_id, defaults={'cutoff_date': TODAY - timedelta(days=5)})
+        blocked = self.pay(p['number'], [(corona, '50.00')], payment_date=str(TODAY - timedelta(days=10)))
+        self.assertEqual((blocked.status_code, blocked.json()['code']), (409, 'payment_date_not_covered'))
+        self.assertEqual((PaymentModel.objects.count(), b.journal('SERVICE_PAYMENT').count()), (0, 0))
+
     # AC-10
     def test_without_accounting_everything_works_and_nothing_is_posted(self):
         DjangoCompanyModuleRepository(self.books.company_id).disable('accounting')

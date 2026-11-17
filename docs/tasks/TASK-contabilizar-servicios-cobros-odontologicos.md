@@ -1,6 +1,6 @@
 # TASK-contabilizar-servicios-cobros-odontologicos: Contabilizar servicios y cobros odontológicos por partida doble (SRV-01)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-servicios-cobros-odontologicos (desde `origin/accounting` b10b293, que ya contiene CONT-10, CONT-12 y VEN-01; base del PR = `accounting`, no `main`)
@@ -14,6 +14,7 @@
 | 2026-11-17 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (lógica financiera, migración, frontera Cobros↔Contabilidad↔fuentes); 2 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
+| 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS condicional (0 Critical/High); REV-01 y REV-02 resueltos, REV-03..06 Low abiertos | delivery-publish |
 
 ## Investigación
 
@@ -112,7 +113,9 @@ Implementado según **PLAN v1**, sin cambios de Specification.
 **Deuda técnica / pendiente:** decisiones de negocio abiertas (cobros previos a la cobertura sobre líneas prestadas con cobertura: bloqueado; anulación/reembolso de servicios prestados); mensajes de configuración faltante solo en español (deuda CONT-12 REV-05); unificar la alerta de Ventas con la compartida.
 
 ## Review
-_Pendiente_
+**Quality Gate (PLAN v1): PASS con limitaciones** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2057 OK, `makemigrations --check` sin cambios, bandit 0 High/Medium (23 Low solo en pruebas); ruff/flake8 no instalados (no realizado). Frontend: `ng lint` OK, `i18n:check` 2193 claves y 0 faltantes, `npm run build` OK, `ng test` 1599 de 1599 OK; `npm audit` 26 vulnerabilidades preexistentes (el diff no toca `package*.json`). Fronteras DDD, aislamiento por empresa, atomicidad/concurrencia y ausencia de doble contabilización verificados. **Revisión visual en navegador: no verificada.** No se comparó el warning de build «23 rules skipped» con la rama base.
+- Resueltos tras el Gate: [REV-01](docs/reviews/REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-01.md) (pruebas de `payment_date_not_covered` y `service_date_not_covered`; siguen sin prueba EDGE-04 y el conteo de consultas), [REV-02](docs/reviews/REV-2026-11-17-contabilizar-servicios-cobros-odontologicos-02.md) (mensaje de rectificación). Verificación posterior: `manage.py test modules.receivables modules.quotations modules.dentistry` 168 OK.
+- Abiertos (Low): REV-03 (alerta de Ventas sin unificar), REV-04 (HEX en scss del diálogo), REV-05 (línea larga), REV-06 (doble `role="alert"` y formato de fecha).
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/88 (base `accounting`) listo para aprobación humana; no se mergea. Cambio sensible: base de datos (migración aditiva `receivables/0002`), lógica financiera y cambio de reglas de cobro con cobertura contable; respaldo: ADR de prestación y asientos. Pendiente de la persona: revisión visual (escritorio/375 px, claro/oscuro), flake8/ruff, y las decisiones de negocio abiertas (cobros previos a la cobertura sobre líneas prestadas con cobertura; anulación/reembolso de servicios).
