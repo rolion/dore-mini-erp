@@ -41,7 +41,7 @@ class PostTests(JournalBase):
         entry = result.entry
         self.assertEqual((entry.total, entry.currency, entry.source, entry.period_id),
                          (Decimal('500.00'), 'BOB', 'MANUAL', self.period.id))
-        self.assertEqual([(l.debit, l.credit) for l in entry.lines],
+        self.assertEqual([(x.debit, x.credit) for x in entry.lines],
                          [(Decimal('200.00'), 0), (Decimal('300.00'), 0), (0, Decimal('500.00'))])
         row = JournalEntryModel.objects.get(pk=entry.id)
         self.assertEqual((row.company_id, row.created_by, row.created_by_name), (self.company.id, 7, 'Ana'))

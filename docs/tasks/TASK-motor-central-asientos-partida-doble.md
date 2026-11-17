@@ -15,6 +15,7 @@
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde | delivery-build |
 | 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS (3 hallazgos Low abiertos) | delivery-publish |
+| 2026-11-16 | PUBLISH → ENGINEERING → REVIEW | Corrección de REV-01..03 pedida por la persona; se repite el gate | delivery-build |
 
 ## Investigación
 
@@ -91,7 +92,7 @@ Implementado según PLAN v1 (sin cambios de Specification).
 - **Períodos**: `JournalPeriodUsage` reemplaza a `NoJournalPeriodUsage` y se cablea en `api/views.py` (AC-08).
 - **Docs**: nota en `docs/architecture/ddd.md`; aviso de transición en el docstring de `record_entry`.
 
-**Desviaciones:** (1) la CHECK de reversión exige `reverses` ⇒ sin origen y con motivo, y una reversión conserva el `source` de su original (el plan decía «MANUAL ⇒ sin origen; AUTOMATIC ⇒ origen completo» solo para originales). (2) La descripción de la reversión es «Reversión: <original>». (3) La moneda del asiento no se recibe: se deriva de sus cuentas. (4) La orquestación vive en `services.py` y no en un `application/journal.py` aparte (REV-02): los casos de uso son delgados y reutilizan los puertos de la fachada. (5) No se añadió `test_migration_0010.py` (REV-01): la aplicación y reversión de `0010` se verificó a mano en el Quality Gate. (6) Un reintento de un evento ya existente se resuelve antes de validar cuentas y períodos (no se revalida).
+**Desviaciones:** (1) la CHECK de reversión exige `reverses` ⇒ sin origen y con motivo, y una reversión conserva el `source` de su original (el plan decía «MANUAL ⇒ sin origen; AUTOMATIC ⇒ origen completo» solo para originales). (2) La descripción de la reversión es «Reversión: <original>». (3) La moneda del asiento no se recibe: se deriva de sus cuentas. (4) [corregida tras REV-02] La orquestación vive en `application/journal.py` (`PostJournalEntry`, `ReverseJournalEntry`, con puertos para repositorio, cuentas y bloqueo de período); `services.py` solo compone adaptadores y mapea a DTO. (5) [corregida tras REV-01] `test_migration_0010.py` prueba aplicar/revertir sobre datos del libro anterior y los CHECK/único de la base. (6) Un reintento de un evento ya existente se resuelve antes de validar cuentas y períodos (no se revalida).
 
 **Corridas propias (no son el Quality Gate):** `test_journal_*` 48 OK (dominio, servicio, adaptador, concurrencia); `makemigrations --check` sin cambios; suite completa 1879 con 3 fallos ajenos al diff (`sales.test_repository` ×2 por orden de filas con marcas de tiempo idénticas y `shared.test_test_runner` por resolución del reloj en Windows; los de ventas pasan aislados) y 1 error de mi prueba de concurrencia, ya corregido.
 

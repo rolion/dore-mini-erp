@@ -8,6 +8,7 @@ from django.db import connection, transaction
 from django.utils import timezone
 
 from modules.accounting.application.coverage import GetCoverageStatus
+from modules.accounting.application.journal import PostJournalEntry, ReverseJournalEntry
 from modules.accounting.application.use_cases import missing_methods
 from modules.accounting.domain.catalog import METHOD_LABELS, OPERATION_RECORD, OPERATION_REVERSAL
 from modules.accounting.domain.account import AccountValidationError
@@ -20,14 +21,11 @@ from modules.accounting.domain.entry import (
     EntryValidationError,
 )
 from modules.accounting.domain.journal import (
-    ORIGIN_CONFLICT,
-    ORIGIN_IN_LEGACY_LEDGER,
     JournalConflict,
     JournalEntry,
     JournalEntryNotFound,
     JournalLineInput,
     JournalValidationError,
-    build_lines,
 )
 from modules.accounting.domain.fiscal_period import (
     DateOutsideFiscalPeriod,
@@ -373,38 +371,14 @@ class JournalBalance:
 def _journal_ref(entry: JournalEntry) -> JournalEntryRef:
     return JournalEntryRef(
         entry.id, entry.accounting_date, entry.description, entry.source, entry.currency, entry.total_debit,
-        entry.period_id, tuple(JournalLineRef(l.account_id, l.debit, l.credit, l.memo) for l in entry.lines),
+        entry.period_id, tuple(JournalLineRef(line.account_id, line.debit, line.credit, line.memo)
+                               for line in entry.lines),
         entry.origin_kind, entry.origin_id, entry.reverses_id, entry.reversed_by_id, entry.reversal_reason)
 
 
 def _require_transaction(name: str) -> None:
     if not connection.in_atomic_block:
         raise EntryContractError(f'{name} debe ejecutarse dentro de la transacción del asiento.')
-
-
-def _currency_of_usable_accounts(company_id: UUID, account_ids) -> str:
-    """Valida cuentas para un asiento NUEVO (de la empresa, activas, clasificadas y habilitadas, en una moneda)."""
-    accounts = DjangoAccountRepository(company_id)
-    disabled = DjangoAccountClassRepository(company_id).disabled()
-    errors: list[str] = []
-    currencies: set[str] = set()
-    for account_id in sorted(account_ids, key=str):  # orden fijo: sin interbloqueos entre asientos
-        account = accounts.get_for_update(account_id)
-        if account is None:
-            errors.append('Una cuenta no existe en esta empresa.')
-        elif not account.is_active:
-            errors.append(f'La cuenta «{account.name}» está inactiva.')
-        elif account.account_class is None or account.code is None:
-            errors.append(f'La cuenta «{account.name}» no tiene código y clasificación contable; complétela en Cuentas.')
-        elif account.account_class in disabled:
-            errors.append(f'La clasificación contable de la cuenta «{account.name}» está deshabilitada.')
-        else:
-            currencies.add(account.currency)
-    if errors:
-        raise JournalValidationError({'lines': errors})
-    if len(currencies) > 1:
-        raise JournalValidationError({'lines': ['Todas las cuentas del asiento deben tener la misma moneda.']})
-    return currencies.pop()
 
 
 def post_journal_entry(company_id: UUID, data: JournalEntryInput) -> PostedJournalEntry:
@@ -416,31 +390,14 @@ def post_journal_entry(company_id: UUID, data: JournalEntryInput) -> PostedJourn
     `EntryContractError` fuera de una transacción y `JournalValidationError` si algo no cumple.
     """
     _require_transaction('post_journal_entry')
-    lines = build_lines(data.lines)
-    journal = DjangoJournalRepository(company_id)
-    common = {'accounting_date': data.accounting_date, 'description': data.description, 'lines': lines,
-              'origin_kind': data.origin_kind, 'origin_id': data.origin_id, 'created_by': data.created_by,
-              'created_by_name': data.created_by_name}
-    if data.origin_id is not None and isinstance(data.origin_kind, str):
-        existing = journal.get_by_origin(data.origin_kind.strip(), data.origin_id)
-        if existing is not None:  # reintento: no se revalida contra cuentas ni períodos de hoy
-            return _replay(JournalEntry.post(currency=existing.currency, **common), existing)
-    currency = _currency_of_usable_accounts(company_id, {line.account_id for line in lines})
-    entry = JournalEntry.post(currency=currency, **common)
-    if entry.origin_id is not None and journal.legacy_origin_exists(entry.origin_kind, entry.origin_id):
-        raise JournalConflict(ORIGIN_IN_LEGACY_LEDGER,
-                              'El origen ya está contabilizado en el libro de entradas anterior.')
-    period = lock_open_period(company_id, entry.accounting_date)
-    stored, created = journal.insert(entry.with_period(period.id))
-    return PostedJournalEntry(_journal_ref(stored), True) if created else _replay(entry, stored)
-
-
-def _replay(candidate: JournalEntry, stored: JournalEntry) -> PostedJournalEntry:
-    differences = candidate.differences(stored)
-    if differences:
-        raise JournalConflict(ORIGIN_CONFLICT,
-                              f'El evento ya tiene un asiento con otros datos: {", ".join(differences)}.', differences)
-    return PostedJournalEntry(_journal_ref(stored), False)
+    stored, created = PostJournalEntry(
+        DjangoJournalRepository(company_id), DjangoAccountRepository(company_id),
+        DjangoAccountClassRepository(company_id).disabled(),
+        lambda accounting_date: lock_open_period(company_id, accounting_date),
+    ).execute(accounting_date=data.accounting_date, description=data.description, lines=data.lines,
+              origin_kind=data.origin_kind, origin_id=data.origin_id, created_by=data.created_by,
+              created_by_name=data.created_by_name)
+    return PostedJournalEntry(_journal_ref(stored), created)
 
 
 def reverse_journal_entry(company_id: UUID, entry_id: UUID, reversal_date: date, reason: str,
@@ -454,18 +411,9 @@ def reverse_journal_entry(company_id: UUID, entry_id: UUID, reversal_date: date,
     motivo.
     """
     _require_transaction('reverse_journal_entry')
-    journal = DjangoJournalRepository(company_id)
-    original = journal.get_for_update(entry_id)
-    if original is None:
-        raise JournalEntryNotFound(str(entry_id))
-    if original.is_reversal:
-        raise JournalValidationError({'entry': ['Una reversión no se puede revertir.']})
-    existing = journal.reversal_of(original.id)
-    if existing is not None:
-        return PostedJournalEntry(_journal_ref(existing), False)
-    reversal = original.reverse(reversal_date, reason, created_by, created_by_name)
-    period = lock_open_period(company_id, reversal.accounting_date)
-    stored, created = journal.insert(reversal.with_period(period.id))
+    stored, created = ReverseJournalEntry(
+        DjangoJournalRepository(company_id), lambda accounting_date: lock_open_period(company_id, accounting_date),
+    ).execute(entry_id, reversal_date, reason, created_by, created_by_name)
     return PostedJournalEntry(_journal_ref(stored), created)
 
 

@@ -90,8 +90,8 @@ class ReverseTests(TestCase):
         original = post(balanced())
         reversal = original.reverse(date(2026, 6, 1), 'Error de captura', 7, 'Ana')
         self.assertEqual(reversal.reverses_id, original.id)
-        self.assertEqual([(l.account_id, l.debit, l.credit) for l in reversal.lines],
-                         [(l.account_id, l.credit, l.debit) for l in original.lines])
+        self.assertEqual([(x.account_id, x.debit, x.credit) for x in reversal.lines],
+                         [(x.account_id, x.credit, x.debit) for x in original.lines])
         self.assertEqual((reversal.total_debit, reversal.total_credit), (Decimal('500.00'), Decimal('500.00')))
         self.assertEqual((reversal.origin_id, reversal.origin_kind), (None, None))
         self.assertEqual(reversal.reversal_reason, 'Error de captura')

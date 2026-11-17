@@ -1,6 +1,6 @@
 # REV-2026-11-16-motor-central-asientos-partida-doble-03: Lint menor en código nuevo (E741 y F401)
 
-**Status:** Open
+**Status:** Fixed (pendiente de verificación en el gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-motor-central-asientos-partida-doble.md (v1)

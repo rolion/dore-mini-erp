@@ -1,7 +1,7 @@
 """CONT-02: concurrencia del motor (AC-03, AC-06, AC-08, AC-09 de CONT-10 con asientos reales)."""
 import threading
 import time
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from django.db import transaction
 from django.test import TransactionTestCase
