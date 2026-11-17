@@ -17,7 +17,11 @@
       "TEXT": "Agenda"
     },
     "RECEIVABLES": {
-      "TEXT": "Cobros"
+      "TEXT": "Cobros",
+      "LIST": {
+        "COLLECTIONS": "Cobros",
+        "SETTINGS": "Configuración"
+      }
     },
     "QUOTATIONS": {
       "TEXT": "Cotizaciones",
@@ -1933,6 +1937,7 @@
       "CONFIGURACION_GUARDADA": "Configuración guardada",
       "ESTE_MODULO_AUN_NO_TIENE": "Este módulo aún no tiene ajustes configurables. Cuando haya reglas disponibles aparecerán aquí.",
       "VENTAS": "Ventas",
+      "COBROS": "Cobros",
       "COMPRAS": "Compras",
       "INVENTARIO": "Inventario",
       "PERMITIR_STOCK_NEGATIVO": "Permitir stock negativo",
@@ -2443,6 +2448,22 @@
     "P_CONDICIONES": "Condiciones"
   },
   "RECEIVABLES": {
+    "COL_PRESTACION": "Prestación",
+    "SIN_PRESTAR": "Sin prestar",
+    "PRESTADO_EL": "Prestado el {{date}}",
+    "MARCAR_PRESTADO": "Marcar como prestado",
+    "RECONOCIDO": "Reconocido",
+    "SRV_TITULO": "Marcar como prestado",
+    "SRV_IMPORTE": "Importe del tratamiento",
+    "SRV_FECHA": "Fecha de prestación",
+    "SRV_ADVERTENCIA": "No se puede deshacer. Reconoce el ingreso por servicios y aplica los anticipos cobrados.",
+    "SRV_CONFIRMAR": "Confirmar prestación",
+    "SRV_GUARDANDO": "Guardando…",
+    "SRV_EXITO": "«{{name}}» se marcó como prestado.",
+    "E_SERVICE_DATE": "La fecha de prestación no puede ser futura.",
+    "E_LINE_ID": "El tratamiento no se puede marcar como prestado.",
+    "CONFIG_INCOMPLETA": "Configuración contable incompleta",
+    "IR_A_CONFIG": "Ir a la configuración de Cobros",
     "E_MONTO_SUPERA": "El monto supera el saldo por cobrar.",
     "DLG_TITULO": "Registrar cobro",
     "SALDO_POR_COBRAR": "Saldo por cobrar",
@@ -2984,7 +3005,8 @@
         "SALE_DELIVERY": "Reconocer la entrega de un pedido",
         "SALE_RECOGNITION": "Reconocer una venta",
         "SALE_PAYMENT": "Cobrar una venta",
-        "SERVICE_RECOGNITION": "Reconocer un servicio",
+        "SERVICE_ADVANCE": "Cobrar un servicio por adelantado",
+        "SERVICE_RECOGNITION": "Reconocer un servicio prestado",
         "SERVICE_PAYMENT": "Cobrar un servicio",
         "INVENTORY_SALE_COST": "Costo de ventas por salida de inventario",
         "PURCHASE_RECOGNITION": "Reconocer una compra de mercadería",

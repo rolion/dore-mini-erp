@@ -29,8 +29,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(quotations.module).toBe('quotations');
     expect(quotations.submenu.map((item) => item.path)).toEqual(['/pocketbiz/quotations/proformas']);
     expect(receivables.module).toBe('receivables');
-    expect(receivables.path).toBe('/pocketbiz/receivables'); // ítem plano: sin submenú redundante (AC-12)
-    expect(receivables.submenu).toEqual([]);
+    // SRV-01: Cobros pasa a ser un grupo porque ahora tiene una segunda pantalla (la configuración contable).
+    expect(receivables.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/receivables', '/pocketbiz/receivables/settings',
+    ]);
     expect(personnel.module).toBe('personnel');
     expect(personnel.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/personnel/professionals', '/pocketbiz/personnel/specialties',
@@ -98,7 +100,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(43);
+    expect(titles.length).toBe(45);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

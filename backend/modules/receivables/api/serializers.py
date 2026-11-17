@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from modules.receivables.application.collections import CommitmentView, PaymentInput
-from modules.receivables.domain.obligation import MAX_REFERENCE, Payment
+from modules.receivables.domain.obligation import MAX_REFERENCE, Payment, RenderedService
 
 CURRENCY = 'BOB'
 
@@ -26,6 +26,11 @@ class PaymentInputSerializer(serializers.Serializer):
                             data['reference'], tuple((a['line_id'], a['amount']) for a in data['allocations']))
 
 
+class RenderServiceSerializer(serializers.Serializer):
+    line_id = serializers.UUIDField()
+    service_date = serializers.DateField(required=False, allow_null=True, default=None)
+
+
 def _money(value) -> str:
     return f'{value:.2f}'
 
@@ -39,10 +44,17 @@ def payment_data(payment: Payment) -> dict:
                             for a in payment.allocations]}
 
 
+def service_data(service: RenderedService) -> dict:
+    return {'id': str(service.id), 'line_id': str(service.line_id), 'description': service.description,
+            'amount': _money(service.amount), 'service_date': service.service_date.isoformat(),
+            'recorded_by_name': service.recorded_by_name}
+
+
 def totals_data(statement) -> dict:
     return {'proposed': _money(statement.proposed), 'accepted': _money(statement.accepted),
             'pending': _money(statement.pending), 'rejected': _money(statement.rejected),
-            'paid': _money(statement.paid), 'balance': _money(statement.balance)}
+            'paid': _money(statement.paid), 'balance': _money(statement.balance),
+            'recognized': _money(statement.recognized)}
 
 
 def summary_data(view: CommitmentView) -> dict:
@@ -62,12 +74,17 @@ def detail_data(view: CommitmentView) -> dict:
     can_pay = snapshot.collectible and statement.balance > 0
     return {'kind': snapshot.kind, 'number': snapshot.number, 'version': snapshot.version,
             'status': snapshot.status,
-            'proforma_id': str(snapshot.proforma_id) if snapshot.proforma_id else None, 'customer_id': str(snapshot.customer_id),
+            'proforma_id': str(snapshot.proforma_id) if snapshot.proforma_id else None,
+            'customer_id': str(snapshot.customer_id),
             'customer_name': snapshot.customer_name, 'date': snapshot.date.isoformat(), 'currency': CURRENCY,
             'payment_status': statement.payment_status, 'totals': totals_data(statement),
             'lines': [{'line_id': str(l.line_id), 'description': l.description, 'piece': l.piece,
                        'decision': l.decision, 'proposed': _money(l.proposed), 'accepted': _money(l.accepted),
-                       'paid': _money(l.paid), 'balance': _money(l.balance), 'collectible': l.collectible}
+                       'paid': _money(l.paid), 'balance': _money(l.balance), 'collectible': l.collectible,
+                       'rendered': l.rendered,
+                       'service_date': l.service_date.isoformat() if l.service_date else None,
+                       'can_render': l.can_render}
                       for l in statement.lines],
             'payments': [payment_data(p) for p in (obligation.payments if obligation else [])],
-            'allowed_actions': ['register_payment'] if can_pay else []}
+            'allowed_actions': (['register_payment'] if can_pay else [])
+            + (['render_service'] if any(l.can_render for l in statement.lines) else [])}

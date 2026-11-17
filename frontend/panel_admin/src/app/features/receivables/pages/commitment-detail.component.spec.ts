@@ -13,7 +13,7 @@ const COMMITMENT = (kind: SourceKind = 'quotation', balance = '300.00'): Commitm
   totals: { proposed: '350.00', accepted: '300.00', pending: '0.00', rejected: '50.00', paid: '0.00', balance },
   lines: [
     { line_id: 'l1', description: 'Limpieza', piece: '', decision: 'accepted', proposed: '100.00', accepted: '100.00', paid: '0.00', balance: '100.00', collectible: true },
-    { line_id: 'l2', description: 'Corona', piece: '18', decision: 'accepted', proposed: '200.00', accepted: '200.00', paid: '0.00', balance: '200.00', collectible: true },
+    { line_id: 'l2', description: 'Corona', piece: '18', decision: 'accepted', proposed: '200.00', accepted: '200.00', paid: '0.00', balance: '200.00', collectible: true, rendered: false, service_date: null, can_render: true },
     { line_id: 'l3', description: 'Blanqueamiento', piece: '', decision: 'rejected', proposed: '50.00', accepted: '0.00', paid: '0.00', balance: '0.00', collectible: false },
   ],
   payments: [], allowed_actions: balance === '0.00' ? [] : ['register_payment'],
@@ -37,6 +37,31 @@ describe('CommitmentDetailComponent', () => {
   }
 
   afterEach(() => http.verify());
+
+  it('ofrece «Marcar como prestado» solo en tratamientos aceptados sin prestar y muestra el total reconocido (UI-01, UI-04)', () => {
+    const root = create().nativeElement as HTMLElement;
+    const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('tbody button')).filter((b) => b.textContent?.includes('Marcar como prestado'));
+    expect(buttons.length).toBe(1);
+    expect(root.textContent).toContain('Reconocido');
+    expect(root.textContent).toContain('Sin prestar');
+  });
+
+  it('al marcar el tratamiento relee el compromiso y anuncia el resultado (AC-13)', () => {
+    const fixture = create();
+    const root = fixture.nativeElement as HTMLElement;
+    fixture.componentInstance.onRendered({
+      ...COMMITMENT(), replayed: false,
+      service: { id: 's1', line_id: 'l2', description: 'Corona', amount: '200.00', service_date: '2026-11-17', recorded_by_name: 'ana' },
+    });
+    const reload = COMMITMENT();
+    reload.lines[1] = { ...reload.lines[1], rendered: true, service_date: '2026-11-17', can_render: false };
+    reload.totals.recognized = '200.00';
+    http.expectOne((req) => req.url.endsWith('/commitments/quotation/PRO-000001/')).flush(reload);
+    fixture.detectChanges();
+    expect(root.querySelector('[data-service-result]')?.textContent).toContain('Corona');
+    expect(root.textContent).toContain('Prestado el 17/11/2026');
+    expect(root.textContent).toContain('Bs 200.00');
+  });
 
   it('muestra propuesto, aceptado, cobrado y saldo por separado y solo ofrece cobrar lo aceptado (AC-08)', () => {
     const text = (create().nativeElement as HTMLElement).textContent ?? '';

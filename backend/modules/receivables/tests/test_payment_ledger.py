@@ -1,17 +1,23 @@
-"""PB-COB-002: pagos de proformas de servicios con el libro de entradas (AC-01..AC-10 del plan)."""
+"""PB-COB-002: pagos de proformas de servicios con el libro de entradas (AC-01..AC-10 del plan).
+
+Desde SRV-01 este camino rige para los cobros sin cobertura de partida doble (fecha anterior al corte): la
+configuración de estas pruebas fija un corte futuro. Los cobros con cobertura están en `test_service_posting.py`.
+"""
 import threading
+from datetime import timedelta
 from decimal import Decimal
 from unittest import mock
 from uuid import uuid4
 
 from django.db import connection, transaction
 from django.test import TransactionTestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from modules.accounting import services as accounting
 from modules.accounting.tests.journal_support import money_account
 from modules.accounting.application.use_cases import ConfigureMethod
-from modules.accounting.infrastructure.django.models import EntryModel
+from modules.accounting.infrastructure.django.models import EntryModel, SettingsModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
 from modules.modularity.infrastructure.django.repositories import DjangoCompanyModuleRepository
 from modules.receivables.infrastructure.django.models import AllocationModel, PaymentModel
@@ -34,6 +40,9 @@ class ServicePaymentLedgerTests(TransactionTestCase):
     def enable_accounting(self):
         company = self.admin.company_id
         DjangoCompanyModuleRepository(company).enable('accounting')
+        # Corte futuro: hoy no tiene cobertura de partida doble, rige el libro de entradas anterior.
+        SettingsModel.objects.update_or_create(
+            company_id=company, defaults={'cutoff_date': timezone.localdate() + timedelta(days=30)})
         accounts = DjangoAccountRepository(company)
         self.caja = money_account(accounts, 'Caja', '110101', 'CASH')
         self.banco = money_account(accounts, 'Banco', '110102')

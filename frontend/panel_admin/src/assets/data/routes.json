@@ -490,15 +490,38 @@
       ]
     },
     {
-      "path": "/pocketbiz/receivables",
+      "path": "",
       "title": "MENUITEMS.RECEIVABLES.TEXT",
       "iconType": "feather",
       "icon": "dollar-sign",
-      "class": "",
+      "class": "menu-toggle",
       "groupTitle": false,
       "badge": "",
       "badgeClass": "",
-      "submenu": [],
+      "submenu": [
+        {
+          "path": "/pocketbiz/receivables",
+          "title": "MENUITEMS.RECEIVABLES.LIST.COLLECTIONS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/receivables/settings",
+          "title": "MENUITEMS.RECEIVABLES.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
       "module": "receivables"
     }
   ]

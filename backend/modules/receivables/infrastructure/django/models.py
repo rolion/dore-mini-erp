@@ -63,6 +63,29 @@ class AllocationModel(models.Model):
         constraints = [models.CheckConstraint(condition=Q(amount__gt=0), name='receivables_allocation_amount_gt_0')]
 
 
+class RenderedServiceModel(models.Model):
+    """Tratamiento prestado (SRV-01). Se inserta una vez y nunca se edita ni se borra."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    obligation = models.ForeignKey(ObligationModel, on_delete=models.CASCADE, related_name='rendered_services')
+    lineage_id = models.UUIDField()
+    line_id = models.UUIDField()
+    description = models.CharField(max_length=150)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    service_date = models.DateField()
+    recorded_by = models.BigIntegerField(null=True, blank=True)
+    recorded_by_name = models.CharField(max_length=150, blank=True, default='')
+    created_at = models.DateTimeField()
+
+    class Meta:
+        db_table = 'receivables_rendered_service'
+        ordering = ['created_at', 'id']
+        constraints = [
+            models.CheckConstraint(condition=Q(amount__gt=0), name='receivables_service_amount_gt_0'),
+            models.UniqueConstraint(fields=['obligation', 'lineage_id'], name='receivables_service_line_unique'),
+        ]
+
+
 class ReceiptCounterModel(models.Model):
     company_id = models.UUIDField(primary_key=True)
     last_number = models.PositiveIntegerField(default=0)

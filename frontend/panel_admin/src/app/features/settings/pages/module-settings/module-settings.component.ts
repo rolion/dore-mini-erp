@@ -18,6 +18,7 @@ export const MODULE_TITLES: Record<string, string> = {
   get sales() { return tr('SETTINGS.MODULE_SETTINGS.VENTAS'); },
   get purchases() { return tr('SETTINGS.MODULE_SETTINGS.COMPRAS'); },
   get inventory() { return tr('SETTINGS.MODULE_SETTINGS.INVENTARIO'); },
+  get receivables() { return tr('SETTINGS.MODULE_SETTINGS.COBROS'); },
 };
 
 export const SAVED_MESSAGE = (): string => tr('SETTINGS.MODULE_SETTINGS.CONFIGURACION_GUARDADA');
@@ -36,7 +37,7 @@ export const ENABLE_CONFIRMATIONS: Record<string, { title: string; message: stri
 
 type Tab = 'general' | 'history' | 'posting';
 
-const POSTING_MODULES: readonly string[] = ['sales', 'purchases', 'inventory'];
+const POSTING_MODULES: readonly string[] = ['sales', 'purchases', 'inventory', 'receivables'];
 
 /** Configuración de un módulo (`data.settingsModule`): pestañas «General», «Asientos automáticos» (si el módulo tiene eventos contabilizables) e «Historial de cambios». */
 @Component({

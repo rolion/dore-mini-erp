@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { PostingIssuesAlertComponent } from '../../../../shared/components/posting-issues-alert/posting-issues-alert.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Observable, catchError, finalize, firstValueFrom, switchMap, tap } from 'rxjs';
@@ -55,6 +56,7 @@ const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
   styleUrl: './order-detail.component.scss',
   imports: [TranslatePipe, 
     RouterLink,
+    PostingIssuesAlertComponent,
     DatePipe,
     MoneyPipe,
     OrderStatusBadgeComponent,

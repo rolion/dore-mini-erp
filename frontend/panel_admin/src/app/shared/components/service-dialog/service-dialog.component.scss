@@ -1,0 +1,26 @@
+@use '../../../../assets/scss/dark-tokens' as dark;
+
+dialog {
+  box-sizing: border-box;
+  inline-size: min(32rem, calc(100% - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  margin: auto;
+  overflow: auto;
+  border: 1px solid var(--bs-border-color, currentcolor);
+}
+
+:host-context(.dark) {
+  dialog {
+    background-color: dark.$color-dark-primary;
+    color: dark.$color-font;
+    border-color: dark.$color-font;
+
+    &::backdrop {
+      background-color: rgb(0 0 0 / 60%);
+    }
+
+    .text-muted {
+      color: inherit !important;
+    }
+  }
+}

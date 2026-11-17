@@ -28,14 +28,9 @@
     </div>
 
     @if (postingIssues.length) {
-    <div class="alert alert-warning" role="alert" data-testid="alert-posting-issues">
-      <strong>{{ 'SALES.ORDER_DETAIL.CONFIGURACION_CONTABLE_INCOMPLETA' | translate }}</strong>
-      <ul class="mb-1">
-        @for (issue of postingIssues; track $index) {
-        <li>{{ issue.message }}</li>
-        }
-      </ul>
-      <a routerLink="/pocketbiz/sales/settings" [queryParams]="{ tab: 'posting' }" class="alert-link" data-testid="link-posting-settings">{{ 'SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS' | translate }}</a>
+    <div class="mb-3">
+      <app-posting-issues-alert [issues]="postingIssues" settingsLink="/pocketbiz/sales/settings"
+        titleKey="SALES.ORDER_DETAIL.CONFIGURACION_CONTABLE_INCOMPLETA" linkKey="SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS" />
     </div>
     }
     @if (cancelled) {

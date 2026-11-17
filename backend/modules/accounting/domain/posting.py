@@ -94,7 +94,10 @@ EVENTS: tuple[Event, ...] = (
     Event('SALE_PAYMENT', 'sales', 'Cobrar una venta', 'MONEY', 'RECEIVABLE'),
     Event('SALE_RECOGNITION', 'sales', 'Reconocer una venta (al confirmar, histórico)', 'RECEIVABLE', 'SALES_INCOME',
           active=False),
-    Event('SERVICE_RECOGNITION', 'receivables', 'Reconocer un servicio', 'RECEIVABLE', 'SERVICE_INCOME'),
+    # Cobros (SRV-01): el ingreso se reconoce al marcar el tratamiento como prestado; lo cobrado antes es anticipo.
+    Event('SERVICE_ADVANCE', 'receivables', 'Cobrar un servicio por adelantado', 'MONEY', 'CUSTOMER_ADVANCES'),
+    Event('SERVICE_RECOGNITION', 'receivables', 'Reconocer un servicio prestado', 'RECEIVABLE', 'SERVICE_INCOME',
+          extra_debit_role='CUSTOMER_ADVANCES'),
     Event('SERVICE_PAYMENT', 'receivables', 'Cobrar un servicio', 'MONEY', 'RECEIVABLE'),
     Event('INVENTORY_SALE_COST', 'inventory', 'Costo de ventas por salida de inventario', 'COST_OF_SALES',
           'INVENTORY'),

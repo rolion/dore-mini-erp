@@ -38,6 +38,24 @@ describe('ReceivablesApiService', () => {
     request.flush({});
   });
 
+  it('marca un tratamiento como prestado y conserva el código y los faltantes de un 409 contable (API-01, API-03)', () => {
+    const results: unknown[] = [];
+    const failures: ReceivableFailure[] = [];
+    service.renderService('dental', 'ODO-000001', { line_id: 'l1', service_date: null }).subscribe((r) => results.push(r));
+    const ok = http.expectOne((req) => req.url.endsWith('/commitments/dental/ODO-000001/services/'));
+    expect(ok.request.method).toBe('POST');
+    expect(ok.request.body).toEqual({ line_id: 'l1', service_date: null });
+    ok.flush({ replayed: false });
+    service.renderService('dental', 'ODO-000001', { line_id: 'l1', service_date: null })
+      .subscribe({ error: (f: ReceivableFailure) => failures.push(f) });
+    http.expectOne((req) => req.url.endsWith('/services/')).flush(
+      { detail: 'Falta la cuenta.', code: 'posting_configuration_missing', issues: [{ code: 'account_missing', subject: 'Cuentas por cobrar', message: 'Falta la cuenta.' }] },
+      { status: 409, statusText: 'Conflict' });
+    expect(results.length).toBe(1);
+    expect(failures[0]).toEqual(jasmine.objectContaining({ conflict: true, code: 'posting_configuration_missing', message: 'Falta la cuenta.' }));
+    expect(failures[0].issues?.length).toBe(1);
+  });
+
   it('traduce 400, 409, 404 y 403 a fallos con mensaje y campos', () => {
     const failures: ReceivableFailure[] = [];
     const run = (status: number, body: object) => {

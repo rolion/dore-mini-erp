@@ -1,0 +1,9 @@
+# Lint del backend. Mismo límite que flake8; las migraciones autogeneradas se excluyen.
+line-length = 120
+target-version = "py312"
+extend-exclude = ["migrations", ".venv"]
+
+[lint]
+select = ["E", "F", "W"]
+# E741: `l` como variable de línea (proformas, pedidos) es la convención del repositorio.
+ignore = ["E741"]
