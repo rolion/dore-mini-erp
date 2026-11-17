@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-gastos-cuenta-gasto-pago (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/90
 **Fuente:** https://trello.com/c/w2fG3Xvu/5-gas-01-registrar-gastos-con-cuenta-de-gasto-y-cuenta-de-pago-en-partida-doble
 
 ## Historial de transiciones
