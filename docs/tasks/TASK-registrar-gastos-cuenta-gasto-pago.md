@@ -113,7 +113,7 @@ UI: pantallas de referencia seguidas = Formulario (`product-form`) y Detalle; si
 
 Nota: el subagente emitió FAIL únicamente por la revisión visual no ejecutada; el procedimiento del proyecto exige marcarla «no verificada» (nunca aprobada), no bloquear.
 
-Evidencia: backend `Ran 2067 tests ... OK`; `makemigrations --check`: No changes detected; frontend `TOTAL: 1601 SUCCESS` (cobertura líneas 88,89 %); `ng lint` sin errores; `i18n:check` 2197 claves, 0 faltantes; `npm run build` OK; bandit sin hallazgos; `npm audit --omit=dev`: 3 high preexistentes (picomatch, tinyglobby, @angular/localize; el diff no toca `package.json`). Revisión visual en navegador: **no verificada**.
+Evidencia: backend `Ran 2067 tests ... OK`; `makemigrations --check`: No changes detected; frontend `TOTAL: 1601 SUCCESS` (cobertura líneas 88,89 %); `ng lint` sin errores; `i18n:check` 2197 claves, 0 faltantes; `npm run build` OK; bandit sin hallazgos; `npm audit --omit=dev`: 3 high preexistentes (picomatch, tinyglobby, @angular/localize; el diff no toca `package.json`). Revisión visual en navegador: verificada a mano por la persona el 2026-11-17 (flujo de escritorio: registrar un alquiler, detalle «Contabilizado», enlace al asiento, campos bloqueados al editar y reversión al anular); **no verificados** móvil ni tema oscuro.
 
 ## Publicación
 PR #90 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migración `expenses/0004`) y contrato de `accounting.services`; respaldo: ADR-registrar-gastos-cuenta-gasto-pago-puerto-asiento-y-bloqueo (migración aditiva y reversible). Hacer backup antes de desplegar (el deploy ya lo hace); la base del PR es `accounting`, no `main`.
