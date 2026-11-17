@@ -13,6 +13,7 @@
 | 2026-11-17 | (nuevo) → INVESTIGATION | Task creado; base = rama `task/TASK-configurar-asientos-automaticos-modulo` (CONT-12, PR #86), no `main` | delivery-start |
 | 2026-11-17 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (lógica financiera, frontera Ventas↔Contabilidad, cambios de reglas de estado); 4 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-17 | ENGINEERING (parcial) | Código y pruebas escritos; pruebas de backend sin ejecutar (falta `.env` local) | delivery-build |
 
 ## Investigación
 
@@ -86,7 +87,20 @@ Con Contabilidad habilitada, cada cobro crea una entrada de una cuenta (libro an
 `docs/plans/PLAN-2026-11-17-contabilizar-ventas-cobros-sin-duplicar.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1, sin cambios de Specification.
+
+- **Fachada** (`accounting/services.py`): `find_automatic_entry` (INV-01/02).
+- **Puerto y adaptador** (`sales/application/ports.py`, `sales/infrastructure/adapters.py`): `SalesPosting` / `SalesPostingAdapter` reemplazan a `PaymentLedger`; reconocimiento, cobro por un único camino (asiento si el pedido está reconocido; libro anterior si es anterior a la cobertura), reversión y traducción de errores del motor (AC-01..AC-10).
+- **Comandos** (`sales/application/commands.py`): `StartOrderPreparation` reconoce al confirmar; `RegisterPayment` contabiliza antes de guardar; `AddOrderItem`/`ChangeOrderItemQuantity`/`RemoveOrderItem`/`ApplyOrderDiscount` bloquean el total reconocido (AC-07); `CancelOrder` revierte o rechaza con cobros (AC-08). `OrderRuleViolation` gana `extra` (para `issues`).
+- **Vistas** (`sales/api/views.py`): cablean el adaptador y exponen `extra` en el 409 (API-01..04).
+- **Frontend** (AC-14): `OrderRuleError.postingIssues`, alerta con enlace a la configuración de Ventas en el detalle (patrón de alerta existente; sin pantalla nueva), claves es/en/pt en `SALES.ORDER_DETAIL.*`.
+- **Pruebas:** `sales/tests/test_sales_posting.py` (AC-01..AC-13, con hilos), `FindTests` en `test_posting_service`, ajuste de `test_payment_ledger.py` (corte futuro para ejercitar el camino anterior); specs de `order-detail` y `orders-api.service`.
+
+**Desviaciones respecto al plan:** ninguna de alcance. `StartOrderPreparation`/`CancelOrder` reciben además `actor` (y `Clock`) para fechar y atribuir los asientos.
+
+**Estado de verificación (propia, no es el Quality Gate):** frontend: `ng lint` OK, `i18n:check` 2178 claves y 0 faltantes, suite completa 1574 OK. **Backend: las pruebas NO se han ejecutado** — el worktree no tiene `backend/.env` y copiarlo de otro worktree fue denegado; solo se comprobó sintaxis y flake8 de lo nuevo. Pendiente de correr: `manage.py test modules.sales modules.accounting modules.receivables`, `makemigrations --check` (no hay migraciones nuevas).
+
+**Deuda técnica / pendiente:** mensajes de configuración faltante solo en español (deuda de CONT-12 REV-05); sin endpoint de verificación previa; revisión visual en navegador pendiente para `delivery-publish`.
 
 ## Review
 _Pendiente_

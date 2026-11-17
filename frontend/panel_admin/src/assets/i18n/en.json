@@ -1693,6 +1693,8 @@
       "PEDIDO": "Order {{p0}}",
       "CANCELAR_PEDIDO": "Cancel order",
       "VOLVER_A_PEDIDOS": "Back to orders",
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Sales accounting setup is incomplete.",
+      "IR_A_CONFIGURACION_DE_VENTAS": "Go to Sales settings",
       "PEDIDO_CANCELADO": "Order cancelled.",
       "MOTIVO": "Reason: {{p0}}",
       "LOS_PAGOS_REGISTRADOS_SE_CONSERVAN": "Recorded payments are kept.",

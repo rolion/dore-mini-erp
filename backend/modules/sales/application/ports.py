@@ -114,11 +114,25 @@ class StockOutput(Protocol):
     def output_for(self, order_id: UUID) -> StockOutputRecord | None: ...
 
 
-class PaymentLedger(Protocol):
-    """Integración opcional con Contabilidad: cada pago crea su entrada en el libro, dentro de la misma transacción."""
+class SalesPosting(Protocol):
+    """Integración opcional con Contabilidad: reconoce la venta, contabiliza cada cobro y revierte el reconocimiento.
 
-    def is_available(self) -> bool: ...
+    Todo ocurre dentro de la transacción de quien llama; rechaza la operación con una excepción de Ventas si no puede.
+    Con el módulo deshabilitado o sin cobertura no hace nada nuevo (comportamiento anterior).
+    """
 
-    def record(self, order_id: UUID, payment: object, actor: Actor) -> None:
-        """Resuelve la cuenta del método y registra la entrada; rechaza el pago (excepción de Ventas) si no puede."""
+    def is_recognized(self, order_id: UUID) -> bool:
+        """¿El pedido ya tiene su asiento de reconocimiento (con Contabilidad habilitada)?"""
+        ...
+
+    def recognize(self, order: object, actor: Actor, today: date) -> None:
+        """Contabiliza el reconocimiento del pedido recién confirmado (total con descuento)."""
+        ...
+
+    def record_payment(self, order: object, payment: object, actor: Actor, today: date) -> None:
+        """Contabiliza un cobro por un único camino (asiento o, en pedidos anteriores a la cobertura, libro anterior)."""
+        ...
+
+    def reverse_recognition(self, order: object, reason: str, actor: Actor, today: date) -> None:
+        """Revierte el reconocimiento del pedido con las cuentas originales."""
         ...

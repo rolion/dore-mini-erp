@@ -4,6 +4,7 @@ Es el único lugar de Sales que conoce a Catalog, Customers y Modularity, y solo
 """
 import logging
 from collections.abc import Iterable
+from contextlib import contextmanager
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -31,6 +32,7 @@ from modules.sales.domain.exceptions import (
     OrderValidationError,
     ShortLine,
 )
+from modules.sales.domain.enums import OrderStatus
 from modules.sales.domain.order import MAX_DISCOUNT_PERCENT
 from shared import module_gate
 
@@ -38,6 +40,8 @@ CUSTOMERS_MODULE = 'customers'
 INVENTORY_MODULE = 'inventory'
 ACCOUNTING_MODULE = 'accounting'
 PAYMENT_CURRENCY = 'BOB'
+SALE_RECOGNITION = 'SALE_RECOGNITION'  # eventos del catálogo de Contabilidad (CONT-12)
+SALE_PAYMENT = 'SALE_PAYMENT'
 
 logger = logging.getLogger(__name__)
 
@@ -166,19 +170,64 @@ class StockOutputAdapter:
             str(exc), exc.warehouse_id, warehouse.name if warehouse else '', lines)
 
 
-class PaymentLedgerAdapter:
-    """Cada pago del pedido crea su entrada en el libro de Contabilidad (origen `PRODUCT`), si el módulo está habilitado."""
+class SalesPostingAdapter:
+    """Contabiliza Ventas en Contabilidad (solo por su fachada `services`), si el módulo está habilitado.
+
+    Reconocimiento al confirmar y un asiento por cobro (partida doble); los cobros de pedidos confirmados antes de la
+    cobertura siguen en el libro anterior (origen `PRODUCT`). Cada cobro sigue exactamente un camino.
+    """
 
     def __init__(self, company_id: UUID):
         self.company_id = company_id
         self._available: bool | None = None
 
-    def is_available(self) -> bool:
+    def _enabled(self) -> bool:
         if self._available is None:
             self._available = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE)
         return self._available
 
-    def record(self, order_id: UUID, payment, actor: Actor) -> None:
+    def is_recognized(self, order_id: UUID) -> bool:
+        return self._enabled() and accounting_services.find_automatic_entry(
+            self.company_id, SALE_RECOGNITION, order_id) is not None
+
+    def recognize(self, order, actor: Actor, today: date) -> None:
+        if not self._enabled():
+            return
+        with _posting_errors():
+            accounting_services.post_automatic_entry(
+                self.company_id, SALE_RECOGNITION, order.id, today, f'Venta {order.code}', order.total,
+                created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def record_payment(self, order, payment, actor: Actor, today: date) -> None:
+        if not self._enabled():
+            return
+        if self.is_recognized(order.id):
+            with _posting_errors():
+                posted = accounting_services.post_automatic_entry(
+                    self.company_id, SALE_PAYMENT, payment.id, payment.payment_date, f'Cobro de la venta {order.code}',
+                    payment.amount, method=payment.payment_method.value, created_by=actor.user_id,
+                    created_by_name=actor.user_name)
+            if not posted.posted:
+                raise OrderRuleViolation(
+                    'payment_date_not_covered',
+                    'La fecha del cobro no tiene cobertura contable; usa una fecha posterior al corte de Contabilidad.')
+            return
+        if order.status is OrderStatus.NEW and accounting_services.coverage_status(self.company_id, today).covered:
+            raise OrderRuleViolation(
+                'order_not_confirmed', 'Confirma el pedido antes de registrar su cobro: la venta se contabiliza al '
+                                       'confirmarlo.')
+        self._record_in_legacy_ledger(order.id, payment, actor)
+
+    def reverse_recognition(self, order, reason: str, actor: Actor, today: date) -> None:
+        if not self._enabled():
+            return
+        with _posting_errors():
+            accounting_services.reverse_automatic_entry(
+                self.company_id, SALE_RECOGNITION, order.id, today, f'Pedido {order.code} cancelado: {reason}',
+                created_by=actor.user_id, created_by_name=actor.user_name)
+
+    def _record_in_legacy_ledger(self, order_id: UUID, payment, actor: Actor) -> None:
+        """Cobro de un pedido confirmado antes de la cobertura: libro anterior, como antes de VEN-01."""
         method = payment.payment_method.value
         account = accounting_services.resolve_account(self.company_id, method)
         if account is None:
@@ -196,6 +245,23 @@ class PaymentLedgerAdapter:
                 'ledger_rejected', 'Contabilidad rechazó la entrada del cobro: ' + _first_message(exc.errors)) from exc
         except accounting_services.EntryConflict as exc:
             raise OrderRuleViolation('ledger_conflict', str(exc)) from exc
+
+
+@contextmanager
+def _posting_errors():
+    """Traduce los rechazos del motor y de la configuración a errores de Ventas (409 accionables)."""
+    try:
+        yield
+    except accounting_services.PostingConfigurationMissing as exc:
+        issues = [{'code': i.code, 'subject': i.subject, 'message': i.message} for i in exc.issues]
+        raise OrderRuleViolation('posting_configuration_missing', '; '.join(i['message'] for i in issues),
+                                 {'issues': issues}) from exc
+    except (accounting_services.FiscalPeriodClosed, accounting_services.DateOutsideFiscalPeriod) as exc:
+        raise OrderRuleViolation('fiscal_period_unavailable', str(exc)) from exc
+    except accounting_services.JournalValidationError as exc:
+        raise OrderRuleViolation('ledger_rejected', 'Contabilidad rechazó el asiento: ' + _first_message(exc.errors)) from exc
+    except accounting_services.JournalConflict as exc:
+        raise OrderRuleViolation('ledger_conflict', str(exc)) from exc
 
 
 def _first_message(errors: dict[str, list[str]]) -> str:

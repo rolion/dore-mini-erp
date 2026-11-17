@@ -335,6 +335,13 @@ export class OrderApiError extends Error {
   }
 }
 
+/** Un faltante de configuración contable que impide confirmar o cobrar (409 `posting_configuration_missing`). */
+export interface PostingIssue {
+  code: string;
+  subject: string;
+  message: string;
+}
+
 /** El pedido no admite la acción en su estado actual (409 con `code` y mensaje del servidor). */
 export class OrderRuleError extends OrderApiError {
   constructor(
@@ -343,6 +350,8 @@ export class OrderRuleError extends OrderApiError {
     /** Líneas sin existencia de un 409 `insufficient_stock` (vacío en otros conflictos). */
     readonly shortages: StockShortage[] = [],
     readonly warehouseName: string = '',
+    /** Faltantes de configuración contable de un 409 `posting_configuration_missing` (vacío en otros conflictos). */
+    readonly postingIssues: PostingIssue[] = [],
   ) {
     super(message, 409);
     this.name = 'OrderRuleError';

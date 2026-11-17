@@ -1,17 +1,22 @@
-"""PB-ACC-003: pagos de pedidos con el libro de entradas e idempotencia (AC-01..AC-11 del plan)."""
-from datetime import date
+"""PB-ACC-003: pagos de pedidos con el libro de entradas anterior e idempotencia (AC-01..AC-11 del plan).
+
+Desde VEN-01 este camino rige para los cobros sin cobertura de partida doble (fecha anterior al corte de Contabilidad):
+la configuración de estas pruebas fija un corte futuro. Los cobros con cobertura están en `test_sales_posting.py`.
+"""
+from datetime import date, timedelta
 from decimal import Decimal
 from unittest import mock
 from uuid import uuid4
 
 from django.db import transaction
 from django.test import TransactionTestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from modules.accounting import services as accounting
 from modules.accounting.tests.journal_support import money_account
 from modules.accounting.application.use_cases import ConfigureMethod
-from modules.accounting.infrastructure.django.models import EntryModel
+from modules.accounting.infrastructure.django.models import EntryModel, SettingsModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
 from modules.accounting.tests.test_concurrency import _run_together
 from modules.catalog.infrastructure.django.models import ProductModel
@@ -22,7 +27,7 @@ from modules.sales.application.commands import AddOrderItem, CreateOrder, Regist
 from modules.sales.application.ports import Actor
 from modules.sales.domain.exceptions import OrderRuleViolation
 from modules.sales.domain.order import Order, payment_digest
-from modules.sales.infrastructure.adapters import PaymentLedgerAdapter, SystemClock
+from modules.sales.infrastructure.adapters import SalesPostingAdapter, SystemClock
 from modules.sales.infrastructure.django.models import PaymentModel
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
 from modules.sales.tests.fakes import FakeCustomers, FakeProducts, FixedClock, InMemoryOrderRepository
@@ -44,6 +49,8 @@ def configure(company, method, account, active=True):
 class LedgerFixtures:
     def setup_accounting(self):
         enable(self.company, 'accounting', 'sales', 'customers')
+        # Corte futuro: hoy no tiene cobertura de partida doble, rige el libro de entradas anterior.
+        SettingsModel.objects.create(company_id=self.company.id, cutoff_date=timezone.localdate() + timedelta(days=30))
         accounts = DjangoAccountRepository(self.company.id)
         self.caja = money_account(accounts, 'Caja', '110101', 'CASH')
         self.banco = money_account(accounts, 'Banco', '110102')
@@ -242,11 +249,8 @@ class PaymentLedgerApplicationTests(TransactionTestCase):
         def __init__(self, available=True, error=None):
             self.available, self.error, self.calls = available, error, []
 
-        def is_available(self):
-            return self.available
-
-        def record(self, order_id, payment, actor):
-            self.calls.append((order_id, payment.amount))
+        def record_payment(self, order, payment, actor, today):
+            self.calls.append((order.id, payment.amount))
             if self.error:
                 raise self.error
 
@@ -264,11 +268,6 @@ class PaymentLedgerApplicationTests(TransactionTestCase):
         with self.assertRaises(OrderRuleViolation):
             RegisterPayment(self.repository, self.clock, ledger).execute(self.order.id, '10.00', 'CASH')
         self.assertEqual((self.repository.saves, len(self.repository.get(self.order.id).payments)), (saves, 0))
-
-    def test_unavailable_ledger_is_not_called(self):
-        ledger = self.FakeLedger(available=False)
-        RegisterPayment(self.repository, self.clock, ledger).execute(self.order.id, '10.00', 'CASH')
-        self.assertEqual(ledger.calls, [])
 
     def test_replay_does_not_call_the_ledger_again(self):
         ledger, key = self.FakeLedger(), uuid4()
@@ -299,7 +298,7 @@ class PaymentLedgerConcurrencyTests(LedgerFixtures, TransactionTestCase):
 
     def pay(self, amount, key):
         use_case = RegisterPayment(DjangoOrderRepository(self.company.id), SystemClock(),
-                                   PaymentLedgerAdapter(self.company.id))
+                                   SalesPostingAdapter(self.company.id))
         return lambda: use_case.execute(self.order.id, amount, 'CASH', None, '', key, Actor(self.user.pk, 'ana'))
 
     def test_double_submit_with_the_same_key_creates_one_payment_and_one_entry(self):  # AC-04

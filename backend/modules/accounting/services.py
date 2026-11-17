@@ -66,7 +66,8 @@ __all__ = ['AccountRef', 'AccountValidationError', 'ClassificationInfo', 'Classi
            'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
            'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
            'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
-           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'post_automatic_entry',
+           'PostingReadiness', 'check_posting_ready', 'describe_posting_config', 'find_automatic_entry',
+           'post_automatic_entry',
            'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
            'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications',
            'get_journal_entry', 'journal_balances', 'lock_open_period', 'period_for', 'post_journal_entry',
@@ -559,6 +560,12 @@ def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounti
         [JournalLineInput(accounts[debit_role], debit=amount), JournalLineInput(accounts[credit_role], credit=amount)],
         origin_kind=definition.code, origin_id=origin_id, created_by=created_by, created_by_name=created_by_name))
     return AutomaticPosting(True, None, posted.entry, posted.created)
+
+
+def find_automatic_entry(company_id: UUID, event: str, origin_id: UUID) -> JournalEntryRef | None:
+    """El asiento ya contabilizado de un evento (o `None`): permite a un módulo saber si un origen está reconocido."""
+    existing = DjangoJournalRepository(company_id).get_by_origin(get_event(event).code, origin_id)
+    return _journal_ref(existing) if existing is not None else None
 
 
 def reverse_automatic_entry(company_id: UUID, event: str, origin_id: UUID, reversal_date: date, reason: str,

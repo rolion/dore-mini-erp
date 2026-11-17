@@ -31,8 +31,8 @@ from modules.sales.domain.exceptions import (
 )
 from modules.sales.infrastructure.adapters import (
     CustomerDirectoryAdapter,
-    PaymentLedgerAdapter,
     ProductCatalogAdapter,
+    SalesPostingAdapter,
     SalesSettingsAdapter,
     StockOutputAdapter,
     SystemClock,
@@ -93,7 +93,7 @@ def _run(use_case, mutates: bool = True, **kwargs):
     except InsufficientStockForDelivery as exc:
         raise RuleConflict(_insufficient_stock_body(exc)) from exc
     except OrderRuleViolation as exc:
-        raise RuleConflict({'code': exc.code, 'detail': exc.message}) from exc
+        raise RuleConflict({'code': exc.code, 'detail': exc.message, **exc.extra}) from exc
     except OrderNotFound as exc:
         raise NotFound(ORDER_NOT_FOUND) from exc
     except OrderItemNotFound as exc:
@@ -127,6 +127,10 @@ def _products(request) -> ProductCatalogAdapter:
 
 def _stock(request) -> StockOutputAdapter:
     return StockOutputAdapter(company_id_from(request))
+
+
+def _posting(request) -> SalesPostingAdapter:
+    return SalesPostingAdapter(company_id_from(request))
 
 
 def _actor(request) -> Actor:
@@ -190,7 +194,7 @@ class OrderItemListView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(OrderItemCreateSerializer, request.data)
-        order = _run(AddOrderItem(_repository(request), _products(request)), order_id=order_id, **data)
+        order = _run(AddOrderItem(_repository(request), _products(request), _posting(request)), order_id=order_id, **data)
         return _order_response(request, order, status.HTTP_201_CREATED)
 
 
@@ -199,12 +203,12 @@ class OrderItemDetailView(APIView):
     def patch(self, request, order_id, item_id):
         order_id, item_id = _uuid(order_id, ORDER_NOT_FOUND), _uuid(item_id, ITEM_NOT_FOUND)
         data = _validated(OrderItemUpdateSerializer, request.data)
-        order = _run(ChangeOrderItemQuantity(_repository(request)), order_id=order_id, item_id=item_id, **data)
+        order = _run(ChangeOrderItemQuantity(_repository(request), _posting(request)), order_id=order_id, item_id=item_id, **data)
         return _order_response(request, order)
 
     def delete(self, request, order_id, item_id):
         order_id, item_id = _uuid(order_id, ORDER_NOT_FOUND), _uuid(item_id, ITEM_NOT_FOUND)
-        order = _run(RemoveOrderItem(_repository(request)), order_id=order_id, item_id=item_id)
+        order = _run(RemoveOrderItem(_repository(request), _posting(request)), order_id=order_id, item_id=item_id)
         return _order_response(request, order)
 
 
@@ -213,7 +217,8 @@ class OrderDiscountView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DiscountSerializer, request.data)
-        use_case = ApplyOrderDiscount(_repository(request), SalesSettingsAdapter(company_id_from(request)))
+        use_case = ApplyOrderDiscount(_repository(request), SalesSettingsAdapter(company_id_from(request)),
+                                     _posting(request))
         return _order_response(request, _run(use_case, order_id=order_id, **data))
 
 
@@ -221,7 +226,8 @@ class OrderPrepareView(APIView):
     required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
-        return _order_response(request, _run(StartOrderPreparation(_repository(request)), order_id=order_id))
+        use_case = StartOrderPreparation(_repository(request), SystemClock(), _posting(request))
+        return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request)))
 
 
 class OrderReadyView(APIView):
@@ -258,7 +264,8 @@ class OrderCancelView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(CancelSerializer, request.data)
-        return _order_response(request, _run(CancelOrder(_repository(request), SystemClock()), order_id=order_id, **data))
+        use_case = CancelOrder(_repository(request), SystemClock(), _posting(request))
+        return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request), **data))
 
 
 class OrderPaymentView(APIView):
@@ -266,6 +273,6 @@ class OrderPaymentView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(PaymentInputSerializer, request.data)
-        use_case = RegisterPayment(_repository(request), SystemClock(), PaymentLedgerAdapter(company_id_from(request)))
+        use_case = RegisterPayment(_repository(request), SystemClock(), _posting(request))
         order = _run(use_case, order_id=order_id, actor=_actor(request), **data)
         return _order_response(request, order, status.HTTP_200_OK if use_case.replayed else status.HTTP_201_CREATED)

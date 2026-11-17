@@ -325,3 +325,15 @@ class DescribeTests(PostingBase):
         self.assertTrue(all(r.account is None for r in theirs.roles))
         with self.assertRaises(services.AccountValidationError):
             services.set_role_account(self.other.id, 'RECEIVABLE', self.cxc.id)
+
+
+class FindTests(PostingBase):
+    def test_finds_the_entry_of_an_event_only_in_its_own_company(self):  # VEN-01 INV-01
+        self.configure_sales()
+        origin = uuid4()
+        self.assertIsNone(services.find_automatic_entry(self.company.id, 'SALE_RECOGNITION', origin))
+        posted = self.post(origin=origin)
+        found = services.find_automatic_entry(self.company.id, 'SALE_RECOGNITION', origin)
+        self.assertEqual(found.id, posted.entry.id)
+        self.assertIsNone(services.find_automatic_entry(self.other.id, 'SALE_RECOGNITION', origin))
+        self.assertIsNone(services.find_automatic_entry(self.company.id, 'SALE_PAYMENT', origin))

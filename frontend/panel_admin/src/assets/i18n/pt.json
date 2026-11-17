@@ -1693,6 +1693,8 @@
       "PEDIDO": "Pedido {{p0}}",
       "CANCELAR_PEDIDO": "Cancelar pedido",
       "VOLVER_A_PEDIDOS": "Voltar aos pedidos",
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar a contabilidade de Vendas.",
+      "IR_A_CONFIGURACION_DE_VENTAS": "Ir para a configuração de Vendas",
       "PEDIDO_CANCELADO": "Pedido cancelado.",
       "MOTIVO": "Motivo: {{p0}}",
       "LOS_PAGOS_REGISTRADOS_SE_CONSERVAN": "Os pagamentos registrados são mantidos.",

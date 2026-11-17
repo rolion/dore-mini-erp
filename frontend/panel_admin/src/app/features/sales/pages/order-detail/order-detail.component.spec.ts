@@ -467,6 +467,17 @@ describe('OrderDetailComponent', () => {
       expect(component.busy).toBeFalse();
     });
 
+    it('explains missing accounting configuration in an alert with a link, without a toast (409, VEN-01)', () => {
+      const issues = [{ code: 'role_unconfigured', subject: 'Cuentas por cobrar', message: 'Falta configurar la cuenta «Cuentas por cobrar».' }];
+      api.prepare.and.returnValue(throwError(() => new OrderRuleError('Falta configurar.', 'posting_configuration_missing', [], '', issues)));
+      const element = setup();
+      component.runPrimary();
+      fixture.detectChanges();
+      expect(toastr.error).not.toHaveBeenCalled();
+      expect(text(element, 'alert-posting-issues')).toContain('Falta configurar la cuenta «Cuentas por cobrar».');
+      expect(element.querySelector('[data-testid="link-posting-settings"]')?.getAttribute('href')).toContain('/sales/settings');
+    });
+
     it('keeps field errors for the children and does not toast them (400)', () => {
       const errors: FieldErrors = { discount: ['No puede superar el subtotal.'] };
       api.applyDiscount.and.returnValue(throwError(() => new OrderApiError('Revisa los datos.', 400, errors)));
