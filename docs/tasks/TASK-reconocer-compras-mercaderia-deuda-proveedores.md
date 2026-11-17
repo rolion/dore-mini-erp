@@ -1,6 +1,6 @@
 # TASK-reconocer-compras-mercaderia-deuda-proveedores: Reconocer compras de mercadería y deuda con proveedores (COM-02)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reconocer-compras-mercaderia-deuda-proveedores
@@ -14,6 +14,7 @@
 | 2026-11-17 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (lógica financiera, frontera Compras↔Contabilidad↔Inventario, reglas de recepción/reversión) | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
+| 2026-11-17 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-03 Medium y REV-01/02/04 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -83,17 +84,22 @@ Implementado según **PLAN v1**, sin cambios de Specification.
 - **Puerto y adaptador** (AC-05..AC-09, INV-02/03): `PurchasePosting` en `purchases/application/ports.py` y `PurchasePostingAdapter` en `purchases/infrastructure/adapters.py` (solo `accounting.services`: `post_automatic_entry`, `reverse_automatic_entry`, `find_automatic_entry`); traduce `PostingConfigurationMissing`, período cerrado/fuera de períodos y rechazos del motor.
 - **Comandos** (AC-01..AC-05, AC-07): `RegisterReception` publica `PURCHASE_RECOGNITION` (`origin_id` = recepción, fecha = fecha de la recepción) tras guardar recepción y stock, sin publicar en reintentos ni con importe 0; `RevertReception` revierte el asiento antes de marcar la recepción revertida.
 - **API** (API-01/02, AC-08): 409 `posting_configuration_missing` (con `issues`) / `fiscal_period_unavailable` / `ledger_rejected` / `ledger_conflict` vía `_run`; el detalle de la recepción añade `accounting_entry` y `accounting_enabled`.
-- **Frontend** (UI-01..03, AC-10): formulario de recepción con alerta de faltantes y enlace a Compras › Asientos automáticos; el diálogo de reversión ya mostraba el mensaje del 409; detalle con fila «Asiento contable» (enlace a `/pocketbiz/accounting/journal/:id` o «Sin asiento contable»); claves es/en/pt. Pantallas de referencia: las existentes de Compras y la alerta de VEN-01 (estilo tenue de Contabilidad, SCSS copiado en `reception-form.component.scss`); componentes compartidos: `MoneyPipe`.
+- **Frontend** (UI-01..03, AC-10): formulario de recepción con alerta de faltantes y enlace a Compras › Asientos automáticos; el diálogo de reversión ya mostraba el mensaje del 409; detalle con fila «Asiento contable» (enlace a `/pocketbiz/accounting/journal/:id` o «Sin asiento contable»); claves es/en/pt. Pantallas de referencia: las existentes de Compras y la alerta de VEN-01 (estilo tenue de Contabilidad, SCSS vía `@use` del parcial de Contabilidad en `reception-form.component.scss`); componentes compartidos: `MoneyPipe`.
 - **Pruebas:** `purchases/tests/test_purchase_posting.py` (17: AC-01..AC-09 con Contabilidad real) y specs de recepción (formulario, detalle, servicio).
 
 **Desviaciones respecto al plan:** (1) la prueba de concurrencia con hilos no se escribió: la serialización de dos recepciones ya la cubre `test_receipt_concurrency.py` (bloqueo de la compra) y la idempotencia por origen la cubre el motor; AC-04 se verifica por reintento HTTP 200 y por llamada repetida a la fachada. (2) El diálogo de reversión no necesitó cambios de código: ya muestra `err.message` de los 409.
 
-**Deuda técnica / pendiente:** los mensajes de `issues` llegan solo en español (deuda ya declarada en CONT-12); el SCSS del aviso está duplicado entre Ventas y Compras (candidato a `shared/`); la reversión usa la fecha de hoy.
+**Deuda técnica / pendiente:** los mensajes de `issues` llegan solo en español (deuda ya declarada en CONT-12); el SCSS del aviso se repite entre Ventas y Compras (candidato a `shared/`); la reversión usa la fecha de hoy.
 
 **Verificación propia (no es el Quality Gate):** backend `manage.py test` 2052 OK, `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 2184 claves y 0 faltantes, `ng test` 1598 OK, `ng build` OK. Pruebas corridas con el `.venv` del checkout principal y un `.env` copiado (no versionado) con base de pruebas `test_com02`.
 
 ## Review
-_Pendiente_
+**Quality Gate (PLAN v1): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2052 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, 0 líneas nuevas >120 caracteres. Frontend: `npm run lint` OK, `i18n:check` 2184 claves y 0 faltantes, `ng test` 1598 de 1598 OK, `ng build` OK. `ruff`/`flake8` solo con avisos de estilo (no comparados con la base); `mypy` y `npm audit` no ejecutados. Fronteras DDD, orden transaccional, AC-01..AC-09, INV, API y UI verificados. **Revisión visual: no verificada** (no se levantó la aplicación con sesión).
+Hallazgos abiertos (ninguno Critical/High):
+- [REV-01](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-01.md) Low: deriva de 1 centavo al revertir una recepción intermedia y volver a recibir con importes que redondean.
+- [REV-02](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-02.md) Low: revertir con Contabilidad deshabilitada hoy deja vivo el asiento de una recepción contabilizada antes.
+- [REV-03](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-03.md) Medium: faltan pruebas de la Test Specification (unit de `receipt_amount`, comandos con puerto falso, serializer, `RevertStockShortage`, `ledger_*`, `in_gap`).
+- [REV-04](../reviews/REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-04.md) Low: el TASK decía «SCSS copiado» pero el componente hace `@use` del parcial de Contabilidad (corregido en este TASK).
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/89 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (reconocer al recibir) y cambia reglas de recepción/reversión con cobertura contable: lo aprueba una persona. Sin migraciones. Pendientes: REV-01..04 abiertos, revisión visual, mypy y npm audit no realizados.
