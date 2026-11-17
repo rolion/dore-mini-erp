@@ -1,6 +1,6 @@
 # TASK-configurar-asientos-automaticos-modulo: Configuración simple de asientos automáticos por módulo (CONT-12)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-asientos-automaticos-modulo
@@ -16,6 +16,7 @@
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-16 | REVIEW (1.ª pasada) | Quality Gate PASS (0 Critical/High; REV-01 Medium, REV-02..05 Low abiertos) | delivery-publish |
 | 2026-11-16 | REVIEW (corrección) | REV-01..04 corregidos; REV-05 (Specification) abierto a la espera de aprobación; se repite el Quality Gate | delivery-publish |
+| 2026-11-16 | REVIEW → PUBLISH | 2.ª pasada del Quality Gate PASS; REV-06..08 (cambios de estilo y una línea de prueba) corregidos sin repetir el Gate; REV-05 abierto | delivery-publish |
 
 ## Investigación
 
@@ -117,5 +118,14 @@ Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó
 - REV-04 (Low, IMPLEMENTATION; **resuelto**): E501 y `assert` en código nuevo.
 - REV-05 (Low, SPECIFICATION; **abierto**): la forma real de API-01 difiere de la documentada (`issues` trae `subject`/`module`, `preview` trae `role` y `account{}`), y los mensajes de faltantes vienen del backend solo en español. Requiere aprobación para actualizar la Specification (PLAN v2).
 
+## Review (segunda pasada)
+**Quality Gate: PASS** (subagente aislado, 2026-11-16, tras corregir REV-01..04). Backend: `manage.py test` 1962 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, flake8 solo con avisos preexistentes más un E303 (REV-08). Frontend: lint OK, `i18n:check` 2174 claves y 0 faltantes, `ng build` OK, suite completa 1570 OK. REV-01..04 comprobados contra el código y resueltos; AC-08, AC-09 y AC-11 pasan a cumplidos.
+- **Revisión visual** (navegador integrado, 375 px y escritorio 1440 px, tema claro; tema oscuro solo a 375 px en Ventas, emulado con clases del `body`): sin recorte ni desborde horizontal a 375 px.
+- REV-06 (Low, DESIGN; **resuelto**): barra vertical interna en la vista previa.
+- REV-07 (Medium, DESIGN; **resuelto**): contraste 2,18:1 de `text-warning-emphasis` en tema oscuro (estados «Sin configurar» y faltantes).
+- REV-08 (Low; **resuelto**): línea en blanco sobrante (E303) en una prueba.
+- REV-05 (Low, SPECIFICATION; **abierto**): forma real de API-01 distinta de la Specification y mensajes de faltantes solo en español; requiere aprobación para PLAN v2.
+- **Sin repetir el Quality Gate:** REV-06, 07 y 08 se corrigieron después de la 2.ª pasada (CSS y una línea de prueba, sin lógica). Tras el cambio se volvió a pasar lint, build y la suite del frontend (1570 OK); **no se volvió a medir el contraste en el navegador ni en el conmutador real de tema oscuro**.
+
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/86 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (modelo de datos nuevo, migración `0011`): lo aprueba una persona. Pendiente de aprobación: REV-05 (cambio de Specification).

@@ -54,7 +54,7 @@
             </select>
             <small class="form-text text-body-secondary d-block">{{ hint(row) }}</small>
             @if (!options(row).length) {
-            <small class="form-text text-warning-emphasis d-block" data-testid="no-options">
+            <small class="form-text posting-warn d-block" data-testid="no-options">
               {{ 'ACCOUNTING.POSTING.NO_OPTIONS' | translate }}
               <a routerLink="/pocketbiz/accounting/accounts">{{ 'ACCOUNTING.POSTING.MANAGE_ACCOUNTS' | translate }}</a>
             </small>
@@ -62,7 +62,7 @@
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text text-warning-emphasis d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -70,7 +70,7 @@
               {{ (row.saving ? 'ACCOUNTING.POSTING.SAVING' : 'COMMON.GUARDAR') | translate }}
             </button>
             @if (row.saved && !isDirty(row)) {
-            <small class="ms-2 text-success-emphasis" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
+            <small class="ms-2 posting-ok" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
             }
           </td>
         </tr>
@@ -106,7 +106,7 @@
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text text-warning-emphasis d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -114,7 +114,7 @@
               {{ (row.saving ? 'ACCOUNTING.POSTING.SAVING' : 'COMMON.GUARDAR') | translate }}
             </button>
             @if (row.saved && !isDirty(row)) {
-            <small class="ms-2 text-success-emphasis" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
+            <small class="ms-2 posting-ok" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
             }
           </td>
         </tr>
@@ -123,7 +123,7 @@
     </table>
   </div>
   @if (!options(methodRows[0]).length) {
-  <small class="form-text text-warning-emphasis d-block" data-testid="no-money-options">
+  <small class="form-text posting-warn d-block" data-testid="no-money-options">
     {{ 'ACCOUNTING.POSTING.NO_OPTIONS_MONEY' | translate }}
     <a routerLink="/pocketbiz/accounting/accounts">{{ 'ACCOUNTING.POSTING.MANAGE_ACCOUNTS' | translate }}</a>
   </small>
@@ -159,7 +159,7 @@
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text text-warning-emphasis d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -167,7 +167,7 @@
               {{ (row.saving ? 'ACCOUNTING.POSTING.SAVING' : 'COMMON.GUARDAR') | translate }}
             </button>
             @if (row.saved && !isDirty(row)) {
-            <small class="ms-2 text-success-emphasis" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
+            <small class="ms-2 posting-ok" role="status">{{ 'ACCOUNTING.POSTING.SAVED' | translate }}</small>
             }
           </td>
         </tr>
@@ -185,7 +185,7 @@
       <div class="card h-100 border" [attr.data-testid]="'event-' + event.code">
         <div class="card-body">
           <h6 class="card-title">{{ 'ACCOUNTING.POSTING.EVENTS.' + event.code | translate }}</h6>
-          <div class="table-responsive">
+          <div class="table-responsive preview-scroll">
             <table class="table table-sm mb-0 preview-table">
               <caption class="visually-hidden">{{ 'ACCOUNTING.POSTING.EVENTS.' + event.code | translate }}</caption>
               <thead>
@@ -208,9 +208,9 @@
                     @if (shown.state === 'ok') {
                     <span>{{ shown.text }}</span>
                     } @else if (shown.state === 'invalid') {
-                    <span class="text-warning-emphasis">{{ shown.text }} · {{ 'ACCOUNTING.POSTING.NOT_VALID' | translate }}</span>
+                    <span class="posting-warn">{{ shown.text }} · {{ 'ACCOUNTING.POSTING.NOT_VALID' | translate }}</span>
                     } @else {
-                    <span class="text-warning-emphasis">{{ 'ACCOUNTING.POSTING.UNCONFIGURED' | translate }}</span>
+                    <span class="posting-warn">{{ 'ACCOUNTING.POSTING.UNCONFIGURED' | translate }}</span>
                     }
                     <small class="d-block text-body-secondary">{{ 'ACCOUNTING.POSTING.ROLES.' + line.role | translate }}</small>
                     }

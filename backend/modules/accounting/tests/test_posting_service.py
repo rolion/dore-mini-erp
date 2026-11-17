@@ -116,7 +116,6 @@ class CoverageTests(PostingBase):
         readiness = services.check_posting_ready(self.company.id, 'SALE_RECOGNITION', old)
         self.assertEqual((readiness.required, readiness.reason), (False, 'before_cutoff'))
 
-
     def test_a_date_inside_a_gap_between_two_coverage_periods_is_not_posted(self):  # AC-08
         self.configure_sales()
         now = timezone.now()
