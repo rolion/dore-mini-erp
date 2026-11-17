@@ -1,6 +1,6 @@
 # TASK-contabilizar-ventas-cobros-sin-duplicar: Contabilizar ventas y cobros por partida doble sin duplicar ingresos (VEN-01)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-ventas-cobros-sin-duplicar
@@ -13,7 +13,7 @@
 | 2026-11-17 | (nuevo) → INVESTIGATION | Task creado; base = rama `task/TASK-configurar-asientos-automaticos-modulo` (CONT-12, PR #86), no `main` | delivery-start |
 | 2026-11-17 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (lógica financiera, frontera Ventas↔Contabilidad, cambios de reglas de estado); 4 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
-| 2026-11-17 | ENGINEERING (parcial) | Código y pruebas escritos; pruebas de backend sin ejecutar (falta `.env` local) | delivery-build |
+| 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -98,7 +98,7 @@ Implementado según PLAN v1, sin cambios de Specification.
 
 **Desviaciones respecto al plan:** ninguna de alcance. `StartOrderPreparation`/`CancelOrder` reciben además `actor` (y `Clock`) para fechar y atribuir los asientos.
 
-**Estado de verificación (propia, no es el Quality Gate):** frontend: `ng lint` OK, `i18n:check` 2178 claves y 0 faltantes, suite completa 1574 OK. **Backend: las pruebas NO se han ejecutado** — el worktree no tiene `backend/.env` y copiarlo de otro worktree fue denegado; solo se comprobó sintaxis y flake8 de lo nuevo. Pendiente de correr: `manage.py test modules.sales modules.accounting modules.receivables`, `makemigrations --check` (no hay migraciones nuevas).
+**Estado de verificación (propia, no es el Quality Gate):** backend `manage.py test` 1986 pruebas (las 2 que fallaron eran recorridos del libro anterior —`test_unified_journey` y `test_payment_ledger`— que ahora fijan un corte futuro para ejercitar ese camino; corregidas, `modules.sales` + recorrido en verde), `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 0 faltantes, suite completa 1574 OK.
 
 **Deuda técnica / pendiente:** mensajes de configuración faltante solo en español (deuda de CONT-12 REV-05); sin endpoint de verificación previa; revisión visual en navegador pendiente para `delivery-publish`.
 

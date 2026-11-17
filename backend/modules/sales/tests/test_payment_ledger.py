@@ -181,6 +181,7 @@ class PaymentLedgerApiTests(LedgerFixtures, SalesApiTestCase):
     def test_other_company_data_is_never_used(self):  # AC-10
         other = make_company('Empresa B')
         enable(other, 'accounting', 'sales', 'customers')
+        SettingsModel.objects.create(company_id=other.id, cutoff_date=timezone.localdate() + timedelta(days=30))
         client_b = APIClient()
         authenticate(client_b, make_admin(other, username='beto'))
         order = self.order_300()
