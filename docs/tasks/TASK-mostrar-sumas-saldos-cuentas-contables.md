@@ -1,6 +1,6 @@
 # TASK-mostrar-sumas-saldos-cuentas-contables: Mostrar sumas y saldos de todas las cuentas contables (CONT-04)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mostrar-sumas-saldos-cuentas-contables
@@ -14,6 +14,7 @@
 | 2026-11-16 | INVESTIGATION → DESIGN | NEEDS_PLAN, diseño requerido | delivery-start |
 | 2026-11-16 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR abiertos | delivery-start |
+| 2026-11-16 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas | delivery-build |
 
 ## Investigación
 
@@ -82,7 +83,18 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-16-mostrar-sumas-saldos-cuentas-contables.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** `GET /api/accounting/balances/` (`api/balance_views.py`, `api/balance_serializers.py`) → caso de uso `GetTrialBalance` (`application/trial_balance.py`) → dominio puro `domain/trial_balance.py` (saldo deudor/acreedor, fila, totales) y la consulta agregada `DjangoJournalRepository.movements_by_account` (una consulta, saldo inicial anterior a `date_from` y movimientos del rango por `accounting_date`). En Angular: `models/balances.ts`, `services/balances-api.service.ts` y la pantalla `pages/balances` (reemplaza el «Próximamente»), con claves `ACCOUNTING.BALANCES.*` en es/en/pt (se retiró `SALDOS_PROXIMAMENTE`). Sin migraciones.
+
+**Cobertura.** INV-01/06 y AC-01/03/05 → `test_trial_balance_domain.py`; AC-01..06, INV-02..05 y filtros inválidos → `test_trial_balance_api.py` (reversión en otra fecha, sin movimientos, deshabilitada, rango, período, dos empresas); AC-07/08, UI-01..04 → `balances-page.component.spec.ts` y `balances-api.service.spec.ts`.
+
+**Pantalla de referencia.** Lista de solo lectura con filtros (`journal-list`) + selector de período; reutiliza clases de la plantilla (`badge-outline`, `ngxTableHeader`) y las claves `COMMON.*`. No se creó ningún componente compartido.
+
+**Desviaciones respecto al plan/DDR.**
+- La tabla es un `table-responsive` de Bootstrap en lugar de `ngx-datatable`: el pie de **Totales** con el badge «Cuadra/No cuadra» y las columnas condicionales son directos en `tfoot`, y no hay paginación. Anotar en `design-system.md` si se vuelve patrón.
+- El selector de período solo rellena Desde/Hasta (el servidor admite `period_id`, pero la UI envía fechas; el resultado es el mismo y la URL queda compartible).
+- Pruebas ejecutadas en esta sesión como verificación propia (no es el Quality Gate): `python manage.py test modules.accounting` (327, OK), `ng test` de `features/accounting` (188, OK) y `core/i18n` (19, OK), `npm run lint` y `npm run i18n:check` sin hallazgos. Para correrlas se copió `backend/.env` al worktree por indicación expresa del usuario (archivo ignorado por git) y se creó `backend/.venv` con `requirements/dev.txt`.
+
+**Deuda técnica.** Ninguna nueva. No se revisó la pantalla en navegador (queda para `delivery-publish`).
 
 ## Review
 _Pendiente_

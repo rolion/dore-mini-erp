@@ -6,6 +6,7 @@ from uuid import uuid4
 from django.db import transaction
 
 from modules.accounting import services
+from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository
 from modules.accounting.tests.journal_support import make_account, make_period
 from modules.accounting.tests.test_api import AccountingApiBase
 from modules.accounting.tests.test_entries_api import enable
@@ -22,7 +23,7 @@ class BalanceApiTests(AccountingApiBase):
         self.bank = make_account(self.company_a.id, 'Banco', code='111002')
         self.income = make_account(self.company_a.id, 'Ingresos', 'INCOME', code='411001')
         self.idle = make_account(self.company_a.id, 'Sin uso', 'EXPENSE', code='511001')
-        self.old = make_account(self.company_a.id, 'Caja vieja', code='111003', active=False)
+        self.old = make_account(self.company_a.id, 'Caja vieja', code='111003')
         self.period = make_period(self.company_a.id, 'Q4', date(2026, 10, 1), date(2026, 12, 31))
         make_period(self.company_a.id, 'Q3', date(2026, 7, 1), date(2026, 9, 30))
 
@@ -51,6 +52,8 @@ class BalanceApiTests(AccountingApiBase):
 
     def test_idle_and_disabled_accounts_are_listed_with_zero(self):  # AC-03
         self.seed()
+        self.old.deactivate()
+        DjangoAccountRepository(self.company_a.id).save(self.old)
         rows, _ = self.rows()
         self.assertEqual(len(rows), 5)
         for name in ('Sin uso', 'Caja vieja'):
@@ -60,6 +63,8 @@ class BalanceApiTests(AccountingApiBase):
 
     def test_disabled_account_keeps_its_balance(self):  # AC-03
         self.post(self.old, self.income, '40.00', date(2026, 11, 5))
+        self.old.deactivate()
+        DjangoAccountRepository(self.company_a.id).save(self.old)
         rows, _ = self.rows()
         self.assertEqual(rows['Caja vieja']['debit_balance'], '40.00')
 
@@ -96,7 +101,7 @@ class BalanceApiTests(AccountingApiBase):
     def test_period_is_a_range_and_cannot_mix_with_dates(self):  # AC-06
         self.seed()
         rows, data = self.rows(period_id=str(self.period.id))
-        self.assertEqual((data['date_from'], data['date_to']), ('2026-10-01', '2026-12-31'))
+        self.assertEqual((data['date_from'], data['date_to']), (date(2026, 10, 1), date(2026, 12, 31)))
         self.assertEqual(rows['Caja']['debit'], '1000.00')
         self.assertEqual(self.client_a.get(URL, {'period_id': str(self.period.id), 'date_from': '2026-11-01'})
                          .status_code, 400)
