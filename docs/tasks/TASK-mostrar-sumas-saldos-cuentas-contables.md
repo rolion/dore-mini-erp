@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mostrar-sumas-saldos-cuentas-contables
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/85
 **Fuente:** https://trello.com/c/mC3XliRv/8-cont-04-mostrar-sumas-y-saldos-de-todas-las-cuentas-contables
 
 ## Historial de transiciones
