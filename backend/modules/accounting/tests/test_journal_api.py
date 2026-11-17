@@ -107,7 +107,7 @@ class JournalApiTests(AccountingApiBase):
             for day in (10, 12, 11):
                 services.post_journal_entry(self.company_a.id, entry_input(
                     self.cash, self.bank, self.income, accounting_date=DAY.replace(day=day)))
-        dates = [row['accounting_date'] for row in self.client_a.get(URL).data['results']]
+        dates = [str(row['accounting_date']) for row in self.client_a.get(URL).data['results']]
         self.assertEqual(dates, ['2026-05-12', '2026-05-11', '2026-05-10'])
 
     def test_filters_by_dates_account_and_source(self):  # AC-03
@@ -149,7 +149,7 @@ class JournalApiTests(AccountingApiBase):
     def test_detail_of_an_automatic_entry_has_origin_and_no_edit(self):  # AC-05
         with transaction.atomic():
             posted = services.post_journal_entry(self.company_a.id, entry_input(
-                self.cash, self.bank, self.income, **automatic(origin_kind='PRODUCT')))
+                self.cash, self.bank, self.income, **dict(automatic(), origin_kind='PRODUCT')))
         enabled = self.client_a.get(f'{URL}{posted.entry.id}/')
         self.assertEqual((enabled.data['source'], enabled.data['origin']['kind'], enabled.data['origin']['available']),
                          ('AUTOMATIC', 'PRODUCT', False))
@@ -204,7 +204,6 @@ class JournalApiTests(AccountingApiBase):
         self.assertIn(APIClient().get(URL).status_code, (401, 403))
 
     def test_amounts_are_exact_decimals(self):
-        response = self.post(bank='300.10', lines=None) if False else None
         data = self.body(bank='0.10')
         data['lines'][2]['credit'] = '200.10'
         created = self.client_a.post(URL, data, format='json')
