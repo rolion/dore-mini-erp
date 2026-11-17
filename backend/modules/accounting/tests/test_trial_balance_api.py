@@ -9,6 +9,8 @@ from modules.accounting import services
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository
 from modules.accounting.tests.journal_support import make_account, make_period
 from modules.accounting.tests.test_api import AccountingApiBase
+from modules.modularity.infrastructure.django.models import CompanyModuleModel
+from rest_framework.test import APIClient
 from modules.accounting.tests.test_entries_api import enable
 
 URL = '/api/accounting/balances/'
@@ -115,3 +117,8 @@ class BalanceApiTests(AccountingApiBase):
         self.seed()
         self.assertEqual(self.client_b.get(URL).data['rows'], [])
         self.assertEqual(self.client_b.get(URL, {'account_id': str(self.cash.id)}).status_code, 400)
+
+    def test_requires_the_accounting_module_and_authentication(self):  # REV-02
+        CompanyModuleModel.objects.filter(company_id=self.company_a.id, module_key='accounting').delete()
+        self.assertEqual(self.client_a.get(URL).status_code, 403)
+        self.assertIn(APIClient().get(URL).status_code, (401, 403))

@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { FiscalPeriod } from '../../models/fiscal-period';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { AccountingApiError } from '../../models/accounting';
@@ -11,13 +13,15 @@ import { makeBalanceRowDto, makeBalancesDto } from '../../testing/balances-fixtu
 import { BalancesPageComponent, balanceFiltersFromParams, balanceFiltersToQuery } from './balances-page.component';
 
 describe('BalancesPageComponent', () => {
-  function create(result: Balances | Error, query: Record<string, string> = {}) {
+  const PERIOD: FiscalPeriod = { id: 'p-1', name: 'Q4', startDate: '2026-10-01', endDate: '2026-12-31', status: 'OPEN', isOpen: true, closedByName: '' };
+
+  function create(result: Balances | Error, query: Record<string, string> = {}, periodList: FiscalPeriod[] = [PERIOD]) {
     const api = jasmine.createSpyObj<BalancesApiService>('BalancesApiService', ['get']);
     api.get.and.returnValue(result instanceof Error ? throwError(() => result) : of(result));
     const accounting = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts']);
     accounting.listAccounts.and.returnValue(of([]));
     const periods = jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', ['list']);
-    periods.list.and.returnValue(of([]));
+    periods.list.and.returnValue(of(periodList));
     const params = new BehaviorSubject(convertToParamMap(query));
     TestBed.configureTestingModule({
       imports: [BalancesPageComponent],
@@ -29,9 +33,10 @@ describe('BalancesPageComponent', () => {
         { provide: ActivatedRoute, useValue: { queryParamMap: params, snapshot: { queryParamMap: convertToParamMap(query) } } },
       ],
     });
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
     const fixture = TestBed.createComponent(BalancesPageComponent);
     fixture.detectChanges();
-    return { fixture, api, el: fixture.nativeElement as HTMLElement };
+    return { fixture, api, navigate, component: fixture.componentInstance, el: fixture.nativeElement as HTMLElement };
   }
 
   it('shows every account with debit and credit balances and the totals (AC-01, AC-08)', () => {
@@ -94,5 +99,40 @@ describe('BalancesPageComponent', () => {
     expect(balanceFiltersToQuery({ dateFrom: '', dateTo: '', accountClass: '', accountId: '' })).toEqual({});
     expect(balanceFiltersToQuery({ dateFrom: '2026-11-01', dateTo: '', accountClass: 'ASSET', accountId: 'a-1' }))
       .toEqual({ date_from: '2026-11-01', account_class: 'ASSET', account_id: 'a-1' });
+  });
+
+  it('fills Desde/Hasta from the chosen fiscal period and puts them in the URL (AC-06)', () => {
+    const { component, navigate } = create(toBalances(makeBalancesDto()));
+    component.onPeriod('p-1');
+    expect(component.filterForm.getRawValue().dateFrom).toBe('2026-10-01');
+    expect(component.filterForm.getRawValue().dateTo).toBe('2026-12-31');
+    expect(component.periodId).toBe('p-1');
+    expect(navigate.calls.mostRecent().args[1]?.queryParams).toEqual({ date_from: '2026-10-01', date_to: '2026-12-31' });
+  });
+
+  it('drops the period selection when the dates no longer match it', () => {
+    const { component } = create(toBalances(makeBalancesDto()));
+    component.onPeriod('p-1');
+    component.filterForm.patchValue({ dateFrom: '2026-10-05' });
+    expect(component.periodId).toBe('');
+    component.onPeriod('');
+    expect(component.filterForm.getRawValue().dateFrom).toBe('');
+  });
+
+  it('sends every changed filter to the URL and clears them all', () => {
+    const { component, navigate } = create(toBalances(makeBalancesDto()));
+    component.filterForm.patchValue({ accountClass: 'ASSET', accountId: 'a-1' });
+    expect(navigate.calls.mostRecent().args[1]?.queryParams).toEqual({ account_class: 'ASSET', account_id: 'a-1' });
+    component.clearFilters();
+    expect(component.filterForm.getRawValue()).toEqual({ dateFrom: '', dateTo: '', accountClass: '', accountId: '' });
+    expect(navigate.calls.mostRecent().args[1]?.queryParams).toEqual({});
+  });
+
+  it('labels classes, unclassified accounts and applied filters', () => {
+    const { component } = create(toBalances(makeBalancesDto()), { date_from: '2026-11-01', date_to: '2026-11-30', account_class: 'ASSET', account_id: 'a-9' });
+    expect(component.classLabel(null)).toBe('Sin clasificar');
+    expect(component.classLabel('ASSET')).toBe('Activo');
+    expect(component.appliedFilters.length).toBe(4);
+    expect(component.appliedFilters.some((f) => f.includes('a-9'))).toBeTrue();
   });
 });

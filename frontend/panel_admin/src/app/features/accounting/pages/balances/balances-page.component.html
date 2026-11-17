@@ -22,7 +22,7 @@
             </div>
 
             <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
-              <div class="col-md-2 col-6">
+              <div class="col-lg-2 col-sm-6 col-12">
                 <label for="filter-period">{{ 'ACCOUNTING.BALANCES.PERIODO' | translate }}</label>
                 <select id="filter-period" class="form-select form-control" data-testid="filter-period" [value]="periodId"
                   (change)="onPeriod($any($event.target).value)">
@@ -32,15 +32,15 @@
                   }
                 </select>
               </div>
-              <div class="col-md-2 col-6">
+              <div class="col-lg-2 col-sm-6 col-12">
                 <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
                 <input id="filter-from" type="date" class="form-control" formControlName="dateFrom" [class.is-invalid]="rangeInvalid">
               </div>
-              <div class="col-md-2 col-6">
+              <div class="col-lg-2 col-sm-6 col-12">
                 <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo" [class.is-invalid]="rangeInvalid">
               </div>
-              <div class="col-md-2 col-6">
+              <div class="col-lg-2 col-sm-6 col-12">
                 <label for="filter-class">{{ 'ACCOUNTING.BALANCES.CLASIFICACION' | translate }}</label>
                 <select id="filter-class" class="form-select form-control" formControlName="accountClass">
                   <option value="">{{ 'COMMON.TODAS' | translate }}</option>
@@ -49,7 +49,7 @@
                   }
                 </select>
               </div>
-              <div class="col-md-3 col-6">
+              <div class="col-lg-2 col-sm-6 col-12">
                 <label for="filter-account">{{ 'ACCOUNTING.BALANCES.CUENTA' | translate }}</label>
                 <select id="filter-account" class="form-select form-control" formControlName="accountId">
                   <option value="">{{ 'COMMON.TODAS' | translate }}</option>
@@ -58,7 +58,7 @@
                   }
                 </select>
               </div>
-              <div class="col-md-1 col-6 d-flex align-items-end">
+              <div class="col-lg-2 col-sm-6 col-12 d-flex align-items-end">
                 <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
                   (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
