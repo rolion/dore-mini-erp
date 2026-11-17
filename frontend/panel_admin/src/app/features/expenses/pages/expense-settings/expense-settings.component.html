@@ -1,0 +1,34 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'COMMON.CONFIGURACION' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/expenses">{{ 'COMMON.GASTOS' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ 'COMMON.CONFIGURACION' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ 'EXPENSES.SETTINGS.TITLE' | translate }}</h4>
+          </div>
+          @if (categories) {
+          <app-posting-config-panel module="expenses" [categories]="categories" />
+          } @else if (loadFailed) {
+          <div class="m-4">
+            <div class="alert alert-danger" role="alert">{{ 'EXPENSES.SETTINGS.LOAD_ERROR' | translate }}</div>
+            <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+          </div>
+          } @else {
+          <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

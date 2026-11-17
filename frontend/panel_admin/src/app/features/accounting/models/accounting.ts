@@ -127,6 +127,13 @@ export interface PaymentMethodDto {
 /** Errores por campo devueltos por el servidor (clave = campo del formulario). */
 export type FieldErrors = Partial<Record<string, string[]>>;
 
+/** Causa estructurada de una cuenta no válida para un rol: el cliente la traduce; `message` va en español. */
+export interface ProblemInfo {
+  code: string;
+  params: Record<string, string>;
+  message?: string;
+}
+
 export class AccountingApiError extends Error {
   constructor(
     message: string,
@@ -136,6 +143,8 @@ export class AccountingApiError extends Error {
     readonly code: string | null = null,
     /** Métodos activos que bloquean la acción (códigos, 409 `account_in_use`). */
     readonly methods: string[] = [],
+    /** En un 400 por una cuenta no válida para un rol: la causa (código y parámetros). */
+    readonly problem: ProblemInfo | null = null,
   ) {
     super(message);
     this.name = 'AccountingApiError';
@@ -156,6 +165,16 @@ const FIELD_MAP: Record<string, string> = {
   end_date: 'endDate',
 };
 
+function toProblem(body: unknown): ProblemInfo | null {
+  const raw = body && typeof body === 'object' ? (body as Record<string, unknown>)['problem'] : null;
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const { code, params } = raw as { code?: unknown; params?: unknown };
+  const entries = params && typeof params === 'object' ? Object.entries(params as Record<string, unknown>) : [];
+  return typeof code === 'string' ? { code, params: Object.fromEntries(entries.map(([k, v]) => [k, String(v)])) } : null;
+}
+
 function toFieldErrors(body: unknown): FieldErrors {
   const errors: FieldErrors = {};
   if (body && typeof body === 'object') {
@@ -175,7 +194,7 @@ export function toApiError(status: number, body: unknown): AccountingApiError {
     return new AccountingApiError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON'), 0);
   }
   if (status === 400) {
-    return new AccountingApiError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS'), 400, toFieldErrors(body));
+    return new AccountingApiError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS'), 400, toFieldErrors(body), null, [], toProblem(body));
   }
   const record = (body && typeof body === 'object' ? body : {}) as { detail?: unknown; code?: unknown; methods?: unknown };
   const detail = typeof record.detail === 'string' ? record.detail : '';

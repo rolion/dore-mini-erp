@@ -8,6 +8,7 @@ from django.test import TestCase, TransactionTestCase
 
 from modules.accounting import services
 from modules.accounting.application.use_cases import ConfigureMethod, UpdateAccount
+from modules.accounting.tests.journal_support import money_account
 from modules.accounting.domain.account import Account, AccountConflict
 from modules.accounting.infrastructure.django.models import EntryModel
 from modules.accounting.infrastructure.django.repositories import (
@@ -32,7 +33,7 @@ class RecordEntryTests(TestCase):
         self.company = make_company('A')
         self.other = make_company('B')
         self.accounts = DjangoAccountRepository(self.company.id)
-        self.caja = self.accounts.save(Account.create('Caja', 'BOB'))
+        self.caja = money_account(self.accounts, 'Caja', '110101', 'CASH')
 
     def test_valid_entry_is_stored_with_all_its_fields(self):  # AC-01
         result = services.record_entry(self.company.id, entry_input(self.caja, receipt_number='CB-000001'))
@@ -71,7 +72,7 @@ class RecordEntryTests(TestCase):
     def test_retry_with_incompatible_data_is_a_conflict(self):  # AC-03
         data = entry_input(self.caja)
         services.record_entry(self.company.id, data)
-        banco = self.accounts.save(Account.create('Banco', 'BOB'))
+        banco = money_account(self.accounts, 'Banco', '110102')
         variants = [
             entry_input(self.caja, origin_id=data.origin_id, amount=Decimal('99.00')),
             entry_input(self.caja, origin_id=data.origin_id, method='QR'),
@@ -118,7 +119,7 @@ class RecordEntryTests(TestCase):
                                       origin_kind='PRODUCT', origin_id=uuid4())
 
     def test_entry_keeps_its_account_after_the_mapping_changes(self):  # AC-06, INV-06
-        banco = self.accounts.save(Account.create('Banco', 'BOB'))
+        banco = money_account(self.accounts, 'Banco', '110102')
         mappings = DjangoMethodMappingRepository(self.company.id)
         ConfigureMethod(self.accounts, mappings).execute('CASH', self.caja.id, True)
         resolved = services.resolve_account(self.company.id, 'CASH')

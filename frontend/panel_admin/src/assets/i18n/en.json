@@ -57,7 +57,8 @@
       "TEXT": "Expenses",
       "LIST": {
         "EXPENSE": "Expenses",
-        "CATEGORY": "Categories"
+        "CATEGORY": "Categories",
+        "SETTINGS": "Settings"
       }
     },
     "REPORTS": {
@@ -745,6 +746,10 @@
       "OTRO": "Other",
       "VIGENTE": "Valid",
       "ANULADO": "Voided"
+    },
+    "SETTINGS": {
+      "TITLE": "Expenses settings",
+      "LOAD_ERROR": "The expense categories could not be loaded."
     }
   },
   "INVENTORY": {
@@ -2893,6 +2898,104 @@
       "SIN_REGISTROS": "No records",
       "VER_MOVIMIENTOS": "View movements of {{name}}",
       "NOTA_APERTURA": "Balances come only from journal entries. With “From”, the opening balance before that date is shown; openings are recorded as entries."
+    },
+    "POSTING": {
+      "TAB": "Automatic entries",
+      "TITLE": "Automatic entries",
+      "INTRO": "Choose the accounts {{p0}} will use for each event. You will see the resulting Debit/Credit entry.",
+      "ACCOUNTING_DISABLED": "Accounting is not enabled. You can prepare this setup; no entries are created while it is disabled and nothing needs to be configured.",
+      "MISSING_TITLE": "{{p0}} account(s) still need to be configured. Operations integrated with Accounting cannot be confirmed until they are complete:",
+      "READY": "Setup complete.",
+      "FUTURE_ONLY": "Changes apply only to new operations; entries already recorded are not modified.",
+      "ACCOUNTS": "Accounts",
+      "NO_ACCOUNT": "No account",
+      "HINT_CLASS": "{{p0}} account, in BOB.",
+      "SHARED": "Shared with: {{p0}}.",
+      "NO_OPTIONS": "There are no active accounts of this classification.",
+      "NO_OPTIONS_MONEY": "There are no active Asset accounts in BOB.",
+      "MANAGE_ACCOUNTS": "Manage accounts",
+      "SAVING": "Saving…",
+      "SAVED": "Saved ✓",
+      "METHODS": "Collection or payment account by method",
+      "METHODS_HINT": "The payment method is not an account: choose the Asset account (for example, a cash box or a bank) where the money comes in or goes out. It is shared across Sales, Purchases and Expenses.",
+      "METHOD_INACTIVE": "Inactive method",
+      "CATEGORIES": "Expense account by category",
+      "NO_CATEGORIES": "There are no expense categories yet.",
+      "CREATE_CATEGORY": "Create category",
+      "CATEGORY_INACTIVE": "Inactive category",
+      "PREVIEW": "Planned entries",
+      "SIDE": "Side",
+      "ACCOUNT": "Account",
+      "DEBIT": "Debit",
+      "CREDIT": "Credit",
+      "BY_METHOD": "Depends on the payment method",
+      "BY_CATEGORY": "Depends on the expense category",
+      "NOT_VALID": "no longer valid",
+      "UNCONFIGURED": "Not configured",
+      "ROLES": {
+        "SALES_INCOME": "Sales income",
+        "SERVICE_INCOME": "Service income",
+        "RECEIVABLE": "Accounts receivable",
+        "INVENTORY": "Inventory",
+        "COST_OF_SALES": "Cost of sales",
+        "PAYABLE": "Accounts payable (suppliers)",
+        "MONEY": "Asset account of the payment method",
+        "EXPENSE_BY_CATEGORY": "Expense account of the category"
+      },
+      "EVENTS": {
+        "SALE_RECOGNITION": "Recognize a sale",
+        "SALE_PAYMENT": "Collect a sale",
+        "SERVICE_RECOGNITION": "Recognize a service",
+        "SERVICE_PAYMENT": "Collect a service",
+        "INVENTORY_SALE_COST": "Cost of sales on inventory issue",
+        "PURCHASE_RECOGNITION": "Recognize a merchandise purchase",
+        "PURCHASE_PAYMENT": "Pay a supplier",
+        "EXPENSE_RECORD": "Record an expense"
+      },
+      "CLASSES": {
+        "ASSET": "Asset",
+        "LIABILITY": "Liability",
+        "EQUITY": "Equity",
+        "INCOME": "Income",
+        "EXPENSE": "Expense",
+        "COST": "Cost"
+      },
+      "CATEGORY_MISSING": "The expense account of the category “{{p0}}” is missing.",
+      "CATEGORY_MISSING_ROW": "This category has no expense account yet.",
+      "WHERE": "{{p0}} › Settings › Automatic entries",
+      "MODULES": {
+        "sales": "Sales",
+        "receivables": "Collections",
+        "inventory": "Inventory",
+        "purchases": "Purchases",
+        "expenses": "Expenses"
+      },
+      "PROBLEMS": {
+        "ACCOUNT_MISSING": "The account does not exist in this company.",
+        "ACCOUNT_INACTIVE": "The account “{{account}}” is disabled; choose another one or enable it in Accounts.",
+        "CURRENCY": "The account “{{account}}” must be in {{currency}}.",
+        "NO_CODE_CLASS": "The account “{{account}}” has no code and accounting classification; complete it in Accounts.",
+        "WRONG_CLASS": "The account “{{account}}” is {{actual}}; a {{required}} account is required.",
+        "CLASS_DISABLED": "The classification {{class_code}} is disabled.",
+        "METHOD_ACCOUNT_MISSING": "This method has no Asset account yet."
+      },
+      "ISSUES": {
+        "ROLE_UNCONFIGURED": "The account “{{subject}}” is not configured. Set it in {{where}}.",
+        "METHOD_UNCONFIGURED": "The Asset account of the method “{{method}}” is missing. Set it in {{where}}.",
+        "CATEGORY_UNCONFIGURED": "The expense account of the category is missing. Set it in {{where}}.",
+        "CATEGORY_UNCONFIGURED_NAMED": "The expense account of the category “{{category}}” is missing. Set it in {{where}}.",
+        "CATEGORY_REQUIRED": "Provide the expense category of the operation.",
+        "METHOD_REQUIRED": "Provide a valid payment method for the operation.",
+        "ACCOUNT_INVALID": "{{problem}} Fix “{{subject}}” in {{where}}."
+      },
+      "METHODS_LABEL": {
+        "CASH": "Cash",
+        "QR": "QR",
+        "BANK_TRANSFER": "Bank transfer",
+        "CARD": "Card",
+        "OTHER": "Other"
+      },
+      "MISSING_MORE": "Show {{p0}} more"
     }
   }
 }

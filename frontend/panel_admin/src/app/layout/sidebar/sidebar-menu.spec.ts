@@ -85,7 +85,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(expenses.title).toBe('MENUITEMS.EXPENSES.TEXT');
     expect(expenses.icon).toBe('dollar-sign');
     expect(expenses.class).toBe('menu-toggle');
-    expect(expenses.submenu.map((item) => item.path)).toEqual(['/pocketbiz/expenses', '/pocketbiz/expenses/categories']);
+    expect(expenses.submenu.map((item) => item.path)).toEqual(['/pocketbiz/expenses', '/pocketbiz/expenses/categories', '/pocketbiz/expenses/settings']);
     expect(expenses.groupTitle).toBeFalse();
 
     expect(reports.path).toBe('/pocketbiz/reports');
@@ -98,7 +98,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(42);
+    expect(titles.length).toBe(43);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

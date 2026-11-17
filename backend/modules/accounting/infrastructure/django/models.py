@@ -263,3 +263,23 @@ class JournalLineModel(models.Model):
             models.UniqueConstraint(fields=['entry', 'position'], name='accounting_journal_line_position_uniq'),
         ]
         indexes = [models.Index(fields=['company_id', 'account'], name='accounting_jline_account')]
+
+
+class PostingAccountModel(models.Model):
+    """Cuenta elegida por la empresa para un rol (`ROLE`) o una categoría de gasto (`CATEGORY`) de los asientos
+    automáticos (CONT-12). El método de pago → cuenta sigue en `MethodMappingModel`. Sin fila = sin configurar."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    scope = models.CharField(max_length=10)
+    # Código del rol del catálogo, o id (opaco) de la categoría de Gastos (texto).
+    key = models.CharField(max_length=40)
+    account = models.ForeignKey(AccountModel, on_delete=models.PROTECT, related_name='+')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'accounting_posting_account'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'scope', 'key'], name='accounting_posting_account_uniq'),
+            models.CheckConstraint(condition=Q(scope__in=['ROLE', 'CATEGORY']), name='accounting_posting_scope'),
+        ]

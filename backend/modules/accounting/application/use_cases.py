@@ -17,6 +17,7 @@ from modules.accounting.domain.account_class import (
 from modules.accounting.domain.catalog import FLOW_CURRENCY, METHOD_LABELS
 from modules.accounting.domain.classification import Classification, ClassificationNotFound
 from modules.accounting.domain.entry import EntryNotFound
+from modules.accounting.domain.posting import ROLES, validate_account_for_role
 
 
 def _active_methods_using(mappings, account_id: UUID) -> list[str]:
@@ -256,6 +257,10 @@ class ConfigureMethod:
         if mapping is None:
             raise MethodNotFound(code)
         account = _require(self.accounts, account_id) if account_id else None
+        if account is not None and is_active and account.id != mapping.account_id:
+            # Uso nuevo y activo: el método apunta a una cuenta de Activo.
+            # Lo ya configurado no se revalida (cambiar solo el estado no exige reclasificar cuentas heredadas).
+            validate_account_for_role(ROLES['MONEY'], account, frozenset())
         mapping.configure(account, is_active)
         self.mappings.save(mapping)
         return MethodView(code, METHOD_LABELS[code], mapping.is_active, account)

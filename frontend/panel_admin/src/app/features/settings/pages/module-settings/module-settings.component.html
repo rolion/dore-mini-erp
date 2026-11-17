@@ -22,6 +22,12 @@
               <button type="button" class="nav-link" [class.active]="tab === 'general'" role="tab" id="tab-general"
                 [attr.aria-selected]="tab === 'general'" aria-controls="panel-general" (click)="select('general')">{{ 'SETTINGS.MODULE_SETTINGS.GENERAL' | translate }}</button>
             </li>
+            @if (hasPosting) {
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'posting'" role="tab" id="tab-posting"
+                [attr.aria-selected]="tab === 'posting'" aria-controls="panel-posting" (click)="select('posting')">{{ 'ACCOUNTING.POSTING.TAB' | translate }}</button>
+            </li>
+            }
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'history'" role="tab" id="tab-history"
                 [attr.aria-selected]="tab === 'history'" aria-controls="panel-history" (click)="select('history')">{{ 'COMMON.HISTORIAL_DE_CAMBIOS' | translate }}</button>
@@ -93,6 +99,10 @@
               </div>
             </form>
             }
+          </div>
+          } @else if (tab === 'posting') {
+          <div id="panel-posting" role="tabpanel" aria-labelledby="tab-posting">
+            <app-posting-config-panel [module]="postingModule" />
           </div>
           } @else {
           <div id="panel-history" role="tabpanel" aria-labelledby="tab-history">

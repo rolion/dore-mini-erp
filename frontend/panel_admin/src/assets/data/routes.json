@@ -150,6 +150,17 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/expenses/settings",
+          "title": "MENUITEMS.EXPENSES.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
         }
       ],
       "module": "expenses"

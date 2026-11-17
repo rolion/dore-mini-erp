@@ -38,3 +38,11 @@ def entry_input(cash, bank, income, **overrides):
 
 def automatic(**overrides):
     return dict(origin_kind='SERVICE_PAYMENT', origin_id=uuid4(), **overrides)
+
+
+def money_account(accounts, name, code, kind='BANK'):
+    """Cuenta de dinero válida para un método de pago (Activo, con código y tipo Caja/Banco), vía el repositorio."""
+    from modules.accounting.domain.account import Account
+    account = Account.create(name, 'BOB', kind=kind, code=code)
+    account.classify('ASSET')
+    return accounts.save(account)

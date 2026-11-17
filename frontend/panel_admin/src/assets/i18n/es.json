@@ -50,7 +50,8 @@
       "TEXT": "Gastos",
       "LIST": {
         "EXPENSE": "Gastos",
-        "CATEGORY": "Categorías"
+        "CATEGORY": "Categorías",
+        "SETTINGS": "Configuración"
       }
     },
     "REPORTS": {
@@ -745,6 +746,10 @@
       "OTRO": "Otro",
       "VIGENTE": "Vigente",
       "ANULADO": "Anulado"
+    },
+    "SETTINGS": {
+      "TITLE": "Configuración de Gastos",
+      "LOAD_ERROR": "No se pudieron cargar las categorías de gasto."
     }
   },
   "INVENTORY": {
@@ -2893,6 +2898,104 @@
       "SIN_REGISTROS": "Sin registros",
       "VER_MOVIMIENTOS": "Ver movimientos de {{name}}",
       "NOTA_APERTURA": "Los saldos salen solo de los asientos. Con «Desde» se muestra el saldo inicial anterior a esa fecha; las aperturas se registran como asientos."
+    },
+    "POSTING": {
+      "TAB": "Asientos automáticos",
+      "TITLE": "Asientos automáticos",
+      "INTRO": "Elija las cuentas contables que usará {{p0}} en cada evento. Verá el asiento Debe/Haber resultante.",
+      "ACCOUNTING_DISABLED": "Contabilidad no está habilitada. Puede dejar esta configuración preparada; no se generan asientos mientras esté deshabilitada ni se exige configurar nada.",
+      "MISSING_TITLE": "Falta configurar {{p0}} cuenta(s). Las operaciones integradas con Contabilidad no se podrán confirmar hasta completarlas:",
+      "READY": "Configuración completa.",
+      "FUTURE_ONLY": "Los cambios aplican solo a operaciones nuevas; los asientos ya registrados no se modifican.",
+      "ACCOUNTS": "Cuentas",
+      "NO_ACCOUNT": "Sin cuenta",
+      "HINT_CLASS": "Cuenta de {{p0}}, en BOB.",
+      "SHARED": "Se comparte con: {{p0}}.",
+      "NO_OPTIONS": "No hay cuentas activas de esta clasificación.",
+      "NO_OPTIONS_MONEY": "No hay cuentas de Activo activas en BOB.",
+      "MANAGE_ACCOUNTS": "Administrar cuentas",
+      "SAVING": "Guardando…",
+      "SAVED": "Guardado ✓",
+      "METHODS": "Cuenta de cobro o pago por método",
+      "METHODS_HINT": "El método de pago no es una cuenta: elija la cuenta de Activo (por ejemplo, una caja o un banco) por donde entra o sale el dinero. Se comparte entre Ventas, Compras y Gastos.",
+      "METHOD_INACTIVE": "Método inactivo",
+      "CATEGORIES": "Cuenta de gasto por categoría",
+      "NO_CATEGORIES": "Aún no hay categorías de gasto.",
+      "CREATE_CATEGORY": "Crear categoría",
+      "CATEGORY_INACTIVE": "Categoría inactiva",
+      "PREVIEW": "Asientos previstos",
+      "SIDE": "Lado",
+      "ACCOUNT": "Cuenta",
+      "DEBIT": "Debe",
+      "CREDIT": "Haber",
+      "BY_METHOD": "Según el método de pago",
+      "BY_CATEGORY": "Según la categoría del gasto",
+      "NOT_VALID": "ya no es válida",
+      "UNCONFIGURED": "Sin configurar",
+      "ROLES": {
+        "SALES_INCOME": "Ingresos por ventas",
+        "SERVICE_INCOME": "Ingresos por servicios",
+        "RECEIVABLE": "Cuentas por cobrar",
+        "INVENTORY": "Inventario",
+        "COST_OF_SALES": "Costo de ventas",
+        "PAYABLE": "Cuentas por pagar (proveedores)",
+        "MONEY": "Cuenta de Activo del método de pago",
+        "EXPENSE_BY_CATEGORY": "Cuenta de gasto de la categoría"
+      },
+      "EVENTS": {
+        "SALE_RECOGNITION": "Reconocer una venta",
+        "SALE_PAYMENT": "Cobrar una venta",
+        "SERVICE_RECOGNITION": "Reconocer un servicio",
+        "SERVICE_PAYMENT": "Cobrar un servicio",
+        "INVENTORY_SALE_COST": "Costo de ventas por salida de inventario",
+        "PURCHASE_RECOGNITION": "Reconocer una compra de mercadería",
+        "PURCHASE_PAYMENT": "Pagar a un proveedor",
+        "EXPENSE_RECORD": "Registrar un gasto"
+      },
+      "CLASSES": {
+        "ASSET": "Activo",
+        "LIABILITY": "Pasivo",
+        "EQUITY": "Patrimonio",
+        "INCOME": "Ingresos",
+        "EXPENSE": "Gastos",
+        "COST": "Costos"
+      },
+      "CATEGORY_MISSING": "Falta la cuenta de gasto de la categoría «{{p0}}».",
+      "CATEGORY_MISSING_ROW": "Falta la cuenta de gasto de esta categoría.",
+      "WHERE": "{{p0}} › Configuración › Asientos automáticos",
+      "MODULES": {
+        "sales": "Ventas",
+        "receivables": "Cobros",
+        "inventory": "Inventario",
+        "purchases": "Compras",
+        "expenses": "Gastos"
+      },
+      "PROBLEMS": {
+        "ACCOUNT_MISSING": "La cuenta no existe en esta empresa.",
+        "ACCOUNT_INACTIVE": "La cuenta «{{account}}» está deshabilitada; elija otra o actívela en Cuentas.",
+        "CURRENCY": "La cuenta «{{account}}» debe estar en {{currency}}.",
+        "NO_CODE_CLASS": "La cuenta «{{account}}» no tiene código y clasificación contable; complétela en Cuentas.",
+        "WRONG_CLASS": "La cuenta «{{account}}» es de {{actual}}; se requiere una cuenta de {{required}}.",
+        "CLASS_DISABLED": "La clasificación {{class_code}} está deshabilitada.",
+        "METHOD_ACCOUNT_MISSING": "Falta la cuenta de Activo de este método."
+      },
+      "ISSUES": {
+        "ROLE_UNCONFIGURED": "Falta configurar la cuenta «{{subject}}». Configúrela en {{where}}.",
+        "METHOD_UNCONFIGURED": "Falta la cuenta de Activo del método «{{method}}». Configúrela en {{where}}.",
+        "CATEGORY_UNCONFIGURED": "Falta la cuenta de gasto de la categoría. Configúrela en {{where}}.",
+        "CATEGORY_UNCONFIGURED_NAMED": "Falta la cuenta de gasto de la categoría «{{category}}». Configúrela en {{where}}.",
+        "CATEGORY_REQUIRED": "Indique la categoría del gasto de la operación.",
+        "METHOD_REQUIRED": "Indique un método de pago válido para la operación.",
+        "ACCOUNT_INVALID": "{{problem}} Corrija «{{subject}}» en {{where}}."
+      },
+      "METHODS_LABEL": {
+        "CASH": "Efectivo",
+        "QR": "QR",
+        "BANK_TRANSFER": "Transferencia",
+        "CARD": "Tarjeta",
+        "OTHER": "Otro"
+      },
+      "MISSING_MORE": "Ver {{p0}} más"
     }
   }
 }
