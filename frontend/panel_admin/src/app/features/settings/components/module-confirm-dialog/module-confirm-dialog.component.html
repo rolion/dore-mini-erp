@@ -28,7 +28,7 @@
   <small class="form-text text-danger d-block mt-2">{{ serverError }}</small>
   }
   @if (needsAccountingSetup) {
-  <a class="btn btn-light btn-sm mt-2" routerLink="/pocketbiz/accounting/settings" data-testid="accounting-setup-link"
+  <a class="btn btn-light btn-sm mt-2" routerLink="/pocketbiz/accounting/accounts" data-testid="accounting-setup-link"
     (click)="activeModal.dismiss()">{{ 'SETTINGS.MODULE_CONFIRM_DIALOG.IR_A_CUENTAS_Y_METODOS_DE_PAGO' | translate }}</a>
   }
 </div>

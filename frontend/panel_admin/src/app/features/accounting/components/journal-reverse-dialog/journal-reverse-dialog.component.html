@@ -1,0 +1,60 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'ACCOUNTING.JOURNAL.REVERTIR_ASIENTO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (entry; as e) {
+    <dl class="row mb-2">
+      <dt class="col-sm-4">{{ 'ACCOUNTING.JOURNAL.FECHA_CONTABLE' | translate }}</dt>
+      <dd class="col-sm-8" data-testid="entry-date">{{ e.accountingDate | date: 'dd/MM/yyyy' }}</dd>
+      <dt class="col-sm-4">{{ 'COMMON.DESCRIPCION' | translate }}</dt>
+      <dd class="col-sm-8" data-testid="entry-description">{{ e.description }}</dd>
+    </dl>
+    <div class="table-responsive mb-3">
+      <table class="table table-sm mb-0" data-testid="reverse-lines">
+        <thead>
+          <tr>
+            <th>{{ 'ACCOUNTING.JOURNAL.CUENTA' | translate }}</th>
+            <th class="text-end">{{ 'ACCOUNTING.JOURNAL.DEBE' | translate }}</th>
+            <th class="text-end">{{ 'ACCOUNTING.JOURNAL.HABER' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of e.lines; track line.position) {
+          <tr>
+            <td>{{ line.account.code }} · {{ line.account.name }}</td>
+            <td class="text-end">{{ line.credit }}</td>
+            <td class="text-end">{{ line.debit }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      <small class="text-body-secondary">{{ 'ACCOUNTING.JOURNAL.ASI_QUEDARA_LA_REVERSION' | translate }}</small>
+    </div>
+    }
+    <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="note" data-testid="effect">{{ 'ACCOUNTING.JOURNAL.EFECTO_REVERSION' | translate }}</div>
+    @if (errorMessage) {
+    <div class="alert alert-warning" role="alert" data-testid="error">{{ errorMessage }}</div>
+    }
+    <div class="form-group mb-3">
+      <label for="reversal-date">{{ 'ACCOUNTING.JOURNAL.FECHA_DE_LA_REVERSION' | translate }} <span class="text-danger">*</span></label>
+      <input id="reversal-date" type="date" class="form-control" formControlName="reversalDate" [class.is-invalid]="dateError">
+      @if (dateError) {
+      <small class="form-text text-danger d-block" data-testid="date-error">{{ dateError }}</small>
+      }
+    </div>
+    <div class="form-group">
+      <label for="reversal-reason">{{ 'COMMON.MOTIVO_DE_LA_REVERSION' | translate }} <span class="text-danger">*</span></label>
+      <textarea id="reversal-reason" class="form-control" rows="3" formControlName="reason" [attr.maxlength]="maxLength"></textarea>
+      <small class="form-text text-muted" data-testid="counter">{{ form.controls.reason.value.length }} / {{ maxLength }}</small>
+      @if (reasonError) {
+      <small class="form-text text-danger d-block" data-testid="reason-error">{{ reasonError }}</small>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-danger" data-testid="confirm-reversal" [disabled]="!canSubmit">{{ saving ? ('ACCOUNTING.JOURNAL.REVIRTIENDO' | translate) : ('ACCOUNTING.JOURNAL.REVERTIR' | translate) }}</button>
+    <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+  </div>
+</form>

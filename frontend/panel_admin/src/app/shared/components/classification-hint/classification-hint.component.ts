@@ -15,7 +15,7 @@ export function isClassificationErrorCode(code: string | null | undefined): bool
   imports: [RouterLink, TranslatePipe],
   template: `
     @if (visible()) {
-    <a class="d-inline-block mt-1" routerLink="/pocketbiz/accounting/settings" [queryParams]="{ tab: 'expenses' }" data-testid="classification-hint" (click)="followed.emit()">
+    <a class="d-inline-block mt-1" routerLink="/pocketbiz/accounting/settings/legacy" [queryParams]="{ tab: 'expenses' }" data-testid="classification-hint" (click)="followed.emit()">
       {{ 'ACCOUNTING.EXPENSE_CONFIG.CONFIGURAR_EN_CONTABILIDAD' | translate }}
     </a>
     }

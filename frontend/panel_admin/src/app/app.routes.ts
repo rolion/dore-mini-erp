@@ -106,6 +106,41 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/accounting/pages/accounting-settings/accounting-settings.component').then(m => m.AccountingSettingsComponent),
             },
             {
+                // Métodos de pago, Egresos y Corte: sin submenú propio hasta CONT-12/13; también sin `moduleGuard`.
+                path: 'accounting/settings/legacy',
+                loadComponent: () => import('./features/accounting/pages/accounting-legacy-settings/accounting-legacy-settings.component').then(m => m.AccountingLegacySettingsComponent),
+            },
+            {
+                // Sin `moduleGuard`: las cuentas se preparan antes de habilitar Contabilidad (DDR).
+                path: 'accounting/accounts',
+                loadComponent: () => import('./features/accounting/pages/accounts/accounts-page.component').then(m => m.AccountsPageComponent),
+            },
+            {
+                path: 'accounting/journal',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/journal-list/journal-list.component').then(m => m.JournalListComponent),
+            },
+            {
+                path: 'accounting/journal/new',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/journal-form/journal-form.component').then(m => m.JournalFormComponent),
+            },
+            {
+                path: 'accounting/journal/:id',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/journal-detail/journal-detail.component').then(m => m.JournalDetailComponent),
+            },
+            {
+                path: 'accounting/balances',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/balances/balances-page.component').then(m => m.BalancesPageComponent),
+            },
+            {
                 path: 'accounting/entries',
                 canActivate: [moduleGuard],
                 data: { module: 'accounting' },

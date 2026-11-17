@@ -315,30 +315,41 @@
       "badgeClass": "",
       "submenu": [
         {
+          "path": "/pocketbiz/accounting/accounts",
+          "title": "MENUITEMS.ACCOUNTING.LIST.ACCOUNTS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/accounting/journal",
+          "title": "MENUITEMS.ACCOUNTING.LIST.JOURNAL",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/accounting/balances",
+          "title": "MENUITEMS.ACCOUNTING.LIST.BALANCES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/accounting/settings",
           "title": "MENUITEMS.ACCOUNTING.LIST.SETTINGS",
-          "iconType": "",
-          "icon": "",
-          "class": "ml-menu",
-          "groupTitle": false,
-          "badge": "",
-          "badgeClass": "",
-          "submenu": []
-        },
-        {
-          "path": "/pocketbiz/accounting/entries",
-          "title": "MENUITEMS.ACCOUNTING.LIST.ENTRIES",
-          "iconType": "",
-          "icon": "",
-          "class": "ml-menu",
-          "groupTitle": false,
-          "badge": "",
-          "badgeClass": "",
-          "submenu": []
-        },
-        {
-          "path": "/pocketbiz/accounting/regularization",
-          "title": "MENUITEMS.ACCOUNTING.LIST.REGULARIZATION",
           "iconType": "",
           "icon": "",
           "class": "ml-menu",
