@@ -11,10 +11,160 @@
     <li class="breadcrumb-item">{{ 'ACCOUNTING.JOURNAL.SALDOS' | translate }}</li>
   </ul>
   <div class="section-body">
-    <div class="card">
-      <div class="card-body">
-        <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle mb-0" role="note" data-testid="coming-soon">
-          {{ 'ACCOUNTING.JOURNAL.SALDOS_PROXIMAMENTE' | translate }}
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'ACCOUNTING.JOURNAL.SALDOS' | translate }}</strong></h2>
+              </div>
+            </div>
+
+            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
+              <div class="col-lg-2 col-sm-6 col-12">
+                <label for="filter-period">{{ 'ACCOUNTING.BALANCES.PERIODO' | translate }}</label>
+                <select id="filter-period" class="form-select form-control" data-testid="filter-period" [value]="periodId"
+                  (change)="onPeriod($any($event.target).value)">
+                  <option value="">{{ 'ACCOUNTING.BALANCES.SIN_PERIODO' | translate }}</option>
+                  @for (period of periods; track period.id) {
+                  <option [value]="period.id" [selected]="period.id === periodId">{{ period.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-lg-2 col-sm-6 col-12">
+                <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
+                <input id="filter-from" type="date" class="form-control" formControlName="dateFrom" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-lg-2 col-sm-6 col-12">
+                <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
+                <input id="filter-to" type="date" class="form-control" formControlName="dateTo" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-lg-2 col-sm-6 col-12">
+                <label for="filter-class">{{ 'ACCOUNTING.BALANCES.CLASIFICACION' | translate }}</label>
+                <select id="filter-class" class="form-select form-control" formControlName="accountClass">
+                  <option value="">{{ 'COMMON.TODAS' | translate }}</option>
+                  @for (code of classes; track code) {
+                  <option [value]="code">{{ classLabel(code) }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-lg-2 col-sm-6 col-12">
+                <label for="filter-account">{{ 'ACCOUNTING.BALANCES.CUENTA' | translate }}</label>
+                <select id="filter-account" class="form-select form-control" formControlName="accountId">
+                  <option value="">{{ 'COMMON.TODAS' | translate }}</option>
+                  @for (account of accounts; track account.id) {
+                  <option [value]="account.id">{{ account.code ? account.code + ' · ' : '' }}{{ account.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-lg-2 col-sm-6 col-12 d-flex align-items-end">
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+              @if (rangeInvalid) {
+              <div class="col-12">
+                <small class="form-text text-danger" data-testid="range-error">{{ 'ACCOUNTING.ENTRIES.LA_FECHA_HASTA_NO_PUEDE' | translate }}</small>
+              </div>
+              }
+            </form>
+
+            <small class="text-muted d-block m-2" data-testid="opening-note">{{ 'ACCOUNTING.BALANCES.NOTA_APERTURA' | translate }}</small>
+
+            @if (errorMessage) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            }
+
+            @if (loading && !balances) {
+            <p class="m-3 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            }
+
+            @if (empty) {
+            <div class="text-center p-4" data-testid="empty">
+              <p class="mb-2">{{ 'ACCOUNTING.BALANCES.SIN_REGISTROS' | translate }}</p>
+              @if (filtersActive) {
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              }
+            </div>
+            } @else if (balances && rows.length > 0) {
+            <div class="table-responsive m-2">
+              <table class="table table-hover align-middle mb-0" data-testid="balances-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'ACCOUNTING.BALANCES.CODIGO' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.BALANCES.CUENTA' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.BALANCES.CLASIFICACION' | translate }}</th>
+                    @if (balances.hasOpening) {
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCES.SALDO_INICIAL_DEUDOR' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCES.SALDO_INICIAL_ACREEDOR' | translate }}</th>
+                    }
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCES.TOTAL_DEBE' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCES.TOTAL_HABER' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCES.SALDO_DEUDOR' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCES.SALDO_ACREEDOR' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows; track row.accountId) {
+                  <tr data-testid="balance-row">
+                    <td>{{ row.code || '—' }}</td>
+                    <td>
+                      <a [routerLink]="journalPath" [queryParams]="movementsQuery(row)" data-testid="movements-link"
+                        [attr.aria-label]="'ACCOUNTING.BALANCES.VER_MOVIMIENTOS' | translate: { name: row.name }"><strong>{{ row.name }}</strong></a>
+                      @if (!row.isActive) {
+                      <span class="badge-outline col-grey ms-1" data-testid="disabled-badge">{{ 'ACCOUNTING.BALANCES.DESHABILITADA' | translate }}</span>
+                      }
+                    </td>
+                    <td>
+                      @if (row.accountClass) {
+                      {{ classLabel(row.accountClass) }}
+                      } @else {
+                      <span class="badge-outline col-grey" data-testid="unclassified">{{ 'ACCOUNTING.BALANCES.SIN_CLASIFICAR' | translate }}</span>
+                      }
+                    </td>
+                    @if (balances.hasOpening) {
+                    <td class="text-end text-nowrap">{{ row.openingDebitBalance }}</td>
+                    <td class="text-end text-nowrap">{{ row.openingCreditBalance }}</td>
+                    }
+                    <td class="text-end text-nowrap">{{ row.debit }}</td>
+                    <td class="text-end text-nowrap">{{ row.credit }}</td>
+                    <td class="text-end text-nowrap" data-testid="debit-balance">{{ row.debitBalance }}</td>
+                    <td class="text-end text-nowrap" data-testid="credit-balance">{{ row.creditBalance }}</td>
+                  </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="fw-bold" data-testid="totals-row">
+                    <td colspan="3">
+                      {{ 'ACCOUNTING.JOURNAL.TOTALES' | translate }}
+                      @if (balances.totals.balanced) {
+                      <span class="badge-outline col-green ms-1" data-testid="balanced-badge">{{ 'ACCOUNTING.BALANCES.CUADRA' | translate }}</span>
+                      } @else {
+                      <span class="badge-outline col-red ms-1" data-testid="unbalanced-badge">{{ 'ACCOUNTING.BALANCES.NO_CUADRA' | translate }}</span>
+                      }
+                    </td>
+                    @if (balances.hasOpening) {
+                    <td class="text-end text-nowrap">{{ balances.totals.openingDebitBalance }}</td>
+                    <td class="text-end text-nowrap">{{ balances.totals.openingCreditBalance }}</td>
+                    }
+                    <td class="text-end text-nowrap" data-testid="total-debit">{{ balances.totals.debit }}</td>
+                    <td class="text-end text-nowrap" data-testid="total-credit">{{ balances.totals.credit }}</td>
+                    <td class="text-end text-nowrap" data-testid="total-debit-balance">{{ balances.totals.debitBalance }}</td>
+                    <td class="text-end text-nowrap" data-testid="total-credit-balance">{{ balances.totals.creditBalance }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            }
+          </div>
         </div>
       </div>
     </div>

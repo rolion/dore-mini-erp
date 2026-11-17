@@ -17,6 +17,7 @@ from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
 from modules.accounting.domain.fiscal_period import FiscalPeriod
 from modules.accounting.domain.journal import JournalEntry, JournalLine
+from modules.accounting.domain.trial_balance import AccountMovements
 
 from .models import (
     AccountClassSettingModel,
@@ -560,6 +561,26 @@ class DjangoJournalRepository:
         zero = Decimal('0.00')
         return {row['account_id']: (row['debit'] or zero, row['credit'] or zero)
                 for row in rows.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))}
+
+    def movements_by_account(self, date_from: date | None, date_to: date | None) -> dict[UUID, AccountMovements]:
+        """Debe/Haber por cuenta según la fecha contable: acumulado previo a `date_from` y movimientos del rango.
+
+        Sin `date_from` no hay acumulado previo; sin `date_to` el rango no tiene tope. Solo cuentas con movimientos.
+        """
+        lines = JournalLineModel.objects.filter(company_id=self.company_id)
+        if date_to:
+            lines = lines.filter(entry__accounting_date__lte=date_to)
+        zero = Decimal('0.00')
+        if date_from is None:
+            rows = lines.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))
+            return {row['account_id']: AccountMovements(zero, zero, row['debit'] or zero, row['credit'] or zero)
+                    for row in rows}
+        before, in_range = Q(entry__accounting_date__lt=date_from), Q(entry__accounting_date__gte=date_from)
+        rows = lines.order_by().values('account_id').annotate(
+            opening_debit=Sum('debit', filter=before), opening_credit=Sum('credit', filter=before),
+            debit=Sum('debit', filter=in_range), credit=Sum('credit', filter=in_range))
+        return {row['account_id']: AccountMovements(row['opening_debit'] or zero, row['opening_credit'] or zero,
+                                                    row['debit'] or zero, row['credit'] or zero) for row in rows}
 
     def count_outside(self, period_id: UUID, start: date, end: date) -> int:
         """Asientos del período cuya fecha contable quedaría fuera del rango `[start, end]`."""
