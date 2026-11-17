@@ -693,7 +693,14 @@
       "GASTO_ANULADO": "Gasto anulado",
       "ANULAR_EL_GASTO": "¿Anular el gasto \"{{p0}}\"?",
       "ESTE_GASTO_DEJARA_DE_SUMAR": "Este gasto dejará de sumar en los reportes. Se conserva en el historial.",
-      "ANULAR_GASTO_2": "Anular gasto"
+      "ANULAR_GASTO_2": "Anular gasto",
+      "ASIENTO_CONTABLE": "Asiento contable",
+      "CONTABILIZADO": "Contabilizado",
+      "NO_CONTABILIZADO": "Sin asiento contable",
+      "DEBE": "Debe",
+      "HABER": "Haber",
+      "VER_ASIENTO": "Ver asiento",
+      "CORREGIR_ANULANDO": "Este gasto está contabilizado. Para corregir el monto, la fecha, la categoría, el método o las cuentas, anúlalo y regístralo de nuevo."
     },
     "EXPENSE_FORM": {
       "IR_A_CATEGORIAS": "Ir a Categorías",
@@ -713,7 +720,17 @@
       "PRIMERO_CREA_UNA_CATEGORIA": "Primero crea una categoría",
       "GASTO_ACTUALIZADO": "Gasto actualizado",
       "GASTO_REGISTRADO": "Gasto registrado",
-      "EL_GASTO_ESTA_ANULADO_Y": "El gasto está anulado y no se puede editar."
+      "EL_GASTO_ESTA_ANULADO_Y": "El gasto está anulado y no se puede editar.",
+      "GASTO_CONTABILIZADO_AVISO": "Este gasto ya está contabilizado: el monto, la fecha, la categoría y el método de pago no se pueden cambiar. Para corregirlos, anula el gasto y regístralo de nuevo.",
+      "CONTABILIDAD": "Contabilidad",
+      "CUENTA_DE_GASTO": "Cuenta de gasto",
+      "CUENTA_DE_PAGO": "Cuenta de pago (Caja o Banco)",
+      "POR_DEFECTO": "Por defecto: {{account}}",
+      "ELIGE_UNA_CUENTA": "Elige una cuenta",
+      "CONFIGURAR_ASIENTOS": "Configurar asientos automáticos de Gastos",
+      "CUENTA": "Cuenta",
+      "DEBE": "Debe",
+      "HABER": "Haber"
     },
     "EXPENSE_LIST": {
       "NUEVO_GASTO": "Nuevo gasto",

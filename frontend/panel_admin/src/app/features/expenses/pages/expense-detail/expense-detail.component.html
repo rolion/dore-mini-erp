@@ -37,6 +37,21 @@
               <dd class="col-sm-9" data-testid="classification">{{ e.classification ? (e.classification.name || ('ACCOUNTING.EXPENSE_CONFIG.CLASIFICACION_NO_DISPONIBLE' | translate)) : ('ACCOUNTING.EXPENSE_CONFIG.SIN_CLASIFICACION' | translate) }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.METODO_DE_PAGO' | translate }}</dt>
               <dd class="col-sm-9" data-testid="payment-method">{{ paymentLabels[e.paymentMethod] }}</dd>
+              <dt class="col-sm-3">{{ 'EXPENSES.EXPENSE_DETAIL.ASIENTO_CONTABLE' | translate }}</dt>
+              <dd class="col-sm-9" data-testid="posting">
+                @if (e.posted && e.expenseAccount && e.paymentAccount) {
+                <div class="badge-outline col-green d-inline-block">{{ 'EXPENSES.EXPENSE_DETAIL.CONTABILIZADO' | translate }}</div>
+                <div>{{ 'EXPENSES.EXPENSE_DETAIL.DEBE' | translate }}: {{ e.expenseAccount.code ? e.expenseAccount.code + ' · ' : '' }}{{ e.expenseAccount.name }}
+                  @if (!e.expenseAccount.active) { <small class="text-muted">{{ 'EXPENSES.EXPENSE_DETAIL.INACTIVA' | translate }}</small> }</div>
+                <div>{{ 'EXPENSES.EXPENSE_DETAIL.HABER' | translate }}: {{ e.paymentAccount.code ? e.paymentAccount.code + ' · ' : '' }}{{ e.paymentAccount.name }}
+                  @if (!e.paymentAccount.active) { <small class="text-muted">{{ 'EXPENSES.EXPENSE_DETAIL.INACTIVA' | translate }}</small> }</div>
+                @if (e.journalEntryId) {
+                <a [routerLink]="['/pocketbiz/accounting/journal', e.journalEntryId]" data-testid="journal-link">{{ 'EXPENSES.EXPENSE_DETAIL.VER_ASIENTO' | translate }}</a>
+                }
+                } @else {
+                {{ 'EXPENSES.EXPENSE_DETAIL.NO_CONTABILIZADO' | translate }}
+                }
+              </dd>
               <dt class="col-sm-3">{{ 'COMMON.PROVEEDOR' | translate }}</dt>
               <dd class="col-sm-9">{{ e.supplierName || '—' }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.NOTAS' | translate }}</dt>
@@ -57,6 +72,9 @@
               <dt class="col-sm-3">{{ 'COMMON.ULTIMA_ACTUALIZACION' | translate }}</dt>
               <dd class="col-sm-9">{{ e.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
             </dl>
+            @if (e.posted && !voided) {
+            <div class="alert alert-info m-4" role="status" data-testid="posted-note">{{ 'EXPENSES.EXPENSE_DETAIL.CORREGIR_ANULANDO' | translate }}</div>
+            }
             <div class="m-4">
               @if (!voided) {
               <a class="btn btn-primary" [routerLink]="['/pocketbiz/expenses', e.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>

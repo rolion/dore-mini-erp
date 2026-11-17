@@ -103,15 +103,38 @@ describe('ExpensesApiService', () => {
     req.flush({ ...DTO, status: 'VOIDED', voided_at: '2026-10-06T10:00:00Z' });
   });
 
-  it('keeps the stable code of a classification error (UI-03)', () => {
+  it('sends the chosen accounts and the idempotency key, and maps the posted expense (GAS-01, API-01, API-03)', () => {
+    let posted: boolean | undefined;
+    service
+      .create({ ...INPUT, expenseAccountId: 'a1', paymentAccountId: 'a2', idempotencyKey: 'k1' })
+      .subscribe((expense) => (posted = expense.posted && expense.journalEntryId === 'j1' && expense.expenseAccount?.name === 'Alquiler'));
+    const req = http.expectOne('/api/expenses/');
+    expect(req.request.body).toEqual(jasmine.objectContaining({ expense_account_id: 'a1', payment_account_id: 'a2', idempotency_key: 'k1' }));
+    req.flush({ ...DTO, posted: true, journal_entry_id: 'j1', expense_account: { id: 'a1', code: '5', name: 'Alquiler', active: true } });
+    expect(posted).toBeTrue();
+  });
+
+  it('asks for the posting options with date, method and category (GAS-01, API-02)', () => {
+    let covered: boolean | undefined;
+    service.postingOptions('2026-10-05', 'c1', 'CASH').subscribe((o) => (covered = o.covered && o.paymentAccounts.length === 1));
+    const req = http.expectOne((r) => r.url === '/api/expenses/posting-options/');
+    expect(req.request.params.get('expense_date')).toBe('2026-10-05');
+    expect(req.request.params.get('category_id')).toBe('c1');
+    expect(req.request.params.get('payment_method')).toBe('CASH');
+    req.flush({ covered: true, reason: null, expense_account: null, payment_account: null, issues: [], expense_accounts: [], payment_accounts: [{ id: 'a', code: null, name: 'Caja', active: true }] });
+    expect(covered).toBeTrue();
+  });
+
+  it('keeps the code and the missing-configuration issues of a posting error and its account fields (GAS-01)', () => {
     let received: ExpensesApiError | undefined;
     service.create(INPUT).subscribe({ error: (e: ExpensesApiError) => (received = e) });
     http.expectOne('/api/expenses/').flush(
-      { category_id: ['Falta la clasificación.'], code: 'classification_not_configured' },
+      { code: 'posting_configuration_missing', detail: 'Falta', issues: [{ code: 'category_unconfigured' }], expense_account_id: ['Cuenta inválida.'] },
       { status: 400, statusText: 'Bad Request' },
     );
-    expect(received?.code).toBe('classification_not_configured');
-    expect(received?.fieldErrors['categoryId']).toEqual(['Falta la clasificación.']);
+    expect(received?.code).toBe('posting_configuration_missing');
+    expect(received?.issues.length).toBe(1);
+    expect(received?.fieldErrors['expenseAccountId']).toEqual(['Cuenta inválida.']);
   });
 
   it('turns 400 into field errors with form field names (AC-04)', () => {

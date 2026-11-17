@@ -30,13 +30,15 @@ class ExpenseCategoryNotFound(Exception):
         self.category_id = category_id
 
 
-NOT_CONFIGURED = 'classification_not_configured'
-INVALID = 'classification_invalid'
+class ExpenseDuplicateKey(Exception):
+    """Otra petición ya creó un gasto con la misma clave de idempotencia (carrera resuelta por la base de datos)."""
 
 
-class ExpenseClassificationError(ExpenseValidationError):
-    """Con Contabilidad cubriendo la operación, la categoría no tiene una clasificación de egreso utilizable."""
+class ExpensePostingError(Exception):
+    """Contabilidad no pudo contabilizar el gasto. `code` es estable; `issues` lista los faltantes de configuración."""
 
-    def __init__(self, code: str, message: str):
-        super().__init__({'category_id': [message]})
+    def __init__(self, code: str, message: str, issues: list[dict] | None = None):
+        super().__init__(message)
         self.code = code
+        self.message = message
+        self.issues = issues or []

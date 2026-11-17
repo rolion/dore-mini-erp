@@ -19,12 +19,18 @@ from modules.expenses.application.commands import (
 from modules.expenses.application.queries import GetExpense, GetExpenseCategory, ListExpenseCategories, ListExpenses
 from modules.expenses.domain.exceptions import (
     ExpenseCategoryNotFound,
-    ExpenseClassificationError,
     ExpenseNotFound,
+    ExpensePostingError,
     ExpenseRuleViolation,
     ExpenseValidationError,
 )
-from modules.expenses.infrastructure.adapters import AccountingClassifications, SystemClock
+from modules.expenses.infrastructure.adapters import (
+    AccountingAccounts,
+    AccountingClassifications,
+    AccountingPosting,
+    SystemClock,
+    issue_data,
+)
 from modules.expenses.infrastructure.django.repositories import (
     DjangoExpenseCategoryRepository,
     DjangoExpenseRepository,
@@ -37,9 +43,12 @@ from .serializers import (
     CategoryClassificationInputSerializer,
     CategoryInputSerializer,
     CategorySerializer,
+    ExpenseCreateSerializer,
     ExpenseInputSerializer,
     ExpenseSerializer,
     ExpenseSummarySerializer,
+    PostingOptionsQuerySerializer,
+    account_data,
 )
 
 EXPENSE_NOT_FOUND = 'Gasto no encontrado.'
@@ -71,8 +80,10 @@ def _run(use_case, mutates: bool = True, **kwargs):
             with transaction.atomic():
                 return use_case.execute(**kwargs)
         return use_case.execute(**kwargs)
-    except ExpenseClassificationError as exc:
-        raise ValidationError({**exc.errors, 'code': exc.code}) from exc
+    except ExpensePostingError as exc:
+        if exc.code == 'posting_configuration_missing':
+            raise ValidationError({'code': exc.code, 'detail': exc.message, 'issues': exc.issues}) from exc
+        raise RuleConflict({'code': exc.code, 'detail': exc.message}) from exc
     except ExpenseValidationError as exc:
         raise ValidationError(exc.errors) from exc
     except ExpenseRuleViolation as exc:
@@ -102,16 +113,25 @@ def _classifications(request) -> AccountingClassifications:
     return AccountingClassifications(company_id_from(request))
 
 
+def _posting(request) -> AccountingPosting:
+    return AccountingPosting(company_id_from(request))
+
+
 def _context(request, expenses, categories) -> dict:
-    """Contexto de los serializers: categorías y clasificaciones de la página, en una consulta por lote."""
+    """Contexto de los serializers: categorías, clasificaciones y cuentas de la página, en una consulta por lote."""
     ids = {e.classification_id for e in expenses if e.classification_id is not None}
-    return {'categories': categories, 'classifications': _classifications(request).describe(ids)}
+    account_ids = {a for e in expenses for a in (e.expense_account_id, e.payment_account_id) if a is not None}
+    return {'categories': categories, 'classifications': _classifications(request).describe(ids),
+            'accounts': AccountingAccounts(company_id_from(request)).describe(account_ids)}
 
 
-def _expense_response(request, expense, http_status: int = status.HTTP_200_OK) -> Response:
+def _expense_response(request, expense, http_status: int = status.HTTP_200_OK, replayed: bool = False) -> Response:
     categories = _categories(request).get_many([expense.category_id])
     context = _context(request, [expense], categories)
-    return Response(ExpenseSerializer(expense, context=context).data, status=http_status)
+    if expense.is_posted:
+        context['journal_entry_id'] = _posting(request).entry_id(expense.id)
+    data = {**ExpenseSerializer(expense, context=context).data, 'replayed': replayed}
+    return Response(data, status=http_status)
 
 
 def _category_response(request, category, http_status: int = status.HTTP_200_OK) -> Response:
@@ -142,10 +162,35 @@ class ExpenseListCreateView(APIView):
         return paginator.get_paginated_response(data)
 
     def post(self, request):
-        values = _validated(ExpenseInputSerializer, request.data)
-        use_case = CreateExpense(_expenses(request), _categories(request), _classifications(request))
+        values = _validated(ExpenseCreateSerializer, request.data)
+        use_case = CreateExpense(_expenses(request), _categories(request), _classifications(request),
+                                 _posting(request))
         expense = _run(use_case, **values)
-        return _expense_response(request, expense, status.HTTP_201_CREATED)
+        return _expense_response(request, expense, status.HTTP_200_OK if use_case.replayed else status.HTTP_201_CREATED,
+                                 replayed=use_case.replayed)
+
+
+class ExpensePostingOptionsView(APIView):
+    """Cuentas por defecto y elegibles para contabilizar un gasto (solo lectura): alimenta el formulario."""
+
+    required_modules = ('expenses',)
+
+    def get(self, request):
+        params = _validated(PostingOptionsQuerySerializer, request.query_params)
+        category = _categories(request).get(params['category_id']) if params.get('category_id') else None
+        method = (params.get('payment_method') or '').strip().upper() or None
+        options = AccountingAccounts(company_id_from(request)).options(
+            params['expense_date'], method, category.id if category else None, category.name if category else '')
+        defaults = options.defaults
+        return Response({
+            'covered': options.covered,
+            'reason': options.reason,
+            'expense_account': account_data(defaults['EXPENSE_BY_CATEGORY']) if 'EXPENSE_BY_CATEGORY' in defaults else None,
+            'payment_account': account_data(defaults['MONEY']) if 'MONEY' in defaults else None,
+            'issues': [issue_data(i) for i in options.issues],
+            'expense_accounts': [account_data(a) for a in options.eligible.get('EXPENSE_BY_CATEGORY', ())],
+            'payment_accounts': [account_data(a) for a in options.eligible.get('MONEY', ())],
+        })
 
 
 class ExpenseDetailView(APIView):
@@ -167,7 +212,7 @@ class ExpenseDetailView(APIView):
 class ExpenseVoidView(APIView):
     required_modules = ('expenses',)
     def post(self, request, expense_id: str):
-        use_case = VoidExpense(_expenses(request), SystemClock())
+        use_case = VoidExpense(_expenses(request), SystemClock(), _posting(request))
         expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND))
         return _expense_response(request, expense)
 
