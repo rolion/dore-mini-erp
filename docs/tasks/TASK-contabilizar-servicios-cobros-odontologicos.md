@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-servicios-cobros-odontologicos (desde `origin/accounting` b10b293, que ya contiene CONT-10, CONT-12 y VEN-01; base del PR = `accounting`, no `main`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/88 (base `accounting`)
 **Fuente:** https://trello.com/c/OhJ58t4R/17-srv-01-configurar-y-contabilizar-servicios-y-cobros-odontol%C3%B3gicos
 
 ## Historial de transiciones
