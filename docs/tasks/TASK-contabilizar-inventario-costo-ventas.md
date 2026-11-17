@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-contabilizar-inventario-costo-ventas
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/91
 **Fuente:** https://trello.com/c/B8wT5K34/18-inv-01-configurar-y-contabilizar-inventario-y-costo-de-ventas
 
 ## Historial de transiciones
