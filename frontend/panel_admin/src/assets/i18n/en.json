@@ -693,7 +693,14 @@
       "GASTO_ANULADO": "Expense voided",
       "ANULAR_EL_GASTO": "Void the expense \"{{p0}}\"?",
       "ESTE_GASTO_DEJARA_DE_SUMAR": "This expense will stop counting in reports. It is kept in the history.",
-      "ANULAR_GASTO_2": "Void expense"
+      "ANULAR_GASTO_2": "Void expense",
+      "ASIENTO_CONTABLE": "Journal entry",
+      "CONTABILIZADO": "Posted",
+      "NO_CONTABILIZADO": "No journal entry",
+      "DEBE": "Debit",
+      "HABER": "Credit",
+      "VER_ASIENTO": "View entry",
+      "CORREGIR_ANULANDO": "This expense is posted. To correct the amount, date, category, method or accounts, void it and register it again."
     },
     "EXPENSE_FORM": {
       "IR_A_CATEGORIAS": "Go to Categories",
@@ -713,7 +720,17 @@
       "PRIMERO_CREA_UNA_CATEGORIA": "First create a category",
       "GASTO_ACTUALIZADO": "Expense updated",
       "GASTO_REGISTRADO": "Expense recorded",
-      "EL_GASTO_ESTA_ANULADO_Y": "The expense is voided and cannot be edited."
+      "EL_GASTO_ESTA_ANULADO_Y": "The expense is voided and cannot be edited.",
+      "GASTO_CONTABILIZADO_AVISO": "This expense is already posted: its amount, date, category and payment method cannot be changed. To correct them, void the expense and register it again.",
+      "CONTABILIDAD": "Accounting",
+      "CUENTA_DE_GASTO": "Expense account",
+      "CUENTA_DE_PAGO": "Payment account (Cash or Bank)",
+      "POR_DEFECTO": "Default: {{account}}",
+      "ELIGE_UNA_CUENTA": "Choose an account",
+      "CONFIGURAR_ASIENTOS": "Set up automatic entries for Expenses",
+      "CUENTA": "Account",
+      "DEBE": "Debit",
+      "HABER": "Credit"
     },
     "EXPENSE_LIST": {
       "NUEVO_GASTO": "New expense",

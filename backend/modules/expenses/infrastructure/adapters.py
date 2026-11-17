@@ -41,11 +41,18 @@ class AccountingClassifications:
         return accounting.coverage_status(self.company_id, on).covered
 
 
+def issue_data(issue) -> dict:
+    """Faltante de configuración como dato serializable (el cliente arma el texto en su idioma con code/params/problem)."""
+    problem = issue.problem
+    return {'code': issue.code, 'role': issue.role, 'subject': issue.subject, 'module': issue.module,
+            'message': issue.message, 'params': issue.params,
+            'problem': {'code': problem.code, 'params': problem.params, 'message': problem.message} if problem else None}
+
+
 def _posting_error(exc: Exception) -> ExpensePostingError:
     """Traduce los errores de la fachada de Contabilidad a uno propio, con código estable y mensaje accionable."""
     if isinstance(exc, accounting.PostingConfigurationMissing):
-        issues = [{'code': i.code, 'role': i.role, 'subject': i.subject, 'message': i.message} for i in exc.issues]
-        return ExpensePostingError('posting_configuration_missing', str(exc), issues)
+        return ExpensePostingError('posting_configuration_missing', str(exc), [issue_data(i) for i in exc.issues])
     if isinstance(exc, accounting.FiscalPeriodClosed):
         return ExpensePostingError('fiscal_period_closed', str(exc))
     if isinstance(exc, accounting.DateOutsideFiscalPeriod):

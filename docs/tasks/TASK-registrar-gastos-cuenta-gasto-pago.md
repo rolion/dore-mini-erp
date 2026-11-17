@@ -1,6 +1,6 @@
 # TASK-registrar-gastos-cuenta-gasto-pago: Registrar gastos con cuenta de gasto y cuenta de pago en partida doble (GAS-01)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-gastos-cuenta-gasto-pago (base: `accounting`)
@@ -13,6 +13,7 @@
 | 2026-11-17 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta GAS-01; base = rama `accounting` (indicación de la persona) | delivery-start |
 | 2026-11-17 | INVESTIGATION → ARCHITECTURE → DESIGN → PLANNING | NEEDS_ARCHITECTURE: lógica financiera, frontera Gastos↔Contabilidad, migración, contrato API | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY (decisiones por defecto registradas en el PLAN); PLAN v1 | delivery-start |
+| 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -82,7 +83,26 @@ Ver `docs/adr/ADR-registrar-gastos-cuenta-gasto-pago-puerto-asiento-y-bloqueo.md
 `docs/plans/PLAN-2026-11-17-registrar-gastos-cuenta-gasto-pago.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Resumen: un gasto con Contabilidad cubriendo su fecha se contabiliza en la misma transacción con el evento `EXPENSE_RECORD` (Debe cuenta de gasto / Haber Caja-Banco), con cuentas por defecto o elegidas, idempotencia y bloqueo posterior; sin cobertura el flujo operativo no cambia.
+
+- **Accounting** (`services.py`, `application/posting.py`, `domain/posting.py`): `post_automatic_entry(account_overrides=…)`, `validate_posting_account`, `posting_options`, `describe_accounts`; la cuenta de pago elegida debe ser de dinero (Caja/Banco/Billetera) — INV-03, EDGE-01..03, AC-02, AC-07.
+- **Expenses dominio/persistencia**: `Expense.is_posted`, bloqueo de monto/categoría/fecha/método (`expense_posted_locked`), `same_submission`; migración `0004` (cuentas, `idempotency_key`, índice único parcial por empresa) — INV-05, INV-04, AC-08.
+- **Expenses aplicación/infraestructura**: puerto `ExpensePostingGateway` y adaptador `AccountingPosting` (traduce errores contables); `CreateExpense` (guarda, contabiliza, idempotente incluso ante carrera), `VoidExpense` (revierte el asiento en la misma transacción), clasificación de egreso ya no exigida — INV-01, INV-02, INV-06, INV-07, AC-01, AC-03..06, AC-09, AC-10.
+- **API**: `POST /expenses/` con `expense_account_id`, `payment_account_id`, `idempotency_key` (200 `replayed` en reintento); `GET /expenses/posting-options/`; gasto con `posted`, `expense_account`, `payment_account`, `journal_entry_id`; errores 400 `posting_configuration_missing` y 409 de período — API-01..04, AC-11.
+- **Frontend**: bloque «Contabilidad» con cuentas por defecto/elegibles y vista previa Debe/Haber, avisos accionables (textos traducidos con `issueText`), clave de idempotencia por formulario, campos bloqueados al editar un gasto contabilizado, sección «Asiento contable» en el detalle con enlace al asiento; i18n es/en/pt — UI-01..03, AC-12.
+- **Pruebas**: `accounting/tests/test_posting_overrides.py`, `expenses/tests/test_posting_api.py` (BD y Contabilidad reales), `test_posting_application.py`, ajuste de pruebas de clasificación; specs del formulario, detalle y servicio. Corridas propias: backend completo 2067 OK; frontend 1601 OK; `ng lint` e `i18n:check` OK; `makemigrations --check` sin cambios (no es el Quality Gate).
+
+Desviaciones respecto al plan:
+- La cuenta de pago exige además que sea de dinero (Caja/Banco/Billetera, `kind` informado), no cualquier Activo: la tarjeta pide «Caja/Banco» y evitaría pagar con, por ejemplo, Cuentas por cobrar.
+- Se añadió `describe_accounts` (fachada de solo lectura) para mostrar código y nombre de las cuentas sin importar infraestructura de Contabilidad.
+- Los faltantes de configuración se envían con `module`, `params` y `problem` para reutilizar `issueText` y traducirlos.
+- Se eliminaron `ExpenseClassificationError` y sus códigos (ya sin uso).
+- Concurrencia: cubierta con prueba de aplicación que simula la carrera (la restricción única y el punto de guardado en el repositorio la resuelven); no hay `TransactionTestCase` multihilo.
+
+Deuda técnica: la pantalla y el endpoint de clasificación de egreso de la categoría se conservan sin uso en el alta (candidatos a retiro en otra tarea). Revisión visual en navegador: no realizada en esta etapa.
+
+UI: pantallas de referencia seguidas = Formulario (`product-form`) y Detalle; sin componentes compartidos nuevos (se reutilizan `MoneyPipe`, ng-select y `issueText` de Contabilidad).
+
 
 ## Review
 _Pendiente_

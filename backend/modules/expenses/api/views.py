@@ -29,6 +29,7 @@ from modules.expenses.infrastructure.adapters import (
     AccountingClassifications,
     AccountingPosting,
     SystemClock,
+    issue_data,
 )
 from modules.expenses.infrastructure.django.repositories import (
     DjangoExpenseCategoryRepository,
@@ -186,8 +187,7 @@ class ExpensePostingOptionsView(APIView):
             'reason': options.reason,
             'expense_account': account_data(defaults['EXPENSE_BY_CATEGORY']) if 'EXPENSE_BY_CATEGORY' in defaults else None,
             'payment_account': account_data(defaults['MONEY']) if 'MONEY' in defaults else None,
-            'issues': [{'code': i.code, 'role': i.role, 'subject': i.subject, 'message': i.message}
-                       for i in options.issues],
+            'issues': [issue_data(i) for i in options.issues],
             'expense_accounts': [account_data(a) for a in options.eligible.get('EXPENSE_BY_CATEGORY', ())],
             'payment_accounts': [account_data(a) for a in options.eligible.get('MONEY', ())],
         })
