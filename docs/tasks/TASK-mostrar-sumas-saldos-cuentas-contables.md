@@ -1,6 +1,6 @@
 # TASK-mostrar-sumas-saldos-cuentas-contables: Mostrar sumas y saldos de todas las cuentas contables (CONT-04)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-mostrar-sumas-saldos-cuentas-contables
@@ -15,6 +15,7 @@
 | 2026-11-16 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas | delivery-build |
+| 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS con reservas (REV-01..03 abiertos, no bloqueantes) | delivery-publish |
 
 ## Investigación
 
@@ -97,7 +98,12 @@ No aplica según veredicto.
 **Deuda técnica.** Ninguna nueva. No se revisó la pantalla en navegador (queda para `delivery-publish`).
 
 ## Review
-_Pendiente_
+**Quality Gate (subagente aislado, 2026-11-16): PASS con reservas.** Sin hallazgos Critical/High; backend `modules.accounting` 327 OK; frontend 1546 OK (cobertura global 86,83 % sentencias); `lint`, `i18n:check` y `build` sin errores; `bandit` sin hallazgos; `npm audit` con 2 moderadas fuera del diff (`node_modules`). No realizadas: ruff/flake8/mypy (no instalados). Visual: verificado en móvil (390 px, claro) con datos de prueba; **no verificado** escritorio 1440 px, tema oscuro, ni estados vacío/error en navegador.
+
+Hallazgos abiertos (no bloquean):
+- REV-01 (Medium, IMPLEMENTATION): faltan pruebas del selector de período y de filtros→URL.
+- REV-02 (Low, IMPLEMENTATION): falta la prueba de módulo deshabilitado / sin autenticar.
+- REV-03 (Low, DESIGN): filtros degradados a ~800 px.
 
 ## Publicación
-_Pendiente_
+PR #85 listo para aprobación humana (base `accounting`; no se mergea sin aprobación). Sin ADR, auth ni migraciones. Limitaciones conocidas: REV-01..03 y la revisión visual parcial.
