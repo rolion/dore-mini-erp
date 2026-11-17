@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-configurar-asientos-automaticos-modulo
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/86
 **Fuente:** https://trello.com/c/SoDkSaoU/15-cont-12-definir-configuraci%C3%B3n-simple-de-asientos-autom%C3%A1ticos-por-m%C3%B3dulo
 
 ## Historial de transiciones
