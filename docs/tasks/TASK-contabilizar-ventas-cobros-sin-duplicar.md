@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-ventas-cobros-sin-duplicar
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/87
 **Fuente:** https://trello.com/c/D5Lgicru/16-ven-01-configurar-y-contabilizar-ventas-y-cobros-sin-duplicar-ingresos
 
 ## Historial de transiciones
