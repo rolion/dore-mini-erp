@@ -1,6 +1,6 @@
 # TASK-registrar-gastos-cuenta-gasto-pago: Registrar gastos con cuenta de gasto y cuenta de pago en partida doble (GAS-01)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-gastos-cuenta-gasto-pago (base: `accounting`)
@@ -14,6 +14,7 @@
 | 2026-11-17 | INVESTIGATION → ARCHITECTURE → DESIGN → PLANNING | NEEDS_ARCHITECTURE: lógica financiera, frontera Gastos↔Contabilidad, migración, contrato API | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY (decisiones por defecto registradas en el PLAN); PLAN v1 | delivery-start |
 | 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
+| 2026-11-17 | REVIEW → PUBLISH | Quality Gate sin Critical/High; todas las pruebas pasan; revisión visual no verificada; REV-01..04 abiertos | delivery-publish |
 
 ## Investigación
 
@@ -105,7 +106,12 @@ UI: pantallas de referencia seguidas = Formulario (`product-form`) y Detalle; si
 
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS con reservas** (subagente aislado, 2026-11-17). Sin hallazgos Critical/High; abiertos REV-2026-11-17-registrar-gastos-cuenta-gasto-pago-01 (Medium: falta la prueba multihilo de AC-04; la sonda manual con dos hilos dio 1 gasto y 1 asiento), -02 (Low: INV-03/ADR dicen «clase Activo» y el código exige cuenta de dinero), -03 (Low: `payment_method` de posting-options sin límite de longitud) y -04 (Low: la clave de idempotencia del formulario no se renueva tras editar y reintentar un alta ya aceptada).
+
+Nota: el subagente emitió FAIL únicamente por la revisión visual no ejecutada; el procedimiento del proyecto exige marcarla «no verificada» (nunca aprobada), no bloquear.
+
+Evidencia: backend `Ran 2067 tests ... OK`; `makemigrations --check`: No changes detected; frontend `TOTAL: 1601 SUCCESS` (cobertura líneas 88,89 %); `ng lint` sin errores; `i18n:check` 2197 claves, 0 faltantes; `npm run build` OK; bandit sin hallazgos; `npm audit --omit=dev`: 3 high preexistentes (picomatch, tinyglobby, @angular/localize; el diff no toca `package.json`). Revisión visual en navegador: **no verificada**.
 
 ## Publicación
-_Pendiente_
+PR #90 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migración `expenses/0004`) y contrato de `accounting.services`; respaldo: ADR-registrar-gastos-cuenta-gasto-pago-puerto-asiento-y-bloqueo (migración aditiva y reversible). Hacer backup antes de desplegar (el deploy ya lo hace); la base del PR es `accounting`, no `main`.
+
