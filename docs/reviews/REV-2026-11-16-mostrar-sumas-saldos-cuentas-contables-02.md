@@ -1,6 +1,6 @@
 # Falta la prueba de módulo `accounting` deshabilitado / acceso no autenticado en la API de saldos
 
-**Status:** Open
+**Status:** Resolved (53e31d6, verificado en la segunda pasada del Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-mostrar-sumas-saldos-cuentas-contables.md (v1)

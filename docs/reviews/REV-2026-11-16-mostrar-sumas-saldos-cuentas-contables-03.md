@@ -1,6 +1,6 @@
 # Filtros de Saldos con apariencia degradada en ancho ~800 px (chevron solapado, botón fuera de la tarjeta)
 
-**Status:** Open
+**Status:** Resolved (53e31d6, verificado en la segunda pasada del Quality Gate)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-16-mostrar-sumas-saldos-cuentas-contables.md (v1)

@@ -1,6 +1,6 @@
 # Sin pruebas para el selector de período, filtros→URL y «Limpiar filtros» de la pantalla Saldos
 
-**Status:** Open
+**Status:** Resolved (53e31d6, verificado en la segunda pasada del Quality Gate)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-16-mostrar-sumas-saldos-cuentas-contables.md (v1)

@@ -16,6 +16,7 @@
 | 2026-11-16 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-16 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas | delivery-build |
 | 2026-11-16 | REVIEW → PUBLISH | Quality Gate PASS con reservas (REV-01..03 abiertos, no bloqueantes) | delivery-publish |
+| 2026-11-16 | PUBLISH → REVIEW → PUBLISH | REV-01..03 corregidos; 2.ª pasada del Quality Gate PASS (REV-04 Low abierto) | delivery-publish |
 
 ## Investigación
 
@@ -98,12 +99,11 @@ No aplica según veredicto.
 **Deuda técnica.** Ninguna nueva. No se revisó la pantalla en navegador (queda para `delivery-publish`).
 
 ## Review
-**Quality Gate (subagente aislado, 2026-11-16): PASS con reservas.** Sin hallazgos Critical/High; backend `modules.accounting` 327 OK; frontend 1546 OK (cobertura global 86,83 % sentencias); `lint`, `i18n:check` y `build` sin errores; `bandit` sin hallazgos; `npm audit` con 2 moderadas fuera del diff (`node_modules`). No realizadas: ruff/flake8/mypy (no instalados). Visual: verificado en móvil (390 px, claro) con datos de prueba; **no verificado** escritorio 1440 px, tema oscuro, ni estados vacío/error en navegador.
-
-Hallazgos abiertos (no bloquean):
-- REV-01 (Medium, IMPLEMENTATION): faltan pruebas del selector de período y de filtros→URL.
-- REV-02 (Low, IMPLEMENTATION): falta la prueba de módulo deshabilitado / sin autenticar.
-- REV-03 (Low, DESIGN): filtros degradados a ~800 px.
+**Quality Gate (subagente aislado, 2026-11-16): PASS con reservas** (2 pasadas).
+- 1.ª pasada: sin Critical/High; backend 327 OK, frontend 1546 OK; lint, i18n:check, build y bandit sin hallazgos; ruff/flake8/mypy no realizados (no instalados); `npm audit` con 2 moderadas fuera del diff. Abrió REV-01 (Medium), REV-02 y REV-03 (Low).
+- Corrección `53e31d6` cerró REV-01..03.
+- 2.ª pasada: backend `modules.accounting` 328 OK; frontend 1550 OK; cobertura de `balances-page.component.ts` 96,7 % sentencias / 97,36 % ramas (antes 78,02 / 57,89); lint, i18n:check y build OK. Visual verificada en 390, 800 y 1440 px, tema claro y oscuro, con datos, vacío y error (la captura de 1440 px oscuro del estado vacío no se hizo; el selector con períodos solo se cubrió con pruebas unitarias).
+- REV-04 (Low, DESIGN, abierto): el enlace «Reintentar» (`btn-link` en `alert-danger`) tiene bajo contraste en tema claro (~1,3:1); patrón transversal a otras pantallas de accounting, fuera del alcance de CONT-04.
 
 ## Publicación
-PR #85 listo para aprobación humana (base `accounting`; no se mergea sin aprobación). Sin ADR, auth ni migraciones. Limitaciones conocidas: REV-01..03 y la revisión visual parcial.
+PR #85 listo para aprobación humana (base `accounting`; no se mergea sin aprobación). Sin ADR, auth ni migraciones. Limitación conocida: REV-04 (contraste de «Reintentar», transversal).
