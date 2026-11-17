@@ -3,9 +3,9 @@ from uuid import UUID
 
 from django.db import IntegrityError, transaction
 
-from modules.receivables.domain.obligation import Allocation, Obligation, Payment, PaymentMethod
+from modules.receivables.domain.obligation import Allocation, Obligation, Payment, PaymentMethod, RenderedService
 from modules.receivables.infrastructure.django.models import (
-    AllocationModel, ObligationModel, PaymentModel, ReceiptCounterModel,
+    AllocationModel, ObligationModel, PaymentModel, ReceiptCounterModel, RenderedServiceModel,
 )
 
 
@@ -16,9 +16,15 @@ def _payment(row: PaymentModel) -> Payment:
                    row.idempotency_key)
 
 
+def _service(row: RenderedServiceModel) -> RenderedService:
+    return RenderedService(row.id, row.lineage_id, row.line_id, row.description, row.amount, row.service_date,
+                           row.recorded_by, row.recorded_by_name, row.created_at)
+
+
 def to_domain(row: ObligationModel) -> Obligation:
     return Obligation(row.id, row.source_kind, row.source_number, row.customer_id, row.customer_name,
-                      [_payment(p) for p in row.payments.all()], row.created_at)
+                      [_payment(p) for p in row.payments.all()], row.created_at,
+                      [_service(s) for s in row.rendered_services.all()])
 
 
 class DjangoObligationRepository:
@@ -29,7 +35,7 @@ class DjangoObligationRepository:
 
     def _qs(self):
         return ObligationModel.objects.filter(company_id=self.company_id).prefetch_related(
-            'payments__allocations')
+            'payments__allocations', 'rendered_services')
 
     def find(self, kind: str, number: str) -> Obligation | None:
         row = self._qs().filter(source_kind=kind, source_number=number).first()
@@ -72,6 +78,14 @@ class DjangoObligationRepository:
         AllocationModel.objects.bulk_create([
             AllocationModel(payment=row, lineage_id=a.lineage_id, line_id=a.line_id, description=a.description,
                             amount=a.amount) for a in payment.allocations])
+
+    def add_rendered(self, obligation: Obligation, service: RenderedService) -> None:
+        """La prestación se inserta una vez y nunca se edita (INV-01)."""
+        RenderedServiceModel.objects.create(
+            id=service.id, company_id=self.company_id, obligation_id=obligation.id, lineage_id=service.lineage_id,
+            line_id=service.line_id, description=service.description, amount=service.amount,
+            service_date=service.service_date, recorded_by=service.recorded_by,
+            recorded_by_name=service.recorded_by_name, created_at=service.created_at)
 
     def search(self, *, customer_id: UUID | None = None, date_from: date | None = None,
                date_to: date | None = None) -> list[Obligation]:

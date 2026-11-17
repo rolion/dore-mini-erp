@@ -5,9 +5,11 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import { PaymentDialogComponent } from '../../../shared/components/payment-dialog/payment-dialog.component';
+import { ServiceDialogComponent } from '../../../shared/components/service-dialog/service-dialog.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import {
-  CollectionPayment, Commitment, PAYMENT_TONES, PaymentRegistered, ReceivableFailure, SourceKind, methodLabel, statusLabel,
+  CollectionPayment, Commitment, CommitmentLine, PAYMENT_TONES, PaymentRegistered, ReceivableFailure, ServiceRendered,
+  SourceKind, methodLabel, statusLabel,
 } from '../../../shared/models/receivable';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { ReceivablesApiService } from '../../../shared/services/receivables-api.service';
@@ -18,7 +20,7 @@ import { ReceivablesApiService } from '../../../shared/services/receivables-api.
  */
 @Component({
   selector: 'app-commitment-detail',
-  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, PaymentDialogComponent, StatusBadgeComponent],
+  imports: [RouterLink, MoneyPipe, DatePipe, TranslatePipe, PaymentDialogComponent, ServiceDialogComponent, StatusBadgeComponent],
   templateUrl: './commitment-detail.component.html',
 })
 export class CommitmentDetailComponent implements OnInit {
@@ -27,6 +29,7 @@ export class CommitmentDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   @ViewChild(PaymentDialogComponent) private payment?: PaymentDialogComponent;
+  @ViewChild(ServiceDialogComponent) private service?: ServiceDialogComponent;
 
   readonly statusLabel = statusLabel;
   readonly methodLabel = methodLabel;
@@ -38,6 +41,8 @@ export class CommitmentDetailComponent implements OnInit {
   loading = true;
   error = '';
   receipt: PaymentRegistered | null = null;
+  /** Último tratamiento marcado como prestado (aviso de resultado). */
+  renderedName = '';
 
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -81,6 +86,17 @@ export class CommitmentDetailComponent implements OnInit {
 
   onPaid(result: PaymentRegistered): void {
     this.receipt = result;
+    this.renderedName = '';
+    this.load();
+  }
+
+  openService(line: CommitmentLine, opener: EventTarget | null): void {
+    this.service?.open(line, opener instanceof HTMLElement ? opener : null);
+  }
+
+  onRendered(result: ServiceRendered): void {
+    this.renderedName = result.service.description;
+    this.receipt = null;
     this.load();
   }
 

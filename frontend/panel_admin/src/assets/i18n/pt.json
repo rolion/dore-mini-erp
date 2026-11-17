@@ -17,7 +17,11 @@
       "TEXT": "Agenda"
     },
     "RECEIVABLES": {
-      "TEXT": "Cobranças"
+      "TEXT": "Cobranças",
+      "LIST": {
+        "COLLECTIONS": "Cobranças",
+        "SETTINGS": "Configurações"
+      }
     },
     "QUOTATIONS": {
       "TEXT": "Orçamentos",
@@ -1901,6 +1905,7 @@
       "CONFIGURACION_GUARDADA": "Configurações salvas",
       "ESTE_MODULO_AUN_NO_TIENE": "Este módulo ainda não tem configurações ajustáveis. Quando houver regras disponíveis, elas aparecerão aqui.",
       "VENTAS": "Vendas",
+      "COBROS": "Cobranças",
       "COMPRAS": "Compras",
       "INVENTARIO": "Estoque",
       "PERMITIR_STOCK_NEGATIVO": "Permitir estoque negativo",
@@ -2411,6 +2416,22 @@
     "P_CONDICIONES": "Condições"
   },
   "RECEIVABLES": {
+    "COL_PRESTACION": "Prestação",
+    "SIN_PRESTAR": "Não prestado",
+    "PRESTADO_EL": "Prestado em {{date}}",
+    "MARCAR_PRESTADO": "Marcar como prestado",
+    "RECONOCIDO": "Reconhecido",
+    "SRV_TITULO": "Marcar como prestado",
+    "SRV_IMPORTE": "Valor do tratamento",
+    "SRV_FECHA": "Data da prestação",
+    "SRV_ADVERTENCIA": "Não é possível desfazer. Reconhece a receita de serviços e aplica os adiantamentos recebidos.",
+    "SRV_CONFIRMAR": "Confirmar prestação",
+    "SRV_GUARDANDO": "Salvando…",
+    "SRV_EXITO": "«{{name}}» foi marcado como prestado.",
+    "E_SERVICE_DATE": "A data da prestação não pode ser futura.",
+    "E_LINE_ID": "Este tratamento não pode ser marcado como prestado.",
+    "CONFIG_INCOMPLETA": "Configuração contábil incompleta",
+    "IR_A_CONFIG": "Ir para a configuração de Cobranças",
     "E_MONTO_SUPERA": "O valor excede o saldo a cobrar.",
     "DLG_TITULO": "Registrar cobrança",
     "SALDO_POR_COBRAR": "Saldo a cobrar",
@@ -2950,7 +2971,8 @@
         "SALE_DELIVERY": "Reconhecer a entrega de um pedido",
         "SALE_RECOGNITION": "Reconhecer uma venda",
         "SALE_PAYMENT": "Receber uma venda",
-        "SERVICE_RECOGNITION": "Reconhecer um serviço",
+        "SERVICE_ADVANCE": "Receber um serviço antecipadamente",
+        "SERVICE_RECOGNITION": "Reconhecer um serviço prestado",
         "SERVICE_PAYMENT": "Receber um serviço",
         "INVENTORY_SALE_COST": "Custo das vendas na saída de estoque",
         "PURCHASE_RECOGNITION": "Reconhecer uma compra de mercadoria",

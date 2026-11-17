@@ -14,11 +14,11 @@ from modules.receivables.application.collections import CollectionService
 from modules.receivables.domain.obligation import (
     KINDS, PAID, PARTIAL, PENDING, CommitmentNotFound, ObligationStateError, ObligationValidationError,
 )
-from modules.receivables.infrastructure.adapters import PaymentLedgerAdapter, source_for
+from modules.receivables.infrastructure.adapters import ServicePostingAdapter, source_for
 from modules.receivables.infrastructure.django.repositories import DjangoObligationRepository
 from shared.tenancy import company_id_from
 
-from .serializers import PaymentInputSerializer, detail_data, payment_data, summary_data
+from .serializers import PaymentInputSerializer, RenderServiceSerializer, detail_data, payment_data, service_data, summary_data
 
 # Módulos de cada fuente, igual que en sus propias APIs.
 SOURCE_MODULES = {'quotation': ('quotations',), 'dental': ('dentistry', 'customers', 'services')}
@@ -65,7 +65,7 @@ def _service(request) -> CollectionService:
     return CollectionService(
         DjangoObligationRepository(company_id), lambda kind: source_for(kind, company_id),
         today=dj_timezone.localdate, now=lambda: datetime.now(timezone.utc),
-        user_id=request.user.pk, user_name=_user_name(request.user), ledger=PaymentLedgerAdapter(company_id))
+        user_id=request.user.pk, user_name=_user_name(request.user), ledger=ServicePostingAdapter(company_id))
 
 
 def _run(callback):
@@ -77,7 +77,7 @@ def _run(callback):
     except ObligationValidationError as exc:
         raise ValidationError(exc.errors) from exc
     except ObligationStateError as exc:
-        raise Conflict({'detail': str(exc), 'code': exc.code} if exc.code else str(exc)) from exc
+        raise Conflict({'detail': str(exc), 'code': exc.code, **exc.data} if exc.code else str(exc)) from exc
 
 
 def _date_param(request, name):
@@ -147,4 +147,18 @@ class PaymentCreateView(APIView):
         service = _service(request)
         result = _run(lambda: service.register_payment(kind, number, serializer.to_input()))
         return Response({**detail_data(result.view), 'payment': payment_data(result.payment),
+                         'replayed': result.replayed}, status=200 if result.replayed else 201)
+
+
+class ServiceCreateView(APIView):
+    """Marca un tratamiento aceptado como prestado y reconoce el ingreso (SRV-01). Idempotente por línea."""
+    required_modules = ('receivables',)
+
+    def post(self, request, kind, number):
+        _authorize(request, kind)
+        serializer = RenderServiceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        result = _run(lambda: _service(request).render_service(kind, number, data['line_id'], data['service_date']))
+        return Response({**detail_data(result.view), 'service': service_data(result.service),
                          'replayed': result.replayed}, status=200 if result.replayed else 201)

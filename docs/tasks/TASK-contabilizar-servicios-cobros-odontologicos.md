@@ -1,6 +1,6 @@
 # TASK-contabilizar-servicios-cobros-odontologicos: Contabilizar servicios y cobros odontológicos por partida doble (SRV-01)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-contabilizar-servicios-cobros-odontologicos (desde `origin/accounting` b10b293, que ya contiene CONT-10, CONT-12 y VEN-01; base del PR = `accounting`, no `main`)
@@ -13,6 +13,7 @@
 | 2026-11-17 | (nuevo) → INVESTIGATION | Task creado; base = rama `accounting` indicada por la persona | delivery-start |
 | 2026-11-17 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (lógica financiera, migración, frontera Cobros↔Contabilidad↔fuentes); 2 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-17 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -91,7 +92,24 @@ Con Contabilidad habilitada cada cobro crea una entrada de una cuenta en el libr
 `docs/plans/PLAN-2026-11-17-contabilizar-servicios-cobros-odontologicos.md` (v1, COMPLETO) · Specification readiness: **READY**
 
 ## Implementación
-_Pendiente_
+Implementado según **PLAN v1**, sin cambios de Specification.
+
+- **Catálogo de Contabilidad** (`accounting/domain/posting.py`; AC-01): `SERVICE_RECOGNITION` con segunda línea de Debe (`CUSTOMER_ADVANCES`) y nuevo `SERVICE_ADVANCE`; claves i18n es/en/pt del evento (el panel de configuración es dirigido por datos).
+- **Dominio de Cobros** (`receivables/domain/obligation.py`; INV-01..05, AC-07/08/11): `RenderedService`, `Obligation.mark_rendered` (idempotente por línea de origen), `applied_to`, `split_payment` (porciones de un cobro: cobro contra CxC, anticipo, libro anterior), `Statement`/`StatementLine` con `rendered`, `service_date`, `can_render` y `recognized`.
+- **Persistencia** (`receivables/0002_rendered_service`, aditiva): tabla `receivables_rendered_service` con único `(obligation, lineage_id)` y `CHECK amount > 0`; repositorio `add_rendered`.
+- **Adaptador y caso de uso** (`receivables/infrastructure/adapters.py`, `application/collections.py`; AC-02..AC-10): `ServicePostingAdapter` reemplaza a `PaymentLedgerAdapter` (puerto `ServicePosting`: `record_payment`, `recognize`); estado contable deducido del libro, ruteo por porción, anticipos aplicados al reconocer, bloqueos accionables (`posting_configuration_missing` con `issues`, `fiscal_period_unavailable`, `payment_date_not_covered`, `service_date_not_covered`, `service_has_unposted_payments`) y `CollectionService.render_service` (bloqueo obligación → proforma, `mark_lines_collected`).
+- **API** (API-01..03): `POST /api/receivables/commitments/<kind>/<number>/services/` (201 nueva / 200 repetida); el detalle añade `rendered`, `service_date`, `can_render`, `totals.recognized` y la acción `render_service`; los 409 ahora llevan `data` adicional (`issues`).
+- **Frontend** (UI-01..04, AC-13): `app-service-dialog` y `app-posting-issues-alert` compartidos, columna «Prestación» y total «Reconocido» en el detalle del compromiso, alerta contable también en el diálogo de cobro, `ReceivablesApiService.renderService` y 409 con `code`/`issues`.
+- **Pruebas:** `receivables/tests/test_service_posting.py` (AC-01..AC-12 con Contabilidad real, hilos para concurrencia), `test_domain.py` (INV-01..05, split), specs de `service-dialog`, `commitment-detail` y `receivables-api.service`; las pruebas del libro anterior (`test_payment_ledger.py`) fijan un corte futuro, igual que VEN-01.
+
+**Desviaciones respecto al plan (detalle de implementación, sin cambio de Specification):**
+- Se añadió la pantalla **Cobros → Configuración** (ruta `receivables/settings`, `module-settings` con `receivables` en `POSTING_MODULES`) y el menú Cobros pasa de ítem plano a grupo con dos ítems: sin ella no había dónde configurar las cuentas de Cobros (la tarjeta pide «Configuración en Servicios/Cobros»). Se actualizó `sidebar-menu.spec.ts` (el AC-12 antiguo decía «ítem plano… si aparecen otras pantallas se vuelve a agrupar»).
+- Código del bloqueo por fecha de prestación sin cobertura con anticipos: `service_date_not_covered` (el plan decía `payment_date_not_covered`/`fiscal_period_unavailable` según el caso).
+- La extracción de la alerta de Ventas a `shared/` (DDR) se hizo solo para Cobros: Ventas conserva su aviso propio (deuda anotada en `design-system.md` §10) para no tocar Ventas fuera de alcance.
+
+**Verificación propia (no es el Quality Gate):** backend `manage.py test` 2057 OK, `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 2193 claves y 0 faltantes, `ng build` OK, `ng test` 1599 de 1599 OK. Entorno: `.env` copiado sin leer desde otro worktree y `node_modules` enlazado (mismo `package-lock.json`); revisión visual no realizada.
+
+**Deuda técnica / pendiente:** decisiones de negocio abiertas (cobros previos a la cobertura sobre líneas prestadas con cobertura: bloqueado; anulación/reembolso de servicios prestados); mensajes de configuración faltante solo en español (deuda CONT-12 REV-05); unificar la alerta de Ventas con la compartida.
 
 ## Review
 _Pendiente_

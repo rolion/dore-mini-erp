@@ -73,7 +73,7 @@ class ReceivablesApiTests(TransactionTestCase):
         p = self.quote(accept=(1,), reject=(2,))  # solo Corona (200) aceptado; Limpieza pendiente; Blanq. rechazado
         view = self.detail(p['number']).json()
         self.assertEqual(view['totals'], {'proposed': '350.00', 'accepted': '200.00', 'pending': '100.00',
-                                          'rejected': '50.00', 'paid': '0.00', 'balance': '200.00'})
+                                          'rejected': '50.00', 'paid': '0.00', 'balance': '200.00', 'recognized': '0.00'})
         line = p['lines'][1]['id']
         first = self.pay(p['number'], [(line, '120.00')])
         self.assertEqual(first.status_code, 201, first.content)

@@ -59,7 +59,7 @@ class FakeLedger:
     def is_available(self):
         return self.available
 
-    def record(self, kind, number, payment, actor_id, actor_name):
+    def record_payment(self, kind, number, obligation, payment, actor_id, actor_name):
         self.events.append('record')
         if self.error:
             raise self.error

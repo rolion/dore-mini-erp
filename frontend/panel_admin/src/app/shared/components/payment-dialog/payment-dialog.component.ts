@@ -8,6 +8,7 @@ import {
   Commitment, CommitmentLine, PAYMENT_METHODS, PaymentMethod, PaymentRegistered, REFERENCE_MAX_LENGTH,
   ReceivableFailure, SourceKind, fromCents, localToday, methodLabel, toCents,
 } from '../../models/receivable';
+import { PostingIssuesAlertComponent } from '../posting-issues-alert/posting-issues-alert.component';
 import { MoneyPipe } from '../../pipes/money.pipe';
 import { ReceivablesApiService } from '../../services/receivables-api.service';
 import { Allocation, autoAllocate, halfOf, totalCents } from '../../utils/payment-allocation';
@@ -21,7 +22,7 @@ type Shortcut = 'total' | 'half' | 'other';
  */
 @Component({
   selector: 'app-payment-dialog',
-  imports: [ReactiveFormsModule, MoneyPipe, TranslatePipe],
+  imports: [ReactiveFormsModule, MoneyPipe, TranslatePipe, PostingIssuesAlertComponent],
   templateUrl: './payment-dialog.component.html',
   styleUrl: './payment-dialog.component.scss',
 })

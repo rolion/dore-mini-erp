@@ -34,9 +34,10 @@ class ObligationValidationError(Exception):
 class ObligationStateError(Exception):
     """Operación no permitida para el estado actual (se traduce a 409); `code` opcional para el cliente."""
 
-    def __init__(self, message: str = '', code: str = ''):
+    def __init__(self, message: str = '', code: str = '', data: dict | None = None):
         super().__init__(message)
         self.code = code
+        self.data = data or {}
 
 
 class CommitmentNotFound(Exception):
@@ -86,6 +87,9 @@ class StatementLine:
     paid: Decimal
     balance: Decimal
     collectible: bool
+    rendered: bool = False
+    service_date: date | None = None
+    can_render: bool = False
 
 
 @dataclass(frozen=True)
@@ -99,6 +103,42 @@ class Statement:
     paid: Decimal
     balance: Decimal
     payment_status: str
+    recognized: Decimal = ZERO  # ingreso reconocido: importe aceptado de los tratamientos prestados
+
+
+@dataclass(frozen=True)
+class RenderedService:
+    """Tratamiento marcado como prestado (SRV-01). Único por obligación y línea de origen; no se deshace."""
+    id: UUID  # es el `origin_id` del asiento de reconocimiento
+    lineage_id: UUID
+    line_id: UUID
+    description: str
+    amount: Decimal
+    service_date: date
+    recorded_by: int | None = None
+    recorded_by_name: str = ''
+    created_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class PaymentPortions:
+    """Un pago repartido por el estado de los tratamientos a los que se imputa (INV-04): cada porción, un camino."""
+    settlement: Decimal  # tratamientos prestados con reconocimiento contabilizado → contra Cuentas por cobrar
+    advance: Decimal  # tratamientos sin prestar → anticipo de cliente
+    rendered_unposted: Decimal  # prestados sin reconocimiento contabilizado → libro anterior
+
+
+def split_payment(payment: 'Payment', rendered: set[UUID], recognized: set[UUID]) -> PaymentPortions:
+    """`rendered`: líneas de origen prestadas; `recognized`: las prestadas con asiento de reconocimiento."""
+    settlement = advance = unposted = ZERO
+    for allocation in payment.allocations:
+        if allocation.lineage_id in recognized:
+            settlement += allocation.amount
+        elif allocation.lineage_id in rendered:
+            unposted += allocation.amount
+        else:
+            advance += allocation.amount
+    return PaymentPortions(money(settlement), money(advance), money(unposted))
 
 
 def _status(accepted: Decimal, paid: Decimal) -> str:
@@ -107,7 +147,9 @@ def _status(accepted: Decimal, paid: Decimal) -> str:
     return PARTIAL if paid > 0 else PENDING
 
 
-def build_statement(snapshot: CommitmentSnapshot, payments: list[Payment]) -> Statement:
+def build_statement(snapshot: CommitmentSnapshot, payments: list[Payment],
+                    rendered: list[RenderedService] | tuple[RenderedService, ...] = ()) -> Statement:
+    rendered_by_lineage = {service.lineage_id: service for service in rendered}
     paid_by_lineage: dict[UUID, Decimal] = {}
     for payment in payments:
         for allocation in payment.allocations:
@@ -120,13 +162,17 @@ def build_statement(snapshot: CommitmentSnapshot, payments: list[Payment]) -> St
         paid = paid_by_lineage.get(line.lineage_id, ZERO)
         balance = max(accepted - paid, ZERO)
         totals[line.decision if line.decision in totals else 'pending'] += line.amount
+        service = rendered_by_lineage.get(line.lineage_id)
+        can_render = snapshot.collectible and line.decision == ACCEPTED and service is None
         lines.append(StatementLine(line.line_id, line.lineage_id, line.description, line.piece, line.decision,
-                                   line.amount, accepted, paid, balance, snapshot.collectible and balance > 0))
+                                   line.amount, accepted, paid, balance, snapshot.collectible and balance > 0,
+                                   service is not None, service.service_date if service else None, can_render))
     accepted_total = money(totals['accepted'])
     paid_total = money(sum(paid_by_lineage.values(), ZERO))
     return Statement(tuple(lines), money(sum((l.amount for l in snapshot.lines), ZERO)), accepted_total,
                      money(totals['pending']), money(totals['rejected']), paid_total,
-                     money(max(accepted_total - paid_total, ZERO)), _status(accepted_total, paid_total))
+                     money(max(accepted_total - paid_total, ZERO)), _status(accepted_total, paid_total),
+                     money(sum((service.amount for service in rendered), ZERO)))
 
 
 @dataclass
@@ -138,13 +184,40 @@ class Obligation:
     customer_name: str
     payments: list[Payment] = field(default_factory=list)
     created_at: datetime | None = None
+    rendered: list[RenderedService] = field(default_factory=list)
 
     @classmethod
     def open(cls, snapshot: CommitmentSnapshot) -> 'Obligation':
         return cls(uuid4(), snapshot.kind, snapshot.number, snapshot.customer_id, snapshot.customer_name)
 
     def statement(self, snapshot: CommitmentSnapshot) -> Statement:
-        return build_statement(snapshot, self.payments)
+        return build_statement(snapshot, self.payments, self.rendered)
+
+    def applied_to(self, lineage_id: UUID) -> Decimal:
+        """Lo cobrado hasta ahora e imputado a esa línea (anticipos que se aplican al prestarla)."""
+        return money(sum((a.amount for p in self.payments for a in p.allocations if a.lineage_id == lineage_id), ZERO))
+
+    def mark_rendered(self, snapshot: CommitmentSnapshot, line_id: UUID, *, service_date: date | None, today: date,
+                      recorded_by: int | None = None, recorded_by_name: str = '',
+                      now: datetime | None = None) -> tuple[RenderedService, bool]:
+        """Marca un tratamiento aceptado como prestado. Devuelve (prestación, creada); repetir no crea otra (INV-01)."""
+        line = next((l for l in snapshot.lines if l.line_id == line_id), None)
+        if line is None:
+            raise ObligationValidationError({'line_id': ['La línea no pertenece a la proforma.']})
+        existing = next((s for s in self.rendered if s.lineage_id == line.lineage_id), None)
+        if existing is not None:
+            return existing, False
+        if not snapshot.collectible:
+            raise ObligationStateError('Solo se puede prestar un tratamiento de una proforma presentada vigente.')
+        if line.decision != ACCEPTED:
+            raise ObligationValidationError({'line_id': [f'«{line.description}» no está aceptado: no se puede prestar.']})
+        when = today if service_date is None else service_date
+        if when > today:
+            raise ObligationValidationError({'service_date': ['La fecha de prestación no puede ser futura.']})
+        service = RenderedService(uuid4(), line.lineage_id, line.line_id, line.description, money(line.amount), when,
+                                  recorded_by, recorded_by_name, now)
+        self.rendered.append(service)
+        return service, True
 
     def register_payment(self, snapshot: CommitmentSnapshot, *, amount: object, payment_method: object,
                          payment_date: date | None, reference: object, allocations: list[tuple[UUID, Decimal]],

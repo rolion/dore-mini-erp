@@ -65,6 +65,8 @@ Contraste: `#1677FF` sobre blanco da ≈3,9:1. Úsalo en botones con texto blanc
 | Estado de pedido / de pago | `app-order-status-badge`, `app-payment-status-badge` | `features/sales/components/` |
 | Estado con icono + fondo tintado (decisión de proforma, aceptación, cobro) | `app-status-badge` (`tone`: `success\|warning\|danger\|info\|muted`, `label`) | `shared/components/status-badge` (nuevo en TASK-simplificar-flujo-proforma-cobro) |
 | Cobro de una proforma en un solo paso | `app-payment-dialog` (`kind`, `number`; `open()`; salida `paid`) y `app-collection-panel` (cobro en contexto de una proforma: estado, diálogo y comprobante) | `shared/components/payment-dialog`, `shared/components/collection-panel` |
+| Aviso de configuración contable incompleta (409 `posting_configuration_missing`): lista lo que falta y enlaza a «Asientos automáticos» | `app-posting-issues-alert` (`issues`, `settingsLink`; salida `navigate`) | `shared/components/posting-issues-alert` (nuevo en TASK-contabilizar-servicios-cobros-odontologicos) |
+| Marcar un tratamiento aceptado como prestado (irreversible, con fecha) | `app-service-dialog` (`kind`, `number`; `open(line)`; salida `rendered`) | `shared/components/service-dialog` (nuevo en TASK-contabilizar-servicios-cobros-odontologicos) |
 | Tabla | `ngx-datatable` con clase `material`, paginación externa | plantilla |
 | Selector con búsqueda | `ng-select` | plantilla |
 
@@ -247,6 +249,7 @@ Una pantalla nueva o modificada pasa si:
 
 ## 10. Deuda visual conocida
 
+- Ventas (`features/sales`: detalle de pedido y diálogo de entrega) repite su propio aviso de configuración contable incompleta en lugar de usar `app-posting-issues-alert` (TASK-contabilizar-servicios-cobros-odontologicos); unificarlo es un cambio mecánico pendiente.
 - La plantilla conserva pantallas demo (calendario, tablas avanzadas, etc.) con la marca y el estilo originales; no son parte del producto.
 - Los skins alternativos del panel de configuración conservan sus propios colores y pueden alejarse de la paleta de marca.
 - Hay textos de la plantilla Oreva sin traducir fuera de las pantallas del producto (por ejemplo "Welcome to Oreva" en el header).

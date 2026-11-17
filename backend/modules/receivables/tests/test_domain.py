@@ -5,7 +5,7 @@ from uuid import uuid4
 from django.test import SimpleTestCase
 
 from modules.receivables.domain.obligation import (
-    Obligation, ObligationStateError, ObligationValidationError, build_statement,
+    Obligation, ObligationStateError, ObligationValidationError, build_statement, split_payment,
 )
 from shared.domain.commitment import CommitmentLine, CommitmentSnapshot, VersionData, build_snapshots
 
@@ -131,3 +131,62 @@ class ProformaIdTests(SimpleTestCase):
                     VersionData(version=2, status='presented', proforma_id=v2_id, **common),
                     VersionData(version=3, status='draft', proforma_id=uuid4(), **common)]
         self.assertEqual(build_snapshots('quotation', versions)['PRO-000001'].proforma_id, v2_id)
+
+
+class RenderedServiceDomainTests(SimpleTestCase):
+    """SRV-01: prestación de tratamientos (INV-01..03, INV-04, INV-05, AC-07, AC-08, AC-11)."""
+
+    def setUp(self):
+        self.snap = snapshot()
+        self.obligation = Obligation.open(self.snap)
+
+    def render(self, index=1, **extra):
+        return self.obligation.mark_rendered(self.snap, self.snap.lines[index].line_id, service_date=None,
+                                             today=TODAY, now=NOW, **extra)
+
+    def test_marking_a_line_creates_one_service_with_the_accepted_amount(self):  # INV-01, INV-02
+        service, created = self.render()
+        self.assertEqual((created, service.amount, service.service_date), (True, D('200.00'), TODAY))
+        again, created_again = self.render()
+        self.assertEqual((created_again, again.id), (False, service.id))
+        self.assertEqual(len(self.obligation.rendered), 1)
+        statement = self.obligation.statement(self.snap)
+        self.assertEqual(statement.recognized, D('200.00'))
+        self.assertEqual([(l.rendered, l.can_render) for l in statement.lines],
+                         [(False, True), (True, False), (False, False)])
+
+    def test_only_accepted_lines_of_a_presented_proforma_can_be_rendered(self):  # INV-02
+        with self.assertRaises(ObligationValidationError):
+            self.render(2)  # rechazada
+        with self.assertRaises(ObligationValidationError):
+            self.obligation.mark_rendered(self.snap, uuid4(), service_date=None, today=TODAY)
+        draft = snapshot(status='draft')
+        with self.assertRaises(ObligationStateError):
+            Obligation.open(draft).mark_rendered(draft, draft.lines[0].line_id, service_date=None, today=TODAY)
+
+    def test_the_service_date_is_never_in_the_future(self):  # INV-03
+        with self.assertRaises(ObligationValidationError) as raised:
+            self.obligation.mark_rendered(self.snap, self.snap.lines[0].line_id, service_date=date(2026, 11, 5),
+                                          today=TODAY)
+        self.assertIn('service_date', raised.exception.errors)
+        service, _ = self.obligation.mark_rendered(self.snap, self.snap.lines[0].line_id,
+                                                   service_date=date(2026, 11, 1), today=TODAY)
+        self.assertEqual(service.service_date, date(2026, 11, 1))
+
+    def test_applied_to_sums_what_was_paid_to_the_line(self):  # INV-05
+        pay(self.obligation, self.snap, '80.00', [(1, '80.00')])
+        pay(self.obligation, self.snap, '30.00', [(1, '20.00'), (0, '10.00')])
+        self.assertEqual(self.obligation.applied_to(self.snap.lines[1].lineage_id), D('100.00'))
+
+    def test_a_payment_is_split_by_the_state_of_its_lines(self):  # INV-04, AC-07
+        payment = pay(self.obligation, self.snap, '90.00', [(0, '30.00'), (1, '60.00')])
+        a, b = (line.lineage_id for line in self.snap.lines[:2])
+        portions = split_payment(payment, rendered={a}, recognized={a})
+        self.assertEqual((portions.settlement, portions.advance, portions.rendered_unposted),
+                         (D('30.00'), D('60.00'), D('0.00')))
+        portions = split_payment(payment, rendered={a, b}, recognized={a})
+        self.assertEqual((portions.settlement, portions.advance, portions.rendered_unposted),
+                         (D('30.00'), D('0.00'), D('60.00')))
+        portions = split_payment(payment, rendered=set(), recognized=set())
+        self.assertEqual((portions.settlement, portions.advance, portions.rendered_unposted),
+                         (D('0.00'), D('90.00'), D('0.00')))
