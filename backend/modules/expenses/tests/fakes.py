@@ -6,6 +6,7 @@ from uuid import UUID
 
 from modules.expenses.domain.category import ExpenseCategory
 from modules.expenses.domain.enums import ExpenseStatus
+from modules.expenses.domain.exceptions import ExpenseDuplicateKey
 from modules.expenses.domain.expense import Expense
 from modules.expenses.domain.repositories import ExpenseFilters
 
@@ -29,8 +30,14 @@ class InMemoryExpenseRepository:
         return self.get(expense_id)
 
     def save(self, expense):
+        if expense.idempotency_key is not None and any(
+                e.idempotency_key == expense.idempotency_key and e.id != expense.id for e in self.expenses.values()):
+            raise ExpenseDuplicateKey()
         self.expenses[expense.id] = copy.deepcopy(expense)
         return copy.deepcopy(expense)
+
+    def find_by_key(self, idempotency_key):
+        return next((copy.deepcopy(e) for e in self.expenses.values() if e.idempotency_key == idempotency_key), None)
 
     def _matching(self, filters: ExpenseFilters):
         for expense in self.expenses.values():
