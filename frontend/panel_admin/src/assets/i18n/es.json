@@ -2961,7 +2961,33 @@
         "COST": "Costos"
       },
       "CATEGORY_MISSING": "Falta la cuenta de gasto de la categoría «{{p0}}».",
-      "CATEGORY_MISSING_ROW": "Falta la cuenta de gasto de esta categoría."
+      "CATEGORY_MISSING_ROW": "Falta la cuenta de gasto de esta categoría.",
+      "WHERE": "{{p0}} › Configuración › Asientos automáticos",
+      "MODULES": {
+        "sales": "Ventas",
+        "receivables": "Cobros",
+        "inventory": "Inventario",
+        "purchases": "Compras",
+        "expenses": "Gastos"
+      },
+      "PROBLEMS": {
+        "ACCOUNT_MISSING": "La cuenta no existe en esta empresa.",
+        "ACCOUNT_INACTIVE": "La cuenta «{{account}}» está deshabilitada; elija otra o actívela en Cuentas.",
+        "CURRENCY": "La cuenta «{{account}}» debe estar en {{currency}}.",
+        "NO_CODE_CLASS": "La cuenta «{{account}}» no tiene código y clasificación contable; complétela en Cuentas.",
+        "WRONG_CLASS": "La cuenta «{{account}}» es de {{actual}}; se requiere una cuenta de {{required}}.",
+        "CLASS_DISABLED": "La clasificación {{class_code}} está deshabilitada.",
+        "METHOD_ACCOUNT_MISSING": "Falta la cuenta de Activo de este método."
+      },
+      "ISSUES": {
+        "ROLE_UNCONFIGURED": "Falta configurar la cuenta «{{subject}}». Configúrela en {{where}}.",
+        "METHOD_UNCONFIGURED": "Falta la cuenta de Activo del método «{{method}}». Configúrela en {{where}}.",
+        "CATEGORY_UNCONFIGURED": "Falta la cuenta de gasto de la categoría. Configúrela en {{where}}.",
+        "CATEGORY_UNCONFIGURED_NAMED": "Falta la cuenta de gasto de la categoría «{{category}}». Configúrela en {{where}}.",
+        "CATEGORY_REQUIRED": "Indique la categoría del gasto de la operación.",
+        "METHOD_REQUIRED": "Indique un método de pago válido para la operación.",
+        "ACCOUNT_INVALID": "{{problem}} Corrija «{{subject}}» en {{where}}."
+      }
     }
   }
 }

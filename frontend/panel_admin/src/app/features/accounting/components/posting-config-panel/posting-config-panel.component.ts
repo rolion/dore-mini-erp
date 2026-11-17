@@ -5,8 +5,9 @@ import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Observable, finalize, forkJoin } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
-import { Account, AccountClassCode, AccountingApiError, FLOW_CURRENCY } from '../../models/accounting';
+import { Account, AccountClassCode, AccountingApiError, FLOW_CURRENCY, ProblemInfo } from '../../models/accounting';
 import { PostingAccount, PostingCategory, PostingConfig, PostingIssue, PostingModule, PreviewLine, accountLabel } from '../../models/posting-config';
+import { issueText, problemText } from '../../models/posting-messages';
 import { AccountingApiService } from '../../services/accounting-api.service';
 import { PostingConfigApiService } from '../../services/posting-config-api.service';
 
@@ -29,6 +30,8 @@ export interface ConfigRow {
   control: FormControl<string>;
   original: string;
   issue: string | null;
+  /** Causa estructurada del `issue` (para traducirlo). */
+  problem: ProblemInfo | null;
   saving: boolean;
   saved: boolean;
   error: string;
@@ -111,11 +114,13 @@ export class PostingConfigPanelComponent implements OnInit {
     return this.categoryRows
       .filter((row) => row.isActive && (row.original === '' || !!row.issue))
       .map((row) => ({
-        code: 'category_unconfigured',
+        code: 'category_row',
         role: 'EXPENSE_BY_CATEGORY',
         subject: row.label,
         module: this.module,
-        message: row.issue ?? tr('ACCOUNTING.POSTING.CATEGORY_MISSING', { p0: row.label }),
+        message: row.issue ? this.rowIssue(row) : tr('ACCOUNTING.POSTING.CATEGORY_MISSING', { p0: row.label }),
+        params: {},
+        problem: null,
       }));
   }
 
@@ -129,6 +134,16 @@ export class PostingConfigPanelComponent implements OnInit {
     const seen = new Set<string>();
     return [...(this.config?.events ?? []).flatMap((event) => event.issues), ...this.categoryIssues]
       .filter((issue) => !seen.has(issue.message) && !!seen.add(issue.message));
+  }
+
+  /** Aviso de un faltante en el idioma activo (con el mensaje del servidor como respaldo). */
+  issueText(issue: PostingIssue): string {
+    return issueText(issue);
+  }
+
+  /** Problema de la cuenta guardada en una fila, en el idioma activo. */
+  rowIssue(row: ConfigRow): string {
+    return problemText(row.problem, row.issue ?? '');
   }
 
   /** Cuenta de una línea del asiento previsto según lo elegido ahora (aún sin guardar). */
@@ -166,7 +181,8 @@ export class PostingConfigPanelComponent implements OnInit {
           row.saved = true;
           this.refresh();
         },
-        error: (err: AccountingApiError) => (row.error = err.fieldErrors['accountId']?.join(' ') || err.message),
+        error: (err: AccountingApiError) =>
+          (row.error = problemText(err.problem, err.fieldErrors['accountId']?.join(' ') || err.message)),
       });
   }
 
@@ -201,18 +217,18 @@ export class PostingConfigPanelComponent implements OnInit {
     this.config = config;
     this.roleRows = config.roles.map((r) =>
       build(
-        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue, current: r.account },
+        { kind: 'role', id: r.role, label: r.label, accountClass: r.accountClass, isActive: true, sharedWith: r.sharedWith.map((s) => s.label), issue: r.issue, problem: r.problem, current: r.account },
         r.account?.id,
       ),
     );
     this.methodRows = config.methods.map((m) =>
-      build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', isActive: m.isActive, sharedWith: [], issue: m.issue, current: m.account }, m.account?.id),
+      build({ kind: 'method', id: m.code, label: m.label, accountClass: 'ASSET', isActive: m.isActive, sharedWith: [], issue: m.issue, problem: m.problem, current: m.account }, m.account?.id),
     );
     const configured = new Map(config.categories.map((c) => [c.categoryId, c]));
     this.categoryRows = this.categories.map((category) => {
       const stored = configured.get(category.id);
       return build(
-        { kind: 'category', id: category.id, label: category.name, accountClass: 'EXPENSE', isActive: category.isActive, sharedWith: [], issue: stored?.issue ?? null, current: stored?.account ?? null },
+        { kind: 'category', id: category.id, label: category.name, accountClass: 'EXPENSE', isActive: category.isActive, sharedWith: [], issue: stored?.issue ?? null, problem: stored?.problem ?? null, current: stored?.account ?? null },
         stored?.account?.id,
       );
     });

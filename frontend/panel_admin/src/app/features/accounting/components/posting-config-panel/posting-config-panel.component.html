@@ -19,7 +19,7 @@
     <strong>{{ 'ACCOUNTING.POSTING.MISSING_TITLE' | translate: { p0: issues.length } }}</strong>
     <ul class="mb-0 mt-1">
       @for (issue of issues; track issue.message) {
-      <li>{{ issue.message }}</li>
+      <li>{{ issueText(issue) }}</li>
       }
     </ul>
   </div>
@@ -65,7 +65,7 @@
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ rowIssue(row) }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -112,7 +112,7 @@
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
             } @else if (row.issue && !isDirty(row)) {
-            <small class="form-text posting-warn d-block">{{ row.issue }}</small>
+            <small class="form-text posting-warn d-block">{{ rowIssue(row) }}</small>
             }
           </td>
           <td class="text-nowrap">
@@ -168,7 +168,7 @@
             @if (row.error) {
             <small class="form-text text-danger d-block" role="alert">{{ row.error }}</small>
             } @else if (row.isActive && !isDirty(row) && (row.issue || row.original === '')) {
-            <small class="form-text posting-warn d-block">{{ row.issue ?? ('ACCOUNTING.POSTING.CATEGORY_MISSING_ROW' | translate) }}</small>
+            <small class="form-text posting-warn d-block">{{ row.issue ? rowIssue(row) : ('ACCOUNTING.POSTING.CATEGORY_MISSING_ROW' | translate) }}</small>
             }
           </td>
           <td class="text-nowrap">

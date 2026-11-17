@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AppLanguage } from '../../../../core/i18n/language.config';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { Account, AccountingApiError } from '../../models/accounting';
 import { PostingCategory, PostingConfig, PostingModule } from '../../models/posting-config';
@@ -13,7 +14,7 @@ describe('PostingConfigPanelComponent', () => {
   let api: jasmine.SpyObj<PostingConfigApiService>;
   let accounting: jasmine.SpyObj<AccountingApiService>;
 
-  function create(module: PostingModule, config: PostingConfig, accounts: Account[] = ALL_ACCOUNTS, categories: PostingCategory[] = []): ComponentFixture<PostingConfigPanelComponent> {
+  function create(module: PostingModule, config: PostingConfig, accounts: Account[] = ALL_ACCOUNTS, categories: PostingCategory[] = [], lang: AppLanguage = 'es'): ComponentFixture<PostingConfigPanelComponent> {
     api = jasmine.createSpyObj<PostingConfigApiService>('PostingConfigApiService', ['get', 'setRoleAccount', 'setCategoryAccount']);
     accounting = jasmine.createSpyObj<AccountingApiService>('AccountingApiService', ['listAccounts', 'configureMethod']);
     api.get.and.returnValue(of(config));
@@ -21,7 +22,7 @@ describe('PostingConfigPanelComponent', () => {
     TestBed.configureTestingModule({
       imports: [PostingConfigPanelComponent],
       providers: [
-        ...provideTestTranslations(),
+        ...provideTestTranslations(lang),
         provideRouter([]),
         { provide: PostingConfigApiService, useValue: api },
         { provide: AccountingApiService, useValue: accounting },
@@ -77,7 +78,7 @@ describe('PostingConfigPanelComponent', () => {
 
   it('saves a role, refreshes the configuration and confirms (AC-02)', () => {
     const fixture = create('sales', salesConfig());
-    api.setRoleAccount.and.returnValue(of({ role: 'SALES_INCOME', label: 'x', accountClass: 'INCOME', account: { id: ingresos.id, code: '410001', name: 'x', isActive: true }, issue: null, sharedWith: [] }));
+    api.setRoleAccount.and.returnValue(of({ role: 'SALES_INCOME', label: 'x', accountClass: 'INCOME', account: { id: ingresos.id, code: '410001', name: 'x', isActive: true }, issue: null, problem: null, sharedWith: [] }));
     const updated = salesConfig();
     updated.roles[1] = { ...updated.roles[1], account: { id: ingresos.id, code: '410001', name: 'Ingresos por ventas', isActive: true } };
     api.get.and.returnValue(of(updated));
@@ -132,7 +133,7 @@ describe('PostingConfigPanelComponent', () => {
 
   it('marks a saved account that is no longer valid and still lets the person fix it', () => {
     const config = salesConfig();
-    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada; elija otra o actívela en Cuentas.' };
+    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada; elija otra o actívela en Cuentas.', problem: null };
     config.events[0].preview[1] = { side: 'CREDIT', role: 'SALES_INCOME', label: 'x', account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, status: 'invalid' };
     const fixture = create('sales', config);
     expect(el(fixture).querySelector('[data-testid="event-SALE_RECOGNITION"]')!.textContent).toContain('4100 · Vieja · ya no es válida');
@@ -141,7 +142,7 @@ describe('PostingConfigPanelComponent', () => {
 
   it('keeps a saved account that is no longer eligible visible and marked in the selector (REV-11)', () => {
     const config = salesConfig();
-    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada.' };
+    config.roles[1] = { ...config.roles[1], account: { id: 'old', code: '4100', name: 'Vieja', isActive: false }, issue: 'La cuenta «Vieja» está deshabilitada.', problem: null };
     const fixture = create('sales', config);
     const field = select(fixture, 'role:SALES_INCOME');
     expect(field.value).toBe('old');
@@ -150,11 +151,41 @@ describe('PostingConfigPanelComponent', () => {
 
   it('reports a category whose saved account stopped being valid, by name (REV-13)', () => {
     const config = expensesConfig();
-    config.categories = [{ categoryId: 'c1', account: { id: 'g9', code: '5100', name: 'Gasto luz', isActive: false }, issue: 'La cuenta «Gasto luz» está deshabilitada; elija otra o actívela en Cuentas.' }];
+    config.categories = [{ categoryId: 'c1', account: { id: 'g9', code: '5100', name: 'Gasto luz', isActive: false }, issue: 'La cuenta «Gasto luz» está deshabilitada; elija otra o actívela en Cuentas.', problem: null }];
     const fixture = create('expenses', config, ALL_ACCOUNTS, EXPENSE_CATEGORIES);
     const warning = el(fixture).querySelector('[data-testid="posting-missing"]')!.textContent ?? '';
     expect(warning).toContain('«Gasto luz» está deshabilitada');
     expect(select(fixture, 'category:c1').selectedOptions[0].textContent).toContain('ya no es válida');
+  });
+
+  it('shows the missing-configuration notices and row problems in the active language (REV-05)', () => {
+    const config = salesConfig();
+    config.roles[1] = {
+      ...config.roles[1],
+      account: { id: 'old', code: '4100', name: 'Vieja', isActive: false },
+      issue: 'La cuenta «Vieja» está deshabilitada; elija otra o actívela en Cuentas.',
+      problem: { code: 'account_inactive', params: { account: 'Vieja' } },
+    };
+    const english = create('sales', config, ALL_ACCOUNTS, [], 'en');
+    const warning = el(english).querySelector('[data-testid="posting-missing"]')!.textContent ?? '';
+    expect(warning).toContain('The account “Accounts receivable” is not configured. Set it in Sales › Settings › Automatic entries.');
+    expect(warning).not.toContain('Falta configurar');
+    expect(el(english).querySelector('[data-testid="row-role:SALES_INCOME"]')!.textContent).toContain(
+      'The account “Vieja” is disabled; choose another one or enable it in Accounts.',
+    );
+  });
+
+  it('shows the 400 cause of a rejected account in the active language (REV-05)', () => {
+    const fixture = create('sales', salesConfig(), ALL_ACCOUNTS, [], 'pt');
+    api.setRoleAccount.and.returnValue(
+      throwError(() => new AccountingApiError('Revisa', 400, { accountId: ['x'] }, null, [], { code: 'wrong_class', params: { account: 'Gastos', actual: 'EXPENSE', required: 'INCOME' } })),
+    );
+    choose(fixture, 'role:SALES_INCOME', ingresos.id);
+    el(fixture).querySelector<HTMLButtonElement>('[data-testid="row-role:SALES_INCOME"] button')!.click();
+    fixture.detectChanges();
+    expect(el(fixture).querySelector('[data-testid="row-role:SALES_INCOME"] [role="alert"]')!.textContent).toContain(
+      'A conta «Gastos» é de Despesas; é necessária uma conta de Receitas.',
+    );
   });
 
   it('tells which other modules share a role', () => {
@@ -178,7 +209,7 @@ describe('PostingConfigPanelComponent', () => {
     expect(preview).toContain('Según la categoría del gasto');
     expect(preview).toContain('Según el método de pago');
     expect(el(fixture).querySelector('[data-testid="posting-roles"]')).toBeNull();
-    api.setCategoryAccount.and.returnValue(of({ categoryId: 'c1', account: null, issue: null }));
+    api.setCategoryAccount.and.returnValue(of({ categoryId: 'c1', account: null, issue: null, problem: null }));
     choose(fixture, 'category:c1', gastoLuz.id);
     el(fixture).querySelector<HTMLButtonElement>('[data-testid="row-category:c1"] button')!.click();
     expect(api.setCategoryAccount).toHaveBeenCalledOnceWith('c1', gastoLuz.id);
@@ -196,7 +227,7 @@ describe('PostingConfigPanelComponent', () => {
   it('shows the configured category account and the ready state once every active category has one', () => {
     const config = expensesConfig();
     config.ready = true;
-    config.categories = ['c1', 'c3'].map((id) => ({ categoryId: id, account: { id: gastoLuz.id, code: '510001', name: 'Gasto de luz', isActive: true }, issue: null }));
+    config.categories = ['c1', 'c3'].map((id) => ({ categoryId: id, account: { id: gastoLuz.id, code: '510001', name: 'Gasto de luz', isActive: true }, issue: null, problem: null }));
     const fixture = create('expenses', config, ALL_ACCOUNTS, EXPENSE_CATEGORIES);
     expect(select(fixture, 'category:c3').value).toBe(gastoLuz.id);
     expect(el(fixture).querySelector('[data-testid="posting-ready"]')).not.toBeNull();

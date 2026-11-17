@@ -77,6 +77,40 @@ class AssignTests(PostingApiBase):
         self.assertIn('deshabilitada', response.json()['account_id'][0])
         self.assertEqual(self.client_a.get(URL, {'module': 'sales'}).json()['roles'][1]['account'], None)
 
+    def test_a_400_carries_a_structured_problem_so_the_client_can_translate_it(self):  # REV-05
+        expense = self.make(self.client_a, 'Gastos', 'EXPENSE')
+        response = self.put_role(self.client_a, 'SALES_INCOME', expense)
+        body = response.json()
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(body['problem'], {'code': 'wrong_class', 'params': {
+            'account': 'Gastos', 'actual': 'EXPENSE', 'required': 'INCOME'}})
+        self.assertIn('se requiere una cuenta de Ingresos', body['account_id'][0])  # respaldo en español
+        method = self.assign(self.client_a, 'CASH', expense)  # también en el mapeo de métodos
+        self.assertEqual((method.status_code, method.json()['problem']['code']), (400, 'wrong_class'))
+        missing = self.client_a.put(f'{URL}roles/SALES_INCOME/', {'account_id': str(uuid4())}, format='json').json()
+        self.assertEqual(missing['problem'], {'code': 'account_missing', 'params': {}})
+
+    def test_issues_and_rows_expose_code_params_and_problem(self):  # REV-05
+        body = self.client_a.get(URL, {'module': 'sales'}).json()
+        first = body['events'][0]['issues'][0]
+        self.assertEqual((first['code'], first['role'], first['module'], first['problem']),
+                         ('role_unconfigured', 'RECEIVABLE', 'sales', None))
+        self.assertIn('Configúrela en Ventas', first['message'])
+        method = next(i for i in body['events'][1]['issues'] if i['code'] == 'method_unconfigured')
+        self.assertEqual(method['params'], {'method': 'Efectivo'})
+        income = self.make(self.client_a, 'Ingresos viejos', 'INCOME')
+        self.put_role(self.client_a, 'SALES_INCOME', income)
+        self.client_a.post(f'{ACCOUNTS}{income["id"]}/deactivate/')
+        body = self.client_a.get(URL, {'module': 'sales'}).json()
+        row = next(r for r in body['roles'] if r['role'] == 'SALES_INCOME')
+        self.assertEqual((row['problem']['code'], row['problem']['params']),
+                         ('account_inactive', {'account': 'Ingresos viejos'}))
+        invalid = next(i for e in body['events'] for i in e['issues'] if i['code'] == 'account_invalid')
+        self.assertEqual(invalid['problem']['code'], 'account_inactive')
+        self.assertIn('Corrija', invalid['message'])
+        cash = next(m for m in body['methods'] if m['code'] == 'CASH')
+        self.assertEqual(cash['problem']['code'], 'method_account_missing')
+
     def test_unknown_role_and_roles_with_another_source_are_404(self):
         for role in ('NOPE', 'MONEY', 'EXPENSE_BY_CATEGORY'):
             self.assertEqual(self.put_role(self.client_a, role, None).status_code, 404)

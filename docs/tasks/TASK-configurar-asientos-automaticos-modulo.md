@@ -103,6 +103,7 @@ Implementado según PLAN v1, sin cambios de Specification. La rama se actualizó
 
 **Desviaciones respecto al plan:**
 A. **PLAN v2 (2026-11-17, a pedido de la persona):** el mapeo de métodos de pago ya no exige tipo de cuenta Caja/Banco/Billetera; basta Activo, BOB, activa y con código. Backend, panel (filtro del selector, textos es/en/pt) y pruebas ajustados.
+C. **PLAN v4 (2026-11-17, aprobado por la persona al pedir arreglar REV-05):** Specification alineada con la API real (API-01/02) y avisos de configuración faltante, problemas de fila y errores 400 **traducidos** (el backend devuelve `code`/`params`/`problem`; el frontend traduce).
 B. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se configura por categoría de Gastos (id opaco), no por clasificación de egreso: backend (`category_id`/`category_label` en la fachada, `PUT categories/<category_id>/`, `categories:[{category_id, account, issue}]`), panel (recibe las categorías de Gastos como `@Input`) y `ExpenseSettingsComponent` (las carga de la API de Gastos; máx. 100).
 1. El endurecimiento del mapeo método→cuenta (API-04) obligó a corregir las cuentas de prueba de `sales`, `receivables` y `accounting` (ahora `money_account` en `tests/journal_support.py`: Activo, con código y tipo Caja/Banco). Es el efecto previsto del riesgo «endurecer método→cuenta» del PLAN.
 2. La validación del método se aplica solo cuando se asigna una cuenta nueva **y el método queda activo** (asignar una cuenta a un método inactivo sigue permitido, como antes).
@@ -118,7 +119,7 @@ B. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se confi
 - REV-02 (Low, IMPLEMENTATION; **resuelto**): faltaban pruebas de AC-08 (hueco) y AC-11 (403/401).
 - REV-03 (Low, DESIGN; **resuelto**, pendiente de confirmar en navegador): recorte de la vista previa y bordes sueltos a 375 px.
 - REV-04 (Low, IMPLEMENTATION; **resuelto**): E501 y `assert` en código nuevo.
-- REV-05 (Low, SPECIFICATION; **abierto**): la forma real de API-01 difiere de la documentada (`issues` trae `subject`/`module`, `preview` trae `role` y `account{}`), y los mensajes de faltantes vienen del backend solo en español. Requiere aprobación para actualizar la Specification (PLAN v4).
+- REV-05 (Low, SPECIFICATION; **resuelto en PLAN v4**): la forma real de API-01 difiere de la documentada (`issues` trae `subject`/`module`, `preview` trae `role` y `account{}`), y los mensajes de faltantes vienen del backend solo en español. Requiere aprobación para actualizar la Specification (PLAN v4).
 
 ## Review (segunda pasada)
 **Quality Gate: PASS** (subagente aislado, 2026-11-16, tras corregir REV-01..04). Backend: `manage.py test` 1962 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, flake8 solo con avisos preexistentes más un E303 (REV-08). Frontend: lint OK, `i18n:check` 2174 claves y 0 faltantes, `ng build` OK, suite completa 1570 OK. REV-01..04 comprobados contra el código y resueltos; AC-08, AC-09 y AC-11 pasan a cumplidos.
@@ -126,7 +127,7 @@ B. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se confi
 - REV-06 (Low, DESIGN; **resuelto**): barra vertical interna en la vista previa.
 - REV-07 (Medium, DESIGN; **resuelto**): contraste 2,18:1 de `text-warning-emphasis` en tema oscuro (estados «Sin configurar» y faltantes).
 - REV-08 (Low; **resuelto**): línea en blanco sobrante (E303) en una prueba.
-- REV-05 (Low, SPECIFICATION; **abierto**): forma real de API-01 distinta de la Specification y mensajes de faltantes solo en español; requiere aprobación para PLAN v2.
+- REV-05 (Low, SPECIFICATION; **resuelto en PLAN v4**).
 - **Sin repetir el Quality Gate:** REV-06, 07 y 08 se corrigieron después de la 2.ª pasada (CSS y una línea de prueba, sin lógica). Tras el cambio se volvió a pasar lint, build y la suite del frontend (1570 OK); **no se volvió a medir el contraste en el navegador ni en el conmutador real de tema oscuro**.
 
 ## Review (tercera pasada)
@@ -136,8 +137,8 @@ B. **PLAN v3 (2026-11-17, a pedido de la persona):** la cuenta de gasto se confi
 - REV-11 (Low, DESIGN; **resuelto**): selector en blanco con una cuenta guardada que dejó de ser elegible.
 - REV-12 (Low, PLAN; **resuelto**): documentación y comentarios desactualizados.
 - REV-13 (Low, IMPLEMENTATION; **resuelto**): pruebas faltantes.
-- REV-05 (Low, SPECIFICATION; **abierto**), a la espera de aprobación (ahora PLAN v4).
+- REV-05 (Low, SPECIFICATION; **resuelto** tras la aprobación explícita de la persona, PLAN v4): Specification alineada con la API real y avisos traducidos.
 - **Sin repetir el Quality Gate** tras estas correcciones (paginación, opción marcada, estilos de texto, pruebas y documentos); se repitieron backend (1964 OK), frontend (1576 OK), lint, `i18n:check` y build. La revisión visual de la 3.ª pasada no se repitió sobre la opción marcada («ya no es válida») ni la paginación.
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/86 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (modelo de datos nuevo, migración `0011`): lo aprueba una persona. Pendiente de aprobación: REV-05 (cambio de Specification).
+PR https://github.com/rolion/dore-mini-erp/pull/86 (base `accounting`) listo para aprobación humana; no se mergea. Incluye ADR (modelo de datos nuevo, migración `0011`): lo aprueba una persona. Sin hallazgos abiertos (REV-05 resuelto en PLAN v4).
