@@ -2,7 +2,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { PostingIssuesAlertComponent } from '../../../../shared/components/posting-issues-alert/posting-issues-alert.component';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { EMPTY, catchError, finalize, switchMap, tap } from 'rxjs';
 import {
@@ -29,7 +29,7 @@ export const STALE_ORDER = 'stale';
   selector: 'app-delivery-dialog',
   templateUrl: './delivery-dialog.component.html',
   styleUrl: './delivery-dialog.component.scss',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, PostingIssuesAlertComponent],
 })
 export class DeliveryDialogComponent {
   readonly today = todayIso();

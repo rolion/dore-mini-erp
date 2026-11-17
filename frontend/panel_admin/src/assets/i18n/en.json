@@ -17,7 +17,11 @@
       "TEXT": "Schedule"
     },
     "RECEIVABLES": {
-      "TEXT": "Collections"
+      "TEXT": "Collections",
+      "LIST": {
+        "COLLECTIONS": "Collections",
+        "SETTINGS": "Settings"
+      }
     },
     "QUOTATIONS": {
       "TEXT": "Quotations",
@@ -1918,6 +1922,7 @@
       "CONFIGURACION_GUARDADA": "Settings saved",
       "ESTE_MODULO_AUN_NO_TIENE": "This module has no configurable settings yet. When rules are available they will appear here.",
       "VENTAS": "Sales",
+      "COBROS": "Collections",
       "COMPRAS": "Purchases",
       "INVENTARIO": "Inventory",
       "PERMITIR_STOCK_NEGATIVO": "Allow negative stock",
@@ -2428,6 +2433,22 @@
     "P_CONDICIONES": "Terms"
   },
   "RECEIVABLES": {
+    "COL_PRESTACION": "Service",
+    "SIN_PRESTAR": "Not rendered",
+    "PRESTADO_EL": "Rendered on {{date}}",
+    "MARCAR_PRESTADO": "Mark as rendered",
+    "RECONOCIDO": "Recognized",
+    "SRV_TITULO": "Mark as rendered",
+    "SRV_IMPORTE": "Treatment amount",
+    "SRV_FECHA": "Service date",
+    "SRV_ADVERTENCIA": "This cannot be undone. It recognizes the service income and applies the advances collected.",
+    "SRV_CONFIRMAR": "Confirm service",
+    "SRV_GUARDANDO": "Saving…",
+    "SRV_EXITO": "“{{name}}” was marked as rendered.",
+    "E_SERVICE_DATE": "The service date cannot be in the future.",
+    "E_LINE_ID": "This treatment cannot be marked as rendered.",
+    "CONFIG_INCOMPLETA": "Accounting setup incomplete",
+    "IR_A_CONFIG": "Go to the Collections settings",
     "E_MONTO_SUPERA": "The amount exceeds the balance to collect.",
     "DLG_TITULO": "Record payment",
     "SALDO_POR_COBRAR": "Balance to collect",
@@ -2967,7 +2988,8 @@
         "SALE_DELIVERY": "Recognize the delivery of an order",
         "SALE_RECOGNITION": "Recognize a sale",
         "SALE_PAYMENT": "Collect a sale",
-        "SERVICE_RECOGNITION": "Recognize a service",
+        "SERVICE_ADVANCE": "Collect a service in advance",
+        "SERVICE_RECOGNITION": "Recognize a rendered service",
         "SERVICE_PAYMENT": "Collect a service",
         "INVENTORY_SALE_COST": "Cost of sales on inventory issue",
         "PURCHASE_RECOGNITION": "Recognize a merchandise purchase",

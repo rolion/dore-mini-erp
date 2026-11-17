@@ -1,3 +1,5 @@
+@use '../../../../assets/scss/dark-tokens' as dark;
+
 dialog {
   box-sizing: border-box;
   inline-size: min(36rem, calc(100% - 2rem));
@@ -9,9 +11,9 @@ dialog {
 
 :host-context(.dark) {
   dialog {
-    background-color: #16192a; // mismo valor que $color-dark-primary de skins/_dark.scss
-    color: #96a2b4; // mismo valor que $color-font de skins/_dark.scss
-    border-color: #96a2b4;
+    background-color: dark.$color-dark-primary;
+    color: dark.$color-font;
+    border-color: dark.$color-font;
 
     &::backdrop {
       background-color: rgb(0 0 0 / 60%);

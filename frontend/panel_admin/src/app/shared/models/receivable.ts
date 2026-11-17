@@ -65,6 +65,10 @@ export interface CommitmentLine {
   paid: string;
   balance: string;
   collectible: boolean;
+  /** SRV-01: el tratamiento ya se prestó (reconoce ingreso). Opcionales para no romper fixtures anteriores. */
+  rendered?: boolean;
+  service_date?: string | null;
+  can_render?: boolean;
 }
 
 export interface CommitmentTotals {
@@ -74,6 +78,8 @@ export interface CommitmentTotals {
   rejected: string;
   paid: string;
   balance: string;
+  /** Ingreso reconocido por los tratamientos prestados. */
+  recognized?: string;
 }
 
 export interface CollectionPayment {
@@ -103,12 +109,31 @@ export interface Commitment {
   totals: CommitmentTotals;
   lines: CommitmentLine[];
   payments: CollectionPayment[];
-  allowed_actions: 'register_payment'[];
+  allowed_actions: ('register_payment' | 'render_service')[];
 }
 
 export interface PaymentRegistered extends Commitment {
   payment: CollectionPayment;
   replayed: boolean;
+}
+
+export interface RenderedService {
+  id: string;
+  line_id: string;
+  description: string;
+  amount: string;
+  service_date: string;
+  recorded_by_name: string;
+}
+
+export interface ServiceRendered extends Commitment {
+  service: RenderedService;
+  replayed: boolean;
+}
+
+export interface ServiceInput {
+  line_id: string;
+  service_date: string | null;
 }
 
 export interface PaymentInput {
@@ -120,10 +145,22 @@ export interface PaymentInput {
   allocations: { line_id: string; amount: string }[];
 }
 
+/** Un faltante de configuración contable que impide cobrar o prestar (409 `posting_configuration_missing`). */
+export interface PostingIssue {
+  code: string;
+  role?: string;
+  subject: string;
+  message: string;
+}
+
 export interface ReceivableFailure {
   message: string;
   fields: Record<string, string>;
   conflict: boolean;
+  /** Código del 409 del servidor (p. ej. `posting_configuration_missing`, `service_has_unposted_payments`). */
+  code?: string;
+  /** Faltantes de configuración contable (solo con `posting_configuration_missing`). */
+  issues?: PostingIssue[];
 }
 
 /** Fecha de hoy en la zona horaria del navegador (AAAA-MM-DD); `toISOString` daría el día UTC. */

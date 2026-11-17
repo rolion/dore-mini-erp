@@ -311,7 +311,7 @@ class DentalProforma:
         if errors:
             raise DentalProformaValidationError(errors)
         if line.collected:
-            raise DentalProformaStateError('La línea tiene cobros registrados: no se puede rectificar.')
+            raise DentalProformaStateError('La línea tiene cobros o ya fue prestada: no se puede rectificar.')
         if line.decision == PENDING:
             raise DentalProformaStateError('La línea aún no tiene una decisión que rectificar.')
         if line.decision == decision:

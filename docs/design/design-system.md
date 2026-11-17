@@ -65,6 +65,8 @@ Contraste: `#1677FF` sobre blanco da ≈3,9:1. Úsalo en botones con texto blanc
 | Estado de pedido / de pago | `app-order-status-badge`, `app-payment-status-badge` | `features/sales/components/` |
 | Estado con icono + fondo tintado (decisión de proforma, aceptación, cobro) | `app-status-badge` (`tone`: `success\|warning\|danger\|info\|muted`, `label`) | `shared/components/status-badge` (nuevo en TASK-simplificar-flujo-proforma-cobro) |
 | Cobro de una proforma en un solo paso | `app-payment-dialog` (`kind`, `number`; `open()`; salida `paid`) y `app-collection-panel` (cobro en contexto de una proforma: estado, diálogo y comprobante) | `shared/components/payment-dialog`, `shared/components/collection-panel` |
+| Aviso de configuración contable incompleta (409 `posting_configuration_missing`): lista lo que falta y enlaza a «Asientos automáticos» | `app-posting-issues-alert` (`issues`, `settingsLink`, `titleKey`, `linkKey`; salida `navigate`; la usan Cobros y Ventas) | `shared/components/posting-issues-alert` (nuevo en TASK-contabilizar-servicios-cobros-odontologicos) |
+| Marcar un tratamiento aceptado como prestado (irreversible, con fecha) | `app-service-dialog` (`kind`, `number`; `open(line)`; salida `rendered`) | `shared/components/service-dialog` (nuevo en TASK-contabilizar-servicios-cobros-odontologicos) |
 | Tabla | `ngx-datatable` con clase `material`, paginación externa | plantilla |
 | Selector con búsqueda | `ng-select` | plantilla |
 

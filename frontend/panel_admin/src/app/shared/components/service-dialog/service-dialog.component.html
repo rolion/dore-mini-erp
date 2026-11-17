@@ -1,0 +1,38 @@
+<dialog #dlg aria-labelledby="srv-title" (cancel)="$event.preventDefault(); close()">
+  <form class="p-3" [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+    <h4 id="srv-title">{{ 'RECEIVABLES.SRV_TITULO' | translate }} · {{ number() }}</h4>
+
+    @if (line) {
+      <dl class="row mb-2">
+        <dt class="col-sm-5">{{ 'RECEIVABLES.COL_TRATAMIENTO' | translate }}</dt>
+        <dd class="col-sm-7">{{ line.description }}@if (line.piece) { <small class="text-muted"> · {{ line.piece }}</small> }</dd>
+        <dt class="col-sm-5">{{ 'RECEIVABLES.SRV_IMPORTE' | translate }}</dt>
+        <dd class="col-sm-7">{{ line.accepted | money }}</dd>
+      </dl>
+
+      <div class="mb-2">
+        <label for="srv-date" class="form-label">{{ 'RECEIVABLES.SRV_FECHA' | translate }}</label>
+        <input id="srv-date" type="date" class="form-control" formControlName="service_date" [max]="today"
+               [class.is-invalid]="failure?.fields?.['service_date']">
+        @if (failure?.fields?.['service_date']) {
+          <small class="form-text text-danger" role="alert">{{ failure?.fields?.['service_date'] }}</small>
+        }
+      </div>
+
+      <p class="mb-2"><small class="text-muted">{{ 'RECEIVABLES.SRV_ADVERTENCIA' | translate }}</small></p>
+
+      @if (failure) {
+        @if (!failure.issues?.length && !failure.fields['service_date']) {
+          <p class="alert alert-danger mb-2" role="alert">{{ failure.message }}</p>
+        }
+        <app-posting-issues-alert [issues]="failure.issues ?? []" (navigate)="close()" />
+      }
+
+      <div class="d-flex gap-2 mt-2">
+        <button type="submit" class="btn btn-primary" [disabled]="!canConfirm" [attr.aria-busy]="saving">
+          {{ (saving ? 'RECEIVABLES.SRV_GUARDANDO' : 'RECEIVABLES.SRV_CONFIRMAR') | translate }}</button>
+        <button type="button" class="btn btn-light" [disabled]="saving" (click)="close()">{{ 'RECEIVABLES.CANCELAR' | translate }}</button>
+      </div>
+    }
+  </form>
+</dialog>

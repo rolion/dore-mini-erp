@@ -89,6 +89,16 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/receivables/pages/obligation-list.component').then(m => m.ObligationListComponent),
             },
             {
+                path: 'receivables/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'receivables', settingsModule: 'receivables' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
+                    ),
+            },
+            {
                 path: 'receivables/:kind/:number',
                 canActivate: [moduleGuard],
                 data: { module: 'receivables' },

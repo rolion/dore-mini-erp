@@ -1,5 +1,4 @@
-$color-dark-primary: #16192a;
-$color-font: #96a2b4;
+@use '../dark-tokens' as *;
 
 %extend_stylegroup {
   background-color: $color-dark-primary;
