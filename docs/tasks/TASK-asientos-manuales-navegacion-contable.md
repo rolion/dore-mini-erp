@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-asientos-manuales-navegacion-contable
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/84
 **Fuente:** https://trello.com/c/WvLdLyky/14-cont-11-simplificar-navegaci%C3%B3n-y-registrar-consultar-asientos-manuales
 
 ## Historial de transiciones
