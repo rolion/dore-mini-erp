@@ -2784,7 +2784,7 @@
     "ACCOUNT_CLASSES": {
       "TITULO": "Clasificaciones contables",
       "AYUDA": "Las seis clasificaciones son fijas: solo puedes habilitarlas o deshabilitarlas. Deshabilitar una no modifica cuentas existentes ni saldos.",
-      "DIFERENCIA": "No es lo mismo que la pestaña «Clasificaciones», que describe el motivo de un movimiento de dinero.",
+      "DIFERENCIA": "No es lo mismo que la pestaña «Clasificaciones» de «Otras configuraciones», que describe el motivo de un movimiento de dinero.",
       "CLASIFICACION": "Clasificación",
       "HABILITAR": "Habilitar",
       "DESHABILITAR": "Deshabilitar",

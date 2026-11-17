@@ -2784,7 +2784,7 @@
     "ACCOUNT_CLASSES": {
       "TITULO": "Accounting classifications",
       "AYUDA": "The six classifications are fixed: you can only enable or disable them. Disabling one does not change existing accounts or balances.",
-      "DIFERENCIA": "This is not the same as the “Classifications” tab, which describes the reason for a money movement.",
+      "DIFERENCIA": "This is not the same as the “Classifications” tab in “Other settings”, which describes the reason for a money movement.",
       "CLASIFICACION": "Classification",
       "HABILITAR": "Enable",
       "DESHABILITAR": "Disable",

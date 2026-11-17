@@ -2784,7 +2784,7 @@
     "ACCOUNT_CLASSES": {
       "TITULO": "Classificações contábeis",
       "AYUDA": "As seis classificações são fixas: você só pode habilitá-las ou desabilitá-las. Desabilitar uma não altera contas existentes nem saldos.",
-      "DIFERENCIA": "Não é o mesmo que a aba “Classificações”, que descreve o motivo de um movimento de dinheiro.",
+      "DIFERENCIA": "Não é o mesmo que a aba “Classificações” de “Outras configurações”, que descreve o motivo de um movimento de dinheiro.",
       "CLASIFICACION": "Classificação",
       "HABILITAR": "Habilitar",
       "DESHABILITAR": "Desabilitar",

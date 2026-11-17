@@ -25,6 +25,7 @@ import { todayIso } from '../../components/journal-reverse-dialog/journal-revers
 @Component({
   selector: 'app-journal-form',
   templateUrl: './journal-form.component.html',
+  styleUrl: './journal-form.component.scss',
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class JournalFormComponent implements OnInit, HasUnsavedChanges {

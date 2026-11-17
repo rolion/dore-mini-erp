@@ -1,6 +1,6 @@
 # REV-2026-11-17-asientos-manuales-navegacion-contable-06: Texto de «Clasificaciones contables» alude a una pestaña que ya no está en Configuración
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-asientos-manuales-navegacion-contable.md (v1)
@@ -19,3 +19,6 @@ En `/accounting/settings` el texto remite a una pestaña inexistente en esa pant
 
 ## Evidence
 Navegador integrado, `/pocketbiz/accounting/settings`, pestaña Clasificaciones contables, segunda línea de la descripción.
+
+## Resolución
+Corregido (2026-11-17): el texto remite a la pestaña «Clasificaciones» de «Otras configuraciones» (es/en/pt).
