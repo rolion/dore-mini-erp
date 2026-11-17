@@ -2858,7 +2858,6 @@
       "REVIRTIENDO": "Revertendo…",
       "REVISA_LOS_DATOS": "Revise os dados informados.",
       "SALDOS": "Saldos",
-      "SALDOS_PROXIMAMENTE": "Em breve. Os saldos por conta sobre o livro de lançamentos ainda não estão disponíveis.",
       "SELECCIONA_UNA_CUENTA": "Selecione uma conta",
       "SIN_CONEXION": "Não foi possível conectar ao servidor. Verifique sua conexão.",
       "SIN_RESULTADOS": "Não há lançamentos com estes filtros.",
@@ -2874,6 +2873,26 @@
     "SETTINGS_HUB": {
       "OTRAS_CONFIGURACIONES": "Outras configurações",
       "OTRAS_CONFIGURACIONES_NOTA": "Métodos de pagamento, Despesas e Corte e cobertura são configurados por enquanto em"
+    },
+    "BALANCES": {
+      "PERIODO": "Período fiscal",
+      "SIN_PERIODO": "Sem período",
+      "CLASIFICACION": "Classificação",
+      "CUENTA": "Conta",
+      "CODIGO": "Código",
+      "SALDO_INICIAL_DEUDOR": "Saldo inicial devedor",
+      "SALDO_INICIAL_ACREEDOR": "Saldo inicial credor",
+      "TOTAL_DEBE": "Total débito",
+      "TOTAL_HABER": "Total crédito",
+      "SALDO_DEUDOR": "Saldo devedor",
+      "SALDO_ACREEDOR": "Saldo credor",
+      "CUADRA": "Fecha",
+      "NO_CUADRA": "Não fecha",
+      "DESHABILITADA": "Desabilitada",
+      "SIN_CLASIFICAR": "Sem classificação",
+      "SIN_REGISTROS": "Sem registros",
+      "VER_MOVIMIENTOS": "Ver movimentos de {{name}}",
+      "NOTA_APERTURA": "Os saldos vêm somente dos lançamentos. Com “De”, mostra-se o saldo inicial anterior a essa data; as aberturas são registradas como lançamentos."
     }
   }
 }

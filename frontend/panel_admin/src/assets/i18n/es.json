@@ -2858,7 +2858,6 @@
       "REVIRTIENDO": "Revirtiendo…",
       "REVISA_LOS_DATOS": "Revisa los datos ingresados.",
       "SALDOS": "Saldos",
-      "SALDOS_PROXIMAMENTE": "Próximamente. Los saldos por cuenta sobre el libro de asientos aún no están disponibles.",
       "SELECCIONA_UNA_CUENTA": "Selecciona una cuenta",
       "SIN_CONEXION": "No se pudo conectar con el servidor. Revisa tu conexión.",
       "SIN_RESULTADOS": "No hay asientos con estos filtros.",
@@ -2874,6 +2873,26 @@
     "SETTINGS_HUB": {
       "OTRAS_CONFIGURACIONES": "Otras configuraciones",
       "OTRAS_CONFIGURACIONES_NOTA": "Métodos de pago, Egresos y Corte y cobertura se configuran por ahora en"
+    },
+    "BALANCES": {
+      "PERIODO": "Período fiscal",
+      "SIN_PERIODO": "Sin período",
+      "CLASIFICACION": "Clasificación",
+      "CUENTA": "Cuenta",
+      "CODIGO": "Código",
+      "SALDO_INICIAL_DEUDOR": "Saldo inicial deudor",
+      "SALDO_INICIAL_ACREEDOR": "Saldo inicial acreedor",
+      "TOTAL_DEBE": "Total Debe",
+      "TOTAL_HABER": "Total Haber",
+      "SALDO_DEUDOR": "Saldo deudor",
+      "SALDO_ACREEDOR": "Saldo acreedor",
+      "CUADRA": "Cuadra",
+      "NO_CUADRA": "No cuadra",
+      "DESHABILITADA": "Deshabilitada",
+      "SIN_CLASIFICAR": "Sin clasificar",
+      "SIN_REGISTROS": "Sin registros",
+      "VER_MOVIMIENTOS": "Ver movimientos de {{name}}",
+      "NOTA_APERTURA": "Los saldos salen solo de los asientos. Con «Desde» se muestra el saldo inicial anterior a esa fecha; las aperturas se registran como asientos."
     }
   }
 }

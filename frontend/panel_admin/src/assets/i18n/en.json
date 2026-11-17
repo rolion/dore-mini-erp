@@ -2858,7 +2858,6 @@
       "REVIRTIENDO": "Reversing…",
       "REVISA_LOS_DATOS": "Check the data you entered.",
       "SALDOS": "Balances",
-      "SALDOS_PROXIMAMENTE": "Coming soon. Balances per account on the journal are not available yet.",
       "SELECCIONA_UNA_CUENTA": "Select an account",
       "SIN_CONEXION": "Could not connect to the server. Check your connection.",
       "SIN_RESULTADOS": "No entries match these filters.",
@@ -2874,6 +2873,26 @@
     "SETTINGS_HUB": {
       "OTRAS_CONFIGURACIONES": "Other settings",
       "OTRAS_CONFIGURACIONES_NOTA": "Payment methods, Expenses and Cutoff and coverage are configured for now in"
+    },
+    "BALANCES": {
+      "PERIODO": "Fiscal period",
+      "SIN_PERIODO": "No period",
+      "CLASIFICACION": "Classification",
+      "CUENTA": "Account",
+      "CODIGO": "Code",
+      "SALDO_INICIAL_DEUDOR": "Opening debit balance",
+      "SALDO_INICIAL_ACREEDOR": "Opening credit balance",
+      "TOTAL_DEBE": "Total debit",
+      "TOTAL_HABER": "Total credit",
+      "SALDO_DEUDOR": "Debit balance",
+      "SALDO_ACREEDOR": "Credit balance",
+      "CUADRA": "Balanced",
+      "NO_CUADRA": "Not balanced",
+      "DESHABILITADA": "Disabled",
+      "SIN_CLASIFICAR": "Unclassified",
+      "SIN_REGISTROS": "No records",
+      "VER_MOVIMIENTOS": "View movements of {{name}}",
+      "NOTA_APERTURA": "Balances come only from journal entries. With “From”, the opening balance before that date is shown; openings are recorded as entries."
     }
   }
 }
