@@ -704,6 +704,7 @@
       "DEBE": "Debit",
       "HABER": "Credit",
       "VER_ASIENTO": "View entry",
+      "VER_REVERSION": "View reversal",
       "CORREGIR_ANULANDO": "This expense is posted. To correct the amount, date, category, method or accounts, void it and register it again."
     },
     "EXPENSE_FORM": {

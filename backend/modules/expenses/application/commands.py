@@ -145,13 +145,13 @@ class VoidExpense:
         self.clock = clock
         self.posting = posting
 
-    def execute(self, expense_id: UUID) -> Expense:
+    def execute(self, expense_id: UUID, actor_id: int | None = None, actor_name: str = '') -> Expense:
         expense = self.expenses.get_for_update(expense_id)
         if expense is None:
             raise ExpenseNotFound(expense_id)
         expense.void(self.clock.now())
         if expense.is_posted and self.posting is not None:
-            self.posting.reverse(expense.id)
+            self.posting.reverse(expense.id, actor_id, actor_name)
         return self.expenses.save(expense)
 
 

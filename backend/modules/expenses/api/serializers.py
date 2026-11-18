@@ -128,5 +128,10 @@ class ExpenseSerializer(ExpenseSummarySerializer):
     notes = serializers.CharField(read_only=True)
     journal_entry_id = serializers.SerializerMethodField()
 
+    reversal_entry_id = serializers.SerializerMethodField()
+
     def get_journal_entry_id(self, obj):
         return self.context.get('journal_entry_id')
+
+    def get_reversal_entry_id(self, obj):
+        return self.context.get('reversal_entry_id')

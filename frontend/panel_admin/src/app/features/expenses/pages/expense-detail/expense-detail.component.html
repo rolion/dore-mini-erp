@@ -48,6 +48,9 @@
                 @if (e.journalEntryId) {
                 <a [routerLink]="['/pocketbiz/accounting/journal', e.journalEntryId]" data-testid="journal-link">{{ 'EXPENSES.EXPENSE_DETAIL.VER_ASIENTO' | translate }}</a>
                 }
+                @if (e.reversalEntryId) {
+                <a class="ms-3" [routerLink]="['/pocketbiz/accounting/journal', e.reversalEntryId]" data-testid="reversal-link">{{ 'EXPENSES.EXPENSE_DETAIL.VER_REVERSION' | translate }}</a>
+                }
                 } @else {
                 {{ 'EXPENSES.EXPENSE_DETAIL.NO_CONTABILIZADO' | translate }}
                 }

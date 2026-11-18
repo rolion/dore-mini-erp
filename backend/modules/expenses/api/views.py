@@ -129,7 +129,7 @@ def _expense_response(request, expense, http_status: int = status.HTTP_200_OK, r
     categories = _categories(request).get_many([expense.category_id])
     context = _context(request, [expense], categories)
     if expense.is_posted:
-        context['journal_entry_id'] = _posting(request).entry_id(expense.id)
+        context['journal_entry_id'], context['reversal_entry_id'] = _posting(request).entry_ids(expense.id)
     data = {**ExpenseSerializer(expense, context=context).data, 'replayed': replayed}
     return Response(data, status=http_status)
 
@@ -213,7 +213,9 @@ class ExpenseVoidView(APIView):
     required_modules = ('expenses',)
     def post(self, request, expense_id: str):
         use_case = VoidExpense(_expenses(request), SystemClock(), _posting(request))
-        expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND))
+        user = request.user
+        expense = _run(use_case, expense_id=_uuid(expense_id, EXPENSE_NOT_FOUND), actor_id=user.pk,
+                       actor_name=user.get_full_name().strip() or user.get_username())
         return _expense_response(request, expense)
 
 

@@ -30,6 +30,7 @@ export function makeExpense(overrides: Partial<Expense> = {}): Expense {
     expenseAccount: null,
     paymentAccount: null,
     journalEntryId: null,
+    reversalEntryId: null,
     createdAt: '2026-10-05T10:00:00Z',
     updatedAt: '2026-10-05T11:00:00Z',
     ...overrides,

@@ -103,17 +103,18 @@ class AccountingPosting:
         credit = next(line.account_id for line in result.entry.lines if line.credit > 0)
         return PostedAccounts(debit, credit)
 
-    def reverse(self, expense_id: UUID) -> None:
+    def reverse(self, expense_id: UUID, actor_id: int | None = None, actor_name: str = '') -> None:
+        """Revierte con las cuentas del asiento original: depende de que exista, no de la cobertura vigente."""
         try:
             accounting.reverse_automatic_entry(self.company_id, EXPENSE_RECORD, expense_id, timezone.localdate(),
-                                               VOID_REASON)
+                                               VOID_REASON, actor_id, actor_name)
         except _POSTING_ERRORS as exc:
             raise _posting_error(exc) from exc
 
-    def entry_id(self, expense_id: UUID) -> UUID | None:
-        """Asiento del gasto (o `None` si no se contabilizó)."""
+    def entry_ids(self, expense_id: UUID) -> tuple[UUID | None, UUID | None]:
+        """`(asiento, reversión)` del gasto; `None` donde no exista."""
         entry = accounting.find_automatic_entry(self.company_id, EXPENSE_RECORD, expense_id)
-        return entry.id if entry else None
+        return (entry.id, entry.reversed_by_id) if entry else (None, None)
 
 
 class AccountingAccounts:
