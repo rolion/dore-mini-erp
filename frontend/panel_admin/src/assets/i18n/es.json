@@ -925,7 +925,14 @@
       "ORIGEN": "Origen",
       "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "Sin movimientos para los filtros elegidos.",
       "RECEPCION": "Recepción",
-      "PEDIDO": "Pedido"
+      "PEDIDO": "Pedido",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "SIN_REFERENCIA": "Sin referencia",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_MOVIMIENTOS": "Lista de movimientos",
+      "VER_MOVIMIENTO_N": "Ver movimiento {{reference}}",
+      "PAGINAS_DE_MOVIMIENTOS": "Páginas de movimientos"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Detalle de existencia",
@@ -955,6 +962,9 @@
     "STOCK_LIST": {
       "CANTIDAD_ACTUAL_DE_CADA_PRODUCTO": "Cantidad actual de cada producto por almacén.",
       "FILTROS_DE_EXISTENCIAS": "Filtros de existencias",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros activos",
       "BUSCAR_PRODUCTO_POR_NOMBRE": "Buscar producto por nombre",
       "TODOS_LOS_ALMACENES_ACTIVOS": "Todos los almacenes activos",
       "INACTIVO": "(inactivo)",
@@ -1489,7 +1499,11 @@
       "RECEPCION": "Recepción",
       "PAGO": "Pago",
       "SALDO": "Saldo",
-      "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra»."
+      "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra».",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "PAGINACION": "Paginación de compras",
+      "VER_FILTROS_ACTIVOS": "filtros activos"
     },
     "RECEPTION_DETAIL": {
       "ASIENTO_CONTABLE": "Asiento contable",
@@ -1566,7 +1580,16 @@
       "VER_COMPRAS": "Ver compras",
       "IDENTIFICACION": "Identificación",
       "CORREO": "Correo",
-      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No hay proveedores que coincidan"
+      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No hay proveedores que coincidan",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "LISTA_DE_PROVEEDORES": "Lista de proveedores",
+      "PAGINAS_DE_PROVEEDORES": "Páginas de proveedores",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "ACCION_SOBRE_N": "{{action}}: {{name}}",
+      "BUSCAR": "Buscar",
+      "ESTADO_FILTRO": "Estado: {{value}}",
+      "BUSCAR_FILTRO": "Búsqueda: {{value}}"
     },
     "RECEIPT": {
       "SIN_CONTROL_DE_STOCK_SIN": "Sin control de stock · sin entrada",
@@ -1810,7 +1833,14 @@
       "AUN_NO_HAY_PEDIDOS": "Aún no hay pedidos.",
       "NO_CANCELADOS": "No cancelados",
       "CON_SALDO_PENDIENTE": "Con saldo pendiente",
-      "MAS_FILTROS": "Más filtros"
+      "MAS_FILTROS": "Más filtros",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_PEDIDOS": "Lista de pedidos",
+      "VER_PEDIDO_N": "Ver pedido {{code}}",
+      "PAGINAS_DE_PEDIDOS": "Páginas de pedidos",
+      "PERSONALIZADA": "Personalizada"
     },
     "ORDERS_API_SERVICE": {
       "PEDIDO_NO_ENCONTRADO": "Pedido no encontrado."
@@ -2865,6 +2895,7 @@
     },
     "JOURNAL": {
       "AGREGAR_LINEA": "Agregar línea",
+      "APLICAR_FILTROS": "Aplicar filtros",
       "ASIENTO": "Asiento",
       "ASIENTO_MANUAL": "Asiento manual (sin documento de origen)",
       "ASIENTO_REGISTRADO": "El asiento se registró y quedó confirmado.",
@@ -2889,15 +2920,18 @@
       "FALTA_IMPORTE": "Escribe un importe en Debe o en Haber.",
       "FECHA_CONTABLE": "Fecha contable",
       "FECHA_DE_LA_REVERSION": "Fecha de la reversión",
+      "FILTROS": "Filtros",
       "HABER": "Haber",
       "HABER_DE_LA_LINEA_N": "Haber de la línea {{n}}",
       "IMPORTE_INVALIDO": "El importe no es válido (máximo 2 decimales).",
       "IR_A_CUENTAS": "Ir a Cuentas",
       "LINEAS_INCOMPLETAS": "Completa todas las líneas.",
+      "LISTA_DE_MOVIMIENTOS": "Lista de movimientos",
       "LOS_ASIENTOS_NO_SE_EDITAN": "Los asientos confirmados no se editan ni se borran; se corrigen con una reversión.",
       "MANUAL": "Manual",
       "MINIMO_DOS_LINEAS": "El asiento necesita al menos dos líneas.",
       "MONEDA": "Moneda",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
       "MOVIMIENTOS": "Movimientos",
       "NECESITA_DOS_CUENTAS": "Para registrar un asiento necesitas al menos dos cuentas activas con código y clasificación contable.",
       "NOTA": "Nota",
@@ -2908,6 +2942,7 @@
       "NO_REVERTIBLE_REVERSION": "Este asiento es una reversión y no se puede revertir.",
       "NO_REVERTIBLE_YA_REVERTIDO": "Este asiento ya fue revertido.",
       "NUEVO_ASIENTO": "Nuevo asiento",
+      "PAGINAS_DE_MOVIMIENTOS": "Páginas de movimientos",
       "PERIODO": "Período fiscal",
       "QUITAR_LINEA_N": "Quitar la línea {{n}}",
       "REGISTRANDO": "Registrando…",
@@ -2928,6 +2963,7 @@
       "TOTAL_CERO": "El total del asiento debe ser mayor que cero.",
       "USUARIO": "Usuario",
       "VER_ASIENTO": "Ver asiento",
+      "VER_ASIENTO_N": "Ver asiento: {{description}}",
       "VER_DOCUMENTO_DE_ORIGEN": "Ver documento de origen",
       "VER_ENTRADAS_ANTERIORES": "Ver entradas anteriores",
       "VER_REVERSION": "Ver reversión"

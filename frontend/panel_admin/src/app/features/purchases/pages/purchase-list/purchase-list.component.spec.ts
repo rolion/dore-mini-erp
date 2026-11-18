@@ -178,6 +178,64 @@ describe('PurchaseListComponent', () => {
     expect(component.rows.length).toBe(1);
   });
 
+  it('renders one card per purchase with reference, date, supplier, reception, status and balance', async () => {
+    await setup({}, page([makePurchaseSummary({ status: 'confirmed', receptionStatus: 'received', paymentStatus: 'partial', paidTotal: '10.00', balance: '15.00' })]));
+    const cards = all('purchase-card');
+    expect(cards.length).toBe(1);
+    const card = cards[0].textContent ?? '';
+    for (const expected of ['COM-1A2B3C4D', '29/10/2026', 'Distribuidora Sur', 'Recibida', 'Pago parcial', 'Bs 15.00']) {
+      expect(card).toContain(expected);
+    }
+    expect(cards[0].querySelector('a[aria-label="Ver compra"]')?.getAttribute('href')).toBe('/pocketbiz/purchases/c-1');
+  });
+
+  it('shows a dash in the card where reception, payment and balance do not apply, and edit only for drafts', async () => {
+    await setup({}, page([makePurchaseSummary({ status: 'cancelled' }), makePurchaseSummary({ id: 'c-2' })]));
+    const [cancelled, draft] = all('purchase-card');
+    expect((cancelled.textContent ?? '').match(/—/g)?.length).toBe(3);
+    expect(cancelled.querySelector('a[href$="/edit"]')).toBeNull();
+    expect(draft.querySelector('a[href="/pocketbiz/purchases/c-2/edit"]')).not.toBeNull();
+  });
+
+  it('keeps the filters folded on small screens until the toggle is pressed', async () => {
+    await setup();
+    const form = byTestId('filters');
+    expect(form.classList).toContain('d-none');
+    expect(byTestId('filters-toggle').getAttribute('aria-expanded')).toBe('false');
+    byTestId('filters-toggle').click();
+    fixture.detectChanges();
+    expect(form.classList).not.toContain('d-none');
+    expect(byTestId('filters-toggle').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('applies the filters and folds the panel with «Aplicar filtros»', async () => {
+    await setup();
+    component.toggleFilters();
+    component.filterForm.patchValue({ status: 'confirmed' }, { emitEvent: false });
+    component.submitFilters();
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/purchases'], { queryParams: { status: 'confirmed' } });
+    expect(component.filtersOpen).toBeFalse();
+  });
+
+  it('keeps the panel open when the date range is inverted', async () => {
+    await setup();
+    component.toggleFilters();
+    component.filterForm.patchValue({ dateFrom: '2026-10-10', dateTo: '2026-10-01' }, { emitEvent: false });
+    component.submitFilters();
+    expect(component.filtersOpen).toBeTrue();
+  });
+
+  it('shows the number of active filters on the toggle', async () => {
+    await setup({ receptionStatus: 'received', paymentStatus: 'pending' });
+    expect(byTestId('filters-count').textContent).toContain('2');
+  });
+
+  it('pages the cards with a base-1 paginator', async () => {
+    await setup();
+    component.onCardsPage(2);
+    expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ page: 2 }));
+  });
+
   it('requests another page from the server keeping the filters (AC-02)', async () => {
     await setup({ status: 'confirmed' });
     component.onPage({ offset: 1 });

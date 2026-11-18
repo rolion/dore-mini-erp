@@ -925,7 +925,14 @@
       "ORIGEN": "Source",
       "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "No movements for the chosen filters.",
       "RECEPCION": "Receipt",
-      "PEDIDO": "Order"
+      "PEDIDO": "Order",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "SIN_REFERENCIA": "No reference",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "LISTA_DE_MOVIMIENTOS": "Movements list",
+      "VER_MOVIMIENTO_N": "View movement {{reference}}",
+      "PAGINAS_DE_MOVIMIENTOS": "Movement pages"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Stock details",
@@ -955,6 +962,9 @@
     "STOCK_LIST": {
       "CANTIDAD_ACTUAL_DE_CADA_PRODUCTO": "Current quantity of each product by warehouse.",
       "FILTROS_DE_EXISTENCIAS": "Stock filters",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply",
+      "FILTROS_ACTIVOS": "{{count}} active filters",
       "BUSCAR_PRODUCTO_POR_NOMBRE": "Search product by name",
       "TODOS_LOS_ALMACENES_ACTIVOS": "All active warehouses",
       "INACTIVO": "(inactive)",
@@ -1489,7 +1499,11 @@
       "RECEPCION": "Receipt",
       "PAGO": "Payment",
       "SALDO": "Balance",
-      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\"."
+      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\".",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "PAGINACION": "Purchases pagination",
+      "VER_FILTROS_ACTIVOS": "active filters"
     },
     "RECEPTION_DETAIL": {
       "ASIENTO_CONTABLE": "Journal entry",
@@ -1566,7 +1580,16 @@
       "VER_COMPRAS": "View purchases",
       "IDENTIFICACION": "ID",
       "CORREO": "Email",
-      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No suppliers match"
+      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No suppliers match",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply",
+      "LISTA_DE_PROVEEDORES": "Suppliers list",
+      "PAGINAS_DE_PROVEEDORES": "Suppliers pages",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "ACCION_SOBRE_N": "{{action}}: {{name}}",
+      "BUSCAR": "Search",
+      "ESTADO_FILTRO": "Status: {{value}}",
+      "BUSCAR_FILTRO": "Search: {{value}}"
     },
     "RECEIPT": {
       "SIN_CONTROL_DE_STOCK_SIN": "No stock control · no inbound",
@@ -1810,7 +1833,14 @@
       "AUN_NO_HAY_PEDIDOS": "There are no orders yet.",
       "NO_CANCELADOS": "Not cancelled",
       "CON_SALDO_PENDIENTE": "With pending balance",
-      "MAS_FILTROS": "More filters"
+      "MAS_FILTROS": "More filters",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "LISTA_DE_PEDIDOS": "Order list",
+      "VER_PEDIDO_N": "View order {{code}}",
+      "PAGINAS_DE_PEDIDOS": "Order pages",
+      "PERSONALIZADA": "Custom"
     },
     "ORDERS_API_SERVICE": {
       "PEDIDO_NO_ENCONTRADO": "Order not found."
@@ -2865,6 +2895,7 @@
     },
     "JOURNAL": {
       "AGREGAR_LINEA": "Add line",
+      "APLICAR_FILTROS": "Apply filters",
       "ASIENTO": "Journal entry",
       "ASIENTO_MANUAL": "Manual entry (no source document)",
       "ASIENTO_REGISTRADO": "The entry was recorded and confirmed.",
@@ -2889,15 +2920,18 @@
       "FALTA_IMPORTE": "Enter an amount in Debit or Credit.",
       "FECHA_CONTABLE": "Accounting date",
       "FECHA_DE_LA_REVERSION": "Reversal date",
+      "FILTROS": "Filters",
       "HABER": "Credit",
       "HABER_DE_LA_LINEA_N": "Credit of line {{n}}",
       "IMPORTE_INVALIDO": "The amount is not valid (at most 2 decimals).",
       "IR_A_CUENTAS": "Go to Accounts",
       "LINEAS_INCOMPLETAS": "Complete all lines.",
+      "LISTA_DE_MOVIMIENTOS": "Journal entries list",
       "LOS_ASIENTOS_NO_SE_EDITAN": "Confirmed entries cannot be edited or deleted; they are corrected with a reversal.",
       "MANUAL": "Manual",
       "MINIMO_DOS_LINEAS": "The entry needs at least two lines.",
       "MONEDA": "Currency",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
       "MOVIMIENTOS": "Movements",
       "NECESITA_DOS_CUENTAS": "To record an entry you need at least two active accounts with a code and an accounting classification.",
       "NOTA": "Note",
@@ -2908,6 +2942,7 @@
       "NO_REVERTIBLE_REVERSION": "This entry is a reversal and cannot be reversed.",
       "NO_REVERTIBLE_YA_REVERTIDO": "This entry has already been reversed.",
       "NUEVO_ASIENTO": "New entry",
+      "PAGINAS_DE_MOVIMIENTOS": "Journal entries pages",
       "PERIODO": "Fiscal period",
       "QUITAR_LINEA_N": "Remove line {{n}}",
       "REGISTRANDO": "Recording…",
@@ -2928,6 +2963,7 @@
       "TOTAL_CERO": "The entry total must be greater than zero.",
       "USUARIO": "User",
       "VER_ASIENTO": "View entry",
+      "VER_ASIENTO_N": "View entry: {{description}}",
       "VER_DOCUMENTO_DE_ORIGEN": "View source document",
       "VER_ENTRADAS_ANTERIORES": "View earlier entries",
       "VER_REVERSION": "View reversal"

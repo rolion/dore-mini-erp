@@ -1,8 +1,10 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { Page } from '../../../../shared/models/page';
 import { Product } from '../../../products/models/product';
 import { ProductsApiService } from '../../../products/services/products-api.service';
@@ -34,7 +36,7 @@ describe('MovementListComponent', () => {
 
   let productsApi: jasmine.SpyObj<ProductsApiService>;
 
-  async function setup(rows: StockMovement[] = [exit, entry], query: Record<string, string> = {}): Promise<void> {
+  async function setup(rows: StockMovement[] = [exit, entry], query: Record<string, string> = {}, compact = false): Promise<void> {
     api = jasmine.createSpyObj<MovementsApiService>('MovementsApiService', ['list']);
     api.list.and.returnValue(of(page(rows)));
     const products = jasmine.createSpyObj<ProductsApiService>('ProductsApiService', ['list', 'get']);
@@ -47,6 +49,7 @@ describe('MovementListComponent', () => {
       imports: [MovementListComponent],
       providers: [...provideTestTranslations(), 
         provideRouter([]),
+        { provide: CompactViewportService, useValue: { compact: signal(compact).asReadonly() } },
         { provide: MovementsApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },
         { provide: WarehousesApiService, useValue: warehouses },
@@ -180,5 +183,54 @@ describe('MovementListComponent', () => {
     component.reload();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-testid="error"]').textContent).toContain('Sin conexión');
+  });
+
+  describe('pantalla estrecha', () => {
+    const q = (sel: string): HTMLElement | null => fixture.nativeElement.querySelector(sel);
+
+    it('muestra tarjetas en lugar de la tabla, con el origen primero y la unidad junto a la cantidad', async () => {
+      await setup([exit, entry], {}, true);
+      expect(q('ngx-datatable')).toBeNull();
+      const cards = fixture.nativeElement.querySelectorAll('[data-testid="movement-card"]');
+      expect(cards.length).toBe(2);
+      const labels = Array.from<HTMLElement>(cards[0].querySelectorAll('dt')).map((dt) => dt.textContent?.trim());
+      expect(labels.length).toBe(7);
+      expect(cards[1].querySelector('[data-testid="card-reference"]').textContent).toContain('Sin referencia');
+      expect(cards[1].querySelector('[data-col="out"]').textContent?.trim()).toBe('—');
+    });
+
+    it('conserva la tabla en pantallas anchas', async () => {
+      await setup();
+      expect(q('ngx-datatable')).not.toBeNull();
+      expect(q('[data-testid="movement-card"]')).toBeNull();
+      expect(q('[data-testid="filters-toggle"]')).toBeNull();
+    });
+
+    it('abre los filtros con «Filtros» y no consulta hasta pulsar «Aplicar», que cierra el panel', async () => {
+      await setup([exit], {}, true);
+      expect(q('[data-testid="filters"]')?.classList).toContain('d-none');
+      q('[data-testid="filters-toggle"]')?.click();
+      fixture.detectChanges();
+      expect(q('[data-testid="filters"]')?.classList).not.toContain('d-none');
+
+      component.filterForm.patchValue({ kind: 'out' });
+      fixture.detectChanges();
+      expect(api.list).toHaveBeenCalledTimes(1);
+
+      q('[data-testid="apply-filters"]')?.click();
+      fixture.detectChanges();
+      expect(api.list).toHaveBeenCalledTimes(2);
+      expect(lastParams()).toEqual(jasmine.objectContaining({ kind: 'out', page: 1 }));
+      expect(component.filtersOpen).toBeFalse();
+      expect(q('[data-testid="filters-count"]')?.textContent?.trim()).toBe('1');
+    });
+
+    it('«Limpiar filtros» vuelve a consultar sin filtros', async () => {
+      await setup([exit], {}, true);
+      component.filterForm.patchValue({ kind: 'out' });
+      component.applyAndClose();
+      component.clearFilters();
+      expect(lastParams().kind).toBeUndefined();
+    });
   });
 });

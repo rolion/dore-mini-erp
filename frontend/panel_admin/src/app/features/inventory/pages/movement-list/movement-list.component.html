@@ -25,16 +25,36 @@
               </div>
             </div>
 
-            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
-              <div class="col-md-2">
+            @if (compact()) {
+            <div class="d-flex align-items-center gap-2 m-2" data-testid="filters-toolbar">
+              <button type="button" class="btn btn-light" data-testid="filters-toggle" aria-controls="movement-filters"
+                [attr.aria-expanded]="filtersOpen" (click)="filtersOpen = !filtersOpen">
+                <i class="fas fa-filter" aria-hidden="true"></i> {{ 'INVENTORY.MOVEMENT_LIST.FILTROS' | translate }}
+                @if (activeFilterCount > 0) {
+                <span class="badge bg-primary ms-1" data-testid="filters-count">{{ activeFilterCount }}</span>
+                }
+              </button>
+              @if (!filtersOpen) {
+              <div class="d-flex flex-wrap gap-1" data-testid="filters-chips">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue">{{ filter }}</span>
+                }
+              </div>
+              }
+            </div>
+            }
+
+            <form id="movement-filters" class="row g-2 m-2" [class.d-none]="compact() && !filtersOpen" [formGroup]="filterForm"
+              data-testid="filters">
+              <div class="col-6 col-md-2">
                 <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
                 <input id="filter-from" type="date" class="form-control" formControlName="dateFrom">
               </div>
-              <div class="col-md-2">
+              <div class="col-6 col-md-2">
                 <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo">
               </div>
-              <div class="col-md-2">
+              <div class="col-12 col-sm-6 col-md-2">
                 <label for="filter-product">{{ 'COMMON.PRODUCTO' | translate }}</label>
                 <select id="filter-product" class="form-select form-control" formControlName="productId">
                   <option value="">{{ 'COMMON.TODOS' | translate }}</option>
@@ -43,7 +63,7 @@
                   }
                 </select>
               </div>
-              <div class="col-md-2">
+              <div class="col-12 col-sm-6 col-md-2">
                 <label for="filter-warehouse">{{ 'COMMON.ALMACEN' | translate }}</label>
                 <select id="filter-warehouse" class="form-select form-control" formControlName="warehouseId">
                   <option value="">{{ 'COMMON.TODOS' | translate }}</option>
@@ -52,7 +72,7 @@
                   }
                 </select>
               </div>
-              <div class="col-md-2">
+              <div class="col-12 col-sm-6 col-md-2">
                 <label for="filter-kind">{{ 'COMMON.TIPO' | translate }}</label>
                 <select id="filter-kind" class="form-select form-control" formControlName="kind">
                   <option value="">{{ 'COMMON.TODOS' | translate }}</option>
@@ -60,7 +80,7 @@
                   <option value="out">{{ 'INVENTORY.MOVEMENT_LIST.SALIDA' | translate }}</option>
                 </select>
               </div>
-              <div class="col-md-2">
+              <div class="col-12 col-sm-6 col-md-2">
                 <label for="filter-source">{{ 'COMMON.ORIGEN' | translate }}</label>
                 <select id="filter-source" class="form-select form-control" formControlName="sourceType">
                   <option value="">{{ 'COMMON.TODOS' | translate }}</option>
@@ -74,8 +94,12 @@
                 <small class="form-text text-danger" data-testid="range-error">{{ rangeError }}</small>
               </div>
               }
-              <div class="col-12">
-                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
+              <div class="col-12 d-flex gap-2" [class.mt-3]="compact()">
+                @if (compact()) {
+                <button type="button" class="btn btn-primary" data-testid="apply-filters"
+                  (click)="applyAndClose()">{{ 'INVENTORY.MOVEMENT_LIST.APLICAR_FILTROS' | translate }}</button>
+                }
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
                   (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
             </form>
@@ -98,6 +122,96 @@
             </div>
             }
 
+            @if (compact()) {
+            @if (rows.length > 0) {
+            <p class="small text-body-secondary mx-2 mb-2" #summary tabindex="-1" data-testid="range-summary">
+              {{ 'INVENTORY.MOVEMENT_LIST.MOSTRANDO_N_DE_M' | translate: { from: shownFrom, to: shownTo, total: total } }}
+            </p>
+            <ul class="movement-cards row g-2 mx-1 p-0 mb-2" [attr.aria-label]="'INVENTORY.MOVEMENT_LIST.LISTA_DE_MOVIMIENTOS' | translate">
+              @for (row of rows; track row.id) {
+              <li class="col-12 col-sm-6">
+                <article class="movement-card" data-testid="movement-card">
+                  <header class="movement-card__header">
+                    <h3 class="movement-card__title" data-testid="card-reference">
+                      @if (row.reference) {
+                      {{ row.reference }}
+                      } @else {
+                      <span class="text-body-secondary fw-normal">{{ 'INVENTORY.MOVEMENT_LIST.SIN_REFERENCIA' | translate }}</span>
+                      }
+                    </h3>
+                    <span class="movement-card__actions">
+                      <a class="btn btn-tbl-edit btn-tbl-view movement-card__action" data-testid="card-view"
+                        [routerLink]="['/pocketbiz/inventory/movements', row.id]" [title]="'COMMON.VER_DETALLE' | translate"
+                        [attr.aria-label]="'INVENTORY.MOVEMENT_LIST.VER_MOVIMIENTO_N' | translate: { reference: row.reference || (row.occurredAt | date: 'dd/MM/yyyy HH:mm') }">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                      </a>
+                      @if (sourceLink(row); as link) {
+                      <a class="btn btn-tbl-edit btn-tbl-update movement-card__action" data-testid="card-source" [routerLink]="link"
+                        [title]="'INVENTORY.MOVEMENT_LIST.ABRIR_DOCUMENTO_DE_ORIGEN' | translate"
+                        [attr.aria-label]="'INVENTORY.MOVEMENT_LIST.ABRIR_DOCUMENTO_DE_ORIGEN' | translate">
+                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                      </a>
+                      }
+                    </span>
+                  </header>
+                  <dl class="movement-card__body">
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.ORIGEN' | translate }}</dt>
+                      <dd>
+                        @if (row.source; as source) {
+                        <span data-col="source">{{ source.label }}@if (source.id) { · {{ source.id }} }</span>
+                        } @else {
+                        <span class="text-body-secondary">{{ 'INVENTORY.MOVEMENT_LIST.SIN_DOCUMENTO' | translate }}</span>
+                        }
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.FECHA_Y_HORA' | translate }}</dt>
+                      <dd>{{ row.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.PRODUCTO' | translate }}</dt>
+                      <dd>{{ row.product.name }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.ALMACEN' | translate }}</dt>
+                      <dd>{{ row.warehouse.name }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.TIPO' | translate }}</dt>
+                      <dd>
+                        @if (row.kind === 'in') {
+                        <span class="badge-outline col-green d-inline-block">{{ typeLabel(row) }}</span>
+                        } @else {
+                        <span class="badge-outline col-orange d-inline-block">{{ typeLabel(row) }}</span>
+                        }
+                        @if (row.status === 'reversed') {
+                        <span class="badge-outline col-grey d-inline-block ms-1" data-testid="reversed-badge">{{ statusLabel(row.status) }}</span>
+                        }
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.ENTRADA' | translate }}</dt>
+                      <dd class="movement-card__qty" [class.movement-card__qty--empty]="row.quantityIn === null" data-col="in">{{ row.quantityIn ?? '—' }}@if (row.quantityIn !== null && row.unitAbbreviation) { {{ row.unitAbbreviation }} }</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'INVENTORY.MOVEMENT_LIST.SALIDA' | translate }}</dt>
+                      <dd class="movement-card__qty" [class.movement-card__qty--empty]="row.quantityOut === null" data-col="out">{{ row.quantityOut ?? '—' }}@if (row.quantityOut !== null && row.unitAbbreviation) { {{ row.unitAbbreviation }} }</dd>
+                    </div>
+                  </dl>
+                </article>
+              </li>
+              }
+            </ul>
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center" size="sm" [collectionSize]="total" [pageSize]="pageSize"
+              [page]="pageIndex + 1" [maxSize]="3" [rotate]="true"
+              [attr.aria-label]="'INVENTORY.MOVEMENT_LIST.PAGINAS_DE_MOVIMIENTOS' | translate" (pageChange)="onPageNumber($event)" />
+            }
+            } @else if (!loading && !errorMessage) {
+            <p class="text-body-secondary m-3" data-testid="empty">{{ 'INVENTORY.MOVEMENT_LIST.SIN_MOVIMIENTOS_PARA_LOS_FILTROS' | translate }}</p>
+            }
+            } @else {
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
@@ -168,6 +282,7 @@
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
+            }
           </div>
         </div>
       </div>

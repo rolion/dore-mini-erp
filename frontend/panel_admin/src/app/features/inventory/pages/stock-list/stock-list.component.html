@@ -20,7 +20,7 @@
                 <h2><strong>{{ 'COMMON.EXISTENCIAS' | translate }}</strong></h2>
                 <small class="text-muted">{{ 'INVENTORY.STOCK_LIST.CANTIDAD_ACTUAL_DE_CADA_PRODUCTO' | translate }}</small>
               </div>
-              <div class="header-buttons-left">
+              <div class="header-buttons-left stock-header-actions">
                 <div class="d-flex align-items-center gap-2 ms-3">
                   <a class="btn btn-primary" [routerLink]="openingLink()" data-testid="register-opening">
                     {{ 'COMMON.REGISTRAR_APERTURA' | translate }}
@@ -28,7 +28,23 @@
                 </div>
               </div>
             </div>
-            <form class="row g-2 m-2 align-items-end" [formGroup]="filterForm" [attr.aria-label]="'INVENTORY.STOCK_LIST.FILTROS_DE_EXISTENCIAS' | translate">
+            @if (compact) {
+            <div class="m-2">
+              <button type="button" class="btn btn-light w-100 stock-filters-toggle" data-testid="filters-toggle"
+                aria-controls="stock-filters" [attr.aria-expanded]="!filtersCollapsed" (click)="toggleFilters()">
+                <span>
+                  <i class="fas fa-filter me-2" aria-hidden="true"></i>{{ 'INVENTORY.STOCK_LIST.FILTROS' | translate }}
+                  @if (activeFilterCount) {
+                  <span class="badge bg-primary ms-2" data-testid="filters-count"
+                    [attr.aria-label]="'INVENTORY.STOCK_LIST.FILTROS_ACTIVOS' | translate: { count: activeFilterCount }">{{ activeFilterCount }}</span>
+                  }
+                </span>
+                <i class="fas" [class.fa-chevron-down]="filtersCollapsed" [class.fa-chevron-up]="!filtersCollapsed" aria-hidden="true"></i>
+              </button>
+            </div>
+            }
+            <div id="stock-filters" [ngbCollapse]="compact && filtersCollapsed">
+            <form class="row g-2 m-2 align-items-end" [formGroup]="filterForm" (ngSubmit)="applyFilters()" [attr.aria-label]="'INVENTORY.STOCK_LIST.FILTROS_DE_EXISTENCIAS' | translate">
               <div class="col-md-3">
                 <label for="stock-search">{{ 'COMMON.PRODUCTO' | translate }}</label>
                 <input id="stock-search" type="search" class="form-control" formControlName="search"
@@ -83,11 +99,15 @@
                   }
                 </select>
               </div>
-              <div class="col-md-2">
+              <div class="col-md-2 stock-filter-actions">
+                @if (compact) {
+                <button type="submit" class="btn btn-primary" data-testid="apply-filters">{{ 'INVENTORY.STOCK_LIST.APLICAR_FILTROS' | translate }}</button>
+                }
                 <button type="button" class="btn btn-light" [disabled]="!filtersActive"
                   (click)="clearFilters()" data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
             </form>
+            </div>
             @if (loading && !rows.length) {
             <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
             } @else if (errorMessage) {
@@ -104,6 +124,45 @@
             <p class="m-4" data-testid="stock-empty">
               {{ 'INVENTORY.STOCK_LIST.AUN_NO_HAY_PRODUCTOS_QUE' | translate }}
             </p>
+            } @else {
+            @if (compact) {
+            <ul class="list-unstyled stock-cards m-2 p-0" data-testid="stock-cards"
+              [attr.aria-label]="'INVENTORY.STOCK_LIST.EXISTENCIAS_POR_PRODUCTO_Y_ALMACEN' | translate">
+              @for (row of rows; track row.productId + row.warehouseId) {
+              <li class="card stock-card m-0" data-testid="stock-card">
+                <div class="stock-card-header">
+                  <div class="stock-card-title">
+                    <ng-container [ngTemplateOutlet]="productTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
+                  </div>
+                  <div class="stock-card-actions">
+                    <ng-container [ngTemplateOutlet]="actionsTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
+                  </div>
+                </div>
+                <dl class="stock-card-body mb-0">
+                  <div class="stock-card-row">
+                    <dt>{{ 'COMMON.ALMACEN' | translate }}</dt>
+                    <dd>{{ row.warehouseName }}</dd>
+                  </div>
+                  <div class="stock-card-row">
+                    <dt>{{ 'INVENTORY.STOCK_LIST.CLASIFICACION' | translate }}</dt>
+                    <dd data-testid="category"><ng-container [ngTemplateOutlet]="categoryTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></dd>
+                  </div>
+                  <div class="stock-card-row">
+                    <dt>{{ 'INVENTORY.STOCK_LIST.USOS' | translate }}</dt>
+                    <dd data-testid="uses"><ng-container [ngTemplateOutlet]="usesTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></dd>
+                  </div>
+                  <div class="stock-card-row">
+                    <dt>{{ 'COMMON.UNIDAD_BASE' | translate }}</dt>
+                    <dd>{{ row.unit?.abbreviation ?? '—' }}</dd>
+                  </div>
+                  <div class="stock-card-row stock-card-quantity">
+                    <dt>{{ 'INVENTORY.STOCK_LIST.EXISTENCIA' | translate }}</dt>
+                    <dd data-testid="quantity"><ng-container [ngTemplateOutlet]="quantityTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></dd>
+                  </div>
+                </dl>
+              </li>
+              }
+            </ul>
             } @else {
             <div class="table-responsive">
               <table class="table align-middle inventory-table">
@@ -123,49 +182,28 @@
                   @for (row of rows; track row.productId + row.warehouseId) {
                   <tr>
                     <td [attr.data-label]="'COMMON.PRODUCTO' | translate">
-                      <a class="fw-bold" [routerLink]="detailLink(row)" data-testid="detail-link">{{ row.productName }}</a>
-                      @if (!row.productActive) {
-                      <div class="badge-outline col-grey d-inline-block ms-1">{{ 'COMMON.INACTIVO' | translate }}</div>
-                      }
+                      <ng-container [ngTemplateOutlet]="productTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                     </td>
                     <td [attr.data-label]="'COMMON.ALMACEN' | translate">{{ row.warehouseName }}</td>
                     <td [attr.data-label]="'INVENTORY.STOCK_DETAIL.CLASIFICACION' | translate" data-testid="category">
-                      @if (row.category) {
-                      {{ categoryText(row) }}
-                      } @else {
-                      <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_LIST.SIN_CLASIFICAR' | translate }}</div>
-                      }
+                      <ng-container [ngTemplateOutlet]="categoryTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                     </td>
                     <td [attr.data-label]="'INVENTORY.STOCK_DETAIL.USOS' | translate" data-testid="uses">
-                      @if (row.canBuy) {
-                      <div class="badge-outline col-blue d-inline-block">{{ 'INVENTORY.STOCK_LIST.COMPRABLE' | translate }}</div>
-                      }
-                      @if (row.canSell) {
-                      <div class="badge-outline col-green d-inline-block ms-1">{{ 'INVENTORY.STOCK_LIST.VENDIBLE' | translate }}</div>
-                      }
-                      @if (!row.canBuy && !row.canSell) {
-                      <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_LIST.SIN_USOS' | translate }}</div>
-                      }
+                      <ng-container [ngTemplateOutlet]="usesTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                     </td>
                     <td [attr.data-label]="'COMMON.UNIDAD_BASE' | translate">{{ row.unit?.abbreviation ?? '—' }}</td>
                     <td [attr.data-label]="'INVENTORY.STOCK_LIST.EXISTENCIA' | translate" class="text-end" data-testid="quantity">
-                      <span [class.text-danger]="row.balanceState === 'negative'">{{ display(row.quantity) }}</span>
-                      @if (row.balanceState === 'negative') {
-                      <div class="badge-outline col-red d-inline-block ms-1" data-testid="negative-badge">{{ 'INVENTORY.STOCK_LIST.NEGATIVO' | translate }}</div>
-                      }
+                      <ng-container [ngTemplateOutlet]="quantityTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                     </td>
                     <td [attr.data-label]="'COMMON.ACCIONES' | translate">
-                      <button type="button" class="btn btn-light btn-sm" data-testid="open-movements"
-                        (click)="openMovements(row)">{{ 'COMMON.MOVIMIENTOS' | translate }}</button>
-                      <a class="btn btn-light btn-sm ms-1" data-testid="adjust-stock"
-                        [routerLink]="['/pocketbiz/inventory/adjustments/new']"
-                        [queryParams]="{ warehouse_id: row.warehouseId, product_id: row.productId }">{{ 'INVENTORY.STOCK_LIST.AJUSTAR' | translate }}</a>
+                      <ng-container [ngTemplateOutlet]="actionsTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                     </td>
                   </tr>
                   }
                 </tbody>
               </table>
             </div>
+            }
             @if (count > pageSize) {
             <ngb-pagination class="d-flex justify-content-center" [collectionSize]="count" [pageSize]="pageSize"
               [page]="page" [maxSize]="5" [boundaryLinks]="true" [attr.aria-label]="'INVENTORY.STOCK_LIST.PAGINAS_DE_EXISTENCIAS' | translate"
@@ -178,3 +216,45 @@
     </div>
   </div>
 </section>
+
+<ng-template #productTpl let-row>
+  <a class="fw-bold" [routerLink]="detailLink(row)" data-testid="detail-link">{{ row.productName }}</a>
+  @if (!row.productActive) {
+  <div class="badge-outline col-grey d-inline-block ms-1">{{ 'COMMON.INACTIVO' | translate }}</div>
+  }
+</ng-template>
+
+<ng-template #categoryTpl let-row>
+  @if (row.category) {
+  {{ categoryText(row) }}
+  } @else {
+  <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_LIST.SIN_CLASIFICAR' | translate }}</div>
+  }
+</ng-template>
+
+<ng-template #usesTpl let-row>
+  @if (row.canBuy) {
+  <div class="badge-outline col-blue d-inline-block">{{ 'INVENTORY.STOCK_LIST.COMPRABLE' | translate }}</div>
+  }
+  @if (row.canSell) {
+  <div class="badge-outline col-green d-inline-block ms-1">{{ 'INVENTORY.STOCK_LIST.VENDIBLE' | translate }}</div>
+  }
+  @if (!row.canBuy && !row.canSell) {
+  <div class="badge-outline col-grey d-inline-block">{{ 'INVENTORY.STOCK_LIST.SIN_USOS' | translate }}</div>
+  }
+</ng-template>
+
+<ng-template #quantityTpl let-row>
+  <span [class.text-danger]="row.balanceState === 'negative'">{{ display(row.quantity) }}</span>
+  @if (row.balanceState === 'negative') {
+  <div class="badge-outline col-red d-inline-block ms-1" data-testid="negative-badge">{{ 'INVENTORY.STOCK_LIST.NEGATIVO' | translate }}</div>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-row>
+  <button type="button" class="btn btn-light btn-sm" data-testid="open-movements"
+    (click)="openMovements(row)">{{ 'COMMON.MOVIMIENTOS' | translate }}</button>
+  <a class="btn btn-light btn-sm ms-1" data-testid="adjust-stock"
+    [routerLink]="['/pocketbiz/inventory/adjustments/new']"
+    [queryParams]="{ warehouse_id: row.warehouseId, product_id: row.productId }">{{ 'INVENTORY.STOCK_LIST.AJUSTAR' | translate }}</a>
+</ng-template>

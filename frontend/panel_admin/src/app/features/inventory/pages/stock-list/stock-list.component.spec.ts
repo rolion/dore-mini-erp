@@ -1,7 +1,8 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { InventoryApiError } from '../../models/api-error';
 import { StockBalance } from '../../models/stock';
 import { StockApiService } from '../../services/stock-api.service';
@@ -29,12 +30,15 @@ describe('StockListComponent', () => {
   let stockApi: jasmine.SpyObj<StockApiService>;
   let fixture: ComponentFixture<StockListComponent>;
   let router: Router;
+  let compact$: BehaviorSubject<{ matches: boolean }>;
 
   async function setup(
     query: Record<string, string> = {},
     rows: StockBalance[] = [ROW],
     seed?: (state: StockFiltersState) => void,
+    compact = false,
   ): Promise<void> {
+    compact$ = new BehaviorSubject({ matches: compact });
     stockApi = jasmine.createSpyObj<StockApiService>('StockApiService', ['list']);
     stockApi.list.and.returnValue(of({ count: rows.length, next: null, previous: null, results: rows }));
     const warehouses = jasmine.createSpyObj<WarehousesApiService>('WarehousesApiService', ['list']);
@@ -45,6 +49,7 @@ describe('StockListComponent', () => {
       imports: [StockListComponent],
       providers: [...provideTestTranslations(), 
         provideRouter([]),
+        { provide: BreakpointObserver, useValue: { observe: () => compact$ } },
         { provide: StockApiService, useValue: stockApi },
         { provide: WarehousesApiService, useValue: warehouses },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap(query) } } },
@@ -177,5 +182,73 @@ describe('StockListComponent', () => {
     fixture.componentInstance.reload();
     fixture.detectChanges();
     expect(el().querySelector('[data-testid="stock-error"]')?.textContent).toContain('No se pudo conectar');
+  });
+
+  describe('pantalla estrecha (< 992 px)', () => {
+    const compactSetup = (rows: StockBalance[] = [ROW]) => setup({}, rows, undefined, true);
+
+    it('muestra tarjetas con producto, acciones y los cinco datos, sin tabla', async () => {
+      await compactSetup();
+      expect(el().querySelector('table')).toBeNull();
+      const card = el().querySelector('[data-testid="stock-card"]') as HTMLElement;
+      expect(card.querySelector('.stock-card-header')?.textContent).toContain('Harina');
+      expect(card.querySelector('.stock-card-header [data-testid="open-movements"]')).not.toBeNull();
+      expect(card.querySelector('.stock-card-header [data-testid="adjust-stock"]')).not.toBeNull();
+      const labels = Array.from(card.querySelectorAll('dt')).map((dt) => dt.textContent?.trim());
+      expect(labels).toEqual(['Almacén', 'Clasificación', 'Usos', 'Unidad base', 'Existencia']);
+      expect(card.querySelector('[data-testid="quantity"]')?.textContent).toContain('10');
+      expect(card.querySelector('[data-testid="uses"]')?.textContent).toContain('Comprable');
+    });
+
+    it('marca el saldo negativo con texto en la tarjeta', async () => {
+      await compactSetup([{ ...ROW, quantity: '-2.000', balanceState: 'negative' }]);
+      expect(el().querySelector('[data-testid="negative-badge"]')?.textContent).toContain('Negativo');
+    });
+
+    it('el panel de filtros empieza colapsado y el botón lo abre y lo cierra', async () => {
+      await compactSetup();
+      const toggle = el().querySelector('[data-testid="filters-toggle"]') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('no consulta al cambiar un filtro: lo hace «Aplicar», que además repliega el panel y cuenta los filtros', fakeAsync(() => {
+      void setup({}, [ROW], undefined, true);
+      tick();
+      const calls = stockApi.list.calls.count();
+      fixture.componentInstance.toggleFilters();
+      fixture.componentInstance.filterForm.patchValue({ search: 'har', balance: 'zero' });
+      tick(300);
+      expect(stockApi.list.calls.count()).toBe(calls);
+      fixture.detectChanges();
+      expect(el().querySelector('[data-testid="filters-count"]')?.textContent).toContain('2');
+      (el().querySelector('[data-testid="apply-filters"]') as HTMLButtonElement).click();
+      tick();
+      expect(stockApi.list.calls.mostRecent().args[0]).toEqual(
+        jasmine.objectContaining({ search: 'har', balance: 'zero', page: 1 }),
+      );
+      expect(fixture.componentInstance.filtersCollapsed).toBeTrue();
+    }));
+
+    it('«Limpiar filtros» consulta con los valores por defecto', fakeAsync(() => {
+      void setup({}, [ROW], undefined, true);
+      tick();
+      fixture.componentInstance.filterForm.patchValue({ canSell: 'true' });
+      tick(300);
+      fixture.componentInstance.clearFilters();
+      tick(300);
+      expect(stockApi.list.calls.mostRecent().args[0]).toEqual(jasmine.objectContaining({ canSell: undefined, active: 'true' }));
+    }));
+  });
+
+  it('en escritorio no hay botón «Filtros» ni «Aplicar»', async () => {
+    await setup();
+    expect(el().querySelector('[data-testid="filters-toggle"]')).toBeNull();
+    expect(el().querySelector('[data-testid="apply-filters"]')).toBeNull();
   });
 });

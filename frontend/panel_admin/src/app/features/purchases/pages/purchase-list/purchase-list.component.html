@@ -40,7 +40,18 @@
                 </div>
               </div>
             </div>
-            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters" (ngSubmit)="applyForm()">
+            <div class="d-lg-none px-2 pb-2">
+              <button type="button" class="btn btn-light w-100 d-flex align-items-center justify-content-between"
+                data-testid="filters-toggle" aria-controls="purchase-filters" [attr.aria-expanded]="filtersOpen"
+                (click)="toggleFilters()">
+                <span><i class="fas fa-sliders-h me-2" aria-hidden="true"></i>{{ 'PURCHASES.PURCHASE_LIST.FILTROS' | translate }}</span>
+                @if (activeFilterCount > 0) {
+                <span class="badge bg-primary" data-testid="filters-count">{{ activeFilterCount }}<span class="visually-hidden"> {{ 'PURCHASES.PURCHASE_LIST.VER_FILTROS_ACTIVOS' | translate }}</span></span>
+                }
+              </button>
+            </div>
+            <form id="purchase-filters" class="row g-2 m-2 d-lg-flex" [class.d-none]="!filtersOpen" [formGroup]="filterForm"
+              data-testid="filters" (ngSubmit)="submitFilters()">
               <div class="col-md-4">
                 <label for="filter-search">{{ 'PURCHASES.PURCHASE_LIST.BUSCAR' | translate }}</label>
                 <input id="filter-search" type="search" class="form-control search-field" formControlName="search"
@@ -100,6 +111,9 @@
               <div class="col-12">
                 <small class="form-text text-muted">{{ 'PURCHASES.PURCHASE_LIST.RECEPCION_Y_PAGO_APLICAN_SOLO' | translate }}</small>
               </div>
+              <div class="col-12 d-lg-none">
+                <button type="submit" class="btn btn-primary w-100" data-testid="apply-filters">{{ 'PURCHASES.PURCHASE_LIST.APLICAR_FILTROS' | translate }}</button>
+              </div>
             </form>
             @if (errorMessage) {
             <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
@@ -119,7 +133,71 @@
               <a class="btn btn-primary" routerLink="/pocketbiz/purchases/new" data-testid="empty-new">{{ 'PURCHASES.PURCHASE_LIST.NUEVA_COMPRA' | translate }}</a>
             </div>
             } @else {
-            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
+            <div class="purchase-cards d-lg-none" data-testid="purchase-cards">
+              @for (row of rows; track row.id) {
+              <article class="purchase-card" data-testid="purchase-card" [attr.aria-label]="row.reference">
+                <header class="purchase-card-header">
+                  <div class="min-w-0">
+                    <a class="fw-bold text-break" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
+                    @if (row.externalReference) {
+                    <small class="d-block text-secondary text-break">{{ row.externalReference }}</small>
+                    }
+                  </div>
+                  <span class="d-flex gap-1 flex-shrink-0">
+                    <a class="btn btn-tbl-edit btn-tbl-view purchase-card-action" [routerLink]="['/pocketbiz/purchases', row.id]"
+                      [title]="'PURCHASES.PURCHASE_LIST.VER_COMPRA' | translate" [attr.aria-label]="'PURCHASES.PURCHASE_LIST.VER_COMPRA' | translate">
+                      <i class="fas fa-eye" aria-hidden="true"></i>
+                    </a>
+                    @if (row.status === 'draft') {
+                    <a class="btn btn-tbl-edit btn-tbl-update purchase-card-action"
+                      [routerLink]="['/pocketbiz/purchases', row.id, 'edit']" [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
+                      <i class="fas fa-pen" aria-hidden="true"></i>
+                    </a>
+                    }
+                  </span>
+                </header>
+                <dl class="purchase-card-body">
+                  <dt>{{ 'PURCHASES.PURCHASE_LIST.FECHA' | translate }}</dt>
+                  <dd>{{ row.purchaseDate | date: 'dd/MM/yyyy' }}</dd>
+                  <dt>{{ 'PURCHASES.PURCHASE_LIST.PROVEEDOR' | translate }}</dt>
+                  <dd>{{ row.supplier.name || '—' }}</dd>
+                  <dt>{{ 'PURCHASES.PURCHASE_LIST.TOTAL' | translate }}</dt>
+                  <dd>{{ row.total | money }}</dd>
+                  <dt>{{ 'PURCHASES.PURCHASE_LIST.RECEPCION' | translate }}</dt>
+                  <dd>
+                    @if (row.receptionStatus; as reception) {
+                    <span class="badge-outline" [class]="receptionClass(reception)">{{ receptionLabel(reception) }}</span>
+                    } @else {
+                    —
+                    }
+                  </dd>
+                  <dt>{{ 'COMMON.ESTADO' | translate }}</dt>
+                  <dd><span class="badge-outline" [class]="statusClass(row.status)">{{ statusLabel(row.status) }}</span></dd>
+                  <dt>{{ 'PURCHASES.PURCHASE_LIST.PAGO' | translate }}</dt>
+                  <dd>
+                    @if (row.paymentStatus; as payment) {
+                    <span class="badge-outline" [class]="paymentClass(payment)">{{ paymentLabel(payment) }}</span>
+                    } @else {
+                    —
+                    }
+                  </dd>
+                  <dt>{{ 'PURCHASES.PURCHASE_LIST.SALDO' | translate }}</dt>
+                  <dd class="fw-bold">{{ row.balance !== null ? (row.balance | money) : '—' }}</dd>
+                </dl>
+              </article>
+              }
+              @if (loading) {
+              <p class="text-center text-secondary" data-testid="cards-loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+              } @else if (rows.length === 0) {
+              <p class="text-center text-secondary" data-testid="cards-empty">{{ messages.emptyMessage }}</p>
+              }
+              @if (total > pageSize) {
+              <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
+                [page]="pageIndex + 1" [maxSize]="3" [rotate]="true" size="sm"
+                [attr.aria-label]="'PURCHASES.PURCHASE_LIST.PAGINACION' | translate" (pageChange)="onCardsPage($event)" />
+              }
+            </div>
+            <ngx-datatable class="material d-none d-lg-block" [rows]="rows" [loadingIndicator]="loading" columnMode="flex"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
               <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.REFERENCIA' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="135">
