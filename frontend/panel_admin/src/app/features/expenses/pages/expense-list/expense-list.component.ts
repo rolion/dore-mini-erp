@@ -131,10 +131,13 @@ export class ExpenseListComponent implements OnInit {
     this.filterForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.currentShortcut = this.matchingShortcut();
       this.period.setValue(this.currentShortcut ?? '', { emitEvent: false });
-      this.pageIndex = 0;
       const valid = this.validateRange();
-      if (valid && !this.compact()) {
-        this.runQuery();
+      if (!this.compact()) {
+        // En pantalla estrecha la página solo vuelve a la primera al aplicar (la lista mostrada sigue siendo la aplicada).
+        this.pageIndex = 0;
+        if (valid) {
+          this.runQuery();
+        }
       }
     });
 

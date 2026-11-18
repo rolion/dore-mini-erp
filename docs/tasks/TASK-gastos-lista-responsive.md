@@ -1,6 +1,6 @@
 # TASK-gastos-lista-responsive: Lista de Gastos responsive (< 992 px)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-gastos-lista-responsive (base: `origin/accounting`)
@@ -13,6 +13,7 @@
 | 2026-11-18 | INVESTIGATION → PLANNING | NEEDS_PLAN, diseño SI (DDR escrito) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY, PR abierto contra `accounting` | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
+| 2026-11-18 | REVIEW → PUBLISH | Quality Gate PASS (4 hallazgos Low) | delivery-publish |
 
 ## Investigación
 
@@ -75,7 +76,7 @@ Lista de Gastos con rama compacta (`CompactViewportService` + `@if`) siguiendo `
 **Deuda:** unificar el color del badge Anulado entre tabla y tarjeta si se desea.
 
 ## Review
-_Pendiente_
+Quality Gate PASS (subagente aislado): lint, i18n:check, 1674 pruebas, build y audit OK; AC-01..08 cubiertos. Hallazgos Low: reinicio transitorio de página al editar fechas (corregido), badge Anulado gris vs rojo (DDR), sin spec de cambio de ancho con panel abierto. Revisión visual en navegador: no verificada.
 
 ## Publicación
-_Pendiente_
+PR #101 listo para aprobación humana contra `accounting`. No se mergea. Sin cambios sensibles (sin ADR, auth, BD ni infraestructura).
