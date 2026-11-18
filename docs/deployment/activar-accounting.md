@@ -1,16 +1,18 @@
 # Activar accounting en una empresa (runbook)
 
+> **Estado actual (CONT-13, 2026-11-18):** además del libro de entradas descrito abajo, `accounting` ya incluye **partida doble**: cuentas con código y clasificación, períodos fiscales con cierre, asientos manuales y automáticos (ventas, cobros, servicios, inventario, compras, gastos) configurados por módulo y reversión de asientos. Las cuentas por rol y los métodos de pago se configuran en Contabilidad; sin una cuenta o período necesarios la operación se rechaza sin guardar nada. El libro de entradas anterior sigue existiendo pero **no suma** al reporte contable (lo anterior al corte es histórico). Validación y evidencia: `docs/deployment/validacion-accounting-a-main.md`; transición del libro anterior: `docs/deployment/transicion-partida-doble.md`. El resto de esta guía describe solo el libro de entradas y su regularización.
+
 Guía para habilitar el libro de entradas y completar el histórico. Origen: PB-ACC-005. **Escribir esta guía no despliega ni regulariza nada**: cada paso lo ejecuta una persona administradora, empresa por empresa, primero en un entorno de prueba.
 
 ## Qué es y qué no es
 - El libro registra **entradas** = dinero recibido por pago de productos (pedidos) y servicios (proformas), con fecha efectiva del pago, cuenta destino y origen (`PRODUCT` / `SERVICE`). Un pago = una entrada, aunque se distribuya en varias líneas.
 - Los totales son **entradas registradas**: no son saldo bancario ni utilidad. Las cuentas son destinos de clasificación, no cuentas bancarias.
-- No incluye partida doble, contabilidad fiscal, egresos, transferencias, saldos iniciales ni reversiones.
+- Este libro de entradas no incluye partida doble ni reversiones (existen en el libro de asientos, ver el estado actual arriba).
 - El reporte ventas − gastos no cambia: no lee el libro.
 
 ## Antes de empezar
 1. Respaldo de la base de datos (el deploy ya lo hace; en una activación manual, hágalo antes).
-2. Confirmar que `main` incluye PB-ACC-001..005 y PB-COB-002 y que las migraciones `accounting` 0001..0003 están aplicadas (`python manage.py showmigrations accounting`).
+2. Confirmar que `main` incluye PB-ACC-001..005 y PB-COB-002 y que las migraciones `accounting` 0001..0011 están aplicadas (`python manage.py showmigrations accounting`).
 3. Usar una cuenta **administradora** de la empresa (los miembros reciben 403 en la API de contabilidad).
 
 ## Pasos
@@ -41,7 +43,7 @@ Guía para habilitar el libro de entradas y completar el histórico. Origen: PB-
 - Los pagos de Ventas históricos no tienen autor ni comprobante: quedan sin esos campos (no se inventan).
 
 ## Fuera de alcance (no hay forma de hacerlo hoy)
-Reversiones o anulaciones de entradas/pagos, edición manual de entradas, saldos iniciales, transferencias entre cuentas, egresos, partida doble y contabilidad fiscal. Una entrada incorrecta solo se resuelve con una tarea posterior.
+En el libro de entradas anterior: reversiones o anulaciones, edición manual y transferencias entre cuentas. Una entrada incorrecta solo se resuelve con una tarea posterior.
 
 ## Rollback
 Deshabilitar `accounting` devuelve los cobros al comportamiento anterior sin borrar entradas. No hay reversión de entradas regularizadas; por eso la previsualización y el respaldo previo son obligatorios.

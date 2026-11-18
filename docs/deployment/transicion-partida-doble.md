@@ -72,3 +72,9 @@ Resultado del diagnóstico sobre la copia (sin mapeo): 32 entradas, 0 convertibl
 ## Estado de la verificación
 - Pruebas del diagnóstico (7 unitarias y 8 de integración) y regresión de `accounting` (181): en verde. La base de pruebas se crea desde cero aplicando toda la cadena de migraciones sin errores.
 - **Ensayo en copia (2026-11-16):** `pg_dump -Fc` de `doredb` (237 602 bytes) → `createdb doredb_copia` → `pg_restore`; el diagnóstico de la copia es idéntico al de la original; `migrate` en la copia: «No migrations to apply»; el diagnóstico tras `migrate` es idéntico (mismos 32 movimientos y 4 448,50). La base original solo se leyó.
+
+## Actualización CONT-13 (2026-11-18)
+- El esquema destino ya existe en `main` y `accounting` (0001–0011); la **Etapa 2 (conversión del libro anterior) sigue sin implementarse**.
+- La base local `doredb` está en la cadena final y su `accounting_entry` quedó **vacío** (0 filas; el 2026-11-16 tenía 32): hoy no hay movimientos antiguos que convertir. Tiene 43 asientos / 88 líneas con Debe = Haber = 8 014,00.
+- El ensayo en copia (respaldo → restauración → `migrate` x2 → reversión a 0006 y avance a 0011) y la conciliación están en `docs/deployment/validacion-accounting-a-main.md`.
+- Siguen abiertas, para cuando exista un libro anterior real que convertir: códigos de cuentas de dinero, contrapartida de cobros y de gastos/compras, y cuenta de Patrimonio de las aperturas.

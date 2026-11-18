@@ -1,6 +1,6 @@
 # TASK-validar-migracion-integracion-conciliacion-contable: Validar migración, integración y conciliación de `accounting` antes de main (CONT-13)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-validar-migracion-integracion-conciliacion-contable (base: `accounting`)
@@ -13,6 +13,7 @@
 | 2026-11-18 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta CONT-13 | delivery-start |
 | 2026-11-18 | INVESTIGATION → PLANNING | Validación acotada, sin decisión arquitectónica nueva; sin pantallas | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación y validación completas | delivery-build |
 
 ## Investigación
 
@@ -32,8 +33,8 @@ Reglas transversales: precisión decimal y moneda existentes (sin conversión de
 Aclaración del usuario: usar la rama `accounting` como base.
 
 ### Hechos encontrados
-- `git rev-list --left-right --count origin/main...origin/accounting` = `0 38`: `main` no tiene nada que `accounting` no tenga; `accounting` (c1afaf1, PR #103) lleva 38 commits más. El PR `accounting → main` es, por tanto, un avance sin divergencia. La rama del task se creó desde `origin/accounting`.
-- Cadena de migraciones de `accounting`: `0001`…`0011` (`backend/modules/accounting/migrations/`). Las tablas nuevas del libro son `accounting_fiscal_period` (0009), `accounting_journal_entry`/`accounting_journal_line` (0010) y `accounting_posting_account` (0011); `0006` reemplazó la restricción única de `accounting_entry`. Las migraciones 0007–0011 solo crean/alteran estructura (sin `RunPython`).
+- `git rev-list --left-right --count origin/main...origin/accounting` = `0 38`: sin divergencia; `accounting` (c1afaf1, PR #103) lleva 38 commits más. **Corrección (verificada en build, `git diff --stat origin/main..origin/accounting`):** el diff neto es de 87 archivos (+4985/−79) y **no contiene ninguna migración**: `main` ya incluye `accounting` 0001–0011 (`git ls-tree origin/main backend/modules/accounting/migrations/`). Lo que añade el PR `accounting → main` son el flujo de dinero (`cash_flow*`, `ledger_report`), el reporte contable en `reporting`, la reversión del asiento al anular un gasto, pantallas de frontend (29 archivos) y documentación. La rama del task se creó desde `origin/accounting`.
+- Cadena de migraciones de `accounting` (ya en `main`): `0001`…`0011` (`backend/modules/accounting/migrations/`). Las tablas nuevas del libro son `accounting_fiscal_period` (0009), `accounting_journal_entry`/`accounting_journal_line` (0010) y `accounting_posting_account` (0011); `0006` reemplazó la restricción única de `accounting_entry`. Las migraciones 0007–0011 solo crean/alteran estructura (sin `RunPython`).
 - Modelo: `JournalEntryModel` (`infrastructure/django/models.py:198`, único por `(company, origin_kind, origin_id)` en `:236`) y `JournalLineModel` (`:245`, único `(entry, position)` en `:263`); `FiscalPeriodModel` (`:170`); `PostingAccountModel` (`:268`); el libro anterior `EntryModel` (`:122`) sigue existiendo.
 - Aplicación contable: `application/journal.py`, `fiscal_periods.py`, `posting.py`, `trial_balance.py`, `cash_flow.py`, `ledger_report.py`, `regularize.py`, `transition_diagnosis.py`; API en `accounting/api/` (`journal_views.py`, `posting_views.py`, `balance_views.py`, `cash_flow_views.py`, `views.py`).
 - Integraciones fuera de `accounting`: adaptadores/puertos en `sales`, `receivables`, `expenses`, `purchases` y `reporting` (`*/infrastructure/adapters.py`, `purchases/application/ports.py`).
@@ -65,7 +66,7 @@ El libro de partida doble, los períodos, la configuración de asientos por mód
 - Un defecto de conciliación descubierto aquí puede exigir un arreglo en código de producto; se corrige acotado dentro de este task y se documenta (no se oculta ni se baja el criterio).
 - La migración de la base local con datos reales de prueba puede no ser reproducible sin respaldo previo: toda ejecución sobre datos reales se hace sobre una **copia restaurada**, nunca sobre `doredb`.
 - Sin `pg_dump` accesible, el ensayo de recuperación quedaría incompleto.
-- Los 38 commits de `accounting` llegan a `main` de una vez y el push despliega: el PR debe listar migraciones y recuperación.
+- Los 38 commits de `accounting` llegan a `main` de una vez y el push despliega: el PR debe declarar que no hay migraciones nuevas y la recuperación.
 
 ### Veredicto de complejidad
 **NEEDS_PLAN** — validación, pruebas integradas y documentación sobre código ya decidido; no hay decisión arquitectónica nueva ni cambio de contrato previsto (cualquier cambio de contrato requeriría ADR y nueva versión del plan).
@@ -83,7 +84,11 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-18-validar-migracion-integracion-conciliacion-contable.md` (v1) · Modo: COMPLETO · Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Prueba integrada `backend/modules/accounting/tests/test_cont13_integration.py` (6 pruebas, PostgreSQL real): un recorrido único de venta con anticipo y entrega, servicio cobrado, compra con recepción y pago, gasto y anulación, con apertura manual, cuyos 11 saldos por cuenta están calculados a mano y concilian (AC-01, AC-04); período cerrado + reversión en período abierto (AC-03); recepción rechazada sin efectos parciales (AC-07); módulo deshabilitado y anterior al corte sin contabilización retroactiva (AC-05); segunda empresa sin fuga ni efecto, 401 sin sesión (AC-06); reintentos sin duplicados (AC-07). Verificación propia ejecutada y registrada en `docs/deployment/validacion-accounting-a-main.md` (AC-02, AC-10): ensayo `pg_dump` → `pg_restore` → `migrate` x2 en copia de `doredb`, y reversión a 0006 y avance a 0011 sobre la copia. Guías `activar-accounting.md` y `transicion-partida-doble.md` actualizadas (AC-09); cuerpo del PR `accounting → main` redactado en el informe, sin abrirlo (AC-11). Con la confirmación del usuario se hizo `npm ci` en el worktree (sin cambios en `package*.json`); se copió `backend/.env` sin leerlo (ignorado por git).
+
+**Desviaciones del plan:** (1) el PLAN decía que `accounting → main` traía migraciones nuevas: no es así (main ya tiene 0001–0011); se corrigió el hecho en la investigación, sin cambio de Specification (AC-02 sigue validando instalación nueva y actualización). (2) AC-08: no se escribió una prueba nueva de los submenús/configuración; se apoya en las pruebas de API existentes y en la suite de frontend (1702) — ver informe. (3) El estado real de `doredb` ya estaba en 0011, así que el «actualizar desde copia» se ensayó además revirtiendo la copia a 0006 y volviendo a avanzar.
+
+**Deuda técnica:** la Etapa 2 de CONT-07 (conversión del libro anterior) sigue sin implementar; hoy `accounting_entry` está vacío en la base local.
 
 ## Review
 _Pendiente_

@@ -1,4 +1,4 @@
-# PLAN-2026-11-18-validar-migracion-integracion-conciliacion-contable (v1)
+# PLAN-2026-11-18-validar-migracion-integracion-conciliacion-contable (v2)
 
 **Task:** TASK-validar-migracion-integracion-conciliacion-contable · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** Ninguno
@@ -134,3 +134,6 @@ No se crean migraciones. Nunca editar una migración aplicada; solo `migrate` so
 
 ## New dependencies
 Ninguna. (No se instala Playwright ni paquetes.)
+
+## Changelog
+- **v2** (2026-11-18): [Implementation Plan] Corrección de contexto: `main` ya contiene `accounting` 0001–0011, así que el PR `accounting → main` no trae migraciones nuevas (AC-02 y AC-11 no cambian; AC-11 declara «sin migraciones nuevas»). Solicitado por delivery-build.
