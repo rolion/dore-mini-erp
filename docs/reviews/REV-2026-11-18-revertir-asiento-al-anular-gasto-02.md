@@ -1,6 +1,6 @@
 # REV-2026-11-18-revertir-asiento-al-anular-gasto-02: código residual en test_voiding_api.py
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-18-revertir-asiento-al-anular-gasto.md (v1)
@@ -19,3 +19,6 @@ Código residual cosmético, sin impacto funcional.
 
 ## Evidence
 Informe del Quality Gate: hallazgo L-2, severidad Low.
+
+## Resolución
+Se eliminó `__all__`, el import de `CATEGORIES` sin uso y el `import UUID` local pasó al inicio del módulo; `expenses/tests`: OK.

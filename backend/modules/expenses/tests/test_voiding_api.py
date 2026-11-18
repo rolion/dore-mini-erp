@@ -1,6 +1,7 @@
 """GAS-02: al anular un gasto contabilizado se revierte el asiento completo (BD real, Contabilidad real)."""
 from datetime import timedelta
 from decimal import Decimal
+from uuid import UUID
 
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
@@ -17,7 +18,7 @@ from modules.accounts.testing import authenticate, make_admin
 from modules.expenses.infrastructure.django.models import ExpenseModel
 from modules.modularity.infrastructure.django.models import CompanyModuleModel
 
-from .test_posting_api import CATEGORIES, EXPENSES, TODAY, PostingApiBase, enable
+from .test_posting_api import EXPENSES, TODAY, PostingApiBase, enable
 
 
 class VoidPostedExpenseTests(PostingApiBase):
@@ -124,9 +125,25 @@ class VoidPostedExpenseTests(PostingApiBase):
         self.assertEqual(self.client.post(f'{EXPENSES}{created["id"]}/void/').status_code, 409)
         self.assertEqual(JournalEntryModel.objects.filter(reverses_id__isnull=False).count(), 1)
 
+    def test_a_posted_expense_whose_entry_is_missing_is_voided_without_inventing_a_reversal(self):  # EDGE-01
+        CompanyModuleModel.objects.filter(company_id=self.company.id, module_key='accounting').delete()
+        created = self.create()
+        enable(self.company, 'accounting')
+        ExpenseModel.objects.filter(pk=created['id']).update(expense_account_id=self.alquiler.id,
+                                                             payment_account_id=self.banco.id)
+        self.assertTrue(self.client.get(f'{EXPENSES}{created["id"]}/').json()['posted'])
+        self.assertIsNone(self.original(created))
+        self.assertEqual(self.void(created)['status'], 'VOIDED')
+        self.assertEqual(JournalEntryModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_voiding_when_today_is_outside_every_period_fails_and_keeps_the_expense_active(self):  # EDGE-02
+        accounting.coverage_status(self.company.id, TODAY)
+        SettingsModel.objects.filter(company_id=self.company.id).update(cutoff_date=TODAY - timedelta(days=200))
+        created = self.create(expense_date=(TODAY - timedelta(days=20)).isoformat())
+        FiscalPeriodModel.objects.filter(pk=self.period.id).update(end_date=TODAY - timedelta(days=1))
+        self.assertEqual(self.void(created, expected=409)['code'], 'date_outside_fiscal_period')
+        self.assertEqual(ExpenseModel.objects.get(pk=created['id']).status, 'ACTIVE')
+        self.assertFalse(JournalEntryModel.objects.filter(reverses_id__isnull=False).exists())
+
     def category_id(self):
-        from uuid import UUID
         return UUID(self.category['id'])
-
-
-__all__ = ['CATEGORIES']
