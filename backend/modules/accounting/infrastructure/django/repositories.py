@@ -9,6 +9,7 @@ from django.db.models import Count, Exists, Max, Min, OuterRef, Q, Sum
 from django.db.models.functions import Lower
 from django.utils import timezone
 
+from modules.accounting.application.cash_flow import EntryHeader
 from modules.accounting.application.journal_queries import JournalFilters
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES, OPERATION_RECORD
@@ -610,6 +611,14 @@ class DjangoJournalRepository:
                         entry__accounting_date__gte=date_from, entry__accounting_date__lte=date_to)
                 .order_by().values('entry_id', 'account_id').annotate(debit=Sum('debit'), credit=Sum('credit')))
         return [EntryMoneyLine(row['entry_id'], row['account_id'], row['debit'] - row['credit']) for row in rows]
+
+    def money_entries(self, entry_ids: list[UUID]) -> dict[UUID, EntryHeader]:
+        """Cabeceras (fecha, concepto, origen, reversión) de los asientos pedidos de la empresa."""
+        rows = self._rows().filter(id__in=entry_ids).order_by().values(
+            'id', 'accounting_date', 'created_at', 'description', 'origin_kind', 'origin_id', 'reverses_id')
+        return {row['id']: EntryHeader(row['id'], row['accounting_date'], row['created_at'], row['description'],
+                                       row['origin_kind'], row['origin_id'], row['reverses_id'] is not None)
+                for row in rows}
 
     def count_outside(self, period_id: UUID, start: date, end: date) -> int:
         """Asientos del período cuya fecha contable quedaría fuera del rango `[start, end]`."""

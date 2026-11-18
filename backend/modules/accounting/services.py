@@ -7,6 +7,7 @@ from uuid import UUID
 from django.db import connection, transaction
 from django.utils import timezone
 
+from modules.accounting.application.cash_flow import CashFlowAccountNotFound, ListCashFlowMovements  # noqa: F401
 from modules.accounting.application.coverage import GetCoverageStatus
 from modules.accounting.application.journal import PostJournalEntry, ReverseJournalEntry
 from modules.accounting.application.ledger_report import GetLedgerReport
@@ -474,6 +475,10 @@ class LedgerAccountFlow:
     opening: Decimal
     net: Decimal
     closing: Decimal
+    inflow: Decimal = Decimal('0.00')
+    outflow: Decimal = Decimal('0.00')
+    transfers_in: Decimal = Decimal('0.00')
+    transfers_out: Decimal = Decimal('0.00')
 
 
 @dataclass(frozen=True)
@@ -516,9 +521,50 @@ def get_ledger_report(company_id: UUID, date_from: date, date_to: date) -> Ledge
     return LedgerReport(
         report.coverage.cutoff_date, report.coverage.partial,
         LedgerCashFlow(flow.opening, flow.inflow, flow.outflow, flow.net, flow.closing, flow.transfers,
-                       tuple(LedgerAccountFlow(a.account_id, a.name, a.opening, a.net, a.closing)
-                             for a in flow.accounts)),
+                       tuple(LedgerAccountFlow(
+                           a.account_id, a.name, a.opening, a.net, a.closing, a.inflow, a.outflow, a.transfers_in,
+                           a.transfers_out) for a in flow.accounts)),
         LedgerResult(result.income, result.cost, result.margin, result.expense, result.result))
+
+
+@dataclass(frozen=True)
+class CashFlowMovement:
+    entry_id: UUID
+    accounting_date: date
+    account_id: UUID
+    account_name: str
+    description: str
+    origin_kind: str | None
+    origin_id: UUID | None
+    is_reversal: bool
+    kind: str  # inflow | outflow | transfer_in | transfer_out
+    amount: Decimal
+
+
+@dataclass(frozen=True)
+class CashFlowMovementList:
+    movements: tuple[CashFlowMovement, ...]
+    inflow: Decimal
+    outflow: Decimal
+    transfers_in: Decimal
+    transfers_out: Decimal
+
+
+def list_cash_flow_movements(company_id: UUID, date_from: date, date_to: date, account_id: UUID | None = None,
+                             movement_type: str | None = None) -> CashFlowMovementList:
+    """Movimientos de las cuentas de dinero en `[date_from, date_to]` con la misma clasificación del flujo (CONT-05).
+
+    `movement_type`: `inflow`, `outflow` o `transfer`. Lanza `CashFlowAccountNotFound` si `account_id` no es una cuenta
+    de dinero de la empresa. Lo anterior al corte no está en el libro y no se incluye.
+    """
+    result = ListCashFlowMovements(DjangoAccountRepository(company_id), DjangoJournalRepository(company_id),
+                                   DjangoCoverageRepository(company_id)).execute(
+        date_from, date_to, account_id, movement_type)
+    return CashFlowMovementList(
+        tuple(CashFlowMovement(r.entry.entry_id, r.entry.accounting_date, r.account_id, r.account_name,
+                               r.entry.description, r.entry.origin_kind, r.entry.origin_id, r.entry.is_reversal,
+                               r.kind, r.amount) for r in result.rows),
+        result.totals.inflow, result.totals.outflow, result.totals.transfers_in, result.totals.transfers_out)
 
 
 # --- Asientos automáticos por evento (CONT-12) --------------------------------------------------------------------

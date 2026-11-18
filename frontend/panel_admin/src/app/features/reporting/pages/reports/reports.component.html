@@ -50,17 +50,8 @@
             </tbody>
           </table>
           @if (l.cashFlow.accounts.length) {
-          <details class="reports-details mb-2" data-testid="ledger-accounts-details">
-            <summary>{{ 'REPORTING.REPORTS.VER_POR_CUENTA' | translate }}</summary>
-            <table class="table table-sm" data-testid="ledger-accounts">
-              <thead><tr><th>{{ 'REPORTING.REPORTS.CUENTA_DE_DINERO' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.VARIACION' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.SALDO_FINAL' | translate }}</th></tr></thead>
-              <tbody>
-                @for (a of l.cashFlow.accounts; track a.accountId) {
-                <tr><td>{{ a.name }}</td><td class="text-end">{{ a.net | money }}</td><td class="text-end">{{ a.closing | money }}</td></tr>
-                }
-              </tbody>
-            </table>
-          </details>
+          <a class="d-block mb-2" data-testid="ledger-accounts-link" routerLink="/pocketbiz/accounting/cash-flow"
+            [queryParams]="{ date_from: l.period.dateFrom, date_to: l.period.dateTo }">{{ 'REPORTING.REPORTS.VER_POR_CUENTA' | translate }}</a>
           }
           <small class="text-body-secondary d-block mb-1" data-testid="ledger-transfers">{{ 'REPORTING.REPORTS.TRANSFERENCIAS_INTERNAS' | translate: { p0: (l.cashFlow.transfers | money) } }}</small>
           <details class="reports-details">

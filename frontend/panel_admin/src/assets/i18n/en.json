@@ -8,7 +8,8 @@
         "REGULARIZATION": "Regularize historical payments",
         "ACCOUNTS": "Accounts",
         "JOURNAL": "Movements",
-        "BALANCES": "Balances"
+        "BALANCES": "Balances",
+        "CASH_FLOW": "Cash flow"
       }
     },
     "AGENDA": {
@@ -3136,6 +3137,45 @@
         "OTHER": "Other"
       },
       "MISSING_MORE": "Show {{p0}} more"
+    },
+    "CASH_FLOW": {
+      "TITLE": "Cash flow",
+      "COVERAGE_PARTIAL": "Part of the period is before the accounting cutoff ({{date}}); that data is not included.",
+      "OPENING": "Opening balance",
+      "INFLOW": "Inflows",
+      "OUTFLOW": "Outflows",
+      "NET": "Net flow",
+      "CLOSING": "Closing balance",
+      "TRANSFERS_NOTE": "Transfers between your accounts: {{amount}}. They do not change the net flow.",
+      "ACCOUNTS_TITLE": "Money accounts",
+      "ACCOUNT": "Account",
+      "TRANSFERS_IN": "Transfers in",
+      "TRANSFERS_OUT": "Transfers out",
+      "TOTAL": "Total",
+      "NO_ACCOUNTS": "No money accounts are set up.",
+      "GO_ACCOUNTS": "Go to Accounts",
+      "SELECT_ACCOUNT": "View the movements of {{name}}",
+      "ACCOUNT_CHIP": "Account: {{name}}",
+      "REMOVE_ACCOUNT": "Remove the account filter",
+      "MOVEMENTS_TITLE": "Movements",
+      "TYPE": "Type",
+      "TYPE_ALL": "All",
+      "TYPE_INFLOW": "Inflows",
+      "TYPE_OUTFLOW": "Outflows",
+      "TYPE_TRANSFER": "Transfers",
+      "KIND_INFLOW": "Inflow",
+      "KIND_OUTFLOW": "Outflow",
+      "KIND_TRANSFER_IN": "Transfer received",
+      "KIND_TRANSFER_OUT": "Transfer sent",
+      "CONCEPT": "Description",
+      "AMOUNT": "Amount",
+      "VIEW_ENTRY": "View entry",
+      "VIEW_ENTRY_N": "View the entry: {{description}}",
+      "REVERSAL": "Reversal",
+      "EMPTY": "No movements in this period.",
+      "SHOWING": "Showing {{from}}–{{to}} of {{total}}",
+      "PAGINATION": "Movement pages",
+      "FILTER_TOTALS": "Filter totals: inflows {{inflow}}, outflows {{outflow}}, transfers received {{transfersIn}} and sent {{transfersOut}}."
     }
   }
 }

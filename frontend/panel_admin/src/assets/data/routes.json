@@ -359,6 +359,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/accounting/cash-flow",
+          "title": "MENUITEMS.ACCOUNTING.LIST.CASH_FLOW",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/accounting/settings",
           "title": "MENUITEMS.ACCOUNTING.LIST.SETTINGS",
           "iconType": "",

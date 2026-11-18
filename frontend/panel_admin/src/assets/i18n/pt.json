@@ -8,7 +8,8 @@
         "REGULARIZATION": "Regularizar pagamentos históricos",
         "ACCOUNTS": "Contas",
         "JOURNAL": "Movimentos",
-        "BALANCES": "Saldos"
+        "BALANCES": "Saldos",
+        "CASH_FLOW": "Fluxo de dinheiro"
       }
     },
     "AGENDA": {
@@ -3136,6 +3137,45 @@
         "OTHER": "Outro"
       },
       "MISSING_MORE": "Ver mais {{p0}}"
+    },
+    "CASH_FLOW": {
+      "TITLE": "Fluxo de dinheiro",
+      "COVERAGE_PARTIAL": "Parte do período é anterior ao corte contábil ({{date}}); esses dados não estão incluídos.",
+      "OPENING": "Saldo inicial",
+      "INFLOW": "Entradas",
+      "OUTFLOW": "Saídas",
+      "NET": "Fluxo líquido",
+      "CLOSING": "Saldo final",
+      "TRANSFERS_NOTE": "Transferências entre suas contas: {{amount}}. Não alteram o fluxo líquido.",
+      "ACCOUNTS_TITLE": "Contas de dinheiro",
+      "ACCOUNT": "Conta",
+      "TRANSFERS_IN": "Transf. recebidas",
+      "TRANSFERS_OUT": "Transf. enviadas",
+      "TOTAL": "Total",
+      "NO_ACCOUNTS": "Não há contas de dinheiro configuradas.",
+      "GO_ACCOUNTS": "Ir para Contas",
+      "SELECT_ACCOUNT": "Ver os movimentos de {{name}}",
+      "ACCOUNT_CHIP": "Conta: {{name}}",
+      "REMOVE_ACCOUNT": "Remover o filtro de conta",
+      "MOVEMENTS_TITLE": "Movimentos",
+      "TYPE": "Tipo",
+      "TYPE_ALL": "Todos",
+      "TYPE_INFLOW": "Entradas",
+      "TYPE_OUTFLOW": "Saídas",
+      "TYPE_TRANSFER": "Transferências",
+      "KIND_INFLOW": "Entrada",
+      "KIND_OUTFLOW": "Saída",
+      "KIND_TRANSFER_IN": "Transferência recebida",
+      "KIND_TRANSFER_OUT": "Transferência enviada",
+      "CONCEPT": "Descrição",
+      "AMOUNT": "Valor",
+      "VIEW_ENTRY": "Ver lançamento",
+      "VIEW_ENTRY_N": "Ver o lançamento: {{description}}",
+      "REVERSAL": "Estorno",
+      "EMPTY": "Sem movimentos neste período.",
+      "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
+      "PAGINATION": "Páginas de movimentos",
+      "FILTER_TOTALS": "Totais do filtro: entradas {{inflow}}, saídas {{outflow}}, transferências recebidas {{transfersIn}} e enviadas {{transfersOut}}."
     }
   }
 }
