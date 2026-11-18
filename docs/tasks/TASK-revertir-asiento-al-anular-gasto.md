@@ -1,6 +1,6 @@
 # TASK-revertir-asiento-al-anular-gasto: Revertir el asiento completo al anular un gasto (GAS-02)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-revertir-asiento-al-anular-gasto (base: `accounting`)
@@ -13,6 +13,7 @@
 | 2026-11-18 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta GAS-02; base = rama `accounting` (indicación de la persona; la rama de trabajo se actualizó a `origin/accounting`, commit `de1abd4`) | delivery-start |
 | 2026-11-18 | INVESTIGATION → PLANNING | NEEDS_PLAN: GAS-01 ya implementó la reversión; quedan brechas acotadas (usuario, módulo deshabilitado, pruebas de AC, vínculo a la reversión) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación según PLAN v1; pruebas escritas pero **no ejecutadas** (sin `DATABASE_URL` ni `node_modules` completo) | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,18 @@ No aplica según veredicto; se sigue `ADR-registrar-gastos-cuenta-gasto-pago-pue
 `docs/plans/PLAN-2026-11-18-revertir-asiento-al-anular-gasto.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Resumen: la anulación ya revertía el asiento completo (GAS-01); se cierran las brechas de la tarjeta.
+
+- **Actor en la reversión** (INV-04, AC-05): `ExpensePostingGateway.reverse(expense_id, actor_id, actor_name)`, `VoidExpense.execute(..., actor_id, actor_name)`, `AccountingPosting.reverse` reenvía `created_by`/`created_by_name` a `reverse_automatic_entry`; la vista toma al usuario autenticado.
+- **`reversal_entry_id`** (API-01/02, AC-07): `AccountingPosting.entry_ids` devuelve `(asiento, reversión)` (reemplaza `entry_id`, sin otros usos); campo aditivo en el detalle y la respuesta de void.
+- **Frontend** (UI-01): `reversalEntryId` en modelo/servicio/fixture, enlace «Ver reversión» (`data-testid="reversal-link"`) junto a «Ver asiento», claves `VER_REVERSION` es/en/pt. Pantalla de referencia: Detalle existente; sin componentes nuevos.
+- **Pruebas escritas:** `expenses/tests/test_voiding_api.py` (AC-01, 03, 04, 05, 06, 07, 08, EDGE-03), `test_voiding_concurrency.py` (AC-02), ajuste de `test_posting_application.py` (actor), specs del detalle y del servicio.
+
+Desviaciones: ninguna en el diseño. No fue necesario tocar `accounting`; **no se sabe aún** si AC-06 (módulo deshabilitado) y AC-04 pasan: dependen de ejecutar las pruebas.
+
+**Verificación propia:** solo `npm run i18n:check` (2224 claves, 0 faltantes). **No ejecutado:** backend (falta `DATABASE_URL`; no se lee `.env`) ni specs/lint/build del frontend (el `node_modules` del repo principal está incompleto: sin `@angular`).
+
+Deuda técnica: el `DjangoOutflowLedger.open_count()` sigue devolviendo 0, por lo que deshabilitar Contabilidad no se bloquea con egresos sin revertir (ADR modularidad, decisión 6); fuera de alcance.
 
 ## Review
 _Pendiente_
