@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-revertir-asiento-al-anular-gasto (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/92
 **Fuente:** https://trello.com/c/NymyeXFY/6-gas-02-revertir-todas-las-l%C3%ADneas-del-asiento-al-anular-un-gasto
 
 ## Historial de transiciones
