@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-adaptar-reportes-libro-partida-doble (base: `task/TASK-revertir-asiento-al-anular-gasto`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/100 (base `accounting`)
 **Fuente:** https://trello.com/c/r2KUm3GG/9-cont-05-adaptar-reportes-al-libro-de-partida-doble-sin-duplicar-compras-y-cobros
 
 ## Historial de transiciones
