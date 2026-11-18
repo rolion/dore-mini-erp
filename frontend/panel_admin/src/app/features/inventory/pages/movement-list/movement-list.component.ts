@@ -1,10 +1,12 @@
 import { tr } from '../../../../core/i18n/translate';
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Subject, catchError, finalize, switchMap } from 'rxjs';
 import { Product } from '../../../products/models/product';
@@ -33,7 +35,7 @@ export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_
   selector: 'app-movement-list',
   templateUrl: './movement-list.component.html',
   styleUrl: './movement-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, NgbPagination],
 })
 export class MovementListComponent implements OnInit {
   readonly pageSize = 10;
@@ -57,6 +59,12 @@ export class MovementListComponent implements OnInit {
   loading = false;
   errorMessage = '';
   rangeError = '';
+  /** Solo en pantalla estrecha: el panel de filtros se abre con «Filtros» y se cierra al aplicar. */
+  filtersOpen = false;
+  readonly compact = inject(CompactViewportService).compact;
+  private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
+  /** Filtros vigentes (los que produjeron la lista); en pantalla estrecha el formulario puede ir por delante. */
+  private appliedValue = this.filterForm.getRawValue();
   products: Product[] = [];
   warehouses: Warehouse[] = [];
 
@@ -129,16 +137,62 @@ export class MovementListComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (page) => (this.warehouses = page.results), error: () => (this.warehouses = []) });
 
+    // En pantalla estrecha se aplica con «Aplicar»: cerrar el panel al elegir «Desde» impediría elegir «Hasta».
     this.filterForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
-      if (this.sourceId && this.filterForm.getRawValue().sourceType !== this.documentSource) {
-        this.sourceId = ''; // cambiar la clase de origen deja de filtrar por ese pedido
-      }
-      this.pageIndex = 0;
-      if (this.validateRange()) {
-        this.reload$.next();
+      if (!this.compact()) {
+        this.applyForm();
       }
     });
+    this.appliedValue = this.filterForm.getRawValue();
     this.reload$.next();
+  }
+
+  private applyForm(): void {
+    if (this.sourceId && this.filterForm.getRawValue().sourceType !== this.documentSource) {
+      this.sourceId = ''; // cambiar la clase de origen deja de filtrar por ese pedido
+    }
+    this.pageIndex = 0;
+    if (this.validateRange()) {
+      this.appliedValue = this.filterForm.getRawValue();
+      this.reload$.next();
+    }
+  }
+
+  /** «Aplicar» en pantalla estrecha: aplica, cierra el panel y lleva el foco al resumen de resultados. */
+  applyAndClose(): void {
+    this.applyForm();
+    if (this.rangeError) return;
+    this.filtersOpen = false;
+    queueMicrotask(() => this.summary()?.nativeElement.focus());
+  }
+
+  /** Filtros vigentes como texto, para los chips con el panel cerrado y el contador del botón. */
+  get appliedFilters(): string[] {
+    const f = this.appliedValue;
+    const applied: string[] = [];
+    if (f.dateFrom) applied.push(`${tr('COMMON.DESDE')}: ${f.dateFrom}`);
+    if (f.dateTo) applied.push(`${tr('COMMON.HASTA')}: ${f.dateTo}`);
+    const product = this.products.find((item) => item.id === f.productId);
+    if (f.productId) applied.push(product?.name ?? tr('COMMON.PRODUCTO'));
+    const warehouse = this.warehouses.find((item) => item.id === f.warehouseId);
+    if (f.warehouseId) applied.push(warehouse?.name ?? tr('COMMON.ALMACEN'));
+    if (f.kind) applied.push(f.kind === 'in' ? tr('INVENTORY.MOVEMENT_LIST.ENTRADA') : tr('INVENTORY.MOVEMENT_LIST.SALIDA'));
+    const source = this.sourceOptions.find((option) => option.value === f.sourceType);
+    if (f.sourceType) applied.push(source?.label ?? f.sourceType);
+    return applied;
+  }
+
+  get activeFilterCount(): number {
+    return this.appliedFilters.length;
+  }
+
+  /** Rango visible para «Mostrando 1–10 de N». */
+  get shownFrom(): number {
+    return this.rows.length === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+
+  get shownTo(): number {
+    return this.pageIndex * this.pageSize + this.rows.length;
   }
 
   /** El producto del filtro (p. ej. el que llega desde Existencias, activo o no) siempre debe poder elegirse. */
@@ -165,6 +219,7 @@ export class MovementListComponent implements OnInit {
   clearOrderFilter(): void {
     this.sourceId = '';
     this.filterForm.patchValue({ sourceType: '' });
+    if (this.compact()) this.applyForm();
   }
 
   statusLabel(status: MovementStatus): string {
@@ -178,6 +233,10 @@ export class MovementListComponent implements OnInit {
   clearFilters(): void {
     this.sourceId = '';
     this.filterForm.setValue({ dateFrom: '', dateTo: '', productId: '', warehouseId: '', kind: '', sourceType: '' });
+    if (this.compact()) {
+      this.filtersOpen = false;
+      this.applyForm();
+    }
   }
 
   onPage(event: { offset: number }): void {
@@ -187,6 +246,16 @@ export class MovementListComponent implements OnInit {
     }
     this.pageIndex = event.offset;
     this.reload$.next();
+  }
+
+  /** Paginación de las tarjetas (`ngb-pagination` es base 1) y vuelta al inicio de la lista. */
+  onPageNumber(page: number): void {
+    this.onPage({ offset: page - 1 });
+    queueMicrotask(() => {
+      const el = this.summary()?.nativeElement;
+      el?.scrollIntoView({ block: 'start' });
+      el?.focus();
+    });
   }
 
   /** Enlace al documento de origen: solo con el módulo propietario habilitado y una pantalla de destino. */
