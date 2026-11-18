@@ -1,9 +1,12 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { NgbCollapse, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, switchMap } from 'rxjs';
@@ -13,11 +16,16 @@ import { CustomersApiService } from '../../services/customers-api.service';
 
 export type StatusFilter = 'all' | 'active' | 'inactive';
 
+/** Por debajo de `lg` (992 px) los filtros son un panel colapsable con «Aplicar» y las filas son tarjetas. */
+export const COMPACT_QUERY = '(max-width: 991.98px)';
+
+const DEFAULT_STATUS: StatusFilter = 'active';
+
 @Component({
   selector: 'app-customer-list',
   templateUrl: './customer-list.component.html',
   styleUrl: './customer-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, NgbCollapse, NgbPagination, NgTemplateOutlet],
 })
 export class CustomerListComponent implements OnInit {
   readonly pageSize = 10;
@@ -26,14 +34,20 @@ export class CustomerListComponent implements OnInit {
   }
   readonly searchControl = new FormControl('', { nonNullable: true });
   /** Los clientes desactivados no aparecen por defecto (REQ-CUS-005). */
-  readonly statusControl = new FormControl<StatusFilter>('active', { nonNullable: true });
+  readonly statusControl = new FormControl<StatusFilter>(DEFAULT_STATUS, { nonNullable: true });
 
   rows: Customer[] = [];
   total = 0;
   /** Página actual base 0, como espera ngx-datatable. */
   pageIndex = 0;
   loading = false;
+  /** Pantalla estrecha: tarjetas en vez de tabla y filtros con «Aplicar». */
+  compact = false;
+  filtersCollapsed = true;
+  /** Filtros que se enviaron al servidor (en pantalla estrecha pueden diferir de lo escrito hasta pulsar «Aplicar»). */
+  private applied = { search: '', status: DEFAULT_STATUS as StatusFilter };
 
+  private breakpoints = inject(BreakpointObserver);
   private api = inject(CustomersApiService);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
@@ -46,7 +60,7 @@ export class CustomerListComponent implements OnInit {
           this.loading = true;
           return this.api
             .list({
-              search: this.searchControl.value.trim(),
+              search: this.applied.search,
               active: this.activeFilter(),
               page: this.pageIndex + 1,
               pageSize: this.pageSize,
@@ -66,14 +80,46 @@ export class CustomerListComponent implements OnInit {
         this.total = page.count;
       });
 
+    this.breakpoints
+      .observe(COMPACT_QUERY)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((state) => (this.compact = state.matches));
+
+    // En pantalla estrecha los cambios se aplican con «Aplicar»; en escritorio, al instante.
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.goToFirstPageAndReload());
+      .subscribe(() => this.applyIfWide());
     this.statusControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.goToFirstPageAndReload());
+      .subscribe(() => this.applyIfWide());
 
     this.reload$.next();
+  }
+
+  /** Cuántos filtros se apartan de su valor por defecto (contador del botón «Filtros»). */
+  get activeFilterCount(): number {
+    return (this.searchControl.value.trim() ? 1 : 0) + (this.statusControl.value !== DEFAULT_STATUS ? 1 : 0);
+  }
+
+  toggleFilters(): void {
+    this.filtersCollapsed = !this.filtersCollapsed;
+  }
+
+  /** Consulta con lo escrito en los filtros y repliega el panel para mostrar las tarjetas. */
+  applyFilters(): void {
+    this.filtersCollapsed = true;
+    this.syncAppliedAndReload();
+  }
+
+  clearFilters(): void {
+    this.searchControl.setValue('', { emitEvent: false });
+    this.statusControl.setValue(DEFAULT_STATUS, { emitEvent: false });
+    this.applyFilters();
+  }
+
+  /** Página (base 1) para `ngb-pagination` en la vista de tarjetas. */
+  onCardsPage(page: number): void {
+    this.onPage({ offset: page - 1 });
   }
 
   onPage(event: { offset: number }): void {
@@ -117,7 +163,7 @@ export class CustomerListComponent implements OnInit {
   }
 
   private activeFilter(): boolean | undefined {
-    switch (this.statusControl.value) {
+    switch (this.applied.status) {
       case 'active':
         return true;
       case 'inactive':
@@ -127,7 +173,14 @@ export class CustomerListComponent implements OnInit {
     }
   }
 
-  private goToFirstPageAndReload(): void {
+  private applyIfWide(): void {
+    if (!this.compact) {
+      this.syncAppliedAndReload();
+    }
+  }
+
+  private syncAppliedAndReload(): void {
+    this.applied = { search: this.searchControl.value.trim(), status: this.statusControl.value };
     this.pageIndex = 0;
     this.reload$.next();
   }

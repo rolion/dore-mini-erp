@@ -401,6 +401,9 @@
       "PHONE_TAKEN_LIST": "These customers already have that phone:"
     },
     "CUSTOMER_LIST": {
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply",
+      "FILTROS_ACTIVOS": "{{count}} active filters",
       "CLIENTES": "Customers",
       "NUEVO_CLIENTE": "New customer",
       "VER_PERFIL": "View profile",

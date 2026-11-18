@@ -2,9 +2,10 @@ import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { ToastrService } from 'ngx-toastr';
 import Swal, { SweetAlertResult } from 'sweetalert2';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 
 import { Customer, CustomerApiError } from '../../models/customer';
 import { Page } from '../../../../shared/models/page';
@@ -25,6 +26,7 @@ describe('CustomerListComponent', () => {
   let component: CustomerListComponent;
   let api: jasmine.SpyObj<CustomersApiService>;
   let toastr: jasmine.SpyObj<ToastrService>;
+  let compact$: BehaviorSubject<{ matches: boolean }>;
 
   const active = makeCustomer({ id: 'a', name: 'Ana Pérez' });
   const inactive = makeCustomer({ id: 'b', name: 'Beto', phone: '', email: '', active: false });
@@ -34,12 +36,15 @@ describe('CustomerListComponent', () => {
     api.list.and.returnValue(of(page([active, inactive])));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
 
+    compact$ = new BehaviorSubject<{ matches: boolean }>({ matches: false });
+
     await TestBed.configureTestingModule({
       imports: [CustomerListComponent],
       providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: CustomersApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
+        { provide: BreakpointObserver, useValue: { observe: () => compact$ } },
       ],
     }).compileComponents();
 
@@ -186,5 +191,74 @@ describe('CustomerListComponent', () => {
     expect(options['titleText']).toBe('¿Quieres desactivar a "<img src=x onerror="window.__xss=1">"?');
     expect(options['title']).toBeUndefined();
     expect(options['html']).toBeUndefined();
+  });
+
+  describe('compact (< 992 px)', () => {
+    const el = () => fixture.nativeElement as HTMLElement;
+    const byId = (id: string) => el().querySelector(`[data-testid="${id}"]`) as HTMLElement | null;
+
+    beforeEach(() => {
+      compact$.next({ matches: true });
+      fixture.detectChanges();
+      fixture.detectChanges();
+    });
+
+    it('shows cards instead of the table, with phone, email and state', () => {
+      expect(el().querySelector('ngx-datatable')).toBeNull();
+      const cards = el().querySelectorAll('[data-testid="customer-card"]');
+      expect(cards.length).toBe(2);
+      expect(cards[0].textContent).toContain('Ana Pérez');
+      expect(cards[0].textContent).toContain('+59176543210');
+      expect(cards[0].textContent).toContain('ana@example.com');
+      expect(cards[1].textContent).toContain('Inactivo');
+      expect(byId('customer-total')?.textContent).toContain('2');
+    });
+
+    it('puts «Nuevo cliente» above the filters toggle', () => {
+      const add = byId('new-customer') as HTMLElement;
+      const toggle = byId('filters-toggle') as HTMLElement;
+      expect(add.getAttribute('href')).toBe('/pocketbiz/customers/new');
+      expect(add.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('toggles the filter panel (aria-expanded) and starts collapsed', () => {
+      const toggle = byId('filters-toggle') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('does not query while typing; «Aplicar» queries, goes to page 1 and collapses', fakeAsync(() => {
+      component.filtersCollapsed = false;
+      component.searchControl.setValue('ana');
+      component.statusControl.setValue('all');
+      tick(400);
+      expect(api.list).toHaveBeenCalledTimes(1);
+
+      component.applyFilters();
+
+      expect(api.list).toHaveBeenCalledTimes(2);
+      expect(lastListParams()).toEqual({ search: 'ana', active: undefined, page: 1, pageSize: 10 });
+      expect(component.filtersCollapsed).toBeTrue();
+    }));
+
+    it('keeps the applied filters when changing page with unapplied edits', fakeAsync(() => {
+      component.searchControl.setValue('zzz');
+      tick(400);
+      component.onPage({ offset: 1 });
+      expect(lastListParams()).toEqual({ search: '', active: true, page: 2, pageSize: 10 });
+    }));
+
+    it('counts active filters and clears them back to defaults', fakeAsync(() => {
+      component.searchControl.setValue('ana');
+      component.statusControl.setValue('inactive');
+      expect(component.activeFilterCount).toBe(2);
+
+      component.clearFilters();
+
+      expect(component.activeFilterCount).toBe(0);
+      expect(lastListParams()).toEqual({ search: '', active: true, page: 1, pageSize: 10 });
+    }));
   });
 });
