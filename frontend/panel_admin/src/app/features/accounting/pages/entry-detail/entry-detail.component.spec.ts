@@ -26,6 +26,21 @@ describe('EntryDetailComponent', () => {
     return { fixture, api };
   }
 
+  it('shows classification, signed amount and links between a movement and its reversal (UI-02, UI-04)', () => {
+    const original = create(of(makeEntry({
+      origin: 'EXPENSE', direction: 'EXPENSE', classificationName: 'Alquiler', reversedBy: 'e-9', documentRef: 'gasto-1',
+    }))).fixture.nativeElement as HTMLElement;
+    expect(original.querySelector('[data-testid="amount"]')?.textContent).toContain('−');
+    expect(original.querySelector('[data-testid="classification"]')?.textContent).toContain('Alquiler');
+    expect(original.querySelector('[data-testid="reversal-link"]')).not.toBeNull();
+    expect(original.querySelector('[data-testid="reversal-badge"]')).toBeNull();
+    TestBed.resetTestingModule();
+    const reversal = create(of(makeEntry({ operation: 'REVERSAL', direction: 'INCOME', reversalOf: 'e-1' }))).fixture
+      .nativeElement as HTMLElement;
+    expect(reversal.querySelector('[data-testid="reversal-badge"]')).not.toBeNull();
+    expect(reversal.querySelector('[data-testid="original-link"]')).not.toBeNull();
+  });
+
   it('shows the entry data with a link to the source and no edit actions (UI-04)', () => {
     const { fixture, api } = create(of(makeEntry({ documentRef: 'o-1', receiptNumber: 'CB-000001' })));
     const el = fixture.nativeElement as HTMLElement;

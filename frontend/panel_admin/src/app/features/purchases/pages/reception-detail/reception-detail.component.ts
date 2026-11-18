@@ -1,6 +1,7 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -20,7 +21,7 @@ import { ReceiptsApiService } from '../../services/receipts-api.service';
 @Component({
   selector: 'app-reception-detail',
   templateUrl: './reception-detail.component.html',
-  imports: [TranslatePipe, RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe],
 })
 export class ReceptionDetailComponent implements OnInit {
   readonly statusLabels = RECEIPT_STATUS_LABELS;

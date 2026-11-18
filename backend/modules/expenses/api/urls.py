@@ -2,17 +2,20 @@ from django.urls import path
 
 from .views import (
     CategoryActivateView,
+    CategoryClassificationView,
     CategoryDeactivateView,
     CategoryDetailView,
     CategoryListCreateView,
     ExpenseDetailView,
     ExpenseListCreateView,
+    ExpensePostingOptionsView,
     ExpenseVoidView,
 )
 
 # Los ids van como `str` y la vista los convierte: un id mal formado responde 404 `{detail}`, no una página HTML.
 expense_urlpatterns = [
     path('', ExpenseListCreateView.as_view(), name='expense-list'),
+    path('posting-options/', ExpensePostingOptionsView.as_view(), name='expense-posting-options'),
     path('<str:expense_id>/', ExpenseDetailView.as_view(), name='expense-detail'),
     path('<str:expense_id>/void/', ExpenseVoidView.as_view(), name='expense-void'),
 ]
@@ -20,6 +23,8 @@ expense_urlpatterns = [
 category_urlpatterns = [
     path('', CategoryListCreateView.as_view(), name='expense-category-list'),
     path('<str:category_id>/', CategoryDetailView.as_view(), name='expense-category-detail'),
+    path('<str:category_id>/classification/', CategoryClassificationView.as_view(),
+         name='expense-category-classification'),
     path('<str:category_id>/activate/', CategoryActivateView.as_view(), name='expense-category-activate'),
     path('<str:category_id>/deactivate/', CategoryDeactivateView.as_view(), name='expense-category-deactivate'),
 ]

@@ -38,3 +38,32 @@ class ValuationLineModel(models.Model):
             models.CheckConstraint(condition=models.Q(total_value__gte=0), name='costing_line_value_nonneg'),
             models.CheckConstraint(condition=models.Q(reconciled_quantity__gt=0), name='costing_line_qty_positive'),
         ]
+
+
+class CostEventModel(models.Model):
+    """Ledger de costo: eventos inmutables (solo se insertan), únicos por `(empresa, tipo, origen, producto)`."""
+
+    company_id = models.UUIDField(db_index=True)
+    kind = models.CharField(max_length=20)
+    source_type = models.CharField(max_length=40)
+    source_id = models.CharField(max_length=64)
+    # Sin FK al producto (es de otro módulo).
+    product_id = models.UUIDField()
+    quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    unit_cost = models.DecimalField(max_digits=20, decimal_places=6)
+    total_cost = models.DecimalField(max_digits=16, decimal_places=2)
+    average_after = models.DecimalField(max_digits=20, decimal_places=6)
+    reverses_id = models.BigIntegerField(null=True, blank=True)
+    occurred_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'costing_cost_event'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'kind', 'source_type', 'source_id', 'product_id'],
+                                    name='costing_event_origin_uniq'),
+            models.CheckConstraint(condition=models.Q(quantity__gt=0), name='costing_event_qty_positive'),
+            models.CheckConstraint(condition=models.Q(unit_cost__gte=0, total_cost__gte=0),
+                                   name='costing_event_cost_nonneg'),
+        ]
+        indexes = [models.Index(fields=['company_id', 'product_id', 'kind', '-id'], name='costing_event_latest_idx')]

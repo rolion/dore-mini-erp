@@ -1,4 +1,5 @@
 import { tr } from '../../../core/i18n/translate';
+import type { PostingIssue } from './expense';
 /** Errores de validación por campo devueltos por el servidor (clave = campo del formulario). */
 export type FieldErrors = Partial<Record<string, string[]>>;
 
@@ -9,6 +10,8 @@ export class ExpensesApiError extends Error {
     readonly fieldErrors: FieldErrors = {},
     /** Código estable de una violación de regla (409): `already_voided`, `expense_voided`. */
     readonly code: string | null = null,
+    /** Faltantes de configuración contable (`posting_configuration_missing`, 400). */
+    readonly issues: PostingIssue[] = [],
   ) {
     super(message);
     this.name = 'ExpensesApiError';
@@ -29,6 +32,8 @@ const FIELD_MAP: Record<string, string> = {
   payment_method: 'paymentMethod',
   supplier_name: 'supplierName',
   notes: 'notes',
+  expense_account_id: 'expenseAccountId',
+  payment_account_id: 'paymentAccountId',
   name: 'name',
 };
 
@@ -45,6 +50,11 @@ function toFieldErrors(body: unknown): FieldErrors {
   return errors;
 }
 
+function issuesOf(body: unknown): PostingIssue[] {
+  const issues = (body && typeof body === 'object' ? (body as { issues?: unknown }).issues : null) ?? [];
+  return Array.isArray(issues) ? (issues as PostingIssue[]) : [];
+}
+
 function detailOf(body: unknown): { detail: string; code: string | null } {
   const record = (body && typeof body === 'object' ? body : {}) as { detail?: unknown; code?: unknown };
   return {
@@ -59,7 +69,8 @@ export function toApiError(status: number, body: unknown): ExpensesApiError {
     return new ExpensesApiError(NETWORK_ERROR_MESSAGE(), 0);
   }
   if (status === 400) {
-    return new ExpensesApiError(VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(body));
+    const { detail, code } = detailOf(body);
+    return new ExpensesApiError(detail || VALIDATION_ERROR_MESSAGE(), 400, toFieldErrors(body), code, issuesOf(body));
   }
   const { detail, code } = detailOf(body);
   if (status === 404) {

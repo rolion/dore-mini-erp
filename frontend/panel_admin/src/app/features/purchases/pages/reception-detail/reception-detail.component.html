@@ -63,6 +63,16 @@
               <dt class="col-sm-3">{{ 'COMMON.ALMACEN' | translate }}</dt>
               <dd class="col-sm-9" data-testid="warehouse">{{ r.warehouse.name || '—' }}</dd>
               }
+              @if (r.accountingEnabled) {
+              <dt class="col-sm-3">{{ 'PURCHASES.RECEPTION_DETAIL.ASIENTO_CONTABLE' | translate }}</dt>
+              <dd class="col-sm-9" data-testid="accounting-entry">
+                @if (r.accountingEntry; as entry) {
+                <a data-testid="accounting-entry-link" [routerLink]="['/pocketbiz/accounting/journal', entry.id]">{{ entry.accountingDate | date: 'dd/MM/yyyy' }} · {{ entry.total | money }}</a>
+                } @else {
+                <span class="text-muted" data-testid="no-accounting-entry">{{ 'PURCHASES.RECEPTION_DETAIL.SIN_ASIENTO_CONTABLE' | translate }}</span>
+                }
+              </dd>
+              }
             </dl>
             <h5 class="mx-4">{{ 'PURCHASES.RECEPTION_DETAIL.PRODUCTOS_RECIBIDOS' | translate }}</h5>
             <div class="table-responsive mx-4">

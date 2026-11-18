@@ -15,6 +15,116 @@
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="card">
           <div class="p-10">
+            @if (compact()) {
+            <div class="d-flex flex-column gap-2 mb-2">
+              <h2 class="h5 m-0"><strong>{{ 'COMMON.PROVEEDORES' | translate }}</strong></h2>
+              <a class="btn btn-primary" data-testid="add-supplier" routerLink="/pocketbiz/purchases/suppliers/new">
+                <i class="material-icons align-middle" aria-hidden="true">add</i> {{ 'PURCHASES.SUPPLIER_LIST.NUEVO_PROVEEDOR' | translate }}
+              </a>
+              <div class="d-flex align-items-center gap-2" data-testid="filters-toolbar">
+                <button type="button" class="btn btn-light" data-testid="filters-toggle" aria-controls="supplier-filters"
+                  [attr.aria-expanded]="filtersOpen" (click)="filtersOpen = !filtersOpen">
+                  <i class="fas fa-filter" aria-hidden="true"></i> {{ 'PURCHASES.SUPPLIER_LIST.FILTROS' | translate }}
+                  @if (activeFilterCount > 0) {
+                  <span class="badge bg-primary ms-1" data-testid="filters-count">{{ activeFilterCount }}</span>
+                  }
+                </button>
+                @if (!filtersOpen) {
+                <div class="d-flex flex-wrap gap-1" data-testid="filters-chips">
+                  @for (filter of appliedFilters; track filter) {
+                  <span class="badge-outline col-blue">{{ filter }}</span>
+                  }
+                </div>
+                }
+              </div>
+              <div id="supplier-filters" class="row g-2" [class.d-none]="!filtersOpen" data-testid="filters">
+                <div class="col-12 col-sm-6">
+                  <label for="supplier-search-compact">{{ 'PURCHASES.SUPPLIER_LIST.BUSCAR' | translate }}</label>
+                  <input id="supplier-search-compact" type="search" class="form-control" [formControl]="searchControl"
+                    [placeholder]="'PURCHASES.SUPPLIER_LIST.BUSCAR_POR_NOMBRE_O_IDENTIFICACION' | translate">
+                </div>
+                <div class="col-12 col-sm-6">
+                  <label for="supplier-status-compact">{{ 'COMMON.ESTADO' | translate }}</label>
+                  <select id="supplier-status-compact" class="form-select form-control" [formControl]="statusControl">
+                    <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+                    <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
+                    <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+                  </select>
+                </div>
+                <div class="col-12 d-flex gap-2 mt-3">
+                  <button type="button" class="btn btn-primary" data-testid="apply-filters" (click)="applyAndClose()">{{ 'PURCHASES.SUPPLIER_LIST.APLICAR_FILTROS' | translate }}</button>
+                  <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                    (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+                </div>
+              </div>
+            </div>
+            @if (rows.length > 0) {
+            <p class="small text-body-secondary mb-2" #summary tabindex="-1" data-testid="range-summary">
+              {{ 'PURCHASES.SUPPLIER_LIST.MOSTRANDO_N_DE_M' | translate: { from: shownFrom, to: shownTo, total: total } }}
+            </p>
+            <ul class="supplier-cards row g-2 m-0 p-0 mb-2" [attr.aria-label]="'PURCHASES.SUPPLIER_LIST.LISTA_DE_PROVEEDORES' | translate">
+              @for (row of rows; track row.id) {
+              <li class="col-12 col-sm-6">
+                <article class="supplier-card" data-testid="supplier-card">
+                  <header class="supplier-card__header">
+                    <div class="supplier-card__heading">
+                      <h3 class="supplier-card__title">
+                        <a [routerLink]="['/pocketbiz/purchases/suppliers', row.id]">{{ row.name }}</a>
+                      </h3>
+                      @if (row.active) {
+                      <span class="badge-outline col-green" data-testid="status-badge">{{ 'COMMON.ACTIVO' | translate }}</span>
+                      } @else {
+                      <span class="badge-outline col-red" data-testid="status-badge">{{ 'COMMON.INACTIVO' | translate }}</span>
+                      }
+                    </div>
+                    <div class="supplier-card__actions">
+                      <a class="btn btn-tbl-edit btn-tbl-view supplier-card__action" data-testid="card-view" [routerLink]="['/pocketbiz/purchases/suppliers', row.id]"
+                        [title]="'PURCHASES.SUPPLIER_LIST.VER_PROVEEDOR' | translate" [attr.aria-label]="actionLabel('PURCHASES.SUPPLIER_LIST.VER_PROVEEDOR', row)">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                      </a>
+                      <a class="btn btn-tbl-edit btn-tbl-update supplier-card__action" data-testid="card-edit" [routerLink]="['/pocketbiz/purchases/suppliers', row.id, 'edit']"
+                        [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="actionLabel('COMMON.EDITAR', row)">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                      </a>
+                      <a class="btn btn-tbl-edit btn-tbl-view supplier-card__action" data-testid="card-purchases" routerLink="/pocketbiz/purchases"
+                        [queryParams]="{ supplierId: row.id }" [title]="'PURCHASES.SUPPLIER_LIST.VER_COMPRAS' | translate"
+                        [attr.aria-label]="actionLabel('PURCHASES.SUPPLIER_LIST.VER_COMPRAS', row)">
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                      </a>
+                      <button type="button" class="btn btn-tbl-edit btn-tbl-toggle supplier-card__action" data-testid="card-toggle" (click)="toggleActive(row)"
+                        [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
+                        [attr.aria-label]="actionLabel(row.active ? 'CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' : 'CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR', row)">
+                        <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </header>
+                  <dl class="supplier-card__body">
+                    <div>
+                      <dt>{{ 'PURCHASES.SUPPLIER_LIST.IDENTIFICACION' | translate }}</dt>
+                      <dd>{{ row.taxId || '—' }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'COMMON.TELEFONO' | translate }}</dt>
+                      <dd>{{ row.phone || '—' }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'PURCHASES.SUPPLIER_LIST.CORREO' | translate }}</dt>
+                      <dd>{{ row.email || '—' }}</dd>
+                    </div>
+                  </dl>
+                </article>
+              </li>
+              }
+            </ul>
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center" size="sm" [collectionSize]="total" [pageSize]="pageSize" [page]="pageIndex + 1"
+              [maxSize]="3" [rotate]="true" [attr.aria-label]="'PURCHASES.SUPPLIER_LIST.PAGINAS_DE_PROVEEDORES' | translate"
+              (pageChange)="onPageNumber($event)" />
+            }
+            } @else if (!loading) {
+            <p class="text-center text-body-secondary my-4" data-testid="empty">{{ 'PURCHASES.SUPPLIER_LIST.NO_HAY_PROVEEDORES_QUE_COINCIDAN' | translate }}</p>
+            }
+            } @else {
             <div class="row">
               <div class="col-lg-8">
                 <div class="row m-0">
@@ -112,6 +222,7 @@
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
+            }
           </div>
         </div>
       </div>

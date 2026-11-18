@@ -43,6 +43,47 @@ describe('ExpenseDetailComponent', () => {
   const buttons = () =>
     fixture.debugElement.queryAll(By.css('.btn')).map((b) => (b.nativeElement as HTMLElement).textContent?.trim());
 
+  it('shows the posted accounts, the link to the entry and the correction note (GAS-01, UI-02)', () => {
+    api.get.and.returnValue(
+      of(
+        makeExpense({
+          posted: true,
+          journalEntryId: 'j-1',
+          expenseAccount: { id: 'a1', code: '510001', name: 'Alquiler', active: true },
+          paymentAccount: { id: 'a2', code: '110102', name: 'Banco', active: false },
+        }),
+      ),
+    );
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const posting = el.querySelector('[data-testid="posting"]')?.textContent ?? '';
+    expect(posting).toContain('Contabilizado');
+    expect(posting).toContain('510001 · Alquiler');
+    expect(posting).toContain('Banco');
+    expect(posting).toContain('(inactiva)');
+    expect(el.querySelector('[data-testid="journal-link"]')?.getAttribute('href')).toBe('/pocketbiz/accounting/journal/j-1');
+    expect(el.querySelector('[data-testid="posted-note"]')).not.toBeNull();
+  });
+
+  it('says there is no entry for an expense that was not posted (GAS-01, AC-06)', () => {
+    api.get.and.returnValue(of(makeExpense()));
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="posting"]')?.textContent).toContain('Sin asiento contable');
+    expect(el.querySelector('[data-testid="posted-note"]')).toBeNull();
+  });
+
+  it('shows the applied classification, or a placeholder for older expenses (UI-02)', () => {
+    api.get.and.returnValue(of(makeExpense({ classification: { id: 'c1', name: 'Alquiler', active: true } })));
+    fixture.detectChanges();
+    const line = () => fixture.debugElement.query(By.css('[data-testid="classification"]')).nativeElement as HTMLElement;
+    expect(line().textContent?.trim()).toBe('Alquiler');
+    api.get.and.returnValue(of(makeExpense({ classification: null })));
+    component.ngOnInit();
+    fixture.detectChanges();
+    expect(line().textContent?.trim()).toBe('Sin clasificación');
+  });
+
   it('shows every field, including the payment method and the inactive category (AC-23)', () => {
     api.get.and.returnValue(
       of(makeExpense({ paymentMethod: 'BANK_TRANSFER', category: { id: 'c', name: 'Vieja', active: false } })),

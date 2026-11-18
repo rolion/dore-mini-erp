@@ -1,10 +1,13 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 import { ModuleSettings, Setting, SettingHistoryPage, SettingsApiError } from '../../models/setting';
+import { AccountingApiService } from '../../../accounting/services/accounting-api.service';
+import { PostingConfigApiService } from '../../../accounting/services/posting-config-api.service';
+import { ALL_ACCOUNTS, salesConfig } from '../../../accounting/testing/posting-fixtures';
 import { SettingsApiService } from '../../services/settings-api.service';
 import { ModuleSettingsComponent, SAVED_MESSAGE } from './module-settings.component';
 
@@ -78,6 +81,8 @@ describe('ModuleSettingsComponent', () => {
       providers: [...provideTestTranslations(), 
         provideRouter([]),
         { provide: SettingsApiService, useValue: api },
+        { provide: PostingConfigApiService, useValue: { get: () => of(salesConfig()) } },
+        { provide: AccountingApiService, useValue: { listAccounts: () => of(ALL_ACCOUNTS) } },
         { provide: ToastrService, useValue: toastr },
         { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } },
       ],
@@ -91,6 +96,37 @@ describe('ModuleSettingsComponent', () => {
     expect(el().textContent).toContain('Aplica a los descuentos que se registren desde ahora.');
     expect(el().textContent).toContain('Valor predeterminado: 100.00 %');
     expect((el().querySelector(`#setting-${PERCENT.replace(/\./g, '\\.')}`) as HTMLInputElement).value).toBe('100.00');
+  });
+
+  it('offers the Asientos automáticos tab with the account panel in Sales, Purchases and Inventory (AC-13)', () => {
+    for (const module of ['sales', 'purchases', 'inventory']) {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        imports: [ModuleSettingsComponent],
+        providers: [...provideTestTranslations(), provideRouter([]),
+          { provide: SettingsApiService, useValue: api },
+          { provide: PostingConfigApiService, useValue: { get: () => of(salesConfig()) } },
+          { provide: AccountingApiService, useValue: { listAccounts: () => of(ALL_ACCOUNTS) } },
+          { provide: ToastrService, useValue: toastr }],
+      });
+      setup(module, module === 'inventory' ? INVENTORY : SALES);
+      expect(button('Asientos automáticos')).not.toBeNull();
+      button('Asientos automáticos')?.click();
+      fixture.detectChanges();
+      expect(el().querySelector('app-posting-config-panel')).not.toBeNull();
+      expect(el().textContent).toContain('Asientos previstos');
+    }
+  });
+
+  it('opens the Asientos automáticos tab when the link asks for it (?tab=posting)', () => {
+    api.get.and.returnValue(of(SALES));
+    TestBed.overrideProvider(ActivatedRoute, {
+      useValue: { snapshot: { data: { settingsModule: 'sales' }, queryParamMap: convertToParamMap({ tab: 'posting' }) } },
+    });
+    fixture = TestBed.createComponent(ModuleSettingsComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tab).toBe('posting');
+    expect(el().querySelector('app-posting-config-panel')).not.toBeNull();
   });
 
   it('offers General and Historial de cambios tabs (AC-09)', () => {

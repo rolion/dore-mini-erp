@@ -5,22 +5,108 @@ export const ACCOUNT_NAME_MAX_LENGTH = 80;
 export const CURRENCIES = ['BOB', 'USD'] as const;
 export const FLOW_CURRENCY = 'BOB';
 
+/** Dónde se mueve el dinero. No restringe si la cuenta recibe o paga. */
+export const ACCOUNT_KINDS = ['CASH', 'BANK', 'WALLET'] as const;
+export type AccountKind = (typeof ACCOUNT_KINDS)[number];
+
+/** Las seis clasificaciones contables fijas, en orden de presentación (CONT-08). */
+export const ACCOUNT_CLASSES = ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE', 'COST'] as const;
+export type AccountClassCode = (typeof ACCOUNT_CLASSES)[number];
+
+/** Código de cuenta: hasta 20 dígitos (por ahora solo numérico, p. ej. 111001); los espacios de los bordes se recortan. */
+export const ACCOUNT_CODE_MAX_LENGTH = 20;
+export const ACCOUNT_CODE_PATTERN = /^\s*\d+\s*$/;
+
+/** Estado de una clasificación contable en la empresa: solo se habilita o deshabilita. */
+export interface AccountClassState {
+  code: AccountClassCode;
+  enabled: boolean;
+}
+
 export interface Account {
   id: string;
   name: string;
   currency: string;
+  /** `null` en cuentas anteriores a la introducción del tipo. */
+  kind: AccountKind | null;
+  /** Clasificación contable; `null` solo en cuentas anteriores que aún no la tienen. */
+  accountClass?: AccountClassCode | null;
+  /** Código del plan de cuentas (único por empresa); `null` en cuentas anteriores. */
+  code?: string | null;
+  /** La cuenta ya tiene asientos: su clasificación y su marca de correctora no cambian. */
+  hasEntries?: boolean;
+  /** Cuenta correctora: su saldo normal es contrario al de su clasificación. */
+  isContra?: boolean;
+  /** Monto a la fecha de corte, decimal en texto (nunca float). */
+  openingBalance: string;
   isActive: boolean;
 }
 
 export interface AccountInput {
   name: string;
   currency: string;
+  code?: string;
+  /** Tipo de cuenta de dinero (Caja/Banco/Billetera); solo con clasificación Activo. `null` lo quita. */
+  kind?: AccountKind | null;
+  openingBalance?: string;
+  accountClass?: AccountClassCode | null;
+  isContra?: boolean;
 }
 
 export interface AccountDto {
   id: string;
   name: string;
   currency: string;
+  kind?: AccountKind | null;
+  account_class?: AccountClassCode | null;
+  code?: string | null;
+  is_contra?: boolean;
+  has_entries?: boolean;
+  opening_balance?: string;
+  is_active: boolean;
+}
+
+export interface Gap {
+  from: string;
+  to: string;
+}
+
+/** Corte y cobertura de Contabilidad de la empresa. */
+export interface AccountingSettings {
+  cutoffDate: string | null;
+  enabledAt: string | null;
+  /** Hay movimientos: la fecha de corte ya no cambia. */
+  locked: boolean;
+  gaps: Gap[];
+}
+
+export interface AccountingSettingsDto {
+  cutoff_date: string | null;
+  enabled_at: string | null;
+  locked: boolean;
+  gaps: Gap[];
+}
+
+/** Por qué se mueve el dinero: de ingreso o de egreso. La dirección no cambia tras crearla. */
+export const DIRECTIONS = ['INCOME', 'EXPENSE'] as const;
+export type Direction = (typeof DIRECTIONS)[number];
+
+export interface Classification {
+  id: string;
+  name: string;
+  direction: Direction;
+  isActive: boolean;
+}
+
+export interface ClassificationInput {
+  name: string;
+  direction: Direction;
+}
+
+export interface ClassificationDto {
+  id: string;
+  name: string;
+  direction: Direction;
   is_active: boolean;
 }
 
@@ -41,6 +127,13 @@ export interface PaymentMethodDto {
 /** Errores por campo devueltos por el servidor (clave = campo del formulario). */
 export type FieldErrors = Partial<Record<string, string[]>>;
 
+/** Causa estructurada de una cuenta no válida para un rol: el cliente la traduce; `message` va en español. */
+export interface ProblemInfo {
+  code: string;
+  params: Record<string, string>;
+  message?: string;
+}
+
 export class AccountingApiError extends Error {
   constructor(
     message: string,
@@ -50,13 +143,37 @@ export class AccountingApiError extends Error {
     readonly code: string | null = null,
     /** Métodos activos que bloquean la acción (códigos, 409 `account_in_use`). */
     readonly methods: string[] = [],
+    /** En un 400 por una cuenta no válida para un rol: la causa (código y parámetros). */
+    readonly problem: ProblemInfo | null = null,
   ) {
     super(message);
     this.name = 'AccountingApiError';
   }
 }
 
-const FIELD_MAP: Record<string, string> = { name: 'name', currency: 'currency', account_id: 'accountId' };
+const FIELD_MAP: Record<string, string> = {
+  name: 'name',
+  currency: 'currency',
+  kind: 'kind',
+  direction: 'direction',
+  opening_balance: 'openingBalance',
+  account_class: 'accountClass',
+  code: 'code',
+  cutoff_date: 'cutoffDate',
+  account_id: 'accountId',
+  start_date: 'startDate',
+  end_date: 'endDate',
+};
+
+function toProblem(body: unknown): ProblemInfo | null {
+  const raw = body && typeof body === 'object' ? (body as Record<string, unknown>)['problem'] : null;
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const { code, params } = raw as { code?: unknown; params?: unknown };
+  const entries = params && typeof params === 'object' ? Object.entries(params as Record<string, unknown>) : [];
+  return typeof code === 'string' ? { code, params: Object.fromEntries(entries.map(([k, v]) => [k, String(v)])) } : null;
+}
 
 function toFieldErrors(body: unknown): FieldErrors {
   const errors: FieldErrors = {};
@@ -77,7 +194,7 @@ export function toApiError(status: number, body: unknown): AccountingApiError {
     return new AccountingApiError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.NO_SE_PUDO_CONECTAR_CON'), 0);
   }
   if (status === 400) {
-    return new AccountingApiError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS'), 400, toFieldErrors(body));
+    return new AccountingApiError(tr('CUSTOMERS.CUSTOMERS_API_SERVICE.REVISA_LOS_DATOS_INGRESADOS'), 400, toFieldErrors(body), null, [], toProblem(body));
   }
   const record = (body && typeof body === 'object' ? body : {}) as { detail?: unknown; code?: unknown; methods?: unknown };
   const detail = typeof record.detail === 'string' ? record.detail : '';

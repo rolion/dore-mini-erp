@@ -5,16 +5,23 @@ import { environment } from '../../../environments/environment';
 import { tr } from '../../core/i18n/translate';
 import { Page } from '../models/page';
 import {
-  Commitment, ObligationFilters, ObligationSummary, PaymentInput, PaymentRegistered, ReceivableFailure, SourceKind,
+  Commitment, ObligationFilters, ObligationSummary, PaymentInput, PaymentRegistered, PostingIssue, ReceivableFailure,
+  ServiceInput, ServiceRendered, SourceKind,
 } from '../models/receivable';
 
-const FIELD_ERRORS = ['amount', 'payment_method', 'payment_date', 'reference', 'allocations'];
+const FIELD_ERRORS = ['amount', 'payment_method', 'payment_date', 'reference', 'allocations', 'service_date', 'line_id'];
 
 export function toFailure(error: unknown): ReceivableFailure {
   const none = { fields: {}, conflict: false };
   if (!(error instanceof HttpErrorResponse)) return { message: tr('RECEIVABLES.ERR_GENERICO'), ...none };
   const body = (error.error ?? {}) as Record<string, unknown>;
-  if (error.status === 409) return { message: tr('RECEIVABLES.ERR_ESTADO'), ...none, conflict: true };
+  if (error.status === 409) {
+    // Rechazos contables (SRV-01): el servidor explica la causa y, si falta configuración, qué cuentas faltan.
+    const code = typeof body['code'] === 'string' ? body['code'] : undefined;
+    const detail = typeof body['detail'] === 'string' ? body['detail'] : '';
+    const issues = Array.isArray(body['issues']) ? (body['issues'] as PostingIssue[]) : [];
+    return { message: detail || tr('RECEIVABLES.ERR_ESTADO'), ...none, conflict: true, code, issues };
+  }
   if (error.status === 400) {
     const fields: Record<string, string> = {};
     for (const key of Object.keys(body)) {
@@ -43,6 +50,13 @@ export class ReceivablesApiService {
   get(kind: SourceKind, number: string): Observable<Commitment> {
     return this.http
       .get<Commitment>(`${this.base}commitments/${kind}/${encodeURIComponent(number)}/`)
+      .pipe(catchError((error) => throwError(() => toFailure(error))));
+  }
+
+  /** Marca un tratamiento como prestado y reconoce el ingreso (idempotente por tratamiento). */
+  renderService(kind: SourceKind, number: string, input: ServiceInput): Observable<ServiceRendered> {
+    return this.http
+      .post<ServiceRendered>(`${this.base}commitments/${kind}/${encodeURIComponent(number)}/services/`, input)
       .pipe(catchError((error) => throwError(() => toFailure(error))));
   }
 

@@ -4,24 +4,84 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from django.db import connection
+from django.db import connection, transaction
+from django.utils import timezone
 
+from modules.accounting.application.coverage import GetCoverageStatus
+from modules.accounting.application.journal import PostJournalEntry, ReverseJournalEntry
+from modules.accounting.application.posting import (
+    ConfigView,
+    DescribePostingConfig,
+    AccountInfo,
+    SetCategoryAccount,
+    SetRoleAccount,
+    load_context,
+    resolve_event,
+)
 from modules.accounting.application.use_cases import missing_methods
-from modules.accounting.domain.catalog import METHOD_LABELS
+from modules.accounting.domain.catalog import METHOD_LABELS, OPERATION_RECORD, OPERATION_REVERSAL
+from modules.accounting.domain.account import AccountValidationError
+from modules.accounting.domain.account_class import ensure_enabled, validate_account_class as _parse_account_class
 from modules.accounting.domain.entry import (
     Entry,
     EntryConflict,
     EntryContractError,
+    EntryNotFound,
     EntryValidationError,
 )
-from modules.accounting.infrastructure.django.repositories import (
-    DjangoAccountRepository,
-    DjangoEntryRepository,
-    DjangoMethodMappingRepository,
+from modules.accounting.domain.journal import (
+    ORIGIN_CONFLICT,
+    JournalConflict,
+    JournalEntry,
+    JournalEntryNotFound,
+    JournalLineInput,
+    JournalValidationError,
 )
+from modules.accounting.domain.posting import (
+    PostingConfigurationMissing,
+    PostingIssue,
+    PostingNotFound,
+    account_problem_info,
+    get_event,
+    money_account_problem,
+    get_role,
+    validate_account_for_role,
+)
+from modules.accounting.domain.fiscal_period import (
+    DateOutsideFiscalPeriod,
+    FiscalPeriodClosed,
+    FiscalPeriodContractError,
+)
+from modules.accounting.infrastructure.django.repositories import (
+    DjangoAccountClassRepository,
+    DjangoAccountRepository,
+    DjangoClassificationRepository,
+    DjangoCoverageRepository,
+    DjangoEntryRepository,
+    DjangoFiscalPeriodRepository,
+    DjangoJournalRepository,
+    DjangoMethodMappingRepository,
+    DjangoPostingConfigRepository,
+)
+from shared import module_gate
 
-__all__ = ['AccountRef', 'EntryConflict', 'EntryContractError', 'EntryInput', 'EntryRef', 'EntryValidationError',
-           'RecordedEntry', 'missing_method_labels', 'record_entry', 'resolve_account']
+__all__ = ['AccountInfo', 'AccountRef', 'describe_accounts', 'AccountValidationError', 'ClassificationInfo',
+           'ClassificationRef', 'CoverageRef',
+           'AutomaticPosting', 'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput',
+           'EntryRef', 'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError',
+           'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
+           'JournalLineInput', 'JournalLineRef', 'JournalValidationError', 'PeriodRef', 'PostedJournalEntry',
+           'PostingConfigRef', 'PostingConfigurationMissing', 'PostingIssue', 'PostingNotFound',
+           'PostingReadiness', 'PostingOptions', 'posting_options', 'validate_posting_account', 'check_posting_ready',
+           'describe_posting_config', 'automatic_entry_origins',
+           'find_automatic_entry', 'automatic_entries_for', 'preview_automatic_entry', 'PostingPreview',
+           'PostingPreviewLine',
+           'post_automatic_entry',
+           'reverse_automatic_entry', 'set_category_account', 'set_role_account', 'RecordedEntry',
+           'missing_method_labels', 'record_entry', 'coverage_status', 'describe_classifications',
+           'get_journal_entry', 'journal_balances', 'lock_open_period', 'period_for', 'post_journal_entry',
+           'resolve_account', 'reverse_journal_entry', 'validate_account_class', 'validate_classification',
+           'validate_money_account']
 
 
 @dataclass(frozen=True)
@@ -45,6 +105,87 @@ def resolve_account(company_id: UUID, method: str) -> AccountRef | None:
     return AccountRef(account.id, account.name, account.currency)
 
 
+@dataclass(frozen=True)
+class ClassificationRef:
+    classification_id: UUID
+    name: str
+    direction: str  # 'INCOME' o 'EXPENSE'
+
+
+def validate_money_account(company_id: UUID, account_id: UUID) -> AccountRef:
+    """Valida una cuenta de dinero elegida para un uso NUEVO, sea un cobro o un pago (no distingue dirección).
+
+    Lanza `AccountValidationError` si no existe en la empresa o está inactiva. Los registros anteriores de una cuenta
+    desactivada no se tocan.
+    """
+    account = DjangoAccountRepository(company_id).get(account_id)
+    if account is None:
+        raise AccountValidationError({'account_id': ['La cuenta no existe en esta empresa.']})
+    if not account.is_active:
+        raise AccountValidationError({'account_id': ['La cuenta está inactiva.']})
+    return AccountRef(account.id, account.name, account.currency)
+
+
+def validate_classification(company_id: UUID, classification_id: UUID, direction: str) -> ClassificationRef:
+    """Valida una clasificación para un uso nuevo: de la empresa, activa y de la dirección (`INCOME`/`EXPENSE`)."""
+    classification = DjangoClassificationRepository(company_id).get(classification_id)
+    if classification is None:
+        raise AccountValidationError({'classification_id': ['La clasificación no existe en esta empresa.']})
+    classification.ensure_usable(direction)
+    return ClassificationRef(classification.id, classification.name, classification.direction)
+
+
+def validate_account_class(company_id: UUID, code: str) -> str:
+    """Valida una clasificación contable (ASSET…COST) para un uso NUEVO: del catálogo y habilitada en la empresa.
+
+    Devuelve el código normalizado o lanza `AccountValidationError`. Lo ya clasificado no se revalida.
+    """
+    parsed = _parse_account_class(code)
+    ensure_enabled(parsed, DjangoAccountClassRepository(company_id).disabled())
+    return parsed
+
+
+@dataclass(frozen=True)
+class ClassificationInfo:
+    """Clasificación tal como está hoy (nombre, dirección y estado), para mostrar o revalidar una asociación."""
+    classification_id: UUID
+    name: str
+    direction: str
+    is_active: bool
+
+
+def describe_classifications(company_id: UUID, classification_ids) -> dict[UUID, ClassificationInfo]:
+    """Clasificaciones de la empresa entre los ids pedidos; los ajenos o inexistentes no aparecen."""
+    wanted = set(classification_ids)
+    if not wanted:
+        return {}
+    return {c.id: ClassificationInfo(c.id, c.name, c.direction, c.is_active)
+            for c in DjangoClassificationRepository(company_id).list() if c.id in wanted}
+
+
+@dataclass(frozen=True)
+class CoverageRef:
+    """¿Una operación con esa fecha efectiva debe crear movimiento? `reason`: accounting_disabled, before_cutoff,
+    in_gap."""
+    enabled: bool
+    cutoff_date: date | None
+    covered: bool
+    reason: str | None = None
+
+
+def coverage_status(company_id: UUID, effective_date: date) -> CoverageRef:
+    """Decisión única de cobertura: solo si `covered` se crea movimiento (con cuenta y clasificación válidas).
+
+    Sin cobertura (módulo deshabilitado, fecha anterior al corte o dentro de un periodo sin cobertura) la operación de
+    origen se guarda sin movimiento y sin error. Completa de forma perezosa el corte de empresas anteriores.
+    """
+    with transaction.atomic():
+        status = GetCoverageStatus(DjangoCoverageRepository(company_id), DjangoEntryRepository(company_id),
+                                   timezone.localdate(), module_gate.is_enabled(company_id, 'accounting')
+                                   ).execute(effective_date)
+    return CoverageRef(status.enabled, status.cutoff_date, status.covered, status.reason)
+
+
 def missing_method_labels(company_id: UUID) -> list[str]:
     """Etiquetas de los métodos activos sin destino válido (precondición para habilitar Contabilidad)."""
     codes = missing_methods(DjangoAccountRepository(company_id), DjangoMethodMappingRepository(company_id))
@@ -59,14 +200,15 @@ class EntryInput:
     amount: Decimal
     payment_date: date
     method: str
-    origin_kind: str  # 'PRODUCT' (pago de pedido) o 'SERVICE' (pago de proforma)
-    origin_id: UUID  # ID del pago en su módulo de origen
+    origin_kind: str  # 'PRODUCT' (pago de pedido), 'SERVICE' (pago de proforma), 'EXPENSE' o 'PURCHASE_PAYMENT'
+    origin_id: UUID  # ID del pago o del gasto en su módulo de origen
     origin_document_ref: str = ''  # ID del pedido o número de proforma
     receipt_number: str = ''  # CB-NNNNNN cuando existe
     recorded_by: int | None = None
     recorded_by_name: str = ''
     regularized_at: datetime | None = None  # solo regularización de pagos históricos
     regularized_by_name: str = ''
+    classification_id: UUID | None = None  # obligatoria en egresos (EXPENSE, PURCHASE_PAYMENT): de egreso y activa
 
 
 @dataclass(frozen=True)
@@ -77,6 +219,8 @@ class EntryRef:
     currency: str
     amount: Decimal
     payment_date: date
+    direction: str = 'INCOME'
+    operation: str = 'RECORD'
 
 
 @dataclass(frozen=True)
@@ -85,12 +229,22 @@ class RecordedEntry:
     created: bool  # False: ya existía (reintento idempotente)
 
 
-def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
-    """Registra la entrada de un pago dentro de la transacción del llamante (que la confirma o la revierte).
+def _ref(entry: Entry) -> EntryRef:
+    return EntryRef(entry.id, entry.account_id, entry.currency, entry.amount, entry.payment_date,
+                    entry.direction, entry.operation)
 
-    Idempotente por `(empresa, origin_kind, origin_id)`: repetir con los mismos datos devuelve la existente
-    (`created=False`); con datos distintos lanza `EntryConflict`. Lanza `EntryContractError` si no hay transacción
-    abierta y `EntryValidationError` si el monto, la cuenta o la moneda no son válidos.
+
+def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
+    """Registra el movimiento de un origen (cobro o egreso) dentro de la transacción del llamante.
+
+    Contrato anterior (una cuenta por movimiento). Los asientos de partida doble usan `post_journal_entry`: cuando un
+    origen migre al motor, su llamante deja de usar `record_entry` para ese origen en la misma entrega (el motor rechaza
+    un origen ya presente en este libro, así no se contabiliza dos veces).
+
+    Idempotente por `(empresa, origen)`: repetir con los mismos datos devuelve el existente (`created=False`); con
+    datos distintos lanza `EntryConflict`. Lanza `EntryContractError` si no hay transacción abierta y
+    `EntryValidationError` si el monto, la cuenta, la moneda o (en egresos) la clasificación no son válidos.
+    La dirección la deriva el origen: `PRODUCT`/`SERVICE` son ingresos; `EXPENSE`/`PURCHASE_PAYMENT`, egresos.
     """
     if not connection.in_atomic_block:
         raise EntryContractError('record_entry debe ejecutarse dentro de la transacción del pago.')
@@ -99,15 +253,493 @@ def record_entry(company_id: UUID, data: EntryInput) -> RecordedEntry:
         method=data.method, origin_kind=data.origin_kind, origin_id=data.origin_id,
         origin_document_ref=data.origin_document_ref, receipt_number=data.receipt_number,
         recorded_by=data.recorded_by, recorded_by_name=data.recorded_by_name,
-        regularized_at=data.regularized_at, regularized_by_name=data.regularized_by_name)
+        regularized_at=data.regularized_at, regularized_by_name=data.regularized_by_name,
+        classification_id=data.classification_id)
+    entries = DjangoEntryRepository(company_id)
     account = DjangoAccountRepository(company_id).get_for_update(entry.account_id)
     if account is None:
         raise EntryValidationError({'account_id': ['La cuenta no existe en esta empresa.']})
     if account.currency != entry.currency:
         raise EntryValidationError({'currency': [f'La moneda debe ser la de la cuenta ({account.currency}).']})
-    stored, created = DjangoEntryRepository(company_id).insert(entry)
+    already = entries.get_by_origin(entry.origin_kind, entry.origin_id, entry.operation)
+    if already is None and entry.direction == 'EXPENSE':
+        # Un reintento no se revalida: la clasificación pudo desactivarse después de registrar el egreso.
+        try:
+            validate_classification(company_id, entry.classification_id, 'EXPENSE')
+        except AccountValidationError as exc:
+            raise EntryValidationError(exc.errors) from exc
+    stored, created = entries.insert(entry)
     if not created:
         differences = entry.differences(stored)
         if differences:
             raise EntryConflict(differences)
-    return RecordedEntry(EntryRef(stored.id, stored.account_id, stored.currency, stored.amount, stored.payment_date), created)
+    return RecordedEntry(_ref(stored), created)
+
+
+def reverse_entry(company_id: UUID, origin_kind: str, origin_id: UUID, reversal_date: date,
+                  recorded_by: int | None = None, recorded_by_name: str = '') -> RecordedEntry:
+    """Revierte el movimiento de un origen con otro de dirección opuesta, mismo monto, moneda y cuenta.
+
+    El original no se modifica ni se borra. Idempotente: si ya fue revertido devuelve la reversión existente
+    (`created=False`) sin tocar de nuevo el saldo. Corre dentro de la transacción del llamante y bloquea la cuenta (como
+    `record_entry`), de modo que dos reversiones simultáneas crean una sola. Permite cuentas inactivas: restituye.
+    Lanza `EntryNotFound` si el origen no tiene movimiento y `EntryContractError` fuera de una transacción.
+    """
+    if not connection.in_atomic_block:
+        raise EntryContractError('reverse_entry debe ejecutarse dentro de la transacción de la anulación.')
+    entries = DjangoEntryRepository(company_id)
+    original = entries.get_by_origin(origin_kind, origin_id, OPERATION_RECORD)
+    if original is None:
+        raise EntryNotFound(f'{origin_kind}:{origin_id}')
+    DjangoAccountRepository(company_id).get_for_update(original.account_id)
+    existing = entries.get_by_origin(origin_kind, origin_id, OPERATION_REVERSAL)
+    if existing is not None:
+        return RecordedEntry(_ref(existing), False)
+    stored, created = entries.insert(original.reverse(reversal_date, recorded_by, recorded_by_name))
+    return RecordedEntry(_ref(stored), created)
+
+
+def account_balances(company_id: UUID, account_ids=None) -> dict[UUID, Decimal]:
+    """Saldo actual por cuenta de la empresa: apertura + ingresos − egresos (las reversiones cuentan con su dirección).
+
+    Sin `account_ids` devuelve todas las cuentas; los ids de otra empresa no aparecen en el resultado.
+    """
+    wanted = None if account_ids is None else set(account_ids)
+    accounts = [a for a in DjangoAccountRepository(company_id).list() if wanted is None or a.id in wanted]
+    net = DjangoEntryRepository(company_id).net_by_account([a.id for a in accounts])
+    return {a.id: a.opening_balance + net.get(a.id, Decimal('0.00')) for a in accounts}
+
+
+@dataclass(frozen=True)
+class PeriodRef:
+    id: UUID
+    name: str
+    start_date: date
+    end_date: date
+    is_open: bool
+
+
+def _period_ref(period) -> PeriodRef:
+    return PeriodRef(period.id, period.name, period.start_date, period.end_date, period.is_open)
+
+
+def period_for(company_id: UUID, accounting_date: date) -> PeriodRef | None:
+    """El período fiscal de la empresa que contiene la fecha (abierto o cerrado), sin bloquear; `None` si no hay."""
+    period = DjangoFiscalPeriodRepository(company_id).find_containing(accounting_date)
+    return _period_ref(period) if period else None
+
+
+def lock_open_period(company_id: UUID, accounting_date: date) -> PeriodRef:
+    """Exige que la fecha contable esté en un período abierto y lo bloquea hasta el fin de la transacción del llamante.
+
+    Todo asiento (manual, automático o reversión, esta con su fecha explícita) debe llamarla antes de insertarse, dentro
+    de su transacción: cerrar el período espera a que esa transacción termine, y si el cierre gana, el asiento ve el
+    período cerrado. Lanza `FiscalPeriodContractError` fuera de una transacción, `DateOutsideFiscalPeriod` sin período
+    y `FiscalPeriodClosed` si el período está cerrado.
+    """
+    if not connection.in_atomic_block:
+        raise FiscalPeriodContractError('lock_open_period debe ejecutarse dentro de la transacción del asiento.')
+    if not isinstance(accounting_date, date) or isinstance(accounting_date, datetime):
+        raise FiscalPeriodContractError('La fecha contable debe ser una fecha (date).')
+    period = DjangoFiscalPeriodRepository(company_id).find_containing_for_update(accounting_date)
+    if period is None:
+        raise DateOutsideFiscalPeriod(accounting_date)
+    if not period.is_open:
+        raise FiscalPeriodClosed(period.name, accounting_date)
+    return _period_ref(period)
+
+
+@dataclass(frozen=True)
+class JournalEntryInput:
+    """Asiento que quien contabiliza entrega al motor. Con `origin_kind` y `origin_id` es automático e idempotente."""
+    accounting_date: date
+    description: str
+    lines: list  # de `JournalLineInput` (cuenta + Debe o Haber)
+    origin_kind: str | None = None  # tipo de evento del módulo de origen (p. ej. 'SALE_PAYMENT')
+    origin_id: UUID | None = None  # id del evento en su módulo: referencia única de evento
+    created_by: int | None = None
+    created_by_name: str = ''
+
+
+@dataclass(frozen=True)
+class JournalLineRef:
+    account_id: UUID
+    debit: Decimal
+    credit: Decimal
+    memo: str = ''
+
+
+@dataclass(frozen=True)
+class JournalEntryRef:
+    """El asiento como DTO inmutable (nunca el agregado ni el modelo)."""
+    id: UUID
+    accounting_date: date
+    description: str
+    source: str
+    currency: str
+    total: Decimal
+    period_id: UUID | None
+    lines: tuple[JournalLineRef, ...]
+    origin_kind: str | None = None
+    origin_id: UUID | None = None
+    reverses_id: UUID | None = None
+    reversed_by_id: UUID | None = None
+    reversal_reason: str = ''
+
+
+@dataclass(frozen=True)
+class PostedJournalEntry:
+    entry: JournalEntryRef
+    created: bool  # False: ya existía (reintento idempotente o reversión ya hecha)
+
+
+@dataclass(frozen=True)
+class JournalBalance:
+    debit: Decimal
+    credit: Decimal
+
+
+def _journal_ref(entry: JournalEntry) -> JournalEntryRef:
+    return JournalEntryRef(
+        entry.id, entry.accounting_date, entry.description, entry.source, entry.currency, entry.total_debit,
+        entry.period_id, tuple(JournalLineRef(line.account_id, line.debit, line.credit, line.memo)
+                               for line in entry.lines),
+        entry.origin_kind, entry.origin_id, entry.reverses_id, entry.reversed_by_id, entry.reversal_reason)
+
+
+def _require_transaction(name: str) -> None:
+    if not connection.in_atomic_block:
+        raise EntryContractError(f'{name} debe ejecutarse dentro de la transacción del asiento.')
+
+
+def post_journal_entry(company_id: UUID, data: JournalEntryInput) -> PostedJournalEntry:
+    """Confirma un asiento de partida doble dentro de la transacción del llamante (atómico: todo o nada).
+
+    Valida forma, Debe = Haber, cuentas de la empresa (activas, clasificadas, misma moneda) y fecha en período abierto
+    (`lock_open_period`). Con `origin_kind`/`origin_id` es idempotente por `(empresa, origen)`: repetir con los mismos
+    datos devuelve el existente (`created=False`) sin revalidar; con datos distintos lanza `JournalConflict`. Lanza
+    `EntryContractError` fuera de una transacción y `JournalValidationError` si algo no cumple.
+    """
+    _require_transaction('post_journal_entry')
+    stored, created = PostJournalEntry(
+        DjangoJournalRepository(company_id), DjangoAccountRepository(company_id),
+        DjangoAccountClassRepository(company_id).disabled(),
+        lambda accounting_date: lock_open_period(company_id, accounting_date),
+    ).execute(accounting_date=data.accounting_date, description=data.description, lines=data.lines,
+              origin_kind=data.origin_kind, origin_id=data.origin_id, created_by=data.created_by,
+              created_by_name=data.created_by_name)
+    return PostedJournalEntry(_journal_ref(stored), created)
+
+
+def reverse_journal_entry(company_id: UUID, entry_id: UUID, reversal_date: date, reason: str,
+                          created_by: int | None = None, created_by_name: str = '') -> PostedJournalEntry:
+    """Revierte por completo un asiento: otro asiento con Debe/Haber invertidos, vinculado al original (que no cambia).
+
+    Corre en la transacción del llamante y bloquea el original, de modo que dos solicitudes simultáneas crean una sola
+    reversión; repetir devuelve la existente (`created=False`). Usa las cuentas originales aunque estén deshabilitadas;
+    la fecha explícita debe caer en un período abierto (el del original puede estar cerrado). Lanza
+    `JournalEntryNotFound` si el asiento no es de la empresa y `JournalValidationError` si es una reversión o falta el
+    motivo.
+    """
+    _require_transaction('reverse_journal_entry')
+    stored, created = ReverseJournalEntry(
+        DjangoJournalRepository(company_id), lambda accounting_date: lock_open_period(company_id, accounting_date),
+    ).execute(entry_id, reversal_date, reason, created_by, created_by_name)
+    return PostedJournalEntry(_journal_ref(stored), created)
+
+
+def get_journal_entry(company_id: UUID, entry_id: UUID) -> JournalEntryRef:
+    """El asiento de la empresa con sus líneas; `JournalEntryNotFound` si no existe o es de otra empresa."""
+    entry = DjangoJournalRepository(company_id).get(entry_id)
+    if entry is None:
+        raise JournalEntryNotFound(str(entry_id))
+    return _journal_ref(entry)
+
+
+def journal_balances(company_id: UUID, account_ids=None) -> dict[UUID, JournalBalance]:
+    """Debe y Haber acumulados por cuenta en el libro de asientos (solo cuentas con movimientos de la empresa).
+
+    No incluye el libro de entradas anterior ni aplica el signo según la clasificación (lo resuelven los saldos).
+    """
+    wanted = None if account_ids is None else set(account_ids)
+    return {account_id: JournalBalance(debit, credit) for account_id, (debit, credit)
+            in DjangoJournalRepository(company_id).totals_by_account(wanted).items()}
+
+
+# --- Asientos automáticos por evento (CONT-12) --------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class PostingConfigRef:
+    """Configuración de los eventos de un módulo y si Contabilidad está habilitada para la empresa."""
+    accounting_enabled: bool
+    config: ConfigView
+
+
+def _posting_sources(company_id: UUID):
+    return (DjangoAccountRepository(company_id), DjangoAccountClassRepository(company_id),
+            DjangoPostingConfigRepository(company_id), DjangoMethodMappingRepository(company_id))
+
+
+def describe_posting_config(company_id: UUID, module: str) -> PostingConfigRef:
+    """Eventos de un módulo con vista previa Debe/Haber, estado y faltantes (`PostingNotFound` si no hay)."""
+    return PostingConfigRef(module_gate.is_enabled(company_id, 'accounting'),
+                            DescribePostingConfig(*_posting_sources(company_id)).execute(module))
+
+
+def set_role_account(company_id: UUID, role: str, account_id: UUID | None) -> None:
+    """Asigna o quita la cuenta de un rol. Solo afecta a operaciones futuras; los asientos guardan sus cuentas."""
+    with transaction.atomic():
+        accounts, classes, posting, _ = _posting_sources(company_id)
+        SetRoleAccount(accounts, classes, posting).execute(role, account_id)
+
+
+def set_category_account(company_id: UUID, category_id: UUID, account_id: UUID | None) -> None:
+    """Asigna o quita la cuenta de gasto de una categoría de Gastos (id opaco, sin verificar en Contabilidad)."""
+    with transaction.atomic():
+        accounts, classes, posting, _ = _posting_sources(company_id)
+        SetCategoryAccount(accounts, classes, posting).execute(category_id, account_id)
+
+
+@dataclass(frozen=True)
+class PostingReadiness:
+    """¿Puede confirmarse? `required=False`: no se contabiliza (nada que exigir); `issues`: lo que falta."""
+    required: bool
+    issues: tuple[PostingIssue, ...] = ()
+    reason: str | None = None
+
+    @property
+    def ready(self) -> bool:
+        return not self.issues
+
+
+def check_posting_ready(company_id: UUID, event: str, accounting_date: date, *, method: str | None = None,
+                        category_id: UUID | None = None, category_label: str = '') -> PostingReadiness:
+    """Verificación previa a confirmar una operación: muestra la configuración faltante antes de escribir nada.
+
+    Sin cobertura (Contabilidad deshabilitada, anterior al corte o en un hueco) nunca exige cuentas.
+    """
+    definition = get_event(event)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return PostingReadiness(False, (), coverage.reason)
+    _, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
+                              category_label)
+    return PostingReadiness(True, tuple(issues))
+
+
+@dataclass(frozen=True)
+class AutomaticPosting:
+    posted: bool  # False: la operación no se contabiliza (ver `reason`); el módulo sigue su curso sin asiento
+    reason: str | None = None  # accounting_disabled | before_cutoff | in_gap
+    entry: JournalEntryRef | None = None
+    created: bool = False  # False con `entry`: ya existía (reintento idempotente)
+
+
+def post_automatic_entry(company_id: UUID, event: str, origin_id: UUID, accounting_date: date, description: str,
+                         amount: Decimal, *, method: str | None = None, category_id: UUID | None = None,
+                         category_label: str = '', advance_applied: Decimal | None = None,
+                         account_overrides: dict[str, UUID] | None = None,
+                         created_by: int | None = None, created_by_name: str = '') -> AutomaticPosting:
+    """Contabiliza un evento con las cuentas configuradas, dentro de la transacción del llamante.
+
+    Sin cobertura no crea nada. Con cobertura y configuración incompleta lanza `PostingConfigurationMissing` (nunca
+    omite en silencio). Idempotente por `(empresa, evento, origin_id)` mediante el motor: `origin_kind` = código del
+    evento. Lanza `EntryContractError` fuera de una transacción.
+
+    Los eventos con una segunda línea (de Debe en `SALE_DELIVERY`, de Haber en `PURCHASE_RECOGNITION`) reciben en
+    `advance_applied` el importe de esa línea (anticipos aplicados); la línea principal lleva el resto y ninguna línea
+    de importe cero se genera. Una cuenta solo se exige si su línea existe.
+
+    `account_overrides` (código de rol → cuenta) elige las cuentas de esta operación en lugar de las configuradas; cada
+    una se valida contra su rol y, si no sirve, se informa como faltante (`PostingConfigurationMissing`).
+    """
+    _require_transaction('post_automatic_entry')
+    definition = get_event(event)
+    extra = _extra_debit(definition, amount, advance_applied)
+    existing = DjangoJournalRepository(company_id).get_by_origin(definition.code, origin_id)
+    if existing is not None:
+        # Reintento: el asiento ya existe y no se revalida contra la configuración ni la cobertura de hoy (INV-06).
+        differences = [name for name, same in (('accounting_date', existing.accounting_date == accounting_date),
+                                               ('amount', existing.total_debit == amount)) if not same]
+        if differences:
+            raise JournalConflict(ORIGIN_CONFLICT, 'El evento ya tiene un asiento con otros datos: '
+                                  f'{", ".join(differences)}.', differences)
+        return AutomaticPosting(True, None, _journal_ref(existing), False)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return AutomaticPosting(False, coverage.reason)
+    skipped = _skipped_roles(definition, amount, extra)
+    accounts, issues = resolve_event(definition, load_context(*_posting_sources(company_id)), method, category_id,
+                                     category_label, skipped, account_overrides)
+    if issues:
+        raise PostingConfigurationMissing(issues)
+    lines = [line for _, line in _event_lines(definition, accounts, amount, extra)]
+    posted = post_journal_entry(company_id, JournalEntryInput(
+        accounting_date, description, lines, origin_kind=definition.code, origin_id=origin_id,
+        created_by=created_by, created_by_name=created_by_name))
+    return AutomaticPosting(True, None, posted.entry, posted.created)
+
+
+def _skipped_roles(definition, amount: Decimal, extra: Decimal) -> frozenset[str]:
+    """Roles cuya línea no existe (importe cero): no se exige su cuenta."""
+    main = amount - extra
+    skipped: list[str] = []
+    if definition.extra_debit_role:
+        skipped += [definition.extra_debit_role] if extra == 0 else []
+        skipped += [definition.debit_role] if main == 0 else []
+    if definition.extra_credit_role:
+        skipped += [definition.extra_credit_role] if extra == 0 else []
+        skipped += [definition.credit_role] if main == 0 else []
+    return frozenset(skipped)
+
+
+def _event_lines(definition, accounts: dict, amount: Decimal, extra: Decimal) -> list[tuple[str, JournalLineInput]]:
+    """`(rol, línea)` del asiento: la segunda línea (Debe o Haber) lleva `extra` y la principal el resto; sin ceros."""
+    main = amount - extra
+    lines: list[tuple[str, JournalLineInput]] = []
+
+    def add(role: str, **side):
+        lines.append((role, JournalLineInput(accounts[role], **side)))
+
+    if definition.extra_credit_role:  # un solo Debe por el total; el Haber se reparte
+        add(definition.debit_role, debit=amount)
+        if main > 0:
+            add(definition.credit_role, credit=main)
+        if extra > 0:
+            add(definition.extra_credit_role, credit=extra)
+        return lines
+    if main > 0:
+        add(definition.debit_role, debit=main)
+    if extra > 0:
+        add(definition.extra_debit_role, debit=extra)
+    add(definition.credit_role, credit=amount)
+    return lines
+
+
+def _extra_debit(definition, amount: Decimal, advance_applied: Decimal | None) -> Decimal:
+    """Importe de la segunda línea (Debe o Haber; 0 si no aplica); valida que sea coherente con el total."""
+    if advance_applied is None:
+        return Decimal('0')
+    if not (definition.extra_debit_role or definition.extra_credit_role):
+        raise JournalValidationError({'advance_applied': ['El evento no admite una segunda línea.']})
+    if isinstance(advance_applied, (float, bool)) or not isinstance(advance_applied, Decimal):
+        raise JournalValidationError({'advance_applied': ['El importe debe ser un decimal.']})
+    if advance_applied < 0 or advance_applied > amount:
+        raise JournalValidationError(
+            {'advance_applied': ['El importe aplicado no puede ser negativo ni superar el total.']})
+    return advance_applied
+
+
+@dataclass(frozen=True)
+class PostingPreviewLine:
+    side: str  # DEBIT | CREDIT
+    role: str
+    account_id: UUID
+    account_name: str
+    amount: Decimal
+
+
+@dataclass(frozen=True)
+class PostingPreview:
+    """Asiento que se crearía (sin escribir nada): líneas con nombre de cuenta, faltantes y cobertura."""
+    covered: bool
+    reason: str | None = None
+    lines: tuple[PostingPreviewLine, ...] = ()
+    issues: tuple[PostingIssue, ...] = ()
+
+
+def preview_automatic_entry(company_id: UUID, event: str, accounting_date: date, amount: Decimal, *,
+                            method: str | None = None, advance_applied: Decimal | None = None) -> PostingPreview:
+    """Vista previa de `post_automatic_entry`: no escribe. Sin cobertura no hay asiento (`covered=False`)."""
+    definition = get_event(event)
+    extra = _extra_debit(definition, amount, advance_applied)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return PostingPreview(False, coverage.reason)
+    ctx = load_context(*_posting_sources(company_id))
+    accounts, issues = resolve_event(definition, ctx, method, None, '', _skipped_roles(definition, amount, extra))
+    if issues:
+        return PostingPreview(True, None, (), tuple(issues))
+    return PostingPreview(True, None, tuple(PostingPreviewLine(
+        'DEBIT' if line.debit else 'CREDIT', role, line.account_id, ctx.accounts[line.account_id].name,
+        line.debit or line.credit) for role, line in _event_lines(definition, accounts, amount, extra)))
+
+
+def automatic_entries_for(company_id: UUID, event: str, origin_ids) -> dict[UUID, JournalEntryRef]:
+    """Asientos de un evento por `origin_id` (una consulta; solo de la empresa)."""
+    found = DjangoJournalRepository(company_id).by_origins(get_event(event).code, list(origin_ids))
+    return {origin_id: _journal_ref(entry) for origin_id, entry in found.items()}
+
+
+def find_automatic_entry(company_id: UUID, event: str, origin_id: UUID) -> JournalEntryRef | None:
+    """El asiento ya contabilizado de un evento (o `None`): permite a un módulo saber si un origen está reconocido."""
+    existing = DjangoJournalRepository(company_id).get_by_origin(get_event(event).code, origin_id)
+    return _journal_ref(existing) if existing is not None else None
+
+
+def automatic_entry_origins(company_id: UUID, event: str, origin_ids) -> set[UUID]:
+    """Cuáles de los `origin_ids` ya tienen asiento del evento (una consulta; solo de la empresa)."""
+    return DjangoJournalRepository(company_id).origins_with(get_event(event).code, list(origin_ids))
+
+
+def reverse_automatic_entry(company_id: UUID, event: str, origin_id: UUID, reversal_date: date, reason: str,
+                            created_by: int | None = None, created_by_name: str = '') -> PostedJournalEntry | None:
+    """Revierte el asiento de un evento con sus cuentas originales (no consulta la configuración actual).
+
+    Devuelve `None` si el evento nunca se contabilizó (no hay nada que revertir).
+    """
+    _require_transaction('reverse_automatic_entry')
+    definition = get_event(event)
+    original = DjangoJournalRepository(company_id).get_by_origin(definition.code, origin_id)
+    if original is None:
+        return None
+    return reverse_journal_entry(company_id, original.id, reversal_date, reason, created_by, created_by_name)
+
+
+def validate_posting_account(company_id: UUID, role: str, account_id: UUID) -> AccountRef:
+    """Valida una cuenta elegida para un rol de asiento automático (empresa, activa, BOB, clase y clasificación).
+
+    Lanza `AccountValidationError` (campo `account_id`) si no sirve. Uso nuevo: lo ya registrado no se revalida.
+    """
+    accounts, classes, _, _ = _posting_sources(company_id)
+    account = accounts.get(account_id)
+    validate_account_for_role(get_role(role), account, classes.disabled(), money_only=True)
+    return AccountRef(account.id, account.name, account.currency)
+
+
+@dataclass(frozen=True)
+class PostingOptions:
+    """Lo que un formulario necesita para contabilizar una operación: cobertura, cuentas por defecto y elegibles."""
+    covered: bool
+    reason: str | None
+    defaults: dict[str, AccountInfo]  # rol -> cuenta que regiría hoy (solo los roles que se resuelven)
+    issues: tuple[PostingIssue, ...]
+    eligible: dict[str, tuple[AccountInfo, ...]]  # rol -> cuentas activas utilizables para ese rol
+
+
+def posting_options(company_id: UUID, event: str, accounting_date: date, *, method: str | None = None,
+                    category_id: UUID | None = None, category_label: str = '') -> PostingOptions:
+    """Solo lectura. Sin cobertura no hay cuentas ni faltantes que mostrar."""
+    definition = get_event(event)
+    coverage = coverage_status(company_id, accounting_date)
+    if not coverage.covered:
+        return PostingOptions(False, coverage.reason, {}, (), {})
+    ctx = load_context(*_posting_sources(company_id))
+    accounts, issues = resolve_event(definition, ctx, method, category_id, category_label)
+    info = {a.id: AccountInfo(a.id, a.code, a.name, a.is_active) for a in ctx.accounts.values()}
+    eligible: dict[str, tuple[AccountInfo, ...]] = {}
+    for _, role in definition.lines:
+        usable = [info[a.id] for a in ctx.accounts.values()
+                  if account_problem_info(role, a, ctx.disabled) is None and money_account_problem(role, a) is None]
+        eligible[role.code] = tuple(sorted(usable, key=lambda i: (i.code or '', i.name)))
+    return PostingOptions(True, None, {code: info[acc] for code, acc in accounts.items()}, tuple(issues), eligible)
+
+
+def describe_accounts(company_id: UUID, account_ids) -> dict[UUID, AccountInfo]:
+    """Cuentas de la empresa entre los ids pedidos (código y nombre), para mostrarlas; las ajenas no aparecen."""
+    wanted = set(account_ids)
+    if not wanted:
+        return {}
+    return {a.id: AccountInfo(a.id, a.code, a.name, a.is_active)
+            for a in DjangoAccountRepository(company_id).list() if a.id in wanted}

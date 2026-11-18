@@ -9,6 +9,8 @@ import { ToastrService } from 'ngx-toastr';
 import { HasUnsavedChanges } from '../../../../core/guard/unsaved-changes.guard';
 import { SettingConfirmDialogComponent } from '../../components/setting-confirm-dialog/setting-confirm-dialog.component';
 import { SettingsHistoryComponent } from '../../components/settings-history/settings-history.component';
+import { PostingConfigPanelComponent } from '../../../accounting/components/posting-config-panel/posting-config-panel.component';
+import { PostingModule } from '../../../accounting/models/posting-config';
 import { Setting, SettingsApiError } from '../../models/setting';
 import { SettingsApiService } from '../../services/settings-api.service';
 
@@ -16,6 +18,7 @@ export const MODULE_TITLES: Record<string, string> = {
   get sales() { return tr('SETTINGS.MODULE_SETTINGS.VENTAS'); },
   get purchases() { return tr('SETTINGS.MODULE_SETTINGS.COMPRAS'); },
   get inventory() { return tr('SETTINGS.MODULE_SETTINGS.INVENTARIO'); },
+  get receivables() { return tr('SETTINGS.MODULE_SETTINGS.COBROS'); },
 };
 
 export const SAVED_MESSAGE = (): string => tr('SETTINGS.MODULE_SETTINGS.CONFIGURACION_GUARDADA');
@@ -32,20 +35,27 @@ export const ENABLE_CONFIRMATIONS: Record<string, { title: string; message: stri
   },
 };
 
-type Tab = 'general' | 'history';
+type Tab = 'general' | 'history' | 'posting';
 
-/** Configuración de un módulo (`data.settingsModule`): pestañas «General» e «Historial de cambios». */
+const POSTING_MODULES: readonly string[] = ['sales', 'purchases', 'inventory', 'receivables'];
+
+/** Configuración de un módulo (`data.settingsModule`): pestañas «General», «Asientos automáticos» (si el módulo tiene eventos contabilizables) e «Historial de cambios». */
 @Component({
   selector: 'app-module-settings',
   templateUrl: './module-settings.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, SettingsHistoryComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, SettingsHistoryComponent, PostingConfigPanelComponent],
 })
 export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
-  readonly module: string = inject(ActivatedRoute).snapshot.data['settingsModule'] ?? '';
+  private readonly route = inject(ActivatedRoute);
+  readonly module: string = this.route.snapshot.data['settingsModule'] ?? '';
   readonly title = MODULE_TITLES[this.module] ?? this.module;
   readonly noSettingsMessage = NO_SETTINGS_MESSAGE();
+  /** El módulo tiene eventos que se contabilizan: muestra la pestaña «Asientos automáticos». */
+  readonly hasPosting = POSTING_MODULES.includes(this.module);
+  readonly postingModule = this.module as PostingModule;
 
-  tab: Tab = 'general';
+  /** `?tab=posting` abre «Asientos automáticos» (enlaces de los avisos contables). */
+  tab: Tab = this.hasPosting && this.route.snapshot.queryParamMap?.get('tab') === 'posting' ? 'posting' : 'general';
   settings: Setting[] = [];
   form = new FormGroup<Record<string, FormControl<string>>>({});
   loading = false;

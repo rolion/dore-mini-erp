@@ -13,6 +13,7 @@ import {
   ReceiptApiError,
   ReceiptFieldErrors,
   ReceiptLineInput,
+  ReceiptPostingIssue,
   ReceptionForm,
   ReceptionFormLine,
   DOCUMENTAL_LABEL,
@@ -44,6 +45,7 @@ export interface ReviewLine {
 @Component({
   selector: 'app-reception-form',
   templateUrl: './reception-form.component.html',
+  styleUrl: './reception-form.component.scss',
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink, DatePipe],
 })
 export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
@@ -70,6 +72,8 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
   submitted = false;
   /** Aviso de negocio del servidor (409): se conserva lo escrito. */
   conflictMessage = '';
+  /** Faltantes de configuración contable devueltos por el servidor (409 `posting_configuration_missing`). */
+  postingIssues: ReceiptPostingIssue[] = [];
   serverErrors: ReceiptFieldErrors = { lines: [] };
   /** Posición en `reception.lines` de cada línea enviada, para ubicar los errores del servidor. */
   private sentRows: number[] = [];
@@ -218,6 +222,7 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
     });
     this.submitting = true;
     this.conflictMessage = '';
+    this.postingIssues = [];
     this.receiptsApi
       .create(this.purchaseId, {
         receiptId: this.receiptId,
@@ -248,6 +253,7 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
   private clearServerErrors(): void {
     this.serverErrors = { lines: [] };
     this.conflictMessage = '';
+    this.postingIssues = [];
   }
 
   private onSubmitError(err: ReceiptApiError): void {
@@ -256,7 +262,8 @@ export class ReceptionFormComponent implements OnInit, HasUnsavedChanges {
       this.step = 'edit';
       this.toastr.error(err.fieldErrors.linesMessage ?? err.message);
     } else if (err.status === 409) {
-      this.conflictMessage = err.message;
+      this.conflictMessage = err.postingIssues.length ? '' : err.message;
+      this.postingIssues = err.postingIssues;
       this.step = 'edit';
       this.refreshLines();
     } else {

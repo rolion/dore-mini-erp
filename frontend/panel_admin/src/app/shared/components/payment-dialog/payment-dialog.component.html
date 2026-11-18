@@ -12,7 +12,10 @@
       <p class="mb-2"><small class="text-muted">{{ 'RECEIVABLES.SALDO_POR_COBRAR' | translate }}</small><br>
         <strong class="fs-4">{{ commitment.totals.balance | money }}</strong></p>
 
-      @if (failure) { <p class="alert alert-danger" role="alert">{{ failure.message }}</p> }
+      @if (failure) {
+        @if (!failure.issues?.length) { <p class="alert alert-danger" role="alert">{{ failure.message }}</p> }
+        <app-posting-issues-alert [issues]="failure.issues ?? []" (navigate)="close()" />
+      }
 
       <div class="mb-2">
         <label for="pay-amount" class="form-label">{{ 'RECEIVABLES.MONTO' | translate }}</label>

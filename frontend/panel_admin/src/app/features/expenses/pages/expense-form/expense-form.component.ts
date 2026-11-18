@@ -1,4 +1,6 @@
 import { tr } from '../../../../core/i18n/translate';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { issueText } from '../../../accounting/models/posting-messages';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -6,23 +8,37 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { NgSelectComponent } from '@ng-select/ng-select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { catchError, merge, of, startWith, switchMap } from 'rxjs';
 import { ExpensesApiError } from '../../models/api-error';
 import { toIsoDate } from '../../models/date-range';
 import {
+  AccountRef,
   DESCRIPTION_MAX_LENGTH,
   Expense,
+  ExpenseCreateInput,
   ExpenseInput,
   NOTES_MAX_LENGTH,
   PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
   PaymentMethod,
+  PostingIssue,
+  PostingOptions,
   SUPPLIER_MAX_LENGTH,
   isVoided,
 } from '../../models/expense';
 import { CategoriesApiService } from '../../services/categories-api.service';
 import { ExpensesApiService } from '../../services/expenses-api.service';
 
-export type FormField = keyof ExpenseInput;
+export type FormField = keyof ExpenseInput | 'expenseAccountId' | 'paymentAccountId';
+
+/** Opción de un selector de cuenta contable. */
+export interface AccountOption {
+  id: string;
+  label: string;
+}
+
+export const accountLabel = (account: AccountRef): string =>
+  account.code ? `${account.code} · ${account.name}` : account.name;
 
 /** Opción del selector de categoría; la categoría actual de un gasto puede estar inactiva. */
 export interface CategoryOption {
@@ -52,7 +68,7 @@ function positiveAmount(control: AbstractControl<string>): ValidationErrors | nu
 @Component({
   selector: 'app-expense-form',
   templateUrl: './expense-form.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectComponent, MoneyPipe],
 })
 export class ExpenseFormComponent implements OnInit {
   readonly descriptionMaxLength = DESCRIPTION_MAX_LENGTH;
@@ -69,12 +85,26 @@ export class ExpenseFormComponent implements OnInit {
     paymentMethod: ['CASH' as PaymentMethod, [Validators.required]],
     supplierName: ['', [Validators.maxLength(SUPPLIER_MAX_LENGTH)]],
     notes: ['', [Validators.maxLength(NOTES_MAX_LENGTH)]],
+    // Cuentas contables elegidas; vacías = las de la configuración (valor por defecto).
+    expenseAccountId: [null as string | null],
+    paymentAccountId: [null as string | null],
   });
 
   expenseId: string | null = null;
   saving = false;
   loading = false;
   categoryOptions: CategoryOption[] = [];
+  /** Cuentas por defecto y elegibles; `null` mientras carga, si falló o al editar. Sin cobertura, `covered` es false. */
+  options: PostingOptions | null = null;
+  expenseAccountItems: AccountOption[] = [];
+  paymentAccountItems: AccountOption[] = [];
+  /** Gasto contabilizado que se edita: monto, categoría, fecha y método quedan de solo lectura. */
+  posted = false;
+  /** Código de la última respuesta de error de contabilización (p. ej. `fiscal_period_closed`). */
+  errorCode: string | null = null;
+  /** Mensaje accionable de un 409 contable (período cerrado o fuera de períodos). */
+  postingError = '';
+  postingIssues: PostingIssue[] = [];
   /** Errores de validación devueltos por el servidor, por campo; se limpian al editar. */
   serverErrors: Partial<Record<FormField, string>> = {};
 
@@ -84,6 +114,12 @@ export class ExpenseFormComponent implements OnInit {
   private router = inject(Router);
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
+  /**
+   * Un envío = una clave: reintentar los mismos datos no duplica el gasto ni el asiento. Si la persona cambia algún
+   * dato entre intentos es un envío nuevo y la clave se renueva (así un 409 de clave reutilizada no la deja atascada).
+   */
+  private idempotencyKey = crypto.randomUUID();
+  private lastSubmission = '';
 
   get isEdit(): boolean {
     return this.expenseId !== null;
@@ -94,8 +130,35 @@ export class ExpenseFormComponent implements OnInit {
     return !this.loading && this.categoryOptions.length === 0;
   }
 
+  /** ¿Contabilidad cubre esta fecha? Solo entonces se muestran las cuentas (alta de un gasto nuevo). */
+  get covered(): boolean {
+    return !this.isEdit && this.options?.covered === true;
+  }
+
+  get effectiveExpenseAccount(): AccountRef | null {
+    return this.pick(this.form.controls.expenseAccountId.value, this.options?.expenseAccounts) ?? this.options?.expenseAccount ?? null;
+  }
+
+  get effectivePaymentAccount(): AccountRef | null {
+    return this.pick(this.form.controls.paymentAccountId.value, this.options?.paymentAccounts) ?? this.options?.paymentAccount ?? null;
+  }
+
+  /** Con cobertura hace falta una cuenta de gasto y una de pago, elegidas o por defecto. */
+  get missingAccounts(): boolean {
+    return this.covered && (!this.effectiveExpenseAccount || !this.effectivePaymentAccount);
+  }
+
+  issueMessage(issue: PostingIssue): string {
+    return issueText(issue);
+  }
+
   ngOnInit(): void {
-    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => (this.serverErrors = {}));
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.serverErrors = {};
+      this.errorCode = null;
+      this.postingError = '';
+      this.postingIssues = [];
+    });
     this.expenseId = this.route.snapshot.paramMap.get('id');
     this.loading = true;
     this.categoriesApi
@@ -124,7 +187,7 @@ export class ExpenseFormComponent implements OnInit {
       return;
     }
     const value = this.form.getRawValue();
-    const input: ExpenseInput = {
+    const input: ExpenseCreateInput = {
       description: value.description.trim(),
       amount: value.amount.trim(),
       categoryId: value.categoryId,
@@ -133,6 +196,18 @@ export class ExpenseFormComponent implements OnInit {
       supplierName: value.supplierName.trim(),
       notes: value.notes.trim(),
     };
+    if (this.covered) {
+      input.expenseAccountId = value.expenseAccountId;
+      input.paymentAccountId = value.paymentAccountId;
+    }
+    if (!this.isEdit) {
+      const signature = JSON.stringify(input);
+      if (this.lastSubmission && signature !== this.lastSubmission) {
+        this.idempotencyKey = crypto.randomUUID();
+      }
+      this.lastSubmission = signature;
+      input.idempotencyKey = this.idempotencyKey;
+    }
     this.saving = true;
     const request = this.expenseId ? this.api.update(this.expenseId, input) : this.api.create(input);
     request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -152,6 +227,7 @@ export class ExpenseFormComponent implements OnInit {
     if (!this.expenseId) {
       this.form.patchValue({ expenseDate: toIsoDate(new Date()) });
       this.loading = false;
+      this.watchPostingOptions();
       return;
     }
     this.api
@@ -187,12 +263,49 @@ export class ExpenseFormComponent implements OnInit {
       paymentMethod: expense.paymentMethod,
       supplierName: expense.supplierName,
       notes: expense.notes,
+      expenseAccountId: null,
+      paymentAccountId: null,
     });
+    this.posted = expense.posted;
+    if (this.posted) {
+      for (const control of [this.form.controls.amount, this.form.controls.expenseDate, this.form.controls.categoryId, this.form.controls.paymentMethod]) {
+        control.disable({ emitEvent: false });
+      }
+    }
     this.serverErrors = {};
     this.loading = false;
   }
 
+  private pick(id: string | null, accounts: AccountRef[] | undefined): AccountRef | null {
+    return id ? (accounts ?? []).find((account) => account.id === id) ?? null : null;
+  }
+
+  /** Recarga las cuentas por defecto y elegibles cuando cambian la fecha, la categoría o el método de pago. */
+  private watchPostingOptions(): void {
+    const controls = this.form.controls;
+    merge(controls.expenseDate.valueChanges, controls.categoryId.valueChanges, controls.paymentMethod.valueChanges)
+      .pipe(
+        startWith(null),
+        switchMap(() => {
+          const { expenseDate, categoryId, paymentMethod } = this.form.getRawValue();
+          if (!expenseDate) {
+            return of(null);
+          }
+          return this.api.postingOptions(expenseDate, categoryId || null, paymentMethod).pipe(catchError(() => of(null)));
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((options) => {
+        this.options = options;
+        this.expenseAccountItems = (options?.expenseAccounts ?? []).map((a) => ({ id: a.id, label: accountLabel(a) }));
+        this.paymentAccountItems = (options?.paymentAccounts ?? []).map((a) => ({ id: a.id, label: accountLabel(a) }));
+      });
+  }
+
   private showServerError(err: ExpensesApiError): void {
+    this.errorCode = err.code;
+    this.postingIssues = err.issues;
+    this.postingError = err.status === 409 ? err.message : '';
     const errors: Partial<Record<FormField, string>> = {};
     for (const field of Object.keys(this.form.controls) as FormField[]) {
       const messages = err.fieldErrors[field];
@@ -201,7 +314,7 @@ export class ExpenseFormComponent implements OnInit {
       }
     }
     this.serverErrors = errors;
-    if (!Object.keys(errors).length) {
+    if (!Object.keys(errors).length && !err.issues.length && !this.postingError) {
       this.toastr.error(err.message);
     }
   }

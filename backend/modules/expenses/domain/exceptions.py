@@ -28,3 +28,17 @@ class ExpenseCategoryNotFound(Exception):
     def __init__(self, category_id: UUID):
         super().__init__(f'Categoría {category_id} no encontrada.')
         self.category_id = category_id
+
+
+class ExpenseDuplicateKey(Exception):
+    """Otra petición ya creó un gasto con la misma clave de idempotencia (carrera resuelta por la base de datos)."""
+
+
+class ExpensePostingError(Exception):
+    """Contabilidad no pudo contabilizar el gasto. `code` es estable; `issues` lista los faltantes de configuración."""
+
+    def __init__(self, code: str, message: str, issues: list[dict] | None = None):
+        super().__init__(message)
+        self.code = code
+        self.message = message
+        self.issues = issues or []

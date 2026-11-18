@@ -1,10 +1,14 @@
+import re
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 
-from .catalog import CURRENCIES, FLOW_CURRENCY
+from .catalog import ACCOUNT_KINDS, CURRENCIES, FLOW_CURRENCY
 
 NAME_MAX_LENGTH = 80
+CODE_MAX_LENGTH = 20
+CODE_PATTERN = re.compile(r'^[0-9]+$')  # por ahora solo numérico; el formato lo elige cada empresa (p. ej. 111001)
 
 
 class AccountValidationError(Exception):
@@ -41,10 +45,49 @@ def validate_name(name: object) -> str:
     return name
 
 
+def validate_code(code: object) -> str:
+    """Código de cuenta: recortado, de 1 a 20 dígitos (solo numérico por ahora; se conservan los ceros a la izquierda)."""
+    if not isinstance(code, str) or not code.strip():
+        raise AccountValidationError({'code': ['El código es obligatorio.']})
+    code = code.strip()
+    if len(code) > CODE_MAX_LENGTH:
+        raise AccountValidationError({'code': [f'El código no puede superar {CODE_MAX_LENGTH} caracteres.']})
+    if not CODE_PATTERN.match(code):
+        raise AccountValidationError({'code': ['El código solo admite dígitos (por ejemplo, 111001).']})
+    return code
+
+
 def validate_currency(currency: object) -> str:
     if not isinstance(currency, str) or currency.strip().upper() not in CURRENCIES:
         raise AccountValidationError({'currency': [f'La moneda debe ser una de: {", ".join(CURRENCIES)}.']})
     return currency.strip().upper()
+
+
+OPENING_MAX = Decimal(10) ** 10
+ZERO = Decimal('0.00')
+
+
+def validate_opening_balance(value: object) -> Decimal:
+    """Saldo de apertura: decimal ≥ 0 con a lo sumo 2 decimales (nunca float)."""
+    if isinstance(value, (float, bool)):
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura debe ser un decimal.']})
+    try:
+        amount = value if isinstance(value, Decimal) else Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura no es válido.']}) from None
+    if not amount.is_finite() or amount < 0:
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura no puede ser negativo.']})
+    if amount != amount.quantize(Decimal('0.01')):
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura admite como máximo 2 decimales.']})
+    if amount >= OPENING_MAX:
+        raise AccountValidationError({'opening_balance': ['El saldo de apertura es demasiado grande.']})
+    return amount.quantize(Decimal('0.01'))
+
+
+def validate_kind(kind: object) -> str:
+    if not isinstance(kind, str) or kind.strip().upper() not in ACCOUNT_KINDS:
+        raise AccountValidationError({'kind': [f'El tipo debe ser uno de: {", ".join(ACCOUNT_KINDS)}.']})
+    return kind.strip().upper()
 
 
 @dataclass
@@ -55,13 +98,52 @@ class Account:
     is_active: bool = True
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    # Caja/Banco/Billetera; nulo solo en cuentas anteriores a su introducción. No restringe la dirección del dinero.
+    kind: str | None = None
+    # Monto de la cuenta a la fecha de corte; cambia solo mientras la cuenta no tiene movimientos.
+    opening_balance: Decimal = ZERO
+    # Clasificación contable (CONT-08); nula hasta que CONT-09 la haga obligatoria.
+    account_class: str | None = None
+    # Código del plan de cuentas (CONT-09); nulo solo en cuentas anteriores; único por empresa sin mayúsculas.
+    code: str | None = None
+    # Cuenta correctora: su saldo normal es contrario al de su clasificación (informativo).
+    is_contra: bool = False
 
     @classmethod
-    def create(cls, name: object, currency: object) -> 'Account':
-        return cls(id=uuid4(), name=validate_name(name), currency=validate_currency(currency))
+    def create(cls, name: object, currency: object, kind: object = None,
+               opening_balance: object = None, code: object = None, is_contra: bool = False) -> 'Account':
+        return cls(id=uuid4(), name=validate_name(name), currency=validate_currency(currency),
+                   kind=validate_kind(kind) if kind is not None else None,
+                   opening_balance=validate_opening_balance(opening_balance) if opening_balance is not None else ZERO,
+                   code=validate_code(code) if code is not None else None, is_contra=bool(is_contra))
+
+    def change_code(self, code: object) -> None:
+        self.code = validate_code(code)
+
+    def change_is_contra(self, value: bool) -> None:
+        self.is_contra = bool(value)
+
+    def ensure_consistent(self) -> None:
+        """El tipo de dinero (Caja/Banco/Billetera) solo existe en cuentas de Activo."""
+        if self.kind is not None and self.account_class is not None and self.account_class != 'ASSET':
+            raise AccountValidationError({'kind': ['El tipo de cuenta de dinero solo aplica a cuentas de Activo.']})
+
+    def classify(self, code: str) -> None:
+        """Asigna una clasificación ya validada del catálogo."""
+        self.account_class = code
+
+    def set_opening_balance(self, value: object) -> None:
+        self.opening_balance = validate_opening_balance(value)
 
     def rename(self, name: object) -> None:
         self.name = validate_name(name)
+
+    def clear_kind(self) -> None:
+        """Deja de ser cuenta de dinero (sin tipo Caja/Banco/Billetera)."""
+        self.kind = None
+
+    def change_kind(self, kind: object) -> None:
+        self.kind = validate_kind(kind)
 
     def change_currency(self, currency: object) -> None:
         self.currency = validate_currency(currency)

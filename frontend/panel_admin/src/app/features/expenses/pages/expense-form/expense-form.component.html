@@ -93,6 +93,88 @@
                   }
                 </div>
               </div>
+              @if (posted) {
+              <div class="alert alert-info" role="status" data-testid="posted-lock">
+                {{ 'EXPENSES.EXPENSE_FORM.GASTO_CONTABILIZADO_AVISO' | translate }}
+              </div>
+              }
+              @if (covered) {
+              <div class="row" data-testid="accounting-block">
+                <div class="col-md-12">
+                  <h6 class="m-b-10">{{ 'EXPENSES.EXPENSE_FORM.CONTABILIDAD' | translate }}</h6>
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="expense-account">{{ 'EXPENSES.EXPENSE_FORM.CUENTA_DE_GASTO' | translate }}</label>
+                  <ng-select inputId="expense-account" [items]="expenseAccountItems" bindLabel="label" bindValue="id"
+                    formControlName="expenseAccountId" [clearable]="true"
+                    [placeholder]="(options?.expenseAccount ? ('EXPENSES.EXPENSE_FORM.POR_DEFECTO' | translate: { account: options?.expenseAccount?.name }) : ('EXPENSES.EXPENSE_FORM.ELIGE_UNA_CUENTA' | translate))"
+                    [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [ariaLabel]="'EXPENSES.EXPENSE_FORM.CUENTA_DE_GASTO' | translate">
+                  </ng-select>
+                  @if (serverErrors.expenseAccountId) {
+                  <small class="form-text text-danger">{{ serverErrors.expenseAccountId }}</small>
+                  }
+                </div>
+                <div class="form-group col-md-6">
+                  <label for="payment-account">{{ 'EXPENSES.EXPENSE_FORM.CUENTA_DE_PAGO' | translate }}</label>
+                  <ng-select inputId="payment-account" [items]="paymentAccountItems" bindLabel="label" bindValue="id"
+                    formControlName="paymentAccountId" [clearable]="true"
+                    [placeholder]="(options?.paymentAccount ? ('EXPENSES.EXPENSE_FORM.POR_DEFECTO' | translate: { account: options?.paymentAccount?.name }) : ('EXPENSES.EXPENSE_FORM.ELIGE_UNA_CUENTA' | translate))"
+                    [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [ariaLabel]="'EXPENSES.EXPENSE_FORM.CUENTA_DE_PAGO' | translate">
+                  </ng-select>
+                  @if (serverErrors.paymentAccountId) {
+                  <small class="form-text text-danger">{{ serverErrors.paymentAccountId }}</small>
+                  }
+                </div>
+                @if (options?.issues?.length && missingAccounts) {
+                <div class="col-md-12">
+                  <div class="alert alert-warning" role="alert" data-testid="posting-issues">
+                    @for (issue of options?.issues; track issue.code + issue.subject) {
+                    <div>{{ issueMessage(issue) }}</div>
+                    }
+                    <a routerLink="/pocketbiz/expenses/settings">{{ 'EXPENSES.EXPENSE_FORM.CONFIGURAR_ASIENTOS' | translate }}</a>
+                  </div>
+                </div>
+                }
+                @if (effectiveExpenseAccount && effectivePaymentAccount && form.controls.amount.valid) {
+                <div class="col-md-12" data-testid="posting-preview">
+                  <table class="table table-sm">
+                    <thead>
+                      <tr>
+                        <th>{{ 'EXPENSES.EXPENSE_FORM.CUENTA' | translate }}</th>
+                        <th class="text-end">{{ 'EXPENSES.EXPENSE_FORM.DEBE' | translate }}</th>
+                        <th class="text-end">{{ 'EXPENSES.EXPENSE_FORM.HABER' | translate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{{ effectiveExpenseAccount.name }}</td>
+                        <td class="text-end">{{ form.controls.amount.value | money }}</td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td>{{ effectivePaymentAccount.name }}</td>
+                        <td></td>
+                        <td class="text-end">{{ form.controls.amount.value | money }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                }
+              </div>
+              }
+              @if (postingIssues.length || postingError) {
+              <div class="alert alert-danger" role="alert" data-testid="posting-error">
+                @if (postingError) {
+                <div>{{ postingError }}</div>
+                }
+                @for (issue of postingIssues; track issue.code + issue.subject) {
+                <div>{{ issueMessage(issue) }}</div>
+                }
+                @if (postingIssues.length) {
+                <a routerLink="/pocketbiz/expenses/settings">{{ 'EXPENSES.EXPENSE_FORM.CONFIGURAR_ASIENTOS' | translate }}</a>
+                }
+              </div>
+              }
               <div class="row">
                 <div class="form-group col-md-12">
                   <label for="expense-notes">{{ 'COMMON.NOTAS' | translate }}</label>
@@ -108,7 +190,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <button type="submit" class="btn btn-primary"
-                    [disabled]="form.invalid || saving || loading || noCategories">
+                    [disabled]="form.invalid || saving || loading || noCategories || missingAccounts">
                     {{ 'COMMON.GUARDAR' | translate }}
                   </button>
                   <a class="btn btn-light ms-2" [routerLink]="isEdit ? ['/pocketbiz/expenses', expenseId] : ['/pocketbiz/expenses']">{{ 'COMMON.CANCELAR' | translate }}</a>

@@ -1,3 +1,4 @@
+import '../../../core/i18n/testing'; // idioma por defecto estable para `tr` (ver testing.ts)
 import { amountError, fromCents, toCents } from './payment-amounts';
 
 describe('payment-amounts', () => {

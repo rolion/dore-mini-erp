@@ -1,2 +1,11 @@
 @use '../../../inventory/components/inventory-table';
 @use '../alert-warning';
+
+// La plantilla (`_checkbox.scss`) oculta `.form-check-input` con `pointer-events: none` y espera que el clic llegue por
+// una etiqueta. Aquí el interruptor no tiene etiqueta visible (solo `aria-label`): se vuelve a hacer clicable.
+.form-switch .form-check-input {
+  pointer-events: auto;
+  position: relative;
+  cursor: pointer;
+  margin: 0;
+}

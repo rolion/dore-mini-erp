@@ -32,13 +32,25 @@ class DjangoPaymentRepository:
                     id=payment.id, company_id=self.company_id, purchase_id=payment.purchase_id,
                     amount=payment.amount, payment_method=payment.payment_method.value,
                     payment_date=payment.payment_date, status=payment.status.value, user_id=payment.user_id,
-                    user_name=payment.user_name)
+                    user_name=payment.user_name, classification_id=payment.classification_id,
+                    debt_amount=payment.debt_amount, advance_amount=payment.advance_amount)
         except IntegrityError as exc:
             raise PaymentConflict() from exc
         return payment_to_entity(model)
 
     def list_for_purchase(self, purchase_id: UUID) -> list[Payment]:
         return [payment_to_entity(m) for m in self._payments().filter(purchase_id=purchase_id)]
+
+    def _confirmed(self, purchase_id: UUID) -> QuerySet:
+        return self._payments().filter(purchase_id=purchase_id, status=PaymentRecordStatus.CONFIRMED.value)
+
+    def debt_paid_total(self, purchase_id: UUID) -> Decimal:
+        """Suma de lo que los pagos confirmados liquidaron de deuda reconocida."""
+        return self._confirmed(purchase_id).aggregate(total=Sum('debt_amount'))['total'] or Decimal('0.00')
+
+    def advance_total(self, purchase_id: UUID) -> Decimal:
+        """Suma de los anticipos a proveedores de los pagos confirmados."""
+        return self._confirmed(purchase_id).aggregate(total=Sum('advance_amount'))['total'] or Decimal('0.00')
 
     def paid_total(self, purchase_id: UUID) -> Decimal:
         total = (self._payments().filter(purchase_id=purchase_id, status=PaymentRecordStatus.CONFIRMED.value)

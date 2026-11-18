@@ -8,6 +8,9 @@
     @if (generalError) {
     <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }}</div>
     }
+    <app-posting-issues-alert [issues]="shownIssues" settingsLink="/pocketbiz/purchases/settings"
+      titleKey="PURCHASES.PAYMENT_DIALOG.CONFIGURACION_CONTABLE_INCOMPLETA"
+      linkKey="PURCHASES.RECEPTION_FORM.IR_A_CONFIGURACION_DE_COMPRAS" (navigate)="activeModal.dismiss()" />
     <div class="form-group mb-3">
       <label for="payment-date">{{ 'COMMON.FECHA' | translate }} <span class="text-danger">*</span></label>
       <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today"
@@ -42,9 +45,50 @@
       <small id="payment-method-error" class="text-danger" role="alert" data-testid="method-error">{{ message }}</small>
       }
     </div>
+    @if (previewLoading) {
+    <p class="text-muted mb-0" role="status" aria-live="polite" data-testid="preview-loading">{{ 'PURCHASES.PAYMENT_DIALOG.CALCULANDO_ASIENTO' | translate }}</p>
+    } @else if (previewError) {
+    <p class="text-danger mb-0" role="alert" data-testid="preview-error">{{ 'PURCHASES.PAYMENT_DIALOG.NO_SE_PUDO_CALCULAR_EL_ASIENTO' | translate }}</p>
+    } @else if (preview; as p) {
+    <div data-testid="preview">
+      <h6>{{ 'PURCHASES.PAYMENT_DIALOG.ASIENTO_PREVISTO' | translate }}</h6>
+      @if (!p.covered) {
+      <p class="text-muted mb-0" data-testid="preview-uncovered">{{ 'PURCHASES.PAYMENT_DIALOG.ESTE_PAGO_NO_GENERA_ASIENTO' | translate }}</p>
+      } @else {
+      <ul class="list-unstyled mb-2">
+        @if (p.debtAmount !== '0.00') {
+        <li data-testid="preview-debt">{{ 'PURCHASES.PAYMENT_DIALOG.LIQUIDA_DEUDA' | translate }}: <strong>{{ p.debtAmount | money }}</strong></li>
+        }
+        @if (p.advanceAmount !== '0.00') {
+        <li data-testid="preview-advance">{{ 'PURCHASES.PAYMENT_DIALOG.ANTICIPO_A_PROVEEDOR' | translate }}: <strong>{{ p.advanceAmount | money }}</strong></li>
+        }
+      </ul>
+      @if (p.lines.length) {
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'ACCOUNTING.POSTING.ACCOUNT' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'ACCOUNTING.POSTING.DEBIT' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'ACCOUNTING.POSTING.CREDIT' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (line of p.lines; track $index) {
+          <tr data-testid="preview-line">
+            <td>{{ line.accountName }}</td>
+            <td class="text-end">{{ line.side === 'DEBIT' ? (line.amount | money) : '' }}</td>
+            <td class="text-end">{{ line.side === 'CREDIT' ? (line.amount | money) : '' }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      }
+      }
+    </div>
+    }
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || (touched && !canSubmit)">
+    <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || blockedByPreview || (touched && !canSubmit)">
       {{ submitting ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('COMMON.REGISTRAR_PAGO' | translate) }}
     </button>
     <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>

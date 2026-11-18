@@ -198,6 +198,13 @@ describe('OrdersApiService', () => {
       expect(error.status).toBe(409);
     });
 
+    it('maps a posting_configuration_missing 409 with its issues (VEN-01)', () => {
+      const issues = [{ code: 'role_unconfigured', subject: 'Ingresos por ventas', message: 'Falta configurar la cuenta.' }];
+      const error = failWith(409, { code: 'posting_configuration_missing', detail: 'Falta configurar la cuenta.', issues }) as OrderRuleError;
+      expect(error instanceof OrderRuleError).toBeTrue();
+      expect(error.postingIssues).toEqual(issues);
+    });
+
     it('maps a 409 without code to the generic error', () => {
       const error = failWith(409, 'raro');
       expect(error instanceof OrderRuleError).toBeFalse();

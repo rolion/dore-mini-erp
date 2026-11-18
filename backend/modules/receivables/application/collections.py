@@ -8,7 +8,7 @@ from typing import Protocol
 from uuid import UUID
 
 from modules.receivables.domain.obligation import (
-    CommitmentNotFound, Obligation, ObligationStateError, Payment, Statement, build_statement,
+    CommitmentNotFound, Obligation, ObligationStateError, Payment, RenderedService, Statement, build_statement,
 )
 from shared.domain.commitment import CommitmentSnapshot
 
@@ -37,12 +37,28 @@ class PaymentResult:
     replayed: bool
 
 
-class PaymentLedger(Protocol):
-    """Puerto del libro de entradas: lo implementa un adaptador; puede no estar disponible."""
+@dataclass(frozen=True)
+class RenderResult:
+    view: CommitmentView
+    service: RenderedService
+    replayed: bool
+
+
+class ServicePosting(Protocol):
+    """Puerto de contabilización de servicios: lo implementa un adaptador; puede no estar disponible."""
 
     def is_available(self) -> bool: ...
 
-    def record(self, kind: str, number: str, payment: Payment, actor_id: int | None, actor_name: str) -> None: ...
+    def record_payment(self, kind: str, number: str, obligation: Obligation, payment: Payment,
+                       actor_id: int | None, actor_name: str) -> None: ...
+
+    def recognize(self, kind: str, number: str, obligation: Obligation, service: RenderedService,
+                  actor_id: int | None, actor_name: str) -> None: ...
+
+
+def _view(snapshot: CommitmentSnapshot, obligation: Obligation | None) -> CommitmentView:
+    payments, rendered = (obligation.payments, obligation.rendered) if obligation else ([], [])
+    return CommitmentView(snapshot, obligation, build_statement(snapshot, payments, rendered))
 
 
 def _digest(kind: str, number: str, data: PaymentInput) -> str:
@@ -56,7 +72,7 @@ class CollectionService:
 
     def __init__(self, repository, source_for: Callable, *, today: Callable[[], date], now: Callable[[], datetime],
                  user_id: int | None = None, user_name: str = '',
-                 ledger: PaymentLedger | None = None):
+                 ledger: ServicePosting | None = None):
         self.repository = repository
         self.source_for = source_for
         self.today, self.now = today, now
@@ -74,7 +90,7 @@ class CollectionService:
         if snapshot is None:
             raise CommitmentNotFound()
         obligation = self.repository.find(kind, number)
-        return CommitmentView(snapshot, obligation, build_statement(snapshot, obligation.payments if obligation else []))
+        return _view(snapshot, obligation)
 
     def register_payment(self, kind: str, number: str, data: PaymentInput) -> PaymentResult:
         """Debe ejecutarse dentro de una transacción. Orden de bloqueo fijo: obligación → proforma (ADR)."""
@@ -100,10 +116,32 @@ class CollectionService:
             recorded_by_name=self.user_name, idempotency_key=data.idempotency_key, now=self.now())
         self.repository.add_payment(obligation, payment, digest)
         if self.ledger is not None and self.ledger.is_available():
-            self.ledger.record(kind, number, payment, self.user_id, self.user_name)
+            self.ledger.record_payment(kind, number, obligation, payment, self.user_id, self.user_name)
         source.mark_collected(a.line_id for a in payment.allocations)
-        view = CommitmentView(snapshot, obligation, build_statement(snapshot, obligation.payments))
-        return PaymentResult(view, payment, False)
+        return PaymentResult(_view(snapshot, obligation), payment, False)
+
+    def render_service(self, kind: str, number: str, line_id: UUID, service_date: date | None) -> RenderResult:
+        """Marca un tratamiento como prestado y reconoce el ingreso. Dentro de una transacción; mismo orden de bloqueo.
+
+        Es idempotente por (obligación, línea de origen): repetirlo devuelve la prestación sin asiento nuevo.
+        """
+        source = self._source(kind)
+        snapshot = source.get(number)
+        if snapshot is None:
+            raise CommitmentNotFound()
+        obligation = self.repository.lock_or_create(Obligation.open(snapshot))
+        snapshot = source.lock(number)
+        if snapshot is None:
+            raise CommitmentNotFound()
+        service, created = obligation.mark_rendered(
+            snapshot, line_id, service_date=service_date, today=self.today(), recorded_by=self.user_id,
+            recorded_by_name=self.user_name, now=self.now())
+        if created:
+            self.repository.add_rendered(obligation, service)
+            if self.ledger is not None and self.ledger.is_available():
+                self.ledger.recognize(kind, number, obligation, service, self.user_id, self.user_name)
+            source.mark_collected([service.line_id])
+        return RenderResult(_view(snapshot, obligation), service, not created)
 
     def _replay(self, kind: str, number: str, key: UUID, digest: str) -> PaymentResult | None:
         """INV-06: misma clave y mismo contenido → el pago ya registrado; misma clave con otro contenido → 409."""
@@ -127,7 +165,7 @@ class CollectionService:
             for obligation in obligations:
                 snapshot = snapshots.get(obligation.source_number) if obligation.source_kind == kind else None
                 if snapshot is not None:
-                    views.append(CommitmentView(snapshot, obligation, build_statement(snapshot, obligation.payments)))
+                    views.append(_view(snapshot, obligation))
         if status:
             views = [v for v in views if v.statement.payment_status == status]
         return sorted(views, key=lambda v: (v.obligation.created_at, v.obligation.id), reverse=True)

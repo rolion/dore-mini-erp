@@ -17,6 +17,7 @@ import {
   OrderItemDto,
   OrderListParams,
   OrderRuleError,
+  PostingIssue,
   OrderSummary,
   OrderSummaryDto,
   Payment,
@@ -187,6 +188,15 @@ function toFieldErrors(body: unknown): FieldErrors {
   return errors;
 }
 
+function toPostingIssues(body: unknown): PostingIssue[] {
+  const raw = (body as { issues?: unknown } | null)?.issues;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is { code: string; subject: string; message: string } =>
+      !!item && typeof item === 'object' && typeof (item as { message?: unknown }).message === 'string')
+    .map((item) => ({ code: String(item.code ?? ''), subject: String(item.subject ?? ''), message: item.message }));
+}
+
 function ruleMessage(body: unknown): { code: string; detail: string } | null {
   if (body && typeof body === 'object') {
     const { code, detail } = body as { code?: unknown; detail?: unknown };
@@ -216,6 +226,7 @@ function toApiError(err: HttpErrorResponse): OrderApiError {
       rule.code,
       rule.code === 'insufficient_stock' ? toShortages(err.error) : [],
       typeof warehouse?.name === 'string' ? warehouse.name : '',
+      rule.code === 'posting_configuration_missing' ? toPostingIssues(err.error) : [],
     );
   }
   return new OrderApiError(GENERIC_ERROR_MESSAGE(), err.status);

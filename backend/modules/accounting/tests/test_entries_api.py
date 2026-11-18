@@ -94,8 +94,10 @@ class ListTests(EntriesApiBase):
     def test_empty_book_returns_empty_totals_and_null_coverage(self):  # AC-09
         data = self.client_a.get(ENTRIES).data
         self.assertEqual((data['count'], data['results'], data['totals']), (0, [], []))
-        self.assertEqual(data['coverage'], {'first_payment_date': None, 'last_payment_date': None,
-                                            'first_recorded_at': None})
+        coverage = data['coverage']
+        self.assertEqual((coverage['first_payment_date'], coverage['last_payment_date'],
+                          coverage['first_recorded_at']), (None, None, None))
+        self.assertEqual(coverage['gaps'], [])  # CONT-06 API-04: el corte y los huecos se añaden al bloque
 
     def test_invalid_filters_are_rejected(self):  # EDGE-01, EDGE-02
         for params in ({'date_from': '2026-12-01', 'date_to': '2026-11-01'}, {'date_from': 'x'}, {'method': 'CHEQUE'},
@@ -123,7 +125,8 @@ class ListTests(EntriesApiBase):
         self.assertEqual(row['account']['name'], 'Banco')
         # conjunto exacto de claves: ningún texto libre del pago puede colarse en el listado
         self.assertEqual(set(row), {'id', 'account', 'currency', 'amount', 'payment_date', 'created_at', 'method',
-                                    'method_label', 'recorded_by_name', 'origin', 'source'})
+                                    'method_label', 'recorded_by_name', 'origin', 'source', 'direction', 'operation',
+                                    'classification', 'reversal_of', 'reversed_by'})
         self.assertEqual(set(row['source']), {'document_ref', 'receipt_number', 'available'})
 
     def test_source_link_is_unavailable_when_the_origin_module_is_disabled(self):  # AC-07

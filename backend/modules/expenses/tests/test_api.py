@@ -10,7 +10,8 @@ CATEGORIES = '/api/expense-categories/'
 
 EXPENSE_KEYS = {
     'id', 'description', 'amount', 'expense_date', 'category', 'payment_method', 'supplier_name', 'notes', 'status',
-    'voided_at', 'created_at', 'updated_at',
+    'voided_at', 'classification', 'created_at', 'updated_at', 'posted', 'expense_account', 'payment_account',
+    'journal_entry_id', 'replayed',
 }
 
 

@@ -37,7 +37,7 @@ class DjangoReceiptRepository:
             id=receipt.id, company_id=self.company_id, purchase_id=receipt.purchase_id,
             receipt_date=receipt.receipt_date, status=receipt.status.value, warehouse_id=receipt.warehouse_id,
             inventory_mode=receipt.inventory_mode.value if receipt.inventory_mode else None,
-            user_id=receipt.user_id, user_name=receipt.user_name)
+            user_id=receipt.user_id, user_name=receipt.user_name, advance_applied=receipt.advance_applied)
         ReceiptItemModel.objects.bulk_create([
             ReceiptItemModel(receipt=model, position=position, purchase_item_id=line.purchase_item_id,
                              product_id=line.product_id, product_name=line.product_name,
@@ -54,6 +54,12 @@ class DjangoReceiptRepository:
     def list_for_purchase(self, purchase_id: UUID) -> list[Receipt]:
         models = list(self._receipts().filter(purchase_id=purchase_id).prefetch_related('items'))
         return [receipt_to_entity(m, m.items.all()) for m in models]
+
+    def advance_applied_total(self, purchase_id: UUID) -> Decimal:
+        """Anticipos a proveedores aplicados por las recepciones vigentes de la compra."""
+        total = (self._receipts().filter(purchase_id=purchase_id, status=ReceiptStatus.CONFIRMED.value)
+                 .aggregate(total=Sum('advance_applied'))['total'])
+        return total if total is not None else Decimal('0.00')
 
     def received_totals(self, purchase_id: UUID) -> dict[UUID, Decimal]:
         rows = (ReceiptItemModel.objects

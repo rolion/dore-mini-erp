@@ -40,6 +40,13 @@ class RegisterPaymentTests(TestCase):
         self.assertEqual((payment.status, payment.purchase_id), (PaymentRecordStatus.CONFIRMED, purchase.id))
         self.assertRegex(payment.reference, r'^PAG-[0-9A-F]{8}$')  # H-01
 
+    def test_the_classification_snapshot_is_set_through_the_aggregate(self):  # CONT-03, INV-02
+        payment = pay(confirmed())
+        self.assertIsNone(payment.classification_id)
+        classification_id = uuid4()
+        payment.assign_classification(classification_id)
+        self.assertEqual(payment.classification_id, classification_id)
+
     def test_status_goes_partial_then_paid(self):  # AC-02, INV-06, EDGE-01
         purchase = confirmed()
         self.assertEqual(purchase.payment_status, PaymentStatus.UNPAID)

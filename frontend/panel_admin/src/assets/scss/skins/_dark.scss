@@ -1,5 +1,4 @@
-$color-dark-primary: #16192a;
-$color-font: #96a2b4;
+@use '../dark-tokens' as *;
 
 %extend_stylegroup {
   background-color: $color-dark-primary;
@@ -289,6 +288,12 @@ $color-font: #96a2b4;
 
   .text-muted {
     color: #64789a !important;
+  }
+
+  // Bootstrap 5.3 solo adapta `text-body-secondary` con data-bs-theme (que este panel no usa): sin esto queda gris
+  // oscuro sobre la tarjeta oscura (~1,1:1). $color-font sobre $color-dark-primary supera 4,5:1 (REV-2026-11-17-04).
+  .text-body-secondary {
+    color: $color-font !important;
   }
 
   .main-footer {

@@ -88,6 +88,8 @@ class ReceiptModel(models.Model):
     reverted_by_user_id = models.UUIDField(null=True, blank=True)
     reverted_by_name = models.CharField(max_length=200, blank=True, default='')
     revert_reason = models.CharField(max_length=200, blank=True, default='')
+    # Anticipos a proveedores que aplicó el reconocimiento de esta recepción.
+    advance_applied = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     class Meta:
         db_table = 'purchases_receipt'
@@ -120,6 +122,11 @@ class PaymentModel(models.Model):
     payment_method = models.CharField(max_length=20)
     payment_date = models.DateField()
     status = models.CharField(max_length=20, default='confirmed')
+    # Instantánea de la clasificación de pagos a proveedores al registrar; nula en pagos anteriores.
+    classification_id = models.UUIDField(null=True, blank=True)
+    # Reparto del pago: deuda reconocida liquidada y anticipo a proveedores (`debt_amount + advance_amount = amount`).
+    debt_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    advance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     user_id = models.UUIDField(null=True, blank=True)
     user_name = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -129,3 +136,17 @@ class PaymentModel(models.Model):
         ordering = ['-payment_date', '-created_at', 'id']
         indexes = [models.Index(fields=['company_id', 'purchase_id'], name='purch_payment_company_purch')]
         constraints = [models.CheckConstraint(condition=models.Q(amount__gt=0), name='purchases_payment_amount_gt_0')]
+
+
+class SettingsModel(models.Model):
+    """Ajustes de Compras de una empresa (una fila por empresa)."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    # Clasificación de egreso de «pagos a proveedores» (UUID sin FK entre módulos; la valida Contabilidad).
+    payment_classification_id = models.UUIDField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'purchases_settings'
+        constraints = [models.UniqueConstraint(fields=['company_id'], name='purchases_settings_company_uniq')]
