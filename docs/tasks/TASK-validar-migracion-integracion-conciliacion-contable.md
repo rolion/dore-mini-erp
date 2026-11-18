@@ -1,6 +1,6 @@
 # TASK-validar-migracion-integracion-conciliacion-contable: Validar migración, integración y conciliación de `accounting` antes de main (CONT-13)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-validar-migracion-integracion-conciliacion-contable (base: `accounting`)
@@ -14,6 +14,7 @@
 | 2026-11-18 | INVESTIGATION → PLANNING | Validación acotada, sin decisión arquitectónica nueva; sin pantallas | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación y validación completas | delivery-build |
+| 2026-11-18 | REVIEW → PUBLISH | Quality Gate PASS (solo hallazgos Low) | delivery-publish |
 
 ## Investigación
 
@@ -91,7 +92,8 @@ Prueba integrada `backend/modules/accounting/tests/test_cont13_integration.py` (
 **Deuda técnica:** la Etapa 2 de CONT-07 (conversión del libro anterior) sigue sin implementar; hoy `accounting_entry` está vacío en la base local.
 
 ## Review
-_Pendiente_
+**Resultado: PASS** (Quality Gate en subagente aislado, 2026-11-18). Ejecutado: prueba nueva 6/6; backend completo 2230 OK; `makemigrations --check` sin cambios; `ruff`, `flake8` y `bandit` sin hallazgos; frontend `i18n:check` (0 faltantes), `lint`, `build` (solo avisos), `npm test` 1702 OK; `npm audit`: 2 moderadas transitivas; sin secretos, `.env` y `node_modules` no rastreados; sin código de producto ni migraciones en el diff. No re-ejecutado por el revisor: el ensayo en la copia de `doredb` (evidencia de build, ver informe).
+Hallazgos, todos Low y sin REV abierto bloqueante (resueltos en documentación o declarados como limitación): AC-04 sin verificación de «origen existente» (declarado en el informe); AC-06 sin 403 de miembro en la prueba nueva (cubierto por las pruebas de cada API, declarado); cifra de archivos de frontend corregida a 33; nota de `npm audit` añadida; acoplamiento de la prueba a helpers de `receivables.tests` (precedente en `test_unified_journey.py`).
 
 ## Publicación
-_Pendiente_
+PR #104 (base `accounting`) listo para aprobación humana; no se mergea. El PR `accounting → main` **no se abrió**: su cuerpo propuesto está en `docs/deployment/validacion-accounting-a-main.md`; abrirlo y mergearlo es decisión humana (el push a `main` despliega a producción). Cambio sensible: toca la integración a producción y documenta datos de la transición contable, aunque no hay código de producto ni migraciones nuevas.

@@ -5,7 +5,7 @@ Informe de la validación (2026-11-18) sobre `origin/accounting` (c1afaf1, PR #1
 ## Qué trae el PR `accounting → main`
 - Sin divergencia (`main...accounting` = `0 38`): 38 commits, **87 archivos (+4985/−79)**.
 - **Migraciones nuevas: ninguna.** `main` ya contiene `accounting` 0001–0011 (`git diff --name-status origin/main..origin/accounting -- 'backend/**/migrations/*.py'` vacío). El PR no cambia el esquema.
-- Contenido: flujo de dinero (`accounting/application/cash_flow.py`, `ledger_report.py`, API `/api/accounting/cash-flow/`), reporte contable en `reporting`, reversión del asiento al anular un gasto, pantallas de frontend (29 archivos: Flujo de dinero, Gastos, Reportes) y documentación.
+- Contenido: flujo de dinero (`accounting/application/cash_flow.py`, `ledger_report.py`, API `/api/accounting/cash-flow/`), reporte contable en `reporting`, reversión del asiento al anular un gasto, pantallas de frontend (33 archivos: Flujo de dinero, Gastos, Reportes) y documentación.
 
 ## Resultados reales
 | Comprobación | Resultado |
@@ -18,6 +18,7 @@ Informe de la validación (2026-11-18) sobre `origin/accounting` (c1afaf1, PR #1
 | Frontend `npm run lint` | «All files pass linting» |
 | Frontend `npm run build` | OK; avisos: obsolescencias de `angular-sass`, 23 «Unmatched selector: %» y `stock-list.component.scss` excede el presupuesto de 2,00 kB por 38 bytes (aviso, no error; viene de `main`) |
 | Frontend `npm test` (Karma, ChromeHeadless) | **1702 de 1702 OK** |
+| `npm audit` (frontend) | 2 vulnerabilidades moderadas en dependencias transitivas (`hono`, `@hono/node-server`); no se ejecutó `audit fix` |
 
 Entorno: Windows 11, Python 3.12, Node 22, PostgreSQL 16 local. Para ejecutar el frontend se hizo `npm ci` (sin cambios en `package*.json`).
 
@@ -59,6 +60,8 @@ Sobre la base local `doredb` (solo lectura) con `pg_dump -Fc` → `createdb` →
 ## Limitaciones
 - **No implementado (fuera de alcance):** conversión del libro anterior a asientos (Etapa 2 de CONT-07). Hoy no hay datos que convertir en la base local; si una empresa de producción tiene `accounting_entry`, sigue vigente la decisión pendiente del dueño (contrapartidas, códigos, Patrimonio) — ver `transicion-partida-doble.md`.
 - No se probó contra datos de producción; solo contra la base local de pruebas y la base de pruebas de Django.
+- **AC-04 parcial:** se verificó cuadre, duplicados y cuentas de la empresa, pero no que cada asiento con origen apunte a un registro de origen existente (no hay FK entre módulos; queda como mejora).
+- **AC-06:** el 403 para un miembro sin permiso no se repite en la prueba nueva; está en las pruebas de cada API.
 - Sin prueba E2E de navegador ni recorrido visual manual de los cuatro submenús.
 - Aviso de presupuesto de `stock-list.component.scss` (+38 bytes) y avisos de `angular-sass` en el build, preexistentes.
 
