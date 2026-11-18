@@ -1,7 +1,7 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { EMPTY, Observable } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { ApexChart, ApexLegend, NgApexchartsModule } from 'ng-apexcharts';
@@ -26,6 +26,7 @@ export function percentOf(part: string, total: string): number {
 @Component({
   selector: 'app-reports',
   templateUrl: './reports.component.html',
+  styleUrl: './reports.component.scss',
   imports: [TranslatePipe, 
     AsyncPipe,
     RouterLink,
@@ -38,10 +39,13 @@ export function percentOf(part: string, total: string): number {
 export class ReportsComponent {
   readonly productAmountNote = PRODUCT_AMOUNT_NOTE();
   readonly customerRankingNote = CUSTOMER_RANKING_NOTE();
-  readonly chart: ApexChart = { type: 'donut', height: 260, foreColor: '#9aa0ac' };
+  readonly chart: ApexChart = { type: 'donut', height: 200, foreColor: '#9aa0ac' };
   readonly legend: ApexLegend = { position: 'bottom' };
 
   selection: PeriodSelection = DEFAULT_SELECTION;
+
+  /** El aviso de cobertura se puede cerrar; reaparece al cambiar de periodo. */
+  readonly coverageDismissed = signal(false);
 
   private api = inject(ReportingApiService);
   private modules = inject(ModulesService);
@@ -82,7 +86,17 @@ export class ReportsComponent {
 
   onSelection(selection: PeriodSelection): void {
     this.selection = selection;
+    this.coverageDismissed.set(false);
     this.all.forEach((resource) => resource.reload());
+  }
+
+  /** Solo para colorear: el importe exacto sigue siendo texto y se muestra con `money`. */
+  isNegative(amount: string): boolean {
+    return Number(amount) < 0;
+  }
+
+  isPositive(amount: string): boolean {
+    return Number(amount) > 0;
   }
 
   /** Fecha ISO como `dd/MM/aaaa`. */

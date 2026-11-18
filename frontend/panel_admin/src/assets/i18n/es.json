@@ -1721,7 +1721,19 @@
       "RESULTADO": "Resultado",
       "AVISO_COBERTURA": "Parte del periodo es anterior al corte contable ({{p0}}) o no tuvo cobertura; esos datos no se incluyen.",
       "AVISO_SIN_CORTE": "La contabilidad aún no tiene fecha de corte; los datos pueden estar incompletos.",
-      "CRITERIO_OPERATIVO": "Operativo: se calcula con pedidos y gastos registrados, no con el libro contable."
+      "CRITERIO_OPERATIVO": "Operativo: se calcula con pedidos y gastos registrados, no con el libro contable.",
+      "SECCION_CONTABLE": "Contable (libro de asientos)",
+      "SECCION_OPERATIVA": "Operativo (pedidos y gastos)",
+      "CHIP_CONTABLE": "Contable",
+      "CHIP_OPERATIVO": "Operativo",
+      "COMO_SE_CALCULA": "¿Cómo se calcula?",
+      "VER_POR_CUENTA": "Ver por cuenta",
+      "SIN_CUENTAS_DE_DINERO": "Configura el tipo de cuenta Caja/Banco para ver el flujo de dinero.",
+      "IR_A_CUENTAS": "Ir a Contabilidad → Cuentas",
+      "CERRAR_AVISO": "Cerrar aviso",
+      "RESULTADO_NEGATIVO": "Resultado negativo",
+      "RESULTADO_POSITIVO": "Resultado positivo",
+      "DONA_GASTOS_ARIA": "Gráfico de gastos por categoría"
     },
     "REPORT_CARD": {
       "NO_SE_PUDO_CARGAR": "No se pudo cargar.",

@@ -94,6 +94,74 @@ describe('ReportsComponent', () => {
     expect(byTestId('sales-operational')).not.toBeNull();
   });
 
+  it('orders the screen in an accounting section and an operational section with chips (AC-01, AC-02)', () => {
+    render();
+    const html = root().innerHTML;
+    expect(byTestId('ledger-heading')?.textContent).toContain('Contable (libro de asientos)');
+    expect(byTestId('chip-ledger')?.textContent?.trim()).toBe('Contable');
+    expect(byTestId('operational-heading')?.textContent).toContain('Operativo (pedidos y gastos)');
+    expect(byTestId('chip-operational')?.textContent?.trim()).toBe('Operativo');
+    expect(html.indexOf('ledger-net')).toBeLessThan(html.indexOf('sales-total'));
+    expect(root().querySelector('.reports-container')).not.toBeNull();
+  });
+
+  it('folds the long criteria and the per-account table into closed details (AC-03)', () => {
+    render();
+    for (const id of ['ledger-criteria', 'sales-criteria', 'sales-operational', 'expenses-operational']) {
+      const details = byTestId(id)?.closest('details') as HTMLDetailsElement | null;
+      expect(details).withContext(id).not.toBeNull();
+      expect(details?.open).toBeFalse();
+    }
+    const accounts = byTestId('ledger-accounts')?.closest('details') as HTMLDetailsElement;
+    expect(accounts.open).toBeFalse();
+    expect(accounts.textContent).toContain('Ver por cuenta');
+  });
+
+  it('marks a negative result in red with a text label and a positive one in green (AC-04)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ result: { income: '0.00', cost: '0.00', margin: '0.00', expense: '30.00', result: '-30.00' } })));
+    render();
+    expect(byTestId('ledger-result')?.classList).toContain('text-danger');
+    expect(byTestId('ledger-result-label')?.textContent).toContain('Resultado negativo');
+    fixture.destroy();
+    api.ledger.and.returnValue(of(makeLedger()));
+    fixture = TestBed.createComponent(ReportsComponent);
+    render();
+    expect(byTestId('ledger-result')?.classList).toContain('text-success');
+    expect(byTestId('ledger-result-label')?.textContent).toContain('Resultado positivo');
+  });
+
+  it('points to Accounting → Accounts when the ledger has no money accounts (AC-05)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ cashFlow: { ...makeLedger().cashFlow, accounts: [] } })));
+    render();
+    const notice = byTestId('ledger-no-money-accounts') as HTMLElement;
+    expect(notice.textContent).toContain('Caja/Banco');
+    expect(notice.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/accounting/accounts');
+    expect(byTestId('ledger-accounts-details')).toBeNull();
+  });
+
+  it('does not show the no-money-accounts notice when there are accounts (AC-05)', () => {
+    render();
+    expect(byTestId('ledger-no-money-accounts')).toBeNull();
+  });
+
+  it('lets the coverage notice be closed and shows it again when the period changes (AC-06)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ partial: true })));
+    render();
+    const close = byTestId('ledger-coverage-close') as HTMLElement;
+    expect(close.getAttribute('aria-label')).toBe('Cerrar aviso');
+    close.click();
+    fixture.detectChanges();
+    expect(byTestId('ledger-coverage')).toBeNull();
+    component.onSelection({ kind: 'week' });
+    render();
+    expect(byTestId('ledger-coverage')).not.toBeNull();
+  });
+
+  it('labels the donut chart for assistive technology (AC-07)', () => {
+    render();
+    expect(byTestId('expenses-chart')?.getAttribute('aria-label')).toBe('Gráfico de gastos por categoría');
+  });
+
   it('warns when the period starts before the accounting cutoff (AC-05)', () => {
     api.ledger.and.returnValue(of(makeLedger({ partial: true })));
     render();
