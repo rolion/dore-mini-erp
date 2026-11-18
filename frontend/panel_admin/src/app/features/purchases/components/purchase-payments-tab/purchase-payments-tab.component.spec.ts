@@ -1,5 +1,6 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, Subject, of, throwError } from 'rxjs';
@@ -29,7 +30,7 @@ describe('PurchasePaymentsTabComponent', () => {
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
     await TestBed.configureTestingModule({
       imports: [PurchasePaymentsTabComponent],
-      providers: [...provideTestTranslations(), 
+      providers: [...provideTestTranslations(), provideRouter([]),
         { provide: PaymentsApiService, useValue: api },
         { provide: NgbModal, useValue: modal },
         { provide: ToastrService, useValue: toastr },
@@ -73,6 +74,27 @@ describe('PurchasePaymentsTabComponent', () => {
     }
     expect(rows[1].textContent).toContain('Transferencia');
     expect(rows[1].textContent).toContain('—');
+  });
+
+  it('links each payment entry, marks the advance and says when a payment has no entry (UI-05)', async () => {
+    await setup(
+      makeConfirmedPurchase(),
+      of(page([
+        makePayment({ id: 'p-a', advanceAmount: '4.00', debtAmount: '6.00', accountingEntries: [
+          { id: 'j-1', kind: 'debt', accountingDate: '2026-10-30', total: '6.00' },
+          { id: 'j-2', kind: 'advance', accountingDate: '2026-10-30', total: '4.00' }] }),
+        makePayment({ id: 'p-b', reference: 'PAG-2' }),
+      ])),
+    );
+    const links = all('payment-entry-link');
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/pocketbiz/accounting/journal/j-1', '/pocketbiz/accounting/journal/j-2']);
+    expect(all('advance-note')[0].textContent).toContain('Bs 4.00');
+    expect(all('no-payment-entry').length).toBe(1);
+  });
+
+  it('hides the entry column when no payment has an entry (UI-05)', async () => {
+    await setup(makeConfirmedPurchase(), of(page([makePayment()])));
+    expect(all('payment-entries').length).toBe(0);
   });
 
   it('offers Register payment only when the server allows it and explains otherwise (AC-16)', async () => {

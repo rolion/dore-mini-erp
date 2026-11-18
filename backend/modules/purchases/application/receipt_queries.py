@@ -8,7 +8,7 @@ from modules.purchases.domain.purchase import Purchase
 from modules.purchases.domain.receipt import Receipt
 from modules.purchases.domain.repositories import PurchaseRepository, ReceiptRepository
 
-from .ports import ProductCatalog, StockEntry, StockEntryMovement, StockWarehouse
+from .ports import PostedEntry, ProductCatalog, PurchasePosting, StockEntry, StockEntryMovement, StockWarehouse
 from .receipt_commands import allows_fractions_by_item, received_by_item, suggested_warehouse
 
 
@@ -41,6 +41,8 @@ class ReceiptDetail:
     # Según el modo guardado al confirmar: None si fue documental (o modo desconocido sin Inventario hoy).
     movements: list[StockEntryMovement] | None
     inventory_available: bool  # estado actual del módulo (solo para decidir enlaces)
+    accounting_enabled: bool = False  # Contabilidad habilitada hoy (decide si se muestra el asiento)
+    accounting_entry: PostedEntry | None = None  # asiento de reconocimiento de la recepción, si existe
 
     @property
     def can_revert(self) -> bool:
@@ -102,10 +104,12 @@ class ListReceipts:
 
 
 class GetReceipt:
-    def __init__(self, purchases: PurchaseRepository, receipts: ReceiptRepository, stock: StockEntry):
+    def __init__(self, purchases: PurchaseRepository, receipts: ReceiptRepository, stock: StockEntry,
+                 posting: PurchasePosting | None = None):
         self.purchases = purchases
         self.receipts = receipts
         self.stock = stock
+        self.posting = posting
 
     def execute(self, purchase_id: UUID, receipt_id: UUID) -> ReceiptDetail:
         purchase = _purchase(self.purchases, purchase_id)
@@ -127,4 +131,6 @@ class GetReceipt:
             name = next((m.warehouse_name for m in movements or [] if m.warehouse_id == receipt.warehouse_id), '')
             if not name and available:
                 name = next((w.name for w in self.stock.active_warehouses() if w.id == receipt.warehouse_id), '')
-        return ReceiptDetail(receipt, purchase, name, movements, available)
+        enabled = self.posting is not None and self.posting.is_available()
+        entry = self.posting.entry_for(receipt.id) if enabled else None
+        return ReceiptDetail(receipt, purchase, name, movements, available, enabled, entry)

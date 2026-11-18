@@ -95,3 +95,12 @@ class PaymentClassificationError(PurchaseValidationError):
     def __init__(self, code: str, message: str):
         super().__init__({'non_field_errors': [message]})
         self.code = code
+
+
+class PostingRejected(Exception):
+    """Contabilidad rechazó el asiento; `code` estable y `extra` con datos adicionales del 409 (`issues`)."""
+
+    def __init__(self, code: str, message: str, extra: dict | None = None):
+        super().__init__(message)
+        self.code = code
+        self.extra = extra or {}

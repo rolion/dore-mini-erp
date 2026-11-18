@@ -10,6 +10,7 @@ import {
   ReceiptDto,
   ReceiptFieldErrors,
   ReceiptInput,
+  ReceiptPostingIssue,
   ReceiptSummary,
   ReceiptShortage,
   ReceiptSummaryDto,
@@ -65,6 +66,15 @@ function toShortage(body: unknown): ReceiptShortage | null {
   };
 }
 
+function toPostingIssues(body: unknown): ReceiptPostingIssue[] {
+  const raw = (body as { issues?: unknown } | null)?.issues;
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((item): item is { code: string; subject: string; message: string } =>
+      !!item && typeof item === 'object' && typeof (item as { message?: unknown }).message === 'string')
+    .map((item) => ({ code: String(item.code ?? ''), subject: String(item.subject ?? ''), message: item.message }));
+}
+
 function toError(err: HttpErrorResponse): ReceiptApiError {
   if (err.status === 0) return new ReceiptApiError(RECEIPT_NETWORK_ERROR_MESSAGE(), 0);
   if (err.status === 400) {
@@ -81,6 +91,7 @@ function toError(err: HttpErrorResponse): ReceiptApiError {
       { lines: [] },
       code,
       code === 'insufficient_stock' ? toShortage(err.error) : null,
+      code === 'posting_configuration_missing' ? toPostingIssues(err.error) : [],
     );
   }
   return new ReceiptApiError(RECEIPT_GENERIC_ERROR_MESSAGE(), err.status);
@@ -121,6 +132,10 @@ function toReceipt(dto: ReceiptDto): Receipt {
     canRevert: dto.can_revert ?? false,
     reversal: dto.reversal
       ? { revertedAt: dto.reversal.reverted_at, userName: dto.reversal.user_name, reason: dto.reversal.reason }
+      : null,
+    accountingEnabled: dto.accounting_enabled ?? false,
+    accountingEntry: dto.accounting_entry
+      ? { id: dto.accounting_entry.id, accountingDate: dto.accounting_entry.accounting_date, total: dto.accounting_entry.total }
       : null,
   };
 }

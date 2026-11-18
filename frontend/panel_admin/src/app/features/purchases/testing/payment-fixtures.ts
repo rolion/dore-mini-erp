@@ -10,6 +10,9 @@ export function makePayment(overrides: Partial<Payment> = {}): Payment {
     status: 'confirmed',
     userName: 'ana',
     createdAt: '2026-10-30T12:00:00Z',
+    debtAmount: '10.00',
+    advanceAmount: '0.00',
+    accountingEntries: [],
     ...overrides,
   };
 }
