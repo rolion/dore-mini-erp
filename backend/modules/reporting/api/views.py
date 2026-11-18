@@ -7,6 +7,7 @@ from modules.reporting.domain.period import PeriodError
 from modules.reporting.infrastructure.adapters import (
     CustomerNamesAdapter,
     ExpensesReaderAdapter,
+    LedgerReaderAdapter,
     SalesReaderAdapter,
     SourceAvailabilityAdapter,
     SystemClock,
@@ -69,6 +70,14 @@ class ExpensesReportView(_PeriodReportView):
 
     def build(self):
         return queries.GetExpenseReport(ExpensesReaderAdapter(self._company_id()), SystemClock())
+
+
+class LedgerReportView(_PeriodReportView):
+    required_modules = ('reporting', 'accounting')
+    present = staticmethod(serializers.ledger_data)
+
+    def build(self):
+        return queries.GetLedgerReport(LedgerReaderAdapter(self._company_id()), SystemClock())
 
 
 class SalesByChannelView(_PeriodReportView):

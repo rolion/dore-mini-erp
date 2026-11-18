@@ -60,8 +60,14 @@ export class ReportsComponent {
     return this.modules.isDisabled('expenses');
   }
 
+  /** El libro contable es una fuente opcional: con Contabilidad deshabilitada no se pide. */
+  get ledgerDisabled(): boolean {
+    return this.modules.isDisabled('accounting');
+  }
+
   readonly sales = new RemoteResource(() => this.fromSales(() => this.api.sales(this.selection)));
   readonly expenses = new RemoteResource(() => (this.expensesDisabled ? EMPTY : this.api.expenses(this.selection)));
+  readonly ledger = new RemoteResource(() => (this.ledgerDisabled ? EMPTY : this.api.ledger(this.selection)));
   readonly channels = new RemoteResource(() => this.fromSales(() => this.api.salesByChannel(this.selection)));
   readonly products = new RemoteResource(() => this.fromSales(() => this.api.topProducts(this.selection)));
   readonly customers = new RemoteResource(() =>
@@ -72,11 +78,16 @@ export class ReportsComponent {
     return this.salesDisabled ? EMPTY : request();
   }
 
-  private readonly all = [this.sales, this.expenses, this.channels, this.products, this.customers];
+  private readonly all = [this.sales, this.expenses, this.ledger, this.channels, this.products, this.customers];
 
   onSelection(selection: PeriodSelection): void {
     this.selection = selection;
     this.all.forEach((resource) => resource.reload());
+  }
+
+  /** Fecha ISO como `dd/MM/aaaa`. */
+  dateLabel(iso: string): string {
+    return iso.split('-').reverse().join('/');
   }
 
   channelLabel(code: SalesChannel): string {

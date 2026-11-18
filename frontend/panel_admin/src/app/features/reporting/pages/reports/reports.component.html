@@ -15,6 +15,66 @@
         (selectionChange)="onSelection($event)" />
     </div>
 
+    <h5 class="mb-2" data-testid="ledger-heading">{{ 'REPORTING.REPORTS.LIBRO_CONTABLE' | translate }}</h5>
+    @if ((ledger.state$ | async)?.data; as l) {
+    @if (l.partial) {
+    <div class="alert alert-warning" role="alert" data-testid="ledger-coverage">
+      {{ l.cutoffDate ? ('REPORTING.REPORTS.AVISO_COBERTURA' | translate: { p0: dateLabel(l.cutoffDate) }) : ('REPORTING.REPORTS.AVISO_SIN_CORTE' | translate) }}
+    </div>
+    }
+    }
+    <div class="row">
+      <div class="col-lg-6">
+        <app-report-card [title]="'REPORTING.REPORTS.FLUJO_DE_DINERO' | translate" [status]="(ledger.state$ | async)?.status ?? 'loading'"
+          [error]="(ledger.state$ | async)?.error ?? ''" [unavailable]="ledgerDisabled" (retry)="ledger.reload()">
+          @if ((ledger.state$ | async)?.data; as l) {
+          <h2 class="mb-1" data-testid="ledger-net">{{ l.cashFlow.net | money }}</h2>
+          <small class="text-muted d-block">{{ 'REPORTING.REPORTS.FLUJO_NETO' | translate }}</small>
+          <table class="table table-sm mt-2" data-testid="ledger-flow-table">
+            <tbody>
+              <tr><td>{{ 'REPORTING.REPORTS.SALDO_INICIAL' | translate }}</td><td class="text-end" data-testid="ledger-opening">{{ l.cashFlow.opening | money }}</td></tr>
+              <tr><td>{{ 'REPORTING.REPORTS.ENTRADAS' | translate }}</td><td class="text-end" data-testid="ledger-inflow">{{ l.cashFlow.inflow | money }}</td></tr>
+              <tr><td>{{ 'REPORTING.REPORTS.SALIDAS' | translate }}</td><td class="text-end" data-testid="ledger-outflow">{{ l.cashFlow.outflow | money }}</td></tr>
+              <tr><td>{{ 'REPORTING.REPORTS.SALDO_FINAL' | translate }}</td><td class="text-end" data-testid="ledger-closing">{{ l.cashFlow.closing | money }}</td></tr>
+            </tbody>
+          </table>
+          @if (l.cashFlow.accounts.length) {
+          <table class="table table-sm" data-testid="ledger-accounts">
+            <thead><tr><th>{{ 'REPORTING.REPORTS.CUENTA_DE_DINERO' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.VARIACION' | translate }}</th><th class="text-end">{{ 'REPORTING.REPORTS.SALDO_FINAL' | translate }}</th></tr></thead>
+            <tbody>
+              @for (a of l.cashFlow.accounts; track a.accountId) {
+              <tr><td>{{ a.name }}</td><td class="text-end">{{ a.net | money }}</td><td class="text-end">{{ a.closing | money }}</td></tr>
+              }
+            </tbody>
+          </table>
+          } @else {
+          <p class="mb-1" data-testid="ledger-accounts-empty">{{ 'REPORTING.REPORTS.SIN_REGISTROS' | translate }}</p>
+          }
+          <small class="text-muted d-block" data-testid="ledger-transfers">{{ 'REPORTING.REPORTS.TRANSFERENCIAS_INTERNAS' | translate: { p0: (l.cashFlow.transfers | money) } }}</small>
+          <small class="text-muted" data-testid="ledger-criteria">{{ l.criteria }}</small>
+          }
+        </app-report-card>
+      </div>
+      <div class="col-lg-6">
+        <app-report-card [title]="'REPORTING.REPORTS.RESULTADO_CONTABLE' | translate" [status]="(ledger.state$ | async)?.status ?? 'loading'"
+          [error]="(ledger.state$ | async)?.error ?? ''" [unavailable]="ledgerDisabled" (retry)="ledger.reload()">
+          @if ((ledger.state$ | async)?.data; as l) {
+          <h2 class="mb-1" data-testid="ledger-result">{{ l.result.result | money }}</h2>
+          <small class="text-muted d-block">{{ 'REPORTING.REPORTS.RESULTADO' | translate }}</small>
+          <table class="table table-sm mt-2" data-testid="ledger-result-table">
+            <tbody>
+              <tr><td>{{ 'REPORTING.REPORTS.INGRESOS' | translate }}</td><td class="text-end" data-testid="ledger-income">{{ l.result.income | money }}</td></tr>
+              <tr><td>{{ 'REPORTING.REPORTS.COSTOS' | translate }}</td><td class="text-end" data-testid="ledger-cost">{{ l.result.cost | money }}</td></tr>
+              <tr><td>{{ 'REPORTING.REPORTS.MARGEN' | translate }}</td><td class="text-end" data-testid="ledger-margin">{{ l.result.margin | money }}</td></tr>
+              <tr><td>{{ 'REPORTING.REPORTS.GASTOS' | translate }}</td><td class="text-end" data-testid="ledger-expense">{{ l.result.expense | money }}</td></tr>
+            </tbody>
+          </table>
+          <small class="text-muted d-block" data-testid="ledger-period">{{ periodLabel(l.period) }}</small>
+          }
+        </app-report-card>
+      </div>
+    </div>
+
     <div class="row">
       <div class="col-md-6">
         <app-report-card [title]="'REPORTING.REPORTS.TOTAL_DE_VENTAS' | translate" [status]="(sales.state$ | async)?.status ?? 'loading'"
@@ -23,7 +83,8 @@
           <h2 class="mb-1" data-testid="sales-total">{{ d.total | money }}</h2>
           <p class="mb-1" data-testid="sales-orders">{{ 'REPORTING.REPORTS.PEDIDOS_TICKET_PROMEDIO' | translate: { p0: (d.ordersCount), p1: (d.averageTicket ? (d.averageTicket | money) : ('REPORTING.REPORTS.SIN_REGISTROS' | translate)) } }}</p>
           <small class="text-muted d-block" data-testid="sales-period">{{ periodLabel(d.period) }}</small>
-          <small class="text-muted" data-testid="sales-criteria">{{ d.criteria }}</small>
+          <small class="text-muted d-block" data-testid="sales-criteria">{{ d.criteria }}</small>
+          <small class="text-muted" data-testid="sales-operational">{{ 'REPORTING.REPORTS.CRITERIO_OPERATIVO' | translate }}</small>
           }
         </app-report-card>
       </div>
@@ -33,7 +94,8 @@
           @if ((expenses.state$ | async)?.data; as d) {
           <h2 class="mb-1" data-testid="expenses-total">{{ d.total | money }}</h2>
           <small class="text-muted d-block" data-testid="expenses-period">{{ periodLabel(d.period) }}</small>
-          <small class="text-muted">{{ 'REPORTING.REPORTS.GASTOS_VIGENTES_DEL_PERIODO_LOS' | translate }}</small>
+          <small class="text-muted d-block">{{ 'REPORTING.REPORTS.GASTOS_VIGENTES_DEL_PERIODO_LOS' | translate }}</small>
+          <small class="text-muted" data-testid="expenses-operational">{{ 'REPORTING.REPORTS.CRITERIO_OPERATIVO' | translate }}</small>
           }
         </app-report-card>
       </div>

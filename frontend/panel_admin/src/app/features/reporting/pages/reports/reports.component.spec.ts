@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ReportingApiService } from '../../services/reporting-api.service';
-import { makeChannels, makeCustomers, makeExpenses, makeProducts, makeSales } from '../../testing/report-fixtures';
+import { makeChannels, makeCustomers, makeExpenses, makeLedger, makeProducts, makeSales } from '../../testing/report-fixtures';
 import { CUSTOMER_RANKING_NOTE, PRODUCT_AMOUNT_NOTE, ReportsComponent, percentOf } from './reports.component';
 
 describe('percentOf', () => {
@@ -16,12 +16,13 @@ describe('percentOf', () => {
   });
 });
 
-const modulesState = { customersDisabled: false, salesDisabled: false, expensesDisabled: false };
+const modulesState = { customersDisabled: false, salesDisabled: false, expensesDisabled: false, accountingDisabled: false };
 const modulesFake = {
   isDisabled: (key: string) =>
     (key === 'customers' && modulesState.customersDisabled) ||
     (key === 'sales' && modulesState.salesDisabled) ||
-    (key === 'expenses' && modulesState.expensesDisabled),
+    (key === 'expenses' && modulesState.expensesDisabled) ||
+    (key === 'accounting' && modulesState.accountingDisabled),
 };
 
 describe('ReportsComponent', () => {
@@ -33,12 +34,14 @@ describe('ReportsComponent', () => {
     api = jasmine.createSpyObj<ReportingApiService>('ReportingApiService', [
       'sales',
       'expenses',
+      'ledger',
       'salesByChannel',
       'topProducts',
       'topCustomers',
     ]);
     api.sales.and.returnValue(of(makeSales()));
     api.expenses.and.returnValue(of(makeExpenses()));
+    api.ledger.and.returnValue(of(makeLedger()));
     api.salesByChannel.and.returnValue(of(makeChannels()));
     api.topProducts.and.returnValue(of(makeProducts()));
     api.topCustomers.and.returnValue(of(makeCustomers()));
@@ -77,6 +80,31 @@ describe('ReportsComponent', () => {
   afterEach(() => {
     modulesState.salesDisabled = false;
     modulesState.expensesDisabled = false;
+    modulesState.accountingDisabled = false;
+  });
+
+  it('shows the ledger flow and result with their own figures, apart from the operational cards (UI-01)', () => {
+    render();
+    expect(byTestId('ledger-net')?.textContent).toContain('Bs 200.00');
+    expect(byTestId('ledger-income')?.textContent).toContain('Bs 150.00');
+    expect(byTestId('ledger-margin')?.textContent).toContain('Bs 50.00');
+    expect(byTestId('ledger-result')?.textContent).toContain('Bs 30.00');
+    expect(byTestId('ledger-transfers')?.textContent).toContain('Bs 200.00');
+    expect(byTestId('ledger-coverage')).toBeNull();
+    expect(byTestId('sales-operational')).not.toBeNull();
+  });
+
+  it('warns when the period starts before the accounting cutoff (AC-05)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ partial: true })));
+    render();
+    expect(byTestId('ledger-coverage')?.textContent).toContain('01/04/2026');
+  });
+
+  it('explains the ledger cards as unavailable and requests nothing when Accounting is disabled (AC-05)', () => {
+    modulesState.accountingDisabled = true;
+    render();
+    expect(api.ledger).not.toHaveBeenCalled();
+    expect(root().querySelectorAll('[data-testid="unavailable"]').length).toBe(2);
   });
 
   it('explains the Sales cards as unavailable and requests nothing from Sales when it is disabled (AC-09, AC-08)', () => {
