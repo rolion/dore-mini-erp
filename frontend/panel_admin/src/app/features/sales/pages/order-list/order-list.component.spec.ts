@@ -1,3 +1,5 @@
+import { signal } from '@angular/core';
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
@@ -17,6 +19,7 @@ function page(results: OrderSummary[], count = results.length): Page<OrderSummar
   return { count, next: null, previous: null, results };
 }
 
+const compactState = signal(false);
 const modulesState = { customersDisabled: false };
 const modulesFake = { isDisabled: (key: string) => key === 'customers' && modulesState.customersDisabled };
 
@@ -77,6 +80,7 @@ describe('OrderListComponent', () => {
       imports: [OrderListComponent],
       providers: [...provideTestTranslations(), 
         provideRouter([]),
+        { provide: CompactViewportService, useValue: { compact: compactState.asReadonly() } },
         { provide: OrdersApiService, useValue: api },
         { provide: CustomerOptionsService, useValue: customerOptions },
         { provide: ModulesService, useValue: modulesFake },
@@ -391,6 +395,70 @@ describe('OrderListComponent', () => {
       expect(toastr.error).toHaveBeenCalledWith('Sin conexión');
       expect(component.loading).toBeFalse();
       expect(component.rows).toEqual([]);
+    });
+  });
+  describe('narrow screens', () => {
+    beforeEach(() => {
+      compactState.set(true);
+    });
+    afterEach(() => compactState.set(false));
+
+    function q(testid: string): HTMLElement | null {
+      return (fixture.nativeElement as HTMLElement).querySelector(`[data-testid="${testid}"]`);
+    }
+
+    it('shows cards instead of the table, with the new-order button above the filters', () => {
+      const element = start();
+      expect(element.querySelector('ngx-datatable')).toBeNull();
+      expect(element.querySelectorAll('[data-testid="order-card"]').length).toBe(4);
+      const newOrder = q('new-order') as HTMLElement;
+      const filters = q('filters-toolbar') as HTMLElement;
+      expect(newOrder.compareDocumentPosition(filters) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(newOrder.getAttribute('href')).toBe('/pocketbiz/sales/orders/new');
+    });
+
+    it('card shows code, customer, channel, total, delivery and payment, and links to the detail', () => {
+      const card = start().querySelector('[data-testid="order-card"]') as HTMLElement;
+      const text = card.textContent ?? '';
+      expect(text).toContain('P-AAAAAAAA');
+      expect(text).toContain('Ana Pérez');
+      expect(text).toContain('WhatsApp');
+      expect(text).toContain('Bs 70.00');
+      expect(card.querySelector('[data-testid="card-view"]')?.getAttribute('href')).toBe('/pocketbiz/sales/orders/a');
+    });
+
+    it('keeps the filters collapsed until «Filtros» is clicked and collapses them on apply', () => {
+      start();
+      const panel = q('filters') as HTMLElement;
+      expect(panel.classList).toContain('d-none');
+      (q('filters-toggle') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(panel.classList).not.toContain('d-none');
+      expect(q('filters-toggle')?.getAttribute('aria-expanded')).toBe('true');
+
+      component.filterForm.patchValue({ paymentKey: 'PAID' });
+      expect(navigate).not.toHaveBeenCalled(); // no se aplica hasta pulsar «Aplicar»
+      (q('apply-filters') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(navigate).toHaveBeenCalledTimes(1);
+      expect(panel.classList).toContain('d-none');
+    });
+
+    it('replaces the shortcut buttons with a combo inside the filters panel', () => {
+      const element = start();
+      expect(element.querySelector('[data-testid="shortcuts"]')).toBeNull();
+      const select = q('shortcut-select') as HTMLSelectElement;
+      expect(q('filters')?.contains(select)).toBeTrue();
+      select.value = 'pending';
+      select.dispatchEvent(new Event('change'));
+      expect(component.filterForm.getRawValue().statusKey).toBe('PENDING_DELIVERY');
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('shows a count and chips for the applied filters', () => {
+      start({ pay: 'PAID' });
+      expect(q('filters-count')?.textContent?.trim()).toBe('1');
+      expect(q('filters-chips')?.textContent).toContain('Estado de pago');
     });
   });
 });
