@@ -115,7 +115,7 @@ class PostingConcurrencyCase(TransactionTestCase):
 
 class PaymentAgainstReceptionTests(PostingConcurrencyCase):
     def assert_consistent_books(self):
-        """Mismo libro en cualquier orden: 400 recibidos y 500 pagados (400 deuda + 100 anticipo, o 500 y 400 aplicados)."""
+        """Mismo libro en cualquier orden: 400 recibidos y 500 pagados (400 de deuda y 100 de anticipo)."""
         b = self.books
         payable_debit, payable_credit = b.net(b.payable)
         advances_debit, advances_credit = b.net(b.advances)
