@@ -87,7 +87,7 @@ class RegisterReception:
         amount = self._recognized_amount(purchase, receipt)
         advance = self._advance_to_apply(purchase, receipt, amount)
         receipt.apply_advance(advance)
-        self._enter_stock(receipt, warehouse_id, actor)
+        self._enter_stock(receipt, warehouse_id, actor, purchase)
         saved = self.receipts.save(receipt)
         self.purchases.save(purchase)
         if amount > 0:
@@ -114,7 +114,7 @@ class RegisterReception:
                     posted[line.purchase_item_id] = posted.get(line.purchase_item_id, ZERO) + line.quantity
         return purchase.receipt_amount(receipt, posted, sum(recognized.values(), ZERO))
 
-    def _enter_stock(self, receipt: Receipt, warehouse_id: UUID | None, actor: Actor) -> None:
+    def _enter_stock(self, receipt: Receipt, warehouse_id: UUID | None, actor: Actor, purchase: Purchase) -> None:
         if not self.stock.is_available():
             receipt.set_inventory_mode(InventoryMode.DOCUMENTAL)
             return
@@ -127,7 +127,10 @@ class RegisterReception:
             raise PurchaseValidationError({'warehouse_id': [WAREHOUSE_REQUIRED]})
         if all(w.id != warehouse_id for w in self.stock.active_warehouses()):
             raise PurchaseValidationError({'warehouse_id': [WAREHOUSE_INVALID]})
-        self.stock.register_entries(warehouse_id, entries, receipt.id, receipt.reference, actor)
+        prices = {item.id: item.unit_price for item in purchase.items}
+        unit_costs = {line.product_id: prices[line.purchase_item_id] for line in receipt.lines
+                      if line.purchase_item_id in prices}
+        self.stock.register_entries(warehouse_id, entries, receipt.id, receipt.reference, actor, unit_costs)
         receipt.assign_warehouse(warehouse_id)
 
 

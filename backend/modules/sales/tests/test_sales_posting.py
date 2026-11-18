@@ -23,6 +23,8 @@ from modules.accounting.infrastructure.django.repositories import DjangoAccountR
 from modules.accounting.tests.journal_support import make_account, make_period, money_account
 from modules.accounting.tests.test_concurrency import _run_together
 from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.costing.domain.valuation import ValuationAdoption, parse_lines
+from modules.costing.infrastructure.django.repositories import DjangoAdoptionRepository
 from modules.inventory import services as inventory
 from modules.inventory.tests.test_movements import make_product, make_warehouse
 from modules.catalog.infrastructure.django.models import ProductModel
@@ -257,9 +259,21 @@ class DeliveryWithStockTests(SalesApiTestCase):
                          (Decimal('10'), 'READY', 0))
 
     def test_delivering_with_complete_configuration_moves_stock_and_posts_the_income(self):
+        # INV-01: con cobertura contable y stock, la configuración completa incluye Costeo adoptado y las cuentas
+        # de Inventario y Costo de ventas.
+        set_enabled(self.company, DEFAULT_ENABLED_KEYS + ('inventory', 'accounting', 'costing'))
+        accounting.set_role_account(
+            self.company.id, 'INVENTORY', make_account(self.company.id, 'Inventario', 'ASSET', '113001').id)
+        accounting.set_role_account(
+            self.company.id, 'COST_OF_SALES', make_account(self.company.id, 'Costo de ventas', 'COST', '510001').id)
+        DjangoAdoptionRepository(self.company.id).save(ValuationAdoption.adopt(
+            uuid4(), timezone.now(), None, 'ana', parse_lines([{
+                'product_id': self.bags.id, 'reconciled_quantity': '10', 'total_value': '50.00',
+                'declared_zero': False, 'source': None}])))
         order = self.ready_order()
         self.act(order, 'deliver', {'warehouse_id': str(self.warehouse.id)})
-        self.assertEqual((self.balance(), self.books.journal('SALE_DELIVERY').count()), (Decimal('8'), 1))
+        self.assertEqual((self.balance(), self.books.journal('SALE_DELIVERY').count(),
+                          self.books.journal('INVENTORY_SALE_COST').count()), (Decimal('8'), 1, 1))
 
 
 class DeliveryTests(PostingApiBase):

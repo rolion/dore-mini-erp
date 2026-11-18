@@ -3,7 +3,7 @@
 Es el único lugar de Purchases que conoce a Catalog e Inventory, y solo por su `services.py`.
 """
 from collections.abc import Iterable
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from uuid import UUID
 
 from datetime import date
@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
+from modules.costing import services as costing_services
 from modules.inventory import services as inventory_services
 from modules.purchases.application.ports import (
     Actor,
@@ -30,6 +31,7 @@ from modules.purchases.domain.exceptions import PostingRejected, PurchaseValidat
 from shared import module_gate
 
 INVENTORY_MODULE = 'inventory'
+COSTING_MODULE = 'costing'
 ACCOUNTING_MODULE = 'accounting'
 PURCHASE_RECOGNITION = 'PURCHASE_RECOGNITION'
 PURCHASE_PAYMENT = 'PURCHASE_PAYMENT'
@@ -72,26 +74,47 @@ class StockEntryAdapter:
                 for w in inventory_services.list_active_warehouses(self.company_id)]
 
     def register_entries(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
-                         reference: str, actor: Actor) -> None:
-        for product_id, quantity in lines:
-            try:
-                inventory_services.record_movement(
-                    self.company_id, product_id=product_id, warehouse_id=warehouse_id, kind='in', quantity=quantity,
-                    user_id=actor.user_id, user_name=actor.user_name, reference=reference,
-                    source_type=self.SOURCE_TYPE, source_id=str(receipt_id), source_line=str(product_id))
-            except inventory_services.MovementValidationError as exc:
-                # Solo el almacén es atribuible a la persona; lo demás se informa sin campo.
-                raise PurchaseValidationError({
-                    'warehouse_id' if key == 'warehouse_id' else 'non_field_errors': messages
-                    for key, messages in exc.errors.items()}) from exc
-            except inventory_services.MovementConflict as exc:
-                raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
+                         reference: str, actor: Actor, unit_costs: dict[UUID, Decimal] | None = None) -> None:
+        with self._serialized():
+            for product_id, quantity in lines:
+                try:
+                    inventory_services.record_movement(
+                        self.company_id, product_id=product_id, warehouse_id=warehouse_id, kind='in',
+                        quantity=quantity, user_id=actor.user_id, user_name=actor.user_name, reference=reference,
+                        source_type=self.SOURCE_TYPE, source_id=str(receipt_id), source_line=str(product_id))
+                except inventory_services.MovementValidationError as exc:
+                    # Solo el almacén es atribuible a la persona; lo demás se informa sin campo.
+                    raise PurchaseValidationError({
+                        'warehouse_id' if key == 'warehouse_id' else 'non_field_errors': messages
+                        for key, messages in exc.errors.items()}) from exc
+                except inventory_services.MovementConflict as exc:
+                    raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
+            self._cost_entries(lines, receipt_id, unit_costs)
+
+    def _serialized(self):
+        """Con Costeo, el bloqueo de la empresa se toma antes que el del almacén (REV-01)."""
+        if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            return inventory_services.lock_company_stock(self.company_id)
+        return nullcontext()
+
+    def _cost_entries(self, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
+                      unit_costs: dict[UUID, Decimal] | None) -> None:
+        """Traslada el precio acordado al costo promedio (INV-01). Sin Costeo adoptado no hace nada ni asienta."""
+        if not unit_costs or not module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            return
+        costing_services.cost_receipt(
+            self.company_id, source_type=self.SOURCE_TYPE, source_id=str(receipt_id),
+            lines=[(pid, qty, unit_costs[pid]) for pid, qty in lines if pid in unit_costs])
 
     def reverse_entries(self, receipt_id: UUID, reason: str, actor: Actor) -> None:
         try:
-            inventory_services.reverse_source_movements(
-                self.company_id, self.SOURCE_TYPE, str(receipt_id), user_id=actor.user_id,
-                user_name=actor.user_name, reason=reason)
+            with self._serialized():
+                inventory_services.reverse_source_movements(
+                    self.company_id, self.SOURCE_TYPE, str(receipt_id), user_id=actor.user_id,
+                    user_name=actor.user_name, reason=reason)
+                if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+                    costing_services.reverse_receipt_cost(
+                        self.company_id, source_type=self.SOURCE_TYPE, source_id=str(receipt_id))
         except inventory_services.InsufficientStock as exc:
             raise StockShortage(exc.warehouse_id, [(s.product_id, s.requested, s.available)
                                                    for s in exc.shortages]) from exc

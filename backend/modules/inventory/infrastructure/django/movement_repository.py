@@ -199,8 +199,10 @@ class DjangoStockMovementRepository:
         return set(self._movements().filter(warehouse_id=warehouse_id, product_id__in=list(product_ids))
                    .values_list('product_id', flat=True))
 
-    def list_balances(self, warehouse_id: UUID | None = None) -> BalanceList:
+    def list_balances(self, warehouse_id: UUID | None = None, product_ids=None) -> BalanceList:
         queryset = self._movements()
+        if product_ids is not None:
+            queryset = queryset.filter(product_id__in=list(product_ids))
         if warehouse_id is not None:
             queryset = queryset.filter(warehouse_id=warehouse_id)
         rows = (queryset.values('product_id', 'warehouse_id', 'warehouse__name').annotate(total=_signed_sum())

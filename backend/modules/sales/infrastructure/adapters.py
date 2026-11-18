@@ -4,8 +4,8 @@ Es el único lugar de Sales que conoce a Catalog, Customers y Modularity, y solo
 """
 import logging
 from collections.abc import Iterable
-from contextlib import contextmanager
-from datetime import date, datetime
+from contextlib import contextmanager, nullcontext
+from datetime import date, datetime, time
 from decimal import Decimal
 from uuid import UUID
 
@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
+from modules.costing import services as costing_services
 from modules.customers import services as customer_services
 from modules.inventory import services as inventory_services
 from modules.modularity import services as modularity_services
@@ -41,6 +42,8 @@ from shared import module_gate
 CUSTOMERS_MODULE = 'customers'
 INVENTORY_MODULE = 'inventory'
 ACCOUNTING_MODULE = 'accounting'
+COSTING_MODULE = 'costing'
+INVENTORY_SALE_COST = 'INVENTORY_SALE_COST'  # evento del catálogo de Contabilidad (CONT-12 / INV-01)
 PAYMENT_CURRENCY = 'BOB'
 SALE_RECOGNITION = 'SALE_RECOGNITION'  # eventos del catálogo de Contabilidad (CONT-12 / VEN-01)
 SALE_ADVANCE = 'SALE_ADVANCE'
@@ -134,15 +137,22 @@ class StockOutputAdapter:
     def register_outputs(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], order_id: UUID,
                          reference: str, actor: Actor) -> None:
         try:
-            inventory_services.record_outputs(
-                self.company_id, warehouse_id=warehouse_id, lines=lines, source_type=self.SOURCE_TYPE,
-                source_id=str(order_id), user_id=actor.user_id, user_name=actor.user_name, reference=reference)
+            with self._serialized():
+                inventory_services.record_outputs(
+                    self.company_id, warehouse_id=warehouse_id, lines=lines, source_type=self.SOURCE_TYPE,
+                    source_id=str(order_id), user_id=actor.user_id, user_name=actor.user_name, reference=reference)
         except inventory_services.InsufficientStock as exc:
             raise self._insufficient(exc) from exc
         except inventory_services.MovementValidationError as exc:
             raise OrderValidationError(self._field_errors(exc.errors)) from exc
         except inventory_services.MovementConflict as exc:
             raise OrderRuleViolation(exc.code, str(exc)) from exc
+
+    def _serialized(self):
+        """Con Costeo, el bloqueo de la empresa se toma antes que el del almacén (mismo orden que el costo, REV-01)."""
+        if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            return inventory_services.lock_company_stock(self.company_id)
+        return nullcontext()
 
     def output_for(self, order_id: UUID) -> StockOutputRecord | None:
         if not self.is_available():
@@ -295,6 +305,64 @@ class SalesPostingAdapter:
                 'ledger_rejected', 'Contabilidad rechazó la entrada del cobro: ' + _first_message(exc.errors)) from exc
         except accounting_services.EntryConflict as exc:
             raise OrderRuleViolation('ledger_conflict', str(exc)) from exc
+
+
+class DeliveryCostingAdapter:
+    """Costo de ventas al entregar (INV-01), sobre las fachadas de Costeo y Contabilidad.
+
+    Con cobertura contable: valoriza al costo promedio y asienta `INVENTORY_SALE_COST` por el total, o rechaza la
+    entrega (nunca inventa un costo). Sin cobertura: registra el costo si Costeo lo tiene y sigue sin asiento.
+    """
+
+    SOURCE_TYPE = StockOutputAdapter.SOURCE_TYPE
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def cost_delivery(self, order, lines: list[tuple[UUID, Decimal]], actor: Actor) -> None:
+        covered = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE) and accounting_services.coverage_status(
+            self.company_id, order.delivered_date).covered
+        if not module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            if covered:
+                raise OrderRuleViolation('inventory_cost_unavailable', _COSTING_OFF)
+            return
+        try:
+            costed = costing_services.cost_outputs(
+                self.company_id, source_type=self.SOURCE_TYPE, source_id=str(order.id), lines=lines,
+                occurred_at=self._occurred_at(order.delivered_date))
+        except costing_services.CostUnavailable as exc:
+            if not covered:
+                return
+            raise OrderRuleViolation('inventory_cost_unavailable', self._unavailable_message(exc),
+                                     {'product_ids': [str(pid) for pid in exc.product_ids]}) from exc
+        if not covered or costed.total <= 0:
+            return  # sin cobertura no hay asiento; un costo total cero (declarado) no genera movimiento
+        with _posting_errors():
+            accounting_services.post_automatic_entry(
+                self.company_id, INVENTORY_SALE_COST, order.id, order.delivered_date,
+                f'Costo de ventas del pedido {order.code}', costed.total, created_by=actor.user_id,
+                created_by_name=actor.user_name)
+
+    @staticmethod
+    def _occurred_at(delivered_on: date) -> datetime:
+        """Momento del evento de costo: ahora si se entrega hoy; si no, el inicio del día de entrega (REV-03)."""
+        if delivered_on == timezone.localdate():
+            return timezone.now()
+        return timezone.make_aware(datetime.combine(delivered_on, time.min))
+
+    def _unavailable_message(self, exc) -> str:
+        if exc.reason == costing_services.CostUnavailable.NOT_ADOPTED:
+            return _COSTING_NOT_ADOPTED
+        names = inventory_services.get_product_names(self.company_id, exc.product_ids)
+        listed = ', '.join(names[pid][0] for pid in exc.product_ids if pid in names) or 'algunos productos'
+        return ('No se puede contabilizar el costo de ventas: no hay costo promedio para ' + listed
+                + '. Registra una compra recibida de esos productos o revisa la valoración inicial en Costeo.')
+
+
+_COSTING_OFF = ('No se puede contabilizar el costo de ventas: habilita Costeo y adopta la valoración inicial de '
+                'las existencias.')
+_COSTING_NOT_ADOPTED = ('No se puede contabilizar el costo de ventas: adopta la valoración inicial de las '
+                        'existencias en Costeo.')
 
 
 @contextmanager
