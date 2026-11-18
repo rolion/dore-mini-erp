@@ -1,6 +1,6 @@
 # TASK-consultar-flujo-dinero-contabilidad: Consultar el detalle de flujo de dinero desde Contabilidad (CONT-14)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-flujo-dinero-contabilidad (base: `accounting`)
@@ -16,6 +16,7 @@
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa; pruebas de integración con BD sin ejecutar (sin credenciales) | delivery-build |
 | 2026-11-18 | REVIEW (sin cambio) | Quality Gate 1 FAIL: REV-01/02/04 corregidos; REV-03 resuelto con enmienda aprobada de la Specification (PLAN v2) | delivery-publish |
+| 2026-11-18 | REVIEW → PUBLISH | Quality Gate 2: PASS (REV-03 resuelto con PLAN v2) | delivery-publish |
 
 ## Investigación
 
@@ -77,7 +78,7 @@ Ver `docs/design/DDR-consultar-flujo-dinero-contabilidad-pagina-flujo-de-dinero.
 No aplica según veredicto (sin ADR: se amplía `accounting` con la fachada y arquitectura de CONT-05; los endpoints viven en `accounting`, no en `reporting`, para que el submenú funcione con Contabilidad habilitada aunque Reportes no lo esté).
 
 ## Plan
-`docs/plans/PLAN-2026-11-18-consultar-flujo-dinero-contabilidad.md` (v1, COMPLETO, READY).
+`docs/plans/PLAN-2026-11-18-consultar-flujo-dinero-contabilidad.md` (v2, COMPLETO, READY; v2 enmendó con aprobación del usuario el requisito de paginación).
 
 ## Implementación
 **Backend** (`accounting`): `domain/ledger_report.py` clasifica cada asiento (`classify_entry`, INV-02/INV-04) y `build_cash_flow` ahora devuelve por cuenta entradas, salidas y transferencias recibidas/enviadas (campos aditivos; INV-03); `application/cash_flow.py` (`ListCashFlowMovements`), `money_entries` en el repositorio, fachada `list_cash_flow_movements`, y vistas `GET /api/accounting/cash-flow/` y `/cash-flow/movements/` (`api/cash_flow_*.py`, API-01/02). El resumen reutiliza `GetLedgerReport`, por lo que coincide con la tarjeta (AC-01..AC-04, AC-06..AC-08).
@@ -90,7 +91,7 @@ No aplica según veredicto (sin ADR: se amplía `accounting` con la fachada y ar
 - El desempate del reparto proporcional (INV-04) es por importe, luego nombre de cuenta, luego id.
 - `build_cash_flow.transfers` pasa a ser Σ de transferencias recibidas (incluye la parte de transferencia de asientos mixtos); en asientos de neto 0 es idéntico al cálculo de CONT-05.
 
-**Verificación propia (no es el Quality Gate):** pruebas de dominio del backend en verde (10); suite de Angular completa 1702/1702, `ng lint` y `ng build` sin errores, `npm run i18n:check` sin claves faltantes; ruff/flake8 sin avisos nuevos en lo cambiado. **No se ejecutaron** las pruebas de integración con BD de `test_cash_flow_detail.py` (el worktree no tiene `backend/.env` ni `DATABASE_URL`); deben correrse con PostgreSQL antes de aprobar.
+**Verificación propia (no es el Quality Gate):** pruebas de dominio del backend en verde (10); suite de Angular completa 1702/1702, `ng lint` y `ng build` sin errores, `npm run i18n:check` sin claves faltantes; ruff/flake8 sin avisos nuevos en lo cambiado. Las pruebas de integración con BD se ejecutaron después (ver Review): 497/497.
 
 ## Review
 **Quality Gate 1: FAIL** (subagente aislado). No ejecutado: pruebas de integración con BD (sin `DATABASE_URL`) e inspección visual. Hallazgos:
@@ -98,7 +99,8 @@ No aplica según veredicto (sin ADR: se amplía `accounting` con la fachada y ar
 - REV-02 (Medium, IMPLEMENTATION) reparto de centavos de INV-04 podía dar un movimiento negativo → corregido (reparto de uno en uno) con prueba nueva.
 - REV-03 (Medium, SPECIFICATION) la paginación en memoria contradice el requisito no funcional «paginación en BD» → resuelto: el usuario aprobó enmendar la Specification (PLAN v2).
 - REV-04 (Low, IMPLEMENTATION) orden de desempate por cuenta y texto de `design-system.md` §6 → corregidos; el fallback HEX en el scss sigue igual que en `journal-list`.
-Pendiente: correr las pruebas con BD (requiere `DATABASE_URL` de prueba) y repetir el Quality Gate; sigue en REVIEW.
+
+**Quality Gate 2: PASS** (subagente aislado, sobre el estado actual). Backend `manage.py test modules.accounting modules.reporting` con PostgreSQL: 497 OK; `manage.py check`, ruff, flake8 y bandit sin hallazgos. Frontend: `ng test` 1702/1702, `ng lint`, `ng build` e `i18n:check` (0 faltantes) OK. Sin hallazgos nuevos; REV-01..04 verificados como resueltos (REV-04 deja el fallback HEX del scss igual que `journal-list`, Low). No ejecutado: **inspección visual en navegador (390/1440 px) — no verificada**, `npm audit` en la 2.ª pasada (la 1.ª reportó 2 vulnerabilidades moderadas en `hono`, transitiva y ajena al diff) y E2E (el plan dice NO).
 
 ## Publicación
-_Pendiente_
+PR #103 (base `accounting`) completo y listo para aprobación humana; no se mergea. Sin ADR. Sin cambios de autenticación, base de datos ni infraestructura (sin migraciones). Pendiente humano: revisión visual en navegador y aprobar el merge.
