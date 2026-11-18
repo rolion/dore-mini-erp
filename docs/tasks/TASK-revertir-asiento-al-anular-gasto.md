@@ -13,7 +13,7 @@
 | 2026-11-18 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta GAS-02; base = rama `accounting` (indicación de la persona; la rama de trabajo se actualizó a `origin/accounting`, commit `de1abd4`) | delivery-start |
 | 2026-11-18 | INVESTIGATION → PLANNING | NEEDS_PLAN: GAS-01 ya implementó la reversión; quedan brechas acotadas (usuario, módulo deshabilitado, pruebas de AC, vínculo a la reversión) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
-| 2026-11-18 | ENGINEERING → REVIEW | Implementación según PLAN v1; pruebas backend propias en verde; frontend sin ejecutar (`node_modules` incompleto) | delivery-build |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación según PLAN v1; pruebas propias en verde (backend y frontend) | delivery-build |
 
 ## Investigación
 
@@ -88,7 +88,7 @@ Resumen: la anulación ya revertía el asiento completo (GAS-01); se cierran las
 
 Desviaciones: ninguna. No fue necesario tocar `accounting`: AC-04 (corte y período cerrado) y AC-06 (Contabilidad deshabilitada) pasan con la fachada actual. Un ajuste de pruebas: `reversal_entry_id` se añadió al conjunto de claves de `test_api.py`, y la prueba de período cerrado fija un corte anterior (el corte por defecto es hoy).
 
-**Verificación propia (no es el Quality Gate):** backend completo `Ran 2222 tests ... OK`; `makemigrations --check`: No changes detected; frontend `npm run i18n:check`: 2224 claves, 0 faltantes. **No ejecutado:** specs, lint y build del frontend (el `node_modules` del repo principal está incompleto: sin `@angular`; instalarlo exige `npm ci`, pendiente de autorización).
+**Verificación propia (no es el Quality Gate), sobre la rama fusionada con `accounting` (2026-11-18):** backend completo `Ran 2222 tests ... OK`; `makemigrations --check`: No changes detected; frontend `1664 specs, 0 failures`, `npm run lint` sin errores, `npm run build` OK, `i18n:check` 2260 claves, 0 faltantes. Revisión visual en navegador: no realizada.
 
 Deuda técnica: el `DjangoOutflowLedger.open_count()` sigue devolviendo 0, por lo que deshabilitar Contabilidad no se bloquea con egresos sin revertir (ADR modularidad, decisión 6); fuera de alcance.
 
