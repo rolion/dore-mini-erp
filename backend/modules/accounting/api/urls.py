@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .balance_views import BalanceListView
+from .cash_flow_views import CashFlowMovementsView, CashFlowView
 from .posting_views import PostingCategoryView, PostingConfigView, PostingRoleView
 from .journal_views import JournalEntryDetailView, JournalEntryListCreateView, JournalEntryReverseView
 from .views import (
@@ -57,6 +58,8 @@ urlpatterns = [
     path('journal-entries/<uuid:entry_id>/', JournalEntryDetailView.as_view(), name='accounting-journal-detail'),
     path('journal-entries/<uuid:entry_id>/reverse/', JournalEntryReverseView.as_view(),
          name='accounting-journal-reverse'),
+    path('cash-flow/', CashFlowView.as_view(), name='accounting-cash-flow'),
+    path('cash-flow/movements/', CashFlowMovementsView.as_view(), name='accounting-cash-flow-movements'),
     path('balances/', BalanceListView.as_view(), name='accounting-balance-list'),
     path('entries/', EntryListView.as_view(), name='accounting-entry-list'),
     path('entries/<uuid:entry_id>/', EntryDetailView.as_view(), name='accounting-entry-detail'),

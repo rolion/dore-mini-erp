@@ -1,6 +1,6 @@
 # TASK-consultar-flujo-dinero-contabilidad: Consultar el detalle de flujo de dinero desde Contabilidad (CONT-14)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-flujo-dinero-contabilidad (base: `accounting`)
@@ -14,6 +14,7 @@
 | 2026-11-18 | INVESTIGATION → DESIGN | Pantalla nueva y cambio en la tarjeta de Reportes | delivery-start |
 | 2026-11-18 | DESIGN → PLANNING | DDR escrito; sin ADR (extiende módulo y fachada existentes) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación completa; pruebas de integración con BD sin ejecutar (sin credenciales) | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,17 @@ No aplica según veredicto (sin ADR: se amplía `accounting` con la fachada y ar
 `docs/plans/PLAN-2026-11-18-consultar-flujo-dinero-contabilidad.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend** (`accounting`): `domain/ledger_report.py` clasifica cada asiento (`classify_entry`, INV-02/INV-04) y `build_cash_flow` ahora devuelve por cuenta entradas, salidas y transferencias recibidas/enviadas (campos aditivos; INV-03); `application/cash_flow.py` (`ListCashFlowMovements`), `money_entries` en el repositorio, fachada `list_cash_flow_movements`, y vistas `GET /api/accounting/cash-flow/` y `/cash-flow/movements/` (`api/cash_flow_*.py`, API-01/02). El resumen reutiliza `GetLedgerReport`, por lo que coincide con la tarjeta (AC-01..AC-04, AC-06..AC-08).
+**Frontend:** modelo, servicio y página `features/accounting/pages/cash-flow` (resumen, tabla de cuentas seleccionable, movimientos con enlace al asiento y origen, filtros en la URL, variante compacta con tarjetas), ruta `accounting/cash-flow` con `moduleGuard`, ítem de menú y claves es/en/pt; la tarjeta de Reportes reemplaza el `<details>` por el enlace «Ver por cuenta» con las fechas efectivas (AC-01, AC-05, UI-01..03). `design-system.md` §6 ya actualizado.
+**Pantalla de referencia:** `journal-list` / `inventory/movement-list` (Lista de solo lectura con filtros); sin componentes nuevos compartidos.
+
+**Desviaciones respecto al plan**
+- La paginación de movimientos es en memoria sobre las partes ya clasificadas (la clasificación necesita todas las líneas del asiento); las líneas se agregan por (asiento, cuenta) en BD y las cabeceras se piden una sola vez. Deuda: si los rangos crecen mucho, mover la clasificación a SQL.
+- La tabla de movimientos y la de cuentas son tablas Bootstrap simples (`table table-sm`) en vez de `ngx-datatable`, porque la paginación es del servidor y el volumen por página es 20; la variante compacta usa tarjetas y `ngb-pagination` como en el DDR.
+- El desempate del reparto proporcional (INV-04) es por importe, luego nombre de cuenta, luego id.
+- `build_cash_flow.transfers` pasa a ser Σ de transferencias recibidas (incluye la parte de transferencia de asientos mixtos); en asientos de neto 0 es idéntico al cálculo de CONT-05.
+
+**Verificación propia (no es el Quality Gate):** pruebas de dominio del backend en verde (10); suite de Angular completa 1702/1702, `ng lint` y `ng build` sin errores, `npm run i18n:check` sin claves faltantes; ruff/flake8 sin avisos nuevos en lo cambiado. **No se ejecutaron** las pruebas de integración con BD de `test_cash_flow_detail.py` (el worktree no tiene `backend/.env` ni `DATABASE_URL`); deben correrse con PostgreSQL antes de aprobar.
 
 ## Review
 _Pendiente_

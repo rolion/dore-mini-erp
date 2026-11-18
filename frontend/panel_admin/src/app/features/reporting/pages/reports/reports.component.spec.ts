@@ -105,16 +105,17 @@ describe('ReportsComponent', () => {
     expect(root().querySelector('.reports-container')).not.toBeNull();
   });
 
-  it('folds the long criteria and the per-account table into closed details (AC-03)', () => {
+  it('folds the long criteria into closed details and links «Ver por cuenta» to the cash-flow page keeping the period (AC-03, CONT-14 AC-01)', () => {
     render();
     for (const id of ['ledger-criteria', 'sales-criteria', 'sales-operational', 'expenses-operational']) {
       const details = byTestId(id)?.closest('details') as HTMLDetailsElement | null;
       expect(details).withContext(id).not.toBeNull();
       expect(details?.open).toBeFalse();
     }
-    const accounts = byTestId('ledger-accounts')?.closest('details') as HTMLDetailsElement;
-    expect(accounts.open).toBeFalse();
-    expect(accounts.textContent).toContain('Ver por cuenta');
+    const link = byTestId('ledger-accounts-link') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Ver por cuenta');
+    expect(link.getAttribute('href')).toBe('/pocketbiz/accounting/cash-flow?date_from=2026-10-01&date_to=2026-10-31');
+    expect(byTestId('ledger-accounts')).toBeNull();
   });
 
   it('marks a negative result in red with a text label and a positive one in green (AC-04)', () => {
@@ -136,7 +137,7 @@ describe('ReportsComponent', () => {
     const notice = byTestId('ledger-no-money-accounts') as HTMLElement;
     expect(notice.textContent).toContain('Caja/Banco');
     expect(notice.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/accounting/accounts');
-    expect(byTestId('ledger-accounts-details')).toBeNull();
+    expect(byTestId('ledger-accounts-link')).toBeNull();
   });
 
   it('does not show the no-money-accounts notice when there are accounts (AC-05)', () => {
