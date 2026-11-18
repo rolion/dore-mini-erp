@@ -1,5 +1,5 @@
 import { provideTestTranslations } from '../../../core/i18n/testing';
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { CatalogService, ServiceApiError } from '../models/service';
@@ -105,28 +105,33 @@ describe('ServiceListComponent', () => {
     api.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [{ ...service, active: false }] }));
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('datatable-body-row')?.classList).toContain('text-muted');
+    expect(el.querySelector('[data-testid="service-card"]')?.classList).toContain('text-muted');
     expect(el.querySelector('.btn-tbl-view .fa-eye')).not.toBeNull();
-    expect(el.querySelector('.search-icon')).not.toBeNull();
+    expect(el.querySelector('.btn-tbl-update .fa-pen')).not.toBeNull();
+    expect(el.querySelector('[data-testid="add-service"]')).not.toBeNull();
   });
   it('keeps the restored page while the table initializes with an empty loading state', () => {
     const pending = new Subject<{ count: number; next: null; previous: null; results: CatalogService[] }>();
     api.list.and.returnValue(pending);
     const state = TestBed.inject(ServiceFiltersState); state.pageIndex = 1;
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
-    fixture.componentInstance.onPage({ offset: 0 }); expect(state.pageIndex).toBe(1);
+    fixture.componentInstance.onPage(1); expect(state.pageIndex).toBe(1);
     pending.next({ count: 21, next: null, previous: null, results: [service] });
     pending.complete(); fixture.detectChanges(); expect(state.pageIndex).toBe(1);
   });
-  it('searches on the server and resets pagination', fakeAsync(() => {
+  it('applies the filters on the server, resets pagination and collapses the panel', () => {
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
-    fixture.componentInstance.search.setValue('Limpieza'); tick(301);
+    fixture.componentInstance.toggleFilters(); expect(fixture.componentInstance.filtersCollapsed).toBeFalse();
+    fixture.componentInstance.search.setValue('Limpieza');
+    expect(api.list).not.toHaveBeenCalledWith(jasmine.objectContaining({ search: 'Limpieza' }));
+    fixture.componentInstance.applyFilters(); fixture.detectChanges();
     expect(api.list).toHaveBeenCalledWith({ search: 'Limpieza', active: true, page: 1, pageSize: 20 });
-    fixture.destroy();
-  }));
+    expect(fixture.componentInstance.filtersCollapsed).toBeTrue();
+    expect(fixture.nativeElement.querySelector('[data-testid="filters-count"]').textContent).toContain('1');
+  });
   it('filters by specialty and keeps it in the saved list state', () => {
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
-    fixture.componentInstance.specialty.setValue('specialty-1');
+    fixture.componentInstance.specialty.setValue('specialty-1'); fixture.componentInstance.applyFilters();
     expect(TestBed.inject(ServiceFiltersState).specialtyId).toBe('specialty-1');
     expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ specialtyId: 'specialty-1', page: 1 }));
   });

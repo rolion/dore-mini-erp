@@ -1883,7 +1883,7 @@
     "SERVICE_LIST": {
       "TODAS_LAS_ESPECIALIDADES": "All specialties",
       "SIN_ESPECIALIDAD": "No specialty",
-      "NUEVO_SERVICIO": "New service",
+      "NUEVO_SERVICIO": "Add service",
       "HABILITA_PERSONAL_PARA_FILTRAR_POR": "Enable Staff to filter by specialty. You can create services without a specialty.",
       "AUN_NO_HAY_SERVICIOS_ACTIVOS": "There are no active services yet. Use \"New service\" to get started.",
       "MIN": "{{p0}} min",
@@ -1892,7 +1892,13 @@
       "PRECIO": "Price",
       "DURACION": "Duration",
       "ESPECIALIDAD": "Specialty",
-      "NO_HAY_SERVICIOS_PARA_ESTOS": "No services for these filters."
+      "NO_HAY_SERVICIOS_PARA_ESTOS": "No services for these filters.",
+      "FILTROS": "Filters",
+      "FILTROS_ACTIVOS": "{{count}} active filters",
+      "FILTROS_DE_SERVICIOS": "Service filters",
+      "APLICAR": "Apply",
+      "TOTAL_SERVICIOS": "{{count}} services",
+      "PAGINAS_DE_SERVICIOS": "Service pages"
     },
     "SERVICE_TOGGLE": {
       "DESACTIVAR": "Deactivate",
