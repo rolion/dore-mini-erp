@@ -1447,7 +1447,11 @@
       "RECEPCION": "Receipt",
       "PAGO": "Payment",
       "SALDO": "Balance",
-      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\"."
+      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\".",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "PAGINACION": "Purchases pagination",
+      "VER_FILTROS_ACTIVOS": "active filters"
     },
     "RECEPTION_DETAIL": {
       "DETALLE_DE_LA_RECEPCION": "Receipt details",

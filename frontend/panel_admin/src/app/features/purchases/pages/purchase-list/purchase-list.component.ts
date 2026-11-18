@@ -5,6 +5,7 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectComponent } from '@ng-select/ng-select';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Observable, Subject, catchError, debounceTime, finalize, map, of, startWith, switchMap } from 'rxjs';
@@ -47,7 +48,7 @@ const FILTER_DEBOUNCE_MS = 300;
   selector: 'app-purchase-list',
   templateUrl: './purchase-list.component.html',
   styleUrl: './purchase-list.component.scss',
-  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgSelectComponent, AsyncPipe, NgxDatatableModule, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgSelectComponent, AsyncPipe, NgxDatatableModule, DatePipe, MoneyPipe, NgbPagination],
 })
 export class PurchaseListComponent implements OnInit {
   readonly pageSize = 10;
@@ -143,6 +144,31 @@ export class PurchaseListComponent implements OnInit {
     this.filterForm.valueChanges
       .pipe(debounceTime(FILTER_DEBOUNCE_MS), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.applyForm());
+  }
+
+  /** Panel de filtros desplegado; solo importa bajo `lg` (en escritorio los filtros están siempre visibles). */
+  filtersOpen = false;
+
+  /** Cuántos filtros hay aplicados, para el contador del botón «Filtros». */
+  get activeFilterCount(): number {
+    return this.appliedFilters.length;
+  }
+
+  toggleFilters(): void {
+    this.filtersOpen = !this.filtersOpen;
+  }
+
+  /** «Aplicar filtros» (móvil): consulta y, si el rango es válido, pliega el panel para mostrar las tarjetas. */
+  submitFilters(): void {
+    this.applyForm();
+    if (!this.rangeInvalid) {
+      this.filtersOpen = false;
+    }
+  }
+
+  /** Paginación de las tarjetas (ngb-pagination es base 1). */
+  onCardsPage(page: number): void {
+    this.onPage({ offset: page - 1 });
   }
 
   /** Pasa lo escrito en el formulario a la URL (que dispara la consulta). Un rango invertido no consulta. */

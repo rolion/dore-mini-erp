@@ -1447,7 +1447,11 @@
       "RECEPCION": "Recepción",
       "PAGO": "Pago",
       "SALDO": "Saldo",
-      "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra»."
+      "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra».",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "PAGINACION": "Paginación de compras",
+      "VER_FILTROS_ACTIVOS": "filtros activos"
     },
     "RECEPTION_DETAIL": {
       "DETALLE_DE_LA_RECEPCION": "Detalle de la recepción",
