@@ -28,25 +28,25 @@ class DeliveryCostTestCase(PostingApiBase):
         super().setUp()
         enable(self.company, 'inventory', 'costing')
         self.warehouse = make_warehouse(self.company)
-        self.product = make_product(self.company, 'Harina')
-        self.product.sale_price = D('150.00')
-        self.product.save()
+        self.flour = make_product(self.company, 'Harina')
+        self.flour.sale_price = D('150.00')
+        self.flour.save()
         self.inventory_account = make_account(self.company.id, 'Inventario', 'ASSET', '113001')
         self.cost_account = make_account(self.company.id, 'Costo de ventas', 'COST', '510001')
         accounting.set_role_account(self.company.id, 'INVENTORY', self.inventory_account.id)
         accounting.set_role_account(self.company.id, 'COST_OF_SALES', self.cost_account.id)
-        inventory.record_movement(self.company.id, product_id=self.product.id, warehouse_id=self.warehouse.id,
+        inventory.record_movement(self.company.id, product_id=self.flour.id, warehouse_id=self.warehouse.id,
                                   kind='in', quantity=D('10'), user_id=None, user_name='ana')
 
     def adopt(self, value='1000.00', zero=False):
-        lines = parse_lines([{'product_id': self.product.id, 'reconciled_quantity': '10', 'total_value': value,
+        lines = parse_lines([{'product_id': self.flour.id, 'reconciled_quantity': '10', 'total_value': value,
                               'declared_zero': zero, 'source': None}])
         DjangoAdoptionRepository(self.company.id).save(
             ValuationAdoption.adopt(uuid4(), timezone.now(), None, 'ana', lines))
 
     def stock_order(self, quantity=1):
         order = self.create()
-        self.add_item(order, self.product, quantity)
+        self.add_item(order, self.flour, quantity)
         self.act(order, 'prepare')
         self.act(order, 'ready')
         return order
@@ -55,7 +55,7 @@ class DeliveryCostTestCase(PostingApiBase):
         return self.act(order, 'deliver', {'warehouse_id': str(self.warehouse.id)}, expected_status)
 
     def balance(self):
-        return inventory.get_balance(self.company.id, self.product.id, self.warehouse.id)
+        return inventory.get_balance(self.company.id, self.flour.id, self.warehouse.id)
 
 
 class DeliveryCostPostingTests(DeliveryCostTestCase):
@@ -85,7 +85,7 @@ class DeliveryCostPostingTests(DeliveryCostTestCase):
         delivered = SimpleNamespace(id=uuid_of(order), code=order['code'], delivered_date=timezone.localdate())
         with transaction.atomic():
             DeliveryCostingAdapter(self.company.id).cost_delivery(
-                delivered, [(self.product.id, D('1'))], Actor(None, 'ana'))
+                delivered, [(self.flour.id, D('1'))], Actor(None, 'ana'))
         self.assertEqual((self.books.journal(COST).count(), CostEventModel.objects.filter(kind='out').count(),
                           self.balance()), (1, 1, D('9')))
 

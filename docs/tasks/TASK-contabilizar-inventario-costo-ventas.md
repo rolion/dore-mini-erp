@@ -1,6 +1,6 @@
 # TASK-contabilizar-inventario-costo-ventas: Contabilizar inventario y costo de ventas (INV-01)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-contabilizar-inventario-costo-ventas
@@ -13,6 +13,7 @@
 | 2026-11-17 | (nuevo) → INVESTIGATION | Task creado; base = `origin/accounting` (PR #88 integrado), no `main` | delivery-start |
 | 2026-11-17 | INVESTIGATION → PLANNING | NEEDS_ARCHITECTURE (ledger de costo nuevo, contrato entre Ventas/Compras/Costeo/Contabilidad); Diseño NO; 2 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 
 ## Investigación
 
@@ -82,7 +83,23 @@ No aplica (Diseño requerido: NO).
 `docs/plans/PLAN-2026-11-17-contabilizar-inventario-costo-ventas.md` (v1, COMPLETO) · Specification readiness: READY
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1, sin cambios de Specification.
+
+- **Dominio** (`costing/domain/cost.py`; INV-01/02/04, AC-03/09): promedio ponderado, costo de línea, `CostEvent` (IN/OUT/IN_REVERSAL) y `CostUnavailable`.
+- **Persistencia** (INV-03/06, AC-10): `CostEventModel` + migración `costing/0002_cost_event` (solo `CreateModel`) + `DjangoCostEventRepository(company_id)`.
+- **Casos de uso y fachada** (`costing/application/cost_use_cases.py`, `costing/services.py`; AC-02/03/05/07/09): `cost_receipt`, `reverse_receipt_cost`, `cost_outputs`, `is_valued`, bajo `lock_company_stock`. Nueva `inventory.services.get_product_totals`.
+- **Compras** (INV-05, AC-03/07): `register_entries` recibe `unit_costs` (precio de la línea de compra) y `StockEntryAdapter` alimenta el costo; la reversa de recepción registra IN_REVERSAL. No crea asiento.
+- **Ventas** (AC-01/02/04/05/08/09): `DeliveryCosting` + `DeliveryCostingAdapter`, invocado por `DeliverOrder` tras la salida y el reconocimiento, en la misma transacción. Errores: `inventory_cost_unavailable` y los de configuración/período ya existentes.
+- **Pruebas:** `costing/tests/test_cost_ledger.py`, `sales/tests/test_delivery_cost.py`, `purchases/tests/test_receipt_cost.py`; `test_boundaries` permite `sales → costing` y `purchases → costing`.
+
+**Desviaciones respecto al plan:**
+1. La prueba existente `DeliveryWithStockTests.test_delivering_with_complete_configuration...` (VEN-01) ahora configura Costeo adoptado y las cuentas de Inventario/Costo de ventas: es el efecto previsto de AC-05 (con cobertura y stock, falta de costo bloquea).
+2. Sin cobertura contable y con Costeo sin costo disponible, la entrega no se bloquea y no se registra evento de costo (el plan decía «se actualiza si Costeo está habilitado»; solo se registra cuando hay costo).
+3. No se usó `check_posting_ready` previo: `post_automatic_entry` ya rechaza antes de escribir y la transacción de la entrega revierte stock y costo.
+
+**Deuda técnica / límites:** ajustes de inventario sin asiento (decisión de la persona); sin devolución de ventas; unidades sin costo previo se promedian al costo de la primera recepción; sin vista del costo promedio; el frontend no se tocó (el mensaje de error 409 existente se muestra tal cual, pendiente de verificar en publish).
+
+**Corridas propias (no son el Quality Gate):** suite completa del backend 2130 pruebas, 1 falla corregida (deviación 1); `modules.sales` 377 OK; `makemigrations --check` sin cambios; flake8/ruff sin avisos nuevos.
 
 ## Review
 _Pendiente_
