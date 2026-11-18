@@ -924,7 +924,14 @@
       "ORIGEN": "Source",
       "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "No movements for the chosen filters.",
       "RECEPCION": "Receipt",
-      "PEDIDO": "Order"
+      "PEDIDO": "Order",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "SIN_REFERENCIA": "No reference",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "LISTA_DE_MOVIMIENTOS": "Movements list",
+      "VER_MOVIMIENTO_N": "View movement {{reference}}",
+      "PAGINAS_DE_MOVIMIENTOS": "Movement pages"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Stock details",
@@ -954,6 +961,9 @@
     "STOCK_LIST": {
       "CANTIDAD_ACTUAL_DE_CADA_PRODUCTO": "Current quantity of each product by warehouse.",
       "FILTROS_DE_EXISTENCIAS": "Stock filters",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply",
+      "FILTROS_ACTIVOS": "{{count}} active filters",
       "BUSCAR_PRODUCTO_POR_NOMBRE": "Search product by name",
       "TODOS_LOS_ALMACENES_ACTIVOS": "All active warehouses",
       "INACTIVO": "(inactive)",
@@ -1488,7 +1498,11 @@
       "RECEPCION": "Receipt",
       "PAGO": "Payment",
       "SALDO": "Balance",
-      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\"."
+      "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\".",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "PAGINACION": "Purchases pagination",
+      "VER_FILTROS_ACTIVOS": "active filters"
     },
     "RECEPTION_DETAIL": {
       "ASIENTO_CONTABLE": "Journal entry",

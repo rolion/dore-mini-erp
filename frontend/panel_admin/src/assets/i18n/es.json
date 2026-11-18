@@ -924,7 +924,14 @@
       "ORIGEN": "Origen",
       "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "Sin movimientos para los filtros elegidos.",
       "RECEPCION": "Recepción",
-      "PEDIDO": "Pedido"
+      "PEDIDO": "Pedido",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "SIN_REFERENCIA": "Sin referencia",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_MOVIMIENTOS": "Lista de movimientos",
+      "VER_MOVIMIENTO_N": "Ver movimiento {{reference}}",
+      "PAGINAS_DE_MOVIMIENTOS": "Páginas de movimientos"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Detalle de existencia",
@@ -954,6 +961,9 @@
     "STOCK_LIST": {
       "CANTIDAD_ACTUAL_DE_CADA_PRODUCTO": "Cantidad actual de cada producto por almacén.",
       "FILTROS_DE_EXISTENCIAS": "Filtros de existencias",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros activos",
       "BUSCAR_PRODUCTO_POR_NOMBRE": "Buscar producto por nombre",
       "TODOS_LOS_ALMACENES_ACTIVOS": "Todos los almacenes activos",
       "INACTIVO": "(inactivo)",
@@ -1488,7 +1498,11 @@
       "RECEPCION": "Recepción",
       "PAGO": "Pago",
       "SALDO": "Saldo",
-      "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra»."
+      "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra».",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "PAGINACION": "Paginación de compras",
+      "VER_FILTROS_ACTIVOS": "filtros activos"
     },
     "RECEPTION_DETAIL": {
       "ASIENTO_CONTABLE": "Asiento contable",

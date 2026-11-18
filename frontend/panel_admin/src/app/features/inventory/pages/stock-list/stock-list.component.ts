@@ -1,9 +1,11 @@
 import { TranslatePipe } from '@ngx-translate/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { EMPTY, Subject, catchError, debounceTime, finalize, switchMap, tap } from 'rxjs';
 import { InventoryApiError } from '../../models/api-error';
 import {
@@ -26,12 +28,15 @@ import { WarehousesApiService } from '../../services/warehouses-api.service';
 
 export const ALL_WAREHOUSES = '';
 
+/** Por debajo de `lg` (992 px) los filtros son un panel colapsable que se aplica a mano y las filas son tarjetas. */
+export const COMPACT_QUERY = '(max-width: 991.98px)';
+
 /** Inventario › Existencias: saldos por almacén y punto de entrada de «Registrar apertura». */
 @Component({
   selector: 'app-stock-list',
   templateUrl: './stock-list.component.html',
   styleUrl: './stock-list.component.scss',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgbPagination],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgbPagination, NgbCollapse, NgTemplateOutlet],
 })
 export class StockListComponent implements OnInit {
   readonly pageSize = 20;
@@ -55,7 +60,11 @@ export class StockListComponent implements OnInit {
   page = 1;
   loading = false;
   errorMessage = '';
+  /** Pantalla estrecha: tarjetas en vez de tabla y filtros con «Aplicar». */
+  compact = false;
+  filtersCollapsed = true;
 
+  private breakpoints = inject(BreakpointObserver);
   private stockApi = inject(StockApiService);
   private warehousesApi = inject(WarehousesApiService);
   private route = inject(ActivatedRoute);
@@ -124,7 +133,15 @@ export class StockListComponent implements OnInit {
         },
         error: () => this.reload(),
       });
+    this.breakpoints
+      .observe(COMPACT_QUERY)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((state) => (this.compact = state.matches));
     this.filterForm.valueChanges.pipe(debounceTime(250), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      // En pantalla estrecha los cambios se aplican con «Aplicar»; en escritorio, al instante.
+      if (this.compact) {
+        return;
+      }
       this.page = 1;
       this.reload();
     });
@@ -137,8 +154,30 @@ export class StockListComponent implements OnInit {
     );
   }
 
+  /** Cuántos filtros se apartan de su valor por defecto (para el contador del botón «Filtros»). */
+  get activeFilterCount(): number {
+    const current = this.filterForm.getRawValue();
+    return (Object.keys(DEFAULT_STOCK_FILTERS) as (keyof typeof DEFAULT_STOCK_FILTERS)[]).filter(
+      (key) => current[key] !== DEFAULT_STOCK_FILTERS[key],
+    ).length;
+  }
+
   clearFilters(): void {
     this.filterForm.setValue({ ...DEFAULT_STOCK_FILTERS });
+    if (this.compact) {
+      this.applyFilters();
+    }
+  }
+
+  toggleFilters(): void {
+    this.filtersCollapsed = !this.filtersCollapsed;
+  }
+
+  /** Consulta con los filtros del formulario y, en pantalla estrecha, repliega el panel para mostrar las tarjetas. */
+  applyFilters(): void {
+    this.page = 1;
+    this.filtersCollapsed = true;
+    this.reload();
   }
 
   reload(): void {
