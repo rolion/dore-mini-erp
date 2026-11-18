@@ -71,10 +71,13 @@ $touch: 44px;
   // Botones de acción siempre visibles: círculo de 44 px y el lápiz en oscuro sobre el amarillo.
   .btn-tbl-edit,
   ::ng-deep .btn-tbl-edit {
-    width: $touch;
-    height: $touch;
+    // El estilo global fija 30 px con !important: hay que igualarlo para que el círculo no se estire.
+    width: $touch !important;
+    height: $touch !important;
     min-height: $touch;
+    margin: 0 !important;
     border-radius: 50%;
+    flex: 0 0 auto;
   }
 
   .btn-tbl-update i {
