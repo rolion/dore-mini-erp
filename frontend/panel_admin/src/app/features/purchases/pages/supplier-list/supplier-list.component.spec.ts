@@ -1,10 +1,12 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { of, throwError } from 'rxjs';
 
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { Page } from '../../../../shared/models/page';
 import { Supplier, SupplierApiError } from '../../models/supplier';
 import { SuppliersApiService } from '../../services/suppliers-api.service';
@@ -28,6 +30,14 @@ describe('SupplierListComponent', () => {
   const active = makeSupplier({ id: 'a', name: 'Distribuidora Sur' });
   const inactive = makeSupplier({ id: 'b', name: 'Norte', taxId: '', phone: '', email: '', active: false });
 
+  const compactState = signal(false);
+
+  function create(compact: boolean): void {
+    compactState.set(compact);
+    fixture = TestBed.createComponent(SupplierListComponent);
+    component = fixture.componentInstance;
+  }
+
   beforeEach(async () => {
     api = jasmine.createSpyObj<SuppliersApiService>('SuppliersApiService', ['list', 'activate', 'deactivate']);
     api.list.and.returnValue(of(page([active, inactive])));
@@ -39,11 +49,11 @@ describe('SupplierListComponent', () => {
         provideRouter([]),
         { provide: SuppliersApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
+        { provide: CompactViewportService, useValue: { compact: compactState.asReadonly() } },
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(SupplierListComponent);
-    component = fixture.componentInstance;
+    create(false);
   });
 
   function lastListParams() {
@@ -164,5 +174,87 @@ describe('SupplierListComponent', () => {
     await component.toggleActive(active);
 
     expect(toastr.error).toHaveBeenCalledWith('Proveedor no encontrado.');
+  });
+
+  describe('en pantalla estrecha', () => {
+    const q = (css: string): HTMLElement | null => (fixture.nativeElement as HTMLElement).querySelector(css);
+
+    beforeEach(() => {
+      create(true);
+      fixture.detectChanges();
+      fixture.detectChanges();
+    });
+
+    it('muestra tarjetas en lugar de la tabla, con identificación, teléfono, correo y estado', () => {
+      expect(q('ngx-datatable')).toBeNull();
+      const cards = fixture.nativeElement.querySelectorAll('[data-testid="supplier-card"]');
+      expect(cards.length).toBe(2);
+      const first = (cards[0] as HTMLElement).textContent ?? '';
+      for (const expected of ['Distribuidora Sur', 'NIT-1020', '76543210', 'ventas@sur.com', 'Activo']) {
+        expect(first).toContain(expected);
+      }
+      expect((cards[1] as HTMLElement).textContent).toContain('—');
+    });
+
+    it('cada tarjeta tiene ver, editar, compras y activar/desactivar con nombre accesible', () => {
+      const card = q('[data-testid="supplier-card"]') as HTMLElement;
+      expect(card.querySelector('[data-testid="card-view"]')?.getAttribute('href')).toBe('/pocketbiz/purchases/suppliers/a');
+      expect(card.querySelector('[data-testid="card-edit"]')?.getAttribute('href')).toBe('/pocketbiz/purchases/suppliers/a/edit');
+      expect(card.querySelector('[data-testid="card-purchases"]')?.getAttribute('href')).toBe('/pocketbiz/purchases?supplierId=a');
+      expect(card.querySelector('[data-testid="card-toggle"]')?.getAttribute('aria-label')).toContain('Distribuidora Sur');
+    });
+
+    it('el botón de agregar está arriba de los filtros', () => {
+      const add = q('[data-testid="add-supplier"]') as HTMLElement;
+      const toolbar = q('[data-testid="filters-toolbar"]') as HTMLElement;
+      expect(add.getAttribute('href')).toBe('/pocketbiz/purchases/suppliers/new');
+      expect(add.compareDocumentPosition(toolbar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('los filtros están colapsados y se abren y cierran con el botón «Filtros»', () => {
+      const panel = q('[data-testid="filters"]') as HTMLElement;
+      const toggle = q('[data-testid="filters-toggle"]') as HTMLButtonElement;
+      expect(panel.classList).toContain('d-none');
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click();
+      fixture.detectChanges();
+      expect(panel.classList).not.toContain('d-none');
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('no pide datos al escribir; «Aplicar» pide, cierra el panel y muestra el filtro como chip', fakeAsync(() => {
+      component.filtersOpen = true;
+      component.searchControl.setValue(' sur ');
+      component.statusControl.setValue('all');
+      tick(400);
+      expect(api.list).toHaveBeenCalledTimes(1);
+
+      (q('[data-testid="apply-filters"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      tick();
+
+      expect(api.list).toHaveBeenCalledTimes(2);
+      expect(lastListParams()).toEqual({ search: 'sur', active: undefined, page: 1, pageSize: 10 });
+      expect(component.filtersOpen).toBeFalse();
+      expect(q('[data-testid="filters-count"]')?.textContent?.trim()).toBe('2');
+      expect(q('[data-testid="filters-chips"]')?.textContent).toContain('sur');
+    }));
+
+    it('«Limpiar filtros» vuelve a los activos sin búsqueda', () => {
+      component.searchControl.setValue('x', { emitEvent: false });
+      component.statusControl.setValue('inactive', { emitEvent: false });
+      component.clearFilters();
+      expect(lastListParams()).toEqual({ search: '', active: true, page: 1, pageSize: 10 });
+      expect(component.filtersActive).toBeFalse();
+    });
+
+    it('pagina con ngb-pagination cuando hay más de una página', () => {
+      api.list.and.returnValue(of(page([active], 25)));
+      component.clearFilters();
+      fixture.detectChanges();
+      expect(q('ngb-pagination')).not.toBeNull();
+      component.onPageNumber(2);
+      expect(lastListParams()?.page).toBe(2);
+    });
   });
 });

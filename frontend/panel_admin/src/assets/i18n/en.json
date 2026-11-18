@@ -1565,7 +1565,16 @@
       "VER_COMPRAS": "View purchases",
       "IDENTIFICACION": "ID",
       "CORREO": "Email",
-      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No suppliers match"
+      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No suppliers match",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply",
+      "LISTA_DE_PROVEEDORES": "Suppliers list",
+      "PAGINAS_DE_PROVEEDORES": "Suppliers pages",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "ACCION_SOBRE_N": "{{action}}: {{name}}",
+      "BUSCAR": "Search",
+      "ESTADO_FILTRO": "Status: {{value}}",
+      "BUSCAR_FILTRO": "Search: {{value}}"
     },
     "RECEIPT": {
       "SIN_CONTROL_DE_STOCK_SIN": "No stock control · no inbound",

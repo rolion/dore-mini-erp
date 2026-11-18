@@ -1565,7 +1565,16 @@
       "VER_COMPRAS": "Ver compras",
       "IDENTIFICACION": "Identificación",
       "CORREO": "Correo",
-      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No hay proveedores que coincidan"
+      "NO_HAY_PROVEEDORES_QUE_COINCIDAN": "No hay proveedores que coincidan",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "LISTA_DE_PROVEEDORES": "Lista de proveedores",
+      "PAGINAS_DE_PROVEEDORES": "Páginas de proveedores",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "ACCION_SOBRE_N": "{{action}}: {{name}}",
+      "BUSCAR": "Buscar",
+      "ESTADO_FILTRO": "Estado: {{value}}",
+      "BUSCAR_FILTRO": "Búsqueda: {{value}}"
     },
     "RECEIPT": {
       "SIN_CONTROL_DE_STOCK_SIN": "Sin control de stock · sin entrada",
