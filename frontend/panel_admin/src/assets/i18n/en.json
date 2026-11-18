@@ -1809,7 +1809,14 @@
       "AUN_NO_HAY_PEDIDOS": "There are no orders yet.",
       "NO_CANCELADOS": "Not cancelled",
       "CON_SALDO_PENDIENTE": "With pending balance",
-      "MAS_FILTROS": "More filters"
+      "MAS_FILTROS": "More filters",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "LISTA_DE_PEDIDOS": "Order list",
+      "VER_PEDIDO_N": "View order {{code}}",
+      "PAGINAS_DE_PEDIDOS": "Order pages",
+      "PERSONALIZADA": "Custom"
     },
     "ORDERS_API_SERVICE": {
       "PEDIDO_NO_ENCONTRADO": "Order not found."

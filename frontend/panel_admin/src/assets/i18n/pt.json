@@ -1809,7 +1809,14 @@
       "AUN_NO_HAY_PEDIDOS": "Ainda não há pedidos.",
       "NO_CANCELADOS": "Não cancelados",
       "CON_SALDO_PENDIENTE": "Com saldo pendente",
-      "MAS_FILTROS": "Mais filtros"
+      "MAS_FILTROS": "Mais filtros",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_PEDIDOS": "Lista de pedidos",
+      "VER_PEDIDO_N": "Ver pedido {{code}}",
+      "PAGINAS_DE_PEDIDOS": "Páginas de pedidos",
+      "PERSONALIZADA": "Personalizada"
     },
     "ORDERS_API_SERVICE": {
       "PEDIDO_NO_ENCONTRADO": "Pedido não encontrado."
