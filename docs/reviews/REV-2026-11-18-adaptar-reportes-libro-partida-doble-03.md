@@ -1,6 +1,6 @@
 # REV-2026-11-18-adaptar-reportes-libro-partida-doble-03: Avisos E501 nuevos y clave i18n sin uso
 
-**Status:** Fixed (pendiente de re-verificación)
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-18-adaptar-reportes-libro-partida-doble.md (v1)
@@ -23,3 +23,5 @@ Dos E501 nuevos (el resto de los 6 avisos son preexistentes en líneas no tocada
 
 ## Resolución
 Corregido: línea de `criteria.py` acortada y clave i18n `OPERATIVO` sin uso eliminada (el E501 de `repositories.py:603` ya no existe).
+
+Verificado en la segunda pasada del Quality Gate (PASS).

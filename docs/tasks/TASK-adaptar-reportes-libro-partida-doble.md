@@ -1,6 +1,6 @@
 # TASK-adaptar-reportes-libro-partida-doble: Adaptar reportes al libro de partida doble sin duplicar compras y cobros (CONT-05)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-adaptar-reportes-libro-partida-doble (base: `task/TASK-revertir-asiento-al-anular-gasto`)
@@ -17,6 +17,7 @@
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa; integración con BD sin ejecutar | delivery-build |
 | 2026-11-18 | REVIEW (sin cambio) | Quality Gate sin PASS: pruebas con BD no ejecutables aquí; REV-01..03 corregidos | delivery-publish |
+| 2026-11-18 | REVIEW → PUBLISH | Segunda pasada del Quality Gate: PASS | delivery-publish |
 
 ## Investigación
 
@@ -85,7 +86,7 @@ Rendimiento por rango largo; cuentas de dinero sin `kind`; cifras operativas ≠
 - REV-01 (Medium, IMPLEMENTATION): el reporte no excluía lo anterior al corte → corregido con `since` + prueba nueva.
 - REV-02 (Low, SPECIFICATION): desviaciones de API-01 no declaradas → declaradas en Implementación.
 - REV-03 (Low, IMPLEMENTATION): E501 nuevos y clave i18n sin uso → corregido.
-**Actualización:** con PostgreSQL disponible se ejecutó `manage.py test modules.accounting modules.reporting modules.sales.tests.test_boundaries` → 489 pruebas OK (incluye `LedgerReportTests`, `test_ledger_api` y la del corte). Pendiente: repetir el Quality Gate aislado sobre el estado final y la revisión visual en navegador.
+**Actualización:** con PostgreSQL disponible se ejecutó `manage.py test modules.accounting modules.reporting modules.sales.tests.test_boundaries` → 489 pruebas OK (incluye `LedgerReportTests`, `test_ledger_api` y la del corte). Segunda pasada del gate: PASS (ver Publicación).
 
 ## Publicación
-_Pendiente_
+Quality Gate segunda pasada (subagente aislado): **PASS**. Backend con PostgreSQL 489 OK; `ng test` reporting 53 OK; `i18n:check`, `npm run lint`, `ng build`, ruff/flake8 sin avisos nuevos; REV-01..03 resueltos. No verificada: revisión visual en navegador. Cambios sensibles: nueva dependencia entre módulos (ADR `ADR-adaptar-reportes-libro-partida-doble-lectura-contable-en-reporting`); sin migraciones ni escritura en el libro. PR listo para aprobación humana contra `accounting`; no se mergea.

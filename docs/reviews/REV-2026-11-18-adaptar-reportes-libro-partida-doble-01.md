@@ -1,6 +1,6 @@
 # REV-2026-11-18-adaptar-reportes-libro-partida-doble-01: El reporte no excluye el libro anterior al corte y ninguna prueba lo verifica
 
-**Status:** Fixed (pendiente de re-verificación)
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-18-adaptar-reportes-libro-partida-doble.md (v1)
@@ -24,3 +24,5 @@ Los asientos con fecha contable anterior a `cutoff_date` no entran en flujo, sal
 
 ## Resolución
 Corregido en el código (corte aplicado con `since` en `movements_by_account` y `money_lines`, más `test_entries_before_the_cutoff_are_not_summed`); la prueba con BD sigue sin ejecutarse.
+
+Verificado en la segunda pasada del Quality Gate (PASS).

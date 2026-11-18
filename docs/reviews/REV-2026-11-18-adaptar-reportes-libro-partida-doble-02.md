@@ -1,6 +1,6 @@
 # REV-2026-11-18-adaptar-reportes-libro-partida-doble-02: Desviaciones del contrato API-01 no declaradas en el TASK
 
-**Status:** Fixed (pendiente de re-verificación)
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-18-adaptar-reportes-libro-partida-doble.md (v1)
@@ -24,3 +24,5 @@ La respuesta incluye `accountingEnabled` y, por cuenta, `inflow` y `outflow` ade
 
 ## Resolución
 Aceptado: se declara en `## Implementación` del TASK (sin `accountingEnabled` porque el módulo deshabilitado responde 403; por cuenta solo `opening/net/closing` porque entradas/salidas por cuenta no suman a los totales por asiento).
+
+Verificado en la segunda pasada del Quality Gate (PASS).
