@@ -15,6 +15,7 @@
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-18 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01 y REV-02 Medium, REV-03 Low abiertos) | delivery-publish |
+| 2026-11-18 | PUBLISH (merge) | `origin/accounting` integrado (COM-01/COM-02, PR #89); 2 conflictos en Compras resueltos conservando ambos lados; suite completa 2211 OK; el Quality Gate no se repitió tras el merge | delivery-publish |
 | 2026-11-18 | PUBLISH (corrección) | REV-01..03 corregidos a pedido de la persona; suite completa 2138 OK; Quality Gate repetido: PASS | delivery-build |
 
 ## Investigación
@@ -116,4 +117,6 @@ Implementado según PLAN v1, sin cambios de Specification.
 - **No realizado:** mutación que revierta el arreglo de REV-01 para confirmar que las pruebas de concurrencia fallan sin él.
 
 ## Publicación
+**Merge con `accounting` (2026-11-18):** COM-02 (PR #89) ya estaba integrado: la recepción reconoce la compra con su propio asiento, lo que confirma INV-05 (INV-01 solo alimenta el costo). Conflictos en `purchases/application/receipt_commands.py` y `purchases/infrastructure/adapters.py`, resueltos conservando el reconocimiento y los anticipos de COM-02 junto con el costo y el orden de bloqueo de INV-01. Suite completa 2211 OK; el Quality Gate no se repitió tras el merge.
+
 PR https://github.com/rolion/dore-mini-erp/pull/91 (base `accounting`) listo para aprobación humana; no se mergea. **Sensible:** incluye ADR, migración nueva (`costing/0002`) y cálculo de dinero; lo aprueba una persona. REV-01..03 corregidos y Quality Gate repetido con PASS.
