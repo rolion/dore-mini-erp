@@ -15,7 +15,7 @@
 | 2026-11-18 | DESIGN → PLANNING | DDR escrito; sin ADR (extiende módulo y fachada existentes) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa; pruebas de integración con BD sin ejecutar (sin credenciales) | delivery-build |
-| 2026-11-18 | REVIEW (sin cambio) | Quality Gate 1 FAIL: REV-01/02/04 corregidos; REV-03 (Specification) espera decisión del usuario | delivery-publish |
+| 2026-11-18 | REVIEW (sin cambio) | Quality Gate 1 FAIL: REV-01/02/04 corregidos; REV-03 resuelto con enmienda aprobada de la Specification (PLAN v2) | delivery-publish |
 
 ## Investigación
 
@@ -96,9 +96,9 @@ No aplica según veredicto (sin ADR: se amplía `accounting` con la fachada y ar
 **Quality Gate 1: FAIL** (subagente aislado). No ejecutado: pruebas de integración con BD (sin `DATABASE_URL`) e inspección visual. Hallazgos:
 - REV-01 (High, IMPLEMENTATION) aserciones de `count` erróneas en pruebas → corregido.
 - REV-02 (Medium, IMPLEMENTATION) reparto de centavos de INV-04 podía dar un movimiento negativo → corregido (reparto de uno en uno) con prueba nueva.
-- REV-03 (Medium, SPECIFICATION) la paginación en memoria contradice el requisito no funcional «paginación en BD» → **abierto; requiere decisión del usuario** (enmendar la Specification o paginar en SQL).
+- REV-03 (Medium, SPECIFICATION) la paginación en memoria contradice el requisito no funcional «paginación en BD» → resuelto: el usuario aprobó enmendar la Specification (PLAN v2).
 - REV-04 (Low, IMPLEMENTATION) orden de desempate por cuenta y texto de `design-system.md` §6 → corregidos; el fallback HEX en el scss sigue igual que en `journal-list`.
-Pendiente: decisión sobre REV-03, correr las pruebas con BD y repetir el Quality Gate.
+Pendiente: correr las pruebas con BD (requiere `DATABASE_URL` de prueba) y repetir el Quality Gate; sigue en REVIEW.
 
 ## Publicación
 _Pendiente_

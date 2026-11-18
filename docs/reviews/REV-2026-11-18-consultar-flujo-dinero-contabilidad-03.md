@@ -1,6 +1,6 @@
 # REV-2026-11-18-consultar-flujo-dinero-contabilidad-03: Paginación en memoria contradice el requisito no funcional de la Specification
 
-**Status:** Open
+**Status:** Resolved (Specification enmendada en PLAN v2 con aprobación del usuario)
 **Severity:** Medium
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-18-consultar-flujo-dinero-contabilidad.md (v1)

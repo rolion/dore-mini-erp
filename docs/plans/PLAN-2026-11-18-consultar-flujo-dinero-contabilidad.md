@@ -1,4 +1,4 @@
-# PLAN-2026-11-18-consultar-flujo-dinero-contabilidad (v1)
+# PLAN-2026-11-18-consultar-flujo-dinero-contabilidad (v2)
 
 **Task:** TASK-consultar-flujo-dinero-contabilidad · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-consultar-flujo-dinero-contabilidad-pagina-flujo-de-dinero · Ninguno
@@ -73,7 +73,7 @@ Permiso por defecto (`CompanyModulePermission`: admin de empresa) y `required_mo
 - **UI-03** Variante compacta < 992 px, estados §4, textos `translate` en es/en/pt, filtros en la URL (`date_from`, `date_to`, `account`, `type`) para que el enlace y «volver» conserven el contexto.
 
 ## Non-functional requirements
-Agregación y paginación en la base de datos (sin traer todas las líneas a memoria para listar); pruebas de aislamiento por empresa; accesibilidad mínima §7 (botón de cuenta con `aria-pressed`, badges con texto, no solo color).
+Las líneas de dinero se agregan por (asiento, cuenta) en la base de datos y la clasificación y la paginación de movimientos se hacen en memoria sobre ese resultado (enmienda v2, aprobada por el usuario; si los rangos crecen, mover la clasificación a SQL); pruebas de aislamiento por empresa; accesibilidad mínima §7 (botón de cuenta con `aria-pressed`, badges con texto, no solo color).
 
 ## Out of scope
 Exportación, gráficos, edición de asientos desde la página, cambiar el cálculo de CONT-05, el selector hoy/semana/mes en la página, nuevos filtros del reporte, cambios de migración.
@@ -145,3 +145,6 @@ Sin migraciones. Consulta sobre `accounting_journal_line` con el índice `(compa
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-18): [Specification] Requisito no funcional: la paginación de movimientos es en memoria sobre líneas agregadas por asiento y cuenta en BD (antes: paginación en BD). Cambio aprobado explícitamente por el usuario en el chat; origen: REV-03 del Quality Gate 1. [Implementation Plan] Desempate de INV-04 y orden de movimientos aclarados (REV-02, REV-04).
