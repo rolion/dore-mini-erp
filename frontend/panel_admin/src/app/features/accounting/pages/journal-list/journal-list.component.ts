@@ -1,12 +1,14 @@
-import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { Component, DestroyRef, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
+import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { EMPTY, Subject, catchError, debounceTime, finalize, switchMap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { Account, AccountingApiError } from '../../models/accounting';
 import {
   EMPTY_JOURNAL_FILTERS,
@@ -50,7 +52,8 @@ export function journalFiltersToQuery(filters: JournalFilters, page = 0): Params
 @Component({
   selector: 'app-journal-list',
   templateUrl: './journal-list.component.html',
-  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule, DatePipe],
+  imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule, DatePipe, NgbPagination, NgTemplateOutlet],
+  styleUrl: './journal-list.component.scss',
 })
 export class JournalListComponent implements OnInit {
   readonly pageSize = 20;
@@ -64,6 +67,10 @@ export class JournalListComponent implements OnInit {
   filters: JournalFilters = EMPTY_JOURNAL_FILTERS;
   rangeInvalid = false;
   accounts: Account[] = [];
+  /** Solo en pantalla estrecha: el panel de filtros se muestra al pulsar «Filtros» y se cierra al aplicar. */
+  filtersOpen = false;
+  readonly compact = inject(CompactViewportService).compact;
+  private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
 
   readonly filterForm = inject(FormBuilder).nonNullable.group({
     dateFrom: '',
@@ -90,6 +97,19 @@ export class JournalListComponent implements OnInit {
 
   get emptyBook(): boolean {
     return !this.loading && !this.errorMessage && this.rows.length === 0 && !this.filtersActive;
+  }
+
+  get activeFilterCount(): number {
+    return this.appliedFilters.length;
+  }
+
+  /** Rango visible para «Mostrando 1–20 de N». */
+  get shownFrom(): number {
+    return this.rows.length === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+
+  get shownTo(): number {
+    return this.pageIndex * this.pageSize + this.rows.length;
   }
 
   get appliedFilters(): string[] {
@@ -145,7 +165,10 @@ export class JournalListComponent implements OnInit {
 
     this.filterForm.valueChanges
       .pipe(debounceTime(FILTER_DEBOUNCE_MS), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.applyForm());
+      // En pantalla estrecha se aplica con el botón «Aplicar»: cerrar el panel al elegir «Desde» impediría elegir «Hasta».
+      .subscribe(() => {
+        if (!this.compact()) this.applyForm();
+      });
   }
 
   /** Al volver desde un detalle sin parámetros en la URL, recupera los filtros y la página guardados. */
@@ -164,7 +187,16 @@ export class JournalListComponent implements OnInit {
     void this.router.navigate([LIST_PATH], { queryParams: journalFiltersToQuery(next) });
   }
 
+  /** «Aplicar» en pantalla estrecha: aplica, cierra el panel y lleva el foco al resumen de resultados. */
+  applyAndClose(): void {
+    this.applyForm();
+    if (this.rangeInvalid) return;
+    this.filtersOpen = false;
+    queueMicrotask(() => this.summary()?.nativeElement.focus());
+  }
+
   clearFilters(): void {
+    this.filtersOpen = false;
     void this.router.navigate([LIST_PATH]);
   }
 
@@ -176,6 +208,16 @@ export class JournalListComponent implements OnInit {
     // ngx-datatable también emite `page` al inicializarse; sin cambio de página no se vuelve a pedir.
     if (event.offset === this.pageIndex) return;
     void this.router.navigate([LIST_PATH], { queryParams: journalFiltersToQuery(this.filters, event.offset) });
+  }
+
+  /** Paginación de las tarjetas (`ngb-pagination` es base 1) y vuelta al inicio de la lista. */
+  onPageNumber(page: number): void {
+    this.onPage({ offset: page - 1 });
+    queueMicrotask(() => {
+      const el = this.summary()?.nativeElement;
+      el?.scrollIntoView({ block: 'start' });
+      el?.focus();
+    });
   }
 
   sourceLabel(source: JournalSource): string {
