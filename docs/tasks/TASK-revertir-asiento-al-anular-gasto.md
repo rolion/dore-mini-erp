@@ -1,6 +1,6 @@
 # TASK-revertir-asiento-al-anular-gasto: Revertir el asiento completo al anular un gasto (GAS-02)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-revertir-asiento-al-anular-gasto (base: `accounting`)
@@ -14,6 +14,7 @@
 | 2026-11-18 | INVESTIGATION → PLANNING | NEEDS_PLAN: GAS-01 ya implementó la reversión; quedan brechas acotadas (usuario, módulo deshabilitado, pruebas de AC, vínculo a la reversión) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación según PLAN v1; pruebas propias en verde (backend y frontend) | delivery-build |
+| 2026-11-18 | REVIEW → PUBLISH | Quality Gate sin Critical/High; todas las pruebas pasan; revisión visual no verificada; REV-01..02 (Low) abiertos | delivery-publish |
 
 ## Investigación
 
@@ -93,7 +94,9 @@ Desviaciones: ninguna. No fue necesario tocar `accounting`: AC-04 (corte y perí
 Deuda técnica: el `DjangoOutflowLedger.open_count()` sigue devolviendo 0, por lo que deshabilitar Contabilidad no se bloquea con egresos sin revertir (ADR modularidad, decisión 6); fuera de alcance.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS con reservas** (subagente aislado, 2026-11-18). Sin hallazgos Critical/High; abiertos REV-2026-11-18-revertir-asiento-al-anular-gasto-01 (Low: EDGE-01/EDGE-02 sin prueba dedicada) y -02 (Low: código residual en `test_voiding_api.py`); ambos **resueltos** después con pruebas EDGE-01/02 y limpieza (`modules.expenses` OK; el Gate no se repitió).
+
+Evidencia: backend `Ran 2222 tests ... OK`; `makemigrations --check`: No changes detected; `bandit -r modules`: 0 High, 0 Medium, 23 Low preexistentes, ninguno en el diff; frontend `TOTAL: 1664 SUCCESS` (cobertura líneas 88,91 %); `npm run lint` sin errores; `npm run build` OK; `i18n:check` 2260 claves, 0 faltantes; `npm audit --omit=dev`: 0 vulnerabilidades. Todos los AC (01..09), INV e invariantes verificados con aserciones reales; sin scope creep (20 archivos, todos del plan), sin secretos, límites DDD respetados. Revisión visual en navegador: **no verificada**.
 
 ## Publicación
-_Pendiente_
+PR #92 listo para aprobación humana (no se mergea); base `accounting`, no `main`. Sin cambios sensibles de base de datos (sin migración), autenticación ni infraestructura; no hay ADR nuevo.
