@@ -119,6 +119,7 @@ class LedgerReportTests(LedgerReportBase):
         self.assertEqual((empty.cash_flow.net, empty.result.result, len(empty.cash_flow.accounts)), (0, 0, 0))
 
     def test_entries_before_the_cutoff_are_not_summed(self):  # AC-05, INV-R5
+        make_period(self.company.id, 'Q1', date(2026, 1, 1), date(2026, 3, 31))
         self.post(self.cash, self.income, '700.00', on=date(2026, 3, 15))  # anterior al corte (2026-04-01)
         self.post(self.cash, self.income, '100.00', on=DAY)
         report = self.report(date(2026, 3, 1), TO)

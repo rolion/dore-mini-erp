@@ -85,7 +85,7 @@ Rendimiento por rango largo; cuentas de dinero sin `kind`; cifras operativas ≠
 - REV-01 (Medium, IMPLEMENTATION): el reporte no excluía lo anterior al corte → corregido con `since` + prueba nueva.
 - REV-02 (Low, SPECIFICATION): desviaciones de API-01 no declaradas → declaradas en Implementación.
 - REV-03 (Low, IMPLEMENTATION): E501 nuevos y clave i18n sin uso → corregido.
-Pendiente: correr en un entorno con PostgreSQL las pruebas con BD (incluida la nueva) y repetir el Quality Gate sobre el estado final.
+**Actualización:** con PostgreSQL disponible se ejecutó `manage.py test modules.accounting modules.reporting modules.sales.tests.test_boundaries` → 489 pruebas OK (incluye `LedgerReportTests`, `test_ledger_api` y la del corte). Pendiente: repetir el Quality Gate aislado sobre el estado final y la revisión visual en navegador.
 
 ## Publicación
 _Pendiente_
