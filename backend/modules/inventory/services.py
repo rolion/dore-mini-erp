@@ -254,9 +254,8 @@ def get_product_totals(company_id: UUID, product_ids) -> dict[UUID, Decimal]:
     """Saldo total (suma de almacenes) de los productos indicados; los que no tienen movimientos valen cero."""
     wanted = set(product_ids)
     totals = {pid: Decimal('0') for pid in wanted}
-    for row in DjangoStockMovementRepository(company_id).list_balances()[:]:
-        if row.product_id in wanted:
-            totals[row.product_id] += row.quantity
+    for row in DjangoStockMovementRepository(company_id).list_balances(product_ids=wanted)[:]:
+        totals[row.product_id] += row.quantity
     return totals
 
 

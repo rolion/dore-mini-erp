@@ -244,8 +244,9 @@ class OrderDeliverView(APIView):
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
         data = _validated(DeliverSerializer, request.data)
-        use_case = DeliverOrder(_repository(request), SystemClock(), _stock(request), _posting(request),
-                              DeliveryCostingAdapter(company_id_from(request)))
+        use_case = DeliverOrder(
+            _repository(request), SystemClock(), _stock(request), _posting(request),
+            DeliveryCostingAdapter(company_id_from(request)))
         return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request), **data))
 
 

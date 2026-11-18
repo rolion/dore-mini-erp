@@ -175,3 +175,26 @@ class CostReceiptTests(CostLedgerTestCase):
             self.out('o1', '1')
             raise RuntimeError('fallo contable')
         self.assertEqual(CostEventModel.objects.count(), 0)
+
+
+class CostIsolationTests(CostLedgerTestCase):
+    def test_receipts_of_another_company_never_move_this_companys_average(self):  # AC-10, INV-06
+        self.stock('10')
+        self.adopt()
+        other_product = make_product(self.other, 'Harina')
+        self.adopt(other_product, value='500.00', company=self.other)
+        other_warehouse = make_warehouse(self.other)
+        for _ in range(2):  # 10 existentes valoradas + 10 recibidas
+            inventory.record_movement(self.other.id, product_id=other_product.id, warehouse_id=other_warehouse.id,
+                                      kind='in', quantity=D('10'), user_id=None, user_name='ana')
+        costing.cost_receipt(self.other.id, source_type=RECEIPT, source_id='r1',
+                             lines=[(other_product.id, D('10'), D('900'))])
+        self.assertEqual(self.out('o1', '1').lines[0].unit_cost, D('100.000000'))
+        self.assertEqual(costing.cost_outputs(self.other.id, source_type=ORDER, source_id='o1',
+                                              lines=[(other_product.id, D('1'))]).lines[0].unit_cost,
+                         D('475.000000'))
+
+    def test_fractional_quantities_are_costed_with_two_decimals(self):  # EDGE
+        self.stock('10')
+        self.adopt()
+        self.assertEqual(self.out('o1', '0.3333').total, D('33.33'))

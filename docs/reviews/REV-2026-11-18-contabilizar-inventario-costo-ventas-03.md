@@ -1,6 +1,6 @@
 # REV-2026-11-18-contabilizar-inventario-costo-ventas-03: Observaciones menores del Quality Gate
 
-**Status:** Open
+**Status:** Resolved (2026-11-18), salvo el E501 de la migración generada `0002` y la nota (d), que queda como límite documentado
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-inventario-costo-ventas.md (v1)

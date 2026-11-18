@@ -1,6 +1,6 @@
 # REV-2026-11-18-contabilizar-inventario-costo-ventas-02: Faltan pruebas de casos límite y concurrencia
 
-**Status:** Open
+**Status:** Resolved (2026-11-18)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-contabilizar-inventario-costo-ventas.md (v1)

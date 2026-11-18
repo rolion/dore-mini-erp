@@ -15,6 +15,7 @@
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-18 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01 y REV-02 Medium, REV-03 Low abiertos) | delivery-publish |
+| 2026-11-18 | PUBLISH (corrección) | REV-01..03 corregidos a pedido de la persona; suite completa 2138 OK; el Quality Gate no se repitió | delivery-build |
 
 ## Investigación
 
@@ -104,10 +105,10 @@ Implementado según PLAN v1, sin cambios de Specification.
 
 ## Review
 **Quality Gate: PASS** (subagente aislado, 2026-11-18, diff contra `origin/accounting`). Backend: `manage.py test` 2130 OK (en serie), `makemigrations --check` sin cambios, bandit sin hallazgos, sin secretos ni `float` en el diff. flake8: un aviso nuevo (E128 en `sales/api/views.py:248`) y E501 en la migración generada; ruff sin avisos nuevos. Frontend no tocado (Diseño NO): sin verificación visual ni pruebas de frontend. Límites DDD y aislamiento por `company_id` verificados; todos los AC cubiertos, AC-06 y AC-10 solo en parte.
-- REV-01 (Medium, IMPLEMENTATION; **abierto**): posible deadlock entre el bloqueo por almacén y el de la empresa (no reproducido con hilos).
-- REV-02 (Medium, IMPLEMENTATION; **abierto**): faltan pruebas de casos límite y concurrencia.
-- REV-03 (Low, IMPLEMENTATION; **abierto**): `get_product_totals` en memoria, fecha del evento de costo, estilo y límite del promedio tras reversa.
-- **No realizado:** prueba de concurrencia real.
+- REV-01 (Medium, IMPLEMENTATION; **resuelto**): posible deadlock entre el bloqueo por almacén y el de la empresa (no reproducido con hilos).
+- REV-02 (Medium, IMPLEMENTATION; **resuelto**): faltan pruebas de casos límite y concurrencia.
+- REV-03 (Low, IMPLEMENTATION; **resuelto**, salvo el E501 de la migración generada): `get_product_totals` en memoria, fecha del evento de costo, estilo y límite del promedio tras reversa.
+- **Corrección posterior (sin repetir el Quality Gate):** REV-01 con el bloqueo de la empresa antes que el del almacén en recepciones, su reversa y salidas por venta (con Costeo habilitado); REV-02 con pruebas nuevas (AC-06, aislamiento, entrega con fecha distinta, producto sin costo, reversa tras vender, entregas y recepciones simultáneas en dos almacenes); REV-03 con saldos filtrados en la consulta, fecha del evento de costo y E128. Suite completa 2138 OK. Producto repetido y cantidades fraccionarias en pedidos no son alcanzables (Ventas las rechaza). La concurrencia pasa con el arreglo, pero no se demostró que fallara antes.
 
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/91 (base `accounting`) listo para aprobación humana; no se mergea. **Sensible:** incluye ADR, migración nueva (`costing/0002`) y cálculo de dinero; lo aprueba una persona. Hallazgos Medium/Low abiertos (REV-01..03) sin corregir.
+PR https://github.com/rolion/dore-mini-erp/pull/91 (base `accounting`) listo para aprobación humana; no se mergea. **Sensible:** incluye ADR, migración nueva (`costing/0002`) y cálculo de dinero; lo aprueba una persona. REV-01..03 corregidos tras el Quality Gate sin repetirlo.

@@ -3,6 +3,7 @@
 Es el único lugar de Purchases que conoce a Catalog e Inventory, y solo por su `services.py`.
 """
 from collections.abc import Iterable
+from contextlib import nullcontext
 from uuid import UUID
 
 from datetime import date
@@ -64,20 +65,27 @@ class StockEntryAdapter:
 
     def register_entries(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
                          reference: str, actor: Actor, unit_costs: dict[UUID, Decimal] | None = None) -> None:
-        for product_id, quantity in lines:
-            try:
-                inventory_services.record_movement(
-                    self.company_id, product_id=product_id, warehouse_id=warehouse_id, kind='in', quantity=quantity,
-                    user_id=actor.user_id, user_name=actor.user_name, reference=reference,
-                    source_type=self.SOURCE_TYPE, source_id=str(receipt_id), source_line=str(product_id))
-            except inventory_services.MovementValidationError as exc:
-                # Solo el almacén es atribuible a la persona; lo demás se informa sin campo.
-                raise PurchaseValidationError({
-                    'warehouse_id' if key == 'warehouse_id' else 'non_field_errors': messages
-                    for key, messages in exc.errors.items()}) from exc
-            except inventory_services.MovementConflict as exc:
-                raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
-        self._cost_entries(lines, receipt_id, unit_costs)
+        with self._serialized():
+            for product_id, quantity in lines:
+                try:
+                    inventory_services.record_movement(
+                        self.company_id, product_id=product_id, warehouse_id=warehouse_id, kind='in',
+                        quantity=quantity, user_id=actor.user_id, user_name=actor.user_name, reference=reference,
+                        source_type=self.SOURCE_TYPE, source_id=str(receipt_id), source_line=str(product_id))
+                except inventory_services.MovementValidationError as exc:
+                    # Solo el almacén es atribuible a la persona; lo demás se informa sin campo.
+                    raise PurchaseValidationError({
+                        'warehouse_id' if key == 'warehouse_id' else 'non_field_errors': messages
+                        for key, messages in exc.errors.items()}) from exc
+                except inventory_services.MovementConflict as exc:
+                    raise PurchaseValidationError({'non_field_errors': [str(exc)]}) from exc
+            self._cost_entries(lines, receipt_id, unit_costs)
+
+    def _serialized(self):
+        """Con Costeo, el bloqueo de la empresa se toma antes que el del almacén (REV-01)."""
+        if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            return inventory_services.lock_company_stock(self.company_id)
+        return nullcontext()
 
     def _cost_entries(self, lines: list[tuple[UUID, Decimal]], receipt_id: UUID,
                       unit_costs: dict[UUID, Decimal] | None) -> None:
@@ -90,12 +98,13 @@ class StockEntryAdapter:
 
     def reverse_entries(self, receipt_id: UUID, reason: str, actor: Actor) -> None:
         try:
-            inventory_services.reverse_source_movements(
-                self.company_id, self.SOURCE_TYPE, str(receipt_id), user_id=actor.user_id,
-                user_name=actor.user_name, reason=reason)
-            if module_gate.is_enabled(self.company_id, COSTING_MODULE):
-                costing_services.reverse_receipt_cost(
-                    self.company_id, source_type=self.SOURCE_TYPE, source_id=str(receipt_id))
+            with self._serialized():
+                inventory_services.reverse_source_movements(
+                    self.company_id, self.SOURCE_TYPE, str(receipt_id), user_id=actor.user_id,
+                    user_name=actor.user_name, reason=reason)
+                if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+                    costing_services.reverse_receipt_cost(
+                        self.company_id, source_type=self.SOURCE_TYPE, source_id=str(receipt_id))
         except inventory_services.InsufficientStock as exc:
             raise StockShortage(exc.warehouse_id, [(s.product_id, s.requested, s.available)
                                                    for s in exc.shortages]) from exc

@@ -4,8 +4,8 @@ Es el único lugar de Sales que conoce a Catalog, Customers y Modularity, y solo
 """
 import logging
 from collections.abc import Iterable
-from contextlib import contextmanager
-from datetime import date, datetime
+from contextlib import contextmanager, nullcontext
+from datetime import date, datetime, time
 from decimal import Decimal
 from uuid import UUID
 
@@ -137,15 +137,22 @@ class StockOutputAdapter:
     def register_outputs(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], order_id: UUID,
                          reference: str, actor: Actor) -> None:
         try:
-            inventory_services.record_outputs(
-                self.company_id, warehouse_id=warehouse_id, lines=lines, source_type=self.SOURCE_TYPE,
-                source_id=str(order_id), user_id=actor.user_id, user_name=actor.user_name, reference=reference)
+            with self._serialized():
+                inventory_services.record_outputs(
+                    self.company_id, warehouse_id=warehouse_id, lines=lines, source_type=self.SOURCE_TYPE,
+                    source_id=str(order_id), user_id=actor.user_id, user_name=actor.user_name, reference=reference)
         except inventory_services.InsufficientStock as exc:
             raise self._insufficient(exc) from exc
         except inventory_services.MovementValidationError as exc:
             raise OrderValidationError(self._field_errors(exc.errors)) from exc
         except inventory_services.MovementConflict as exc:
             raise OrderRuleViolation(exc.code, str(exc)) from exc
+
+    def _serialized(self):
+        """Con Costeo, el bloqueo de la empresa se toma antes que el del almacén (mismo orden que el costo, REV-01)."""
+        if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            return inventory_services.lock_company_stock(self.company_id)
+        return nullcontext()
 
     def output_for(self, order_id: UUID) -> StockOutputRecord | None:
         if not self.is_available():
@@ -321,7 +328,8 @@ class DeliveryCostingAdapter:
             return
         try:
             costed = costing_services.cost_outputs(
-                self.company_id, source_type=self.SOURCE_TYPE, source_id=str(order.id), lines=lines)
+                self.company_id, source_type=self.SOURCE_TYPE, source_id=str(order.id), lines=lines,
+                occurred_at=self._occurred_at(order.delivered_date))
         except costing_services.CostUnavailable as exc:
             if not covered:
                 return
@@ -334,6 +342,13 @@ class DeliveryCostingAdapter:
                 self.company_id, INVENTORY_SALE_COST, order.id, order.delivered_date,
                 f'Costo de ventas del pedido {order.code}', costed.total, created_by=actor.user_id,
                 created_by_name=actor.user_name)
+
+    @staticmethod
+    def _occurred_at(delivered_on: date) -> datetime:
+        """Momento del evento de costo: ahora si se entrega hoy; si no, el inicio del día de entrega (REV-03)."""
+        if delivered_on == timezone.localdate():
+            return timezone.now()
+        return timezone.make_aware(datetime.combine(delivered_on, time.min))
 
     def _unavailable_message(self, exc) -> str:
         if exc.reason == costing_services.CostUnavailable.NOT_ADOPTED:
