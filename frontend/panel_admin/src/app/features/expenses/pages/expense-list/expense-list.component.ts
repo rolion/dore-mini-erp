@@ -1,14 +1,16 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subject, catchError, finalize, switchMap } from 'rxjs';
 import Swal from 'sweetalert2';
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ExpensesApiError } from '../../models/api-error';
 import { ExpenseCategory } from '../../models/category';
@@ -40,7 +42,7 @@ export const INVALID_RANGE_MESSAGE = (): string => tr('EXPENSES.EXPENSE_LIST.LA_
   selector: 'app-expense-list',
   templateUrl: './expense-list.component.html',
   styleUrl: './expense-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, DatePipe, MoneyPipe, NgbPagination],
 })
 export class ExpenseListComponent implements OnInit {
   readonly pageSize = 10;
@@ -55,6 +57,18 @@ export class ExpenseListComponent implements OnInit {
     /** Los gastos anulados no aparecen por defecto (REQ-EXP-004). */
     status: ['active' as ExpenseStatusFilter],
   });
+
+  /**
+   * Período del selector (solo pantalla estrecha). Va fuera de `filterForm` para no entrar en la consulta;
+   * `''` es el valor neutro «Personalizado» cuando las fechas no coinciden con ningún período.
+   */
+  readonly period = new FormControl<RangeShortcut | ''>('month', { nonNullable: true });
+  /** Solo en pantalla estrecha: el panel de filtros se abre con «Filtros» y se cierra al aplicar. */
+  filtersOpen = false;
+  readonly compact = inject(CompactViewportService).compact;
+  private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
+  /** Filtros vigentes (los que produjeron la lista); en pantalla estrecha el formulario puede ir por delante. */
+  private appliedValue = this.filterForm.getRawValue();
 
   rows: Expense[] = [];
   total = 0;
@@ -113,11 +127,20 @@ export class ExpenseListComponent implements OnInit {
         error: (err: ExpensesApiError) => this.toastr.error(err.message),
       });
 
+    // En pantalla estrecha se consulta con «Aplicar filtros»: consultar al elegir «Desde» estorbaría elegir «Hasta».
     this.filterForm.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.currentShortcut = this.matchingShortcut();
+      this.period.setValue(this.currentShortcut ?? '', { emitEvent: false });
       this.pageIndex = 0;
-      if (this.validateRange()) {
-        this.reload$.next();
+      const valid = this.validateRange();
+      if (valid && !this.compact()) {
+        this.runQuery();
+      }
+    });
+
+    this.period.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((value) => {
+      if (value) {
+        this.applyShortcut(value);
       }
     });
 
@@ -136,6 +159,66 @@ export class ExpenseListComponent implements OnInit {
 
   clearFilters(): void {
     this.filterForm.setValue({ dateFrom: '', dateTo: '', categoryId: '', status: 'active' });
+    if (this.compact()) {
+      this.filtersOpen = false;
+      this.runQuery();
+    }
+  }
+
+  /** «Aplicar filtros» en pantalla estrecha: consulta, cierra el panel y lleva el foco al resumen. */
+  applyAndClose(): void {
+    this.pageIndex = 0;
+    if (!this.validateRange()) {
+      return;
+    }
+    this.runQuery();
+    this.filtersOpen = false;
+    queueMicrotask(() => this.summary()?.nativeElement.focus());
+  }
+
+  /** Filtros vigentes como texto, para los chips con el panel cerrado, el contador y el vacío con filtros. */
+  get appliedFilters(): string[] {
+    const { dateFrom, dateTo, categoryId, status } = this.appliedValue;
+    const applied: string[] = [];
+    const shortcut = this.shortcutFor(dateFrom, dateTo);
+    if (shortcut === 'month' || shortcut === 'previous-month') {
+      applied.push(this.shortcuts.find((item) => item.id === shortcut)?.label ?? '');
+    } else if (!shortcut) {
+      if (dateFrom) applied.push(`${tr('COMMON.DESDE')}: ${dateFrom}`);
+      if (dateTo) applied.push(`${tr('COMMON.HASTA')}: ${dateTo}`);
+    }
+    const category = this.categories.find((item) => item.id === categoryId);
+    if (categoryId) applied.push(category ? this.categoryLabel(category) : tr('COMMON.CATEGORIA'));
+    if (status === 'voided') applied.push(tr('EXPENSES.EXPENSE_LIST.ANULADOS'));
+    if (status === 'all') applied.push(tr('COMMON.TODOS'));
+    return applied;
+  }
+
+  get activeFilterCount(): number {
+    return this.appliedFilters.length;
+  }
+
+  get emptyWithFilters(): boolean {
+    return !this.loading && this.rows.length === 0 && this.activeFilterCount > 0;
+  }
+
+  /** Rango visible para «Mostrando n–m de N». */
+  get shownFrom(): number {
+    return this.rows.length === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+
+  get shownTo(): number {
+    return this.pageIndex * this.pageSize + this.rows.length;
+  }
+
+  /** Paginación de las tarjetas (`ngb-pagination` es base 1) y vuelta al inicio de la lista. */
+  onCardsPage(page: number): void {
+    this.onPage({ offset: page - 1 });
+    queueMicrotask(() => {
+      const el = this.summary()?.nativeElement;
+      el?.scrollIntoView({ block: 'start' });
+      el?.focus();
+    });
   }
 
   onPage(event: { offset: number }): void {
@@ -198,12 +281,23 @@ export class ExpenseListComponent implements OnInit {
     this.filterForm.patchValue(range, { emitEvent: !silent });
     if (silent) {
       this.currentShortcut = this.matchingShortcut();
-      this.reload$.next();
+      this.period.setValue(this.currentShortcut ?? '', { emitEvent: false });
+      this.runQuery();
     }
+  }
+
+  /** Fija los filtros del formulario como vigentes y consulta. */
+  private runQuery(): void {
+    this.appliedValue = this.filterForm.getRawValue();
+    this.reload$.next();
   }
 
   private matchingShortcut(): RangeShortcut | null {
     const { dateFrom, dateTo } = this.filterForm.getRawValue();
+    return this.shortcutFor(dateFrom, dateTo);
+  }
+
+  private shortcutFor(dateFrom: string, dateTo: string): RangeShortcut | null {
     const candidates: [RangeShortcut, DateRange][] = [
       ['month', monthRange(this.today())],
       ['previous-month', monthRange(this.today(), -1)],
@@ -220,7 +314,7 @@ export class ExpenseListComponent implements OnInit {
   }
 
   private params(): ExpenseListParams {
-    const { dateFrom, dateTo, categoryId, status } = this.filterForm.getRawValue();
+    const { dateFrom, dateTo, categoryId, status } = this.appliedValue;
     return {
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,

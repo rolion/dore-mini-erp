@@ -755,7 +755,17 @@
       "ESTE_MES": "This month",
       "MES_ANTERIOR": "Previous month",
       "TODO": "Everything",
-      "NO_HAY_GASTOS_QUE_COINCIDAN": "No expenses match"
+      "NO_HAY_GASTOS_QUE_COINCIDAN": "No expenses match",
+      "REGISTRAR_GASTO": "Record expense",
+      "FILTROS": "Filters",
+      "FILTROS_ACTIVOS": "active filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "PERIODO": "Period",
+      "PERSONALIZADO": "Custom",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "LISTA_DE_GASTOS": "Expenses list",
+      "VER_GASTO_N": "View expense {{description}}",
+      "PAGINACION": "Expenses pagination"
     },
     "API_ERROR": {
       "NO_SE_ENCONTRO_EL_REGISTRO": "The record was not found."

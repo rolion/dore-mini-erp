@@ -755,7 +755,17 @@
       "ESTE_MES": "Este mes",
       "MES_ANTERIOR": "Mes anterior",
       "TODO": "Todo",
-      "NO_HAY_GASTOS_QUE_COINCIDAN": "No hay gastos que coincidan"
+      "NO_HAY_GASTOS_QUE_COINCIDAN": "No hay gastos que coincidan",
+      "REGISTRAR_GASTO": "Registrar gasto",
+      "FILTROS": "Filtros",
+      "FILTROS_ACTIVOS": "filtros activos",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "PERIODO": "Período",
+      "PERSONALIZADO": "Personalizado",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_GASTOS": "Lista de gastos",
+      "VER_GASTO_N": "Ver gasto {{description}}",
+      "PAGINACION": "Paginación de gastos"
     },
     "API_ERROR": {
       "NO_SE_ENCONTRO_EL_REGISTRO": "No se encontró el registro."

@@ -1,6 +1,6 @@
 # TASK-gastos-lista-responsive: Lista de Gastos responsive (< 992 px)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-gastos-lista-responsive (base: `origin/accounting`)
@@ -12,6 +12,7 @@
 | 2026-11-18 | (nuevo) → INVESTIGATION | Task creado (sin tarjeta de Trello; crítica de diseño con la persona) | delivery-start |
 | 2026-11-18 | INVESTIGATION → PLANNING | NEEDS_PLAN, diseño SI (DDR escrito) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY, PR abierto contra `accounting` | delivery-start |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 
 ## Investigación
 
@@ -64,7 +65,14 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-18-gastos-lista-responsive.md` (v1, COMPLETO por DDR con impacto visual)
 
 ## Implementación
-_Pendiente_
+Lista de Gastos con rama compacta (`CompactViewportService` + `@if`) siguiendo `inventory/pages/movement-list` y `purchases/pages/purchase-list`. Sin componentes compartidos nuevos; sin backend.
+- AC-01: rama de escritorio intacta (tabla, atajos, aplicación automática); spec «desktop».
+- AC-02/03/04/05: «Registrar gasto» arriba, botón «Filtros» con contador/chips/`aria-*`, `select` de período (control `period` fuera de `filterForm`) que precarga fechas sin consultar y vuelve a «Personalizado» al editar; `applyAndClose()` consulta, pliega y enfoca el resumen; `appliedValue` es el snapshot vigente que usan la consulta, el paginado, los chips y el contador.
+- AC-06/07: tarjetas `ul > li > article` con acciones de 44 px, `dl` y `ngb-pagination`; vacío con badges/«Limpiar»/alta.
+- AC-08: 10 claves nuevas en `EXPENSES.EXPENSE_LIST` (es/en/pt); `i18n:check` 0 faltantes; lint limpio.
+- Pruebas: 25 specs del componente (13 nuevos), suite completa 1674 OK.
+**Desviaciones:** ninguna. Badge «Anulado» en tarjeta usa `col-grey` (gris, según DDR); la tabla de escritorio conserva rojo. `design-system.md` actualizado con la variante.
+**Deuda:** unificar el color del badge Anulado entre tabla y tarjeta si se desea.
 
 ## Review
 _Pendiente_
