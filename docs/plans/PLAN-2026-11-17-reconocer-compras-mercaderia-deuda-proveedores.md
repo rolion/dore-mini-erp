@@ -55,7 +55,7 @@ Con Contabilidad habilitada y **cobertura** de la fecha de recepción:
 ## Acceptance criteria
 - **AC-01** Compra de 1.000 recibida completa: un asiento Debe Inventario 1.000 / Haber Proveedores 1.000 (tarjeta AC1); el saldo de Proveedores en `journal_balances` es 1.000.
 - **AC-02** Recepciones parciales: cada una reconoce su importe (p. ej. 400 y luego 600); la suma = total de la compra; recibir cantidades que superan lo pendiente sigue siendo rechazado como hoy.
-- **AC-03** Con la compra reconocida, un pago de 300 no genera un segundo asiento de inventario ni gasto (Compras no postea al pagar); un asiento `PURCHASE_PAYMENT` aplicado por la fachada (lo que hará COM-01) deja Proveedores en 700 sin tocar Inventario ni gastos (tarjeta AC2).
+- **AC-03** Con la compra reconocida, un pago de 300 no genera un segundo asiento de inventario ni gasto (v1; desde v2 el pago sí tiene asiento, AC-11 y AC-12); un asiento `PURCHASE_PAYMENT` aplicado por la fachada (lo que hará COM-01) deja Proveedores en 700 sin tocar Inventario ni gastos (tarjeta AC2).
 - **AC-04** Reintento con el mismo `receipt_id` (HTTP 200) y concurrencia de dos recepciones iguales no duplican asiento ni importe; el mismo evento reconocido «por ambos módulos» (llamada repetida a la fachada con el mismo origen) devuelve el asiento existente (tarjeta AC3).
 - **AC-05** Borrador, confirmar y cancelar no crean asientos ni cambian saldos (tarjeta AC4); un fallo del asiento (configuración faltante, período cerrado, motor) deja la compra sin recepción, sin stock y sin asiento (atomicidad).
 - **AC-06** Cobertura: Contabilidad deshabilitada, fecha anterior al corte o en un hueco → recepción sin asiento y sin error; con cobertura y cuentas `INVENTORY`/`PAYABLE` sin configurar → 409 `posting_configuration_missing` con `issues`, sin escribir nada; período cerrado → 409 `fiscal_period_unavailable`.
@@ -92,7 +92,7 @@ Sin permisos nuevos: las vistas de recepción mantienen `required_modules`/permi
 - **API-01** `POST /api/purchases/{id}/receipts/` y `.../revert/`: nuevos 409 `{code: 'posting_configuration_missing' | 'fiscal_period_unavailable' | 'ledger_rejected' | 'ledger_conflict', detail, issues?}` (forma de Ventas: `issues[{code, role, subject, message, params}]`). Compatible hacia atrás: solo aparecen con cobertura.
 - **API-02** `GET`/`POST` detalle de recepción: campo aditivo `accounting_entry: {id, accounting_date, total} | null`.
 
-- **API-03** (v2) `GET /api/purchases/{id}/payments/preview/?amount=&method=&payment_date=` → `{debt_amount, advance_amount, lines:[{side, role, account:{id,name}|null, amount}], issues:[...], covered}`; solo lectura.
+- **API-03** (v2) `GET /api/purchases/{id}/payments/preview/?amount=&method=&payment_date=` → `{debt_amount, advance_amount, lines:[{side, role, account:{name}, amount}], issues:[...], covered}`; solo lectura.
 - **API-04** (v2) `GET .../payments/` y `POST .../payments/`: campos aditivos `debt_amount`, `advance_amount`, `accounting_entries:[{id, kind: debt|advance, accounting_date, total}]`; `POST` nuevos 409 como API-01; ya no devuelve el error de clasificación.
 - **API-05** (v2) Detalle del asiento en Contabilidad: `origin.label` y `origin.module` del evento automático (aditivo).
 
@@ -106,7 +106,7 @@ Sin permisos nuevos: las vistas de recepción mantienen `required_modules`/permi
 - **UI-06** (v2) Movimientos: Origen con etiqueta y módulo del evento (DDR 2).
 
 ## Non-functional requirements
-`Decimal`, BOB sin conversión; una consulta extra por recepción para `find_automatic_entry`; sin migraciones.
+`Decimal`, BOB sin conversión; una consulta extra por recepción para `find_automatic_entry`; v1 sin migraciones, v2 con la migración aditiva `purchases/0009`.
 
 ## Out of scope
 costo de ventas y salidas (INV-01) y contabilidad de existencias iniciales/ajustes de Inventario; anulaciones o reembolsos de pagos (no existen); selector de cuenta de salida por pago; impuestos y costos adicionales (flete, aduana); regularización de recepciones históricas (CONT-07); notas de crédito/devoluciones a proveedor; multimoneda.

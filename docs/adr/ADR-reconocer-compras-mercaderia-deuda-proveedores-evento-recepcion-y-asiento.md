@@ -28,7 +28,7 @@ Flujo real: borrador → confirmada (el «pedido al proveedor»; no mueve stock 
 - **Cuenta de anticipos a proveedores para pagos previos a la recepción.** Descartada por alcance; se documenta el saldo deudor temporal.
 
 ## Estrategia de rollback / mitigación
-Sin migraciones: revertir el código deja los asientos ya publicados (inmutables, visibles en Entradas/Asientos); no afectan al flujo operativo porque Compras sigue funcionando sin Contabilidad. Antes de desplegar con cobertura activa, la persona debe configurar `INVENTORY` y `PAYABLE`; si no, recibir se rechaza con un mensaje accionable (nunca omite en silencio). Para desactivar el efecto basta deshabilitar Contabilidad o fijar el corte posterior a la fecha de operación (CONT-07).
+Sin migraciones en esta decisión (la migración `purchases/0009` pertenece al ADR de pagos y anticipos): revertir el código deja los asientos ya publicados (inmutables, visibles en Entradas/Asientos); no afectan al flujo operativo porque Compras sigue funcionando sin Contabilidad. Antes de desplegar con cobertura activa, la persona debe configurar `INVENTORY` y `PAYABLE`; si no, recibir se rechaza con un mensaje accionable (nunca omite en silencio). Para desactivar el efecto basta deshabilitar Contabilidad o fijar el corte posterior a la fecha de operación (CONT-07).
 
 ## Consecuencias
 - Compras con cobertura **exigen configuración** al recibir (cambio de reglas acotado a empresas con cobertura; sin Contabilidad nada cambia).
