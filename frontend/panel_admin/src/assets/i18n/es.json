@@ -925,6 +925,9 @@
     "STOCK_LIST": {
       "CANTIDAD_ACTUAL_DE_CADA_PRODUCTO": "Cantidad actual de cada producto por almacén.",
       "FILTROS_DE_EXISTENCIAS": "Filtros de existencias",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros activos",
       "BUSCAR_PRODUCTO_POR_NOMBRE": "Buscar producto por nombre",
       "TODOS_LOS_ALMACENES_ACTIVOS": "Todos los almacenes activos",
       "INACTIVO": "(inactivo)",

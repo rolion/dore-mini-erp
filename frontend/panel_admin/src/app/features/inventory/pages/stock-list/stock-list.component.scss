@@ -1,1 +1,112 @@
 @use '../../components/inventory-table';
+
+// Por debajo de `lg` (992 px) las filas son tarjetas y los filtros un panel colapsable (ver `COMPACT_QUERY`).
+$compact-max: 991.98px;
+$touch: 44px;
+
+.stock-filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: $touch;
+}
+
+.stock-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: $compact-max) {
+  // «Registrar apertura» arriba de todo y a todo el ancho: es la acción primaria.
+  .stock-header-actions {
+    width: 100%;
+
+    > div {
+      margin-left: 0 !important;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: $touch;
+    }
+  }
+
+  .stock-filter-actions {
+    flex-direction: row;
+
+    .btn {
+      flex: 1 1 0;
+      min-height: $touch;
+    }
+  }
+}
+
+// Tarjetas: una columna en móvil y varias en tablet.
+.stock-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0.75rem;
+}
+
+.stock-card {
+  box-shadow: none;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  overflow: hidden;
+}
+
+.stock-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.stock-card-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.stock-card-actions {
+  display: flex;
+  gap: 0.25rem;
+
+  .btn {
+    min-height: $touch;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+}
+
+.stock-card-body {
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.stock-card-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.375rem 0;
+
+  dt {
+    font-weight: 600;
+    flex: 0 0 auto;
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    min-width: 0;
+  }
+}
+
+// La existencia es el dato clave de la tarjeta.
+.stock-card-quantity dd {
+  font-weight: 700;
+  font-size: 1.125rem;
+}
