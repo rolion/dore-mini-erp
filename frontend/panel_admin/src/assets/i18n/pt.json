@@ -400,6 +400,9 @@
       "PHONE_TAKEN_LIST": "Estes clientes já têm esse telefone:"
     },
     "CUSTOMER_LIST": {
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros ativos",
       "CLIENTES": "Clientes",
       "NUEVO_CLIENTE": "Novo cliente",
       "VER_PERFIL": "Ver perfil",
