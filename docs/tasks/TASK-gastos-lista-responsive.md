@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-gastos-lista-responsive (base: `origin/accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/101
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
