@@ -20,16 +20,42 @@
                   <div class="table-title">
                     <h2><strong>{{ 'COMMON.GASTOS' | translate }}</strong></h2>
                   </div>
+                  @if (!compact()) {
                   <div class="header-buttons-left">
                     <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/expenses/new"
                       [title]="'EXPENSES.EXPENSE_LIST.NUEVO_GASTO' | translate" [attr.aria-label]="'EXPENSES.EXPENSE_LIST.NUEVO_GASTO' | translate">
                       <i class="material-icons">add</i>
                     </a>
                   </div>
+                  }
                 </div>
               </div>
             </div>
 
+            @if (compact()) {
+            <div class="m-2">
+              <a class="btn btn-primary w-100 expense-new" routerLink="/pocketbiz/expenses/new" data-testid="new-expense">
+                <i class="material-icons align-middle" aria-hidden="true">add</i>
+                {{ 'EXPENSES.EXPENSE_LIST.REGISTRAR_GASTO' | translate }}
+              </a>
+            </div>
+            <div class="d-flex align-items-center flex-wrap gap-2 m-2" data-testid="filters-toolbar">
+              <button type="button" class="btn btn-light" data-testid="filters-toggle" aria-controls="expense-filters"
+                [attr.aria-expanded]="filtersOpen" (click)="filtersOpen = !filtersOpen">
+                <i class="fas fa-filter" aria-hidden="true"></i> {{ 'EXPENSES.EXPENSE_LIST.FILTROS' | translate }}
+                @if (activeFilterCount > 0) {
+                <span class="badge bg-primary ms-1" data-testid="filters-count">{{ activeFilterCount }}<span class="visually-hidden"> {{ 'EXPENSES.EXPENSE_LIST.FILTROS_ACTIVOS' | translate }}</span></span>
+                }
+              </button>
+              @if (!filtersOpen) {
+              <div class="d-flex flex-wrap gap-1" data-testid="filters-chips">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue">{{ filter }}</span>
+                }
+              </div>
+              }
+            </div>
+            } @else {
             <div class="btn-group flex-wrap m-2" role="group" [attr.aria-label]="'EXPENSES.EXPENSE_LIST.ATAJOS_DE_RANGO' | translate" data-testid="shortcuts">
               @for (shortcut of shortcuts; track shortcut.id) {
               <button type="button" class="btn" [class.btn-primary]="currentShortcut === shortcut.id"
@@ -39,17 +65,30 @@
               </button>
               }
             </div>
+            }
 
-            <form class="row g-2 m-2 expense-filters" [formGroup]="filterForm" data-testid="filters">
-              <div class="col-md-3">
+            <form id="expense-filters" class="row g-2 m-2 expense-filters" [class.d-none]="compact() && !filtersOpen"
+              [formGroup]="filterForm" data-testid="filters">
+              @if (compact()) {
+              <div class="col-12 col-sm-6">
+                <label for="filter-period">{{ 'EXPENSES.EXPENSE_LIST.PERIODO' | translate }}</label>
+                <select id="filter-period" class="form-select form-control" [formControl]="period" data-testid="period-select">
+                  <option value="">{{ 'EXPENSES.EXPENSE_LIST.PERSONALIZADO' | translate }}</option>
+                  @for (shortcut of shortcuts; track shortcut.id) {
+                  <option [value]="shortcut.id">{{ shortcut.label }}</option>
+                  }
+                </select>
+              </div>
+              }
+              <div class="col-6 col-lg-3">
                 <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
                 <input id="filter-from" type="date" class="form-control" formControlName="dateFrom">
               </div>
-              <div class="col-md-3">
+              <div class="col-6 col-lg-3">
                 <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
                 <input id="filter-to" type="date" class="form-control" formControlName="dateTo">
               </div>
-              <div class="col-md-3">
+              <div class="col-12 col-sm-6 col-lg-3">
                 <label for="filter-category">{{ 'COMMON.CATEGORIA' | translate }}</label>
                 <select id="filter-category" class="form-select form-control" formControlName="categoryId">
                   <option value="">{{ 'COMMON.TODAS' | translate }}</option>
@@ -58,7 +97,7 @@
                   }
                 </select>
               </div>
-              <div class="col-md-3">
+              <div class="col-12 col-sm-6 col-lg-3">
                 <label for="filter-status">{{ 'COMMON.ESTADO' | translate }}</label>
                 <select id="filter-status" class="form-select form-control" formControlName="status">
                   <option value="active">{{ 'EXPENSES.EXPENSE_LIST.VIGENTES' | translate }}</option>
@@ -71,8 +110,12 @@
                 <small class="form-text text-danger" data-testid="range-error">{{ rangeError }}</small>
               </div>
               }
-              <div class="col-12">
-                <button type="button" class="btn btn-light" [disabled]="!filtersActive"
+              <div class="col-12 d-flex gap-2" [class.mt-3]="compact()">
+                @if (compact()) {
+                <button type="button" class="btn btn-primary" data-testid="apply-filters"
+                  (click)="applyAndClose()">{{ 'EXPENSES.EXPENSE_LIST.APLICAR_FILTROS' | translate }}</button>
+                }
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
                   (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
               </div>
             </form>
@@ -84,6 +127,107 @@
               }
             </div>
 
+            @if (compact()) {
+            <p class="small text-body-secondary mx-2 mb-2" #summary tabindex="-1" data-testid="range-summary">
+              {{ 'EXPENSES.EXPENSE_LIST.MOSTRANDO_N_DE_M' | translate: { from: shownFrom, to: shownTo, total: total } }}
+            </p>
+            @if (loading) {
+            <p class="text-center text-secondary" data-testid="cards-loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (rows.length === 0) {
+            @if (emptyWithFilters) {
+            <div class="text-center p-3" data-testid="empty-filtered">
+              <p class="mb-2">{{ messages.emptyMessage }}</p>
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-light me-2" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              <a class="btn btn-primary" routerLink="/pocketbiz/expenses/new" data-testid="empty-new">{{ 'EXPENSES.EXPENSE_LIST.REGISTRAR_GASTO' | translate }}</a>
+            </div>
+            } @else {
+            <p class="text-center text-secondary" data-testid="cards-empty">{{ messages.emptyMessage }}</p>
+            }
+            } @else {
+            <ul class="expense-cards row g-2 mx-1 p-0 mb-2" [attr.aria-label]="'EXPENSES.EXPENSE_LIST.LISTA_DE_GASTOS' | translate">
+              @for (row of rows; track row.id) {
+              <li class="col-12 col-sm-6">
+                <article class="expense-card" [class.expense-card--voided]="row.status === 'VOIDED'" data-testid="expense-card">
+                  <header class="expense-card__header">
+                    <div class="expense-card__title">
+                      <a class="fw-bold" data-testid="card-description" [routerLink]="['/pocketbiz/expenses', row.id]">{{ row.description }}</a>
+                      <small class="d-block text-body-secondary" data-testid="card-date">{{ row.expenseDate | date: 'dd/MM/yyyy' }}</small>
+                    </div>
+                    <span class="expense-card__actions">
+                      <a class="btn btn-tbl-edit btn-tbl-view expense-card__action" data-testid="card-view"
+                        [routerLink]="['/pocketbiz/expenses', row.id]" [title]="'COMMON.VER_DETALLE' | translate"
+                        [attr.aria-label]="'EXPENSES.EXPENSE_LIST.VER_GASTO_N' | translate: { description: row.description }">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                      </a>
+                      @if (row.status === 'ACTIVE') {
+                      <a class="btn btn-tbl-edit btn-tbl-update expense-card__action" data-testid="card-edit"
+                        [routerLink]="['/pocketbiz/expenses', row.id, 'edit']" [title]="'COMMON.EDITAR' | translate"
+                        [attr.aria-label]="'COMMON.EDITAR' | translate">
+                        <i class="fas fa-pen" aria-hidden="true"></i>
+                      </a>
+                      <button type="button" class="btn btn-tbl-edit btn-tbl-toggle expense-card__action" data-testid="card-void"
+                        (click)="voidExpense(row)" [title]="'EXPENSES.EXPENSE_LIST.ANULAR' | translate"
+                        [attr.aria-label]="'EXPENSES.EXPENSE_LIST.ANULAR' | translate">
+                        <i class="fas fa-ban" aria-hidden="true"></i>
+                      </button>
+                      }
+                    </span>
+                  </header>
+                  <dl class="expense-card__body">
+                    <div>
+                      <dt>{{ 'EXPENSES.EXPENSE_LIST.CATEGORIA' | translate }}</dt>
+                      <dd>
+                        {{ row.category.name }}
+                        @if (!row.category.active) {
+                        <small class="text-muted">{{ 'EXPENSES.EXPENSE_LIST.INACTIVA' | translate }}</small>
+                        }
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'EXPENSES.EXPENSE_LIST.METODO_DE_PAGO' | translate }}</dt>
+                      <dd>{{ paymentLabel(row.paymentMethod) }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'EXPENSES.EXPENSE_LIST.PROVEEDOR' | translate }}</dt>
+                      <dd>
+                        @if (row.supplierName) {
+                        {{ row.supplierName }}
+                        } @else {
+                        <span class="text-body-secondary" data-testid="card-no-supplier">—</span>
+                        }
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'EXPENSES.EXPENSE_LIST.MONTO' | translate }}</dt>
+                      <dd class="expense-card__amount expense-amount" data-testid="card-amount">{{ row.amount | money }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ 'COMMON.ESTADO' | translate }}</dt>
+                      <dd>
+                        @if (row.status === 'ACTIVE') {
+                        <span class="badge-outline col-green d-inline-block" data-testid="card-status">{{ statusLabel(row.status) }}</span>
+                        } @else {
+                        <span class="badge-outline col-grey d-inline-block" data-testid="card-status">{{ statusLabel(row.status) }}</span>
+                        }
+                      </dd>
+                    </div>
+                  </dl>
+                </article>
+              </li>
+              }
+            </ul>
+            }
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center mb-2" [collectionSize]="total" [pageSize]="pageSize"
+              [page]="pageIndex + 1" [maxSize]="3" [rotate]="true" size="sm"
+              [attr.aria-label]="'EXPENSES.EXPENSE_LIST.PAGINACION' | translate" (pageChange)="onCardsPage($event)" />
+            }
+            } @else {
             <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
               [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" [rowClass]="rowClass"
@@ -146,6 +290,7 @@
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
+            }
           </div>
         </div>
       </div>
