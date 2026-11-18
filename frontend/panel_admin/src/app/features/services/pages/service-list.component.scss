@@ -1,6 +1,8 @@
 @use '../../../shared/styles/table-actions';
 
 $touch: 44px;
+// Botones de acción de la tarjeta: punto medio entre los 30 px de la plantilla y los 44 px táctiles.
+$action-size: 36px;
 
 .service-add-button {
   display: inline-flex;
@@ -68,13 +70,13 @@ $touch: 44px;
   flex: 0 0 auto;
   gap: 0.5rem;
 
-  // Botones de acción siempre visibles: círculo de 44 px y el lápiz en oscuro sobre el amarillo.
+  // Botones de acción siempre visibles: círculo de 36 px y el lápiz en oscuro sobre el amarillo.
   .btn-tbl-edit,
   ::ng-deep .btn-tbl-edit {
     // El estilo global fija 30 px con !important: hay que igualarlo para que el círculo no se estire.
-    width: $touch !important;
-    height: $touch !important;
-    min-height: $touch;
+    width: $action-size !important;
+    height: $action-size !important;
+    min-height: $action-size;
     margin: 0 !important;
     border-radius: 50%;
     flex: 0 0 auto;
