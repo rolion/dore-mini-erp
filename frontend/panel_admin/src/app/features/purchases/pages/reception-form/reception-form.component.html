@@ -37,6 +37,18 @@
             @if (conflictMessage) {
             <div class="alert alert-warning mx-4" role="alert" data-testid="conflict">{{ conflictMessage }}</div>
             }
+            @if (postingIssues.length) {
+            <div class="alert alert-warning mx-4" role="alert" data-testid="alert-posting-issues">
+              <strong>{{ 'PURCHASES.RECEPTION_FORM.CONFIGURACION_CONTABLE_INCOMPLETA' | translate }}</strong>
+              <ul class="mb-1">
+                @for (issue of postingIssues; track $index) {
+                <li>{{ issue.message }}</li>
+                }
+              </ul>
+              <a routerLink="/pocketbiz/purchases/settings" [queryParams]="{ tab: 'posting' }" class="alert-link"
+                data-testid="link-posting-settings">{{ 'PURCHASES.RECEPTION_FORM.IR_A_CONFIGURACION_DE_COMPRAS' | translate }}</a>
+            </div>
+            }
             <form [formGroup]="form" class="m-4" (ngSubmit)="review()" novalidate>
               <div class="row">
                 <div class="col-md-4 mb-3">

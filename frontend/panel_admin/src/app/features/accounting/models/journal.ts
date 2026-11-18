@@ -18,7 +18,10 @@ export interface JournalFilters {
 
 export const EMPTY_JOURNAL_FILTERS: JournalFilters = { dateFrom: '', dateTo: '', accountId: '', source: '' };
 
+/** Origen de un asiento; `label` y `module` solo en los automáticos (etiqueta del evento y su módulo). */
 export interface JournalOrigin {
+  label?: string;
+  module?: string;
   kind: string;
   id?: string;
   /** El servidor declara que el módulo propietario está habilitado. */

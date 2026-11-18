@@ -54,7 +54,7 @@
           } @else if (originLink; as target) {
           <a class="link-primary" [routerLink]="target" data-testid="origin-link">{{ 'ACCOUNTING.JOURNAL.VER_DOCUMENTO_DE_ORIGEN' | translate }}</a>
           } @else {
-          <span data-testid="origin-text">{{ e.origin.kind }}
+          <span data-testid="origin-text">{{ e.origin.label || e.origin.kind }}
             @if (!e.origin.available) { <small class="text-body-secondary">({{ 'ACCOUNTING.ENTRIES.MODULO_DESHABILITADO' | translate }})</small> }
           </span>
           }

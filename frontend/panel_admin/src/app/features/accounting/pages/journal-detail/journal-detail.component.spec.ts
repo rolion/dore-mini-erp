@@ -49,6 +49,14 @@ describe('JournalDetailComponent', () => {
     expect(unavailable.querySelector('[data-testid="origin-text"]')?.textContent).toContain('EXPENSE');
   });
 
+  it('shows the event label instead of the technical code for an automatic entry (AC-19, UI-06)', () => {
+    const el = create(of(makeJournalDetail({ source: 'AUTOMATIC', origin: {
+      kind: 'PURCHASE_RECOGNITION', id: 'r-1', available: true, label: 'Reconocer una compra de mercadería', module: 'purchases' } }))).el;
+    const text = el.querySelector('[data-testid="origin-text"]')?.textContent ?? '';
+    expect(text).toContain('Reconocer una compra de mercadería');
+    expect(text).not.toContain('PURCHASE_RECOGNITION');
+  });
+
   it('links an original and its reversal both ways and hides Reverse (AC-05, AC-07)', () => {
     const original = create(of(makeJournalDetail({ reversed_by_id: 'j-2', can_reverse: false }))).el;
     expect(original.querySelector('[data-testid="reversal-link"]')).not.toBeNull();

@@ -32,8 +32,8 @@ class CatalogTests(SimpleTestCase):
             self.assertLessEqual(len(event.code), ORIGIN_KIND_MAX)
             self.assertNotEqual(event.debit_role, event.credit_role)
             self.assertIn(event.module, MODULE_LABELS)
-            sides = [side for side, _ in event.lines]  # una o dos líneas de Debe y una de Haber
-            self.assertIn(sides, (['DEBIT', 'CREDIT'], ['DEBIT', 'DEBIT', 'CREDIT']))
+            sides = [side for side, _ in event.lines]  # una línea por lado y, a lo sumo, una segunda de Debe o de Haber
+            self.assertIn(sides, (['DEBIT', 'CREDIT'], ['DEBIT', 'DEBIT', 'CREDIT'], ['DEBIT', 'CREDIT', 'CREDIT']))
             self.assertEqual(len(set(event.role_codes)), len(event.role_codes))
         self.assertFalse(set(codes) & set(ORIGIN_KINDS))  # no choca con PRODUCT / SERVICE del libro anterior
 

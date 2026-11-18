@@ -1329,6 +1329,13 @@
   },
   "PURCHASES": {
     "PAYMENT_DIALOG": {
+      "NO_SE_PUDO_CALCULAR_EL_ASIENTO": "No se pudo calcular el asiento previsto; puedes registrar el pago igualmente.",
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar la contabilidad de Compras.",
+      "CALCULANDO_ASIENTO": "Calculando asiento…",
+      "ASIENTO_PREVISTO": "Asiento previsto",
+      "ESTE_PAGO_NO_GENERA_ASIENTO": "Este pago no genera asiento contable.",
+      "LIQUIDA_DEUDA": "Liquida deuda",
+      "ANTICIPO_A_PROVEEDOR": "Anticipo a proveedor",
       "SALDO_ACTUAL": "Saldo actual:",
       "MONTO_BS": "Monto (Bs)",
       "PAGAR_EL_SALDO_COMPLETO": "Pagar el saldo completo",
@@ -1349,6 +1356,11 @@
       "CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS": "Confirmar no modifica las existencias; el stock cambia al recibir la mercadería."
     },
     "PURCHASE_PAYMENTS_TAB": {
+      "ASIENTO_CONTABLE": "Asiento contable",
+      "SIN_ASIENTO_CONTABLE": "Sin asiento contable",
+      "ASIENTO_DE_DEUDA": "Asiento de deuda",
+      "ASIENTO_DE_ANTICIPO": "Asiento de anticipo",
+      "INCLUYE_ANTICIPO": "Incluye anticipo: {{amount}}",
       "RESUMEN_DE_PAGOS": "Resumen de pagos",
       "TOTAL_DE_LA_COMPRA": "Total de la compra",
       "TOTAL_PAGADO": "Total pagado",
@@ -1479,6 +1491,8 @@
       "AUN_NO_HAY_COMPRAS_CREA": "Aún no hay compras. Crea la primera con «Nueva compra»."
     },
     "RECEPTION_DETAIL": {
+      "ASIENTO_CONTABLE": "Asiento contable",
+      "SIN_ASIENTO_CONTABLE": "Sin asiento contable",
       "DETALLE_DE_LA_RECEPCION": "Detalle de la recepción",
       "FECHA_DE_RECEPCION": "Fecha de recepción",
       "REGISTRADA_POR": "Registrada por",
@@ -1501,6 +1515,8 @@
       "RECEPCION_REVERTIDA": "Recepción revertida"
     },
     "RECEPTION_FORM": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar la contabilidad de Compras.",
+      "IR_A_CONFIGURACION_DE_COMPRAS": "Ir a la configuración de Compras",
       "VOLVER_A_LA_COMPRA": "Volver a la compra",
       "RECEPCION_DE_LA_COMPRA": "Recepción de la compra {{p0}}",
       "FECHA_DE_RECEPCION": "Fecha de recepción*",
@@ -2973,6 +2989,7 @@
       "NOT_VALID": "ya no es válida",
       "UNCONFIGURED": "Sin configurar",
       "ROLES": {
+        "SUPPLIER_ADVANCES": "Anticipos a proveedores",
         "CUSTOMER_ADVANCES": "Anticipos de clientes",
         "SALES_INCOME": "Ingresos por ventas",
         "SERVICE_INCOME": "Ingresos por servicios",
@@ -2984,6 +3001,7 @@
         "EXPENSE_BY_CATEGORY": "Cuenta de gasto de la categoría"
       },
       "EVENTS": {
+        "PURCHASE_ADVANCE": "Pagar por adelantado a un proveedor",
         "SALE_ADVANCE": "Cobrar un pedido por adelantado",
         "SALE_DELIVERY": "Reconocer la entrega de un pedido",
         "SALE_RECOGNITION": "Reconocer una venta",

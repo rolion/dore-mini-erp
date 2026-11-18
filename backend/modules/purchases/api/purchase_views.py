@@ -1,5 +1,4 @@
 from decimal import Decimal
-from uuid import UUID
 
 from django.db import transaction
 from django.utils import timezone
@@ -18,6 +17,7 @@ from modules.purchases.application.purchase_commands import (
 from modules.purchases.application.purchase_queries import GetPurchase, ListPurchases
 from modules.purchases.domain.exceptions import (
     PaymentClassificationError,
+    PostingRejected,
     PurchaseCancellationBlocked,
     PurchaseInvalidTransition,
     PaymentConflict,
@@ -113,6 +113,8 @@ def _run(callable_, **kwargs):
         raise ValidationError({**exc.errors, 'code': exc.code}) from exc
     except PurchaseValidationError as exc:
         raise ValidationError(exc.errors) from exc
+    except PostingRejected as exc:
+        raise Conflict({'code': exc.code, 'detail': str(exc), **exc.extra}) from exc
     except PurchaseNotFound as exc:
         raise NotFound(PURCHASE_NOT_FOUND) from exc
     except PurchaseNotEditable as exc:

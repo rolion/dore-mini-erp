@@ -93,7 +93,7 @@ class ClassificationGateway(Protocol):
     """Clasificaciones de egreso de Contabilidad (integración por su fachada, en `infrastructure/adapters.py`)."""
 
     def validate_expense_classification(self, classification_id: UUID) -> ClassificationInfo:
-        """Lanza `PurchaseValidationError` (`classification_id`) si no es de la empresa, está inactiva o no es de egreso."""
+        """Lanza `PurchaseValidationError` (`classification_id`) si no es de la empresa, está inactiva o no egreso."""
         ...
 
     def describe(self, classification_ids: Iterable[UUID]) -> dict[UUID, ClassificationInfo]: ...
@@ -101,3 +101,81 @@ class ClassificationGateway(Protocol):
     def is_covered(self, on: date) -> bool:
         """¿Contabilidad debe crear movimiento para una operación con esa fecha efectiva?"""
         ...
+
+
+@dataclass(frozen=True)
+class PostedEntry:
+    """El asiento contable de una recepción (DTO de lectura)."""
+    id: UUID
+    accounting_date: date
+    total: Decimal
+
+
+class PurchasePosting(Protocol):
+    """Contabilización de la recepción de mercadería (COM-02); integración opcional con Contabilidad."""
+
+    def is_available(self) -> bool:
+        """¿Está habilitada Contabilidad? (solo para decidir si se muestra el asiento)."""
+        ...
+
+    def covers(self, on: date) -> bool:
+        """¿Contabilidad está habilitada y una operación con esa fecha debe crear asiento?"""
+        ...
+
+    def recognize_receipt(self, purchase, receipt, amount: Decimal, actor: Actor,
+                          advance_applied: Decimal = Decimal('0')) -> None:
+        """Debe Inventario / Haber Cuentas por pagar por `amount` (y Haber Anticipos por `advance_applied`).
+
+        Dentro de la transacción del llamador. Sin cobertura no hace nada; lanza `PostingRejected` si Contabilidad
+        lo rechaza (configuración, período).
+        """
+        ...
+
+    def record_payment(self, purchase, payment, debt: Decimal, advance: Decimal, actor: Actor) -> None:
+        """Asientos del pago: `PURCHASE_PAYMENT` por `debt` y `PURCHASE_ADVANCE` por `advance` (los de importe 0 no)."""
+        ...
+
+    def preview_payment(self, purchase, amount: Decimal, method: str, on: date, debt: Decimal,
+                        advance: Decimal) -> 'PaymentPreview':
+        """Asiento previsto del pago sin escribir nada."""
+        ...
+
+    def payment_entries(self, payment_ids: Iterable[UUID]) -> dict[UUID, list['PostedPaymentEntry']]:
+        """Asientos de cada pago (0-2); los pagos sin asiento no aparecen."""
+        ...
+
+    def reverse_receipt(self, purchase, receipt, reason: str, actor: Actor) -> None:
+        """Revierte el asiento de la recepción con sus cuentas originales; sin asiento no hace nada."""
+        ...
+
+    def recognized_totals(self, receipt_ids: Iterable[UUID]) -> dict[UUID, Decimal]:
+        """Total del asiento de reconocimiento de cada recepción que lo tiene (las demás no aparecen)."""
+        ...
+
+    def entry_for(self, receipt_id: UUID) -> PostedEntry | None: ...
+
+
+@dataclass(frozen=True)
+class PostedPaymentEntry:
+    id: UUID
+    kind: str  # 'debt' | 'advance'
+    accounting_date: date
+    total: Decimal
+
+
+@dataclass(frozen=True)
+class PaymentPreviewLine:
+    side: str  # DEBIT | CREDIT
+    role: str
+    account_name: str
+    amount: Decimal
+
+
+@dataclass(frozen=True)
+class PaymentPreview:
+    """Vista previa del asiento de un pago: reparto, líneas y faltantes (cada uno con `code`, `role`, `message`)."""
+    covered: bool
+    debt_amount: Decimal
+    advance_amount: Decimal
+    lines: tuple[PaymentPreviewLine, ...] = ()
+    issues: tuple[dict, ...] = ()

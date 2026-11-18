@@ -62,6 +62,20 @@ export interface ReceiptWarehouse {
   name: string;
 }
 
+/** Asiento contable que reconoció la recepción (Debe Inventario / Haber Cuentas por pagar). */
+export interface ReceiptAccountingEntry {
+  id: string;
+  accountingDate: string;
+  total: string;
+}
+
+/** Un faltante de configuración contable que impide registrar la recepción (409 `posting_configuration_missing`). */
+export interface ReceiptPostingIssue {
+  code: string;
+  subject: string;
+  message: string;
+}
+
 export interface Receipt {
   id: string;
   reference: string;
@@ -80,6 +94,10 @@ export interface Receipt {
   /** El servidor permite revertirla (confirmada y, si movió stock, con Inventario habilitado). */
   canRevert: boolean;
   reversal: ReceiptReversal | null;
+  /** Contabilidad está habilitada hoy (decide si se muestra la fila del asiento). */
+  accountingEnabled: boolean;
+  /** `null` si no hay asiento (sin cobertura, anterior al corte o recepción anterior a la contabilización). */
+  accountingEntry: ReceiptAccountingEntry | null;
 }
 
 export interface ReceptionWarehouse {
@@ -153,6 +171,8 @@ export class ReceiptApiError extends Error {
     /** Código estable de un 409: `insufficient_stock`, `already_reverted`, `inventory_unavailable`... */
     readonly code: string | null = null,
     readonly shortage: ReceiptShortage | null = null,
+    /** Faltantes de un 409 `posting_configuration_missing` (vacío en otros conflictos). */
+    readonly postingIssues: ReceiptPostingIssue[] = [],
   ) {
     super(message);
     this.name = 'ReceiptApiError';
@@ -201,6 +221,8 @@ export interface ReceiptDto {
     | null;
   can_revert?: boolean;
   reversal?: { reverted_at: string; user_name: string; reason: string } | null;
+  accounting_enabled?: boolean;
+  accounting_entry?: { id: string; accounting_date: string; total: string } | null;
 }
 
 export interface ReceptionFormDto {

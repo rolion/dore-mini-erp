@@ -3,6 +3,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
@@ -15,7 +16,7 @@ import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.compone
 @Component({
   selector: 'app-purchase-payments-tab',
   templateUrl: './purchase-payments-tab.component.html',
-  imports: [TranslatePipe, DatePipe, MoneyPipe],
+  imports: [TranslatePipe, DatePipe, MoneyPipe, RouterLink],
 })
 export class PurchasePaymentsTabComponent implements OnInit {
   readonly purchase = input.required<Purchase>();
@@ -35,6 +36,19 @@ export class PurchasePaymentsTabComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  /** Hay pagos con asiento: se muestra la columna del asiento (sin Contabilidad o sin cobertura no hay ninguno). */
+  get showEntries(): boolean {
+    return this.payments.some((payment) => payment.accountingEntries.length > 0);
+  }
+
+  hasAdvance(payment: Payment): boolean {
+    return Number(payment.advanceAmount) > 0;
+  }
+
+  entryLabel(kind: 'debt' | 'advance'): string {
+    return kind === 'debt' ? tr('PURCHASES.PURCHASE_PAYMENTS_TAB.ASIENTO_DE_DEUDA') : tr('PURCHASES.PURCHASE_PAYMENTS_TAB.ASIENTO_DE_ANTICIPO');
   }
 
   get isConfirmed(): boolean {

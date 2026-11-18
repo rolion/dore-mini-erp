@@ -266,6 +266,35 @@ describe('ReceptionFormComponent', () => {
     expect(toastr.success).toHaveBeenCalledTimes(1);
   });
 
+  it('shows the missing accounting setup with a link to Purchases settings on a 409 (AC-10, UI-01)', async () => {
+    await setup();
+    type(0, '4');
+    reviewButton().click();
+    fixture.detectChanges();
+    receiptsApi.create.and.returnValue(throwError(() => new ReceiptApiError(
+      'Falta configurar la cuenta «Inventario».', 409, { lines: [] }, 'posting_configuration_missing', null,
+      [{ code: 'role_unconfigured', subject: 'Inventario', message: 'Falta configurar la cuenta «Inventario».' }])));
+    (byId('confirm') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(byId('alert-posting-issues')?.textContent).toContain('Falta configurar la cuenta «Inventario».');
+    expect(byId('link-posting-settings')?.getAttribute('href')).toBe('/pocketbiz/purchases/settings?tab=posting');
+    expect(byId('conflict')).toBeNull();
+    expect(component.quantities.at(0).value).toBe('4');
+  });
+
+  it('shows the period message as a plain conflict and keeps what was typed (AC-10)', async () => {
+    await setup();
+    type(0, '4');
+    reviewButton().click();
+    fixture.detectChanges();
+    receiptsApi.create.and.returnValue(throwError(() => new ReceiptApiError('El período está cerrado.', 409, { lines: [] }, 'fiscal_period_unavailable')));
+    (byId('confirm') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(byId('conflict')?.textContent).toContain('cerrado');
+    expect(byId('alert-posting-issues')).toBeNull();
+    expect(component.quantities.at(0).value).toBe('4');
+  });
+
   it('keeps what was typed on a 409 and re-reads the pending quantities (AC-22)', async () => {
     await setup();
     type(0, '4');

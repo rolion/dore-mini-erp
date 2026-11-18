@@ -1329,6 +1329,13 @@
   },
   "PURCHASES": {
     "PAYMENT_DIALOG": {
+      "NO_SE_PUDO_CALCULAR_EL_ASIENTO": "The expected entry could not be calculated; you can still register the payment.",
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Purchases accounting setup is incomplete.",
+      "CALCULANDO_ASIENTO": "Calculating entry…",
+      "ASIENTO_PREVISTO": "Expected journal entry",
+      "ESTE_PAGO_NO_GENERA_ASIENTO": "This payment does not create a journal entry.",
+      "LIQUIDA_DEUDA": "Settles debt",
+      "ANTICIPO_A_PROVEEDOR": "Supplier advance",
       "SALDO_ACTUAL": "Current balance:",
       "MONTO_BS": "Amount (Bs)",
       "PAGAR_EL_SALDO_COMPLETO": "Pay the full balance",
@@ -1349,6 +1356,11 @@
       "CONFIRMAR_NO_MODIFICA_LAS_EXISTENCIAS": "Confirming does not change stock; stock changes when the goods are received."
     },
     "PURCHASE_PAYMENTS_TAB": {
+      "ASIENTO_CONTABLE": "Journal entry",
+      "SIN_ASIENTO_CONTABLE": "No journal entry",
+      "ASIENTO_DE_DEUDA": "Debt entry",
+      "ASIENTO_DE_ANTICIPO": "Advance entry",
+      "INCLUYE_ANTICIPO": "Includes advance: {{amount}}",
       "RESUMEN_DE_PAGOS": "Payment summary",
       "TOTAL_DE_LA_COMPRA": "Purchase total",
       "TOTAL_PAGADO": "Total paid",
@@ -1479,6 +1491,8 @@
       "AUN_NO_HAY_COMPRAS_CREA": "There are no purchases yet. Create the first one with \"New purchase\"."
     },
     "RECEPTION_DETAIL": {
+      "ASIENTO_CONTABLE": "Journal entry",
+      "SIN_ASIENTO_CONTABLE": "No journal entry",
       "DETALLE_DE_LA_RECEPCION": "Receipt details",
       "FECHA_DE_RECEPCION": "Receipt date",
       "REGISTRADA_POR": "Recorded by",
@@ -1501,6 +1515,8 @@
       "RECEPCION_REVERTIDA": "Receipt reversed"
     },
     "RECEPTION_FORM": {
+      "CONFIGURACION_CONTABLE_INCOMPLETA": "Purchases accounting setup is incomplete.",
+      "IR_A_CONFIGURACION_DE_COMPRAS": "Go to Purchases settings",
       "VOLVER_A_LA_COMPRA": "Back to the purchase",
       "RECEPCION_DE_LA_COMPRA": "Receipt of purchase {{p0}}",
       "FECHA_DE_RECEPCION": "Receipt date*",
@@ -2973,6 +2989,7 @@
       "NOT_VALID": "no longer valid",
       "UNCONFIGURED": "Not configured",
       "ROLES": {
+        "SUPPLIER_ADVANCES": "Supplier advances",
         "CUSTOMER_ADVANCES": "Customer advances",
         "SALES_INCOME": "Sales income",
         "SERVICE_INCOME": "Service income",
@@ -2984,6 +3001,7 @@
         "EXPENSE_BY_CATEGORY": "Expense account of the category"
       },
       "EVENTS": {
+        "PURCHASE_ADVANCE": "Pay a supplier in advance",
         "SALE_ADVANCE": "Collect an order in advance",
         "SALE_DELIVERY": "Recognize the delivery of an order",
         "SALE_RECOGNITION": "Recognize a sale",

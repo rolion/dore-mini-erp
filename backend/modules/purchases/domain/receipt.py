@@ -41,6 +41,11 @@ class Receipt:
     reverted_by_user_id: UUID | None = None
     reverted_by_name: str = ''
     revert_reason: str = ''
+    # Anticipos a proveedores que aplicó el reconocimiento de esta recepción (0 si no hubo).
+    advance_applied: Decimal = Decimal('0')
+
+    def apply_advance(self, amount: Decimal) -> None:
+        self.advance_applied = amount
 
     @property
     def reference(self) -> str:
@@ -71,7 +76,8 @@ class Receipt:
         if not text:
             raise PurchaseValidationError({'reason': ['El motivo es obligatorio.']})
         if len(text) > REVERT_REASON_MAX_LENGTH:
-            raise PurchaseValidationError({'reason': [f'El motivo no puede superar {REVERT_REASON_MAX_LENGTH} caracteres.']})
+            raise PurchaseValidationError(
+                {'reason': [f'El motivo no puede superar {REVERT_REASON_MAX_LENGTH} caracteres.']})
         self.status = ReceiptStatus.REVERTED
         self.reverted_at = now
         self.reverted_by_user_id = user_id

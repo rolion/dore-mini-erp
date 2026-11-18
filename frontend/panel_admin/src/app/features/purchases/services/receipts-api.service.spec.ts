@@ -113,6 +113,23 @@ describe('ReceiptsApiService', () => {
     expect(results[4].fieldErrors.lines[0].quantity).toContain('pendiente');
   });
 
+  it('maps the accounting issues of a posting_configuration_missing 409 and the receipt accounting entry (API-01, API-02)', () => {
+    const errors: ReceiptApiError[] = [];
+    service.create('c-1', { receiptId: 'x', receiptDate: '2026-10-30', warehouseId: null, lines: [] }).subscribe({ error: (err: ReceiptApiError) => errors.push(err) });
+    http.expectOne((r) => r.url.endsWith('/receipts/')).flush(
+      { code: 'posting_configuration_missing', detail: 'Falta.', issues: [{ code: 'role_unconfigured', role: 'PAYABLE', subject: 'Cuentas por pagar', message: 'Falta cuenta.' }] },
+      { status: 409, statusText: 'x' });
+    expect(errors[0].code).toBe('posting_configuration_missing');
+    expect(errors[0].postingIssues).toEqual([{ code: 'role_unconfigured', subject: 'Cuentas por pagar', message: 'Falta cuenta.' }]);
+    let receipt: Receipt | undefined;
+    service.get('c-1', 'r-1').subscribe((result) => (receipt = result));
+    http.expectOne((r) => r.url.endsWith('/purchases/c-1/receipts/r-1/')).flush({
+      ...RECEIPT_DTO, accounting_enabled: true, accounting_entry: { id: 'j-1', accounting_date: '2026-10-30', total: '58.00' },
+    });
+    expect(receipt?.accountingEnabled).toBeTrue();
+    expect(receipt?.accountingEntry).toEqual({ id: 'j-1', accountingDate: '2026-10-30', total: '58.00' });
+  });
+
   it('posts the reason to revert a receipt and maps the reversal data (API-03, API-04)', () => {
     let receipt: Receipt | undefined;
     service.revert('c-1', 'r-1', 'Error de conteo').subscribe((result) => (receipt = result));

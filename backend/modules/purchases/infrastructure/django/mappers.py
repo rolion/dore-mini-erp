@@ -87,6 +87,7 @@ def receipt_to_entity(model: ReceiptModel, items: Iterable[ReceiptItemModel]) ->
         inventory_mode=InventoryMode(model.inventory_mode) if model.inventory_mode else None,
         reverted_at=model.reverted_at, reverted_by_user_id=model.reverted_by_user_id,
         reverted_by_name=model.reverted_by_name, revert_reason=model.revert_reason,
+        advance_applied=model.advance_applied,
         lines=[ReceiptLine(purchase_item_id=i.purchase_item_id, product_id=i.product_id,
                            product_name=i.product_name, unit_abbreviation=i.unit_abbreviation, quantity=i.quantity)
                for i in items])
@@ -97,4 +98,5 @@ def payment_to_entity(model: PaymentModel) -> Payment:
         id=model.id, purchase_id=model.purchase_id, amount=model.amount,
         payment_method=PaymentMethod(model.payment_method), payment_date=model.payment_date,
         user_id=model.user_id, user_name=model.user_name, status=PaymentRecordStatus(model.status),
-        classification_id=model.classification_id, created_at=model.created_at)
+        classification_id=model.classification_id, created_at=model.created_at,
+        debt_amount=model.debt_amount, advance_amount=model.advance_amount)
