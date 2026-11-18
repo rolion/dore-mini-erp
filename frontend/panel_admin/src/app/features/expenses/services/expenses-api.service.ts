@@ -40,6 +40,7 @@ export function toExpense(dto: ExpenseDto): Expense {
     expenseAccount: dto.expense_account ?? null,
     paymentAccount: dto.payment_account ?? null,
     journalEntryId: dto.journal_entry_id ?? null,
+    reversalEntryId: dto.reversal_entry_id ?? null,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };

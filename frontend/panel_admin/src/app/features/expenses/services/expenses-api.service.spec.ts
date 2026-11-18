@@ -114,6 +114,13 @@ describe('ExpensesApiService', () => {
     expect(posted).toBeTrue();
   });
 
+  it('maps the reversal entry of a voided expense (GAS-02, API-01)', () => {
+    let reversal: string | null | undefined;
+    service.void('e1').subscribe((expense) => (reversal = expense.reversalEntryId));
+    http.expectOne('/api/expenses/e1/void/').flush({ ...DTO, status: 'VOIDED', posted: true, reversal_entry_id: 'r1' });
+    expect(reversal).toBe('r1');
+  });
+
   it('asks for the posting options with date, method and category (GAS-01, API-02)', () => {
     let covered: boolean | undefined;
     service.postingOptions('2026-10-05', 'c1', 'CASH').subscribe((o) => (covered = o.covered && o.paymentAccounts.length === 1));

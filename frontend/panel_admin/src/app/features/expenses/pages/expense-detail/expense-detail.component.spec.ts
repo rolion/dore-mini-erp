@@ -65,6 +65,21 @@ describe('ExpenseDetailComponent', () => {
     expect(el.querySelector('[data-testid="posted-note"]')).not.toBeNull();
   });
 
+  it('links the reversal only when the voided expense has one (GAS-02, AC-07)', () => {
+    api.get.and.returnValue(of(makeExpense({ posted: true, journalEntryId: 'j-1', reversalEntryId: 'r-1',
+      expenseAccount: { id: 'a1', code: '510001', name: 'Alquiler', active: true },
+      paymentAccount: { id: 'a2', code: '110102', name: 'Banco', active: true } })));
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="reversal-link"]')?.getAttribute('href')).toBe('/pocketbiz/accounting/journal/r-1');
+    api.get.and.returnValue(of(makeExpense({ posted: true, journalEntryId: 'j-1',
+      expenseAccount: { id: 'a1', code: '510001', name: 'Alquiler', active: true },
+      paymentAccount: { id: 'a2', code: '110102', name: 'Banco', active: true } })));
+    fixture = TestBed.createComponent(ExpenseDetailComponent);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="reversal-link"]')).toBeNull();
+  });
+
   it('says there is no entry for an expense that was not posted (GAS-01, AC-06)', () => {
     api.get.and.returnValue(of(makeExpense()));
     fixture.detectChanges();

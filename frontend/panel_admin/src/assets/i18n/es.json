@@ -704,6 +704,7 @@
       "DEBE": "Debe",
       "HABER": "Haber",
       "VER_ASIENTO": "Ver asiento",
+      "VER_REVERSION": "Ver reversión",
       "CORREGIR_ANULANDO": "Este gasto está contabilizado. Para corregir el monto, la fecha, la categoría, el método o las cuentas, anúlalo y regístralo de nuevo."
     },
     "EXPENSE_FORM": {

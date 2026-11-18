@@ -704,6 +704,7 @@
       "DEBE": "Débito",
       "HABER": "Crédito",
       "VER_ASIENTO": "Ver lançamento",
+      "VER_REVERSION": "Ver estorno",
       "CORREGIR_ANULANDO": "Esta despesa está contabilizada. Para corrigir o valor, a data, a categoria, o método ou as contas, anule-a e registre-a novamente."
     },
     "EXPENSE_FORM": {

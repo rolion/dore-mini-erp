@@ -39,10 +39,10 @@ class FakePosting:
         self.posted.append((expense.id, expense.amount, accounts))
         return accounts
 
-    def reverse(self, expense_id):
+    def reverse(self, expense_id, actor_id=None, actor_name=''):
         if self.fail:
             raise self.fail
-        self.reversed.append(expense_id)
+        self.reversed.append((expense_id, actor_id, actor_name))
 
 
 class Base(SimpleTestCase):
@@ -150,9 +150,9 @@ class LockAndVoidTests(Base):
             void.execute(posted.id)
         self.assertFalse(self.expenses.get(posted.id).voided)
         self.posting.fail = None
-        self.assertTrue(void.execute(posted.id).voided)
-        self.assertEqual(self.posting.reversed, [posted.id])
+        self.assertTrue(void.execute(posted.id, actor_id=7, actor_name='Ana').voided)  # INV-04: el actor llega al puerto
+        self.assertEqual(self.posting.reversed, [(posted.id, 7, 'Ana')])
         self.posting.covered = False
         plain = self.create()
         void.execute(plain.id)
-        self.assertEqual(self.posting.reversed, [posted.id])
+        self.assertEqual(self.posting.reversed, [(posted.id, 7, 'Ana')])

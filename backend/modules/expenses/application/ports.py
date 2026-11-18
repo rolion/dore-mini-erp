@@ -56,6 +56,7 @@ class ExpensePostingGateway(Protocol):
         """Contabiliza el gasto (idempotente por gasto). Lanza `ExpensePostingError` si Contabilidad no puede."""
         ...
 
-    def reverse(self, expense_id: UUID) -> None:
-        """Revierte el asiento del gasto con fecha de hoy (idempotente). Lanza `ExpensePostingError`."""
+    def reverse(self, expense_id: UUID, actor_id: int | None = None, actor_name: str = '') -> None:
+        """Revierte el asiento del gasto con fecha de hoy, a nombre de quien anula (idempotente). Sin asiento no hace
+        nada. Lanza `ExpensePostingError`."""
         ...
