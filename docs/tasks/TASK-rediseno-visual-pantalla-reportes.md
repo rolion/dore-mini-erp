@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-rediseno-visual-pantalla-reportes
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/102
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
