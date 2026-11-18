@@ -1,10 +1,11 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
+import { NgbCollapse, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, merge, switchMap } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -14,6 +15,9 @@ import { ProductUsesComponent } from '../../../../shared/components/product-uses
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ProductsApiService } from '../../services/products-api.service';
 
+/** Por debajo de `lg` (992 px) los filtros son un panel colapsable que se aplica a mano. */
+export const COMPACT_QUERY = '(max-width: 991.98px)';
+
 export type StatusFilter = 'all' | 'active' | 'inactive';
 export type UseFilter = 'all' | 'buy' | 'sell';
 export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
@@ -22,13 +26,10 @@ export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, ProductUsesComponent, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, NgbCollapse, NgbPagination, ReactiveFormsModule, ProductUsesComponent, MoneyPipe],
 })
 export class ProductListComponent implements OnInit {
   readonly pageSize = 10;
-  get messages() {
-    return { emptyMessage: tr('PRODUCTS.PRODUCT_LIST.NO_HAY_PRODUCTOS'), totalMessage: tr('COMMON.IN_TOTAL') };
-  }
   readonly searchControl = new FormControl('', { nonNullable: true });
   readonly statusControl = new FormControl<StatusFilter>('all', { nonNullable: true });
   readonly useControl = new FormControl<UseFilter>('all', { nonNullable: true });
@@ -37,10 +38,14 @@ export class ProductListComponent implements OnInit {
 
   rows: Product[] = [];
   total = 0;
-  /** Página actual base 0, como espera ngx-datatable. */
-  pageIndex = 0;
+  /** Página actual, base 1 como espera `ngb-pagination`. */
+  page = 1;
   loading = false;
+  /** Pantalla estrecha: filtros en un panel colapsable que se aplica con «Aplicar». */
+  compact = false;
+  filtersCollapsed = true;
 
+  private breakpoints = inject(BreakpointObserver);
   private modules = inject(ModulesService);
   private api = inject(ProductsApiService);
   private toastr = inject(ToastrService);
@@ -64,7 +69,7 @@ export class ProductListComponent implements OnInit {
               canBuy: this.useControl.value === 'buy' ? true : undefined,
               canSell: this.useControl.value === 'sell' ? true : undefined,
               category: this.categoryControl.value === 'all' ? undefined : this.categoryControl.value,
-              page: this.pageIndex + 1,
+              page: this.page,
               pageSize: this.pageSize,
             })
             .pipe(
@@ -84,27 +89,55 @@ export class ProductListComponent implements OnInit {
 
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.goToFirstPageAndReload());
+      .subscribe(() => this.applyOnDesktop());
     merge(this.statusControl.valueChanges, this.useControl.valueChanges, this.categoryControl.valueChanges)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.goToFirstPageAndReload());
+      .subscribe(() => this.applyOnDesktop());
+    this.breakpoints
+      .observe(COMPACT_QUERY)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((state) => (this.compact = state.matches));
 
     this.reload$.next();
   }
 
-  /** Los productos inactivos se atenúan además de llevar su badge de estado. */
-  readonly rowClass = (row: Product): Record<string, boolean> => ({ 'text-muted': !row.active });
+  /** Cuántos filtros se apartan de su valor por defecto (contador del botón «Filtros»). */
+  get activeFilterCount(): number {
+    return [
+      this.searchControl.value.trim() !== '',
+      this.statusControl.value !== 'all',
+      this.useControl.value !== 'all',
+      this.categoryControl.value !== 'all',
+    ].filter(Boolean).length;
+  }
+
+  toggleFilters(): void {
+    this.filtersCollapsed = !this.filtersCollapsed;
+  }
+
+  /** Consulta con los filtros del formulario y repliega el panel para mostrar las tarjetas. */
+  applyFilters(): void {
+    this.filtersCollapsed = true;
+    this.goToFirstPageAndReload();
+  }
+
+  clearFilters(): void {
+    this.searchControl.setValue('', { emitEvent: false });
+    this.statusControl.setValue('all', { emitEvent: false });
+    this.useControl.setValue('all', { emitEvent: false });
+    this.categoryControl.setValue('all', { emitEvent: false });
+    this.applyFilters();
+  }
 
   categoryName(product: Product): string {
     return categoryLabel(product.category);
   }
 
-  onPage(event: { offset: number }): void {
-    // ngx-datatable también emite `page` al inicializarse; sin cambio de página no se vuelve a pedir.
-    if (event.offset === this.pageIndex) {
+  goTo(page: number): void {
+    if (page === this.page) {
       return;
     }
-    this.pageIndex = event.offset;
+    this.page = page;
     this.reload$.next();
   }
 
@@ -148,8 +181,15 @@ export class ProductListComponent implements OnInit {
     }
   }
 
+  /** En escritorio los filtros se aplican al instante; en pantalla estrecha, con «Aplicar». */
+  private applyOnDesktop(): void {
+    if (!this.compact) {
+      this.goToFirstPageAndReload();
+    }
+  }
+
   private goToFirstPageAndReload(): void {
-    this.pageIndex = 0;
+    this.page = 1;
     this.reload$.next();
   }
 }

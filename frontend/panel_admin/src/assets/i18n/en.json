@@ -1343,7 +1343,14 @@
       "PRECIO": "Price",
       "CONTROLA_STOCK": "Tracks stock",
       "UNIDAD_BASE": "Base unit",
-      "NO_HAY_PRODUCTOS": "No products"
+      "NO_HAY_PRODUCTOS": "No products",
+      "AGREGAR_PRODUCTO": "Add product",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply",
+      "FILTROS_ACTIVOS": "{{count}} active filters",
+      "LISTA_DE_PRODUCTOS": "Product list",
+      "PAGINAS_DE_PRODUCTOS": "Product pages",
+      "FILTROS_DE_PRODUCTOS": "Product filters"
     },
     "PRODUCTS_API_SERVICE": {
       "PRODUCTO_NO_ENCONTRADO": "Product not found."
