@@ -924,7 +924,14 @@
       "ORIGEN": "Origen",
       "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "Sin movimientos para los filtros elegidos.",
       "RECEPCION": "Recepción",
-      "PEDIDO": "Pedido"
+      "PEDIDO": "Pedido",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "SIN_REFERENCIA": "Sin referencia",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_MOVIMIENTOS": "Lista de movimientos",
+      "VER_MOVIMIENTO_N": "Ver movimiento {{reference}}",
+      "PAGINAS_DE_MOVIMIENTOS": "Páginas de movimientos"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Detalle de existencia",
