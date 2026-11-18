@@ -1331,7 +1331,14 @@
       "PRECIO": "Precio",
       "CONTROLA_STOCK": "Controla stock",
       "UNIDAD_BASE": "Unidad base",
-      "NO_HAY_PRODUCTOS": "No hay productos"
+      "NO_HAY_PRODUCTOS": "No hay productos",
+      "AGREGAR_PRODUCTO": "Agregar producto",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros activos",
+      "LISTA_DE_PRODUCTOS": "Lista de productos",
+      "PAGINAS_DE_PRODUCTOS": "Páginas de productos",
+      "FILTROS_DE_PRODUCTOS": "Filtros de productos"
     },
     "PRODUCTS_API_SERVICE": {
       "PRODUCTO_NO_ENCONTRADO": "Producto no encontrado."

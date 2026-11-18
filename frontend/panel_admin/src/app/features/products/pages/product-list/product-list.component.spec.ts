@@ -1,4 +1,5 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
@@ -38,6 +39,8 @@ describe('ProductListComponent', () => {
       imports: [ProductListComponent],
       providers: [...provideTestTranslations(), 
         provideRouter([]),
+        // Escritorio por defecto: el navegador de pruebas es estrecho y activaría el modo compacto.
+        { provide: BreakpointObserver, useValue: { observe: () => of({ matches: false, breakpoints: {} }) } },
         { provide: ProductsApiService, useValue: api },
         { provide: ToastrService, useValue: toastr },
       ],
@@ -69,7 +72,7 @@ describe('ProductListComponent', () => {
 
   it('filters by use and category and goes back to the first page (AC-08, UI-03)', () => {
     fixture.detectChanges();
-    component.onPage({ offset: 2 });
+    component.goTo(3);
 
     component.useControl.setValue('buy');
     expect(lastListParams()).toEqual(jasmine.objectContaining({ canBuy: true, canSell: undefined, page: 1 }));
@@ -106,20 +109,78 @@ describe('ProductListComponent', () => {
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('Bs 5.50');
-    const rows = Array.from(el.querySelectorAll('datatable-body-row'));
-    expect(rows[1].classList).toContain('text-muted');
-    expect(rows[0].classList).not.toContain('text-muted');
+    const cards = Array.from(el.querySelectorAll('[data-testid="product-card"]'));
+    expect(cards[1].classList).toContain('text-muted');
+    expect(cards[0].classList).not.toContain('text-muted');
   });
 
-  it('links the "+" button to the new product form (AC-10)', () => {
+  it('links the «Agregar producto» button to the new product form, above the filters (AC-10)', () => {
     fixture.detectChanges();
-    const link = fixture.debugElement.query(By.css('a[title="Nuevo producto"]'));
-    expect((link.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/pocketbiz/catalog/products/new');
+    const link = fixture.debugElement.query(By.css('[data-testid="add-product"]'));
+    const el = link.nativeElement as HTMLAnchorElement;
+    expect(el.getAttribute('href')).toBe('/pocketbiz/catalog/products/new');
+    expect(el.textContent).toContain('Agregar producto');
+    const filters = (fixture.nativeElement as HTMLElement).querySelector('#product-filters') as HTMLElement;
+    expect(el.compareDocumentPosition(filters) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows each product as a card with action buttons and labelled rows', () => {
+    spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
+    fixture.detectChanges();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('datatable-body')).toBeNull();
+    const card = el.querySelector('[data-testid="product-card"]') as HTMLElement;
+    const labels = Array.from(card.querySelectorAll('dt')).map((dt) => dt.textContent?.trim());
+    expect(labels).toEqual(['Categoría', 'Usos', 'Precio', 'Estado', 'Unidad base']);
+    expect(card.querySelectorAll('.product-card-actions .btn').length).toBe(3);
+  });
+
+  describe('compact screens', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+      component.compact = true;
+      fixture.detectChanges();
+    });
+
+    it('collapses the filters behind a «Filtros» button and counts the active ones', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      const toggle = el.querySelector('[data-testid="filters-toggle"]') as HTMLButtonElement;
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      expect(el.querySelector('[data-testid="filters-count"]')).toBeNull();
+
+      component.useControl.setValue('buy');
+      fixture.detectChanges();
+      expect(el.querySelector('[data-testid="filters-count"]')?.textContent?.trim()).toBe('1');
+
+      toggle.click();
+      fixture.detectChanges();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('does not query on every change; «Aplicar» queries and collapses the panel', () => {
+      component.filtersCollapsed = false;
+      component.categoryControl.setValue('unclassified');
+      expect(api.list).toHaveBeenCalledTimes(1);
+
+      component.applyFilters();
+
+      expect(api.list).toHaveBeenCalledTimes(2);
+      expect(lastListParams()).toEqual(jasmine.objectContaining({ category: 'unclassified', page: 1 }));
+      expect(component.filtersCollapsed).toBeTrue();
+    });
+
+    it('clears the filters and queries again', () => {
+      component.useControl.setValue('sell');
+      component.clearFilters();
+      expect(component.activeFilterCount).toBe(0);
+      expect(lastListParams()?.canSell).toBeUndefined();
+    });
   });
 
   it('searches by name with debounce and goes back to the first page (AC-06, AC-10)', fakeAsync(() => {
     fixture.detectChanges();
-    component.onPage({ offset: 2 });
+    component.goTo(3);
     expect(lastListParams()?.page).toBe(3);
 
     component.searchControl.setValue('  cu ');
@@ -144,20 +205,20 @@ describe('ProductListComponent', () => {
     expect(lastListParams()?.active).toBeUndefined();
   });
 
-  it('does not reload when the table re-emits the current page (AC-10)', () => {
+  it('does not reload when the current page is requested again (AC-10)', () => {
     fixture.detectChanges();
-    component.onPage({ offset: 0 });
+    component.goTo(1);
     expect(api.list).toHaveBeenCalledTimes(1);
   });
 
-  it('requests the page selected in the table (AC-10)', () => {
+  it('requests the page selected in the pagination (AC-10)', () => {
     api.list.and.returnValue(of(page([active], 25)));
     fixture.detectChanges();
     expect(component.total).toBe(25);
 
-    component.onPage({ offset: 1 });
+    component.goTo(2);
     expect(lastListParams()?.page).toBe(2);
-    expect(component.pageIndex).toBe(1);
+    expect(component.page).toBe(2);
   });
 
   it('shows the empty state when there are no products (EDGE-06)', () => {
@@ -177,7 +238,7 @@ describe('ProductListComponent', () => {
     expect(component.loading).toBeFalse();
 
     api.list.and.returnValue(of(page([active])));
-    component.onPage({ offset: 1 });
+    component.goTo(2);
     expect(component.rows).toEqual([active]);
   });
 
@@ -246,10 +307,10 @@ describe('ProductListComponent', () => {
       api.list.and.returnValue(of(page([stocked, active])));
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
-      const headers = Array.from(el.querySelectorAll('datatable-header-cell')).map((h) => h.textContent?.trim());
-      expect(headers).toContain('Unidad base');
-      expect(headers).not.toContain('Controla stock'); // AC-03
-      const rows = Array.from(el.querySelectorAll('datatable-body-row')).map((r) => r.textContent ?? '');
+      const labels = Array.from(el.querySelectorAll('dt')).map((h) => h.textContent?.trim());
+      expect(labels).toContain('Unidad base');
+      expect(labels).not.toContain('Controla stock'); // AC-03
+      const rows = Array.from(el.querySelectorAll('[data-testid="product-card"]')).map((r) => r.textContent ?? '');
       expect(rows[0]).toContain('kg');
       expect(rows[1]).not.toContain('kg');
     });
