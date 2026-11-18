@@ -110,7 +110,7 @@ Implementado según **PLAN v1**, sin cambios de Specification.
 - **Frontend** (UI-01..03, AC-10): formulario de recepción con alerta de faltantes y enlace a Compras › Asientos automáticos; el diálogo de reversión ya mostraba el mensaje del 409; detalle con fila «Asiento contable» (enlace a `/pocketbiz/accounting/journal/:id` o «Sin asiento contable»); claves es/en/pt. Pantallas de referencia: las existentes de Compras y la alerta de VEN-01 (estilo tenue de Contabilidad, SCSS vía `@use` del parcial de Contabilidad en `reception-form.component.scss`); componentes compartidos: `MoneyPipe`.
 - **Pruebas:** `purchases/tests/test_purchase_posting.py` (17: AC-01..AC-09 con Contabilidad real) y specs de recepción (formulario, detalle, servicio).
 
-**Desviaciones respecto al plan:** (1) la prueba de concurrencia con hilos no se escribió: la serialización de dos recepciones ya la cubre `test_receipt_concurrency.py` (bloqueo de la compra) y la idempotencia por origen la cubre el motor; AC-04 se verifica por reintento HTTP 200 y por llamada repetida a la fachada. (2) El diálogo de reversión no necesitó cambios de código: ya muestra `err.message` de los 409.
+**Desviaciones respecto al plan:** (1) v1 no escribió pruebas con hilos propias; v2 las agrega (ver «Pruebas de concurrencia» abajo). (2) El diálogo de reversión no necesitó cambios de código: ya muestra `err.message` de los 409.
 
 **Deuda técnica / pendiente:** los mensajes de `issues` llegan solo en español (deuda ya declarada en CONT-12); el SCSS del aviso se repite entre Ventas y Compras (candidato a `shared/`); la reversión usa la fecha de hoy.
 
@@ -131,6 +131,14 @@ Implementado según **PLAN v2**, sin cambios adicionales de Specification.
 **Deuda técnica / pendiente:** el SCSS de aviso sigue duplicado entre Ventas y Compras; la clasificación de egreso de pagos queda sin uso obligatorio (candidata a retiro); los pagos anteriores al corte con compras recibidas después no se reflejan en el libro (ADR §10); `PaymentClassificationError` y sus constantes quedaron sin uso.
 
 **Verificación propia (no es el Quality Gate):** backend `manage.py test` 2104 OK, `makemigrations --check` sin cambios; frontend `ng lint` OK, `i18n:check` 2197 claves y 0 faltantes, `ng test` 1606 OK, `ng build` OK.
+
+### Pruebas de concurrencia (agregadas después del Quality Gate final)
+`purchases/tests/test_posting_concurrency.py` (hilos reales sobre PostgreSQL, Contabilidad e Inventario reales; el primer hilo retiene el bloqueo de la compra y el segundo intenta entrar; se verifica el resultado final):
+- **Pago y recepción a la vez** sobre la misma compra, en los dos órdenes (AC-13, AC-16): en ambos el libro queda igual (sin deuda, 100 de anticipo sin aplicar, Inventario 400, Caja 500) y `debt_amount + advance_amount = amount`.
+- **Mismo `payment_id` enviado dos veces a la vez** (AC-12): un solo pago, un solo asiento, un hilo `created=True` y el otro `False`, sin error.
+- **Mismo `receipt_id` enviado dos veces a la vez** (AC-04): una recepción, un asiento de reconocimiento, un movimiento de stock.
+- **Validación por mutación:** se comprobó (fuera del repo) que, sin el bloqueo de fila de la compra, las cuatro pruebas fallan; con él, pasan. Hallazgo de método: al principio dos de ellas pasaban sin el bloqueo porque el primer uso de la cobertura (alta del corte) serializaba a los hilos por casualidad; ahora el corte se fija en `setUp`.
+Verificación propia: backend 2170 pruebas OK, `ruff`/`flake8` sin avisos en el archivo nuevo.
 
 ## Review
 **Quality Gate (PLAN v1): PASS** (subagente aislado, 2026-11-17). Backend: `manage.py test` 2052 OK, `makemigrations --check` sin cambios, bandit sin hallazgos, 0 líneas nuevas >120 caracteres. Frontend: `npm run lint` OK, `i18n:check` 2184 claves y 0 faltantes, `ng test` 1598 de 1598 OK, `ng build` OK. `ruff`/`flake8` solo con avisos de estilo (no comparados con la base); `mypy` y `npm audit` no ejecutados. Fronteras DDD, orden transaccional, AC-01..AC-09, INV, API y UI verificados. **Revisión visual: no verificada** (no se levantó la aplicación con sesión).
