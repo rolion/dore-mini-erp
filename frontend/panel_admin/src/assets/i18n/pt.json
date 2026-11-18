@@ -1926,7 +1926,7 @@
     "SERVICE_LIST": {
       "TODAS_LAS_ESPECIALIDADES": "Todas as especialidades",
       "SIN_ESPECIALIDAD": "Sem especialidade",
-      "NUEVO_SERVICIO": "Novo serviço",
+      "NUEVO_SERVICIO": "Adicionar serviço",
       "HABILITA_PERSONAL_PARA_FILTRAR_POR": "Habilite Equipe para filtrar por especialidade. Você pode criar serviços sem especialidade.",
       "AUN_NO_HAY_SERVICIOS_ACTIVOS": "Ainda não há serviços ativos. Use \"Novo serviço\" para começar.",
       "MIN": "{{p0}} min",
@@ -1935,7 +1935,13 @@
       "PRECIO": "Preço",
       "DURACION": "Duração",
       "ESPECIALIDAD": "Especialidade",
-      "NO_HAY_SERVICIOS_PARA_ESTOS": "Nenhum serviço para estes filtros."
+      "NO_HAY_SERVICIOS_PARA_ESTOS": "Nenhum serviço para estes filtros.",
+      "FILTROS": "Filtros",
+      "FILTROS_ACTIVOS": "{{count}} filtros ativos",
+      "FILTROS_DE_SERVICIOS": "Filtros de serviços",
+      "APLICAR": "Aplicar",
+      "TOTAL_SERVICIOS": "{{count}} serviços",
+      "PAGINAS_DE_SERVICIOS": "Páginas de serviços"
     },
     "SERVICE_TOGGLE": {
       "DESACTIVAR": "Desativar",

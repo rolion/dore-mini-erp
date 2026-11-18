@@ -4,8 +4,8 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { EMPTY, Subject, catchError, debounceTime, distinctUntilChanged, finalize, startWith, switchMap, throwError } from 'rxjs';
+import { NgbCollapse, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
+import { EMPTY, Subject, catchError, finalize, startWith, switchMap, throwError } from 'rxjs';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { SpecialtyOption } from '../../personnel/models/profile';
 import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
@@ -14,7 +14,7 @@ import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
 
 @Component({ selector: 'app-service-list',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgxDatatableModule, MoneyPipe, ServiceToggleComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgbCollapse, NgbPagination, MoneyPipe, ServiceToggleComponent],
   templateUrl: './service-list.component.html',
   styleUrl: './service-list.component.scss',
 })
@@ -35,11 +35,8 @@ export class ServiceListComponent implements OnInit {
   loading = false;
   error = '';
   success = '';
-  /** Los servicios inactivos se atenúan además de llevar su badge de estado. */
-  readonly rowClass = (row: CatalogService): Record<string, boolean> => ({ 'text-muted': !row.active });
-  get messages() {
-    return { emptyMessage: tr('SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS'), totalMessage: tr('COMMON.SERVICES_TOTAL') };
-  }
+  /** Los filtros arrancan plegados; «Aplicar» consulta y los repliega para dejar las tarjetas a la vista. */
+  filtersCollapsed = true;
 
   ngOnInit(): void {
     this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -71,25 +68,26 @@ export class ServiceListComponent implements OnInit {
       this.rows = page.results; this.total = page.count;
       if (!this.rows.length && this.state.pageIndex > 0) { this.state.pageIndex = 0; this.reload(); }
     });
-    this.search.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
-      .subscribe(value => { this.state.search = value.trim(); this.state.pageIndex = 0; this.reload(); });
-    this.status.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(value => {
-      this.state.status = value; this.state.pageIndex = 0; this.reload();
-    });
-    this.specialty.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(value => {
-      this.state.specialtyId = value; this.state.pageIndex = 0; this.reload();
-    });
   }
   reload(): void { this.reload$.next(); }
-  onPage(event: { offset: number }): void {
-    if (this.loading || event.offset === this.state.pageIndex) return;
-    this.state.pageIndex = event.offset; this.reload();
+  onPage(page: number): void {
+    if (this.loading || page - 1 === this.state.pageIndex) return;
+    this.state.pageIndex = page - 1; this.reload();
+  }
+  /** Cuántos filtros se apartan de su valor por defecto (contador del botón «Filtros»). */
+  get activeFilterCount(): number {
+    return (this.state.search ? 1 : 0) + (this.state.status !== 'active' ? 1 : 0) + (this.state.specialtyId ? 1 : 0);
+  }
+  toggleFilters(): void { this.filtersCollapsed = !this.filtersCollapsed; }
+  applyFilters(): void {
+    this.state.search = this.search.value.trim(); this.state.status = this.status.value; this.state.specialtyId = this.specialty.value;
+    this.state.pageIndex = 0; this.filtersCollapsed = true; this.reload();
   }
   clearFilters(): void {
     this.search.setValue('', { emitEvent: false }); this.status.setValue('active', { emitEvent: false });
     this.specialty.setValue('', { emitEvent: false });
     this.state.search = ''; this.state.status = 'active'; this.state.specialtyId = '';
-    this.state.pageIndex = 0; this.reload();
+    this.state.pageIndex = 0; this.filtersCollapsed = true; this.reload();
   }
   onUpdated(service: CatalogService): void {
     this.success = service.active ? tr('SERVICES.SERVICE_TOGGLE.SERVICIO_ACTIVADO') : tr('SERVICES.SERVICE_TOGGLE.SERVICIO_DESACTIVADO');

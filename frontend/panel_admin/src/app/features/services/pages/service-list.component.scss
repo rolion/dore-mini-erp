@@ -1,9 +1,115 @@
 @use '../../../shared/styles/table-actions';
 
-@media (max-width: 575px) {
-  .service-list-header {
-    height: auto;
-    min-height: 70px;
-    padding-block: 10px;
+$touch: 44px;
+// Botones de acción de la tarjeta: punto medio entre los 30 px de la plantilla y los 44 px táctiles.
+$action-size: 36px;
+
+.service-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: $touch;
+}
+
+.service-filters-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: $touch;
+}
+
+.service-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  .btn {
+    min-height: $touch;
   }
+}
+
+@media (max-width: 767.98px) {
+  .service-add-button {
+    width: 100%;
+  }
+
+  .service-filter-actions .btn {
+    flex: 1 1 0;
+  }
+}
+
+// Tarjetas: una columna en móvil, varias en tablet y escritorio.
+.service-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0.75rem;
+}
+
+.service-card {
+  box-shadow: none;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  overflow: hidden;
+}
+
+.service-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.service-card-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.service-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+
+  // Botones de acción siempre visibles: círculo de 36 px y el lápiz en oscuro sobre el amarillo.
+  .btn-tbl-edit,
+  ::ng-deep .btn-tbl-edit {
+    // El estilo global fija 30 px con !important: hay que igualarlo para que el círculo no se estire.
+    width: $action-size !important;
+    height: $action-size !important;
+    min-height: $action-size;
+    margin: 0 !important;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+
+  .btn-tbl-update i {
+    color: #212529;
+  }
+}
+
+.service-card-body {
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.service-card-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.375rem 0;
+
+  dt {
+    font-weight: 600;
+    flex: 0 0 auto;
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    min-width: 0;
+  }
+}
+
+.service-card-price {
+  font-weight: 700;
 }
