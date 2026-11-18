@@ -36,7 +36,8 @@ class AccountReader(Protocol):
 
 
 class JournalReader(Protocol):
-    def movements_by_account(self, date_from: date | None, date_to: date | None) -> dict[UUID, AccountMovements]: ...
+    def movements_by_account(self, date_from: date | None, date_to: date | None,
+                             since: date | None = None) -> dict[UUID, AccountMovements]: ...
 
     def money_lines(self, account_ids: list[UUID], date_from: date, date_to: date) -> list[EntryMoneyLine]: ...
 
@@ -56,10 +57,12 @@ class GetLedgerReport:
     def execute(self, date_from: date, date_to: date) -> LedgerReport:
         accounts = self.accounts.list()
         money = [a for a in accounts if a.account_class == ASSET and a.kind is not None]
-        movements = self.journal.movements_by_account(date_from, date_to)
+        cutoff = self.coverage.cutoff_date()
+        movements = self.journal.movements_by_account(date_from, date_to, since=cutoff)
         opening = {a.id: movements[a.id].opening_debit - movements[a.id].opening_credit
                    for a in money if a.id in movements}
-        lines = self.journal.money_lines([a.id for a in money], date_from, date_to) if money else []
+        start = max(date_from, cutoff or date_from)
+        lines = self.journal.money_lines([a.id for a in money], start, date_to) if money else []
         flow = build_cash_flow([MoneyAccount(a.id, a.name) for a in money], opening, lines)
         by_class: dict[str, tuple[Decimal, Decimal]] = {}
         for account in accounts:
@@ -68,5 +71,5 @@ class GetLedgerReport:
                 continue
             debit, credit = by_class.get(account.account_class, (ZERO, ZERO))
             by_class[account.account_class] = (debit + moved.debit, credit + moved.credit)
-        coverage = build_coverage(self.coverage.cutoff_date(), gaps(self.coverage.periods()), date_from, date_to)
+        coverage = build_coverage(cutoff, gaps(self.coverage.periods()), date_from, date_to)
         return LedgerReport(date_from, date_to, flow, build_result(by_class), coverage)

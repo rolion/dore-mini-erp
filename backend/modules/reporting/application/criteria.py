@@ -3,8 +3,8 @@
 LEDGER_CRITERIA = (
     'Libro contable: el flujo es la variación de las cuentas de dinero (Caja, Banco, Billetera) y las transferencias '
     'entre ellas no cuentan; el resultado es Ingresos − Costos − Gastos según la fecha contable de cada asiento. '
-    'Comprar inventario, pagar a un proveedor o cobrar una deuda no son gasto ni ingreso. No incluye lo anterior al corte '
-    'contable ni es un estado financiero legal.'
+    'Comprar inventario, pagar a un proveedor o cobrar una deuda no son gasto ni ingreso. No incluye lo anterior al '
+    'corte contable ni es un estado financiero legal.'
 )
 
 SALES_CRITERIA = (

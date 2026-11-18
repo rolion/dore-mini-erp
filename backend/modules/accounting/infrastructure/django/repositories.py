@@ -579,14 +579,18 @@ class DjangoJournalRepository:
         return {row['account_id']: (row['debit'] or zero, row['credit'] or zero)
                 for row in rows.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))}
 
-    def movements_by_account(self, date_from: date | None, date_to: date | None) -> dict[UUID, AccountMovements]:
+    def movements_by_account(self, date_from: date | None, date_to: date | None,
+                             since: date | None = None) -> dict[UUID, AccountMovements]:
         """Debe/Haber por cuenta según la fecha contable: acumulado previo a `date_from` y movimientos del rango.
 
         Sin `date_from` no hay acumulado previo; sin `date_to` el rango no tiene tope. Solo cuentas con movimientos.
+        `since` descarta los asientos con fecha contable anterior (el corte contable).
         """
         lines = JournalLineModel.objects.filter(company_id=self.company_id)
         if date_to:
             lines = lines.filter(entry__accounting_date__lte=date_to)
+        if since:
+            lines = lines.filter(entry__accounting_date__gte=since)
         zero = Decimal('0.00')
         if date_from is None:
             rows = lines.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))
@@ -600,7 +604,7 @@ class DjangoJournalRepository:
                                                     row['debit'] or zero, row['credit'] or zero) for row in rows}
 
     def money_lines(self, account_ids: list[UUID], date_from: date, date_to: date) -> list[EntryMoneyLine]:
-        """Neto (Debe − Haber) por asiento y cuenta de las cuentas dadas, por fecha contable en `[date_from, date_to]`."""
+        """Neto (Debe − Haber) por asiento y cuenta, por fecha contable en `[date_from, date_to]`."""
         rows = (JournalLineModel.objects
                 .filter(company_id=self.company_id, account_id__in=account_ids,
                         entry__accounting_date__gte=date_from, entry__accounting_date__lte=date_to)

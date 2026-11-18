@@ -16,6 +16,7 @@
 | 2026-11-18 | ARCHITECTURE → PLANNING | ADR y DDR escritos | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa; integración con BD sin ejecutar | delivery-build |
+| 2026-11-18 | REVIEW (sin cambio) | Quality Gate sin PASS: pruebas con BD no ejecutables aquí; REV-01..03 corregidos | delivery-publish |
 
 ## Investigación
 
@@ -73,14 +74,18 @@ Rendimiento por rango largo; cuentas de dinero sin `kind`; cifras operativas ≠
 - **Frontend:** modelo, `ReportingApiService.ledger`, recurso y bloque de dos tarjetas con aviso de cobertura, estados y «No disponible» (UI-01); etiqueta «Operativo» en ventas y gastos (UI-02, AC-06); claves es/en/pt. Pantalla de referencia: la propia de Reportes (plantilla Dashboard y reportes); reutiliza `app-period-selector`, `app-report-card` y el pipe `money`; sin componentes nuevos.
 - **Cobertura de AC:** AC-01..05 en `accounting/tests/test_ledger_report.py` y `reporting/tests/test_ledger_api.py`; AC-05/06 y UI en los specs de `features/reporting`.
 
-**Desviaciones respecto al plan.** (1) La respuesta usa snake_case como el resto de `/api/reports/*` (el plan decía camelCase); el servicio Angular la mapea a camelCase. (2) Con `accounting` deshabilitado la API responde 403 `{module}` como Gastos (patrón existente), no un estado de fuente. (3) El saldo inicial/final del flujo sale solo del libro de asientos (el `opening_balance` de cuenta del libro anterior no entra; coherente con el ADR).
+**Desviaciones respecto al plan.** (1) La respuesta usa snake_case como el resto de `/api/reports/*` (el plan decía camelCase); el servicio Angular la mapea a camelCase. (2) Con `accounting` deshabilitado la API responde 403 `{module}` como Gastos (patrón existente), no un estado de fuente. (3) API-01 sin `accountingEnabled` (la API responde 403 con el módulo deshabilitado) y sin `inflow`/`outflow` por cuenta (las entradas/salidas se calculan por asiento; por cuenta se muestra `opening/net/closing`). (4) El saldo inicial/final del flujo sale solo del libro de asientos (el `opening_balance` de cuenta del libro anterior no entra; coherente con el ADR).
 
 **Verificación propia (no es el Quality Gate).** Ejecutado: pruebas unitarias del dominio (4 OK), `modules.sales.tests.test_boundaries` (8 OK), `ng test` de `features/reporting` (53 OK, ChromeHeadless), `npm run i18n:check` (0 faltantes), ruff/flake8 sin avisos en lo nuevo. **No ejecutado:** las pruebas de integración con PostgreSQL (`test_ledger_report.LedgerReportTests`, `test_ledger_api`) porque este entorno no tiene `DATABASE_URL` y no se leen credenciales; deben correrse en `delivery-publish`. ESLint del frontend no pudo ejecutarse (configuración incompatible del entorno).
 
 **Deuda técnica.** Ninguna nueva.
 
 ## Review
-_Pendiente_
+**Quality Gate (subagente aislado, 2026-11-18): NO PASS (verificación pendiente).** Sin hallazgos Critical/High. Ejecutado: pruebas de dominio y fronteras (12 OK), `ng test` reporting (53 OK), `i18n:check`, `ng build`, `npm run lint`, ruff/flake8. **No ejecutado:** pruebas con PostgreSQL (`LedgerReportTests`, `test_ledger_api`); revisión visual en navegador.
+- REV-01 (Medium, IMPLEMENTATION): el reporte no excluía lo anterior al corte → corregido con `since` + prueba nueva.
+- REV-02 (Low, SPECIFICATION): desviaciones de API-01 no declaradas → declaradas en Implementación.
+- REV-03 (Low, IMPLEMENTATION): E501 nuevos y clave i18n sin uso → corregido.
+Pendiente: correr en un entorno con PostgreSQL las pruebas con BD (incluida la nueva) y repetir el Quality Gate sobre el estado final.
 
 ## Publicación
 _Pendiente_

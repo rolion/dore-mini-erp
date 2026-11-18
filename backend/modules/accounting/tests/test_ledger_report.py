@@ -118,6 +118,14 @@ class LedgerReportTests(LedgerReportBase):
         empty = services.get_ledger_report(self.other.id, FROM, TO)
         self.assertEqual((empty.cash_flow.net, empty.result.result, len(empty.cash_flow.accounts)), (0, 0, 0))
 
+    def test_entries_before_the_cutoff_are_not_summed(self):  # AC-05, INV-R5
+        self.post(self.cash, self.income, '700.00', on=date(2026, 3, 15))  # anterior al corte (2026-04-01)
+        self.post(self.cash, self.income, '100.00', on=DAY)
+        report = self.report(date(2026, 3, 1), TO)
+        self.assertEqual((report.partial, report.cash_flow.inflow, report.cash_flow.opening, report.result.income),
+                         (True, D('100.00'), 0, D('100.00')))
+        self.assertEqual(self.report(FROM, TO).cash_flow.opening, 0)
+
     def test_coverage_is_reported_by_cutoff(self):  # AC-05
         self.assertFalse(self.report().partial)
         early = self.report(date(2026, 3, 1), TO)
