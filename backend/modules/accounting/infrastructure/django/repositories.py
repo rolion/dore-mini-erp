@@ -380,7 +380,8 @@ class DjangoEntryRepository:
             bucket['count'] += row['n']
             if row['operation'] == OPERATION_RECORD:
                 if row['direction'] == 'INCOME':
-                    bucket['by_origin'][row['origin_kind']] = bucket['by_origin'].get(row['origin_kind'], zero) + row['total']
+                    by_origin = bucket['by_origin']
+                    by_origin[row['origin_kind']] = by_origin.get(row['origin_kind'], zero) + row['total']
                 else:
                     bucket['expense'] += row['total']
             elif row['direction'] == 'EXPENSE':  # reversión de un ingreso
@@ -418,7 +419,7 @@ class DjangoFiscalPeriodRepository:
         return FiscalPeriodModel.objects.filter(company_id=self.company_id)
 
     def lock_company(self) -> None:
-        """Serializa altas y cambios de límites de la empresa hasta el fin de la transacción (no hay filas que bloquear)."""
+        """Serializa altas y cambios de límites de la empresa hasta el fin de la transacción (sin filas a bloquear)."""
         key = int.from_bytes(hashlib.sha256(self.company_id.bytes).digest()[:4], 'big', signed=True)
         with connection.cursor() as cursor:
             cursor.execute('SELECT pg_advisory_xact_lock(%s, %s)', [_PERIOD_LOCK_NAMESPACE, key])

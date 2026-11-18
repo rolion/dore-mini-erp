@@ -31,7 +31,8 @@ class ReadTests(PostingApiBase):
         body = response.json()
         self.assertEqual(body['module'], 'purchases')
         self.assertFalse(body['accounting_enabled'])
-        self.assertEqual([e['code'] for e in body['events']], ['PURCHASE_RECOGNITION', 'PURCHASE_PAYMENT', 'PURCHASE_ADVANCE'])
+        self.assertEqual([e['code'] for e in body['events']],
+                         ['PURCHASE_RECOGNITION', 'PURCHASE_PAYMENT', 'PURCHASE_ADVANCE'])
         self.assertEqual([line['side'] for line in body['events'][0]['preview']], ['DEBIT', 'CREDIT', 'CREDIT'])
         self.assertEqual([r['role'] for r in body['roles']], ['INVENTORY', 'PAYABLE', 'SUPPLIER_ADVANCES'])
         self.assertEqual(len(body['methods']), 5)

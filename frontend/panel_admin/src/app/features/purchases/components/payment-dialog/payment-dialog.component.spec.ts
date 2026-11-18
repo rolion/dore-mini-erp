@@ -90,6 +90,35 @@ describe('PaymentDialogComponent', () => {
     expect(root().textContent).toContain('Proveedores');
   }));
 
+  it('shows the issues known from the preview with the settings link and disables Register (REV-06, UI-04)', fakeAsync(() => {
+    api.preview.and.returnValue(of({
+      covered: true, debtAmount: '10.00', advanceAmount: '0.00', lines: [],
+      issues: [{ code: 'method_unconfigured', subject: 'Caja', message: 'Falta la cuenta del método.' }],
+    }));
+    fill('10.00');
+    tick(300);
+    fixture.detectChanges();
+    expect(byId('alert-posting-issues')?.textContent).toContain('Falta la cuenta del método.');
+    expect(byId('link-posting-settings')?.getAttribute('href')).toBe('/pocketbiz/purchases/settings?tab=posting');
+    expect((byId('submit') as HTMLButtonElement).disabled).toBeTrue();
+  }));
+
+  it('shows a readable error when the preview fails and still lets the payment be registered (REV-06, UI-04)', fakeAsync(() => {
+    api.preview.and.returnValue(throwError(() => new PaymentApiError('Error', 500)));
+    fill('10.00');
+    tick(300);
+    fixture.detectChanges();
+    expect(byId('preview-error')?.getAttribute('role')).toBe('alert');
+    expect((byId('submit') as HTMLButtonElement).disabled).toBeFalse();
+  }));
+
+  it('announces the loading state politely (REV-06, UI-04)', fakeAsync(() => {
+    fill('10.00');
+    expect(byId('preview-loading')?.getAttribute('role')).toBe('status');
+    expect(byId('preview-loading')?.getAttribute('aria-live')).toBe('polite');
+    tick(300);
+  }));
+
   it('does not ask for a preview while the amount is invalid, and says so when the payment makes no entry (UI-04)', fakeAsync(() => {
     fill('abc');
     tick(300);

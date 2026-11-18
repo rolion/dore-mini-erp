@@ -6,8 +6,6 @@ from rest_framework.test import APIClient
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.expenses.infrastructure.django.models import ExpenseModel
-from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
-from modules.modularity.tests.test_enforcement import set_enabled
 from modules.purchases.infrastructure.django.models import PaymentModel
 from modules.purchases.tests.payment_support import PaymentBooks
 from modules.purchases.tests.test_payment_api import PaymentApiTestCase, purchase_url

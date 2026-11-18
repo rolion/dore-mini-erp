@@ -20,6 +20,8 @@ La persona amplió COM-02 con COM-01 (Trello «Registrar pagos de compras contra
 9. **Anulaciones:** no existen anulaciones ni reembolsos de pagos (`PaymentRecordStatus.VOIDED` no lo produce ningún flujo; cancelar una compra con pagos está bloqueado, `purchase.py:327-330`); no se agregan.
 10. **Pagos anteriores al corte:** un pago sin asiento, con compras recibidas después del corte, deja Cuentas por pagar sin liquidar en el libro (el pago no se contabilizó); es el mismo límite de los cobros históricos y se regulariza con el saldo de apertura/regularización de CONT-07. Se documenta como limitación.
 
+11. **Recepciones sin asiento cuentan como deuda reconocida (límite aceptado, REV-08).** El reparto deuda/anticipo usa el valor de **todas** las recepciones vigentes (con o sin asiento), no solo las que tienen asiento. Una compra recibida antes del corte de Contabilidad o antes de esta tarea y pagada después con cobertura registra el pago contra Cuentas por pagar aunque ese pasivo nunca se haya reconocido en el libro: Cuentas por pagar puede quedar con saldo deudor hasta que se regularice (saldo de apertura/regularización de CONT-07). Se acepta porque esa deuda existe en la realidad y el pago salió de caja; restringir el reparto a recepciones con asiento convertiría ese pago en un anticipo falso. Decisión de la persona (2026-11-18): dejarlo documentado.
+
 ## Alternativas consideradas
 - **Bloquear pagos antes de recibir:** cambia el flujo actual y rompe compras pagadas por adelantado (comunes con proveedores). Descartada por la persona.
 - **Solo documentar saldo deudor** (ADR vigente, decisión 7): deja Cuentas por pagar con saldo deudor y mezcla anticipos con deuda. Reemplazada.

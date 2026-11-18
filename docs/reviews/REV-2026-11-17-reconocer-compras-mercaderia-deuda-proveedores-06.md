@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-06: El diálogo de pago no cumple parte del DDR (botón con faltantes conocidos, enlace en la vista previa, estado de error) y deja código muerto
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v2)
@@ -27,3 +27,6 @@ payment-dialog.component.ts:38:  readonly sideLabels = { DEBIT: () => tr('ACCOUN
 $ payment-dialog.component.html:  [disabled]="submitting || (touched && !canSubmit)"   (sin referencia a preview.issues)
 $ payment-dialog.component.ts:  .pipe(catchError(() => of(null)))
 ```
+
+## Resolution
+Resuelto: Registrar se deshabilita con faltantes ya conocidos de la vista previa; los avisos de la vista previa llevan el enlace a Compras › Asientos automáticos; un fallo de la vista previa muestra un mensaje (no impide pagar); el aviso de carga usa `role="status"` y `aria-live`; se eliminó `sideLabels`. Pruebas nuevas en el spec del diálogo.

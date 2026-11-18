@@ -20,7 +20,7 @@ class RawField(serializers.Field):
 
 
 class LenientDateField(serializers.Field):
-    """Convierte `YYYY-MM-DD` en fecha; cualquier otro valor pasa intacto y lo rechaza el dominio como fecha inválida."""
+    """Convierte `YYYY-MM-DD` en fecha; otro valor pasa intacto y lo rechaza el dominio como fecha inválida."""
 
     def to_internal_value(self, data):
         if isinstance(data, str):

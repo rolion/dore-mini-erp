@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-05: Las alertas del diálogo de pago usan el naranja con texto blanco de la plantilla (contraste AA)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v2)
@@ -27,3 +27,6 @@ alert alert-warning mt-2 mb-0 ... data-testid="preview-issues"
 $ sed -n 65,67p src/assets/scss/override/_alert.scss   ->  &.alert-warning { background-color: variable.color(warning); }  (y .alert { color: #fff })
 ```
 La revisión visual en navegador no se hizo (no verificada); la conclusión sale del código y del comentario de reception-form.component.scss.
+
+## Resolution
+Resuelto: el diálogo usa el componente compartido `app-posting-issues-alert` (estilo tenue con contraste AA y tokens del tema oscuro de SRV-01) para los avisos de configuración.

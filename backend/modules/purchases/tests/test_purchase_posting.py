@@ -11,18 +11,13 @@ from django.utils import timezone
 
 from modules.accounting import services as accounting
 from modules.accounting.application.fiscal_periods import CloseFiscalPeriod
-from modules.accounting.application.use_cases import ConfigureMethod
 from modules.accounting.infrastructure.django.models import (
     CoveragePeriodModel,
     JournalEntryModel,
     SettingsModel,
 )
-from modules.accounting.infrastructure.django.repositories import (
-    DjangoAccountRepository,
-    DjangoFiscalPeriodRepository,
-    DjangoMethodMappingRepository,
-)
-from modules.accounting.tests.journal_support import make_account, make_period, money_account
+from modules.accounting.infrastructure.django.repositories import DjangoFiscalPeriodRepository
+from modules.accounting.tests.journal_support import make_account, make_period
 from modules.inventory.infrastructure.django.models import StockMovementModel
 from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.tests.test_enforcement import set_enabled

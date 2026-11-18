@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-07: Higiene de lint en Python nuevo (líneas >120, imports sin uso, nombre `l`)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v2)
@@ -25,3 +25,6 @@ $ git diff origin/accounting...HEAD -U0 -- '*.py' | awk (líneas añadidas >120)
 accounting/services.py: 121 (x2); accounting/tests/test_posting_config_api.py: 127; test_posting_domain.py: 121;
 purchases/tests/test_payment_api.py: 135; test_payment_classification_api.py: 122; test_payment_posting.py: 121
 ```
+
+## Resolution
+Resuelto: cero avisos de `ruff` y `flake8` en todos los `.py` que cambia la tarea (líneas largas, imports sin uso, una continuación).

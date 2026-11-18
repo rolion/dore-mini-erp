@@ -65,7 +65,8 @@ from modules.accounting.infrastructure.django.repositories import (
 )
 from shared import module_gate
 
-__all__ = ['AccountInfo', 'AccountRef', 'describe_accounts', 'AccountValidationError', 'ClassificationInfo', 'ClassificationRef', 'CoverageRef',
+__all__ = ['AccountInfo', 'AccountRef', 'describe_accounts', 'AccountValidationError', 'ClassificationInfo',
+           'ClassificationRef', 'CoverageRef',
            'AutomaticPosting', 'DateOutsideFiscalPeriod', 'EntryConflict', 'EntryContractError', 'EntryInput',
            'EntryRef', 'EntryValidationError', 'FiscalPeriodClosed', 'FiscalPeriodContractError',
            'JournalBalance', 'JournalConflict', 'JournalEntryInput', 'JournalEntryNotFound', 'JournalEntryRef',
@@ -164,7 +165,8 @@ def describe_classifications(company_id: UUID, classification_ids) -> dict[UUID,
 
 @dataclass(frozen=True)
 class CoverageRef:
-    """¿Una operación con esa fecha efectiva debe crear movimiento? `reason`: accounting_disabled, before_cutoff, in_gap."""
+    """¿Una operación con esa fecha efectiva debe crear movimiento? `reason`: accounting_disabled, before_cutoff,
+    in_gap."""
     enabled: bool
     cutoff_date: date | None
     covered: bool

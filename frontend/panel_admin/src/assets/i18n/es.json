@@ -1329,6 +1329,7 @@
   },
   "PURCHASES": {
     "PAYMENT_DIALOG": {
+      "NO_SE_PUDO_CALCULAR_EL_ASIENTO": "No se pudo calcular el asiento previsto; puedes registrar el pago igualmente.",
       "CONFIGURACION_CONTABLE_INCOMPLETA": "Falta configurar la contabilidad de Compras.",
       "CALCULANDO_ASIENTO": "Calculando asiento…",
       "ASIENTO_PREVISTO": "Asiento previsto",

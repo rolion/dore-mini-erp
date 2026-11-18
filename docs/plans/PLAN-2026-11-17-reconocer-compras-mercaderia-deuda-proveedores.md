@@ -81,6 +81,7 @@ Con Contabilidad habilitada y **cobertura** de la fecha de recepción:
 - **v2** Pago antes de recibir = anticipo a proveedores (ADR de pagos §2); pago mixto = dos asientos; pago por un importe mayor que la deuda reconocida pero menor que el saldo de la compra = deuda + anticipo.
 - **v2** Revertir una recepción tras pagar: la deuda reconocida baja y los pagos ya aplicados pueden dejar Cuentas por pagar con saldo deudor (límite documentado).
 - **v2** Pago anterior al corte de una compra recibida después: el libro no tiene el pago (limitación, ADR §10).
+- **v2** Compra recibida antes del corte (o antes de esta tarea, sin asiento) y pagada después con cobertura: el pago se reparte como deuda y Cuentas por pagar puede quedar deudor hasta regularizar (límite aceptado, ADR §11, REV-08).
 - Reversión en la misma transacción que el stock: si el stock falta (`RevertStockShortage`) no se revierte el asiento.
 - Cuenta `INVENTORY` compartida con INV-01: cambiarla no afecta asientos ya publicados (guardan sus cuentas).
 

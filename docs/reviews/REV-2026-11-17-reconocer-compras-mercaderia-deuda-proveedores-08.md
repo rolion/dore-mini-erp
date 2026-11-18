@@ -1,6 +1,6 @@
 # REV-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores-08: El reparto deuda/anticipo cuenta recepciones sin asiento como deuda reconocida (límite no documentado)
 
-**Status:** Open
+**Status:** Accepted
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-17-reconocer-compras-mercaderia-deuda-proveedores.md (v2)
@@ -25,3 +25,6 @@ backend/modules/purchases/application/payment_commands.py (split_for_payment):
 backend/modules/purchases/application/receipt_commands.py (_recognized_amount) sí limita lo reconocido a recepciones con asiento.
 ```
 Verificación de conservación (prueba aleatoria de 25 semillas: recibir/pagar/revertir, comparando libro y columnas) pasó; esto es solo la brecha documental.
+
+## Resolution
+Aceptado y documentado (decisión de la persona, 2026-11-18): no se restringe el reparto; límite descrito en el ADR de pagos §11 y en el PLAN v2.

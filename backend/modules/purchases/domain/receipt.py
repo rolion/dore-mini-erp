@@ -76,7 +76,8 @@ class Receipt:
         if not text:
             raise PurchaseValidationError({'reason': ['El motivo es obligatorio.']})
         if len(text) > REVERT_REASON_MAX_LENGTH:
-            raise PurchaseValidationError({'reason': [f'El motivo no puede superar {REVERT_REASON_MAX_LENGTH} caracteres.']})
+            raise PurchaseValidationError(
+                {'reason': [f'El motivo no puede superar {REVERT_REASON_MAX_LENGTH} caracteres.']})
         self.status = ReceiptStatus.REVERTED
         self.reverted_at = now
         self.reverted_by_user_id = user_id

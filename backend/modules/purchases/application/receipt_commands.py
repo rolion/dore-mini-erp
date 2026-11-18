@@ -8,7 +8,6 @@ from modules.purchases.domain.enums import InventoryMode, ReceiptStatus
 from modules.purchases.domain.exceptions import (
     PurchaseNotFound,
     PurchaseValidationError,
-    ReceiptAlreadyReverted,
     ReceiptConflict,
     ReceiptInventoryUnavailable,
     ReceiptNotFound,

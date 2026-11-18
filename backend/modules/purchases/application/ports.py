@@ -89,7 +89,7 @@ class ClassificationGateway(Protocol):
     """Clasificaciones de egreso de Contabilidad (integración por su fachada, en `infrastructure/adapters.py`)."""
 
     def validate_expense_classification(self, classification_id: UUID) -> ClassificationInfo:
-        """Lanza `PurchaseValidationError` (`classification_id`) si no es de la empresa, está inactiva o no es de egreso."""
+        """Lanza `PurchaseValidationError` (`classification_id`) si no es de la empresa, está inactiva o no egreso."""
         ...
 
     def describe(self, classification_ids: Iterable[UUID]) -> dict[UUID, ClassificationInfo]: ...

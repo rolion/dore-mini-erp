@@ -5,7 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 from unittest import mock
 
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient, APITestCase
 

@@ -14,8 +14,8 @@ from modules.modularity.tests.test_enforcement import set_enabled
 from modules.purchases.infrastructure.django.models import PaymentModel, PurchaseModel
 from modules.purchases.tests.test_purchase_api import LIST_URL, PurchaseApiTestCase, detail_url
 
-PAYMENT_FIELDS = {'id', 'reference', 'amount', 'payment_method', 'payment_date', 'status', 'classification', 'user_name', 'created_at',
-                  'debt_amount', 'advance_amount', 'accounting_entries'}
+PAYMENT_FIELDS = {'id', 'reference', 'amount', 'payment_method', 'payment_date', 'status', 'classification',
+                  'user_name', 'created_at', 'debt_amount', 'advance_amount', 'accounting_entries'}
 
 
 def purchase_url(purchase_id, suffix):

@@ -8,18 +8,9 @@
     @if (generalError) {
     <div class="alert alert-danger" role="alert" data-testid="general-error">{{ generalError }}</div>
     }
-    @if (postingIssues.length) {
-    <div class="alert alert-warning" role="alert" data-testid="alert-posting-issues">
-      <strong>{{ 'PURCHASES.PAYMENT_DIALOG.CONFIGURACION_CONTABLE_INCOMPLETA' | translate }}</strong>
-      <ul class="mb-1">
-        @for (issue of postingIssues; track $index) {
-        <li>{{ issue.message }}</li>
-        }
-      </ul>
-      <a routerLink="/pocketbiz/purchases/settings" [queryParams]="{ tab: 'posting' }" class="alert-link"
-        data-testid="link-posting-settings" (click)="activeModal.dismiss()">{{ 'PURCHASES.RECEPTION_FORM.IR_A_CONFIGURACION_DE_COMPRAS' | translate }}</a>
-    </div>
-    }
+    <app-posting-issues-alert [issues]="shownIssues" settingsLink="/pocketbiz/purchases/settings"
+      titleKey="PURCHASES.PAYMENT_DIALOG.CONFIGURACION_CONTABLE_INCOMPLETA"
+      linkKey="PURCHASES.RECEPTION_FORM.IR_A_CONFIGURACION_DE_COMPRAS" (navigate)="activeModal.dismiss()" />
     <div class="form-group mb-3">
       <label for="payment-date">{{ 'COMMON.FECHA' | translate }} <span class="text-danger">*</span></label>
       <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today"
@@ -55,7 +46,9 @@
       }
     </div>
     @if (previewLoading) {
-    <p class="text-muted mb-0" data-testid="preview-loading">{{ 'PURCHASES.PAYMENT_DIALOG.CALCULANDO_ASIENTO' | translate }}</p>
+    <p class="text-muted mb-0" role="status" aria-live="polite" data-testid="preview-loading">{{ 'PURCHASES.PAYMENT_DIALOG.CALCULANDO_ASIENTO' | translate }}</p>
+    } @else if (previewError) {
+    <p class="text-danger mb-0" role="alert" data-testid="preview-error">{{ 'PURCHASES.PAYMENT_DIALOG.NO_SE_PUDO_CALCULAR_EL_ASIENTO' | translate }}</p>
     } @else if (preview; as p) {
     <div data-testid="preview">
       <h6>{{ 'PURCHASES.PAYMENT_DIALOG.ASIENTO_PREVISTO' | translate }}</h6>
@@ -90,21 +83,12 @@
         </tbody>
       </table>
       }
-      @if (p.issues.length) {
-      <div class="alert alert-warning mt-2 mb-0" role="alert" data-testid="preview-issues">
-        <ul class="mb-0">
-          @for (issue of p.issues; track $index) {
-          <li>{{ issue.message }}</li>
-          }
-        </ul>
-      </div>
-      }
       }
     </div>
     }
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || (touched && !canSubmit)">
+    <button type="submit" class="btn btn-primary" data-testid="submit" [disabled]="submitting || blockedByPreview || (touched && !canSubmit)">
       {{ submitting ? ('INVENTORY.ADJUSTMENT_FORM.REGISTRANDO' | translate) : ('COMMON.REGISTRAR_PAGO' | translate) }}
     </button>
     <button type="button" class="btn btn-light" data-testid="back" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>

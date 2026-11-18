@@ -4,7 +4,7 @@ import { Component, DestroyRef, OnInit, inject, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { RouterLink } from '@angular/router';
+import { PostingIssuesAlertComponent } from '../../../../shared/components/posting-issues-alert/posting-issues-alert.component';
 import { EMPTY, catchError, debounceTime, finalize, of, switchMap, tap } from 'rxjs';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import {
@@ -29,13 +29,12 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-payment-dialog',
   templateUrl: './payment-dialog.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe, PostingIssuesAlertComponent],
 })
 export class PaymentDialogComponent implements OnInit {
   readonly methods = PAYMENT_METHODS;
   readonly methodLabels = PAYMENT_METHOD_LABELS;
   readonly today = todayIso();
-  readonly sideLabels = { DEBIT: () => tr('ACCOUNTING.POSTING.DEBIT'), CREDIT: () => tr('ACCOUNTING.POSTING.CREDIT') };
   readonly form = inject(FormBuilder).nonNullable.group({
     paymentDate: [todayIso(), Validators.required],
     amount: '',
@@ -55,6 +54,8 @@ export class PaymentDialogComponent implements OnInit {
   /** Asiento previsto según monto, método y fecha; `null` mientras falte algún dato válido. */
   preview: PaymentPreview | null = null;
   previewLoading = false;
+  /** El servidor no pudo calcular el asiento previsto (no impide registrar el pago). */
+  previewError = false;
 
   private paymentId: string = crypto.randomUUID();
   /** Se emite cuando se relee la compra tras un rechazo (saldo desactualizado), para refrescar el fondo. */
@@ -74,6 +75,7 @@ export class PaymentDialogComponent implements OnInit {
       .pipe(
         tap(() => {
           this.preview = null;
+          this.previewError = false;
           this.previewLoading = this.canPreview;
         }),
         debounceTime(300),
@@ -89,14 +91,25 @@ export class PaymentDialogComponent implements OnInit {
               paymentMethod: method,
               paymentDate: this.form.controls.paymentDate.value,
             })
-            .pipe(catchError(() => of(null)));
+            .pipe(catchError(() => of('error' as const)));
         }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((preview) => {
+      .subscribe((result) => {
         this.previewLoading = false;
-        this.preview = preview;
+        this.previewError = result === 'error';
+        this.preview = result === 'error' ? null : result;
       });
+  }
+
+  /** Faltantes de configuración a mostrar: los del rechazo del alta o, si no hay, los de la vista previa. */
+  get shownIssues(): PaymentPostingIssue[] {
+    return this.postingIssues.length ? this.postingIssues : (this.preview?.issues ?? []);
+  }
+
+  /** La vista previa ya conoce faltantes de configuración: el servidor rechazaría el pago. */
+  get blockedByPreview(): boolean {
+    return (this.preview?.issues.length ?? 0) > 0;
   }
 
   private get canPreview(): boolean {

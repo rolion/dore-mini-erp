@@ -1,4 +1,4 @@
-"""COM-01 (en COM-02 v2): el pago de una compra se contabiliza contra Cuentas por pagar o como anticipo a proveedores."""
+"""COM-01 (en COM-02 v2): el pago se contabiliza contra Cuentas por pagar o como anticipo a proveedores."""
 import threading
 import time
 from datetime import timedelta

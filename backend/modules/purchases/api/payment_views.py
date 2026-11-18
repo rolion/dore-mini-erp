@@ -83,8 +83,8 @@ class PaymentPreviewView(APIView):
 
 
 def _setting_response(info) -> Response:
-    return Response({'classification': None if info is None else {'id': info.id, 'name': info.name,
-                                                                    'active': info.active}})
+    classification = None if info is None else {'id': info.id, 'name': info.name, 'active': info.active}
+    return Response({'classification': classification})
 
 
 class PaymentClassificationView(APIView):
