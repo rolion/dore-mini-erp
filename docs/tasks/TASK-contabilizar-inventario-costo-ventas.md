@@ -1,6 +1,6 @@
 # TASK-contabilizar-inventario-costo-ventas: Contabilizar inventario y costo de ventas (INV-01)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** task/TASK-contabilizar-inventario-costo-ventas
@@ -14,6 +14,7 @@
 | 2026-11-17 | INVESTIGATION → PLANNING | NEEDS_ARCHITECTURE (ledger de costo nuevo, contrato entre Ventas/Compras/Costeo/Contabilidad); Diseño NO; 2 decisiones de negocio resueltas por la persona | delivery-start |
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
+| 2026-11-18 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01 y REV-02 Medium, REV-03 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -102,7 +103,11 @@ Implementado según PLAN v1, sin cambios de Specification.
 **Corridas propias (no son el Quality Gate):** suite completa del backend 2130 pruebas, 1 falla corregida (deviación 1); `modules.sales` 377 OK; `makemigrations --check` sin cambios; flake8/ruff sin avisos nuevos.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-18, diff contra `origin/accounting`). Backend: `manage.py test` 2130 OK (en serie), `makemigrations --check` sin cambios, bandit sin hallazgos, sin secretos ni `float` en el diff. flake8: un aviso nuevo (E128 en `sales/api/views.py:248`) y E501 en la migración generada; ruff sin avisos nuevos. Frontend no tocado (Diseño NO): sin verificación visual ni pruebas de frontend. Límites DDD y aislamiento por `company_id` verificados; todos los AC cubiertos, AC-06 y AC-10 solo en parte.
+- REV-01 (Medium, IMPLEMENTATION; **abierto**): posible deadlock entre el bloqueo por almacén y el de la empresa (no reproducido con hilos).
+- REV-02 (Medium, IMPLEMENTATION; **abierto**): faltan pruebas de casos límite y concurrencia.
+- REV-03 (Low, IMPLEMENTATION; **abierto**): `get_product_totals` en memoria, fecha del evento de costo, estilo y límite del promedio tras reversa.
+- **No realizado:** prueba de concurrencia real.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/91 (base `accounting`) listo para aprobación humana; no se mergea. **Sensible:** incluye ADR, migración nueva (`costing/0002`) y cálculo de dinero; lo aprueba una persona. Hallazgos Medium/Low abiertos (REV-01..03) sin corregir.
