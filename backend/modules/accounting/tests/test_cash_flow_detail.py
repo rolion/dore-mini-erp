@@ -184,7 +184,7 @@ class CashFlowApiTests(CashFlowApiBase):
                           origin_id=uuid4()).entry
         row = self.moves()['results'][0]
         self.assertEqual((row['entry_id'], row['description'], row['kind'], row['amount'], row['accounting_date']),
-                         (str(entry.id), 'Cobro', 'inflow', '90.00', '2026-05-10'))
+                         (str(entry.id), 'Cobro', 'inflow', '90.00', DAY))
         self.assertEqual(row['origin']['kind'], 'SERVICE_PAYMENT')
         self.assertFalse(self.post(self.cash, self.income, '1.00').entry is None)
         self.assertIsNone([m for m in self.moves()['results'] if m['amount'] == '1.00'][0]['origin'])
@@ -219,7 +219,7 @@ class CashFlowApiTests(CashFlowApiBase):
         services.reverse_journal_entry(self.company_a.id, original.id, date(2026, 5, 25), 'Error')
         rows = self.moves()['results']
         self.assertEqual([(m['kind'], m['accounting_date'], m['is_reversal']) for m in rows],
-                         [('outflow', '2026-05-25', True), ('inflow', '2026-05-20', False)])
+                         [('outflow', date(2026, 5, 25), True), ('inflow', date(2026, 5, 20), False)])
 
     def test_cutoff_marks_partial_coverage_and_excludes_earlier_lines(self):
         make_period(self.company_a.id, 'Q1', date(2026, 1, 1), date(2026, 3, 31))
