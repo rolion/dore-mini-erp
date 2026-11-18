@@ -13,7 +13,7 @@
 | 2026-11-18 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta GAS-02; base = rama `accounting` (indicación de la persona; la rama de trabajo se actualizó a `origin/accounting`, commit `de1abd4`) | delivery-start |
 | 2026-11-18 | INVESTIGATION → PLANNING | NEEDS_PLAN: GAS-01 ya implementó la reversión; quedan brechas acotadas (usuario, módulo deshabilitado, pruebas de AC, vínculo a la reversión) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
-| 2026-11-18 | ENGINEERING → REVIEW | Implementación según PLAN v1; pruebas escritas pero **no ejecutadas** (sin `DATABASE_URL` ni `node_modules` completo) | delivery-build |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación según PLAN v1; pruebas backend propias en verde; frontend sin ejecutar (`node_modules` incompleto) | delivery-build |
 
 ## Investigación
 
@@ -86,9 +86,9 @@ Resumen: la anulación ya revertía el asiento completo (GAS-01); se cierran las
 - **Frontend** (UI-01): `reversalEntryId` en modelo/servicio/fixture, enlace «Ver reversión» (`data-testid="reversal-link"`) junto a «Ver asiento», claves `VER_REVERSION` es/en/pt. Pantalla de referencia: Detalle existente; sin componentes nuevos.
 - **Pruebas escritas:** `expenses/tests/test_voiding_api.py` (AC-01, 03, 04, 05, 06, 07, 08, EDGE-03), `test_voiding_concurrency.py` (AC-02), ajuste de `test_posting_application.py` (actor), specs del detalle y del servicio.
 
-Desviaciones: ninguna en el diseño. No fue necesario tocar `accounting`; **no se sabe aún** si AC-06 (módulo deshabilitado) y AC-04 pasan: dependen de ejecutar las pruebas.
+Desviaciones: ninguna. No fue necesario tocar `accounting`: AC-04 (corte y período cerrado) y AC-06 (Contabilidad deshabilitada) pasan con la fachada actual. Un ajuste de pruebas: `reversal_entry_id` se añadió al conjunto de claves de `test_api.py`, y la prueba de período cerrado fija un corte anterior (el corte por defecto es hoy).
 
-**Verificación propia:** solo `npm run i18n:check` (2224 claves, 0 faltantes). **No ejecutado:** backend (falta `DATABASE_URL`; no se lee `.env`) ni specs/lint/build del frontend (el `node_modules` del repo principal está incompleto: sin `@angular`).
+**Verificación propia (no es el Quality Gate):** backend completo `Ran 2222 tests ... OK`; `makemigrations --check`: No changes detected; frontend `npm run i18n:check`: 2224 claves, 0 faltantes. **No ejecutado:** specs, lint y build del frontend (el `node_modules` del repo principal está incompleto: sin `@angular`; instalarlo exige `npm ci`, pendiente de autorización).
 
 Deuda técnica: el `DjangoOutflowLedger.open_count()` sigue devolviendo 0, por lo que deshabilitar Contabilidad no se bloquea con egresos sin revertir (ADR modularidad, decisión 6); fuera de alcance.
 

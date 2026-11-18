@@ -6,7 +6,12 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from modules.accounting import services as accounting
-from modules.accounting.infrastructure.django.models import AccountModel, FiscalPeriodModel, JournalEntryModel
+from modules.accounting.infrastructure.django.models import (
+    AccountModel,
+    FiscalPeriodModel,
+    JournalEntryModel,
+    SettingsModel,
+)
 from modules.accounting.tests.journal_support import make_period
 from modules.accounts.testing import authenticate, make_admin
 from modules.expenses.infrastructure.django.models import ExpenseModel
@@ -70,6 +75,8 @@ class VoidPostedExpenseTests(PostingApiBase):
         self.assertEqual((self.net(self.alquiler), self.net(self.banco)), (0, 0))
 
     def test_a_closed_original_period_is_not_rewritten_and_the_reversal_goes_to_the_open_one(self):  # AC-04
+        accounting.coverage_status(self.company.id, TODAY)  # crea el ajuste con corte = hoy
+        SettingsModel.objects.filter(company_id=self.company.id).update(cutoff_date=TODAY - timedelta(days=200))
         FiscalPeriodModel.objects.filter(pk=self.period.id).update(end_date=TODAY - timedelta(days=10))
         make_period(self.company.id, 'Nuevo', TODAY - timedelta(days=9), TODAY + timedelta(days=100))
         created = self.create(expense_date=(TODAY - timedelta(days=20)).isoformat())
