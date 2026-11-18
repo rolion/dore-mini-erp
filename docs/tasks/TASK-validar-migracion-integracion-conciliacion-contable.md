@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-validar-migracion-integracion-conciliacion-contable (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/104
 **Fuente:** https://trello.com/c/cTuM9i9k
 
 ## Historial de transiciones
