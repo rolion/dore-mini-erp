@@ -1,0 +1,17 @@
+.reports-container {
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.reports-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reports-details > summary {
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}

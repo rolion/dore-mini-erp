@@ -1,6 +1,6 @@
 # TASK-rediseno-visual-pantalla-reportes: Rediseño visual de la pantalla de Reportes («Enfoque analítico visual»)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-rediseno-visual-pantalla-reportes
@@ -12,6 +12,7 @@
 | 2026-11-18 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-18 | INVESTIGATION → DESIGN → PLANNING | Diseño requerido SI; sin arquitectura | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-18 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -67,7 +68,18 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-18-rediseno-visual-pantalla-reportes.md` (v1, COMPLETO por DDR con impacto visual relevante).
 
 ## Implementación
-_Pendiente_
+Rediseño de `reports.component.{html,ts,scss}` según el DDR; sin cambios de API ni backend.
+- AC-01/02: secciones «Contable»/«Operativo» con chips, contenedor `max-width: 80rem`, KPIs `display-6` y operativos `h4`, tarjetas de igual altura.
+- AC-03: `<details>` cerrados para criterios y «Ver por cuenta».
+- AC-04: `isNegative/isPositive` solo para colorear + etiqueta de texto.
+- AC-05: aviso con enlace a `/pocketbiz/accounting/accounts` cuando `cashFlow.accounts` está vacía (la API basta; sin decisión abierta).
+- AC-06: señal `coverageDismissed`, reiniciada en `onSelection`.
+- AC-07: `role="img"`+`aria-label` en la dona (200 px), `text-body-secondary`; botones del selector de periodo con `py-2`.
+- AC-08: `data-testid` conservados; specs nuevas en `reports.component.spec.ts`.
+- Claves i18n nuevas en es/en/pt; nota en `design-system.md` (Dashboard y reportes).
+- Pantalla de referencia: `features/reporting`; reutiliza `app-report-card`, `app-period-selector`, pipe `money`. Sin componentes nuevos.
+- Desviaciones: chips solo informativos (no variante interactiva del selector; ver Hipótesis). Deuda: `foreColor` HEX de la dona (preexistente).
+- Verificación propia (no es el Quality Gate): `i18n:check` ok, tests de reporting 60/60, `ng lint` ok.
 
 ## Review
 _Pendiente_

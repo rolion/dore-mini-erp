@@ -1711,7 +1711,19 @@
       "RESULTADO": "Result",
       "AVISO_COBERTURA": "Part of the period is before the accounting cutoff ({{p0}}) or had no coverage; that data is not included.",
       "AVISO_SIN_CORTE": "Accounting has no cutoff date yet; data may be incomplete.",
-      "CRITERIO_OPERATIVO": "Operational: based on recorded orders and expenses, not on the accounting ledger."
+      "CRITERIO_OPERATIVO": "Operational: based on recorded orders and expenses, not on the accounting ledger.",
+      "SECCION_CONTABLE": "Accounting (journal ledger)",
+      "SECCION_OPERATIVA": "Operational (orders and expenses)",
+      "CHIP_CONTABLE": "Accounting",
+      "CHIP_OPERATIVO": "Operational",
+      "COMO_SE_CALCULA": "How is it calculated?",
+      "VER_POR_CUENTA": "View by account",
+      "SIN_CUENTAS_DE_DINERO": "Set the account type to Cash/Bank to see the cash flow.",
+      "IR_A_CUENTAS": "Go to Accounting → Accounts",
+      "CERRAR_AVISO": "Dismiss notice",
+      "RESULTADO_NEGATIVO": "Negative result",
+      "RESULTADO_POSITIVO": "Positive result",
+      "DONA_GASTOS_ARIA": "Expenses by category chart"
     },
     "REPORT_CARD": {
       "NO_SE_PUDO_CARGAR": "Could not load.",
