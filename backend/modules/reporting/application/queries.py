@@ -6,11 +6,13 @@ from uuid import UUID
 
 from modules.reporting.domain.period import Period, resolve_period
 
-from .criteria import SALES_CRITERIA
+from .criteria import LEDGER_CRITERIA, SALES_CRITERIA
 from .ports import (
     ChannelSales,
     Clock,
     CustomerNames,
+    LedgerReader,
+    LedgerTotals,
     CategoryExpense,
     ExpensesReader,
     PendingOrder,
@@ -64,6 +66,13 @@ class ExpensesReport:
     period: Period
     total: Decimal
     categories: Sequence[CategoryExpense]
+
+
+@dataclass(frozen=True)
+class LedgerReport:
+    period: Period
+    totals: LedgerTotals
+    criteria: str
 
 
 @dataclass(frozen=True)
@@ -156,6 +165,19 @@ class GetExpenseReport(_PeriodQuery):
         period = self._period(params)
         report = self.expenses.report(period.date_from, period.date_to)
         return ExpensesReport(period=period, total=report.total, categories=report.categories)
+
+
+class GetLedgerReport(_PeriodQuery):
+    """Flujo de dinero y resultado contable del libro de asientos (no los reportes operativos de Ventas y Gastos)."""
+
+    def __init__(self, ledger: LedgerReader, clock: Clock):
+        super().__init__(clock)
+        self.ledger = ledger
+
+    def execute(self, params: PeriodParams) -> LedgerReport:
+        period = self._period(params)
+        return LedgerReport(period=period, totals=self.ledger.report(period.date_from, period.date_to),
+                            criteria=LEDGER_CRITERIA)
 
 
 class GetDashboardSummary(_PeriodQuery):

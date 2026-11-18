@@ -35,6 +35,24 @@ def dashboard_data(summary: queries.DashboardSummary) -> dict:
     }
 
 
+def ledger_data(report: queries.LedgerReport) -> dict:
+    flow, result, totals = report.totals.cash_flow, report.totals.result, report.totals
+    return {
+        'period': period_data(report.period),
+        'coverage': {'cutoff_date': totals.cutoff_date.isoformat() if totals.cutoff_date else None,
+                     'partial': totals.partial},
+        'cash_flow': {
+            'opening': money(flow.opening), 'inflow': money(flow.inflow), 'outflow': money(flow.outflow),
+            'net': money(flow.net), 'closing': money(flow.closing), 'transfers': money(flow.transfers),
+            'accounts': [{'account_id': _id(a.account_id), 'name': a.name, 'opening': money(a.opening),
+                          'net': money(a.net), 'closing': money(a.closing)} for a in flow.accounts],
+        },
+        'result': {'income': money(result.income), 'cost': money(result.cost), 'margin': money(result.margin),
+                   'expense': money(result.expense), 'result': money(result.result)},
+        'criteria': report.criteria,
+    }
+
+
 def sales_data(report: queries.SalesReport) -> dict:
     return {
         'period': period_data(report.period),

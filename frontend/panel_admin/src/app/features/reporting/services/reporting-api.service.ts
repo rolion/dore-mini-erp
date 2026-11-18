@@ -9,6 +9,7 @@ import {
   CustomersReport,
   DashboardSummary,
   ExpensesReport,
+  LedgerReport,
   Period,
   PeriodSelection,
   PendingReport,
@@ -54,6 +55,22 @@ interface ExpensesDto {
   period: PeriodDto;
   total: string;
   categories: { category_id: string; name: string; active: boolean; total: string }[];
+}
+
+interface LedgerDto {
+  period: PeriodDto;
+  coverage: { cutoff_date: string | null; partial: boolean };
+  cash_flow: {
+    opening: string;
+    inflow: string;
+    outflow: string;
+    net: string;
+    closing: string;
+    transfers: string;
+    accounts: { account_id: string; name: string; opening: string; net: string; closing: string }[];
+  };
+  result: LedgerReport['result'];
+  criteria: string;
 }
 
 interface ChannelsDto {
@@ -151,6 +168,32 @@ export class ReportingApiService {
       period: toPeriod(dto.period),
       total: dto.total,
       categories: dto.categories.map(toCategory),
+    }));
+  }
+
+  /** Flujo de dinero y resultado del libro de asientos (no los reportes operativos). */
+  ledger(selection: PeriodSelection): Observable<LedgerReport> {
+    return this.get<LedgerDto, LedgerReport>('ledger/', selection, (dto) => ({
+      period: toPeriod(dto.period),
+      cutoffDate: dto.coverage.cutoff_date,
+      partial: dto.coverage.partial,
+      cashFlow: {
+        opening: dto.cash_flow.opening,
+        inflow: dto.cash_flow.inflow,
+        outflow: dto.cash_flow.outflow,
+        net: dto.cash_flow.net,
+        closing: dto.cash_flow.closing,
+        transfers: dto.cash_flow.transfers,
+        accounts: dto.cash_flow.accounts.map((a) => ({
+          accountId: a.account_id,
+          name: a.name,
+          opening: a.opening,
+          net: a.net,
+          closing: a.closing,
+        })),
+      },
+      result: dto.result,
+      criteria: dto.criteria,
     }));
   }
 

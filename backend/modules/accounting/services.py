@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from modules.accounting.application.coverage import GetCoverageStatus
 from modules.accounting.application.journal import PostJournalEntry, ReverseJournalEntry
+from modules.accounting.application.ledger_report import GetLedgerReport
 from modules.accounting.application.posting import (
     ConfigView,
     DescribePostingConfig,
@@ -464,6 +465,60 @@ def journal_balances(company_id: UUID, account_ids=None) -> dict[UUID, JournalBa
     wanted = None if account_ids is None else set(account_ids)
     return {account_id: JournalBalance(debit, credit) for account_id, (debit, credit)
             in DjangoJournalRepository(company_id).totals_by_account(wanted).items()}
+
+
+@dataclass(frozen=True)
+class LedgerAccountFlow:
+    account_id: UUID
+    name: str
+    opening: Decimal
+    net: Decimal
+    closing: Decimal
+
+
+@dataclass(frozen=True)
+class LedgerCashFlow:
+    opening: Decimal
+    inflow: Decimal
+    outflow: Decimal
+    net: Decimal
+    closing: Decimal
+    transfers: Decimal
+    accounts: tuple[LedgerAccountFlow, ...]
+
+
+@dataclass(frozen=True)
+class LedgerResult:
+    income: Decimal
+    cost: Decimal
+    margin: Decimal
+    expense: Decimal
+    result: Decimal
+
+
+@dataclass(frozen=True)
+class LedgerReport:
+    cutoff_date: date | None
+    partial: bool
+    cash_flow: LedgerCashFlow
+    result: LedgerResult
+
+
+def get_ledger_report(company_id: UUID, date_from: date, date_to: date) -> LedgerReport:
+    """Flujo de dinero y resultado del libro de asientos de la empresa entre dos fechas contables (solo lectura).
+
+    Flujo: variación de las cuentas de Activo con tipo Caja/Banco/Billetera; una transferencia entre ellas no suma a
+    entradas ni salidas. Resultado: Ingresos − Costos − Gastos. Lo anterior al corte no está en el libro (`partial`).
+    """
+    report = GetLedgerReport(DjangoAccountRepository(company_id), DjangoJournalRepository(company_id),
+                             DjangoCoverageRepository(company_id)).execute(date_from, date_to)
+    flow, result = report.cash_flow, report.result
+    return LedgerReport(
+        report.coverage.cutoff_date, report.coverage.partial,
+        LedgerCashFlow(flow.opening, flow.inflow, flow.outflow, flow.net, flow.closing, flow.transfers,
+                       tuple(LedgerAccountFlow(a.account_id, a.name, a.opening, a.net, a.closing)
+                             for a in flow.accounts)),
+        LedgerResult(result.income, result.cost, result.margin, result.expense, result.result))
 
 
 # --- Asientos automáticos por evento (CONT-12) --------------------------------------------------------------------

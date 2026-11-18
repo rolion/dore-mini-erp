@@ -17,6 +17,7 @@ from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
 from modules.accounting.domain.fiscal_period import FiscalPeriod
 from modules.accounting.domain.journal import JournalEntry, JournalLine
+from modules.accounting.domain.ledger_report import EntryMoneyLine
 from modules.accounting.domain.trial_balance import AccountMovements
 
 from .models import (
@@ -597,6 +598,14 @@ class DjangoJournalRepository:
             debit=Sum('debit', filter=in_range), credit=Sum('credit', filter=in_range))
         return {row['account_id']: AccountMovements(row['opening_debit'] or zero, row['opening_credit'] or zero,
                                                     row['debit'] or zero, row['credit'] or zero) for row in rows}
+
+    def money_lines(self, account_ids: list[UUID], date_from: date, date_to: date) -> list[EntryMoneyLine]:
+        """Neto (Debe − Haber) por asiento y cuenta de las cuentas dadas, por fecha contable en `[date_from, date_to]`."""
+        rows = (JournalLineModel.objects
+                .filter(company_id=self.company_id, account_id__in=account_ids,
+                        entry__accounting_date__gte=date_from, entry__accounting_date__lte=date_to)
+                .order_by().values('entry_id', 'account_id').annotate(debit=Sum('debit'), credit=Sum('credit')))
+        return [EntryMoneyLine(row['entry_id'], row['account_id'], row['debit'] - row['credit']) for row in rows]
 
     def count_outside(self, period_id: UUID, start: date, end: date) -> int:
         """Asientos del período cuya fecha contable quedaría fuera del rango `[start, end]`."""
