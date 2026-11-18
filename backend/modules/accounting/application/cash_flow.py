@@ -90,9 +90,9 @@ class ListCashFlowMovements:
                  if (account_id is None or m.account_id == account_id) and (kinds is None or m.kind in kinds)]
         headers = self.journal.money_entries(list({m.entry_id for m in moves}))
         rows = sorted((MovementRow(headers[m.entry_id], m.account_id, money[m.account_id], m.kind, m.amount)
-                       for m in moves),
-                      key=lambda r: (r.entry.accounting_date, r.entry.created_at, str(r.entry.entry_id),
-                                     r.account_name, r.kind), reverse=True)
+                       for m in moves), key=lambda r: (r.account_name, r.kind))
+        # Orden estable del libro (INV-04): fecha contable ↓, alta ↓, id ↓; el empate se rompe por cuenta ↑.
+        rows.sort(key=lambda r: (r.entry.accounting_date, r.entry.created_at, str(r.entry.entry_id)), reverse=True)
         return CashFlowMovements(tuple(rows), _totals(rows))
 
 

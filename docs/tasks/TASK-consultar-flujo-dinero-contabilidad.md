@@ -15,6 +15,7 @@
 | 2026-11-18 | DESIGN → PLANNING | DDR escrito; sin ADR (extiende módulo y fachada existentes) | delivery-start |
 | 2026-11-18 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa; pruebas de integración con BD sin ejecutar (sin credenciales) | delivery-build |
+| 2026-11-18 | REVIEW (sin cambio) | Quality Gate 1 FAIL: REV-01/02/04 corregidos; REV-03 (Specification) espera decisión del usuario | delivery-publish |
 
 ## Investigación
 
@@ -92,7 +93,12 @@ No aplica según veredicto (sin ADR: se amplía `accounting` con la fachada y ar
 **Verificación propia (no es el Quality Gate):** pruebas de dominio del backend en verde (10); suite de Angular completa 1702/1702, `ng lint` y `ng build` sin errores, `npm run i18n:check` sin claves faltantes; ruff/flake8 sin avisos nuevos en lo cambiado. **No se ejecutaron** las pruebas de integración con BD de `test_cash_flow_detail.py` (el worktree no tiene `backend/.env` ni `DATABASE_URL`); deben correrse con PostgreSQL antes de aprobar.
 
 ## Review
-_Pendiente_
+**Quality Gate 1: FAIL** (subagente aislado). No ejecutado: pruebas de integración con BD (sin `DATABASE_URL`) e inspección visual. Hallazgos:
+- REV-01 (High, IMPLEMENTATION) aserciones de `count` erróneas en pruebas → corregido.
+- REV-02 (Medium, IMPLEMENTATION) reparto de centavos de INV-04 podía dar un movimiento negativo → corregido (reparto de uno en uno) con prueba nueva.
+- REV-03 (Medium, SPECIFICATION) la paginación en memoria contradice el requisito no funcional «paginación en BD» → **abierto; requiere decisión del usuario** (enmendar la Specification o paginar en SQL).
+- REV-04 (Low, IMPLEMENTATION) orden de desempate por cuenta y texto de `design-system.md` §6 → corregidos; el fallback HEX en el scss sigue igual que en `journal-list`.
+Pendiente: decisión sobre REV-03, correr las pruebas con BD y repetir el Quality Gate.
 
 ## Publicación
 _Pendiente_

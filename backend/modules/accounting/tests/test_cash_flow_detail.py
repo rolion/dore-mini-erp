@@ -78,6 +78,17 @@ class CashFlowDomainTests(SimpleTestCase):
         self.assertEqual(received, D('100.01'))
         self.assertEqual(sum((m.amount for m in moves if m.kind == INFLOW), D('0')), D('99.99'))
 
+    def test_leftover_cents_never_exceed_a_line(self):  # INV-04
+        entry = uuid4()
+        lines = [EntryMoneyLine(entry, a, D('0.02')) for a in (self.cash, self.bank, self.third)]
+        other = uuid4()
+        names = {**self.names, other: 'Otra'}
+        lines.append(EntryMoneyLine(entry, other, D('-0.05')))
+        moves = build_cash_flow_movements(lines, names)
+        self.assertTrue(all(m.amount > 0 for m in moves))
+        self.assertEqual(sum((m.amount for m in moves if m.kind == TRANSFER_IN), D('0')), D('0.05'))
+        self.assertEqual(sum((m.amount for m in moves if m.kind == INFLOW), D('0')), D('0.01'))
+
     def test_account_totals_add_up_to_the_consolidated_flow(self):  # INV-03
         e1, e2, e3 = uuid4(), uuid4(), uuid4()
         lines = [EntryMoneyLine(e1, self.cash, D('150.00')), EntryMoneyLine(e2, self.cash, D('-40.00')),
@@ -156,7 +167,7 @@ class CashFlowApiTests(CashFlowApiBase):
         self.assertEqual((totals['inflow'], totals['outflow'], totals['transfers_in'], totals['transfers_out']),
                          (data['summary']['inflow'], data['summary']['outflow'], data['summary']['transfers'],
                           data['summary']['transfers']))
-        self.assertEqual(result['count'], 5)
+        self.assertEqual(result['count'], 4)
 
     def test_transfer_shows_sent_in_cash_and_received_in_bank(self):  # AC-04
         self.post(self.bank, self.cash, '500.00', description='Depósito')
@@ -189,7 +200,7 @@ class CashFlowApiTests(CashFlowApiBase):
         both = self.moves(type='inflow', account_id=str(self.cash.id))
         self.assertEqual([m['amount'] for m in both['results']], ['300.00'])
         self.assertEqual(self.moves(date_from='2026-05-11')['count'], 0)
-        self.assertEqual(self.moves(page_size=2)['count'], 6)
+        self.assertEqual(self.moves(page_size=2)['count'], 5)
         self.assertEqual(len(self.moves(page_size=2)['results']), 2)
 
     def test_invalid_parameters_and_foreign_or_non_money_accounts_are_rejected(self):  # AC-06

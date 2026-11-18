@@ -83,10 +83,20 @@ class Coverage:
 
 
 def _share(total: Decimal, weights: list[Decimal]) -> list[Decimal]:
-    """Reparte `total` en proporción a `weights` con centavos exactos; el resto va a la primera (la mayor)."""
+    """Reparte `total` en proporción a `weights` con centavos exactos.
+
+    Los centavos que sobran del redondeo hacia abajo se dan de uno en uno, empezando por la primera línea (la mayor),
+    así ninguna parte supera su peso.
+    """
     whole = sum(weights, ZERO)
     shares = [(total * w / whole).quantize(CENT, rounding=ROUND_DOWN) for w in weights]
-    shares[0] += total - sum(shares, ZERO)
+    leftover = total - sum(shares, ZERO)
+    index = 0
+    while leftover > 0:
+        step = min(CENT, leftover)
+        shares[index % len(shares)] += step
+        leftover -= step
+        index += 1
     return shares
 
 
