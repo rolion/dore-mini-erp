@@ -895,7 +895,14 @@
       "ORIGEN": "Source",
       "SIN_MOVIMIENTOS_PARA_LOS_FILTROS": "No movements for the chosen filters.",
       "RECEPCION": "Receipt",
-      "PEDIDO": "Order"
+      "PEDIDO": "Order",
+      "FILTROS": "Filters",
+      "APLICAR_FILTROS": "Apply filters",
+      "SIN_REFERENCIA": "No reference",
+      "MOSTRANDO_N_DE_M": "Showing {{from}}–{{to}} of {{total}}",
+      "LISTA_DE_MOVIMIENTOS": "Movements list",
+      "VER_MOVIMIENTO_N": "View movement {{reference}}",
+      "PAGINAS_DE_MOVIMIENTOS": "Movement pages"
     },
     "STOCK_DETAIL": {
       "DETALLE_DE_EXISTENCIA": "Stock details",
