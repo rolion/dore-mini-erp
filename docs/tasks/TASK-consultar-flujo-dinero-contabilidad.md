@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-flujo-dinero-contabilidad (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/103 (base `accounting`)
 **Fuente:** https://trello.com/c/akzAhY3U/21-cont-14-consultar-el-detalle-de-flujo-de-dinero-desde-contabilidad
 
 ## Historial de transiciones
