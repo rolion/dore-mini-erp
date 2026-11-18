@@ -1,4 +1,8 @@
 import { tr } from '../../../core/i18n/translate';
+import type { PostingIssue } from '../../accounting/models/posting-config';
+/** Faltante de configuración contable que impide contabilizar (misma forma que en Contabilidad). */
+export type { PostingIssue };
+
 export type PaymentMethod = 'CASH' | 'QR' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
 export type ExpenseStatus = 'ACTIVE' | 'VOIDED';
 /** Filtro de estado de la lista: vigentes (por omisión), anulados o todos. */
@@ -30,6 +34,14 @@ export interface CategoryRef {
   active: boolean;
 }
 
+/** Cuenta contable usada en el asiento del gasto (`active` permite avisar si hoy está deshabilitada). */
+export interface AccountRef {
+  id: string;
+  code: string | null;
+  name: string;
+  active: boolean;
+}
+
 export interface Expense {
   id: string;
   description: string;
@@ -43,6 +55,14 @@ export interface Expense {
   notes: string;
   status: ExpenseStatus;
   voidedAt: string | null;
+  /** Clasificación de egreso aplicada al registrar; `null` en gastos anteriores a CONT-03. */
+  classification?: { id: string; name: string; active: boolean } | null;
+  /** `true` si generó asiento: monto, categoría, fecha, método y cuentas ya no se editan (se anula y se registra de nuevo). */
+  posted: boolean;
+  expenseAccount: AccountRef | null;
+  paymentAccount: AccountRef | null;
+  /** Asiento del gasto (solo en el detalle); enlaza a la pantalla de asientos. */
+  journalEntryId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,6 +78,34 @@ export interface ExpenseInput {
   notes: string;
 }
 
+/** Alta: además, las cuentas elegidas (vacías = las de la configuración) y la clave de idempotencia del envío. */
+export interface ExpenseCreateInput extends ExpenseInput {
+  expenseAccountId?: string | null;
+  paymentAccountId?: string | null;
+  idempotencyKey?: string;
+}
+
+/** Cuentas por defecto y elegibles para contabilizar un gasto con esa fecha, categoría y método. */
+export interface PostingOptions {
+  covered: boolean;
+  reason: string | null;
+  expenseAccount: AccountRef | null;
+  paymentAccount: AccountRef | null;
+  issues: PostingIssue[];
+  expenseAccounts: AccountRef[];
+  paymentAccounts: AccountRef[];
+}
+
+export interface PostingOptionsDto {
+  covered: boolean;
+  reason: string | null;
+  expense_account: AccountRef | null;
+  payment_account: AccountRef | null;
+  issues: PostingIssue[];
+  expense_accounts: AccountRef[];
+  payment_accounts: AccountRef[];
+}
+
 /** Forma de respuesta de la API (snake_case). */
 export interface ExpenseDto {
   id: string;
@@ -70,6 +118,11 @@ export interface ExpenseDto {
   notes?: string;
   status: ExpenseStatus;
   voided_at: string | null;
+  classification?: { id: string; name: string; active: boolean } | null;
+  posted?: boolean;
+  expense_account?: AccountRef | null;
+  payment_account?: AccountRef | null;
+  journal_entry_id?: string | null;
   created_at: string;
   updated_at: string;
 }

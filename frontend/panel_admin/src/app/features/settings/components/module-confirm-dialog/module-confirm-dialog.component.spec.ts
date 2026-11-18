@@ -75,7 +75,7 @@ describe('ModuleConfirmDialogComponent', () => {
     component.confirm();
     fixture.detectChanges();
     const link = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="accounting-setup-link"]');
-    expect(link?.getAttribute('href')).toContain('/pocketbiz/accounting/settings');
+    expect(link?.getAttribute('href')).toContain('/pocketbiz/accounting/accounts');
   });
 
   it('does not offer the link for other conflicts', () => {

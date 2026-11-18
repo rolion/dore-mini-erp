@@ -150,6 +150,17 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/expenses/settings",
+          "title": "MENUITEMS.EXPENSES.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
         }
       ],
       "module": "expenses"
@@ -315,30 +326,41 @@
       "badgeClass": "",
       "submenu": [
         {
+          "path": "/pocketbiz/accounting/accounts",
+          "title": "MENUITEMS.ACCOUNTING.LIST.ACCOUNTS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/accounting/journal",
+          "title": "MENUITEMS.ACCOUNTING.LIST.JOURNAL",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/accounting/balances",
+          "title": "MENUITEMS.ACCOUNTING.LIST.BALANCES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/accounting/settings",
           "title": "MENUITEMS.ACCOUNTING.LIST.SETTINGS",
-          "iconType": "",
-          "icon": "",
-          "class": "ml-menu",
-          "groupTitle": false,
-          "badge": "",
-          "badgeClass": "",
-          "submenu": []
-        },
-        {
-          "path": "/pocketbiz/accounting/entries",
-          "title": "MENUITEMS.ACCOUNTING.LIST.ENTRIES",
-          "iconType": "",
-          "icon": "",
-          "class": "ml-menu",
-          "groupTitle": false,
-          "badge": "",
-          "badgeClass": "",
-          "submenu": []
-        },
-        {
-          "path": "/pocketbiz/accounting/regularization",
-          "title": "MENUITEMS.ACCOUNTING.LIST.REGULARIZATION",
           "iconType": "",
           "icon": "",
           "class": "ml-menu",
@@ -468,15 +490,38 @@
       ]
     },
     {
-      "path": "/pocketbiz/receivables",
+      "path": "",
       "title": "MENUITEMS.RECEIVABLES.TEXT",
       "iconType": "feather",
       "icon": "dollar-sign",
-      "class": "",
+      "class": "menu-toggle",
       "groupTitle": false,
       "badge": "",
       "badgeClass": "",
-      "submenu": [],
+      "submenu": [
+        {
+          "path": "/pocketbiz/receivables",
+          "title": "MENUITEMS.RECEIVABLES.LIST.COLLECTIONS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/receivables/settings",
+          "title": "MENUITEMS.RECEIVABLES.LIST.SETTINGS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
       "module": "receivables"
     }
   ]

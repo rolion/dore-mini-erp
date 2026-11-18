@@ -4,6 +4,7 @@ from django.db import close_old_connections, connection, transaction
 from django.test import TransactionTestCase
 
 from modules.accounting.application.use_cases import ConfigureMethod, DeactivateAccount
+from modules.accounting.tests.journal_support import money_account
 from modules.accounting.domain.account import Account, AccountConflict, AccountValidationError
 from modules.accounting.infrastructure.django.models import MethodMappingModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
@@ -41,7 +42,8 @@ class ConcurrentMappingTests(TransactionTestCase):
         self.mappings = DjangoMethodMappingRepository(self.company.id)
 
     def test_two_simultaneous_puts_on_the_same_method_leave_one_destination(self):  # EDGE-06
-        first, second = (self.accounts.save(Account.create(name, 'BOB')) for name in ('Banco A', 'Banco B'))
+        first, second = (money_account(self.accounts, name, code)
+                         for name, code in (('Banco A', '110201'), ('Banco B', '110202')))
         outcomes = _run_together(
             lambda: ConfigureMethod(self.accounts, self.mappings).execute('QR', first.id, True),
             lambda: ConfigureMethod(self.accounts, self.mappings).execute('QR', second.id, True),

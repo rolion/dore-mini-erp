@@ -98,6 +98,13 @@
     @if (errorMessage) {
     <div class="alert alert-danger mt-3 mb-0" role="alert" data-testid="alert-error">{{ errorMessage }}</div>
     }
+    @if (postingIssues.length) {
+    <div class="mt-3">
+      <app-posting-issues-alert [issues]="postingIssues" settingsLink="/pocketbiz/sales/settings"
+        titleKey="SALES.ORDER_DETAIL.CONFIGURACION_CONTABLE_INCOMPLETA" linkKey="SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS"
+        (navigate)="activeModal.dismiss()" />
+    </div>
+    }
     }
   </div>
   <div class="modal-footer">

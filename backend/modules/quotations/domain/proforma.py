@@ -290,7 +290,7 @@ class Proforma:
         if errors:
             raise ProformaValidationError(errors)
         if line.collected:
-            raise ProformaStateError('La línea tiene cobros registrados: no se puede rectificar.')
+            raise ProformaStateError('La línea tiene cobros o ya fue prestada: no se puede rectificar.')
         if line.decision == PENDING:
             raise ProformaStateError('La línea aún no tiene una decisión que rectificar.')
         if line.decision == decision:

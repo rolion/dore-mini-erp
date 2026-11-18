@@ -69,7 +69,7 @@ class StockMovementRepository(Protocol):
         """Los productos indicados que ya tienen algún movimiento en el almacén."""
         ...
 
-    def list_balances(self, warehouse_id: UUID | None = None) -> Sequence[StockBalanceEntry]:
+    def list_balances(self, warehouse_id: UUID | None = None, product_ids=None) -> Sequence[StockBalanceEntry]:
         """Existencias por producto y almacén (entradas menos salidas), con al menos un movimiento."""
         ...
 

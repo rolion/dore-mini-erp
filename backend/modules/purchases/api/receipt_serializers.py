@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .purchase_serializers import DecimalInputField, quantity
+from .purchase_serializers import DecimalInputField, money, quantity
 
 
 class ReceiptLineInputSerializer(serializers.Serializer):
@@ -76,6 +76,10 @@ def receipt_representation(detail) -> dict:
             'stock_entry': detail.stock_entry(line.product_id),
         } for line in receipt.lines],
         'movements': movements,
+        'accounting_entry': ({'id': detail.accounting_entry.id,
+                              'accounting_date': detail.accounting_entry.accounting_date.isoformat(),
+                              'total': money(detail.accounting_entry.total)} if detail.accounting_entry else None),
+        'accounting_enabled': detail.accounting_enabled,
     }
 
 

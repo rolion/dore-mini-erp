@@ -8,7 +8,7 @@ import { AccountingApiService } from '../../services/accounting-api.service';
 import { DeactivateDialogComponent } from '../deactivate-dialog/deactivate-dialog.component';
 import { AccountsTabComponent } from './accounts-tab.component';
 
-const banco: Account = { id: 'a1', name: 'Banco', currency: 'BOB', isActive: true };
+const banco: Account = { id: 'a1', name: 'Banco', currency: 'BOB', kind: 'BANK', openingBalance: '0.00', isActive: true };
 
 describe('AccountsTabComponent', () => {
   let api: jasmine.SpyObj<AccountingApiService>;
@@ -41,9 +41,38 @@ describe('AccountsTabComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Aún no hay cuentas');
   });
 
+  it('shows the opening balance formatted as money, with the currency for non-BOB accounts (REV-03)', () => {
+    const fixture = create([
+      { ...banco, openingBalance: '1000.50' },
+      { ...banco, id: 'a2', name: 'Dólares', currency: 'USD', openingBalance: '20.00' },
+    ]);
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('Bs 1000.50');
+    expect(text).toContain('20.00 USD');
+  });
+
+  it('shows code, classification and the contra badge, and "Sin código" for legacy accounts (UI-01)', () => {
+    const fixture = create([
+      { ...banco, code: '121005', name: 'Depreciación acumulada', accountClass: 'ASSET', kind: null, isContra: true },
+      { ...banco, id: 'a2', name: 'Vieja', code: null, accountClass: null },
+    ]);
+    const text = fixture.nativeElement.textContent as string;
+    expect(text).toContain('121005');
+    expect(text).toContain('Activo');
+    expect(text).toContain('Correctora');
+    expect(text).toContain('Sin código');
+    expect(text).toContain('Sin clasificación');
+  });
+
+  it('filters by classification (UI-01)', () => {
+    const fixture = create([banco]);
+    fixture.componentInstance.classControl.setValue('EXPENSE');
+    expect(api.listAccounts).toHaveBeenCalledWith(true, 'EXPENSE');
+  });
+
   it('lists accounts filtered by active by default', () => {
     const fixture = create([banco]);
-    expect(api.listAccounts).toHaveBeenCalledWith(true);
+    expect(api.listAccounts).toHaveBeenCalledWith(true, undefined);
     expect(fixture.nativeElement.textContent).toContain('Banco');
   });
 

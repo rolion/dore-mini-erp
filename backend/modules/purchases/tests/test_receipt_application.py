@@ -64,7 +64,7 @@ class FakeStock:
     def active_warehouses(self):
         return self.warehouses
 
-    def register_entries(self, warehouse_id, lines, receipt_id, reference, actor):
+    def register_entries(self, warehouse_id, lines, receipt_id, reference, actor, unit_costs=None):
         if self.fail:
             raise PurchaseValidationError({'warehouse_id': ['El almacén está inactivo.']})
         self.entries.append((warehouse_id, lines, receipt_id, reference, actor))

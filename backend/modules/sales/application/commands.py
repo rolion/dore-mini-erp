@@ -6,7 +6,17 @@ from modules.sales.domain.order import UNSET, Order, payment_digest, validate_qu
 from modules.sales.domain.repositories import OrderRepository
 
 from .delivery import controlled_lines
-from .ports import Actor, Clock, CustomerDirectory, PaymentLedger, ProductCatalog, SalesSettingsReader, StockOutput
+from .ports import (
+    AT_CONFIRM,
+    Actor,
+    Clock,
+    CustomerDirectory,
+    DeliveryCosting,
+    ProductCatalog,
+    SalesPosting,
+    SalesSettingsReader,
+    StockOutput,
+)
 
 
 def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
@@ -14,6 +24,16 @@ def _load_for_update(repository: OrderRepository, order_id: UUID) -> Order:
     if order is None:
         raise OrderNotFound(order_id)
     return order
+
+
+TOTAL_LOCKED_MESSAGE = ('El pedido ya está contabilizado: no se pueden cambiar sus productos, cantidades ni descuento '
+                        'porque alterarían el total.')
+
+
+def _ensure_total_unlocked(posting: SalesPosting | None, order: Order) -> None:
+    """Con el pedido confirmado y cubierto por Contabilidad el total no puede cambiar (regla comercial estable)."""
+    if posting is not None and posting.locks_total(order):
+        raise OrderRuleViolation('order_total_locked', TOTAL_LOCKED_MESSAGE)
 
 
 def _customer_errors(customers: CustomerDirectory, customer_id: UUID) -> dict[str, list[str]]:
@@ -82,13 +102,15 @@ class UpdateOrder:
 class AddOrderItem:
     """Agrega un producto activo con snapshot de nombre y precio vigentes (el precio nunca lo envía el cliente)."""
 
-    def __init__(self, repository: OrderRepository, products: ProductCatalog):
+    def __init__(self, repository: OrderRepository, products: ProductCatalog, posting: SalesPosting | None = None):
         self.repository = repository
         self.products = products
+        self.posting = posting
 
     def execute(self, order_id: UUID, product_id: UUID, quantity: object) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.ensure_editable()
+        _ensure_total_unlocked(self.posting, order)
         errors: dict[str, list[str]] = {}
         product = self.products.get_product_for_sale(product_id)
         if product is None:
@@ -108,32 +130,42 @@ class AddOrderItem:
 
 
 class ChangeOrderItemQuantity:
-    def __init__(self, repository: OrderRepository):
+    def __init__(self, repository: OrderRepository, posting: SalesPosting | None = None):
         self.repository = repository
+        self.posting = posting
 
     def execute(self, order_id: UUID, item_id: UUID, quantity: object) -> Order:
         order = _load_for_update(self.repository, order_id)
+        order.ensure_editable()
+        _ensure_total_unlocked(self.posting, order)
         order.change_item_quantity(item_id, quantity)
         return self.repository.save(order)
 
 
 class RemoveOrderItem:
-    def __init__(self, repository: OrderRepository):
+    def __init__(self, repository: OrderRepository, posting: SalesPosting | None = None):
         self.repository = repository
+        self.posting = posting
 
     def execute(self, order_id: UUID, item_id: UUID) -> Order:
         order = _load_for_update(self.repository, order_id)
+        order.ensure_editable()
+        _ensure_total_unlocked(self.posting, order)
         order.remove_item(item_id)
         return self.repository.save(order)
 
 
 class ApplyOrderDiscount:
-    def __init__(self, repository: OrderRepository, settings: SalesSettingsReader | None = None):
+    def __init__(self, repository: OrderRepository, settings: SalesSettingsReader | None = None,
+                 posting: SalesPosting | None = None):
         self.repository = repository
         self.settings = settings
+        self.posting = posting
 
     def execute(self, order_id: UUID, discount: object) -> Order:
         order = _load_for_update(self.repository, order_id)
+        order.ensure_editable()
+        _ensure_total_unlocked(self.posting, order)
         if self.settings is None:
             order.apply_discount(discount)
         else:
@@ -142,7 +174,7 @@ class ApplyOrderDiscount:
 
 
 class StartOrderPreparation:
-    """Confirma el pedido (NEW -> IN_PREPARATION)."""
+    """Confirma el pedido (NEW -> IN_PREPARATION). No genera asiento: el ingreso se reconoce al entregar."""
 
     def __init__(self, repository: OrderRepository):
         self.repository = repository
@@ -164,28 +196,37 @@ class MarkOrderReady:
 
 
 class DeliverOrder:
-    """Entrega el pedido (READY -> DELIVERED) y, con Inventario habilitado, registra la salida de sus productos
-    controlados en el almacén elegido. Todo ocurre en la transacción de quien llama: si algo falla, no se entrega
-    el pedido ni se registra ninguna salida."""
+    """Entrega el pedido (READY -> DELIVERED), registra la salida de sus productos controlados en el almacén elegido
+    (con Inventario habilitado) y, con cobertura de Contabilidad, reconoce el ingreso aplicando los anticipos. Todo
+    ocurre en la transacción de quien llama: si algo falla, no se entrega el pedido ni queda salida ni asiento."""
 
-    def __init__(self, repository: OrderRepository, clock: Clock, stock: StockOutput | None = None):
+    def __init__(self, repository: OrderRepository, clock: Clock, stock: StockOutput | None = None,
+                 posting: SalesPosting | None = None, costing: DeliveryCosting | None = None):
         self.repository = repository
         self.clock = clock
         self.stock = stock
+        self.posting = posting
+        self.costing = costing
 
     def execute(self, order_id: UUID, delivered_date: date | None = None, warehouse_id: UUID | None = None,
                 actor: Actor | None = None) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.deliver(delivered_date, self.clock.today())
-        self._register_outputs(order, warehouse_id, actor)
+        planned = self._register_outputs(order, warehouse_id, actor)
+        if self.posting is not None:
+            self.posting.recognize_delivery(order, actor or Actor(None, ''))
+        if self.costing is not None and planned:
+            self.costing.cost_delivery(order, [(product.id, quantity) for product, quantity in planned],
+                                       actor or Actor(None, ''))
         return self.repository.save(order)
 
-    def _register_outputs(self, order: Order, warehouse_id: UUID | None, actor: Actor | None) -> None:
+    def _register_outputs(self, order: Order, warehouse_id: UUID | None, actor: Actor | None) -> list:
+        """Registra las salidas y devuelve las líneas de stock controlado (vacío si no hubo salida)."""
         if self.stock is None or not self.stock.is_available():
-            return
+            return []
         planned = controlled_lines(order, self.stock)
         if not planned:
-            return
+            return []
         if not self.stock.active_warehouses():
             raise OrderRuleViolation(
                 'no_active_warehouse',
@@ -195,28 +236,44 @@ class DeliverOrder:
         self.stock.register_outputs(
             warehouse_id, [(product.id, quantity) for product, quantity in planned], order.id, order.code,
             actor or Actor(None, ''))
+        return planned
 
 
 class CancelOrder:
-    def __init__(self, repository: OrderRepository, clock: Clock):
+    """Cancela el pedido. Con cobros contabilizados no se cancela (no hay reembolsos). Un pedido reconocido al confirmar
+    (lógica anterior) sin cobros revierte su reconocimiento con las cuentas originales; uno sin reconocer se cancela
+    sin asiento."""
+
+    def __init__(self, repository: OrderRepository, clock: Clock, posting: SalesPosting | None = None):
         self.repository = repository
         self.clock = clock
+        self.posting = posting
 
-    def execute(self, order_id: UUID, reason: object = None) -> Order:
+    def execute(self, order_id: UUID, reason: object = None, actor: Actor | None = None) -> Order:
         order = _load_for_update(self.repository, order_id)
         order.cancel(reason, self.clock.now())
+        if self.posting is not None:
+            state = self.posting.recognition_state(order.id)
+            if self.posting.has_posted_payments(order):
+                raise OrderRuleViolation(
+                    'order_has_payments_posted',
+                    'El pedido tiene cobros contabilizados: no se puede cancelar hasta que exista el reembolso.')
+            if state == AT_CONFIRM:
+                self.posting.reverse_recognition(order, order.cancellation_reason, actor or Actor(None, ''),
+                                                 self.clock.today())
         return self.repository.save(order)
 
 
 class RegisterPayment:
-    """Registra un pago del pedido. Con Contabilidad habilitada crea su entrada en el libro antes de guardar, todo en
-    la transacción de quien llama (si algo falla no queda pago, saldo ni entrada). Idempotente por `idempotency_key`:
-    `replayed` indica que el intento ya estaba registrado y no se creó nada."""
+    """Registra un pago del pedido. Con Contabilidad habilitada lo contabiliza antes de guardar (asiento contra Cuentas
+    por cobrar si el pedido está reconocido; libro anterior si es anterior a la cobertura), todo en la transacción de
+    quien llama (si algo falla no queda pago, saldo ni asiento). Idempotente por `idempotency_key`: `replayed` indica
+    que el intento ya estaba registrado y no se creó nada."""
 
-    def __init__(self, repository: OrderRepository, clock: Clock, ledger: PaymentLedger | None = None):
+    def __init__(self, repository: OrderRepository, clock: Clock, posting: SalesPosting | None = None):
         self.repository = repository
         self.clock = clock
-        self.ledger = ledger
+        self.posting = posting
         self.replayed = False
 
     def execute(self, order_id: UUID, amount: object = None, payment_method: object = None, payment_date: object = None,
@@ -233,6 +290,6 @@ class RegisterPayment:
                 return order
         payment = order.register_payment(amount, payment_method, payment_date, reference, self.clock.today(),
                                          idempotency_key, digest)
-        if self.ledger is not None and self.ledger.is_available():
-            self.ledger.record(order.id, payment, actor or Actor(None, ''))
+        if self.posting is not None:
+            self.posting.record_payment(order, payment, actor or Actor(None, ''), self.clock.today())
         return self.repository.save(order)

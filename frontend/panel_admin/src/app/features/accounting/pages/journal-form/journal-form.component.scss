@@ -1,0 +1,75 @@
+// En pantallas estrechas cada línea se apila (cuenta arriba; Debe y Haber lado a lado con su rótulo) para poder
+// cargar importes sin desplazar la tabla en horizontal (REV-2026-11-17-05). Los rótulos salen de `data-label`.
+@media (max-width: 767.98px) {
+  .journal-lines {
+    // Sin diseño de tabla: el ancho lo da el contenedor, no el contenido de las celdas.
+    &,
+    tbody,
+    tfoot {
+      display: block;
+      width: 100%;
+      min-width: 0;
+    }
+
+    thead {
+      // Rótulos solo para lectores de pantalla: cada celda ya lleva el suyo.
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    tbody tr,
+    tfoot tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr 2.5rem;
+      gap: 0.25rem 0.5rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    }
+
+    td {
+      display: block;
+      padding: 0;
+      border: 0;
+    }
+
+    td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    // Línea de captura: cuenta en toda la fila, Debe y Haber debajo, «Quitar» al final.
+    tbody td:first-child {
+      grid-column: 1 / -1;
+    }
+
+    tbody td:last-child {
+      grid-column: 3;
+      grid-row: 2;
+      align-self: end;
+    }
+
+    // Totales y Diferencia: rótulo de la fila arriba y los importes debajo.
+    tfoot td.label-cell {
+      grid-column: 1 / -1;
+      text-align: left !important;
+    }
+
+    // La fila Diferencia ya rotula su importe con `data-label`: el rótulo de la fila sobra.
+    tfoot tr:last-child td.label-cell {
+      display: none;
+    }
+
+    tfoot td[colspan] {
+      grid-column: 1 / -1;
+    }
+
+    tfoot td:empty {
+      display: none;
+    }
+  }
+}

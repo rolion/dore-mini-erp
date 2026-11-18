@@ -1,10 +1,11 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, inject, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectComponent } from '@ng-select/ng-select';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { ToastrService } from 'ngx-toastr';
@@ -24,6 +25,7 @@ import {
   SalesChannel,
   ZERO_AMOUNT,
 } from '../../models/order';
+import { CompactViewportService } from '../../../../core/layout/compact-viewport.service';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { CustomerOptionsService } from '../../services/customer-options.service';
@@ -57,6 +59,7 @@ export const EMPTY_ALL = (): string => tr('SALES.ORDER_LIST.AUN_NO_HAY_PEDIDOS')
     NgxDatatableModule,
     ReactiveFormsModule,
     NgSelectComponent,
+    NgbPagination,
     MoneyPipe,
     OrderStatusBadgeComponent,
     PaymentStatusBadgeComponent,
@@ -90,6 +93,10 @@ export class OrderListComponent implements OnInit {
 
   /** «Más filtros» (canal y fechas): cerrado por defecto, abierto si alguno está activo. */
   moreFiltersOpen = false;
+  /** Pantalla estrecha: el panel de filtros se abre con «Filtros» y se aplica con «Aplicar». */
+  filtersOpen = false;
+  readonly compact = inject(CompactViewportService).compact;
+  private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
   rows: OrderSummary[] = [];
   total = 0;
   /** Página actual base 0, como espera ngx-datatable. */
@@ -111,6 +118,7 @@ export class OrderListComponent implements OnInit {
   private toastr = inject(ToastrService);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<ListState>();
+  private appliedState: ListFilters = { ...DEFAULT_FILTERS };
 
   /** Con Clientes deshabilitado no se ofrece el filtro por cliente (DDR integraciones opcionales). */
   get customersDisabled(): boolean {
@@ -147,6 +155,35 @@ export class OrderListComponent implements OnInit {
     return channel !== DEFAULT_FILTERS.channel || dateField !== DEFAULT_FILTERS.dateField || !!dateFrom || !!dateTo;
   }
 
+  get shownFrom(): number {
+    return this.rows.length === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+
+  get shownTo(): number {
+    return this.pageIndex * this.pageSize + this.rows.length;
+  }
+
+  /** Filtros aplicados (los de la URL), como texto para los chips del panel cerrado. */
+  get appliedFilters(): string[] {
+    const f = this.appliedState;
+    const applied: string[] = [];
+    if (f.statusKey !== DEFAULT_FILTERS.statusKey) {
+      applied.push(`${tr('SALES.ORDER_LIST.ESTADO_DE_ENTREGA')}: ${this.statusOptions.find((o) => o.value === f.statusKey)?.label ?? f.statusKey}`);
+    }
+    if (f.paymentKey !== DEFAULT_FILTERS.paymentKey) {
+      applied.push(`${tr('SALES.ORDER_LIST.ESTADO_DE_PAGO')}: ${this.paymentOptions.find((o) => o.value === f.paymentKey)?.label ?? f.paymentKey}`);
+    }
+    if (f.customer) applied.push(`${tr('COMMON.CLIENTE')}: ${f.customer.name}`);
+    if (f.channel !== DEFAULT_FILTERS.channel) applied.push(`${tr('COMMON.CANAL')}: ${this.channelLabel(f.channel)}`);
+    if (f.dateFrom) applied.push(`${tr('COMMON.DESDE')}: ${f.dateFrom}`);
+    if (f.dateTo) applied.push(`${tr('COMMON.HASTA')}: ${f.dateTo}`);
+    return applied;
+  }
+
+  get activeFilterCount(): number {
+    return this.appliedFilters.length;
+  }
+
   ngOnInit(): void {
     this.reload$
       .pipe(
@@ -174,6 +211,7 @@ export class OrderListComponent implements OnInit {
       const state = this.customersDisabled ? { ...parsed, customer: null } : parsed;
       const { page, ...filters } = state;
       this.filterForm.setValue(filters, { emitEvent: false });
+      this.appliedState = filters;
       this.pageIndex = page - 1;
       this.moreFiltersOpen = this.moreFiltersOpen || this.secondaryFiltersActive;
       this.emptyMessage = hasActiveFilters(filters) ? EMPTY_FILTERED() : EMPTY_ALL();
@@ -183,15 +221,44 @@ export class OrderListComponent implements OnInit {
 
     this.filterForm.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.navigate(this.filterForm.getRawValue(), 1));
+      // En pantalla estrecha se aplica con «Aplicar»: cerrar el panel al elegir una fecha impediría elegir la otra.
+      .subscribe(() => {
+        if (!this.compact()) this.navigate(this.filterForm.getRawValue(), 1);
+      });
   }
 
   applyShortcut(shortcut: Shortcut): void {
-    this.filterForm.patchValue({ statusKey: shortcut.statusKey, paymentKey: shortcut.paymentKey });
+    this.filterForm.patchValue({ statusKey: shortcut.statusKey, paymentKey: shortcut.paymentKey }, { emitEvent: false });
+    this.applyAndClose();
+  }
+
+  /** Atajo elegido en el combo de pantalla estrecha: rellena entrega y pago; se aplica con «Aplicar». */
+  selectShortcut(id: string): void {
+    const shortcut = this.shortcuts.find((s) => s.id === id);
+    if (shortcut) this.filterForm.patchValue({ statusKey: shortcut.statusKey, paymentKey: shortcut.paymentKey }, { emitEvent: false });
   }
 
   clearFilters(): void {
-    this.filterForm.setValue({ ...DEFAULT_FILTERS });
+    this.filterForm.setValue({ ...DEFAULT_FILTERS }, { emitEvent: false });
+    this.applyAndClose();
+  }
+
+  /** Aplica el formulario, cierra el panel y lleva el foco al resumen de resultados. */
+  applyAndClose(): void {
+    this.navigate(this.filterForm.getRawValue(), 1);
+    if (!this.compact()) return;
+    this.filtersOpen = false;
+    queueMicrotask(() => this.summary()?.nativeElement.focus());
+  }
+
+  /** Paginación de las tarjetas (`ngb-pagination` es base 1) y vuelta al inicio de la lista. */
+  onPageNumber(page: number): void {
+    this.onPage({ offset: page - 1 });
+    queueMicrotask(() => {
+      const el = this.summary()?.nativeElement;
+      el?.scrollIntoView({ block: 'start' });
+      el?.focus();
+    });
   }
 
   onPage(event: { offset: number }): void {

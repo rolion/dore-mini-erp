@@ -7,7 +7,7 @@ from django.db.models import QuerySet, Sum
 
 from modules.expenses.domain.category import ExpenseCategory
 from modules.expenses.domain.enums import ExpenseStatus
-from modules.expenses.domain.exceptions import ExpenseValidationError
+from modules.expenses.domain.exceptions import ExpenseDuplicateKey, ExpenseValidationError
 from modules.expenses.domain.expense import Expense
 from modules.expenses.domain.repositories import ExpenseFilters
 
@@ -69,9 +69,21 @@ class DjangoExpenseRepository:
         return expense_to_entity(model) if model else None
 
     def save(self, expense: Expense) -> Expense:
-        model, _ = ExpenseModel.objects.update_or_create(
-            id=expense.id, company_id=self.company_id, defaults=expense_to_values(expense))
+        try:
+            with transaction.atomic():  # punto de guardado: la transacción del llamante sigue utilizable
+                model, _ = ExpenseModel.objects.update_or_create(
+                    id=expense.id, company_id=self.company_id, defaults=expense_to_values(expense))
+        except IntegrityError:
+            if expense.idempotency_key is not None and ExpenseModel.objects.filter(
+                    company_id=self.company_id, idempotency_key=expense.idempotency_key).exclude(
+                    pk=expense.id).exists():
+                raise ExpenseDuplicateKey() from None
+            raise
         return expense_to_entity(model)
+
+    def find_by_key(self, idempotency_key: UUID) -> Expense | None:
+        model = ExpenseModel.objects.filter(company_id=self.company_id, idempotency_key=idempotency_key).first()
+        return expense_to_entity(model) if model else None
 
     def list(self, filters: ExpenseFilters) -> LazyList:
         return LazyList(_filtered(self.company_id, filters, include_status=True), expense_to_entity)

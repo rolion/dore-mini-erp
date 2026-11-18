@@ -45,6 +45,22 @@ describe('ReceptionDetailComponent', () => {
     expect(byId('back')?.getAttribute('href')).toBe('/pocketbiz/purchases/c-1?tab=receptions');
   });
 
+  it('links the accounting entry, or says there is none, only with Accounting enabled (AC-10, UI-03)', async () => {
+    await setup(makeReceipt({ accountingEnabled: true, accountingEntry: { id: 'j-1', accountingDate: '2026-10-30', total: '58.00' } }));
+    expect(byId('accounting-entry-link')?.getAttribute('href')).toBe('/pocketbiz/accounting/journal/j-1');
+    expect(byId('accounting-entry-link')?.textContent).toContain('30/10/2026');
+  });
+
+  it('says there is no journal entry when Accounting is on but nothing was posted (UI-03)', async () => {
+    await setup(makeReceipt({ accountingEnabled: true, accountingEntry: null }));
+    expect(byId('no-accounting-entry')?.textContent).toContain('Sin asiento contable');
+  });
+
+  it('hides the accounting row when Accounting is disabled (UI-03)', async () => {
+    await setup(makeReceipt());
+    expect(byId('accounting-entry')).toBeNull();
+  });
+
   it('shows neither warehouse nor movements when Inventory is off (AC-24)', async () => {
     await setup(makeReceipt({ warehouse: null, movements: null }));
     expect(byId('warehouse')).toBeNull();

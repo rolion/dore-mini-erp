@@ -27,6 +27,12 @@
       </div>
     </div>
 
+    @if (postingIssues.length) {
+    <div class="mb-3">
+      <app-posting-issues-alert [issues]="postingIssues" settingsLink="/pocketbiz/sales/settings"
+        titleKey="SALES.ORDER_DETAIL.CONFIGURACION_CONTABLE_INCOMPLETA" linkKey="SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS" />
+    </div>
+    }
     @if (cancelled) {
     <div class="alert alert-danger" role="alert" data-testid="alert-cancelled">
       <strong>{{ 'SALES.ORDER_DETAIL.PEDIDO_CANCELADO' | translate }}</strong> {{ 'SALES.ORDER_DETAIL.MOTIVO' | translate: { p0: (o.cancellationReason) } }}

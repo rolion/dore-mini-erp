@@ -83,3 +83,24 @@ class SupplierNotFound(Exception):
     def __init__(self, supplier_id: UUID):
         super().__init__(f'Proveedor {supplier_id} no encontrado.')
         self.supplier_id = supplier_id
+
+
+NOT_CONFIGURED = 'classification_not_configured'
+INVALID = 'classification_invalid'
+
+
+class PaymentClassificationError(PurchaseValidationError):
+    """Con Contabilidad cubriendo el pago, no hay una clasificación de egreso utilizable para pagos a proveedores."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__({'non_field_errors': [message]})
+        self.code = code
+
+
+class PostingRejected(Exception):
+    """Contabilidad rechazó el asiento; `code` estable y `extra` con datos adicionales del 409 (`issues`)."""
+
+    def __init__(self, code: str, message: str, extra: dict | None = None):
+        super().__init__(message)
+        self.code = code
+        self.extra = extra or {}

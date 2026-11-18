@@ -15,6 +15,10 @@
       <p class="alert alert-success" role="status" data-payment-receipt tabindex="-1">
         {{ 'RECEIVABLES.EXITO' | translate: { receipt: r.payment.receipt_number, amount: (r.payment.amount | money) } }}</p>
     }
+    @if (renderedName) {
+      <p class="alert alert-success" role="status" data-service-result tabindex="-1">
+        {{ 'RECEIVABLES.SRV_EXITO' | translate: { name: renderedName } }}</p>
+    }
     @if (commitment; as c) {
       <div class="card">
         <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
@@ -40,10 +44,11 @@
           </dl>
 
           <div class="row text-center mb-3">
-            <div class="col-6 col-md-3"><small class="text-muted">{{ 'RECEIVABLES.PROPUESTO' | translate }}</small><h4>{{ c.totals.proposed | money }}</h4></div>
-            <div class="col-6 col-md-3"><small class="text-muted">{{ 'RECEIVABLES.ACEPTADO' | translate }}</small><h4>{{ c.totals.accepted | money }}</h4></div>
-            <div class="col-6 col-md-3"><small class="text-muted">{{ 'RECEIVABLES.COBRADO' | translate }}</small><h4>{{ c.totals.paid | money }}</h4></div>
-            <div class="col-6 col-md-3"><small class="text-muted">{{ 'RECEIVABLES.SALDO' | translate }}</small><h4>{{ c.totals.balance | money }}</h4></div>
+            <div class="col-6 col-md"><small class="text-muted">{{ 'RECEIVABLES.PROPUESTO' | translate }}</small><h4>{{ c.totals.proposed | money }}</h4></div>
+            <div class="col-6 col-md"><small class="text-muted">{{ 'RECEIVABLES.ACEPTADO' | translate }}</small><h4>{{ c.totals.accepted | money }}</h4></div>
+            <div class="col-6 col-md"><small class="text-muted">{{ 'RECEIVABLES.RECONOCIDO' | translate }}</small><h4>{{ (c.totals.recognized ?? '0.00') | money }}</h4></div>
+            <div class="col-6 col-md"><small class="text-muted">{{ 'RECEIVABLES.COBRADO' | translate }}</small><h4>{{ c.totals.paid | money }}</h4></div>
+            <div class="col-6 col-md"><small class="text-muted">{{ 'RECEIVABLES.SALDO' | translate }}</small><h4>{{ c.totals.balance | money }}</h4></div>
           </div>
 
           <h5>{{ 'RECEIVABLES.TRATAMIENTOS' | translate }}</h5>
@@ -55,6 +60,7 @@
                   <th>{{ 'RECEIVABLES.COL_TRATAMIENTO' | translate }}</th><th>{{ 'RECEIVABLES.COL_DECISION' | translate }}</th>
                   <th class="text-end">{{ 'RECEIVABLES.PROPUESTO' | translate }}</th><th class="text-end">{{ 'RECEIVABLES.ACEPTADO' | translate }}</th>
                   <th class="text-end">{{ 'RECEIVABLES.COBRADO' | translate }}</th><th class="text-end">{{ 'RECEIVABLES.SALDO' | translate }}</th>
+                  <th>{{ 'RECEIVABLES.COL_PRESTACION' | translate }}</th>
                 </tr></thead>
                 <tbody>
                   @for (line of c.lines; track line.line_id) {
@@ -65,6 +71,16 @@
                       <td class="text-end">{{ line.accepted | money }}</td>
                       <td class="text-end">{{ line.paid | money }}</td>
                       <td class="text-end">{{ line.balance | money }}</td>
+                      <td>
+                        @if (line.rendered) {
+                          <app-status-badge tone="success" [label]="'RECEIVABLES.PRESTADO_EL' | translate: { date: (line.service_date | date: 'dd/MM/yyyy') }" />
+                        } @else if (line.can_render) {
+                          <button type="button" class="btn btn-sm btn-outline-primary" (click)="openService(line, $event.currentTarget)"
+                            [attr.aria-label]="('RECEIVABLES.MARCAR_PRESTADO' | translate) + ': ' + line.description">{{ 'RECEIVABLES.MARCAR_PRESTADO' | translate }}</button>
+                        } @else if (line.decision === 'accepted') {
+                          <small class="text-muted">{{ 'RECEIVABLES.SIN_PRESTAR' | translate }}</small>
+                        }
+                      </td>
                     </tr>
                   }
                 </tbody>
@@ -100,6 +116,7 @@
         </div>
       </div>
       <app-payment-dialog [kind]="c.kind" [number]="c.number" (paid)="onPaid($event)" />
+      <app-service-dialog [kind]="c.kind" [number]="c.number" (rendered)="onRendered($event)" />
     }
   </div>
 </section>

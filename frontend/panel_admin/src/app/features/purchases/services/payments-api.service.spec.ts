@@ -4,7 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 
 import { Page } from '../../../shared/models/page';
-import { Payment, PaymentApiError } from '../models/payment';
+import { Payment, PaymentApiError, PaymentPreview } from '../models/payment';
 import { PaymentsApiService, toPaymentFieldErrors } from './payments-api.service';
 
 const DTO = {
@@ -47,7 +47,48 @@ describe('PaymentsApiService', () => {
       status: 'confirmed',
       userName: 'ana',
       createdAt: '2026-10-30T12:00:00Z',
+      debtAmount: '20.00',
+      advanceAmount: '0.00',
+      accountingEntries: [],
     });
+  });
+
+  it('maps the debt/advance split and the accounting entries of a payment (API-04)', () => {
+    let page: Page<Payment> | undefined;
+    service.list('c-1').subscribe((result) => (page = result));
+    http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/purchases/c-1/payments/')).flush({
+      count: 1, next: null, previous: null,
+      results: [{ ...DTO, debt_amount: '15.00', advance_amount: '5.00', accounting_entries: [{ id: 'j-1', kind: 'advance', accounting_date: '2026-10-30', total: '5.00' }] }],
+    });
+    expect(page?.results[0].debtAmount).toBe('15.00');
+    expect(page?.results[0].advanceAmount).toBe('5.00');
+    expect(page?.results[0].accountingEntries).toEqual([{ id: 'j-1', kind: 'advance', accountingDate: '2026-10-30', total: '5.00' }]);
+  });
+
+  it('asks the server for the expected entry and maps lines and issues (API-03)', () => {
+    let preview: PaymentPreview | undefined;
+    service.preview('c-1', { amount: '20.00', paymentMethod: 'QR', paymentDate: '2026-10-30' }).subscribe((p) => (preview = p));
+    const req = http.expectOne((r) => r.method === 'GET' && r.url.endsWith('/purchases/c-1/payments/preview/'));
+    expect(req.request.params.get('amount')).toBe('20.00');
+    expect(req.request.params.get('payment_method')).toBe('QR');
+    req.flush({
+      covered: true, debt_amount: '15.00', advance_amount: '5.00',
+      lines: [{ side: 'DEBIT', role: 'PAYABLE', account: { name: 'Proveedores' }, amount: '15.00' }],
+      issues: [{ code: 'role_unconfigured', subject: 'Anticipos', message: 'Falta cuenta.' }],
+    });
+    expect(preview?.lines).toEqual([{ side: 'DEBIT', role: 'PAYABLE', accountName: 'Proveedores', amount: '15.00' }]);
+    expect(preview?.issues[0].message).toBe('Falta cuenta.');
+  });
+
+  it('keeps the accounting issues of a posting_configuration_missing 409 (API-01)', () => {
+    let error: PaymentApiError | undefined;
+    service.create('c-1', INPUT).subscribe({ error: (e: PaymentApiError) => (error = e) });
+    http.expectOne((r) => r.method === 'POST').flush(
+      { code: 'posting_configuration_missing', detail: 'Falta.', issues: [{ code: 'method_unconfigured', subject: 'Caja', message: 'Falta la cuenta del método.' }] },
+      { status: 409, statusText: 'Conflict' },
+    );
+    expect(error?.code).toBe('posting_configuration_missing');
+    expect(error?.postingIssues).toEqual([{ code: 'method_unconfigured', subject: 'Caja', message: 'Falta la cuenta del método.' }]);
   });
 
   it('sends the amount as text with the idempotency id (AC-01, AC-18)', () => {
@@ -63,6 +104,17 @@ describe('PaymentsApiService', () => {
     expect(typeof (req.request.body as { amount: unknown }).amount).toBe('string');
     req.flush(DTO, { status: 201, statusText: 'Created' });
     expect(payment?.reference).toBe('PAG-1A2B3C4D');
+  });
+
+  it('keeps the stable code of a classification error (CONT-03, UI-03)', () => {
+    let error: PaymentApiError | undefined;
+    service.create('c-1', INPUT).subscribe({ error: (e: PaymentApiError) => (error = e) });
+    http.expectOne((r) => r.method === 'POST').flush(
+      { non_field_errors: ['Falta la clasificación de pagos a proveedores.'], code: 'classification_not_configured' },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    expect(error?.code).toBe('classification_not_configured');
+    expect(error?.message).toBe('Falta la clasificación de pagos a proveedores.');
   });
 
   it('maps field errors of a 400 (AC-03, AC-04)', () => {

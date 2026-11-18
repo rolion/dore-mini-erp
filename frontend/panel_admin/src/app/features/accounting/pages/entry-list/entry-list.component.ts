@@ -9,16 +9,21 @@ import { EMPTY, Subject, catchError, debounceTime, finalize, switchMap } from 'r
 import { tr } from '../../../../core/i18n/translate';
 import { Account, AccountingApiError, PaymentMethod } from '../../models/accounting';
 import {
+  ENTRY_DIRECTIONS,
   ENTRY_ORIGINS,
   EMPTY_ENTRY_FILTERS,
   Entry,
+  EntryCoverage,
+  EntryDirection,
   EntryListFilters,
   EntryOrigin,
   CurrencyTotal,
   ORIGIN_CLASSES,
+  directionLabel,
   documentLabel,
   formatAmount,
   originLabel,
+  signedAmount,
   sourceLink,
 } from '../../models/entry';
 import { AccountingApiService } from '../../services/accounting-api.service';
@@ -38,10 +43,11 @@ const FILTER_DEBOUNCE_MS = 300;
 export class EntryListComponent implements OnInit {
   readonly pageSize = 20;
   readonly origins = ENTRY_ORIGINS;
+  readonly directions = ENTRY_DIRECTIONS;
   rows: Entry[] = [];
   total = 0;
   totals: CurrencyTotal[] = [];
-  coverage: { firstPaymentDate: string | null; lastPaymentDate: string | null; firstRecordedAt: string | null } | null = null;
+  coverage: EntryCoverage | null = null;
   /** Página actual base 0, como espera ngx-datatable. */
   pageIndex = 0;
   loading = false;
@@ -57,6 +63,7 @@ export class EntryListComponent implements OnInit {
     accountId: '',
     method: '',
     origin: '' as EntryOrigin | '',
+    direction: '' as EntryDirection | '',
   });
 
   private api = inject(EntriesApiService);
@@ -87,6 +94,7 @@ export class EntryListComponent implements OnInit {
     if (f.accountId) applied.push(`${tr('ACCOUNTING.ENTRIES.CUENTA')}: ${this.accountName(f.accountId)}`);
     if (f.method) applied.push(`${tr('COMMON.METODO')}: ${this.methodName(f.method)}`);
     if (f.origin) applied.push(`${tr('COMMON.ORIGEN')}: ${originLabel(f.origin)}`);
+    if (f.direction) applied.push(`${tr('ACCOUNTING.ENTRIES.DIRECCION')}: ${directionLabel(f.direction)}`);
     return applied;
   }
 
@@ -172,6 +180,14 @@ export class EntryListComponent implements OnInit {
 
   originClass(origin: EntryOrigin): string {
     return ORIGIN_CLASSES[origin];
+  }
+
+  directionLabel(direction: EntryDirection): string {
+    return directionLabel(direction);
+  }
+
+  signed(entry: Entry): string {
+    return signedAmount(entry);
   }
 
   amount(amount: string, currency: string): string {

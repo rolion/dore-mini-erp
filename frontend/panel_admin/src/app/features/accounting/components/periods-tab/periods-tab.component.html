@@ -1,0 +1,83 @@
+<div class="p-10">
+  <div class="ngxTableHeader">
+    <div class="table-title">
+      <h2><strong>{{ 'ACCOUNTING.FISCAL_PERIODS.TITULO' | translate }}</strong></h2>
+      <small class="text-muted">{{ 'ACCOUNTING.FISCAL_PERIODS.DESCRIPCION' | translate }}</small>
+    </div>
+    <div class="header-buttons-left">
+      <div class="d-flex align-items-center gap-2 ms-3">
+        <button type="button" class="btn btn-icon icon-left btn-primary rounded-button" (click)="openDialog()"
+          [title]="'ACCOUNTING.FISCAL_PERIODS.NUEVO_PERIODO' | translate" [attr.aria-label]="'ACCOUNTING.FISCAL_PERIODS.NUEVO_PERIODO' | translate">
+          <i class="material-icons">add</i>
+        </button>
+      </div>
+    </div>
+  </div>
+  @if (blockReason) {
+  <div class="alert alert-warning m-3" role="alert">{{ blockReason }}</div>
+  }
+  @if (loading && !rows.length) {
+  <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="m-4">
+    <small class="form-text text-danger d-block mb-2">{{ errorMessage }}</small>
+    <button type="button" class="btn btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else if (!rows.length) {
+  <div class="m-4">
+    <p>{{ 'ACCOUNTING.FISCAL_PERIODS.SIN_PERIODOS' | translate }}</p>
+    <button type="button" class="btn btn-primary" data-testid="create-first" (click)="openDialog()">{{ 'ACCOUNTING.FISCAL_PERIODS.CREAR_PERIODO' | translate }}</button>
+  </div>
+  } @else {
+  <div class="table-responsive">
+    <table class="table align-middle inventory-table">
+      <caption class="visually-hidden">{{ 'ACCOUNTING.FISCAL_PERIODS.TITULO' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.FISCAL_PERIODS.INICIO' | translate }}</th>
+          <th scope="col">{{ 'ACCOUNTING.FISCAL_PERIODS.FIN' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (period of rows; track period.id) {
+        <tr>
+          <td [attr.data-label]="'COMMON.NOMBRE' | translate"><strong>{{ period.name }}</strong></td>
+          <td [attr.data-label]="'ACCOUNTING.FISCAL_PERIODS.INICIO' | translate">{{ period.startDate | date: 'dd/MM/yyyy' }}</td>
+          <td [attr.data-label]="'ACCOUNTING.FISCAL_PERIODS.FIN' | translate">{{ period.endDate | date: 'dd/MM/yyyy' }}</td>
+          <td [attr.data-label]="'COMMON.ESTADO' | translate">
+            @if (period.isOpen) {
+            <div class="badge-outline col-green">{{ 'ACCOUNTING.FISCAL_PERIODS.ABIERTO' | translate }}</div>
+            } @else {
+            <div class="badge-outline col-red">{{ 'ACCOUNTING.FISCAL_PERIODS.CERRADO' | translate }}</div>
+            @if (period.closedByName) {
+            <small class="text-muted d-block">{{ 'ACCOUNTING.FISCAL_PERIODS.CERRADO_POR' | translate: { user: period.closedByName } }}</small>
+            }
+            }
+          </td>
+          <td>
+            @if (period.isOpen) {
+            <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto" (click)="openDialog(period)"
+              [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="confirm(period, 'close')"
+              [title]="'ACCOUNTING.FISCAL_PERIODS.CERRAR' | translate" [attr.aria-label]="'ACCOUNTING.FISCAL_PERIODS.CERRAR' | translate">
+              <i class="fas fa-lock"></i>
+            </button>
+            } @else {
+            <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="confirm(period, 'reopen')"
+              [title]="'ACCOUNTING.FISCAL_PERIODS.REABRIR' | translate" [attr.aria-label]="'ACCOUNTING.FISCAL_PERIODS.REABRIR' | translate">
+              <i class="fas fa-lock-open"></i>
+            </button>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

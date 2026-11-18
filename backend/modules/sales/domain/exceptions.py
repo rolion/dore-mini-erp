@@ -14,10 +14,11 @@ class OrderValidationError(Exception):
 class OrderRuleViolation(Exception):
     """El pedido está en un estado que no admite la acción; no es atribuible a un campo. `code` es estable."""
 
-    def __init__(self, code: str, message: str):
+    def __init__(self, code: str, message: str, extra: dict | None = None):
         super().__init__(message)
         self.code = code
         self.message = message
+        self.extra = extra or {}  # datos adicionales de la respuesta 409 (p. ej. `issues`)
 
 
 class OrderNotFound(Exception):

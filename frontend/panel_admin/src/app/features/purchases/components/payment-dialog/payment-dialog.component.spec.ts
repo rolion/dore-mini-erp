@@ -1,5 +1,6 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NEVER, of, throwError } from 'rxjs';
 
@@ -18,13 +19,14 @@ describe('PaymentDialogComponent', () => {
   let purchasesApi: jasmine.SpyObj<PurchasesApiService>;
 
   beforeEach(async () => {
-    api = jasmine.createSpyObj<PaymentsApiService>('PaymentsApiService', ['create']);
+    api = jasmine.createSpyObj<PaymentsApiService>('PaymentsApiService', ['create', 'preview']);
+    api.preview.and.returnValue(NEVER);
     purchasesApi = jasmine.createSpyObj<PurchasesApiService>('PurchasesApiService', ['get']);
     purchasesApi.get.and.returnValue(of(makeConfirmedPurchase({ balance: '25.00' })));
     modal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
     await TestBed.configureTestingModule({
       imports: [PaymentDialogComponent],
-      providers: [...provideTestTranslations(), 
+      providers: [...provideTestTranslations(), provideRouter([]),
         { provide: PaymentsApiService, useValue: api },
         { provide: PurchasesApiService, useValue: purchasesApi },
         { provide: NgbActiveModal, useValue: modal },
@@ -43,6 +45,90 @@ describe('PaymentDialogComponent', () => {
     component.form.patchValue({ amount, paymentMethod: method });
     fixture.detectChanges();
   }
+
+  it('shows the missing accounting setup with a link to Purchases settings and closes the dialog when followed (UI-04)', () => {
+    api.create.and.returnValue(throwError(() => new PaymentApiError(
+      'Falta la cuenta del método.', 409, {}, 'posting_configuration_missing', [{ code: 'method_unconfigured', subject: 'Caja', message: 'Falta la cuenta del método.' }])));
+    fill('10.00');
+    component.submit();
+    fixture.detectChanges();
+    expect(byId('alert-posting-issues')?.textContent).toContain('Falta la cuenta del método.');
+    expect(byId('general-error')).toBeNull();
+    const link = byId('link-posting-settings') as HTMLAnchorElement | null;
+    expect(link?.getAttribute('href')).toBe('/pocketbiz/purchases/settings?tab=posting');
+    link?.addEventListener('click', (event) => event.preventDefault());
+    link?.click();
+    expect(modal.dismiss).toHaveBeenCalled();
+  });
+
+  it('shows a plain error for other failures and no accounting alert (UI-04)', () => {
+    api.create.and.returnValue(throwError(() => new PaymentApiError('Ocurrió un error inesperado.', 500)));
+    fill('10.00');
+    component.submit();
+    fixture.detectChanges();
+    expect(byId('general-error')?.textContent).toContain('inesperado');
+    expect(byId('alert-posting-issues')).toBeNull();
+  });
+
+  it('asks for the expected entry once amount and method are valid and shows the split and the lines (AC-18, UI-04)', fakeAsync(() => {
+    api.preview.and.returnValue(of({
+      covered: true, debtAmount: '15.00', advanceAmount: '10.00',
+      lines: [
+        { side: 'DEBIT', role: 'PAYABLE', accountName: 'Proveedores', amount: '15.00' },
+        { side: 'CREDIT', role: 'MONEY', accountName: 'Caja', amount: '15.00' },
+      ],
+      issues: [],
+    }));
+    fill('25.00');
+    expect(byId('preview-loading')).not.toBeNull();
+    tick(300);
+    fixture.detectChanges();
+    expect(api.preview).toHaveBeenCalledTimes(1);
+    expect(byId('preview-debt')?.textContent).toContain('Bs 15.00');
+    expect(byId('preview-advance')?.textContent).toContain('Bs 10.00');
+    expect(root().querySelectorAll('[data-testid="preview-line"]').length).toBe(2);
+    expect(root().textContent).toContain('Proveedores');
+  }));
+
+  it('shows the issues known from the preview with the settings link and disables Register (REV-06, UI-04)', fakeAsync(() => {
+    api.preview.and.returnValue(of({
+      covered: true, debtAmount: '10.00', advanceAmount: '0.00', lines: [],
+      issues: [{ code: 'method_unconfigured', subject: 'Caja', message: 'Falta la cuenta del método.' }],
+    }));
+    fill('10.00');
+    tick(300);
+    fixture.detectChanges();
+    expect(byId('alert-posting-issues')?.textContent).toContain('Falta la cuenta del método.');
+    expect(byId('link-posting-settings')?.getAttribute('href')).toBe('/pocketbiz/purchases/settings?tab=posting');
+    expect((byId('submit') as HTMLButtonElement).disabled).toBeTrue();
+  }));
+
+  it('shows a readable error when the preview fails and still lets the payment be registered (REV-06, UI-04)', fakeAsync(() => {
+    api.preview.and.returnValue(throwError(() => new PaymentApiError('Error', 500)));
+    fill('10.00');
+    tick(300);
+    fixture.detectChanges();
+    expect(byId('preview-error')?.getAttribute('role')).toBe('alert');
+    expect((byId('submit') as HTMLButtonElement).disabled).toBeFalse();
+  }));
+
+  it('announces the loading state politely (REV-06, UI-04)', fakeAsync(() => {
+    fill('10.00');
+    expect(byId('preview-loading')?.getAttribute('role')).toBe('status');
+    expect(byId('preview-loading')?.getAttribute('aria-live')).toBe('polite');
+    tick(300);
+  }));
+
+  it('does not ask for a preview while the amount is invalid, and says so when the payment makes no entry (UI-04)', fakeAsync(() => {
+    fill('abc');
+    tick(300);
+    expect(api.preview).not.toHaveBeenCalled();
+    api.preview.and.returnValue(of({ covered: false, debtAmount: '10.00', advanceAmount: '0.00', lines: [], issues: [] }));
+    fill('10.00');
+    tick(300);
+    fixture.detectChanges();
+    expect(byId('preview-uncovered')).not.toBeNull();
+  }));
 
   it('shows the current balance next to the amount and today as the default date (AC-17)', () => {
     expect(byId('balance')?.textContent).toContain('Bs 25.00');

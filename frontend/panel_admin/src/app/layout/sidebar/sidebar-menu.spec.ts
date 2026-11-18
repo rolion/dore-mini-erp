@@ -29,8 +29,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(quotations.module).toBe('quotations');
     expect(quotations.submenu.map((item) => item.path)).toEqual(['/pocketbiz/quotations/proformas']);
     expect(receivables.module).toBe('receivables');
-    expect(receivables.path).toBe('/pocketbiz/receivables'); // ítem plano: sin submenú redundante (AC-12)
-    expect(receivables.submenu).toEqual([]);
+    // SRV-01: Cobros pasa a ser un grupo porque ahora tiene una segunda pantalla (la configuración contable).
+    expect(receivables.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/receivables', '/pocketbiz/receivables/settings',
+    ]);
     expect(personnel.module).toBe('personnel');
     expect(personnel.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/personnel/professionals', '/pocketbiz/personnel/specialties',
@@ -58,7 +60,9 @@ describe('Sidebar menu (routes.json)', () => {
     expect(visibleRoutes(routes, new Set(['customers', 'accounting']), false).some((route) => route.adminOnly)).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers', 'accounting']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeTrue();
-    expect(accounting.submenu.map((item) => item.path)).toEqual(['/pocketbiz/accounting/settings', '/pocketbiz/accounting/entries', '/pocketbiz/accounting/regularization']);
+    expect(accounting.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/accounting/accounts', '/pocketbiz/accounting/journal', '/pocketbiz/accounting/balances', '/pocketbiz/accounting/settings',
+    ]); // Cuentas, Movimientos, Saldos, Configuración (AC-09)
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
@@ -83,7 +87,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(expenses.title).toBe('MENUITEMS.EXPENSES.TEXT');
     expect(expenses.icon).toBe('dollar-sign');
     expect(expenses.class).toBe('menu-toggle');
-    expect(expenses.submenu.map((item) => item.path)).toEqual(['/pocketbiz/expenses', '/pocketbiz/expenses/categories']);
+    expect(expenses.submenu.map((item) => item.path)).toEqual(['/pocketbiz/expenses', '/pocketbiz/expenses/categories', '/pocketbiz/expenses/settings']);
     expect(expenses.groupTitle).toBeFalse();
 
     expect(reports.path).toBe('/pocketbiz/reports');
@@ -96,7 +100,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(41);
+    expect(titles.length).toBe(45);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

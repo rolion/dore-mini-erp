@@ -114,11 +114,46 @@ class StockOutput(Protocol):
     def output_for(self, order_id: UUID) -> StockOutputRecord | None: ...
 
 
-class PaymentLedger(Protocol):
-    """Integración opcional con Contabilidad: cada pago crea su entrada en el libro, dentro de la misma transacción."""
+class DeliveryCosting(Protocol):
+    """Costo de ventas al entregar (INV-01): valoriza las salidas al costo promedio y asienta Costo de ventas /
+    Inventario en la transacción de quien llama. Rechaza la entrega con una excepción de Ventas si falta costo o
+    configuración; sin cobertura contable no asienta ni exige nada."""
 
-    def is_available(self) -> bool: ...
+    def cost_delivery(self, order: object, lines: list[tuple[UUID, Decimal]], actor: Actor) -> None: ...
 
-    def record(self, order_id: UUID, payment: object, actor: Actor) -> None:
-        """Resuelve la cuenta del método y registra la entrada; rechaza el pago (excepción de Ventas) si no puede."""
+
+AT_CONFIRM = 'AT_CONFIRM'  # reconocido al confirmar (lógica anterior, histórico)
+AT_DELIVERY = 'AT_DELIVERY'  # reconocido al entregar
+
+
+class SalesPosting(Protocol):
+    """Integración opcional con Contabilidad: anticipos, reconocimiento al entregar, cobros y reversión.
+
+    Todo ocurre dentro de la transacción de quien llama; rechaza la operación con una excepción de Ventas si no
+    puede.
+    Con el módulo deshabilitado o sin cobertura no hace nada nuevo (comportamiento anterior).
+    """
+
+    def recognition_state(self, order_id: UUID) -> str | None:
+        """`AT_CONFIRM`, `AT_DELIVERY` o `None` (sin reconocimiento o con Contabilidad deshabilitada)."""
+        ...
+
+    def locks_total(self, order: object) -> bool:
+        """¿El total del pedido debe permanecer estable (confirmado con cobertura o ya reconocido)?"""
+        ...
+
+    def has_posted_payments(self, order: object) -> bool:
+        """¿Algún cobro del pedido tiene asiento (anticipo o cobro)?"""
+        ...
+
+    def record_payment(self, order: object, payment: object, actor: Actor, today: date) -> None:
+        """Contabiliza un cobro por un único camino (anticipo, cobro o, sin cobertura, libro anterior)."""
+        ...
+
+    def recognize_delivery(self, order: object, actor: Actor) -> None:
+        """Reconoce el ingreso al entregar y aplica los anticipos del pedido (una sola vez)."""
+        ...
+
+    def reverse_recognition(self, order: object, reason: str, actor: Actor, today: date) -> None:
+        """Revierte el reconocimiento anterior (al confirmar) con las cuentas originales."""
         ...
