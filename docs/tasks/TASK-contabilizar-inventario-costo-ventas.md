@@ -15,7 +15,7 @@
 | 2026-11-17 | PLANNING → ENGINEERING | Specification READY; PLAN v1 | delivery-start |
 | 2026-11-18 | ENGINEERING → REVIEW | Implementación completa según PLAN v1; pruebas propias en verde | delivery-build |
 | 2026-11-18 | REVIEW → PUBLISH | Quality Gate PASS (0 Critical/High; REV-01 y REV-02 Medium, REV-03 Low abiertos) | delivery-publish |
-| 2026-11-18 | PUBLISH (corrección) | REV-01..03 corregidos a pedido de la persona; suite completa 2138 OK; el Quality Gate no se repitió | delivery-build |
+| 2026-11-18 | PUBLISH (corrección) | REV-01..03 corregidos a pedido de la persona; suite completa 2138 OK; Quality Gate repetido: PASS | delivery-build |
 
 ## Investigación
 
@@ -110,5 +110,10 @@ Implementado según PLAN v1, sin cambios de Specification.
 - REV-03 (Low, IMPLEMENTATION; **resuelto**, salvo el E501 de la migración generada): `get_product_totals` en memoria, fecha del evento de costo, estilo y límite del promedio tras reversa.
 - **Corrección posterior (sin repetir el Quality Gate):** REV-01 con el bloqueo de la empresa antes que el del almacén en recepciones, su reversa y salidas por venta (con Costeo habilitado); REV-02 con pruebas nuevas (AC-06, aislamiento, entrega con fecha distinta, producto sin costo, reversa tras vender, entregas y recepciones simultáneas en dos almacenes); REV-03 con saldos filtrados en la consulta, fecha del evento de costo y E128. Suite completa 2138 OK. Producto repetido y cantidades fraccionarias en pedidos no son alcanzables (Ventas las rechaza). La concurrencia pasa con el arreglo, pero no se demostró que fallara antes.
 
+## Review (segunda pasada)
+**Quality Gate: PASS** (subagente aislado, 2026-11-18, estado final tras corregir REV-01..03). Backend: `manage.py test` 2138 OK (en serie), `makemigrations --check` sin cambios, bandit sin hallazgos, sin avisos nuevos de flake8/ruff en líneas cambiadas (solo el E501 conocido de la migración generada). Pruebas de concurrencia repetidas 6 veces sin fallos. REV-01..03 comprobados contra el código y resueltos; el orden de bloqueo (empresa antes que almacén) es consistente en recepción, reversa y salida, y los movimientos manuales (un solo almacén) no pueden formar ciclo. Frontend no tocado.
+- Observaciones Low sin REV: (1) el bloqueo de empresa serializa todas las entregas y recepciones con Costeo activo hasta el commit (límite de rendimiento aceptado por el ADR); (2) las pruebas de concurrencia usan productos y almacenes distintos: no cubren el mismo producto en dos almacenes ni entrega concurrente con recepción; (3) el índice real es `(company_id, product_id, kind, -id)` y no se usa `check_posting_ready` previo.
+- **No realizado:** mutación que revierta el arreglo de REV-01 para confirmar que las pruebas de concurrencia fallan sin él.
+
 ## Publicación
-PR https://github.com/rolion/dore-mini-erp/pull/91 (base `accounting`) listo para aprobación humana; no se mergea. **Sensible:** incluye ADR, migración nueva (`costing/0002`) y cálculo de dinero; lo aprueba una persona. REV-01..03 corregidos tras el Quality Gate sin repetirlo.
+PR https://github.com/rolion/dore-mini-erp/pull/91 (base `accounting`) listo para aprobación humana; no se mergea. **Sensible:** incluye ADR, migración nueva (`costing/0002`) y cálculo de dinero; lo aprueba una persona. REV-01..03 corregidos y Quality Gate repetido con PASS.
