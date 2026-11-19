@@ -1,0 +1,369 @@
+{
+  "version": 1,
+  "accounting": {
+    "accounts": [
+      {
+        "code": "1102",
+        "name": "Bancos",
+        "currency": "BOB",
+        "kind": "BANK",
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "1103",
+        "name": "Cuentas por cobrar a clientes",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "1104",
+        "name": "Inventario de mercaderías",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "110401",
+        "name": "Inventario de mercaderías para la venta",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "110402",
+        "name": "Inventario de materias primas",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "110403",
+        "name": "Inventario de productos en proceso",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "110404",
+        "name": "Inventario de productos terminados",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "110405",
+        "name": "Inventario de materiales e insumos",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "11101",
+        "name": "Caja",
+        "currency": "BOB",
+        "kind": "CASH",
+        "account_class": "ASSET",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "2101",
+        "name": "Cuentas por pagar a proveedores",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "LIABILITY",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "2104",
+        "name": "Anticipos de clientes",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "LIABILITY",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "3101",
+        "name": "Patrimonio",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "EQUITY",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "4101",
+        "name": "Ingresos por venta de productos",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "INCOME",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "4102",
+        "name": "Ingresos por prestación de servicios",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "INCOME",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "5101",
+        "name": "Costo de mercaderías vendidas",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "COST",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "6101",
+        "name": "Gastos de sueldos y beneficios",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "EXPENSE",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "6102",
+        "name": "Gastos de alquiler",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "EXPENSE",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "6103",
+        "name": "Gastos de servicios básicos",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "EXPENSE",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "6104",
+        "name": "Gastos de internet y telefonía",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "EXPENSE",
+        "is_contra": false,
+        "is_active": true
+      },
+      {
+        "code": "6107",
+        "name": "Gastos de materiales y suministros",
+        "currency": "BOB",
+        "kind": null,
+        "account_class": "EXPENSE",
+        "is_contra": false,
+        "is_active": true
+      }
+    ],
+    "method_mappings": [
+      {
+        "method": "BANK_TRANSFER",
+        "account_code": "1102",
+        "is_active": true
+      },
+      {
+        "method": "CARD",
+        "account_code": "1102",
+        "is_active": true
+      },
+      {
+        "method": "CASH",
+        "account_code": "11101",
+        "is_active": true
+      },
+      {
+        "method": "OTHER",
+        "account_code": "1102",
+        "is_active": true
+      },
+      {
+        "method": "QR",
+        "account_code": "1102",
+        "is_active": true
+      }
+    ],
+    "classifications": [
+      {
+        "name": "Alquiler",
+        "direction": "EXPENSE",
+        "is_active": true
+      },
+      {
+        "name": "Pago Proveedores",
+        "direction": "EXPENSE",
+        "is_active": true
+      },
+      {
+        "name": "Servicios Basico",
+        "direction": "EXPENSE",
+        "is_active": true
+      },
+      {
+        "name": "Sueldos y Salarios",
+        "direction": "EXPENSE",
+        "is_active": true
+      },
+      {
+        "name": "Alquiler",
+        "direction": "INCOME",
+        "is_active": false
+      },
+      {
+        "name": "servicios",
+        "direction": "INCOME",
+        "is_active": true
+      },
+      {
+        "name": "ventas",
+        "direction": "INCOME",
+        "is_active": true
+      }
+    ],
+    "account_class_settings": []
+  },
+  "expenses": {
+    "categories": [
+      {
+        "name": "Alquiler",
+        "active": true,
+        "classification": {
+          "name": "Alquiler",
+          "direction": "EXPENSE"
+        }
+      },
+      {
+        "name": "Pago a proveedores",
+        "active": false,
+        "classification": null
+      },
+      {
+        "name": "Servicios Basicos",
+        "active": true,
+        "classification": {
+          "name": "Servicios Basico",
+          "direction": "EXPENSE"
+        }
+      },
+      {
+        "name": "Sueldos y Salarios",
+        "active": true,
+        "classification": {
+          "name": "Sueldos y Salarios",
+          "direction": "EXPENSE"
+        }
+      }
+    ]
+  },
+  "accounting_posting": {
+    "roles": [
+      {
+        "key": "COST_OF_SALES",
+        "account_code": "5101"
+      },
+      {
+        "key": "CUSTOMER_ADVANCES",
+        "account_code": "2104"
+      },
+      {
+        "key": "INVENTORY",
+        "account_code": "1104"
+      },
+      {
+        "key": "PAYABLE",
+        "account_code": "2101"
+      },
+      {
+        "key": "RECEIVABLE",
+        "account_code": "1103"
+      },
+      {
+        "key": "SALES_INCOME",
+        "account_code": "4101"
+      },
+      {
+        "key": "SERVICE_INCOME",
+        "account_code": "4102"
+      }
+    ],
+    "categories": [
+      {
+        "category_name": "Alquiler",
+        "account_code": "6102"
+      },
+      {
+        "category_name": "Servicios Basicos",
+        "account_code": "6103"
+      },
+      {
+        "category_name": "Sueldos y Salarios",
+        "account_code": "6101"
+      }
+    ]
+  },
+  "purchases": {
+    "payment_classification": {
+      "name": "Pago Proveedores",
+      "direction": "EXPENSE"
+    }
+  },
+  "inventory": {
+    "warehouses": [
+      {
+        "name": "Almacén principal",
+        "is_default": true,
+        "description": "",
+        "active": true
+      }
+    ]
+  },
+  "modularity": {
+    "modules": [
+      "accounting",
+      "agenda",
+      "costing",
+      "customers",
+      "dentistry",
+      "expenses",
+      "inventory",
+      "personnel",
+      "purchases",
+      "quotations",
+      "receivables",
+      "reporting",
+      "sales",
+      "services"
+    ],
+    "settings": {
+      "sales.default_payment_method": "QR",
+      "sales.default_sales_channel": "WHATSAPP"
+    }
+  }
+}

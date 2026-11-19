@@ -1,6 +1,6 @@
 # TASK-configuracion-contable-por-defecto-nueva-empresa: Configuración contable y de módulos por defecto en empresas nuevas
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-configuracion-contable-por-defecto-nueva-empresa` (base: `accounting`)
@@ -12,6 +12,7 @@
 | 2026-11-19 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-19 | INVESTIGATION → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE; decisiones de negocio respondidas por el usuario | delivery-start |
 | 2026-11-19 | PLANNING → ENGINEERING | Specification READY, plan v1 | delivery-start |
+| 2026-11-19 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -79,7 +80,18 @@ No aplica.
 `docs/plans/PLAN-2026-11-19-configuracion-contable-por-defecto-nueva-empresa.md` (v1, COMPLETO) — Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+**Resumen.** Puerto `shared/company_defaults` (registro de secciones + `export_all`/`apply_all` atómico, `dry_run`), snapshot `shared/company_defaults/snapshot.json` generado desde «demo dore» (claves naturales, sin UUID), una sección por módulo en `<módulo>/infrastructure/defaults.py` registrada desde su `apps.py`, llamada en `register_company_admin` (misma transacción) y comandos `copy_company_defaults` / `export_company_defaults` en `accounts`.
+
+**Cobertura.** AC-01..05 y AC-09 → `RegisterSeedsDefaultsTests`; AC-06 → aislamiento entre dos altas y empresa anterior intacta; AC-07 → `CopyCommandTests` (vacía, parcial, idempotente, dry-run, empresa inexistente); AC-08 → snapshot sin UUID e ida y vuelta export→apply→export; INV-02/03 → idempotencia y «no pisa» (cuenta 1102 y ajuste existentes); referencia rota → no escribe nada.
+
+**Desviaciones respecto al plan.**
+- El `ctx` de la ADR se mantiene pero Contabilidad aporta dos secciones (`accounting` y `accounting_posting`) porque las cuentas por categoría dependen de Gastos y los módulos no pueden importarse entre sí (los tests de frontera lo exigen). Documentado en la ADR.
+- El ajuste de Compras se completa solo si está vacío (no pisa una clasificación ya elegida).
+- El snapshot no incluye `account_class_settings` (demo dore no tiene filas = todas habilitadas).
+
+**Deuda / notas.** Cada configuración nueva por empresa debe sumar su sección y regenerar el snapshot. La corrida de `export_company_defaults` leyó `doredb` solo en lectura. Sin migraciones ni dependencias nuevas.
+
+**Verificación propia (no es el Quality Gate).** `manage.py test` de accounts, modularity, accounting, expenses, purchases e inventory: 1300 tests OK y suite completa 2277 tests OK; ruff y flake8 sin avisos en los archivos cambiados.
 
 ## Review
 _Pendiente_
