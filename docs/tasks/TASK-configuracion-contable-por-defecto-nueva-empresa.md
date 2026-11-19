@@ -88,6 +88,8 @@ No aplica.
 **Desviaciones respecto al plan.**
 - El `ctx` de la ADR se mantiene pero Contabilidad aporta dos secciones (`accounting` y `accounting_posting`) porque las cuentas por categoría dependen de Gastos y los módulos no pueden importarse entre sí (los tests de frontera lo exigen). Documentado en la ADR.
 - El ajuste de Compras se completa solo si está vacío (no pisa una clasificación ya elegida).
+- El puerto es un paquete (`shared/company_defaults/`) y no un módulo suelto, para alojar `snapshot.json`.
+- Un snapshot inválido en el alta responde 500 con la empresa revertida (decisión declarada en la ADR).
 - El snapshot no incluye `account_class_settings` (demo dore no tiene filas = todas habilitadas).
 
 **Deuda / notas.** Cada configuración nueva por empresa debe sumar su sección y regenerar el snapshot. La corrida de `export_company_defaults` leyó `doredb` solo en lectura. Sin migraciones ni dependencias nuevas.
@@ -95,7 +97,7 @@ No aplica.
 **Verificación propia (no es el Quality Gate).** `manage.py test` de accounts, modularity, accounting, expenses, purchases e inventory: 1300 tests OK y suite completa 2277 tests OK; ruff y flake8 sin avisos en los archivos cambiados.
 
 ## Review
-**PASS** (Quality Gate en subagente aislado, 2026-11-19). Tests de 7 apps: 1681 OK (el autor corrió además la suite completa: 2277 OK); ruff y flake8 sin avisos; bandit sin Medium/High (1 Low falso positivo en un test); límites DDD verificados; AC-01..09 e INV-01..05 con verificación. Revisión visual: no aplica (sin UI). Hallazgos no bloqueantes: REV-2026-11-19-configuracion-contable-por-defecto-nueva-empresa-01 a -04 (docs/reviews/).
+**PASS** (Quality Gate en subagente aislado, 2026-11-19). Tests de 7 apps: 1681 OK (el autor corrió además la suite completa: 2277 OK); ruff y flake8 sin avisos; bandit sin Medium/High (1 Low falso positivo en un test); límites DDD verificados; AC-01..09 e INV-01..05 con verificación. Revisión visual: no aplica (sin UI). Hallazgos (corregidos tras el PASS, ver REV): REV-2026-11-19-configuracion-contable-por-defecto-nueva-empresa-01 a -04 (docs/reviews/).
 
 ## Publicación
 PR #109 listo para aprobación humana contra `accounting`; nunca se mergea desde el flujo. Cambio sensible: base de datos / alta de empresa (ADR respaldatorio: ADR-configuracion-contable-por-defecto-nueva-empresa-snapshot-y-puerto). Sin migraciones ni dependencias nuevas.

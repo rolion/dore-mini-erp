@@ -1,6 +1,6 @@
 # ADR-configuracion-contable-por-defecto-nueva-empresa-snapshot-y-puerto: Snapshot JSON y puerto neutro de defaults por empresa
 
-**Estado:** Propuesto
+**Estado:** Aceptado
 **Task relacionado:** TASK-configuracion-contable-por-defecto-nueva-empresa
 **Fecha:** 2026-11-19
 
@@ -25,6 +25,9 @@ La configuración contable y de módulos de la empresa «demo dore» debe ser el
 Sin migraciones: solo código y un JSON. Revertir el PR devuelve el alta al comportamiento actual. La siembra del alta es atómica con la empresa. El comando de copia solo agrega y soporta `--dry-run`; lo creado no pisa datos previos. Fallo de una sección en la copia → transacción por empresa completa revierte.
 
 ## Consecuencias
+- El puerto es el paquete `shared/company_defaults/` (no un módulo suelto) porque aloja `snapshot.json`; un test de frontera impide que importe `modules.*`.
+- Si el snapshot es inválido, `DefaultsError` sube sin capturar y el alta responde 500 (la empresa se revierte): es un error de despliegue, no de la persona usuaria, porque el archivo lo versiona el repo.
+- Aplicar el snapshot marca la empresa como inicializada (`CompanySettingsModel`), por lo que la siembra perezosa de `DEFAULT_ENABLED_KEYS` ya no corre para ella. Es seguro mientras el snapshot incluya los módulos por defecto; si se quitan, hay que revisar este acoplamiento.
 - Nueva frontera `accounts → shared.company_defaults` y módulos registrando secciones; cubierta por tests de frontera.
 - Cada configuración nueva por empresa debe sumar su sección y regenerar el snapshot.
 - El snapshot refleja la configuración de «demo dore» en el momento de exportar; editarlo manualmente es válido y se valida al aplicar.

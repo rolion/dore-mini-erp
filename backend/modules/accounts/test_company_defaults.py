@@ -1,13 +1,15 @@
 """Configuración contable y de módulos por defecto: alta de empresa y copia a empresas existentes."""
 import json
 import re
+import tempfile
 from datetime import date
 from io import StringIO
+from pathlib import Path
 from unittest import mock
 
 from django.core.cache import cache
 from django.core.management import CommandError, call_command
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APITestCase
 
 from modules.accounting.infrastructure.django.models import (
@@ -178,9 +180,35 @@ class CopyCommandTests(TestCase):
 
     def test_export_command_writes_snapshot_without_uuids(self):  # AC-08
         run('copy_company_defaults', '--company', 'Vacía SRL')
-        import tempfile
-        from pathlib import Path
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder) / 'out.json'
             run('export_company_defaults', '--company', 'Vacía SRL', '--output', str(target))
             self.assertEqual(json.loads(target.read_text(encoding='utf-8')), SNAPSHOT)
+
+
+class DefaultsIsolationAndDryRunTests(TestCase):  # REV-02
+    def test_dry_run_rolls_back_coverage_and_cutoff(self):  # AC-07
+        company = Company.objects.create(name='Simulada SRL')
+        run('copy_company_defaults', '--company', 'Simulada SRL', '--dry-run')
+        self.assertFalse(SettingsModel.objects.filter(company_id=company.id).exists())
+        self.assertFalse(CoveragePeriodModel.objects.filter(company_id=company.id).exists())
+        self.assertFalse(FiscalPeriodModel.objects.filter(company_id=company.id).exists())
+
+    def test_applying_to_one_company_does_not_touch_another(self):  # INV-01
+        target = Company.objects.create(name='Destino SRL')
+        other = Company.objects.create(name='Otra SRL')
+        AccountModel.objects.create(company_id=other.id, code='9999', name='Propia', currency='BOB',
+                                    account_class='ASSET')
+        run('copy_company_defaults', '--company', 'Destino SRL')
+        self.assertEqual(list(AccountModel.objects.filter(company_id=other.id).values_list('code', flat=True)),
+                         ['9999'])
+        self.assertFalse(CompanyModuleModel.objects.filter(company_id=other.id).exists())
+        self.assertFalse(PostingAccountModel.objects.filter(company_id=other.id).exists())
+        self.assertTrue(AccountModel.objects.filter(company_id=target.id, code='1102').exists())
+
+
+class DefaultsBoundaryTests(SimpleTestCase):  # REV-02
+    def test_shared_company_defaults_does_not_import_business_modules(self):
+        source = Path(company_defaults.__file__).read_text(encoding='utf-8')
+        imports = re.findall(r'^\s*(?:from|import)\s+modules\b', source, flags=re.MULTILINE)
+        self.assertEqual(imports, [], 'shared no importa módulos de negocio')

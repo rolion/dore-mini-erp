@@ -1,6 +1,6 @@
 # REV-2026-11-19-configuracion-contable-por-defecto-nueva-empresa-01: Desviaciones sin declarar y ADR en Propuesto
 
-**Status:** Open (no bloquea el PASS)
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-19-configuracion-contable-por-defecto-nueva-empresa.md (v1)

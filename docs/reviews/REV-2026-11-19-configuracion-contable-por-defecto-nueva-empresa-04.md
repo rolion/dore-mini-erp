@@ -1,6 +1,6 @@
 # REV-2026-11-19-configuracion-contable-por-defecto-nueva-empresa-04: Acoplamiento implícito con DEFAULT_ENABLED_KEYS
 
-**Status:** Open (no bloquea el PASS)
+**Status:** Resolved
 **Severity:** Medium
 **Category:** ARCHITECTURE
 **Related plan:** docs/plans/PLAN-2026-11-19-configuracion-contable-por-defecto-nueva-empresa.md (v1)

@@ -1,6 +1,6 @@
 # REV-2026-11-19-configuracion-contable-por-defecto-nueva-empresa-02: Falta cobertura de dry-run con cobertura/corte e INV-01 directo
 
-**Status:** Open (no bloquea el PASS)
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-19-configuracion-contable-por-defecto-nueva-empresa.md (v1)
