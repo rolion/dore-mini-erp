@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-configuracion-contable-por-defecto-nueva-empresa` (base: `accounting`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/109
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
