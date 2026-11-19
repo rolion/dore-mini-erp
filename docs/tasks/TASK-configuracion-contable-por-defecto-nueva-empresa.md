@@ -1,6 +1,6 @@
 # TASK-configuracion-contable-por-defecto-nueva-empresa: Configuración contable y de módulos por defecto en empresas nuevas
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** NO
 **Rama:** `task/TASK-configuracion-contable-por-defecto-nueva-empresa` (base: `accounting`)
@@ -13,6 +13,7 @@
 | 2026-11-19 | INVESTIGATION → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE; decisiones de negocio respondidas por el usuario | delivery-start |
 | 2026-11-19 | PLANNING → ENGINEERING | Specification READY, plan v1 | delivery-start |
 | 2026-11-19 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-19 | REVIEW → PUBLISH | Quality Gate PASS (4 hallazgos Low/Medium no bloqueantes) | delivery-publish |
 
 ## Investigación
 
@@ -94,7 +95,7 @@ No aplica.
 **Verificación propia (no es el Quality Gate).** `manage.py test` de accounts, modularity, accounting, expenses, purchases e inventory: 1300 tests OK y suite completa 2277 tests OK; ruff y flake8 sin avisos en los archivos cambiados.
 
 ## Review
-_Pendiente_
+**PASS** (Quality Gate en subagente aislado, 2026-11-19). Tests de 7 apps: 1681 OK (el autor corrió además la suite completa: 2277 OK); ruff y flake8 sin avisos; bandit sin Medium/High (1 Low falso positivo en un test); límites DDD verificados; AC-01..09 e INV-01..05 con verificación. Revisión visual: no aplica (sin UI). Hallazgos no bloqueantes: REV-2026-11-19-configuracion-contable-por-defecto-nueva-empresa-01 a -04 (docs/reviews/).
 
 ## Publicación
-_Pendiente_
+PR #109 listo para aprobación humana contra `accounting`; nunca se mergea desde el flujo. Cambio sensible: base de datos / alta de empresa (ADR respaldatorio: ADR-configuracion-contable-por-defecto-nueva-empresa-snapshot-y-puerto). Sin migraciones ni dependencias nuevas.
