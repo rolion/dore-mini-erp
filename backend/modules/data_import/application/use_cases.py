@@ -442,6 +442,8 @@ class ExecuteSalesImport:
         try:
             with gateway.atomic():
                 outcome = self._build_sale(run_id, group, opts, planner, warehouse_id, refs, day)
+                # Misma transacción que la venta: la clave única impide duplicarla (reintentos y cargas simultáneas).
+                self.repository.record_sale(group.key, outcome.order_id, run_id)
         except DuplicateSale:
             self.gateway.reset_cache()
             self._duplicate(run_id, group, counts)

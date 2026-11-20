@@ -62,8 +62,6 @@ class FakeRepository:
 
     def add_result(self, run_id, row_number, sale_key, status, code, message, order_id, refs):
         self.results.append((row_number, sale_key, status, code, message, order_id, refs))
-        if status in ('CREATED', 'CREATED_WITHOUT_POSTING') and sale_key not in self.keys:
-            self.keys.add(sale_key)
 
 
 class FakeGateway:

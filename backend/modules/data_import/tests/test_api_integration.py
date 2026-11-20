@@ -111,3 +111,41 @@ class FullSequenceTests(APITestCase):
         stock = self.client.get('/api/stock/').json()
         quantities = [Decimal(str(r.get('quantity', r.get('balance', 0)))) for r in stock.get('results', stock)]
         self.assertTrue(all(q == 0 for q in quantities), quantities)  # compró exactamente lo que vendió
+
+
+class ReuploadTests(APITestCase):
+    """Volver a subir ventas ya importadas no las duplica, aunque sea otro archivo."""
+
+    def setUp(self):
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
+
+    def _run(self, text, name):
+        upload = self.client.post('/api/imports/sales/', {'file': SimpleUploadedFile(name, text.encode())},
+                                  format='multipart').json()
+        body = {'mapping': upload['suggested_mapping'], 'options': OPTIONS}
+        base = f"/api/imports/sales/{upload['id']}"
+        preview = self.client.post(f'{base}/preview/', body, format='json').json()
+        self.client.post(f'{base}/execute/', body, format='json')
+        rows = self.client.get(f'{base}/rows/').json()['results']
+        return preview, [r['status'] for r in rows]
+
+    def test_same_sales_in_another_file_are_skipped_and_new_ones_are_loaded(self):
+        header = 'fecha,n_venta,producto,cantidad,precio_unitario,cliente,metodo_pago,canal'
+        september = chr(10).join([header, '3 sep.,10,pack queso,4,25,Eva,QR,Whatsapp',
+                                  '4 sep.,11,pack queso,1,25,Eva,QR,Whatsapp'])
+        _, statuses = self._run(september, 'sep.csv')
+        self.assertEqual(statuses, ['CREATED', 'CREATED'])
+        extended = september + chr(10) + '5 sep.,12,pack queso,2,25,Eva,QR,Whatsapp'
+        preview, statuses = self._run(extended, 'sep_ampliado.csv')
+        self.assertEqual((preview['already_imported'], preview['to_create']), (2, 1))
+        self.assertEqual(sorted(statuses), ['CREATED', 'SKIPPED_DUPLICATE', 'SKIPPED_DUPLICATE'])
+        self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 3)
+
+    def test_sales_without_number_are_recognized_by_their_content(self):
+        header = 'fecha,producto,cantidad,precio_unitario,cliente,metodo_pago,canal'
+        text = header + chr(10) + '3 sep.,pack queso,4,25,Eva,QR,Whatsapp'
+        self._run(text, 'a.csv')
+        _, statuses = self._run(text, 'b.csv')
+        self.assertEqual(statuses, ['SKIPPED_DUPLICATE'])
+        self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 1)
