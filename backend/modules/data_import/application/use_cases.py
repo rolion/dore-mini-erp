@@ -4,6 +4,7 @@ import json
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from itertools import groupby
 from decimal import Decimal
 from uuid import UUID
 
@@ -141,6 +142,72 @@ class _Planner:
         return self.gateway.average_cost(product.id) if product is not None else None
 
 
+@dataclass
+class PlannedLine:
+    key: str
+    name: str
+    product: ProductRef | None
+    quantity: int
+    cost: Decimal
+    price: Decimal
+    category: str
+    row: int
+
+
+@dataclass
+class DayPlan:
+    """Compras que hacen falta un día: una por proveedor con el faltante de stock de todas las ventas del día."""
+    purchases: dict[str, tuple[str, list[PlannedLine]]] = field(default_factory=dict)
+    blocked: dict[str, ImportRejected] = field(default_factory=dict)  # producto → motivo por el que no se puede comprar
+    blocked_rows: dict[str, int] = field(default_factory=dict)
+    balances: dict[str, Decimal] = field(default_factory=dict)  # saldo proyectado por producto tras comprar
+    units: int = 0
+
+
+def plan_day(planner: '_Planner', groups: list[SaleGroup], products: dict[str, ProductRef | None],
+             balances: dict[str, Decimal], warehouse_id: UUID | None) -> DayPlan:
+    plan = DayPlan()
+    if warehouse_id is None:
+        return plan
+    lines_by_key: dict[str, list[SaleLine]] = {}
+    for group in groups:
+        for line in group.lines:
+            lines_by_key.setdefault(line.product_key, []).append(line)
+    for key, lines in lines_by_key.items():
+        product = products.get(key)
+        if not planner.controls_stock(product):
+            continue
+        balance = balances.get(key)
+        if balance is None:
+            balance = planner.gateway.stock_balance(warehouse_id, product.id) if product is not None else Decimal('0')
+        plan.balances[key] = balance
+        short = planner.shortfall(balance, sum(line.quantity for line in lines))
+        if short <= 0:
+            continue
+        first = lines[0]
+        cost = planner.unit_cost([line.unit_cost for line in lines], product)
+        if cost is None:
+            plan.blocked[key] = ImportRejected(
+                'cost_missing', f'Falta el costo unitario de «{first.product_name}» para crear la compra por el '
+                'faltante de stock: agrega la columna de costo o registra una compra antes.', 'unit_cost')
+            plan.blocked_rows[key] = first.row
+            continue
+        if product is not None and not product.can_buy:
+            plan.blocked[key] = ImportRejected(
+                'product_not_buyable', f'El producto «{product.name}» no está habilitado para compra.',
+                'product_name')
+            plan.blocked_rows[key] = first.row
+            continue
+        if product is None and not planner.options.infer_products:
+            continue  # la venta falla por producto inexistente; no se compra nada
+        supplier = next((line.supplier_name for line in lines if line.supplier_name), '') or DEFAULT_SUPPLIER
+        plan.purchases.setdefault(normalize_name(supplier), (supplier, [])).__getitem__(1).append(
+            PlannedLine(key, first.product_name, product, short, cost, first.unit_price, first.category, first.row))
+        plan.balances[key] = balance + short
+        plan.units += short
+    return plan
+
+
 class PreviewSalesImport:
     """Valida todo sin escribir en ningún módulo (AC-06); el servidor revalida al ejecutar."""
 
@@ -178,49 +245,73 @@ class PreviewSalesImport:
         seen_customers: set[str] = set()
         warehouse_flagged = False
         allow_negative = gateway.allow_negative_stock() if caps.inventory else True
-        for group in groups:
-            if group.key in duplicates:
-                result.already_imported += 1
+        for _day, day_iter in groupby(groups, key=lambda g: g.sale_date):
+            day_groups = list(day_iter)
+            live = []
+            for group in day_groups:
+                if group.key in duplicates:
+                    result.already_imported += 1
+                else:
+                    live.append(group)
+            if not live:
                 continue
-            problems: list[RowProblem] = []
+            per_group: dict[str, tuple[list[RowProblem], dict, object]] = {}
+            day_products: dict[str, ProductRef | None] = {}
+            for group in live:
+                problems: list[RowProblem] = []
 
-            def problem(line_row: int, field_name: str, code: str, message: str, _g=group, _p=problems) -> None:
-                _p.append(RowProblem(line_row, _g.key, field_name, code, message))
+                def problem(line_row: int, field_name: str, code: str, message: str, _g=group, _p=problems) -> None:
+                    _p.append(RowProblem(line_row, _g.key, field_name, code, message))
 
-            products = self._check_products(group, opts, problem)
-            customer = self._check_customer(group, opts, caps, problem)
-            staged, purchases, units = self._simulate_stock(group, products, planner, warehouse_id, balances,
-                                                            allow_negative, problem)
-            if warehouse_id is None and not warehouse_flagged and any(
-                    planner.controls_stock(p) for p in products.values()):
-                warehouse_flagged = True
-                problem(group.first_row, 'warehouse_id', 'warehouse_required',
-                        'Elige el almacén de salida: hay productos con control de stock.')
-            posts = bool(opts.infer_accounting and caps.accounting and gateway.is_covered(group.sale_date))
-            if posts and caps.costing and not caps.costing_valued and any(
-                    planner.controls_stock(p) for p in products.values()):
-                problem(group.first_row, 'sale_date', 'costing_not_adopted',
-                        'Para contabilizar el costo de ventas, adopta antes la valoración inicial de las existencias '
-                        'en Costeo (o desmarca «Inferir movimientos contables»).')
-            if problems:
-                result.with_errors += 1
-                result.problems.extend(problems)
-                continue
-            balances.update(staged)
-            result.to_create += 1
-            result.purchases_to_create += purchases
-            result.units_to_buy += units
-            for key, product in products.items():
-                if key not in seen_products:
-                    seen_products.add(key)
-                    result.existing_products += product is not None
-                    result.new_products += product is None
-            if group.customer_name and caps.customers and group.customer_key not in seen_customers:
-                seen_customers.add(group.customer_key)
-                result.existing_customers += customer is not None
-                result.new_customers += customer is None
-            if opts.infer_accounting and caps.accounting and not posts:
-                result.without_posting += 1
+                products = self._check_products(group, opts, problem)
+                day_products.update({k: v for k, v in products.items() if k not in day_products or v is not None})
+                customer = self._check_customer(group, opts, caps, problem)
+                per_group[group.key] = (problems, products, customer)
+            plan = plan_day(planner, live, day_products, balances, warehouse_id)
+            result.purchases_to_create += len(plan.purchases)
+            result.units_to_buy += plan.units
+            balances.update(plan.balances)
+            for group in live:
+                problems, products, customer = per_group[group.key]
+
+                def problem(line_row: int, field_name: str, code: str, message: str, _g=group, _p=problems) -> None:
+                    _p.append(RowProblem(line_row, _g.key, field_name, code, message))
+
+                for line in group.lines:
+                    blocked = plan.blocked.get(line.product_key)
+                    if blocked is not None:
+                        problem(line.row, blocked.field or 'product_name', blocked.code, blocked.message)
+                        break
+                staged = self._simulate_stock(group, products, planner, warehouse_id, balances, allow_negative,
+                                              problem)
+                if warehouse_id is None and not warehouse_flagged and any(
+                        planner.controls_stock(p) for p in products.values()):
+                    warehouse_flagged = True
+                    problem(group.first_row, 'warehouse_id', 'warehouse_required',
+                            'Elige el almacén de salida: hay productos con control de stock.')
+                posts = bool(opts.infer_accounting and caps.accounting and gateway.is_covered(group.sale_date))
+                if posts and caps.costing and not caps.costing_valued and any(
+                        planner.controls_stock(p) for p in products.values()):
+                    problem(group.first_row, 'sale_date', 'costing_not_adopted',
+                            'Para contabilizar el costo de ventas, adopta antes la valoración inicial de las '
+                            'existencias en Costeo (o desmarca «Inferir movimientos contables»).')
+                if problems:
+                    result.with_errors += 1
+                    result.problems.extend(problems)
+                    continue
+                balances.update(staged)
+                result.to_create += 1
+                for key, product in products.items():
+                    if key not in seen_products:
+                        seen_products.add(key)
+                        result.existing_products += product is not None
+                        result.new_products += product is None
+                if group.customer_name and caps.customers and group.customer_key not in seen_customers:
+                    seen_customers.add(group.customer_key)
+                    result.existing_customers += customer is not None
+                    result.new_customers += customer is None
+                if opts.infer_accounting and caps.accounting and not posts:
+                    result.without_posting += 1
 
     def _check_products(self, group: SaleGroup, opts: ImportOptions, problem) -> dict[str, ProductRef | None]:
         products: dict[str, ProductRef | None] = {}
@@ -252,42 +343,27 @@ class PreviewSalesImport:
 
     def _simulate_stock(self, group: SaleGroup, products: dict[str, ProductRef | None], planner: _Planner,
                         warehouse_id: UUID | None, balances: dict[str, Decimal], allow_negative: bool, problem):
-        """Devuelve `(saldos proyectados, compras a crear, unidades a comprar)` de la venta."""
+        """Saldos proyectados tras la venta (las compras del día ya están en `balances`)."""
         staged: dict[str, Decimal] = {}
         if warehouse_id is None:
-            return staged, 0, 0
+            return staged
         needs: dict[str, int] = {}
         for line in group.lines:
             needs[line.product_key] = needs.get(line.product_key, 0) + line.quantity
-        suppliers: set[str] = set()
-        units = 0
         for key, need in needs.items():
             product = products.get(key)
             if not planner.controls_stock(product):
                 continue
-            lines = [line for line in group.lines if line.product_key == key]
             balance = balances.get(key)
             if balance is None:
                 balance = (planner.gateway.stock_balance(warehouse_id, product.id) if product is not None
                            else Decimal('0'))
-            short = planner.shortfall(balance, need)
-            if short > 0:
-                cost = planner.unit_cost([line.unit_cost for line in lines], product)
-                if cost is None:
-                    problem(lines[0].row, 'unit_cost', 'cost_missing',
-                            f'Falta el costo unitario de «{lines[0].product_name}» para crear la compra por el '
-                            'faltante de stock: agrega la columna de costo o registra una compra antes.')
-                elif product is not None and not product.can_buy:
-                    problem(lines[0].row, 'product_name', 'product_not_buyable',
-                            f'El producto «{product.name}» no está habilitado para compra.')
-                suppliers.add(normalize_name(lines[0].supplier_name or DEFAULT_SUPPLIER))
-                balance += short
-                units += short
-            elif balance - need < 0 and not allow_negative and not planner.options.infer_inventory:
-                problem(lines[0].row, 'quantity', 'insufficient_stock',
-                        f'Stock insuficiente de «{lines[0].product_name}»: hay {int(balance)} y se venden {need}.')
+            if balance - need < 0 and not allow_negative and not planner.options.infer_inventory:
+                first = next(line for line in group.lines if line.product_key == key)
+                problem(first.row, 'quantity', 'insufficient_stock',
+                        f'Stock insuficiente de «{first.product_name}»: hay {int(balance)} y se venden {need}.')
             staged[key] = balance - need
-        return staged, len(suppliers), units
+        return staged
 
 
 class ExecuteSalesImport:
@@ -321,12 +397,16 @@ class ExecuteSalesImport:
             self._report_invalid(run_id, parsed, counts)
             duplicates = self.repository.existing_keys([g.key for g in parsed.groups])
             planner = _Planner(self.gateway, opts, caps)
-            for group in parsed.groups:
-                self.repository.heartbeat(run_id, self.clock.now())
-                if group.key in duplicates:
-                    self._duplicate(run_id, group, counts)
-                    continue
-                self._load_sale(run_id, group, opts, planner, warehouse_id, counts)
+            for _day, day_iter in groupby(parsed.groups, key=lambda g: g.sale_date):
+                day_groups = list(day_iter)
+                day = self._prepare_day([g for g in day_groups if g.key not in duplicates], opts, planner,
+                                        warehouse_id)
+                for group in day_groups:
+                    self.repository.heartbeat(run_id, self.clock.now())
+                    if group.key in duplicates:
+                        self._duplicate(run_id, group, counts)
+                        continue
+                    self._load_sale(run_id, group, opts, planner, warehouse_id, counts, day)
         except Exception:
             self.repository.finish(run_id, 'FAILED', counts, self.clock.now())
             raise
@@ -348,41 +428,49 @@ class ExecuteSalesImport:
                                    'Esta venta ya fue importada antes.', None, {})
         counts['skipped'] += 1
 
-    def _fail(self, run_id: UUID, group: SaleGroup, code: str, message: str, counts: dict) -> None:
+    def _fail(self, run_id: UUID, group: SaleGroup, code: str, message: str, counts: dict,
+              day: '_DayContext') -> None:
         self.gateway.reset_cache()
-        self.repository.add_result(run_id, group.first_row, group.key, STATUS_FAILED, code, message, None, {})
+        self.repository.add_result(run_id, group.first_row, group.key, STATUS_FAILED, code, message, None,
+                                   day.take_refs())
         counts['failed'] += 1
 
     def _load_sale(self, run_id: UUID, group: SaleGroup, opts: ImportOptions, planner: _Planner,
-                   warehouse_id: UUID | None, counts: dict) -> None:
+                   warehouse_id: UUID | None, counts: dict, day: '_DayContext') -> None:
         gateway = self.gateway
         refs: dict[str, object] = {'purchase_ids': [], 'product_ids': [], 'customer_id': None}
         try:
             with gateway.atomic():
-                outcome = self._build_sale(run_id, group, opts, planner, warehouse_id, refs)
+                outcome = self._build_sale(run_id, group, opts, planner, warehouse_id, refs, day)
         except DuplicateSale:
             self.gateway.reset_cache()
             self._duplicate(run_id, group, counts)
             return
         except ImportRejected as exc:
-            self._fail(run_id, group, exc.code, exc.message, counts)
+            self._fail(run_id, group, exc.code, exc.message, counts, day)
             return
         except Exception:
             logger.exception('Error inesperado al importar la venta %s', group.key)
             self._fail(run_id, group, 'unexpected_error',
-                       'Ocurrió un error inesperado al cargar esta venta; no se guardó nada de ella.', counts)
+                       'Ocurrió un error inesperado al cargar esta venta; no se guardó nada de ella.', counts, day)
             return
         without = outcome.without_posting and opts.infer_accounting and planner.caps.accounting
         status = STATUS_WITHOUT_POSTING if without else STATUS_CREATED
         message = ('Cargada sin asiento: la fecha no tiene cobertura contable.' if without else '')
+        day_refs = day.take_refs()
+        refs['purchase_ids'] = [*day_refs.get('purchase_ids', []), *refs['purchase_ids']]
+        refs['product_ids'] = [*day_refs.get('product_ids', []), *refs['product_ids']]
         self.repository.add_result(run_id, group.first_row, group.key, status, '', message, outcome.order_id, refs)
         counts['created'] += 1
         if without:
             counts['without_posting'] += 1
 
     def _build_sale(self, run_id: UUID, group: SaleGroup, opts: ImportOptions, planner: _Planner,
-                    warehouse_id: UUID | None, refs: dict):
+                    warehouse_id: UUID | None, refs: dict, day: '_DayContext'):
         gateway, caps = self.gateway, planner.caps
+        for line in group.lines:
+            if line.product_key in day.blocked:
+                raise day.blocked[line.product_key]
         customer_id = None
         if group.customer_name and caps.customers:
             customer = gateway.find_customer(group.customer_key)
@@ -410,46 +498,70 @@ class ExecuteSalesImport:
                                                  can_buy=opts.infer_inventory, category=line.category)
                 refs['product_ids'].append(str(product.id))
             products[line.product_key] = product
-        self._infer_purchases(group, products, opts, planner, warehouse_id, refs)
         return gateway.deliver_sale(
             group.sale_date, group.sales_channel, customer_id,
             [SaleLineInput(products[line.product_key].id, line.quantity, line.unit_price) for line in group.lines],
             group.payment_method, warehouse_id, opts.infer_accounting and caps.accounting,
             _sale_note(group, run_id), group.discount)
 
-    def _infer_purchases(self, group: SaleGroup, products: dict[str, ProductRef], opts: ImportOptions,
-                         planner: _Planner, warehouse_id: UUID | None, refs: dict) -> None:
-        if not (opts.infer_inventory and planner.caps.purchases and warehouse_id is not None):
-            return
-        needs: dict[str, int] = {}
-        for line in group.lines:
-            needs[line.product_key] = needs.get(line.product_key, 0) + line.quantity
-        by_supplier: dict[str, tuple[str, list[tuple[UUID, int, Decimal]]]] = {}
-        for key, need in needs.items():
-            product = products[key]
-            if not planner.controls_stock(product):
+    def _prepare_day(self, groups: list[SaleGroup], opts: ImportOptions, planner: _Planner,
+                     warehouse_id: UUID | None) -> '_DayContext':
+        """Una compra recibida y pagada por proveedor con el faltante de stock de todas las ventas del día.
+
+        Cada compra corre en su propia transacción (con los productos y el proveedor que haga falta crear): si una
+        se rechaza, solo se bloquean las ventas con esos productos."""
+        day = _DayContext()
+        if not groups or not (opts.infer_inventory and planner.caps.purchases and warehouse_id is not None):
+            return day
+        products: dict[str, ProductRef | None] = {}
+        for group in groups:
+            for line in group.lines:
+                if products.get(line.product_key) is None:
+                    products[line.product_key] = self.gateway.find_product(line.product_key)
+        plan = plan_day(planner, groups, products, {}, warehouse_id)
+        day.blocked.update(plan.blocked)
+        for supplier_name, lines in plan.purchases.values():
+            try:
+                with self.gateway.atomic():
+                    created = self._buy(supplier_name, lines, groups[0].sale_date, opts, planner, warehouse_id)
+            except ImportRejected as exc:
+                self.gateway.reset_cache()
+                for line in lines:
+                    day.blocked[line.key] = exc
                 continue
-            short = planner.shortfall(self.gateway.stock_balance(warehouse_id, product.id), need)
-            if short <= 0:
-                continue
-            lines: list[SaleLine] = [line for line in group.lines if line.product_key == key]
-            cost = planner.unit_cost([line.unit_cost for line in lines], product)
-            if cost is None:
-                raise ImportRejected(
-                    'cost_missing', f'Falta el costo unitario de «{product.name}» para crear la compra por el '
-                    'faltante de stock.', 'unit_cost')
-            if not product.can_buy:
-                raise ImportRejected('product_not_buyable', f'El producto «{product.name}» no está habilitado para '
-                                     'compra.', 'product_name')
-            supplier_name = lines[0].supplier_name or DEFAULT_SUPPLIER
-            by_supplier.setdefault(normalize_name(supplier_name), (supplier_name, []))[1].append(
-                (product.id, short, cost))
-        for _, (supplier_name, lines) in by_supplier.items():
-            supplier_id = self.gateway.find_supplier(normalize_name(supplier_name)) or self.gateway.create_supplier(
-                supplier_name)
-            purchase_id = self.gateway.receive_purchase(supplier_id, group.sale_date, lines, warehouse_id,
-                                                        opts.infer_accounting and planner.caps.accounting)
-            refs['purchase_ids'].append(str(purchase_id))
+            day.refs['purchase_ids'].append(str(created[0]))
+            day.refs['product_ids'].extend(created[1])
+        return day
+
+    def _buy(self, supplier_name: str, lines: list[PlannedLine], on, opts: ImportOptions, planner: _Planner,
+             warehouse_id: UUID | None) -> tuple[UUID, list[str]]:
+        gateway = self.gateway
+        created_products: list[str] = []
+        items: list[tuple[UUID, int, Decimal]] = []
+        for line in lines:
+            product = gateway.find_product(line.key)
+            if product is None:
+                product = gateway.create_product(line.name, line.price, planner.controls_stock(None),
+                                                 can_buy=opts.infer_inventory, category=line.category)
+                created_products.append(str(product.id))
+            items.append((product.id, line.quantity, line.cost))
+        supplier_id = gateway.find_supplier(normalize_name(supplier_name)) or gateway.create_supplier(supplier_name)
+        purchase_id = gateway.receive_purchase(supplier_id, on, items, warehouse_id,
+                                               opts.infer_accounting and planner.caps.accounting,
+                                               opts.default_payment_method)
+        return purchase_id, created_products
+
+
+@dataclass
+class _DayContext:
+    """Lo creado a nivel de día (compras y productos) y los productos que no se pudieron comprar."""
+    refs: dict[str, list[str]] = field(default_factory=lambda: {'purchase_ids': [], 'product_ids': []})
+    blocked: dict[str, ImportRejected] = field(default_factory=dict)
+
+    def take_refs(self) -> dict[str, list[str]]:
+        """Lo creado a nivel de día se asigna al primer resultado del día (una sola vez)."""
+        taken, self.refs = self.refs, {'purchase_ids': [], 'product_ids': []}
+        return taken
 
 
 def _sale_note(group: SaleGroup, run_id: UUID) -> str:

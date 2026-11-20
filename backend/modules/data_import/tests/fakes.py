@@ -79,6 +79,7 @@ class FakeGateway:
         self.costs = costs or {}
         self.created_products: list[str] = []
         self.purchases: list[tuple] = []
+        self.purchase_payments: list[str] = []
         self.sales: list[dict] = []
         self.fail_sale_with: ImportRejected | None = None
 
@@ -120,8 +121,9 @@ class FakeGateway:
     def is_covered(self, on):
         return self.covered
 
-    def receive_purchase(self, supplier_id, on, lines, warehouse_id, post_accounting):
+    def receive_purchase(self, supplier_id, on, lines, warehouse_id, post_accounting, payment_method):
         self.purchases.append((supplier_id, on, lines, post_accounting))
+        self.purchase_payments.append(payment_method)
         for pid, qty, _ in lines:
             self.stock[pid] = self.stock.get(pid, 0) + qty
         return uuid4()

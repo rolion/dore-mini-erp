@@ -139,11 +139,12 @@ class SalesImportAdapter:
         return created.id
 
     def receive_purchase(self, supplier_id: UUID, on, lines: list[tuple[UUID, int, Decimal]],
-                         warehouse_id: UUID | None, post_accounting: bool) -> UUID:
+                         warehouse_id: UUID | None, post_accounting: bool, payment_method: str) -> UUID:
         purchase = purchase_services.import_received_purchase(
             self.company_id, supplier_id=supplier_id, purchase_date=on,
             lines=[(pid, Decimal(qty), cost) for pid, qty, cost in lines], warehouse_id=warehouse_id,
-            user_id=self.user_id, user_name=self.user_name, post_accounting=post_accounting)
+            user_id=self.user_id, user_name=self.user_name, post_accounting=post_accounting,
+            payment_method=payment_method)
         self._costs.clear()
         return purchase.id
 

@@ -90,6 +90,31 @@ class ExecuteTests(SimpleTestCase):
             execute(repo, gw, mapping, {**opts, 'infer_customers': False})
         self.assertEqual(ctx.exception.code, 'preview_stale')
 
+    def test_one_paid_purchase_per_supplier_and_day_covers_all_sales_of_the_day(self):
+        repo, gw, mapping, opts = setup(rows(
+            ['01/10/2026', 'Café', '3', '10', 'V1', 'Ana', 'Andina', '4'],
+            ['01/10/2026', 'Café', '2', '10', 'V2', 'Luis', 'Andina', '4'],
+            ['01/10/2026', 'Té', '1', '5', 'V3', 'Luis', 'Andina', '2'],
+            ['02/10/2026', 'Café', '1', '10', 'V4', 'Ana', 'Andina', '4']),
+            default_payment_method='QR')
+        preview_result = preview(repo, gw, mapping, opts)
+        self.assertEqual((preview_result.purchases_to_create, preview_result.units_to_buy), (2, 7))
+        execute(repo, gw, mapping, opts)
+        self.assertEqual(len(gw.purchases), 2)  # día 1 (café + té), día 2 (café)
+        first_day = {qty for _pid, qty, _cost in gw.purchases[0][2]}
+        self.assertEqual(first_day, {5, 1})
+        self.assertEqual(gw.purchase_payments, ['QR', 'QR'])  # compras pagadas con el método elegido
+        self.assertEqual(len(gw.sales), 4)
+
+    def test_cost_missing_blocks_only_the_sales_with_that_product(self):
+        repo, gw, mapping, opts = setup(rows(
+            ['01/10/2026', 'Café', '3', '10', 'V1', 'Ana', 'Andina', ''],
+            ['01/10/2026', 'Té', '1', '5', 'V2', 'Luis', 'Andina', '2']))
+        preview(repo, gw, mapping, opts)
+        run = execute(repo, gw, mapping, opts)
+        self.assertEqual((run.counts['created'], run.counts['failed']), (1, 1))
+        self.assertEqual(len(gw.purchases), 1)  # solo se compra el té
+
     def test_creates_purchase_for_shortfall_then_sale_at_file_price_and_date(self):
         repo, gw, mapping, opts = setup(rows(SALE))
         preview(repo, gw, mapping, opts)

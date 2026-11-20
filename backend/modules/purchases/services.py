@@ -69,9 +69,10 @@ class ImportedPurchase:
 def import_received_purchase(company_id: UUID, *, supplier_id: UUID, purchase_date,
                              lines: list[tuple[UUID, Decimal, Decimal]], warehouse_id: UUID | None,
                              user_id: UUID | None, user_name: str, post_accounting: bool = True,
-                             external_reference: str = '') -> ImportedPurchase:
+                             external_reference: str = '', payment_method: str | None = None) -> ImportedPurchase:
     """Crea, confirma y recibe por completo una compra (entradas de stock con costo y, con cobertura, el asiento de
-    reconocimiento Debe Inventario / Haber Cuentas por pagar). **No registra pago**: queda por pagar.
+    reconocimiento Debe Inventario / Haber Cuentas por pagar). Con `payment_method` la deja **pagada por completo**
+    en la fecha de la compra (asiento de pago incluido); sin él queda por pagar.
 
     Cada línea es `(producto, cantidad, costo unitario)`. Corre en la transacción de quien llama. Con
     `post_accounting=False` no genera ningún asiento. Lanza `shared.import_errors.ImportRejected`.
@@ -87,7 +88,10 @@ def import_received_purchase(company_id: UUID, *, supplier_id: UUID, purchase_da
         PurchasePostingAdapter,
         StockEntryAdapter,
     )
+    from modules.purchases.application.payment_commands import RegisterPayment
+    from modules.purchases.infrastructure.adapters import AccountingClassifications
     from modules.purchases.infrastructure.django.payment_repository import DjangoPaymentRepository
+    from modules.purchases.infrastructure.django.settings_repository import DjangoPurchaseSettingsRepository
     from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
     from modules.purchases.infrastructure.django.receipt_repository import DjangoReceiptRepository
     from uuid import uuid4
@@ -104,14 +108,21 @@ def import_received_purchase(company_id: UUID, *, supplier_id: UUID, purchase_da
             notes='Compra inferida por importación de ventas',
             items=[ItemInput(product_id, quantity, unit_cost) for product_id, quantity, unit_cost in lines])
         purchase = ConfirmPurchase(purchases, suppliers).execute(purchase.id, timezone.now())
+        posting = PurchasePostingAdapter(company_id) if post_accounting else None
+        payments = DjangoPaymentRepository(company_id)
         receipt, _ = RegisterReception(
-            purchases, receipts, ProductCatalogAdapter(company_id), StockEntryAdapter(company_id),
-            PurchasePostingAdapter(company_id) if post_accounting else None, DjangoPaymentRepository(company_id),
+            purchases, receipts, ProductCatalogAdapter(company_id), StockEntryAdapter(company_id), posting, payments,
         ).execute(purchase.id, uuid4(), purchase_date,
                   [ReceiptLineInput(item.id, item.quantity) for item in purchase.items],
                   warehouse_id, actor, timezone.localdate())
+        if payment_method:
+            RegisterPayment(purchases, payments, DjangoPurchaseSettingsRepository(company_id),
+                            AccountingClassifications(company_id), posting, receipts).execute(
+                purchase.id, uuid4(), purchase.total, payment_method, purchase_date, actor, timezone.localdate())
     except errors.PostingRejected as exc:
         raise ImportRejected(exc.code, str(exc)) from exc
+    except errors.PurchaseNotPayable as exc:
+        raise ImportRejected('purchase_not_payable', 'No se pudo registrar el pago de la compra inferida.') from exc
     except errors.PurchaseValidationError as exc:
         field, message = first_error(exc.errors)
         raise ImportRejected('purchase_rejected', message, field) from exc
