@@ -1,1 +1,129 @@
 @use '../../../../shared/styles/table-actions';
+
+// Por debajo de `lg` (992 px): filtros colapsables y filas como tarjetas (ver `COMPACT_QUERY`).
+$touch: 44px;
+
+.customer-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.customer-touch {
+  min-height: $touch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customer-filters-toggle {
+  justify-content: space-between;
+}
+
+.customer-filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 0.5rem;
+
+  label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+}
+
+// La lupa va dentro del campo, a la derecha, sin tapar el texto.
+.customer-search-box {
+  position: relative;
+
+  .form-control {
+    padding-right: 2.5rem;
+    min-height: $touch;
+  }
+}
+
+.customer-search-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--bs-secondary-color, #6c757d);
+}
+
+.customer-filters-form .form-select {
+  min-height: $touch;
+}
+
+.customer-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+
+  .btn {
+    flex: 1 1 0;
+  }
+}
+
+.customer-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0.75rem;
+}
+
+.customer-card {
+  box-shadow: none;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  overflow: hidden;
+}
+
+.customer-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.customer-card-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.customer-card-actions {
+  display: flex;
+  gap: 0.5rem;
+
+  .btn-tbl-edit {
+    min-width: $touch;
+    min-height: $touch;
+    border-radius: 50%;
+  }
+}
+
+.customer-card-body {
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.customer-card-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.375rem 0;
+
+  dt {
+    font-weight: 600;
+    flex: 0 0 auto;
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

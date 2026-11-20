@@ -71,6 +71,43 @@ class ExpenseTotals:
     categories: Sequence[CategoryExpense]
 
 
+@dataclass(frozen=True)
+class LedgerAccountFlow:
+    account_id: UUID
+    name: str
+    opening: Decimal
+    net: Decimal
+    closing: Decimal
+
+
+@dataclass(frozen=True)
+class LedgerCashFlow:
+    opening: Decimal
+    inflow: Decimal
+    outflow: Decimal
+    net: Decimal
+    closing: Decimal
+    transfers: Decimal
+    accounts: Sequence[LedgerAccountFlow]
+
+
+@dataclass(frozen=True)
+class LedgerResult:
+    income: Decimal
+    cost: Decimal
+    margin: Decimal
+    expense: Decimal
+    result: Decimal
+
+
+@dataclass(frozen=True)
+class LedgerTotals:
+    cutoff_date: date | None
+    partial: bool
+    cash_flow: LedgerCashFlow
+    result: LedgerResult
+
+
 class SalesReader(Protocol):
     def totals(self, date_from: date, date_to: date) -> SalesTotals: ...
 
@@ -87,6 +124,10 @@ class SalesReader(Protocol):
 
 class ExpensesReader(Protocol):
     def report(self, date_from: date, date_to: date) -> ExpenseTotals: ...
+
+
+class LedgerReader(Protocol):
+    def report(self, date_from: date, date_to: date) -> LedgerTotals: ...
 
 
 class CustomerNames(Protocol):

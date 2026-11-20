@@ -63,6 +63,8 @@ export interface Expense {
   paymentAccount: AccountRef | null;
   /** Asiento del gasto (solo en el detalle); enlaza a la pantalla de asientos. */
   journalEntryId: string | null;
+  /** Reversión del asiento (solo en el detalle de un gasto anulado que se había contabilizado). */
+  reversalEntryId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,6 +125,7 @@ export interface ExpenseDto {
   expense_account?: AccountRef | null;
   payment_account?: AccountRef | null;
   journal_entry_id?: string | null;
+  reversal_entry_id?: string | null;
   created_at: string;
   updated_at: string;
 }

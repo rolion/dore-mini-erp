@@ -19,3 +19,93 @@
 :host ::ng-deep .expense-amount {
   white-space: nowrap;
 }
+
+// Pantalla estrecha (< 992 px): cada gasto es una tarjeta plana (la `.card` exterior ya aporta sombra).
+.expense-cards {
+  list-style: none;
+}
+
+.expense-card {
+  height: 100%;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.5rem;
+  background: var(--bs-body-bg);
+
+  &--voided {
+    opacity: 0.65;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+  }
+
+  &__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere; // descripciones largas envuelven; no se truncan
+  }
+
+  &__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+  }
+
+  // Objetivo táctil de 44 × 44 px (el botón de tabla mide ~22 px).
+  &__action.btn-tbl-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
+
+  &__body {
+    margin: 0;
+    padding: 0.5rem 0.75rem 0.75rem;
+
+    > div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.25rem 0;
+    }
+
+    dt {
+      flex: 0 0 auto;
+      margin: 0;
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: var(--bs-secondary-color);
+    }
+
+    dd {
+      margin: 0;
+      min-width: 0;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__amount {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--voided &__amount {
+    text-decoration: line-through;
+  }
+}
+
+// El selector es el primer filtro del panel: el botón «+» ocupa el ancho y alinea icono y texto.
+.expense-new {
+  min-height: 44px;
+}

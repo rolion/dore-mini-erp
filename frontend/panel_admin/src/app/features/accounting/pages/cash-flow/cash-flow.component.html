@@ -1,0 +1,310 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.CASH_FLOW.TITLE' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'ACCOUNTING.CASH_FLOW.TITLE' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'ACCOUNTING.CASH_FLOW.TITLE' | translate }}</strong></h2>
+              </div>
+            </div>
+
+            @if (flow?.partial && !coverageDismissed) {
+            <div class="alert alert-warning alert-dismissible m-2" role="alert" data-testid="coverage">
+              {{ coverageMessage() }}
+              <button type="button" class="btn-close" data-testid="coverage-close" [attr.aria-label]="'COMMON.CERRAR' | translate"
+                (click)="coverageDismissed = true"></button>
+            </div>
+            }
+
+            @if (compact()) {
+            <div class="d-flex align-items-center gap-2 m-2" data-testid="filters-toolbar">
+              <button type="button" class="btn btn-light" data-testid="filters-toggle" aria-controls="cash-flow-filters"
+                [attr.aria-expanded]="filtersOpen" (click)="filtersOpen = !filtersOpen">
+                <i class="fas fa-filter" aria-hidden="true"></i> {{ 'ACCOUNTING.JOURNAL.FILTROS' | translate }}
+              </button>
+              @if (!filtersOpen) {
+              <div class="d-flex flex-wrap gap-1" data-testid="filters-chips">
+                <span class="badge-outline col-blue">{{ filters.dateFrom }} – {{ filters.dateTo }}</span>
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue">{{ filter }}</span>
+                }
+              </div>
+              }
+            </div>
+            }
+
+            <form id="cash-flow-filters" class="row g-2 m-2" [class.d-none]="compact() && !filtersOpen" [formGroup]="filterForm"
+              (ngSubmit)="applyAndClose()" data-testid="filters">
+              <div class="col-md-3 col-6">
+                <label for="cf-from">{{ 'COMMON.DESDE' | translate }}</label>
+                <input id="cf-from" type="date" class="form-control" formControlName="dateFrom" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-md-3 col-6">
+                <label for="cf-to">{{ 'COMMON.HASTA' | translate }}</label>
+                <input id="cf-to" type="date" class="form-control" formControlName="dateTo" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="cf-type">{{ 'ACCOUNTING.CASH_FLOW.TYPE' | translate }}</label>
+                <select id="cf-type" class="form-select form-control" formControlName="type">
+                  <option value="">{{ 'ACCOUNTING.CASH_FLOW.TYPE_ALL' | translate }}</option>
+                  @for (type of types; track type) {
+                  <option [value]="type">{{ typeLabel(type) }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12 col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary" data-testid="apply-filters">{{ 'ACCOUNTING.JOURNAL.APLICAR_FILTROS' | translate }}</button>
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+              @if (rangeInvalid) {
+              <div class="col-12">
+                <small class="form-text text-danger" data-testid="range-error">{{ 'ACCOUNTING.ENTRIES.LA_FECHA_HASTA_NO_PUEDE' | translate }}</small>
+              </div>
+              }
+            </form>
+
+            @if (flowError) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="flow-error">
+              {{ flowError }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry-flow" (click)="retryFlow()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            } @else if (flowLoading && !flow) {
+            <p class="m-3 text-body-secondary" data-testid="flow-loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (flow) {
+            <div class="row g-2 m-2 text-center" data-testid="summary">
+              <div class="col-6 col-md"><small class="text-body-secondary d-block">{{ 'ACCOUNTING.CASH_FLOW.OPENING' | translate }}</small>
+                <strong data-testid="opening">{{ flow.summary.opening | money }}</strong></div>
+              <div class="col-6 col-md"><small class="text-body-secondary d-block">{{ 'ACCOUNTING.CASH_FLOW.INFLOW' | translate }}</small>
+                <strong class="text-success" data-testid="inflow">{{ flow.summary.inflow | money }}</strong></div>
+              <div class="col-6 col-md"><small class="text-body-secondary d-block">{{ 'ACCOUNTING.CASH_FLOW.OUTFLOW' | translate }}</small>
+                <strong class="text-danger" data-testid="outflow">{{ flow.summary.outflow | money }}</strong></div>
+              <div class="col-6 col-md"><small class="text-body-secondary d-block">{{ 'ACCOUNTING.CASH_FLOW.NET' | translate }}</small>
+                <strong class="fs-5" data-testid="net">{{ flow.summary.net | money }}</strong></div>
+              <div class="col-12 col-md"><small class="text-body-secondary d-block">{{ 'ACCOUNTING.CASH_FLOW.CLOSING' | translate }}</small>
+                <strong data-testid="closing">{{ flow.summary.closing | money }}</strong></div>
+            </div>
+            <small class="text-body-secondary d-block mx-2 mb-2" data-testid="transfers-note">
+              {{ 'ACCOUNTING.CASH_FLOW.TRANSFERS_NOTE' | translate: { amount: (flow.summary.transfers | money) } }}
+            </small>
+
+            <h3 class="h6 mx-2 mt-3">{{ 'ACCOUNTING.CASH_FLOW.ACCOUNTS_TITLE' | translate }}</h3>
+            @if (flow.accounts.length === 0) {
+            <div class="alert alert-info m-2" role="status" data-testid="no-accounts">
+              {{ 'ACCOUNTING.CASH_FLOW.NO_ACCOUNTS' | translate }}
+              <a routerLink="/pocketbiz/accounting/accounts">{{ 'ACCOUNTING.CASH_FLOW.GO_ACCOUNTS' | translate }}</a>
+            </div>
+            } @else if (compact()) {
+            <ul class="cash-cards row g-2 mx-1 p-0 mb-2" data-testid="account-cards">
+              @for (a of flow.accounts; track a.accountId) {
+              <li class="col-12 col-sm-6">
+                <article class="cash-card" data-testid="account-card">
+                  <div class="cash-card__header">
+                    <button type="button" class="account-name-button" [attr.aria-pressed]="filters.accountId === a.accountId"
+                      (click)="selectAccount(a.accountId)">{{ a.name }}</button>
+                  </div>
+                  <dl>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.OPENING' | translate }}</dt><dd>{{ a.opening | money }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.CLOSING' | translate }}</dt><dd>{{ a.closing | money }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.INFLOW' | translate }}</dt><dd>{{ a.inflow | money }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.OUTFLOW' | translate }}</dt><dd>{{ a.outflow | money }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.TRANSFERS_IN' | translate }}</dt><dd>{{ a.transfersIn | money }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.TRANSFERS_OUT' | translate }}</dt><dd>{{ a.transfersOut | money }}</dd></div>
+                  </dl>
+                </article>
+              </li>
+              }
+            </ul>
+            } @else {
+            <div class="table-responsive mx-2">
+              <table class="table table-sm" data-testid="accounts-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'ACCOUNTING.CASH_FLOW.ACCOUNT' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.OPENING' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.INFLOW' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.OUTFLOW' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.TRANSFERS_IN' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.TRANSFERS_OUT' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.CLOSING' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (a of flow.accounts; track a.accountId) {
+                  <tr [class.table-active]="filters.accountId === a.accountId" data-testid="account-row">
+                    <td>
+                      <button type="button" class="account-name-button" data-testid="account-select" [attr.aria-pressed]="filters.accountId === a.accountId"
+                        [title]="'ACCOUNTING.CASH_FLOW.SELECT_ACCOUNT' | translate: { name: a.name }" (click)="selectAccount(a.accountId)">{{ a.name }}</button>
+                    </td>
+                    <td class="text-end">{{ a.opening | money }}</td>
+                    <td class="text-end text-success">{{ a.inflow | money }}</td>
+                    <td class="text-end text-danger">{{ a.outflow | money }}</td>
+                    <td class="text-end">{{ a.transfersIn | money }}</td>
+                    <td class="text-end">{{ a.transfersOut | money }}</td>
+                    <td class="text-end fw-bold">{{ a.closing | money }}</td>
+                  </tr>
+                  }
+                  <tr class="fw-bold" data-testid="accounts-total">
+                    <td>{{ 'ACCOUNTING.CASH_FLOW.TOTAL' | translate }}</td>
+                    <td class="text-end">{{ flow.summary.opening | money }}</td>
+                    <td class="text-end">{{ flow.summary.inflow | money }}</td>
+                    <td class="text-end">{{ flow.summary.outflow | money }}</td>
+                    <td class="text-end">{{ flow.summary.transfers | money }}</td>
+                    <td class="text-end">{{ flow.summary.transfers | money }}</td>
+                    <td class="text-end">{{ flow.summary.closing | money }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            }
+            }
+
+            <h3 class="h6 mx-2 mt-3">{{ 'ACCOUNTING.CASH_FLOW.MOVEMENTS_TITLE' | translate }}</h3>
+            @if (filtersActive) {
+            <div class="d-flex flex-wrap align-items-center gap-2 mx-2 mb-2" data-testid="active-filters">
+              @if (filters.accountId) {
+              <span class="badge-outline col-blue" data-testid="account-chip">
+                {{ 'ACCOUNTING.CASH_FLOW.ACCOUNT_CHIP' | translate: { name: selectedAccountName } }}
+                <button type="button" class="btn btn-link p-0 ms-1" data-testid="remove-account" [attr.aria-label]="'ACCOUNTING.CASH_FLOW.REMOVE_ACCOUNT' | translate"
+                  (click)="selectAccount(filters.accountId)"><i class="fas fa-times" aria-hidden="true"></i></button>
+              </span>
+              }
+            </div>
+            }
+
+            @if (movementsError) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="movements-error">
+              {{ movementsError }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry-movements" (click)="retryMovements()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            } @else if (movementsLoading && rows.length === 0) {
+            <p class="m-3 text-body-secondary" data-testid="movements-loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (rows.length === 0) {
+            <div class="text-center p-4" data-testid="empty">
+              <p class="mb-2">{{ 'ACCOUNTING.CASH_FLOW.EMPTY' | translate }}</p>
+              @if (filtersActive) {
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              }
+            </div>
+            } @else {
+            <p class="small text-body-secondary mx-2 mb-2" #summary tabindex="-1" data-testid="range-summary">
+              {{ 'ACCOUNTING.CASH_FLOW.SHOWING' | translate: { from: shownFrom, to: shownTo, total: total } }}
+            </p>
+            @if (compact()) {
+            <ul class="cash-cards row g-2 mx-1 p-0 mb-2" data-testid="movement-cards">
+              @for (m of rows; track $index) {
+              <li class="col-12 col-sm-6">
+                <article class="cash-card" data-testid="movement-card">
+                  <div class="cash-card__header">
+                    <strong>{{ m.description }}
+                      @if (m.isReversal) {
+                      <span class="badge-outline col-red ms-1" data-testid="reversal-badge">{{ 'ACCOUNTING.CASH_FLOW.REVERSAL' | translate }}</span>
+                      }
+                    </strong>
+                    <a class="btn btn-tbl-edit btn-tbl-view" data-testid="card-view" [routerLink]="['/pocketbiz/accounting/journal', m.entryId]"
+                      [title]="'ACCOUNTING.CASH_FLOW.VIEW_ENTRY' | translate"
+                      [attr.aria-label]="'ACCOUNTING.CASH_FLOW.VIEW_ENTRY_N' | translate: { description: m.description }">
+                      <i class="fas fa-eye" aria-hidden="true"></i>
+                    </a>
+                  </div>
+                  <dl>
+                    <div><dt>{{ 'ACCOUNTING.JOURNAL.FECHA_CONTABLE' | translate }}</dt><dd>{{ m.accountingDate | date: 'dd/MM/yyyy' }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.ACCOUNT' | translate }}</dt><dd>{{ m.accountName }}</dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.TYPE' | translate }}</dt>
+                      <dd><span class="badge-outline" [class]="kindClass(m.kind)">{{ kindLabel(m.kind) }}</span></dd></div>
+                    <div><dt>{{ 'ACCOUNTING.CASH_FLOW.AMOUNT' | translate }}</dt>
+                      <dd class="fw-bold" data-testid="amount">{{ sign(m.kind) }} {{ m.amount | money }}</dd></div>
+                    <div><dt>{{ 'COMMON.ORIGEN' | translate }}</dt>
+                      <dd>
+                        @if (originLink(m); as link) {
+                        <a [routerLink]="link">{{ m.origin?.label ?? m.origin?.kind }}</a>
+                        } @else {
+                        {{ m.origin?.label ?? '—' }}
+                        }
+                      </dd></div>
+                  </dl>
+                </article>
+              </li>
+              }
+            </ul>
+            } @else {
+            <div class="table-responsive mx-2">
+              <table class="table table-sm align-middle" data-testid="movements-table">
+                <thead>
+                  <tr>
+                    <th>{{ 'ACCOUNTING.JOURNAL.FECHA_CONTABLE' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.CASH_FLOW.ACCOUNT' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.CASH_FLOW.CONCEPT' | translate }}</th>
+                    <th>{{ 'COMMON.ORIGEN' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.CASH_FLOW.TYPE' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.CASH_FLOW.AMOUNT' | translate }}</th>
+                    <th><span class="visually-hidden">{{ 'COMMON.ACCIONES' | translate }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (m of rows; track $index) {
+                  <tr data-testid="movement-row">
+                    <td>{{ m.accountingDate | date: 'dd/MM/yyyy' }}</td>
+                    <td>{{ m.accountName }}</td>
+                    <td>
+                      {{ m.description }}
+                      @if (m.isReversal) {
+                      <span class="badge-outline col-red ms-1" data-testid="reversal-badge">{{ 'ACCOUNTING.CASH_FLOW.REVERSAL' | translate }}</span>
+                      }
+                    </td>
+                    <td>
+                      @if (originLink(m); as link) {
+                      <a [routerLink]="link" data-testid="origin-link">{{ m.origin?.label ?? m.origin?.kind }}</a>
+                      } @else {
+                      {{ m.origin?.label ?? '—' }}
+                      }
+                    </td>
+                    <td><span class="badge-outline" data-testid="kind-badge" [class]="kindClass(m.kind)">{{ kindLabel(m.kind) }}</span></td>
+                    <td class="text-end text-nowrap fw-bold" data-testid="amount">{{ sign(m.kind) }} {{ m.amount | money }}</td>
+                    <td>
+                      <a class="btn btn-tbl-edit btn-tbl-view h-auto" data-testid="view-entry" [routerLink]="['/pocketbiz/accounting/journal', m.entryId]"
+                        [title]="'ACCOUNTING.CASH_FLOW.VIEW_ENTRY' | translate"
+                        [attr.aria-label]="'ACCOUNTING.CASH_FLOW.VIEW_ENTRY_N' | translate: { description: m.description }">
+                        <i class="fas fa-eye" aria-hidden="true"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center" size="sm" [collectionSize]="total" [pageSize]="pageSize" [page]="pageIndex + 1"
+              [maxSize]="3" [rotate]="true" [attr.aria-label]="'ACCOUNTING.CASH_FLOW.PAGINATION' | translate" (pageChange)="onPage($event)" />
+            }
+            @if (totals) {
+            <small class="text-body-secondary d-block mx-2 mb-2" data-testid="movement-totals">
+              {{ 'ACCOUNTING.CASH_FLOW.FILTER_TOTALS' | translate: { inflow: (totals.inflow | money), outflow: (totals.outflow | money), transfersIn: (totals.transfersIn | money), transfersOut: (totals.transfersOut | money) } }}
+            </small>
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

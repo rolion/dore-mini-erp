@@ -24,7 +24,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'expenses': {'accounting'},
     'purchases': {'accounting', 'catalog', 'costing', 'inventory'},
     'sales': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'modularity'},
-    'reporting': {'sales', 'expenses', 'customers'},
+    'reporting': {'accounting', 'sales', 'expenses', 'customers'},
 }
 # Módulos no-negocio que un módulo de negocio puede leer (solo por su fachada `services`): la configuración.
 NON_BUSINESS_ALLOWED = {'modularity'}

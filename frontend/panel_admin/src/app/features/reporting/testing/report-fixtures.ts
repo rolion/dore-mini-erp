@@ -3,6 +3,7 @@ import {
   CustomersReport,
   DashboardSummary,
   ExpensesReport,
+  LedgerReport,
   PendingReport,
   Period,
   ProductsReport,
@@ -30,6 +31,26 @@ export function makeSummary(overrides: Partial<DashboardSummary> = {}): Dashboar
 
 export function makeSales(overrides: Partial<SalesReport> = {}): SalesReport {
   return { period: MONTH, total: '1200.00', ordersCount: 4, averageTicket: '300.00', criteria: 'Ventas: criterio.', ...overrides };
+}
+
+export function makeLedger(overrides: Partial<LedgerReport> = {}): LedgerReport {
+  return {
+    period: MONTH,
+    cutoffDate: '2026-04-01',
+    partial: false,
+    cashFlow: {
+      opening: '100.00',
+      inflow: '500.00',
+      outflow: '300.00',
+      net: '200.00',
+      closing: '300.00',
+      transfers: '200.00',
+      accounts: [{ accountId: 'a1', name: 'Caja', opening: '100.00', net: '200.00', closing: '300.00' }],
+    },
+    result: { income: '150.00', cost: '100.00', margin: '50.00', expense: '20.00', result: '30.00' },
+    criteria: 'Libro contable: criterio.',
+    ...overrides,
+  };
 }
 
 export function makeExpenses(overrides: Partial<ExpensesReport> = {}): ExpensesReport {

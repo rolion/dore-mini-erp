@@ -63,6 +63,30 @@ describe('ReportingApiService', () => {
     expect(result).toEqual(jasmine.objectContaining({ sources: { sales: false, expenses: true }, salesTotal: null, estimatedProfit: null }));
   });
 
+  it('maps the ledger report with coverage, flow and result (API-01)', () => {
+    let partial = true;
+    let net = '';
+    let account = '';
+    service.ledger({ kind: 'month' }).subscribe((r) => {
+      partial = r.partial;
+      net = r.cashFlow.net;
+      account = r.cashFlow.accounts[0].accountId;
+    });
+    const req = http.expectOne((r) => r.url === '/api/reports/ledger/');
+    expect(req.request.params.get('period')).toBe('month');
+    req.flush({
+      period: PERIOD,
+      coverage: { cutoff_date: '2026-04-01', partial: false },
+      cash_flow: {
+        opening: '0.00', inflow: '500.00', outflow: '0.00', net: '500.00', closing: '500.00', transfers: '200.00',
+        accounts: [{ account_id: 'a1', name: 'Caja', opening: '0.00', net: '500.00', closing: '500.00' }],
+      },
+      result: { income: '500.00', cost: '0.00', margin: '500.00', expense: '0.00', result: '500.00' },
+      criteria: 'criterio',
+    });
+    expect([partial, net, account]).toEqual([false, '500.00', 'a1']);
+  });
+
   it('asks for a range with date_from and date_to and no `period`', () => {
     service.sales({ kind: 'range', dateFrom: '2026-01-01', dateTo: '2026-03-31' }).subscribe();
     const req = http.expectOne((r) => r.url === '/api/reports/sales/');

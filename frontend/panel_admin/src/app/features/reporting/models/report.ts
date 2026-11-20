@@ -63,6 +63,31 @@ export interface ExpensesReport {
   categories: CategoryExpense[];
 }
 
+export interface LedgerAccountFlow {
+  accountId: string;
+  name: string;
+  opening: string;
+  net: string;
+  closing: string;
+}
+
+export interface LedgerReport {
+  period: Period;
+  cutoffDate: string | null;
+  partial: boolean;
+  cashFlow: {
+    opening: string;
+    inflow: string;
+    outflow: string;
+    net: string;
+    closing: string;
+    transfers: string;
+    accounts: LedgerAccountFlow[];
+  };
+  result: { income: string; cost: string; margin: string; expense: string; result: string };
+  criteria: string;
+}
+
 export interface ChannelSales {
   salesChannel: SalesChannel;
   ordersCount: number;

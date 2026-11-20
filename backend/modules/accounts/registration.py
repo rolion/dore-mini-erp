@@ -3,6 +3,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 
+from shared import company_defaults
+
 from .models import Company, UserRole
 
 COMPANY_EXISTS = 'Ya existe una empresa con ese nombre.'
@@ -40,6 +42,7 @@ def register_company_admin(*, company_name: str, username: str, first_name: str,
     try:
         with transaction.atomic():
             company = Company.objects.create(name=company_name)
+            company_defaults.apply_all(company.id)  # configuración por defecto, atómica con el alta
             return User.objects.create_user(
                 username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, company=company, role=UserRole.ADMIN,

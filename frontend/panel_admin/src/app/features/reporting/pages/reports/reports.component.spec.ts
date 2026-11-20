@@ -5,7 +5,7 @@ import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ReportingApiService } from '../../services/reporting-api.service';
-import { makeChannels, makeCustomers, makeExpenses, makeProducts, makeSales } from '../../testing/report-fixtures';
+import { makeChannels, makeCustomers, makeExpenses, makeLedger, makeProducts, makeSales } from '../../testing/report-fixtures';
 import { CUSTOMER_RANKING_NOTE, PRODUCT_AMOUNT_NOTE, ReportsComponent, percentOf } from './reports.component';
 
 describe('percentOf', () => {
@@ -16,12 +16,13 @@ describe('percentOf', () => {
   });
 });
 
-const modulesState = { customersDisabled: false, salesDisabled: false, expensesDisabled: false };
+const modulesState = { customersDisabled: false, salesDisabled: false, expensesDisabled: false, accountingDisabled: false };
 const modulesFake = {
   isDisabled: (key: string) =>
     (key === 'customers' && modulesState.customersDisabled) ||
     (key === 'sales' && modulesState.salesDisabled) ||
-    (key === 'expenses' && modulesState.expensesDisabled),
+    (key === 'expenses' && modulesState.expensesDisabled) ||
+    (key === 'accounting' && modulesState.accountingDisabled),
 };
 
 describe('ReportsComponent', () => {
@@ -33,12 +34,14 @@ describe('ReportsComponent', () => {
     api = jasmine.createSpyObj<ReportingApiService>('ReportingApiService', [
       'sales',
       'expenses',
+      'ledger',
       'salesByChannel',
       'topProducts',
       'topCustomers',
     ]);
     api.sales.and.returnValue(of(makeSales()));
     api.expenses.and.returnValue(of(makeExpenses()));
+    api.ledger.and.returnValue(of(makeLedger()));
     api.salesByChannel.and.returnValue(of(makeChannels()));
     api.topProducts.and.returnValue(of(makeProducts()));
     api.topCustomers.and.returnValue(of(makeCustomers()));
@@ -77,6 +80,100 @@ describe('ReportsComponent', () => {
   afterEach(() => {
     modulesState.salesDisabled = false;
     modulesState.expensesDisabled = false;
+    modulesState.accountingDisabled = false;
+  });
+
+  it('shows the ledger flow and result with their own figures, apart from the operational cards (UI-01)', () => {
+    render();
+    expect(byTestId('ledger-net')?.textContent).toContain('Bs 200.00');
+    expect(byTestId('ledger-income')?.textContent).toContain('Bs 150.00');
+    expect(byTestId('ledger-margin')?.textContent).toContain('Bs 50.00');
+    expect(byTestId('ledger-result')?.textContent).toContain('Bs 30.00');
+    expect(byTestId('ledger-transfers')?.textContent).toContain('Bs 200.00');
+    expect(byTestId('ledger-coverage')).toBeNull();
+    expect(byTestId('sales-operational')).not.toBeNull();
+  });
+
+  it('orders the screen in an accounting section and an operational section with chips (AC-01, AC-02)', () => {
+    render();
+    const html = root().innerHTML;
+    expect(byTestId('ledger-heading')?.textContent).toContain('Contable (libro de asientos)');
+    expect(byTestId('chip-ledger')?.textContent?.trim()).toBe('Contable');
+    expect(byTestId('operational-heading')?.textContent).toContain('Operativo (pedidos y gastos)');
+    expect(byTestId('chip-operational')?.textContent?.trim()).toBe('Operativo');
+    expect(html.indexOf('ledger-net')).toBeLessThan(html.indexOf('sales-total'));
+    expect(root().querySelector('.reports-container')).not.toBeNull();
+  });
+
+  it('folds the long criteria into closed details and links «Ver por cuenta» to the cash-flow page keeping the period (AC-03, CONT-14 AC-01)', () => {
+    render();
+    for (const id of ['ledger-criteria', 'sales-criteria', 'sales-operational', 'expenses-operational']) {
+      const details = byTestId(id)?.closest('details') as HTMLDetailsElement | null;
+      expect(details).withContext(id).not.toBeNull();
+      expect(details?.open).toBeFalse();
+    }
+    const link = byTestId('ledger-accounts-link') as HTMLAnchorElement;
+    expect(link.textContent).toContain('Ver por cuenta');
+    expect(link.getAttribute('href')).toBe('/pocketbiz/accounting/cash-flow?date_from=2026-10-01&date_to=2026-10-31');
+    expect(byTestId('ledger-accounts')).toBeNull();
+  });
+
+  it('marks a negative result in red with a text label and a positive one in green (AC-04)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ result: { income: '0.00', cost: '0.00', margin: '0.00', expense: '30.00', result: '-30.00' } })));
+    render();
+    expect(byTestId('ledger-result')?.classList).toContain('text-danger');
+    expect(byTestId('ledger-result-label')?.textContent).toContain('Resultado negativo');
+    fixture.destroy();
+    api.ledger.and.returnValue(of(makeLedger()));
+    fixture = TestBed.createComponent(ReportsComponent);
+    render();
+    expect(byTestId('ledger-result')?.classList).toContain('text-success');
+    expect(byTestId('ledger-result-label')?.textContent).toContain('Resultado positivo');
+  });
+
+  it('points to Accounting → Accounts when the ledger has no money accounts (AC-05)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ cashFlow: { ...makeLedger().cashFlow, accounts: [] } })));
+    render();
+    const notice = byTestId('ledger-no-money-accounts') as HTMLElement;
+    expect(notice.textContent).toContain('Caja/Banco');
+    expect(notice.querySelector('a')?.getAttribute('href')).toBe('/pocketbiz/accounting/accounts');
+    expect(byTestId('ledger-accounts-link')).toBeNull();
+  });
+
+  it('does not show the no-money-accounts notice when there are accounts (AC-05)', () => {
+    render();
+    expect(byTestId('ledger-no-money-accounts')).toBeNull();
+  });
+
+  it('lets the coverage notice be closed and shows it again when the period changes (AC-06)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ partial: true })));
+    render();
+    const close = byTestId('ledger-coverage-close') as HTMLElement;
+    expect(close.getAttribute('aria-label')).toBe('Cerrar aviso');
+    close.click();
+    fixture.detectChanges();
+    expect(byTestId('ledger-coverage')).toBeNull();
+    component.onSelection({ kind: 'week' });
+    render();
+    expect(byTestId('ledger-coverage')).not.toBeNull();
+  });
+
+  it('labels the donut chart for assistive technology (AC-07)', () => {
+    render();
+    expect(byTestId('expenses-chart')?.getAttribute('aria-label')).toBe('Gráfico de gastos por categoría');
+  });
+
+  it('warns when the period starts before the accounting cutoff (AC-05)', () => {
+    api.ledger.and.returnValue(of(makeLedger({ partial: true })));
+    render();
+    expect(byTestId('ledger-coverage')?.textContent).toContain('01/04/2026');
+  });
+
+  it('explains the ledger cards as unavailable and requests nothing when Accounting is disabled (AC-05)', () => {
+    modulesState.accountingDisabled = true;
+    render();
+    expect(api.ledger).not.toHaveBeenCalled();
+    expect(root().querySelectorAll('[data-testid="unavailable"]').length).toBe(2);
   });
 
   it('explains the Sales cards as unavailable and requests nothing from Sales when it is disabled (AC-09, AC-08)', () => {

@@ -6,39 +6,81 @@
   </ul>
   <div class="section-body"><div class="card">
     <div class="p-10">
-      <div class="ngxTableHeader service-list-header d-flex flex-wrap gap-2 align-items-center">
-        <div class="table-title"><h2><strong>{{ 'COMMON.SERVICIOS' | translate }}</strong></h2></div>
-        <div class="table-search-area"><div><label for="service-search"><i class="material-icons search-icon" aria-hidden="true">search</i><span class="visually-hidden">{{ 'COMMON.BUSCAR_POR_NOMBRE' | translate }}</span></label>
-          <input id="service-search" class="browser-default search-field" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" [formControl]="search"
-            [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE' | translate"></div></div>
-        <div><label for="service-status" class="visually-hidden">{{ 'COMMON.ESTADO' | translate }}</label>
-          <select id="service-status" class="form-select" [formControl]="status">
-            <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option><option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option><option value="all">{{ 'COMMON.TODOS' | translate }}</option>
-          </select></div>
-        <div><label for="service-specialty" class="visually-hidden">{{ 'COMMON.ESPECIALIDAD' | translate }}</label>
-          <select id="service-specialty" class="form-select" [formControl]="specialty" aria-describedby="specialty-help">
-            <option value="">{{ 'SERVICES.SERVICE_LIST.TODAS_LAS_ESPECIALIDADES' | translate }}</option><option value="none">{{ 'SERVICES.SERVICE_LIST.SIN_ESPECIALIDAD' | translate }}</option>
-            @for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
-          </select></div>
-        <a routerLink="/pocketbiz/catalog/services/new" class="btn btn-icon icon-left btn-primary rounded-button" [title]="'SERVICES.SERVICE_LIST.NUEVO_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.NUEVO_SERVICIO' | translate"><i class="material-icons" aria-hidden="true">add</i></a>
+      <div class="service-list-actions m-2">
+        <a routerLink="/pocketbiz/catalog/services/new" class="btn btn-primary service-add-button" data-testid="add-service">
+          <i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'SERVICES.SERVICE_LIST.NUEVO_SERVICIO' | translate }}</a>
       </div>
-      @if (!specialtiesAvailable) { <small id="specialty-help" class="text-muted d-block">{{ 'SERVICES.SERVICE_LIST.HABILITA_PERSONAL_PARA_FILTRAR_POR' | translate }}</small> }
-      @if (success) { <div role="status" class="alert alert-success mt-2">{{ success }}</div> }
-      @if (error) { <div role="alert" class="alert alert-danger mt-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
-      @if (state.search || state.status !== 'active' || state.specialtyId) { <button type="button" class="btn btn-light mt-2" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button> }
-      @if (!loading && !error && total === 0 && !state.search && state.status === 'active') { <p class="mt-2">{{ 'SERVICES.SERVICE_LIST.AUN_NO_HAY_SERVICIOS_ACTIVOS' | translate }}</p> }
-      <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force" [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [virtualization]="false" [count]="total" [offset]="state.pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)" [scrollbarH]="true" [rowClass]="rowClass">
-        <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [minWidth]="150"><ng-template ngx-datatable-cell-template let-row="row"><a class="fw-bold" [routerLink]="['/pocketbiz/catalog/services', row.id]">{{ row.name }}</a></ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.PRECIO' | translate" [sortable]="false" headerClass="text-end" cellClass="text-end"><ng-template ngx-datatable-cell-template let-row="row">{{ row.basePrice | money }}</ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.DURACION' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">{{ 'SERVICES.SERVICE_LIST.MIN' | translate: { p0: (row.durationMinutes) } }}</ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'SERVICES.SERVICE_LIST.ESPECIALIDAD' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row">@if (row.specialtyName) { {{ row.specialtyName }} } @else { <span class="text-muted">{{ 'SERVICES.SERVICE_FORM.SIN_ESPECIALIDAD' | translate }}</span> }</ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false"><ng-template ngx-datatable-cell-template let-row="row"><div class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</div></ng-template></ngx-datatable-column>
-        <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [minWidth]="160"><ng-template ngx-datatable-cell-template let-row="row">
-          <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id]" [title]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>
-          <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/catalog/services', row.id, 'edit']" [title]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate"><i class="fas fa-pen" aria-hidden="true"></i></a>
-          <app-service-toggle [service]="row" [compact]="true" (updated)="onUpdated($event)" />
-        </ng-template></ngx-datatable-column>
-      </ngx-datatable>
+      <div class="m-2">
+        <button type="button" class="btn btn-light w-100 service-filters-toggle" data-testid="filters-toggle"
+          aria-controls="service-filters" [attr.aria-expanded]="!filtersCollapsed" (click)="toggleFilters()">
+          <span><i class="fas fa-filter me-2" aria-hidden="true"></i>{{ 'SERVICES.SERVICE_LIST.FILTROS' | translate }}
+            @if (activeFilterCount) {
+            <span class="badge bg-primary ms-2" data-testid="filters-count"
+              [attr.aria-label]="'SERVICES.SERVICE_LIST.FILTROS_ACTIVOS' | translate: { count: activeFilterCount }">{{ activeFilterCount }}</span>
+            }
+          </span>
+          <i class="fas" [class.fa-chevron-down]="filtersCollapsed" [class.fa-chevron-up]="!filtersCollapsed" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="service-filters" [ngbCollapse]="filtersCollapsed">
+        <form class="row g-2 m-2 align-items-end" (ngSubmit)="applyFilters()" [attr.aria-label]="'SERVICES.SERVICE_LIST.FILTROS_DE_SERVICIOS' | translate">
+          <div class="col-md-4">
+            <label for="service-search">{{ 'COMMON.BUSCAR_POR_NOMBRE' | translate }}</label>
+            <input id="service-search" type="search" class="form-control" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" [formControl]="search">
+          </div>
+          <div class="col-md-3">
+            <label for="service-status">{{ 'COMMON.ESTADO' | translate }}</label>
+            <select id="service-status" class="form-select form-control" [formControl]="status">
+              <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option><option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option><option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="service-specialty">{{ 'COMMON.ESPECIALIDAD' | translate }}</label>
+            <select id="service-specialty" class="form-select form-control" [formControl]="specialty" aria-describedby="specialty-help">
+              <option value="">{{ 'SERVICES.SERVICE_LIST.TODAS_LAS_ESPECIALIDADES' | translate }}</option><option value="none">{{ 'SERVICES.SERVICE_LIST.SIN_ESPECIALIDAD' | translate }}</option>
+              @for (item of specialties; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+            </select>
+          </div>
+          <div class="col-md-2 service-filter-actions">
+            <button type="submit" class="btn btn-primary" data-testid="apply-filters">{{ 'SERVICES.SERVICE_LIST.APLICAR' | translate }}</button>
+            <button type="button" class="btn btn-light" [disabled]="!activeFilterCount && !search.value && status.value === 'active' && !specialty.value" (click)="clearFilters()" data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+          </div>
+        </form>
+        @if (!specialtiesAvailable) { <small id="specialty-help" class="text-muted d-block mx-2">{{ 'SERVICES.SERVICE_LIST.HABILITA_PERSONAL_PARA_FILTRAR_POR' | translate }}</small> }
+      </div>
+      @if (success) { <div role="status" class="alert alert-success m-2">{{ success }}</div> }
+      @if (error) { <div role="alert" class="alert alert-danger m-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
+      @if (loading && !rows.length) { <p class="m-2" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+      @if (!loading && !error && total === 0) {
+        <p class="m-2">{{ (!state.search && state.status === 'active' && !state.specialtyId ? 'SERVICES.SERVICE_LIST.AUN_NO_HAY_SERVICIOS_ACTIVOS' : 'SERVICES.SERVICE_LIST.NO_HAY_SERVICIOS_PARA_ESTOS') | translate }}</p>
+      }
+      @if (rows.length) {
+      <ul class="list-unstyled service-cards m-2 p-0" data-testid="service-cards">
+        @for (row of rows; track row.id) {
+        <li class="card service-card m-0" [class.text-muted]="!row.active" data-testid="service-card">
+          <div class="service-card-header">
+            <a class="fw-bold service-card-title" [routerLink]="['/pocketbiz/catalog/services', row.id]">{{ row.name }}</a>
+            <div class="service-card-actions">
+              <a class="btn btn-tbl-edit btn-tbl-view" [routerLink]="['/pocketbiz/catalog/services', row.id]" [title]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.VER_SERVICIO' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>
+              <a class="btn btn-tbl-edit btn-tbl-update" [routerLink]="['/pocketbiz/catalog/services', row.id, 'edit']" [title]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate" [attr.aria-label]="'SERVICES.SERVICE_LIST.EDITAR_SERVICIO' | translate"><i class="fas fa-pen" aria-hidden="true"></i></a>
+              <app-service-toggle [service]="row" [compact]="true" (updated)="onUpdated($event)" />
+            </div>
+          </div>
+          <dl class="service-card-body mb-0">
+            <div class="service-card-row"><dt>{{ 'SERVICES.SERVICE_LIST.PRECIO' | translate }}</dt><dd class="service-card-price">{{ row.basePrice | money }}</dd></div>
+            <div class="service-card-row"><dt>{{ 'SERVICES.SERVICE_LIST.DURACION' | translate }}</dt><dd>{{ 'SERVICES.SERVICE_LIST.MIN' | translate: { p0: row.durationMinutes } }}</dd></div>
+            <div class="service-card-row"><dt>{{ 'COMMON.ESTADO' | translate }}</dt><dd><span class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></dd></div>
+            <div class="service-card-row"><dt>{{ 'SERVICES.SERVICE_LIST.ESPECIALIDAD' | translate }}</dt><dd>@if (row.specialtyName) { {{ row.specialtyName }} } @else { <span class="text-muted">{{ 'SERVICES.SERVICE_FORM.SIN_ESPECIALIDAD' | translate }}</span> }</dd></div>
+          </dl>
+        </li>
+        }
+      </ul>
+      <p class="m-2 text-muted" data-testid="service-total">{{ 'SERVICES.SERVICE_LIST.TOTAL_SERVICIOS' | translate: { count: total } }}</p>
+      @if (total > pageSize) {
+      <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize" [page]="state.pageIndex + 1" [maxSize]="5"
+        [boundaryLinks]="true" [attr.aria-label]="'SERVICES.SERVICE_LIST.PAGINAS_DE_SERVICIOS' | translate" (pageChange)="onPage($event)" />
+      }
+      }
     </div>
   </div></div>
 </section>

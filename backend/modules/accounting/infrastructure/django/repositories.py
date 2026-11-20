@@ -9,6 +9,7 @@ from django.db.models import Count, Exists, Max, Min, OuterRef, Q, Sum
 from django.db.models.functions import Lower
 from django.utils import timezone
 
+from modules.accounting.application.cash_flow import EntryHeader
 from modules.accounting.application.journal_queries import JournalFilters
 from modules.accounting.domain.account import Account, AccountValidationError, MethodMapping
 from modules.accounting.domain.catalog import METHOD_CODES, OPERATION_RECORD
@@ -17,6 +18,7 @@ from modules.accounting.domain.coverage import Period
 from modules.accounting.domain.entry import Entry
 from modules.accounting.domain.fiscal_period import FiscalPeriod
 from modules.accounting.domain.journal import JournalEntry, JournalLine
+from modules.accounting.domain.ledger_report import EntryMoneyLine
 from modules.accounting.domain.trial_balance import AccountMovements
 
 from .models import (
@@ -578,14 +580,18 @@ class DjangoJournalRepository:
         return {row['account_id']: (row['debit'] or zero, row['credit'] or zero)
                 for row in rows.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))}
 
-    def movements_by_account(self, date_from: date | None, date_to: date | None) -> dict[UUID, AccountMovements]:
+    def movements_by_account(self, date_from: date | None, date_to: date | None,
+                             since: date | None = None) -> dict[UUID, AccountMovements]:
         """Debe/Haber por cuenta según la fecha contable: acumulado previo a `date_from` y movimientos del rango.
 
         Sin `date_from` no hay acumulado previo; sin `date_to` el rango no tiene tope. Solo cuentas con movimientos.
+        `since` descarta los asientos con fecha contable anterior (el corte contable).
         """
         lines = JournalLineModel.objects.filter(company_id=self.company_id)
         if date_to:
             lines = lines.filter(entry__accounting_date__lte=date_to)
+        if since:
+            lines = lines.filter(entry__accounting_date__gte=since)
         zero = Decimal('0.00')
         if date_from is None:
             rows = lines.order_by().values('account_id').annotate(debit=Sum('debit'), credit=Sum('credit'))
@@ -597,6 +603,22 @@ class DjangoJournalRepository:
             debit=Sum('debit', filter=in_range), credit=Sum('credit', filter=in_range))
         return {row['account_id']: AccountMovements(row['opening_debit'] or zero, row['opening_credit'] or zero,
                                                     row['debit'] or zero, row['credit'] or zero) for row in rows}
+
+    def money_lines(self, account_ids: list[UUID], date_from: date, date_to: date) -> list[EntryMoneyLine]:
+        """Neto (Debe − Haber) por asiento y cuenta, por fecha contable en `[date_from, date_to]`."""
+        rows = (JournalLineModel.objects
+                .filter(company_id=self.company_id, account_id__in=account_ids,
+                        entry__accounting_date__gte=date_from, entry__accounting_date__lte=date_to)
+                .order_by().values('entry_id', 'account_id').annotate(debit=Sum('debit'), credit=Sum('credit')))
+        return [EntryMoneyLine(row['entry_id'], row['account_id'], row['debit'] - row['credit']) for row in rows]
+
+    def money_entries(self, entry_ids: list[UUID]) -> dict[UUID, EntryHeader]:
+        """Cabeceras (fecha, concepto, origen, reversión) de los asientos pedidos de la empresa."""
+        rows = self._rows().filter(id__in=entry_ids).order_by().values(
+            'id', 'accounting_date', 'created_at', 'description', 'origin_kind', 'origin_id', 'reverses_id')
+        return {row['id']: EntryHeader(row['id'], row['accounting_date'], row['created_at'], row['description'],
+                                       row['origin_kind'], row['origin_id'], row['reverses_id'] is not None)
+                for row in rows}
 
     def count_outside(self, period_id: UUID, start: date, end: date) -> int:
         """Asientos del período cuya fecha contable quedaría fuera del rango `[start, end]`."""

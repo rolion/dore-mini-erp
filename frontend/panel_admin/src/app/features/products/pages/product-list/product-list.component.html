@@ -15,123 +15,145 @@
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="card">
           <div class="p-10">
-            <div class="row">
-              <div class="col-lg-8">
-                <div class="row m-0">
-                  <div class="col-auto p-0">
-                    <div class="ngxTableHeader">
-                      <div class="table-title">
-                        <h2><strong>{{ 'COMMON.PRODUCTOS' | translate }}</strong></h2>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col p-0">
-                    <div class="ngxTableHeader">
-                      <div class="table-search-area">
-                        <div>
-                          <label for="product-search"><i class="material-icons search-icon">search</i></label>
-                          <input id="product-search" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" type="text"
-                            class="browser-default search-field" [formControl]="searchControl"
-                            [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE' | translate">
-                        </div>
-                      </div>
-                      <div class="header-buttons-left">
-                        <div class="d-flex align-items-center gap-2 ms-3">
-                          <select class="form-select form-control w-auto" [formControl]="statusControl"
-                            [attr.aria-label]="'COMMON.FILTRAR_POR_ESTADO' | translate">
-                            <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
-                            <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
-                            <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
-                          </select>
-                          <select class="form-select form-control w-auto" [formControl]="useControl"
-                            [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.FILTRAR_POR_USO' | translate">
-                            <option value="all">{{ 'PRODUCTS.PRODUCT_LIST.TODOS_LOS_USOS' | translate }}</option>
-                            <option value="buy">{{ 'PRODUCTS.PRODUCT_LIST.SE_COMPRA' | translate }}</option>
-                            <option value="sell">{{ 'PRODUCTS.PRODUCT_LIST.SE_VENDE' | translate }}</option>
-                          </select>
-                          <select class="form-select form-control w-auto" [formControl]="categoryControl"
-                            [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.FILTRAR_POR_CATEGORIA' | translate">
-                            <option value="all">{{ 'PRODUCTS.PRODUCT_LIST.TODAS_LAS_CATEGORIAS' | translate }}</option>
-                            @for (option of categories; track option.value) {
-                            <option [value]="option.value">{{ option.label }}</option>
-                            }
-                            <option value="unclassified">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</option>
-                          </select>
-                          <a class="btn btn-icon icon-left btn-primary rounded-button" routerLink="/pocketbiz/catalog/products/new"
-                            [title]="'PRODUCTS.PRODUCT_LIST.NUEVO_PRODUCTO' | translate" [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.NUEVO_PRODUCTO' | translate">
-                            <i class="material-icons">add</i>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div class="ngxTableHeader product-header">
+              <div class="table-title">
+                <h2><strong>{{ 'COMMON.PRODUCTOS' | translate }}</strong></h2>
               </div>
+              <a class="btn btn-primary product-add" routerLink="/pocketbiz/catalog/products/new" data-testid="add-product">
+                <i class="material-icons me-1" aria-hidden="true">add</i>{{ 'PRODUCTS.PRODUCT_LIST.AGREGAR_PRODUCTO' | translate }}
+              </a>
             </div>
-            <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
-              [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
-              [offset]="pageIndex" [limit]="pageSize" [messages]="messages" [rowClass]="rowClass" (page)="onPage($event)">
-              <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [width]="250">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{row.name}}</a>
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.CATEGORIA' | translate" [sortable]="false" [width]="150">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  @if (row.needsReview) {
-                  <div class="badge-outline col-orange">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</div>
-                  } @else {
-                  {{ categoryName(row) }}
+            @if (compact) {
+            <div class="m-2">
+              <button type="button" class="btn btn-light w-100 product-filters-toggle" data-testid="filters-toggle"
+                aria-controls="product-filters" [attr.aria-expanded]="!filtersCollapsed" (click)="toggleFilters()">
+                <span>
+                  <i class="fas fa-filter me-2" aria-hidden="true"></i>{{ 'PRODUCTS.PRODUCT_LIST.FILTROS' | translate }}
+                  @if (activeFilterCount) {
+                  <span class="badge bg-primary ms-2" data-testid="filters-count"
+                    [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.FILTROS_ACTIVOS' | translate: { count: activeFilterCount }">{{ activeFilterCount }}</span>
                   }
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.USOS' | translate" [sortable]="false" [width]="230">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  <app-product-uses [product]="row" />
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.PRECIO' | translate" [sortable]="false" [width]="120"
-                headerClass="text-end" cellClass="text-end">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.canSell ? (row.salePrice | money) : '—' }}
-                </ng-template>
-              </ngx-datatable-column>
-              <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="120">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  @if (row.active) {
-                  <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
-                  } @else {
-                  <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
+                </span>
+                <i class="fas" [class.fa-chevron-down]="filtersCollapsed" [class.fa-chevron-up]="!filtersCollapsed" aria-hidden="true"></i>
+              </button>
+            </div>
+            }
+            <div id="product-filters" [ngbCollapse]="compact && filtersCollapsed">
+              <form class="row g-2 m-2 align-items-end" (ngSubmit)="applyFilters()"
+                [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.FILTROS_DE_PRODUCTOS' | translate">
+                <div class="col-lg-3 col-md-6">
+                  <label for="product-search">{{ 'COMMON.PRODUCTO' | translate }}</label>
+                  <input id="product-search" type="search" class="form-control" [formControl]="searchControl"
+                    [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" [attr.aria-label]="'COMMON.BUSCAR_POR_NOMBRE' | translate">
+                </div>
+                <div class="col-lg-2 col-md-6">
+                  <label for="product-status">{{ 'COMMON.ESTADO' | translate }}</label>
+                  <select id="product-status" class="form-select form-control" [formControl]="statusControl">
+                    <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+                    <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+                    <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
+                  </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                  <label for="product-use">{{ 'PRODUCTS.PRODUCT_LIST.USO' | translate }}</label>
+                  <select id="product-use" class="form-select form-control" [formControl]="useControl">
+                    <option value="all">{{ 'PRODUCTS.PRODUCT_LIST.TODOS_LOS_USOS' | translate }}</option>
+                    <option value="buy">{{ 'PRODUCTS.PRODUCT_LIST.SE_COMPRA' | translate }}</option>
+                    <option value="sell">{{ 'PRODUCTS.PRODUCT_LIST.SE_VENDE' | translate }}</option>
+                  </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                  <label for="product-category">{{ 'PRODUCTS.PRODUCT_LIST.CATEGORIA' | translate }}</label>
+                  <select id="product-category" class="form-select form-control" [formControl]="categoryControl">
+                    <option value="all">{{ 'PRODUCTS.PRODUCT_LIST.TODAS_LAS_CATEGORIAS' | translate }}</option>
+                    @for (option of categories; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                    }
+                    <option value="unclassified">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</option>
+                  </select>
+                </div>
+                <div class="col-lg-2 product-filter-actions">
+                  @if (compact) {
+                  <button type="submit" class="btn btn-primary" data-testid="apply-filters">{{ 'PRODUCTS.PRODUCT_LIST.APLICAR_FILTROS' | translate }}</button>
                   }
-                </ng-template>
-              </ngx-datatable-column>
-              @if (inventoryEnabled) {
-              <ngx-datatable-column [name]="'PRODUCTS.PRODUCT_LIST.UNIDAD_BASE' | translate" [sortable]="false" [width]="130">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  {{ row.tracksStock && row.baseUnit ? row.baseUnit.abbreviation : '—' }}
-                </ng-template>
-              </ngx-datatable-column>
-              }
-              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="180">
-                <ng-template let-row="row" ngx-datatable-cell-template>
-                  <span>
-                    <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/catalog/products', row.id]" [title]="'COMMON.VER_DETALLE' | translate"
-                      [attr.aria-label]="'COMMON.VER_DETALLE' | translate">
+                  <button type="button" class="btn btn-light" [disabled]="!activeFilterCount" (click)="clearFilters()"
+                    data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+                </div>
+              </form>
+            </div>
+            @if (loading && !rows.length) {
+            <p class="m-4">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (!rows.length) {
+            <p class="m-4" data-testid="product-empty">{{ 'PRODUCTS.PRODUCT_LIST.NO_HAY_PRODUCTOS' | translate }}</p>
+            } @else {
+            <ul class="list-unstyled product-cards m-2 p-0" data-testid="product-cards"
+              [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.LISTA_DE_PRODUCTOS' | translate">
+              @for (row of rows; track row.id) {
+              <li class="card product-card m-0" [class.text-muted]="!row.active" data-testid="product-card">
+                <div class="product-card-header">
+                  <a class="fw-bold product-card-title" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{ row.name }}</a>
+                  <div class="product-card-actions">
+                    <a class="btn btn-tbl-edit btn-tbl-view" [routerLink]="['/pocketbiz/catalog/products', row.id]"
+                      [title]="'COMMON.VER_DETALLE' | translate" [attr.aria-label]="'COMMON.VER_DETALLE' | translate">
                       <i class="fas fa-eye"></i>
                     </a>
-                    <a class="btn btn-tbl-edit btn-tbl-update h-auto" [routerLink]="['/pocketbiz/catalog/products', row.id, 'edit']"
+                    <a class="btn btn-tbl-edit btn-tbl-update" [routerLink]="['/pocketbiz/catalog/products', row.id, 'edit']"
                       [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
                       <i class="fas fa-pen"></i>
                     </a>
-                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle h-auto" (click)="toggleActive(row)"
+                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle" (click)="toggleActive(row)"
                       [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
                       [attr.aria-label]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
                       <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
                     </button>
-                  </span>
-                </ng-template>
-              </ngx-datatable-column>
-            </ngx-datatable>
+                  </div>
+                </div>
+                <dl class="product-card-body mb-0">
+                  <div class="product-card-row">
+                    <dt>{{ 'PRODUCTS.PRODUCT_LIST.CATEGORIA' | translate }}</dt>
+                    <dd>
+                      @if (row.needsReview) {
+                      <span class="badge-outline col-orange d-inline-block">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</span>
+                      } @else {
+                      {{ categoryName(row) }}
+                      }
+                    </dd>
+                  </div>
+                  <div class="product-card-row">
+                    <dt>{{ 'PRODUCTS.PRODUCT_LIST.USOS' | translate }}</dt>
+                    <dd><app-product-uses [product]="row" /></dd>
+                  </div>
+                  <div class="product-card-row product-card-price">
+                    <dt>{{ 'PRODUCTS.PRODUCT_LIST.PRECIO' | translate }}</dt>
+                    <dd>{{ row.canSell ? (row.salePrice | money) : '—' }}</dd>
+                  </div>
+                  <div class="product-card-row">
+                    <dt>{{ 'COMMON.ESTADO' | translate }}</dt>
+                    <dd>
+                      @if (row.active) {
+                      <span class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</span>
+                      } @else {
+                      <span class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</span>
+                      }
+                    </dd>
+                  </div>
+                  @if (inventoryEnabled) {
+                  <div class="product-card-row">
+                    <dt>{{ 'PRODUCTS.PRODUCT_LIST.UNIDAD_BASE' | translate }}</dt>
+                    <dd>{{ row.tracksStock && row.baseUnit ? row.baseUnit.abbreviation : '—' }}</dd>
+                  </div>
+                  }
+                </dl>
+              </li>
+              }
+            </ul>
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
+              [page]="page" [maxSize]="5" [boundaryLinks]="true" [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.PAGINAS_DE_PRODUCTOS' | translate"
+              (pageChange)="goTo($event)" />
+            }
+            <p class="text-muted small m-2">{{ total }} {{ 'COMMON.IN_TOTAL' | translate }}</p>
+            }
           </div>
         </div>
       </div>

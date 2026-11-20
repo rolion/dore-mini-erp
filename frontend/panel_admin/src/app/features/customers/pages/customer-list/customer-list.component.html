@@ -14,6 +14,84 @@
       <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
         <div class="card">
           <div class="p-10">
+            @if (compact) {
+            <div class="customer-compact" data-testid="customer-compact">
+              <div class="customer-compact-title">
+                <h2><strong>{{ 'CUSTOMERS.CUSTOMER_LIST.CLIENTES' | translate }}</strong></h2>
+              </div>
+              <a class="btn btn-primary w-100 customer-touch" routerLink="/pocketbiz/customers/new" data-testid="new-customer">
+                <i class="material-icons me-1" aria-hidden="true">add</i>{{ 'CUSTOMERS.CUSTOMER_LIST.NUEVO_CLIENTE' | translate }}
+              </a>
+              <button type="button" class="btn btn-light w-100 customer-touch customer-filters-toggle" data-testid="filters-toggle"
+                aria-controls="customer-filters" [attr.aria-expanded]="!filtersCollapsed" (click)="toggleFilters()">
+                <span>
+                  <i class="fas fa-filter me-2" aria-hidden="true"></i>{{ 'CUSTOMERS.CUSTOMER_LIST.FILTROS' | translate }}
+                  @if (activeFilterCount) {
+                  <span class="badge bg-primary ms-2" data-testid="filters-count"
+                    [attr.aria-label]="'CUSTOMERS.CUSTOMER_LIST.FILTROS_ACTIVOS' | translate: { count: activeFilterCount }">{{ activeFilterCount }}</span>
+                  }
+                </span>
+                <i class="fas" [class.fa-chevron-down]="filtersCollapsed" [class.fa-chevron-up]="!filtersCollapsed" aria-hidden="true"></i>
+              </button>
+              <div id="customer-filters" [ngbCollapse]="filtersCollapsed">
+                <form class="customer-filters-form" (ngSubmit)="applyFilters()" [attr.aria-label]="'CUSTOMERS.CUSTOMER_LIST.FILTROS' | translate">
+                  <div>
+                    <label for="customer-search-compact">{{ 'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate }}</label>
+                    <div class="customer-search-box">
+                      <input id="customer-search-compact" type="search" class="form-control" [formControl]="searchControl"
+                        [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate">
+                      <i class="material-icons customer-search-icon" aria-hidden="true">search</i>
+                    </div>
+                  </div>
+                  <div>
+                    <label for="customer-status-compact">{{ 'COMMON.ESTADO' | translate }}</label>
+                    <select id="customer-status-compact" class="form-select" [formControl]="statusControl">
+                      <option value="active">{{ 'COMMON.ACTIVOS' | translate }}</option>
+                      <option value="inactive">{{ 'COMMON.INACTIVOS' | translate }}</option>
+                      <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+                    </select>
+                  </div>
+                  <div class="customer-filter-actions">
+                    <button type="submit" class="btn btn-primary customer-touch" data-testid="apply-filters">{{ 'CUSTOMERS.CUSTOMER_LIST.APLICAR_FILTROS' | translate }}</button>
+                    <button type="button" class="btn btn-light customer-touch" data-testid="clear-filters" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+                  </div>
+                </form>
+              </div>
+              @if (rows.length) {
+              <ul class="list-unstyled customer-cards m-0 p-0" data-testid="customer-cards">
+                @for (row of rows; track row.id) {
+                <li class="card customer-card m-0" data-testid="customer-card">
+                  <div class="customer-card-header">
+                    <div class="customer-card-title"><ng-container [ngTemplateOutlet]="nameTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></div>
+                    <div class="customer-card-actions"><ng-container [ngTemplateOutlet]="actionsTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></div>
+                  </div>
+                  <dl class="customer-card-body mb-0">
+                    <div class="customer-card-row">
+                      <dt>{{ 'COMMON.TELEFONO' | translate }}</dt>
+                      <dd>{{ row.phone || '—' }}</dd>
+                    </div>
+                    <div class="customer-card-row">
+                      <dt>{{ 'CUSTOMERS.CUSTOMER_LIST.CORREO' | translate }}</dt>
+                      <dd>{{ row.email || '—' }}</dd>
+                    </div>
+                    <div class="customer-card-row">
+                      <dt>{{ 'COMMON.ESTADO' | translate }}</dt>
+                      <dd><ng-container [ngTemplateOutlet]="statusTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></dd>
+                    </div>
+                  </dl>
+                </li>
+                }
+              </ul>
+              } @else if (!loading) {
+              <p class="m-0 text-muted">{{ 'CUSTOMERS.CUSTOMER_LIST.NO_HAY_CLIENTES_QUE_COINCIDAN' | translate }}</p>
+              }
+              <p class="customer-total text-muted m-0" data-testid="customer-total">{{ total }} {{ 'COMMON.IN_TOTAL' | translate }}</p>
+              @if (total > pageSize) {
+              <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
+                [page]="pageIndex + 1" [maxSize]="3" [boundaryLinks]="true" (pageChange)="onCardsPage($event)" />
+              }
+            </div>
+            } @else {
             <div class="row">
               <div class="col-lg-8">
                 <div class="row m-0">
@@ -58,7 +136,7 @@
               [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
               <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [width]="220">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <a class="fw-bold" [routerLink]="['/pocketbiz/customers', row.id]">{{row.name}}</a>
+                  <ng-container [ngTemplateOutlet]="nameTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.TELEFONO' | translate" [sortable]="false" [width]="160">
@@ -73,16 +151,37 @@
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="110">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  @if (row.active) {
-                  <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
-                  } @else {
-                  <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
-                  }
+                  <ng-container [ngTemplateOutlet]="statusTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="180">
                 <ng-template let-row="row" ngx-datatable-cell-template>
-                  <span>
+                  <ng-container [ngTemplateOutlet]="actionsTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<ng-template #nameTpl let-row>
+  <a class="fw-bold" [routerLink]="['/pocketbiz/customers', row.id]">{{row.name}}</a>
+</ng-template>
+
+<ng-template #statusTpl let-row>
+  @if (row.active) {
+  <div class="badge-outline col-green">{{ 'COMMON.ACTIVO' | translate }}</div>
+  } @else {
+  <div class="badge-outline col-red">{{ 'COMMON.INACTIVO' | translate }}</div>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-row>
+  <span>
                     <a class="btn btn-tbl-edit btn-tbl-view h-auto" [routerLink]="['/pocketbiz/customers', row.id]" [title]="'CUSTOMERS.CUSTOMER_LIST.VER_PERFIL' | translate"
                       [attr.aria-label]="'CUSTOMERS.CUSTOMER_LIST.VER_PERFIL' | translate">
                       <i class="fas fa-eye"></i>
@@ -97,12 +196,4 @@
                       <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
                     </button>
                   </span>
-                </ng-template>
-              </ngx-datatable-column>
-            </ngx-datatable>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+</ng-template>

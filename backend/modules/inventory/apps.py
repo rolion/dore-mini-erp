@@ -8,7 +8,9 @@ class InventoryConfig(AppConfig):
     def ready(self):
         from shared import stock_history
 
+        from .infrastructure import defaults
         from .services import has_history
 
         # Con movimientos registrados, Catálogo deja de permitir cambiar el control de stock o la unidad base.
         stock_history.register(has_history)
+        defaults.register()

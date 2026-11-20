@@ -8,7 +8,8 @@
         "REGULARIZATION": "Regularizar pagamentos históricos",
         "ACCOUNTS": "Contas",
         "JOURNAL": "Movimentos",
-        "BALANCES": "Saldos"
+        "BALANCES": "Saldos",
+        "CASH_FLOW": "Fluxo de dinheiro"
       }
     },
     "AGENDA": {
@@ -400,6 +401,9 @@
       "PHONE_TAKEN_LIST": "Estes clientes já têm esse telefone:"
     },
     "CUSTOMER_LIST": {
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros ativos",
       "CLIENTES": "Clientes",
       "NUEVO_CLIENTE": "Novo cliente",
       "VER_PERFIL": "Ver perfil",
@@ -704,6 +708,7 @@
       "DEBE": "Débito",
       "HABER": "Crédito",
       "VER_ASIENTO": "Ver lançamento",
+      "VER_REVERSION": "Ver estorno",
       "CORREGIR_ANULANDO": "Esta despesa está contabilizada. Para corrigir o valor, a data, a categoria, o método ou as contas, anule-a e registre-a novamente."
     },
     "EXPENSE_FORM": {
@@ -755,7 +760,17 @@
       "ESTE_MES": "Este mês",
       "MES_ANTERIOR": "Mês anterior",
       "TODO": "Tudo",
-      "NO_HAY_GASTOS_QUE_COINCIDAN": "Nenhuma despesa corresponde"
+      "NO_HAY_GASTOS_QUE_COINCIDAN": "Nenhuma despesa corresponde",
+      "REGISTRAR_GASTO": "Registrar despesa",
+      "FILTROS": "Filtros",
+      "FILTROS_ACTIVOS": "filtros ativos",
+      "APLICAR_FILTROS": "Aplicar filtros",
+      "PERIODO": "Período",
+      "PERSONALIZADO": "Personalizado",
+      "MOSTRANDO_N_DE_M": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LISTA_DE_GASTOS": "Lista de despesas",
+      "VER_GASTO_N": "Ver despesa {{description}}",
+      "PAGINACION": "Paginação de despesas"
     },
     "API_ERROR": {
       "NO_SE_ENCONTRO_EL_REGISTRO": "O registro não foi encontrado."
@@ -1331,7 +1346,14 @@
       "PRECIO": "Preço",
       "CONTROLA_STOCK": "Controla estoque",
       "UNIDAD_BASE": "Unidade base",
-      "NO_HAY_PRODUCTOS": "Sem produtos"
+      "NO_HAY_PRODUCTOS": "Sem produtos",
+      "AGREGAR_PRODUCTO": "Adicionar produto",
+      "FILTROS": "Filtros",
+      "APLICAR_FILTROS": "Aplicar",
+      "FILTROS_ACTIVOS": "{{count}} filtros ativos",
+      "LISTA_DE_PRODUCTOS": "Lista de produtos",
+      "PAGINAS_DE_PRODUCTOS": "Páginas de produtos",
+      "FILTROS_DE_PRODUCTOS": "Filtros de produtos"
     },
     "PRODUCTS_API_SERVICE": {
       "PRODUCTO_NO_ENCONTRADO": "Produto não encontrado."
@@ -1691,7 +1713,38 @@
       "TOTAL_COMPRADO": "Total comprado",
       "PORCENTAJE_DE_N": "Porcentagem de {{n}}",
       "IMPORTES_ANTES_DE_DESCUENTOS_DEL": "Valores antes dos descontos do pedido.",
-      "NO_INCLUYE_PEDIDOS_SIN_CLIENTE": "Não inclui pedidos sem cliente."
+      "NO_INCLUYE_PEDIDOS_SIN_CLIENTE": "Não inclui pedidos sem cliente.",
+      "LIBRO_CONTABLE": "Livro contábil",
+      "FLUJO_DE_DINERO": "Fluxo de dinheiro",
+      "RESULTADO_CONTABLE": "Resultado contábil",
+      "ENTRADAS": "Entradas",
+      "SALIDAS": "Saídas",
+      "FLUJO_NETO": "Fluxo líquido",
+      "SALDO_INICIAL": "Saldo inicial",
+      "SALDO_FINAL": "Saldo final",
+      "TRANSFERENCIAS_INTERNAS": "Transferências entre contas próprias: {{p0}}. Não alteram o fluxo líquido.",
+      "CUENTA_DE_DINERO": "Conta",
+      "VARIACION": "Variação",
+      "INGRESOS": "Receitas",
+      "COSTOS": "Custos",
+      "MARGEN": "Margem",
+      "GASTOS": "Despesas",
+      "RESULTADO": "Resultado",
+      "AVISO_COBERTURA": "Parte do período é anterior ao corte contábil ({{p0}}) ou não teve cobertura; esses dados não são incluídos.",
+      "AVISO_SIN_CORTE": "A contabilidade ainda não tem data de corte; os dados podem estar incompletos.",
+      "CRITERIO_OPERATIVO": "Operacional: baseado em pedidos e despesas registrados, não no livro contábil.",
+      "SECCION_CONTABLE": "Contábil (livro de lançamentos)",
+      "SECCION_OPERATIVA": "Operacional (pedidos e despesas)",
+      "CHIP_CONTABLE": "Contábil",
+      "CHIP_OPERATIVO": "Operacional",
+      "COMO_SE_CALCULA": "Como é calculado?",
+      "VER_POR_CUENTA": "Ver por conta",
+      "SIN_CUENTAS_DE_DINERO": "Configure o tipo de conta Caixa/Banco para ver o fluxo de dinheiro.",
+      "IR_A_CUENTAS": "Ir para Contabilidade → Contas",
+      "CERRAR_AVISO": "Fechar aviso",
+      "RESULTADO_NEGATIVO": "Resultado negativo",
+      "RESULTADO_POSITIVO": "Resultado positivo",
+      "DONA_GASTOS_ARIA": "Gráfico de despesas por categoria"
     },
     "REPORT_CARD": {
       "NO_SE_PUDO_CARGAR": "Não foi possível carregar.",
@@ -1883,7 +1936,7 @@
     "SERVICE_LIST": {
       "TODAS_LAS_ESPECIALIDADES": "Todas as especialidades",
       "SIN_ESPECIALIDAD": "Sem especialidade",
-      "NUEVO_SERVICIO": "Novo serviço",
+      "NUEVO_SERVICIO": "Adicionar serviço",
       "HABILITA_PERSONAL_PARA_FILTRAR_POR": "Habilite Equipe para filtrar por especialidade. Você pode criar serviços sem especialidade.",
       "AUN_NO_HAY_SERVICIOS_ACTIVOS": "Ainda não há serviços ativos. Use \"Novo serviço\" para começar.",
       "MIN": "{{p0}} min",
@@ -1892,7 +1945,13 @@
       "PRECIO": "Preço",
       "DURACION": "Duração",
       "ESPECIALIDAD": "Especialidade",
-      "NO_HAY_SERVICIOS_PARA_ESTOS": "Nenhum serviço para estes filtros."
+      "NO_HAY_SERVICIOS_PARA_ESTOS": "Nenhum serviço para estes filtros.",
+      "FILTROS": "Filtros",
+      "FILTROS_ACTIVOS": "{{count}} filtros ativos",
+      "FILTROS_DE_SERVICIOS": "Filtros de serviços",
+      "APLICAR": "Aplicar",
+      "TOTAL_SERVICIOS": "{{count}} serviços",
+      "PAGINAS_DE_SERVICIOS": "Páginas de serviços"
     },
     "SERVICE_TOGGLE": {
       "DESACTIVAR": "Desativar",
@@ -3094,6 +3153,45 @@
         "OTHER": "Outro"
       },
       "MISSING_MORE": "Ver mais {{p0}}"
+    },
+    "CASH_FLOW": {
+      "TITLE": "Fluxo de dinheiro",
+      "COVERAGE_PARTIAL": "Parte do período é anterior ao corte contábil ({{date}}); esses dados não estão incluídos.",
+      "OPENING": "Saldo inicial",
+      "INFLOW": "Entradas",
+      "OUTFLOW": "Saídas",
+      "NET": "Fluxo líquido",
+      "CLOSING": "Saldo final",
+      "TRANSFERS_NOTE": "Transferências entre suas contas: {{amount}}. Não alteram o fluxo líquido.",
+      "ACCOUNTS_TITLE": "Contas de dinheiro",
+      "ACCOUNT": "Conta",
+      "TRANSFERS_IN": "Transf. recebidas",
+      "TRANSFERS_OUT": "Transf. enviadas",
+      "TOTAL": "Total",
+      "NO_ACCOUNTS": "Não há contas de dinheiro configuradas.",
+      "GO_ACCOUNTS": "Ir para Contas",
+      "SELECT_ACCOUNT": "Ver os movimentos de {{name}}",
+      "ACCOUNT_CHIP": "Conta: {{name}}",
+      "REMOVE_ACCOUNT": "Remover o filtro de conta",
+      "MOVEMENTS_TITLE": "Movimentos",
+      "TYPE": "Tipo",
+      "TYPE_ALL": "Todos",
+      "TYPE_INFLOW": "Entradas",
+      "TYPE_OUTFLOW": "Saídas",
+      "TYPE_TRANSFER": "Transferências",
+      "KIND_INFLOW": "Entrada",
+      "KIND_OUTFLOW": "Saída",
+      "KIND_TRANSFER_IN": "Transferência recebida",
+      "KIND_TRANSFER_OUT": "Transferência enviada",
+      "CONCEPT": "Descrição",
+      "AMOUNT": "Valor",
+      "VIEW_ENTRY": "Ver lançamento",
+      "VIEW_ENTRY_N": "Ver o lançamento: {{description}}",
+      "REVERSAL": "Estorno",
+      "EMPTY": "Sem movimentos neste período.",
+      "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
+      "PAGINATION": "Páginas de movimentos",
+      "FILTER_TOTALS": "Totais do filtro: entradas {{inflow}}, saídas {{outflow}}, transferências recebidas {{transfersIn}} e enviadas {{transfersOut}}."
     }
   }
 }

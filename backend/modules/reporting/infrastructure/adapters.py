@@ -8,6 +8,7 @@ from uuid import UUID
 
 from django.utils import timezone
 
+from modules.accounting import services as accounting_services
 from modules.customers import services as customer_services
 from modules.expenses import services as expense_services
 from modules.reporting.application import ports
@@ -68,6 +69,23 @@ class ExpensesReaderAdapter:
         categories = [ports.CategoryExpense(category_id=r.category_id, name=r.name, active=r.active, total=r.total)
                       for r in report.rows]
         return ports.ExpenseTotals(total=report.total, categories=categories)
+
+
+class LedgerReaderAdapter:
+    """Lector del libro de asientos de Accounting acotado a una empresa (solo lectura, por su fachada)."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def report(self, date_from: date, date_to: date) -> ports.LedgerTotals:
+        r = accounting_services.get_ledger_report(self.company_id, date_from, date_to)
+        flow, result = r.cash_flow, r.result
+        accounts = [ports.LedgerAccountFlow(a.account_id, a.name, a.opening, a.net, a.closing) for a in flow.accounts]
+        return ports.LedgerTotals(
+            cutoff_date=r.cutoff_date, partial=r.partial,
+            cash_flow=ports.LedgerCashFlow(flow.opening, flow.inflow, flow.outflow, flow.net, flow.closing,
+                                           flow.transfers, accounts),
+            result=ports.LedgerResult(result.income, result.cost, result.margin, result.expense, result.result))
 
 
 class CustomerNamesAdapter:
