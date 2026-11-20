@@ -68,6 +68,7 @@ docs/plans/PLAN-2026-11-20-productos-tabla-desde-957px.md (v1, COMPACTO, READY)
 - `scss`: `$compact-max: 956.98px`; `.product-row-actions` reutiliza el estilo circular de las acciones de tarjeta.
 - Pruebas: `product-list.component.spec.ts` (24 en verde, Karma ChromeHeadless); `npm run i18n:check` sin claves nuevas.
 - Desviaciones: ninguna. Referencia: `stock-list`; sin componentes compartidos nuevos. Corte 957 px anotado en `design-system.md`.
+- Ampliación pedida por el usuario: Servicios (`service-list`) con el mismo corte, tabla desde 957 px y botón «Filtros» solo en compacto; 1744 pruebas en verde, lint, build e i18n:check OK.
 - Deuda: otras listas siguen en 992 px.
 
 ## Review

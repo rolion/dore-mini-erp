@@ -16,7 +16,10 @@ La lista de productos muestra tarjetas solo con ancho de pantalla menor a 957 px
   - AC-05: el corte es 957 px (`max-width: 956.98px`) tanto para tarjetas como para los filtros plegables.
   - AC-06: paginación y contador «n en total» se conservan en ambas vistas.
 - **Edge/error cases:** vacío y error de carga sin cambios; sin texto hardcodeado (claves existentes `COMMON.*`/`PRODUCTS.PRODUCT_LIST.*`; i18n:check debe pasar).
-- **Out of scope:** otras listas (siguen en 992 px), backend, nuevas columnas u ordenamiento.
+- **Out of scope:** otras listas salvo Servicios (siguen en 992 px), backend, nuevas columnas u ordenamiento.
+
+## Ampliación (v1.1, pedida por el usuario en el chat)
+La misma regla aplica a `features/services/pages/service-list` (AC-01..AC-05 sobre Servicios; el botón «Aplicar» se conserva también en escritorio).
 
 # Test Specification
 - Unit (Karma, `product-list.component.spec.ts`): AC-01 y AC-02 (alternando `compact`), AC-03 (datos en filas de la tabla, inactivo atenuado, unidad base según Inventario), AC-04 (toggle desde la tabla), AC-05 (`COMPACT_QUERY` vale `(max-width: 956.98px)`), AC-06 (paginación presente). Se adaptan los specs que hoy asumen tarjetas en escritorio.
