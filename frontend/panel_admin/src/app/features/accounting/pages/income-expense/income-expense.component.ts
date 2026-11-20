@@ -46,6 +46,7 @@ export interface MonthOption {
 @Component({
   selector: 'app-income-expense',
   templateUrl: './income-expense.component.html',
+  styleUrl: './income-expense.component.scss',
   imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgSelectComponent, MoneyPipe],
 })
 export class IncomeExpenseComponent implements OnInit {

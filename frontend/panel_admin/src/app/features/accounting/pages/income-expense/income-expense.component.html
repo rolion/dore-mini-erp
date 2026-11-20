@@ -66,8 +66,8 @@
             </div>
             } @else if (report && report.period) {
             <small class="text-muted d-block m-2" data-testid="note">{{ 'ACCOUNTING.INCOME_EXPENSE.NOTA' | translate }}</small>
-            <div class="table-responsive m-2">
-              <table class="table table-hover align-middle mb-0" data-testid="income-expense-table">
+            <div class="table-responsive mx-0 mx-sm-2 my-2">
+              <table class="table table-hover align-middle mb-0 income-expense-table" data-testid="income-expense-table">
                 <thead>
                   <tr>
                     <th [attr.aria-sort]="ariaSort('month')">
