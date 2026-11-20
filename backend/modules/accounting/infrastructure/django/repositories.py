@@ -606,7 +606,7 @@ class DjangoJournalRepository:
                                                     row['debit'] or zero, row['credit'] or zero) for row in rows}
 
     def result_by_month(self, date_from: date, date_to: date) -> list[tuple[str, str | None, Decimal, Decimal]]:
-        """`(mes yyyy-MM, clase, Debe, Haber)` de Ingresos, Gastos y Costos por fecha contable en `[date_from, date_to]`."""
+        """`(mes yyyy-MM, clase, Debe, Haber)` de Ingresos, Gastos y Costos con fecha contable en el rango."""
         rows = (JournalLineModel.objects
                 .filter(company_id=self.company_id, entry__accounting_date__gte=date_from,
                         entry__accounting_date__lte=date_to, account__account_class__in=INCOME_EXPENSE_CLASSES)

@@ -1,6 +1,6 @@
 # TASK-reporte-ingresos-egresos-contabilidad: Reporte de ingresos y egresos por mes en Contabilidad
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-reporte-ingresos-egresos-contabilidad
@@ -14,6 +14,7 @@
 | 2026-11-20 | DESIGN → PLANNING | DDR escrito; decisión de negocio resuelta con el usuario | delivery-start |
 | 2026-11-20 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR #114 abiertos | delivery-start |
 | 2026-11-20 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas (pruebas de API backend sin ejecutar: sin DATABASE_URL) | delivery-build |
+| 2026-11-20 | REVIEW → PUBLISH | Quality Gate PASS con reservas (REV-01 corregido, REV-02 Low abierto; API backend y revisión visual no ejecutadas) | delivery-publish |
 
 ## Investigación
 
@@ -75,12 +76,12 @@ docs/plans/PLAN-2026-11-20-reporte-ingresos-egresos-contabilidad.md (v1, COMPLET
 - **Backend** (`backend/modules/accounting/`): dominio `domain/income_expense.py` (INV-01, INV-02, INV-03; AC-01, AC-03, AC-07), caso de uso `application/income_expense.py`, `DjangoJournalRepository.result_by_month` (agregación por mes y clase con `TruncMonth`, filtrada por `company_id`; INV-04, AC-08), vista/serializer `api/income_expense_*.py` y ruta `income-expense/` (API-01, AC-04, AC-05).
 - **Frontend** (`features/accounting/`): `models/income-expense.ts` (orden con centavos en `bigint`, sin float; AC-06), `services/income-expense-api.service.ts`, `pages/income-expense/` (filtros Período y Mes con `ng-select` múltiple encima de la tabla, pie con totales del servidor, cabeceras ordenables con `aria-sort`, utilidad negativa con color y texto; UI-01..04), ruta `accounting/income-expense`, entrada de menú y claves es/en/pt.
 - **UI:** plantilla «Lista de solo lectura con filtros» siguiendo `pages/balances` (breadcrumb, `.card`, `table-responsive`); reutiliza `MoneyPipe`. Sin componentes compartidos nuevos.
-- **Pruebas:** dominio (6, ejecutadas, OK), API (`test_income_expense_api.py`, 9 casos: **escritos pero no ejecutados**, el entorno no tiene `DATABASE_URL` y no se lee `.env`), frontend (suite completa 1760 OK, `ng lint` y `i18n:check` OK, `ng build` OK). flake8 limpio en lo nuevo; `ruff` no está instalado en el entorno.
+- **Pruebas:** dominio (6, ejecutadas, OK), API (`test_income_expense_api.py`, 9 casos: **escritos pero no ejecutados**, el entorno no tiene `DATABASE_URL` y no se lee `.env`), frontend (suite completa 1760 OK, `ng lint` y `i18n:check` OK, `ng build` OK). flake8 limpio en lo nuevo (tras corregir REV-01); `ruff` no está instalado en el entorno.
 - **Desviaciones del plan:** ninguna de alcance. Ordenar en cliente según el DDR.
 - **Deuda / pendiente:** correr `DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test modules.accounting.tests.test_income_expense_api` desde `backend/` con una BD de pruebas; primer uso de `TruncMonth` en el proyecto aún sin confirmar contra PostgreSQL.
 
 ## Review
-_Pendiente_
+Quality Gate en subagente aislado: **PASS con reservas**. Ejecutado OK: dominio (6), frontend 1760 pruebas, `ng lint`, `i18n:check`, `ng build`, `npm audit` (0), bandit, límites DDD. Hallazgos: [REV-01](../reviews/REV-2026-11-20-reporte-ingresos-egresos-contabilidad-01.md) (Low, corregido), [REV-02](../reviews/REV-2026-11-20-reporte-ingresos-egresos-contabilidad-02.md) (Low, abierto). **No ejecutado:** 9 pruebas de API backend (sin PostgreSQL/`DATABASE_URL`; `TruncMonth` sin confirmar contra PostgreSQL), revisión visual en navegador, ruff.
 
 ## Publicación
-_Pendiente_
+PR #114 listo para aprobación humana, con las reservas de `## Review`. Sin cambios sensibles (sin migraciones, auth ni infraestructura; sin ADR).
