@@ -1,6 +1,6 @@
 # TASK-importacion-en-segundo-plano: Ejecutar la importación de ventas en segundo plano para que no la aborte el timeout
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-importacion-en-segundo-plano
@@ -13,6 +13,7 @@
 | 2026-11-20 | INVESTIGATION → ARCHITECTURE | NEEDS_ARCHITECTURE: cambia el modelo de ejecución, el contrato API y la infraestructura | delivery-start |
 | 2026-11-20 | ARCHITECTURE → DESIGN → PLANNING → ENGINEERING | ADR + DDR + PLAN v1 listos, Specification READY | delivery-start |
 | 2026-11-20 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-20 | REVIEW → PUBLISH | Quality Gate PASS (5 hallazgos Low/Medium abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -92,7 +93,15 @@ Ver `docs/adr/ADR-importacion-en-segundo-plano-cola-en-base-de-datos-y-worker.md
 **Deuda / notas:** consultas por venta sin optimizar (fuera de alcance); sin reencolado automático de corridas caídas ni cancelación.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-20). Sin hallazgos Critical/High; 0 pruebas fallando.
+Hallazgos abiertos (Medium/Low, no bloquean; registrados como REV):
+- [REV-2026-11-20-importacion-en-segundo-plano-01](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-01.md) — Low, IMPLEMENTATION: Doble envio concurrente con la misma clave responde 409
+- [REV-2026-11-20-importacion-en-segundo-plano-02](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-02.md) — Low, IMPLEMENTATION: finish() y fail() actualizan sin condicion de estado
+- [REV-2026-11-20-importacion-en-segundo-plano-03](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-03.md) — Medium, SPECIFICATION: Pruebas mas debiles que la tabla AC -> verificacion del plan
+- [REV-2026-11-20-importacion-en-segundo-plano-04](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-04.md) — Low, DESIGN: Altura inline en la barra de progreso
+- [REV-2026-11-20-importacion-en-segundo-plano-05](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-05.md) — Low, ARCHITECTURE: El servicio import-worker no tiene healthcheck
+Revisión visual: **no verificada** (la app no se levantó en navegador); sí revisada por lectura contra la sección 8 del sistema de diseño (sin HEX/fuentes propias, textos por `translate` en es/en/pt, roles ARIA, estados cubiertos).
+
 
 ## Publicación
-_Pendiente_
+PR #113 listo para aprobación humana (nunca mergeado por el flujo). Cambio sensible: **base de datos (migración 0003) e infraestructura (nuevo servicio `import-worker`)**, respaldado por el ADR de cola en base de datos. Hallazgos REV-01..05 abiertos (Low/Medium) para decidir si se atienden antes o después del merge.
