@@ -9,7 +9,8 @@
         "ACCOUNTS": "Accounts",
         "JOURNAL": "Movements",
         "BALANCES": "Balances",
-        "CASH_FLOW": "Cash flow"
+        "CASH_FLOW": "Cash flow",
+        "INCOME_EXPENSE": "Income and expenses"
       }
     },
     "AGENDA": {
@@ -3193,6 +3194,32 @@
       "SHOWING": "Showing {{from}}–{{to}} of {{total}}",
       "PAGINATION": "Movement pages",
       "FILTER_TOTALS": "Filter totals: inflows {{inflow}}, outflows {{outflow}}, transfers received {{transfersIn}} and sent {{transfersOut}}."
+    },
+    "INCOME_EXPENSE": {
+      "TITULO": "Income and expenses",
+      "PERIODO": "Fiscal period",
+      "MES": "Month",
+      "TODOS_LOS_MESES": "All months",
+      "COL_MES": "Month",
+      "INGRESO": "Income",
+      "EGRESO": "Expenses",
+      "UTILIDAD": "Profit",
+      "TOTAL": "Total",
+      "PERDIDA": "loss",
+      "SIN_PERIODOS": "No fiscal periods.",
+      "NOTA": "Income from Income accounts; expenses from Expense and Cost accounts, by the entry accounting date. Profit = Income − Expenses.",
+      "MONTH_01": "January",
+      "MONTH_02": "February",
+      "MONTH_03": "March",
+      "MONTH_04": "April",
+      "MONTH_05": "May",
+      "MONTH_06": "June",
+      "MONTH_07": "July",
+      "MONTH_08": "August",
+      "MONTH_09": "September",
+      "MONTH_10": "October",
+      "MONTH_11": "November",
+      "MONTH_12": "December"
     }
   },
   "DATA_IMPORT": {

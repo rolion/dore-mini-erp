@@ -2,6 +2,7 @@ from django.urls import path
 
 from .balance_views import BalanceListView
 from .cash_flow_views import CashFlowMovementsView, CashFlowView
+from .income_expense_views import IncomeExpenseView
 from .posting_views import PostingCategoryView, PostingConfigView, PostingRoleView
 from .journal_views import JournalEntryDetailView, JournalEntryListCreateView, JournalEntryReverseView
 from .views import (
@@ -60,6 +61,7 @@ urlpatterns = [
          name='accounting-journal-reverse'),
     path('cash-flow/', CashFlowView.as_view(), name='accounting-cash-flow'),
     path('cash-flow/movements/', CashFlowMovementsView.as_view(), name='accounting-cash-flow-movements'),
+    path('income-expense/', IncomeExpenseView.as_view(), name='accounting-income-expense'),
     path('balances/', BalanceListView.as_view(), name='accounting-balance-list'),
     path('entries/', EntryListView.as_view(), name='accounting-entry-list'),
     path('entries/<uuid:entry_id>/', EntryDetailView.as_view(), name='accounting-entry-detail'),

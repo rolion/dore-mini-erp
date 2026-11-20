@@ -1,0 +1,87 @@
+# TASK-reporte-ingresos-egresos-contabilidad: Reporte de ingresos y egresos por mes en Contabilidad
+
+**Etapa actual:** PUBLISH
+**Veredicto de complejidad:** NEEDS_PLAN
+**Diseño requerido:** SI
+**Rama:** task/TASK-reporte-ingresos-egresos-contabilidad
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/114
+
+## Historial de transiciones
+| Fecha (UTC) | Transición | Motivo | Origen |
+|---|---|---|---|
+| 2026-11-20 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
+| 2026-11-20 | INVESTIGATION → DESIGN | NEEDS_PLAN, pantalla nueva | delivery-start |
+| 2026-11-20 | DESIGN → PLANNING | DDR escrito; decisión de negocio resuelta con el usuario | delivery-start |
+| 2026-11-20 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR #114 abiertos | delivery-start |
+| 2026-11-20 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas (pruebas de API backend sin ejecutar: sin DATABASE_URL) | delivery-build |
+| 2026-11-20 | REVIEW → PUBLISH | Quality Gate PASS con reservas (REV-01 corregido, REV-02 Low abierto; API backend y revisión visual no ejecutadas) | delivery-publish |
+
+## Investigación
+
+### Requerimiento
+Agregar en Contabilidad un reporte de ingresos y egresos: suma de ingresos y de egresos **por mes dentro de un período fiscal** (por defecto el período fiscal actual abierto). Columnas: Mes, Ingreso, Egreso, Utilidad; pie de tabla con la suma de cada columna. Filtros sobre la tabla: **Mes** (por defecto todos; se pueden elegir uno o más) y **Período** (período fiscal; por defecto el actual). Las cabeceras de la tabla se pueden ordenar (de mayor a menor).
+
+**Aclaración del usuario (2026-11-20):** egreso = cuentas de clasificación Gastos **+ Costos**.
+
+### Hechos encontrados
+- `backend/modules/accounting/domain/account_class.py:5-12` — seis clasificaciones fijas (ASSET, LIABILITY, EQUITY, INCOME, EXPENSE, COST).
+- `backend/modules/accounting/domain/ledger_report.py:1-6` y `services.py:512-517` — el «Resultado» del libro ya se define como Ingresos − Costos − Gastos por clasificación de cuenta, con cuentas correctoras netas. Este reporte sigue la misma definición, desglosada por mes.
+- `backend/modules/accounting/infrastructure/django/repositories.py:583-605` — `movements_by_account` suma Debe/Haber por cuenta y fecha contable (`entry__accounting_date`); no existe agrupación por mes. `JournalLineModel` (`models.py:245`) tiene `debit`, `credit`, `company_id`, `account`; `accounting_date` está en la cabecera del asiento.
+- `backend/modules/accounting/infrastructure/django/models.py:18` — `AccountModel.account_class` (nulo en cuentas antiguas: no cuentan como ingreso ni egreso).
+- `backend/modules/accounting/domain/fiscal_period.py:63-91` — `FiscalPeriod` con `start_date`, `end_date`, estado `OPEN`/`CLOSED`; el listado existe (`api/urls.py:38`, `fiscal-periods/`) y `frontend/.../services/fiscal-periods-api.service.ts` lo consume.
+- `backend/modules/accounting/api/balance_views.py:18-31` y `api/urls.py:61-65` — patrón de vista de solo lectura: `required_modules = ('accounting',)`, `company_id_from`, serializer de filtros, caso de uso con repositorios `Django…Repository(company_id)`.
+- `frontend/.../pages/cash-flow/cash-flow.component.ts:27-47,154-168` y `pages/balances/balances-page.component.ts` — pantallas de reporte con filtros en la URL (`ActivatedRoute.queryParamMap`), `Subject` + `switchMap`, estados cargando/error/vacío.
+- `frontend/panel_admin/src/app/app.routes.ts:148-157` — rutas `accounting/balances` y `accounting/cash-flow` con `data.module = 'accounting'`; menú en `src/assets/data/routes.json:374` (+ claves `MENUITEMS.ACCOUNTING.LIST.*` y prueba `layout/sidebar/sidebar-menu.spec.ts:64`).
+- `docs/design/design-system.md:131-134` — plantilla de reportes; la regla «Ganancia estimada, nunca utilidad» es del módulo Reporting (cifras estimadas); aquí la fuente es el libro de asientos y el usuario pidió explícitamente «Utilidad».
+
+### Hipótesis / supuestos no confirmados
+- Asientos de reversión cuentan por su propia fecha contable (igual que CONT-04); no hay asiento de cierre de período, así que no hay que excluir nada.
+- Mes = mes calendario de `accounting_date`. Si el período abarca más de 12 meses, cada mes lleva año (`yyyy-MM`).
+- Período por defecto: el período abierto que contiene la fecha de hoy; si ninguno la contiene, el abierto más reciente; si no hay abiertos, el más reciente. Sin períodos: estado vacío.
+- Meses del período sin movimientos se muestran con 0.
+- Orden: sin paginación (pocas filas), se ordena en el cliente; alternar ascendente/descendente al pulsar la cabecera, primer clic descendente (mayor a menor).
+
+### Módulos y dependencias relacionadas
+Solo `accounting` (dominio, aplicación, repositorio, API) y su frontend. Sin impacto en otros módulos.
+
+### Implementaciones similares existentes
+`GetTrialBalance` (`application/trial_balance.py`) para caso de uso + filtros; `BalancesPageComponent` / `CashFlowComponent` para pantalla de reporte.
+
+### Comportamiento actual
+No existe reporte mensual de ingresos/egresos; el resultado solo se ofrece como total de un rango en el libro (`get_ledger_report`).
+
+### Restricciones
+Dinero en `Decimal`; filtrar por `company_id`; sin texto hardcodeado (es/en/pt); sin migraciones (solo lectura); sin dependencias nuevas.
+
+### Riesgos identificados
+- Cuentas sin clasificación (`account_class` nulo) quedan fuera: se documenta.
+- Agrupar por mes con zona horaria: `accounting_date` es `DateField`, sin conversión.
+
+### Veredicto de complejidad
+**NEEDS_PLAN** — endpoint nuevo de solo lectura y pantalla nueva en un solo módulo, sin decisión arquitectónica nueva.
+
+### Diseño requerido
+**SI** — pantalla nueva de reporte con filtros y tabla ordenable.
+
+## Diseño
+DDR-reporte-ingresos-egresos-contabilidad-pantalla-reporte-mensual (docs/design/).
+
+## Arquitectura
+No aplica según veredicto.
+
+## Plan
+docs/plans/PLAN-2026-11-20-reporte-ingresos-egresos-contabilidad.md (v1, COMPLETO).
+
+## Implementación
+- **Backend** (`backend/modules/accounting/`): dominio `domain/income_expense.py` (INV-01, INV-02, INV-03; AC-01, AC-03, AC-07), caso de uso `application/income_expense.py`, `DjangoJournalRepository.result_by_month` (agregación por mes y clase con `TruncMonth`, filtrada por `company_id`; INV-04, AC-08), vista/serializer `api/income_expense_*.py` y ruta `income-expense/` (API-01, AC-04, AC-05).
+- **Frontend** (`features/accounting/`): `models/income-expense.ts` (orden con centavos en `bigint`, sin float; AC-06), `services/income-expense-api.service.ts`, `pages/income-expense/` (filtros Período y Mes con `ng-select` múltiple encima de la tabla, pie con totales del servidor, cabeceras ordenables con `aria-sort`, utilidad negativa con color y texto; UI-01..04), ruta `accounting/income-expense`, entrada de menú y claves es/en/pt.
+- **UI:** plantilla «Lista de solo lectura con filtros» siguiendo `pages/balances` (breadcrumb, `.card`, `table-responsive`); reutiliza `MoneyPipe`. Sin componentes compartidos nuevos.
+- **Pruebas:** dominio (6, ejecutadas, OK), API (`test_income_expense_api.py`, 9 casos: **escritos pero no ejecutados**, el entorno no tiene `DATABASE_URL` y no se lee `.env`), frontend (suite completa 1760 OK, `ng lint` y `i18n:check` OK, `ng build` OK). flake8 limpio en lo nuevo (tras corregir REV-01); `ruff` no está instalado en el entorno.
+- **Desviaciones del plan:** ninguna de alcance. Ordenar en cliente según el DDR.
+- **Deuda / pendiente:** correr `DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test modules.accounting.tests.test_income_expense_api` desde `backend/` con una BD de pruebas; primer uso de `TruncMonth` en el proyecto aún sin confirmar contra PostgreSQL.
+
+## Review
+Quality Gate en subagente aislado: **PASS con reservas**. Ejecutado OK: dominio (6), frontend 1760 pruebas, `ng lint`, `i18n:check`, `ng build`, `npm audit` (0), bandit, límites DDD. Hallazgos: [REV-01](../reviews/REV-2026-11-20-reporte-ingresos-egresos-contabilidad-01.md) (Low, corregido), [REV-02](../reviews/REV-2026-11-20-reporte-ingresos-egresos-contabilidad-02.md) (Low, abierto). **Cierre de reservas (2026-11-20):** con PostgreSQL real, `manage.py test modules.accounting` pasa 453 pruebas (incluye las 9 de la API del reporte y confirma `TruncMonth`); se corrigió un fallo de la propia prueba (empresa B sin período fiscal). **Revisión visual (2026-11-20, navegador integrado, datos locales de prueba):** escritorio 1440 px y móvil 375 px, tema claro y oscuro; filtros, orden y pie correctos. Hallazgos: [REV-03](../reviews/REV-2026-11-20-reporte-ingresos-egresos-contabilidad-03.md) (Medium, tabla ilegible en móvil, **corregido**) y [REV-04](../reviews/REV-2026-11-20-reporte-ingresos-egresos-contabilidad-04.md) (Low, abierto). **Sigue sin ejecutar:** ruff (no instalado).
+
+## Publicación
+PR #114 listo para aprobación humana, con las reservas de `## Review`. Sin cambios sensibles (sin migraciones, auth ni infraestructura; sin ADR).

@@ -1,0 +1,30 @@
+// Tres columnas de importes caben en pantalla estrecha: se anula el ancho mínimo global de `.table-responsive table`
+// (_table.scss) y se compacta la tabla para que Ingreso, Egreso y Utilidad se vean sin desplazamiento horizontal.
+.income-expense-table {
+  min-width: 0;
+
+  @media (max-width: 575.98px) {
+    font-size: 0.6875rem;
+
+    th,
+    td {
+      // `!important`: la regla global de `.table` (_table.scss) tiene mayor especificidad.
+      padding-inline: 0.2rem !important;
+    }
+
+    th .btn {
+      font-size: inherit;
+      white-space: normal;
+      text-align: end;
+    }
+
+    th:first-child .btn {
+      text-align: start;
+    }
+
+    // «(pérdida)» baja a su propia línea en vez de ensanchar la columna.
+    td small {
+      display: block;
+    }
+  }
+}
