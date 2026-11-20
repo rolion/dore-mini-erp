@@ -42,6 +42,15 @@ class NormalizeTests(SimpleTestCase):
         with self.assertRaises(ValueProblem):
             parse_date('31/02/2026')
 
+    def test_textual_dates_without_year(self):
+        today = date(2026, 11, 20)
+        self.assertEqual(parse_date('3 ago.', today=today), date(2026, 8, 3))
+        self.assertEqual(parse_date('4 sep.', today=today), date(2026, 9, 4))
+        self.assertEqual(parse_date('3 de agosto de 2025', today=today), date(2025, 8, 3))
+        self.assertEqual(parse_date('15 dic', today=today), date(2025, 12, 15))
+        with self.assertRaises(ValueProblem):
+            parse_date('31 feb.', today=today)
+
     def test_quantity_must_be_positive_integer(self):
         self.assertEqual(parse_quantity('3'), 3)
         for bad in ('0', '-1', '1,5', 'x', '100001'):

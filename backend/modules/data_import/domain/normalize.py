@@ -43,10 +43,40 @@ def normalize_header(value: object) -> str:
 DATE_FORMATS = ('dmy', 'mdy', 'ymd')
 
 
-def parse_date(raw: object, date_format: str = 'dmy') -> date:
+_MONTHS = {
+    1: ('ene', 'jan'), 2: ('feb', 'fev'), 3: ('mar',), 4: ('abr', 'apr'), 5: ('may', 'mai'), 6: ('jun',),
+    7: ('jul',), 8: ('ago', 'aug'), 9: ('sep', 'set'), 10: ('oct', 'out'), 11: ('nov',), 12: ('dic', 'dec', 'dez'),
+}
+_MONTH_BY_PREFIX = {prefix: number for number, prefixes in _MONTHS.items() for prefix in prefixes}
+_TEXT_DATE = re.compile(r'^(\d{1,2})(?:\s+de)?\s+([a-z]{3,12})\.?(?:\s+(?:de\s+)?(\d{4}))?$')
+
+
+def _parse_text_date(text: str, today: date | None) -> date | None:
+    """«3 ago.», «3 de agosto», «3 ago 2026»: devuelve None si no tiene esa forma.
+
+    Sin año se usa el año actual, o el anterior si la fecha caería en el futuro."""
+    found = _TEXT_DATE.match(normalize_name(text))
+    month = _MONTH_BY_PREFIX.get(found.group(2)[:3]) if found else None
+    if not found or not month:
+        return None
+    day = int(found.group(1))
+    try:
+        if found.group(3):
+            return date(int(found.group(3)), month, day)
+        reference = today or date.today()
+        value = date(reference.year, month, day)
+        return value if value <= reference else date(reference.year - 1, month, day)
+    except ValueError:
+        raise ValueProblem('invalid_date', f'La fecha «{text}» no es válida.') from None
+
+
+def parse_date(raw: object, date_format: str = 'dmy', today: date | None = None) -> date:
     text = clean_text(raw)
     if not text:
         raise ValueProblem('required', 'La fecha de la venta es obligatoria.')
+    textual = _parse_text_date(text, today)
+    if textual:
+        return textual
     iso = re.match(r'^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$', text)
     if iso:
         parts = (int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))

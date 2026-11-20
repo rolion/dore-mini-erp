@@ -116,7 +116,7 @@ def parse_sales(headers: list[str], rows: list[list[str]], mapping: dict[str, st
                 problems.append(RowProblem(_p, _bk, field_name, exc.code, exc.message))
 
         def sale_date() -> date:
-            value = parse_date(get('sale_date'), options.date_format)
+            value = parse_date(get('sale_date'), options.date_format, today)
             if value > today:
                 raise ValueProblem('future_date', 'La fecha de la venta no puede ser futura.')
             return value
