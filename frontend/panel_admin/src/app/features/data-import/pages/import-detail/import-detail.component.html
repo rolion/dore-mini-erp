@@ -1,0 +1,54 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'DATA_IMPORT.DETAIL_TITLE' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'COMMON.VENTAS' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/sales/import/history">{{ 'DATA_IMPORT.HISTORY_TITLE' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ 'DATA_IMPORT.DETAIL_TITLE' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h4 class="mb-0">{{ 'DATA_IMPORT.DETAIL_TITLE' | translate }}</h4>
+            <a class="btn btn-light" routerLink="/pocketbiz/sales/import/history" data-testid="back-history">{{ 'COMMON.VOLVER' | translate }}</a>
+          </div>
+          <div class="card-body">
+            @if (loading) {
+            <p class="text-muted" role="status" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (errorMessage) {
+            <div class="alert alert-danger" role="alert" data-testid="load-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-light btn-sm ms-2" data-testid="retry" (click)="load()">
+                {{ 'COMMON.REINTENTAR' | translate }}
+              </button>
+            </div>
+            } @else if (run) {
+            <dl class="row" data-testid="run-summary">
+              <dt class="col-sm-3">{{ 'DATA_IMPORT.COL_FILE' | translate }}</dt>
+              <dd class="col-sm-9" data-testid="run-file">{{ run.filename }}</dd>
+              <dt class="col-sm-3">{{ 'COMMON.FECHA' | translate }}</dt>
+              <dd class="col-sm-9">{{ run.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              <dt class="col-sm-3">{{ 'COMMON.USUARIO' | translate }}</dt>
+              <dd class="col-sm-9">{{ run.createdByName }}</dd>
+              <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
+              <dd class="col-sm-9"><app-status-badge [tone]="tone(run.status)" [label]="label(run.status)" /></dd>
+              <dt class="col-sm-3">{{ 'DATA_IMPORT.COL_ROWS_READ' | translate }}</dt>
+              <dd class="col-sm-9">{{ run.rowCount }}</dd>
+            </dl>
+            <app-import-counts [counts]="run.counts" />
+            <h6>{{ 'DATA_IMPORT.ROWS_TITLE' | translate }}</h6>
+            <app-import-rows [runId]="run.id" />
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

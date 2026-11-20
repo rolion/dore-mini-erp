@@ -82,7 +82,10 @@ describe('Sidebar menu (routes.json)', () => {
     expect(orders.title).toBe('MENUITEMS.SALES.TEXT');
     expect(orders.icon).toBe('shopping-cart');
     expect(orders.class).toBe('menu-toggle');
-    expect(orders.submenu.map((item) => item.path)).toEqual(['/pocketbiz/sales/orders', '/pocketbiz/sales/settings']);
+    expect(orders.submenu.map((item) => item.path)).toEqual(['/pocketbiz/sales/orders', '/pocketbiz/sales/import', '/pocketbiz/sales/settings']);
+    const salesFor = (isAdmin: boolean) => visibleRoutes(routes, new Set(['sales']), isAdmin).find((route) => route.module === 'sales')!;
+    expect(salesFor(true).submenu.map((item) => item.path)).toContain('/pocketbiz/sales/import');
+    expect(salesFor(false).submenu.map((item) => item.path)).not.toContain('/pocketbiz/sales/import');
     expect(orders.groupTitle).toBeFalse();
 
     expect(expenses.title).toBe('MENUITEMS.EXPENSES.TEXT');

@@ -216,6 +216,14 @@ export const APP_ROUTE: Route[] = [
                     import('./features/sales/sales.routes').then((m) => m.SALES_ORDERS_ROUTE),
             },
             {
+                // Importar ventas (asistente e historial): bajo Ventas; el servidor exige rol admin.
+                path: 'sales/import',
+                canActivate: [moduleGuard],
+                data: { module: 'sales' },
+                loadChildren: () =>
+                    import('./features/data-import/data-import.routes').then((m) => m.DATA_IMPORT_ROUTE),
+            },
+            {
                 path: 'sales/settings',
                 canActivate: [moduleGuard],
                 canDeactivate: [unsavedChangesGuard],

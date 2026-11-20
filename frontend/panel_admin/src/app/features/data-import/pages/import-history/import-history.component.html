@@ -1,0 +1,77 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'DATA_IMPORT.HISTORY_TITLE' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'COMMON.VENTAS' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/sales/import">{{ 'DATA_IMPORT.TITLE' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ 'DATA_IMPORT.HISTORY_TITLE' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h4 class="mb-0">{{ 'DATA_IMPORT.HISTORY_TITLE' | translate }}</h4>
+            <a class="btn btn-primary" routerLink="/pocketbiz/sales/import" data-testid="new-import">{{ 'DATA_IMPORT.TITLE' | translate }}</a>
+          </div>
+          <div class="card-body">
+            @if (loading) {
+            <p class="text-muted" role="status" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (errorMessage) {
+            <div class="alert alert-danger" role="alert" data-testid="load-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-light btn-sm ms-2" data-testid="retry" (click)="load()">
+                {{ 'COMMON.REINTENTAR' | translate }}
+              </button>
+            </div>
+            } @else if (runs.length === 0) {
+            <p class="text-muted" data-testid="empty">{{ 'DATA_IMPORT.HISTORY_EMPTY' | translate }}</p>
+            } @else {
+            <div class="table-responsive">
+              <table class="table align-middle" data-testid="history-table">
+                <caption class="visually-hidden">{{ 'DATA_IMPORT.HISTORY_TITLE' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'COMMON.FECHA' | translate }}</th>
+                    <th scope="col">{{ 'DATA_IMPORT.COL_FILE' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.USUARIO' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+                    <th scope="col">{{ 'DATA_IMPORT.COL_RESULT' | translate }}</th>
+                    <th scope="col"><span class="visually-hidden">{{ 'DATA_IMPORT.VIEW_DETAIL' | translate }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (run of runs; track run.id) {
+                  <tr data-testid="history-row">
+                    <td>{{ run.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ run.filename }}</td>
+                    <td>{{ run.createdByName }}</td>
+                    <td><app-status-badge [tone]="tone(run.status)" [label]="label(run.status)" /></td>
+                    <td>{{ 'DATA_IMPORT.RESULT_SUMMARY' | translate: { p0: run.counts.created, p1: run.counts.failed } }}</td>
+                    <td>
+                      <a [routerLink]="['/pocketbiz/sales/import/history', run.id]" data-testid="detail-link">
+                        {{ 'DATA_IMPORT.VIEW_DETAIL' | translate }}
+                      </a>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center" size="sm" [collectionSize]="total" [pageSize]="pageSize"
+              [page]="page" [maxSize]="3" [rotate]="true" [attr.aria-label]="'DATA_IMPORT.HISTORY_PAGINATION' | translate"
+              (pageChange)="onPage($event)" />
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

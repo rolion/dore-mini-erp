@@ -1,0 +1,62 @@
+<div data-testid="import-rows">
+  <div class="d-flex flex-wrap align-items-end gap-3 mb-3">
+    <div>
+      <label for="import-rows-status" class="form-label mb-1">{{ 'DATA_IMPORT.FILTER_STATUS' | translate }}</label>
+      <select id="import-rows-status" class="form-select" data-testid="rows-status-filter" [value]="status"
+        (change)="onStatusChange($event)">
+        <option value="">{{ 'DATA_IMPORT.ALL' | translate }}</option>
+        @for (s of statuses; track s) {
+        <option [value]="s">{{ label(s) }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (loading) {
+  <p class="text-muted" role="status" data-testid="rows-loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (errorMessage) {
+  <div class="alert alert-danger" role="alert" data-testid="rows-error">
+    {{ errorMessage }}
+    <button type="button" class="btn btn-light btn-sm ms-2" data-testid="rows-retry" (click)="load()">
+      {{ 'COMMON.REINTENTAR' | translate }}
+    </button>
+  </div>
+  } @else if (rows.length === 0) {
+  <p class="text-muted" data-testid="rows-empty">{{ 'DATA_IMPORT.ROWS_EMPTY' | translate }}</p>
+  } @else {
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <caption class="visually-hidden">{{ 'DATA_IMPORT.ROWS_TITLE' | translate }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ 'DATA_IMPORT.COL_ROW' | translate }}</th>
+          <th scope="col">{{ 'DATA_IMPORT.COL_SALE' | translate }}</th>
+          <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+          <th scope="col">{{ 'DATA_IMPORT.COL_MESSAGE' | translate }}</th>
+          <th scope="col"><span class="visually-hidden">{{ 'DATA_IMPORT.VIEW_ORDER' | translate }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.row + row.saleKey) {
+        <tr data-testid="import-row">
+          <td>{{ row.row }}</td>
+          <td>{{ row.saleKey }}</td>
+          <td><app-status-badge [tone]="tone(row.status)" [label]="label(row.status)" /></td>
+          <td>{{ row.message }}</td>
+          <td>
+            @if (row.orderId) {
+            <a [routerLink]="['/pocketbiz/sales/orders', row.orderId]" data-testid="order-link">{{ 'DATA_IMPORT.VIEW_ORDER' | translate }}</a>
+            }
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (total > pageSize) {
+  <ngb-pagination class="d-flex justify-content-center" size="sm" [collectionSize]="total" [pageSize]="pageSize"
+    [page]="page" [maxSize]="3" [rotate]="true" [attr.aria-label]="'DATA_IMPORT.ROWS_PAGINATION' | translate"
+    (pageChange)="onPage($event)" />
+  }
+  }
+</div>
