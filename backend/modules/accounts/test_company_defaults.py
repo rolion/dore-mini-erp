@@ -10,6 +10,7 @@ from unittest import mock
 from django.core.cache import cache
 from django.core.management import CommandError, call_command
 from django.test import SimpleTestCase, TestCase
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
 from modules.accounting.infrastructure.django.models import (
@@ -94,7 +95,7 @@ class RegisterSeedsDefaultsTests(APITestCase):
         enabled = set(CompanyModuleModel.objects.filter(company_id=company.id).values_list('module_key', flat=True))
         self.assertEqual(enabled, set(SNAPSHOT['modularity']['modules']))
         self.assertEqual(len(enabled), 14)
-        today = date.today()
+        today = timezone.localdate()  # el alta usa la zona horaria del proyecto, no la del sistema
         self.assertEqual(SettingsModel.objects.get(company_id=company.id).cutoff_date, today)
         period = FiscalPeriodModel.objects.get(company_id=company.id)
         self.assertEqual((period.name, period.start_date, period.end_date, period.status),
@@ -212,3 +213,15 @@ class DefaultsBoundaryTests(SimpleTestCase):  # REV-02
         source = Path(company_defaults.__file__).read_text(encoding='utf-8')
         imports = re.findall(r'^\s*(?:from|import)\s+modules\b', source, flags=re.MULTILINE)
         self.assertEqual(imports, [], 'shared no importa módulos de negocio')
+
+
+class ExistingAccountWithoutCodeTests(TestCase):
+    def test_account_with_same_name_and_no_code_counts_as_existing(self):  # INV-03 (empresa real sin código en «Caja»)
+        company = Company.objects.create(name='Legada SRL')
+        legacy = AccountModel.objects.create(company_id=company.id, name='Caja', currency='BOB')
+        run('copy_company_defaults', '--company', 'Legada SRL')
+        self.assertEqual(AccountModel.objects.filter(company_id=company.id, name__iexact='caja').count(), 1)
+        legacy.refresh_from_db()
+        self.assertIsNone(legacy.code)  # no se modifica lo existente
+        cash = MethodMappingModel.objects.get(company_id=company.id, method='CASH')
+        self.assertEqual(cash.account_id, legacy.id)  # el mapeo usa la cuenta existente

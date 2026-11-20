@@ -25,8 +25,10 @@ ORDER_ACCOUNTING = 20
 ORDER_POSTING = 40
 
 
-def _account_by_code(company_id: UUID, code: str) -> AccountModel:
-    account = AccountModel.objects.filter(company_id=company_id, code__iexact=code).first()
+def _account_by_code(company_id: UUID, code: str, ctx: dict) -> AccountModel:
+    account = ctx.get('accounts_by_code', {}).get(code.lower())
+    if account is None:
+        account = AccountModel.objects.filter(company_id=company_id, code__iexact=code).first()
     if account is None:
         raise company_defaults.DefaultsError(f'Cuenta con código «{code}» inexistente en la configuración.')
     return account
@@ -56,13 +58,19 @@ def export_accounting(company_id: UUID, ctx: dict) -> dict:
 
 def apply_accounting(company_id: UUID, data: dict, ctx: dict) -> dict[str, int]:
     created = existing = 0
+    resolved = ctx.setdefault('accounts_by_code', {})
     for item in data.get('accounts', []):
-        _, was_created = AccountModel.objects.get_or_create(
-            company_id=company_id, code__iexact=item['code'],
-            defaults={'code': item['code'], **{f: item[f] for f in ACCOUNT_FIELDS}, 'opening_balance': 0})
+        # Existe si coincide el código o el nombre (el nombre es único por empresa); nunca se modifica lo existente.
+        account = (AccountModel.objects.filter(company_id=company_id, code__iexact=item['code']).first()
+                   or AccountModel.objects.filter(company_id=company_id, name__iexact=item['name']).first())
+        was_created = account is None
+        if was_created:
+            account = AccountModel.objects.create(
+                company_id=company_id, code=item['code'], opening_balance=0, **{f: item[f] for f in ACCOUNT_FIELDS})
+        resolved[item['code'].lower()] = account
         created, existing = created + was_created, existing + (not was_created)
     for item in data.get('method_mappings', []):
-        account = _account_by_code(company_id, item['account_code']) if item.get('account_code') else None
+        account = _account_by_code(company_id, item['account_code'], ctx) if item.get('account_code') else None
         _, was_created = MethodMappingModel.objects.get_or_create(
             company_id=company_id, method=item['method'],
             defaults={'account': account, 'is_active': item.get('is_active', True)})
@@ -108,7 +116,7 @@ def apply_posting(company_id: UUID, data: dict, ctx: dict) -> dict[str, int]:
         entries.append(('CATEGORY', str(category_id), item['account_code']))
     for scope, key, code in entries:
         _, was_created = PostingAccountModel.objects.get_or_create(
-            company_id=company_id, scope=scope, key=key, defaults={'account': _account_by_code(company_id, code)})
+            company_id=company_id, scope=scope, key=key, defaults={'account': _account_by_code(company_id, code, ctx)})
         created, existing = created + was_created, existing + (not was_created)
     return {'created': created, 'existing': existing}
 
