@@ -1,6 +1,6 @@
 # TASK-productos-tabla-desde-957px: Productos en tarjetas solo bajo 957 px; tabla desde 957 px
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-productos-tabla-desde-957px
@@ -12,6 +12,7 @@
 | 2026-11-20 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-20 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, sin diseño nuevo | delivery-start |
 | 2026-11-20 | PLANNING → ENGINEERING | Plan v1 READY | delivery-start |
+| 2026-11-20 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -61,7 +62,12 @@ No aplica según veredicto.
 docs/plans/PLAN-2026-11-20-productos-tabla-desde-957px.md (v1, COMPACTO, READY)
 
 ## Implementación
-_Pendiente_
+- `COMPACT_QUERY` pasa a `(max-width: 956.98px)` (AC-05); `compact` gobierna tarjetas y filtros plegables.
+- `product-list.component.html`: `@if (compact)` tarjetas / `@else` tabla `table-responsive` (AC-01, AC-02, AC-03, AC-06); categoría, estado y acciones se comparten con `ng-template` entre ambas vistas (AC-04).
+- `scss`: `$compact-max: 956.98px`; `.product-row-actions` reutiliza el estilo circular de las acciones de tarjeta.
+- Pruebas: `product-list.component.spec.ts` (24 en verde, Karma ChromeHeadless); `npm run i18n:check` sin claves nuevas.
+- Desviaciones: ninguna. Referencia: `stock-list`; sin componentes compartidos nuevos. Corte 957 px anotado en `design-system.md`.
+- Deuda: otras listas siguen en 992 px.
 
 ## Review
 _Pendiente_

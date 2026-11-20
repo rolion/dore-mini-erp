@@ -1,6 +1,7 @@
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -15,8 +16,8 @@ import { ProductUsesComponent } from '../../../../shared/components/product-uses
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { ProductsApiService } from '../../services/products-api.service';
 
-/** Por debajo de `lg` (992 px) los filtros son un panel colapsable que se aplica a mano. */
-export const COMPACT_QUERY = '(max-width: 991.98px)';
+/** Por debajo de 957 px la lista pasa a tarjetas y los filtros a un panel colapsable que se aplica a mano. */
+export const COMPACT_QUERY = '(max-width: 956.98px)';
 
 export type StatusFilter = 'all' | 'active' | 'inactive';
 export type UseFilter = 'all' | 'buy' | 'sell';
@@ -26,7 +27,7 @@ export type CategoryFilter = 'all' | 'unclassified' | ProductCategory;
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
   styleUrl: './product-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgbCollapse, NgbPagination, ReactiveFormsModule, ProductUsesComponent, MoneyPipe],
+  imports: [NgTemplateOutlet, TranslatePipe, RouterLink, NgbCollapse, NgbPagination, ReactiveFormsModule, ProductUsesComponent, MoneyPipe],
 })
 export class ProductListComponent implements OnInit {
   readonly pageSize = 10;
@@ -41,7 +42,7 @@ export class ProductListComponent implements OnInit {
   /** Página actual, base 1 como espera `ngb-pagination`. */
   page = 1;
   loading = false;
-  /** Pantalla estrecha: filtros en un panel colapsable que se aplica con «Aplicar». */
+  /** Pantalla estrecha (< 957 px): tarjetas y filtros en un panel colapsable que se aplica con «Aplicar». */
   compact = false;
   filtersCollapsed = true;
 

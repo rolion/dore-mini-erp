@@ -86,6 +86,7 @@
             } @else if (!rows.length) {
             <p class="m-4" data-testid="product-empty">{{ 'PRODUCTS.PRODUCT_LIST.NO_HAY_PRODUCTOS' | translate }}</p>
             } @else {
+            @if (compact) {
             <ul class="list-unstyled product-cards m-2 p-0" data-testid="product-cards"
               [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.LISTA_DE_PRODUCTOS' | translate">
               @for (row of rows; track row.id) {
@@ -93,31 +94,13 @@
                 <div class="product-card-header">
                   <a class="fw-bold product-card-title" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{ row.name }}</a>
                   <div class="product-card-actions">
-                    <a class="btn btn-tbl-edit btn-tbl-view" [routerLink]="['/pocketbiz/catalog/products', row.id]"
-                      [title]="'COMMON.VER_DETALLE' | translate" [attr.aria-label]="'COMMON.VER_DETALLE' | translate">
-                      <i class="fas fa-eye"></i>
-                    </a>
-                    <a class="btn btn-tbl-edit btn-tbl-update" [routerLink]="['/pocketbiz/catalog/products', row.id, 'edit']"
-                      [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
-                      <i class="fas fa-pen"></i>
-                    </a>
-                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle" (click)="toggleActive(row)"
-                      [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
-                      [attr.aria-label]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
-                      <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
-                    </button>
+                    <ng-container [ngTemplateOutlet]="actionsTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
                   </div>
                 </div>
                 <dl class="product-card-body mb-0">
                   <div class="product-card-row">
                     <dt>{{ 'PRODUCTS.PRODUCT_LIST.CATEGORIA' | translate }}</dt>
-                    <dd>
-                      @if (row.needsReview) {
-                      <span class="badge-outline col-orange d-inline-block">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</span>
-                      } @else {
-                      {{ categoryName(row) }}
-                      }
-                    </dd>
+                    <dd><ng-container [ngTemplateOutlet]="categoryTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></dd>
                   </div>
                   <div class="product-card-row">
                     <dt>{{ 'PRODUCTS.PRODUCT_LIST.USOS' | translate }}</dt>
@@ -129,13 +112,7 @@
                   </div>
                   <div class="product-card-row">
                     <dt>{{ 'COMMON.ESTADO' | translate }}</dt>
-                    <dd>
-                      @if (row.active) {
-                      <span class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</span>
-                      } @else {
-                      <span class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</span>
-                      }
-                    </dd>
+                    <dd><ng-container [ngTemplateOutlet]="statusTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></dd>
                   </div>
                   @if (inventoryEnabled) {
                   <div class="product-card-row">
@@ -147,6 +124,45 @@
               </li>
               }
             </ul>
+            } @else {
+            <div class="table-responsive">
+              <table class="table align-middle product-table" data-testid="product-table">
+                <caption class="visually-hidden">{{ 'PRODUCTS.PRODUCT_LIST.LISTA_DE_PRODUCTOS' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+                    <th scope="col">{{ 'PRODUCTS.PRODUCT_LIST.CATEGORIA' | translate }}</th>
+                    <th scope="col">{{ 'PRODUCTS.PRODUCT_LIST.USOS' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'PRODUCTS.PRODUCT_LIST.PRECIO' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+                    @if (inventoryEnabled) {
+                    <th scope="col">{{ 'PRODUCTS.PRODUCT_LIST.UNIDAD_BASE' | translate }}</th>
+                    }
+                    <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows; track row.id) {
+                  <tr [class.text-muted]="!row.active" data-testid="product-row">
+                    <td><a class="fw-bold" [routerLink]="['/pocketbiz/catalog/products', row.id]">{{ row.name }}</a></td>
+                    <td><ng-container [ngTemplateOutlet]="categoryTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></td>
+                    <td><app-product-uses [product]="row" /></td>
+                    <td class="text-end">{{ row.canSell ? (row.salePrice | money) : '—' }}</td>
+                    <td><ng-container [ngTemplateOutlet]="statusTpl" [ngTemplateOutletContext]="{ $implicit: row }" /></td>
+                    @if (inventoryEnabled) {
+                    <td>{{ row.tracksStock && row.baseUnit ? row.baseUnit.abbreviation : '—' }}</td>
+                    }
+                    <td>
+                      <div class="product-row-actions">
+                        <ng-container [ngTemplateOutlet]="actionsTpl" [ngTemplateOutletContext]="{ $implicit: row }" />
+                      </div>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
             @if (total > pageSize) {
             <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
               [page]="page" [maxSize]="5" [boundaryLinks]="true" [attr.aria-label]="'PRODUCTS.PRODUCT_LIST.PAGINAS_DE_PRODUCTOS' | translate"
@@ -160,3 +176,35 @@
     </div>
   </div>
 </section>
+
+<ng-template #categoryTpl let-row>
+  @if (row.needsReview) {
+  <span class="badge-outline col-orange d-inline-block">{{ 'PRODUCTS.PRODUCT_LIST.POR_REVISAR' | translate }}</span>
+  } @else {
+  {{ categoryName(row) }}
+  }
+</ng-template>
+
+<ng-template #statusTpl let-row>
+  @if (row.active) {
+  <span class="badge-outline col-green d-inline-block">{{ 'COMMON.ACTIVO' | translate }}</span>
+  } @else {
+  <span class="badge-outline col-red d-inline-block">{{ 'COMMON.INACTIVO' | translate }}</span>
+  }
+</ng-template>
+
+<ng-template #actionsTpl let-row>
+                    <a class="btn btn-tbl-edit btn-tbl-view" [routerLink]="['/pocketbiz/catalog/products', row.id]"
+                      [title]="'COMMON.VER_DETALLE' | translate" [attr.aria-label]="'COMMON.VER_DETALLE' | translate">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a class="btn btn-tbl-edit btn-tbl-update" [routerLink]="['/pocketbiz/catalog/products', row.id, 'edit']"
+                      [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate">
+                      <i class="fas fa-pen"></i>
+                    </a>
+                    <button type="button" class="btn btn-tbl-edit btn-tbl-toggle" (click)="toggleActive(row)"
+                      [title]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)"
+                      [attr.aria-label]="row.active ? ('CUSTOMERS.CUSTOMER_DETAIL.DESACTIVAR' | translate) : ('CUSTOMERS.CUSTOMER_DETAIL.ACTIVAR' | translate)">
+                      <i class="fas" [class.fa-ban]="row.active" [class.fa-check]="!row.active"></i>
+                    </button>
+</ng-template>

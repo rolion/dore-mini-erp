@@ -1,5 +1,5 @@
-// Por debajo de `lg` (992 px) los filtros son un panel colapsable (ver `COMPACT_QUERY`).
-$compact-max: 991.98px;
+// Por debajo de 957 px: tarjetas y filtros colapsables (ver `COMPACT_QUERY`).
+$compact-max: 956.98px;
 $touch: 44px;
 
 .product-header {
@@ -70,7 +70,8 @@ $touch: 44px;
 }
 
 // Acciones siempre visibles y con área táctil cómoda; el icono del botón amarillo es oscuro para tener contraste.
-.product-card-actions {
+.product-card-actions,
+.product-row-actions {
   display: flex;
   flex: 0 0 auto;
   gap: 0.5rem;
