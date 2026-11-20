@@ -96,6 +96,7 @@ class IncomeExpenseApiTests(AccountingApiBase):
         self.seed()
         other = make_account(self.company_b.id, 'Ventas B', 'INCOME', code='411001')
         cash_b = make_account(self.company_b.id, 'Caja B', code='111001')
+        make_period(self.company_b.id, '2026 B', date(2026, 1, 1), date(2026, 12, 31))
         self.post(cash_b, other, '9999.00', date(2026, 1, 12), company=self.company_b)
         data = self.get(period_id=str(self.period.id))
         self.assertEqual(data['months'][0]['income'], '1000.00')
