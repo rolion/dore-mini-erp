@@ -1,6 +1,6 @@
 # TASK-productos-tabla-desde-957px: Productos en tarjetas solo bajo 957 px; tabla desde 957 px
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-productos-tabla-desde-957px
@@ -13,6 +13,7 @@
 | 2026-11-20 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, sin diseño nuevo | delivery-start |
 | 2026-11-20 | PLANNING → ENGINEERING | Plan v1 READY | delivery-start |
 | 2026-11-20 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-20 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -70,7 +71,7 @@ docs/plans/PLAN-2026-11-20-productos-tabla-desde-957px.md (v1, COMPACTO, READY)
 - Deuda: otras listas siguen en 992 px.
 
 ## Review
-_Pendiente_
+**PASS** (subagente aislado). Karma 1742/1742, `npm run lint` OK, `npm run build` OK, `i18n:check` 2433 claves/0 faltantes, `npm audit` 2 moderadas transitivas (hono) ajenas al diff. AC-01..AC-06 verificados. Hallazgos Low (sin REV, no bloquean): sangría del `ng-template #actionsTpl`; sin aserción explícita del «—» de precio ni de la paginación; título de sección de `design-system.md` aún dice «< lg, 992 px» (excepción anotada debajo). Revisión visual en navegador: **no verificada** (requiere backend y login).
 
 ## Publicación
-_Pendiente_
+PR #112 listo para aprobación humana; no se mergea. Sin ADR ni cambio sensible.
