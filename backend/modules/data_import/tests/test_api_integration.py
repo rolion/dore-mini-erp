@@ -4,7 +4,12 @@ from decimal import Decimal
 from io import StringIO
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from threading import Barrier, Thread
+from unittest.mock import patch
+
 from django.core.management import call_command
+from django.db import connection
+from django.test import TransactionTestCase
 from django.utils import timezone
 from rest_framework.test import APITestCase
 from uuid import uuid4
@@ -15,7 +20,8 @@ from modules.customers.infrastructure.django.models import CustomerModel
 from modules.accounting.infrastructure.django.models import JournalEntryModel
 from modules.purchases.infrastructure.django.models import PurchaseModel, ReceiptModel
 from modules.data_import.infrastructure.django.models import ImportRunModel
-from modules.data_import.infrastructure.django.repositories import DjangoImportQueue
+from modules.data_import.infrastructure.adapters import SalesImportAdapter
+from modules.data_import.infrastructure.django.repositories import DjangoImportQueue, DjangoImportRepository
 from modules.sales.infrastructure.django.models import OrderModel
 
 
@@ -232,3 +238,98 @@ class BackgroundQueueTests(APITestCase):
         self.assertEqual(self.client.get(f'{url}/').status_code, 404)
         self.assertEqual(OrderModel.objects.filter(company_id=other.id).count(), 0)
         self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 2)
+
+    def test_progress_grows_sale_by_sale_while_the_worker_runs(self):  # AC-03
+        url, body = self._previewed()
+        self.client.post(f'{url}/execute/', {**body, 'idempotency_key': str(uuid4())}, format='json')
+        seen = []
+        original = SalesImportAdapter.deliver_sale
+
+        def spy(adapter, *args, **kwargs):
+            status = self.client.get(f'{url}/').json()
+            seen.append((status['status'], status['processed'], status['total']))
+            return original(adapter, *args, **kwargs)
+
+        with patch.object(SalesImportAdapter, 'deliver_sale', spy):
+            call_command('run_import_worker', '--once', stdout=StringIO())
+        self.assertEqual(seen, [('RUNNING', 0, 2), ('RUNNING', 1, 2)])
+
+    def test_run_that_no_longer_validates_when_the_worker_takes_it_ends_failed(self):  # AC-05
+        url, body = self._previewed()
+        self.client.post(f'{url}/execute/', {**body, 'idempotency_key': str(uuid4())}, format='json')
+        run_id = url.rsplit('/', 1)[1]
+        run = ImportRunModel.objects.get(pk=run_id)
+        ImportRunModel.objects.filter(pk=run_id).update(options={**run.options, 'infer_customers': False})
+        call_command('run_import_worker', '--once', stdout=StringIO())
+        failed = self.client.get(f'{url}/').json()
+        self.assertEqual((failed['status'], failed['failure']['code']), ('FAILED', 'preview_stale'))
+        self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_worker_runs_each_queued_run_with_its_own_company(self):  # AC-08
+        url_a, body_a = self._previewed()
+        self.client.post(f'{url_a}/execute/', {**body_a, 'idempotency_key': str(uuid4())}, format='json')
+        other = make_company('Empresa B')
+        authenticate(self.client, make_admin(other, username='beto'))
+        url_b, body_b = self._previewed()
+        queued = self.client.post(f'{url_b}/execute/', {**body_b, 'idempotency_key': str(uuid4())}, format='json')
+        self.assertEqual(queued.status_code, 202, queued.content)  # una activa por empresa, no global
+        call_command('run_import_worker', '--once', stdout=StringIO())
+        for company in (self.company, other):
+            self.assertEqual(OrderModel.objects.filter(company_id=company.id).count(), 2)
+            self.assertEqual(ProductModel.objects.filter(company_id=company.id).count(), 2)
+        self.assertEqual(set(ImportRunModel.objects.values_list('status', flat=True)), {'COMPLETED'})
+
+
+class QueueConcurrencyTests(TransactionTestCase):
+    """Reclamos y encolados simultáneos desde hilos distintos, cada uno con su propia conexión."""
+
+    def _run(self, company, status='PREVIEWED', **extra):
+        return ImportRunModel.objects.create(company_id=company.id, filename='v.csv', file_sha256='0' * 64, headers=[],
+                                             rows=[], status=status, **extra)
+
+    def _parallel(self, work, attempts=2):
+        barrier = Barrier(attempts)
+        outcomes, errors = [], []
+
+        def attempt():
+            try:
+                barrier.wait(timeout=10)
+                outcomes.append(work())
+            except Exception as exc:  # se reporta en el hilo principal
+                errors.append(exc)
+            finally:
+                connection.close()
+
+        threads = [Thread(target=attempt) for _ in range(attempts)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=30)
+        return outcomes, errors
+
+    def test_two_workers_never_claim_the_same_run(self):  # AC-07
+        run = self._run(make_company('Empresa A'), status='QUEUED')
+        outcomes, errors = self._parallel(lambda: DjangoImportQueue().claim_next(timezone.now()))
+        self.assertEqual(errors, [])
+        claimed = [o for o in outcomes if o is not None]
+        self.assertEqual([c.run_id for c in claimed], [run.id])
+        self.assertEqual(ImportRunModel.objects.get(pk=run.id).status, 'RUNNING')
+
+    def test_same_request_arriving_twice_queues_once_and_never_fails(self):  # REV-01
+        company = make_company('Empresa A')
+        run = self._run(company)
+        key = uuid4()
+        outcomes, errors = self._parallel(
+            lambda: DjangoImportRepository(company.id).enqueue(run.id, key, timezone.now()))
+        self.assertEqual(errors, [])
+        self.assertEqual(ImportRunModel.objects.get(pk=run.id).status, 'QUEUED')
+
+    def test_an_interrupted_run_is_not_overwritten_by_the_worker_that_was_still_running(self):  # REV-02
+        company = make_company('Empresa A')
+        run = self._run(company, status='RUNNING', heartbeat_at=timezone.now() - timedelta(minutes=16))
+        DjangoImportQueue().fail_stale(timezone.now())
+        repository = DjangoImportRepository(company.id)
+        repository.finish(run.id, 'COMPLETED', {'created': 1}, timezone.now())
+        repository.fail(run.id, 'unexpected_error', 'x', timezone.now())
+        current = ImportRunModel.objects.get(pk=run.id)
+        self.assertEqual((current.status, current.failure_code), ('FAILED', 'interrupted'))

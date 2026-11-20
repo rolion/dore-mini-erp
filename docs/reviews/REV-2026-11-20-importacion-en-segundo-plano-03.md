@@ -1,6 +1,6 @@
 # REV-2026-11-20-importacion-en-segundo-plano-03: Pruebas mas debiles que la tabla AC -> verificacion del plan
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-20-importacion-en-segundo-plano.md (v1)
@@ -19,3 +19,6 @@ Los comportamientos se cumplen por lectura del codigo pero no estan probados de 
 
 ## Evidence
 Informe del Quality Gate: `test_a_queued_run_is_claimed_only_once` sin hilos; `test_other_company_cannot_see_the_run_and_the_worker_uses_the_runs_company` con una sola empresa encolada.
+
+## Resolución
+Corregido en el commit de seguimiento del 2026-11-20 (repositorio y pruebas de integración con hilos, dos empresas y progreso); pruebas de `modules.data_import` en verde con PostgreSQL 16.

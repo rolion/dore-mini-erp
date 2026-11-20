@@ -1,6 +1,6 @@
 # REV-2026-11-20-importacion-en-segundo-plano-01: Doble envio concurrente con la misma clave responde 409
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-20-importacion-en-segundo-plano.md (v1)
@@ -19,3 +19,6 @@ Responde 409 `import_not_runnable`. El caso secuencial funciona y el boton del f
 
 ## Evidence
 `repositories.py` `enqueue`: `if not updated: raise ImportRuleViolation(...)`. Sugerencia: ante `updated == 0`, releer la corrida y devolverla si la clave coincide.
+
+## Resolución
+Corregido en el commit de seguimiento del 2026-11-20 (repositorio y pruebas de integración con hilos, dos empresas y progreso); pruebas de `modules.data_import` en verde con PostgreSQL 16.

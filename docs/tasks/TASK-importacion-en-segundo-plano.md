@@ -94,7 +94,7 @@ Ver `docs/adr/ADR-importacion-en-segundo-plano-cola-en-base-de-datos-y-worker.md
 
 ## Review
 **Quality Gate: PASS** (subagente aislado, 2026-11-20). Sin hallazgos Critical/High; 0 pruebas fallando.
-Hallazgos abiertos (Medium/Low, no bloquean; registrados como REV):
+Hallazgos (Medium/Low, no bloquean; registrados como REV; REV-01..03 resueltos después, REV-04..05 abiertos):
 - [REV-2026-11-20-importacion-en-segundo-plano-01](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-01.md) — Low, IMPLEMENTATION: Doble envio concurrente con la misma clave responde 409
 - [REV-2026-11-20-importacion-en-segundo-plano-02](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-02.md) — Low, IMPLEMENTATION: finish() y fail() actualizan sin condicion de estado
 - [REV-2026-11-20-importacion-en-segundo-plano-03](docs/reviews/REV-2026-11-20-importacion-en-segundo-plano-03.md) — Medium, SPECIFICATION: Pruebas mas debiles que la tabla AC -> verificacion del plan
@@ -104,4 +104,4 @@ Revisión visual: **no verificada** (la app no se levantó en navegador); sí re
 
 
 ## Publicación
-PR #113 listo para aprobación humana (nunca mergeado por el flujo). Cambio sensible: **base de datos (migración 0003) e infraestructura (nuevo servicio `import-worker`)**, respaldado por el ADR de cola en base de datos. Hallazgos REV-01..05 abiertos (Low/Medium) para decidir si se atienden antes o después del merge.
+PR #113 listo para aprobación humana (nunca mergeado por el flujo). Cambio sensible: **base de datos (migración 0003) e infraestructura (nuevo servicio `import-worker`)**, respaldado por el ADR de cola en base de datos. REV-01, REV-02 y REV-03 corregidos y resueltos tras el Quality Gate (pruebas de `modules.data_import` + `config`: 81 OK con PostgreSQL 16, flake8/ruff limpios); REV-04 (altura inline) y REV-05 (healthcheck del worker) siguen abiertos como Low.

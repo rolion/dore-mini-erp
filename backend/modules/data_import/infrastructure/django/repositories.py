@@ -80,6 +80,10 @@ class DjangoImportRepository:
                 raise ImportRuleViolation(
                     'import_running', 'Ya hay una importación en curso en tu empresa; espera a que termine.') from None
         if not updated:
+            current = self._runs().filter(pk=run_id).values('status', 'idempotency_key').first()
+            if (current and idempotency_key is not None and current['idempotency_key'] == idempotency_key
+                    and current['status'] in ACTIVE_STATUSES + [ImportRunModel.COMPLETED]):
+                return  # la misma petición llegó dos veces a la vez: la primera ya la encoló
             raise ImportRuleViolation('import_not_runnable', 'La importación no se puede ejecutar en su estado actual.')
         ImportRowResultModel.objects.filter(run_id=run_id).delete()  # reintento de una corrida caída o fallida
 
@@ -110,11 +114,14 @@ class DjangoImportRepository:
         self._runs().filter(pk=run_id).update(**values)
 
     def fail(self, run_id: UUID, code: str, message: str, now) -> None:
-        self._runs().filter(pk=run_id).update(status=ImportRunModel.FAILED, failure_code=code[:60],
-                                              failure_message=message, finished_at=now, heartbeat_at=now)
+        self._runs().filter(pk=run_id, status=ImportRunModel.RUNNING).update(
+            status=ImportRunModel.FAILED, failure_code=code[:60], failure_message=message, finished_at=now,
+            heartbeat_at=now)
 
     def finish(self, run_id: UUID, status: str, counts: dict, now) -> None:
-        self._runs().filter(pk=run_id).update(status=status, counts=counts, finished_at=now, heartbeat_at=now)
+        # Solo una corrida en curso termina: si se marcó interrumpida mientras tanto, no se sobrescribe.
+        self._runs().filter(pk=run_id, status=ImportRunModel.RUNNING).update(
+            status=status, counts=counts, finished_at=now, heartbeat_at=now)
 
     def existing_keys(self, keys: list[str]) -> set[str]:
         found: set[str] = set()
