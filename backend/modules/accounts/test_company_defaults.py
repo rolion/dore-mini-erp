@@ -215,13 +215,27 @@ class DefaultsBoundaryTests(SimpleTestCase):  # REV-02
         self.assertEqual(imports, [], 'shared no importa módulos de negocio')
 
 
-class ExistingAccountWithoutCodeTests(TestCase):
-    def test_account_with_same_name_and_no_code_counts_as_existing(self):  # INV-03 (empresa real sin código en «Caja»)
+class ExistingAccountCompletionTests(TestCase):
+    def test_existing_account_is_reactivated_and_completed_without_duplicating(self):  # INV-03 (v2)
         company = Company.objects.create(name='Legada SRL')
-        legacy = AccountModel.objects.create(company_id=company.id, name='Caja', currency='BOB')
+        legacy = AccountModel.objects.create(company_id=company.id, name='Caja', currency='BOB', is_active=False)
         run('copy_company_defaults', '--company', 'Legada SRL')
         self.assertEqual(AccountModel.objects.filter(company_id=company.id, name__iexact='caja').count(), 1)
         legacy.refresh_from_db()
-        self.assertIsNone(legacy.code)  # no se modifica lo existente
-        cash = MethodMappingModel.objects.get(company_id=company.id, method='CASH')
-        self.assertEqual(cash.account_id, legacy.id)  # el mapeo usa la cuenta existente
+        self.assertEqual((legacy.code, legacy.kind, legacy.account_class, legacy.is_active),
+                         ('11101', 'CASH', 'ASSET', True))
+        self.assertEqual(MethodMappingModel.objects.get(company_id=company.id, method='CASH').account_id, legacy.id)
+
+    def test_existing_data_is_not_overwritten(self):  # INV-03 (v2)
+        company = Company.objects.create(name='Propia SRL')
+        mine = AccountModel.objects.create(company_id=company.id, code='11101', name='Mi caja', currency='USD',
+                                           kind='CASH', account_class='ASSET')
+        run('copy_company_defaults', '--company', 'Propia SRL')
+        mine.refresh_from_db()
+        self.assertEqual((mine.name, mine.currency), ('Mi caja', 'USD'))
+
+    def test_second_run_reports_nothing_to_complete(self):  # INV-02
+        company = Company.objects.create(name='Doble SRL')
+        AccountModel.objects.create(company_id=company.id, name='Caja', currency='BOB', is_active=False)
+        run('copy_company_defaults', '--company', 'Doble SRL')
+        self.assertNotIn('reactivados', run('copy_company_defaults', '--company', 'Doble SRL'))

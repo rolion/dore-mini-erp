@@ -37,4 +37,5 @@ class Command(BaseCommand):
         self.stdout.write(f'{mode} sobre «{company.name}»:')
         for key, counts in report.items():
             label = SECTION_LABELS.get(key, key)
-            self.stdout.write(f'  {label}: {counts["created"]} creados, {counts["existing"]} ya existían')
+            extra = f', {counts["completed"]} reactivados/completados' if counts.get('completed') else ''
+            self.stdout.write(f'  {label}: {counts["created"]} creados, {counts["existing"]} ya existían{extra}')

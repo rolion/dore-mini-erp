@@ -56,17 +56,35 @@ def export_accounting(company_id: UUID, ctx: dict) -> dict:
     }
 
 
+def _complete(account: AccountModel, item: dict) -> bool:
+    """Reactiva la cuenta y completa sus datos vacíos desde el snapshot; devuelve si cambió algo."""
+    changes: dict = {}
+    if item.get('is_active', True) and not account.is_active:
+        changes['is_active'] = True
+    for field in ('code', 'kind', 'account_class', 'currency'):
+        if not getattr(account, field) and item.get(field):
+            changes[field] = item[field]
+    for field, value in changes.items():
+        setattr(account, field, value)
+    if changes:
+        account.save(update_fields=[*changes, 'updated_at'])
+    return bool(changes)
+
+
 def apply_accounting(company_id: UUID, data: dict, ctx: dict) -> dict[str, int]:
-    created = existing = 0
+    created = existing = completed = 0
     resolved = ctx.setdefault('accounts_by_code', {})
     for item in data.get('accounts', []):
-        # Existe si coincide el código o el nombre (el nombre es único por empresa); nunca se modifica lo existente.
+        # Existe si coincide el código o el nombre (el nombre es único por empresa). Una cuenta existente se reactiva
+        # si el snapshot la define activa y se le completan solo los datos vacíos; lo ya cargado no se pisa.
         account = (AccountModel.objects.filter(company_id=company_id, code__iexact=item['code']).first()
                    or AccountModel.objects.filter(company_id=company_id, name__iexact=item['name']).first())
         was_created = account is None
         if was_created:
             account = AccountModel.objects.create(
                 company_id=company_id, code=item['code'], opening_balance=0, **{f: item[f] for f in ACCOUNT_FIELDS})
+        elif _complete(account, item):
+            completed += 1
         resolved[item['code'].lower()] = account
         created, existing = created + was_created, existing + (not was_created)
     for item in data.get('method_mappings', []):
@@ -92,7 +110,7 @@ def apply_accounting(company_id: UUID, data: dict, ctx: dict) -> dict[str, int]:
             company_id=company_id, name=str(today.year), start_date=today.replace(month=1, day=1),
             end_date=today.replace(month=12, day=31))
         created += 1
-    return {'created': created, 'existing': existing}
+    return {'created': created, 'existing': existing, 'completed': completed}
 
 
 def export_posting(company_id: UUID, ctx: dict) -> dict:

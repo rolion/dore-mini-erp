@@ -89,6 +89,7 @@ No aplica.
 - El `ctx` de la ADR se mantiene pero Contabilidad aporta dos secciones (`accounting` y `accounting_posting`) porque las cuentas por categoría dependen de Gastos y los módulos no pueden importarse entre sí (los tests de frontera lo exigen). Documentado en la ADR.
 - El ajuste de Compras se completa solo si está vacío (no pisa una clasificación ya elegida).
 - El puerto es un paquete (`shared/company_defaults/`) y no un módulo suelto, para alojar `snapshot.json`.
+- **Plan v2 (Specification, aprobado por el usuario en el chat):** INV-03 ampliado: una cuenta existente se reactiva y se le completan los datos vacíos, en lugar de omitirse.
 - Un snapshot inválido en el alta responde 500 con la empresa revertida (decisión declarada en la ADR).
 - El snapshot no incluye `account_class_settings` (demo dore no tiene filas = todas habilitadas).
 

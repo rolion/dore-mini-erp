@@ -1,4 +1,4 @@
-# PLAN-2026-11-19-configuracion-contable-por-defecto-nueva-empresa (v1)
+# PLAN-2026-11-19-configuracion-contable-por-defecto-nueva-empresa (v2)
 
 **Task:** TASK-configuracion-contable-por-defecto-nueva-empresa · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** ADR-configuracion-contable-por-defecto-nueva-empresa-snapshot-y-puerto
@@ -24,7 +24,7 @@ Empresa nueva sin configuración contable, 4 módulos, sin ajustes (`accounts/re
 ## Domain rules / invariants
 - INV-01: toda escritura filtra por `company_id`; nada del snapshot contiene UUID de otra empresa.
 - INV-02: aplicar es idempotente (segunda ejecución: 0 creados).
-- INV-03: no se pisa configuración existente (cuentas por código, mapeos, clasificaciones, ajustes, módulos).
+- INV-03: no se pisa configuración existente (cuentas por código o nombre, mapeos, clasificaciones, ajustes, módulos). Excepción (v2): una cuenta existente se reactiva si el snapshot la define activa y se le completan solo los datos vacíos (código, tipo, clasificación, moneda).
 - INV-04: dinero en `Decimal`; saldos de apertura = 0.
 - INV-05: el alta es atómica: si falla la siembra no queda empresa.
 
@@ -92,3 +92,6 @@ Sin migraciones.
 Orden de habilitación de Contabilidad (precondiciones y cobertura); snapshot desactualizado frente a nuevas configuraciones.
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-19): [Specification] INV-03 ampliado: una cuenta existente (por código o nombre) se reactiva y se completa en sus datos vacíos, en vez de omitirse. Aprobado explícitamente por el usuario en el chat tras detectar una cuenta «Caja» sin código en `demo dore` y cuentas desactivadas.
