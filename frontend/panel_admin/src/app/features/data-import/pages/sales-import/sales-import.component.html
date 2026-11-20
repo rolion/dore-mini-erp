@@ -165,13 +165,13 @@
                     <div class="col-12 col-md-6 col-lg-3">
                       <label for="def-payment" class="form-label">{{ 'DATA_IMPORT.DEFAULT_PAYMENT' | translate }}</label>
                       <select id="def-payment" class="form-select" formControlName="defaultPaymentMethod" data-testid="default-payment">
-                        @for (o of paymentOptions; track o.value) { <option [value]="o.value">{{ o.labelKey | translate }}</option> }
+                        @for (o of paymentOptions; track o.value) { <option [value]="o.value" [selected]="o.value === options.controls.defaultPaymentMethod.value">{{ o.labelKey | translate }}</option> }
                       </select>
                     </div>
                     <div class="col-12 col-md-6 col-lg-3">
                       <label for="def-channel" class="form-label">{{ 'DATA_IMPORT.DEFAULT_CHANNEL' | translate }}</label>
                       <select id="def-channel" class="form-select" formControlName="defaultSalesChannel" data-testid="default-channel">
-                        @for (o of channelOptions; track o.value) { <option [value]="o.value">{{ o.labelKey | translate }}</option> }
+                        @for (o of channelOptions; track o.value) { <option [value]="o.value" [selected]="o.value === options.controls.defaultSalesChannel.value">{{ o.labelKey | translate }}</option> }
                       </select>
                     </div>
                     @if (upload.capabilities.inventory) {
