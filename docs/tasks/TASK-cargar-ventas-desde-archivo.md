@@ -1,6 +1,6 @@
 # TASK-cargar-ventas-desde-archivo: Cargar ventas desde un archivo CSV/Excel con mapeo e inferencia
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cargar-ventas-desde-archivo
@@ -14,6 +14,7 @@
 | 2026-11-19 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-11-19 | ARCHITECTURE → PLANNING | 2 ADR escritos | delivery-start |
 | 2026-11-19 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
+| 2026-11-19 | ENGINEERING → REVIEW | Implementación completa; pruebas con BD pendientes | delivery-build |
 
 ## Investigación
 
@@ -83,7 +84,18 @@ Ver `docs/design/DDR-cargar-ventas-desde-archivo-asistente-de-importacion.md` (P
 `docs/plans/PLAN-2026-11-19-cargar-ventas-desde-archivo.md` (v1, COMPLETO). Specification readiness: **READY** (los cuatro puntos abiertos de negocio quedaron resueltos por el usuario; los supuestos restantes están declarados como no bloqueantes).
 
 ## Implementación
-_Pendiente_
+
+**Backend** (`backend/modules/data_import/`, dominio sin Django): parsers CSV/XLSX con límites (AC-01), mapeo sugerido y validado (AC-02/03), opciones y casillas validadas contra módulos habilitados (AC-04/05), validación por celda y agrupación en ventas con clave de idempotencia (AC-18, INV-05), vista previa sin escritura (AC-06), ejecución por venta en transacción propia con idempotencia, bloqueo de una ejecución por empresa (restricción única parcial) y exigencia de vista previa vigente (AC-07..AC-15, INV-04/09), historial y filas (AC-17), API-01..05 bajo `/api/imports/sales/` con admin + `sales`,`catalog` (AC-16). Migración `data_import/0001_initial` (3 tablas).
+Fachadas aditivas: `catalog` (`list_products_for_import`, `create_product_for_import`), `customers`, `purchases` (`import_received_purchase`: crear+confirmar+recibir, sin pago), `sales` (`import_delivered_sale`: precio del archivo, entrega, cobro total), `costing.get_average_costs`; `shared/import_errors.py`; `SalesPostingAdapter.posts_on` y `DeliveryCostingAdapter(post_accounting)`. Test de fronteras actualizado (AC-20). `openpyxl==3.1.5` agregado (autorizado por el usuario).
+**Frontend** (`features/data-import/`, hecho por un subagente): asistente de 4 pasos con las cuatro casillas sobre el mapeo, historial y detalle, i18n es/en/pt, ruta `sales/import`, menú `adminOnly`; referencias: `accounting/regularization`, `inventory/stock-opening`; reutiliza `app-status-badge`, `app-posting-issues-alert`, `Page<T>`, `NgbModal`. Se corrigió `sidebar` para respetar `adminOnly` en submenús.
+
+**Desviaciones respecto al plan**
+- Los movimientos de inventario y los eventos de costo registran el **momento de la carga**, no la fecha de la venta (las fachadas de Inventario no aceptan `occurred_at` en entradas/salidas de documentos); la fecha de negocio vive en pedido, cobro, recepción y asientos. R-02 queda como deuda técnica.
+- Sin integración HTTP de pruebas: **no hay `DATABASE_URL` en este worktree** (no se copia `.env`), así que no se escribieron ni corrieron pruebas de integración con BD (AC-06 «no escribe», AC-07, AC-10..AC-17 contra BD real, 409 concurrente, aislamiento). Cubierto solo con pruebas de dominio/parsers y de casos de uso con fakes (31 pruebas OK) más el test de fronteras (8 OK).
+- Frontend: sin `node_modules`, no se ejecutaron `lint`, `npm test` ni `build`; solo `tools/check-i18n-keys.mjs` (0 faltantes). Sin tarjetas móviles (se usa `table-responsive`), sin filtro «solo con error» en la vista previa, retomar `?run=` solo para importaciones terminadas.
+
+**Deuda técnica:** reversa en bloque, ejecución asíncrona, pruebas de integración y Karma pendientes.
+
 
 ## Review
 _Pendiente_
