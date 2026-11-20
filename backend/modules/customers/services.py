@@ -67,3 +67,37 @@ def get_customers_administrative(company_id: UUID, customer_ids: Iterable[UUID])
 def search_customer_ids(company_id: UUID, search: str) -> list[UUID]:
     """Identity values only; never exposes a model or queryset across contexts."""
     return [customer.id for customer in DjangoCustomerRepository(company_id).list(search=search)]
+
+
+# --- Escritura para la importación de ventas (TASK-cargar-ventas-desde-archivo) -----------------------------
+
+@dataclass(frozen=True)
+class CustomerForImport:
+    id: UUID
+    name: str
+    active: bool
+
+
+def list_customers_for_import(company_id: UUID) -> list[CustomerForImport]:
+    """Todos los clientes de la empresa (activos e inactivos) para casar por nombre; solo lectura."""
+    rows = (CustomerModel.objects.filter(company_id=company_id).order_by('name', 'id')
+            .values_list('id', 'name', 'active'))
+    return [CustomerForImport(id=i, name=n, active=a) for i, n, a in rows]
+
+
+def create_customer_for_import(company_id: UUID, name: str) -> CustomerForImport:
+    """Crea un cliente solo con nombre (sin teléfono, así no hay aviso de duplicado) con el caso de uso de Clientes."""
+    from django.conf import settings
+
+    from modules.customers.application.commands import CreateCustomer
+
+    from modules.customers.domain.exceptions import CustomerValidationError
+    from shared.import_errors import ImportRejected, first_error
+
+    try:
+        customer = CreateCustomer(DjangoCustomerRepository(company_id), settings.DEFAULT_PHONE_COUNTRY_CODE).execute(
+            name=name)
+    except CustomerValidationError as exc:
+        field, message = first_error(exc.errors)
+        raise ImportRejected('customer_rejected', message, field) from exc
+    return CustomerForImport(id=customer.id, name=customer.name, active=customer.active)

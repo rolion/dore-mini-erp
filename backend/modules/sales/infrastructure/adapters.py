@@ -203,6 +203,10 @@ class SalesPostingAdapter:
     def _covers(self, on: date) -> bool:
         return accounting_services.coverage_status(self.company_id, on).covered
 
+    def posts_on(self, on: date) -> bool:
+        """¿Contabilidad está habilitada y cubre esa fecha (se generarían asientos)?"""
+        return self._enabled() and self._covers(on)
+
     def recognition_state(self, order_id: UUID) -> str | None:
         if not self._enabled():
             return None
@@ -316,11 +320,13 @@ class DeliveryCostingAdapter:
 
     SOURCE_TYPE = StockOutputAdapter.SOURCE_TYPE
 
-    def __init__(self, company_id: UUID):
+    def __init__(self, company_id: UUID, post_accounting: bool = True):
         self.company_id = company_id
+        self.post_accounting = post_accounting  # False (importación sin contabilidad): registra el costo, sin asiento
 
     def cost_delivery(self, order, lines: list[tuple[UUID, Decimal]], actor: Actor) -> None:
-        covered = module_gate.is_enabled(self.company_id, ACCOUNTING_MODULE) and accounting_services.coverage_status(
+        covered = self.post_accounting and module_gate.is_enabled(
+            self.company_id, ACCOUNTING_MODULE) and accounting_services.coverage_status(
             self.company_id, order.delivered_date).covered
         if not module_gate.is_enabled(self.company_id, COSTING_MODULE):
             if covered:

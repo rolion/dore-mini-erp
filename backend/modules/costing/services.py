@@ -14,7 +14,8 @@ from modules.costing.infrastructure.adapters import InventoryStockTotals
 from modules.costing.infrastructure.django.cost_repository import DjangoCostEventRepository
 from modules.costing.infrastructure.django.repositories import DjangoAdoptionRepository
 
-__all__ = ['CostUnavailable', 'CostedOutput', 'cost_outputs', 'cost_receipt', 'is_valued', 'reverse_receipt_cost']
+__all__ = ['CostUnavailable', 'CostedOutput', 'cost_outputs', 'cost_receipt', 'get_average_costs', 'is_valued',
+           'reverse_receipt_cost']
 
 
 def _parts(company_id: UUID):
@@ -25,6 +26,17 @@ def _parts(company_id: UUID):
 def is_valued(company_id: UUID) -> bool:
     """¿La empresa adoptó la valoración inicial (condición para tener costo)?"""
     return DjangoAdoptionRepository(company_id).get() is not None
+
+
+def get_average_costs(company_id: UUID, product_ids: list[UUID]) -> dict[UUID, Decimal]:
+    """Costo promedio vigente de cada producto (última recepción o valoración inicial); solo lectura. Los productos
+    sin costo no aparecen y sin valoración adoptada el resultado es vacío."""
+    adoption = DjangoAdoptionRepository(company_id).get()
+    if adoption is None or not product_ids:
+        return {}
+    averages = {line.product_id: line.unit_cost for line in adoption.lines if line.product_id in product_ids}
+    averages.update(DjangoCostEventRepository(company_id).latest_averages(product_ids))
+    return averages
 
 
 def cost_receipt(company_id: UUID, *, source_type: str, source_id: str, lines: list[tuple[UUID, Decimal, Decimal]],

@@ -125,3 +125,76 @@ def get_products_for_purchase(company_id: UUID, product_ids: Iterable[UUID]) -> 
     models = (ProductModel.objects.filter(company_id=company_id, pk__in=list(product_ids))
               .select_related('base_unit'))
     return {model.id: _for_purchase(model) for model in models}
+
+
+# --- Escritura para la importación de ventas (TASK-cargar-ventas-desde-archivo) -----------------------------
+
+@dataclass(frozen=True)
+class ProductForImport:
+    id: UUID
+    name: str
+    active: bool
+    can_sell: bool
+    can_buy: bool
+    tracks_stock: bool
+
+
+def _for_import(model: ProductModel) -> ProductForImport:
+    return ProductForImport(id=model.id, name=model.name, active=model.active, can_sell=model.can_sell,
+                            can_buy=model.can_buy, tracks_stock=model.tracks_stock)
+
+
+def list_products_for_import(company_id: UUID) -> list[ProductForImport]:
+    """Todos los productos de la empresa (activos e inactivos) para casar por nombre; solo lectura."""
+    return [_for_import(m) for m in ProductModel.objects.filter(company_id=company_id).order_by('name', 'id')]
+
+
+DEFAULT_UNIT_NAME = 'Unidad'
+DEFAULT_UNIT_ABBREVIATION = 'u'
+
+
+def _default_unit_id(company_id: UUID):
+    """Unidad base para productos nuevos con stock: la de abreviatura «u» (o nombre «Unidad») o una nueva."""
+    from django.db.models import Q
+
+    from modules.catalog.domain.unit import UnitOfMeasure
+    from modules.catalog.infrastructure.django.models import UnitModel
+    from modules.catalog.infrastructure.django.repositories import DjangoUnitRepository
+
+    existing = UnitModel.objects.filter(company_id=company_id, active=True).filter(
+        Q(abbreviation__iexact=DEFAULT_UNIT_ABBREVIATION) | Q(name__iexact=DEFAULT_UNIT_NAME)).order_by('name').first()
+    if existing is not None:
+        return existing.id
+    unit = DjangoUnitRepository(company_id).save(
+        UnitOfMeasure.create(DEFAULT_UNIT_NAME, DEFAULT_UNIT_ABBREVIATION, False))
+    return unit.id
+
+
+def create_product_for_import(company_id: UUID, name: str, sale_price: Decimal, tracks_stock: bool = False,
+                              can_buy: bool = False) -> ProductForImport:
+    """Crea un producto vendible activo con el caso de uso de Catálogo. Con `tracks_stock` controla stock con la
+    unidad por defecto (Inventario debe estar habilitado). Lanza los errores de dominio de Catálogo."""
+    from modules.catalog.application.commands import CreateProduct, StockControl
+    from modules.catalog.infrastructure.django.repositories import DjangoUnitRepository
+    from shared import module_gate
+
+    stock = StockControl(DjangoUnitRepository(company_id),
+                         inventory_enabled=module_gate.is_enabled(company_id, 'inventory'))
+    kwargs = {}
+    if tracks_stock:
+        try:
+            kwargs = {'tracks_stock': True, 'base_unit_id': _default_unit_id(company_id)}
+        except Exception as exc:  # UnitValidationError u otro: la importación lo muestra por fila
+            from shared.import_errors import ImportRejected
+            raise ImportRejected('unit_rejected', 'No se pudo preparar la unidad base por defecto.') from exc
+    from modules.catalog.domain.exceptions import ProductValidationError, UnitValidationError
+    from shared.import_errors import ImportRejected, first_error
+
+    try:
+        product = CreateProduct(DjangoProductRepository(company_id), stock).execute(
+            name=name, sale_price=sale_price, can_buy=can_buy, can_sell=True, **kwargs)
+    except (ProductValidationError, UnitValidationError) as exc:
+        field, message = first_error(exc.errors)
+        raise ImportRejected('product_rejected', message, field) from exc
+    return ProductForImport(id=product.id, name=product.name, active=product.active, can_sell=product.can_sell,
+                            can_buy=product.can_buy, tracks_stock=product.tracks_stock)

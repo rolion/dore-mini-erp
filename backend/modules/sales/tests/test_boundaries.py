@@ -25,11 +25,13 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'purchases': {'accounting', 'catalog', 'costing', 'inventory'},
     'sales': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'modularity'},
     'reporting': {'accounting', 'sales', 'expenses', 'customers'},
+    # Importación de ventas: orquesta otros módulos solo por sus fachadas (ADR cargar-ventas-desde-archivo).
+    'data_import': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'purchases', 'sales'},
 }
 # Módulos no-negocio que un módulo de negocio puede leer (solo por su fachada `services`): la configuración.
 NON_BUSINESS_ALLOWED = {'modularity'}
 # Módulos que consumen a otros: solo desde sus adaptadores de infraestructura.
-CONSUMERS = ('accounting', 'expenses', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables')
+CONSUMERS = ('accounting', 'expenses', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables', 'data_import')
 
 
 def source_files(base: Path):
