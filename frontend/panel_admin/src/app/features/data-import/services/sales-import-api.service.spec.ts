@@ -133,6 +133,15 @@ describe('SalesImportApiService', () => {
     expect(run).toEqual(jasmine.objectContaining({ processed: 2, total: 3, failure: { code: 'interrupted', message: 'm' } }));
   });
 
+  it('shows zero counters for a run that is still queued (counts arrive as {})', () => {
+    let run: { counts: unknown } | null = null;
+    service.get('r-1').subscribe((r) => (run = r));
+    http.expectOne(`${base}r-1/`).flush({
+      id: 'r-1', filename: 'f', status: 'QUEUED', created_at: 'd', created_by_name: 'ana', row_count: 3, counts: {},
+    });
+    expect(run!.counts).toEqual({ created: 0, skipped: 0, failed: 0, withoutPosting: 0 });
+  });
+
   it('maps 400 to field errors, 409 import_running to its code and 409 posting issues', () => {
     let error: ImportApiError | null = null;
     service.preview('r-1', REQUEST).subscribe({ error: (e: ImportApiError) => (error = e) });

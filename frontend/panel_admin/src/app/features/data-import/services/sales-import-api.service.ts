@@ -29,10 +29,10 @@ export const VALIDATION_ERROR_MESSAGE = (): string => tr('DATA_IMPORT.ERR_VALIDA
 export const NOT_FOUND_MESSAGE = (): string => tr('DATA_IMPORT.ERR_NOT_FOUND');
 
 interface CountsDto {
-  created: number;
-  skipped: number;
-  failed: number;
-  without_posting: number;
+  created?: number;
+  skipped?: number;
+  failed?: number;
+  without_posting?: number;
 }
 
 interface UploadDto {
@@ -95,7 +95,13 @@ interface RowDto {
 }
 
 function toCounts(dto: CountsDto): ImportCounts {
-  return { created: dto.created, skipped: dto.skipped, failed: dto.failed, withoutPosting: dto.without_posting };
+  // Una corrida en cola o en curso aún no tiene contadores (`{}`): se muestran en cero, no como texto sin resolver.
+  return {
+    created: dto.created ?? 0,
+    skipped: dto.skipped ?? 0,
+    failed: dto.failed ?? 0,
+    withoutPosting: dto.without_posting ?? 0,
+  };
 }
 
 function toCapabilities(dto: UploadDto['capabilities']): ImportCapabilities {
