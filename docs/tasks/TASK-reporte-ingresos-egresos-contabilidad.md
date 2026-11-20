@@ -1,10 +1,10 @@
 # TASK-reporte-ingresos-egresos-contabilidad: Reporte de ingresos y egresos por mes en Contabilidad
 
-**Etapa actual:** PLANNING
+**Etapa actual:** ENGINEERING
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-reporte-ingresos-egresos-contabilidad
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/114
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -12,6 +12,7 @@
 | 2026-11-20 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-20 | INVESTIGATION → DESIGN | NEEDS_PLAN, pantalla nueva | delivery-start |
 | 2026-11-20 | DESIGN → PLANNING | DDR escrito; decisión de negocio resuelta con el usuario | delivery-start |
+| 2026-11-20 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR #114 abiertos | delivery-start |
 
 ## Investigación
 
