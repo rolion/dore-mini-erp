@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { tr } from '../../../../core/i18n/translate';
@@ -17,6 +17,9 @@ import { AccountingApiService } from '../../services/accounting-api.service';
 })
 export class CutoffTabComponent implements OnInit {
   readonly cutoffControl = new FormControl('', { nonNullable: true, validators: [Validators.required] });
+
+  /** El `<form>` necesita un `FormGroup`: sin él Angular no intercepta el envío y el navegador recarga la página. */
+  readonly form = new FormGroup({ cutoff: this.cutoffControl });
 
   settings: AccountingSettings | null = null;
   loading = false;

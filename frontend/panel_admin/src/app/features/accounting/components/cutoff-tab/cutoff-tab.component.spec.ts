@@ -62,6 +62,16 @@ describe('CutoffTabComponent', () => {
     expect(fixture.componentInstance.settings?.cutoffDate).toBe('2026-10-15');
   });
 
+  it('saves through the form submit without letting the browser reload the page', () => {
+    const fixture = create(open);
+    api.updateCutoff.and.returnValue(of({ ...open, cutoffDate: '2026-10-15' }));
+    fixture.componentInstance.cutoffControl.setValue('2026-10-15');
+    const event = new Event('submit', { cancelable: true });
+    fixture.nativeElement.querySelector('form').dispatchEvent(event);
+    expect(event.defaultPrevented).toBeTrue();
+    expect(api.updateCutoff).toHaveBeenCalledWith('2026-10-15');
+  });
+
   it('shows the server error when the cutoff is rejected', () => {
     const fixture = create(open);
     api.updateCutoff.and.returnValue(throwError(() => new AccountingApiError('No se puede cambiar la fecha de corte.', 409, {}, 'cutoff_locked')));

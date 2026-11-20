@@ -35,7 +35,7 @@ function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolea
 export function visibleRoutes(routes: RouteInfo[], enabled: ReadonlySet<string> | null, isAdmin = true): RouteInfo[] {
   return routes
     .filter((item) => item && isVisible(item, enabled) && (item.module !== 'personnel' || isAdmin) && (!item.adminOnly || isAdmin))
-    .map((item) => ({ ...item, submenu: item.submenu.filter((sub) => isVisible(sub, enabled)) }));
+    .map((item) => ({ ...item, submenu: item.submenu.filter((sub) => isVisible(sub, enabled) && (!sub.adminOnly || isAdmin)) }));
 }
 
 @Component({

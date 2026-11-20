@@ -144,3 +144,93 @@ def list_historical_payments(company_id: UUID, date_from: date | None = None,
                           document_ref=str(p.order_id), reference=p.reference, document_state=p.order.status)
         for p in read_queries.payments_between(company_id, date_from, date_to)
     )
+
+
+# --- Escritura para la importación de ventas (TASK-cargar-ventas-desde-archivo) -----------------------------
+
+@dataclass(frozen=True)
+class ImportedSaleLine:
+    product_id: UUID
+    quantity: int
+    unit_price: Decimal  # precio del archivo: la venta histórica conserva su precio, no el del catálogo
+
+
+@dataclass(frozen=True)
+class ImportedSale:
+    order_id: UUID
+    code: str
+    total: Decimal
+    without_posting: bool  # la fecha no tiene cobertura contable (o no se pidió contabilizar): sin asiento
+
+
+def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: str, customer_id: UUID | None,
+                          lines: list[ImportedSaleLine], payment_method: str, warehouse_id: UUID | None,
+                          user_id: UUID | None, user_name: str, post_accounting: bool = True,
+                          notes: str = '', discount: Decimal = Decimal('0')) -> ImportedSale:
+    """Registra una venta histórica completa con los casos de uso de Ventas: crea el pedido en su fecha con el
+    precio del archivo, lo confirma, lo marca listo, lo entrega (salida de stock, costo y reconocimiento contable) y
+    registra el cobro por el total (con el descuento del archivo) en la misma fecha.
+
+    Corre en la transacción de quien llama (todo o nada). Con `post_accounting=False` no genera asientos. Lanza
+    `shared.import_errors.ImportRejected` con el mensaje del módulo que rechazó la operación.
+    """
+    from modules.sales.application.commands import (
+        CreateOrder,
+        DeliverOrder,
+        MarkOrderReady,
+        RegisterPayment,
+        StartOrderPreparation,
+    )
+    from modules.sales.application.ports import Actor
+    from modules.sales.domain import exceptions as errors
+    from modules.sales.infrastructure.adapters import (
+        CustomerDirectoryAdapter,
+        DeliveryCostingAdapter,
+        ProductCatalogAdapter,
+        SalesPostingAdapter,
+        StockOutputAdapter,
+        SystemClock,
+    )
+    from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
+    from shared.import_errors import ImportRejected, first_error
+
+    repository = DjangoOrderRepository(company_id)
+    clock = SystemClock()
+    actor = Actor(user_id, user_name)
+    products = ProductCatalogAdapter(company_id)
+    posting = SalesPostingAdapter(company_id) if post_accounting else None
+    try:
+        order = CreateOrder(repository, CustomerDirectoryAdapter(company_id), clock).execute(
+            sales_channel=sales_channel, order_date=sale_date, customer_id=customer_id, notes=notes)
+        order = repository.get_for_update(order.id)
+        for line in lines:
+            product = products.get_product_for_sale(line.product_id)
+            if product is None:
+                raise ImportRejected('product_missing', 'El producto no existe.', 'product_name')
+            if not product.active:
+                raise ImportRejected('product_inactive', f'El producto «{product.name}» está inactivo.',
+                                     'product_name')
+            if not product.can_sell:
+                raise ImportRejected('product_not_sellable', f'El producto «{product.name}» no se puede vender.',
+                                     'product_name')
+            order.add_item(product.id, product.name, line.unit_price, line.quantity)
+        if discount:
+            order.apply_discount(discount)  # el archivo manda: sin el tope porcentual de la empresa
+        order = repository.save(order)
+        StartOrderPreparation(repository).execute(order.id)
+        MarkOrderReady(repository).execute(order.id)
+        DeliverOrder(repository, clock, StockOutputAdapter(company_id), posting,
+                     DeliveryCostingAdapter(company_id, post_accounting)).execute(
+            order.id, sale_date, warehouse_id, actor)
+        order = RegisterPayment(repository, clock, posting).execute(
+            order.id, amount=order.total, payment_method=payment_method, payment_date=sale_date, actor=actor)
+    except errors.InsufficientStockForDelivery as exc:
+        detail = '; '.join(f'{line.product_name}: pides {line.requested}, hay {line.available}' for line in exc.lines)
+        raise ImportRejected('insufficient_stock', f'{exc.message} {detail}'.strip(), 'quantity') from exc
+    except errors.OrderRuleViolation as exc:
+        raise ImportRejected(exc.code, exc.message) from exc
+    except errors.OrderValidationError as exc:
+        field, message = first_error(exc.errors)
+        raise ImportRejected('order_rejected', message, field) from exc
+    covered = post_accounting and SalesPostingAdapter(company_id).posts_on(sale_date)
+    return ImportedSale(order_id=order.id, code=order.code, total=order.total, without_posting=not covered)

@@ -1,0 +1,336 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'DATA_IMPORT.TITLE' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'COMMON.VENTAS' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'DATA_IMPORT.TITLE' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h4 class="mb-0">{{ 'DATA_IMPORT.TITLE' | translate }}</h4>
+            <a class="btn btn-light" routerLink="/pocketbiz/sales/import/history" data-testid="link-history">
+              {{ 'DATA_IMPORT.VIEW_HISTORY' | translate }}
+            </a>
+          </div>
+          <div class="card-body">
+            <nav [attr.aria-label]="'DATA_IMPORT.STEPS_LABEL' | translate" data-testid="steps">
+              <ol class="list-inline mb-3">
+                @for (s of stepDefs; track s.n) {
+                <li class="list-inline-item" [class.fw-bold]="step === s.n" [class.text-muted]="step !== s.n"
+                  [attr.aria-current]="step === s.n ? 'step' : null" [attr.data-testid]="'step-indicator-' + s.n">
+                  {{ s.n }}. {{ s.labelKey | translate }}
+                </li>
+                }
+              </ol>
+            </nav>
+            <h5 #stepHeading tabindex="-1" class="mb-3" data-testid="step-heading">
+              @switch (step) {
+              @case (1) { {{ 'DATA_IMPORT.STEP_UPLOAD' | translate }} }
+              @case (2) { {{ 'DATA_IMPORT.STEP_MAP' | translate }} }
+              @case (3) { {{ 'DATA_IMPORT.STEP_PREVIEW' | translate }} }
+              @default { {{ 'DATA_IMPORT.STEP_RESULT' | translate }} }
+              }
+            </h5>
+
+            @if (resuming) {
+            <p class="text-muted" role="status" data-testid="resuming">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else {
+
+            @if (step === 1) {
+            <!-- Paso 1: subir archivo -->
+            @if (resumeError) {
+            <div class="alert alert-warning" role="alert" data-testid="resume-error">{{ resumeError }}</div>
+            }
+            <div class="mb-3" data-testid="step-upload">
+              <label for="import-file" class="form-label">{{ 'DATA_IMPORT.FILE_LABEL' | translate }}</label>
+              <input id="import-file" type="file" class="form-control" accept=".csv,.xlsx" data-testid="file-input"
+                [attr.aria-describedby]="'import-file-help'" (change)="onFileSelected($event)">
+              <small id="import-file-help" class="text-muted">{{ 'DATA_IMPORT.LIMITS' | translate }}</small>
+            </div>
+            @if (uploadErrors.length) {
+            <div class="alert alert-danger" role="alert" data-testid="upload-error">
+              @for (message of uploadErrors; track $index) { <div>{{ message }}</div> }
+            </div>
+            }
+            @if (templateError) {
+            <div class="alert alert-danger" role="alert" data-testid="template-error">{{ 'DATA_IMPORT.TEMPLATE_ERROR' | translate }}</div>
+            }
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-primary" data-testid="upload" [disabled]="!selectedFile || uploading"
+                (click)="uploadFile()">
+                {{ (uploading ? 'DATA_IMPORT.UPLOADING' : 'DATA_IMPORT.UPLOAD_BUTTON') | translate }}
+              </button>
+              <button type="button" class="btn btn-link" data-testid="download-template" (click)="downloadTemplate()">
+                {{ 'DATA_IMPORT.DOWNLOAD_TEMPLATE' | translate }}
+              </button>
+            </div>
+            }
+
+            @if (step === 2 && upload) {
+            <!-- Paso 2: casillas arriba del mapeo -->
+            <div data-testid="step-map">
+              <p class="text-muted" data-testid="file-summary">
+                {{ 'DATA_IMPORT.FILE_SUMMARY' | translate: { p0: upload.filename, p1: upload.rowCount } }}
+              </p>
+              <div class="card border mb-3">
+                <div class="card-body" [formGroup]="options">
+                  <h6 class="mb-3">{{ 'DATA_IMPORT.AUTO_TITLE' | translate }}</h6>
+                  <div class="form-check mb-2">
+                    <input id="opt-products" type="checkbox" class="form-check-input" formControlName="inferProducts"
+                      data-testid="opt-products">
+                    <label for="opt-products" class="form-check-label">{{ 'DATA_IMPORT.INFER_PRODUCTS' | translate }}</label>
+                    <small class="d-block text-muted">{{ 'DATA_IMPORT.INFER_PRODUCTS_HELP' | translate }}</small>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input id="opt-customers" type="checkbox" class="form-check-input" formControlName="inferCustomers"
+                      data-testid="opt-customers" aria-describedby="opt-customers-help">
+                    <label for="opt-customers" class="form-check-label">{{ 'DATA_IMPORT.INFER_CUSTOMERS' | translate }}</label>
+                    <small id="opt-customers-help" class="d-block text-muted">
+                      {{ 'DATA_IMPORT.INFER_CUSTOMERS_HELP' | translate }}
+                      @if (!customersAvailable) { <strong data-testid="reason-customers">{{ 'DATA_IMPORT.REASON_CUSTOMERS' | translate }}</strong> }
+                    </small>
+                  </div>
+                  <div class="form-check mb-2">
+                    <input id="opt-inventory" type="checkbox" class="form-check-input" formControlName="inferInventory"
+                      data-testid="opt-inventory" aria-describedby="opt-inventory-help">
+                    <label for="opt-inventory" class="form-check-label">{{ 'DATA_IMPORT.INFER_INVENTORY' | translate }}</label>
+                    <small id="opt-inventory-help" class="d-block text-muted">
+                      {{ 'DATA_IMPORT.INFER_INVENTORY_HELP' | translate }}
+                      @if (!inventoryOptionAvailable) { <strong data-testid="reason-inventory">{{ 'DATA_IMPORT.REASON_INVENTORY' | translate }}</strong> }
+                    </small>
+                  </div>
+                  <div class="form-check">
+                    <input id="opt-accounting" type="checkbox" class="form-check-input" formControlName="inferAccounting"
+                      data-testid="opt-accounting" aria-describedby="opt-accounting-help">
+                    <label for="opt-accounting" class="form-check-label">{{ 'DATA_IMPORT.INFER_ACCOUNTING' | translate }}</label>
+                    <small id="opt-accounting-help" class="d-block text-muted">
+                      {{ 'DATA_IMPORT.INFER_ACCOUNTING_HELP' | translate }}
+                      @if (!accountingAvailable) { <strong data-testid="reason-accounting">{{ 'DATA_IMPORT.REASON_ACCOUNTING' | translate }}</strong> }
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-info" role="note" data-testid="fixed-notice">{{ 'DATA_IMPORT.FIXED_NOTICE' | translate }}</div>
+
+              <h6>{{ 'DATA_IMPORT.MAPPING_TITLE' | translate }}</h6>
+              <div class="table-responsive" [formGroup]="mapping">
+                <table class="table align-middle" data-testid="mapping-table">
+                  <caption class="visually-hidden">{{ 'DATA_IMPORT.MAPPING_TITLE' | translate }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_TARGET' | translate }}</th>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_COLUMN' | translate }}</th>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_SAMPLE' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (field of fields; track field.key) {
+                    <tr>
+                      <th scope="row" class="fw-normal">
+                        <label [for]="'map-' + field.key">
+                          {{ field.labelKey | translate }}
+                          @if (field.required) { <span aria-hidden="true">*</span><span class="visually-hidden">{{ 'DATA_IMPORT.REQUIRED' | translate }}</span> }
+                        </label>
+                      </th>
+                      <td>
+                        <select [id]="'map-' + field.key" class="form-select" [formControlName]="field.key"
+                          [attr.data-testid]="'map-' + field.key">
+                          <option value="">{{ 'DATA_IMPORT.NOT_MAPPED' | translate }}</option>
+                          @for (header of upload.headers; track header) {
+                          <option [value]="header">{{ header }}</option>
+                          }
+                        </select>
+                      </td>
+                      <td class="small text-muted">{{ samples(field.key).join(' · ') }}</td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="card border mb-3">
+                <div class="card-body" [formGroup]="options">
+                  <h6 class="mb-1">{{ 'DATA_IMPORT.DEFAULTS_TITLE' | translate }}</h6>
+                  <p class="small text-muted">{{ 'DATA_IMPORT.DEFAULTS_HELP' | translate }}</p>
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <label for="def-payment" class="form-label">{{ 'DATA_IMPORT.DEFAULT_PAYMENT' | translate }}</label>
+                      <select id="def-payment" class="form-select" formControlName="defaultPaymentMethod" data-testid="default-payment">
+                        @for (o of paymentOptions; track o.value) { <option [value]="o.value" [selected]="o.value === options.controls.defaultPaymentMethod.value">{{ o.labelKey | translate }}</option> }
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <label for="def-channel" class="form-label">{{ 'DATA_IMPORT.DEFAULT_CHANNEL' | translate }}</label>
+                      <select id="def-channel" class="form-select" formControlName="defaultSalesChannel" data-testid="default-channel">
+                        @for (o of channelOptions; track o.value) { <option [value]="o.value" [selected]="o.value === options.controls.defaultSalesChannel.value">{{ o.labelKey | translate }}</option> }
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <label for="def-category" class="form-label">{{ 'DATA_IMPORT.DEFAULT_CATEGORY' | translate }}</label>
+                      <select id="def-category" class="form-select" formControlName="defaultCategory" data-testid="default-category">
+                        @for (o of categoryOptions; track o.value) { <option [value]="o.value" [selected]="o.value === options.controls.defaultCategory.value">{{ o.labelKey | translate }}</option> }
+                      </select>
+                    </div>
+                    @if (upload.capabilities.inventory) {
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <label for="def-warehouse" class="form-label">{{ 'DATA_IMPORT.DEFAULT_WAREHOUSE' | translate }}</label>
+                      <select id="def-warehouse" class="form-select" formControlName="warehouseId" data-testid="default-warehouse">
+                        @for (w of upload.capabilities.warehouses; track w.id) { <option [value]="w.id">{{ w.name }}</option> }
+                      </select>
+                    </div>
+                    }
+                    <div class="col-12 col-md-6 col-lg-3">
+                      <label for="def-date" class="form-label">{{ 'DATA_IMPORT.DATE_FORMAT' | translate }}</label>
+                      <select id="def-date" class="form-select" formControlName="dateFormat" data-testid="date-format">
+                        @for (o of dateFormats; track o.value) { <option [value]="o.value">{{ o.labelKey | translate }}</option> }
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              @if (previewErrors.length) {
+              <div class="alert alert-danger" role="alert" data-testid="preview-error">
+                @for (message of previewErrors; track $index) { <div>{{ message }}</div> }
+              </div>
+              }
+              @if (missingRequired) {
+              <p class="small text-muted" data-testid="missing-required">{{ 'DATA_IMPORT.MISSING_REQUIRED' | translate }}</p>
+              }
+              <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-light" data-testid="restart" (click)="restart()">
+                  {{ 'DATA_IMPORT.CHANGE_FILE' | translate }}
+                </button>
+                <button type="button" class="btn btn-primary" data-testid="review" [disabled]="!canReview" (click)="review()">
+                  {{ (previewing ? 'DATA_IMPORT.REVIEWING' : 'DATA_IMPORT.REVIEW') | translate }}
+                </button>
+              </div>
+            </div>
+            }
+
+            @if (step === 3 && preview) {
+            <!-- Paso 3: vista previa -->
+            <div data-testid="step-preview">
+              <div class="alert alert-info" role="status" data-testid="preview-note">
+                <strong>{{ 'DATA_IMPORT.PREVIEW_NOTE' | translate }}</strong>
+                <div data-testid="preview-headline">
+                  {{ 'DATA_IMPORT.PREVIEW_HEADLINE' | translate: { p0: preview.salesTotal, p1: preview.linesTotal, p2: preview.toCreate, p3: preview.alreadyImported, p4: preview.withErrors } }}
+                </div>
+              </div>
+              <ul class="small text-muted" data-testid="preview-scope">
+                <li>{{ 'DATA_IMPORT.SCOPE_PRODUCTS' | translate: { p0: preview.newProducts, p1: preview.existingProducts } }}</li>
+                <li>{{ 'DATA_IMPORT.SCOPE_CUSTOMERS' | translate: { p0: preview.newCustomers, p1: preview.existingCustomers } }}</li>
+                <li>{{ 'DATA_IMPORT.SCOPE_PURCHASES' | translate: { p0: preview.purchasesToCreate, p1: preview.unitsToBuy } }}</li>
+                <li>{{ 'DATA_IMPORT.SCOPE_WITHOUT_POSTING' | translate: { p0: preview.withoutPosting } }}</li>
+              </ul>
+
+              <h6>{{ 'DATA_IMPORT.PROBLEMS_TITLE' | translate }}</h6>
+              @if (preview.problems.length === 0) {
+              <p class="text-muted" data-testid="no-problems">{{ 'DATA_IMPORT.NO_PROBLEMS' | translate }}</p>
+              } @else {
+              <div class="table-responsive">
+                <table class="table table-sm align-middle" data-testid="problems-table">
+                  <caption class="visually-hidden">{{ 'DATA_IMPORT.PROBLEMS_TITLE' | translate }}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_ROW' | translate }}</th>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_SALE' | translate }}</th>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_FIELD' | translate }}</th>
+                      <th scope="col">{{ 'DATA_IMPORT.COL_MESSAGE' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (problem of pagedProblems; track $index) {
+                    <tr class="table-warning" data-testid="problem-row">
+                      <td>{{ problem.row }}</td>
+                      <td>{{ problem.saleKey }}</td>
+                      <td>{{ problem.field }}</td>
+                      <td>{{ problem.message }}</td>
+                    </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (preview.problemsTotal > preview.problems.length) {
+              <p class="small text-muted" data-testid="problems-truncated">
+                {{ 'DATA_IMPORT.PROBLEMS_SHOWN' | translate: { p0: preview.problems.length, p1: preview.problemsTotal } }}
+              </p>
+              }
+              @if (preview.problems.length > problemsPageSize) {
+              <ngb-pagination class="d-flex justify-content-center" size="sm" [collectionSize]="preview.problems.length"
+                [pageSize]="problemsPageSize" [(page)]="problemsPage" [maxSize]="3" [rotate]="true"
+                [attr.aria-label]="'DATA_IMPORT.PROBLEMS_PAGINATION' | translate" />
+              }
+              }
+
+              @if (stale) {
+              <div class="alert alert-warning" role="alert" data-testid="stale-warning">{{ 'DATA_IMPORT.STALE' | translate }}</div>
+              }
+              @if (preview.toCreate === 0) {
+              <p class="text-muted" data-testid="nothing-to-load">{{ 'DATA_IMPORT.NOTHING_TO_LOAD' | translate }}</p>
+              }
+              @if (isRunning) {
+              <div class="alert alert-warning" role="alert" data-testid="import-running">{{ executeError?.message }}</div>
+              } @else if (isConfigMissing) {
+              <div class="alert alert-warning mb-2" role="alert" data-testid="config-missing">{{ executeError?.message }}</div>
+              <app-posting-issues-alert [issues]="postingIssues" settingsLink="/pocketbiz/sales/settings" />
+              } @else if (executeError) {
+              <div class="alert alert-danger" role="alert" data-testid="execute-error">
+                {{ executeError.message }}
+                <button type="button" class="btn btn-light btn-sm ms-2" data-testid="retry-execute" [disabled]="executing"
+                  (click)="runExecute()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+              </div>
+              }
+
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="button" class="btn btn-light" data-testid="back-to-edit" (click)="backToEdit()">
+                  {{ 'DATA_IMPORT.BACK_TO_EDIT' | translate }}
+                </button>
+                @if (stale) {
+                <button type="button" class="btn btn-primary" data-testid="preview-again" [disabled]="!canReview" (click)="review()">
+                  {{ 'DATA_IMPORT.PREVIEW_AGAIN' | translate }}
+                </button>
+                }
+                <button type="button" class="btn btn-warning" data-testid="execute" [disabled]="!canExecute" (click)="execute()">
+                  {{ (executing ? 'DATA_IMPORT.EXECUTING' : 'DATA_IMPORT.EXECUTE') | translate }}
+                </button>
+              </div>
+            </div>
+            }
+
+            @if (step === 4 && result) {
+            <!-- Paso 4: resultado -->
+            <div data-testid="step-result">
+              <div class="alert" [class.alert-success]="!hasFailures" [class.alert-warning]="hasFailures" role="status"
+                data-testid="result-alert">
+                {{ (hasFailures ? 'DATA_IMPORT.RESULT_WARN' : 'DATA_IMPORT.RESULT_OK') | translate }}
+              </div>
+              <app-import-counts [counts]="result.counts" />
+              <h6>{{ 'DATA_IMPORT.ROWS_TITLE' | translate }}</h6>
+              <app-import-rows [runId]="result.id" />
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="button" class="btn btn-light" data-testid="fix-and-retry" (click)="restart()">
+                  {{ 'DATA_IMPORT.FIX_AND_RETRY' | translate }}
+                </button>
+                <a class="btn btn-primary" routerLink="/pocketbiz/sales/import/history" data-testid="go-history">
+                  {{ 'DATA_IMPORT.VIEW_HISTORY' | translate }}
+                </a>
+              </div>
+            </div>
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

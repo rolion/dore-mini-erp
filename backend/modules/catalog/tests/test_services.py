@@ -111,3 +111,20 @@ class GetProductsForPurchaseTests(TestCase):
             with_unit.id: ProductForPurchase(with_unit.id, 'Arroz', True, True, 'kg', True),
             bare.id: ProductForPurchase(bare.id, 'Bolsa', False, False, None, False),
         })
+
+
+class CreateProductForImportTests(TestCase):
+    """Usa el caso de uso real de Catálogo (la importación no debe depender de dobles)."""
+
+    def test_creates_a_sellable_product_with_the_given_category(self):
+        from modules.catalog.services import create_product_for_import
+        company = uuid4()
+        created = create_product_for_import(company, 'Pack queso', Decimal('25.00'), category='finished')
+        self.assertTrue(created.can_sell)
+        self.assertEqual(ProductModel.objects.get(id=created.id, company_id=company).category, 'finished')
+
+    def test_invalid_category_is_rejected_with_a_readable_error(self):
+        from modules.catalog.services import create_product_for_import
+        from shared.import_errors import ImportRejected
+        with self.assertRaises(ImportRejected):
+            create_product_for_import(uuid4(), 'Pack', Decimal('1.00'), category='nope')

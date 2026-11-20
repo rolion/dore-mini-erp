@@ -106,6 +106,18 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/sales/import",
+          "title": "MENUITEMS.SALES.LIST.IMPORT",
+          "adminOnly": true,
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/sales/settings",
           "title": "MENUITEMS.SALES.LIST.SETTINGS",
           "iconType": "",
