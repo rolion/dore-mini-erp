@@ -36,6 +36,14 @@ SALE = ['01/10/2026', 'Café', '5', '10', 'V1', 'Ana', 'Andina', '4']
 
 
 class PreviewTests(SimpleTestCase):
+    def test_preview_flags_sales_that_cannot_post_cost_when_costing_is_not_adopted(self):
+        repo, gw, mapping, opts = setup(rows(SALE), gateway=FakeGateway(costing_valued=False))
+        result = preview(repo, gw, mapping, opts)
+        self.assertEqual((result.to_create, result.with_errors), (0, 1))
+        self.assertEqual(result.problems[0].code, 'costing_not_adopted')
+        repo, gw, mapping, opts = setup(rows(SALE), gateway=FakeGateway(costing_valued=False), infer_accounting=False)
+        self.assertEqual(preview(repo, gw, mapping, opts).to_create, 1)
+
     def test_preview_counts_new_entities_and_purchases_without_writing(self):
         repo, gw, mapping, opts = setup(rows(SALE))
         result = preview(repo, gw, mapping, opts)

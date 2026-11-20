@@ -13,6 +13,7 @@ export type ImportField =
   | 'supplier_name'
   | 'unit_cost'
   | 'discount'
+  | 'category'
   | 'notes';
 
 export interface ImportFieldDef {
@@ -34,6 +35,7 @@ export const IMPORT_FIELDS: readonly ImportFieldDef[] = [
   { key: 'supplier_name', required: false, labelKey: 'DATA_IMPORT.FIELDS.SUPPLIER_NAME' },
   { key: 'unit_cost', required: false, labelKey: 'DATA_IMPORT.FIELDS.UNIT_COST' },
   { key: 'discount', required: false, labelKey: 'DATA_IMPORT.FIELDS.DISCOUNT' },
+  { key: 'category', required: false, labelKey: 'DATA_IMPORT.FIELDS.CATEGORY' },
   { key: 'notes', required: false, labelKey: 'DATA_IMPORT.FIELDS.NOTES' },
 ];
 
@@ -41,6 +43,7 @@ export type ImportMapping = Record<ImportField, string | null>;
 
 export type PaymentMethodCode = 'CASH' | 'QR' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
 export type SalesChannelCode = 'WHATSAPP' | 'FACEBOOK' | 'INSTAGRAM' | 'STORE' | 'FAIR' | 'OTHER';
+export type ProductCategoryCode = 'raw_material' | 'packaging' | 'intermediate' | 'finished' | 'merchandise';
 export type DateFormatCode = 'dmy' | 'mdy' | 'ymd';
 
 /** Opciones con etiqueta traducible (claves literales). */
@@ -61,6 +64,14 @@ export const SALES_CHANNEL_OPTIONS: readonly { value: SalesChannelCode; labelKey
   { value: 'OTHER', labelKey: 'DATA_IMPORT.CHANNEL.OTHER' },
 ];
 
+export const PRODUCT_CATEGORY_OPTIONS: readonly { value: ProductCategoryCode; labelKey: string }[] = [
+  { value: 'finished', labelKey: 'DATA_IMPORT.CATEGORY.FINISHED' },
+  { value: 'packaging', labelKey: 'DATA_IMPORT.CATEGORY.PACKAGING' },
+  { value: 'merchandise', labelKey: 'DATA_IMPORT.CATEGORY.MERCHANDISE' },
+  { value: 'intermediate', labelKey: 'DATA_IMPORT.CATEGORY.INTERMEDIATE' },
+  { value: 'raw_material', labelKey: 'DATA_IMPORT.CATEGORY.RAW_MATERIAL' },
+];
+
 export const DATE_FORMAT_OPTIONS: readonly { value: DateFormatCode; labelKey: string }[] = [
   { value: 'dmy', labelKey: 'DATA_IMPORT.DATE.DMY' },
   { value: 'mdy', labelKey: 'DATA_IMPORT.DATE.MDY' },
@@ -74,6 +85,7 @@ export interface ImportOptions {
   inferAccounting: boolean;
   defaultPaymentMethod: PaymentMethodCode;
   defaultSalesChannel: SalesChannelCode;
+  defaultCategory: ProductCategoryCode;
   warehouseId: string | null;
   dateFormat: DateFormatCode;
 }

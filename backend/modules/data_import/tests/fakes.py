@@ -94,7 +94,7 @@ class FakeGateway:
     def find_supplier(self, key):
         return None
 
-    def create_product(self, name, sale_price, tracks_stock, can_buy):
+    def create_product(self, name, sale_price, tracks_stock, can_buy, category):
         ref = ProductRef(uuid4(), name, True, True, can_buy, tracks_stock)
         self.products[name.lower()] = ref
         self.created_products.append(name)

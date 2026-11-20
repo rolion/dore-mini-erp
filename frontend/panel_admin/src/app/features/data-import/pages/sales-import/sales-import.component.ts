@@ -23,6 +23,7 @@ import {
   ImportResult,
   ImportUpload,
   PAYMENT_METHOD_OPTIONS,
+  PRODUCT_CATEGORY_OPTIONS,
   SALES_CHANNEL_OPTIONS,
   newUuid,
 } from '../../models/sales-import';
@@ -85,6 +86,7 @@ export class SalesImportComponent implements OnInit {
     inferAccounting: [true],
     defaultPaymentMethod: this.fb.control<ImportOptions['defaultPaymentMethod']>('CASH'),
     defaultSalesChannel: this.fb.control<ImportOptions['defaultSalesChannel']>('OTHER'),
+    defaultCategory: this.fb.control<ImportOptions['defaultCategory']>('finished'),
     warehouseId: [''],
     dateFormat: this.fb.control<ImportOptions['dateFormat']>('dmy'),
   });
@@ -192,6 +194,7 @@ export class SalesImportComponent implements OnInit {
       inferAccounting: caps.accounting,
       defaultPaymentMethod: 'CASH',
       defaultSalesChannel: 'OTHER',
+      defaultCategory: 'finished',
       warehouseId: this.defaultWarehouse(caps),
       dateFormat: 'dmy',
     });
@@ -266,6 +269,8 @@ export class SalesImportComponent implements OnInit {
     const options = PAYMENT_METHOD_OPTIONS.filter((o) => allowed.includes(o.value));
     return options.length ? options : PAYMENT_METHOD_OPTIONS;
   }
+
+  readonly categoryOptions = PRODUCT_CATEGORY_OPTIONS;
 
   get channelOptions() {
     const allowed = this.capabilities?.salesChannels ?? [];

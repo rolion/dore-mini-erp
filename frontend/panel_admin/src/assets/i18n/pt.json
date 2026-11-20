@@ -3243,12 +3243,21 @@
       "SUPPLIER_NAME": "Fornecedor",
       "UNIT_COST": "Custo unitário",
       "DISCOUNT": "Desconto",
+      "CATEGORY": "Categoria",
       "NOTES": "Observações"
     },
     "DEFAULTS_TITLE": "Valores padrão",
     "DEFAULTS_HELP": "Usados quando a coluna não está atribuída.",
     "DEFAULT_PAYMENT": "Forma de pagamento",
     "DEFAULT_CHANNEL": "Canal",
+    "DEFAULT_CATEGORY": "Categoria dos produtos novos",
+    "CATEGORY": {
+      "FINISHED": "Produto acabado",
+      "PACKAGING": "Embalagem (packaging)",
+      "MERCHANDISE": "Mercadoria",
+      "INTERMEDIATE": "Intermediário",
+      "RAW_MATERIAL": "Matéria-prima"
+    },
     "DEFAULT_WAREHOUSE": "Depósito de saída",
     "DATE_FORMAT": "Formato de data",
     "PAYMENT": {

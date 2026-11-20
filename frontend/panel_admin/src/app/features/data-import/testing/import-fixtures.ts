@@ -12,6 +12,7 @@ export const FULL_MAPPING: ImportMapping = {
   supplier_name: null,
   unit_cost: null,
   discount: null,
+  category: null,
   notes: null,
 };
 

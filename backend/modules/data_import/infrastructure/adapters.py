@@ -59,7 +59,8 @@ class SalesImportAdapter:
                                for w in inventory_services.list_active_warehouses(self.company_id)) if inventory else ()
             self._caps = Capabilities(
                 customers='customers' in enabled, inventory=inventory, purchases='purchases' in enabled,
-                accounting='accounting' in enabled, costing='costing' in enabled, warehouses=warehouses)
+                accounting='accounting' in enabled, costing='costing' in enabled, warehouses=warehouses,
+                costing_valued='costing' not in enabled or costing_services.is_valued(self.company_id))
         return self._caps
 
     def _product_index(self) -> dict[str, ProductRef]:
@@ -115,8 +116,10 @@ class SalesImportAdapter:
 
     # --- escritura (por fachadas; reglas del módulo dueño) -------------------------------------------------
 
-    def create_product(self, name: str, sale_price: Decimal, tracks_stock: bool, can_buy: bool) -> ProductRef:
-        created = catalog_services.create_product_for_import(self.company_id, name, sale_price, tracks_stock, can_buy)
+    def create_product(self, name: str, sale_price: Decimal, tracks_stock: bool, can_buy: bool,
+                       category: str) -> ProductRef:
+        created = catalog_services.create_product_for_import(
+            self.company_id, name, sale_price, tracks_stock, can_buy, category)
         ref = ProductRef(created.id, created.name, created.active, created.can_sell, created.can_buy,
                          created.tracks_stock)
         self._product_index()[normalize_name(created.name)] = ref

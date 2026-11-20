@@ -103,6 +103,25 @@ class SalesRowsTests(SimpleTestCase):
         self.assertEqual(parsed.groups[0].total, Decimal('20.00'))
         self.assertEqual(parsed.problems[0].code, 'discount_exceeds_subtotal')
 
+    def test_product_category_column_and_default(self):
+        headers = HEADERS + ['Categoría']
+        mapping = validate_mapping(suggest_mapping(headers), headers)
+        rows = [['01/02/2026', 'Pack', '1', '10', 'A1', '', '', 'Paquete terminado'],
+                ['01/02/2026', 'Bolsa', '1', '1', 'A2', '', '', 'packaging'],
+                ['01/02/2026', 'Otro', '1', '1', 'A3', '', '', ''],
+                ['01/02/2026', 'Raro', '1', '1', 'A4', '', '', 'xyz']]
+        parsed = parse_sales(headers, rows, mapping, parse_options({}), TODAY)
+        self.assertEqual([g.lines[0].category for g in parsed.groups], ['finished', 'packaging', 'finished'])
+        self.assertEqual(parsed.problems[0].code, 'invalid_category')
+
+    def test_repeated_product_in_a_sale_is_merged_or_rejected_when_prices_differ(self):
+        parsed = _parse([['01/02/2026', 'Café', '1', '10', 'A1', '', ''],
+                         ['01/02/2026', 'café', '2', '10', 'A1', '', ''],
+                         ['01/02/2026', 'Té', '1', '5', 'A2', '', ''], ['01/02/2026', 'Té', '1', '6', 'A2', '', '']])
+        self.assertEqual([(l.quantity, l.row) for l in parsed.groups[0].lines], [(3, 1)])
+        self.assertEqual(len(parsed.groups), 1)
+        self.assertEqual(parsed.problems[0].code, 'duplicate_product_price')
+
     def test_row_errors_invalidate_only_their_sale(self):
         parsed = _parse([['01/02/2026', 'Café', '2', '10', 'A1', '', ''], ['01/02/2026', 'Té', 'x', '5', 'A2', '', '']])
         self.assertEqual(len(parsed.groups), 1)

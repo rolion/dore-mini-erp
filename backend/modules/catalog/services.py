@@ -171,7 +171,7 @@ def _default_unit_id(company_id: UUID):
 
 
 def create_product_for_import(company_id: UUID, name: str, sale_price: Decimal, tracks_stock: bool = False,
-                              can_buy: bool = False) -> ProductForImport:
+                              can_buy: bool = False, category: str = 'finished') -> ProductForImport:
     """Crea un producto vendible activo con el caso de uso de Catálogo. Con `tracks_stock` controla stock con la
     unidad por defecto (Inventario debe estar habilitado). Lanza los errores de dominio de Catálogo."""
     from modules.catalog.application.commands import CreateProduct, StockControl
@@ -192,7 +192,7 @@ def create_product_for_import(company_id: UUID, name: str, sale_price: Decimal, 
 
     try:
         product = CreateProduct(DjangoProductRepository(company_id), stock).execute(
-            name=name, sale_price=sale_price, can_buy=can_buy, can_sell=True, **kwargs)
+            name=name, sale_price=sale_price, category=category, can_buy=can_buy, can_sell=True, **kwargs)
     except (ProductValidationError, UnitValidationError) as exc:
         field, message = first_error(exc.errors)
         raise ImportRejected('product_rejected', message, field) from exc

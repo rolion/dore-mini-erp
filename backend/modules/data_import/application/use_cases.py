@@ -196,6 +196,12 @@ class PreviewSalesImport:
                 warehouse_flagged = True
                 problem(group.first_row, 'warehouse_id', 'warehouse_required',
                         'Elige el almacén de salida: hay productos con control de stock.')
+            posts = bool(opts.infer_accounting and caps.accounting and gateway.is_covered(group.sale_date))
+            if posts and caps.costing and not caps.costing_valued and any(
+                    planner.controls_stock(p) for p in products.values()):
+                problem(group.first_row, 'sale_date', 'costing_not_adopted',
+                        'Para contabilizar el costo de ventas, adopta antes la valoración inicial de las existencias '
+                        'en Costeo (o desmarca «Inferir movimientos contables»).')
             if problems:
                 result.with_errors += 1
                 result.problems.extend(problems)
@@ -213,7 +219,7 @@ class PreviewSalesImport:
                 seen_customers.add(group.customer_key)
                 result.existing_customers += customer is not None
                 result.new_customers += customer is None
-            if opts.infer_accounting and caps.accounting and not gateway.is_covered(group.sale_date):
+            if opts.infer_accounting and caps.accounting and not posts:
                 result.without_posting += 1
 
     def _check_products(self, group: SaleGroup, opts: ImportOptions, problem) -> dict[str, ProductRef | None]:
@@ -401,7 +407,7 @@ class ExecuteSalesImport:
                                          'product_name')
                 tracks = planner.controls_stock(None)
                 product = gateway.create_product(line.product_name, line.unit_price, tracks,
-                                                 can_buy=opts.infer_inventory)
+                                                 can_buy=opts.infer_inventory, category=line.category)
                 refs['product_ids'].append(str(product.id))
             products[line.product_key] = product
         self._infer_purchases(group, products, opts, planner, warehouse_id, refs)

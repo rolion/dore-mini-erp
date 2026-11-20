@@ -3243,12 +3243,21 @@
       "SUPPLIER_NAME": "Supplier",
       "UNIT_COST": "Unit cost",
       "DISCOUNT": "Discount",
+      "CATEGORY": "Category",
       "NOTES": "Notes"
     },
     "DEFAULTS_TITLE": "Default values",
     "DEFAULTS_HELP": "Used when the column is not assigned.",
     "DEFAULT_PAYMENT": "Payment method",
     "DEFAULT_CHANNEL": "Channel",
+    "DEFAULT_CATEGORY": "Category of new products",
+    "CATEGORY": {
+      "FINISHED": "Finished product",
+      "PACKAGING": "Packaging",
+      "MERCHANDISE": "Merchandise",
+      "INTERMEDIATE": "Intermediate",
+      "RAW_MATERIAL": "Raw material"
+    },
     "DEFAULT_WAREHOUSE": "Issuing warehouse",
     "DATE_FORMAT": "Date format",
     "PAYMENT": {

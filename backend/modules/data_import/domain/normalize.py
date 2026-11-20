@@ -156,6 +156,14 @@ _PAYMENT = {
     'CARD': ('tarjeta', 'card', 'cartao', 'debito', 'credito', 'tarjeta debito', 'tarjeta credito'),
     'OTHER': ('otro', 'otros', 'other', 'outro'),
 }
+_CATEGORY = {
+    'raw_material': ('materia prima', 'insumo', 'insumos', 'raw material', 'raw_material', 'materia-prima'),
+    'packaging': ('packaging', 'empaque', 'envase', 'embalaje', 'paquete', 'pack'),
+    'intermediate': ('intermedio', 'semielaborado', 'intermediate', 'semi elaborado'),
+    'finished': ('terminado', 'producto terminado', 'paquete terminado', 'finished', 'acabado', 'pt',
+                 'producto final'),
+    'merchandise': ('mercaderia', 'mercancia', 'reventa', 'merchandise', 'mercadoria'),
+}
 _CHANNEL = {
     'WHATSAPP': ('whatsapp', 'wsp', 'wa'),
     'FACEBOOK': ('facebook', 'fb'),
@@ -187,4 +195,12 @@ def parse_sales_channel(raw: object) -> str:
     value = _lookup(_CHANNEL, raw)
     if value is None:
         raise ValueProblem('invalid_sales_channel', f'El canal «{clean_text(raw)}» no se reconoce.')
+    return value
+
+
+def parse_product_category(raw: object) -> str:
+    value = _lookup(_CATEGORY, raw)
+    if value is None:
+        raise ValueProblem('invalid_category', f'La categoría «{clean_text(raw)}» no se reconoce (materia prima, '
+                           'empaque, intermedio, producto terminado o mercadería).')
     return value

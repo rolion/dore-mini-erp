@@ -1,7 +1,7 @@
 """De filas del archivo a ventas: validación por celda, agrupación por n.º de venta y clave de idempotencia."""
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
 
@@ -14,6 +14,7 @@ from .normalize import (
     parse_date,
     parse_money_value,
     parse_payment_method,
+    parse_product_category,
     parse_quantity,
     parse_sales_channel,
 )
@@ -31,6 +32,7 @@ class SaleLine:
     unit_price: Decimal
     unit_cost: Decimal | None
     supplier_name: str
+    category: str = 'finished'
 
     @property
     def subtotal(self) -> Decimal:
@@ -142,6 +144,8 @@ def parse_sales(headers: list[str], rows: list[list[str]], mapping: dict[str, st
         check('unit_price', lambda: parse_money_value(get('unit_price'), 'El precio unitario'), 'unit_price')
         check('payment_method', lambda: optional(
             parse_payment_method, 'payment_method', options.default_payment_method), 'method')
+        check('category', lambda: optional(
+            parse_product_category, 'category', options.default_category), 'category')
         check('sales_channel', lambda: optional(
             parse_sales_channel, 'sales_channel', options.default_sales_channel), 'channel')
         cost_raw = get('unit_cost')
@@ -186,15 +190,33 @@ def parse_sales(headers: list[str], rows: list[list[str]], mapping: dict[str, st
                                               'El descuento no puede superar el subtotal de la venta.'))
             result.invalid_sales += 1
             continue
+        lines: dict[str, SaleLine] = {}
+        conflict = None
+        for m in members:
+            line = SaleLine(
+                row=m.row, product_name=str(m.values['product_name']), product_key=str(m.values['product_key']),
+                quantity=int(m.values['quantity']), unit_price=m.values['unit_price'],
+                unit_cost=m.values['unit_cost'], supplier_name=str(m.values['supplier_name']),
+                category=str(m.values['category']))
+            current = lines.get(line.product_key)
+            if current is None:
+                lines[line.product_key] = line
+            elif current.unit_price != line.unit_price:
+                conflict = conflict or RowProblem(
+                    m.row, key, 'unit_price', 'duplicate_product_price',
+                    f'El producto «{line.product_name}» aparece dos veces en la venta con precios distintos '
+                    f'(fila {current.row}).')
+            else:  # mismo producto y precio: el pedido no admite líneas repetidas, se suman las cantidades
+                lines[line.product_key] = replace(current, quantity=current.quantity + line.quantity)
+        if conflict:
+            result.problems.append(conflict)
+            result.invalid_sales += 1
+            continue
         result.groups.append(SaleGroup(
             key=key, number=first.number, first_row=first.row, sale_date=first.values['date'],
             customer_name=str(first.values['customer_name']), customer_key=str(first.values['customer_key']),
             payment_method=str(first.values['method']), sales_channel=str(first.values['channel']),
-            notes=str(first.values['notes']), discount=discount,
-            lines=tuple(SaleLine(
-                row=m.row, product_name=str(m.values['product_name']), product_key=str(m.values['product_key']),
-                quantity=int(m.values['quantity']), unit_price=m.values['unit_price'],
-                unit_cost=m.values['unit_cost'], supplier_name=str(m.values['supplier_name'])) for m in members)))
+            notes=str(first.values['notes']), discount=discount, lines=tuple(lines.values())))
     result.problems.sort(key=lambda p: (p.row, p.field))
     result.groups.sort(key=lambda g: (g.sale_date, g.first_row))
     return result

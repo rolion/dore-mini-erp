@@ -6,10 +6,11 @@ from .normalize import DATE_FORMATS, normalize_header
 
 REQUIRED_FIELDS = ('sale_date', 'product_name', 'quantity', 'unit_price')
 OPTIONAL_FIELDS = ('sale_number', 'customer_name', 'payment_method', 'sales_channel', 'supplier_name', 'unit_cost',
-                   'discount', 'notes')
+                   'discount', 'category', 'notes')
 TARGET_FIELDS = REQUIRED_FIELDS + OPTIONAL_FIELDS
 
 PAYMENT_METHODS = ('CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER')
+PRODUCT_CATEGORIES = ('raw_material', 'packaging', 'intermediate', 'finished', 'merchandise')
 SALES_CHANNELS = ('WHATSAPP', 'FACEBOOK', 'INSTAGRAM', 'STORE', 'FAIR', 'OTHER')
 
 _SYNONYMS: dict[str, tuple[str, ...]] = {
@@ -29,6 +30,8 @@ _SYNONYMS: dict[str, tuple[str, ...]] = {
     'supplier_name': ('proveedor', 'supplier', 'fornecedor', 'nombre proveedor'),
     'unit_cost': ('costo', 'costo unitario', 'cost', 'unit cost', 'custo', 'custo unitario', 'costo compra'),
     'discount': ('descuento', 'discount', 'desconto', 'rebaja', 'dto'),
+    'category': ('categoria', 'categoria producto', 'categoria del producto', 'category', 'tipo producto',
+                 'tipo de producto', 'categoria de producto'),
     'notes': ('notas', 'nota', 'observaciones', 'observacion', 'notes', 'comentario', 'comentarios'),
 }
 
@@ -87,6 +90,7 @@ class ImportOptions:
     infer_accounting: bool
     default_payment_method: str
     default_sales_channel: str
+    default_category: str
     warehouse_id: str | None
     date_format: str
 
@@ -94,7 +98,8 @@ class ImportOptions:
         return {'infer_products': self.infer_products, 'infer_customers': self.infer_customers,
                 'infer_inventory': self.infer_inventory, 'infer_accounting': self.infer_accounting,
                 'default_payment_method': self.default_payment_method,
-                'default_sales_channel': self.default_sales_channel, 'warehouse_id': self.warehouse_id,
+                'default_sales_channel': self.default_sales_channel,
+                'default_category': self.default_category, 'warehouse_id': self.warehouse_id,
                 'date_format': self.date_format}
 
 
@@ -113,6 +118,9 @@ def parse_options(raw: object) -> ImportOptions:
     channel = data.get('default_sales_channel') or 'OTHER'
     if channel not in SALES_CHANNELS:
         errors['options.default_sales_channel'] = ['El canal de venta no es válido.']
+    category = data.get('default_category') or 'finished'
+    if category not in PRODUCT_CATEGORIES:
+        errors['options.default_category'] = ['La categoría no es válida.']
     date_format = data.get('date_format') or 'dmy'
     if date_format not in DATE_FORMATS:
         errors['options.date_format'] = ['El formato de fecha no es válido.']
@@ -121,5 +129,6 @@ def parse_options(raw: object) -> ImportOptions:
         errors['options.warehouse_id'] = ['El almacén no es válido.']
     if errors:
         raise ImportValidationError(errors)
-    return ImportOptions(default_payment_method=method, default_sales_channel=channel, warehouse_id=warehouse,
+    return ImportOptions(default_payment_method=method, default_sales_channel=channel, default_category=category,
+                         warehouse_id=warehouse,
                          date_format=date_format, **flags)

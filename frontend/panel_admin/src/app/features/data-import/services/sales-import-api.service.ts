@@ -223,6 +223,7 @@ function toBody(request: ImportRequest): Record<string, unknown> {
       infer_accounting: o.inferAccounting,
       default_payment_method: o.defaultPaymentMethod,
       default_sales_channel: o.defaultSalesChannel,
+      default_category: o.defaultCategory,
       warehouse_id: o.warehouseId,
       date_format: o.dateFormat,
     },

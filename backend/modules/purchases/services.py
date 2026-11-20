@@ -87,11 +87,9 @@ def import_received_purchase(company_id: UUID, *, supplier_id: UUID, purchase_da
         PurchasePostingAdapter,
         StockEntryAdapter,
     )
-    from modules.purchases.infrastructure.django.repositories import (
-        DjangoPaymentRepository,
-        DjangoPurchaseRepository,
-        DjangoReceiptRepository,
-    )
+    from modules.purchases.infrastructure.django.payment_repository import DjangoPaymentRepository
+    from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
+    from modules.purchases.infrastructure.django.receipt_repository import DjangoReceiptRepository
     from uuid import uuid4
 
     from shared.import_errors import ImportRejected, first_error

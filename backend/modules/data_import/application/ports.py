@@ -22,6 +22,7 @@ class Capabilities:
     accounting: bool
     costing: bool
     warehouses: tuple[Warehouse, ...] = field(default_factory=tuple)
+    costing_valued: bool = True  # Costeo adoptó la valoración inicial (sin ella no hay costo contabilizable)
 
 
 @dataclass(frozen=True)
@@ -66,7 +67,8 @@ class SalesImportGateway(Protocol):
 
     def find_supplier(self, key: str) -> UUID | None: ...
 
-    def create_product(self, name: str, sale_price: Decimal, tracks_stock: bool, can_buy: bool) -> ProductRef: ...
+    def create_product(self, name: str, sale_price: Decimal, tracks_stock: bool, can_buy: bool,
+                       category: str) -> ProductRef: ...
 
     def create_customer(self, name: str) -> CustomerRef: ...
 

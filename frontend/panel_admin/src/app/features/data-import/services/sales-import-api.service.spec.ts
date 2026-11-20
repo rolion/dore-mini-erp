@@ -18,6 +18,7 @@ const MAPPING: ImportMapping = {
   supplier_name: null,
   unit_cost: null,
   discount: null,
+  category: null,
   notes: null,
 };
 
@@ -30,6 +31,7 @@ const REQUEST: ImportRequest = {
     inferAccounting: true,
     defaultPaymentMethod: 'CASH',
     defaultSalesChannel: 'OTHER',
+    defaultCategory: 'finished',
     warehouseId: null,
     dateFormat: 'dmy',
   },
@@ -95,6 +97,7 @@ describe('SalesImportApiService', () => {
         infer_accounting: true,
         default_payment_method: 'CASH',
         default_sales_channel: 'OTHER',
+        default_category: 'finished',
         warehouse_id: null,
         date_format: 'dmy',
       },
