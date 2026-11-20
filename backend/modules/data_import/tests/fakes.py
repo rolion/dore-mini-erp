@@ -127,7 +127,7 @@ class FakeGateway:
         return uuid4()
 
     def deliver_sale(self, on, sales_channel, customer_id, lines, payment_method, warehouse_id, post_accounting,
-                     notes):
+                     notes, discount):
         if self.fail_sale_with is not None:
             raise self.fail_sale_with
         for line in lines:

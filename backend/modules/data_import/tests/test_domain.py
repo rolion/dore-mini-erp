@@ -92,6 +92,17 @@ class SalesRowsTests(SimpleTestCase):
         self.assertEqual(parsed.groups[0].total, Decimal('26.00'))
         self.assertEqual(parsed.groups[0].key, 'n:a1')
 
+    def test_discount_is_taken_from_the_sale_and_lowers_the_total(self):
+        headers = HEADERS + ['Descuento']
+        mapping = validate_mapping(suggest_mapping(headers), headers)
+        rows = [['01/02/2026', 'Café', '2', '10', 'A1', 'Ana', '', '5'],
+                ['01/02/2026', 'Té', '1', '5', 'A1', 'Ana', '', ''],
+                ['01/02/2026', 'Café', '1', '10', 'A2', 'Ana', '', '50']]
+        parsed = parse_sales(headers, rows, mapping, parse_options({}), TODAY)
+        self.assertEqual(parsed.groups[0].discount, Decimal('5.00'))
+        self.assertEqual(parsed.groups[0].total, Decimal('20.00'))
+        self.assertEqual(parsed.problems[0].code, 'discount_exceeds_subtotal')
+
     def test_row_errors_invalidate_only_their_sale(self):
         parsed = _parse([['01/02/2026', 'Café', '2', '10', 'A1', '', ''], ['01/02/2026', 'Té', 'x', '5', 'A2', '', '']])
         self.assertEqual(len(parsed.groups), 1)

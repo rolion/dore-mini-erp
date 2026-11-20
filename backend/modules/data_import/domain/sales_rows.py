@@ -49,10 +49,15 @@ class SaleGroup:
     sales_channel: str
     notes: str
     lines: tuple[SaleLine, ...]
+    discount: Decimal = Decimal('0.00')  # descuento de toda la venta (se toma de la primera fila que lo traiga)
+
+    @property
+    def subtotal(self) -> Decimal:
+        return sum((line.subtotal for line in self.lines), Decimal('0.00'))
 
     @property
     def total(self) -> Decimal:
-        return sum((line.subtotal for line in self.lines), Decimal('0.00'))
+        return self.subtotal - self.discount
 
     @property
     def rows(self) -> tuple[int, ...]:
@@ -144,6 +149,11 @@ def parse_sales(headers: list[str], rows: list[list[str]], mapping: dict[str, st
             check('unit_cost', lambda: parse_money_value(cost_raw, 'El costo unitario'), 'unit_cost')
         else:
             values['unit_cost'] = None
+        discount_raw = get('discount')
+        if discount_raw:
+            check('discount', lambda: parse_money_value(discount_raw, 'El descuento'), 'discount')
+        else:
+            values['discount'] = Decimal('0.00')
         values['supplier_name'] = clean_text(get('supplier_name'), NAME_MAX)
         values['customer_name'] = clean_text(get('customer_name'), NAME_MAX)
         values['customer_key'] = normalize_name(values['customer_name'])
@@ -170,11 +180,17 @@ def parse_sales(headers: list[str], rows: list[list[str]], mapping: dict[str, st
             result.invalid_sales += 1
             continue
         first = members[0]
+        discount = next((m.values['discount'] for m in members if m.values['discount']), Decimal('0.00'))
+        if discount > sum((Decimal(m.values['unit_price']) * int(m.values['quantity']) for m in members), Decimal(0)):
+            result.problems.append(RowProblem(first.row, key, 'discount', 'discount_exceeds_subtotal',
+                                              'El descuento no puede superar el subtotal de la venta.'))
+            result.invalid_sales += 1
+            continue
         result.groups.append(SaleGroup(
             key=key, number=first.number, first_row=first.row, sale_date=first.values['date'],
             customer_name=str(first.values['customer_name']), customer_key=str(first.values['customer_key']),
             payment_method=str(first.values['method']), sales_channel=str(first.values['channel']),
-            notes=str(first.values['notes']),
+            notes=str(first.values['notes']), discount=discount,
             lines=tuple(SaleLine(
                 row=m.row, product_name=str(m.values['product_name']), product_key=str(m.values['product_key']),
                 quantity=int(m.values['quantity']), unit_price=m.values['unit_price'],
@@ -189,10 +205,17 @@ _CONSISTENT = (('date', 'sale_date', 'la fecha'), ('customer_key', 'customer_nam
 
 
 def _check_consistency(key: str, members: list[_Row]) -> None:
-    """Las líneas de una misma venta deben coincidir en fecha, cliente, método de pago y canal."""
+    """Las líneas de una misma venta deben coincidir en fecha, cliente, método de pago y canal; el descuento, si
+    se repite en varias filas, debe ser el mismo."""
     first = members[0]
     if len(members) == 1 or first.problems:
         return
+    given = [m for m in members if m.values.get('discount')]
+    for other in given[1:]:
+        if other.values['discount'] != given[0].values['discount']:
+            other.problems.append(RowProblem(
+                other.row, key, 'discount', 'sale_inconsistent',
+                f'El descuento de una venta se indica una sola vez o se repite igual (fila {given[0].row}).'))
     for other in members[1:]:
         for value_key, field_name, label in _CONSISTENT:
             if value_key in other.values and value_key in first.values and other.values[value_key] != first.values[

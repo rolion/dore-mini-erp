@@ -12,6 +12,7 @@ export type ImportField =
   | 'sales_channel'
   | 'supplier_name'
   | 'unit_cost'
+  | 'discount'
   | 'notes';
 
 export interface ImportFieldDef {
@@ -32,6 +33,7 @@ export const IMPORT_FIELDS: readonly ImportFieldDef[] = [
   { key: 'sales_channel', required: false, labelKey: 'DATA_IMPORT.FIELDS.SALES_CHANNEL' },
   { key: 'supplier_name', required: false, labelKey: 'DATA_IMPORT.FIELDS.SUPPLIER_NAME' },
   { key: 'unit_cost', required: false, labelKey: 'DATA_IMPORT.FIELDS.UNIT_COST' },
+  { key: 'discount', required: false, labelKey: 'DATA_IMPORT.FIELDS.DISCOUNT' },
   { key: 'notes', required: false, labelKey: 'DATA_IMPORT.FIELDS.NOTES' },
 ];
 

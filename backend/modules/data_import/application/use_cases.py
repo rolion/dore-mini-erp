@@ -409,7 +409,7 @@ class ExecuteSalesImport:
             group.sale_date, group.sales_channel, customer_id,
             [SaleLineInput(products[line.product_key].id, line.quantity, line.unit_price) for line in group.lines],
             group.payment_method, warehouse_id, opts.infer_accounting and caps.accounting,
-            _sale_note(group, run_id))
+            _sale_note(group, run_id), group.discount)
 
     def _infer_purchases(self, group: SaleGroup, products: dict[str, ProductRef], opts: ImportOptions,
                          planner: _Planner, warehouse_id: UUID | None, refs: dict) -> None:

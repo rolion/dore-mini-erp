@@ -6,7 +6,7 @@ from .normalize import DATE_FORMATS, normalize_header
 
 REQUIRED_FIELDS = ('sale_date', 'product_name', 'quantity', 'unit_price')
 OPTIONAL_FIELDS = ('sale_number', 'customer_name', 'payment_method', 'sales_channel', 'supplier_name', 'unit_cost',
-                   'notes')
+                   'discount', 'notes')
 TARGET_FIELDS = REQUIRED_FIELDS + OPTIONAL_FIELDS
 
 PAYMENT_METHODS = ('CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER')
@@ -28,6 +28,7 @@ _SYNONYMS: dict[str, tuple[str, ...]] = {
     'sales_channel': ('canal', 'canal venta', 'canal de venta', 'channel', 'sales channel', 'canal de vendas'),
     'supplier_name': ('proveedor', 'supplier', 'fornecedor', 'nombre proveedor'),
     'unit_cost': ('costo', 'costo unitario', 'cost', 'unit cost', 'custo', 'custo unitario', 'costo compra'),
+    'discount': ('descuento', 'discount', 'desconto', 'rebaja', 'dto'),
     'notes': ('notas', 'nota', 'observaciones', 'observacion', 'notes', 'comentario', 'comentarios'),
 }
 

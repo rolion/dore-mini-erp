@@ -3242,6 +3242,7 @@
       "SALES_CHANNEL": "Channel",
       "SUPPLIER_NAME": "Supplier",
       "UNIT_COST": "Unit cost",
+      "DISCOUNT": "Discount",
       "NOTES": "Notes"
     },
     "DEFAULTS_TITLE": "Default values",

@@ -146,12 +146,13 @@ class SalesImportAdapter:
 
     def deliver_sale(self, on, sales_channel: str, customer_id: UUID | None, lines: list[SaleLineInput],
                      payment_method: str, warehouse_id: UUID | None, post_accounting: bool,
-                     notes: str) -> SaleOutcome:
+                     notes: str, discount: Decimal) -> SaleOutcome:
         sale = sales_services.import_delivered_sale(
             self.company_id, sale_date=on, sales_channel=sales_channel, customer_id=customer_id,
             lines=[sales_services.ImportedSaleLine(l.product_id, l.quantity, l.unit_price) for l in lines],
             payment_method=payment_method, warehouse_id=warehouse_id, user_id=self.user_id,
-            user_name=self.user_name, post_accounting=post_accounting, notes=notes)
+            user_name=self.user_name, post_accounting=post_accounting, notes=notes,
+            discount=discount)
         self._costs.clear()
         return SaleOutcome(sale.order_id, sale.code, sale.without_posting)
 

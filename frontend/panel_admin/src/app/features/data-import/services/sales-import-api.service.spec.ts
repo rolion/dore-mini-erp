@@ -17,6 +17,7 @@ const MAPPING: ImportMapping = {
   sales_channel: null,
   supplier_name: null,
   unit_cost: null,
+  discount: null,
   notes: null,
 };
 

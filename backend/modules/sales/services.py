@@ -166,10 +166,10 @@ class ImportedSale:
 def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: str, customer_id: UUID | None,
                           lines: list[ImportedSaleLine], payment_method: str, warehouse_id: UUID | None,
                           user_id: UUID | None, user_name: str, post_accounting: bool = True,
-                          notes: str = '') -> ImportedSale:
+                          notes: str = '', discount: Decimal = Decimal('0')) -> ImportedSale:
     """Registra una venta histórica completa con los casos de uso de Ventas: crea el pedido en su fecha con el
     precio del archivo, lo confirma, lo marca listo, lo entrega (salida de stock, costo y reconocimiento contable) y
-    registra el cobro por el total en la misma fecha.
+    registra el cobro por el total (con el descuento del archivo) en la misma fecha.
 
     Corre en la transacción de quien llama (todo o nada). Con `post_accounting=False` no genera asientos. Lanza
     `shared.import_errors.ImportRejected` con el mensaje del módulo que rechazó la operación.
@@ -214,6 +214,8 @@ def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: s
                 raise ImportRejected('product_not_sellable', f'El producto «{product.name}» no se puede vender.',
                                      'product_name')
             order.add_item(product.id, product.name, line.unit_price, line.quantity)
+        if discount:
+            order.apply_discount(discount)  # el archivo manda: sin el tope porcentual de la empresa
         order = repository.save(order)
         StartOrderPreparation(repository).execute(order.id)
         MarkOrderReady(repository).execute(order.id)
