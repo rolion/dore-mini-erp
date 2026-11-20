@@ -11,7 +11,7 @@ import { Product, ProductApiError } from '../../models/product';
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../services/products-api.service';
 import { makeProduct } from '../../testing/product-fixtures';
-import { ProductListComponent } from './product-list.component';
+import { COMPACT_QUERY, ProductListComponent } from './product-list.component';
 
 interface ToggleHook {
   confirmToggle(product: Product): Promise<boolean>;
@@ -109,9 +109,42 @@ describe('ProductListComponent', () => {
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.textContent).toContain('Bs 5.50');
+    const rows = Array.from(el.querySelectorAll('[data-testid="product-row"]'));
+    expect(rows[1].classList).toContain('text-muted');
+    expect(rows[0].classList).not.toContain('text-muted');
+    component.compact = true;
+    fixture.detectChanges();
     const cards = Array.from(el.querySelectorAll('[data-testid="product-card"]'));
     expect(cards[1].classList).toContain('text-muted');
     expect(cards[0].classList).not.toContain('text-muted');
+  });
+
+  it('cuts to cards under 957 px (AC-05)', () => {
+    expect(COMPACT_QUERY).toBe('(max-width: 956.98px)');
+  });
+
+  it('shows a table, not cards, from 957 px (AC-01, AC-03, AC-06)', () => {
+    spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
+    fixture.detectChanges();
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="product-cards"]')).toBeNull();
+    const heads = Array.from(el.querySelectorAll('th')).map((th) => th.textContent?.trim());
+    expect(heads).toEqual(['Nombre', 'Categoría', 'Usos', 'Precio', 'Estado', 'Unidad base', 'Acciones']);
+    const rows = el.querySelectorAll('[data-testid="product-row"]');
+    expect(rows.length).toBe(2);
+    expect(rows[0].textContent).toContain('Cuñapé grande');
+    expect(rows[1].textContent).toContain('Bs 5.50');
+    expect(rows[0].querySelectorAll('.product-row-actions .btn').length).toBe(3);
+  });
+
+  it('toggles a product from the table actions (AC-04)', () => {
+    fixture.detectChanges();
+    fixture.detectChanges();
+    const toggle = spyOn(component, 'toggleActive').and.resolveTo();
+    const button = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="product-row"] .btn-tbl-toggle') as HTMLButtonElement;
+    button.click();
+    expect(toggle).toHaveBeenCalledWith(active);
   });
 
   it('links the «Agregar producto» button to the new product form, above the filters (AC-10)', () => {
@@ -124,10 +157,12 @@ describe('ProductListComponent', () => {
     expect(el.compareDocumentPosition(filters) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('shows each product as a card with action buttons and labelled rows', () => {
+  it('shows each product as a card with action buttons and labelled rows under 957 px (AC-02)', () => {
     spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
     fixture.detectChanges();
+    component.compact = true;
     fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="product-table"]')).toBeNull();
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('datatable-body')).toBeNull();
     const card = el.querySelector('[data-testid="product-card"]') as HTMLElement;
@@ -305,6 +340,8 @@ describe('ProductListComponent', () => {
     it('shows the base unit, not «Controla stock», when Inventario is enabled (AC-03)', () => {
       spyOnProperty(TestBed.inject(ModulesService), 'enabledKeysValue').and.returnValue(new Set(['inventory']));
       api.list.and.returnValue(of(page([stocked, active])));
+      fixture.detectChanges();
+      component.compact = true;
       fixture.detectChanges();
       const el = fixture.nativeElement as HTMLElement;
       const labels = Array.from(el.querySelectorAll('dt')).map((h) => h.textContent?.trim());

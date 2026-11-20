@@ -1,5 +1,7 @@
 import { tr } from '../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -13,13 +15,17 @@ import { ServiceToggleComponent } from '../components/service-toggle.component';
 import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
 
+/** Por debajo de 957 px la lista pasa a tarjetas y los filtros a un panel plegable. */
+export const COMPACT_QUERY = '(max-width: 956.98px)';
+
 @Component({ selector: 'app-service-list',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgbCollapse, NgbPagination, MoneyPipe, ServiceToggleComponent],
+  imports: [NgTemplateOutlet, TranslatePipe, ReactiveFormsModule, RouterLink, NgbCollapse, NgbPagination, MoneyPipe, ServiceToggleComponent],
   templateUrl: './service-list.component.html',
   styleUrl: './service-list.component.scss',
 })
 export class ServiceListComponent implements OnInit {
   readonly state = inject(ServiceFiltersState);
+  private breakpoints = inject(BreakpointObserver);
   private api = inject(ServicesApiService);
   private personnel = inject(PersonnelApiService);
   private destroyRef = inject(DestroyRef);
@@ -37,8 +43,11 @@ export class ServiceListComponent implements OnInit {
   success = '';
   /** Los filtros arrancan plegados; «Aplicar» consulta y los repliega para dejar las tarjetas a la vista. */
   filtersCollapsed = true;
+  /** Pantalla estrecha (< 957 px): tarjetas y filtros plegables; desde 957 px, tabla y filtros siempre visibles. */
+  compact = false;
 
   ngOnInit(): void {
+    this.breakpoints.observe(COMPACT_QUERY).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(state => this.compact = state.matches);
     this.personnel.specialties().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: rows => {
         this.specialties = rows.filter(row => row.active);

@@ -65,7 +65,8 @@ $action-size: 36px;
   overflow-wrap: anywhere;
 }
 
-.service-card-actions {
+.service-card-actions,
+.service-row-actions {
   display: flex;
   flex: 0 0 auto;
   gap: 0.5rem;

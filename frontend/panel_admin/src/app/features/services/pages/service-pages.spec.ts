@@ -1,12 +1,13 @@
 import { provideTestTranslations } from '../../../core/i18n/testing';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { Subject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { CatalogService, ServiceApiError } from '../models/service';
 import { ServiceFiltersState, ServicesApiService } from '../services/services-api.service';
 import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import { ServiceFormComponent } from './service-form.component';
-import { ServiceListComponent } from './service-list.component';
+import { COMPACT_QUERY, ServiceListComponent } from './service-list.component';
 import { ServiceDetailComponent } from './service-detail.component';
 
 const service: CatalogService = { id: 'one', name: 'Consulta', code: 'CON-01', description: '', basePrice: '120.00', durationMinutes: 30,
@@ -85,12 +86,16 @@ describe('ServiceFormComponent', () => {
 describe('ServiceListComponent', () => {
   let api: jasmine.SpyObj<ServicesApiService>;
   let personnel: jasmine.SpyObj<PersonnelApiService>;
+  let compact$: BehaviorSubject<{ matches: boolean }>;
   beforeEach(() => {
+    // Escritorio por defecto: el navegador de pruebas es estrecho y activaría el modo compacto.
+    compact$ = new BehaviorSubject<{ matches: boolean }>({ matches: false });
     api = jasmine.createSpyObj<ServicesApiService>('api', ['list']);
     api.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [service] }));
     personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['specialties']);
     personnel.specialties.and.returnValue(of([]));
     TestBed.configureTestingModule({ imports: [ServiceListComponent], providers: [...provideTestTranslations(), provideRouter([]),
+      { provide: BreakpointObserver, useValue: { observe: () => compact$ } },
       { provide: ServicesApiService, useValue: api }, { provide: PersonnelApiService, useValue: personnel }] });
   });
   it('restores filters and pagination and displays formatted values', () => {
@@ -103,12 +108,32 @@ describe('ServiceListComponent', () => {
   });
   it('dims inactive rows and uses the standard action buttons (AC-07)', () => {
     api.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [{ ...service, active: false }] }));
+    compact$.next({ matches: true });
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="service-table"]')).toBeNull(); // AC-02
     expect(el.querySelector('[data-testid="service-card"]')?.classList).toContain('text-muted');
     expect(el.querySelector('.btn-tbl-view .fa-eye')).not.toBeNull();
     expect(el.querySelector('.btn-tbl-update .fa-pen')).not.toBeNull();
     expect(el.querySelector('[data-testid="add-service"]')).not.toBeNull();
+  });
+  it('uses the 957 px cut (AC-05)', () => { expect(COMPACT_QUERY).toBe('(max-width: 956.98px)'); });
+  it('shows a table, not cards, with always-visible filters from 957 px (AC-01, AC-03, AC-04)', () => {
+    api.list.and.returnValue(of({ count: 2, next: null, previous: null, results: [service, { ...service, id: 'two', name: 'Limpieza', active: false }] }));
+    const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('[data-testid="service-cards"]')).toBeNull();
+    expect(el.querySelector('[data-testid="filters-toggle"]')).toBeNull();
+    expect(Array.from(el.querySelectorAll('th')).map(th => th.textContent?.trim()))
+      .toEqual(['Nombre', 'Precio', 'Duración', 'Estado', 'Especialidad', 'Acciones']);
+    const rows = el.querySelectorAll('[data-testid="service-row"]');
+    expect(rows.length).toBe(2);
+    expect(rows[0].textContent).toContain('Consulta'); expect(rows[0].textContent).toContain('30 min');
+    expect(rows[1].classList).toContain('text-muted');
+    expect(rows[0].querySelector('.btn-tbl-view .fa-eye')).not.toBeNull();
+    expect(rows[0].querySelector('.btn-tbl-update .fa-pen')).not.toBeNull();
+    expect(rows[0].querySelector('.btn-tbl-toggle')).not.toBeNull();
+    expect(el.querySelector('[data-testid="service-total"]')).not.toBeNull();
   });
   it('keeps the restored page while the table initializes with an empty loading state', () => {
     const pending = new Subject<{ count: number; next: null; previous: null; results: CatalogService[] }>();
@@ -120,6 +145,7 @@ describe('ServiceListComponent', () => {
     pending.complete(); fixture.detectChanges(); expect(state.pageIndex).toBe(1);
   });
   it('applies the filters on the server, resets pagination and collapses the panel', () => {
+    compact$.next({ matches: true });
     const fixture = TestBed.createComponent(ServiceListComponent); fixture.detectChanges();
     fixture.componentInstance.toggleFilters(); expect(fixture.componentInstance.filtersCollapsed).toBeFalse();
     fixture.componentInstance.search.setValue('Limpieza');
