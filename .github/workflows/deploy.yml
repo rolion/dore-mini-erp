@@ -55,8 +55,8 @@ jobs:
 
       - name: Construir imágenes
         run: |
-          docker build -t "pocketbiz-backend:${IMAGE_TAG}" backend
-          docker build -t "pocketbiz-frontend:${IMAGE_TAG}" frontend/panel_admin
+          docker build --pull -t "pocketbiz-backend:${IMAGE_TAG}" backend
+          docker build --pull -t "pocketbiz-frontend:${IMAGE_TAG}" frontend/panel_admin
 
       - name: Configurar SSH
         run: |
