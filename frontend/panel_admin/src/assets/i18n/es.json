@@ -9,7 +9,8 @@
         "ACCOUNTS": "Cuentas",
         "JOURNAL": "Movimientos",
         "BALANCES": "Saldos",
-        "CASH_FLOW": "Flujo de dinero"
+        "CASH_FLOW": "Flujo de dinero",
+        "INCOME_EXPENSE": "Ingresos y egresos"
       }
     },
     "AGENDA": {
@@ -3193,6 +3194,32 @@
       "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
       "PAGINATION": "Páginas de movimientos",
       "FILTER_TOTALS": "Totales del filtro: entradas {{inflow}}, salidas {{outflow}}, transferencias recibidas {{transfersIn}} y enviadas {{transfersOut}}."
+    },
+    "INCOME_EXPENSE": {
+      "TITULO": "Ingresos y egresos",
+      "PERIODO": "Período fiscal",
+      "MES": "Mes",
+      "TODOS_LOS_MESES": "Todos los meses",
+      "COL_MES": "Mes",
+      "INGRESO": "Ingreso",
+      "EGRESO": "Egreso",
+      "UTILIDAD": "Utilidad",
+      "TOTAL": "Total",
+      "PERDIDA": "pérdida",
+      "SIN_PERIODOS": "Sin períodos fiscales.",
+      "NOTA": "Ingresos de cuentas de Ingresos; egresos de cuentas de Gastos y Costos, por fecha contable del asiento. Utilidad = Ingreso − Egreso.",
+      "MONTH_01": "Enero",
+      "MONTH_02": "Febrero",
+      "MONTH_03": "Marzo",
+      "MONTH_04": "Abril",
+      "MONTH_05": "Mayo",
+      "MONTH_06": "Junio",
+      "MONTH_07": "Julio",
+      "MONTH_08": "Agosto",
+      "MONTH_09": "Septiembre",
+      "MONTH_10": "Octubre",
+      "MONTH_11": "Noviembre",
+      "MONTH_12": "Diciembre"
     }
   },
   "DATA_IMPORT": {

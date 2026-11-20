@@ -382,6 +382,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/accounting/income-expense",
+          "title": "MENUITEMS.ACCOUNTING.LIST.INCOME_EXPENSE",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/accounting/settings",
           "title": "MENUITEMS.ACCOUNTING.LIST.SETTINGS",
           "iconType": "",

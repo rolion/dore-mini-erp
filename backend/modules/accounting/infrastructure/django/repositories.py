@@ -6,7 +6,7 @@ from uuid import UUID
 
 from django.db import IntegrityError, connection, transaction
 from django.db.models import Count, Exists, Max, Min, OuterRef, Q, Sum
-from django.db.models.functions import Lower
+from django.db.models.functions import Lower, TruncMonth
 from django.utils import timezone
 
 from modules.accounting.application.cash_flow import EntryHeader
@@ -35,6 +35,7 @@ from .models import (
     SettingsModel,
 )
 
+INCOME_EXPENSE_CLASSES = ('INCOME', 'EXPENSE', 'COST')
 DUPLICATE_NAME = 'Ya existe una cuenta con ese nombre.'
 DUPLICATE_CODE = 'Ya existe una cuenta con ese código.'
 
@@ -603,6 +604,17 @@ class DjangoJournalRepository:
             debit=Sum('debit', filter=in_range), credit=Sum('credit', filter=in_range))
         return {row['account_id']: AccountMovements(row['opening_debit'] or zero, row['opening_credit'] or zero,
                                                     row['debit'] or zero, row['credit'] or zero) for row in rows}
+
+    def result_by_month(self, date_from: date, date_to: date) -> list[tuple[str, str | None, Decimal, Decimal]]:
+        """`(mes yyyy-MM, clase, Debe, Haber)` de Ingresos, Gastos y Costos por fecha contable en `[date_from, date_to]`."""
+        rows = (JournalLineModel.objects
+                .filter(company_id=self.company_id, entry__accounting_date__gte=date_from,
+                        entry__accounting_date__lte=date_to, account__account_class__in=INCOME_EXPENSE_CLASSES)
+                .annotate(month=TruncMonth('entry__accounting_date'))
+                .order_by().values('month', 'account__account_class')
+                .annotate(debit=Sum('debit'), credit=Sum('credit')))
+        return [(f'{r["month"].year:04d}-{r["month"].month:02d}', r['account__account_class'], r['debit'], r['credit'])
+                for r in rows]
 
     def money_lines(self, account_ids: list[UUID], date_from: date, date_to: date) -> list[EntryMoneyLine]:
         """Neto (Debe − Haber) por asiento y cuenta, por fecha contable en `[date_from, date_to]`."""
