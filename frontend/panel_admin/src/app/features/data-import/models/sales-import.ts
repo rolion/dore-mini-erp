@@ -154,12 +154,27 @@ export interface ImportCounts {
   withoutPosting: number;
 }
 
-export type ImportRunStatus = 'COMPLETED' | 'FAILED' | (string & {});
+export type ImportRunStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | (string & {});
+
+/** Motivo por el que la importación se detuvo (lo informa el servidor). */
+export interface ImportFailure {
+  code: string;
+  message: string;
+}
 
 export interface ImportResult {
   id: string;
   status: ImportRunStatus;
   counts: ImportCounts;
+  /** Ventas ya tratadas y ventas por tratar (0 mientras la corrida está en cola). */
+  processed: number;
+  total: number;
+  failure: ImportFailure | null;
+}
+
+/** La importación sigue en el servidor (en cola o en curso). */
+export function isActiveRun(status: ImportRunStatus): boolean {
+  return status === 'QUEUED' || status === 'RUNNING';
 }
 
 export interface ImportRunSummary {
@@ -170,6 +185,9 @@ export interface ImportRunSummary {
   createdByName: string;
   rowCount: number;
   counts: ImportCounts;
+  processed: number;
+  total: number;
+  failure: ImportFailure | null;
 }
 
 export interface ImportRunDetail extends ImportRunSummary {

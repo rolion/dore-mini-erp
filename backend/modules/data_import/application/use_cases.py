@@ -110,6 +110,12 @@ class PreviewResult:
         return data
 
 
+def _failure_message(exc: Exception) -> str:
+    if isinstance(exc, ImportValidationError):
+        return ' · '.join(m for messages in exc.errors.values() for m in messages) or 'La importación no es válida.'
+    return getattr(exc, 'message', None) or str(exc)
+
+
 def _load_run(repository: ImportRepository, run_id: UUID) -> RunData:
     run = repository.get_run(run_id)
     if run is None:
@@ -366,8 +372,46 @@ class PreviewSalesImport:
         return staged
 
 
+class EnqueueSalesImport:
+    """Valida lo mismo que la carga y deja la importación en cola; un worker la ejecuta en segundo plano."""
+
+    def __init__(self, repository: ImportRepository, gateway: SalesImportGateway, clock: Clock):
+        self.repository = repository
+        self.gateway = gateway
+        self.clock = clock
+
+    def execute(self, run_id: UUID, mapping: object, options: object, idempotency_key: UUID | None) -> RunData:
+        run = _load_run(self.repository, run_id)
+        if run.status == 'COMPLETED':
+            return run  # idempotente: devuelve el resultado ya guardado
+        if run.status in ('QUEUED', 'RUNNING'):
+            if idempotency_key is not None and run.idempotency_key == idempotency_key:
+                return run  # reintento de la misma petición: no se encola otra vez
+            raise ImportRuleViolation('import_running', 'La importación ya está en curso.')
+        _validate_run(run, self.gateway, mapping, options)
+        self.repository.enqueue(run_id, idempotency_key, self.clock.now())
+        return _load_run(self.repository, run_id)
+
+
+def _validate_run(run: RunData, gateway: SalesImportGateway, mapping: object, options: object):
+    """Revalida mapeo, opciones, firma de la vista previa, módulos y almacén (al encolar y al ejecutar)."""
+    clean_mapping = validate_mapping(mapping, run.headers)
+    opts = parse_options(options)
+    if not run.preview_signature:
+        raise ImportRuleViolation('preview_required', 'Previsualiza la importación antes de cargarla.')
+    if signature(clean_mapping, opts.as_dict()) != run.preview_signature:
+        raise ImportRuleViolation('preview_stale',
+                                  'El mapeo u opciones cambiaron desde la vista previa: vuelve a previsualizar.')
+    caps = gateway.capabilities()
+    _check_capabilities(opts, caps)
+    return clean_mapping, opts, caps, _resolve_warehouse(opts, caps)
+
+
 class ExecuteSalesImport:
-    """Carga cada venta en su propia transacción (INV-04), en orden cronológico e idempotente (INV-05)."""
+    """Carga cada venta en su propia transacción (INV-04), en orden cronológico e idempotente (INV-05).
+
+    `run_claimed` es lo que ejecuta el worker sobre una corrida ya reclamada; `execute` reclama y carga en el
+    mismo proceso (pruebas y operación manual)."""
 
     def __init__(self, repository: ImportRepository, gateway: SalesImportGateway, clock: Clock):
         self.repository = repository
@@ -380,19 +424,38 @@ class ExecuteSalesImport:
             return run  # idempotente: devuelve el resultado ya guardado
         if run.status == 'RUNNING':
             raise ImportRuleViolation('import_running', 'La importación ya está en curso.')
-        clean_mapping = validate_mapping(mapping, run.headers)
-        opts = parse_options(options)
-        if not run.preview_signature:
-            raise ImportRuleViolation('preview_required', 'Previsualiza la importación antes de cargarla.')
-        if signature(clean_mapping, opts.as_dict()) != run.preview_signature:
-            raise ImportRuleViolation('preview_stale',
-                                      'El mapeo u opciones cambiaron desde la vista previa: vuelve a previsualizar.')
-        caps = self.gateway.capabilities()
-        _check_capabilities(opts, caps)
-        warehouse_id = _resolve_warehouse(opts, caps)
-        parsed = parse_sales(run.headers, run.rows, clean_mapping, opts, self.clock.today())
+        clean_mapping, opts, caps, warehouse_id = _validate_run(run, self.gateway, mapping, options)
         self.repository.claim(run_id, idempotency_key, self.clock.now())
+        self._process(run, clean_mapping, opts, caps, warehouse_id)
+        return _load_run(self.repository, run_id)
+
+    def run_claimed(self, run_id: UUID) -> RunData:
+        """Ejecuta una corrida que el worker ya pasó a `RUNNING`; nunca deja una excepción sin dueño: ante un
+        fallo la corrida termina `FAILED` con su código y mensaje."""
+        run = _load_run(self.repository, run_id)
+        try:
+            clean_mapping, opts, caps, warehouse_id = _validate_run(run, self.gateway, run.mapping, run.options)
+        except (ImportValidationError, ImportRuleViolation) as exc:
+            self.repository.fail(run_id, getattr(exc, 'code', 'validation_failed'), _failure_message(exc),
+                                 self.clock.now())
+            return _load_run(self.repository, run_id)
+        try:
+            self._process(run, clean_mapping, opts, caps, warehouse_id)
+        except Exception:
+            logger.exception('Error inesperado en la importación %s', run_id)
+            self.repository.fail(run_id, 'unexpected_error',
+                                 'Ocurrió un error inesperado y la importación se detuvo. Lo ya cargado se conserva: '
+                                 'vuelve a intentarla y no se duplicará.', self.clock.now())
+        return _load_run(self.repository, run_id)
+
+    def _process(self, run: RunData, clean_mapping: dict, opts: ImportOptions, caps: Capabilities,
+                 warehouse_id: UUID | None) -> None:
+        run_id = run.id
+        parsed = parse_sales(run.headers, run.rows, clean_mapping, opts, self.clock.today())
         counts = {'created': 0, 'skipped': 0, 'failed': 0, 'without_posting': 0}
+        total = len(parsed.groups)
+        done = 0
+        self.repository.heartbeat(run_id, self.clock.now(), processed=0, total=total)
         try:
             self._report_invalid(run_id, parsed, counts)
             duplicates = self.repository.existing_keys([g.key for g in parsed.groups])
@@ -402,16 +465,16 @@ class ExecuteSalesImport:
                 day = self._prepare_day([g for g in day_groups if g.key not in duplicates], opts, planner,
                                         warehouse_id)
                 for group in day_groups:
-                    self.repository.heartbeat(run_id, self.clock.now())
                     if group.key in duplicates:
                         self._duplicate(run_id, group, counts)
-                        continue
-                    self._load_sale(run_id, group, opts, planner, warehouse_id, counts, day)
+                    else:
+                        self._load_sale(run_id, group, opts, planner, warehouse_id, counts, day)
+                    done += 1
+                    self.repository.heartbeat(run_id, self.clock.now(), processed=done, total=total)
         except Exception:
             self.repository.finish(run_id, 'FAILED', counts, self.clock.now())
             raise
         self.repository.finish(run_id, 'COMPLETED', counts, self.clock.now())
-        return _load_run(self.repository, run_id)
 
     def _report_invalid(self, run_id: UUID, parsed, counts: dict) -> None:
         by_sale: dict[str, list[RowProblem]] = {}

@@ -9,6 +9,7 @@ import {
   ImportApiError,
   ImportCapabilities,
   ImportCounts,
+  ImportFailure,
   ImportFieldErrors,
   ImportMapping,
   ImportPreview,
@@ -28,10 +29,10 @@ export const VALIDATION_ERROR_MESSAGE = (): string => tr('DATA_IMPORT.ERR_VALIDA
 export const NOT_FOUND_MESSAGE = (): string => tr('DATA_IMPORT.ERR_NOT_FOUND');
 
 interface CountsDto {
-  created: number;
-  skipped: number;
-  failed: number;
-  without_posting: number;
+  created?: number;
+  skipped?: number;
+  failed?: number;
+  without_posting?: number;
 }
 
 interface UploadDto {
@@ -78,6 +79,9 @@ interface RunDto {
   created_by_name: string;
   row_count: number;
   counts: CountsDto;
+  processed?: number;
+  total?: number;
+  failure?: ImportFailure | null;
   options?: Record<string, unknown>;
 }
 
@@ -91,7 +95,13 @@ interface RowDto {
 }
 
 function toCounts(dto: CountsDto): ImportCounts {
-  return { created: dto.created, skipped: dto.skipped, failed: dto.failed, withoutPosting: dto.without_posting };
+  // Una corrida en cola o en curso aún no tiene contadores (`{}`): se muestran en cero, no como texto sin resolver.
+  return {
+    created: dto.created ?? 0,
+    skipped: dto.skipped ?? 0,
+    failed: dto.failed ?? 0,
+    withoutPosting: dto.without_posting ?? 0,
+  };
 }
 
 function toCapabilities(dto: UploadDto['capabilities']): ImportCapabilities {
@@ -151,6 +161,20 @@ function toRun(dto: RunDto): ImportRunSummary {
     createdByName: dto.created_by_name,
     rowCount: dto.row_count,
     counts: toCounts(dto.counts),
+    processed: dto.processed ?? 0,
+    total: dto.total ?? 0,
+    failure: dto.failure ?? null,
+  };
+}
+
+function toResult(dto: Pick<RunDto, 'id' | 'status' | 'counts' | 'processed' | 'total' | 'failure'>): ImportResult {
+  return {
+    id: dto.id,
+    status: dto.status,
+    counts: toCounts(dto.counts),
+    processed: dto.processed ?? 0,
+    total: dto.total ?? 0,
+    failure: dto.failure ?? null,
   };
 }
 
@@ -247,12 +271,12 @@ export class SalesImportApiService {
 
   execute(id: string, request: ImportRequest, idempotencyKey: string): Observable<ImportResult> {
     return this.http
-      .post<{ id: string; status: string; counts: CountsDto }>(`${this.baseUrl}${id}/execute/`, {
+      .post<Pick<RunDto, 'id' | 'status' | 'counts' | 'processed' | 'total' | 'failure'>>(`${this.baseUrl}${id}/execute/`, {
         ...toBody(request),
         idempotency_key: idempotencyKey,
       })
       .pipe(
-        map((dto): ImportResult => ({ id: dto.id, status: dto.status, counts: toCounts(dto.counts) })),
+        map((dto): ImportResult => toResult(dto)),
         this.fail(),
       );
   }

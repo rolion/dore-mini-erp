@@ -5,6 +5,7 @@ import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angul
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgbModal, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
+import { EMPTY, Subscription, catchError, switchMap, takeWhile, tap, timer } from 'rxjs';
 import { PostingIssuesAlertComponent } from '../../../../shared/components/posting-issues-alert/posting-issues-alert.component';
 import { PostingIssue } from '../../../../shared/models/receivable';
 import { ImportConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
@@ -25,6 +26,7 @@ import {
   PAYMENT_METHOD_OPTIONS,
   PRODUCT_CATEGORY_OPTIONS,
   SALES_CHANNEL_OPTIONS,
+  isActiveRun,
   newUuid,
 } from '../../models/sales-import';
 import { SalesImportApiService } from '../../services/sales-import-api.service';
@@ -32,6 +34,9 @@ import { SalesImportApiService } from '../../services/sales-import-api.service';
 export type ImportStep = 1 | 2 | 3 | 4;
 
 export const PROBLEMS_PAGE_SIZE = 10;
+
+/** Cada cuántos milisegundos se consulta el avance de una importación en segundo plano. */
+export const POLL_INTERVAL_MS = 3000;
 
 /** Asistente «Importar ventas»: Subir archivo → Mapear → Vista previa → Resultado (la carga no se deshace en bloque). */
 @Component({
@@ -104,6 +109,9 @@ export class SalesImportComponent implements OnInit {
   // Paso 4
   result: ImportResult | null = null;
   resumeError = '';
+  /** La última consulta del avance falló; se sigue intentando. */
+  pollError = false;
+  private polling: Subscription | null = null;
 
   /** Clave de idempotencia: se genera al abrir el asistente y se reenvía en cada intento de carga. */
   private idempotencyKey = newUuid();
@@ -133,9 +141,12 @@ export class SalesImportComponent implements OnInit {
       .subscribe({
         next: (run) => {
           this.resuming = false;
-          if (run.status === 'COMPLETED' || run.status === 'FAILED') {
-            this.result = { id: run.id, status: run.status, counts: run.counts };
+          if (run.status === 'COMPLETED' || run.status === 'FAILED' || isActiveRun(run.status)) {
+            this.result = this.toResult(run);
             this.goTo(4);
+            if (isActiveRun(run.status)) {
+              this.watch(run.id);
+            }
           } else {
             this.resumeError = tr('DATA_IMPORT.RESUME_UNAVAILABLE');
           }
@@ -383,6 +394,9 @@ export class SalesImportComponent implements OnInit {
           this.executing = false;
           this.result = result;
           this.goTo(4);
+          if (isActiveRun(result.status)) {
+            this.watch(result.id);
+          }
         },
         error: (err: ImportApiError) => {
           this.executing = false;
@@ -390,6 +404,58 @@ export class SalesImportComponent implements OnInit {
           this.postingIssues = err.code === 'posting_configuration_missing' ? err.issues : [];
         },
       });
+  }
+
+  private toResult(run: ImportResult): ImportResult {
+    return {
+      id: run.id,
+      status: run.status,
+      counts: run.counts,
+      processed: run.processed,
+      total: run.total,
+      failure: run.failure,
+    };
+  }
+
+  /** Consulta el avance cada pocos segundos hasta que la importación termina; se corta al salir de la página. */
+  private watch(runId: string): void {
+    this.polling?.unsubscribe();
+    this.pollError = false;
+    this.polling = timer(POLL_INTERVAL_MS, POLL_INTERVAL_MS)
+      .pipe(
+        switchMap(() =>
+          this.api.get(runId).pipe(
+            catchError(() => {
+              this.pollError = true;
+              return EMPTY;
+            }),
+          ),
+        ),
+        tap((run) => {
+          this.pollError = false;
+          this.result = this.toResult(run);
+        }),
+        takeWhile((run) => isActiveRun(run.status)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe();
+  }
+
+  get inProgress(): boolean {
+    return !!this.result && isActiveRun(this.result.status);
+  }
+
+  get progressPercent(): number {
+    const r = this.result;
+    return r && r.total > 0 ? Math.min(100, Math.round((r.processed / r.total) * 100)) : 0;
+  }
+
+  /** Vuelve a la vista previa para reintentar una importación que se detuvo (lo ya cargado no se duplica). */
+  retry(): void {
+    this.polling?.unsubscribe();
+    this.result = null;
+    this.executeError = null;
+    this.goTo(3);
   }
 
   get isRunning(): boolean {
@@ -407,6 +473,8 @@ export class SalesImportComponent implements OnInit {
   }
 
   restart(): void {
+    this.polling?.unsubscribe();
+    this.pollError = false;
     this.upload = null;
     this.preview = null;
     this.result = null;

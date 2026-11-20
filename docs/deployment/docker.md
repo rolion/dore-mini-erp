@@ -45,10 +45,23 @@ docker compose build --pull
 docker compose run --rm --no-deps backend python manage.py migrate --noinput
 docker compose up -d --wait
 docker compose ps
-docker compose logs --tail=100 backend frontend
+docker compose logs --tail=100 backend import-worker frontend
 ```
 
 Build installs the declared Python/npm packages inside build stages. Backend starts as UID 10001, collects static files into a named volume, then runs two Gunicorn workers. Frontend starts after backend liveness is healthy and mounts the volume read-only. The health API checks process availability, not database readiness. Migrations run only when explicitly requested above. Do not run migrations against an unrelated application's database.
+
+### Importaciones en segundo plano
+
+`import-worker` usa la misma imagen que `backend` y ejecuta `python manage.py run_import_worker`: toma las importaciones de ventas en cola (estado `QUEUED`) y las carga venta a venta, con la empresa y el usuario guardados en cada corrida. Sin puertos ni volumen de estáticos; `docker compose up -d --wait` lo levanta junto al resto. Si no está en marcha, las importaciones quedan «En cola» sin avanzar.
+
+```sh
+docker compose ps import-worker
+docker compose logs --tail=100 import-worker
+# Procesar la cola a mano (por ejemplo, con el worker detenido):
+docker compose run --rm --no-deps import-worker python manage.py run_import_worker --once
+```
+
+Una importación `RUNNING` sin latido durante 15 minutos (p. ej. el contenedor se reinició a mitad) pasa a «Con fallos» («se interrumpió»); se reintenta desde la pantalla y lo ya cargado no se duplica. Para desplegar sin cortar una carga, el contenedor espera hasta 2 minutos a terminar la venta en curso al detenerse.
 
 If an admin account is needed:
 

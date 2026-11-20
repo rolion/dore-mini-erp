@@ -3308,6 +3308,13 @@
     "CONFIRM_BODY": "Se cargarán {{p0}} ventas. No se puede deshacer en bloque: cada venta cargada tendrá que corregirse o anularse una por una.",
     "RESULT_OK": "Importación completada.",
     "RESULT_WARN": "La importación terminó con ventas que no se cargaron.",
+    "PROGRESS_QUEUED": "En cola: empezará en un momento.",
+    "PROGRESS_RUNNING": "Procesando {{done}} de {{total}} ventas…",
+    "PROGRESS_LABEL": "Avance de la importación",
+    "BACKGROUND_NOTE": "Puedes salir de esta página: la importación sigue en segundo plano. Vuelve desde el historial.",
+    "POLL_ERROR": "No se pudo consultar el avance. Reintentando…",
+    "RUN_FAILED": "La importación se detuvo.",
+    "RETRY_IMPORT": "Volver a intentar",
     "COUNT_CREATED": "Cargadas",
     "COUNT_SKIPPED": "Ya importadas",
     "COUNT_WITHOUT_POSTING": "Sin asiento por fecha",
@@ -3334,6 +3341,7 @@
     "RESULT_SUMMARY": "{{p0}} / {{p1}}",
     "VIEW_DETAIL": "Ver detalle",
     "RUN_STATUS": {
+      "QUEUED": "En cola",
       "COMPLETED": "Completada",
       "FAILED": "Con fallos",
       "RUNNING": "En curso"

@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.data_import.application.ports import RunData
-from modules.data_import.application.use_cases import ExecuteSalesImport, PreviewSalesImport, UploadSalesFile
+from modules.data_import.application.use_cases import EnqueueSalesImport, PreviewSalesImport, UploadSalesFile
 from modules.data_import.domain.errors import ImportNotFound, ImportRuleViolation, ImportValidationError
 from modules.data_import.infrastructure.adapters import SalesImportAdapter, SystemClock
 from modules.data_import.infrastructure.django.repositories import DjangoImportRepository
@@ -70,12 +70,19 @@ def _capabilities(caps) -> dict:
 
 def _summary(run: RunData) -> dict:
     return {'id': str(run.id), 'filename': run.filename, 'status': run.status, 'created_at': run.created_at,
-            'created_by_name': run.created_by_name, 'row_count': run.row_count, 'counts': run.counts}
+            'created_by_name': run.created_by_name, 'row_count': run.row_count, 'counts': run.counts,
+            'processed': run.processed, 'total': run.total}
+
+
+def _failure(run: RunData) -> dict | None:
+    return {'code': run.failure_code, 'message': run.failure_message} if run.failure_code else None
 
 
 def _model_summary(model) -> dict:
     return {'id': str(model.id), 'filename': model.filename, 'status': model.status, 'created_at': model.created_at,
-            'created_by_name': model.created_by_name, 'row_count': model.row_count, 'counts': model.counts}
+            'created_by_name': model.created_by_name, 'row_count': model.row_count, 'counts': model.counts,
+            'processed': model.processed_count, 'total': model.total_count,
+            'failure': {'code': model.failure_code, 'message': model.failure_message} if model.failure_code else None}
 
 
 class RunListCreateView(APIView):
@@ -106,10 +113,10 @@ class RunDetailView(APIView):
     required_modules = REQUIRED_MODULES
 
     def get(self, request, run_id):
-        run = _repository(request).get_run(_uuid(run_id))
+        run = _repository(request).get_status(_uuid(run_id))  # sin cargar el archivo: la interfaz lo sondea
         if run is None:
             raise NotFound(RUN_NOT_FOUND)
-        return Response({**_summary(run), 'options': run.options, 'mapping': run.mapping})
+        return Response({**_summary(run), 'options': run.options, 'mapping': run.mapping, 'failure': _failure(run)})
 
 
 class RunPreviewView(APIView):
@@ -133,11 +140,14 @@ class RunExecuteView(APIView):
                 key = UUID(str(raw_key))
             except ValueError:
                 raise ValidationError({'idempotency_key': ['La clave de la operación no es válida.']}) from None
-        use_case = ExecuteSalesImport(_repository(request), _gateway(request), SystemClock())
+        use_case = EnqueueSalesImport(_repository(request), _gateway(request), SystemClock())
         run = _run(use_case.execute, run_id=_uuid(run_id), mapping=request.data.get('mapping'),
                    options=request.data.get('options'), idempotency_key=key)
+        finished = run.status in ('COMPLETED', 'FAILED')
         return Response({'id': str(run.id), 'status': run.status, 'counts': run.counts,
-                         'rows_url': f'/api/imports/sales/{run.id}/rows/'})
+                         'processed': run.processed, 'total': run.total, 'failure': _failure(run),
+                         'rows_url': f'/api/imports/sales/{run.id}/rows/'},
+                        status=status.HTTP_200_OK if finished else status.HTTP_202_ACCEPTED)
 
 
 class RunRowsView(APIView):
