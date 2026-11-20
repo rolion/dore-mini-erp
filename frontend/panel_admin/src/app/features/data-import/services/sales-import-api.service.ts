@@ -9,6 +9,7 @@ import {
   ImportApiError,
   ImportCapabilities,
   ImportCounts,
+  ImportFailure,
   ImportFieldErrors,
   ImportMapping,
   ImportPreview,
@@ -78,6 +79,9 @@ interface RunDto {
   created_by_name: string;
   row_count: number;
   counts: CountsDto;
+  processed?: number;
+  total?: number;
+  failure?: ImportFailure | null;
   options?: Record<string, unknown>;
 }
 
@@ -151,6 +155,20 @@ function toRun(dto: RunDto): ImportRunSummary {
     createdByName: dto.created_by_name,
     rowCount: dto.row_count,
     counts: toCounts(dto.counts),
+    processed: dto.processed ?? 0,
+    total: dto.total ?? 0,
+    failure: dto.failure ?? null,
+  };
+}
+
+function toResult(dto: Pick<RunDto, 'id' | 'status' | 'counts' | 'processed' | 'total' | 'failure'>): ImportResult {
+  return {
+    id: dto.id,
+    status: dto.status,
+    counts: toCounts(dto.counts),
+    processed: dto.processed ?? 0,
+    total: dto.total ?? 0,
+    failure: dto.failure ?? null,
   };
 }
 
@@ -247,12 +265,12 @@ export class SalesImportApiService {
 
   execute(id: string, request: ImportRequest, idempotencyKey: string): Observable<ImportResult> {
     return this.http
-      .post<{ id: string; status: string; counts: CountsDto }>(`${this.baseUrl}${id}/execute/`, {
+      .post<Pick<RunDto, 'id' | 'status' | 'counts' | 'processed' | 'total' | 'failure'>>(`${this.baseUrl}${id}/execute/`, {
         ...toBody(request),
         idempotency_key: idempotencyKey,
       })
       .pipe(
-        map((dto): ImportResult => ({ id: dto.id, status: dto.status, counts: toCounts(dto.counts) })),
+        map((dto): ImportResult => toResult(dto)),
         this.fail(),
       );
   }

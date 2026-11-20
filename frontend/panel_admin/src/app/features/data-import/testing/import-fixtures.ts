@@ -75,5 +75,8 @@ export const RUN: ImportRunDetail = {
   createdByName: 'ana',
   rowCount: 3,
   counts: COUNTS,
+  processed: 3,
+  total: 3,
+  failure: null,
   options: {},
 };

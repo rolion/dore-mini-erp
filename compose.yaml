@@ -6,7 +6,7 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
-    environment:
+    environment: &backend-environment
       DJANGO_SETTINGS_MODULE: config.settings.production
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY for production}
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL for the existing PostgreSQL container}
@@ -34,6 +34,19 @@ services:
       timeout: 10s
       start_period: 30s
       retries: 3
+
+  # Ejecuta en segundo plano las importaciones en cola (misma imagen que backend; sin puertos ni estáticos).
+  import-worker:
+    image: pocketbiz-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: ["python", "manage.py", "run_import_worker"]
+    environment: *backend-environment
+    networks:
+      - database
+    stop_grace_period: 2m  # deja terminar la venta en curso antes de detenerse
+    depends_on:
+      backend:
+        condition: service_healthy
 
   frontend:
     image: pocketbiz-frontend:${IMAGE_TAG:-latest}

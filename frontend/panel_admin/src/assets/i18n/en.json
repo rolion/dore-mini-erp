@@ -3308,6 +3308,13 @@
     "CONFIRM_BODY": "{{p0}} sales will be loaded. This cannot be undone in bulk: each loaded sale will have to be corrected or cancelled one by one.",
     "RESULT_OK": "Import completed.",
     "RESULT_WARN": "The import finished with sales that were not loaded.",
+    "PROGRESS_QUEUED": "Queued: it will start shortly.",
+    "PROGRESS_RUNNING": "Processing {{done}} of {{total}} sales…",
+    "PROGRESS_LABEL": "Import progress",
+    "BACKGROUND_NOTE": "You can leave this page: the import keeps running in the background. Come back from the history.",
+    "POLL_ERROR": "Could not check the progress. Retrying…",
+    "RUN_FAILED": "The import stopped.",
+    "RETRY_IMPORT": "Try again",
     "COUNT_CREATED": "Loaded",
     "COUNT_SKIPPED": "Already imported",
     "COUNT_WITHOUT_POSTING": "Without entry (date)",
@@ -3334,6 +3341,7 @@
     "RESULT_SUMMARY": "{{p0}} / {{p1}}",
     "VIEW_DETAIL": "View details",
     "RUN_STATUS": {
+      "QUEUED": "Queued",
       "COMPLETED": "Completed",
       "FAILED": "With failures",
       "RUNNING": "In progress"

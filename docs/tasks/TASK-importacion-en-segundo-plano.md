@@ -1,6 +1,6 @@
 # TASK-importacion-en-segundo-plano: Ejecutar la importación de ventas en segundo plano para que no la aborte el timeout
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-importacion-en-segundo-plano
@@ -12,6 +12,7 @@
 | 2026-11-20 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-20 | INVESTIGATION → ARCHITECTURE | NEEDS_ARCHITECTURE: cambia el modelo de ejecución, el contrato API y la infraestructura | delivery-start |
 | 2026-11-20 | ARCHITECTURE → DESIGN → PLANNING → ENGINEERING | ADR + DDR + PLAN v1 listos, Specification READY | delivery-start |
+| 2026-11-20 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,26 @@ Ver `docs/adr/ADR-importacion-en-segundo-plano-cola-en-base-de-datos-y-worker.md
 `docs/plans/PLAN-2026-11-20-importacion-en-segundo-plano.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+**Resumen.** `execute` ahora valida y encola (202); el worker `run_import_worker` (servicio `import-worker` en `compose.yaml`) ejecuta la carga por venta con la empresa y el usuario guardados en la corrida; la interfaz sondea el avance cada 3 s y permite retomar con `?run=`.
+
+**Cobertura del plan**
+- INV-09/INV-12, AC-04..AC-07: migración `0003_import_queue` (estado `QUEUED`, `processed_count`, `total_count`, `failure_*`, restricción `di_run_one_active_per_company`), `DjangoImportRepository.enqueue/fail/heartbeat(progreso)/get_status` y `DjangoImportQueue.claim_next` (`select_for_update(skip_locked)`) / `fail_stale`.
+- AC-01..AC-05: `EnqueueSalesImport` y `ExecuteSalesImport.run_claimed` (`application/use_cases.py`); revalidación y excepciones terminan en `FAILED` con código y mensaje.
+- AC-02, AC-06, AC-08: `infrastructure/worker.py` y `management/commands/run_import_worker.py` (`--once`, `--poll`, cierre ordenado con SIGTERM).
+- API-01/02: `RunExecuteView` (202/200), `RunDetailView` con `processed/total/failure` sin cargar el archivo.
+- AC-09, AC-10 (UI-01..03): paso 4 con en cola / progreso / fallo, sondeo y retomar; `QUEUED` en historial y detalle; claves i18n es/en/pt.
+- AC-11: `compose.yaml` (`import-worker`), `ImportWorkerServiceTests`, `docs/deployment/docker.md`.
+
+**Pantalla de referencia / componentes:** asistente existente (`sales-import`) y plantilla «previsualización obligatoria»; reutiliza `app-status-badge`, `app-import-counts`, `app-import-rows`, alerta tenue `bg-info-subtle`. Sin componentes compartidos nuevos ni cambios en `design-system.md` (según DDR).
+
+**Desviaciones respecto al plan**
+- `ExecuteSalesImport.execute` (carga síncrona) se conserva para pruebas y como camino reutilizable; ya no lo usa la API. Deuda menor: unificar cuando se retire.
+- La prueba de «dos reclamos simultáneos» (AC-07) es secuencial (el segundo reclamo no encuentra nada); la exclusión real recae en `skip_locked` de PostgreSQL y no se probó con hilos.
+- `stop_grace_period: 2m` y `depends_on: backend` añadidos al servicio (no estaban en el ADR; operativos).
+
+**Verificación propia (no es el Quality Gate):** frontend `ng test` completo 1745/1745, `ng lint` y `i18n:check` limpios; backend: pruebas de casos de uso/dominio y la de compose corridas con configuración mínima de Django; `flake8` limpio en lo cambiado; `docker compose config` válido. **No se corrieron** las pruebas de integración de backend ni la migración: el entorno local no tiene PostgreSQL, `psycopg` ni Django 5.2 (migración escrita a mano, sin `makemigrations`).
+
+**Deuda / notas:** consultas por venta sin optimizar (fuera de alcance); sin reencolado automático de corridas caídas ni cancelación.
 
 ## Review
 _Pendiente_

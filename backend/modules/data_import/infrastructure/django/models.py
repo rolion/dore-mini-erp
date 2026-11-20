@@ -9,10 +9,11 @@ class ImportRunModel(models.Model):
 
     UPLOADED = 'UPLOADED'
     PREVIEWED = 'PREVIEWED'
+    QUEUED = 'QUEUED'
     RUNNING = 'RUNNING'
     COMPLETED = 'COMPLETED'
     FAILED = 'FAILED'
-    STATUSES = [(s, s) for s in (UPLOADED, PREVIEWED, RUNNING, COMPLETED, FAILED)]
+    STATUSES = [(s, s) for s in (UPLOADED, PREVIEWED, QUEUED, RUNNING, COMPLETED, FAILED)]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company_id = models.UUIDField(db_index=True)  # solo UUID, sin FK entre módulos
@@ -27,6 +28,10 @@ class ImportRunModel(models.Model):
     preview_signature = models.CharField(max_length=64, blank=True, default='')
     status = models.CharField(max_length=12, choices=STATUSES, default=UPLOADED)
     counts = models.JSONField(default=dict, blank=True)
+    processed_count = models.PositiveIntegerField(default=0)  # ventas ya tratadas por el worker
+    total_count = models.PositiveIntegerField(default=0)  # ventas que el worker debe tratar (0 hasta que arranca)
+    failure_code = models.CharField(max_length=60, blank=True, default='')
+    failure_message = models.TextField(blank=True, default='')
     idempotency_key = models.UUIDField(null=True, blank=True)
     created_by_id = models.UUIDField(null=True, blank=True)
     created_by_name = models.CharField(max_length=150, blank=True, default='')
@@ -40,9 +45,9 @@ class ImportRunModel(models.Model):
         ordering = ['-created_at', '-id']
         indexes = [models.Index(fields=['company_id', '-created_at'], name='di_run_company_created_idx')]
         constraints = [
-            # INV-09: una sola ejecución activa por empresa.
-            models.UniqueConstraint(fields=['company_id'], condition=Q(status='RUNNING'),
-                                    name='di_run_one_running_per_company'),
+            # INV-09: una sola ejecución activa (en cola o en curso) por empresa.
+            models.UniqueConstraint(fields=['company_id'], condition=Q(status__in=['QUEUED', 'RUNNING']),
+                                    name='di_run_one_active_per_company'),
         ]
 
 

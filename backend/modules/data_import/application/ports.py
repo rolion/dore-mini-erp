@@ -116,6 +116,10 @@ class RunData:
     created_by_name: str
     created_at: object
     finished_at: object
+    processed: int = 0
+    total: int = 0
+    failure_code: str = ''
+    failure_message: str = ''
 
 
 class DuplicateSale(Exception):
@@ -130,9 +134,13 @@ class ImportRepository(Protocol):
 
     def save_preview(self, run_id: UUID, mapping: dict, options: dict, signature: str) -> None: ...
 
+    def enqueue(self, run_id: UUID, idempotency_key: UUID | None, now) -> None: ...
+
     def claim(self, run_id: UUID, idempotency_key: UUID | None, now) -> None: ...
 
-    def heartbeat(self, run_id: UUID, now) -> None: ...
+    def heartbeat(self, run_id: UUID, now, processed: int | None = None, total: int | None = None) -> None: ...
+
+    def fail(self, run_id: UUID, code: str, message: str, now) -> None: ...
 
     def finish(self, run_id: UUID, status: str, counts: dict, now) -> None: ...
 

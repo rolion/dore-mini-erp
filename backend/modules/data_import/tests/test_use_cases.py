@@ -1,6 +1,10 @@
+from dataclasses import replace
+from uuid import uuid4
+
 from django.test import SimpleTestCase
 
-from modules.data_import.application.use_cases import ExecuteSalesImport, PreviewSalesImport
+from modules.data_import.application.use_cases import EnqueueSalesImport, ExecuteSalesImport, PreviewSalesImport
+from modules.data_import.application.ports import RunData
 from modules.data_import.domain.errors import ImportRuleViolation, ImportValidationError
 from modules.data_import.domain.fields import suggest_mapping
 from shared.import_errors import ImportRejected
@@ -177,3 +181,82 @@ class ExecuteTests(SimpleTestCase):
         execute(repo, gw, mapping, opts)
         self.assertFalse(gw.sales[0]['post'])
         self.assertFalse(gw.purchases[0][3])
+
+
+def enqueue(repo, gateway, mapping, opts, key=None):
+    return EnqueueSalesImport(repo, gateway, FakeClock()).execute(repo.run.id, mapping, opts, key)
+
+
+class EnqueueTests(SimpleTestCase):
+    def test_enqueue_queues_without_loading_any_sale(self):  # AC-01
+        repo, gw, mapping, opts = setup(rows(SALE))
+        preview(repo, gw, mapping, opts)
+        run = enqueue(repo, gw, mapping, opts, uuid4())
+        self.assertEqual((run.status, len(gw.sales), repo.results), ('QUEUED', 0, []))
+
+    def test_enqueue_keeps_the_preview_checks(self):  # AC-01
+        repo, gw, mapping, opts = setup(rows(SALE))
+        with self.assertRaises(ImportRuleViolation) as ctx:
+            enqueue(repo, gw, mapping, opts)
+        self.assertEqual(ctx.exception.code, 'preview_required')
+        preview(repo, gw, mapping, opts)
+        with self.assertRaises(ImportRuleViolation) as ctx:
+            enqueue(repo, gw, mapping, {**opts, 'infer_customers': False})
+        self.assertEqual(ctx.exception.code, 'preview_stale')
+
+    def test_same_key_returns_the_active_run_and_another_key_is_rejected(self):  # AC-04
+        repo, gw, mapping, opts = setup(rows(SALE))
+        preview(repo, gw, mapping, opts)
+        key = uuid4()
+        enqueue(repo, gw, mapping, opts, key)
+        self.assertEqual(enqueue(repo, gw, mapping, opts, key).status, 'QUEUED')
+        with self.assertRaises(ImportRuleViolation) as ctx:
+            enqueue(repo, gw, mapping, opts, uuid4())
+        self.assertEqual(ctx.exception.code, 'import_running')
+
+    def test_another_active_run_of_the_company_rejects_the_enqueue(self):  # AC-04
+        repo, gw, mapping, opts = setup(rows(SALE))
+        preview(repo, gw, mapping, opts)
+        repo.running = True
+        with self.assertRaises(ImportRuleViolation) as ctx:
+            enqueue(repo, gw, mapping, opts, uuid4())
+        self.assertEqual(ctx.exception.code, 'import_running')
+
+    def test_completed_run_returns_its_stored_result(self):
+        repo, gw, mapping, opts = setup(rows(SALE))
+        preview(repo, gw, mapping, opts)
+        execute(repo, gw, mapping, opts)
+        self.assertEqual(enqueue(repo, gw, mapping, opts).status, 'COMPLETED')
+
+
+class RunClaimedTests(SimpleTestCase):
+    def _claimed(self, rows_, **options):
+        repo, gw, mapping, opts = setup(rows_, **options)
+        preview(repo, gw, mapping, opts)
+        enqueue(repo, gw, mapping, opts, uuid4())
+        repo.run = RunData(**{**repo.run.__dict__, 'status': 'RUNNING'})  # lo que hace el worker al reclamar
+        return repo, gw
+
+    def test_worker_run_loads_sales_like_the_synchronous_path_and_reports_progress(self):  # AC-02, AC-03
+        repo, gw = self._claimed(rows(SALE, ['02/10/2026', 'Café', '1', '10', 'V2', 'Ana', 'Andina', '4']))
+        run = ExecuteSalesImport(repo, gw, FakeClock()).run_claimed(repo.run.id)
+        self.assertEqual((run.status, run.counts['created'], len(gw.sales)), ('COMPLETED', 2, 2))
+        self.assertEqual(repo.progress, [(0, 2), (1, 2), (2, 2)])
+
+    def test_revalidation_failure_ends_failed_with_a_reason(self):  # AC-05
+        repo, gw = self._claimed(rows(SALE))
+        gw.caps = replace(gw.caps, customers=False)  # el módulo se deshabilitó entre el encolado y la ejecución
+        run = ExecuteSalesImport(repo, gw, FakeClock()).run_claimed(repo.run.id)
+        self.assertEqual(run.status, 'FAILED')
+        self.assertTrue(run.failure_code)
+        self.assertEqual(len(gw.sales), 0)
+
+    def test_unexpected_error_ends_failed_and_is_not_raised(self):  # AC-05
+        repo, gw = self._claimed(rows(SALE))
+
+        def boom(*args, **kwargs):
+            raise RuntimeError('boom')
+
+        repo.existing_keys = boom
+        run = ExecuteSalesImport(repo, gw, FakeClock()).run_claimed(repo.run.id)
+        self.assertEqual((run.status, run.failure_code), ('FAILED', 'unexpected_error'))

@@ -117,6 +117,22 @@ describe('SalesImportApiService', () => {
     expect(JSON.parse(counts)).toEqual({ created: 1, skipped: 0, failed: 0, withoutPosting: 2 });
   });
 
+  it('maps a queued execute (202) with its progress and a failed run with its reason', () => {
+    const counts = { created: 0, skipped: 0, failed: 0, without_posting: 0 };
+    let queued: unknown = null;
+    service.execute('r-1', REQUEST, 'key-1').subscribe((r) => (queued = r));
+    http.expectOne(`${base}r-1/execute/`).flush({ id: 'r-1', status: 'QUEUED', counts, processed: 0, total: 0 }, { status: 202, statusText: 'Accepted' });
+    expect(queued).toEqual({ id: 'r-1', status: 'QUEUED', counts: { created: 0, skipped: 0, failed: 0, withoutPosting: 0 }, processed: 0, total: 0, failure: null });
+
+    let run: { processed: number; total: number; failure: unknown } | null = null;
+    service.get('r-1').subscribe((r) => (run = r));
+    http.expectOne(`${base}r-1/`).flush({
+      id: 'r-1', filename: 'f', status: 'FAILED', created_at: 'd', created_by_name: 'ana', row_count: 3, counts,
+      processed: 2, total: 3, failure: { code: 'interrupted', message: 'm' },
+    });
+    expect(run).toEqual(jasmine.objectContaining({ processed: 2, total: 3, failure: { code: 'interrupted', message: 'm' } }));
+  });
+
   it('maps 400 to field errors, 409 import_running to its code and 409 posting issues', () => {
     let error: ImportApiError | null = null;
     service.preview('r-1', REQUEST).subscribe({ error: (e: ImportApiError) => (error = e) });

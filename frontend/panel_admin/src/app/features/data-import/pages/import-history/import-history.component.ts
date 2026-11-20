@@ -21,6 +21,8 @@ export function runStatusLabel(status: ImportRunStatus): string {
       return tr('DATA_IMPORT.RUN_STATUS.COMPLETED');
     case 'FAILED':
       return tr('DATA_IMPORT.RUN_STATUS.FAILED');
+    case 'QUEUED':
+      return tr('DATA_IMPORT.RUN_STATUS.QUEUED');
     default:
       return tr('DATA_IMPORT.RUN_STATUS.RUNNING');
   }

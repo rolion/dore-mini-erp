@@ -310,6 +310,44 @@
             @if (step === 4 && result) {
             <!-- Paso 4: resultado -->
             <div data-testid="step-result">
+              @if (inProgress) {
+              <div data-testid="step-progress">
+                <div role="status" aria-live="polite" class="mb-2">
+                  <p class="mb-1" data-testid="progress-text">
+                    @if (result.status === 'QUEUED') {
+                    {{ 'DATA_IMPORT.PROGRESS_QUEUED' | translate }}
+                    } @else {
+                    {{ 'DATA_IMPORT.PROGRESS_RUNNING' | translate: { done: result.processed, total: result.total } }}
+                    }
+                  </p>
+                  @if (result.status === 'RUNNING') {
+                  <div class="progress" style="height: 1rem">
+                    <div class="progress-bar" role="progressbar" [style.width.%]="progressPercent"
+                      [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100"
+                      [attr.aria-label]="'DATA_IMPORT.PROGRESS_LABEL' | translate" data-testid="progress-bar">
+                      {{ progressPercent }}%
+                    </div>
+                  </div>
+                  }
+                </div>
+                @if (pollError) {
+                <small class="text-danger d-block mb-2" role="alert" data-testid="poll-error">
+                  {{ 'DATA_IMPORT.POLL_ERROR' | translate }}
+                </small>
+                }
+                <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" data-testid="background-note">
+                  {{ 'DATA_IMPORT.BACKGROUND_NOTE' | translate }}
+                </div>
+                <a class="btn btn-light" routerLink="/pocketbiz/sales/import/history" data-testid="go-history-progress">
+                  {{ 'DATA_IMPORT.VIEW_HISTORY' | translate }}
+                </a>
+              </div>
+              } @else {
+              @if (result.failure) {
+              <div class="alert alert-danger" role="alert" data-testid="run-failure">
+                <strong>{{ 'DATA_IMPORT.RUN_FAILED' | translate }}</strong> {{ result.failure.message }}
+              </div>
+              }
               <div class="alert" [class.alert-success]="!hasFailures" [class.alert-warning]="hasFailures" role="status"
                 data-testid="result-alert">
                 {{ (hasFailures ? 'DATA_IMPORT.RESULT_WARN' : 'DATA_IMPORT.RESULT_OK') | translate }}
@@ -318,6 +356,11 @@
               <h6>{{ 'DATA_IMPORT.ROWS_TITLE' | translate }}</h6>
               <app-import-rows [runId]="result.id" />
               <div class="d-flex flex-wrap gap-2 mt-3">
+                @if (result.failure) {
+                <button type="button" class="btn btn-primary" data-testid="retry-import" (click)="retry()">
+                  {{ 'DATA_IMPORT.RETRY_IMPORT' | translate }}
+                </button>
+                }
                 <button type="button" class="btn btn-light" data-testid="fix-and-retry" (click)="restart()">
                   {{ 'DATA_IMPORT.FIX_AND_RETRY' | translate }}
                 </button>
@@ -325,6 +368,7 @@
                   {{ 'DATA_IMPORT.VIEW_HISTORY' | translate }}
                 </a>
               </div>
+              }
             </div>
             }
             }

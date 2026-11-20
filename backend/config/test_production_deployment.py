@@ -121,5 +121,23 @@ class ProductionDeploymentTests(unittest.TestCase):
             production_settings()
 
 
+class ImportWorkerServiceTests(unittest.TestCase):
+    """AC-11 de la importación en segundo plano: el worker se despliega con la misma imagen y sin exponerse."""
+
+    def worker_block(self):
+        text = (Path(__file__).resolve().parents[2] / 'compose.yaml').read_text(encoding='utf-8')
+        start = text.index('  import-worker:')
+        return text[start:text.index('  frontend:', start)]
+
+    def test_worker_reuses_the_backend_image_and_environment_without_ports(self):
+        block = self.worker_block()
+        self.assertIn('image: pocketbiz-backend:${IMAGE_TAG:-latest}', block)
+        self.assertIn('run_import_worker', block)
+        self.assertIn('environment: *backend-environment', block)
+        self.assertIn('- database', block)
+        for forbidden in ('ports:', 'expose:', 'build:', '- proxy'):
+            self.assertNotIn(forbidden, block)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import timedelta
 from uuid import UUID
 
@@ -10,14 +11,27 @@ from modules.data_import.domain.errors import ImportRuleViolation
 from .models import ImportedSaleModel, ImportRowResultModel, ImportRunModel
 
 STALE_AFTER = timedelta(minutes=15)
+ACTIVE_STATUSES = [ImportRunModel.QUEUED, ImportRunModel.RUNNING]
 
 
-def _run_data(model: ImportRunModel) -> RunData:
+def fail_stale(runs: QuerySet, now) -> int:
+    """Marca fallida («interrupted») una corrida `RUNNING` sin latido reciente: el proceso que la llevaba cayó."""
+    return runs.filter(status=ImportRunModel.RUNNING, heartbeat_at__lt=now - STALE_AFTER).update(
+        status=ImportRunModel.FAILED, finished_at=now, failure_code='interrupted',
+        failure_message='La importación se interrumpió antes de terminar. Vuelve a intentarla: lo ya cargado '
+                        'no se duplica.')
+
+
+def _run_data(model: ImportRunModel, light: bool = False) -> RunData:
+    """`light` no toca `headers` ni `rows` (diferidos): para consultar el estado sin cargar el archivo."""
     return RunData(
-        id=model.id, filename=model.filename, status=model.status, headers=model.headers, rows=model.rows,
+        id=model.id, filename=model.filename, status=model.status,
+        headers=[] if light else model.headers, rows=[] if light else model.rows,
         row_count=model.row_count, mapping=model.mapping, options=model.options,
         preview_signature=model.preview_signature, counts=model.counts, idempotency_key=model.idempotency_key,
-        created_by_name=model.created_by_name, created_at=model.created_at, finished_at=model.finished_at)
+        created_by_name=model.created_by_name, created_at=model.created_at, finished_at=model.finished_at,
+        processed=model.processed_count, total=model.total_count, failure_code=model.failure_code,
+        failure_message=model.failure_message)
 
 
 class DjangoImportRepository:
@@ -40,6 +54,11 @@ class DjangoImportRepository:
         model = self._runs().filter(pk=run_id).first()
         return _run_data(model) if model else None
 
+    def get_status(self, run_id: UUID) -> RunData | None:
+        """Estado y progreso sin cargar el archivo (para el sondeo de la interfaz)."""
+        model = self._runs().filter(pk=run_id).defer('headers', 'rows').first()
+        return _run_data(model, light=True) if model else None
+
     def list_runs(self) -> QuerySet:
         return self._runs().defer('rows', 'headers')
 
@@ -47,12 +66,28 @@ class DjangoImportRepository:
         self._runs().filter(pk=run_id).exclude(status__in=[ImportRunModel.RUNNING, ImportRunModel.COMPLETED]).update(
             mapping=mapping, options=options, preview_signature=signature, status=ImportRunModel.PREVIEWED)
 
+    def enqueue(self, run_id: UUID, idempotency_key: UUID | None, now) -> None:
+        """Pone la importación en cola; una sola activa (en cola o en curso) por empresa (INV-09)."""
+        with transaction.atomic():
+            fail_stale(self._runs(), now)
+            try:
+                with transaction.atomic():
+                    updated = self._runs().filter(pk=run_id).exclude(
+                        status__in=ACTIVE_STATUSES + [ImportRunModel.COMPLETED]).update(
+                        status=ImportRunModel.QUEUED, idempotency_key=idempotency_key, processed_count=0,
+                        total_count=0, failure_code='', failure_message='', started_at=None, finished_at=None)
+            except IntegrityError:
+                raise ImportRuleViolation(
+                    'import_running', 'Ya hay una importación en curso en tu empresa; espera a que termine.') from None
+        if not updated:
+            raise ImportRuleViolation('import_not_runnable', 'La importación no se puede ejecutar en su estado actual.')
+        ImportRowResultModel.objects.filter(run_id=run_id).delete()  # reintento de una corrida caída o fallida
+
     def claim(self, run_id: UUID, idempotency_key: UUID | None, now) -> None:
         """Marca la importación como en curso; una sola por empresa (INV-09). Una «en curso» sin latido reciente se
         considera caída y se marca fallida antes de reclamar."""
         with transaction.atomic():
-            self._runs().filter(status=ImportRunModel.RUNNING, heartbeat_at__lt=now - STALE_AFTER).update(
-                status=ImportRunModel.FAILED, finished_at=now)
+            fail_stale(self._runs(), now)
             try:
                 with transaction.atomic():
                     updated = self._runs().filter(pk=run_id).exclude(
@@ -66,8 +101,17 @@ class DjangoImportRepository:
             raise ImportRuleViolation('import_not_runnable', 'La importación no se puede ejecutar en su estado actual.')
         ImportRowResultModel.objects.filter(run_id=run_id).delete()  # reintento de una corrida caída
 
-    def heartbeat(self, run_id: UUID, now) -> None:
-        self._runs().filter(pk=run_id).update(heartbeat_at=now)
+    def heartbeat(self, run_id: UUID, now, processed: int | None = None, total: int | None = None) -> None:
+        values: dict = {'heartbeat_at': now}
+        if processed is not None:
+            values['processed_count'] = processed
+        if total is not None:
+            values['total_count'] = total
+        self._runs().filter(pk=run_id).update(**values)
+
+    def fail(self, run_id: UUID, code: str, message: str, now) -> None:
+        self._runs().filter(pk=run_id).update(status=ImportRunModel.FAILED, failure_code=code[:60],
+                                              failure_message=message, finished_at=now, heartbeat_at=now)
 
     def finish(self, run_id: UUID, status: str, counts: dict, now) -> None:
         self._runs().filter(pk=run_id).update(status=status, counts=counts, finished_at=now, heartbeat_at=now)
@@ -97,3 +141,30 @@ class DjangoImportRepository:
     def list_results(self, run_id: UUID, status: str | None = None) -> QuerySet:
         queryset = ImportRowResultModel.objects.filter(run__company_id=self.company_id, run_id=run_id)
         return queryset.filter(status=status) if status else queryset
+
+
+@dataclass(frozen=True)
+class QueuedRun:
+    company_id: UUID
+    run_id: UUID
+    user_id: UUID | None
+    user_name: str
+
+
+class DjangoImportQueue:
+    """Cola de corridas de **todas** las empresas: solo la usa el worker, que ejecuta cada corrida con el
+    `company_id`, usuario y nombre guardados en ella (nunca con datos de una petición)."""
+
+    def claim_next(self, now) -> QueuedRun | None:
+        with transaction.atomic():
+            model = (ImportRunModel.objects.select_for_update(skip_locked=True)
+                     .filter(status=ImportRunModel.QUEUED).defer('headers', 'rows').order_by('created_at', 'id')
+                     .first())
+            if model is None:
+                return None
+            ImportRunModel.objects.filter(pk=model.pk).update(
+                status=ImportRunModel.RUNNING, started_at=now, heartbeat_at=now)
+        return QueuedRun(model.company_id, model.id, model.created_by_id, model.created_by_name)
+
+    def fail_stale(self, now) -> int:
+        return fail_stale(ImportRunModel.objects.all(), now)

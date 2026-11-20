@@ -33,6 +33,7 @@ class FakeRepository:
         self.keys: set[str] = set()
         self.results: list[tuple] = []
         self.running = False
+        self.progress: list[tuple] = []
 
     def get_run(self, run_id):
         return self.run if run_id == self.run.id else None
@@ -46,8 +47,17 @@ class FakeRepository:
             raise ImportRuleViolation('import_running', 'en curso')
         self.run = RunData(**{**self.run.__dict__, 'status': 'RUNNING'})
 
-    def heartbeat(self, run_id, now):
-        pass
+    def enqueue(self, run_id, key, now):
+        if self.running:
+            raise ImportRuleViolation('import_running', 'en curso')
+        self.run = RunData(**{**self.run.__dict__, 'status': 'QUEUED', 'idempotency_key': key})
+
+    def heartbeat(self, run_id, now, processed=None, total=None):
+        self.progress.append((processed, total))
+
+    def fail(self, run_id, code, message, now):
+        self.run = RunData(**{**self.run.__dict__, 'status': 'FAILED', 'failure_code': code,
+                              'failure_message': message})
 
     def finish(self, run_id, status, counts, now):
         self.run = RunData(**{**self.run.__dict__, 'status': status, 'counts': counts})

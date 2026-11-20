@@ -42,6 +42,18 @@
               <dt class="col-sm-3">{{ 'DATA_IMPORT.COL_ROWS_READ' | translate }}</dt>
               <dd class="col-sm-9">{{ run.rowCount }}</dd>
             </dl>
+            @if (run.failure) {
+            <div class="alert alert-danger" role="alert" data-testid="run-failure">
+              <strong>{{ 'DATA_IMPORT.RUN_FAILED' | translate }}</strong> {{ run.failure.message }}
+            </div>
+            }
+            @if (run.status === 'QUEUED') {
+            <p class="text-muted" data-testid="run-queued">{{ 'DATA_IMPORT.PROGRESS_QUEUED' | translate }}</p>
+            } @else if (run.status === 'RUNNING') {
+            <p class="text-muted" data-testid="run-progress">
+              {{ 'DATA_IMPORT.PROGRESS_RUNNING' | translate: { done: run.processed, total: run.total } }}
+            </p>
+            }
             <app-import-counts [counts]="run.counts" />
             <h6>{{ 'DATA_IMPORT.ROWS_TITLE' | translate }}</h6>
             <app-import-rows [runId]="run.id" />
