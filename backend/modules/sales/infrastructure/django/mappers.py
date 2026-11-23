@@ -19,6 +19,7 @@ def to_entity(model: OrderModel) -> Order:
         status=OrderStatus(model.status),
         cancellation_reason=model.cancellation_reason,
         cancelled_at=model.cancelled_at,
+        warehouse_id=model.warehouse_id,
         items=[
             OrderItem(id=item.id, product_id=item.product_id, product_name=item.product_name,
                       unit_price=item.unit_price, quantity=item.quantity)
@@ -60,6 +61,7 @@ def to_order_values(order: Order) -> dict[str, object]:
         'notes': order.notes,
         'cancellation_reason': order.cancellation_reason,
         'cancelled_at': order.cancelled_at,
+        'warehouse_id': order.warehouse_id,
         'subtotal': order.subtotal,
         'discount': order.discount,
         'total': order.total,

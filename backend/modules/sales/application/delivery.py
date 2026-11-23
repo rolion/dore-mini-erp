@@ -71,6 +71,8 @@ class PreviewOrderDelivery:
         if not planned:
             return DeliveryPreview(True, False, self.stock.allow_negative_stock(), [], None, [])
         warehouses = self.stock.active_warehouses()
+        if warehouse_id is None and any(w.id == order.warehouse_id for w in warehouses):
+            warehouse_id = order.warehouse_id  # el almacén guardado en el pedido (si sigue activo) se propone primero
         selected = suggested_warehouse(warehouses, warehouse_id)
         balances = self.stock.balances(selected, [p.id for p, _ in planned]) if selected else {}
         lines = []

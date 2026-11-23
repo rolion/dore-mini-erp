@@ -227,6 +227,7 @@ class DeliverOrder:
         planned = controlled_lines(order, self.stock)
         if not planned:
             return []
+        warehouse_id = warehouse_id or order.warehouse_id  # el almacén guardado en el pedido es el predeterminado
         if not self.stock.active_warehouses():
             raise OrderRuleViolation(
                 'no_active_warehouse',
