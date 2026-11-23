@@ -89,7 +89,7 @@ Ver `docs/design/DDR-pedido-pantalla-unica-creacion-formulario-unico.md`.
 Ver `docs/adr/ADR-pedido-pantalla-unica-creacion-creacion-atomica.md`.
 
 ## Plan
-Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO). Specification readiness: READY.
+Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v4, COMPLETO). Specification readiness: READY.
 
 ## Implementación
 

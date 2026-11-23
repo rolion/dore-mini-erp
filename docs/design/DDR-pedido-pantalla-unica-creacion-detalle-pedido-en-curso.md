@@ -15,7 +15,7 @@ Plantilla **Detalle** de `docs/design/design-system.md` (sección 5) con accione
 1. **Cabecera:** `Pedido <código>` + badge de estado + badge de cobro, y a la derecha las acciones: botón primario del paso siguiente (`IN_PREPARATION` → «Marcar listo»; `READY` → «Marcar entregado», con el diálogo de entrega existente; `DELIVERED` → ninguno), **«Registrar pago»** (solo si el servidor permite cobrar), «Cancelar pedido» (outline, solo si el servidor lo permite) y «Volver a pedidos».
 2. **Datos** (`dl.row`, cuatro columnas: etiqueta/valor × 2): Cliente · Canal de venta; Fecha del pedido · Fecha de entrega; Almacén (solo si el pedido tiene almacén). En `DELIVERED` se añade «Entrega real»; las notas se muestran solo si existen.
 3. **Productos** (tabla de solo lectura): Producto · Precio unitario · Cantidad · Subtotal.
-4. **Importes** a la derecha: Subtotal · Descuento · Total (valores del servidor; sin campos editables).
+4. **Importes** a la derecha: Subtotal · Descuento · Total · Pagado · Saldo (valores del servidor; sin campos editables; el saldo en rojo si hay deuda y en verde si no; PLAN v4, AC-14).
 5. **Pagos:** el listado de pagos existente en modo solo lectura (sin formulario embebido); en `DELIVERED` se conserva la tarjeta de salida de inventario.
 6. **«Registrar pago» abre un modal** (`NgbModal`, patrón de `delivery-dialog`) con monto, método, fecha y referencia, saldo visible, errores del servidor por campo y clave de idempotencia por intento; al registrar, el modal se cierra y el detalle muestra el pedido actualizado.
 7. «Marcar listo» llama a `POST /orders/{id}/ready/` y actualiza el estado en pantalla.

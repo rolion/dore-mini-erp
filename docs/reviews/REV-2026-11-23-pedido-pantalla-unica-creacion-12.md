@@ -1,6 +1,6 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-12: Documentos desactualizados tras PLAN v4 (DDR, TASK, PR)
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v4)
