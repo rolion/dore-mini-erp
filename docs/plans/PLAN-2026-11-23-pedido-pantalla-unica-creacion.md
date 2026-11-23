@@ -1,4 +1,4 @@
-# PLAN-2026-11-23-pedido-pantalla-unica-creacion (v1)
+# PLAN-2026-11-23-pedido-pantalla-unica-creacion (v2)
 
 **Task:** TASK-pedido-pantalla-unica-creacion · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-pedido-pantalla-unica-creacion-formulario-unico · ADR-pedido-pantalla-unica-creacion-creacion-atomica
@@ -52,7 +52,7 @@ Ver TASK → «Comportamiento actual».
 - **AC-10** Aislamiento por empresa: no se aceptan cliente, producto ni almacén de otra empresa.
 
 ## Edge cases / Error cases
-- Sin productos → 400 `items`. Producto inactivo/no vendible/inexistente → 400 en `items[i].product_id`. Cantidad no entera o < 1 → 400 `items[i].quantity`.
+- Sin productos → 400 `items`. Producto inactivo/no vendible/inexistente, repetido o con cantidad no entera o < 1 → 400 `items`, con un texto por problema que empieza por «Línea N:».
 - Producto repetido en el cuerpo → 400 (la UI nunca lo envía; suma cantidades).
 - Almacén inexistente/inactivo/de otra empresa → 400 `warehouse_id`. Almacén ausente con producto controlado → 400 `warehouse_id`.
 - Productos sin stock controlado (servicios) → no exigen almacén ni stock.
@@ -64,7 +64,7 @@ Ver TASK → «Comportamiento actual».
 Mismos permisos que la creación actual: usuario autenticado con empresa y módulo `sales` habilitado (`required_modules = ('sales',)`); `company_id` sale del usuario, nunca del cuerpo.
 
 ## API contract
-- **API-01** `POST /api/orders/start/` — cuerpo y respuesta según ADR; `201` con `OrderSerializer` (+ `warehouse: {id, name} | null`); `400` errores por campo (`items` como lista indexada); `409` `{code, detail}` para reglas (`insufficient_stock` con `lines` y `warehouse`).
+- **API-01** `POST /api/orders/start/` — cuerpo y respuesta según ADR; `201` con `OrderSerializer` (+ `warehouse: {id, name} | null`); `400` errores por campo (`items` como lista de textos «Línea N: …», uno por problema); `409` `{code, detail}` para reglas (`insufficient_stock` con `lines` y `warehouse`).
 - **API-02** `GET /api/orders/{id}/` y respuestas de pedido añaden `warehouse` (nullable). Compatible hacia atrás.
 - **API-03** `POST /api/orders/{id}/deliver/` y `GET .../delivery-preview/` usan `order.warehouse_id` como valor por defecto cuando no se envía `warehouse_id`.
 - **API-04** `GET /api/settings/sales/` ya expone `sales.max_discount_percent` (sin cambio).
@@ -74,7 +74,7 @@ Mismos permisos que la creación actual: usuario autenticado con empresa y módu
 - **UI-02** Estados: cargando, vacío («Agregue al menos un producto»), error por campo, 409 de stock con `alert-warning` y filas `table-warning`, éxito con toast y navegación al detalle.
 - **UI-03** Almacén preseleccionado (único activo o predeterminado); visible solo con Inventario; Cliente visible solo con Clientes.
 - **UI-04** Importes con función pura en centavos; ayuda del descuento: «Máximo permitido: X % del subtotal».
-- **UI-05** Salir con cambios usa `unsavedChangesGuard`; accesibilidad: `label` por control, `aria-label` en quitar, foco al producto tras agregar.
+- **UI-05** Salir con cambios usa `unsavedChangesGuard`; accesibilidad: `label` por control, `aria-label` en quitar y en la cantidad de cada fila.
 - **UI-06** Textos con claves i18n en es/en/pt.
 
 ## Non-functional requirements
@@ -151,3 +151,6 @@ Nueva `sales/0004_order_warehouse.py`: `warehouse_id` UUID nullable, sin FK entr
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-23): [Specification] Aprobado por el usuario: API-01 y edge cases pasan de errores de `items` indexados por línea a una lista de textos «Línea N: …» (REV-05); UI-05 deja de exigir el foco al producto tras agregar (REV-03). Solicitado por delivery-publish (REV-03, REV-05).

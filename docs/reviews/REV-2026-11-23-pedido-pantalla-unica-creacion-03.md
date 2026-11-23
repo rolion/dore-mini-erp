@@ -1,9 +1,9 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-03: Falta el foco al selector de producto tras agregar (UI-05)
 
-**Status:** Open
+**Status:** Fixed (pendiente de re-revisión)
 **Severity:** Low
 **Category:** SPECIFICATION
-**Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v1)
+**Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v2)
 **Spec reference:** UI-05
 **Plan mode:** COMPLETO
 **Suggested owner:** delivery-start
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `order-create.component.ts` (`addLine`) no enfoca. Puede resolverse quitando esa frase de UI-05 (cambio de Specification: requiere aprobación) o implementándolo.
+
+## Resolución
+UI-05 ya no exige el foco al producto tras agregar (PLAN v2, aprobado por el usuario).

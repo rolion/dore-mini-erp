@@ -1,9 +1,9 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-05: Errores de `items` como lista de textos y no indexados (plan sin actualizar)
 
-**Status:** Open
+**Status:** Fixed (pendiente de re-revisión)
 **Severity:** Low
 **Category:** SPECIFICATION
-**Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v1)
+**Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v2)
 **Spec reference:** API-01
 **Plan mode:** COMPLETO
 **Suggested owner:** delivery-start
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `placement.py` (`_valid_lines`). Requiere una versión v2 del PLAN que lo recoja (cambio de contrato: aprobación del usuario).
+
+## Resolución
+API-01 y los edge cases describen la lista de textos «Línea N: …» que ya implementa el código (PLAN v2, aprobado por el usuario).
