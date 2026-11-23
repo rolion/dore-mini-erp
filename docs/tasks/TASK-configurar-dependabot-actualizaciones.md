@@ -1,10 +1,10 @@
 # TASK-configurar-dependabot-actualizaciones: Dependabot para detectar dependencias vulnerables o desactualizadas
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-configurar-dependabot-actualizaciones
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/117
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
@@ -12,6 +12,7 @@
 | 2026-11-23 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-23 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, diseño NO | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Plan v1 READY, PR abierto | delivery-start |
+| 2026-11-23 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -66,7 +67,9 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-23-configurar-dependabot-actualizaciones.md` (v1, COMPACTO).
 
 ## Implementación
-_Pendiente_
+Se creó `.github/dependabot.yml` (AC-01..AC-04): pip `/backend`, npm `/frontend/panel_admin`, docker `/backend` y `/frontend/panel_admin`, github-actions `/`; semanal los lunes (`America/La_Paz`), límites de PRs 5/5/3/3/3, etiqueta `dependencies`, prefijo `chore(deps)`; minor+patch agrupados en pip, npm y Actions; ignora majors de Django, `@angular/*`, TypeScript, Node, y major+minor de la imagen `python` (se queda en 3.12; los parches 3.12.x llegan con `--pull` en cada build).
+Verificación propia (AC-05): el archivo valida contra el JSON Schema de SchemaStore `dependabot-2.0` (0 errores, con `jsonschema` instalado solo en el venv temporal fuera del repo). Sin cambios en `deploy.yml` ni código de producto.
+Desviaciones: ninguna. Acción humana pendiente: activar Dependabot alerts y security updates en Settings → Code security del repositorio; tras el merge, comprobar en Insights → Dependency graph → Dependabot que los 5 ecosistemas se leen sin error (en especial que `/backend` encuentre `requirements/*.txt`).
 
 ## Review
 _Pendiente_
