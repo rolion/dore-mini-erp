@@ -1,6 +1,6 @@
 # TASK-pedido-pantalla-unica-creacion: Crear el pedido en una sola pantalla
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-pedido-pantalla-unica-creacion
@@ -14,6 +14,7 @@
 | 2026-11-23 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
 | 2026-11-23 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde (backend solo con SQLite) | delivery-build |
 | 2026-11-23 | REVIEW (sin PASS) | Quality Gate: sin Critical/High; faltan PostgreSQL y revisión visual; 9 REV abiertos | delivery-publish |
+| 2026-11-23 | REVIEW → PUBLISH | Segundo Quality Gate: PASS (2387 backend con PostgreSQL, 1811 frontend); 2 hallazgos Low abiertos | delivery-publish |
 
 ## Investigación
 
@@ -128,20 +129,15 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 **Deuda técnica.** REV-07 (`placement.py` importa `_customer_errors` de `commands.py`) y REV-08 (anchos `style="width"` inline en la tabla de `order-create`, igual que `order-items`). `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
 
 ## Review
-**Resultado: sin PASS.** El revisor devolvió FAIL condicional: no hay hallazgos Critical ni High y ningún test falla por el diff, pero no se ejecutó la suite contra PostgreSQL ni la revisión visual, y no se declara PASS con verificaciones aplicables sin ejecutar.
+**Resultado: PASS** (segundo Quality Gate, subagente independiente sobre PLAN v3, 58 archivos). Sin hallazgos Critical ni High. Primera revisión: FAIL condicional por falta de PostgreSQL; sus hallazgos están cerrados (01, 02, 03, 04, 05, 06, 09) o aceptados como deuda técnica (07, 08).
 
-- [REV-01](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-01.md) (Low, IMPLEMENTATION): Espacio perdido en urls.py (flake8 E231)
-- [REV-02](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-02.md) (Medium, IMPLEMENTATION): Suite backend contra PostgreSQL no ejecutada
-- [REV-03](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-03.md) (Low, SPECIFICATION): Falta el foco al selector de producto tras agregar (UI-05)
-- [REV-04](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-04.md) (Low, IMPLEMENTATION): Pruebas planificadas sin escribir
-- [REV-05](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-05.md) (Low, SPECIFICATION): Errores de `items` como lista de textos y no indexados (plan sin actualizar)
-- [REV-06](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-06.md) (Low, IMPLEMENTATION): Almacén guardado inactivo: la entrega y la vista previa se comportan distinto; nombre vacío
-- [REV-07](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-07.md) (Low, ARCHITECTURE): `placement.py` importa un helper privado de `commands.py`
-- [REV-08](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-08.md) (Low, DESIGN): Anchos fijos `style="width: …"` inline en la tabla
-- [REV-09](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-09.md) (Low, IMPLEMENTATION): Marca de fila con faltante por nombre y `toFieldErrors` frágil con `null`
-Evidencia completa en la sección Testing del PR 118.
-
-**Correcciones posteriores (2026-11-23, delivery-build):** REV-01, 04, 06 y 09 corregidos (ver su sección «Resolución»). Verificación propia: frontend 1794 de 1794 en verde, `npm run lint` e `i18n:check` limpios; backend `test_place_order`, `test_order_warehouse`, `test_api` y `test_delivery_inventory` (139) en verde solo sobre SQLite. REV-03 y REV-05 resueltos con el PLAN v2 (cambio de Specification aprobado por el usuario el 2026-11-23). REV-07 y REV-08 aceptados como deuda técnica por el usuario. REV-02 cerrado: suite completa contra PostgreSQL, 2387 pruebas con 4 fallos ajenos (`config.test_deploy_pipeline`, falta `/bin/bash` en Windows). Revisión visual hecha en la ampliación (ver Implementación).
+- Backend (PostgreSQL, serie): `Ran 2387 tests in 405.860s` → `OK`. `ruff`/`flake8`: 0 avisos nuevos sobre las 453 líneas añadidas; `bandit`: 0 hallazgos.
+- Frontend: `npm run lint` limpio, `i18n:check` (2470 claves, 0 faltantes), `ng test` 1811 de 1811, `npm run build` sin errores; `npm audit`: 2 moderadas en `hono` (dependencia ajena al diff).
+- AC-01..AC-15, INV-01..07, API-01..04 y UI-01..06: todos con verificación real.
+- Hallazgos nuevos (Low, abiertos, no bloquean):
+- [REV-10](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-10.md) (Low, DESIGN, abierto): Sin saldo visible en el detalle de consulta (preparación y listo)
+- [REV-11](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-11.md) (Low, IMPLEMENTATION, abierto): Sin prueba de la recarga tras `stale` del modal de pago
+- Limitación: el revisor independiente no verificó la app en navegador; la revisión visual propia de quien implementó (escritorio, móvil y tema oscuro) consta en `## Implementación`.
 
 ## Publicación
-_Pendiente_
+PR 118 listo para aprobación humana; **no se mergea desde el flujo**. Cambios sensibles que requieren decisión humana: una **migración de base de datos** (`sales/0004_order_warehouse`, aditiva y nullable) y un cambio de contrato API (endpoint nuevo `POST /api/orders/start/`, ADR `creacion-atomica`). Rollback: ver el ADR (columna nullable sin uso al revertir el código).
