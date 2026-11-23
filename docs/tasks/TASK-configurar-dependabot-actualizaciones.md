@@ -1,6 +1,6 @@
 # TASK-configurar-dependabot-actualizaciones: Dependabot para detectar dependencias vulnerables o desactualizadas
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-configurar-dependabot-actualizaciones
@@ -13,6 +13,7 @@
 | 2026-11-23 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, diseño NO | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Plan v1 READY, PR abierto | delivery-start |
 | 2026-11-23 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-23 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -72,7 +73,7 @@ Verificación propia (AC-05): el archivo valida contra el JSON Schema de SchemaS
 Desviaciones: ninguna. Acción humana pendiente: activar Dependabot alerts y security updates en Settings → Code security del repositorio; tras el merge, comprobar en Insights → Dependency graph → Dependabot que los 5 ecosistemas se leen sin error (en especial que `/backend` encuentre `requirements/*.txt`).
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-23), sin hallazgos. Alcance: solo `.github/dependabot.yml` + docs; `deploy.yml` intacto; sin secretos. AC-01..AC-04 verificados contra el YAML y los manifiestos existentes; ningún `ignore` bloquea parches de seguridad. AC-05: validación contra el JSON Schema `dependabot-2.0` con 0 errores. No verificable antes del merge: que GitHub acepte y ejecute la configuración.
 
 ## Publicación
-_Pendiente_
+PR #117 listo para aprobación humana; no se mergea. Pasos humanos: activar Dependabot alerts y security updates en Settings → Code security; tras el merge, revisar Insights → Dependency graph → Dependabot.
