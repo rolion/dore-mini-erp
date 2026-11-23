@@ -58,6 +58,11 @@ export interface OrderCustomer {
   name: string;
 }
 
+export interface OrderWarehouse {
+  id: string;
+  name: string;
+}
+
 export interface OrderItem {
   id: string;
   productId: string;
@@ -123,6 +128,8 @@ export interface Order {
   allowedTransitions: OrderAction[];
   canRegisterPayment: boolean;
   stockOutput: StockOutput | null;
+  /** Almacén desde el que se atiende el pedido; `null` sin almacén o con Inventario deshabilitado. */
+  warehouse: OrderWarehouse | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -185,6 +192,15 @@ export interface OrderInput {
   orderDate: string;
   expectedDeliveryDate: string | null;
   notes: string;
+}
+
+/** Pedido completo de la pantalla única: se crea ya en preparación (`POST /orders/start/`). */
+export interface StartOrderInput extends OrderInput {
+  /** `null` cuando Inventario está deshabilitado o ningún producto controla stock. */
+  warehouseId: string | null;
+  /** Descuento en Bs como texto decimal ("5.00"). */
+  discount: string;
+  items: { productId: string; quantity: number }[];
 }
 
 export interface PaymentInput {
@@ -257,6 +273,7 @@ export interface OrderDto {
   allowed_transitions: OrderAction[];
   can_register_payment: boolean;
   stock_output: StockOutputDto | null;
+  warehouse: OrderWarehouse | null;
   created_at: string;
   updated_at: string;
 }
@@ -313,6 +330,7 @@ export type OrderErrorField =
   | 'notes'
   | 'productId'
   | 'quantity'
+  | 'items'
   | 'discount'
   | 'deliveredDate'
   | 'warehouseId'

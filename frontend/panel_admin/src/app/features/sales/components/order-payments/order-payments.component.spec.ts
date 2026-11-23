@@ -38,7 +38,7 @@ describe('OrderPaymentsComponent', () => {
   });
 
   it('preloads the configured default payment method and keeps it after closing the form (AC-08)', () => {
-    defaults = { salesChannel: '', paymentMethod: 'QR' };
+    defaults = { ...NO_SALES_DEFAULTS, paymentMethod: 'QR' };
     render(makeOrder());
     expect(component.form.controls.paymentMethod.value).toBe('QR');
     component.form.controls.paymentMethod.setValue('CARD');

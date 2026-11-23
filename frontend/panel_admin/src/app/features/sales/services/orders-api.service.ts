@@ -23,6 +23,7 @@ import {
   Payment,
   PaymentDto,
   PaymentInput,
+  StartOrderInput,
   StockOutput,
   StockOutputDto,
   StockShortage,
@@ -41,6 +42,7 @@ const FIELD_NAMES: Record<string, OrderErrorField> = {
   notes: 'notes',
   product_id: 'productId',
   quantity: 'quantity',
+  items: 'items',
   discount: 'discount',
   delivered_date: 'deliveredDate',
   warehouse_id: 'warehouseId',
@@ -154,6 +156,7 @@ function toOrder(dto: OrderDto): Order {
     allowedTransitions: dto.allowed_transitions,
     canRegisterPayment: dto.can_register_payment,
     stockOutput: toStockOutput(dto.stock_output),
+    warehouse: dto.warehouse ?? null,
     createdAt: dto.created_at,
     updatedAt: dto.updated_at,
   };
@@ -181,7 +184,7 @@ function toFieldErrors(body: unknown): FieldErrors {
     for (const [name, value] of Object.entries(body as Record<string, unknown>)) {
       const field = FIELD_NAMES[name];
       if (field && Array.isArray(value)) {
-        errors[field] = value.map(String);
+        errors[field] = value.map((entry) => (typeof entry === 'string' ? entry : Object.values(entry as object).flat().join(' ')));
       }
     }
   }
@@ -274,6 +277,17 @@ export class OrdersApiService {
 
   create(input: OrderInput): Observable<Order> {
     return this.request(this.http.post<OrderDto>(this.baseUrl, toBody(input)));
+  }
+
+  /** Crea el pedido completo (productos, descuento y almacén) ya en preparación, en una sola operación. */
+  start(input: StartOrderInput): Observable<Order> {
+    const body: Record<string, unknown> = {
+      ...toBody(input),
+      warehouse_id: input.warehouseId,
+      discount: input.discount,
+      items: input.items.map((item) => ({ product_id: item.productId, quantity: item.quantity })),
+    };
+    return this.request(this.http.post<OrderDto>(`${this.baseUrl}start/`, body));
   }
 
   update(id: string, input: Partial<OrderInput>): Observable<Order> {

@@ -1,6 +1,6 @@
 # TASK-pedido-pantalla-unica-creacion: Crear el pedido en una sola pantalla
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-pedido-pantalla-unica-creacion
@@ -12,6 +12,7 @@
 | 2026-11-23 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-23 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE; decisiones de negocio respondidas por la persona (almacén, estado NEW) | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
+| 2026-11-23 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde (backend solo con SQLite) | delivery-build |
 
 ## Investigación
 
@@ -87,7 +88,31 @@ Ver `docs/adr/ADR-pedido-pantalla-unica-creacion-creacion-atomica.md`.
 Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** `POST /api/orders/start/` crea el pedido completo (cabecera, productos, descuento y almacén) en una sola transacción y lo deja en `IN_PREPARATION`; la ruta `/pocketbiz/sales/orders/new` es ahora una pantalla única (`order-create`) que arma el borrador en el navegador y llama a ese endpoint con «Iniciar preparación».
+
+**Backend** (commit `feat(...): POST /api/orders/start/`)
+- Dominio: `Order.warehouse_id` y `Order.assign_warehouse()` (INV-07). Migración aditiva `sales/0004_order_warehouse` (nullable, sin FK).
+- `PlaceOrder` (`sales/application/placement.py`): valida cabecera, cliente, líneas (activo, vendible, entero, sin repetir), descuento con el tope de Ventas, almacén y existencia en el almacén vía el puerto `StockOutput`; todo o nada (INV-01..06, AC-04..06, 09, 10).
+- API: `OrderStartView`, `OrderStartSerializer`, `warehouse {id, name}` en la salida del pedido (API-01/02).
+- Entrega: `DeliverOrder` y `PreviewOrderDelivery` usan el almacén guardado como valor por defecto (API-03, AC-07).
+- Pruebas: `sales/tests/test_place_order.py` (18 casos) y `DETAIL_KEYS` de `test_api.py` con `warehouse`.
+
+**Frontend**
+- `order-create` (página, plantilla y spec), `order-amounts.ts` (importes en centavos con `bigint`), `OrdersApiService.start`, `warehouse` en el modelo, `maxDiscountPercent` en `SalesSettingsService`, almacén en el detalle, ruta `new` con `unsavedChangesGuard`, claves `SALES.ORDER_CREATE.*` en es/en/pt y export público de `WarehousesApiService` en `features/inventory/index.ts`.
+- Pantalla de referencia seguida: variante «un solo paso con totales calculados» (`purchase-form`). Reutiliza `MoneyPipe`, `ng-select` y el alta rápida de cliente de `order-form`. `design-system.md` ahora cita `order-create` como segunda referencia.
+
+**Desviaciones respecto al plan**
+- Los errores de líneas de `items` se devuelven como una lista de textos «Línea N: …» (no como estructura indexada): la UI los muestra tal cual.
+- `delivery-dialog` no se modificó: ya preselecciona `preview.warehouseId`, y ahora el servidor propone el almacén del pedido (AC-07 queda cubierto por la API y su prueba).
+- Se conservó el campo opcional «Notas» (supuesto del TASK).
+
+**Verificación propia (no es el Quality Gate)**
+- Backend: `test_place_order` (18) en verde. La suite completa de `modules.sales` solo corrió con SQLite (no hay credenciales de PostgreSQL en esta máquina): 63 errores son de `pg_advisory_xact_lock`/`pg_locks`, propios de PostgreSQL; **falta correr la suite con PostgreSQL** en `delivery-publish`.
+- Frontend: `npm run lint` limpio, `npm run i18n:check` sin faltantes y 1790 pruebas de Karma en verde.
+- `ruff`/`flake8`: cero avisos en lo nuevo (el repositorio conserva avisos previos en `views.py`, `commands.py`, `order.py` y `mappers.py`).
+
+**Deuda técnica.** `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
 
 ## Review
 _Pendiente_

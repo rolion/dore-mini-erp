@@ -131,6 +131,55 @@ describe('OrdersApiService', () => {
       req.flush(makeOrderDto());
     });
 
+    it('starts a whole order in one call with snake_case body and maps the warehouse (API-01, API-02)', () => {
+      let result: Order | undefined;
+      service
+        .start({
+          customerId: null,
+          salesChannel: 'WHATSAPP',
+          orderDate: '2026-10-01',
+          expectedDeliveryDate: null,
+          notes: '',
+          warehouseId: 'w-1',
+          discount: '5.00',
+          items: [{ productId: 'p-1', quantity: 2 }],
+        })
+        .subscribe((order) => (result = order));
+      const req = http.expectOne('/api/orders/start/');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({
+        customer_id: null,
+        sales_channel: 'WHATSAPP',
+        order_date: '2026-10-01',
+        expected_delivery_date: null,
+        notes: '',
+        warehouse_id: 'w-1',
+        discount: '5.00',
+        items: [{ product_id: 'p-1', quantity: 2 }],
+      });
+      req.flush(makeOrderDto({ status: 'IN_PREPARATION', warehouse: { id: 'w-1', name: 'Central' } }));
+      expect(result?.status).toBe('IN_PREPARATION');
+      expect(result?.warehouse).toEqual({ id: 'w-1', name: 'Central' });
+    });
+
+    it('keeps the item messages of a 400 as one text per line (AC-05)', () => {
+      let error: OrderApiError | undefined;
+      service
+        .start({
+          customerId: null,
+          salesChannel: 'WHATSAPP',
+          orderDate: '2026-10-01',
+          expectedDeliveryDate: null,
+          notes: '',
+          warehouseId: null,
+          discount: '0',
+          items: [],
+        })
+        .subscribe({ error: (e: OrderApiError) => (error = e) });
+      http.expectOne('/api/orders/start/').flush({ items: ['Línea 1: x'] }, { status: 400, statusText: 'Bad Request' });
+      expect(error?.fieldErrors.items).toEqual(['Línea 1: x']);
+    });
+
     it('patches only the given fields (AC-24)', () => {
       service.update('o-1', { notes: 'x', expectedDeliveryDate: null }).subscribe();
       const req = http.expectOne('/api/orders/o-1/');

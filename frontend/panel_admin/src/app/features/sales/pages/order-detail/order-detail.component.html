@@ -66,6 +66,10 @@
                 <dd class="col-sm-7" data-testid="expected-date">
                   {{ o.expectedDeliveryDate ? (o.expectedDeliveryDate | date: 'dd/MM/yyyy') : '—' }}
                 </dd>
+                @if (o.warehouse; as warehouse) {
+                <dt class="col-sm-5">{{ 'SALES.ORDER_CREATE.ALMACEN' | translate }}</dt>
+                <dd class="col-sm-7" data-testid="warehouse">{{ warehouse.name || '—' }}</dd>
+                }
                 @if (o.deliveredDate) {
                 <dt class="col-sm-5">{{ 'SALES.ORDER_DETAIL.ENTREGA_REAL' | translate }}</dt>
                 <dd class="col-sm-7" data-testid="delivered-date">{{ o.deliveredDate | date: 'dd/MM/yyyy' }}</dd>

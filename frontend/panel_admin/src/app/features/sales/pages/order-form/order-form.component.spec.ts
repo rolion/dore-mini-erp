@@ -81,7 +81,7 @@ describe('OrderFormComponent', () => {
 
   describe('create', () => {
     it('preloads the configured default channel in a new order without forcing it (AC-08)', () => {
-      defaults = { salesChannel: 'FAIR', paymentMethod: '' };
+      defaults = { ...NO_SALES_DEFAULTS, salesChannel: 'FAIR' };
       setup();
       expect(component.form.controls.salesChannel.value).toBe('FAIR');
       component.form.controls.salesChannel.setValue('STORE');
@@ -89,7 +89,7 @@ describe('OrderFormComponent', () => {
     });
 
     it('does not preload the default channel when editing an order (AC-08)', () => {
-      defaults = { salesChannel: 'FAIR', paymentMethod: '' };
+      defaults = { ...NO_SALES_DEFAULTS, salesChannel: 'FAIR' };
       ordersApi.get.and.returnValue(of(makeOrder({ salesChannel: 'STORE' })));
       setup('o-1');
       expect(component.form.controls.salesChannel.value).toBe('STORE');
