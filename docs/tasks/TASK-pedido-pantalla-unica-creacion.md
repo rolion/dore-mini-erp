@@ -15,6 +15,7 @@
 | 2026-11-23 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde (backend solo con SQLite) | delivery-build |
 | 2026-11-23 | REVIEW (sin PASS) | Quality Gate: sin Critical/High; faltan PostgreSQL y revisión visual; 9 REV abiertos | delivery-publish |
 | 2026-11-23 | REVIEW → PUBLISH | Segundo Quality Gate: PASS (2387 backend con PostgreSQL, 1811 frontend); 2 hallazgos Low abiertos | delivery-publish |
+| 2026-11-23 | PUBLISH | Tercer Quality Gate sobre c557ff45: PASS (2387 backend, 1813 frontend, lint, i18n, build); REV-12 Low (documentos desactualizados) abierto | delivery-publish |
 | 2026-11-23 | PUBLISH (corrección) | REV-10 y REV-11 corregidos; PLAN v4 (Specification aprobada por el usuario) | delivery-build |
 
 ## Investigación
@@ -138,7 +139,7 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 - Hallazgos nuevos (Low, abiertos, no bloquean):
 - [REV-10](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-10.md) (Low, DESIGN, abierto): Sin saldo visible en el detalle de consulta (preparación y listo)
 - [REV-11](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-11.md) (Low, IMPLEMENTATION, abierto): Sin prueba de la recarga tras `stale` del modal de pago
-- **Corrección posterior al Quality Gate:** REV-10 (Pagado y Saldo en los importes, PLAN v4 aprobado por el usuario) y REV-11 (prueba de la recarga tras `stale`) corregidos; frontend 1813 de 1813, lint e `i18n:check` en verde. Este cambio no pasó por un tercer Quality Gate.
+- **Corrección posterior al Quality Gate:** REV-10 (Pagado y Saldo en los importes, PLAN v4 aprobado por el usuario) y REV-11 (prueba de la recarga tras `stale`) corregidos; frontend 1813 de 1813, lint e `i18n:check` en verde. Tercer Quality Gate (subagente independiente) sobre este cambio: PASS; backend 2387 de 2387 con PostgreSQL, frontend 1813 de 1813, lint, `i18n:check` y build en verde. Hallazgo nuevo: REV-12 (Low, documentación desactualizada tras PLAN v4). Revisión visual de las filas Pagado/Saldo en navegador: no verificada.
 - Limitación: el revisor independiente no verificó la app en navegador; la revisión visual propia de quien implementó (escritorio, móvil y tema oscuro) consta en `## Implementación`.
 
 ## Publicación
