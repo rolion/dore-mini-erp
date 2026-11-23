@@ -1,6 +1,6 @@
 # TASK-actualizar-dependencias-vulnerables-backend: Corregir vulnerabilidades de dependencias del backend
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-actualizar-dependencias-vulnerables-backend
@@ -13,6 +13,7 @@
 | 2026-11-23 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, diseño NO | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Plan v1 READY, PR abierto | delivery-start |
 | 2026-11-23 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-23 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -82,7 +83,7 @@ Verificación propia (no es el Quality Gate), con PostgreSQL 16 temporal y venv 
 Desviaciones del plan: ninguna. Deuda/seguimiento sugerido: añadir Dependabot o un job de auditoría (pip-audit) en CI; revisar las alertas de DigitalOcean que no sean de Python (imagen base, npm).
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-23). Alcance: solo `base.txt` + docs. AC-01..AC-04 verificados con evidencia: pines correctos; OSV 0 avisos en 12 paquetes; `manage.py test` 2362 tests OK (PostgreSQL 16 real, en serie); `makemigrations --check` sin cambios; `manage.py check` sin problemas. AC-05 N/A (solo .txt). Bandit informativo (solo Low, sin cambios de código). Notas de versión: DRF 3.18.2 = fixes de seguridad; 3.18.3 revierte un cambio accidental de `order_by_precedence` (no usado); Django 5.2.18/5.2.19 corrigen varios CVE (incl. parseo de cabeceras y `MultiPartParser`). Hallazgo Low informativo: `check --deploy` solo se probó con settings de test, no con `production`. Sin REV abiertos.
 
 ## Publicación
-_Pendiente_
+PR #115 listo para aprobación humana; no se mergea. Al hacer merge a `main` se despliega a producción (reconstruye la imagen con las nuevas versiones).
