@@ -1,9 +1,9 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-10: Sin saldo visible en el detalle de consulta (preparación y listo)
 
-**Status:** Open
+**Status:** Fixed (tras el Quality Gate; no repetido)
 **Severity:** Low
 **Category:** DESIGN
-**Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v3)
+**Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v4)
 **Spec reference:** AC-14, AC-11
 **Plan mode:** COMPLETO
 **Suggested owner:** delivery-start
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `order-detail.component.html`, bloque `compactLayout`. Decidir si se añaden «Pagado» y «Saldo» a los importes (cambio de Specification: requiere aprobación).
+
+## Resolución
+Los importes del detalle de consulta incluyen ahora «Pagado» y «Saldo» (verde sin deuda, rojo con deuda); AC-14 actualizado en el PLAN v4, aprobado por el usuario.

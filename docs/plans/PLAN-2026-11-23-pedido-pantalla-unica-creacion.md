@@ -1,4 +1,4 @@
-# PLAN-2026-11-23-pedido-pantalla-unica-creacion (v3)
+# PLAN-2026-11-23-pedido-pantalla-unica-creacion (v4)
 
 **Task:** TASK-pedido-pantalla-unica-creacion · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-pedido-pantalla-unica-creacion-formulario-unico · DDR-pedido-pantalla-unica-creacion-detalle-pedido-en-curso · ADR-pedido-pantalla-unica-creacion-creacion-atomica
@@ -53,7 +53,7 @@ Ver TASK → «Comportamiento actual».
 - **AC-11** El detalle de un pedido en `IN_PREPARATION`, `READY` o `DELIVERED` muestra en la cabecera código, badge de estado y badge de cobro, con las acciones a la derecha (DDR detalle en curso).
 - **AC-12** «Marcar listo» (en `IN_PREPARATION`) actualiza el estado del pedido; en `READY` el botón primario es «Marcar entregado»; en `DELIVERED` no hay botón primario.
 - **AC-13** «Registrar pago» (visible solo si el servidor permite cobrar) abre un modal; al confirmar, el pago queda registrado y el detalle muestra el pedido actualizado; los errores del servidor se ven en el modal sin perder lo escrito.
-- **AC-14** El detalle muestra, en solo lectura: Cliente, Canal, Fecha del pedido, Fecha de entrega y Almacén (si existe); tabla Producto/Precio unitario/Cantidad/Subtotal; Subtotal, Descuento y Total; y el detalle de pagos.
+- **AC-14** El detalle muestra, en solo lectura: Cliente, Canal, Fecha del pedido, Fecha de entrega y Almacén (si existe); tabla Producto/Precio unitario/Cantidad/Subtotal; Subtotal, Descuento, Total, **Pagado y Saldo**; y el detalle de pagos.
 - **AC-15** Los pedidos `NEW` y `CANCELLED` conservan el detalle actual.
 
 ## Edge cases / Error cases
@@ -123,7 +123,7 @@ Suites existentes de `sales` (`test_api`, `test_delivery_*`, `test_sales_posting
 | AC-11 | spec `order-detail` (cabecera con código y badges) |
 | AC-12 | spec `order-detail` («Marcar listo» actualiza el estado; READY y DELIVERED) |
 | AC-13 | spec `order-detail` (abre el modal) + spec `payment-dialog` (registro, errores, reintento) |
-| AC-14 | spec `order-detail` (datos, productos, importes y pagos de solo lectura) |
+| AC-14 | spec `order-detail` (datos, productos, importes incl. Pagado y Saldo, y pagos de solo lectura) |
 | AC-15 | spec `order-detail` (NEW y CANCELLED conservan el detalle) |
 
 # Implementation Plan
@@ -165,3 +165,4 @@ Ninguna.
 ## Changelog
 - **v2** (2026-11-23): [Specification] Aprobado por el usuario: API-01 y edge cases pasan de errores de `items` indexados por línea a una lista de textos «Línea N: …» (REV-05); UI-05 deja de exigir el foco al producto tras agregar (REV-03). Solicitado por delivery-publish (REV-03, REV-05).
 - **v3** (2026-11-23): [Specification] Solicitado por el usuario en el mismo PR: AC-11..AC-15 (nuevo detalle del pedido en preparación, listo y entregado, con modal de pago). Ver DDR-pedido-pantalla-unica-creacion-detalle-pedido-en-curso.
+- **v4** (2026-11-23): [Specification] Aprobado por el usuario: AC-14 añade «Pagado» y «Saldo» a los importes del detalle (REV-10). Solicitado por delivery-publish (REV-10).

@@ -132,6 +132,10 @@
               <dd class="col-6" data-testid="discount">{{ o.discount | money }}</dd>
               <dt class="col-6">{{ 'COMMON.TOTAL' | translate }}</dt>
               <dd class="col-6 fw-bold fs-5" data-testid="total">{{ o.total | money }}</dd>
+              <dt class="col-6">{{ 'SALES.ORDER_SUMMARY.PAGADO' | translate }}</dt>
+              <dd class="col-6" data-testid="paid">{{ o.paidTotal | money }}</dd>
+              <dt class="col-6">{{ 'COMMON.SALDO' | translate }}</dt>
+              <dd class="col-6 fw-bold" data-testid="balance" [class.text-danger]="hasBalance" [class.text-success]="!hasBalance">{{ o.balance | money }}</dd>
             </dl>
           </div>
         </div>

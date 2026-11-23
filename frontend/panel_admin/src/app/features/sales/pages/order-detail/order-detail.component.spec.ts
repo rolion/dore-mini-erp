@@ -674,6 +674,8 @@ describe('OrderDetailComponent', () => {
       expect(text(element, 'subtotal')).toContain('70.00');
       expect(text(element, 'discount')).toContain('5.00');
       expect(text(element, 'total')).toContain('65.00');
+      expect(text(element, 'paid')).toContain('20.00');
+      expect(text(element, 'balance')).toContain('50.00');
       expect(element.querySelectorAll('[data-testid="payment-row"]').length).toBe(1);
       expect(element.querySelector('[data-testid="edit-link"]')).toBeNull();
       expect(element.querySelector('app-order-items')).toBeNull();
@@ -717,6 +719,30 @@ describe('OrderDetailComponent', () => {
       expect(toastr.success).toHaveBeenCalled();
       expect(element.querySelector('app-payment-status-badge')?.textContent).toContain('Pagado');
       expect(q(element, 'pay-action')).toBeNull();
+    }));
+
+    it('shows the balance in a green line when nothing is owed (REV-10)', () => {
+      const element = setup(inPreparation({ paymentStatus: 'PAID', paidTotal: '65.00', balance: '0.00', canRegisterPayment: false }));
+      expect(text(element, 'balance')).toContain('0.00');
+      expect(q(element, 'balance')?.classList).toContain('text-success');
+      const owed = setup(inPreparation());
+      expect(q(owed, 'balance')?.classList).toContain('text-danger');
+    });
+
+    it('warns and reloads the order when the payment modal is dismissed because the order changed (REV-11)', fakeAsync(() => {
+      const element = setup(inPreparation());
+      spyOn(TestBed.inject(NgbModal), 'open').and.returnValue({
+        componentInstance: { init: () => undefined }, result: Promise.reject('stale'),
+      } as unknown as NgbModalRef);
+      api.get.calls.reset();
+      api.get.and.returnValue(of(inPreparation({ paidTotal: '65.00', balance: '0.00', paymentStatus: 'PAID', canRegisterPayment: false })));
+      (q(element, 'pay-action') as HTMLButtonElement).click();
+      flushMicrotasks();
+      fixture.detectChanges();
+      expect(toastr.error).toHaveBeenCalledTimes(1);
+      expect(api.get).toHaveBeenCalledOnceWith('o-1');
+      expect(text(element, 'paid')).toContain('65.00');
+      expect(toastr.success).not.toHaveBeenCalled();
     }));
 
     it('keeps the order untouched when the payment modal is dismissed (AC-13)', fakeAsync(() => {
