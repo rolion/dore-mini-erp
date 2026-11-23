@@ -1,6 +1,6 @@
 # REV-2026-11-20-reporte-ingresos-egresos-contabilidad-04: El selector de meses pierde el foco tras cada elección
 
-**Status:** Open
+**Status:** Fixed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-20-reporte-ingresos-egresos-contabilidad.md (v1)
@@ -16,3 +16,5 @@ Poder elegir varios meses seguidos sin reabrir el selector.
 Una elección por apertura. El filtro funciona: Enero y Marzo dieron totales 27500.50 / 9200.25 / 18300.25, correctos.
 ## Evidence
 Prueba manual en el navegador integrado (escritorio). No bloqueante.
+
+Resuelto junto con REV-05: la lista queda abierta tras elegir un mes (verificado con ratón).

@@ -56,6 +56,8 @@ export class IncomeExpenseComponent implements OnInit {
   filters: IncomeExpenseFilters = { periodId: '', months: [] };
   periods: FiscalPeriod[] = [];
   sort: IncomeExpenseSort | null = null;
+  /** Se recalcula solo al cambiar el reporte o los períodos: `ng-select` pierde los clics si `items` cambia en cada ciclo. */
+  monthOptions: MonthOption[] = [];
 
   readonly filterForm = inject(FormBuilder).nonNullable.group({ periodId: '', months: [[] as string[]] });
 
@@ -83,17 +85,12 @@ export class IncomeExpenseComponent implements OnInit {
     return this.filters.periodId || this.report?.period?.id || '';
   }
 
-  get monthOptions(): MonthOption[] {
-    const period = this.report?.period;
-    const chosen = this.periods.find((p) => p.id === this.selectedPeriodId);
-    const from = chosen?.startDate ?? period?.dateFrom;
-    const to = chosen?.endDate ?? period?.dateTo;
-    return from && to ? monthKeysBetween(from, to).map((id) => ({ id, label: this.monthLabel(id) })) : [];
-  }
-
   ngOnInit(): void {
     this.periodsApi.list().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (periods) => (this.periods = periods),
+      next: (periods) => {
+        this.periods = periods;
+        this.refreshMonthOptions();
+      },
       error: () => undefined, // el selector queda con el período mostrado; el reporte sigue funcionando
     });
 
@@ -114,6 +111,7 @@ export class IncomeExpenseComponent implements OnInit {
       )
       .subscribe((report) => {
         this.report = report;
+        this.refreshMonthOptions();
         this.filterForm.patchValue({ periodId: this.selectedPeriodId }, { emitEvent: false });
       });
 
@@ -160,6 +158,16 @@ export class IncomeExpenseComponent implements OnInit {
 
   monthLabel(key: string): string {
     return `${tr(`ACCOUNTING.INCOME_EXPENSE.MONTH_${key.slice(5, 7)}`)} ${key.slice(0, 4)}`;
+  }
+
+  private refreshMonthOptions(): void {
+    const period = this.report?.period;
+    const chosen = this.periods.find((p) => p.id === this.selectedPeriodId);
+    const from = chosen?.startDate ?? period?.dateFrom;
+    const to = chosen?.endDate ?? period?.dateTo;
+    const next = from && to ? monthKeysBetween(from, to).map((id) => ({ id, label: this.monthLabel(id) })) : [];
+    const same = next.length === this.monthOptions.length && next.every((o, i) => o.id === this.monthOptions[i].id);
+    if (!same) this.monthOptions = next;
   }
 
   private navigate(filters: IncomeExpenseFilters): void {

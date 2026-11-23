@@ -80,6 +80,14 @@ describe('IncomeExpenseComponent', () => {
     expect(navigate).toHaveBeenCalledWith([], jasmine.objectContaining({ queryParams: { period: 'p-1', months: '2026-01,2026-03' } }));
   });
 
+  it('keeps the same month options between change detections so mouse clicks reach ng-select (REV-05)', () => {
+    const { fixture, component } = create(report());
+    const first = component.monthOptions;
+    fixture.detectChanges();
+    fixture.detectChanges();
+    expect(component.monthOptions).toBe(first);
+  });
+
   it('changing the period resets the months (AC-05)', () => {
     const { component, navigate } = create(report(), { period: 'p-1', months: '2026-01' });
     component.onPeriod('p-0');
