@@ -20,7 +20,7 @@ urlpatterns = [
     path('', OrderListCreateView.as_view(), name='order-list'),
     # `start/` va antes que `<order_id>/` para que no se interprete como un id.
     path('start/', OrderStartView.as_view(), name='order-start'),
-    path('<str:order_id>/',OrderDetailView.as_view(), name='order-detail'),
+    path('<str:order_id>/', OrderDetailView.as_view(), name='order-detail'),
     path('<str:order_id>/items/', OrderItemListView.as_view(), name='order-item-list'),
     path('<str:order_id>/items/<str:item_id>/', OrderItemDetailView.as_view(), name='order-item-detail'),
     path('<str:order_id>/discount/', OrderDiscountView.as_view(), name='order-discount'),

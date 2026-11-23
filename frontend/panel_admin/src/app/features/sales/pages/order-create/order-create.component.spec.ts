@@ -270,7 +270,7 @@ describe('OrderCreateComponent', () => {
     });
 
     it('keeps what was typed and explains the missing stock on a 409 (AC-06)', () => {
-      const shortage = { productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' };
+      const shortage = { productId: 'p-1', productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' };
       ordersApi.start.and.returnValue(
         throwError(() => new OrderRuleError('Sin stock', 'insufficient_stock', [shortage], 'Central')),
       );
@@ -288,6 +288,21 @@ describe('OrderCreateComponent', () => {
       expect(rows[0].classList).toContain('table-warning');
       expect(rows[1].classList).not.toContain('table-warning');
       expect(component.saving).toBeFalse();
+    });
+
+    it('marks only the short product when two products share a name (REV-09)', () => {
+      const twin = product({ id: 'p-3', name: 'Bolsas', tracksStock: true });
+      const shortage = { productId: 'p-3', productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' };
+      ordersApi.start.and.returnValue(throwError(() => new OrderRuleError('Sin stock', 'insufficient_stock', [shortage], 'Central')));
+      setup();
+      fillHeader();
+      add(BAGS, 1);
+      add(twin, 4);
+      component.onSubmit();
+      fixture.detectChanges();
+      const rows = element.querySelectorAll('[data-testid="line-row"]');
+      expect(rows[0].classList).not.toContain('table-warning');
+      expect(rows[1].classList).toContain('table-warning');
     });
 
     it('shows server field errors without clearing the form and a toast for other failures', () => {

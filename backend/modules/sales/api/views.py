@@ -154,7 +154,7 @@ def _order_response(request, order, http_status: int = status.HTTP_200_OK) -> Re
         context['stock_output'] = stock.output_for(order.id)
     if order.warehouse_id is not None and stock.is_available():
         context['inventory_available'] = True
-        context['warehouse_names'] = {w.id: w.name for w in stock.active_warehouses()}
+        context['warehouse_names'] = stock.warehouse_names([order.warehouse_id])
     return Response(OrderSerializer(order, context=context).data, status=http_status)
 
 

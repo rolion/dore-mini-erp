@@ -205,7 +205,7 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
   }
 
   isShort(line: DraftLine): boolean {
-    return this.shortages.some((short) => short.productName === line.productName);
+    return this.shortages.some((short) => short.productId === line.productId);
   }
 
   get canSubmit(): boolean {

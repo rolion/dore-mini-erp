@@ -1,6 +1,6 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-06: Almacén guardado inactivo: la entrega y la vista previa se comportan distinto; nombre vacío
 
-**Status:** Open
+**Status:** Fixed (pendiente de re-revisión)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v1)
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `commands.py:230`, `delivery.py`, `views.py` (`_order_response`).
+
+## Resolución
+`DeliverOrder` usa el almacén guardado solo si sigue activo (igual que la vista previa); el nombre se resuelve con `inventory.services.get_warehouse_names` (activo o no).

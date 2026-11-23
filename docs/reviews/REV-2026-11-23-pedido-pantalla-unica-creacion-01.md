@@ -1,6 +1,6 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-01: Espacio perdido en urls.py (flake8 E231)
 
-**Status:** Open
+**Status:** Fixed (pendiente de re-revisión)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v1)
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `flake8`: `modules/sales/api/urls.py:23:27: E231 missing whitespace after ','`.
+
+## Resolución
+`urls.py` recupera el espacio; `flake8` sin avisos nuevos.

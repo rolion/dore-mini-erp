@@ -180,6 +180,13 @@ describe('OrdersApiService', () => {
       expect(error?.fieldErrors.items).toEqual(['Línea 1: x']);
     });
 
+    it('tolerates a null entry inside a list of field errors (REV-09)', () => {
+      let error: OrderApiError | undefined;
+      service.get('o-1').subscribe({ error: (e: OrderApiError) => (error = e) });
+      http.expectOne('/api/orders/o-1/').flush({ items: [null, 'Línea 2: x'] }, { status: 400, statusText: 'Bad Request' });
+      expect(error?.fieldErrors.items).toEqual(['', 'Línea 2: x']);
+    });
+
     it('patches only the given fields (AC-24)', () => {
       service.update('o-1', { notes: 'x', expectedDeliveryDate: null }).subscribe();
       const req = http.expectOne('/api/orders/o-1/');
@@ -332,7 +339,7 @@ describe('OrdersApiService', () => {
       const rule = error as OrderRuleError;
       expect(rule.code).toBe('insufficient_stock');
       expect(rule.warehouseName).toBe('Central');
-      expect(rule.shortages).toEqual([{ productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' }]);
+      expect(rule.shortages).toEqual([{ productId: 'p-1', productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' }]);
     });
 
     it('maps a warehouse validation error to its field (AC-07)', () => {

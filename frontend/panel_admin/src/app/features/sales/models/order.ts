@@ -164,6 +164,7 @@ export interface DeliveryPreview {
 
 /** Línea sin existencia suficiente de un 409 `insufficient_stock`. */
 export interface StockShortage {
+  productId: string;
   productName: string;
   unit: string | null;
   requested: string;

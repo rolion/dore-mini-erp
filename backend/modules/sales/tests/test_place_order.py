@@ -74,6 +74,40 @@ class PlaceOrderTests(DeliveryTestCase):
         self.assertEqual(OrderModel.objects.count(), 0)
         self.assertEqual(self.start([(self.bags, 2)], discount='2.00')['discount'], '2.00')
 
+    def test_repeated_product_in_the_body_is_rejected(self):  # INV-01
+        self.stock(self.bags, 5)
+        body = self.start([(self.bags, 1), (self.bags, 2)], expected_status=400)
+        self.assertEqual(len(body['items']), 1)
+        self.assertTrue(body['items'][0].startswith('Línea 2:') and 'repetido' in body['items'][0])
+        self.assertEqual(OrderModel.objects.count(), 0)
+
+    def test_customer_of_another_company_is_rejected(self):  # AC-10
+        other = CustomerModel.objects.create(company_id=make_company('Empresa B').id, name='Ajeno')
+        self.stock(self.bags, 5)
+        self.assertIn('customer_id', self.start(customer_id=str(other.id), expected_status=400))
+        self.assertEqual(OrderModel.objects.count(), 0)
+
+    def test_customers_disabled_rejects_a_customer_but_accepts_the_order_without_one(self):  # AC-09
+        set_enabled(self.company, tuple(k for k in ENABLED if k != 'customers'))
+        customer = CustomerModel.objects.create(company_id=self.company.id, name='Ana')
+        self.stock(self.bags, 5)
+        self.assertIn('customer_id', self.start(customer_id=str(customer.id), expected_status=400))
+        self.assertEqual(self.start()['status'], 'IN_PREPARATION')
+
+    def test_an_inactive_saved_warehouse_is_not_used_by_the_delivery(self):  # AC-07
+        other = make_warehouse(self.company, 'Secundario')
+        self.stock(self.bags, 5, warehouse=other)
+        order = self.start([(self.bags, 1)], warehouse_id=str(other.id))
+        other.active = False
+        other.save()
+        self.client.post(url(order, 'ready/'), {}, format='json')
+        preview = self.client.get(url(order, 'delivery-preview/')).json()
+        self.assertEqual(preview['warehouse_id'], str(self.warehouse.id))
+        response = self.client.post(url(order, 'deliver/'), {}, format='json')
+        self.assertEqual(response.status_code, 400, response.content)  # pide elegir; no usa el inactivo
+        self.assertIn('warehouse_id', response.json())
+        self.assertEqual(self.get(order)['warehouse']['name'], 'Secundario')  # nombre visible aunque esté inactivo
+
     def test_inactive_customer_is_rejected(self):
         customer = CustomerModel.objects.create(company_id=self.company.id, name='Baja', active=False)
         self.stock(self.bags, 5)

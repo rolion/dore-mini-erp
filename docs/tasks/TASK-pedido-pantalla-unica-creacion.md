@@ -129,5 +129,7 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v1, COMPLETO
 - [REV-09](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-09.md) (Low, IMPLEMENTATION): Marca de fila con faltante por nombre y `toFieldErrors` frágil con `null`
 Evidencia completa en la sección Testing del PR 118.
 
+**Correcciones posteriores (2026-11-23, delivery-build):** REV-01, 04, 06 y 09 corregidos (ver su sección «Resolución»). Verificación propia: frontend 1794 de 1794 en verde, `npm run lint` e `i18n:check` limpios; backend `test_place_order`, `test_order_warehouse`, `test_api` y `test_delivery_inventory` (139) en verde solo sobre SQLite. Siguen abiertos REV-02 (PostgreSQL), REV-03 y REV-05 (cambios de Specification: requieren aprobación), REV-07 y REV-08 (Low) y la revisión visual.
+
 ## Publicación
 _Pendiente_

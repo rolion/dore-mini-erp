@@ -117,12 +117,13 @@ function toShortages(body: unknown): StockShortage[] {
   if (!Array.isArray(lines)) return [];
   return lines.map((raw) => {
     const line = raw as {
-      product?: { name?: unknown };
+      product?: { id?: unknown; name?: unknown };
       unit?: { abbreviation?: unknown } | null;
       requested?: unknown;
       available?: unknown;
     };
     return {
+      productId: String(line.product?.id ?? ''),
       productName: String(line.product?.name ?? ''),
       unit: typeof line.unit?.abbreviation === 'string' ? line.unit.abbreviation : null,
       requested: String(line.requested ?? ''),
@@ -184,7 +185,7 @@ function toFieldErrors(body: unknown): FieldErrors {
     for (const [name, value] of Object.entries(body as Record<string, unknown>)) {
       const field = FIELD_NAMES[name];
       if (field && Array.isArray(value)) {
-        errors[field] = value.map((entry) => (typeof entry === 'string' ? entry : Object.values(entry as object).flat().join(' ')));
+        errors[field] = value.map((entry) => (typeof entry === 'string' ? entry : Object.values((entry ?? {}) as object).flat().join(' ')));
       }
     }
   }

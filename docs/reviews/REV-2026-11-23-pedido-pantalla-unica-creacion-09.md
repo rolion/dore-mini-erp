@@ -1,6 +1,6 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-09: Marca de fila con faltante por nombre y `toFieldErrors` frágil con `null`
 
-**Status:** Open
+**Status:** Fixed (pendiente de re-revisión)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v1)
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `order-create.component.ts` (`isShort`), `orders-api.service.ts` (`toFieldErrors`).
+
+## Resolución
+`isShort` y el `track` comparan por `productId` (`StockShortage.productId`); `toFieldErrors` tolera `null`. Pruebas añadidas.

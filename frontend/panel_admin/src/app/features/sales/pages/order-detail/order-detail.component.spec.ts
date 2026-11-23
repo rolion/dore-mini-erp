@@ -155,6 +155,16 @@ describe('OrderDetailComponent', () => {
       expect(text(payment, 'balance-panel')).toBe('Saldo Bs 50.00');
     });
 
+    it('shows the order warehouse in the delivery panel only when it has one (AC-07)', () => {
+      const withWarehouse = setup(makeOrder({ warehouse: { id: 'w-1', name: 'Central' } }));
+      expect(text(q(withWarehouse, 'delivery-panel') as HTMLElement, 'warehouse')).toBe('Central');
+    });
+
+    it('hides the warehouse row when the order has none (AC-07)', () => {
+      const element = setup(makeOrder({ warehouse: null }));
+      expect(q(q(element, 'delivery-panel') as HTMLElement, 'warehouse')).toBeNull();
+    });
+
     it('shows "Sin saldo" when nothing is owed and the real delivery date once delivered', () => {
       const element = setup(
         makeOrder({
