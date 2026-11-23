@@ -13,6 +13,7 @@
 | 2026-11-23 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE; decisiones de negocio respondidas por la persona (almacén, estado NEW) | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Specification READY; PR abierto | delivery-start |
 | 2026-11-23 | ENGINEERING → REVIEW | Implementación completa; pruebas propias en verde (backend solo con SQLite) | delivery-build |
+| 2026-11-23 | REVIEW (sin PASS) | Quality Gate: sin Critical/High; faltan PostgreSQL y revisión visual; 9 REV abiertos | delivery-publish |
 
 ## Investigación
 
@@ -115,7 +116,18 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v1, COMPLETO
 **Deuda técnica.** `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
 
 ## Review
-_Pendiente_
+**Resultado: sin PASS.** El revisor devolvió FAIL condicional: no hay hallazgos Critical ni High y ningún test falla por el diff, pero no se ejecutó la suite contra PostgreSQL ni la revisión visual, y no se declara PASS con verificaciones aplicables sin ejecutar.
+
+- [REV-01](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-01.md) (Low, IMPLEMENTATION): Espacio perdido en urls.py (flake8 E231)
+- [REV-02](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-02.md) (Medium, IMPLEMENTATION): Suite backend contra PostgreSQL no ejecutada
+- [REV-03](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-03.md) (Low, SPECIFICATION): Falta el foco al selector de producto tras agregar (UI-05)
+- [REV-04](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-04.md) (Low, IMPLEMENTATION): Pruebas planificadas sin escribir
+- [REV-05](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-05.md) (Low, SPECIFICATION): Errores de `items` como lista de textos y no indexados (plan sin actualizar)
+- [REV-06](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-06.md) (Low, IMPLEMENTATION): Almacén guardado inactivo: la entrega y la vista previa se comportan distinto; nombre vacío
+- [REV-07](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-07.md) (Low, ARCHITECTURE): `placement.py` importa un helper privado de `commands.py`
+- [REV-08](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-08.md) (Low, DESIGN): Anchos fijos `style="width: …"` inline en la tabla
+- [REV-09](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-09.md) (Low, IMPLEMENTATION): Marca de fila con faltante por nombre y `toFieldErrors` frágil con `null`
+Evidencia completa en la sección Testing del PR 118.
 
 ## Publicación
 _Pendiente_
