@@ -113,6 +113,12 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 - Frontend: `npm run lint` limpio, `npm run i18n:check` sin faltantes y 1790 pruebas de Karma en verde.
 - `ruff`/`flake8`: cero avisos en lo nuevo (el repositorio conserva avisos previos en `views.py`, `commands.py`, `order.py` y `mappers.py`).
 
+**Ampliación (2026-11-23, pedida por el usuario en el mismo PR): nuevo detalle del pedido en preparación, listo y entregado** (PLAN v3, AC-11..AC-15; DDR `detalle-pedido-en-curso`).
+- `order-detail` usa la vista de consulta para `IN_PREPARATION`, `READY` y `DELIVERED` (cabecera con código y badges, acciones a la derecha, datos en cuatro columnas, productos, importes y pagos de solo lectura); `NEW` y `CANCELLED` conservan el detalle anterior.
+- Nuevo `PaymentDialogComponent` (modal de «Registrar pago»); `OrderPaymentsComponent` gana `readonly`.
+- Pruebas: specs nuevos de `payment-dialog` y del detalle en curso; se adaptaron 3 pruebas del detalle anterior. Frontend 1811 de 1811, lint, `i18n:check` y `ng build` en verde.
+- Efecto a tener presente: un pedido confirmado ya no se edita desde la interfaz (productos, descuento y «Editar datos»); la API sigue permitiéndolo. Revisión visual en navegador pendiente.
+
 **Deuda técnica.** REV-07 (`placement.py` importa `_customer_errors` de `commands.py`) y REV-08 (anchos `style="width"` inline en la tabla de `order-create`, igual que `order-items`). `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
 
 ## Review

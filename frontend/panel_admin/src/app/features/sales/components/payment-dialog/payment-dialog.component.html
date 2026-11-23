@@ -1,0 +1,66 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'COMMON.REGISTRAR_PAGO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving"
+      (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (order) {
+    <p class="mb-3" data-testid="order-reference">
+      {{ 'COMMON.PEDIDO' | translate }} <strong>{{ order.code }}</strong> ·
+      <span data-testid="payment-balance-help">{{ 'SALES.ORDER_PAYMENTS.SALDO' | translate: { p0: (order.balance | money) } }}</span>
+    </p>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label for="payment-amount">{{ 'COMMON.MONTO' | translate }} <span class="text-danger">*</span></label>
+        <input id="payment-amount" type="text" inputmode="decimal" class="form-control" placeholder="0.00" formControlName="amount">
+        @if (errors.amount?.length) {
+        <small class="form-text text-danger d-block" data-testid="amount-error">{{ errors.amount?.join(' ') }}</small>
+        }
+      </div>
+      <div class="col-md-6">
+        <label for="payment-method">{{ 'COMMON.METODO' | translate }} <span class="text-danger">*</span></label>
+        <select id="payment-method" class="form-select form-control" formControlName="paymentMethod">
+          @for (method of methods; track method) {
+          <option [value]="method">{{ methodLabels[method] }}</option>
+          }
+        </select>
+        @if (errors.paymentMethod?.length) {
+        <small class="form-text text-danger" data-testid="method-error">{{ errors.paymentMethod?.join(' ') }}</small>
+        }
+      </div>
+      <div class="col-md-6">
+        <label for="payment-date">{{ 'COMMON.FECHA' | translate }} <span class="text-danger">*</span></label>
+        <input id="payment-date" type="date" class="form-control" formControlName="paymentDate" [max]="today">
+        @if (errors.paymentDate?.length) {
+        <small class="form-text text-danger" data-testid="date-error">{{ errors.paymentDate?.join(' ') }}</small>
+        }
+      </div>
+      <div class="col-md-6">
+        <label for="payment-reference">{{ 'COMMON.REFERENCIA' | translate }}</label>
+        <input id="payment-reference" type="text" class="form-control" formControlName="reference" maxlength="100">
+        @if (errors.reference?.length) {
+        <small class="form-text text-danger" data-testid="reference-error">{{ errors.reference?.join(' ') }}</small>
+        }
+      </div>
+    </div>
+    @if (errorMessage) {
+    <div class="alert alert-danger mt-3 mb-0" role="alert" data-testid="alert-error">{{ errorMessage }}</div>
+    }
+    @if (postingIssues.length) {
+    <div class="mt-3">
+      <app-posting-issues-alert [issues]="postingIssues" settingsLink="/pocketbiz/sales/settings"
+        titleKey="SALES.ORDER_DETAIL.CONFIGURACION_CONTABLE_INCOMPLETA" linkKey="SALES.ORDER_DETAIL.IR_A_CONFIGURACION_DE_VENTAS"
+        (navigate)="activeModal.dismiss()" />
+    </div>
+    }
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" data-testid="cancel" [disabled]="saving"
+      (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" class="btn btn-primary" data-testid="confirm" [disabled]="form.invalid || saving">
+      {{ saving ? ('SALES.PAYMENT_DIALOG.REGISTRANDO' | translate) : ('SALES.ORDER_PAYMENTS.REGISTRAR' | translate) }}
+    </button>
+  </div>
+</form>

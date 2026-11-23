@@ -1881,6 +1881,10 @@
       "STOCK_INSUFICIENTE": "No hay existencia suficiente en {{warehouse}}:",
       "STOCK_LINEA": "{{product}}: pedido {{requested}}, disponible {{available}}"
     },
+    "PAYMENT_DIALOG": {
+      "REGISTRANDO": "Registrando…",
+      "PEDIDO_CAMBIO": "El pedido cambió desde que se abrió el pago. Se actualizó con los datos vigentes."
+    },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "Nuevo pedido",
       "ATAJOS_DE_VISTA": "Atajos de vista",

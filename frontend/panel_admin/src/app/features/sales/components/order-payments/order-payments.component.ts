@@ -27,6 +27,8 @@ import { SalesSettingsService } from '../../services/sales-settings.service';
 export class OrderPaymentsComponent {
   readonly order = input.required<Order>();
   readonly busy = input(false);
+  /** Solo lista los pagos (sin botón ni formulario): el registro se hace en un modal desde la cabecera del detalle. */
+  readonly readonly = input(false);
   readonly errors = input<FieldErrors>({});
   readonly paymentSubmit = output<PaymentInput>();
 

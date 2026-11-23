@@ -1,7 +1,7 @@
-# PLAN-2026-11-23-pedido-pantalla-unica-creacion (v2)
+# PLAN-2026-11-23-pedido-pantalla-unica-creacion (v3)
 
 **Task:** TASK-pedido-pantalla-unica-creacion · **Modo:** COMPLETO · **Specification readiness:** READY
-**DDRs / ADRs:** DDR-pedido-pantalla-unica-creacion-formulario-unico · ADR-pedido-pantalla-unica-creacion-creacion-atomica
+**DDRs / ADRs:** DDR-pedido-pantalla-unica-creacion-formulario-unico · DDR-pedido-pantalla-unica-creacion-detalle-pedido-en-curso · ADR-pedido-pantalla-unica-creacion-creacion-atomica
 
 ## Objective
 Crear un pedido en una sola pantalla (cabecera, detalle de productos, descuento y totales) cuyo botón «Iniciar preparación» crea el pedido ya en `IN_PREPARATION`, guardando el almacén y validando el stock en ese almacén.
@@ -50,6 +50,11 @@ Ver TASK → «Comportamiento actual».
 - **AC-08** Los pedidos NEW existentes siguen abriéndose, editándose y preparándose como hoy; `POST /api/orders/` y demás endpoints no cambian.
 - **AC-09** Con Clientes o Inventario deshabilitados, la pantalla oculta el combobox correspondiente y el servidor no exige ni valida esos datos.
 - **AC-10** Aislamiento por empresa: no se aceptan cliente, producto ni almacén de otra empresa.
+- **AC-11** El detalle de un pedido en `IN_PREPARATION`, `READY` o `DELIVERED` muestra en la cabecera código, badge de estado y badge de cobro, con las acciones a la derecha (DDR detalle en curso).
+- **AC-12** «Marcar listo» (en `IN_PREPARATION`) actualiza el estado del pedido; en `READY` el botón primario es «Marcar entregado»; en `DELIVERED` no hay botón primario.
+- **AC-13** «Registrar pago» (visible solo si el servidor permite cobrar) abre un modal; al confirmar, el pago queda registrado y el detalle muestra el pedido actualizado; los errores del servidor se ven en el modal sin perder lo escrito.
+- **AC-14** El detalle muestra, en solo lectura: Cliente, Canal, Fecha del pedido, Fecha de entrega y Almacén (si existe); tabla Producto/Precio unitario/Cantidad/Subtotal; Subtotal, Descuento y Total; y el detalle de pagos.
+- **AC-15** Los pedidos `NEW` y `CANCELLED` conservan el detalle actual.
 
 ## Edge cases / Error cases
 - Sin productos → 400 `items`. Producto inactivo/no vendible/inexistente, repetido o con cantidad no entera o < 1 → 400 `items`, con un texto por problema que empieza por «Línea N:».
@@ -115,6 +120,11 @@ Suites existentes de `sales` (`test_api`, `test_delivery_*`, `test_sales_posting
 | AC-08 | regresión `sales` + spec `order-form`/`order-detail` |
 | AC-09 | API tests con módulos deshabilitados + spec componente |
 | AC-10 | API test de aislamiento por empresa |
+| AC-11 | spec `order-detail` (cabecera con código y badges) |
+| AC-12 | spec `order-detail` («Marcar listo» actualiza el estado; READY y DELIVERED) |
+| AC-13 | spec `order-detail` (abre el modal) + spec `payment-dialog` (registro, errores, reintento) |
+| AC-14 | spec `order-detail` (datos, productos, importes y pagos de solo lectura) |
+| AC-15 | spec `order-detail` (NEW y CANCELLED conservan el detalle) |
 
 # Implementation Plan
 
@@ -154,3 +164,4 @@ Ninguna.
 
 ## Changelog
 - **v2** (2026-11-23): [Specification] Aprobado por el usuario: API-01 y edge cases pasan de errores de `items` indexados por línea a una lista de textos «Línea N: …» (REV-05); UI-05 deja de exigir el foco al producto tras agregar (REV-03). Solicitado por delivery-publish (REV-03, REV-05).
+- **v3** (2026-11-23): [Specification] Solicitado por el usuario en el mismo PR: AC-11..AC-15 (nuevo detalle del pedido en preparación, listo y entregado, con modal de pago). Ver DDR-pedido-pantalla-unica-creacion-detalle-pedido-en-curso.

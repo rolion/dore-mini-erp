@@ -19,6 +19,10 @@ import {
   STALE_ORDER,
 } from '../../components/delivery-dialog/delivery-dialog.component';
 import { OrderPaymentsComponent } from '../../components/order-payments/order-payments.component';
+import {
+  PaymentDialogComponent,
+  STALE_ORDER_FOR_PAYMENT,
+} from '../../components/payment-dialog/payment-dialog.component';
 import { OrderStatusBadgeComponent } from '../../components/order-status-badge/order-status-badge.component';
 import { OrderSummaryComponent } from '../../components/order-summary/order-summary.component';
 import { PaymentStatusBadgeComponent } from '../../components/payment-status-badge/payment-status-badge.component';
@@ -48,6 +52,8 @@ export const PRIMARY_LABELS: Record<PrimaryAction, string> = {
   get deliver() { return tr('SALES.ORDER_DETAIL.MARCAR_ENTREGADO'); },
 };
 const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
+/** Estados con la vista de consulta (acciones en la cabecera y pago en un modal); NEW aún se arma y CANCELLED conserva el aviso. */
+const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVERED'];
 
 /** Pantalla de trabajo del pedido. Las acciones visibles salen del servidor; los importes no se calculan aquí. */
 @Component({
@@ -144,12 +150,21 @@ export class OrderDetailComponent implements OnInit {
     return !!this.order && this.order.paymentStatus === 'PAID' && OPEN_STATUSES.includes(this.order.status);
   }
 
+  /** Vista de consulta del pedido ya confirmado (IN_PREPARATION, READY, DELIVERED). */
+  get compactLayout(): boolean {
+    return !!this.order && COMPACT_STATUSES.includes(this.order.status);
+  }
+
   get cancelled(): boolean {
     return this.order?.status === 'CANCELLED';
   }
 
   /** «Registrar pago» de la tarjeta Cobro: abre el formulario de Pagos, lo deja a la vista y enfoca el monto. */
   openPayment(): void {
+    if (this.compactLayout) {
+      void this.openPaymentDialog();
+      return;
+    }
     this.payments()?.open();
     const host = this.paymentsHost()?.nativeElement as HTMLElement | undefined;
     host?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -221,6 +236,24 @@ export class OrderDetailComponent implements OnInit {
 
   registerPayment(input: PaymentInput): void {
     this.run(() => this.api.registerPayment(this.order!.id, input), tr('PURCHASES.PURCHASE_PAYMENTS_TAB.PAGO_REGISTRADO'));
+  }
+
+  /** «Registrar pago» en la vista de consulta: modal que registra el pago y devuelve el pedido actualizado. */
+  protected async openPaymentDialog(): Promise<void> {
+    const order = this.order;
+    if (!order || this.busy) return;
+    const ref = this.modal.open(PaymentDialogComponent, { backdrop: 'static', keyboard: false });
+    (ref.componentInstance as PaymentDialogComponent).init(order);
+    try {
+      this.order = (await ref.result) as Order;
+      this.toastr.success(tr('PURCHASES.PURCHASE_PAYMENTS_TAB.PAGO_REGISTRADO'));
+    } catch (reason) {
+      // Cerrar no cambia nada; si el pedido cambió en otra parte, se vuelve a leer.
+      if (reason === STALE_ORDER_FOR_PAYMENT) {
+        this.toastr.error(tr('SALES.PAYMENT_DIALOG.PEDIDO_CAMBIO'));
+        this.reload();
+      }
+    }
   }
 
   /** Entrega con salida de inventario: el diálogo elige almacén y confirma; devuelve el pedido entregado. */

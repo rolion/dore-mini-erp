@@ -1881,6 +1881,10 @@
       "STOCK_INSUFICIENTE": "Estoque insuficiente em {{warehouse}}:",
       "STOCK_LINEA": "{{product}}: pedido {{requested}}, disponível {{available}}"
     },
+    "PAYMENT_DIALOG": {
+      "REGISTRANDO": "Registrando…",
+      "PEDIDO_CAMBIO": "O pedido mudou desde que o pagamento foi aberto. Foi atualizado com os dados vigentes."
+    },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "Novo pedido",
       "ATAJOS_DE_VISTA": "Atalhos de visualização",

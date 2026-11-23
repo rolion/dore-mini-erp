@@ -1881,6 +1881,10 @@
       "STOCK_INSUFICIENTE": "Not enough stock in {{warehouse}}:",
       "STOCK_LINEA": "{{product}}: ordered {{requested}}, available {{available}}"
     },
+    "PAYMENT_DIALOG": {
+      "REGISTRANDO": "Registering…",
+      "PEDIDO_CAMBIO": "The order changed after the payment form was opened. It was refreshed with the current data."
+    },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "New order",
       "ATAJOS_DE_VISTA": "View shortcuts",

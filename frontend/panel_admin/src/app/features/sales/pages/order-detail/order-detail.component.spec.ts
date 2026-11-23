@@ -1,6 +1,7 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { ActivatedRoute, ParamMap, Router, convertToParamMap, provideRouter } from '@angular/router';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { NO_SALES_DEFAULTS, SalesSettingsService } from '../../services/sales-settings.service';
@@ -172,8 +173,8 @@ describe('OrderDetailComponent', () => {
           balance: '0.00', deliveredDate: '2026-10-06',
         }),
       );
-      expect(text(element, 'balance-panel')).toBe('Sin saldo');
       expect(text(element, 'delivered-date')).toBe('06/10/2026');
+      expect(element.textContent).toContain('Pagado');
     });
 
     it('warns about a delivered order with pending balance, without the other alerts', () => {
@@ -417,8 +418,7 @@ describe('OrderDetailComponent', () => {
       component.order = withOutput;
       fixture.detectChanges();
       expect(text(element, 'output-warehouse')).toBe('Central');
-      expect(text(element, 'delivery-panel')).toContain('Entregado');
-      expect(text(element, 'payment-panel')).toContain('Cobro');
+      expect(element.querySelector('app-order-status-badge')?.textContent).toContain('Entregado');
     });
 
     it('does not deliver when the dialog is dismissed', fakeAsync(() => {
@@ -637,7 +637,106 @@ describe('OrderDetailComponent', () => {
       const element = setup(
         makeOrder({ status: 'DELIVERED', editable: false, allowedTransitions: [], canRegisterPayment: true }),
       );
-      expect(element.querySelector('app-order-payments .card-header button')?.textContent).toContain('Registrar pago');
+      expect(text(element, 'pay-action')).toContain('Registrar pago');
+    });
+  });
+
+  describe('detail of an order in progress (AC-11..AC-15, DDR detalle en curso)', () => {
+    const inPreparation = (overrides: Partial<Order> = {}): Order =>
+      makeOrder({
+        status: 'IN_PREPARATION', paymentStatus: 'PARTIAL', paidTotal: '20.00', balance: '50.00',
+        allowedTransitions: ['ready', 'cancel'], canRegisterPayment: true, discount: '5.00', total: '65.00',
+        warehouse: { id: 'w-1', name: 'Central' }, payments: [makePayment()], ...overrides,
+      });
+
+    it('shows code, state badge and payment badge in the header with the actions on the right (AC-11)', () => {
+      const element = setup(inPreparation());
+      expect(text(element, 'order-code')).toContain('P-1A2B3C4D');
+      expect(element.querySelector('app-order-status-badge')?.textContent).toContain('En preparación');
+      expect(element.querySelector('app-payment-status-badge')?.textContent).toContain('Parcial');
+      expect(text(element, 'primary-action')).toBe('Marcar listo');
+      expect(text(element, 'pay-action')).toBe('Registrar pago');
+    });
+
+    it('shows customer, channel, dates and warehouse read-only (AC-14)', () => {
+      const element = setup(inPreparation());
+      expect(text(element, 'customer')).toBe('Ana Pérez');
+      expect(text(element, 'channel')).toBeTruthy();
+      expect(text(element, 'order-date')).toBe('01/10/2026');
+      expect(text(element, 'expected-date')).toBe('05/10/2026');
+      expect(text(element, 'warehouse')).toBe('Central');
+      expect(element.querySelector('input, select, textarea')).toBeNull();
+    });
+
+    it('lists the products, the amounts and the payments without edit controls (AC-14)', () => {
+      const element = setup(inPreparation());
+      expect(element.querySelectorAll('[data-testid="item-row"]').length).toBe(1);
+      expect(text(element, 'subtotal')).toContain('70.00');
+      expect(text(element, 'discount')).toContain('5.00');
+      expect(text(element, 'total')).toContain('65.00');
+      expect(element.querySelectorAll('[data-testid="payment-row"]').length).toBe(1);
+      expect(element.querySelector('[data-testid="edit-link"]')).toBeNull();
+      expect(element.querySelector('app-order-items')).toBeNull();
+    });
+
+    it('marks the order ready and updates the state on screen (AC-12)', () => {
+      const element = setup(inPreparation());
+      api.ready.and.returnValue(of(inPreparation({ status: 'READY', allowedTransitions: ['deliver', 'cancel'] })));
+      (q(element, 'primary-action') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(api.ready).toHaveBeenCalledOnceWith('o-1');
+      expect(element.querySelector('app-order-status-badge')?.textContent).toContain('Listo');
+      expect(text(element, 'primary-action')).toBe('Marcar entregado');
+    });
+
+    it('offers the delivery in READY and no primary action once delivered (AC-12)', () => {
+      const ready = setup(inPreparation({ status: 'READY', allowedTransitions: ['deliver', 'cancel'] }));
+      expect(text(ready, 'primary-action')).toBe('Marcar entregado');
+      const delivered = setup(inPreparation({ status: 'DELIVERED', editable: false, allowedTransitions: [], deliveredDate: '2026-10-06' }));
+      expect(q(delivered, 'primary-action')).toBeNull();
+      expect(text(delivered, 'delivered-date')).toBe('06/10/2026');
+    });
+
+    it('hides the payment button when the server does not allow collecting (AC-13)', () => {
+      const element = setup(inPreparation({ canRegisterPayment: false, balance: '0.00', paymentStatus: 'PAID', paidTotal: '65.00' }));
+      expect(q(element, 'pay-action')).toBeNull();
+    });
+
+    it('opens the payment modal and shows the updated order afterwards (AC-13)', fakeAsync(() => {
+      const element = setup(inPreparation());
+      const init = jasmine.createSpy('init');
+      const updated = inPreparation({ paymentStatus: 'PAID', paidTotal: '65.00', balance: '0.00', canRegisterPayment: false });
+      const open = spyOn(TestBed.inject(NgbModal), 'open').and.returnValue({
+        componentInstance: { init }, result: Promise.resolve(updated),
+      } as unknown as NgbModalRef);
+      (q(element, 'pay-action') as HTMLButtonElement).click();
+      flushMicrotasks();
+      fixture.detectChanges();
+      expect(open).toHaveBeenCalled();
+      expect(init).toHaveBeenCalledWith(jasmine.objectContaining({ id: 'o-1' }));
+      expect(toastr.success).toHaveBeenCalled();
+      expect(element.querySelector('app-payment-status-badge')?.textContent).toContain('Pagado');
+      expect(q(element, 'pay-action')).toBeNull();
+    }));
+
+    it('keeps the order untouched when the payment modal is dismissed (AC-13)', fakeAsync(() => {
+      const element = setup(inPreparation());
+      spyOn(TestBed.inject(NgbModal), 'open').and.returnValue({
+        componentInstance: { init: () => undefined }, result: Promise.reject('closed'),
+      } as unknown as NgbModalRef);
+      (q(element, 'pay-action') as HTMLButtonElement).click();
+      flushMicrotasks();
+      expect(toastr.success).not.toHaveBeenCalled();
+      expect(component.order?.paidTotal).toBe('20.00');
+    }));
+
+    it('keeps the current detail for NEW and CANCELLED orders (AC-15)', () => {
+      const created = setup(makeOrder());
+      expect(created.querySelector('app-order-items')).not.toBeNull();
+      expect(q(created, 'delivery-panel')).not.toBeNull();
+      const cancelled = setup(makeOrder({ status: 'CANCELLED', editable: false, allowedTransitions: [], cancellationReason: 'x' }));
+      expect(q(cancelled, 'alert-cancelled')).not.toBeNull();
+      expect(q(cancelled, 'delivery-panel')).not.toBeNull();
     });
   });
 });
