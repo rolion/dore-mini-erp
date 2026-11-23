@@ -1,6 +1,6 @@
 # REV-2026-11-23-pedido-pantalla-unica-creacion-08: Anchos fijos `style="width: …"` inline en la tabla
 
-**Status:** Open
+**Status:** Accepted (deuda técnica)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md (v1)
@@ -19,3 +19,6 @@ Ver evidencia.
 
 ## Evidence
 `order-create.component.html:154,156` (mismo patrón que `order-items`).
+
+## Resolución
+Aceptado como deuda técnica por el usuario (2026-11-23); sin cambio de código en esta tarea.

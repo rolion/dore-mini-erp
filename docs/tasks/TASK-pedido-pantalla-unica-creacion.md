@@ -113,7 +113,7 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 - Frontend: `npm run lint` limpio, `npm run i18n:check` sin faltantes y 1790 pruebas de Karma en verde.
 - `ruff`/`flake8`: cero avisos en lo nuevo (el repositorio conserva avisos previos en `views.py`, `commands.py`, `order.py` y `mappers.py`).
 
-**Deuda técnica.** `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
+**Deuda técnica.** REV-07 (`placement.py` importa `_customer_errors` de `commands.py`) y REV-08 (anchos `style="width"` inline en la tabla de `order-create`, igual que `order-items`). `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
 
 ## Review
 **Resultado: sin PASS.** El revisor devolvió FAIL condicional: no hay hallazgos Critical ni High y ningún test falla por el diff, pero no se ejecutó la suite contra PostgreSQL ni la revisión visual, y no se declara PASS con verificaciones aplicables sin ejecutar.
@@ -129,7 +129,7 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 - [REV-09](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-09.md) (Low, IMPLEMENTATION): Marca de fila con faltante por nombre y `toFieldErrors` frágil con `null`
 Evidencia completa en la sección Testing del PR 118.
 
-**Correcciones posteriores (2026-11-23, delivery-build):** REV-01, 04, 06 y 09 corregidos (ver su sección «Resolución»). Verificación propia: frontend 1794 de 1794 en verde, `npm run lint` e `i18n:check` limpios; backend `test_place_order`, `test_order_warehouse`, `test_api` y `test_delivery_inventory` (139) en verde solo sobre SQLite. REV-03 y REV-05 resueltos con el PLAN v2 (cambio de Specification aprobado por el usuario el 2026-11-23). Siguen abiertos REV-02 (PostgreSQL), REV-07 y REV-08 (Low) y la revisión visual.
+**Correcciones posteriores (2026-11-23, delivery-build):** REV-01, 04, 06 y 09 corregidos (ver su sección «Resolución»). Verificación propia: frontend 1794 de 1794 en verde, `npm run lint` e `i18n:check` limpios; backend `test_place_order`, `test_order_warehouse`, `test_api` y `test_delivery_inventory` (139) en verde solo sobre SQLite. REV-03 y REV-05 resueltos con el PLAN v2 (cambio de Specification aprobado por el usuario el 2026-11-23). REV-07 y REV-08 aceptados como deuda técnica por el usuario. Siguen abiertos REV-02 (suite completa con PostgreSQL) y la revisión visual.
 
 ## Publicación
 _Pendiente_
