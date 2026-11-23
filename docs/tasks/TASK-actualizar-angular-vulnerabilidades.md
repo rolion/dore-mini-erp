@@ -1,6 +1,6 @@
 # TASK-actualizar-angular-vulnerabilidades: Revisar y corregir vulnerabilidades de Angular en el frontend
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-actualizar-angular-vulnerabilidades
@@ -13,6 +13,7 @@
 | 2026-11-23 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, sin diseño | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Plan v1 READY | delivery-start |
 | 2026-11-23 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-23 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -75,7 +76,7 @@ No aplica según veredicto.
 - Desviaciones: ninguna. Deuda: avisos peer de librerías de terceros (`^19/^20`) preexistentes por `legacy-peer-deps`; el build emite avisos CSS «Unmatched selector» de la plantilla, preexistentes.
 
 ## Review
-_Pendiente_
+**PASS** (subagente aislado, sin hallazgos). AC-01..AC-04 verificados: `npm ls` Angular 21.2.26 / cli-build 21.2.31; `npm audit` 0; build de producción OK; Karma 1768/1768; lint, `i18n:check` (2453 claves, 0 faltantes) y `test:tooling` 4/4; diff solo `package.json`, `package-lock.json` y docs. Nota: el lockfile *elimina* la entrada opcional `@napi-rs/lzma-linux-x64-gnu` (binario de plataforma que npm regenera según el SO); revisión visual no aplica (sin cambios de UI).
 
 ## Publicación
-_Pendiente_
+PR #116 listo para aprobación humana. Cambio de dependencias de frontend, sin impacto en auth/BD/infraestructura. No se mergea.
