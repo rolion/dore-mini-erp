@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-pedido-pantalla-unica-creacion
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/118
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
