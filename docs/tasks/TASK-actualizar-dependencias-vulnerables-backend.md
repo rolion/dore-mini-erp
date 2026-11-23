@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-actualizar-dependencias-vulnerables-backend
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/115
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
