@@ -10,6 +10,8 @@ class OrderModel(models.Model):
     company_id = models.UUIDField(db_index=True)
     # Referencias a otros módulos solo por UUID, sin FK (los módulos no acoplan modelos ni migraciones).
     customer_id = models.UUIDField(null=True, blank=True, db_index=True)
+    # Almacén de Inventario desde el que se atiende el pedido; nulo en pedidos anteriores.
+    warehouse_id = models.UUIDField(null=True, blank=True)
     status = models.CharField(max_length=20, db_index=True)
     sales_channel = models.CharField(max_length=20, db_index=True)
     order_date = models.DateField(db_index=True)

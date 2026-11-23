@@ -187,6 +187,8 @@ class Order:
     status: OrderStatus = OrderStatus.NEW
     cancellation_reason: str = ''
     cancelled_at: datetime | None = None
+    # Almacén desde el que se atiende el pedido (solo el id: Inventario es otro módulo); None en pedidos anteriores.
+    warehouse_id: UUID | None = None
     items: list[OrderItem] = field(default_factory=list)
     payments: list[Payment] = field(default_factory=list)
     created_at: datetime | None = None
@@ -223,6 +225,11 @@ class Order:
         self.order_date = values['order_date']
         self.expected_delivery_date = values['expected_delivery_date']
         self.notes = values['notes']
+
+    def assign_warehouse(self, warehouse_id: UUID | None) -> None:
+        """Fija el almacén del pedido; solo mientras el pedido admite cambios."""
+        self.ensure_editable()
+        self.warehouse_id = warehouse_id
 
     # --- importes derivados -----------------------------------------------------------------------------------
 

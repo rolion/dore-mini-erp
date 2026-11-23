@@ -1864,6 +1864,27 @@
       "PEDIDO_ACTUALIZADO": "Order updated",
       "PEDIDO_CREADO": "Order created"
     },
+    "ORDER_CREATE": {
+      "DETALLE_DEL_PEDIDO": "Order details",
+      "ALMACEN": "Warehouse",
+      "SELECCIONE_UN_ALMACEN": "Select a warehouse",
+      "EL_ALMACEN_ES_OBLIGATORIO": "Choose the warehouse that will fulfil the order.",
+      "SIN_ALMACENES_ACTIVOS": "There are no active warehouses: create or activate one in Inventory.",
+      "FECHA_DE_ENTREGA": "Delivery date",
+      "AGREGUE_AL_MENOS_UN_PRODUCTO": "Add at least one product to start preparation.",
+      "MAXIMO_DESCUENTO": "Maximum allowed: {{percent}} % of the subtotal (Bs {{amount}}).",
+      "DESCUENTO_INVALIDO": "Enter a valid amount with up to 2 decimals.",
+      "DESCUENTO_SUPERA_SUBTOTAL": "The discount cannot exceed the subtotal.",
+      "DESCUENTO_SUPERA_MAXIMO": "The discount exceeds the maximum allowed ({{percent}} % of the subtotal).",
+      "CREANDO": "Creating…",
+      "PEDIDO_EN_PREPARACION": "Order created and in preparation",
+      "STOCK_INSUFICIENTE": "Not enough stock in {{warehouse}}:",
+      "STOCK_LINEA": "{{product}}: ordered {{requested}}, available {{available}}"
+    },
+    "PAYMENT_DIALOG": {
+      "REGISTRANDO": "Registering…",
+      "PEDIDO_CAMBIO": "The order changed after the payment form was opened. It was refreshed with the current data."
+    },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "New order",
       "ATAJOS_DE_VISTA": "View shortcuts",
