@@ -157,6 +157,12 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/accounting/pages/cash-flow/cash-flow.component').then(m => m.CashFlowComponent),
             },
             {
+                path: 'accounting/income-expense',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/income-expense/income-expense.component').then(m => m.IncomeExpenseComponent),
+            },
+            {
                 path: 'accounting/entries',
                 canActivate: [moduleGuard],
                 data: { module: 'accounting' },

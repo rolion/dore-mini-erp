@@ -9,7 +9,8 @@
         "ACCOUNTS": "Contas",
         "JOURNAL": "Movimentos",
         "BALANCES": "Saldos",
-        "CASH_FLOW": "Fluxo de dinheiro"
+        "CASH_FLOW": "Fluxo de dinheiro",
+        "INCOME_EXPENSE": "Receitas e despesas"
       }
     },
     "AGENDA": {
@@ -3193,6 +3194,32 @@
       "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
       "PAGINATION": "Páginas de movimentos",
       "FILTER_TOTALS": "Totais do filtro: entradas {{inflow}}, saídas {{outflow}}, transferências recebidas {{transfersIn}} e enviadas {{transfersOut}}."
+    },
+    "INCOME_EXPENSE": {
+      "TITULO": "Receitas e despesas",
+      "PERIODO": "Período fiscal",
+      "MES": "Mês",
+      "TODOS_LOS_MESES": "Todos os meses",
+      "COL_MES": "Mês",
+      "INGRESO": "Receita",
+      "EGRESO": "Despesa",
+      "UTILIDAD": "Lucro",
+      "TOTAL": "Total",
+      "PERDIDA": "prejuízo",
+      "SIN_PERIODOS": "Sem períodos fiscais.",
+      "NOTA": "Receitas das contas de Receitas; despesas das contas de Despesas e Custos, pela data contábil do lançamento. Lucro = Receita − Despesa.",
+      "MONTH_01": "Janeiro",
+      "MONTH_02": "Fevereiro",
+      "MONTH_03": "Março",
+      "MONTH_04": "Abril",
+      "MONTH_05": "Maio",
+      "MONTH_06": "Junho",
+      "MONTH_07": "Julho",
+      "MONTH_08": "Agosto",
+      "MONTH_09": "Setembro",
+      "MONTH_10": "Outubro",
+      "MONTH_11": "Novembro",
+      "MONTH_12": "Dezembro"
     }
   },
   "DATA_IMPORT": {

@@ -1,0 +1,127 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'ACCOUNTING.INCOME_EXPENSE.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'ACCOUNTING.INCOME_EXPENSE.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'ACCOUNTING.INCOME_EXPENSE.TITULO' | translate }}</strong></h2>
+              </div>
+            </div>
+
+            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
+              <div class="col-lg-3 col-md-4 col-12">
+                <label for="filter-month">{{ 'ACCOUNTING.INCOME_EXPENSE.MES' | translate }}</label>
+                <ng-select inputId="filter-month" [items]="monthOptions" bindLabel="label" bindValue="id" [multiple]="true"
+                  formControlName="months" [closeOnSelect]="false" [clearable]="true" data-testid="filter-month"
+                  [placeholder]="'ACCOUNTING.INCOME_EXPENSE.TODOS_LOS_MESES' | translate"
+                  [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [ariaLabel]="'ACCOUNTING.INCOME_EXPENSE.MES' | translate"
+                  (change)="onMonths(filterForm.controls.months.value)">
+                </ng-select>
+              </div>
+              <div class="col-lg-3 col-md-4 col-12">
+                <label for="filter-period">{{ 'ACCOUNTING.INCOME_EXPENSE.PERIODO' | translate }}</label>
+                <select id="filter-period" class="form-select form-control" data-testid="filter-period"
+                  [value]="selectedPeriodId" (change)="onPeriod($any($event.target).value)">
+                  @if (periods.length === 0 && report?.period) {
+                  <option [value]="report!.period!.id" selected>{{ report!.period!.name }}</option>
+                  }
+                  @for (period of periods; track period.id) {
+                  <option [value]="period.id" [selected]="period.id === selectedPeriodId">{{ period.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-lg-2 col-md-4 col-12 d-flex align-items-end">
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+            </form>
+
+            @if (errorMessage) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            }
+
+            @if (loading && !report) {
+            <p class="m-3 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            }
+
+            @if (noPeriods) {
+            <div class="text-center p-4" data-testid="empty">
+              <p class="mb-0">{{ 'ACCOUNTING.INCOME_EXPENSE.SIN_PERIODOS' | translate }}</p>
+            </div>
+            } @else if (report && report.period) {
+            <small class="text-muted d-block m-2" data-testid="note">{{ 'ACCOUNTING.INCOME_EXPENSE.NOTA' | translate }}</small>
+            <div class="table-responsive mx-0 mx-sm-2 my-2">
+              <table class="table table-hover align-middle mb-0 income-expense-table" data-testid="income-expense-table">
+                <thead>
+                  <tr>
+                    <th [attr.aria-sort]="ariaSort('month')">
+                      <button type="button" class="btn btn-link p-0 text-reset fw-bold text-decoration-none" data-testid="sort-month"
+                        (click)="sortBy('month')">{{ 'ACCOUNTING.INCOME_EXPENSE.COL_MES' | translate }} <i class="fas" [class]="sortIcon('month')" aria-hidden="true"></i></button>
+                    </th>
+                    <th class="text-end" [attr.aria-sort]="ariaSort('income')">
+                      <button type="button" class="btn btn-link p-0 text-reset fw-bold text-decoration-none" data-testid="sort-income"
+                        (click)="sortBy('income')">{{ 'ACCOUNTING.INCOME_EXPENSE.INGRESO' | translate }} <i class="fas" [class]="sortIcon('income')" aria-hidden="true"></i></button>
+                    </th>
+                    <th class="text-end" [attr.aria-sort]="ariaSort('expense')">
+                      <button type="button" class="btn btn-link p-0 text-reset fw-bold text-decoration-none" data-testid="sort-expense"
+                        (click)="sortBy('expense')">{{ 'ACCOUNTING.INCOME_EXPENSE.EGRESO' | translate }} <i class="fas" [class]="sortIcon('expense')" aria-hidden="true"></i></button>
+                    </th>
+                    <th class="text-end" [attr.aria-sort]="ariaSort('profit')">
+                      <button type="button" class="btn btn-link p-0 text-reset fw-bold text-decoration-none" data-testid="sort-profit"
+                        (click)="sortBy('profit')">{{ 'ACCOUNTING.INCOME_EXPENSE.UTILIDAD' | translate }} <i class="fas" [class]="sortIcon('profit')" aria-hidden="true"></i></button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows; track row.month) {
+                  <tr data-testid="month-row">
+                    <td data-testid="month">{{ monthLabel(row.month) }}</td>
+                    <td class="text-end text-nowrap" data-testid="income">{{ row.income | money }}</td>
+                    <td class="text-end text-nowrap" data-testid="expense">{{ row.expense | money }}</td>
+                    <td class="text-end text-nowrap" data-testid="profit" [class.text-danger]="isLoss(row.profit)">
+                      {{ row.profit | money }}
+                      @if (isLoss(row.profit)) {
+                      <small>({{ 'ACCOUNTING.INCOME_EXPENSE.PERDIDA' | translate }})</small>
+                      }
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="fw-bold" data-testid="totals-row">
+                    <td>{{ 'ACCOUNTING.INCOME_EXPENSE.TOTAL' | translate }}</td>
+                    <td class="text-end text-nowrap" data-testid="total-income">{{ report.totals.income | money }}</td>
+                    <td class="text-end text-nowrap" data-testid="total-expense">{{ report.totals.expense | money }}</td>
+                    <td class="text-end text-nowrap" data-testid="total-profit" [class.text-danger]="isLoss(report.totals.profit)">
+                      {{ report.totals.profit | money }}
+                      @if (isLoss(report.totals.profit)) {
+                      <small>({{ 'ACCOUNTING.INCOME_EXPENSE.PERDIDA' | translate }})</small>
+                      }
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
