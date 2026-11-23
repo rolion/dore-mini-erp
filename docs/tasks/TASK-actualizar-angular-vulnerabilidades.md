@@ -1,6 +1,6 @@
 # TASK-actualizar-angular-vulnerabilidades: Revisar y corregir vulnerabilidades de Angular en el frontend
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-actualizar-angular-vulnerabilidades
@@ -12,6 +12,7 @@
 | 2026-11-23 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-23 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, sin diseño | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Plan v1 READY | delivery-start |
+| 2026-11-23 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -67,7 +68,11 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-23-actualizar-angular-vulnerabilidades.md` (v1, COMPACTO, READY).
 
 ## Implementación
-_Pendiente_
+- `frontend/panel_admin/package.json`: mínimos `^21.2.26` para animations, common, compiler, compiler-cli, core, forms, localize, platform-browser(-dynamic), router; `@angular/build` y `@angular/cli` `^21.2.31` (AC-01).
+- `package-lock.json`: Angular 21.2.26, cli/build 21.2.31 (con `@angular-devkit/*`, `@schematics/angular`, vite/rollup en su patch), `hono` 4.13.21 y `@hono/node-server` 2.1.11 (AC-02: `npm audit` → 0 vulnerabilidades).
+- Sin cambios en `src/`, `overrides`, `tools/minimatch-compat` ni Dockerfile (AC-04). Sin paquetes nuevos; `npm ci --ignore-scripts`.
+- Verificación propia (no es el Quality Gate): `i18n:check`, `test:tooling` (4/4), `lint`, build de producción y Karma 1768/1768 pasan con Angular 21.2.26 (AC-03).
+- Desviaciones: ninguna. Deuda: avisos peer de librerías de terceros (`^19/^20`) preexistentes por `legacy-peer-deps`; el build emite avisos CSS «Unmatched selector» de la plantilla, preexistentes.
 
 ## Review
 _Pendiente_
