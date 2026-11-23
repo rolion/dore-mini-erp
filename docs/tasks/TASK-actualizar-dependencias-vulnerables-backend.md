@@ -1,6 +1,6 @@
 # TASK-actualizar-dependencias-vulnerables-backend: Corregir vulnerabilidades de dependencias del backend
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-actualizar-dependencias-vulnerables-backend
@@ -12,6 +12,7 @@
 | 2026-11-23 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-23 | INVESTIGATION → PLANNING | Veredicto NEEDS_PLAN, diseño NO | delivery-start |
 | 2026-11-23 | PLANNING → ENGINEERING | Plan v1 READY, PR abierto | delivery-start |
+| 2026-11-23 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,16 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-23-actualizar-dependencias-vulnerables-backend.md` (v1, COMPACTO).
 
 ## Implementación
-_Pendiente_
+Cambio solo en `backend/requirements/base.txt`: `Django 5.2.17 → 5.2.19`, `djangorestframework 3.18.1 → 3.18.3`, `psycopg[binary] 3.3.6 → 3.3.9`. Sin dependencias nuevas, sin cambios de código ni migraciones.
+
+Verificación propia (no es el Quality Gate), con PostgreSQL 16 temporal y venv fuera del repo:
+- AC-01: pines actualizados.
+- AC-02: consulta OSV de los 12 paquetes resueltos de `production.txt`: 0 avisos (antes: 3 en DRF).
+- AC-03: `python manage.py test` → 2362 tests, OK (en serie; `--parallel` no funciona en Windows).
+- AC-04: `makemigrations --check` sin cambios; `check --deploy` sin errores (los 5 avisos W* vienen de `config.settings.test`, no de producción).
+- AC-05: solo `.txt`, nada que lintear.
+
+Desviaciones del plan: ninguna. Deuda/seguimiento sugerido: añadir Dependabot o un job de auditoría (pip-audit) en CI; revisar las alertas de DigitalOcean que no sean de Python (imagen base, npm).
 
 ## Review
 _Pendiente_
