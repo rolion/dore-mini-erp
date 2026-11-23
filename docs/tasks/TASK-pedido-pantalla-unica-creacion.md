@@ -117,7 +117,13 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 - `order-detail` usa la vista de consulta para `IN_PREPARATION`, `READY` y `DELIVERED` (cabecera con código y badges, acciones a la derecha, datos en cuatro columnas, productos, importes y pagos de solo lectura); `NEW` y `CANCELLED` conservan el detalle anterior.
 - Nuevo `PaymentDialogComponent` (modal de «Registrar pago»); `OrderPaymentsComponent` gana `readonly`.
 - Pruebas: specs nuevos de `payment-dialog` y del detalle en curso; se adaptaron 3 pruebas del detalle anterior. Frontend 1811 de 1811, lint, `i18n:check` y `ng build` en verde.
-- Efecto a tener presente: un pedido confirmado ya no se edita desde la interfaz (productos, descuento y «Editar datos»); la API sigue permitiéndolo. Revisión visual en navegador pendiente.
+- Efecto a tener presente: un pedido confirmado ya no se edita desde la interfaz (productos, descuento y «Editar datos»); la API sigue permitiéndolo. Revisión visual en navegador: ver el párrafo siguiente.
+
+**Revisión visual en navegador (2026-11-23, hecha por quien implementó; no sustituye al Quality Gate):** backend y frontend levantados con una base SQLite descartable y datos de prueba. Verificado en escritorio (1440 px) y móvil (375 px, sin scroll horizontal) y con el tema oscuro de la plantilla:
+- Pantalla `/sales/orders/new`: estructura pedida, producto + cantidad + «Agregar», totales (Subtotal 155, Descuento 5, Total 150) y creación real en `IN_PREPARATION` con almacén, que navega al detalle.
+- Detalle en preparación, listo y entregado: cabecera con badges y acciones, datos en cuatro columnas, productos, importes y pagos; «Marcar listo» cambió el estado a «Listo» y el botón a «Marcar entregado»; el modal de pago mostró el error de monto (999 > saldo) sin perder lo escrito y registró 120.00 (tag «Pagado», sin botón de pago); el entregado muestra entrega real y salida de inventario.
+- Hallazgo bajo, ya existente: en el tema oscuro el título `Pedido P-…` (un `h4` fuera de tarjeta) queda en negro sobre fondo oscuro; es un límite de la plantilla y no se tocó.
+- No verificado: el tope de descuento configurado (la base de prueba usa 100 %; cubierto por pruebas automáticas) y la tabla de líneas de `order-create` en móvil.
 
 **Deuda técnica.** REV-07 (`placement.py` importa `_customer_errors` de `commands.py`) y REV-08 (anchos `style="width"` inline en la tabla de `order-create`, igual que `order-items`). `StockOutputAdapter` lanza `InsufficientStockForDelivery` también al iniciar preparación (el nombre dice «entrega»); se dejó para no ampliar el alcance. Un reintento tras un 201 perdido podría duplicar el pedido (riesgo aceptado en el ADR).
 
@@ -135,7 +141,7 @@ Ver `docs/plans/PLAN-2026-11-23-pedido-pantalla-unica-creacion.md` (v2, COMPLETO
 - [REV-09](docs/reviews/REV-2026-11-23-pedido-pantalla-unica-creacion-09.md) (Low, IMPLEMENTATION): Marca de fila con faltante por nombre y `toFieldErrors` frágil con `null`
 Evidencia completa en la sección Testing del PR 118.
 
-**Correcciones posteriores (2026-11-23, delivery-build):** REV-01, 04, 06 y 09 corregidos (ver su sección «Resolución»). Verificación propia: frontend 1794 de 1794 en verde, `npm run lint` e `i18n:check` limpios; backend `test_place_order`, `test_order_warehouse`, `test_api` y `test_delivery_inventory` (139) en verde solo sobre SQLite. REV-03 y REV-05 resueltos con el PLAN v2 (cambio de Specification aprobado por el usuario el 2026-11-23). REV-07 y REV-08 aceptados como deuda técnica por el usuario. REV-02 cerrado: suite completa contra PostgreSQL, 2387 pruebas con 4 fallos ajenos (`config.test_deploy_pipeline`, falta `/bin/bash` en Windows). Sigue pendiente la revisión visual en navegador.
+**Correcciones posteriores (2026-11-23, delivery-build):** REV-01, 04, 06 y 09 corregidos (ver su sección «Resolución»). Verificación propia: frontend 1794 de 1794 en verde, `npm run lint` e `i18n:check` limpios; backend `test_place_order`, `test_order_warehouse`, `test_api` y `test_delivery_inventory` (139) en verde solo sobre SQLite. REV-03 y REV-05 resueltos con el PLAN v2 (cambio de Specification aprobado por el usuario el 2026-11-23). REV-07 y REV-08 aceptados como deuda técnica por el usuario. REV-02 cerrado: suite completa contra PostgreSQL, 2387 pruebas con 4 fallos ajenos (`config.test_deploy_pipeline`, falta `/bin/bash` en Windows). Revisión visual hecha en la ampliación (ver Implementación).
 
 ## Publicación
 _Pendiente_
