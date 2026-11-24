@@ -56,6 +56,12 @@
     "CUSTOMER": {
       "TEXT": "Customer"
     },
+    "CRM": {
+      "TEXT": "CRM",
+      "LIST": {
+        "CUSTOMERS": "Customers"
+      }
+    },
     "ORDERS": {
       "TEXT": "Orders"
     },
@@ -3398,5 +3404,35 @@
     "ERR_GENERIC": "An unexpected error occurred. Please try again.",
     "ERR_VALIDATION": "Check the data you entered.",
     "ERR_NOT_FOUND": "Import not found."
+  },
+  "CRM": {
+    "CUSTOMER_LIST": {
+      "TITLE": "Customers",
+      "BREADCRUMB": "CRM",
+      "SEARCH": "Search by name or phone",
+      "BRANCH": "Branch",
+      "ALL_BRANCHES": "All branches",
+      "NAME": "Name",
+      "PHONE": "Phone",
+      "ORDERS": "Orders",
+      "BALANCE": "Balance",
+      "NO_PURCHASES": "No purchases",
+      "EMPTY": "There are no customers yet. Register them under Customers to see them here.",
+      "EMPTY_FILTERED": "No customers match the filters.",
+      "GO_CUSTOMERS": "Go to Customers",
+      "FILTERS": "Filters",
+      "FILTERS_ACTIVE": "{{count}} active filters",
+      "APPLY": "Apply filters",
+      "CLEAR": "Clear filters",
+      "ERROR": "The customer list could not be loaded.",
+      "RETRY": "Retry",
+      "VIEW": "View profile",
+      "SHOWING": "Showing {{from}}–{{to}} of {{total}}",
+      "LOADING": "Loading customers…",
+      "ACTIVE_FILTERS": "Active filters",
+      "SEARCH_BADGE": "Search: {{value}}",
+      "BRANCH_BADGE": "Branch: {{value}}",
+      "LAST_PURCHASE": "Last purchase"
+    }
   }
 }

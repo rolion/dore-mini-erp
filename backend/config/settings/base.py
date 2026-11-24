@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'modules.quotations',
     'modules.receivables',
     'modules.reporting',
+    'modules.crm',
     'modules.modularity',
     'modules.accounting',
     'modules.data_import',
