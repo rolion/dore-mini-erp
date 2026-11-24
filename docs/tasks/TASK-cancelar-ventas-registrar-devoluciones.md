@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cancelar-ventas-registrar-devoluciones
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/119
 **Fuente:** https://trello.com/c/xkhyFuVJ/22-cancelar-ventas-y-registrar-devoluciones-con-reversi%C3%B3n-contable
 
 ## Historial de transiciones
