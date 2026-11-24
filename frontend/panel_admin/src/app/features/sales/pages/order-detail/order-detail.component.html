@@ -29,6 +29,10 @@
         <button type="button" class="btn btn-outline-primary" data-testid="pay-action" [disabled]="busy"
           (click)="openPayment()">{{ 'COMMON.REGISTRAR_PAGO' | translate }}</button>
         }
+        @if (canReturn) {
+        <button type="button" class="btn btn-outline-danger" data-testid="return-action" [disabled]="busy"
+          (click)="registerReturn()">{{ 'SALES.ORDER_RETURN.REGISTRAR_DEVOLUCION' | translate }}</button>
+        }
         @if (canCancel) {
         <button type="button" class="btn btn-outline-danger" data-testid="cancel-action" [disabled]="busy"
           (click)="cancel()">{{ 'SALES.ORDER_DETAIL.CANCELAR_PEDIDO' | translate }}</button>
@@ -50,6 +54,10 @@
       <div>{{ 'SALES.ORDER_DETAIL.LOS_PAGOS_REGISTRADOS_SE_CONSERVAN' | translate }}</div>
       }
     </div>
+    <app-order-reversal-card [order]="o" />
+    }
+    @if (returned) {
+    <app-order-reversal-card [order]="o" />
     }
     @if (deliveredWithBalance) {
     <div class="alert alert-warning" role="alert" data-testid="alert-delivered-balance">

@@ -7,6 +7,10 @@ import { Page } from '../../../shared/models/page';
 import {
   DeliveryPreview,
   DeliveryPreviewDto,
+  OrderReversal,
+  OrderReversalDto,
+  ReturnPreview,
+  ReturnPreviewDto,
   FieldErrors,
   Order,
   OrderApiError,
@@ -112,6 +116,62 @@ function toPreview(dto: DeliveryPreviewDto): DeliveryPreview {
   };
 }
 
+function toReversal(dto: OrderReversalDto | null | undefined): OrderReversal | null {
+  if (!dto) return null;
+  return {
+    movements: dto.movements.map((m) => ({
+      id: m.id,
+      productName: m.product.name,
+      quantity: m.quantity,
+      unit: m.unit.abbreviation,
+      warehouseName: m.warehouse_name,
+      reversedById: m.reversed_by_id,
+      reversedByReference: m.reversed_by_reference,
+    })),
+    entries: dto.entries.map((e) => ({
+      event: e.event,
+      id: e.id,
+      accountingDate: e.accounting_date,
+      description: e.description,
+      total: e.total,
+      reversedById: e.reversed_by_id,
+    })),
+  };
+}
+
+function toReturnPreview(dto: ReturnPreviewDto): ReturnPreview {
+  return {
+    orderCode: dto.order_code,
+    inventoryEnabled: dto.inventory_enabled,
+    requiresRefundAcknowledgement: dto.requires_refund_acknowledgement,
+    items: dto.items.map((i) => ({ productId: i.product.id, productName: i.product.name, quantity: i.quantity })),
+    payments: dto.payments.map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      paymentMethod: p.payment_method,
+      paymentDate: p.payment_date,
+    })),
+    stock: dto.stock
+      ? {
+          warehouseName: dto.stock.warehouse.name,
+          lines: dto.stock.lines.map((l) => ({
+            productId: l.product.id,
+            productName: l.product.name,
+            quantity: l.quantity,
+            unit: l.unit.abbreviation,
+          })),
+        }
+      : null,
+    entries: dto.entries.map((e) => ({
+      event: e.event,
+      id: e.id,
+      accountingDate: e.accounting_date,
+      description: e.description,
+      total: e.total,
+    })),
+  };
+}
+
 function toShortages(body: unknown): StockShortage[] {
   const lines = (body as { lines?: unknown } | null)?.lines;
   if (!Array.isArray(lines)) return [];
@@ -153,6 +213,12 @@ function toOrder(dto: OrderDto): Order {
     payments: dto.payments.map(toPayment),
     cancellationReason: dto.cancellation_reason,
     cancelledAt: dto.cancelled_at,
+    cancelledByName: dto.cancelled_by_name ?? '',
+    returnedAt: dto.returned_at ?? null,
+    returnedByName: dto.returned_by_name ?? '',
+    returnReason: dto.return_reason ?? '',
+    refundAcknowledged: dto.refund_acknowledged ?? false,
+    reversal: toReversal(dto.reversal),
     editable: dto.editable,
     allowedTransitions: dto.allowed_transitions,
     canRegisterPayment: dto.can_register_payment,
@@ -338,8 +404,26 @@ export class OrdersApiService {
     return this.request(this.http.post<OrderDto>(`${this.baseUrl}${orderId}/deliver/`, body));
   }
 
-  cancel(orderId: string, reason: string): Observable<Order> {
-    return this.request(this.http.post<OrderDto>(`${this.baseUrl}${orderId}/cancel/`, { reason }));
+  /** `refundAcknowledged`: el dinero ya cobrado se devolvió fuera de PocketBiz (obligatorio si hay cobros). */
+  cancel(orderId: string, reason: string, refundAcknowledged = false): Observable<Order> {
+    return this.request(
+      this.http.post<OrderDto>(`${this.baseUrl}${orderId}/cancel/`, { reason, refund_acknowledged: refundAcknowledged }),
+    );
+  }
+
+  /** Qué contrarrestaría la devolución total (informativo). */
+  returnPreview(orderId: string): Observable<ReturnPreview> {
+    return this.http.get<ReturnPreviewDto>(`${this.baseUrl}${orderId}/return-preview/`).pipe(
+      map(toReturnPreview),
+      catchError((err: HttpErrorResponse) => throwError(() => toApiError(err))),
+    );
+  }
+
+  /** Devolución total de un pedido entregado. */
+  returnOrder(orderId: string, reason: string, refundAcknowledged = false): Observable<Order> {
+    return this.request(
+      this.http.post<OrderDto>(`${this.baseUrl}${orderId}/return/`, { reason, refund_acknowledged: refundAcknowledged }),
+    );
   }
 
   registerPayment(orderId: string, input: PaymentInput): Observable<Order> {

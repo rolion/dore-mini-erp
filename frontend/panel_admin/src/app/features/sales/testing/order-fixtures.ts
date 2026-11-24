@@ -1,4 +1,13 @@
-import { DeliveryLine, DeliveryPreview, Order, OrderDto, OrderItem, OrderSummary, Payment } from '../models/order';
+import {
+  DeliveryLine,
+  DeliveryPreview,
+  Order,
+  OrderDto,
+  OrderItem,
+  OrderSummary,
+  Payment,
+  ReturnPreview,
+} from '../models/order';
 
 export function makeItem(overrides: Partial<OrderItem> = {}): OrderItem {
   return {
@@ -46,6 +55,12 @@ export function makeOrder(overrides: Partial<Order> = {}): Order {
     payments: [],
     cancellationReason: '',
     cancelledAt: null,
+    cancelledByName: '',
+    returnedAt: null,
+    returnedByName: '',
+    returnReason: '',
+    refundAcknowledged: false,
+    reversal: null,
     editable: true,
     allowedTransitions: ['prepare', 'cancel'],
     canRegisterPayment: true,
@@ -105,6 +120,12 @@ export function makeOrderDto(overrides: Partial<OrderDto> = {}): OrderDto {
     payments: [],
     cancellation_reason: '',
     cancelled_at: null,
+    cancelled_by_name: '',
+    returned_at: null,
+    returned_by_name: '',
+    return_reason: '',
+    refund_acknowledged: false,
+    reversal: null,
     editable: true,
     allowed_transitions: ['prepare', 'cancel'],
     can_register_payment: true,
@@ -151,3 +172,20 @@ export const NO_STOCK_PREVIEW: DeliveryPreview = {
   warehouseId: null,
   lines: [],
 };
+
+/** Vista previa de devolución: una línea con salida de stock, dos asientos y sin cobros. */
+export function makeReturnPreview(overrides: Partial<ReturnPreview> = {}): ReturnPreview {
+  return {
+    orderCode: 'P-1A2B3C4D',
+    inventoryEnabled: true,
+    requiresRefundAcknowledgement: false,
+    items: [{ productId: 'p-1', productName: 'Bolsas', quantity: 2 }],
+    payments: [],
+    stock: { warehouseName: 'Central', lines: [{ productId: 'p-1', productName: 'Bolsas', quantity: '2.0000', unit: 'u' }] },
+    entries: [
+      { event: 'SALE_DELIVERY', id: 'e-1', accountingDate: '2026-10-03', description: 'Entrega', total: '70.00' },
+      { event: 'INVENTORY_SALE_COST', id: 'e-2', accountingDate: '2026-10-03', description: 'Costo', total: '10.00' },
+    ],
+    ...overrides,
+  };
+}

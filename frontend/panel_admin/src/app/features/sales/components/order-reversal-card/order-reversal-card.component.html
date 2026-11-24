@@ -1,0 +1,88 @@
+<div class="card" data-testid="reversal-card">
+  <div class="card-header">
+    <h4>{{ (returned ? 'SALES.ORDER_RETURN.DEVOLUCION_REGISTRADA' : 'SALES.ORDER_RETURN.CANCELACION_REGISTRADA') | translate }}</h4>
+  </div>
+  <div class="card-body">
+    <dl class="row m-4 mb-2">
+      <dt class="col-sm-3">{{ 'SALES.ORDER_RETURN.FECHA' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="reversal-date">{{ at | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      <dt class="col-sm-3">{{ 'SALES.ORDER_RETURN.USUARIO' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="reversal-user">{{ by || '—' }}</dd>
+      <dt class="col-sm-3">{{ 'SALES.ORDER_RETURN.MOTIVO_DETALLE' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="reversal-reason">{{ reason }}</dd>
+      @if (order().refundAcknowledged) {
+      <dt class="col-sm-3">{{ 'SALES.ORDER_RETURN.REEMBOLSO' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="reversal-refund">{{ 'SALES.ORDER_RETURN.REEMBOLSO_EXTERNO' | translate }}</dd>
+      }
+    </dl>
+
+    @if (order().reversal; as reversal) {
+    @if (reversal.movements.length) {
+    <h6 class="mx-4">{{ 'SALES.ORDER_RETURN.MOVIMIENTOS' | translate }}</h6>
+    <div class="table-responsive mx-4 mb-3">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
+            <th scope="col">{{ 'COMMON.ALMACEN' | translate }}</th>
+            <th scope="col">{{ 'SALES.ORDER_RETURN.ORIGINAL' | translate }}</th>
+            <th scope="col">{{ 'SALES.ORDER_RETURN.REVERSO' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (movement of reversal.movements; track movement.id) {
+          <tr data-testid="reversal-movement">
+            <td>{{ movement.productName }}</td>
+            <td class="text-end">{{ format(movement.quantity) }} {{ movement.unit }}</td>
+            <td>{{ movement.warehouseName }}</td>
+            <td><a [routerLink]="['/pocketbiz/inventory/movements', movement.id]">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a></td>
+            <td>
+              @if (movement.reversedById) {
+              <a [routerLink]="['/pocketbiz/inventory/movements', movement.reversedById]">{{ movement.reversedByReference || ('SALES.ORDER_RETURN.VER' | translate) }}</a>
+              } @else {
+              —
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+    @if (reversal.entries.length) {
+    <h6 class="mx-4">{{ 'SALES.ORDER_RETURN.ASIENTOS' | translate }}</h6>
+    <div class="table-responsive mx-4 mb-3">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'COMMON.FECHA' | translate }}</th>
+            <th scope="col">{{ 'SALES.ORDER_RETURN.MOTIVO_DETALLE' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'COMMON.TOTAL' | translate }}</th>
+            <th scope="col">{{ 'SALES.ORDER_RETURN.ORIGINAL' | translate }}</th>
+            <th scope="col">{{ 'SALES.ORDER_RETURN.REVERSO' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of reversal.entries; track entry.id) {
+          <tr data-testid="reversal-entry">
+            <td>{{ entry.accountingDate | date: 'dd/MM/yyyy' }}</td>
+            <td>{{ eventLabel(entry.event) }}</td>
+            <td class="text-end">{{ entry.total | money }}</td>
+            <td><a [routerLink]="['/pocketbiz/accounting/journal', entry.id]">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a></td>
+            <td>
+              @if (entry.reversedById) {
+              <a [routerLink]="['/pocketbiz/accounting/journal', entry.reversedById]">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a>
+              } @else {
+              {{ 'SALES.ORDER_RETURN.SIN_REVERSO' | translate }}
+              }
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+    }
+  </div>
+</div>

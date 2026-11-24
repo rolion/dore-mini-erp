@@ -31,6 +31,7 @@ describe('OrderStatusBadgeComponent', () => {
       READY: 'col-indigo',
       DELIVERED: 'col-green',
       CANCELLED: 'col-red',
+      RETURNED: 'col-purple',
     };
     for (const status of ORDER_STATUSES) {
       const badge = render(status).querySelector('div') as HTMLElement;
