@@ -105,11 +105,11 @@ Ver `docs/adr/ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-
 **Deuda técnica.** Los cobros de pedidos cancelados siguen apareciendo en `payments_between` (dinero recibido) aunque estén reembolsados; la devolución parcial y el saldo a favor quedan fuera de alcance. Sin pruebas de concurrencia simultánea reales (se confía en `select_for_update` + reversiones idempotentes).
 
 ## Review
-**Resultado: sin Critical/High, pero NO se declara PASS** porque dos verificaciones aplicables no se ejecutaron: las pruebas con PostgreSQL (AC-01..09 y AC-11 dependen de ellas) y la revisión visual.
+**Resultado: sin Critical/High; PASS técnico pendiente de la revisión visual (no realizada) y de la decisión del usuario sobre REV-04.** Pruebas con PostgreSQL ejecutadas tras el hallazgo del revisor: suite completa del backend 2411 tests; 2 errores en `reporting` por pruebas antiguas que cancelaban pedidos con cobros sin confirmar el reembolso; corregidos (junto con 5 pruebas antiguas de `sales`) y re-ejecutado `modules.reporting modules.sales`: 493 OK; `modules.sales modules.costing`: 479 OK (incluye `test_order_return`).
 
 Ejecutado por el revisor aislado: pruebas sin BD (138 OK), `manage.py check`, `makemigrations --check` (sin cambios), `ruff`/`flake8`, `ng lint`, `tsc` app y specs, `i18n:check` (2505 claves, 0 faltantes), `ng test` de `features/sales` (285 OK) y `ng build` (solo avisos de CSS de la plantilla). Tras las correcciones: `ng test` sales+customers 385 OK, `ng lint` OK, pruebas backend sin BD OK.
 
-No realizado: pruebas con PostgreSQL (`test_order_return`, `test_sales_posting`, `test_api`, `test_cost_ledger`), revisión visual (claro/oscuro, 390/1440 px), `bandit`/`npm audit`, concurrencia real.
+No realizado: revisión visual (claro/oscuro, 390/1440 px), `bandit`/`npm audit`, concurrencia real.
 
 Hallazgos:
 - REV-01 (Medium, IMPLEMENTATION): el frontend trataba `RETURNED` como pedido válido (perfil del cliente y lista) → corregido (`isVoidedStatus`, `owes`, `showsBalance`).

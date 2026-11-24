@@ -433,7 +433,7 @@ class StateTests(SalesApiTestCase):
         self.assertEqual((order['status'], order['allowed_transitions']), ('READY', ['deliver', 'cancel']))
         order = self.act(order, 'deliver')
         self.assertEqual((order['status'], order['delivered_date'], order['allowed_transitions'], order['editable']),
-                         ('DELIVERED', today().isoformat(), [], False))
+                         ('DELIVERED', today().isoformat(), ['return'], False))
 
     def test_invalid_transitions_conflict_and_change_nothing(self):  # AC-09
         new = self.order_with_item()

@@ -94,8 +94,8 @@ class PaymentLedgerApiTests(LedgerFixtures, SalesApiTestCase):
         self.assertEqual(self.entries().count(), 0)
         self.pay(order, '100.00')
         self.act(order, 'ready')
-        self.act(order, 'cancel', {'reason': 'Ya no lo quiere'})
-        self.assertEqual(self.entries().count(), 1)
+        self.act(order, 'cancel', {'reason': 'Ya no lo quiere', 'refund_acknowledged': True})
+        self.assertEqual(self.entries().count(), 2)  # el cobro y su reverso en el libro anterior
         self.assertEqual(PaymentModel.objects.count(), 1)
         self.assertEqual(StockMovementModel.objects.count(), 0)
 
@@ -217,11 +217,11 @@ class PaymentLedgerApiTests(LedgerFixtures, SalesApiTestCase):
         order = self.order_300()
         key = str(uuid4())
         self.pay(order, '100.00', idempotency_key=key)
-        self.act(order, 'cancel', {'reason': 'Ya no lo quiere'})
+        self.act(order, 'cancel', {'reason': 'Ya no lo quiere', 'refund_acknowledged': True})
         self.pay(order, '100.00', expected_status=200, idempotency_key=key)
         rejected = self.pay(order, '50.00', expected_status=409, idempotency_key=str(uuid4()))
         self.assertEqual(rejected['code'], 'order_cancelled')
-        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (1, 1))
+        self.assertEqual((PaymentModel.objects.count(), self.entries().count()), (1, 2))
 
     def test_adding_items_and_delivering_create_no_entries(self):  # AC-03
         order = self.order_300()
