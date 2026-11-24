@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tableros-columnas-configurables` (base: `crm`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/121
 **Fuente:** https://trello.com/c/wFFKjHkX/2-pb-crm-003-tableros-y-columnas-configurables
 
 ## Historial de transiciones
