@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-prospectos-oportunidades` (base: `crm`)
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/122
 **Fuente:** https://trello.com/c/kQtkFFfv/5-pb-crm-004-prospectos-y-oportunidades
 
 ## Historial de transiciones
