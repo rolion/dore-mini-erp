@@ -20,20 +20,24 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'inventory': {'catalog', 'modularity'},
     'costing': {'inventory'},
     'customers': set(),
-    # CRM (tableros y etapas): sin dependencias hacia otros módulos; nadie lo importa.
-    'crm': set(),
     'dentistry': {'customers', 'service_catalog'},
     'expenses': {'accounting'},
     'purchases': {'accounting', 'catalog', 'costing', 'inventory'},
     'sales': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'modularity'},
     'reporting': {'accounting', 'sales', 'expenses', 'customers'},
+    # CRM: el listado compone Clientes, Ventas e Inventario por sus fachadas (ADR crm-listado-clientes); los tableros y etapas son propios.
+    'crm': {'customers', 'sales', 'inventory'},
     # Importación de ventas: orquesta otros módulos solo por sus fachadas (ADR cargar-ventas-desde-archivo).
     'data_import': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'purchases', 'sales'},
 }
 # Módulos no-negocio que un módulo de negocio puede leer (solo por su fachada `services`): la configuración.
 NON_BUSINESS_ALLOWED = {'modularity'}
 # Módulos que consumen a otros: solo desde sus adaptadores de infraestructura.
-CONSUMERS = ('accounting', 'expenses', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog', 'agenda', 'quotations', 'receivables', 'data_import')
+CONSUMERS = (
+    'accounting', 'expenses', 'sales', 'reporting',
+    'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog',
+    'agenda', 'quotations', 'receivables', 'data_import', 'crm',
+)
 
 
 def source_files(base: Path):

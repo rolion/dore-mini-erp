@@ -15,10 +15,11 @@ describe('Sidebar menu (routes.json)', () => {
   it('has the business menu, Dentistry, Purchases, Inventory and Settings > Modules', () => {
     expect(routes.length).toBe(16);
 
-    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, accounting, settings, agenda, personnel, quotations, receivables, crm] = routes;
-    expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
-      'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
+    const [dashboard, catalog, customer, crm, dentistry, orders, expenses, reports, purchases, inventory, accounting, settings, agenda, personnel, quotations, receivables] = routes;
+    expect(routes.slice(0, 8).map((route) => route.module)).toEqual([
+      'reporting', 'catalog', 'customers', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
+    expect(crm.submenu.map((item) => item.path)).toEqual(['/pocketbiz/crm/customers', '/pocketbiz/crm/board']); // PB-CRM-001, PB-CRM-003
     expect(dentistry.submenu.map((item) => item.path)).toEqual(['/pocketbiz/dentistry/patients']);
     expect(visibleRoutes(routes, new Set(['customers'])).some((route) => route.module === 'dentistry')).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers', 'dentistry'])).some((route) => route.module === 'dentistry')).toBeTrue();
@@ -33,9 +34,6 @@ describe('Sidebar menu (routes.json)', () => {
     expect(receivables.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/receivables', '/pocketbiz/receivables/settings',
     ]);
-    expect(crm.module).toBe('customers');
-    expect(crm.title).toBe('MENUITEMS.CRM.TEXT');
-    expect(crm.submenu.map((item) => item.path)).toEqual(['/pocketbiz/crm/board']);
     expect(personnel.module).toBe('personnel');
     expect(personnel.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/personnel/professionals', '/pocketbiz/personnel/specialties',
@@ -107,7 +105,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(50);
+    expect(titles.length).toBe(51);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

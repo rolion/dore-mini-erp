@@ -49,6 +49,13 @@
     "CUSTOMER": {
       "TEXT": "Cliente"
     },
+    "CRM": {
+      "TEXT": "CRM",
+      "LIST": {
+        "CUSTOMERS": "Clientes",
+        "BOARD": "Quadro"
+      }
+    },
     "ORDERS": {
       "TEXT": "Pedidos"
     },
@@ -164,12 +171,6 @@
       "LIST": {
         "PROFESSIONALS": "Profissionais",
         "SPECIALTIES": "Especialidades"
-      }
-    },
-    "CRM": {
-      "TEXT": "Acompanhamento comercial",
-      "LIST": {
-        "BOARD": "Quadro"
       }
     }
   },
@@ -3406,6 +3407,34 @@
     "ERR_NOT_FOUND": "Importação não encontrada."
   },
   "CRM": {
+    "CUSTOMER_LIST": {
+      "TITLE": "Clientes",
+      "BREADCRUMB": "CRM",
+      "SEARCH": "Buscar por nome ou telefone",
+      "BRANCH": "Filial",
+      "ALL_BRANCHES": "Todas as filiais",
+      "NAME": "Nome",
+      "PHONE": "Telefone",
+      "ORDERS": "Pedidos",
+      "BALANCE": "Saldo",
+      "NO_PURCHASES": "Sem compras",
+      "EMPTY": "Ainda não há clientes. Cadastre-os em Clientes para vê-los aqui.",
+      "EMPTY_FILTERED": "Nenhum cliente corresponde aos filtros.",
+      "GO_CUSTOMERS": "Ir para Clientes",
+      "FILTERS": "Filtros",
+      "FILTERS_ACTIVE": "{{count}} filtros ativos",
+      "APPLY": "Aplicar filtros",
+      "CLEAR": "Limpar filtros",
+      "ERROR": "Não foi possível carregar a lista de clientes.",
+      "RETRY": "Tentar novamente",
+      "VIEW": "Ver ficha",
+      "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LOADING": "Carregando clientes…",
+      "ACTIVE_FILTERS": "Filtros ativos",
+      "SEARCH_BADGE": "Busca: {{value}}",
+      "BRANCH_BADGE": "Filial: {{value}}",
+      "LAST_PURCHASE": "Última compra"
+    },
     "BOARD": {
       "TABLERO": "Quadro",
       "SEGUIMIENTO_COMERCIAL": "Acompanhamento comercial",

@@ -108,7 +108,7 @@ class BoardApiTests(BoardApiBase):
         a, b = self.ids(board)
         cards = FakeCards({UUID(a): 4})
         url = f"{URL}{board['id']}/stages/{a}/archive/"
-        with mock.patch('modules.crm.api.views.stage_cards', return_value=cards):
+        with mock.patch('modules.crm.api.board_views.stage_cards', return_value=cards):
             blocked = self.client.post(url, {}, format='json')
             self.assertEqual((blocked.status_code, blocked.json()['code'], blocked.json()['card_count']),
                              (409, 'stage_has_cards', 4))
@@ -125,7 +125,7 @@ class BoardApiTests(BoardApiBase):
         a, b = self.ids(board)
         cards = FakeCards({UUID(a): 2}, fail=True)
         self.client.raise_request_exception = False
-        with mock.patch('modules.crm.api.views.stage_cards', return_value=cards):
+        with mock.patch('modules.crm.api.board_views.stage_cards', return_value=cards):
             response = self.client.post(f"{URL}{board['id']}/stages/{a}/archive/", {'target_stage_id': b},
                                         format='json')
         self.assertEqual(response.status_code, 500)
@@ -135,7 +135,7 @@ class BoardApiTests(BoardApiBase):
     def test_board_with_cards_cannot_be_archived(self):
         board = self.make_board('Ventas', 'A')
         cards = FakeCards({UUID(self.ids(board)[0]): 1})
-        with mock.patch('modules.crm.api.views.stage_cards', return_value=cards):
+        with mock.patch('modules.crm.api.board_views.stage_cards', return_value=cards):
             response = self.client.post(f"{URL}{board['id']}/archive/")
         self.assertEqual((response.status_code, response.json()['code']), (409, 'board_has_cards'))
         self.assertTrue(BoardModel.objects.get(pk=board['id']).is_active)
@@ -174,7 +174,7 @@ class BoardAccessTests(BoardApiBase):
         mine = self.make_board('Ventas', 'A')
         a = self.ids(mine)[0]
         cards = FakeCards({UUID(a): 1})
-        with mock.patch('modules.crm.api.views.stage_cards', return_value=cards):
+        with mock.patch('modules.crm.api.board_views.stage_cards', return_value=cards):
             response = self.client.post(f"{URL}{mine['id']}/stages/{a}/archive/",
                                         {'target_stage_id': str(foreign.id)}, format='json')
         self.assertEqual(response.status_code, 400)

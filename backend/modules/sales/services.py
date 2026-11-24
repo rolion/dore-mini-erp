@@ -102,6 +102,35 @@ def get_top_customers(company_id: UUID, date_from: date, date_to: date,
     )
 
 
+@dataclass(frozen=True)
+class CustomerCommercialSummary:
+    customer_id: UUID
+    order_count: int
+    last_purchase_date: date | None
+    outstanding_amount: Decimal
+
+
+def get_customer_commercial_summaries(company_id: UUID, customer_ids) -> dict[UUID, CustomerCommercialSummary]:
+    """Pedidos válidos, última compra y saldo (Σ total − pagado, solo con saldo > 0) por cliente de la empresa.
+
+    Los clientes sin pedidos válidos no aparecen en el resultado.
+    """
+    ids = list(customer_ids)
+    if not ids:
+        return {}
+    return {
+        row['customer_id']: CustomerCommercialSummary(
+            customer_id=row['customer_id'], order_count=row['orders_count'],
+            last_purchase_date=row['last_order_date'], outstanding_amount=row['balance'] or ZERO)
+        for row in read_queries.customer_summaries(company_id, ids)
+    }
+
+
+def list_customer_ids_with_orders_in_warehouse(company_id: UUID, warehouse_id: UUID) -> list[UUID]:
+    """Clientes con al menos un pedido válido atendido desde el almacén indicado."""
+    return read_queries.customer_ids_in_warehouse(company_id, warehouse_id)
+
+
 def _pending_rows(queryset, limit: int) -> tuple[PendingOrder, ...]:
     return tuple(
         PendingOrder(id=o.id, customer_id=o.customer_id, order_date=o.order_date,

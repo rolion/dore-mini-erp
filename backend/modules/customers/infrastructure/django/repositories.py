@@ -1,5 +1,5 @@
 import re
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from uuid import UUID
 
 from django.db.models import Q, QuerySet
@@ -49,8 +49,11 @@ class DjangoCustomerRepository:
             id=customer.id, company_id=self.company_id, defaults=to_model_values(customer))
         return to_entity(model)
 
-    def list(self, search: str | None = None, active: bool | None = None) -> CustomerList:
+    def list(self, search: str | None = None, active: bool | None = None,
+             ids: Collection[UUID] | None = None) -> CustomerList:
         queryset = self._customers().order_by('name', 'id')
+        if ids is not None:
+            queryset = queryset.filter(pk__in=ids)
         if search:
             condition = Q(name__icontains=search)
             digits = re.sub(r'\D', '', search)
