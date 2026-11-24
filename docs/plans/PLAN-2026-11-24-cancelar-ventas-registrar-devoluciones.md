@@ -1,4 +1,4 @@
-# PLAN-2026-11-24-cancelar-ventas-registrar-devoluciones (v1)
+# PLAN-2026-11-24-cancelar-ventas-registrar-devoluciones (v2)
 
 **Task:** TASK-cancelar-ventas-registrar-devoluciones · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-cancelar-ventas-registrar-devoluciones-acciones-y-vista-previa · ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-registro
@@ -67,7 +67,7 @@ Rol admin con empresa activa (permiso por defecto); `company_id` del usuario aut
 
 ## UI behavior
 - **UI-01** Botón «Registrar devolución» en DELIVERED y diálogo con vista previa (plantilla «Diálogo de acción irreversible con motivo», DDR).
-- **UI-02** Diálogo de cancelar con casilla de reembolso si hay cobros.
+- **UI-02** Al cancelar con cobros, tras indicar el motivo aparece una segunda confirmación del reembolso externo («Ya devolví el dinero»); sin cobros no aparece (v2: reemplaza la casilla dentro del diálogo).
 - **UI-03** Sección «Cancelación / Devolución» con vínculos; badge «Devuelto».
 - **UI-04** Estados cargando/error/éxito; textos i18n es/en/pt.
 
@@ -125,3 +125,6 @@ Ver ADR.
 Orden de bloqueos (pedido → empresa → almacén); cobros del libro anterior; consistencia de reportes.
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-24): [Specification] UI-02 cambiado de «casilla de reembolso dentro del diálogo de cancelar» a «segunda confirmación tras el motivo», tras aprobación explícita del usuario en el chat (REV-04). El diálogo de devolución conserva la casilla.

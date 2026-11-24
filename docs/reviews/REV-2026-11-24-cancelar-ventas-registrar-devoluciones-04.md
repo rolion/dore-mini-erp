@@ -1,6 +1,6 @@
 # REV-2026-11-24-cancelar-ventas-registrar-devoluciones-04: UI-02 y ADR/DDR no reflejan lo implementado (casilla de reembolso al cancelar; ADR en «Propuesto»)
 
-**Status:** Open
+**Status:** Resolved (el usuario aprobó la desviación en el chat; PLAN v2 y DDR actualizados)
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-24-cancelar-ventas-registrar-devoluciones.md (v1)

@@ -1,6 +1,6 @@
 # TASK-cancelar-ventas-registrar-devoluciones: Cancelar ventas y registrar devoluciones con reversión contable
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cancelar-ventas-registrar-devoluciones
@@ -17,6 +17,7 @@
 | 2026-11-24 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación escrita; pruebas de integración con BD sin ejecutar (sin credenciales de PostgreSQL en esta sesión) | delivery-build |
 | 2026-11-24 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 (Medium), REV-02 y REV-03 (Low) corregidos; REV-04 (Specification, Low) abierto; pruebas con PostgreSQL y revisión visual NO realizadas, por lo que no se declara PASS | delivery-publish |
+| 2026-11-24 | REVIEW → PUBLISH | REV-04 resuelto por aprobación del usuario (PLAN v2); pruebas con PostgreSQL en verde; revisión visual no realizada | delivery-publish |
 
 ## Investigación
 
@@ -84,7 +85,7 @@ Ver `docs/design/DDR-cancelar-ventas-registrar-devoluciones-acciones-y-vista-pre
 Ver `docs/adr/ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-registro.md`.
 
 ## Plan
-`docs/plans/PLAN-2026-11-24-cancelar-ventas-registrar-devoluciones.md` (v1, COMPLETO).
+`docs/plans/PLAN-2026-11-24-cancelar-ventas-registrar-devoluciones.md` (v2, COMPLETO).
 
 ## Implementación
 **Backend (Sales + Costing).**
@@ -105,7 +106,7 @@ Ver `docs/adr/ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-
 **Deuda técnica.** Los cobros de pedidos cancelados siguen apareciendo en `payments_between` (dinero recibido) aunque estén reembolsados; la devolución parcial y el saldo a favor quedan fuera de alcance. Sin pruebas de concurrencia simultánea reales (se confía en `select_for_update` + reversiones idempotentes).
 
 ## Review
-**Resultado: sin Critical/High; PASS técnico pendiente de la revisión visual (no realizada) y de la decisión del usuario sobre REV-04.** Pruebas con PostgreSQL ejecutadas tras el hallazgo del revisor: suite completa del backend 2411 tests; 2 errores en `reporting` por pruebas antiguas que cancelaban pedidos con cobros sin confirmar el reembolso; corregidos (junto con 5 pruebas antiguas de `sales`) y re-ejecutado `modules.reporting modules.sales`: 493 OK; `modules.sales modules.costing`: 479 OK (incluye `test_order_return`).
+**Resultado: sin Critical/High, todos los REV resueltos; PASS técnico con la revisión visual como única verificación no realizada.** Pruebas con PostgreSQL ejecutadas tras el hallazgo del revisor: suite completa del backend 2411 tests; 2 errores en `reporting` por pruebas antiguas que cancelaban pedidos con cobros sin confirmar el reembolso; corregidos (junto con 5 pruebas antiguas de `sales`) y re-ejecutado `modules.reporting modules.sales`: 493 OK; `modules.sales modules.costing`: 479 OK (incluye `test_order_return`).
 
 Ejecutado por el revisor aislado: pruebas sin BD (138 OK), `manage.py check`, `makemigrations --check` (sin cambios), `ruff`/`flake8`, `ng lint`, `tsc` app y specs, `i18n:check` (2505 claves, 0 faltantes), `ng test` de `features/sales` (285 OK) y `ng build` (solo avisos de CSS de la plantilla). Tras las correcciones: `ng test` sales+customers 385 OK, `ng lint` OK, pruebas backend sin BD OK.
 
@@ -115,8 +116,8 @@ Hallazgos:
 - REV-01 (Medium, IMPLEMENTATION): el frontend trataba `RETURNED` como pedido válido (perfil del cliente y lista) → corregido (`isVoidedStatus`, `owes`, `showsBalance`).
 - REV-02 (Low): 3 E501 nuevos → corregidos (queda el E501 previo de `commands.py`).
 - REV-03 (Low, DESIGN): fecha ISO y enlaces «Ver» sin nombre accesible → corregidos; los HEX de `confirmRefund` siguen el patrón existente de `askCancelReason`.
-- REV-04 (Low, SPECIFICATION): UI-02 y el DDR piden una casilla de reembolso dentro del diálogo de cancelar; se implementó una segunda confirmación. Abierto: requiere aprobación del usuario para aceptar la desviación o pedir la casilla.
+- REV-04 (Low, SPECIFICATION): UI-02 pedía una casilla dentro del diálogo de cancelar; se implementó una segunda confirmación. **Resuelto:** el usuario aprobó la desviación; PLAN v2 y DDR actualizados.
 - Observación: `reverse_entry` del libro anterior no traduce sus errores a 409.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/119 listo para aprobación humana (no se mergea). Cambios sensibles: migración de base de datos (`sales/0005`) y lógica contable (ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-registro). Pendiente: revisión visual en navegador.

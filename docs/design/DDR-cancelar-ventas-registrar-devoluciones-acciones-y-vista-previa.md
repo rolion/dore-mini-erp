@@ -9,7 +9,7 @@ El detalle del pedido ya ofrece «Cancelar» (diálogo SweetAlert con motivo) an
 
 ## Pantallas/flujos afectados
 Solo `features/sales/pages/order-detail`:
-1. **Cancelar venta** (estados NEW/IN_PREPARATION/READY): se mantiene el botón; si hay cobros, el diálogo añade una casilla obligatoria «Ya devolví el dinero al cliente fuera de PocketBiz» y lista los cobros que se contrarrestarán.
+1. **Cancelar venta** (estados NEW/IN_PREPARATION/READY): se mantiene el botón; se mantiene el diálogo de motivo (SweetAlert) y, si hay cobros, una segunda confirmación obligatoria con el total cobrado y el botón «Ya devolví el dinero» (el servidor exige `refund_acknowledged`). Aprobado por el usuario (REV-04, PLAN v2).
 2. **Registrar devolución** (estado DELIVERED): botón en la cabecera → diálogo con motivo obligatorio, tabla de productos y cantidades (todas, solo lectura: devolución total), efecto sobre existencias (almacén y unidades a reingresar o «sin salida de inventario»), efecto contable (asientos que se contrarrestarán, con su fecha de hoy) y la casilla de reembolso si hay cobros. El efecto sale de un endpoint de vista previa solo lectura.
 3. **Sección «Cancelación / Devolución»** en el detalle (cuando el pedido está CANCELLED o RETURNED): fecha, usuario, motivo, reembolso, enlaces a movimientos de inventario (original y reverso) y a asientos (original y contrasiento).
 
