@@ -7,7 +7,7 @@ import { ORDER_STATUSES, OrderStatus, PAYMENT_STATUSES, PaymentStatus } from '..
 import { OrderStatusBadgeComponent } from '../../../sales/components/order-status-badge/order-status-badge.component';
 import { PaymentStatusBadgeComponent } from '../../../sales/components/payment-status-badge/payment-status-badge.component';
 import { CustomerOrderSummary } from '../../models/customer';
-import { CANCELLED_STATUS } from '../../models/customer-purchase-summary';
+import { isVoidedStatus } from '../../models/customer-purchase-summary';
 
 /**
  * Historial de compras del cliente (REQ-CUS-004). Presenta los pedidos que recibe, sin hacer peticiones: los
@@ -34,7 +34,7 @@ export class CustomerPurchaseHistoryComponent {
   readonly canCreateOrder = input(false);
 
   isCancelled(order: CustomerOrderSummary): boolean {
-    return order.status === CANCELLED_STATUS;
+    return isVoidedStatus(order.status);
   }
 
   /** Un código desconocido devuelve `null` y la plantilla lo muestra como texto, sin romper la tabla (EDGE-05). */

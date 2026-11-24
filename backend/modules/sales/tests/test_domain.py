@@ -32,8 +32,10 @@ def in_status(status: OrderStatus, price='35.00', quantity=2) -> Order:
     if status is OrderStatus.CANCELLED:
         order.cancel('Cliente desistió', NOW)
         return order
-    steps = [order.start_preparation, order.mark_ready, lambda: order.deliver(None, TODAY)]
-    order_of_states = [OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY, OrderStatus.DELIVERED]
+    steps = [order.start_preparation, order.mark_ready, lambda: order.deliver(None, TODAY),
+             lambda: order.register_return('Devuelto', NOW)]
+    order_of_states = [OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY, OrderStatus.DELIVERED,
+                       OrderStatus.RETURNED]
     for step in steps[:order_of_states.index(status)]:
         step()
     return order
@@ -112,7 +114,7 @@ class UpdateDetailsTests(SimpleTestCase):
         self.assertIn('sales_channel', field_errors(self, new_order().update_details, sales_channel='NOPE'))
 
     def test_not_editable_in_terminal_states(self):  # AC-19
-        for status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED):
+        for status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.RETURNED):
             order = in_status(status)
             self.assertEqual(violation_code(self, order.update_details, notes='x'), 'order_not_editable')
 
@@ -228,7 +230,7 @@ class ItemTests(SimpleTestCase):
         for status in (OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY):
             order = in_status(status)
             order.add_item(uuid4(), 'Extra', D('1.00'), 1)
-        for status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED):
+        for status in (OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.RETURNED):
             order = in_status(status)
             self.assertEqual(violation_code(self, order.add_item, uuid4(), 'X', D('1.00'), 1), 'order_not_editable')
             self.assertEqual(violation_code(self, order.change_item_quantity, order.items[0].id, 1),
@@ -343,8 +345,9 @@ class TransitionTests(SimpleTestCase):
             OrderStatus.NEW: ['prepare', 'cancel'],
             OrderStatus.IN_PREPARATION: ['ready', 'cancel'],
             OrderStatus.READY: ['deliver', 'cancel'],
-            OrderStatus.DELIVERED: [],
+            OrderStatus.DELIVERED: ['return'],
             OrderStatus.CANCELLED: [],
+            OrderStatus.RETURNED: [],
         }
         for status, transitions in expected.items():
             self.assertEqual(in_status(status).allowed_transitions, transitions)
@@ -367,7 +370,8 @@ class TransitionTests(SimpleTestCase):
     def test_editable_flag_follows_status(self):  # INV-04
         flags = {s: in_status(s).editable for s in OrderStatus}
         self.assertEqual(flags, {OrderStatus.NEW: True, OrderStatus.IN_PREPARATION: True, OrderStatus.READY: True,
-                                 OrderStatus.DELIVERED: False, OrderStatus.CANCELLED: False})
+                                 OrderStatus.DELIVERED: False, OrderStatus.CANCELLED: False,
+                                 OrderStatus.RETURNED: False})
 
 
 class DeliveryDateTests(SimpleTestCase):
@@ -387,6 +391,38 @@ class DeliveryDateTests(SimpleTestCase):
         self.assertIn('delivered_date', field_errors(self, order.deliver, '2026-10-05', TODAY))
 
 
+class ReturnTests(SimpleTestCase):
+    def test_return_requires_a_delivered_order_and_a_reason(self):  # INV-01
+        for status in (OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY, OrderStatus.CANCELLED,
+                       OrderStatus.RETURNED):
+            order = in_status(status)
+            self.assertEqual(violation_code(self, order.register_return, 'x', NOW), 'invalid_transition', status)
+        for reason in (None, '', '  ', 'x' * 501):
+            order = in_status(OrderStatus.DELIVERED)
+            self.assertIn('reason', field_errors(self, order.register_return, reason, NOW), repr(reason))
+            self.assertEqual(order.status, OrderStatus.DELIVERED)
+
+    def test_return_records_who_when_and_why_and_closes_the_order(self):  # INV-01, AC-09
+        order = in_status(OrderStatus.DELIVERED)
+        order.register_return(' Defectuoso ', NOW, 'ana')
+        self.assertEqual((order.status, order.return_reason, order.returned_at, order.returned_by_name,
+                          order.refund_acknowledged, order.allowed_transitions),
+                         (OrderStatus.RETURNED, 'Defectuoso', NOW, 'ana', False, []))
+        self.assertEqual(len(order.items), 1)  # la venta original se conserva
+
+    def test_payments_require_the_refund_confirmation_on_return_and_cancel(self):  # INV-02
+        for status, action in ((OrderStatus.DELIVERED, 'register_return'), (OrderStatus.READY, 'cancel')):
+            order = in_status(status)
+            pay(order, '10.00')
+            self.assertEqual(violation_code(self, getattr(order, action), 'x', NOW),
+                             'refund_acknowledgement_required')
+            self.assertEqual(order.status, status)
+
+    def test_a_returned_order_accepts_no_payments(self):  # INV-01
+        order = in_status(OrderStatus.RETURNED)
+        self.assertEqual(violation_code(self, pay, order, '1.00'), 'order_cancelled')
+
+
 class CancelTests(SimpleTestCase):
     def test_cancel_requires_a_reason(self):  # AC-11
         for reason in (None, '', '   ', 'x' * 501):
@@ -398,11 +434,11 @@ class CancelTests(SimpleTestCase):
         for status in (OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY):
             order = in_status(status)
             pay(order, '20.00')
-            order.cancel('  Cliente desistió ', NOW)
+            order.cancel('  Cliente desistió ', NOW, 'ana', True)
             self.assertEqual(order.status, OrderStatus.CANCELLED)
             self.assertEqual((order.cancellation_reason, order.cancelled_at), ('Cliente desistió', NOW))
             self.assertEqual((len(order.items), len(order.payments)), (1, 1))
-            self.assertEqual(order.payment_status, PaymentStatus.PARTIAL)
+            self.assertEqual(order.payment_status, PaymentStatus.REFUNDED)  # cobros con reembolso confirmado
             self.assertEqual(order.balance, D('50.00'))
 
     def test_cancelled_order_exposes_no_actions(self):  # AC-11
@@ -494,10 +530,12 @@ class PaymentStatusTests(SimpleTestCase):
         order.change_item_quantity(order.items[0].id, 1)
         self.assertEqual(order.payment_status, PaymentStatus.PAID)
 
-    def test_refunded_is_never_derived(self):  # INV-11
-        order = in_status(OrderStatus.CANCELLED)
-        pay_status = {in_status(s).payment_status for s in OrderStatus}
-        self.assertNotIn(PaymentStatus.REFUNDED, pay_status | {order.payment_status})
+    def test_refunded_only_with_payments_and_a_confirmed_refund(self):  # INV-02
+        self.assertNotIn(PaymentStatus.REFUNDED, {in_status(s).payment_status for s in OrderStatus})
+        order = in_status(OrderStatus.DELIVERED)
+        pay(order, '10.00')
+        order.register_return('Defectuoso', NOW, 'ana', True)
+        self.assertEqual(order.payment_status, PaymentStatus.REFUNDED)
 
 
 class DeliveryAndPaymentAreIndependentTests(SimpleTestCase):

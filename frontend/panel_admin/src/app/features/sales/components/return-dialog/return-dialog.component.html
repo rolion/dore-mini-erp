@@ -1,0 +1,97 @@
+<form [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'SALES.ORDER_RETURN.TITULO_DIALOGO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving"
+      (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (order && preview) {
+    <p class="mb-2" data-testid="order-reference">
+      {{ 'COMMON.PEDIDO' | translate }} <strong>{{ order.code }}</strong>@if (order.customer) { · {{ order.customer.name }}}
+    </p>
+    <p class="text-muted" data-testid="total-notice">{{ 'SALES.ORDER_RETURN.DEVOLUCION_TOTAL' | translate }}</p>
+
+    <h6>{{ 'SALES.ORDER_RETURN.PRODUCTOS_A_DEVOLVER' | translate }}</h6>
+    <div class="table-responsive">
+      <table class="table table-sm mb-3" data-testid="items-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of preview.items; track item.productId) {
+          <tr data-testid="item-row">
+            <td>{{ item.productName }}</td>
+            <td class="text-end">{{ item.quantity }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mb-3" data-testid="stock-effect">
+      @if (preview.stock; as stock) {
+      <p class="mb-1">{{ 'SALES.ORDER_RETURN.EXISTENCIAS_TITULO' | translate: { p0: stock.warehouseName } }}</p>
+      <ul class="mb-0">
+        @for (line of stock.lines; track line.productId) {
+        <li data-testid="stock-line">{{ line.productName }}: {{ format(line.quantity) }} {{ line.unit }}</li>
+        }
+      </ul>
+      } @else {
+      <p class="mb-0 text-muted">{{ 'SALES.ORDER_RETURN.SIN_SALIDA' | translate }}</p>
+      }
+    </div>
+
+    <div class="mb-3" data-testid="accounting-effect">
+      @if (preview.entries.length) {
+      <p class="mb-1">{{ 'SALES.ORDER_RETURN.ASIENTOS_TITULO' | translate }}</p>
+      <ul class="mb-0">
+        @for (entry of preview.entries; track entry.id) {
+        <li data-testid="entry-line">{{ eventLabel(entry.event) }} · {{ entry.total | money }}</li>
+        }
+      </ul>
+      } @else {
+      <p class="mb-0 text-muted">{{ 'SALES.ORDER_RETURN.SIN_ASIENTOS' | translate }}</p>
+      }
+    </div>
+
+    @if (preview.payments.length) {
+    <div class="mb-3" data-testid="payments-effect">
+      <p class="mb-1">{{ 'SALES.ORDER_RETURN.COBROS_TITULO' | translate }}</p>
+      <ul class="mb-2">
+        @for (payment of preview.payments; track payment.id) {
+        <li data-testid="payment-line">{{ payment.paymentDate | date: 'dd/MM/yyyy' }} · {{ payment.amount | money }}</li>
+        }
+      </ul>
+      <div class="form-check">
+        <input id="return-refund" class="form-check-input" type="checkbox" formControlName="refundAcknowledged"
+          data-testid="refund-check">
+        <label class="form-check-label" for="return-refund">{{ 'SALES.ORDER_RETURN.REEMBOLSO_CASILLA' | translate }}</label>
+      </div>
+    </div>
+    }
+
+    <div>
+      <label for="return-reason">{{ 'SALES.ORDER_RETURN.MOTIVO' | translate }} <span class="text-danger">*</span></label>
+      <textarea id="return-reason" class="form-control" rows="3" maxlength="500" formControlName="reason"
+        data-testid="reason"></textarea>
+      @if (form.controls.reason.touched && form.controls.reason.invalid) {
+      <small class="form-text text-danger" data-testid="reason-error">{{ 'SALES.ORDER_RETURN.MOTIVO_OBLIGATORIO' | translate }}</small>
+      }
+    </div>
+
+    @if (errorMessage) {
+    <div class="alert alert-danger mt-3 mb-0" role="alert" data-testid="alert-error">{{ errorMessage }}</div>
+    }
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" data-testid="cancel" [disabled]="saving"
+      (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" class="btn btn-danger" data-testid="confirm" [disabled]="!canConfirm">
+      {{ saving ? ('SALES.ORDER_RETURN.CONFIRMANDO' | translate) : ('SALES.ORDER_RETURN.CONFIRMAR' | translate) }}
+    </button>
+  </div>
+</form>

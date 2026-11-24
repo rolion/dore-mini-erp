@@ -3,6 +3,12 @@ import { CustomerOrderSummary } from './customer';
 
 /** Código de estado de entrega de un pedido cancelado; no cuenta en las cifras del perfil (INV-01). */
 export const CANCELLED_STATUS = 'CANCELLED';
+export const RETURNED_STATUS = 'RETURNED';
+
+/** Pedido anulado (cancelado o devuelto): no cuenta como compra ni como deuda. */
+export function isVoidedStatus(status: string): boolean {
+  return status === CANCELLED_STATUS || status === RETURNED_STATUS;
+}
 
 export interface CustomerPurchaseSummary {
   /** Fecha (`AAAA-MM-DD`) del pedido no cancelado más reciente; `null` si no hay ninguno. */
@@ -17,9 +23,9 @@ export interface CustomerPurchaseSummary {
   hasOutstandingBalance: boolean;
 }
 
-/** Cifras del perfil a partir de los pedidos cargados. Los cancelados no cuentan; la suma no usa coma flotante. */
+/** Cifras del perfil a partir de los pedidos cargados. Los cancelados y devueltos no cuentan; la suma no usa coma flotante. */
 export function summarizePurchases(orders: readonly CustomerOrderSummary[]): CustomerPurchaseSummary {
-  const valid = orders.filter((order) => order.status !== CANCELLED_STATUS);
+  const valid = orders.filter((order) => !isVoidedStatus(order.status));
   const lastPurchaseDate = valid.reduce<string | null>(
     (latest, order) => (latest === null || order.date > latest ? order.date : latest),
     null,

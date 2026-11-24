@@ -45,6 +45,15 @@ class FakePosting:
     def reverse_recognition(self, order, reason, actor, today):
         self.calls.append(('reverse', reason))
 
+    def reverse_payments(self, order, reason, actor, today):
+        self.calls.append(('reverse_payments', len(order.payments)))
+
+    def reverse_delivery(self, order, reason, actor, today):
+        self.calls.append(('reverse_delivery', reason))
+
+    def reversal_entries(self, order):
+        return []
+
 
 class PostingCommandsTests(SimpleTestCase):
     def setUp(self):
@@ -98,14 +107,18 @@ class PostingCommandsTests(SimpleTestCase):
         CancelOrder(self.repository, self.clock, posting).execute(self.order_id, 'Error')
         self.assertEqual(posting.calls, [])
 
-    def test_cancel_is_rejected_when_a_payment_is_posted(self):  # AC-11
+    def test_cancel_with_payments_needs_the_refund_confirmation_and_then_reverses_them(self):  # AC-02
         StartOrderPreparation(self.repository).execute(self.order_id)
+        RegisterPayment(self.repository, self.clock).execute(self.order_id, '10.00', 'CASH', None, '')
         for state in (None, AT_CONFIRM, AT_DELIVERY):
-            posting = FakePosting(state=state, posted_payments=True)
+            posting = FakePosting(state=state)
             with self.assertRaises(OrderRuleViolation) as caught:
                 CancelOrder(self.repository, self.clock, posting).execute(self.order_id, 'Error')
-            self.assertEqual(caught.exception.code, 'order_has_payments_posted')
+            self.assertEqual((caught.exception.code, posting.calls), ('refund_acknowledgement_required', []))
         self.assertEqual(self.repository.get(self.order_id).status.value, 'IN_PREPARATION')
+        posting = FakePosting(state=None)
+        CancelOrder(self.repository, self.clock, posting).execute(self.order_id, 'Error', refund_acknowledged=True)
+        self.assertEqual(posting.calls, [('reverse_payments', 1)])
 
     def test_the_total_is_locked_only_when_the_port_says_so(self):  # AC-12
         StartOrderPreparation(self.repository).execute(self.order_id)

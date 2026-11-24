@@ -18,6 +18,11 @@ import {
   DeliveryDialogComponent,
   STALE_ORDER,
 } from '../../components/delivery-dialog/delivery-dialog.component';
+import { OrderReversalCardComponent } from '../../components/order-reversal-card/order-reversal-card.component';
+import {
+  ReturnDialogComponent,
+  STALE_ORDER_FOR_RETURN,
+} from '../../components/return-dialog/return-dialog.component';
 import { OrderPaymentsComponent } from '../../components/order-payments/order-payments.component';
 import {
   PaymentDialogComponent,
@@ -30,6 +35,7 @@ import { StockOutputCardComponent } from '../../components/stock-output-card/sto
 import {
   DeliveryPreview,
   FieldErrors,
+  ReturnPreview,
   Order,
   OrderApiError,
   OrderItem,
@@ -52,8 +58,8 @@ export const PRIMARY_LABELS: Record<PrimaryAction, string> = {
   get deliver() { return tr('SALES.ORDER_DETAIL.MARCAR_ENTREGADO'); },
 };
 const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
-/** Estados con la vista de consulta (acciones en la cabecera y pago en un modal); NEW aún se arma y CANCELLED conserva el aviso. */
-const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVERED'];
+/** Estados con la vista de consulta (acciones en la cabecera y pago en un modal); solo NEW aún se arma. */
+const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVERED', 'CANCELLED', 'RETURNED'];
 
 /** Pantalla de trabajo del pedido. Las acciones visibles salen del servidor; los importes no se calculan aquí. */
 @Component({
@@ -71,6 +77,7 @@ const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVER
     OrderSummaryComponent,
     OrderPaymentsComponent,
     StockOutputCardComponent,
+    OrderReversalCardComponent,
   ],
 })
 export class OrderDetailComponent implements OnInit {
@@ -134,6 +141,14 @@ export class OrderDetailComponent implements OnInit {
 
   get canCancel(): boolean {
     return !!this.order?.allowedTransitions.includes('cancel');
+  }
+
+  get canReturn(): boolean {
+    return !!this.order?.allowedTransitions.includes('return');
+  }
+
+  get returned(): boolean {
+    return this.order?.status === 'RETURNED';
   }
 
   get hasBalance(): boolean {
@@ -211,8 +226,38 @@ export class OrderDetailComponent implements OnInit {
     const order = this.order;
     if (!order) return;
     const reason = await this.askCancelReason(order);
-    if (reason !== null) {
-      this.run(() => this.api.cancel(order.id, reason), tr('SALES.ORDER_DETAIL.PEDIDO_CANCELADO_2'));
+    if (reason === null) return;
+    // Con cobros, la persona confirma que el dinero ya se devolvió fuera de PocketBiz (el servidor lo exige).
+    const refund = order.payments.length > 0;
+    if (refund && !(await this.confirmRefund(order))) return;
+    this.run(() => this.api.cancel(order.id, reason, refund), tr('SALES.ORDER_DETAIL.PEDIDO_CANCELADO_2'));
+  }
+
+  /** «Registrar devolución» (pedido entregado): lee el efecto y abre el diálogo de confirmación. */
+  async registerReturn(): Promise<void> {
+    const order = this.order;
+    if (!order || this.busy) return;
+    this.busy = true;
+    let preview: ReturnPreview;
+    try {
+      preview = await firstValueFrom(this.api.returnPreview(order.id));
+    } catch (err) {
+      this.busy = false;
+      this.onError(err as OrderApiError);
+      return;
+    }
+    this.busy = false;
+    const ref = this.modal.open(ReturnDialogComponent, { size: 'lg', backdrop: 'static', keyboard: false });
+    (ref.componentInstance as ReturnDialogComponent).init(order, preview);
+    try {
+      this.order = (await ref.result) as Order;
+      this.toastr.success(tr('SALES.ORDER_RETURN.PEDIDO_DEVUELTO'));
+    } catch (reason) {
+      // Cerrar no cambia nada; si el pedido cambió en otra parte, se vuelve a leer.
+      if (reason === STALE_ORDER_FOR_RETURN) {
+        this.toastr.error(tr('SALES.ORDER_DETAIL.EL_PEDIDO_CAMBIO_DESDE_QUE'));
+        this.reload();
+      }
     }
   }
 
@@ -309,6 +354,20 @@ export class OrderDetailComponent implements OnInit {
       cancelButtonText: tr('PERSONNEL.PROFILE_CONFIRMATION.VOLVER'),
     });
     return result.isConfirmed ? String(result.value).trim() : null;
+  }
+
+  /** Confirmación del reembolso externo antes de cancelar un pedido con cobros. */
+  protected async confirmRefund(order: Order): Promise<boolean> {
+    const result = await Swal.fire({
+      title: tr('SALES.ORDER_RETURN.CANCELAR_COBROS_TITULO'),
+      text: tr('SALES.ORDER_RETURN.CANCELAR_COBROS_TEXTO', { p0: order.paidTotal }),
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#fb7823',
+      confirmButtonText: tr('SALES.ORDER_RETURN.CANCELAR_COBROS_CONFIRMAR'),
+      cancelButtonText: tr('PERSONNEL.PROFILE_CONFIRMATION.VOLVER'),
+    });
+    return result.isConfirmed;
   }
 
   protected async confirmRemove(item: OrderItem): Promise<boolean> {

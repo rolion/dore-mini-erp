@@ -55,7 +55,7 @@ class ReportingApiTestCase(APITestCase):
         if status == 'DELIVERED':
             order.deliver(on, WEDNESDAY)
         if status == 'CANCELLED':
-            order.cancel('Motivo', NOW)
+            order.cancel('Motivo', NOW, refund_acknowledged=True)
         return self.orders.save(order)
 
     def category(self, name='Materia prima', active=True):

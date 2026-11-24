@@ -98,6 +98,19 @@ class ReverseReceiptCost(_CostBase):
                                                   occurred_at))
 
 
+class ReverseOutputCost(_CostBase):
+    """Contra-evento de cada salida valorizada (devolución): conserva el costo de venta y el vínculo; idempotente."""
+
+    def execute(self, source_type: str, source_id: str, occurred_at: datetime) -> None:
+        originals = self.events.list_for_source(CostKind.OUT, source_type, source_id)
+        if not originals:
+            return
+        with self.stock.locked():
+            for original in originals:
+                if self.events.get(CostKind.OUT_REVERSAL, source_type, source_id, original.product_id) is None:
+                    self.events.add(original.output_reversal(occurred_at))
+
+
 class CostOutputs(_CostBase):
     """Valoriza las salidas de un documento al promedio vigente: todas o ninguna, idempotente por origen."""
 

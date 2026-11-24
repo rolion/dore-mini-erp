@@ -10,14 +10,16 @@ import Swal, { SweetAlertResult } from 'sweetalert2';
 import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../../products';
 import { DeliveryPreview, FieldErrors, Order, OrderApiError, OrderItem, OrderRuleError } from '../../models/order';
+import { ReturnDialogComponent } from '../../components/return-dialog/return-dialog.component';
 import { OrdersApiService } from '../../services/orders-api.service';
-import { NO_STOCK_PREVIEW, makeItem, makeOrder, makePayment, makePreview } from '../../testing/order-fixtures';
+import { NO_STOCK_PREVIEW, makeItem, makeOrder, makePayment, makePreview, makeReturnPreview } from '../../testing/order-fixtures';
 import { OrderDetailComponent } from './order-detail.component';
 
 interface DialogHooks {
   askDeliveryDate(order: Order): Promise<string | null>;
   askCancelReason(order: Order): Promise<string | null>;
   confirmRemove(item: OrderItem): Promise<boolean>;
+  confirmRefund(order: Order): Promise<boolean>;
   deliverWithStock(order: Order, preview: DeliveryPreview): Promise<void>;
 }
 
@@ -55,7 +57,7 @@ describe('OrderDetailComponent', () => {
   beforeEach(() => {
     api = jasmine.createSpyObj<OrdersApiService>('OrdersApiService', [
       'get', 'prepare', 'ready', 'deliver', 'cancel', 'addItem', 'changeItemQuantity', 'removeItem',
-      'applyDiscount', 'registerPayment', 'deliveryPreview',
+      'applyDiscount', 'registerPayment', 'deliveryPreview', 'returnPreview',
     ]);
     api.deliveryPreview.and.returnValue(of(NO_STOCK_PREVIEW));
     toastr = jasmine.createSpyObj<ToastrService>('ToastrService', ['success', 'error']);
@@ -437,9 +439,77 @@ describe('OrderDetailComponent', () => {
       (q(element, 'cancel-action') as HTMLButtonElement).click();
       flushMicrotasks();
       fixture.detectChanges();
-      expect(api.cancel).toHaveBeenCalledOnceWith('o-1', 'No lo quiere');
+      expect(api.cancel).toHaveBeenCalledOnceWith('o-1', 'No lo quiere', false);
       expect(q(element, 'alert-cancelled')).not.toBeNull();
     }));
+
+    it('asks to confirm the external refund when the order has payments and sends it (AC-02)', fakeAsync(() => {
+      api.cancel.and.returnValue(of(makeOrder({ status: 'CANCELLED', allowedTransitions: [], refundAcknowledged: true })));
+      setup(makeOrder({ payments: [makePayment()], paidTotal: '20.00' }));
+      spyOn(dialogs(), 'askCancelReason').and.resolveTo('No lo quiere');
+      const refund = spyOn(dialogs(), 'confirmRefund').and.resolveTo(true);
+      void component.cancel();
+      flushMicrotasks();
+      expect(refund).toHaveBeenCalledTimes(1);
+      expect(api.cancel).toHaveBeenCalledOnceWith('o-1', 'No lo quiere', true);
+    }));
+
+    it('does not cancel when the refund is not confirmed (AC-02)', fakeAsync(() => {
+      setup(makeOrder({ payments: [makePayment()], paidTotal: '20.00' }));
+      spyOn(dialogs(), 'askCancelReason').and.resolveTo('No lo quiere');
+      spyOn(dialogs(), 'confirmRefund').and.resolveTo(false);
+      void component.cancel();
+      flushMicrotasks();
+      expect(api.cancel).not.toHaveBeenCalled();
+    }));
+
+    describe('return (AC-03, AC-09, AC-11)', () => {
+      const delivered = () => makeOrder({ status: 'DELIVERED', editable: false, allowedTransitions: ['return'] });
+
+      it('offers «Registrar devolución» only when the server allows it', () => {
+        expect(q(setup(delivered()), 'return-action')).not.toBeNull();
+        expect(q(setup(makeOrder({ status: 'DELIVERED', allowedTransitions: [] })), 'return-action')).toBeNull();
+      });
+
+      it('reads the preview, opens the dialog and shows the returned order', fakeAsync(() => {
+        const returned = makeOrder({ status: 'RETURNED', allowedTransitions: [], returnReason: 'Defectuoso', returnedByName: 'ana' });
+        const preview = makeReturnPreview();
+        api.returnPreview.and.returnValue(of(preview));
+        const element = setup(delivered());
+        const init = jasmine.createSpy('init');
+        const ref = { componentInstance: { init }, result: Promise.resolve(returned) } as unknown as NgbModalRef;
+        const open = spyOn(TestBed.inject(NgbModal), 'open').and.returnValue(ref);
+        (q(element, 'return-action') as HTMLButtonElement).click();
+        flushMicrotasks();
+        fixture.detectChanges();
+        expect(api.returnPreview).toHaveBeenCalledOnceWith('o-1');
+        expect(open.calls.mostRecent().args[0]).toBe(ReturnDialogComponent);
+        expect(init).toHaveBeenCalledOnceWith(jasmine.objectContaining({ id: 'o-1' }), preview);
+        expect(component.order?.status).toBe('RETURNED');
+        expect(toastr.success).toHaveBeenCalledWith('Pedido devuelto.');
+        expect(text(element, 'reversal-reason')).toBe('Defectuoso');
+        expect(q(element, 'return-action')).toBeNull();
+      }));
+
+      it('keeps the order when the dialog is dismissed', fakeAsync(() => {
+        api.returnPreview.and.returnValue(of(makeReturnPreview()));
+        setup(delivered());
+        const ref = { componentInstance: { init: () => undefined }, result: Promise.reject('x') } as unknown as NgbModalRef;
+        spyOn(TestBed.inject(NgbModal), 'open').and.returnValue(ref);
+        void component.registerReturn();
+        flushMicrotasks();
+        expect(component.order?.status).toBe('DELIVERED');
+        expect(toastr.error).not.toHaveBeenCalled();
+      }));
+
+      it('shows the server message when the preview fails', fakeAsync(() => {
+        api.returnPreview.and.returnValue(throwError(() => new OrderApiError('Falló', 500)));
+        setup(delivered());
+        void component.registerReturn();
+        flushMicrotasks();
+        expect(toastr.error).toHaveBeenCalledWith('Falló');
+      }));
+    });
 
     it('does not cancel when the user goes back', fakeAsync(() => {
       setup();
@@ -756,13 +826,30 @@ describe('OrderDetailComponent', () => {
       expect(component.order?.paidTotal).toBe('20.00');
     }));
 
-    it('keeps the current detail for NEW and CANCELLED orders (AC-15)', () => {
+    it('keeps the current detail for NEW orders and uses the compact view for cancelled ones (AC-15, AC-09)', () => {
       const created = setup(makeOrder());
       expect(created.querySelector('app-order-items')).not.toBeNull();
       expect(q(created, 'delivery-panel')).not.toBeNull();
       const cancelled = setup(makeOrder({ status: 'CANCELLED', editable: false, allowedTransitions: [], cancellationReason: 'x' }));
       expect(q(cancelled, 'alert-cancelled')).not.toBeNull();
-      expect(q(cancelled, 'delivery-panel')).not.toBeNull();
+      expect(q(cancelled, 'order-data')).not.toBeNull();
+      expect(q(cancelled, 'delivery-panel')).toBeNull();
+      expect(cancelled.querySelector('app-order-items')).toBeNull();
+    });
+
+    it('shows a refunded cancellation as refunded, not as a settled sale (AC-02, AC-09)', () => {
+      const element = setup(makeOrder({
+        status: 'CANCELLED', editable: false, allowedTransitions: [], canRegisterPayment: false,
+        cancellationReason: 'Sin stock', payments: [makePayment({ amount: '28.00' })], paidTotal: '28.00',
+        balance: '42.00', paymentStatus: 'REFUNDED', refundAcknowledged: true, cancelledByName: 'ana',
+        cancelledAt: '2026-10-04T10:00:00Z',
+      }));
+      expect(text(element, 'refund-registered')).toContain('reembolso quedó registrado');
+      expect(text(element, 'alert-cancelled')).not.toContain('Los pagos registrados se conservan');
+      expect(text(element, 'paid')).toContain('28.00');
+      expect(q(element, 'balance')).toBeNull();
+      expect(element.textContent).toContain('Reembolsado');
+      expect(q(element, 'reversal-card')).not.toBeNull();
     });
   });
 });

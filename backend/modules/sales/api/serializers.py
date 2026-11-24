@@ -50,6 +50,7 @@ class DeliveryPreviewQuerySerializer(serializers.Serializer):
 
 class CancelSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    refund_acknowledged = serializers.BooleanField(required=False, default=False)
 
 
 class PaymentInputSerializer(serializers.Serializer):
@@ -119,6 +120,12 @@ class OrderSerializer(_CustomerMixin):
     payments = PaymentSerializer(many=True, read_only=True)
     cancellation_reason = serializers.CharField(read_only=True)
     cancelled_at = serializers.DateTimeField(read_only=True)
+    cancelled_by_name = serializers.CharField(read_only=True)
+    returned_at = serializers.DateTimeField(read_only=True)
+    returned_by_name = serializers.CharField(read_only=True)
+    return_reason = serializers.CharField(read_only=True)
+    refund_acknowledged = serializers.BooleanField(read_only=True)
+    reversal = serializers.SerializerMethodField()
     editable = serializers.BooleanField(read_only=True)
     allowed_transitions = serializers.ListField(child=serializers.CharField(), read_only=True)
     can_register_payment = serializers.BooleanField(read_only=True)
@@ -132,6 +139,10 @@ class OrderSerializer(_CustomerMixin):
         if obj.warehouse_id is None or not self.context.get('inventory_available', False):
             return None
         return {'id': obj.warehouse_id, 'name': self.context.get('warehouse_names', {}).get(obj.warehouse_id, '')}
+
+    def get_reversal(self, obj):
+        """Movimientos y asientos vinculados a una cancelación o devolución (`null` en los demás estados)."""
+        return reversal_data(self.context.get('reversal'))
 
     def get_stock_output(self, obj):
         """Salida de inventario del pedido entregado (`null` si no hubo o Inventario está deshabilitado)."""
@@ -157,6 +168,53 @@ def stock_output_data(record) -> dict | None:
             'quantity': quantity_text(m.quantity),
             'unit': {'abbreviation': m.unit},
         } for m in record.movements],
+    }
+
+
+def reversal_data(reversal) -> dict | None:
+    if reversal is None:
+        return None
+    stock, entries = reversal
+    return {
+        'movements': [{
+            'id': str(m.movement_id),
+            'product': {'id': str(m.product_id), 'name': m.product_name},
+            'quantity': quantity_text(m.quantity),
+            'unit': {'abbreviation': m.unit},
+            'warehouse_name': m.warehouse_name,
+            'reversed_by_id': str(m.reversed_by_id) if m.reversed_by_id else None,
+            'reversed_by_reference': m.reversed_by_reference,
+        } for m in stock],
+        'entries': [{
+            'event': e.event,
+            'id': str(e.entry_id),
+            'accounting_date': e.accounting_date.isoformat(),
+            'description': e.description,
+            'total': format(e.total, 'f'),
+            'reversed_by_id': str(e.reversed_by_id) if e.reversed_by_id else None,
+        } for e in entries],
+    }
+
+
+def return_preview_data(preview) -> dict:
+    order = preview.order
+    stock = preview.stock
+    return {
+        'order_code': order.code,
+        'inventory_enabled': preview.inventory_enabled,
+        'requires_refund_acknowledgement': preview.requires_refund_acknowledgement,
+        'items': [{'product': {'id': str(i.product_id), 'name': i.product_name}, 'quantity': i.quantity}
+                  for i in order.items],
+        'payments': [{'id': str(p.id), 'amount': format(p.amount, '.2f'), 'payment_method': p.payment_method.value,
+                      'payment_date': p.payment_date.isoformat()} for p in order.payments],
+        'stock': None if stock is None else {
+            'warehouse': {'id': str(stock.warehouse_id), 'name': stock.warehouse_name},
+            'lines': [{'product': {'id': str(m.product_id), 'name': m.product_name},
+                       'quantity': quantity_text(m.quantity), 'unit': {'abbreviation': m.unit}}
+                      for m in stock.movements],
+        },
+        'entries': [{'event': e.event, 'id': str(e.entry_id), 'accounting_date': e.accounting_date.isoformat(),
+                     'description': e.description, 'total': format(e.total, 'f')} for e in preview.entries],
     }
 
 

@@ -9,12 +9,13 @@ class OrderStatus(str, Enum):
     READY = 'READY'
     DELIVERED = 'DELIVERED'
     CANCELLED = 'CANCELLED'
+    RETURNED = 'RETURNED'
 
 
 class PaymentStatus(str, Enum):
     """Estado de cobro; siempre derivado de los pagos del pedido.
 
-    REFUNDED existe en el modelo pero ningún flujo lo produce todavía (no hay reembolsos en el MVP).
+    REFUNDED: el pedido se canceló o devolvió con cobros y la persona confirmó el reembolso fuera de PocketBiz.
     """
 
     PENDING = 'PENDING'

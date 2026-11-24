@@ -34,8 +34,9 @@ _ALLOWED_TRANSITIONS: dict[OrderStatus, tuple[str, ...]] = {
     OrderStatus.NEW: ('prepare', 'cancel'),
     OrderStatus.IN_PREPARATION: ('ready', 'cancel'),
     OrderStatus.READY: ('deliver', 'cancel'),
-    OrderStatus.DELIVERED: (),
+    OrderStatus.DELIVERED: ('return',),
     OrderStatus.CANCELLED: (),
+    OrderStatus.RETURNED: (),
 }
 
 _MONEY_MESSAGES = {
@@ -187,6 +188,12 @@ class Order:
     status: OrderStatus = OrderStatus.NEW
     cancellation_reason: str = ''
     cancelled_at: datetime | None = None
+    cancelled_by_name: str = ''
+    # Devolución total de un pedido entregado y reembolso externo declarado (ver ADR de devoluciones).
+    returned_at: datetime | None = None
+    returned_by_name: str = ''
+    return_reason: str = ''
+    refund_acknowledged: bool = False
     # Almacén desde el que se atiende el pedido (solo el id: Inventario es otro módulo); None en pedidos anteriores.
     warehouse_id: UUID | None = None
     items: list[OrderItem] = field(default_factory=list)
@@ -254,6 +261,8 @@ class Order:
         if not self.items:
             return PaymentStatus.PENDING
         paid = self.paid_total
+        if self.refund_acknowledged and paid > 0:
+            return PaymentStatus.REFUNDED
         if paid >= self.total:
             return PaymentStatus.PAID
         if paid > 0:
@@ -276,7 +285,7 @@ class Order:
 
     @property
     def can_register_payment(self) -> bool:
-        return self.status is not OrderStatus.CANCELLED and self.balance > 0
+        return self.status not in (OrderStatus.CANCELLED, OrderStatus.RETURNED) and self.balance > 0
 
     # --- ítems y descuento ------------------------------------------------------------------------------------
 
@@ -349,15 +358,44 @@ class Order:
         self.delivered_date = value
         self.status = OrderStatus.DELIVERED
 
-    def cancel(self, reason: object, now: datetime) -> None:
+    def cancel(self, reason: object, now: datetime, by_name: str = '', refund_acknowledged: bool = False) -> None:
         if self.status not in OPEN_STATUSES:
             raise self._invalid_transition()
-        text = _text(reason, 'reason', 'El motivo de cancelación', REASON_MAX_LENGTH)
-        if not text:
-            raise _fail('reason', 'El motivo de cancelación es obligatorio.')
+        text = self._required_reason(reason, 'El motivo de cancelación')
+        self._require_refund_ack(refund_acknowledged)
         self.cancellation_reason = text
         self.cancelled_at = now
+        self.cancelled_by_name = by_name
+        self.refund_acknowledged = bool(self.payments) and refund_acknowledged
         self.status = OrderStatus.CANCELLED
+
+    def ensure_returnable(self) -> None:
+        """Lanza `invalid_transition` si el pedido no se puede devolver (no cambia nada)."""
+        self._require_status(OrderStatus.DELIVERED)
+
+    def register_return(self, reason: object, now: datetime, by_name: str = '',
+                        refund_acknowledged: bool = False) -> None:
+        """Devolución total: DELIVERED -> RETURNED. Con cobros exige confirmar el reembolso externo."""
+        self._require_status(OrderStatus.DELIVERED)
+        text = self._required_reason(reason, 'El motivo de la devolución')
+        self._require_refund_ack(refund_acknowledged)
+        self.return_reason = text
+        self.returned_at = now
+        self.returned_by_name = by_name
+        self.refund_acknowledged = bool(self.payments) and refund_acknowledged
+        self.status = OrderStatus.RETURNED
+
+    def _required_reason(self, reason: object, label: str) -> str:
+        text = _text(reason, 'reason', label, REASON_MAX_LENGTH)
+        if not text:
+            raise _fail('reason', f'{label} es obligatorio.')
+        return text
+
+    def _require_refund_ack(self, refund_acknowledged: bool) -> None:
+        if self.payments and not refund_acknowledged:
+            raise OrderRuleViolation(
+                'refund_acknowledgement_required',
+                'El pedido tiene cobros: confirma que el dinero ya se devolvió al cliente fuera de PocketBiz.')
 
     # --- pagos ------------------------------------------------------------------------------------------------
 
@@ -366,8 +404,8 @@ class Order:
 
     def register_payment(self, amount: object, payment_method: object, payment_date: object, reference: object,
                          today: date, idempotency_key: UUID | None = None, request_digest: str = '') -> Payment:
-        if self.status is OrderStatus.CANCELLED:
-            raise OrderRuleViolation('order_cancelled', 'El pedido está cancelado: no admite nuevos pagos.')
+        if self.status in (OrderStatus.CANCELLED, OrderStatus.RETURNED):
+            raise OrderRuleViolation('order_cancelled', 'El pedido está cancelado o devuelto: no admite pagos.')
         values, errors = _run_checks([
             ('amount', lambda: _money(amount, 'amount', 'El monto', positive=True)),
             ('payment_method', lambda: _enum(PaymentMethod, payment_method, 'payment_method', 'El método de pago')),
