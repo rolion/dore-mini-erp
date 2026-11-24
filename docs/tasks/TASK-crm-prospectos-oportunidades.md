@@ -1,6 +1,6 @@
 # TASK-crm-prospectos-oportunidades: PB-CRM-004 · Prospectos y oportunidades
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-prospectos-oportunidades` (base: `crm`)
@@ -13,6 +13,7 @@
 | 2026-11-24 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-24 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
+| 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,13 @@ Ver `docs/adr/ADR-crm-prospectos-oportunidades-modelo-conversion-y-vinculos.md` 
 `docs/plans/PLAN-2026-11-24-crm-prospectos-oportunidades.md` (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+Implementado según PLAN v1 (backend en `backend/modules/crm/`, fachadas en `customers`/`sales`, frontend en `features/crm/`).
+
+- **Backend:** dominio `Lead`/`Opportunity` (INV-01…04, 07), modelos y migración `crm 0002` (INV-03, INV-08), `DjangoStageCards` en lugar de `NoCards` (INV-09, AC-08), conversión y cierre idempotentes (AC-04, AC-05), vínculo a pedido con códigos 409 (AC-06), API `/api/crm/leads/` y `/api/crm/opportunities/` (AC-01…03, 07, 09). Pruebas: `test_domain_opportunity`, `test_api_leads`, `test_api_opportunities`, fachadas de `customers`/`sales`, `test_boundaries`.
+- **Frontend:** páginas `crm-opportunity-board` (Kanban) y `crm-lead-list`, diálogos de prospecto, oportunidad, cierre y conversión, servicios API, rutas y menú, 100 claves i18n es/en/pt (AC-10, AC-11). Referencias: plantilla Kanban nueva del DDR, `product-list` (lista) y el patrón de diálogo con motivo; se reutilizan `money`, `ModulesService` y `CrmApiError` ampliado.
+- **Desviaciones (detalle de implementación):** fachada extra `customers.get_customers_for_crm` (sin N+1); códigos extra `opportunity_closed`, `opportunity_not_won` y `already_converted`; una oportunidad nueva de un prospecto ya convertido hereda su cliente; mover a la misma etapa no escribe historial; `GET /opportunities/<id>/orders/` excluye pedidos ya vinculados. El plan no define endpoint de usuarios de la empresa: el selector/filtro de responsable ofrece el usuario actual y los responsables ya vistos en el tablero, y el filtro de prospecto/cliente se arma con los contactos ya cargados (deuda: endpoint de usuarios y búsqueda libre). Cartas de oportunidades cerradas en etapas archivadas se agrupan en «Etapas archivadas».
+- **Deuda técnica:** sin arrastrar y soltar; sin detalle de oportunidad (PB-CRM-005); límite de 200 tarjetas por carga.
+- **Verificación propia (no es el Quality Gate):** backend `modules.crm modules.customers modules.sales` (604 pruebas) y `shared` pasan con PostgreSQL; `makemigrations --check` sin cambios; frontend `i18n:check`, `lint`, `build` y `npm test` (1895) pasan. No se probó contra un navegador real ni el flujo Kanban de punta a punta con el backend.
 
 ## Review
 _Pendiente_

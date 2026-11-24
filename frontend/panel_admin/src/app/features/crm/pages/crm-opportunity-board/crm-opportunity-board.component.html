@@ -1,0 +1,227 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'CRM.OPPORTUNITY_BOARD.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate">
+        <i class="fas fa-home font-17" aria-hidden="true"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.CUSTOMER_LIST.BREADCRUMB' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'CRM.OPPORTUNITY_BOARD.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header">
+        <h4>{{ 'CRM.OPPORTUNITY_BOARD.TITULO' | translate }}</h4>
+        @if (selected && selected.stages.length) {
+        <button type="button" class="btn btn-icon icon-left btn-primary rounded-button crm-add-button ms-auto" data-testid="new-opportunity"
+          (click)="create()" [attr.title]="'CRM.OPPORTUNITY_BOARD.NUEVA_OPORTUNIDAD' | translate"
+          [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.NUEVA_OPORTUNIDAD' | translate">
+          <i class="material-icons" aria-hidden="true">add</i>
+        </button>
+        }
+      </div>
+      <div class="card-body">
+        @if (loadingBoards) {
+        <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+        } @else if (boardsError) {
+        <div class="alert alert-danger" role="alert" data-testid="boards-error">
+          {{ boardsError }}
+          <button type="button" class="btn btn-light btn-sm ms-2" (click)="loadBoards()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else if (!selected) {
+        <div class="text-center py-4" data-testid="no-boards">
+          <p>{{ 'CRM.OPPORTUNITY_BOARD.SIN_TABLEROS' | translate }}</p>
+          <a class="btn btn-primary" routerLink="/pocketbiz/crm/board">{{ 'CRM.OPPORTUNITY_BOARD.CONFIGURAR_TABLERO' | translate }}</a>
+        </div>
+        } @else {
+        <form class="row g-2 align-items-end mb-3" [formGroup]="filters" (submit)="$event.preventDefault()" [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS' | translate"
+          data-testid="board-filters">
+          <div class="col-md-6 col-lg-3">
+            <label for="crm-opp-board" class="form-label">{{ 'CRM.BOARD.TABLERO' | translate }}</label>
+            <select id="crm-opp-board" class="form-select" [formControl]="boardSelect">
+              @for (board of boards; track board.id) {
+              <option [value]="board.id">{{ board.name }}</option>
+              }
+            </select>
+          </div>
+            <div class="col-md-6 col-lg-3">
+              <label for="crm-opp-owner-filter" class="form-label">{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</label>
+              <select id="crm-opp-owner-filter" class="form-select" formControlName="ownerId">
+                <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                @for (owner of ownerOptions; track owner.id) {
+                <option [value]="'' + owner.id">{{ owner.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6 col-lg-3">
+              <label for="crm-opp-contact-filter" class="form-label">{{ 'CRM.OPPORTUNITY_BOARD.PROSPECTO_O_CLIENTE' | translate }}</label>
+              <select id="crm-opp-contact-filter" class="form-select" formControlName="contact">
+                <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                @for (option of contactOptions; track option.key) {
+                <option [value]="option.key">{{ option.name }} ({{ (option.kind === 'lead' ? 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' : 'COMMON.CLIENTE') | translate }})</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-6 col-lg-2">
+              <label for="crm-opp-status-filter" class="form-label">{{ 'COMMON.ESTADO' | translate }}</label>
+              <select id="crm-opp-status-filter" class="form-select" formControlName="status">
+                <option value="open">{{ 'CRM.OPPORTUNITY_BOARD.ABIERTAS' | translate }}</option>
+                <option value="won">{{ 'CRM.OPPORTUNITY_BOARD.GANADAS' | translate }}</option>
+                <option value="lost">{{ 'CRM.OPPORTUNITY_BOARD.PERDIDAS' | translate }}</option>
+              </select>
+            </div>
+          @if (hasFilters) {
+          <div class="col-auto">
+            <button type="button" class="btn btn-light" (click)="clearFilters()" data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+          </div>
+          }
+        </form>
+
+        <div aria-live="polite">
+          @if (notice) {
+          <div class="alert alert-warning" role="alert" data-testid="notice">{{ notice }}</div>
+          }
+          @if (success) {
+          <div class="alert alert-success" role="status" data-testid="success">{{ success }}</div>
+          }
+        </div>
+
+        @if (!selected.stages.length) {
+        <div class="text-center py-4" data-testid="no-stages">
+          <p>{{ 'CRM.OPPORTUNITY_BOARD.SIN_ETAPAS' | translate }}</p>
+          <a class="btn btn-primary" routerLink="/pocketbiz/crm/board">{{ 'CRM.OPPORTUNITY_BOARD.CONFIGURAR_TABLERO' | translate }}</a>
+        </div>
+        } @else if (cardsError) {
+        <div class="alert alert-danger" role="alert" data-testid="cards-error">
+          {{ cardsError }}
+          <button type="button" class="btn btn-light btn-sm ms-2" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else if (loadingCards && !columns.length) {
+        <p data-testid="loading-cards">{{ 'COMMON.CARGANDO' | translate }}</p>
+        } @else if (hasFilters && !opportunities.length && !loadingCards) {
+        <div class="text-center py-4" data-testid="empty-filtered">
+          <p class="text-muted">{{ 'CRM.OPPORTUNITY_BOARD.SIN_RESULTADOS' | translate }}</p>
+          <button type="button" class="btn btn-light" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+        </div>
+        } @else {
+        @if (loadingCards) {
+        <p class="visually-hidden" role="status">{{ 'COMMON.CARGANDO' | translate }}</p>
+        }
+        <div class="crm-kanban" data-testid="kanban" [attr.aria-busy]="loadingCards">
+          @for (column of columns; track column.stage.id) {
+          <section class="card crm-column m-0" data-testid="column" [attr.aria-labelledby]="'crm-col-' + column.stage.id">
+            <header class="crm-column-header">
+              <h5 class="h6 mb-0" [id]="'crm-col-' + column.stage.id">{{ column.stage.name }} · {{ column.cards.length }}</h5>
+              <small class="text-muted">{{ column.total | money }}</small>
+            </header>
+            <ul class="list-unstyled crm-column-body m-0">
+              @for (opportunity of column.cards; track opportunity.id) {
+              <li class="card crm-opportunity m-0" data-testid="opportunity-card">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <strong class="crm-opportunity-title">{{ opportunity.title }}</strong>
+                  @if (opportunity.status === 'won') {
+                  <span class="badge-outline col-green" data-testid="badge-won">{{ 'CRM.OPPORTUNITY_BOARD.GANADA' | translate }}</span>
+                  } @else if (opportunity.status === 'lost') {
+                  <span class="badge-outline col-red" data-testid="badge-lost">{{ 'CRM.OPPORTUNITY_BOARD.PERDIDA' | translate }}</span>
+                  }
+                </div>
+                <dl class="crm-opportunity-data mb-0">
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.CONTACTO' | translate }}</dt>
+                    <dd data-testid="card-contact">
+                      @if (contact(opportunity); as person) {
+                      {{ person.name }}@if (person.phone) { · {{ person.phone }} }
+                      @if (!opportunity.customer) {
+                      <small class="text-muted">({{ 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' | translate }})</small>
+                      }
+                      } @else {
+                      {{ 'CRM.OPPORTUNITY_BOARD.SIN_CONTACTO' | translate }}
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.IMPORTE' | translate }}</dt>
+                    <dd class="fw-bold" data-testid="card-amount">{{ opportunity.amount | money }}</dd>
+                  </div>
+                  @if (isOpenView) {
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.SIGUIENTE_ACCION' | translate }}</dt>
+                    <dd data-testid="card-next" [class.text-danger]="overdue(opportunity)" [class.fw-bold]="overdue(opportunity)">
+                      @if (opportunity.nextActionAt) {
+                      {{ opportunity.nextActionAt | date: 'dd/MM/yyyy HH:mm' }}
+                      @if (overdue(opportunity)) { · {{ 'CRM.OPPORTUNITY_BOARD.VENCIDA' | translate }} }
+                      } @else {
+                      {{ 'CRM.OPPORTUNITY_BOARD.SIN_SIGUIENTE_ACCION' | translate }}
+                      }
+                    </dd>
+                  </div>
+                  } @else {
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.CERRADA_EL' | translate }}</dt>
+                    <dd>{{ opportunity.closedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+                  </div>
+                  @if (opportunity.status === 'lost' && opportunity.lostReason) {
+                  <div>
+                    <dt>{{ 'COMMON.MOTIVO' | translate }}</dt>
+                    <dd data-testid="card-reason">{{ opportunity.lostReason }}</dd>
+                  </div>
+                  }
+                  @if (opportunity.status === 'won') {
+                  <div>
+                    <dt>{{ 'COMMON.PEDIDO' | translate }}</dt>
+                    <dd>{{ (opportunity.orderId ? 'CRM.OPPORTUNITY_BOARD.PEDIDO_VINCULADO_SI' : 'CRM.OPPORTUNITY_BOARD.SIN_PEDIDO') | translate }}</dd>
+                  </div>
+                  }
+                  }
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</dt>
+                    <dd>{{ opportunity.owner.name }}</dd>
+                  </div>
+                </dl>
+                @if (opportunity.status === 'open') {
+                <div class="crm-opportunity-actions">
+                  <label class="visually-hidden" [for]="'crm-move-' + opportunity.id">{{ 'CRM.OPPORTUNITY_BOARD.MOVER_A_DE' | translate: { title: opportunity.title } }}</label>
+                  <select #moveSelect class="form-select form-select-sm" [id]="'crm-move-' + opportunity.id" data-testid="move-select"
+                    [disabled]="movingId !== null" (change)="move(opportunity, moveSelect.value); moveSelect.value = ''">
+                    <option value="">{{ 'CRM.OPPORTUNITY_BOARD.MOVER_A' | translate }}</option>
+                    @for (target of targets(opportunity); track target.id) {
+                    <option [value]="target.id">{{ target.name }}</option>
+                    }
+                  </select>
+                  <div class="d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-light btn-sm" (click)="edit(opportunity)" data-testid="edit-opportunity"
+                      [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.EDITAR_DE' | translate: { title: opportunity.title }">{{ 'COMMON.EDITAR' | translate }}</button>
+                    <button type="button" class="btn btn-warning btn-sm" (click)="close(opportunity)" data-testid="close-opportunity"
+                      [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.CERRAR_DE' | translate: { title: opportunity.title }">{{ 'CRM.OPPORTUNITY_BOARD.CERRAR' | translate }}</button>
+                    @if (opportunity.lead && !opportunity.customer) {
+                    <button type="button" class="btn btn-light btn-sm" (click)="convert(opportunity.lead)" data-testid="convert-lead">{{ 'CRM.LEAD_LIST.CONVERTIR' | translate }}</button>
+                    }
+                  </div>
+                </div>
+                } @else if (canLinkOrder(opportunity)) {
+                <div class="crm-opportunity-actions">
+                  <button type="button" class="btn btn-light btn-sm" (click)="close(opportunity)" data-testid="link-order">{{ 'CRM.CLOSE_DIALOG.VINCULAR_PEDIDO' | translate }}</button>
+                </div>
+                }
+              </li>
+              } @empty {
+              <li class="text-muted crm-column-empty" data-testid="column-empty">{{ 'CRM.OPPORTUNITY_BOARD.SIN_OPORTUNIDADES' | translate }}</li>
+              }
+            </ul>
+            @if (isOpenView && column.stage.isActive) {
+            <button type="button" class="btn btn-light btn-sm crm-column-add" (click)="create(column.stage.id)"
+              [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.NUEVA_EN' | translate: { name: column.stage.name }">
+              <i class="fas fa-plus me-1" aria-hidden="true"></i>{{ 'CRM.OPPORTUNITY_BOARD.AGREGAR' | translate }}
+            </button>
+            }
+          </section>
+          }
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+</section>

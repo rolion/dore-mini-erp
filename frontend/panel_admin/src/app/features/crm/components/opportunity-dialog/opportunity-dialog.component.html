@@ -1,0 +1,108 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ (isEdit ? 'CRM.OPPORTUNITY_DIALOG.EDITAR_OPORTUNIDAD' : 'CRM.OPPORTUNITY_DIALOG.NUEVA_OPORTUNIDAD') | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (errorMessage) {
+    <div class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert" data-testid="opportunity-error">{{ errorMessage }}</div>
+    }
+
+    @if (isEdit) {
+    <dl class="row mb-2">
+      <dt class="col-sm-4">{{ (contactKind === 'customer' ? 'COMMON.CLIENTE' : 'CRM.OPPORTUNITY_DIALOG.PROSPECTO') | translate }}</dt>
+      <dd class="col-sm-8">{{ form.controls.contact.value?.name }}</dd>
+    </dl>
+    } @else {
+    <fieldset class="mb-2">
+      <legend class="form-label fs-6">{{ 'CRM.OPPORTUNITY_DIALOG.PARA' | translate }} <span class="text-danger">*</span></legend>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="crm-opp-kind-lead" value="lead" formControlName="contactKind">
+        <label class="form-check-label" for="crm-opp-kind-lead">{{ 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' | translate }}</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="crm-opp-kind-customer" value="customer" formControlName="contactKind">
+        <label class="form-check-label" for="crm-opp-kind-customer">{{ 'COMMON.CLIENTE' | translate }}</label>
+      </div>
+    </fieldset>
+    <div class="form-group">
+      <label for="crm-opp-contact">{{ (contactKind === 'customer' ? 'CRM.OPPORTUNITY_DIALOG.BUSCAR_CLIENTE' : 'CRM.OPPORTUNITY_DIALOG.BUSCAR_PROSPECTO') | translate }} <span class="text-danger">*</span></label>
+      <ng-select labelForId="crm-opp-contact" formControlName="contact" [items]="contacts" bindLabel="name" [typeahead]="contactSearch$"
+        [loading]="contactsLoading" [clearable]="true" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate"
+        [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate"
+        [loadingText]="'COMMON.CARGANDO' | translate">
+        <ng-template ng-option-tmp let-item="item">
+          <span class="fw-semibold">{{ item.name }}</span>
+          <small class="text-muted d-block">{{ item.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</small>
+        </ng-template>
+      </ng-select>
+      @if (invalid('contact')) {
+      <small class="form-text text-danger" role="alert">{{ serverErrors.contact || ('CRM.OPPORTUNITY_DIALOG.CONTACTO_OBLIGATORIO' | translate) }}</small>
+      }
+    </div>
+    }
+
+    <div class="form-group">
+      <label for="crm-opp-title">{{ 'CRM.OPPORTUNITY_DIALOG.TITULO' | translate }} <span class="text-danger">*</span></label>
+      <input id="crm-opp-title" type="text" class="form-control" formControlName="title" [attr.maxlength]="titleMaxLength"
+        [attr.aria-invalid]="invalid('title')">
+      @if (invalid('title')) {
+      <small class="form-text text-danger" role="alert">
+        {{ serverErrors.title || (form.controls.title.hasError('maxlength') ?
+        ('CRM.OPPORTUNITY_DIALOG.TITULO_MUY_LARGO' | translate: { n: titleMaxLength }) : ('CRM.OPPORTUNITY_DIALOG.TITULO_OBLIGATORIO' | translate)) }}
+      </small>
+      }
+    </div>
+    <div class="row">
+      <div class="form-group col-md-6">
+        <label for="crm-opp-amount">{{ 'CRM.OPPORTUNITY_DIALOG.IMPORTE_BS' | translate }} <span class="text-danger">*</span></label>
+        <input id="crm-opp-amount" type="text" inputmode="decimal" class="form-control" formControlName="amount" placeholder="0.00"
+          [attr.aria-invalid]="invalid('amount')">
+        @if (invalid('amount')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.amount || ('CRM.OPPORTUNITY_DIALOG.IMPORTE_INVALIDO' | translate) }}</small>
+        }
+      </div>
+      <div class="form-group col-md-6">
+        <label for="crm-opp-next">{{ 'CRM.OPPORTUNITY_BOARD.SIGUIENTE_ACCION' | translate }}</label>
+        <input id="crm-opp-next" type="datetime-local" class="form-control" formControlName="nextActionAt"
+          [attr.aria-invalid]="invalid('nextActionAt')">
+        @if (invalid('nextActionAt')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.nextActionAt }}</small>
+        }
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-md-6">
+        <label for="crm-opp-owner">{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</label>
+        <select id="crm-opp-owner" class="form-select" formControlName="ownerId" [attr.aria-invalid]="invalid('ownerId')">
+          @if (!ownerOptions.length) {
+          <option value="">{{ 'CRM.OPPORTUNITY_DIALOG.YO' | translate }}</option>
+          }
+          @for (owner of ownerOptions; track owner.id) {
+          <option [value]="'' + owner.id">{{ owner.name }}</option>
+          }
+        </select>
+        @if (invalid('ownerId')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.ownerId }}</small>
+        }
+      </div>
+      @if (!isEdit) {
+      <div class="form-group col-md-6">
+        <label for="crm-opp-stage">{{ 'CRM.OPPORTUNITY_DIALOG.ETAPA_INICIAL' | translate }}</label>
+        <select id="crm-opp-stage" class="form-select" formControlName="stageId" [attr.aria-invalid]="invalid('stageId')">
+          @for (stage of stages; track stage.id) {
+          <option [value]="stage.id">{{ stage.name }}</option>
+          }
+        </select>
+        @if (invalid('stageId')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.stageId }}</small>
+        }
+      </div>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving" data-testid="save-opportunity">{{ 'COMMON.GUARDAR' | translate }}</button>
+  </div>
+</form>

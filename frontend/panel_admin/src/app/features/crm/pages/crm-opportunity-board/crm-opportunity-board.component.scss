@@ -1,0 +1,112 @@
+// Tablero Kanban (design-system §5): columnas de ancho fijo con desplazamiento horizontal desde `lg`; apiladas debajo.
+$touch: 44px;
+
+.crm-kanban {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 992px) {
+  .crm-kanban {
+    flex-direction: row;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .crm-column {
+    flex: 0 0 18rem;
+    max-width: 18rem;
+  }
+}
+
+.crm-column {
+  padding: 0.75rem;
+  background-color: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+.crm-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.crm-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crm-column-empty {
+  padding: 0.5rem 0;
+}
+
+.crm-column-add {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.crm-opportunity {
+  padding: 0.625rem;
+  border: 1px solid var(--bs-border-color);
+}
+
+.crm-opportunity-title {
+  overflow-wrap: anywhere;
+}
+
+.crm-opportunity-data {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  dt {
+    font-weight: 400;
+    color: var(--bs-secondary-color);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.crm-opportunity-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+// En pantallas táctiles los controles llegan a 44 px.
+@media (max-width: 991.98px) {
+  .crm-opportunity-actions .btn,
+  .crm-opportunity-actions .form-select,
+  .crm-column-add {
+    min-height: $touch;
+  }
+}
+
+// Botón circular de alta rápida (mismo ajuste que `crm-board`).
+.crm-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  .material-icons {
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+  }
+}

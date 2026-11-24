@@ -5,16 +5,16 @@ from rest_framework.views import APIView
 
 from modules.crm.application.services import BoardService
 from modules.crm.domain.board import BoardConflict, BoardNotFound, BoardValidationError
-from modules.crm.infrastructure.adapters import NoCards
-from modules.crm.infrastructure.django.repositories import DjangoBoardRepository
+from modules.crm.infrastructure.adapters import system_clock
+from modules.crm.infrastructure.django.repositories import DjangoBoardRepository, DjangoStageCards
 from shared.tenancy import company_id_from
 
 from .board_serializers import NameInputSerializer, StageArchiveInputSerializer, StageOrderInputSerializer, board_data
 
 
 def stage_cards(company_id):
-    """Puerto de tarjetas de la empresa; PB-CRM-004 lo cambia por el adaptador real."""
-    return NoCards()
+    """Puerto de tarjetas de la empresa: sus oportunidades abiertas (PB-CRM-004)."""
+    return DjangoStageCards(company_id, system_clock)
 
 
 def _service(request) -> BoardService:

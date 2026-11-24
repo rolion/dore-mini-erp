@@ -19,7 +19,9 @@ describe('Sidebar menu (routes.json)', () => {
     expect(routes.slice(0, 8).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
-    expect(crm.submenu.map((item) => item.path)).toEqual(['/pocketbiz/crm/customers', '/pocketbiz/crm/board']); // PB-CRM-001, PB-CRM-003
+    expect(crm.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/crm/customers', '/pocketbiz/crm/leads', '/pocketbiz/crm/opportunities', '/pocketbiz/crm/board',
+    ]); // PB-CRM-001, PB-CRM-004, PB-CRM-003
     expect(dentistry.submenu.map((item) => item.path)).toEqual(['/pocketbiz/dentistry/patients']);
     expect(visibleRoutes(routes, new Set(['customers'])).some((route) => route.module === 'dentistry')).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers', 'dentistry'])).some((route) => route.module === 'dentistry')).toBeTrue();
@@ -105,7 +107,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(51);
+    expect(titles.length).toBe(53); // PB-CRM-004 suma Prospectos y Oportunidades
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
@@ -131,6 +133,9 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(en, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Suppliers');
     expect(translate(pt, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Fornecedores');
     expect(translate(es, 'MENUITEMS.CRM.LIST.BOARD')).toBe('Tablero');
+    expect(translate(es, 'MENUITEMS.CRM.LIST.OPPORTUNITIES')).toBe('Oportunidades');
+    expect(translate(en, 'MENUITEMS.CRM.LIST.LEADS')).toBe('Leads');
+    expect(translate(pt, 'MENUITEMS.CRM.LIST.LEADS')).toBe('Prospectos');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
     expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
   });

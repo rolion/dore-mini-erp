@@ -26,6 +26,8 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'sales': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'modularity'},
     'reporting': {'accounting', 'sales', 'expenses', 'customers'},
     # CRM: el listado compone Clientes, Ventas e Inventario por sus fachadas (ADR crm-listado-clientes); los tableros y etapas son propios.
+    # Prospectos/oportunidades: conversión por la fachada de Clientes y vínculo a pedido por la de Ventas, solo desde
+    # crm/infrastructure/adapters.py (ADR crm-prospectos-oportunidades-modelo-conversion-y-vinculos).
     'crm': {'customers', 'sales', 'inventory'},
     # Importación de ventas: orquesta otros módulos solo por sus fachadas (ADR cargar-ventas-desde-archivo).
     'data_import': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'purchases', 'sales'},
@@ -147,7 +149,7 @@ class ModuleBoundaryTests(SimpleTestCase):
 
     def test_application_layers_do_not_import_django_or_infrastructure(self):  # ADR persistencia
         offenders = []
-        for owner in ('sales', 'expenses', 'reporting'):
+        for owner in ('sales', 'expenses', 'reporting', 'crm'):
             for path in source_files(MODULES / owner / 'application'):
                 for module, _ in imports(path):
                     if module.split('.')[0] in ('django', 'rest_framework') or '.infrastructure' in module:

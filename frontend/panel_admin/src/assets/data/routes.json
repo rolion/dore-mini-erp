@@ -82,6 +82,28 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/crm/leads",
+          "title": "MENUITEMS.CRM.LIST.LEADS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/crm/opportunities",
+          "title": "MENUITEMS.CRM.LIST.OPPORTUNITIES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/crm/board",
           "title": "MENUITEMS.CRM.LIST.BOARD",
           "iconType": "",
