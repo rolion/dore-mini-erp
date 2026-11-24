@@ -17,8 +17,9 @@
           <div class="card-header">
             <h4>{{ 'CRM.BOARD.ETAPAS_COMERCIALES' | translate }}</h4>
             <button type="button" class="btn btn-icon icon-left btn-primary rounded-button ms-auto" data-testid="new-board"
-              (click)="createBoard()" [disabled]="loading">
-              <i class="material-icons">add</i> {{ 'CRM.BOARD.NUEVO_TABLERO' | translate }}
+              (click)="createBoard()" [disabled]="loading" [attr.title]="'CRM.BOARD.NUEVO_TABLERO' | translate"
+              [attr.aria-label]="'CRM.BOARD.NUEVO_TABLERO' | translate">
+              <i class="material-icons">add</i>
             </button>
           </div>
           <div class="card-body">
@@ -68,10 +69,11 @@
             <div class="alert alert-info" role="status">{{ 'CRM.BOARD.TABLERO_ARCHIVADO' | translate }}</div>
             }
             <div class="table-responsive">
-              <table class="table align-middle" data-testid="stages-table">
+              <table class="table align-middle crm-stage-table" data-testid="stages-table">
+                <caption class="visually-hidden">{{ 'CRM.BOARD.ETAPAS_COMERCIALES' | translate }}</caption>
                 <thead>
                   <tr>
-                    <th scope="col" class="w-25">{{ 'CRM.BOARD.ORDEN' | translate }}</th>
+                    <th scope="col">{{ 'CRM.BOARD.ORDEN' | translate }}</th>
                     <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
                     <th scope="col" class="text-end">{{ 'COMMON.ACCIONES' | translate }}</th>
                   </tr>
@@ -79,7 +81,7 @@
                 <tbody>
                   @for (stage of selected.stages; track stage.id; let first = $first; let last = $last) {
                   <tr data-testid="stage-row">
-                    <td>
+                    <td [attr.data-label]="'CRM.BOARD.ORDEN' | translate">
                       <span class="me-2">{{ stage.position }}</span>
                       @if (selected.isActive) {
                       <button type="button" class="btn btn-light btn-sm" data-testid="move-up" [disabled]="first || saving"
@@ -90,7 +92,7 @@
                         <i class="fas fa-arrow-down"></i></button>
                       }
                     </td>
-                    <td>
+                    <td [attr.data-label]="'COMMON.NOMBRE' | translate">
                       @if (editingStageId === stage.id) {
                       <input type="text" class="form-control" [formControl]="editName" [attr.maxlength]="nameMaxLength"
                         [attr.aria-label]="'COMMON.NOMBRE' | translate" data-testid="edit-name" (keydown.enter)="saveEdit(stage)">
@@ -104,7 +106,7 @@
                       }
                       }
                     </td>
-                    <td class="text-end">
+                    <td class="text-end crm-stage-actions">
                       @if (selected.isActive) {
                       @if (editingStageId === stage.id) {
                       <button type="button" class="btn btn-primary btn-sm" (click)="saveEdit(stage)" [disabled]="editName.invalid || saving" data-testid="save-stage">{{ 'COMMON.GUARDAR' | translate }}</button>

@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-tableros-columnas-configurables-02: La tabla de etapas desborda en móvil y deja «Acciones» fuera de pantalla
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-tableros-columnas-configurables.md (v1)
@@ -19,3 +19,6 @@ Bajo 768 px cada etapa se apila como bloque y Renombrar/Archivar quedan visibles
 
 ## Evidence
 `document.querySelector('.table-responsive')` → `{client: 265, scroll: 800}`; botones `move-up` 27×29, `edit-stage` 83×29 con `left: 690`, `archive-stage` 68×29 con `left: 777`. Captura a 375 px: columna «Nombre» truncada («Contact», «Propues»), sin acciones visibles.
+
+## Resolution
+Tabla apilada bajo 768 px (`crm-board.component.scss`, `data-label` en cada celda, `<caption>` accesible) y botones de 44 px. Verificado en navegador a 375 px: `{client: 265, scroll: 265}`, «Renombrar» y «Archivar» visibles dentro del contenedor, botones de 44 px de alto.

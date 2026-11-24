@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-tableros-columnas-configurables-03: El botón «Nuevo tablero» de la cabecera mezcla texto con el botón circular
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-tableros-columnas-configurables-v1 (docs/plans/PLAN-2026-11-24-crm-tableros-columnas-configurables.md)
@@ -19,3 +19,6 @@ El patrón de alta rápida es un botón circular solo con icono, con `title` y `
 
 ## Evidence
 Captura en tema oscuro a 1440 px: letras apiladas verticalmente bajo el «+» de la cabecera de la tarjeta.
+
+## Resolution
+Botón de alta rápida solo con icono, con `title` y `aria-label` (patrón de `customer-list`). Verificado en tema claro y oscuro: círculo de 40×40 con «+», sin texto suelto.

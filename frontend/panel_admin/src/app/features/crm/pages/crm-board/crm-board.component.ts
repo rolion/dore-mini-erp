@@ -18,6 +18,7 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 @Component({
   selector: 'app-crm-board',
   templateUrl: './crm-board.component.html',
+  styleUrl: './crm-board.component.scss',
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink],
 })
 export class CrmBoardComponent implements OnInit {
