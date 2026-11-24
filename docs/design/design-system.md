@@ -149,6 +149,10 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - `.card` con selector de contenedor (`form-select`, p. ej. «Tablero») y tabla Bootstrap simple apilada en móvil con columnas **Orden**, **Nombre** (edición en línea) y **Acciones**. Ordenar con botones Subir/Bajar (iconos con `title` y `aria-label`, sin arrastre); cada cambio se guarda al instante y la lista se recarga con la respuesta del servidor.
 - Archivar un elemento que contiene otros pide, en un diálogo `NgbModal`, un destino activo obligatorio; los 409 se muestran en `alert alert-warning` y recargan la lista. Vacíos: «Aún no hay …» con la acción de alta.
 
+### Tablero Kanban de tarjetas con acciones accesibles (referencia: `features/crm/pages/crm-opportunity-board`; DDR-crm-prospectos-oportunidades-kanban-y-prospectos)
+- Encabezado con selector de tablero y filtros (`form-select`/búsqueda) y botón de alta. Una columna `.card` por etapa (encabezado «Etapa · N»), con desplazamiento horizontal desde `lg` y apiladas en móvil; tarjetas `.card` compactas con título, contacto, importe, fecha de siguiente acción (resaltada si venció) y responsable.
+- Mover tarjetas con un control «Mover a…» (sin arrastrar), guardado inmediato y recarga desde el servidor. Cierre con el patrón «Diálogo de acción irreversible con motivo». Vacíos por columna y del tablero; 409 en `alert alert-warning`.
+
 ### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
 - `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.
 
