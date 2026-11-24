@@ -1,6 +1,6 @@
 # TASK-crm-listado-clientes: PB-CRM-001 · Listado de clientes CRM
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-listado-clientes` (base: `crm`)
@@ -14,6 +14,8 @@
 | 2026-11-24 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
+| 2026-11-24 | REVIEW → PUBLISH | Quality Gate PASS (sin Critical/High); 2 Medium y 2 Low abiertos (REV-01…04) | delivery-publish |
+| 2026-11-24 | PUBLISH (sin cambio) | PR listo para aprobación humana; cambio con ADR (contexto nuevo), no se mergea | delivery-publish |
 
 ## Investigación
 
@@ -78,7 +80,11 @@ Rendimiento del filtro por almacén con muchos clientes; pedidos históricos sin
 **UI:** referencia «Lista de solo lectura con filtros» (`inventory/pages/movement-list`, `customers/pages/customer-list`); reutiliza el pipe `money`, `ngx-datatable`, `NgbCollapse`/`NgbPagination` y `WarehousesApiService` vía `features/inventory/index.ts`; no se crearon componentes compartidos.
 
 ## Review
-_Pendiente_
+**Veredicto: PASS** (Quality Gate en subagente aislado, sobre el estado `HEAD` de la rama).
+
+Ejecutado: backend suite completa 2403 OK (PostgreSQL, Django 5.2); frontend 1827 specs OK (cobertura `features/crm`: página 95 % líneas, servicios 100 %); `ruff` y `flake8` limpios; `bandit -r modules/crm` sin hallazgos; `makemigrations --check` sin cambios; `npm run lint`, `i18n:check`, `ng build` OK; `npm audit` 0 vulnerabilidades. No ejecutado: revisión visual en navegador (claro/oscuro, 390/1440 px; solo revisión estática) y E2E (el plan fija E2E: NO).
+
+Hallazgos abiertos (no bloquean): [REV-01](../reviews/REV-2026-11-24-crm-listado-clientes-01.md) Medium, fecha de última compra sin formato local; [REV-02](../reviews/REV-2026-11-24-crm-listado-clientes-02.md) Medium, faltan pruebas de la fachada de Ventas (cancelados, sin ítems, sobrepagado, N+1); [REV-03](../reviews/REV-2026-11-24-crm-listado-clientes-03.md) Low, el filtro acepta almacenes inactivos; [REV-04](../reviews/REV-2026-11-24-crm-listado-clientes-04.md) Low, HEX de respaldo en el SCSS.
 
 ## Publicación
-_Pendiente_
+PR #120 completo y listo para aprobación humana (base `crm`). Cambio sensible: introduce un contexto nuevo con dependencias entre módulos (ADR-crm-listado-clientes-contexto-crm-de-solo-lectura); no toca autenticación, migraciones ni infraestructura. No se mergea desde el flujo.
