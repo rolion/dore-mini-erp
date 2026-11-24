@@ -365,5 +365,12 @@
       "sales.default_payment_method": "QR",
       "sales.default_sales_channel": "WHATSAPP"
     }
+  },
+  "crm": {
+    "boards": [
+      {
+        "name": "Ventas"
+      }
+    ]
   }
 }

@@ -52,7 +52,8 @@
     "CRM": {
       "TEXT": "CRM",
       "LIST": {
-        "CUSTOMERS": "Clientes"
+        "CUSTOMERS": "Clientes",
+        "BOARD": "Quadro"
       }
     },
     "ORDERS": {
@@ -3433,6 +3434,47 @@
       "SEARCH_BADGE": "Busca: {{value}}",
       "BRANCH_BADGE": "Filial: {{value}}",
       "LAST_PURCHASE": "Última compra"
+    },
+    "BOARD": {
+      "TABLERO": "Quadro",
+      "SEGUIMIENTO_COMERCIAL": "Acompanhamento comercial",
+      "ETAPAS_COMERCIALES": "Etapas comerciais",
+      "NUEVO_TABLERO": "Novo quadro",
+      "CREAR_TABLERO": "Criar quadro",
+      "AUN_NO_HAY_TABLEROS": "Ainda não há quadros.",
+      "RENOMBRAR": "Renomear",
+      "ARCHIVAR": "Arquivar",
+      "ARCHIVAR_TABLERO": "Arquivar quadro",
+      "REACTIVAR_TABLERO": "Reativar quadro",
+      "VER_ARCHIVADOS": "Ver arquivados",
+      "ARCHIVADO": "arquivado",
+      "TABLERO_ARCHIVADO": "Este quadro está arquivado. Reative-o para editar suas etapas.",
+      "ORDEN": "Ordem",
+      "SUBIR": "Subir",
+      "BAJAR": "Descer",
+      "SIN_ETAPAS": "Este quadro não tem etapas.",
+      "NUEVA_ETAPA": "Nova etapa",
+      "AGREGAR_ETAPA": "Adicionar etapa",
+      "N_TARJETAS": "{{n}} cartões"
+    },
+    "BOARD_DIALOG": {
+      "NUEVO_TABLERO": "Novo quadro",
+      "RENOMBRAR_TABLERO": "Renomear quadro",
+      "NOMBRE_OBLIGATORIO": "O nome é obrigatório.",
+      "NOMBRE_MUY_LARGO": "O nome não pode ter mais de {{n}} caracteres."
+    },
+    "ARCHIVE_STAGE_DIALOG": {
+      "ARCHIVAR_ETAPA": "Arquivar etapa",
+      "CONFIRMAR": "Arquivar a etapa “{{name}}”? Ela deixará de aparecer no quadro.",
+      "TIENE_TARJETAS": "Esta etapa tem {{n}} cartões. Escolha para qual etapa eles serão movidos.",
+      "ETAPA_DESTINO": "Etapa de destino",
+      "ELEGIR_ETAPA": "Escolha uma etapa",
+      "ARCHIVAR": "Arquivar",
+      "ARCHIVAR_Y_MOVER": "Arquivar e mover"
+    },
+    "ERRORS": {
+      "SIN_CONEXION": "Não foi possível conectar ao servidor.",
+      "INESPERADO": "Ocorreu um erro inesperado. Tente novamente."
     }
   }
 }

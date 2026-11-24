@@ -1,0 +1,35 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'CRM.ARCHIVE_STAGE_DIALOG.ARCHIVAR_ETAPA' | translate }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  @if (errorMessage) {
+  <div class="alert alert-warning" role="alert">{{ errorMessage }}</div>
+  }
+  <p>{{ 'CRM.ARCHIVE_STAGE_DIALOG.CONFIRMAR' | translate: { name: stage.name } }}</p>
+  @if (needsTarget) {
+  <div class="alert alert-info" role="status">
+    {{ 'CRM.ARCHIVE_STAGE_DIALOG.TIENE_TARJETAS' | translate: { n: cardCount } }}
+  </div>
+  <form [formGroup]="form">
+    <div class="form-group">
+      <label for="crm-archive-target">{{ 'CRM.ARCHIVE_STAGE_DIALOG.ETAPA_DESTINO' | translate }} <span class="text-danger">*</span></label>
+      <select id="crm-archive-target" class="form-select" formControlName="target">
+        <option value="">{{ 'CRM.ARCHIVE_STAGE_DIALOG.ELEGIR_ETAPA' | translate }}</option>
+        @for (target of targets; track target.id) {
+        <option [value]="target.id">{{ target.name }}</option>
+        }
+      </select>
+      @if (targetError) {
+      <small class="form-text text-danger">{{ targetError }}</small>
+      }
+    </div>
+  </form>
+  }
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+  <button type="button" class="btn btn-warning" [disabled]="!canConfirm" (click)="confirm()">
+    {{ (needsTarget ? 'CRM.ARCHIVE_STAGE_DIALOG.ARCHIVAR_Y_MOVER' : 'CRM.ARCHIVE_STAGE_DIALOG.ARCHIVAR') | translate }}
+  </button>
+</div>

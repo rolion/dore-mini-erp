@@ -25,7 +25,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'purchases': {'accounting', 'catalog', 'costing', 'inventory'},
     'sales': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'modularity'},
     'reporting': {'accounting', 'sales', 'expenses', 'customers'},
-    # CRM (solo lectura): compone Clientes, Ventas e Inventario por sus fachadas (ADR crm-listado-clientes).
+    # CRM: el listado compone Clientes, Ventas e Inventario por sus fachadas (ADR crm-listado-clientes); los tableros y etapas son propios.
     'crm': {'customers', 'sales', 'inventory'},
     # Importación de ventas: orquesta otros módulos solo por sus fachadas (ADR cargar-ventas-desde-archivo).
     'data_import': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'purchases', 'sales'},

@@ -145,6 +145,10 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - `.card` con `h4` y `nav-tabs` (`role="tablist"`); cada pestaña es un listado con buscador por nombre, filtro de estado (por defecto **Activos/Activas**) y botón «+», en tabla Bootstrap simple apilada en móvil (`inventory/components/_inventory-table.scss`).
 - Alta/edición en diálogo (`NgbModal`, patrón de `category-dialog`); sin eliminar: los registros usados se desactivan. Los bloqueos del servidor (409) se muestran en `alert alert-warning` sobre la tabla con el motivo, y un registro bloqueado deshabilita sus campos con `small.text-muted` que explica por qué.
 
+### Editor de lista ordenable con botones Subir/Bajar (referencia: `features/crm/pages/crm-board`; DDR-crm-tableros-columnas-configurables-editor-de-etapas)
+- `.card` con selector de contenedor (`form-select`, p. ej. «Tablero») y tabla Bootstrap simple apilada en móvil con columnas **Orden**, **Nombre** (edición en línea) y **Acciones**. Ordenar con botones Subir/Bajar (iconos con `title` y `aria-label`, sin arrastre); cada cambio se guarda al instante y la lista se recarga con la respuesta del servidor.
+- Archivar un elemento que contiene otros pide, en un diálogo `NgbModal`, un destino activo obligatorio; los 409 se muestran en `alert alert-warning` y recargan la lista. Vacíos: «Aún no hay …» con la acción de alta.
+
 ### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
 - `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.
 
