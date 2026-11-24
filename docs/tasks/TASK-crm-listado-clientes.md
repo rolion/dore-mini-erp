@@ -1,6 +1,6 @@
 # TASK-crm-listado-clientes: PB-CRM-001 · Listado de clientes CRM
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-listado-clientes` (base: `crm`)
@@ -13,6 +13,7 @@
 | 2026-11-24 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-24 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
+| 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 
 ## Investigación
 
@@ -66,7 +67,15 @@ Rendimiento del filtro por almacén con muchos clientes; pedidos históricos sin
 `docs/plans/PLAN-2026-11-24-crm-listado-clientes.md` (v1, COMPLETO, READY)
 
 ## Implementación
-_Pendiente_
+**Resumen:** contexto `crm` de solo lectura (`backend/modules/crm/`: puertos, caso de uso `ListCrmCustomers`, adaptadores, vista `GET /api/crm/customers/`), fachadas `customers.search_customers_for_crm`, `sales.get_customer_commercial_summaries` y `sales.list_customer_ids_with_orders_in_warehouse`; frontend `features/crm` (lista, servicio, modelos, fixtures), submenú CRM en `routes.json`, ruta `crm/customers` e i18n es/en/pt.
+
+**Cobertura:** AC-01…AC-05, AC-08 y AC-09 en `crm/tests/test_api.py`; AC-06 en `sidebar-menu.spec.ts` y el spec de la lista; AC-07 y AC-08 en el spec de la lista; INV-01…INV-04 en las pruebas de API. Pruebas propias (no es el Quality Gate): backend 2403 OK en PostgreSQL (venv del checkout principal, Django 5.2.17), `flake8`/`ruff` limpios en lo cambiado, `makemigrations --check` sin cambios; frontend `ng build`, `ng lint`, `i18n:check` y 1827 specs OK.
+
+**Desviaciones respecto al plan:** (1) la disponibilidad de Ventas/Inventario se lee con `shared.module_gate` en lugar de `modularity.services` (ADR actualizado); (2) menú: el submenú CRM se inserta tras «Cliente» y se actualizó `sidebar-menu.spec.ts` (16 rutas, 50 títulos); (3) no se añadió índice a `sales_order.warehouse_id` (no se midió necesidad; sin migraciones).
+
+**Deuda técnica:** filtro de sucursal con lista de ids (aceptable al volumen del MVP); `last_purchase_at` es una fecha, no un instante; moneda fija `BOB`.
+
+**UI:** referencia «Lista de solo lectura con filtros» (`inventory/pages/movement-list`, `customers/pages/customer-list`); reutiliza el pipe `money`, `ngx-datatable`, `NgbCollapse`/`NgbPagination` y `WarehousesApiService` vía `features/inventory/index.ts`; no se crearon componentes compartidos.
 
 ## Review
 _Pendiente_
