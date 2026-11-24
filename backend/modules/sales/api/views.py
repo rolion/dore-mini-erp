@@ -21,6 +21,7 @@ from modules.sales.application.commands import (
 )
 from modules.sales.application.delivery import PreviewOrderDelivery
 from modules.sales.application.placement import PlaceOrder
+from modules.sales.application.returns import PreviewOrderReturn, ReturnOrder
 from modules.sales.application.ports import Actor
 from modules.sales.application.queries import GetOrder, ListOrders
 from modules.sales.domain.exceptions import (
@@ -58,6 +59,7 @@ from .serializers import (
     PaymentInputSerializer,
     delivery_preview_data,
     quantity_text,
+    return_preview_data,
 )
 
 ORDER_NOT_FOUND = 'Pedido no encontrado.'
@@ -150,8 +152,10 @@ def _customer_context(request, customer_ids) -> dict:
 def _order_response(request, order, http_status: int = status.HTTP_200_OK) -> Response:
     context = _customer_context(request, [order.customer_id] if order.customer_id else [])
     stock = _stock(request)
-    if order.status.value == 'DELIVERED':
+    if order.status.value in ('DELIVERED', 'RETURNED'):
         context['stock_output'] = stock.output_for(order.id)
+    if order.status.value in ('CANCELLED', 'RETURNED'):
+        context['reversal'] = (stock.output_links(order.id), _posting(request).reversal_entries(order))
     if order.warehouse_id is not None and stock.is_available():
         context['inventory_available'] = True
         context['warehouse_names'] = stock.warehouse_names([order.warehouse_id])
@@ -290,6 +294,29 @@ class OrderCancelView(APIView):
         data = _validated(CancelSerializer, request.data)
         use_case = CancelOrder(_repository(request), SystemClock(), _posting(request))
         return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request), **data))
+
+
+class OrderReturnView(APIView):
+    required_modules = ('sales',)
+
+    def post(self, request, order_id):
+        order_id = _uuid(order_id, ORDER_NOT_FOUND)
+        data = _validated(CancelSerializer, request.data)
+        use_case = ReturnOrder(
+            _repository(request), SystemClock(), _stock(request), _posting(request),
+            DeliveryCostingAdapter(company_id_from(request)))
+        return _order_response(request, _run(use_case, order_id=order_id, actor=_actor(request), **data))
+
+
+class OrderReturnPreviewView(APIView):
+    """Vista previa informativa de la devolución: stock a reingresar, asientos y cobros. No escribe nada."""
+
+    required_modules = ('sales',)
+
+    def get(self, request, order_id):
+        order_id = _uuid(order_id, ORDER_NOT_FOUND)
+        use_case = PreviewOrderReturn(_repository(request), _stock(request), _posting(request))
+        return Response(return_preview_data(_run(use_case, mutates=False, order_id=order_id)))
 
 
 class OrderPaymentView(APIView):

@@ -93,6 +93,30 @@ class StockOutputRecord:
     movements: list[StockOutputMovement]
 
 
+@dataclass(frozen=True)
+class StockLink:
+    movement_id: UUID
+    product_id: UUID
+    product_name: str
+    unit: str | None
+    quantity: Decimal
+    warehouse_name: str
+    reversed_by_id: UUID | None
+    reversed_by_reference: str
+
+
+@dataclass(frozen=True)
+class ReversalEntry:
+    """Asiento automático del pedido: el original y, si ya se contrarrestó, su contrasiento."""
+
+    event: str
+    entry_id: UUID
+    accounting_date: date
+    description: str
+    total: Decimal
+    reversed_by_id: UUID | None = None
+
+
 class StockOutput(Protocol):
     """Integración opcional con Inventario: salidas al entregar. Con el módulo deshabilitado no hace nada."""
 
@@ -115,6 +139,14 @@ class StockOutput(Protocol):
 
     def output_for(self, order_id: UUID) -> StockOutputRecord | None: ...
 
+    def reverse_outputs(self, order_id: UUID, reason: str, actor: Actor) -> None:
+        """Reingresa al almacén de origen todas las salidas del pedido (todo o nada); sin salidas no hace nada."""
+        ...
+
+    def output_links(self, order_id: UUID) -> list['StockLink']:
+        """Movimientos del pedido con su reverso (si ya se revirtió), para el historial del detalle."""
+        ...
+
 
 class DeliveryCosting(Protocol):
     """Costo de ventas al entregar (INV-01): valoriza las salidas al costo promedio y asienta Costo de ventas /
@@ -122,6 +154,10 @@ class DeliveryCosting(Protocol):
     configuración; sin cobertura contable no asienta ni exige nada."""
 
     def cost_delivery(self, order: object, lines: list[tuple[UUID, Decimal]], actor: Actor) -> None: ...
+
+    def reverse_cost(self, order_id: UUID) -> None:
+        """Contra-evento de las salidas valorizadas al costo de venta (devolución); sin Costeo no hace nada."""
+        ...
 
 
 AT_CONFIRM = 'AT_CONFIRM'  # reconocido al confirmar (lógica anterior, histórico)
@@ -158,4 +194,16 @@ class SalesPosting(Protocol):
 
     def reverse_recognition(self, order: object, reason: str, actor: Actor, today: date) -> None:
         """Revierte el reconocimiento anterior (al confirmar) con las cuentas originales."""
+        ...
+
+    def reverse_payments(self, order: object, reason: str, actor: Actor, today: date) -> None:
+        """Contrarresta los asientos de todos los cobros del pedido (reembolso externo declarado)."""
+        ...
+
+    def reverse_delivery(self, order: object, reason: str, actor: Actor, today: date) -> None:
+        """Contrarresta ingreso y costo de venta (y el reconocimiento anterior, si lo hay) con las cuentas originales."""
+        ...
+
+    def reversal_entries(self, order: object) -> list[ReversalEntry]:
+        """Asientos automáticos vinculados al pedido (venta, costo y cobros), con su contrasiento si existe."""
         ...

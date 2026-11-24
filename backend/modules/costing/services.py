@@ -8,14 +8,14 @@ from uuid import UUID
 
 from django.utils import timezone
 
-from modules.costing.application.cost_use_cases import CostedOutput, CostOutputs, CostReceipt, ReverseReceiptCost
+from modules.costing.application.cost_use_cases import CostedOutput, CostOutputs, CostReceipt, ReverseOutputCost, ReverseReceiptCost
 from modules.costing.domain.cost import CostUnavailable
 from modules.costing.infrastructure.adapters import InventoryStockTotals
 from modules.costing.infrastructure.django.cost_repository import DjangoCostEventRepository
 from modules.costing.infrastructure.django.repositories import DjangoAdoptionRepository
 
 __all__ = ['CostUnavailable', 'CostedOutput', 'cost_outputs', 'cost_receipt', 'get_average_costs', 'is_valued',
-           'reverse_receipt_cost']
+           'reverse_output_cost', 'reverse_receipt_cost']
 
 
 def _parts(company_id: UUID):
@@ -61,3 +61,12 @@ def cost_outputs(company_id: UUID, *, source_type: str, source_id: str, lines: l
     Lanza `CostUnavailable` si no hay valoración adoptada o algún producto no tiene promedio (sin escribir nada).
     """
     return CostOutputs(*_parts(company_id)).execute(source_type, source_id, lines, occurred_at or timezone.now())
+
+
+def reverse_output_cost(company_id: UUID, *, source_type: str, source_id: str,
+                        occurred_at: datetime | None = None) -> None:
+    """Registra la reversa de las salidas valorizadas de un documento al costo de venta original; idempotente.
+
+    No cambia el promedio vigente. Sin salidas valorizadas no hace nada.
+    """
+    ReverseOutputCost(*_parts(company_id)).execute(source_type, source_id, occurred_at or timezone.now())

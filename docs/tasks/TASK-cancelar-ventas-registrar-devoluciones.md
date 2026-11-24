@@ -1,6 +1,6 @@
 # TASK-cancelar-ventas-registrar-devoluciones: Cancelar ventas y registrar devoluciones con reversión contable
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-cancelar-ventas-registrar-devoluciones
@@ -15,6 +15,7 @@
 | 2026-11-24 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-11-24 | ARCHITECTURE → PLANNING | ADR escrito; decisiones de negocio respondidas por el usuario | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
+| 2026-11-24 | ENGINEERING → REVIEW | Implementación escrita; pruebas de integración con BD sin ejecutar (sin credenciales de PostgreSQL en esta sesión) | delivery-build |
 
 ## Investigación
 
@@ -85,7 +86,22 @@ Ver `docs/adr/ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-
 `docs/plans/PLAN-2026-11-24-cancelar-ventas-registrar-devoluciones.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+**Backend (Sales + Costing).**
+- Dominio: `OrderStatus.RETURNED`, campos `cancelled_by_name`, `returned_at/by`, `return_reason`, `refund_acknowledged`; `Order.register_return`, `ensure_returnable`; `cancel` ahora acepta `by_name` y `refund_acknowledged`; `payment_status` = `REFUNDED` con cobros y reembolso confirmado; transición `return` desde `DELIVERED` (INV-01, INV-02, INV-07).
+- Costeo: `CostKind.OUT_REVERSAL`, `ReverseOutputCost` y `costing.services.reverse_output_cost` (contra-evento al costo de venta, promedio sin cambio, idempotente) (AC-05).
+- Sales: `ReturnOrder` y `PreviewOrderReturn` (`application/returns.py`); `CancelOrder` ya no rechaza con cobros: exige la confirmación del reembolso y contrarresta los cobros; puertos y adaptadores nuevos (`reverse_outputs`, `reverse_cost`, `reverse_payments`, `reverse_delivery`, `reversal_entries`, `output_links`) (AC-01..07, 11).
+- API: `POST …/return/`, `GET …/return-preview/`, `refund_acknowledged` en `cancel`, campos de auditoría y `reversal` en el pedido (API-01..04); «pedido válido» excluye `RETURNED` (AC-10); migración `sales/0005_order_return_and_refund`.
+
+**Frontend (`features/sales`).** Botón «Registrar devolución» (acción `return` del servidor), `ReturnDialogComponent` (NgbModal con vista previa, motivo y reembolso), `OrderReversalCardComponent` (fecha, usuario, motivo, reembolso y vínculos), confirmación del reembolso al cancelar con cobros, estado «Devuelto», claves i18n es/en/pt (`SALES.ORDER_RETURN.*`). Pantalla de referencia: detalle de documento en curso y «Diálogo de acción irreversible con motivo» (design-system §5).
+
+**Desviaciones respecto al plan.**
+- Los contrasientos de reembolso/devolución usan `reverse_automatic_entry` (y `reverse_entry` para cobros del libro anterior); no se creó evento contable nuevo (como decidió el ADR).
+- El diálogo de cancelar sigue siendo SweetAlert con una segunda confirmación cuando hay cobros (en vez de casilla dentro del mismo diálogo); el de devolución es NgbModal.
+- `PaymentStatus.REFUNDED` se deriva de `refund_acknowledged` + cobros.
+
+**Verificación propia (no es el Quality Gate).** Backend: pruebas de dominio/aplicación/costeo-dominio sin BD pasan (130 + 8); **las pruebas de integración con PostgreSQL** (`test_order_return.py`, ajustes en `test_sales_posting.py`, `test_api.py`, `test_cost_ledger.py`) **no se ejecutaron**: la sesión no tiene credenciales de la base. Frontend: `ng lint`, `tsc` de app y specs, `i18n:check` y 304 pruebas Karma de `sales` pasan; `ng build` no se ejecutó. `ruff`/`flake8`: sin avisos nuevos en lo cambiado (quedan los previos de `views.py` y `order.py`).
+
+**Deuda técnica.** Los cobros de pedidos cancelados siguen apareciendo en `payments_between` (dinero recibido) aunque estén reembolsados; la devolución parcial y el saldo a favor quedan fuera de alcance. Sin pruebas de concurrencia simultánea reales (se confía en `select_for_update` + reversiones idempotentes).
 
 ## Review
 _Pendiente_

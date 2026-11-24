@@ -20,6 +20,12 @@ class OrderModel(models.Model):
     notes = models.TextField(blank=True, default='')
     cancellation_reason = models.TextField(blank=True, default='')
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancelled_by_name = models.CharField(max_length=255, blank=True, default='')
+    # Devolución total (pedido entregado) y reembolso externo declarado.
+    returned_at = models.DateTimeField(null=True, blank=True)
+    returned_by_name = models.CharField(max_length=255, blank=True, default='')
+    return_reason = models.TextField(blank=True, default='')
+    refund_acknowledged = models.BooleanField(default=False)
     # Derivados: solo los escribe el repositorio a partir del agregado (permiten filtrar y paginar en SQL).
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)

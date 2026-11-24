@@ -19,7 +19,8 @@ DETAIL_KEYS = {
     'id', 'code', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date', 'delivered_date', 'notes',
     'status', 'payment_status', 'items', 'subtotal', 'discount', 'total', 'paid_total', 'balance', 'payments',
     'cancellation_reason', 'cancelled_at', 'editable', 'allowed_transitions', 'can_register_payment', 'stock_output',
-    'warehouse', 'created_at', 'updated_at',
+    'warehouse', 'created_at', 'updated_at', 'cancelled_by_name', 'returned_at', 'returned_by_name', 'return_reason',
+    'refund_acknowledged', 'reversal',
 }
 SUMMARY_KEYS = {
     'id', 'code', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date', 'status', 'payment_status',
@@ -486,9 +487,11 @@ class CancelTests(SalesApiTestCase):
     def test_payments_survive_cancellation(self):  # AC-11, EDGE-11
         order = self.order_with_item('35.00', 2)
         self.pay(order, '20.00')
-        cancelled = self.act(order, 'cancel', {'reason': 'Se canceló'})
+        rejected = self.act(order, 'cancel', {'reason': 'Se canceló'}, expected_status=409)
+        self.assertEqual(rejected['code'], 'refund_acknowledgement_required')
+        cancelled = self.act(order, 'cancel', {'reason': 'Se canceló', 'refund_acknowledged': True})
         self.assertEqual((len(cancelled['payments']), cancelled['paid_total'], cancelled['payment_status'],
-                          cancelled['balance']), (1, '20.00', 'PARTIAL', '50.00'))
+                          cancelled['balance']), (1, '20.00', 'REFUNDED', '50.00'))
         self.assertEqual(self.get(order)['payments'][0]['amount'], '20.00')
 
     def test_no_new_payments_after_cancelling(self):  # AC-12, EDGE-11

@@ -24,6 +24,8 @@ from modules.sales.application.ports import (
     Actor,
     CustomerInfo,
     ProductInfo,
+    ReversalEntry,
+    StockLink,
     StockOutputMovement,
     StockOutputRecord,
     StockProductInfo,
@@ -171,6 +173,31 @@ class StockOutputAdapter:
             movements=[StockOutputMovement(m.id, m.product_id, m.product_name, m.unit_abbreviation, m.quantity)
                        for m in movements])
 
+    def output_links(self, order_id: UUID) -> list[StockLink]:
+        if not self.is_available():
+            return []
+        return [StockLink(m.id, m.product_id, m.product_name, m.unit_abbreviation, m.quantity, m.warehouse_name,
+                          m.reversed_by_id, m.reversed_by_reference)
+                for m in inventory_services.list_movements_for_source(
+                    self.company_id, self.SOURCE_TYPE, str(order_id))]
+
+    def reverse_outputs(self, order_id: UUID, reason: str, actor: Actor) -> None:
+        if not inventory_services.list_movements_for_source(self.company_id, self.SOURCE_TYPE, str(order_id)):
+            return
+        if not self.is_available():
+            raise OrderRuleViolation(
+                'inventory_disabled', 'El pedido tiene salidas de inventario y el módulo Inventario está '
+                'deshabilitado: habilítalo para registrar la devolución.')
+        try:
+            with self._serialized():
+                inventory_services.reverse_source_movements(
+                    self.company_id, self.SOURCE_TYPE, str(order_id), user_id=actor.user_id,
+                    user_name=actor.user_name, reason=reason)
+        except inventory_services.MovementValidationError as exc:
+            raise OrderValidationError(self._field_errors(exc.errors)) from exc
+        except inventory_services.MovementConflict as exc:
+            raise OrderRuleViolation(exc.code, str(exc)) from exc
+
     @staticmethod
     def _field_errors(errors: dict[str, list[str]]) -> dict[str, list[str]]:
         # Un dato de la salida (almacén) se muestra en su campo; lo demás no es atribuible a la persona.
@@ -294,6 +321,58 @@ class SalesPostingAdapter:
                 self.company_id, SALE_RECOGNITION, order.id, today, f'Pedido {order.code} cancelado: {reason}',
                 created_by=actor.user_id, created_by_name=actor.user_name)
 
+    def reverse_payments(self, order, reason: str, actor: Actor, today: date) -> None:
+        if not self._enabled() or not order.payments:
+            return
+        text = f'Pedido {order.code} anulado, cobro reembolsado: {reason}'
+        with _posting_errors():
+            for payment in order.payments:
+                reversed_any = False
+                for event in (SALE_ADVANCE, SALE_PAYMENT):
+                    reversed_any |= accounting_services.reverse_automatic_entry(
+                        self.company_id, event, payment.id, today, text, created_by=actor.user_id,
+                        created_by_name=actor.user_name) is not None
+                if not reversed_any:
+                    self._reverse_in_legacy_ledger(payment, today, actor)
+
+    def _reverse_in_legacy_ledger(self, payment, today: date, actor: Actor) -> None:
+        """Cobro registrado en el libro anterior (antes de la cobertura): su reverso; sin entrada no hay nada."""
+        try:
+            accounting_services.reverse_entry(
+                self.company_id, 'PRODUCT', payment.id, today, recorded_by=actor.user_id,
+                recorded_by_name=actor.user_name)
+        except accounting_services.EntryNotFound:
+            return
+
+    def reverse_delivery(self, order, reason: str, actor: Actor, today: date) -> None:
+        if not self._enabled():
+            return
+        text = f'Pedido {order.code} devuelto: {reason}'
+        with _posting_errors():
+            for event in (INVENTORY_SALE_COST, SALE_DELIVERY, SALE_RECOGNITION):
+                accounting_services.reverse_automatic_entry(
+                    self.company_id, event, order.id, today, text, created_by=actor.user_id,
+                    created_by_name=actor.user_name)
+
+    def reversal_entries(self, order) -> list[ReversalEntry]:
+        if not self._enabled():
+            return []
+        found: list[ReversalEntry] = []
+        for event in (SALE_RECOGNITION, SALE_DELIVERY, INVENTORY_SALE_COST):
+            entry = accounting_services.find_automatic_entry(self.company_id, event, order.id)
+            if entry is not None:
+                found.append(self._link(event, entry))
+        payment_ids = [payment.id for payment in order.payments]
+        for event in (SALE_ADVANCE, SALE_PAYMENT):
+            entries = accounting_services.automatic_entries_for(self.company_id, event, payment_ids)
+            found.extend(self._link(event, entry) for entry in entries.values())
+        return found
+
+    @staticmethod
+    def _link(event: str, entry) -> ReversalEntry:
+        return ReversalEntry(event, entry.id, entry.accounting_date, entry.description, entry.total,
+                             entry.reversed_by_id)
+
     def _record_in_legacy_ledger(self, order_id: UUID, payment, actor: Actor) -> None:
         """Cobro de un pedido confirmado antes de la cobertura: libro anterior, como antes de VEN-01."""
         method = payment.payment_method.value
@@ -352,6 +431,11 @@ class DeliveryCostingAdapter:
                 self.company_id, INVENTORY_SALE_COST, order.id, order.delivered_date,
                 f'Costo de ventas del pedido {order.code}', costed.total, created_by=actor.user_id,
                 created_by_name=actor.user_name)
+
+    def reverse_cost(self, order_id: UUID) -> None:
+        if module_gate.is_enabled(self.company_id, COSTING_MODULE):
+            costing_services.reverse_output_cost(
+                self.company_id, source_type=self.SOURCE_TYPE, source_id=str(order_id))
 
     @staticmethod
     def _occurred_at(delivered_on: date) -> datetime:

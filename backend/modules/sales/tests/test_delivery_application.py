@@ -20,6 +20,7 @@ class FakeStock:
         self.negative = False
         self.balance: dict = {}
         self.registered: list = []
+        self.reversed: list = []
         self.fail_with: Exception | None = None
 
     def control(self, product):
@@ -47,6 +48,12 @@ class FakeStock:
 
     def output_for(self, order_id):
         return None
+
+    def reverse_outputs(self, order_id, reason, actor):
+        self.reversed.append((order_id, reason, actor))
+
+    def output_links(self, order_id):
+        return []
 
 
 class DeliveryApplicationTests(ApplicationTestCase):
