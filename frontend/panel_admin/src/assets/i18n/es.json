@@ -49,6 +49,12 @@
     "CUSTOMER": {
       "TEXT": "Cliente"
     },
+    "CRM": {
+      "TEXT": "CRM",
+      "LIST": {
+        "CUSTOMERS": "Clientes"
+      }
+    },
     "ORDERS": {
       "TEXT": "Pedidos"
     },
@@ -3398,5 +3404,35 @@
     "ERR_GENERIC": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ERR_VALIDATION": "Revisa los datos ingresados.",
     "ERR_NOT_FOUND": "Importación no encontrada."
+  },
+  "CRM": {
+    "CUSTOMER_LIST": {
+      "TITLE": "Clientes",
+      "BREADCRUMB": "CRM",
+      "SEARCH": "Buscar por nombre o teléfono",
+      "BRANCH": "Sucursal",
+      "ALL_BRANCHES": "Todas las sucursales",
+      "NAME": "Nombre",
+      "PHONE": "Teléfono",
+      "ORDERS": "Pedidos",
+      "BALANCE": "Saldo",
+      "NO_PURCHASES": "Sin compras",
+      "EMPTY": "Aún no hay clientes. Regístralos en Clientes para verlos aquí.",
+      "EMPTY_FILTERED": "No hay clientes que coincidan con los filtros.",
+      "GO_CUSTOMERS": "Ir a Clientes",
+      "FILTERS": "Filtros",
+      "FILTERS_ACTIVE": "{{count}} filtros activos",
+      "APPLY": "Aplicar filtros",
+      "CLEAR": "Limpiar filtros",
+      "ERROR": "No se pudo cargar el listado de clientes.",
+      "RETRY": "Reintentar",
+      "VIEW": "Ver ficha",
+      "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
+      "LOADING": "Cargando clientes…",
+      "ACTIVE_FILTERS": "Filtros activos",
+      "SEARCH_BADGE": "Búsqueda: {{value}}",
+      "BRANCH_BADGE": "Sucursal: {{value}}",
+      "LAST_PURCHASE": "Última compra"
+    }
   }
 }

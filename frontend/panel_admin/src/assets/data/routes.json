@@ -62,6 +62,30 @@
     },
     {
       "path": "",
+      "title": "MENUITEMS.CRM.TEXT",
+      "iconType": "feather",
+      "icon": "target",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/pocketbiz/crm/customers",
+          "title": "MENUITEMS.CRM.LIST.CUSTOMERS",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
+      "module": "customers"
+    },
+    {
+      "path": "",
       "title": "MENUITEMS.DENTISTRY.TEXT",
       "iconType": "feather",
       "icon": "heart",

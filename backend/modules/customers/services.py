@@ -2,7 +2,7 @@
 
 Es la única vía de entrada entre módulos: devuelve DTO inmutables, nunca entidades ni modelos.
 """
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -67,6 +67,39 @@ def get_customers_administrative(company_id: UUID, customer_ids: Iterable[UUID])
 def search_customer_ids(company_id: UUID, search: str) -> list[UUID]:
     """Identity values only; never exposes a model or queryset across contexts."""
     return [customer.id for customer in DjangoCustomerRepository(company_id).list(search=search)]
+
+
+@dataclass(frozen=True)
+class CustomerForCrm:
+    id: UUID
+    name: str
+    phone: str
+
+
+class CrmCustomerList:
+    """Clientes activos paginables sin cargarlos todos: `count()` y rebanadas devuelven DTO de solo lectura."""
+
+    def __init__(self, customers):
+        self._customers = customers
+
+    def count(self) -> int:
+        return self._customers.count()
+
+    def __len__(self) -> int:
+        return self.count()
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return [CustomerForCrm(c.id, c.name, c.phone) for c in self._customers[index]]
+        customer = self._customers[index]
+        return CustomerForCrm(customer.id, customer.name, customer.phone)
+
+
+def search_customers_for_crm(company_id: UUID, search: str | None = None,
+                             customer_ids: Collection[UUID] | None = None) -> CrmCustomerList:
+    """Clientes activos de la empresa por nombre e id (búsqueda por nombre o teléfono; `customer_ids` restringe)."""
+    return CrmCustomerList(DjangoCustomerRepository(company_id).list(
+        search=(search or '').strip() or None, active=True, ids=customer_ids))
 
 
 # --- Escritura para la importación de ventas (TASK-cargar-ventas-desde-archivo) -----------------------------
