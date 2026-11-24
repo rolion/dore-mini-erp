@@ -1,4 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -20,7 +21,7 @@ export const COMPACT_QUERY = '(max-width: 991.98px)';
   selector: 'app-crm-customer-list',
   templateUrl: './crm-customer-list.component.html',
   styleUrl: './crm-customer-list.component.scss',
-  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, NgbCollapse, NgbPagination, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, NgxDatatableModule, ReactiveFormsModule, NgbCollapse, NgbPagination, MoneyPipe, DatePipe],
 })
 export class CrmCustomerListComponent implements OnInit {
   readonly pageSize = 10;

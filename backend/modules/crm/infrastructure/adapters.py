@@ -51,7 +51,8 @@ class WarehouseDirectoryAdapter:
         self.company_id = company_id
 
     def exists(self, warehouse_id: UUID) -> bool:
-        return warehouse_id in inventory_services.get_warehouse_names(self.company_id, [warehouse_id])
+        # Sucursal = almacén activo de la empresa (los inactivos no se ofrecen como filtro).
+        return any(w.id == warehouse_id for w in inventory_services.list_active_warehouses(self.company_id))
 
 
 class ModuleAvailabilityAdapter:

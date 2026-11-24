@@ -56,6 +56,13 @@ describe('CrmCustomerListComponent', () => {
     expect(text()).toContain('Ana Pérez');
   });
 
+  it('formats the last purchase date as dd/MM/yyyy and shows «sin compras» when there is none', async () => {
+    await setup();
+    expect(text()).toContain('10/11/2026');
+    expect(text()).not.toContain('2026-11-10');
+    expect(text()).toContain('Sin compras');
+  });
+
   it('shows the empty state without filters with a way to Customers (AC-07)', async () => {
     await setup(makeCrmPage([]));
     expect(fixture.debugElement.query(By.css('[data-testid="crm-empty"]'))).not.toBeNull();

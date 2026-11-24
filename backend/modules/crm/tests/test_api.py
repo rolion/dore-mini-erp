@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import uuid4
 
+from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
@@ -72,6 +73,10 @@ class FieldsTests(CrmApiTestCase):
         self.customer('Ana')
         self.assertEqual(self.client.get(URL).json()['count'], 1)
 
+    def test_customer_without_phone_returns_empty_string(self):  # AC-05
+        self.customer('Sin teléfono')
+        self.assertEqual(self.client.get(URL).json()['results'][0]['phone'], '')
+
     def test_empty_state(self):  # AC-07
         body = self.client.get(URL).json()
         self.assertEqual((body['count'], body['results']), (0, []))
@@ -84,6 +89,14 @@ class SearchAndPaginationTests(CrmApiTestCase):
         self.assertEqual(self.names(search='pér'), ['Ana Pérez'])
         self.assertEqual(self.names(search='7000'), ['Beto Luna'])
         self.assertEqual(self.names(search='  '), ['Ana Pérez', 'Beto Luna'])
+
+    def test_ties_on_name_keep_a_stable_order_across_pages(self):  # AC-03
+        for _ in range(4):
+            self.customer('Igual')
+        first = [r['customer_id'] for r in self.client.get(URL, {'page_size': 2, 'page': 1}).json()['results']]
+        second = [r['customer_id'] for r in self.client.get(URL, {'page_size': 2, 'page': 2}).json()['results']]
+        self.assertEqual(len(set(first + second)), 4)
+        self.assertEqual(first + second, sorted(first + second, key=lambda i: i))
 
     def test_pagination_and_stable_order(self):  # AC-03
         for index in range(5):
@@ -113,6 +126,11 @@ class WarehouseFilterTests(CrmApiTestCase):
     def test_aggregates_are_not_narrowed_by_the_filter(self):  # INV-02
         row = self.client.get(URL, {'warehouse_id': self.central.id}).json()['results'][0]
         self.assertEqual((row['order_count'], row['outstanding_amount']), (2, '60.00'))
+
+    def test_inactive_warehouse_is_not_a_valid_branch(self):  # AC-02 (sucursal = almacén activo)
+        retired = WarehouseModel.objects.create(company_id=self.company.id, name='Cerrada', active=False)
+        response = self.client.get(URL, {'warehouse_id': retired.id})
+        self.assertEqual(response.status_code, 400)
 
     def test_meta_enables_filter(self):  # AC-09
         self.assertTrue(self.client.get(URL).json()['meta']['warehouse_filter_enabled'])
@@ -152,6 +170,11 @@ class ModuleAndIsolationTests(CrmApiTestCase):
     def test_requires_authentication_and_customers_module(self):  # AC-06
         self.client.credentials()
         self.assertIn(self.client.get(URL).status_code, (401, 403))
+
+    def test_user_without_company_is_forbidden(self):  # AC-04
+        loner = get_user_model().objects.create_superuser(username='sin-empresa', password='x-Pass-123')
+        authenticate(self.client, loner)
+        self.assertEqual(self.client.get(URL).status_code, 403)
 
     def test_customers_module_disabled_blocks_api(self):
         self.client.post('/api/modules/sales/disable/')
