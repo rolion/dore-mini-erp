@@ -58,8 +58,8 @@ export const PRIMARY_LABELS: Record<PrimaryAction, string> = {
   get deliver() { return tr('SALES.ORDER_DETAIL.MARCAR_ENTREGADO'); },
 };
 const OPEN_STATUSES: readonly string[] = ['NEW', 'IN_PREPARATION', 'READY'];
-/** Estados con la vista de consulta (acciones en la cabecera y pago en un modal); NEW aún se arma y CANCELLED conserva el aviso. */
-const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVERED', 'RETURNED'];
+/** Estados con la vista de consulta (acciones en la cabecera y pago en un modal); solo NEW aún se arma. */
+const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVERED', 'CANCELLED', 'RETURNED'];
 
 /** Pantalla de trabajo del pedido. Las acciones visibles salen del servidor; los importes no se calculan aquí. */
 @Component({

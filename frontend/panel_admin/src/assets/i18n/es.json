@@ -1964,7 +1964,9 @@
       "EVENT_SALE_RECOGNITION": "Reconocimiento de la venta (al confirmar)",
       "EVENT_INVENTORY_SALE_COST": "Costo de ventas",
       "EVENT_SALE_ADVANCE": "Anticipo cobrado",
-      "EVENT_SALE_PAYMENT": "Cobro de la venta"
+      "EVENT_SALE_PAYMENT": "Cobro de la venta",
+      "REEMBOLSADO": "Reembolsado",
+      "REEMBOLSO_REGISTRADO": "El reembolso quedó registrado: el dinero se devolvió fuera de PocketBiz."
     }
   },
   "SERVICES": {

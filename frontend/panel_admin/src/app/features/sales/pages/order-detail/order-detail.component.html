@@ -50,7 +50,9 @@
     @if (cancelled) {
     <div class="alert alert-danger" role="alert" data-testid="alert-cancelled">
       <strong>{{ 'SALES.ORDER_DETAIL.PEDIDO_CANCELADO' | translate }}</strong> {{ 'SALES.ORDER_DETAIL.MOTIVO' | translate: { p0: (o.cancellationReason) } }}
-      @if (o.payments.length) {
+      @if (o.refundAcknowledged) {
+      <div data-testid="refund-registered">{{ 'SALES.ORDER_RETURN.REEMBOLSO_REGISTRADO' | translate }}</div>
+      } @else if (o.payments.length) {
       <div>{{ 'SALES.ORDER_DETAIL.LOS_PAGOS_REGISTRADOS_SE_CONSERVAN' | translate }}</div>
       }
     </div>
@@ -140,10 +142,15 @@
               <dd class="col-6" data-testid="discount">{{ o.discount | money }}</dd>
               <dt class="col-6">{{ 'COMMON.TOTAL' | translate }}</dt>
               <dd class="col-6 fw-bold fs-5" data-testid="total">{{ o.total | money }}</dd>
+              @if (o.refundAcknowledged) {
+              <dt class="col-6">{{ 'SALES.ORDER_RETURN.REEMBOLSADO' | translate }}</dt>
+              <dd class="col-6" data-testid="paid">{{ o.paidTotal | money }}</dd>
+              } @else {
               <dt class="col-6">{{ 'SALES.ORDER_SUMMARY.PAGADO' | translate }}</dt>
               <dd class="col-6" data-testid="paid">{{ o.paidTotal | money }}</dd>
               <dt class="col-6">{{ 'COMMON.SALDO' | translate }}</dt>
               <dd class="col-6 fw-bold" data-testid="balance" [class.text-danger]="hasBalance" [class.text-success]="!hasBalance">{{ o.balance | money }}</dd>
+              }
             </dl>
           </div>
         </div>

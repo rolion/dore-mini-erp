@@ -826,13 +826,30 @@ describe('OrderDetailComponent', () => {
       expect(component.order?.paidTotal).toBe('20.00');
     }));
 
-    it('keeps the current detail for NEW and CANCELLED orders (AC-15)', () => {
+    it('keeps the current detail for NEW orders and uses the compact view for cancelled ones (AC-15, AC-09)', () => {
       const created = setup(makeOrder());
       expect(created.querySelector('app-order-items')).not.toBeNull();
       expect(q(created, 'delivery-panel')).not.toBeNull();
       const cancelled = setup(makeOrder({ status: 'CANCELLED', editable: false, allowedTransitions: [], cancellationReason: 'x' }));
       expect(q(cancelled, 'alert-cancelled')).not.toBeNull();
-      expect(q(cancelled, 'delivery-panel')).not.toBeNull();
+      expect(q(cancelled, 'order-data')).not.toBeNull();
+      expect(q(cancelled, 'delivery-panel')).toBeNull();
+      expect(cancelled.querySelector('app-order-items')).toBeNull();
+    });
+
+    it('shows a refunded cancellation as refunded, not as a settled sale (AC-02, AC-09)', () => {
+      const element = setup(makeOrder({
+        status: 'CANCELLED', editable: false, allowedTransitions: [], canRegisterPayment: false,
+        cancellationReason: 'Sin stock', payments: [makePayment({ amount: '28.00' })], paidTotal: '28.00',
+        balance: '42.00', paymentStatus: 'REFUNDED', refundAcknowledged: true, cancelledByName: 'ana',
+        cancelledAt: '2026-10-04T10:00:00Z',
+      }));
+      expect(text(element, 'refund-registered')).toContain('reembolso quedó registrado');
+      expect(text(element, 'alert-cancelled')).not.toContain('Los pagos registrados se conservan');
+      expect(text(element, 'paid')).toContain('28.00');
+      expect(q(element, 'balance')).toBeNull();
+      expect(element.textContent).toContain('Reembolsado');
+      expect(q(element, 'reversal-card')).not.toBeNull();
     });
   });
 });

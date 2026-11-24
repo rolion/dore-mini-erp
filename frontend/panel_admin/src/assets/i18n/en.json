@@ -1964,7 +1964,9 @@
       "EVENT_SALE_RECOGNITION": "Sale recognition (at confirmation)",
       "EVENT_INVENTORY_SALE_COST": "Cost of sales",
       "EVENT_SALE_ADVANCE": "Advance payment",
-      "EVENT_SALE_PAYMENT": "Sale payment"
+      "EVENT_SALE_PAYMENT": "Sale payment",
+      "REEMBOLSADO": "Refunded",
+      "REEMBOLSO_REGISTRADO": "The refund was recorded: the money was returned outside PocketBiz."
     }
   },
   "SERVICES": {
