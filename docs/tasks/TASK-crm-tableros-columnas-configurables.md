@@ -1,6 +1,6 @@
 # TASK-crm-tableros-columnas-configurables: PB-CRM-003 · Tableros y columnas configurables
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tableros-columnas-configurables` (base: `crm`)
@@ -14,6 +14,7 @@
 | 2026-11-24 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-24 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Low abierto) | delivery-publish |
 
 ## Investigación
 
@@ -85,7 +86,8 @@ Aislamiento por `company_id` (repositorio por empresa, IDs ajenos → 404); nunc
 **Verificación propia (no es el Quality Gate):** `npm test` 1832 pruebas OK, `npm run lint` y `npm run i18n:check` limpios; backend `modules.crm` + fronteras OK (30), `makemigrations --check` sin cambios, `ruff`/`flake8` limpios en `modules/crm`.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, 2026-11-24). Ejecutado: backend `modules.crm` + fronteras + `config` + `shared` + `accounts` (127 pruebas OK); `ruff`/`flake8` (solo el E501 preexistente en `test_boundaries.py:36`); `makemigrations --check` sin cambios; `bandit` sin incidencias; frontend `ng test` (1832 OK), `lint`, `i18n:check` (0 faltantes), `build` y `npm audit --omit=dev` (0 vulnerabilidades). No verificado: revisión visual en navegador, concurrencia real de dos administradores.
+Hallazgos: [REV-01](../reviews/REV-2026-11-24-crm-tableros-columnas-configurables-01.md) (Low, SPECIFICATION, abierto): AC-08 dice 404 y API-06 dice 400 para un `target_stage_id` ajeno; se implementó 400 sin fuga entre empresas. Requiere aprobación del usuario si se quiere cambiar la Specification.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/121 listo para aprobación humana (base `crm`); no se mergea automáticamente. Cambio sensible: base de datos (migración `crm 0001`, tablas nuevas) y aislamiento por empresa; ADR `ADR-crm-tableros-columnas-configurables-modelo-y-puerto-de-tarjetas`.
