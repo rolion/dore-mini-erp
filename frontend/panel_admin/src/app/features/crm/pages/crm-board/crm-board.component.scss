@@ -49,3 +49,17 @@
     }
   }
 }
+
+// Botón circular de alta rápida: la plantilla desplaza el icono (relleno y márgenes de `btn-icon`); se centra con flex.
+.crm-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  .material-icons {
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+  }
+}
