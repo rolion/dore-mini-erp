@@ -12,11 +12,14 @@ from .views import (
     OrderPaymentView,
     OrderPrepareView,
     OrderReadyView,
+    OrderStartView,
 )
 
 # Los ids van como `str` y la vista los convierte: un id mal formado responde 404 `{detail}`, no una página HTML.
 urlpatterns = [
     path('', OrderListCreateView.as_view(), name='order-list'),
+    # `start/` va antes que `<order_id>/` para que no se interprete como un id.
+    path('start/', OrderStartView.as_view(), name='order-start'),
     path('<str:order_id>/', OrderDetailView.as_view(), name='order-detail'),
     path('<str:order_id>/items/', OrderItemListView.as_view(), name='order-item-list'),
     path('<str:order_id>/items/<str:item_id>/', OrderItemDetailView.as_view(), name='order-item-detail'),

@@ -23,6 +23,14 @@ class OrderItemCreateSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
 
 
+class OrderStartSerializer(OrderInputSerializer):
+    """Pedido completo: cabecera + productos + descuento + almacén (se crea en preparación)."""
+
+    warehouse_id = serializers.UUIDField(required=False, allow_null=True)
+    discount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, allow_null=True)
+    items = OrderItemCreateSerializer(many=True, required=False)
+
+
 class OrderItemUpdateSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
 
@@ -115,8 +123,15 @@ class OrderSerializer(_CustomerMixin):
     allowed_transitions = serializers.ListField(child=serializers.CharField(), read_only=True)
     can_register_payment = serializers.BooleanField(read_only=True)
     stock_output = serializers.SerializerMethodField()
+    warehouse = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
+
+    def get_warehouse(self, obj):
+        """Almacén del pedido {id, name} o `null` (sin almacén o con Inventario deshabilitado); nombre por contexto."""
+        if obj.warehouse_id is None or not self.context.get('inventory_available', False):
+            return None
+        return {'id': obj.warehouse_id, 'name': self.context.get('warehouse_names', {}).get(obj.warehouse_id, '')}
 
     def get_stock_output(self, obj):
         """Salida de inventario del pedido entregado (`null` si no hubo o Inventario está deshabilitado)."""

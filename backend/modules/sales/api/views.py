@@ -20,6 +20,7 @@ from modules.sales.application.commands import (
     UpdateOrder,
 )
 from modules.sales.application.delivery import PreviewOrderDelivery
+from modules.sales.application.placement import PlaceOrder
 from modules.sales.application.ports import Actor
 from modules.sales.application.queries import GetOrder, ListOrders
 from modules.sales.domain.exceptions import (
@@ -52,6 +53,7 @@ from .serializers import (
     OrderItemCreateSerializer,
     OrderItemUpdateSerializer,
     OrderSerializer,
+    OrderStartSerializer,
     OrderSummarySerializer,
     PaymentInputSerializer,
     delivery_preview_data,
@@ -147,8 +149,12 @@ def _customer_context(request, customer_ids) -> dict:
 
 def _order_response(request, order, http_status: int = status.HTTP_200_OK) -> Response:
     context = _customer_context(request, [order.customer_id] if order.customer_id else [])
+    stock = _stock(request)
     if order.status.value == 'DELIVERED':
-        context['stock_output'] = _stock(request).output_for(order.id)
+        context['stock_output'] = stock.output_for(order.id)
+    if order.warehouse_id is not None and stock.is_available():
+        context['inventory_available'] = True
+        context['warehouse_names'] = stock.warehouse_names([order.warehouse_id])
     return Response(OrderSerializer(order, context=context).data, status=http_status)
 
 
@@ -174,6 +180,20 @@ class OrderListCreateView(APIView):
     def post(self, request):
         data = _validated(OrderInputSerializer, request.data)
         order = _run(CreateOrder(_repository(request), _customers(request), SystemClock()), **data)
+        return _order_response(request, order, status.HTTP_201_CREATED)
+
+
+class OrderStartView(APIView):
+    """Crea el pedido completo (cabecera, productos, descuento y almacén) ya en preparación, en una operación."""
+
+    required_modules = ('sales',)
+
+    def post(self, request):
+        data = _validated(OrderStartSerializer, request.data)
+        company_id = company_id_from(request)
+        use_case = PlaceOrder(_repository(request), _customers(request), _products(request), SystemClock(),
+                              SalesSettingsAdapter(company_id), _stock(request))
+        order = _run(use_case, **data)
         return _order_response(request, order, status.HTTP_201_CREATED)
 
 

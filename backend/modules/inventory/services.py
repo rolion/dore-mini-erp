@@ -174,6 +174,13 @@ def list_active_warehouses(company_id: UUID) -> list[WarehouseInfo]:
             for w in DjangoWarehouseRepository(company_id).list(active=True)]
 
 
+def get_warehouse_names(company_id: UUID, warehouse_ids) -> dict[UUID, str]:
+    """Nombre de cada almacén indicado de la empresa, activo o no (los ids de otra empresa no aparecen)."""
+    repository = DjangoWarehouseRepository(company_id)
+    found = {warehouse_id: repository.get(warehouse_id) for warehouse_id in set(warehouse_ids)}
+    return {warehouse_id: warehouse.name for warehouse_id, warehouse in found.items() if warehouse is not None}
+
+
 def get_stock_products(company_id: UUID, product_ids) -> dict[UUID, StockProduct]:
     """De los productos indicados, solo los de la empresa que controlan stock."""
     found = CatalogProductDirectory(company_id).get_products(product_ids)

@@ -131,6 +131,10 @@ class StockOutputAdapter:
     def allow_negative_stock(self) -> bool:
         return inventory_services.allow_negative_stock(self.company_id)
 
+    def warehouse_names(self, warehouse_ids: Iterable[UUID]) -> dict[UUID, str]:
+        """Nombre de cada almacén (activo o no) para mostrar el del pedido."""
+        return inventory_services.get_warehouse_names(self.company_id, warehouse_ids)
+
     def balances(self, warehouse_id: UUID, product_ids: Iterable[UUID]) -> dict[UUID, Decimal]:
         return inventory_services.get_balances(self.company_id, warehouse_id, product_ids)
 

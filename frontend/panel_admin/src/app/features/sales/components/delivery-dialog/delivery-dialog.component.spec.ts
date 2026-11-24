@@ -157,7 +157,7 @@ describe('DeliveryDialogComponent', () => {
   it('keeps the dialog and the chosen data and shows the current balances after a 409 insufficient_stock (UI-04, AC-02)', () => {
     api.deliver.and.returnValue(throwError(() => new OrderRuleError(
       'No hay saldo suficiente para registrar la salida.', 'insufficient_stock',
-      [{ productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' }], 'Central')));
+      [{ productId: 'p-1', productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' }], 'Central')));
     api.deliveryPreview.and.returnValue(of(makePreview({
       lines: [makeDeliveryLine({ available: '1.0000', projected: '-3.0000', insufficient: true })],
     })));

@@ -1864,6 +1864,27 @@
       "PEDIDO_ACTUALIZADO": "Pedido atualizado",
       "PEDIDO_CREADO": "Pedido criado"
     },
+    "ORDER_CREATE": {
+      "DETALLE_DEL_PEDIDO": "Detalhe do pedido",
+      "ALMACEN": "Armazém",
+      "SELECCIONE_UN_ALMACEN": "Selecione um armazém",
+      "EL_ALMACEN_ES_OBLIGATORIO": "Escolha o armazém que atenderá o pedido.",
+      "SIN_ALMACENES_ACTIVOS": "Não há armazéns ativos: crie ou ative um em Estoque.",
+      "FECHA_DE_ENTREGA": "Data de entrega",
+      "AGREGUE_AL_MENOS_UN_PRODUCTO": "Adicione pelo menos um produto para iniciar a preparação.",
+      "MAXIMO_DESCUENTO": "Máximo permitido: {{percent}} % do subtotal (Bs {{amount}}).",
+      "DESCUENTO_INVALIDO": "Informe um valor válido com até 2 casas decimais.",
+      "DESCUENTO_SUPERA_SUBTOTAL": "O desconto não pode superar o subtotal.",
+      "DESCUENTO_SUPERA_MAXIMO": "O desconto supera o máximo permitido ({{percent}} % do subtotal).",
+      "CREANDO": "Criando…",
+      "PEDIDO_EN_PREPARACION": "Pedido criado e em preparação",
+      "STOCK_INSUFICIENTE": "Estoque insuficiente em {{warehouse}}:",
+      "STOCK_LINEA": "{{product}}: pedido {{requested}}, disponível {{available}}"
+    },
+    "PAYMENT_DIALOG": {
+      "REGISTRANDO": "Registrando…",
+      "PEDIDO_CAMBIO": "O pedido mudou desde que o pagamento foi aberto. Foi atualizado com os dados vigentes."
+    },
     "ORDER_LIST": {
       "NUEVO_PEDIDO": "Novo pedido",
       "ATAJOS_DE_VISTA": "Atalhos de visualização",

@@ -227,7 +227,10 @@ class DeliverOrder:
         planned = controlled_lines(order, self.stock)
         if not planned:
             return []
-        if not self.stock.active_warehouses():
+        warehouses = self.stock.active_warehouses()
+        if warehouse_id is None and any(w.id == order.warehouse_id for w in warehouses):
+            warehouse_id = order.warehouse_id  # almacén guardado (si sigue activo): el predeterminado
+        if not warehouses:
             raise OrderRuleViolation(
                 'no_active_warehouse',
                 'No hay un almacén activo para registrar la salida: crea o activa uno en Inventario.')
