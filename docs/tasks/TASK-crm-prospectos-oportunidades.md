@@ -16,6 +16,7 @@
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 | 2026-11-24 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos) | delivery-publish |
 | 2026-11-24 | PUBLISH | REV-01 corregido (colores del Kanban y prospectos en tema oscuro) | delivery-build |
+| 2026-11-24 | PUBLISH | REV-02 (pruebas de integridad y concurrencia) y REV-03 (endpoint de usuarios y búsqueda libre, aprobado por el usuario en el chat) corregidos | delivery-build |
 
 ## Investigación
 
@@ -85,15 +86,15 @@ Implementado según PLAN v1 (backend en `backend/modules/crm/`, fachadas en `cus
 
 - **Backend:** dominio `Lead`/`Opportunity` (INV-01…04, 07), modelos y migración `crm 0002` (INV-03, INV-08), `DjangoStageCards` en lugar de `NoCards` (INV-09, AC-08), conversión y cierre idempotentes (AC-04, AC-05), vínculo a pedido con códigos 409 (AC-06), API `/api/crm/leads/` y `/api/crm/opportunities/` (AC-01…03, 07, 09). Pruebas: `test_domain_opportunity`, `test_api_leads`, `test_api_opportunities`, fachadas de `customers`/`sales`, `test_boundaries`.
 - **Frontend:** páginas `crm-opportunity-board` (Kanban) y `crm-lead-list`, diálogos de prospecto, oportunidad, cierre y conversión, servicios API, rutas y menú, 100 claves i18n es/en/pt (AC-10, AC-11). Referencias: plantilla Kanban nueva del DDR, `product-list` (lista) y el patrón de diálogo con motivo; se reutilizan `money`, `ModulesService` y `CrmApiError` ampliado.
-- **Desviaciones (detalle de implementación):** fachada extra `customers.get_customers_for_crm` (sin N+1); códigos extra `opportunity_closed`, `opportunity_not_won` y `already_converted`; una oportunidad nueva de un prospecto ya convertido hereda su cliente; mover a la misma etapa no escribe historial; `GET /opportunities/<id>/orders/` excluye pedidos ya vinculados. El plan no define endpoint de usuarios de la empresa: el selector/filtro de responsable ofrece el usuario actual y los responsables ya vistos en el tablero, y el filtro de prospecto/cliente se arma con los contactos ya cargados (deuda: endpoint de usuarios y búsqueda libre). Cartas de oportunidades cerradas en etapas archivadas se agrupan en «Etapas archivadas».
+- **Desviaciones (detalle de implementación):** fachada extra `customers.get_customers_for_crm` (sin N+1); códigos extra `opportunity_closed`, `opportunity_not_won` y `already_converted`; una oportunidad nueva de un prospecto ya convertido hereda su cliente; mover a la misma etapa no escribe historial; `GET /opportunities/<id>/orders/` excluye pedidos ya vinculados. El plan no define endpoint de usuarios de la empresa: el selector/filtro de responsable ofrece el usuario actual y los responsables ya vistos en el tablero, y el filtro de prospecto/cliente se arma con los contactos ya cargados (corregido después en REV-03: `GET /api/crm/users/` y búsqueda libre de prospecto/cliente en el filtro). Cartas de oportunidades cerradas en etapas archivadas se agrupan en «Etapas archivadas».
 - **Deuda técnica:** sin arrastrar y soltar; sin detalle de oportunidad (PB-CRM-005); límite de 200 tarjetas por carga.
 - **Verificación propia (no es el Quality Gate):** backend `modules.crm modules.customers modules.sales` (604 pruebas) y `shared` pasan con PostgreSQL; `makemigrations --check` sin cambios; frontend `i18n:check`, `lint`, `build` y `npm test` (1895) pasan. No se probó contra un navegador real ni el flujo Kanban de punta a punta con el backend.
 
 ## Review
 Quality Gate (subagente aislado, 2026-11-24): **PASS con observaciones**. Backend 616 pruebas OK, `makemigrations --check` sin cambios, ruff/flake8 sin avisos nuevos, bandit sin hallazgos; frontend `i18n:check`, `lint`, `build` OK, 1895 pruebas OK (cobertura global líneas 89,63 %), `npm audit` 0 vulnerabilidades. Revisión visual verificada en 390 y 1440 px, tema claro y oscuro. Sin E2E (decisión del plan) ni mypy (no configurado).
 - REV-01 (Medium, IMPLEMENTATION, RESUELTO): Kanban ilegible en tema oscuro — `docs/reviews/REV-2026-11-24-crm-prospectos-oportunidades-01.md`.
-- REV-02 (Low, IMPLEMENTATION, abierto): faltan pruebas de concurrencia simulada y del camino `IntegrityError` → `order_already_linked` — `...-02.md`.
-- REV-03 (Low, PLAN, abierto): sin endpoint de usuarios de la empresa ni búsqueda libre de prospecto/cliente — `...-03.md`.
+- REV-02 (Low, IMPLEMENTATION, RESUELTO): faltan pruebas de concurrencia simulada y del camino `IntegrityError` → `order_already_linked` — `...-02.md`.
+- REV-03 (Low, PLAN, RESUELTO): sin endpoint de usuarios de la empresa ni búsqueda libre de prospecto/cliente — `...-03.md`.
 
 ## Publicación
 PR 122 listo para aprobación humana (no se mergea). Tarea con arquitectura (ADR), base de datos (migración `crm 0002`): requiere aprobación humana explícita. REV-01 corregido (tema oscuro).

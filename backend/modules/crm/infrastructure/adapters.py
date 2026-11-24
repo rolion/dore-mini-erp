@@ -150,3 +150,7 @@ class UserDirectoryAdapter:
         if not wanted:
             return {}
         return {row['id']: row['name'] for row in self._directory.list() if row['id'] in wanted}
+
+    def search(self, search: str = '') -> list[dict]:
+        """Usuarios de la empresa (`{id, name}`) cuyo nombre o usuario contiene el texto."""
+        return list(self._directory.list(search=search))

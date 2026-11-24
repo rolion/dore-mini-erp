@@ -2,6 +2,7 @@ import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { fakeAsync, tick } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/service/auth.service';
 import { ModulesService } from '../../../../core/service/modules.service';
@@ -11,7 +12,10 @@ import { OpportunityDialogComponent } from '../../components/opportunity-dialog/
 import { CrmApiError, CrmBoard } from '../../models/board';
 import { CrmOpportunity } from '../../models/opportunity';
 import { CrmBoardsApiService } from '../../services/crm-boards-api.service';
+import { CrmCustomersApiService } from '../../services/crm-customers-api.service';
+import { CrmLeadsApiService } from '../../services/crm-leads-api.service';
 import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
+import { CrmUsersApiService } from '../../services/crm-users-api.service';
 import { makeBoard, makeOpportunity, makeStage } from '../../testing/crm-fixtures';
 import { CrmOpportunityBoardComponent } from './crm-opportunity-board.component';
 
@@ -30,6 +34,12 @@ describe('CrmOpportunityBoardComponent', () => {
     boardsApi.list.and.returnValue(of(boards));
     const api = jasmine.createSpyObj<CrmOpportunitiesApiService>('CrmOpportunitiesApiService', ['list', 'move']);
     api.list.and.returnValue(of({ count: cards.length, results: cards }));
+    const usersApi = jasmine.createSpyObj<CrmUsersApiService>('CrmUsersApiService', ['list']);
+    usersApi.list.and.returnValue(of([{ id: 7, name: 'Ana Admin' }, { id: 11, name: 'Carlos Compa' }]));
+    const leadsApi = jasmine.createSpyObj<CrmLeadsApiService>('CrmLeadsApiService', ['list']);
+    leadsApi.list.and.returnValue(of({ count: 0, results: [] }));
+    const customersApi = jasmine.createSpyObj<CrmCustomersApiService>('CrmCustomersApiService', ['list']);
+    customersApi.list.and.returnValue(of({ count: 0, results: [], meta: { sales_enabled: true, warehouse_filter_enabled: true } }));
     const modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     TestBed.configureTestingModule({
       imports: [CrmOpportunityBoardComponent],
@@ -37,6 +47,9 @@ describe('CrmOpportunityBoardComponent', () => {
         ...provideTestTranslations(), provideRouter([]),
         { provide: CrmBoardsApiService, useValue: boardsApi },
         { provide: CrmOpportunitiesApiService, useValue: api },
+        { provide: CrmUsersApiService, useValue: usersApi },
+        { provide: CrmLeadsApiService, useValue: leadsApi },
+        { provide: CrmCustomersApiService, useValue: customersApi },
         { provide: NgbModal, useValue: modal },
         { provide: ModulesService, useValue: { enabledKeysValue: new Set(salesEnabled ? ['customers', 'sales'] : ['customers']) } },
         { provide: AuthService, useValue: { currentUserValue: { id: 7, username: 'ana', firstName: 'Ana', lastName: 'Admin' } } },
@@ -47,7 +60,7 @@ describe('CrmOpportunityBoardComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     const columns = (): HTMLElement[] => Array.from(el.querySelectorAll('[data-testid="column"]'));
     const cardsIn = (column: HTMLElement): HTMLElement[] => Array.from(column.querySelectorAll('[data-testid="opportunity-card"]'));
-    return { fixture, component: fixture.componentInstance, boardsApi, api, modal, el, columns, cardsIn };
+    return { fixture, component: fixture.componentInstance, boardsApi, api, usersApi, leadsApi, customersApi, modal, el, columns, cardsIn };
   }
 
   function dialog<T>(modal: jasmine.SpyObj<NgbModal>, instance: jasmine.SpyObj<T>, result: Promise<unknown>): void {
@@ -94,6 +107,46 @@ describe('CrmOpportunityBoardComponent', () => {
     expect(el.querySelector('[data-testid="success"]')?.textContent).toContain('se movió de etapa');
   });
 
+  it('offers every company user as owner, not only those already on the board (REV-03)', () => {
+    const { component, usersApi } = create();
+    expect(usersApi.list).toHaveBeenCalledTimes(1);
+    expect(component.ownerOptions.map((o) => o.id)).toContain(11); // Carlos no tiene tarjetas en el tablero
+  });
+
+  it('keeps the known owners when the users endpoint fails', () => {
+    const { component, usersApi } = create();
+    usersApi.list.and.returnValue(throwError(() => new CrmApiError('Error', 500, {})));
+    expect(component.ownerOptions.map((o) => o.id)).toEqual([7, 9, 11]);
+  });
+
+  it('searches leads and customers by free text and adds them to the contact filter (REV-03)', fakeAsync(() => {
+    const { component, leadsApi, customersApi } = create();
+    leadsApi.list.and.returnValue(of({ count: 1, results: [{
+      id: 'l-9', name: 'Dora Nueva', phone: '', normalizedPhone: '', email: '', convertedCustomerId: null, createdAt: '',
+    }] }));
+    customersApi.list.and.returnValue(of({ count: 1, results: [{
+      id: 'c-9', name: 'Dora Cliente', phone: '', lastPurchaseAt: null, orderCount: 0, outstandingAmount: '0.00',
+      currency: 'BOB',
+    }], meta: { sales_enabled: true, warehouse_filter_enabled: true } }));
+    component.contactSearch$.next('dora');
+    tick(250);
+    expect(leadsApi.list).toHaveBeenCalledWith({ search: 'dora', pageSize: 20 });
+    expect(customersApi.list).toHaveBeenCalledWith({ search: 'dora', pageSize: 20 });
+    const labels = component.contactOptions.map((o) => o.label);
+    expect(labels).toContain('Dora Nueva (Prospecto)');
+    expect(labels).toContain('Dora Cliente (Cliente)');
+    expect(component.contactsLoading).toBeFalse();
+  }));
+
+  it('survives a failed contact search', fakeAsync(() => {
+    const { component, leadsApi } = create();
+    leadsApi.list.and.returnValue(throwError(() => new CrmApiError('Error', 500, {})));
+    component.contactSearch$.next('x');
+    tick(250);
+    expect(component.contactsLoading).toBeFalse();
+    expect(component.contactOptions.length).toBe(2);
+  }));
+
   it('warns and reloads when moving fails with a 409', () => {
     const { fixture, component, api, el } = create();
     api.move.and.returnValue(throwError(() => new CrmApiError('La oportunidad ya está cerrada.', 409, {}, 'opportunity_closed')));
@@ -105,7 +158,7 @@ describe('CrmOpportunityBoardComponent', () => {
 
   it('filters by owner and by lead or customer on the server and offers to clear filters (AC-07, AC-10)', () => {
     const { fixture, component, api, el } = create();
-    expect(component.ownerOptions.map((o) => o.name)).toEqual(['Ana Admin', 'Beto Vendedor']);
+    expect(component.ownerOptions.map((o) => o.name)).toEqual(['Ana Admin', 'Beto Vendedor', 'Carlos Compa']);
     expect(component.contactOptions.map((o) => o.key)).toEqual(['customer:c-1', 'lead:l-1']);
     api.list.and.returnValue(of({ count: 0, results: [] }));
     component.filters.controls.ownerId.setValue('9');
@@ -114,7 +167,7 @@ describe('CrmOpportunityBoardComponent', () => {
     expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ ownerId: 9, leadId: 'l-1', customerId: undefined }));
     fixture.detectChanges();
     expect(el.querySelector('[data-testid="empty-filtered"]')?.textContent).toContain('No hay oportunidades que coincidan');
-    expect(component.ownerOptions.length).toBe(2); // los filtros conservan las opciones ya vistas
+    expect(component.ownerOptions.length).toBe(3); // los filtros conservan las opciones ya vistas
     component.filters.controls.contact.setValue('customer:c-1');
     expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ leadId: undefined, customerId: 'c-1' }));
     (el.querySelector('[data-testid="empty-filtered"] button') as HTMLButtonElement).click();

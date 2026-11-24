@@ -1,4 +1,4 @@
-# PLAN-2026-11-24-crm-prospectos-oportunidades (v1)
+# PLAN-2026-11-24-crm-prospectos-oportunidades (v2)
 
 **Task:** TASK-crm-prospectos-oportunidades · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-crm-prospectos-oportunidades-kanban-y-prospectos.md` · `docs/adr/ADR-crm-prospectos-oportunidades-modelo-conversion-y-vinculos.md`
@@ -149,3 +149,6 @@ Conversión/cierre concurrentes (bloqueo de fila + idempotencia); pedido vincula
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2 (2026-11-24)** — `[Specification]` (aprobado por el usuario en el chat al pedir corregir REV-03): nuevo `API-05 GET /api/crm/users/?search=` → lista `[{id, name}]` de los usuarios de la empresa (`required_modules = ('customers',)`, empresa del usuario autenticado); el selector y el filtro de «Responsable» lo usan. El filtro «Prospecto/Cliente» busca por texto en `/api/crm/leads/` y `/api/crm/customers/`. `[Implementation Plan]`: pruebas de integridad y concurrencia (`test_integrity.py`) para REV-02.

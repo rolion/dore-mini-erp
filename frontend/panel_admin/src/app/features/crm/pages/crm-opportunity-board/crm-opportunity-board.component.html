@@ -57,12 +57,11 @@
             </div>
             <div class="col-md-6 col-lg-3">
               <label for="crm-opp-contact-filter" class="form-label">{{ 'CRM.OPPORTUNITY_BOARD.PROSPECTO_O_CLIENTE' | translate }}</label>
-              <select id="crm-opp-contact-filter" class="form-select" formControlName="contact">
-                <option value="">{{ 'COMMON.TODOS' | translate }}</option>
-                @for (option of contactOptions; track option.key) {
-                <option [value]="option.key">{{ option.name }} ({{ (option.kind === 'lead' ? 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' : 'COMMON.CLIENTE') | translate }})</option>
-                }
-              </select>
+              <ng-select labelForId="crm-opp-contact-filter" formControlName="contact" [items]="contactOptions" bindLabel="label"
+                bindValue="key" (search)="contactSearch$.next($event.term)" [loading]="contactsLoading" [clearable]="true"
+                [placeholder]="'COMMON.TODOS' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+                [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate" [loadingText]="'COMMON.CARGANDO' | translate">
+              </ng-select>
             </div>
             <div class="col-md-6 col-lg-2">
               <label for="crm-opp-status-filter" class="form-label">{{ 'COMMON.ESTADO' | translate }}</label>

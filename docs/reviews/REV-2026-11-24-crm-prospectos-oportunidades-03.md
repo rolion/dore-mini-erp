@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-prospectos-oportunidades-03: Sin contrato para listar usuarios de la empresa: el responsable solo se elige entre usuarios ya vistos
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-prospectos-oportunidades.md (v1)
@@ -30,3 +30,6 @@ TASK, `## Implementación`: «El plan no define endpoint de usuarios de la empre
     ...
     return all.filter((owner, index) => all.findIndex((o) => o.id === owner.id) === index);
 ```
+
+## Resolution
+Nuevo `GET /api/crm/users/?search=` (`CrmUserListView`, sobre `shared.identity.CompanyUserDirectory`, solo `id` y `name`, empresa del usuario autenticado; probado con dos empresas, búsqueda y asignación como responsable). Frontend: `CrmUsersApiService`; el filtro «Responsable» y el diálogo ofrecen a todos los usuarios de la empresa; el filtro «Prospecto/Cliente» es un `ng-select` con búsqueda libre en prospectos y clientes. PLAN actualizado a v2 con la aprobación del usuario en el chat. Lint, `i18n:check` y 1901 pruebas Karma OK.

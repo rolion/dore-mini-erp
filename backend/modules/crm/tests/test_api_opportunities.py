@@ -427,3 +427,25 @@ class FullFlowTests(OpportunityApiBase):
         self.assertEqual(len(self.history(opportunity['id'])), 3)
         board = self.client.get(f"{BOARDS}{self.board['id']}/").json()
         self.assertEqual(sum(s['card_count'] for s in board['stages']), 0)
+
+
+class CompanyUsersTests(OpportunityApiBase):
+    URL = '/api/crm/users/'
+
+    def test_lists_only_users_of_the_company_and_filters_by_text(self):  # AC-02, INV-07, INV-01
+        mate = make_admin(self.company, username='compa')
+        make_admin(make_company('CRM B'), username='ajeno')
+        body = self.client.get(self.URL).json()
+        self.assertEqual({row['id'] for row in body}, {self.user.id, mate.id})
+        self.assertEqual(set(body[0]), {'id', 'name'})
+        found = self.client.get(self.URL, {'search': 'COMP'}).json()
+        self.assertEqual([row['id'] for row in found], [mate.id])
+        self.assertEqual(self.client.get(self.URL, {'search': 'ajeno'}).json(), [])
+
+    def test_listed_user_can_be_assigned_as_owner(self):  # AC-02
+        mate = make_admin(self.company, username='compa')
+        self.assertEqual(self.create(owner_id=mate.id, customer_id=str(self.customer().id))['owner']['id'], mate.id)
+
+    def test_requires_authentication_and_customers_module(self):
+        self.client.credentials()
+        self.assertEqual(self.client.get(self.URL).status_code, 401)

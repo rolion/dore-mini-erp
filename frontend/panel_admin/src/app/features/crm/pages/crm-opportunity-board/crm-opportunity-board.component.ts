@@ -4,8 +4,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Subject, catchError, distinctUntilChanged, finalize, of, switchMap } from 'rxjs';
+import {
+  Observable, Subject, catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, map, of, switchMap, tap,
+} from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { AuthService } from '../../../../core/service/auth.service';
 import { ModulesService } from '../../../../core/service/modules.service';
@@ -23,7 +26,12 @@ import {
   opportunityContact,
 } from '../../models/opportunity';
 import { CrmBoardsApiService } from '../../services/crm-boards-api.service';
+import { CrmLeadsApiService } from '../../services/crm-leads-api.service';
+import { CrmCustomersApiService } from '../../services/crm-customers-api.service';
 import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
+import { CrmUsersApiService } from '../../services/crm-users-api.service';
+
+const CONTACT_SEARCH_PAGE_SIZE = 20;
 
 export interface CrmColumn {
   stage: CrmStage;
@@ -35,6 +43,8 @@ interface ContactOption {
   /** `lead:<id>` o `customer:<id>`. */
   key: string;
   name: string;
+  /** Texto de la opción: nombre y tipo. */
+  label: string;
   kind: 'lead' | 'customer';
 }
 
@@ -46,7 +56,7 @@ interface ContactOption {
   selector: 'app-crm-opportunity-board',
   templateUrl: './crm-opportunity-board.component.html',
   styleUrl: './crm-opportunity-board.component.scss',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, NgSelectModule],
 })
 export class CrmOpportunityBoardComponent implements OnInit {
   private fb = inject(FormBuilder).nonNullable;
@@ -70,12 +80,20 @@ export class CrmOpportunityBoardComponent implements OnInit {
   movingId: string | null = null;
   readonly salesEnabled: boolean;
 
-  /** Responsables y contactos vistos en el tablero (sin filtros) para ofrecerlos en los filtros. */
+  contactsLoading = false;
+  readonly contactSearch$ = new Subject<string>();
+
+  /** Usuarios de la empresa (`/api/crm/users/`); los responsables vistos en las tarjetas se suman por si faltan. */
+  private companyUsers: CrmOwner[] = [];
+  /** Responsables y contactos vistos en el tablero y hallados al buscar, para ofrecerlos en los filtros. */
   private knownOwners = new Map<number, CrmOwner>();
   private knownContacts = new Map<string, ContactOption>();
   private reload$ = new Subject<void>();
 
   private api = inject(CrmOpportunitiesApiService);
+  private usersApi = inject(CrmUsersApiService);
+  private leadsApi = inject(CrmLeadsApiService);
+  private customersApi = inject(CrmCustomersApiService);
   private boardsApi = inject(CrmBoardsApiService);
   private modal = inject(NgbModal);
   private auth = inject(AuthService);
@@ -122,6 +140,20 @@ export class CrmOpportunityBoardComponent implements OnInit {
     });
     this.filters.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reload$.next());
 
+    this.contactSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      tap(() => (this.contactsLoading = true)),
+      switchMap((term) => this.searchContacts(term.trim())),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((options) => {
+      this.contactsLoading = false;
+      for (const option of options) this.knownContacts.set(option.key, option);
+    });
+
+    this.usersApi.list().pipe(catchError(() => of([] as CrmOwner[])), takeUntilDestroyed(this.destroyRef))
+      .subscribe((users) => (this.companyUsers = users));
+
     this.loadBoards();
   }
 
@@ -143,7 +175,9 @@ export class CrmOpportunityBoardComponent implements OnInit {
   }
 
   get ownerOptions(): CrmOwner[] {
-    return [...this.knownOwners.values()].sort((a, b) => a.name.localeCompare(b.name));
+    const all = new Map<number, CrmOwner>();
+    for (const owner of [...this.companyUsers, ...this.knownOwners.values()]) all.set(owner.id, owner);
+    return [...all.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
 
   get contactOptions(): ContactOption[] {
@@ -277,7 +311,7 @@ export class CrmOpportunityBoardComponent implements OnInit {
 
   private query(boardId: string): CrmOpportunityFilters {
     const { ownerId, contact, status } = this.filters.getRawValue();
-    const [kind, id] = contact.split(':');
+    const [kind, id] = (contact ?? '').split(':');
     return {
       boardId,
       status,
@@ -288,13 +322,29 @@ export class CrmOpportunityBoardComponent implements OnInit {
     };
   }
 
+  private searchContacts(term: string): Observable<ContactOption[]> {
+    const params = { search: term, pageSize: CONTACT_SEARCH_PAGE_SIZE };
+    return forkJoin([this.leadsApi.list(params), this.customersApi.list(params)]).pipe(
+      map(([leads, customers]) => [
+        ...leads.results.map((l) => this.contactOption('lead', l.id, l.name)),
+        ...customers.results.map((c) => this.contactOption('customer', c.id, c.name)),
+      ]),
+      catchError(() => of([] as ContactOption[])),
+    );
+  }
+
+  private contactOption(kind: 'lead' | 'customer', id: string, name: string): ContactOption {
+    const type = tr(kind === 'lead' ? 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' : 'COMMON.CLIENTE');
+    return { key: `${kind}:${id}`, name, label: `${name} (${type})`, kind };
+  }
+
   private remember(opportunities: CrmOpportunity[]): void {
     for (const o of opportunities) {
       this.knownOwners.set(o.owner.id, o.owner);
       if (o.customer) {
-        this.knownContacts.set(`customer:${o.customer.id}`, { key: `customer:${o.customer.id}`, name: o.customer.name, kind: 'customer' });
+        this.knownContacts.set(`customer:${o.customer.id}`, this.contactOption('customer', o.customer.id, o.customer.name));
       } else if (o.lead) {
-        this.knownContacts.set(`lead:${o.lead.id}`, { key: `lead:${o.lead.id}`, name: o.lead.name, kind: 'lead' });
+        this.knownContacts.set(`lead:${o.lead.id}`, this.contactOption('lead', o.lead.id, o.lead.name));
       }
     }
   }

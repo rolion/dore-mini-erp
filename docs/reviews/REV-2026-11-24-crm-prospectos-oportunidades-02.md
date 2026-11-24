@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-prospectos-oportunidades-02: Faltan las pruebas planificadas de concurrencia y de la restricción única de pedido en BD
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-prospectos-oportunidades.md (v1)
@@ -33,3 +33,6 @@ crm/tests/test_api_leads.py:96:        again = self.convert(lead['id'])  # doble
                 raise
             raise CrmConflict('order_already_linked', 'El pedido ya está vinculado a otra oportunidad.') from exc
 ```
+
+## Resolution
+Se añadió `backend/modules/crm/tests/test_integrity.py`: traducción del `IntegrityError` de `crm_opportunity_order_unique` a `order_already_linked` con la transacción utilizable, violación directa de la restricción, los `CheckConstraint` de `crm_opportunity` y la conversión simultánea del mismo prospecto con dos hilos (un solo cliente creado). Suite `modules.crm`: 106 pruebas OK; ruff y flake8 sin avisos.
