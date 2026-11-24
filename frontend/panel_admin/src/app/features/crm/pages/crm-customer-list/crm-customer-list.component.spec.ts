@@ -63,6 +63,17 @@ describe('CrmCustomerListComponent', () => {
     expect(text()).toContain('Sin compras');
   });
 
+  it('right-aligns the Pedidos and Saldo cells like their headers', async () => {
+    await setup();
+    const orders = fixture.debugElement.queryAll(By.css('[data-testid="order-count-cell"]'));
+    const balances = fixture.debugElement.queryAll(By.css('[data-testid="balance-cell"]'));
+    expect(orders.length).toBe(2);
+    expect(balances.length).toBe(2);
+    for (const cell of [...orders, ...balances]) {
+      expect((cell.nativeElement as HTMLElement).classList).toContain('text-end');
+    }
+  });
+
   it('shows the empty state without filters with a way to Customers (AC-07)', async () => {
     await setup(makeCrmPage([]));
     expect(fixture.debugElement.query(By.css('[data-testid="crm-empty"]'))).not.toBeNull();
