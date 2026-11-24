@@ -1,9 +1,10 @@
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { fakeAsync, tick } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/service/auth.service';
 import { ModulesService } from '../../../../core/service/modules.service';
 import { CLOSE_DIALOG_CONVERT, CloseOpportunityDialogComponent } from '../../components/close-opportunity-dialog/close-opportunity-dialog.component';
@@ -17,7 +18,7 @@ import { CrmLeadsApiService } from '../../services/crm-leads-api.service';
 import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
 import { CrmUsersApiService } from '../../services/crm-users-api.service';
 import { makeBoard, makeOpportunity, makeStage } from '../../testing/crm-fixtures';
-import { CrmOpportunityBoardComponent } from './crm-opportunity-board.component';
+import { CrmColumn, CrmOpportunityBoardComponent } from './crm-opportunity-board.component';
 
 describe('CrmOpportunityBoardComponent', () => {
   const board = makeBoard({
@@ -93,18 +94,67 @@ describe('CrmOpportunityBoardComponent', () => {
     expect(customer.textContent).toContain('Beto Vendedor');
   });
 
-  it('moves a card with «Mover a…» to another stage of the same board and reloads (UI-03)', () => {
-    const { fixture, api, el, columns, cardsIn } = create();
-    const select = cardsIn(columns()[0])[0].querySelector('[data-testid="move-select"]') as HTMLSelectElement;
-    expect(Array.from(select.options).map((o) => o.textContent?.trim())).toEqual(['Mover a…', 'Propuesta']);
-    expect(select.labels?.[0]?.textContent).toContain('Mover «Combo familiar» a…');
+  function dropEvent(from: CrmColumn, to: CrmColumn, item: CrmOpportunity): CdkDragDrop<CrmColumn, CrmColumn, CrmOpportunity> {
+    const origin = { data: from };
+    return {
+      previousContainer: origin, container: from === to ? origin : { data: to }, item: { data: item },
+      previousIndex: from.cards.indexOf(item), currentIndex: 0,
+    } as unknown as CdkDragDrop<CrmColumn, CrmColumn, CrmOpportunity>;
+  }
+
+  it('moves a card by dragging it to another stage column and reloads (UI-03)', () => {
+    const { fixture, component, api, el } = create();
+    const [from, to] = component.columns;
     api.move.and.returnValue(of(makeOpportunity({ stageId: 's-2' })));
-    select.value = 's-2';
-    select.dispatchEvent(new Event('change'));
+    component.drop(dropEvent(from, to, leadCard));
     fixture.detectChanges();
     expect(api.move).toHaveBeenCalledOnceWith('o-1', 's-2');
     expect(api.list).toHaveBeenCalledTimes(2);
     expect(el.querySelector('[data-testid="success"]')?.textContent).toContain('se movió de etapa');
+  });
+
+  it('shows the card in the target column right away while the move is in flight', () => {
+    const { component, api } = create();
+    const [from, to] = component.columns;
+    api.move.and.returnValue(NEVER);
+    component.drop(dropEvent(from, to, leadCard));
+    expect(from.cards).not.toContain(leadCard);
+    expect(to.cards).toContain(leadCard);
+    expect(component.movingId).toBe('o-1');
+  });
+
+  it('does nothing when the card is dropped in its own column, in an archived column or while another move runs', () => {
+    const { component, api } = create();
+    const [from, to] = component.columns;
+    component.drop(dropEvent(from, from, leadCard));
+    const archived: CrmColumn = { stage: { ...to.stage, id: '', isActive: false }, cards: [], total: '0.00' };
+    component.drop(dropEvent(from, archived, leadCard));
+    component.movingId = 'o-9';
+    component.drop(dropEvent(from, to, leadCard));
+    expect(api.move).not.toHaveBeenCalled();
+    expect(from.cards).toContain(leadCard);
+  });
+
+  it('refuses to drop a closed card and reloads when the server rejects the move (409)', () => {
+    const { fixture, component, api, el } = create();
+    const [from, to] = component.columns;
+    const closed = makeOpportunity({ id: 'o-8', status: 'won', stageId: 's-1' });
+    from.cards.push(closed);
+    component.drop(dropEvent(from, to, closed));
+    expect(api.move).not.toHaveBeenCalled();
+    api.move.and.returnValue(throwError(() => new CrmApiError('La oportunidad ya está cerrada.', 409, {}, 'opportunity_closed')));
+    component.drop(dropEvent(from, to, leadCard));
+    fixture.detectChanges();
+    expect(el.querySelector('[data-testid="notice"]')?.textContent).toContain('La oportunidad ya está cerrada.');
+    expect(api.list).toHaveBeenCalledTimes(2);
+  });
+
+  it('offers a drag handle and hint only for open cards, and no «Mover a…» select', () => {
+    const { el, columns, cardsIn } = create();
+    expect(el.querySelector('[data-testid="move-select"]')).toBeNull();
+    expect(el.querySelector('[data-testid="drag-hint"]')?.textContent).toContain('Arrastra una tarjeta');
+    const handle = cardsIn(columns()[0])[0].querySelector('[data-testid="drag-handle"]');
+    expect(handle?.getAttribute('aria-label')).toContain('Arrastrar «Combo familiar» a otra etapa');
   });
 
   it('offers every company user as owner, not only those already on the board (REV-03)', () => {
@@ -182,7 +232,8 @@ describe('CrmOpportunityBoardComponent', () => {
     fixture.detectChanges();
     expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ status: 'won' }));
     expect(el.querySelector('[data-testid="badge-won"]')?.textContent).toContain('Ganada');
-    expect(el.querySelector('[data-testid="move-select"]')).toBeNull();
+    expect(el.querySelector('[data-testid="drag-handle"]')).toBeNull();
+    expect(el.querySelector('[data-testid="drag-hint"]')).toBeNull();
     expect(el.querySelector('[data-testid="link-order"]')).not.toBeNull();
   });
 

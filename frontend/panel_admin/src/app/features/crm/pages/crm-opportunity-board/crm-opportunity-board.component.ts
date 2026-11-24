@@ -1,3 +1,4 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup, transferArrayItem } from '@angular/cdk/drag-drop';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -56,7 +57,8 @@ interface ContactOption {
   selector: 'app-crm-opportunity-board',
   templateUrl: './crm-opportunity-board.component.html',
   styleUrl: './crm-opportunity-board.component.scss',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, NgSelectModule],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, NgSelectModule, CdkDropListGroup, CdkDropList, CdkDrag,
+    CdkDragHandle],
 })
 export class CrmOpportunityBoardComponent implements OnInit {
   private fb = inject(FormBuilder).nonNullable;
@@ -230,8 +232,18 @@ export class CrmOpportunityBoardComponent implements OnInit {
   }
 
   /** Etapas a las que se puede mover una tarjeta: las demás activas del mismo tablero. */
-  targets(opportunity: CrmOpportunity): CrmStage[] {
-    return (this.selected?.stages ?? []).filter((s) => s.id !== opportunity.stageId);
+  /**
+   * Arrastrar una tarjeta abierta a la columna de otra etapa activa la mueve (UI-03). Soltarla en su misma columna
+   * no hace nada (no hay orden manual); la tarjeta se ve ya en destino y el tablero se recarga desde el servidor.
+   */
+  drop(event: CdkDragDrop<CrmColumn, CrmColumn, CrmOpportunity>): void {
+    const target = event.container.data;
+    const source = event.previousContainer.data;
+    const opportunity = event.item.data;
+    if (event.previousContainer === event.container || !target.stage.isActive || opportunity.status !== 'open'
+      || this.movingId) return;
+    transferArrayItem(source.cards, target.cards, event.previousIndex, event.currentIndex);
+    this.move(opportunity, target.stage.id);
   }
 
   canLinkOrder(opportunity: CrmOpportunity): boolean {

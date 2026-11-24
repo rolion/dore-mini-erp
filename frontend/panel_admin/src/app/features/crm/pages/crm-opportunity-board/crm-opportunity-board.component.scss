@@ -111,9 +111,10 @@ $color-font: dark.$color-font;
 // En pantallas táctiles los controles llegan a 44 px.
 @media (max-width: 991.98px) {
   .crm-opportunity-actions .btn,
-  .crm-opportunity-actions .form-select,
+  .crm-drag-handle,
   .crm-column-add {
     min-height: $touch;
+    min-width: $touch;
   }
 }
 
@@ -129,4 +130,38 @@ $color-font: dark.$color-font;
     padding: 0;
     line-height: 1;
   }
+}
+
+// Arrastrar y soltar (design-system §5): asa, hueco y vista previa de la tarjeta.
+.crm-drag-handle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  cursor: grab;
+  touch-action: none;
+  color: var(--bs-secondary-color);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+.cdk-drag-preview {
+  cursor: grabbing;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.crm-column-body {
+  min-height: 2.5rem;
+}
+
+:host-context(.dark) .crm-drag-handle {
+  color: $color-font;
 }

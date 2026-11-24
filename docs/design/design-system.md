@@ -151,7 +151,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 ### Tablero Kanban de tarjetas con acciones accesibles (referencia: `features/crm/pages/crm-opportunity-board`; DDR-crm-prospectos-oportunidades-kanban-y-prospectos)
 - Encabezado con selector de tablero y filtros (`form-select`/búsqueda) y botón de alta. Una columna `.card` por etapa (encabezado «Etapa · N»), con desplazamiento horizontal desde `lg` y apiladas en móvil; tarjetas `.card` compactas con título, contacto, importe, fecha de siguiente acción (resaltada si venció) y responsable.
-- Mover tarjetas con un control «Mover a…» (sin arrastrar), guardado inmediato y recarga desde el servidor. Cierre con el patrón «Diálogo de acción irreversible con motivo». Vacíos por columna y del tablero; 409 en `alert alert-warning`.
+- Mover tarjetas abiertas arrastrándolas (`@angular/cdk/drag-drop`, `cdkDropListGroup`) por su asa a la columna de otra etapa activa, guardado inmediato y recarga desde el servidor; soltar en la misma columna no hace nada. Sin alternativa de teclado (decisión de producto, ver DDR). Cierre con el patrón «Diálogo de acción irreversible con motivo». Vacíos por columna y del tablero; 409 en `alert alert-warning`.
 
 ### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
 - `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.

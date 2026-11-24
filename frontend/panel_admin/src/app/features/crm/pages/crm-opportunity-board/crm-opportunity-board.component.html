@@ -108,18 +108,27 @@
         @if (loadingCards) {
         <p class="visually-hidden" role="status">{{ 'COMMON.CARGANDO' | translate }}</p>
         }
-        <div class="crm-kanban" data-testid="kanban" [attr.aria-busy]="loadingCards">
+        @if (isOpenView) {
+        <p class="text-muted small mb-2" data-testid="drag-hint">{{ 'CRM.OPPORTUNITY_BOARD.ARRASTRAR_AYUDA' | translate }}</p>
+        }
+        <div class="crm-kanban" data-testid="kanban" [attr.aria-busy]="loadingCards" cdkDropListGroup>
           @for (column of columns; track column.stage.id) {
           <section class="card crm-column m-0" data-testid="column" [attr.aria-labelledby]="'crm-col-' + column.stage.id">
             <header class="crm-column-header">
               <h5 class="h6 mb-0" [id]="'crm-col-' + column.stage.id">{{ column.stage.name }} · {{ column.cards.length }}</h5>
               <small class="text-muted">{{ column.total | money }}</small>
             </header>
-            <ul class="list-unstyled crm-column-body m-0">
+            <ul class="list-unstyled crm-column-body m-0" cdkDropList [cdkDropListData]="column" data-testid="column-list"
+              [cdkDropListDisabled]="!isOpenView || !column.stage.isActive || movingId !== null" (cdkDropListDropped)="drop($event)">
               @for (opportunity of column.cards; track opportunity.id) {
-              <li class="card crm-opportunity m-0" data-testid="opportunity-card">
+              <li class="card crm-opportunity m-0" data-testid="opportunity-card" cdkDrag [cdkDragData]="opportunity"
+                cdkDragPreviewContainer="parent" [cdkDragDisabled]="opportunity.status !== 'open' || movingId !== null">
                 <div class="d-flex justify-content-between align-items-start gap-2">
-                  <strong class="crm-opportunity-title">{{ opportunity.title }}</strong>
+                  @if (opportunity.status === 'open') {
+                  <span class="crm-drag-handle" cdkDragHandle data-testid="drag-handle" role="img" [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.ARRASTRAR_DE' | translate: { title: opportunity.title }"
+                    [title]="'CRM.OPPORTUNITY_BOARD.ARRASTRAR_DE' | translate: { title: opportunity.title }"><i class="fas fa-grip-vertical" aria-hidden="true"></i></span>
+                  }
+                  <strong class="crm-opportunity-title flex-grow-1">{{ opportunity.title }}</strong>
                   @if (opportunity.status === 'won') {
                   <span class="badge-outline col-green" data-testid="badge-won">{{ 'CRM.OPPORTUNITY_BOARD.GANADA' | translate }}</span>
                   } @else if (opportunity.status === 'lost') {
@@ -181,14 +190,6 @@
                 </dl>
                 @if (opportunity.status === 'open') {
                 <div class="crm-opportunity-actions">
-                  <label class="visually-hidden" [for]="'crm-move-' + opportunity.id">{{ 'CRM.OPPORTUNITY_BOARD.MOVER_A_DE' | translate: { title: opportunity.title } }}</label>
-                  <select #moveSelect class="form-select form-select-sm" [id]="'crm-move-' + opportunity.id" data-testid="move-select"
-                    [disabled]="movingId !== null" (change)="move(opportunity, moveSelect.value); moveSelect.value = ''">
-                    <option value="">{{ 'CRM.OPPORTUNITY_BOARD.MOVER_A' | translate }}</option>
-                    @for (target of targets(opportunity); track target.id) {
-                    <option [value]="target.id">{{ target.name }}</option>
-                    }
-                  </select>
                   <div class="d-flex flex-wrap gap-1">
                     <button type="button" class="btn btn-light btn-sm" (click)="edit(opportunity)" data-testid="edit-opportunity"
                       [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.EDITAR_DE' | translate: { title: opportunity.title }">{{ 'COMMON.EDITAR' | translate }}</button>

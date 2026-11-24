@@ -16,6 +16,7 @@
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 | 2026-11-24 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos) | delivery-publish |
 | 2026-11-24 | PUBLISH | REV-01 corregido (colores del Kanban y prospectos en tema oscuro) | delivery-build |
+| 2026-11-24 | PUBLISH | Mover tarjetas por arrastrar y soltar (reemplaza «Mover a…»), pedido por el usuario | delivery-build |
 | 2026-11-24 | PUBLISH | REV-02 (pruebas de integridad y concurrencia) y REV-03 (endpoint de usuarios y búsqueda libre, aprobado por el usuario en el chat) corregidos | delivery-build |
 
 ## Investigación
@@ -44,7 +45,7 @@ Por coherencia con PB-CRM-003 (decisión del usuario allí) se usa Karma en luga
 ### Hipótesis / supuestos no confirmados
 - La «siguiente acción» de la tarjeta se representa solo con `next_action_at` (fecha/hora), tal como pide la tarjeta; sin texto de acción (lo traerá PB-CRM-005, Tareas).
 - Orden de tarjetas dentro de una columna: por fecha de creación; sin ordenamiento manual (fuera de alcance).
-- Mover tarjetas con control accesible («Mover a…» + botones), no arrastrar y soltar, igual que PB-CRM-003.
+- Mover tarjetas arrastrándolas a la columna de la etapa (cambio pedido después por el usuario; antes «Mover a…»).
 - Con varios clientes coincidentes por teléfono, la persona elige uno en el diálogo; el backend responde 409 `multiple_customer_matches` con candidatos.
 - Contar y reasignar al archivar etapa/tablero solo considera oportunidades **abiertas**; las cerradas conservan su etapa como dato histórico.
 
@@ -87,7 +88,7 @@ Implementado según PLAN v1 (backend en `backend/modules/crm/`, fachadas en `cus
 - **Backend:** dominio `Lead`/`Opportunity` (INV-01…04, 07), modelos y migración `crm 0002` (INV-03, INV-08), `DjangoStageCards` en lugar de `NoCards` (INV-09, AC-08), conversión y cierre idempotentes (AC-04, AC-05), vínculo a pedido con códigos 409 (AC-06), API `/api/crm/leads/` y `/api/crm/opportunities/` (AC-01…03, 07, 09). Pruebas: `test_domain_opportunity`, `test_api_leads`, `test_api_opportunities`, fachadas de `customers`/`sales`, `test_boundaries`.
 - **Frontend:** páginas `crm-opportunity-board` (Kanban) y `crm-lead-list`, diálogos de prospecto, oportunidad, cierre y conversión, servicios API, rutas y menú, 100 claves i18n es/en/pt (AC-10, AC-11). Referencias: plantilla Kanban nueva del DDR, `product-list` (lista) y el patrón de diálogo con motivo; se reutilizan `money`, `ModulesService` y `CrmApiError` ampliado.
 - **Desviaciones (detalle de implementación):** fachada extra `customers.get_customers_for_crm` (sin N+1); códigos extra `opportunity_closed`, `opportunity_not_won` y `already_converted`; una oportunidad nueva de un prospecto ya convertido hereda su cliente; mover a la misma etapa no escribe historial; `GET /opportunities/<id>/orders/` excluye pedidos ya vinculados. El plan no define endpoint de usuarios de la empresa: el selector/filtro de responsable ofrece el usuario actual y los responsables ya vistos en el tablero, y el filtro de prospecto/cliente se arma con los contactos ya cargados (corregido después en REV-03: `GET /api/crm/users/` y búsqueda libre de prospecto/cliente en el filtro). Cartas de oportunidades cerradas en etapas archivadas se agrupan en «Etapas archivadas».
-- **Deuda técnica:** sin arrastrar y soltar; sin detalle de oportunidad (PB-CRM-005); límite de 200 tarjetas por carga.
+- **Deuda técnica:** el arrastre no tiene alternativa de teclado; sin detalle de oportunidad (PB-CRM-005); límite de 200 tarjetas por carga.
 - **Verificación propia (no es el Quality Gate):** backend `modules.crm modules.customers modules.sales` (604 pruebas) y `shared` pasan con PostgreSQL; `makemigrations --check` sin cambios; frontend `i18n:check`, `lint`, `build` y `npm test` (1895) pasan. No se probó contra un navegador real ni el flujo Kanban de punta a punta con el backend.
 
 ## Review

@@ -1,4 +1,4 @@
-# PLAN-2026-11-24-crm-prospectos-oportunidades (v2)
+# PLAN-2026-11-24-crm-prospectos-oportunidades (v3)
 
 **Task:** TASK-crm-prospectos-oportunidades · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-crm-prospectos-oportunidades-kanban-y-prospectos.md` · `docs/adr/ADR-crm-prospectos-oportunidades-modelo-conversion-y-vinculos.md`
@@ -72,7 +72,7 @@ Base `/api/crm/`. Nuevo; los endpoints de `boards/` solo cambian en que `card_co
 ## UI behavior
 - UI-01: menú CRM con **Oportunidades** y **Prospectos** (`/pocketbiz/crm/opportunities`, `/pocketbiz/crm/leads`), `moduleGuard` de `customers`.
 - UI-02: Kanban según DDR y la plantilla nueva en `design-system.md` §5: columnas por etapa activa, tarjetas con contacto/importe/siguiente acción, filtros, estados vacío/cargando/error/409.
-- UI-03: «Mover a…» accesible (teclado/móvil), guardado inmediato y recarga desde el servidor.
+- UI-03: mover arrastrando la tarjeta a la columna de otra etapa activa (v3; antes «Mover a…»), guardado inmediato y recarga desde el servidor.
 - UI-04: diálogo de cierre (ganada: pedido opcional; perdida: motivo obligatorio) con el patrón de acción irreversible; diálogo de conversión con elección ante varios coincidentes.
 - UI-05: lista de prospectos con plantilla Lista y variante compacta; todo texto por claves i18n es/en/pt; botones de icono con `title`/`aria-label`.
 
@@ -80,7 +80,7 @@ Base `/api/crm/`. Nuevo; los endpoints de `boards/` solo cambian en que `card_co
 Escrituras atómicas con bloqueo de fila (prospecto en conversión, oportunidad en cierre/mover); consultas sin N+1 (resolver contactos y responsables por lote por página); índices en `(company_id)`, `(board, stage, status)`, `owner_id`; accesible por teclado.
 
 ## Out of scope
-Tareas y actividad (PB-CRM-005), WhatsApp (006/012), segmentos, arrastrar y soltar, reabrir cerradas, ordenamiento manual dentro de columna, detalle de oportunidad con actividad, sincronización posterior con el pedido, multi-moneda, importación de prospectos, Playwright.
+Tareas y actividad (PB-CRM-005), WhatsApp (006/012), segmentos, reabrir cerradas, ordenamiento manual dentro de columna, detalle de oportunidad con actividad, sincronización posterior con el pedido, multi-moneda, importación de prospectos, Playwright.
 
 ## Open questions
 - Ninguna que bloquee. Pendiente futuro: texto de «siguiente acción» (lo cubrirá PB-CRM-005).
@@ -152,3 +152,4 @@ Ninguna.
 
 ## Changelog
 - **v2 (2026-11-24)** — `[Specification]` (aprobado por el usuario en el chat al pedir corregir REV-03): nuevo `API-05 GET /api/crm/users/?search=` → lista `[{id, name}]` de los usuarios de la empresa (`required_modules = ('customers',)`, empresa del usuario autenticado); el selector y el filtro de «Responsable» lo usan. El filtro «Prospecto/Cliente» busca por texto en `/api/crm/leads/` y `/api/crm/customers/`. `[Implementation Plan]`: pruebas de integridad y concurrencia (`test_integrity.py`) para REV-02.
+- **v3 (2026-11-24)** — `[Specification]` (pedido por el usuario en el chat): UI-03 pasa de «Mover a…» a arrastrar y soltar con `@angular/cdk/drag-drop` (dependencia ya instalada); el contrato API no cambia. El arrastre sale de «Fuera de alcance».

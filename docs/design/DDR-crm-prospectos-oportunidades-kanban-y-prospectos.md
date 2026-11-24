@@ -16,7 +16,7 @@ El vendedor mueve posibles ventas entre etapas, convierte prospectos en clientes
 ## Componentes/patrones elegidos
 - Lista de prospectos: plantilla **Lista** (§5, `product-list`) con variante compacta bajo `lg` (§5 variante compacta).
 - Kanban: no existe plantilla; se añade al sistema de diseño la plantilla **Tablero Kanban de tarjetas con acciones accesibles** (`features/crm/pages/crm-opportunity-board`): columnas `.card` de ancho fijo con encabezado «Etapa · N» y total, tarjetas `.card` compactas con tokens de §2 (sin colores nuevos), badges de §3 para estado (Ganada = éxito, Perdida = secundario/peligro) y botones de §3. Cierre con el patrón **Diálogo de acción irreversible con motivo** (§5).
-- **Mover sin arrastrar**: `select`/menú «Mover a…» con las etapas del mismo tablero (accesible por teclado y móvil), coherente con la decisión de PB-CRM-003; el arrastre con `cdk` queda como mejora futura.
+- **Mover arrastrando** (cambio posterior pedido por el usuario; reemplaza «Mover a…» y la decisión de aplazar el arrastre): la persona arrastra la tarjeta por su asa a la columna de la etapa deseada (`@angular/cdk/drag-drop`, ya instalado). Solo tarjetas abiertas y columnas de etapas activas; la tarjeta se ve en destino al soltar y el tablero se recarga (si el servidor rechaza, aviso y recarga). Trade-off aceptado: sin alternativa de teclado ni de lector de pantalla; el asa lleva `aria-label` y es de 44 px en táctil.
 - Formularios de diálogo: Reactive Forms, `form-label`/`form-control`, errores `small.text-danger` del servidor.
 
 ## Alternativas consideradas
