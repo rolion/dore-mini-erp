@@ -1,5 +1,8 @@
 // Tablero Kanban (design-system §5): columnas de ancho fijo con desplazamiento horizontal desde `lg`; apiladas debajo.
+@use '../../../../../assets/scss/dark-tokens' as dark;
+
 $touch: 44px;
+$color-font: dark.$color-font;
 
 .crm-kanban {
   display: flex;
@@ -25,6 +28,23 @@ $touch: 44px;
   padding: 0.75rem;
   background-color: var(--bs-tertiary-bg);
   border: 1px solid var(--bs-border-color);
+}
+
+// En tema oscuro `--bs-tertiary-bg` y `--bs-secondary-color` siguen siendo los claros (el skin usa la clase `.dark`,
+// no `data-bs-theme`): se fijan colores de la paleta oscura para mantener el contraste AA.
+:host-context(.dark) {
+  .crm-column {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .crm-opportunity {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .crm-opportunity-data dt {
+    color: $color-font;
+  }
 }
 
 .crm-column-header {

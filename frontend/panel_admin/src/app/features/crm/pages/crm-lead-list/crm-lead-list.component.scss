@@ -86,6 +86,11 @@ input.crm-touch {
   min-height: $touch;
 }
 
+// En tema oscuro `--bs-secondary-color` sigue siendo el claro: se fija el color de fuente de la paleta oscura.
+:host-context(.dark) .crm-card-row dt {
+  color: #96a2b4; // $color-font de assets/scss/_dark-tokens.scss
+}
+
 .crm-card-row {
   display: flex;
   justify-content: space-between;

@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-prospectos-oportunidades-01: Kanban ilegible en tema oscuro (columnas claras y etiquetas invisibles)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-prospectos-oportunidades.md (v1)
@@ -38,3 +38,6 @@ Revisión en el navegador integrado (backend `manage.py testserver` con base ais
 ```
 
 Capturas (1440 px y 390 px, oscuro): las tarjetas solo muestran los valores a la derecha; las etiquetas no se ven y la columna se ve blanca. En 390 px oscuro, `/es/pocketbiz/crm/leads` muestra igual las etiquetas «Teléfono», «Correo», «Estado» casi invisibles.
+
+## Resolution
+Corregido en `crm-opportunity-board.component.scss` y `crm-lead-list.component.scss` con `:host-context(.dark)` (fondo/borde de columnas y color de las etiquetas `dt` con `$color-font` #96a2b4, ~7:1 sobre el fondo oscuro). `npm run build` y `npm run lint` pasan; el CSS compilado contiene las reglas `.dark`. Sin recaptura visual en navegador.

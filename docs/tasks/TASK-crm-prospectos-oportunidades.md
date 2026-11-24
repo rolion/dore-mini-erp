@@ -15,6 +15,7 @@
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 | 2026-11-24 | REVIEW → PUBLISH | Quality Gate PASS (REV-01 Medium, REV-02 y REV-03 Low abiertos) | delivery-publish |
+| 2026-11-24 | PUBLISH | REV-01 corregido (colores del Kanban y prospectos en tema oscuro) | delivery-build |
 
 ## Investigación
 
@@ -90,9 +91,9 @@ Implementado según PLAN v1 (backend en `backend/modules/crm/`, fachadas en `cus
 
 ## Review
 Quality Gate (subagente aislado, 2026-11-24): **PASS con observaciones**. Backend 616 pruebas OK, `makemigrations --check` sin cambios, ruff/flake8 sin avisos nuevos, bandit sin hallazgos; frontend `i18n:check`, `lint`, `build` OK, 1895 pruebas OK (cobertura global líneas 89,63 %), `npm audit` 0 vulnerabilidades. Revisión visual verificada en 390 y 1440 px, tema claro y oscuro. Sin E2E (decisión del plan) ni mypy (no configurado).
-- REV-01 (Medium, IMPLEMENTATION, abierto): Kanban ilegible en tema oscuro — `docs/reviews/REV-2026-11-24-crm-prospectos-oportunidades-01.md`.
+- REV-01 (Medium, IMPLEMENTATION, RESUELTO): Kanban ilegible en tema oscuro — `docs/reviews/REV-2026-11-24-crm-prospectos-oportunidades-01.md`.
 - REV-02 (Low, IMPLEMENTATION, abierto): faltan pruebas de concurrencia simulada y del camino `IntegrityError` → `order_already_linked` — `...-02.md`.
 - REV-03 (Low, PLAN, abierto): sin endpoint de usuarios de la empresa ni búsqueda libre de prospecto/cliente — `...-03.md`.
 
 ## Publicación
-PR 122 listo para aprobación humana (no se mergea). Tarea con arquitectura (ADR), base de datos (migración `crm 0002`): requiere aprobación humana explícita. Recomendado corregir REV-01 antes de mergear.
+PR 122 listo para aprobación humana (no se mergea). Tarea con arquitectura (ADR), base de datos (migración `crm 0002`): requiere aprobación humana explícita. REV-01 corregido (tema oscuro).
