@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-listado-clientes-04: HEX de respaldo en el SCSS de CRM
 
-**Status:** Open
+**Status:** Closed (corregido en e0b9dc49; verificado en segunda pasada del Quality Gate)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-listado-clientes.md (v1)

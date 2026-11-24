@@ -1,6 +1,6 @@
 # REV-2026-11-24-crm-listado-clientes-01: Última compra se muestra en ISO y no dd/MM/yyyy
 
-**Status:** Open
+**Status:** Closed (corregido en e0b9dc49; verificado en segunda pasada del Quality Gate)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-24-crm-listado-clientes.md (v1)

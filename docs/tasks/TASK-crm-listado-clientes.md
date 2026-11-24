@@ -15,6 +15,7 @@
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según plan v1 | delivery-build |
 | 2026-11-24 | REVIEW → PUBLISH | Quality Gate PASS (sin Critical/High); 2 Medium y 2 Low abiertos (REV-01…04) | delivery-publish |
+| 2026-11-24 | PUBLISH (sin cambio) | REV-01…04 corregidos (e0b9dc49) y Quality Gate repetido: PASS (backend 2412, frontend 1828) | delivery-publish |
 | 2026-11-24 | PUBLISH (sin cambio) | PR listo para aprobación humana; cambio con ADR (contexto nuevo), no se mergea | delivery-publish |
 
 ## Investigación
@@ -84,7 +85,7 @@ Rendimiento del filtro por almacén con muchos clientes; pedidos históricos sin
 
 Ejecutado: backend suite completa 2403 OK (PostgreSQL, Django 5.2); frontend 1827 specs OK (cobertura `features/crm`: página 95 % líneas, servicios 100 %); `ruff` y `flake8` limpios; `bandit -r modules/crm` sin hallazgos; `makemigrations --check` sin cambios; `npm run lint`, `i18n:check`, `ng build` OK; `npm audit` 0 vulnerabilidades. No ejecutado: revisión visual en navegador (claro/oscuro, 390/1440 px; solo revisión estática) y E2E (el plan fija E2E: NO).
 
-Hallazgos abiertos (no bloquean): [REV-01](../reviews/REV-2026-11-24-crm-listado-clientes-01.md) Medium, fecha de última compra sin formato local; [REV-02](../reviews/REV-2026-11-24-crm-listado-clientes-02.md) Medium, faltan pruebas de la fachada de Ventas (cancelados, sin ítems, sobrepagado, N+1); [REV-03](../reviews/REV-2026-11-24-crm-listado-clientes-03.md) Low, el filtro acepta almacenes inactivos; [REV-04](../reviews/REV-2026-11-24-crm-listado-clientes-04.md) Low, HEX de respaldo en el SCSS.
+Hallazgos: REV-01 a REV-04 **cerrados** (corregidos en `e0b9dc49`). Segunda pasada del Quality Gate sobre el estado final: **PASS** — backend suite completa 2412 OK, frontend 1828 OK, `ruff`/`flake8` limpios, `makemigrations --check` sin cambios, `lint`, `i18n:check` y `ng build` OK. Sin hallazgos nuevos. Observaciones menores sin REV: la tarjeta móvil de la fecha se verificó solo por lectura del diff, y la guarda defensiva de saldo (`total > paid_total`) no es alcanzable por el dominio (impide el sobrepago) y queda sin prueba. Revisión visual en navegador: no verificada.
 
 ## Publicación
 PR #120 completo y listo para aprobación humana (base `crm`). Cambio sensible: introduce un contexto nuevo con dependencias entre módulos (ADR-crm-listado-clientes-contexto-crm-de-solo-lectura); no toca autenticación, migraciones ni infraestructura. No se mergea desde el flujo.
