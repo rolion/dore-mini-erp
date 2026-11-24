@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/reports/', include('modules.reporting.api.urls')),
     path('api/accounting/', include('modules.accounting.api.urls')),
     path('api/imports/', include('modules.data_import.api.urls')),
+    path('api/crm/boards/', include('modules.crm.api.urls')),
     path('api/modules/', include('modules.modularity.api.urls')),
     path('api/settings/', include('modules.modularity.api.settings_urls')),
 ]

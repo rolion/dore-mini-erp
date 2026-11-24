@@ -1,6 +1,6 @@
 # TASK-crm-tableros-columnas-configurables: PB-CRM-003 · Tableros y columnas configurables
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tableros-columnas-configurables` (base: `crm`)
@@ -13,6 +13,7 @@
 | 2026-11-24 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-24 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY; PR abierto contra `crm` | delivery-start |
+| 2026-11-24 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,19 @@ Aislamiento por `company_id` (repositorio por empresa, IDs ajenos → 404); nunc
 `docs/plans/PLAN-2026-11-24-crm-tableros-columnas-configurables.md` (v1, COMPLETO, READY)
 
 ## Implementación
-_Pendiente_
+**Backend (`backend/modules/crm/`, contexto nuevo en esta rama):** dominio puro `domain/board.py` (agregado `Board` con INV-01…INV-05); casos de uso `application/services.py` con el puerto `StageCards` y el adaptador nulo `NoCards`; modelos `crm_board`/`crm_stage` con unicidad condicional por nombre entre activos y migración `0001_initial`; repositorio por empresa (`select_for_update` del tablero; ids ajenos → 404); API `/api/crm/boards/` (API-01…API-06, `required_modules=('customers',)`); sección `crm` de defaults (tablero «Ventas» sin etapas, idempotente) y snapshot actualizado; `crm` declarado en `test_boundaries.py` y nota en `docs/architecture/ddd.md`.
+**Frontend (`features/crm/`):** modelos, `CrmBoardsApiService`, `CrmBoardComponent` (selector, editor de etapas con Subir/Bajar, alta/renombrado en línea), `BoardNameDialogComponent` y `ArchiveStageDialogComponent` (destino obligatorio con tarjetas); ruta `crm/board` con `moduleGuard('customers')`; menú «Seguimiento comercial → Tablero» (`routes.json`) e i18n es/en/pt (`CRM.*`, `MENUITEMS.CRM`).
+**Cobertura:** AC-01 `test_defaults.py`; AC-02…AC-08 `test_api_boards.py` + `test_domain.py`; AC-09 specs Karma de servicio, página y diálogos + `sidebar-menu.spec.ts`.
+**Pantalla de referencia seguida:** `inventory-configuration` (tarjeta, diálogo `NgbModal`, tabla Bootstrap); sin componentes compartidos nuevos; `design-system.md` §5 ya documenta la variante «Editor de lista ordenable».
+
+**Desviaciones respecto al plan:**
+- Una violación 409 se devuelve como `Response` directa (no excepción de DRF) porque DRF convertía `card_count` en texto; el frontend lo lee como número.
+- Un `target_stage_id` inválido o ajeno responde 400 aunque la etapa no tenga tarjetas (el plan solo lo exigía con tarjetas); es más estricto y no cambia ningún AC.
+- El guardado inmediato de cada cambio de orden y la recarga ante 404/409 siguen el DDR; no hay botón «Guardar».
+- Playwright se sustituyó por Karma (decisión del usuario, ya en el PLAN).
+
+**Deuda técnica / notas:** el puerto `StageCards` usa `NoCards` hasta PB-CRM-004 (la reasignación real se prueba con un puerto falso); posibles conflictos aditivos de merge con el PR 120 (`INSTALLED_APPS`, `config/urls.py`, `routes.json`, `app.routes.ts`, i18n, `sidebar-menu.spec.ts`: ambos añaden un ítem CRM).
+**Verificación propia (no es el Quality Gate):** `npm test` 1832 pruebas OK, `npm run lint` y `npm run i18n:check` limpios; backend `modules.crm` + fronteras OK (30), `makemigrations --check` sin cambios, `ruff`/`flake8` limpios en `modules/crm`.
 
 ## Review
 _Pendiente_

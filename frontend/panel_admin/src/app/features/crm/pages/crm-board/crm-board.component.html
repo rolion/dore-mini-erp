@@ -1,0 +1,148 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'CRM.BOARD.TABLERO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.BOARD.SEGUIMIENTO_COMERCIAL' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'CRM.BOARD.TABLERO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ 'CRM.BOARD.ETAPAS_COMERCIALES' | translate }}</h4>
+            <button type="button" class="btn btn-icon icon-left btn-primary rounded-button ms-auto" data-testid="new-board"
+              (click)="createBoard()" [disabled]="loading">
+              <i class="material-icons">add</i> {{ 'CRM.BOARD.NUEVO_TABLERO' | translate }}
+            </button>
+          </div>
+          <div class="card-body">
+            @if (loading) {
+            <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (loadError) {
+            <div class="alert alert-danger" role="alert" data-testid="load-error">
+              {{ loadError }}
+              <button type="button" class="btn btn-light btn-sm ms-2" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            } @else {
+            @if (notice) {
+            <div class="alert alert-warning" role="alert" data-testid="notice">{{ notice }}</div>
+            }
+            <div class="row g-2 align-items-end mb-3">
+              <div class="col-md-5">
+                <label for="crm-board-select" class="form-label">{{ 'CRM.BOARD.TABLERO' | translate }}</label>
+                <select id="crm-board-select" class="form-select" [formControl]="boardSelect">
+                  @for (board of visibleBoards; track board.id) {
+                  <option [value]="board.id">{{ board.name }}{{ board.isActive ? '' : ' (' + ('CRM.BOARD.ARCHIVADO' | translate) + ')' }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-md-7 d-flex flex-wrap gap-2 align-items-center">
+                @if (selected; as board) {
+                <button type="button" class="btn btn-light" (click)="renameBoard()" data-testid="rename-board">{{ 'CRM.BOARD.RENOMBRAR' | translate }}</button>
+                @if (board.isActive) {
+                <button type="button" class="btn btn-warning" (click)="archiveBoard()" [disabled]="saving" data-testid="archive-board">{{ 'CRM.BOARD.ARCHIVAR_TABLERO' | translate }}</button>
+                } @else {
+                <button type="button" class="btn btn-primary" (click)="reactivateBoard()" [disabled]="saving" data-testid="reactivate-board">{{ 'CRM.BOARD.REACTIVAR_TABLERO' | translate }}</button>
+                }
+                }
+                <div class="form-check ms-md-auto mb-0">
+                  <input id="crm-show-archived" type="checkbox" class="form-check-input" [checked]="showArchived" (change)="toggleArchived()">
+                  <label for="crm-show-archived" class="form-check-label">{{ 'CRM.BOARD.VER_ARCHIVADOS' | translate }}</label>
+                </div>
+              </div>
+            </div>
+
+            @if (!selected) {
+            <div class="text-center py-4" data-testid="no-boards">
+              <p>{{ 'CRM.BOARD.AUN_NO_HAY_TABLEROS' | translate }}</p>
+              <button type="button" class="btn btn-primary" (click)="createBoard()">{{ 'CRM.BOARD.CREAR_TABLERO' | translate }}</button>
+            </div>
+            } @else {
+            @if (!selected.isActive) {
+            <div class="alert alert-info" role="status">{{ 'CRM.BOARD.TABLERO_ARCHIVADO' | translate }}</div>
+            }
+            <div class="table-responsive">
+              <table class="table align-middle" data-testid="stages-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="w-25">{{ 'CRM.BOARD.ORDEN' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'COMMON.ACCIONES' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (stage of selected.stages; track stage.id; let first = $first; let last = $last) {
+                  <tr data-testid="stage-row">
+                    <td>
+                      <span class="me-2">{{ stage.position }}</span>
+                      @if (selected.isActive) {
+                      <button type="button" class="btn btn-light btn-sm" data-testid="move-up" [disabled]="first || saving"
+                        [attr.title]="'CRM.BOARD.SUBIR' | translate" [attr.aria-label]="'CRM.BOARD.SUBIR' | translate" (click)="move(stage, -1)">
+                        <i class="fas fa-arrow-up"></i></button>
+                      <button type="button" class="btn btn-light btn-sm ms-1" data-testid="move-down" [disabled]="last || saving"
+                        [attr.title]="'CRM.BOARD.BAJAR' | translate" [attr.aria-label]="'CRM.BOARD.BAJAR' | translate" (click)="move(stage, 1)">
+                        <i class="fas fa-arrow-down"></i></button>
+                      }
+                    </td>
+                    <td>
+                      @if (editingStageId === stage.id) {
+                      <input type="text" class="form-control" [formControl]="editName" [attr.maxlength]="nameMaxLength"
+                        [attr.aria-label]="'COMMON.NOMBRE' | translate" data-testid="edit-name" (keydown.enter)="saveEdit(stage)">
+                      @if (stageError) {
+                      <small class="form-text text-danger">{{ stageError }}</small>
+                      }
+                      } @else {
+                      <strong>{{ stage.name }}</strong>
+                      @if (stage.cardCount) {
+                      <small class="text-muted ms-2">{{ 'CRM.BOARD.N_TARJETAS' | translate: { n: stage.cardCount } }}</small>
+                      }
+                      }
+                    </td>
+                    <td class="text-end">
+                      @if (selected.isActive) {
+                      @if (editingStageId === stage.id) {
+                      <button type="button" class="btn btn-primary btn-sm" (click)="saveEdit(stage)" [disabled]="editName.invalid || saving" data-testid="save-stage">{{ 'COMMON.GUARDAR' | translate }}</button>
+                      <button type="button" class="btn btn-light btn-sm ms-1" (click)="cancelEdit()">{{ 'COMMON.CANCELAR' | translate }}</button>
+                      } @else {
+                      <button type="button" class="btn btn-light btn-sm" (click)="startEdit(stage)" data-testid="edit-stage">{{ 'CRM.BOARD.RENOMBRAR' | translate }}</button>
+                      <button type="button" class="btn btn-warning btn-sm ms-1" (click)="archiveStage(stage)" [disabled]="saving" data-testid="archive-stage">{{ 'CRM.BOARD.ARCHIVAR' | translate }}</button>
+                      }
+                      }
+                    </td>
+                  </tr>
+                  } @empty {
+                  <tr>
+                    <td colspan="3" class="text-center text-muted" data-testid="no-stages">{{ 'CRM.BOARD.SIN_ETAPAS' | translate }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (selected.isActive) {
+            <form class="row g-2 mt-2" (submit)="$event.preventDefault(); addStage()">
+              <div class="col-md-6">
+                <label for="crm-new-stage" class="form-label">{{ 'CRM.BOARD.NUEVA_ETAPA' | translate }}</label>
+                <input id="crm-new-stage" type="text" class="form-control" [formControl]="newStage" [attr.maxlength]="nameMaxLength">
+                @if (stageError && editingStageId === null) {
+                <small class="form-text text-danger">{{ stageError }}</small>
+                }
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary" [disabled]="newStage.invalid || saving" data-testid="add-stage">{{ 'CRM.BOARD.AGREGAR_ETAPA' | translate }}</button>
+              </div>
+            </form>
+            }
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

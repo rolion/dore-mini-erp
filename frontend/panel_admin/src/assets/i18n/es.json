@@ -165,6 +165,12 @@
         "PROFESSIONALS": "Profesionales",
         "SPECIALTIES": "Especialidades"
       }
+    },
+    "CRM": {
+      "TEXT": "Seguimiento comercial",
+      "LIST": {
+        "BOARD": "Tablero"
+      }
     }
   },
   "HEADER": {
@@ -3398,5 +3404,48 @@
     "ERR_GENERIC": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ERR_VALIDATION": "Revisa los datos ingresados.",
     "ERR_NOT_FOUND": "Importación no encontrada."
+  },
+  "CRM": {
+    "BOARD": {
+      "TABLERO": "Tablero",
+      "SEGUIMIENTO_COMERCIAL": "Seguimiento comercial",
+      "ETAPAS_COMERCIALES": "Etapas comerciales",
+      "NUEVO_TABLERO": "Nuevo tablero",
+      "CREAR_TABLERO": "Crear tablero",
+      "AUN_NO_HAY_TABLEROS": "Aún no hay tableros.",
+      "RENOMBRAR": "Renombrar",
+      "ARCHIVAR": "Archivar",
+      "ARCHIVAR_TABLERO": "Archivar tablero",
+      "REACTIVAR_TABLERO": "Reactivar tablero",
+      "VER_ARCHIVADOS": "Ver archivados",
+      "ARCHIVADO": "archivado",
+      "TABLERO_ARCHIVADO": "Este tablero está archivado. Reactívalo para editar sus etapas.",
+      "ORDEN": "Orden",
+      "SUBIR": "Subir",
+      "BAJAR": "Bajar",
+      "SIN_ETAPAS": "Este tablero no tiene etapas.",
+      "NUEVA_ETAPA": "Nueva etapa",
+      "AGREGAR_ETAPA": "Agregar etapa",
+      "N_TARJETAS": "{{n}} tarjetas"
+    },
+    "BOARD_DIALOG": {
+      "NUEVO_TABLERO": "Nuevo tablero",
+      "RENOMBRAR_TABLERO": "Renombrar tablero",
+      "NOMBRE_OBLIGATORIO": "El nombre es obligatorio.",
+      "NOMBRE_MUY_LARGO": "El nombre no puede superar {{n}} caracteres."
+    },
+    "ARCHIVE_STAGE_DIALOG": {
+      "ARCHIVAR_ETAPA": "Archivar etapa",
+      "CONFIRMAR": "¿Archivar la etapa «{{name}}»? Dejará de mostrarse en el tablero.",
+      "TIENE_TARJETAS": "Esta etapa tiene {{n}} tarjetas. Elige a qué etapa se moverán.",
+      "ETAPA_DESTINO": "Etapa destino",
+      "ELEGIR_ETAPA": "Elige una etapa",
+      "ARCHIVAR": "Archivar",
+      "ARCHIVAR_Y_MOVER": "Archivar y mover"
+    },
+    "ERRORS": {
+      "SIN_CONEXION": "No se pudo conectar con el servidor.",
+      "INESPERADO": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    }
   }
 }

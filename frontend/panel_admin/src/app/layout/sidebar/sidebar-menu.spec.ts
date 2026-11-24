@@ -13,9 +13,9 @@ describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
   it('has the business menu, Dentistry, Purchases, Inventory and Settings > Modules', () => {
-    expect(routes.length).toBe(15);
+    expect(routes.length).toBe(16);
 
-    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, accounting, settings, agenda, personnel, quotations, receivables] = routes;
+    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, accounting, settings, agenda, personnel, quotations, receivables, crm] = routes;
     expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
@@ -33,6 +33,9 @@ describe('Sidebar menu (routes.json)', () => {
     expect(receivables.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/receivables', '/pocketbiz/receivables/settings',
     ]);
+    expect(crm.module).toBe('customers');
+    expect(crm.title).toBe('MENUITEMS.CRM.TEXT');
+    expect(crm.submenu.map((item) => item.path)).toEqual(['/pocketbiz/crm/board']);
     expect(personnel.module).toBe('personnel');
     expect(personnel.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/personnel/professionals', '/pocketbiz/personnel/specialties',
@@ -104,7 +107,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(48);
+    expect(titles.length).toBe(50);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
@@ -129,6 +132,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(translate(es, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Proveedores');
     expect(translate(en, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Suppliers');
     expect(translate(pt, 'MENUITEMS.PURCHASES.LIST.SUPPLIERS')).toBe('Fornecedores');
+    expect(translate(es, 'MENUITEMS.CRM.LIST.BOARD')).toBe('Tablero');
     expect(translate(es, 'MENUITEMS.INVENTORY.TEXT')).toBe('Inventario');
     expect(translate(es, 'MENUITEMS.INVENTORY.LIST.STOCK')).toBe('Existencias');
   });

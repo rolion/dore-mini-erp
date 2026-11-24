@@ -557,6 +557,30 @@
         }
       ],
       "module": "receivables"
+    },
+    {
+      "path": "",
+      "title": "MENUITEMS.CRM.TEXT",
+      "iconType": "feather",
+      "icon": "trending-up",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/pocketbiz/crm/board",
+          "title": "MENUITEMS.CRM.LIST.BOARD",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
+      "module": "customers"
     }
   ]
 }

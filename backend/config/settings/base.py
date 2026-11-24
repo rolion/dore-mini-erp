@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'modules.modularity',
     'modules.accounting',
     'modules.data_import',
+    'modules.crm',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

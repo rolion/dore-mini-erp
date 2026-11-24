@@ -20,6 +20,8 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'inventory': {'catalog', 'modularity'},
     'costing': {'inventory'},
     'customers': set(),
+    # CRM (tableros y etapas): sin dependencias hacia otros módulos; nadie lo importa.
+    'crm': set(),
     'dentistry': {'customers', 'service_catalog'},
     'expenses': {'accounting'},
     'purchases': {'accounting', 'catalog', 'costing', 'inventory'},

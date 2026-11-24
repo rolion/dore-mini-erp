@@ -165,6 +165,12 @@
         "IMPORT": "Import sales",
         "SETTINGS": "Settings"
       }
+    },
+    "CRM": {
+      "TEXT": "Sales pipeline",
+      "LIST": {
+        "BOARD": "Board"
+      }
     }
   },
   "HEADER": {
@@ -3398,5 +3404,48 @@
     "ERR_GENERIC": "An unexpected error occurred. Please try again.",
     "ERR_VALIDATION": "Check the data you entered.",
     "ERR_NOT_FOUND": "Import not found."
+  },
+  "CRM": {
+    "BOARD": {
+      "TABLERO": "Board",
+      "SEGUIMIENTO_COMERCIAL": "Sales pipeline",
+      "ETAPAS_COMERCIALES": "Sales stages",
+      "NUEVO_TABLERO": "New board",
+      "CREAR_TABLERO": "Create board",
+      "AUN_NO_HAY_TABLEROS": "There are no boards yet.",
+      "RENOMBRAR": "Rename",
+      "ARCHIVAR": "Archive",
+      "ARCHIVAR_TABLERO": "Archive board",
+      "REACTIVAR_TABLERO": "Reactivate board",
+      "VER_ARCHIVADOS": "Show archived",
+      "ARCHIVADO": "archived",
+      "TABLERO_ARCHIVADO": "This board is archived. Reactivate it to edit its stages.",
+      "ORDEN": "Order",
+      "SUBIR": "Move up",
+      "BAJAR": "Move down",
+      "SIN_ETAPAS": "This board has no stages.",
+      "NUEVA_ETAPA": "New stage",
+      "AGREGAR_ETAPA": "Add stage",
+      "N_TARJETAS": "{{n}} cards"
+    },
+    "BOARD_DIALOG": {
+      "NUEVO_TABLERO": "New board",
+      "RENOMBRAR_TABLERO": "Rename board",
+      "NOMBRE_OBLIGATORIO": "The name is required.",
+      "NOMBRE_MUY_LARGO": "The name cannot exceed {{n}} characters."
+    },
+    "ARCHIVE_STAGE_DIALOG": {
+      "ARCHIVAR_ETAPA": "Archive stage",
+      "CONFIRMAR": "Archive the stage “{{name}}”? It will no longer appear on the board.",
+      "TIENE_TARJETAS": "This stage has {{n}} cards. Choose the stage they will move to.",
+      "ETAPA_DESTINO": "Destination stage",
+      "ELEGIR_ETAPA": "Choose a stage",
+      "ARCHIVAR": "Archive",
+      "ARCHIVAR_Y_MOVER": "Archive and move"
+    },
+    "ERRORS": {
+      "SIN_CONEXION": "Could not connect to the server.",
+      "INESPERADO": "An unexpected error occurred. Please try again."
+    }
   }
 }
