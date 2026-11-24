@@ -201,7 +201,7 @@ class SalesPosting(Protocol):
         ...
 
     def reverse_delivery(self, order: object, reason: str, actor: Actor, today: date) -> None:
-        """Contrarresta ingreso y costo de venta (y el reconocimiento anterior, si lo hay) con las cuentas originales."""
+        """Contrarresta ingreso y costo de venta (y el reconocimiento anterior) con las cuentas originales."""
         ...
 
     def reversal_entries(self, order: object) -> list[ReversalEntry]:

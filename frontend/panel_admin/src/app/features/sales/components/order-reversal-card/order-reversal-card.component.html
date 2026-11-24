@@ -36,10 +36,10 @@
             <td>{{ movement.productName }}</td>
             <td class="text-end">{{ format(movement.quantity) }} {{ movement.unit }}</td>
             <td>{{ movement.warehouseName }}</td>
-            <td><a [routerLink]="['/pocketbiz/inventory/movements', movement.id]">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a></td>
+            <td><a [routerLink]="['/pocketbiz/inventory/movements', movement.id]" [attr.aria-label]="('SALES.ORDER_RETURN.VER' | translate) + ' ' + movement.productName">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a></td>
             <td>
               @if (movement.reversedById) {
-              <a [routerLink]="['/pocketbiz/inventory/movements', movement.reversedById]">{{ movement.reversedByReference || ('SALES.ORDER_RETURN.VER' | translate) }}</a>
+              <a [routerLink]="['/pocketbiz/inventory/movements', movement.reversedById]" [attr.aria-label]="('SALES.ORDER_RETURN.REVERSO' | translate) + ' ' + movement.productName">{{ movement.reversedByReference || ('SALES.ORDER_RETURN.VER' | translate) }}</a>
               } @else {
               —
               }
@@ -69,10 +69,10 @@
             <td>{{ entry.accountingDate | date: 'dd/MM/yyyy' }}</td>
             <td>{{ eventLabel(entry.event) }}</td>
             <td class="text-end">{{ entry.total | money }}</td>
-            <td><a [routerLink]="['/pocketbiz/accounting/journal', entry.id]">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a></td>
+            <td><a [routerLink]="['/pocketbiz/accounting/journal', entry.id]" [attr.aria-label]="('SALES.ORDER_RETURN.VER' | translate) + ' ' + eventLabel(entry.event)">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a></td>
             <td>
               @if (entry.reversedById) {
-              <a [routerLink]="['/pocketbiz/accounting/journal', entry.reversedById]">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a>
+              <a [routerLink]="['/pocketbiz/accounting/journal', entry.reversedById]" [attr.aria-label]="('SALES.ORDER_RETURN.REVERSO' | translate) + ' ' + eventLabel(entry.event)">{{ 'SALES.ORDER_RETURN.VER' | translate }}</a>
               } @else {
               {{ 'SALES.ORDER_RETURN.SIN_REVERSO' | translate }}
               }

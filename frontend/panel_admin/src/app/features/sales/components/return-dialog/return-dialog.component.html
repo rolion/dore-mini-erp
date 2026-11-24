@@ -62,7 +62,7 @@
       <p class="mb-1">{{ 'SALES.ORDER_RETURN.COBROS_TITULO' | translate }}</p>
       <ul class="mb-2">
         @for (payment of preview.payments; track payment.id) {
-        <li data-testid="payment-line">{{ payment.paymentDate }} · {{ payment.amount | money }}</li>
+        <li data-testid="payment-line">{{ payment.paymentDate | date: 'dd/MM/yyyy' }} · {{ payment.amount | money }}</li>
         }
       </ul>
       <div class="form-check">

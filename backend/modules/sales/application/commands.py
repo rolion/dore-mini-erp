@@ -245,7 +245,8 @@ class DeliverOrder:
 class CancelOrder:
     """Cancela el pedido antes de entregarlo. Con cobros exige confirmar que el dinero se reembolsó fuera de PocketBiz
     y contrarresta sus asientos; un pedido reconocido al confirmar (lógica anterior) revierte su reconocimiento con las
-    cuentas originales; uno sin reconocer se cancela sin asiento. Nunca hubo salida de inventario: el stock no cambia."""
+    cuentas originales; uno sin reconocer se cancela sin asiento. Nunca hubo salida de inventario: el stock no
+    cambia."""
 
     def __init__(self, repository: OrderRepository, clock: Clock, posting: SalesPosting | None = None):
         self.repository = repository

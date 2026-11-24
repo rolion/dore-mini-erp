@@ -16,6 +16,7 @@
 | 2026-11-24 | ARCHITECTURE → PLANNING | ADR escrito; decisiones de negocio respondidas por el usuario | delivery-start |
 | 2026-11-24 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR | delivery-start |
 | 2026-11-24 | ENGINEERING → REVIEW | Implementación escrita; pruebas de integración con BD sin ejecutar (sin credenciales de PostgreSQL en esta sesión) | delivery-build |
+| 2026-11-24 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 (Medium), REV-02 y REV-03 (Low) corregidos; REV-04 (Specification, Low) abierto; pruebas con PostgreSQL y revisión visual NO realizadas, por lo que no se declara PASS | delivery-publish |
 
 ## Investigación
 
@@ -104,7 +105,18 @@ Ver `docs/adr/ADR-cancelar-ventas-registrar-devoluciones-reversion-orquestada-y-
 **Deuda técnica.** Los cobros de pedidos cancelados siguen apareciendo en `payments_between` (dinero recibido) aunque estén reembolsados; la devolución parcial y el saldo a favor quedan fuera de alcance. Sin pruebas de concurrencia simultánea reales (se confía en `select_for_update` + reversiones idempotentes).
 
 ## Review
-_Pendiente_
+**Resultado: sin Critical/High, pero NO se declara PASS** porque dos verificaciones aplicables no se ejecutaron: las pruebas con PostgreSQL (AC-01..09 y AC-11 dependen de ellas) y la revisión visual.
+
+Ejecutado por el revisor aislado: pruebas sin BD (138 OK), `manage.py check`, `makemigrations --check` (sin cambios), `ruff`/`flake8`, `ng lint`, `tsc` app y specs, `i18n:check` (2505 claves, 0 faltantes), `ng test` de `features/sales` (285 OK) y `ng build` (solo avisos de CSS de la plantilla). Tras las correcciones: `ng test` sales+customers 385 OK, `ng lint` OK, pruebas backend sin BD OK.
+
+No realizado: pruebas con PostgreSQL (`test_order_return`, `test_sales_posting`, `test_api`, `test_cost_ledger`), revisión visual (claro/oscuro, 390/1440 px), `bandit`/`npm audit`, concurrencia real.
+
+Hallazgos:
+- REV-01 (Medium, IMPLEMENTATION): el frontend trataba `RETURNED` como pedido válido (perfil del cliente y lista) → corregido (`isVoidedStatus`, `owes`, `showsBalance`).
+- REV-02 (Low): 3 E501 nuevos → corregidos (queda el E501 previo de `commands.py`).
+- REV-03 (Low, DESIGN): fecha ISO y enlaces «Ver» sin nombre accesible → corregidos; los HEX de `confirmRefund` siguen el patrón existente de `askCancelReason`.
+- REV-04 (Low, SPECIFICATION): UI-02 y el DDR piden una casilla de reembolso dentro del diálogo de cancelar; se implementó una segunda confirmación. Abierto: requiere aprobación del usuario para aceptar la desviación o pedir la casilla.
+- Observación: `reverse_entry` del libro anterior no traduce sus errores a 409.
 
 ## Publicación
 _Pendiente_

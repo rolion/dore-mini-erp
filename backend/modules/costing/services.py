@@ -8,7 +8,13 @@ from uuid import UUID
 
 from django.utils import timezone
 
-from modules.costing.application.cost_use_cases import CostedOutput, CostOutputs, CostReceipt, ReverseOutputCost, ReverseReceiptCost
+from modules.costing.application.cost_use_cases import (
+    CostedOutput,
+    CostOutputs,
+    CostReceipt,
+    ReverseOutputCost,
+    ReverseReceiptCost,
+)
 from modules.costing.domain.cost import CostUnavailable
 from modules.costing.infrastructure.adapters import InventoryStockTotals
 from modules.costing.infrastructure.django.cost_repository import DjangoCostEventRepository

@@ -1,4 +1,5 @@
 import { TranslatePipe } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,7 +21,7 @@ export const STALE_ORDER_FOR_RETURN = 'stale';
 @Component({
   selector: 'app-return-dialog',
   templateUrl: './return-dialog.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe],
+  imports: [TranslatePipe, ReactiveFormsModule, MoneyPipe, DatePipe],
 })
 export class ReturnDialogComponent {
   readonly form = inject(FormBuilder).nonNullable.group({

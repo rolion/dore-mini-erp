@@ -287,12 +287,12 @@ export class OrderListComponent implements OnInit {
 
   /** Saldo en rojo solo si hay deuda en un pedido que sigue vivo. */
   owes(row: OrderSummary): boolean {
-    return row.status !== 'CANCELLED' && row.balance !== ZERO_AMOUNT;
+    return row.status !== 'CANCELLED' && row.status !== 'RETURNED' && row.balance !== ZERO_AMOUNT;
   }
 
   /** Un cancelado sin pagos no tiene nada que mostrar en el saldo. */
   showsBalance(row: OrderSummary): boolean {
-    return !(row.status === 'CANCELLED' && row.paidTotal === ZERO_AMOUNT);
+    return !((row.status === 'CANCELLED' || row.status === 'RETURNED') && row.paidTotal === ZERO_AMOUNT);
   }
 
   private navigate(filters: ListFilters, page: number): void {
