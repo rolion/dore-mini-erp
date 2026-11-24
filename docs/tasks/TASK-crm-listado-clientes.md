@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-listado-clientes` (base: `crm`)
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/120
 **Fuente:** https://trello.com/c/7VV7PNhI/4-pb-crm-001-listado-de-clientes-crm
 
 ## Historial de transiciones
