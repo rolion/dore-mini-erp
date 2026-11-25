@@ -145,6 +145,14 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 - `.card` con `h4` y `nav-tabs` (`role="tablist"`); cada pestaña es un listado con buscador por nombre, filtro de estado (por defecto **Activos/Activas**) y botón «+», en tabla Bootstrap simple apilada en móvil (`inventory/components/_inventory-table.scss`).
 - Alta/edición en diálogo (`NgbModal`, patrón de `category-dialog`); sin eliminar: los registros usados se desactivan. Los bloqueos del servidor (409) se muestran en `alert alert-warning` sobre la tabla con el motivo, y un registro bloqueado deshabilita sus campos con `small.text-muted` que explica por qué.
 
+### Editor de lista ordenable con botones Subir/Bajar (referencia: `features/crm/pages/crm-board`; DDR-crm-tableros-columnas-configurables-editor-de-etapas)
+- `.card` con selector de contenedor (`form-select`, p. ej. «Tablero») y tabla Bootstrap simple apilada en móvil con columnas **Orden**, **Nombre** (edición en línea) y **Acciones**. Ordenar con botones Subir/Bajar (iconos con `title` y `aria-label`, sin arrastre); cada cambio se guarda al instante y la lista se recarga con la respuesta del servidor.
+- Archivar un elemento que contiene otros pide, en un diálogo `NgbModal`, un destino activo obligatorio; los 409 se muestran en `alert alert-warning` y recargan la lista. Vacíos: «Aún no hay …» con la acción de alta.
+
+### Tablero Kanban de tarjetas con acciones accesibles (referencia: `features/crm/pages/crm-opportunity-board`; DDR-crm-prospectos-oportunidades-kanban-y-prospectos)
+- Encabezado con selector de tablero y filtros (`form-select`/búsqueda) y botón de alta. Una columna `.card` por etapa (encabezado «Etapa · N»), con desplazamiento horizontal desde `lg` y apiladas en móvil; tarjetas `.card` compactas con título, contacto, importe, fecha de siguiente acción (resaltada si venció) y responsable.
+- Mover tarjetas abiertas arrastrándolas (`@angular/cdk/drag-drop`, `cdkDropListGroup`) por su asa a la columna de otra etapa activa, guardado inmediato y recarga desde el servidor; soltar en la misma columna no hace nada. Sin alternativa de teclado (decisión de producto, ver DDR). Cierre con el patrón «Diálogo de acción irreversible con motivo». Vacíos por columna y del tablero; 409 en `alert alert-warning`.
+
 ### Sección condicionada por módulo en un formulario (referencia: `product-form`, bloque «Inventario»)
 - `h5` de sección, interruptor `form-check form-switch` y selector dependiente (`form-select`) que aparece solo si el interruptor está activo. Todo el bloque se renderiza únicamente si el módulo está habilitado (`ModulesService.enabledKeys$`); lista y detalle añaden columnas/filas solo en ese caso. Un 409 de regla de negocio se muestra con `alert alert-warning` sin perder lo escrito.
 
@@ -220,6 +228,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 ## 6. Menú y layout
 
+- CRM → Clientes (`/pocketbiz/crm/customers`, PB-CRM-001): submenú **CRM** (módulo `customers`) con «Lista de solo lectura con filtros» + variante compacta (< 992 px): buscador, filtro «Sucursal» (almacén; se oculta sin Inventario), columnas Nombre (enlace a la ficha), Teléfono, Última compra, Pedidos y Saldo (se ocultan sin Ventas); filtros y página en la URL; vacío con y sin filtros según §4. Ver `DDR-crm-listado-clientes-menu-y-lista-crm`.
 - Catálogo → Servicios (`/pocketbiz/catalog/services`, `/new`, `/:id`, `/:id/edit`): módulo opcional `services`, plantillas Lista/Formulario/Detalle de productos. Precio con `money`, duración con «min», código siempre en mayúsculas. Especialidad opcional desde Personal cuando está habilitado; sin él, selector deshabilitado y explicación visible, sin bloquear el guardado. Ver `DDR-administrar-catalogo-servicios-pantallas`.
 - Odontología → Pacientes (`/pocketbiz/dentistry/patients`, PB-ODO-001): lista, alta por selección de cliente existente y ficha `/:id` con Perfil (administrativo) / Antecedentes (clínico e historial). Reutiliza Lista, Formulario, Detalle y detalle con pestañas de §5. Acceso clínico comprobado en backend, admin autorizado en v1; no mostrar pestañas de capacidades futuras. Vacíos clínicos: «No informado», sin presumir ausencia. Véase `DDR-perfil-odontologico-pacientes-ficha-y-listado.md`.
 

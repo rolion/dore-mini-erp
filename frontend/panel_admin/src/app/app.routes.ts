@@ -215,6 +215,34 @@ export const APP_ROUTE: Route[] = [
                     import('./features/customers/customers.routes').then((m) => m.CUSTOMERS_ROUTE),
             },
             {
+                path: 'crm/customers',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
+                loadChildren: () =>
+                    import('./features/crm/crm.routes').then((m) => m.CRM_CUSTOMERS_ROUTE),
+            },
+            {
+                path: 'crm/board',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
+                loadChildren: () =>
+                    import('./features/crm/crm.routes').then((m) => m.CRM_BOARD_ROUTE),
+            },
+            {
+                path: 'crm/opportunities',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
+                loadChildren: () =>
+                    import('./features/crm/crm.routes').then((m) => m.CRM_OPPORTUNITIES_ROUTE),
+            },
+            {
+                path: 'crm/leads',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
+                loadChildren: () =>
+                    import('./features/crm/crm.routes').then((m) => m.CRM_LEADS_ROUTE),
+            },
+            {
                 path: 'sales/orders',
                 canActivate: [moduleGuard],
                 data: { module: 'sales' },

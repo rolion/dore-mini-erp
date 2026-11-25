@@ -1,0 +1,40 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ 'CRM.CONVERT_DIALOG.TITULO' | translate }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  @if (errorMessage) {
+  <div class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert" data-testid="convert-error">{{ errorMessage }}</div>
+  }
+  <dl class="row mb-2">
+    <dt class="col-sm-4">{{ 'CRM.CONVERT_DIALOG.PROSPECTO' | translate }}</dt>
+    <dd class="col-sm-8">{{ lead.name }}</dd>
+    <dt class="col-sm-4">{{ 'COMMON.TELEFONO' | translate }}</dt>
+    <dd class="col-sm-8">{{ lead.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</dd>
+  </dl>
+  @if (choosing) {
+  <div class="alert alert-warning" role="status" data-testid="multiple-matches">{{ 'CRM.CONVERT_DIALOG.VARIOS_COINCIDENTES' | translate: { n: candidates.length } }}</div>
+  <fieldset>
+    <legend class="form-label fs-6">{{ 'CRM.CONVERT_DIALOG.ELIGE_CLIENTE' | translate }} <span class="text-danger">*</span></legend>
+    @for (candidate of candidates; track candidate.id) {
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="crm-convert-candidate" [id]="'crm-candidate-' + candidate.id"
+        [value]="candidate.id" [formControl]="choice" data-testid="candidate">
+      <label class="form-check-label" [for]="'crm-candidate-' + candidate.id">
+        <strong>{{ candidate.name }}</strong> · {{ candidate.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}
+      </label>
+    </div>
+    }
+  </fieldset>
+  } @else {
+  <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle" role="status">
+    {{ 'CRM.CONVERT_DIALOG.EFECTO' | translate }}
+  </div>
+  }
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+  <button type="button" class="btn btn-primary" [disabled]="!canConfirm" (click)="confirm()" data-testid="confirm-convert">
+    {{ (saving ? 'CRM.CONVERT_DIALOG.CONVIRTIENDO' : (choosing ? 'CRM.CONVERT_DIALOG.VINCULAR' : 'CRM.CONVERT_DIALOG.CONVERTIR')) | translate }}
+  </button>
+</div>

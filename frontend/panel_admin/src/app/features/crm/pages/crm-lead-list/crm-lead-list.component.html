@@ -1,0 +1,189 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'CRM.LEAD_LIST.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate">
+        <i class="fas fa-home font-17" aria-hidden="true"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.CUSTOMER_LIST.BREADCRUMB' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'CRM.LEAD_LIST.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="p-10">
+        <div class="ngxTableHeader d-flex align-items-center">
+          <div class="table-title">
+            <h2><strong>{{ 'CRM.LEAD_LIST.TITULO' | translate }}</strong></h2>
+          </div>
+          <button type="button" class="btn btn-icon icon-left btn-primary rounded-button crm-add-button ms-auto" data-testid="new-lead"
+            (click)="create()" [attr.title]="'CRM.LEAD_LIST.NUEVO_PROSPECTO' | translate" [attr.aria-label]="'CRM.LEAD_LIST.NUEVO_PROSPECTO' | translate">
+            <i class="material-icons" aria-hidden="true">add</i>
+          </button>
+        </div>
+
+        @if (compact) {
+        <div class="crm-compact" data-testid="crm-compact">
+          <button type="button" class="btn btn-light w-100 crm-touch crm-filters-toggle" data-testid="filters-toggle"
+            aria-controls="crm-lead-filters" [attr.aria-expanded]="!filtersCollapsed" (click)="toggleFilters()">
+            <span>
+              <i class="fas fa-filter me-2" aria-hidden="true"></i>{{ 'CRM.CUSTOMER_LIST.FILTERS' | translate }}
+              @if (activeFilterCount) {
+              <span class="badge bg-primary ms-2" data-testid="filters-count"
+                [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS_ACTIVE' | translate: { count: activeFilterCount }">{{ activeFilterCount }}</span>
+              }
+            </span>
+            <i class="fas" [class.fa-chevron-down]="filtersCollapsed" [class.fa-chevron-up]="!filtersCollapsed" aria-hidden="true"></i>
+          </button>
+          <div id="crm-lead-filters" [ngbCollapse]="filtersCollapsed">
+            <form class="crm-filters-form" (ngSubmit)="applyFilters()" [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS' | translate">
+              <div>
+                <label for="crm-lead-search-compact">{{ 'CRM.LEAD_LIST.BUSCAR' | translate }}</label>
+                <input id="crm-lead-search-compact" type="search" class="form-control crm-touch" [formControl]="searchControl"
+                  [placeholder]="'CRM.LEAD_LIST.BUSCAR' | translate">
+              </div>
+              <div>
+                <label for="crm-lead-converted-compact">{{ 'COMMON.ESTADO' | translate }}</label>
+                <select id="crm-lead-converted-compact" class="form-select" [formControl]="convertedControl">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  <option value="false">{{ 'CRM.LEAD_LIST.SIN_CONVERTIR' | translate }}</option>
+                  <option value="true">{{ 'CRM.LEAD_LIST.CONVERTIDOS' | translate }}</option>
+                </select>
+              </div>
+              <div class="crm-filter-actions">
+                <button type="submit" class="btn btn-primary crm-touch" data-testid="apply-filters">{{ 'CRM.CUSTOMER_LIST.APPLY' | translate }}</button>
+                <button type="button" class="btn btn-light crm-touch" data-testid="clear-filters" (click)="clearFilters()">{{ 'CRM.CUSTOMER_LIST.CLEAR' | translate }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        } @else {
+        <form class="row g-2 align-items-end mb-2" data-testid="filters-wide" (submit)="$event.preventDefault()"
+          [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS' | translate">
+          <div class="col-md-5">
+            <label for="crm-lead-search" class="form-label">{{ 'CRM.LEAD_LIST.BUSCAR' | translate }}</label>
+            <input id="crm-lead-search" type="search" class="form-control" [formControl]="searchControl"
+              [placeholder]="'CRM.LEAD_LIST.BUSCAR' | translate">
+          </div>
+          <div class="col-md-3">
+            <label for="crm-lead-converted" class="form-label">{{ 'COMMON.ESTADO' | translate }}</label>
+            <select id="crm-lead-converted" class="form-select" [formControl]="convertedControl">
+              <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+              <option value="false">{{ 'CRM.LEAD_LIST.SIN_CONVERTIR' | translate }}</option>
+              <option value="true">{{ 'CRM.LEAD_LIST.CONVERTIDOS' | translate }}</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-light" data-testid="clear-filters" (click)="clearFilters()">{{ 'CRM.CUSTOMER_LIST.CLEAR' | translate }}</button>
+          </div>
+        </form>
+        }
+
+        @if (success) {
+        <div class="alert alert-success" role="status" data-testid="success">{{ success }}</div>
+        }
+
+        @if (error) {
+        <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert" data-testid="lead-error">
+          <span>{{ error }}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else if (!loading && total === 0) {
+        <div class="text-center py-4" data-testid="lead-empty">
+          @if (hasFilters) {
+          <p class="text-muted">{{ 'CRM.LEAD_LIST.SIN_RESULTADOS' | translate }}</p>
+          <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'CRM.CUSTOMER_LIST.CLEAR' | translate }}</button>
+          } @else {
+          <p class="text-muted">{{ 'CRM.LEAD_LIST.VACIO' | translate }}</p>
+          <button type="button" class="btn btn-primary" data-testid="empty-new" (click)="create()">{{ 'CRM.LEAD_LIST.NUEVO_PROSPECTO' | translate }}</button>
+          }
+        </div>
+        } @else if (compact) {
+        @if (loading) {
+        <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+        }
+        <ul class="list-unstyled crm-cards m-0 p-0" data-testid="lead-cards">
+          @for (row of rows; track row.id) {
+          <li class="card crm-card m-0" data-testid="lead-card">
+            <div class="crm-card-header">
+              <strong>{{ row.name }}</strong>
+              <div class="crm-card-actions">
+                <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto crm-icon-button" (click)="edit(row)" data-testid="edit-lead"
+                  [attr.title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'CRM.LEAD_LIST.EDITAR_DE' | translate: { name: row.name }">
+                  <i class="fas fa-pen" aria-hidden="true"></i></button>
+                @if (!row.convertedCustomerId) {
+                <button type="button" class="btn btn-tbl-edit btn-tbl-view h-auto crm-icon-button" (click)="convert(row)" data-testid="convert-lead"
+                  [attr.title]="'CRM.LEAD_LIST.CONVERTIR' | translate" [attr.aria-label]="'CRM.LEAD_LIST.CONVERTIR_DE' | translate: { name: row.name }">
+                  <i class="fas fa-user-check" aria-hidden="true"></i></button>
+                }
+              </div>
+            </div>
+            <dl class="crm-card-body mb-0">
+              <div class="crm-card-row">
+                <dt>{{ 'COMMON.TELEFONO' | translate }}</dt>
+                <dd>{{ row.phone || '—' }}</dd>
+              </div>
+              <div class="crm-card-row">
+                <dt>{{ 'COMMON.CORREO' | translate }}</dt>
+                <dd>{{ row.email || '—' }}</dd>
+              </div>
+              <div class="crm-card-row">
+                <dt>{{ 'COMMON.ESTADO' | translate }}</dt>
+                <dd>
+                  @if (row.convertedCustomerId) {
+                  <a class="badge-outline col-green" [routerLink]="['/pocketbiz/customers', row.convertedCustomerId]">{{ 'CRM.LEAD_LIST.CONVERTIDO' | translate }}</a>
+                  } @else {
+                  <span class="badge-outline col-blue">{{ 'CRM.LEAD_LIST.NUEVO' | translate }}</span>
+                  }
+                </dd>
+              </div>
+            </dl>
+          </li>
+          }
+        </ul>
+        <p class="crm-total text-muted m-0" data-testid="lead-total" tabindex="-1">{{ 'CRM.CUSTOMER_LIST.SHOWING' | translate: { from: rangeStart, to: rangeEnd, total: total } }}</p>
+        @if (total > pageSize) {
+        <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
+          [page]="pageIndex + 1" [maxSize]="3" [boundaryLinks]="true" (pageChange)="onCardsPage($event)" />
+        }
+        } @else {
+        <ngx-datatable class="material" [rows]="rows" [loadingIndicator]="loading" columnMode="force"
+          [headerHeight]="60" [footerHeight]="80" rowHeight="auto" [externalPaging]="true" [count]="total"
+          [offset]="pageIndex" [limit]="pageSize" [messages]="messages" (page)="onPage($event)">
+          <ngx-datatable-column [name]="'COMMON.NOMBRE' | translate" [sortable]="false" [width]="220">
+            <ng-template let-row="row" ngx-datatable-cell-template><strong data-testid="lead-name">{{ row.name }}</strong></ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'COMMON.TELEFONO' | translate" [sortable]="false" [width]="150">
+            <ng-template let-row="row" ngx-datatable-cell-template>{{ row.phone || '—' }}</ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'COMMON.CORREO' | translate" [sortable]="false" [width]="200">
+            <ng-template let-row="row" ngx-datatable-cell-template>{{ row.email || '—' }}</ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'COMMON.ESTADO' | translate" [sortable]="false" [width]="140">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              @if (row.convertedCustomerId) {
+              <a class="badge-outline col-green" [routerLink]="['/pocketbiz/customers', row.convertedCustomerId]" data-testid="converted-badge">{{ 'CRM.LEAD_LIST.CONVERTIDO' | translate }}</a>
+              } @else {
+              <div class="badge-outline col-blue">{{ 'CRM.LEAD_LIST.NUEVO' | translate }}</div>
+              }
+            </ng-template>
+          </ngx-datatable-column>
+          <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="120">
+            <ng-template let-row="row" ngx-datatable-cell-template>
+              <button type="button" class="btn btn-tbl-edit btn-tbl-update h-auto" (click)="edit(row)" data-testid="edit-lead"
+                [attr.title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'CRM.LEAD_LIST.EDITAR_DE' | translate: { name: row.name }">
+                <i class="fas fa-pen" aria-hidden="true"></i></button>
+              @if (!row.convertedCustomerId) {
+              <button type="button" class="btn btn-tbl-edit btn-tbl-view h-auto ms-1" (click)="convert(row)" data-testid="convert-lead"
+                [attr.title]="'CRM.LEAD_LIST.CONVERTIR' | translate" [attr.aria-label]="'CRM.LEAD_LIST.CONVERTIR_DE' | translate: { name: row.name }">
+                <i class="fas fa-user-check" aria-hidden="true"></i></button>
+              }
+            </ng-template>
+          </ngx-datatable-column>
+        </ngx-datatable>
+        }
+      </div>
+    </div>
+  </div>
+</section>
