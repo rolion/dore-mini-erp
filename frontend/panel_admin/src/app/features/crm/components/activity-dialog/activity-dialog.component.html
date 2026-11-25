@@ -11,7 +11,7 @@
     <app-crm-activity-fields [form]="form" [showDate]="true" [errors]="fieldErrors" idPrefix="crm-activity-dialog" />
 
     <h5 class="mt-4 fs-6">{{ 'CRM.ACTIVITY.HISTORIAL' | translate }} ({{ historyTotal }})</h5>
-    @if (historyLoading) {
+    @if (historyLoading && !history.length) {
     <p class="text-muted mb-0">{{ 'COMMON.CARGANDO' | translate }}</p>
     } @else if (historyError) {
     <div class="alert alert-danger" role="alert">
@@ -37,6 +37,9 @@
       </li>
       }
     </ul>
+    @if (hasMoreHistory) {
+    <button type="button" class="btn btn-light btn-sm mt-2" [disabled]="historyLoading" (click)="loadHistory(true)" data-testid="history-more">{{ 'CRM.ACTIVITY.VER_MAS' | translate }}</button>
+    }
     }
   </div>
   <div class="modal-footer">

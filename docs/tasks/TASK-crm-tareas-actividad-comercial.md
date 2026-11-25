@@ -1,6 +1,6 @@
 # TASK-crm-tareas-actividad-comercial: PB-CRM-005 · Tareas y actividad comercial
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tareas-actividad-comercial` (base: `crm`)
@@ -14,6 +14,7 @@
 | 2026-11-25 | INVESTIGATION → DESIGN → PLANNING | Decisiones de negocio respondidas por el usuario; DDR escrito | delivery-start |
 | 2026-11-25 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
 | 2026-11-25 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-25 | REVIEW → PUBLISH | Quality Gate PASS (REV-01, REV-02 Medium corregidos; REV-03..08 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -95,7 +96,12 @@ No aplica según veredicto.
 **Deuda técnica:** sin Playwright (E2E NO, ver PLAN); la ficha 360° (PB-CRM-002) deberá embeber `activity-dialog`/`task-dialog`; no hay vista de calendario ni recordatorios (fuera de alcance).
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado, sin Critical/High). Hallazgos en `docs/reviews/REV-2026-11-25-crm-tareas-actividad-comercial-01..08.md`:
+- REV-01 (Medium, IMPLEMENTATION) completar con actividad no validaba cliente activo → **corregido** (`TaskService.complete` exige `related.require`; prueba nueva).
+- REV-02 (Medium, IMPLEMENTATION) el historial solo mostraba la primera página → **corregido** («Ver más» con paginación; prueba nueva).
+- REV-03 (Low) faltan pruebas de concurrencia y de N+1 (se añadió la de PATCH con responsable ajeno); REV-04 (Low, SPECIFICATION) `completed_at` conservado al archivar contradice INV-03 (enmendar la Specification requiere aprobación del usuario); REV-05 (Low) cancelar/archivar sin confirmación; REV-06 (Low, DESIGN) insignias fuera del mapa del DDR; REV-07 (Low, PLAN) desviaciones no reflejadas en el DDR; REV-08 (Low) el PR contra `crm` arrastra commits de `main` por el merge del PR 119 → abiertos y aceptados.
+- Revisión visual en navegador: **no verificada**.
+Tras las correcciones: `modules.crm` 140 pruebas OK, Karma 1953 OK, ruff/flake8/lint/i18n:check sin avisos.
 
 ## Publicación
-_Pendiente_
+PR 123 listo para aprobación humana; no se mergea. Sin cambios de autenticación, infraestructura ni ADR; incluye una migración nueva (`0003`, solo crea tablas, reversible).

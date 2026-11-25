@@ -32,9 +32,20 @@ describe('ActivityDialogComponent', () => {
 
   it('shows the related name and its history, most recent first (AC-07, AC-10)', () => {
     setup([makeActivity({ notes: 'Nueva nota' }), makeActivity({ id: 'a-2', notes: 'Vieja' })]);
-    expect(api.list).toHaveBeenCalledWith(related);
+    expect(api.list).toHaveBeenCalledWith(related, 1);
     expect(text()).toContain('Ana Pérez');
     expect(fixture.nativeElement.querySelectorAll('[data-testid="history-item"]').length).toBe(2);
+  });
+
+  it('loads the next history page and appends it (REV-02)', () => {
+    setup([makeActivity({ id: 'a-1' })]);
+    component.historyTotal = 2;
+    api.list.and.returnValue(of({ count: 2, results: [makeActivity({ id: 'a-2', notes: 'Más vieja' })] }));
+    component.loadHistory(true);
+    fixture.detectChanges();
+    expect(api.list).toHaveBeenCalledWith(related, 2);
+    expect(component.history.map((a) => a.id)).toEqual(['a-1', 'a-2']);
+    expect(component.hasMoreHistory).toBeFalse();
   });
 
   it('shows the empty history message', () => {

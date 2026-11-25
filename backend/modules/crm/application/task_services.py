@@ -104,6 +104,7 @@ class TaskService:
         task.complete(now)
         recorded = None
         if activity is not None:
+            self.related.require(task.customer_id, task.opportunity_id)  # INV-07: cliente inactivo no admite actividad
             recorded = self.activities.add(Activity.create(
                 actor_id=actor_id, customer_id=task.customer_id, opportunity_id=task.opportunity_id,
                 channel=activity.get('channel'), outcome=activity.get('outcome'), notes=activity.get('notes'),

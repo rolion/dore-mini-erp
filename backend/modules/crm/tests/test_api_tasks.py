@@ -101,6 +101,17 @@ class TransitionTests(TaskApiBase):
         self.assertEqual(TaskModel.objects.get(pk=bad['id']).status, 'pending')
         self.assertEqual(ActivityModel.objects.count(), 1)
 
+    def test_complete_with_activity_rejected_for_inactive_customer(self):  # INV-07 (REV-01)
+        customer = self.customer('Baja', '76000000')
+        task = self.task(customer_id=str(customer.id))
+        customer.active = False
+        customer.save()
+        body = self.act(task['id'], 'complete', {'activity': {'channel': 'call', 'notes': 'x'}}, expected=409)
+        self.assertEqual(body['code'], 'customer_inactive')
+        self.assertEqual(TaskModel.objects.get(pk=task['id']).status, 'pending')
+        self.assertEqual(ActivityModel.objects.count(), 0)
+        self.assertEqual(self.act(task['id'], 'complete')['status'], 'done')  # sin actividad sí se completa
+
     def test_cancel_reopen_archive(self):  # AC-04
         task = self.task()
         self.assertEqual(self.act(task['id'], 'cancel')['status'], 'cancelled')
@@ -128,6 +139,9 @@ class TransitionTests(TaskApiBase):
                                    format='json')
         self.assertEqual((edited.status_code, edited.json()['title']), (200, 'Visitar'))
         self.assertEqual(self.client.patch(f"{TASKS}{task['id']}/", {'title': ' '}, format='json').status_code, 400)
+        foreign_owner = make_admin(make_company('CRM C'), username='otro').id
+        response = self.client.patch(f"{TASKS}{task['id']}/", {'owner_id': foreign_owner}, format='json')
+        self.assertEqual((response.status_code, 'owner_id' in response.json()), (400, True))
         self.client.patch(f"{TASKS}{task['id']}/", {'customer_id': str(uuid4())}, format='json')
         self.assertEqual(self.client.get(f"{TASKS}{task['id']}/").json()['related']['id'], str(self.buyer.id))
         self.act(task['id'], 'complete')

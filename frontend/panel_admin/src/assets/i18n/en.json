@@ -3719,7 +3719,8 @@
         "interested": "Interested",
         "not_interested": "Not interested",
         "follow_up": "Follow-up pending"
-      }
+      },
+      "VER_MAS": "Show more"
     }
   }
 }

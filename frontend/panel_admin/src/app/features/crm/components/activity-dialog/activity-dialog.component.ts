@@ -27,6 +27,7 @@ export class ActivityDialogComponent {
   historyTotal = 0;
   historyLoading = false;
   historyError = '';
+  historyPage = 1;
   saving = false;
   errorMessage = '';
   conflict = false;
@@ -52,14 +53,21 @@ export class ActivityDialogComponent {
     return !this.saving && activityFormValid(this.form);
   }
 
-  loadHistory(): void {
+  get hasMoreHistory(): boolean {
+    return this.history.length < this.historyTotal;
+  }
+
+  /** Carga la primera página del historial, o la siguiente (se agrega al final) con `more`. */
+  loadHistory(more = false): void {
     this.historyLoading = true;
     this.historyError = '';
-    this.api.list(this.related).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (page) => {
+    const page = more ? this.historyPage + 1 : 1;
+    this.api.list(this.related, page).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (result) => {
         this.historyLoading = false;
-        this.history = page.results;
-        this.historyTotal = page.count;
+        this.historyPage = page;
+        this.history = more ? [...this.history, ...result.results] : result.results;
+        this.historyTotal = result.count;
       },
       error: (err: CrmApiError) => {
         this.historyLoading = false;
