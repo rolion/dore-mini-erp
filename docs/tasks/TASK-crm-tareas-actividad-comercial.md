@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tareas-actividad-comercial` (base: `crm`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/123
 **Fuente:** https://trello.com/c/UjJ6EBn7/1-pb-crm-005-tareas-y-actividad-comercial
 
 ## Historial de transiciones
