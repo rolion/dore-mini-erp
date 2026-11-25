@@ -98,7 +98,7 @@
                 <span class="badge-outline col-red" data-testid="status-badge">{{ 'CRM.TASK_LIST.ESTADOS.overdue' | translate }}</span>
                 } @else {
                 <span class="badge-outline" [class.col-orange]="row.status === 'pending'" [class.col-green]="row.status === 'done'"
-                  [class.col-blue]="row.status === 'cancelled'" data-testid="status-badge">{{ 'CRM.TASK_LIST.ESTADOS.' + row.status | translate }}</span>
+                  [class.col-grey]="row.status === 'cancelled'" data-testid="status-badge">{{ 'CRM.TASK_LIST.ESTADOS.' + row.status | translate }}</span>
                 }
               </td>
               <td [attr.data-label]="'COMMON.ACCIONES' | translate">

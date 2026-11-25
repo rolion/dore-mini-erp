@@ -90,25 +90,42 @@ describe('CrmTaskListComponent', () => {
     expect(query('[data-testid="retry"]')).not.toBeNull();
   });
 
-  it('cancels, reopens and archives through the API and reloads (AC-04)', async () => {
+  it('asks for confirmation before cancelling or archiving, then calls the API and reloads (AC-04, REV-05)', async () => {
     await setup([pending, done]);
     api.cancel.and.returnValue(of(makeTask({ status: 'cancelled' })));
     api.reopen.and.returnValue(of(pending));
     api.archive.and.returnValue(of(makeTask({ status: 'archived' })));
+    const dialog = jasmine.createSpyObj('ConfirmTaskActionDialogComponent', ['open']);
+    modal.open.and.returnValue({ componentInstance: dialog, result: Promise.resolve(true) } as never);
     api.list.calls.reset();
     component.cancel(pending);
-    component.reopen(done);
     component.archive(done);
+    expect(api.cancel).not.toHaveBeenCalled();
+    expect(api.archive).not.toHaveBeenCalled();
+    await fixture.whenStable();
+    expect(dialog.open).toHaveBeenCalledWith('cancel', pending);
+    expect(dialog.open).toHaveBeenCalledWith('archive', done);
     expect(api.cancel).toHaveBeenCalledWith('t-1');
-    expect(api.reopen).toHaveBeenCalledWith('t-3');
     expect(api.archive).toHaveBeenCalledWith('t-3');
+    component.reopen(done);
+    expect(api.reopen).toHaveBeenCalledWith('t-3');
     expect(api.list).toHaveBeenCalledTimes(3);
+  });
+
+  it('does nothing when the confirmation is dismissed (REV-05)', async () => {
+    await setup([pending]);
+    modal.open.and.returnValue({ componentInstance: jasmine.createSpyObj('D', ['open']), result: Promise.reject('x') } as never);
+    component.cancel(pending);
+    await fixture.whenStable();
+    expect(api.cancel).not.toHaveBeenCalled();
   });
 
   it('shows a 409 from an action as an error and reloads (UI-03)', async () => {
     await setup();
     api.cancel.and.returnValue(throwError(() => new CrmApiError('Ya no está pendiente.', 409)));
+    modal.open.and.returnValue({ componentInstance: jasmine.createSpyObj('D', ['open']), result: Promise.resolve(true) } as never);
     component.cancel(pending);
+    await fixture.whenStable();
     fixture.detectChanges();
     expect(component.actionError).toBe('Ya no está pendiente.');
     expect(query('[data-testid="action-error"]')?.textContent).toContain('Ya no está pendiente.');

@@ -3721,6 +3721,14 @@
         "follow_up": "Follow-up pending"
       },
       "VER_MAS": "Show more"
+    },
+    "CONFIRM_TASK": {
+      "CANCELAR_TITULO": "Cancel task",
+      "CANCELAR_TEXTO": "The task stops being pending; you can reopen it from “Cancelled”.",
+      "CANCELAR_CONFIRMAR": "Cancel task",
+      "ARCHIVAR_TITULO": "Archive task",
+      "ARCHIVAR_TEXTO": "The task is hidden from every list and cannot be recovered from the interface.",
+      "ARCHIVAR_CONFIRMAR": "Archive task"
     }
   }
 }

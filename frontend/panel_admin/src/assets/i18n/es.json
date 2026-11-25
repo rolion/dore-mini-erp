@@ -3721,6 +3721,14 @@
         "follow_up": "Seguimiento pendiente"
       },
       "VER_MAS": "Ver más"
+    },
+    "CONFIRM_TASK": {
+      "CANCELAR_TITULO": "Cancelar tarea",
+      "CANCELAR_TEXTO": "La tarea deja de estar pendiente; podrás reabrirla desde «Canceladas».",
+      "CANCELAR_CONFIRMAR": "Cancelar tarea",
+      "ARCHIVAR_TITULO": "Archivar tarea",
+      "ARCHIVAR_TEXTO": "La tarea se oculta de todas las listas y no se puede recuperar desde la interfaz.",
+      "ARCHIVAR_CONFIRMAR": "Archivar tarea"
     }
   }
 }

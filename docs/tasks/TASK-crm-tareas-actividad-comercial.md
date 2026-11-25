@@ -15,6 +15,7 @@
 | 2026-11-25 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
 | 2026-11-25 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 | 2026-11-25 | REVIEW → PUBLISH | Quality Gate PASS (REV-01, REV-02 Medium corregidos; REV-03..08 Low abiertos) | delivery-publish |
+| 2026-11-25 | PUBLISH | REV-03, REV-05, REV-06 y REV-07 corregidos a pedido del usuario; PLAN v2 y DDR alineados | delivery-build |
 
 ## Investigación
 
@@ -101,6 +102,7 @@ No aplica según veredicto.
 - REV-02 (Medium, IMPLEMENTATION) el historial solo mostraba la primera página → **corregido** («Ver más» con paginación; prueba nueva).
 - REV-03 (Low) faltan pruebas de concurrencia y de N+1 (se añadió la de PATCH con responsable ajeno); REV-04 (Low, SPECIFICATION) `completed_at` conservado al archivar contradice INV-03 (enmendar la Specification requiere aprobación del usuario); REV-05 (Low) cancelar/archivar sin confirmación; REV-06 (Low, DESIGN) insignias fuera del mapa del DDR; REV-07 (Low, PLAN) desviaciones no reflejadas en el DDR; REV-08 (Low) el PR contra `crm` arrastra commits de `main` por el merge del PR 119 → abiertos y aceptados.
 - Revisión visual en navegador: **no verificada**.
+**Actualización (a pedido del usuario):** REV-03 (pruebas de N+1 con `CaptureQueriesContext`, de concurrencia con hilos y de PATCH con responsable ajeno), REV-05 (diálogo de confirmación al cancelar/archivar), REV-06 (insignias: Cancelada `col-grey`, resultados por tono) y REV-07 (DDR y PLAN v2 reflejan lo construido) → **corregidos**. Siguen abiertos: REV-04 (INV-03, requiere aprobación para enmendar la Specification) y REV-08 (PR contra `crm` arrastra commits de `main`).
 Tras las correcciones: `modules.crm` 140 pruebas OK, Karma 1953 OK, ruff/flake8/lint/i18n:check sin avisos.
 
 ## Publicación

@@ -8,6 +8,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, catchError, of, switchMap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { AuthService } from '../../../../core/service/auth.service';
+import { ConfirmTaskActionDialogComponent, TaskConfirmAction } from '../../components/confirm-task-action-dialog/confirm-task-action-dialog.component';
 import { CompleteTaskDialogComponent } from '../../components/complete-task-dialog/complete-task-dialog.component';
 import { TaskDialogComponent } from '../../components/task-dialog/task-dialog.component';
 import { CrmApiError } from '../../models/board';
@@ -146,7 +147,7 @@ export class CrmTaskListComponent implements OnInit {
   }
 
   cancel(task: CrmTask): void {
-    this.run(this.api.cancel(task.id), 'CRM.TASK_LIST.CANCELADA_OK');
+    this.confirm('cancel', task, () => this.run(this.api.cancel(task.id), 'CRM.TASK_LIST.CANCELADA_OK'));
   }
 
   reopen(task: CrmTask): void {
@@ -154,7 +155,14 @@ export class CrmTaskListComponent implements OnInit {
   }
 
   archive(task: CrmTask): void {
-    this.run(this.api.archive(task.id), 'CRM.TASK_LIST.ARCHIVADA');
+    this.confirm('archive', task, () => this.run(this.api.archive(task.id), 'CRM.TASK_LIST.ARCHIVADA'));
+  }
+
+  /** Cancelar y archivar piden confirmación: archivar oculta la tarea y la interfaz no la recupera. */
+  private confirm(action: TaskConfirmAction, task: CrmTask, onConfirm: () => void): void {
+    const ref = this.modal.open(ConfirmTaskActionDialogComponent, { centered: true, backdrop: 'static' });
+    (ref.componentInstance as ConfirmTaskActionDialogComponent).open(action, task);
+    ref.result.then(onConfirm, () => undefined);
   }
 
   private run(request: ReturnType<CrmTasksApiService['cancel']>, messageKey: string): void {

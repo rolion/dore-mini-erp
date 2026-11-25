@@ -25,9 +25,9 @@
       @for (item of history; track item.id) {
       <li class="border-bottom py-2" data-testid="history-item">
         <div class="d-flex flex-wrap gap-2 align-items-center">
-          <span class="badge-outline col-blue">{{ 'CRM.ACTIVITY.CHANNELS.' + item.channel | translate }}</span>
+          <span class="badge-outline col-grey">{{ 'CRM.ACTIVITY.CHANNELS.' + item.channel | translate }}</span>
           @if (item.outcome) {
-          <span class="badge-outline col-green">{{ 'CRM.ACTIVITY.OUTCOMES.' + item.outcome | translate }}</span>
+          <span class="badge-outline" [ngClass]="outcomeClass(item.outcome)" data-testid="outcome-badge">{{ 'CRM.ACTIVITY.OUTCOMES.' + item.outcome | translate }}</span>
           }
           <small class="text-muted ms-auto">{{ item.occurredAt | date: 'dd/MM/yyyy HH:mm' }} · {{ item.actor.name }}</small>
         </div>

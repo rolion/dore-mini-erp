@@ -1,9 +1,9 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
-import { CrmActivity } from '../../models/activity';
+import { CrmActivity, CrmActivityOutcome } from '../../models/activity';
 import { CrmApiError, CrmFieldErrors } from '../../models/board';
 import { CrmRelated } from '../../models/task';
 import { CrmActivitiesApiService } from '../../services/crm-activities-api.service';
@@ -18,7 +18,7 @@ import {
 @Component({
   selector: 'app-crm-activity-dialog',
   templateUrl: './activity-dialog.component.html',
-  imports: [TranslatePipe, ActivityFieldsComponent, DatePipe],
+  imports: [TranslatePipe, ActivityFieldsComponent, DatePipe, NgClass],
 })
 export class ActivityDialogComponent {
   readonly form = createActivityForm();
@@ -51,6 +51,21 @@ export class ActivityDialogComponent {
 
   get canSave(): boolean {
     return !this.saving && activityFormValid(this.form);
+  }
+
+  /** Color del resultado según su tono (design-system §3): positivo verde, sin respuesta naranja, negativo rojo. */
+  outcomeClass(outcome: CrmActivityOutcome): string {
+    switch (outcome) {
+      case 'contacted':
+      case 'interested':
+        return 'col-green';
+      case 'no_answer':
+        return 'col-orange';
+      case 'not_interested':
+        return 'col-red';
+      default:
+        return 'col-cyan';
+    }
   }
 
   get hasMoreHistory(): boolean {

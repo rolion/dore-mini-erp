@@ -1,6 +1,6 @@
 # REV-2026-11-25-crm-tareas-actividad-comercial-03: Faltan pruebas de concurrencia, de N+1 y de responsable ajeno en PATCH
 
-**Status:** Open (Low; aceptado, listado en Known limitations)
+**Status:** Resolved (corregido tras el Quality Gate)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-25-crm-tareas-actividad-comercial.md (v1)

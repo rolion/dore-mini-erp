@@ -48,6 +48,14 @@ describe('ActivityDialogComponent', () => {
     expect(component.hasMoreHistory).toBeFalse();
   });
 
+  it('colours outcomes by tone: negatives are not green (REV-06)', () => {
+    setup([makeActivity({ outcome: 'not_interested' }), makeActivity({ id: 'a-2', outcome: 'interested' })]);
+    const classes = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('[data-testid="outcome-badge"]'))
+      .map((el) => el.className);
+    expect(classes[0]).toContain('col-red');
+    expect(classes[1]).toContain('col-green');
+  });
+
   it('shows the empty history message', () => {
     setup([]);
     expect(fixture.nativeElement.querySelector('[data-testid="history-empty"]')).not.toBeNull();

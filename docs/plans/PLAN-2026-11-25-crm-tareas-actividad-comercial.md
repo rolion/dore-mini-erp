@@ -1,4 +1,4 @@
-# PLAN-2026-11-25-crm-tareas-actividad-comercial (v1)
+# PLAN-2026-11-25-crm-tareas-actividad-comercial (v2)
 
 **Task:** TASK-crm-tareas-actividad-comercial · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-crm-tareas-actividad-comercial-por-contactar-y-actividad / Ninguno
@@ -112,8 +112,8 @@ Suite existente de `crm` (tableros, prospectos, oportunidades) sin cambios.
 Se sigue el patrón de oportunidades: dominio puro (`domain/task.py`, `domain/activity.py`), servicios en `application/`, repositorios `Django…Repository(company_id)`, vistas finas con `run()`. Relacionado como dos columnas UUID anulables con CHECK de «exactamente una» (sin FK entre contextos para cliente; FK a `OpportunityModel` dentro de `crm`).
 
 ## Files/components affected
-- Backend (`backend/modules/crm/`): `domain/{task,activity}.py`; `application/{task_services,activity_services}.py` y puertos de repositorio en `ports.py`; `infrastructure/django/{models,repositories}.py`; `api/{task,activity}_{serializers,views,urls}.py` y `api/urls.py`; migración `0003_tasks_activities.py`; `tests/test_domain_task.py`, `test_api_tasks.py`, `test_api_activities.py`.
-- Frontend (`features/crm/`): `models/{task,activity}.ts`; `services/crm-tasks-api.service.ts`, `crm-activities-api.service.ts`; `pages/crm-task-list`; `components/{task-dialog,complete-task-dialog,activity-dialog,activity-history}`; cambios en `crm-opportunity-board` y `crm-customer-list`; `crm.routes.ts`, app routes, `assets/data/routes.json`, `assets/i18n/{es,en,pt}.json`, `testing/crm-fixtures.ts` y specs.
+- Backend (`backend/modules/crm/`): `domain/{task,activity}.py`; `application/{task_services,activity_services}.py` ; `infrastructure/django/{models,repositories}.py`; `api/{task,activity}_{serializers,views,urls}.py` y `api/urls.py`; migración `0003_tasks_activities.py`; `tests/test_domain_task.py`, `test_api_tasks.py` (incluye las pruebas de actividad), `test_concurrency_tasks.py`.
+- Frontend (`features/crm/`): `models/{task,activity}.ts`; `services/crm-tasks-api.service.ts`, `crm-activities-api.service.ts`; `pages/crm-task-list`; `components/{task-dialog,complete-task-dialog,activity-dialog,activity-fields,confirm-task-action-dialog}`; cambios en `crm-opportunity-board` y `crm-customer-list`; `crm.routes.ts`, app routes, `assets/data/routes.json`, `assets/i18n/{es,en,pt}.json`, `testing/crm-fixtures.ts` y specs.
 - Docs: TASK, DDR, PLAN.
 
 ## Implementation steps
@@ -134,3 +134,6 @@ Ficha 360° aún ausente (se mitiga con componentes reutilizables). Concurrencia
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-25): [Implementation Plan] Se alinea el plan con lo construido tras el Quality Gate (REV-03, REV-05, REV-06, REV-07): historial de actividad embebido en `activity-dialog` (sin `activity-history`), pruebas de actividad dentro de `test_api_tasks.py` más `test_concurrency_tasks.py`, sin protocolos nuevos en `ports.py`, diálogo de confirmación al cancelar/archivar y «Nueva tarea» desde la lista solo con cliente (oportunidades desde su tarjeta). Solicitado por delivery-publish. La Specification no cambia (INV-03 sigue pendiente de decisión, REV-04).

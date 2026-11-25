@@ -1,6 +1,6 @@
 # REV-2026-11-25-crm-tareas-actividad-comercial-06: Insignias de estado no siguen el mapa del sistema de diseno ni el DDR
 
-**Status:** Open (Low; aceptado, listado en Known limitations)
+**Status:** Resolved (corregido tras el Quality Gate)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-25-crm-tareas-actividad-comercial.md (v1)

@@ -3721,6 +3721,14 @@
         "follow_up": "Acompanhamento pendente"
       },
       "VER_MAS": "Ver mais"
+    },
+    "CONFIRM_TASK": {
+      "CANCELAR_TITULO": "Cancelar tarefa",
+      "CANCELAR_TEXTO": "A tarefa deixa de estar pendente; você poderá reabri-la em «Canceladas».",
+      "CANCELAR_CONFIRMAR": "Cancelar tarefa",
+      "ARCHIVAR_TITULO": "Arquivar tarefa",
+      "ARCHIVAR_TEXTO": "A tarefa é ocultada de todas as listas e não pode ser recuperada pela interface.",
+      "ARCHIVAR_CONFIRMAR": "Arquivar tarefa"
     }
   }
 }

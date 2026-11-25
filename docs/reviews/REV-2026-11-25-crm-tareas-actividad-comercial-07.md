@@ -1,6 +1,6 @@
 # REV-2026-11-25-crm-tareas-actividad-comercial-07: Desviaciones del plan/DDR no registradas: relacionado solo cliente en la lista, activity-history, compacta bajo md
 
-**Status:** Open (Low; aceptado, listado en Known limitations)
+**Status:** Resolved (corregido tras el Quality Gate)
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-25-crm-tareas-actividad-comercial.md (v1)

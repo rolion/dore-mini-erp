@@ -2,6 +2,8 @@
 from datetime import timedelta
 from uuid import uuid4
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from modules.accounts.testing import authenticate, make_admin, make_company
@@ -170,7 +172,21 @@ class ListTaskTests(TaskApiBase):
         self.assertEqual(soon['is_overdue'], False)
         self.assertEqual(self.client.get(TASKS, {'status': 'archived'}).status_code, 400)
 
-    def test_filter_by_owner_and_related_without_n_plus_one(self):  # AC-05
+    def test_listing_uses_a_constant_number_of_queries(self):  # AC-05 (REV-03)
+        def queries() -> int:
+            with CaptureQueriesContext(connection) as captured:
+                self.assertEqual(self.client.get(TASKS).status_code, 200)
+            return len(captured)
+
+        self.task(title='Primera')
+        opportunity = self.create(customer_id=str(self.buyer.id))
+        self.task(title='De oportunidad', customer_id=None, opportunity_id=opportunity['id'])
+        few = queries()
+        for number in range(6):
+            self.task(title=f'Otra {number}', customer_id=str(self.customer(f'C{number}').id))
+        self.assertEqual(queries(), few)
+
+    def test_filter_by_owner_and_related(self):  # AC-05
         mate = make_admin(self.company, username='colega')
         self.task(title='Mía')
         self.task(title='Del colega', owner_id=mate.id)
