@@ -1,0 +1,11 @@
+// Tabla apilada bajo `md`: cada fila se ve como tarjeta con su rótulo (sin colores fuera de los tokens).
+@media (max-width: 767.98px) {
+  .crm-task-table {
+    thead { display: none; }
+    tr { display: block; border-bottom: 1px solid var(--bs-border-color); padding: 0.5rem 0; }
+    td { display: flex; justify-content: space-between; gap: 1rem; border: 0; padding: 0.25rem 0.5rem; }
+    td::before { content: attr(data-label); font-weight: 600; }
+  }
+}
+
+.crm-task-actions { display: flex; flex-wrap: wrap; gap: 0.25rem; }

@@ -55,7 +55,8 @@
         "CUSTOMERS": "Clientes",
         "BOARD": "Quadro",
         "LEADS": "Prospectos",
-        "OPPORTUNITIES": "Oportunidades"
+        "OPPORTUNITIES": "Oportunidades",
+        "TASKS": "Para contatar"
       }
     },
     "ORDERS": {
@@ -3629,6 +3630,96 @@
       "CERRADA_GANADA": "Oportunidade encerrada como ganha.",
       "CERRADA_PERDIDA": "Oportunidade encerrada como perdida.",
       "PEDIDO_VINCULADO": "Pedido vinculado à oportunidade."
+    },
+    "TASK_LIST": {
+      "TITULO": "Para contatar",
+      "NUEVA_TAREA": "Nova tarefa",
+      "TAREA": "Tarefa",
+      "RELACIONADO": "Relacionado",
+      "VENCIMIENTO": "Vencimento",
+      "VACIO": "Você não tem tarefas pendentes.",
+      "SIN_RESULTADOS": "Não há tarefas com estes filtros.",
+      "FILTROS": {
+        "pending": "Pendentes",
+        "overdue": "Vencidas",
+        "done": "Concluídas",
+        "cancelled": "Canceladas",
+        "all": "Todas"
+      },
+      "ESTADOS": {
+        "pending": "Pendente",
+        "overdue": "Vencida",
+        "done": "Concluída",
+        "cancelled": "Cancelada",
+        "archived": "Arquivada"
+      },
+      "TIPOS": {
+        "customer": "Cliente",
+        "opportunity": "Oportunidade"
+      },
+      "COMPLETAR": "Concluir",
+      "COMPLETAR_DE": "Concluir a tarefa {{title}}",
+      "EDITAR_DE": "Editar a tarefa {{title}}",
+      "CANCELAR_DE": "Cancelar a tarefa {{title}}",
+      "REABRIR": "Reabrir",
+      "REABRIR_DE": "Reabrir a tarefa {{title}}",
+      "ARCHIVAR": "Arquivar",
+      "ARCHIVAR_DE": "Arquivar a tarefa {{title}}",
+      "CREADA": "Tarefa criada.",
+      "GUARDADA": "Tarefa salva.",
+      "COMPLETADA": "Tarefa concluída.",
+      "COMPLETADA_CON_ACTIVIDAD": "Tarefa concluída e atividade registrada.",
+      "CANCELADA_OK": "Tarefa cancelada.",
+      "REABIERTA": "Tarefa reaberta.",
+      "ARCHIVADA": "Tarefa arquivada."
+    },
+    "TASK_DIALOG": {
+      "NUEVA": "Nova tarefa",
+      "EDITAR": "Editar tarefa",
+      "TITULO": "Título",
+      "VENCIMIENTO": "Vencimento",
+      "BUSCAR_CLIENTE": "Cliente",
+      "CLIENTE_OBLIGATORIO": "Escolha um cliente.",
+      "TITULO_OBLIGATORIO": "Informe um título.",
+      "VENCIMIENTO_OBLIGATORIO": "Informe o vencimento.",
+      "GUARDANDO": "Salvando…",
+      "ACCION": "Nova tarefa",
+      "ACCION_DE": "Nova tarefa para {{name}}"
+    },
+    "COMPLETE_DIALOG": {
+      "TITULO": "Concluir tarefa",
+      "REGISTRAR_ACTIVIDAD": "Registrar o que aconteceu (atividade)",
+      "CONFIRMAR": "Concluir",
+      "COMPLETANDO": "Concluindo…"
+    },
+    "ACTIVITY": {
+      "TITULO_DIALOG": "Registrar atividade",
+      "CANAL": "Canal",
+      "RESULTADO": "Resultado",
+      "SIN_RESULTADO": "Sem resultado",
+      "FECHA": "Data e hora",
+      "FECHA_AYUDA": "Se deixar vazio, usa agora.",
+      "HISTORIAL": "Histórico de atividade",
+      "SIN_HISTORIAL": "Ainda não há atividade registrada.",
+      "GUARDAR": "Registrar",
+      "GUARDANDO": "Registrando…",
+      "REGISTRADA": "Atividade registrada.",
+      "ACCION": "Atividade",
+      "ACCION_DE": "Registrar atividade de {{name}}",
+      "CHANNELS": {
+        "call": "Ligação",
+        "whatsapp": "WhatsApp",
+        "email": "E-mail",
+        "visit": "Visita",
+        "other": "Outro"
+      },
+      "OUTCOMES": {
+        "contacted": "Contatado",
+        "no_answer": "Sem resposta",
+        "interested": "Interessado",
+        "not_interested": "Não interessado",
+        "follow_up": "Acompanhamento pendente"
+      }
     }
   }
 }

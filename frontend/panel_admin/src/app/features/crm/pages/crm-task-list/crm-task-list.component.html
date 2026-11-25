@@ -1,0 +1,134 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'CRM.TASK_LIST.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate">
+        <i class="fas fa-home font-17" aria-hidden="true"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.CUSTOMER_LIST.BREADCRUMB' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'CRM.TASK_LIST.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="p-10">
+        <div class="ngxTableHeader d-flex align-items-center">
+          <div class="table-title">
+            <h2><strong>{{ 'CRM.TASK_LIST.TITULO' | translate }}</strong></h2>
+          </div>
+          <button type="button" class="btn btn-icon icon-left btn-primary rounded-button crm-add-button ms-auto" data-testid="new-task"
+            (click)="create()" [attr.title]="'CRM.TASK_LIST.NUEVA_TAREA' | translate" [attr.aria-label]="'CRM.TASK_LIST.NUEVA_TAREA' | translate">
+            <i class="material-icons" aria-hidden="true">add</i>
+          </button>
+        </div>
+
+        <form class="row g-2 align-items-end mb-2" (submit)="$event.preventDefault()" [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS' | translate">
+          <div class="col-sm-5 col-md-4">
+            <label for="crm-task-owner-filter" class="form-label">{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</label>
+            <select id="crm-task-owner-filter" class="form-select" [formControl]="ownerControl" data-testid="owner-filter">
+              <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+              @for (owner of ownerOptions; track owner.id) {
+              <option [value]="'' + owner.id">{{ owner.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-sm-4 col-md-3">
+            <label for="crm-task-status-filter" class="form-label">{{ 'COMMON.ESTADO' | translate }}</label>
+            <select id="crm-task-status-filter" class="form-select" [formControl]="statusControl" data-testid="status-filter">
+              @for (filter of filters; track filter) {
+              <option [value]="filter">{{ 'CRM.TASK_LIST.FILTROS.' + filter | translate }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-auto">
+            <button type="button" class="btn btn-light" data-testid="clear-filters" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+          </div>
+        </form>
+
+        @if (success) {
+        <div class="alert alert-success" role="status" data-testid="success">{{ success }}</div>
+        }
+
+        @if (actionError) {
+        <div class="alert alert-warning" role="alert" data-testid="action-error">{{ actionError }}</div>
+        }
+
+        @if (error) {
+        <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert" data-testid="task-error">
+          <span>{{ error }}</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else if (loading && !rows.length) {
+        <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+        } @else if (total === 0) {
+        <div class="text-center py-4" data-testid="task-empty">
+          @if (hasFilters) {
+          <p class="text-muted">{{ 'CRM.TASK_LIST.SIN_RESULTADOS' | translate }}</p>
+          <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+          } @else {
+          <p class="text-muted">{{ 'CRM.TASK_LIST.VACIO' | translate }}</p>
+          <button type="button" class="btn btn-primary" data-testid="empty-new" (click)="create()">{{ 'CRM.TASK_LIST.NUEVA_TAREA' | translate }}</button>
+          }
+        </div>
+        } @else {
+        <table class="table align-middle crm-task-table" data-testid="task-table">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'CRM.TASK_LIST.VENCIMIENTO' | translate }}</th>
+              <th scope="col">{{ 'CRM.TASK_LIST.TAREA' | translate }}</th>
+              <th scope="col">{{ 'CRM.TASK_LIST.RELACIONADO' | translate }}</th>
+              <th scope="col">{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</th>
+              <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+              <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.id) {
+            <tr data-testid="task-row">
+              <td [attr.data-label]="'CRM.TASK_LIST.VENCIMIENTO' | translate">{{ row.dueAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td [attr.data-label]="'CRM.TASK_LIST.TAREA' | translate"><strong data-testid="task-title">{{ row.title }}</strong></td>
+              <td [attr.data-label]="'CRM.TASK_LIST.RELACIONADO' | translate">
+                <span class="text-muted small">{{ 'CRM.TASK_LIST.TIPOS.' + row.related.type | translate }}</span>
+                {{ row.related.name }}
+              </td>
+              <td [attr.data-label]="'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate">{{ row.owner.name }}</td>
+              <td [attr.data-label]="'COMMON.ESTADO' | translate">
+                @if (row.isOverdue) {
+                <span class="badge-outline col-red" data-testid="status-badge">{{ 'CRM.TASK_LIST.ESTADOS.overdue' | translate }}</span>
+                } @else {
+                <span class="badge-outline" [class.col-orange]="row.status === 'pending'" [class.col-green]="row.status === 'done'"
+                  [class.col-blue]="row.status === 'cancelled'" data-testid="status-badge">{{ 'CRM.TASK_LIST.ESTADOS.' + row.status | translate }}</span>
+                }
+              </td>
+              <td [attr.data-label]="'COMMON.ACCIONES' | translate">
+                <div class="crm-task-actions">
+                  @if (row.status === 'pending') {
+                  <button type="button" class="btn btn-primary btn-sm" data-testid="complete-task" (click)="complete(row)"
+                    [attr.aria-label]="'CRM.TASK_LIST.COMPLETAR_DE' | translate: { title: row.title }">{{ 'CRM.TASK_LIST.COMPLETAR' | translate }}</button>
+                  <button type="button" class="btn btn-light btn-sm" data-testid="edit-task" (click)="edit(row)"
+                    [attr.aria-label]="'CRM.TASK_LIST.EDITAR_DE' | translate: { title: row.title }">{{ 'COMMON.EDITAR' | translate }}</button>
+                  <button type="button" class="btn btn-light btn-sm" data-testid="cancel-task" (click)="cancel(row)"
+                    [attr.aria-label]="'CRM.TASK_LIST.CANCELAR_DE' | translate: { title: row.title }">{{ 'COMMON.CANCELAR' | translate }}</button>
+                  } @else {
+                  <button type="button" class="btn btn-light btn-sm" data-testid="reopen-task" (click)="reopen(row)"
+                    [attr.aria-label]="'CRM.TASK_LIST.REABRIR_DE' | translate: { title: row.title }">{{ 'CRM.TASK_LIST.REABRIR' | translate }}</button>
+                  <button type="button" class="btn btn-light btn-sm" data-testid="archive-task" (click)="archive(row)"
+                    [attr.aria-label]="'CRM.TASK_LIST.ARCHIVAR_DE' | translate: { title: row.title }">{{ 'CRM.TASK_LIST.ARCHIVAR' | translate }}</button>
+                  }
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+        <p class="text-muted m-0" data-testid="task-total">{{ 'CRM.CUSTOMER_LIST.SHOWING' | translate: { from: rangeStart, to: rangeEnd, total: total } }}</p>
+        @if (total > pageSize) {
+        <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
+          [page]="page" [maxSize]="3" [boundaryLinks]="true" (pageChange)="onPage($event)" />
+        }
+        }
+      </div>
+    </div>
+  </div>
+</section>

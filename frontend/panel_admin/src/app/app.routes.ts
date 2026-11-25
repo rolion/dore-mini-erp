@@ -243,6 +243,13 @@ export const APP_ROUTE: Route[] = [
                     import('./features/crm/crm.routes').then((m) => m.CRM_LEADS_ROUTE),
             },
             {
+                path: 'crm/tasks',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
+                loadChildren: () =>
+                    import('./features/crm/crm.routes').then((m) => m.CRM_TASKS_ROUTE),
+            },
+            {
                 path: 'sales/orders',
                 canActivate: [moduleGuard],
                 data: { module: 'sales' },

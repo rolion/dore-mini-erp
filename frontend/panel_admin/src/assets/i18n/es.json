@@ -55,7 +55,8 @@
         "CUSTOMERS": "Clientes",
         "BOARD": "Tablero",
         "LEADS": "Prospectos",
-        "OPPORTUNITIES": "Oportunidades"
+        "OPPORTUNITIES": "Oportunidades",
+        "TASKS": "Por contactar"
       }
     },
     "ORDERS": {
@@ -3629,6 +3630,96 @@
       "CERRADA_GANADA": "Oportunidad cerrada como ganada.",
       "CERRADA_PERDIDA": "Oportunidad cerrada como perdida.",
       "PEDIDO_VINCULADO": "Pedido vinculado a la oportunidad."
+    },
+    "TASK_LIST": {
+      "TITULO": "Por contactar",
+      "NUEVA_TAREA": "Nueva tarea",
+      "TAREA": "Tarea",
+      "RELACIONADO": "Relacionado",
+      "VENCIMIENTO": "Vencimiento",
+      "VACIO": "No tienes tareas pendientes.",
+      "SIN_RESULTADOS": "No hay tareas con estos filtros.",
+      "FILTROS": {
+        "pending": "Pendientes",
+        "overdue": "Vencidas",
+        "done": "Hechas",
+        "cancelled": "Canceladas",
+        "all": "Todas"
+      },
+      "ESTADOS": {
+        "pending": "Pendiente",
+        "overdue": "Vencida",
+        "done": "Hecha",
+        "cancelled": "Cancelada",
+        "archived": "Archivada"
+      },
+      "TIPOS": {
+        "customer": "Cliente",
+        "opportunity": "Oportunidad"
+      },
+      "COMPLETAR": "Completar",
+      "COMPLETAR_DE": "Completar la tarea {{title}}",
+      "EDITAR_DE": "Editar la tarea {{title}}",
+      "CANCELAR_DE": "Cancelar la tarea {{title}}",
+      "REABRIR": "Reabrir",
+      "REABRIR_DE": "Reabrir la tarea {{title}}",
+      "ARCHIVAR": "Archivar",
+      "ARCHIVAR_DE": "Archivar la tarea {{title}}",
+      "CREADA": "Tarea creada.",
+      "GUARDADA": "Tarea guardada.",
+      "COMPLETADA": "Tarea completada.",
+      "COMPLETADA_CON_ACTIVIDAD": "Tarea completada y actividad registrada.",
+      "CANCELADA_OK": "Tarea cancelada.",
+      "REABIERTA": "Tarea reabierta.",
+      "ARCHIVADA": "Tarea archivada."
+    },
+    "TASK_DIALOG": {
+      "NUEVA": "Nueva tarea",
+      "EDITAR": "Editar tarea",
+      "TITULO": "Título",
+      "VENCIMIENTO": "Vencimiento",
+      "BUSCAR_CLIENTE": "Cliente",
+      "CLIENTE_OBLIGATORIO": "Elige un cliente.",
+      "TITULO_OBLIGATORIO": "Ingresa un título.",
+      "VENCIMIENTO_OBLIGATORIO": "Indica el vencimiento.",
+      "GUARDANDO": "Guardando…",
+      "ACCION": "Nueva tarea",
+      "ACCION_DE": "Nueva tarea para {{name}}"
+    },
+    "COMPLETE_DIALOG": {
+      "TITULO": "Completar tarea",
+      "REGISTRAR_ACTIVIDAD": "Registrar qué pasó (actividad)",
+      "CONFIRMAR": "Completar",
+      "COMPLETANDO": "Completando…"
+    },
+    "ACTIVITY": {
+      "TITULO_DIALOG": "Registrar actividad",
+      "CANAL": "Canal",
+      "RESULTADO": "Resultado",
+      "SIN_RESULTADO": "Sin resultado",
+      "FECHA": "Fecha y hora",
+      "FECHA_AYUDA": "Si la dejas vacía se usa ahora.",
+      "HISTORIAL": "Historial de actividad",
+      "SIN_HISTORIAL": "Aún no hay actividad registrada.",
+      "GUARDAR": "Registrar",
+      "GUARDANDO": "Registrando…",
+      "REGISTRADA": "Actividad registrada.",
+      "ACCION": "Actividad",
+      "ACCION_DE": "Registrar actividad de {{name}}",
+      "CHANNELS": {
+        "call": "Llamada",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "visit": "Visita",
+        "other": "Otro"
+      },
+      "OUTCOMES": {
+        "contacted": "Contactado",
+        "no_answer": "Sin respuesta",
+        "interested": "Interesado",
+        "not_interested": "No interesado",
+        "follow_up": "Seguimiento pendiente"
+      }
     }
   }
 }

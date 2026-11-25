@@ -18,6 +18,8 @@ import { sumMoney } from '../../../../shared/utils/decimal-sum';
 import {
   CLOSE_DIALOG_CONVERT, CloseOpportunityDialogComponent,
 } from '../../components/close-opportunity-dialog/close-opportunity-dialog.component';
+import { ActivityDialogComponent } from '../../components/activity-dialog/activity-dialog.component';
+import { TaskDialogComponent } from '../../components/task-dialog/task-dialog.component';
 import { ConvertLeadDialogComponent } from '../../components/convert-lead-dialog/convert-lead-dialog.component';
 import { OpportunityDialogComponent } from '../../components/opportunity-dialog/opportunity-dialog.component';
 import { CrmApiError, CrmBoard, CrmStage } from '../../models/board';
@@ -287,6 +289,21 @@ export class CrmOpportunityBoardComponent implements OnInit {
       board, owners: this.ownerOptions, currentUser: this.currentUser, opportunity,
     });
     ref.result.then(() => this.done(tr('CRM.OPPORTUNITY_BOARD.GUARDADA')), () => this.reload$.next());
+  }
+
+  logActivity(opportunity: CrmOpportunity): void {
+    const ref = this.modal.open(ActivityDialogComponent, { centered: true, backdrop: 'static', scrollable: true });
+    (ref.componentInstance as ActivityDialogComponent).open({ type: 'opportunity', id: opportunity.id, name: opportunity.title });
+    ref.result.then(() => this.done(tr('CRM.ACTIVITY.REGISTRADA')), () => undefined);
+  }
+
+  newTask(opportunity: CrmOpportunity): void {
+    const ref = this.modal.open(TaskDialogComponent, { centered: true, backdrop: 'static' });
+    (ref.componentInstance as TaskDialogComponent).open({
+      owners: this.ownerOptions, currentUser: this.currentUser,
+      related: { type: 'opportunity', id: opportunity.id, name: opportunity.title },
+    });
+    ref.result.then(() => this.done(tr('CRM.TASK_LIST.CREADA')), () => undefined);
   }
 
   close(opportunity: CrmOpportunity): void {

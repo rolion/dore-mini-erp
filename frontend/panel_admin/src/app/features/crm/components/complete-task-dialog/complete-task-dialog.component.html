@@ -1,0 +1,30 @@
+<form (ngSubmit)="confirm()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'CRM.COMPLETE_DIALOG.TITULO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (errorMessage) {
+    <div class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert" data-testid="complete-error">{{ errorMessage }}</div>
+    }
+    <dl class="row mb-3">
+      <dt class="col-sm-4">{{ 'CRM.TASK_LIST.TAREA' | translate }}</dt>
+      <dd class="col-sm-8">{{ task.title }}</dd>
+      <dt class="col-sm-4">{{ 'CRM.TASK_LIST.RELACIONADO' | translate }}</dt>
+      <dd class="col-sm-8">{{ task.related.name }}</dd>
+    </dl>
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" id="crm-complete-with-activity" [formControl]="withActivity" data-testid="with-activity">
+      <label class="form-check-label" for="crm-complete-with-activity">{{ 'CRM.COMPLETE_DIALOG.REGISTRAR_ACTIVIDAD' | translate }}</label>
+    </div>
+    @if (withActivity.value) {
+    <app-crm-activity-fields [form]="form" [errors]="fieldErrors" idPrefix="crm-complete" />
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!canConfirm" data-testid="confirm-complete">
+      {{ (saving ? 'CRM.COMPLETE_DIALOG.COMPLETANDO' : 'CRM.COMPLETE_DIALOG.CONFIRMAR') | translate }}
+    </button>
+  </div>
+</form>

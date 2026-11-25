@@ -20,6 +20,10 @@
               </div>
             </div>
 
+            @if (success) {
+            <div class="alert alert-success" role="status" data-testid="success">{{ success }}</div>
+            }
+
             @if (compact) {
             <div class="crm-compact" data-testid="crm-compact">
               <button type="button" class="btn btn-light w-100 crm-touch crm-filters-toggle" data-testid="filters-toggle"
@@ -134,6 +138,12 @@
                   </div>
                   }
                 </dl>
+                <div class="d-flex flex-wrap gap-1 mt-2">
+                  <button type="button" class="btn btn-light btn-sm" (click)="logActivity(row)" data-testid="log-activity"
+                    [attr.aria-label]="'CRM.ACTIVITY.ACCION_DE' | translate: { name: row.name }">{{ 'CRM.ACTIVITY.ACCION' | translate }}</button>
+                  <button type="button" class="btn btn-light btn-sm" (click)="newTask(row)" data-testid="new-task-for"
+                    [attr.aria-label]="'CRM.TASK_DIALOG.ACCION_DE' | translate: { name: row.name }">{{ 'CRM.TASK_DIALOG.ACCION' | translate }}</button>
+                </div>
               </li>
               }
             </ul>
@@ -169,6 +179,14 @@
                 </ng-template>
               </ngx-datatable-column>
               }
+              <ngx-datatable-column [name]="'COMMON.ACCIONES' | translate" [sortable]="false" [width]="190">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  <button type="button" class="btn btn-light btn-sm" (click)="logActivity(row)" data-testid="log-activity"
+                    [attr.aria-label]="'CRM.ACTIVITY.ACCION_DE' | translate: { name: row.name }">{{ 'CRM.ACTIVITY.ACCION' | translate }}</button>
+                  <button type="button" class="btn btn-light btn-sm ms-1" (click)="newTask(row)" data-testid="new-task-for"
+                    [attr.aria-label]="'CRM.TASK_DIALOG.ACCION_DE' | translate: { name: row.name }">{{ 'CRM.TASK_DIALOG.ACCION' | translate }}</button>
+                </ng-template>
+              </ngx-datatable-column>
             </ngx-datatable>
             }
           </div>

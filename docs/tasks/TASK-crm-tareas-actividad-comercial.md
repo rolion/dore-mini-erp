@@ -1,6 +1,6 @@
 # TASK-crm-tareas-actividad-comercial: PB-CRM-005 · Tareas y actividad comercial
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tareas-actividad-comercial` (base: `crm`)
@@ -13,6 +13,7 @@
 | 2026-11-25 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-25 | INVESTIGATION → DESIGN → PLANNING | Decisiones de negocio respondidas por el usuario; DDR escrito | delivery-start |
 | 2026-11-25 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
+| 2026-11-25 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -76,7 +77,22 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-25-crm-tareas-actividad-comercial.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+
+**Backend (`backend/modules/crm/`)** — dominio puro `domain/task.py` y `domain/activity.py` (INV-01…INV-06); `application/{related,task_services,activity_services}.py`; modelos `TaskModel`/`ActivityModel` y migración `0003_tasks_activities`; repositorios `DjangoTaskRepository`/`DjangoActivityRepository` y `DjangoOpportunityRepository.get_many`; API `/api/crm/tasks/…` y `/api/crm/activities/` (API-01…API-04). Cubre AC-01…AC-08 con `tests/test_domain_task.py` y `tests/test_api_tasks.py` (suite `modules.crm`: 139 pruebas OK con PostgreSQL).
+
+**Frontend (`features/crm/`)** — modelos y servicios (`crm-tasks-api`, `crm-activities-api`), página «Por contactar» (`crm-task-list`, ruta `/pocketbiz/crm/tasks`, ítem de menú), diálogos `task-dialog`, `complete-task-dialog`, `activity-dialog` (con historial) y `activity-fields` compartido; acciones «Actividad» y «Nueva tarea» en la tarjeta del Kanban y en la lista de clientes (AC-09, AC-10). i18n es/en/pt. Karma: 1952 pruebas OK; `npm run lint`, `i18n:check` y `ng build` sin errores.
+
+**Pantalla de referencia seguida:** `crm-lead-list` (Lista) y `close-opportunity-dialog` (diálogos). Se reutilizaron `toLocalInput/fromLocalInput`, `CrmApiError`/`crmErrors`, badges `badge-outline` y botones del sistema; no se añadieron patrones nuevos (no se modificó `design-system.md`).
+
+**Desviaciones respecto al plan (detalle de implementación, sin cambiar Specification):**
+- `completed_at` se **conserva** al archivar una tarea hecha (INV-03 lo daba «nulo en los demás estados»); la restricción de BD permite `archived` con o sin fecha. No afecta ningún AC.
+- No se añadieron protocolos de repositorio a `ports.py` (el módulo ya usa duck typing para sus repositorios).
+- La lista «Por contactar» es una tabla Bootstrap apilada bajo `md` (CSS propio) en lugar de `ngx-datatable` + tarjetas; el DDR pedía «variante compacta» y esto la cubre con menos código.
+- «Nueva tarea» desde la lista permite elegir **cliente**; para tareas de una oportunidad se usa el botón de su tarjeta del Kanban (el selector de oportunidades requeriría tablero).
+- El «Historial de actividad» no es un botón aparte: va dentro del diálogo «Actividad».
+- Se copió `backend/.env` (no versionado, sin leerlo) al worktree y se enlazó `node_modules` para poder ejecutar pruebas; ambos están ignorados por git.
+
+**Deuda técnica:** sin Playwright (E2E NO, ver PLAN); la ficha 360° (PB-CRM-002) deberá embeber `activity-dialog`/`task-dialog`; no hay vista de calendario ni recordatorios (fuera de alcance).
 
 ## Review
 _Pendiente_

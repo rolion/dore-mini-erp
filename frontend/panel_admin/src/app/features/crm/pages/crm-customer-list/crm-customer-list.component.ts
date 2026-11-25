@@ -1,18 +1,23 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, Injector, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { NgbCollapse, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapse, NgbModal, NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
 import { Subject, catchError, debounceTime, distinctUntilChanged, finalize, of, switchMap, tap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { Warehouse, WarehousesApiService } from '../../../inventory';
+import { ActivityDialogComponent } from '../../components/activity-dialog/activity-dialog.component';
+import { TaskDialogComponent } from '../../components/task-dialog/task-dialog.component';
 import { CrmCustomer, CrmListMeta } from '../../models/crm-customer';
+import { CrmOwner } from '../../models/opportunity';
 import { CrmCustomersApiService } from '../../services/crm-customers-api.service';
+import { CrmUsersApiService } from '../../services/crm-users-api.service';
+import { AuthService } from '../../../../core/service/auth.service';
 
 /** Por debajo de `lg` (992 px) los filtros son un panel colapsable con «Aplicar» y las filas son tarjetas. */
 export const COMPACT_QUERY = '(max-width: 991.98px)';
@@ -39,6 +44,7 @@ export class CrmCustomerListComponent implements OnInit {
   meta: CrmListMeta = { sales_enabled: true, warehouse_filter_enabled: false };
   warehouses: Warehouse[] = [];
 
+  success = '';
   protected applied = { search: '', warehouseId: '' };
   private warehousesLoaded = false;
 
@@ -46,6 +52,8 @@ export class CrmCustomerListComponent implements OnInit {
   private api = inject(CrmCustomersApiService);
   private warehousesApi = inject(WarehousesApiService);
   private router = inject(Router);
+  private modal = inject(NgbModal);
+  private injector = inject(Injector);
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
@@ -140,6 +148,29 @@ export class CrmCustomerListComponent implements OnInit {
     this.searchControl.setValue('', { emitEvent: false });
     this.warehouseControl.setValue('', { emitEvent: false });
     this.applyFilters();
+  }
+
+  /** «Registrar actividad» de un cliente, con su historial. */
+  logActivity(customer: CrmCustomer): void {
+    const ref = this.modal.open(ActivityDialogComponent, { centered: true, backdrop: 'static', scrollable: true });
+    (ref.componentInstance as ActivityDialogComponent).open({ type: 'customer', id: customer.id, name: customer.name });
+    ref.result.then(() => (this.success = tr('CRM.ACTIVITY.REGISTRADA')), () => undefined);
+  }
+
+  /** «Nueva tarea» para un cliente; los responsables se piden al abrir (solo si la persona lo usa). */
+  newTask(customer: CrmCustomer): void {
+    const user = this.injector.get(AuthService).currentUserValue;
+    const currentUser: CrmOwner | null = user
+      ? { id: user.id, name: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username }
+      : null;
+    this.injector.get(CrmUsersApiService).list().pipe(catchError(() => of([] as CrmOwner[])), takeUntilDestroyed(this.destroyRef))
+      .subscribe((owners) => {
+        const ref = this.modal.open(TaskDialogComponent, { centered: true, backdrop: 'static' });
+        (ref.componentInstance as TaskDialogComponent).open({
+          owners, currentUser, related: { type: 'customer', id: customer.id, name: customer.name },
+        });
+        ref.result.then(() => (this.success = tr('CRM.TASK_LIST.CREADA')), () => undefined);
+      });
   }
 
   retry(): void {

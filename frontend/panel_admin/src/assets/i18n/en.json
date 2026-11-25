@@ -62,7 +62,8 @@
         "CUSTOMERS": "Customers",
         "BOARD": "Board",
         "LEADS": "Leads",
-        "OPPORTUNITIES": "Opportunities"
+        "OPPORTUNITIES": "Opportunities",
+        "TASKS": "To contact"
       }
     },
     "ORDERS": {
@@ -3629,6 +3630,96 @@
       "CERRADA_GANADA": "Opportunity closed as won.",
       "CERRADA_PERDIDA": "Opportunity closed as lost.",
       "PEDIDO_VINCULADO": "Order linked to the opportunity."
+    },
+    "TASK_LIST": {
+      "TITULO": "To contact",
+      "NUEVA_TAREA": "New task",
+      "TAREA": "Task",
+      "RELACIONADO": "Related to",
+      "VENCIMIENTO": "Due",
+      "VACIO": "You have no pending tasks.",
+      "SIN_RESULTADOS": "No tasks match these filters.",
+      "FILTROS": {
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "done": "Done",
+        "cancelled": "Cancelled",
+        "all": "All"
+      },
+      "ESTADOS": {
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "done": "Done",
+        "cancelled": "Cancelled",
+        "archived": "Archived"
+      },
+      "TIPOS": {
+        "customer": "Customer",
+        "opportunity": "Opportunity"
+      },
+      "COMPLETAR": "Complete",
+      "COMPLETAR_DE": "Complete task {{title}}",
+      "EDITAR_DE": "Edit task {{title}}",
+      "CANCELAR_DE": "Cancel task {{title}}",
+      "REABRIR": "Reopen",
+      "REABRIR_DE": "Reopen task {{title}}",
+      "ARCHIVAR": "Archive",
+      "ARCHIVAR_DE": "Archive task {{title}}",
+      "CREADA": "Task created.",
+      "GUARDADA": "Task saved.",
+      "COMPLETADA": "Task completed.",
+      "COMPLETADA_CON_ACTIVIDAD": "Task completed and activity logged.",
+      "CANCELADA_OK": "Task cancelled.",
+      "REABIERTA": "Task reopened.",
+      "ARCHIVADA": "Task archived."
+    },
+    "TASK_DIALOG": {
+      "NUEVA": "New task",
+      "EDITAR": "Edit task",
+      "TITULO": "Title",
+      "VENCIMIENTO": "Due",
+      "BUSCAR_CLIENTE": "Customer",
+      "CLIENTE_OBLIGATORIO": "Choose a customer.",
+      "TITULO_OBLIGATORIO": "Enter a title.",
+      "VENCIMIENTO_OBLIGATORIO": "Set the due date.",
+      "GUARDANDO": "Saving…",
+      "ACCION": "New task",
+      "ACCION_DE": "New task for {{name}}"
+    },
+    "COMPLETE_DIALOG": {
+      "TITULO": "Complete task",
+      "REGISTRAR_ACTIVIDAD": "Log what happened (activity)",
+      "CONFIRMAR": "Complete",
+      "COMPLETANDO": "Completing…"
+    },
+    "ACTIVITY": {
+      "TITULO_DIALOG": "Log activity",
+      "CANAL": "Channel",
+      "RESULTADO": "Outcome",
+      "SIN_RESULTADO": "No outcome",
+      "FECHA": "Date and time",
+      "FECHA_AYUDA": "Leave empty to use now.",
+      "HISTORIAL": "Activity history",
+      "SIN_HISTORIAL": "No activity logged yet.",
+      "GUARDAR": "Log",
+      "GUARDANDO": "Logging…",
+      "REGISTRADA": "Activity logged.",
+      "ACCION": "Activity",
+      "ACCION_DE": "Log activity for {{name}}",
+      "CHANNELS": {
+        "call": "Call",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "visit": "Visit",
+        "other": "Other"
+      },
+      "OUTCOMES": {
+        "contacted": "Contacted",
+        "no_answer": "No answer",
+        "interested": "Interested",
+        "not_interested": "Not interested",
+        "follow_up": "Follow-up pending"
+      }
     }
   }
 }
