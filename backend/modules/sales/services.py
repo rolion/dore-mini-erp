@@ -14,6 +14,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
+from modules.sales.domain.enums import OrderStatus
 from modules.sales.infrastructure.django import read_queries
 
 ZERO = Decimal('0.00')
@@ -263,3 +264,32 @@ def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: s
         raise ImportRejected('order_rejected', message, field) from exc
     covered = post_accounting and SalesPostingAdapter(company_id).posts_on(sale_date)
     return ImportedSale(order_id=order.id, code=order.code, total=order.total, without_posting=not covered)
+
+
+# --- Vínculo de oportunidades de CRM (TASK-crm-prospectos-oportunidades) ------------------------------------
+
+@dataclass(frozen=True)
+class OrderForCrm:
+    id: UUID
+    customer_id: UUID | None
+    order_date: date
+    total: Decimal
+    status: str
+    cancelled: bool
+
+
+def _order_for_crm(order) -> OrderForCrm:
+    return OrderForCrm(id=order.id, customer_id=order.customer_id, order_date=order.order_date, total=order.total,
+                       status=order.status, cancelled=order.status == OrderStatus.CANCELLED.value)
+
+
+def get_order_for_crm(company_id: UUID, order_id: UUID) -> OrderForCrm | None:
+    """El pedido de la empresa en cualquier estado (CRM decide si es vinculable), o `None` si es ajeno."""
+    order = read_queries.order_by_id(company_id, order_id)
+    return _order_for_crm(order) if order else None
+
+
+def list_orders_for_customer_for_crm(company_id: UUID, customer_id: UUID, limit: int = 50) -> tuple[OrderForCrm, ...]:
+    """Pedidos no cancelados del cliente en la empresa, los más recientes primero (máximo `limit`)."""
+    orders = read_queries.non_cancelled_orders_of_customer(company_id, customer_id)[:limit]
+    return tuple(_order_for_crm(o) for o in orders)

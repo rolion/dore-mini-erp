@@ -109,3 +109,14 @@ def customer_summaries(company_id: UUID, customer_ids) -> list[dict]:
 def customer_ids_in_warehouse(company_id: UUID, warehouse_id: UUID) -> list:
     return list(valid_orders(company_id).filter(customer_id__isnull=False, warehouse_id=warehouse_id)
                 .values_list('customer_id', flat=True).distinct())
+
+
+def order_by_id(company_id: UUID, order_id: UUID):
+    """El pedido de la empresa (cualquier estado) o `None`."""
+    return OrderModel.objects.filter(company_id=company_id, pk=order_id).first()
+
+
+def non_cancelled_orders_of_customer(company_id: UUID, customer_id: UUID) -> QuerySet:
+    """Pedidos no cancelados del cliente en la empresa, los más recientes primero."""
+    return (OrderModel.objects.filter(company_id=company_id, customer_id=customer_id)
+            .exclude(status=OrderStatus.CANCELLED.value).order_by('-order_date', '-created_at', 'id'))

@@ -1,12 +1,22 @@
 """Único lugar de CRM que conoce a Clientes, Ventas e Inventario, y solo por sus `services.py`."""
 from collections.abc import Collection
+from datetime import datetime
 from uuid import UUID
 
-from modules.crm.application.ports import CommercialSummary, CustomerRef
+from django.utils import timezone
+
+from modules.crm.application.ports import (
+    CommercialSummary,
+    CustomerContact,
+    CustomerGatewayError,
+    CustomerRef,
+    OrderRef,
+)
 from modules.customers import services as customer_services
 from modules.inventory import services as inventory_services
 from modules.sales import services as sales_services
 from shared import module_gate
+from shared.identity import CompanyUserDirectory
 
 
 class _CustomerRows:
@@ -74,11 +84,73 @@ class ModuleAvailabilityAdapter:
         return 'inventory' in self._keys()
 
 
-class NoCards:
-    """Adaptador vigente mientras no existan tarjetas (PB-CRM-004 lo reemplaza): cuenta 0 y no mueve nada."""
+def system_clock() -> datetime:
+    return timezone.now()
 
-    def count(self, stage_id: UUID) -> int:
-        return 0
 
-    def reassign(self, from_stage_id: UUID, to_stage_id: UUID) -> int:
-        return 0
+def _contact(found) -> CustomerContact:
+    return CustomerContact(found.id, found.name, found.phone, found.active)
+
+
+class CustomerGatewayAdapter:
+    """Prospectos ↔ Clientes: normalizar teléfono, buscar coincidencias y crear el cliente al convertir."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def normalize_phone(self, raw: str) -> str:
+        return customer_services.normalize_phone_for_crm(raw)
+
+    def find_active_by_phone(self, normalized_phone: str) -> list[CustomerContact]:
+        found = customer_services.find_active_customers_by_phone(self.company_id, normalized_phone)
+        return [_contact(c) for c in found]
+
+    def get(self, customer_id: UUID) -> CustomerContact | None:
+        found = customer_services.get_customer_for_crm(self.company_id, customer_id)
+        return _contact(found) if found else None
+
+    def get_many(self, customer_ids: Collection[UUID]) -> dict[UUID, CustomerContact]:
+        found = customer_services.get_customers_for_crm(self.company_id, customer_ids)
+        return {i: _contact(c) for i, c in found.items()}
+
+    def create(self, name: str, phone: str, email: str) -> CustomerContact:
+        try:
+            return _contact(customer_services.create_customer_for_crm(self.company_id, name, phone, email))
+        except customer_services.CustomerRejected as exc:
+            raise CustomerGatewayError(exc.errors) from exc
+
+
+def _order(found) -> OrderRef:
+    return OrderRef(found.id, found.customer_id, found.order_date, found.total, found.status, found.cancelled)
+
+
+class OrderGatewayAdapter:
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def get(self, order_id: UUID) -> OrderRef | None:
+        found = sales_services.get_order_for_crm(self.company_id, order_id)
+        return _order(found) if found else None
+
+    def list_for_customer(self, customer_id: UUID) -> list[OrderRef]:
+        return [_order(o) for o in sales_services.list_orders_for_customer_for_crm(self.company_id, customer_id)]
+
+
+class UserDirectoryAdapter:
+    """Responsables = usuarios de la empresa, por el directorio neutral (CRM no conoce `accounts`)."""
+
+    def __init__(self, company_id: UUID):
+        self._directory = CompanyUserDirectory(company_id)
+
+    def exists(self, user_id: int) -> bool:
+        return self._directory.exists(user_id)
+
+    def names(self, user_ids: Collection[int]) -> dict[int, str]:
+        wanted = set(user_ids)
+        if not wanted:
+            return {}
+        return {row['id']: row['name'] for row in self._directory.list() if row['id'] in wanted}
+
+    def search(self, search: str = '') -> list[dict]:
+        """Usuarios de la empresa (`{id, name}`) cuyo nombre o usuario contiene el texto."""
+        return list(self._directory.list(search=search))

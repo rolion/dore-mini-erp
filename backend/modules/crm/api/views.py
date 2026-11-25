@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.crm.application.queries import ListCrmCustomers, WarehouseFilterUnavailable, WarehouseNotFound
@@ -8,6 +9,7 @@ from modules.crm.infrastructure.adapters import (
     CustomerDirectoryAdapter,
     ModuleAvailabilityAdapter,
     SalesReaderAdapter,
+    UserDirectoryAdapter,
     WarehouseDirectoryAdapter,
 )
 from shared.tenancy import company_id_from
@@ -48,3 +50,12 @@ class CrmCustomerListView(APIView):
                           'warehouse_filter_enabled': listing.warehouse_filter_enabled}
         page = paginator.paginate_queryset(listing.rows, request, view=self)
         return paginator.get_paginated_response(CrmCustomerSerializer(page, many=True).data)
+
+
+class CrmUserListView(APIView):
+    """Usuarios de la empresa para elegir responsable de una oportunidad (REV-03). Solo `id` y `name`."""
+    required_modules = ('customers',)
+
+    def get(self, request):
+        search = request.query_params.get('search', '').strip()
+        return Response(UserDirectoryAdapter(company_id_from(request)).search(search))

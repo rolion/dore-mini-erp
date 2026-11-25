@@ -134,3 +134,74 @@ def create_customer_for_import(company_id: UUID, name: str) -> CustomerForImport
         field, message = first_error(exc.errors)
         raise ImportRejected('customer_rejected', message, field) from exc
     return CustomerForImport(id=customer.id, name=customer.name, active=customer.active)
+
+
+# --- Prospectos de CRM (TASK-crm-prospectos-oportunidades) -------------------------------------------------
+
+@dataclass(frozen=True)
+class CustomerContactForCrm:
+    id: UUID
+    name: str
+    phone: str
+    active: bool
+
+
+class CustomerRejected(Exception):
+    """Clientes rechazó los datos al crear el cliente: `errors` es `{campo: [mensajes]}`."""
+
+    def __init__(self, errors: dict[str, list[str]]):
+        super().__init__(errors)
+        self.errors = errors
+
+
+def _contact(customer) -> CustomerContactForCrm:
+    return CustomerContactForCrm(id=customer.id, name=customer.name, phone=customer.phone, active=customer.active)
+
+
+def normalize_phone_for_crm(raw: str) -> str:
+    """El teléfono tal como lo guarda Clientes (misma normalización y país por defecto); vacío si no hay."""
+    from django.conf import settings
+
+    from modules.customers.domain.customer import normalize_phone
+
+    return normalize_phone(raw, settings.DEFAULT_PHONE_COUNTRY_CODE) if (raw or '').strip() else ''
+
+
+def find_active_customers_by_phone(company_id: UUID, normalized_phone: str,
+                                   limit: int = 10) -> list[CustomerContactForCrm]:
+    """Clientes **activos** de la empresa con ese teléfono ya normalizado (por nombre); vacío sin teléfono."""
+    if not normalized_phone:
+        return []
+    return [_contact(c) for c in DjangoCustomerRepository(company_id).find_by_phone(normalized_phone, limit=limit * 2)
+            if c.active][:limit]
+
+
+def get_customer_for_crm(company_id: UUID, customer_id: UUID) -> CustomerContactForCrm | None:
+    """El cliente de la empresa con su estado (activo o no), o `None` si no existe o es de otra empresa."""
+    customer = DjangoCustomerRepository(company_id).get(customer_id)
+    return _contact(customer) if customer else None
+
+
+def get_customers_for_crm(company_id: UUID, customer_ids: Iterable[UUID]) -> dict[UUID, CustomerContactForCrm]:
+    """Contactos de varios clientes de la empresa en una sola consulta; los ids inexistentes no aparecen."""
+    ids = set(customer_ids)
+    if not ids:
+        return {}
+    rows = CustomerModel.objects.filter(company_id=company_id, pk__in=ids).values_list('id', 'name', 'phone', 'active')
+    return {i: CustomerContactForCrm(id=i, name=n, phone=p, active=a) for i, n, p, a in rows}
+
+
+def create_customer_for_crm(company_id: UUID, name: str, phone: str = '', email: str = '') -> CustomerContactForCrm:
+    """Crea el cliente con el caso de uso de Clientes. CRM ya resolvió los duplicados por teléfono, por eso se
+    confirma el aviso; lanza `CustomerRejected` si Clientes rechaza los datos."""
+    from django.conf import settings
+
+    from modules.customers.application.commands import CreateCustomer
+    from modules.customers.domain.exceptions import CustomerValidationError
+
+    try:
+        customer = CreateCustomer(DjangoCustomerRepository(company_id), settings.DEFAULT_PHONE_COUNTRY_CODE).execute(
+            name=name, phone=phone, email=email, confirm_duplicate=True)
+    except CustomerValidationError as exc:
+        raise CustomerRejected(exc.errors) from exc
+    return _contact(customer)

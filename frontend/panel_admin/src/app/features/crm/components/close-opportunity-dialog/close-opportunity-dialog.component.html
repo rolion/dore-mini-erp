@@ -1,0 +1,89 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ (linkOnly ? 'CRM.CLOSE_DIALOG.VINCULAR_PEDIDO' : 'CRM.CLOSE_DIALOG.CERRAR_OPORTUNIDAD') | translate }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+</div>
+<form [formGroup]="form" (ngSubmit)="confirm()" novalidate>
+  <div class="modal-body">
+    @if (errorMessage) {
+    <div class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert" data-testid="close-error">{{ errorMessage }}</div>
+    }
+    <dl class="row mb-2">
+      <dt class="col-sm-4">{{ 'CRM.CLOSE_DIALOG.OPORTUNIDAD' | translate }}</dt>
+      <dd class="col-sm-8">{{ opportunity.title }}</dd>
+      <dt class="col-sm-4">{{ 'CRM.OPPORTUNITY_BOARD.CONTACTO' | translate }}</dt>
+      <dd class="col-sm-8">{{ contactName || ('CRM.OPPORTUNITY_BOARD.SIN_CONTACTO' | translate) }}</dd>
+      <dt class="col-sm-4">{{ 'CRM.OPPORTUNITY_BOARD.IMPORTE' | translate }}</dt>
+      <dd class="col-sm-8">{{ opportunity.amount | money }}</dd>
+    </dl>
+
+    @if (!linkOnly) {
+    <fieldset class="mb-3">
+      <legend class="form-label fs-6">{{ 'CRM.CLOSE_DIALOG.RESULTADO' | translate }} <span class="text-danger">*</span></legend>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="crm-close-won" value="won" formControlName="result" data-testid="result-won">
+        <label class="form-check-label" for="crm-close-won">{{ 'CRM.CLOSE_DIALOG.GANADA' | translate }}</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="crm-close-lost" value="lost" formControlName="result" data-testid="result-lost">
+        <label class="form-check-label" for="crm-close-lost">{{ 'CRM.CLOSE_DIALOG.PERDIDA' | translate }}</label>
+      </div>
+    </fieldset>
+    }
+
+    @if (result === 'lost') {
+    <div class="form-group">
+      <label for="crm-lost-reason">{{ 'COMMON.MOTIVO' | translate }} <span class="text-danger">*</span></label>
+      <textarea id="crm-lost-reason" class="form-control" rows="3" formControlName="lostReason" [attr.maxlength]="reasonMaxLength"
+        [attr.aria-invalid]="!!reasonError" aria-describedby="crm-lost-reason-count" data-testid="lost-reason"></textarea>
+      <small id="crm-lost-reason-count" class="form-text text-muted">{{ reasonLength }} / {{ reasonMaxLength }}</small>
+      @if (reasonError) {
+      <small class="form-text text-danger d-block" role="alert">{{ reasonError }}</small>
+      }
+    </div>
+    }
+
+    @if (result === 'won') {
+    @if (showOrders) {
+    <div class="form-group" data-testid="order-picker">
+      <label for="crm-close-order">{{ 'CRM.CLOSE_DIALOG.PEDIDO' | translate }}@if (linkOnly) { <span class="text-danger">*</span>}</label>
+      @if (ordersLoading) {
+      <p class="text-muted mb-0">{{ 'COMMON.CARGANDO' | translate }}</p>
+      } @else if (ordersError) {
+      <div class="alert alert-danger" role="alert">
+        {{ ordersError }}
+        <button type="button" class="btn btn-light btn-sm ms-2" (click)="retryOrders()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+      </div>
+      } @else if (!orders.length) {
+      <p class="text-muted mb-0" data-testid="no-orders">{{ 'CRM.CLOSE_DIALOG.SIN_PEDIDOS' | translate }}</p>
+      } @else {
+      <select id="crm-close-order" class="form-select" formControlName="orderId" [attr.aria-invalid]="!!orderError">
+        <option value="">{{ (linkOnly ? 'CRM.CLOSE_DIALOG.ELIGE_PEDIDO' : 'CRM.CLOSE_DIALOG.SIN_PEDIDO') | translate }}</option>
+        @for (order of orders; track order.id) {
+        <option [value]="order.id">{{ order.orderDate | date: 'dd/MM/yyyy' }} · {{ order.total | money }}</option>
+        }
+      </select>
+      }
+      @if (orderError) {
+      <small class="form-text text-danger" role="alert">{{ orderError }}</small>
+      }
+    </div>
+    } @else if (needsConversion) {
+    <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle d-flex flex-wrap align-items-center gap-2" role="status" data-testid="needs-conversion">
+      <span>{{ 'CRM.CLOSE_DIALOG.CONVIERTE_PARA_PEDIDO' | translate }}</span>
+      <button type="button" class="btn btn-light btn-sm" (click)="requestConversion()" data-testid="go-convert">{{ 'CRM.LEAD_LIST.CONVERTIR' | translate }}</button>
+    </div>
+    }
+    }
+
+    @if (!linkOnly) {
+    <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle mb-0" role="note">{{ 'CRM.CLOSE_DIALOG.EFECTO' | translate }}</div>
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+    <button type="submit" class="btn" [class.btn-danger]="result === 'lost'" [class.btn-primary]="result !== 'lost'"
+      [disabled]="!canConfirm" data-testid="confirm-close">
+      {{ (saving ? 'CRM.CLOSE_DIALOG.GUARDANDO' : (linkOnly ? 'CRM.CLOSE_DIALOG.VINCULAR' : (result === 'lost' ? 'CRM.CLOSE_DIALOG.MARCAR_PERDIDA' : 'CRM.CLOSE_DIALOG.MARCAR_GANADA'))) | translate }}
+    </button>
+  </div>
+</form>
