@@ -87,7 +87,7 @@ No aplica según veredicto.
 **Pantalla de referencia seguida:** `crm-lead-list` (Lista) y `close-opportunity-dialog` (diálogos). Se reutilizaron `toLocalInput/fromLocalInput`, `CrmApiError`/`crmErrors`, badges `badge-outline` y botones del sistema; no se añadieron patrones nuevos (no se modificó `design-system.md`).
 
 **Desviaciones respecto al plan (detalle de implementación, sin cambiar Specification):**
-- `completed_at` se **conserva** al archivar una tarea hecha (INV-03 lo daba «nulo en los demás estados»); la restricción de BD permite `archived` con o sin fecha. No afecta ningún AC.
+- `completed_at` se **conserva** al archivar una tarea hecha (PLAN v3 enmendó INV-03 con aprobación del usuario); la restricción de BD permite `archived` con o sin fecha. No afecta ningún AC.
 - No se añadieron protocolos de repositorio a `ports.py` (el módulo ya usa duck typing para sus repositorios).
 - La lista «Por contactar» es una tabla Bootstrap apilada bajo `md` (CSS propio) en lugar de `ngx-datatable` + tarjetas; el DDR pedía «variante compacta» y esto la cubre con menos código.
 - «Nueva tarea» desde la lista permite elegir **cliente**; para tareas de una oportunidad se usa el botón de su tarjeta del Kanban (el selector de oportunidades requeriría tablero).
@@ -100,7 +100,7 @@ No aplica según veredicto.
 **Quality Gate: PASS** (subagente aislado, sin Critical/High). Hallazgos en `docs/reviews/REV-2026-11-25-crm-tareas-actividad-comercial-01..08.md`:
 - REV-01 (Medium, IMPLEMENTATION) completar con actividad no validaba cliente activo → **corregido** (`TaskService.complete` exige `related.require`; prueba nueva).
 - REV-02 (Medium, IMPLEMENTATION) el historial solo mostraba la primera página → **corregido** («Ver más» con paginación; prueba nueva).
-- REV-03 (Low) faltan pruebas de concurrencia y de N+1 (se añadió la de PATCH con responsable ajeno); REV-04 (Low, SPECIFICATION) `completed_at` conservado al archivar contradice INV-03 (enmendar la Specification requiere aprobación del usuario); REV-05 (Low) cancelar/archivar sin confirmación; REV-06 (Low, DESIGN) insignias fuera del mapa del DDR; REV-07 (Low, PLAN) desviaciones no reflejadas en el DDR; REV-08 (Low) el PR contra `crm` arrastra commits de `main` por el merge del PR 119 → abiertos y aceptados.
+- REV-03 (Low) faltan pruebas de concurrencia y de N+1 (se añadió la de PATCH con responsable ajeno); REV-04 (Low, SPECIFICATION) `completed_at` conservado al archivar → resuelto: el usuario aprobó enmendar INV-03 (PLAN v3); REV-05 (Low) cancelar/archivar sin confirmación; REV-06 (Low, DESIGN) insignias fuera del mapa del DDR; REV-07 (Low, PLAN) desviaciones no reflejadas en el DDR; REV-08 (Low) el PR contra `crm` arrastra commits de `main` por el merge del PR 119 → abierto y aceptado.
 - Revisión visual en navegador: **no verificada**.
 **Actualización (a pedido del usuario):** REV-03 (pruebas de N+1 con `CaptureQueriesContext`, de concurrencia con hilos y de PATCH con responsable ajeno), REV-05 (diálogo de confirmación al cancelar/archivar), REV-06 (insignias: Cancelada `col-grey`, resultados por tono) y REV-07 (DDR y PLAN v2 reflejan lo construido) → **corregidos**. Siguen abiertos: REV-04 (INV-03, requiere aprobación para enmendar la Specification) y REV-08 (PR contra `crm` arrastra commits de `main`).
 Tras las correcciones: `modules.crm` 140 pruebas OK, Karma 1953 OK, ruff/flake8/lint/i18n:check sin avisos.

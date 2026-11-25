@@ -1,6 +1,6 @@
 # REV-2026-11-25-crm-tareas-actividad-comercial-04: completed_at se conserva al archivar: contradice INV-03 sin actualizar la Specification
 
-**Status:** Open (Low; aceptado, listado en Known limitations)
+**Status:** Resolved (2026-11-25: el usuario aprobó conservar la fecha; INV-03 enmendada en PLAN v3)
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-25-crm-tareas-actividad-comercial.md (v1)

@@ -1,4 +1,4 @@
-# PLAN-2026-11-25-crm-tareas-actividad-comercial (v2)
+# PLAN-2026-11-25-crm-tareas-actividad-comercial (v3)
 
 **Task:** TASK-crm-tareas-actividad-comercial · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-crm-tareas-actividad-comercial-por-contactar-y-actividad / Ninguno
@@ -31,7 +31,7 @@ Se crean, editan y gestionan tareas; se registran actividades; ambas se consulta
 ## Domain rules / invariants
 - **INV-01** Tarea y actividad pertenecen a una empresa y se relacionan con exactamente uno de `customer_id` / `opportunity_id` de **esa** empresa (CHECK de BD y validación).
 - **INV-02** Estados de tarea: `pending`, `done`, `cancelled`, `archived`. Transiciones por métodos del agregado: `complete()` y `cancel()` desde pendiente; `reopen()` desde hecha/cancelada (borra `completed_at`); `archive()` desde hecha/cancelada (terminal). Cualquier otra transición → 409.
-- **INV-03** `completed_at` se fija solo al completar y es nulo en los demás estados.
+- **INV-03** `completed_at` se fija solo al completar; es nulo en pendiente y cancelada. Al archivar una tarea hecha se conserva (queda como registro de cuándo se completó); una archivada desde cancelada lo tiene nulo.
 - **INV-04** Solo una tarea pendiente se edita (título, vencimiento, responsable); el relacionado no cambia.
 - **INV-05** Título obligatorio, máx. 150 caracteres. `due_at` obligatorio. Responsable = usuario de la empresa (por defecto quien crea).
 - **INV-06** Actividad: canal ∈ {`call`, `whatsapp`, `email`, `visit`, `other`}; resultado opcional ∈ {`contacted`, `no_answer`, `interested`, `not_interested`, `follow_up`}; notas ≤ 2000; se exige resultado **o** notas; `occurred_at` por defecto ahora y no futuro. Inmutable (sin editar ni borrar).
@@ -137,3 +137,4 @@ Ninguna.
 
 ## Changelog
 - **v2** (2026-11-25): [Implementation Plan] Se alinea el plan con lo construido tras el Quality Gate (REV-03, REV-05, REV-06, REV-07): historial de actividad embebido en `activity-dialog` (sin `activity-history`), pruebas de actividad dentro de `test_api_tasks.py` más `test_concurrency_tasks.py`, sin protocolos nuevos en `ports.py`, diálogo de confirmación al cancelar/archivar y «Nueva tarea» desde la lista solo con cliente (oportunidades desde su tarjeta). Solicitado por delivery-publish. La Specification no cambia (INV-03 sigue pendiente de decisión, REV-04).
+- **v3** (2026-11-25): [Specification] INV-03 enmendada: `completed_at` se conserva al archivar una tarea hecha. Aprobado explícitamente por el usuario en el chat («Conservar fecha»). Cierra REV-04; el código y el CHECK de BD no cambian.
