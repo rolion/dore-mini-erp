@@ -113,3 +113,68 @@ class StageChangeModel(models.Model):
     class Meta:
         db_table = 'crm_stage_change'
         ordering = ['changed_at', 'id']
+
+
+class TaskModel(models.Model):
+    """Tarea comercial; relacionada con exactamente un cliente (UUID de otro contexto) u oportunidad (FK local)."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    customer_id = models.UUIDField(null=True, blank=True)
+    opportunity = models.ForeignKey(OpportunityModel, on_delete=models.PROTECT, null=True, blank=True,
+                                    related_name='tasks')
+    owner_id = models.BigIntegerField()
+    title = models.CharField(max_length=150)
+    due_at = models.DateTimeField()
+    status = models.CharField(max_length=10, default='pending')
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'crm_task'
+        ordering = ['due_at', 'created_at', 'id']
+        indexes = [
+            models.Index(fields=['company_id', 'owner_id', 'status', 'due_at'], name='crm_task_owner_status_due_idx'),
+            models.Index(fields=['company_id', 'customer_id'], name='crm_task_company_customer_idx'),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(customer_id__isnull=False, opportunity__isnull=True)
+                           | Q(customer_id__isnull=True, opportunity__isnull=False)),
+                name='crm_task_exactly_one_related'),
+            models.CheckConstraint(condition=Q(status__in=['pending', 'done', 'cancelled', 'archived']),
+                                   name='crm_task_status_valid'),
+            models.CheckConstraint(
+                condition=(Q(status__in=['pending', 'cancelled'], completed_at__isnull=True)
+                           | Q(status='done', completed_at__isnull=False) | Q(status='archived')),
+                name='crm_task_completed_coherent'),
+        ]
+
+
+class ActivityModel(models.Model):
+    """Actividad comercial: solo se agrega, nunca se edita ni se borra."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    actor_id = models.BigIntegerField()
+    customer_id = models.UUIDField(null=True, blank=True)
+    opportunity = models.ForeignKey(OpportunityModel, on_delete=models.PROTECT, null=True, blank=True,
+                                    related_name='activities')
+    task = models.ForeignKey(TaskModel, on_delete=models.PROTECT, null=True, blank=True, related_name='activities')
+    channel = models.CharField(max_length=10)
+    outcome = models.CharField(max_length=20, blank=True, default='')
+    notes = models.CharField(max_length=2000, blank=True, default='')
+    occurred_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'crm_activity'
+        ordering = ['-occurred_at', '-created_at', 'id']
+        indexes = [models.Index(fields=['company_id', 'customer_id', 'occurred_at'], name='crm_activity_customer_idx')]
+        constraints = [
+            models.CheckConstraint(
+                condition=(Q(customer_id__isnull=False, opportunity__isnull=True)
+                           | Q(customer_id__isnull=True, opportunity__isnull=False)),
+                name='crm_activity_exactly_one_related'),
+            models.CheckConstraint(condition=Q(channel__in=['call', 'whatsapp', 'email', 'visit', 'other']),
+                                   name='crm_activity_channel_valid'),
+        ]
