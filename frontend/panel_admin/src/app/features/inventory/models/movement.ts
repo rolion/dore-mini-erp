@@ -27,6 +27,7 @@ export const SOURCE_TYPE_OPTIONS: readonly { value: string; label: string }[] = 
   { value: 'purchase_receipt', get label() { return tr('INVENTORY.MOVEMENT.RECEPCION_DE_COMPRA'); } },
   { value: 'inventory_adjustment', get label() { return tr('INVENTORY.MOVEMENT.AJUSTE_DE_INVENTARIO'); } },
   { value: 'inventory_opening', get label() { return tr('INVENTORY.MOVEMENT.APERTURA_DE_EXISTENCIAS'); } },
+  { value: 'production_order', get label() { return tr('INVENTORY.MOVEMENT.ORDEN_DE_PRODUCCION'); } },
   { value: 'none', get label() { return tr('INVENTORY.MOVEMENT.SIN_DOCUMENTO'); } },
 ];
 
@@ -59,6 +60,8 @@ export interface StockMovement {
   unitAbbreviation: string | null;
   status: MovementStatus;
   source: MovementSource | null;
+  /** Lote al que pertenece el movimiento; `null` si es stock sin lote. */
+  lot: { id: string; code: string } | null;
 }
 
 /** Longitud máxima del motivo de una reversión (la misma que valida el servidor). */
@@ -117,6 +120,7 @@ export interface StockMovementDto {
   unit: { abbreviation: string | null };
   status: MovementStatus;
   source: MovementSource | null;
+  lot?: { id: string; code: string } | null;
 }
 
 export interface StockMovementDetailDto extends StockMovementDto {

@@ -23,6 +23,7 @@ export function makeMovement(overrides: Partial<StockMovement> = {}): StockMovem
     unitAbbreviation: 'kg',
     status: 'confirmed',
     source: { type: 'sales_order', label: 'Pedido de venta', id: '42', line: '', reference: 'PV-1', available: true },
+    lot: null,
     ...overrides,
   };
 }

@@ -26,6 +26,8 @@ export interface StockBalance {
   /** Derivado por el servidor del signo del saldo. */
   balanceState: BalanceState;
   unit: StockUnit | null;
+  /** El producto tiene lotes en este almacén (Producción): el detalle los lista. */
+  hasLots: boolean;
 }
 
 /** Existencia de un producto en un almacén, con lo necesario para decidir las acciones del detalle. */
@@ -134,6 +136,7 @@ export interface StockBalanceDto {
   quantity: string;
   balance_state: BalanceState;
   unit: StockUnitDto | null;
+  has_lots: boolean;
 }
 
 export interface StockPositionDto extends StockBalanceDto {

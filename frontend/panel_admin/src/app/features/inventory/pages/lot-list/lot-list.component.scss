@@ -1,0 +1,6 @@
+@use '../../components/inventory-table';
+
+.lot-quantity {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

@@ -50,6 +50,7 @@ describe('StockApiService', () => {
           quantity: '10.000',
           balance_state: 'positive',
           unit: { abbreviation: 'u', allows_fractions: false },
+          has_lots: false,
         },
       ],
     });
@@ -66,6 +67,7 @@ describe('StockApiService', () => {
       quantity: '10.000',
       balanceState: 'positive',
       unit: { abbreviation: 'u', allowsFractions: false },
+      hasLots: false,
     });
   });
 

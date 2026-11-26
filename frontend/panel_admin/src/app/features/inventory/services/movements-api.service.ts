@@ -25,6 +25,7 @@ export function toMovement(dto: StockMovementDto): StockMovement {
     unitAbbreviation: dto.unit.abbreviation,
     status: dto.status,
     source: dto.source,
+    lot: dto.lot ?? null,
   };
 }
 

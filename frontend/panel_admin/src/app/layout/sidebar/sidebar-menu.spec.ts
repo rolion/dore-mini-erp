@@ -49,6 +49,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(inventory.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/inventory',
       '/pocketbiz/inventory/stock',
+      '/pocketbiz/inventory/lots',
       '/pocketbiz/inventory/configuration',
       '/pocketbiz/inventory/movements',
       '/pocketbiz/inventory/adjustments',
@@ -104,7 +105,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(48);
+    expect(titles.length).toBe(49);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
@@ -141,7 +142,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(valuationPaths(['inventory'])).not.toContain('/pocketbiz/inventory/valuation');
     expect(valuationPaths(['inventory', 'costing'])).toContain('/pocketbiz/inventory/valuation');
     expect(visibleRoutes(routes, new Set(['inventory', 'costing'])).find((r) => r.module === 'inventory')?.submenu.length)
-      .toBe(7);
+      .toBe(8);
     expect(es.MENUITEMS.INVENTORY.LIST.VALUATION).toBe('Valoración');
   });
 });

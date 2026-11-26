@@ -35,6 +35,7 @@ export function toBalance(dto: StockBalanceDto): StockBalance {
     quantity: dto.quantity,
     balanceState: dto.balance_state,
     unit: toUnit(dto.unit),
+    hasLots: dto.has_lots ?? false,
   };
 }
 

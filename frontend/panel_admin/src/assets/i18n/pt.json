@@ -142,7 +142,8 @@
         "MOVEMENTS": "Movimentações",
         "ADJUSTMENTS": "Ajustes de estoque",
         "VALUATION": "Valorização",
-        "SETTINGS": "Ajustes"
+        "SETTINGS": "Ajustes",
+        "LOTS": "Lotes"
       }
     },
     "SETTINGS": {
@@ -1097,7 +1098,8 @@
       "RECEPCION_DE_COMPRA": "Recebimento de compra",
       "AJUSTE_DE_INVENTARIO": "Ajuste de estoque",
       "APERTURA_DE_EXISTENCIAS": "Abertura de estoque",
-      "SIN_DOCUMENTO": "Sem documento"
+      "SIN_DOCUMENTO": "Sem documento",
+      "ORDEN_DE_PRODUCCION": "Ordem de produção"
     },
     "STOCK": {
       "TODAS_LAS_CLASIFICACIONES": "Todas as classificações",
@@ -1119,6 +1121,28 @@
       "INGRESA_UN_NUMERO_MAYOR_O": "Informe um número maior ou igual a zero.",
       "LA_CANTIDAD_ADMITE_COMO_MAXIMO": "A quantidade admite no máximo {{p0}} casas decimais.",
       "LA_UNIDAD_BASE_DE_ESTE": "A unidade base deste produto não admite frações."
+    },
+    "LOTS": {
+      "LOTES": "Lotes",
+      "LOTES_DE_INVENTARIO": "Lotes de estoque",
+      "FISICO_Y_DISPONIBLE_PARA_EMPAQUE": "Saldo físico e disponível para embalagem de cada lote.",
+      "FILTROS_DE_LOTES": "Filtros de lotes",
+      "CODIGO_DE_LOTE": "Código do lote",
+      "BUSCAR_POR_CODIGO": "Buscar por código",
+      "SOLO_CON_STOCK": "Somente com estoque",
+      "LISTA_DE_LOTES": "Lista de lotes",
+      "LOTE": "Lote",
+      "CANTIDAD_FISICA": "Quantidade física",
+      "DISPONIBLE_PARA_EMPAQUE": "Disponível para embalagem",
+      "FECHA_DEL_LOTE": "Data do lote",
+      "EN_REFRIGERACION": "Em refrigeração",
+      "LIBERADO": "Liberado",
+      "BLOQUEADO_HASTA_SU_LIBERACION": "Bloqueado até a liberação",
+      "VER_EXISTENCIA": "Ver estoque",
+      "AUN_NO_HAY_LOTES": "Ainda não há lotes.",
+      "SIN_LOTES_PARA_LOS_FILTROS": "Nenhum lote para os filtros escolhidos.",
+      "PAGINAS_DE_LOTES": "Páginas de lotes",
+      "LOTES_DE_ESTE_PRODUCTO": "Lotes deste produto"
     }
   },
   "LANDING": {

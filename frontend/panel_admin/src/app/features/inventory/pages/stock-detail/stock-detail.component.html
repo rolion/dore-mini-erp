@@ -99,6 +99,45 @@
               }
             </div>
 
+            @if (p.hasLots) {
+            <h5 class="mx-4" data-testid="lots-title">{{ 'INVENTORY.LOTS.LOTES_DE_ESTE_PRODUCTO' | translate }}</h5>
+            @if (lotsError) {
+            <small class="form-text text-danger d-block mx-4 mb-2" data-testid="lots-error">{{ lotsError }}</small>
+            } @else if (lots.length) {
+            <div class="table-responsive">
+              <table class="table align-middle inventory-table" data-testid="lots-table">
+                <caption class="visually-hidden">{{ 'INVENTORY.LOTS.LISTA_DE_LOTES' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'INVENTORY.LOTS.LOTE' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'INVENTORY.LOTS.CANTIDAD_FISICA' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'INVENTORY.LOTS.DISPONIBLE_PARA_EMPAQUE' | translate }}</th>
+                    <th scope="col">{{ 'INVENTORY.LOTS.FECHA_DEL_LOTE' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (lot of lots; track lot.id) {
+                  <tr data-testid="lot-row">
+                    <td [attr.data-label]="'INVENTORY.LOTS.LOTE' | translate" class="fw-bold">{{ lot.code }}</td>
+                    <td [attr.data-label]="'COMMON.ESTADO' | translate">
+                      @if (lot.status === 'released') {
+                      <span class="badge-outline col-green d-inline-block">{{ lotStatusLabel(lot.status) }}</span>
+                      } @else {
+                      <span class="badge-outline col-orange d-inline-block">{{ lotStatusLabel(lot.status) }}</span>
+                      }
+                    </td>
+                    <td [attr.data-label]="'INVENTORY.LOTS.CANTIDAD_FISICA' | translate" class="text-end">{{ display(lot.physicalQuantity) }} {{ p.unit?.abbreviation }}</td>
+                    <td [attr.data-label]="'INVENTORY.LOTS.DISPONIBLE_PARA_EMPAQUE' | translate" class="text-end">{{ display(lot.availableQuantity) }} {{ p.unit?.abbreviation }}</td>
+                    <td [attr.data-label]="'INVENTORY.LOTS.FECHA_DEL_LOTE' | translate">{{ lot.lotDate | date: 'dd/MM/yyyy' }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+            }
+
             <h5 class="mx-4">{{ 'INVENTORY.STOCK_DETAIL.HISTORIAL_DE_MOVIMIENTOS' | translate }}</h5>
             @if (movementsError) {
             <div class="m-4">

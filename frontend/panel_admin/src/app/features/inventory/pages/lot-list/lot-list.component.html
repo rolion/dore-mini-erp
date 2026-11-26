@@ -1,0 +1,130 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'INVENTORY.LOTS.LOTES' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/inventory">{{ 'COMMON.INVENTARIO' | translate }}</a></li>
+    <li class="breadcrumb-item">{{ 'INVENTORY.LOTS.LOTES' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'INVENTORY.LOTS.LOTES_DE_INVENTARIO' | translate }}</strong></h2>
+                <small class="text-muted">{{ 'INVENTORY.LOTS.FISICO_Y_DISPONIBLE_PARA_EMPAQUE' | translate }}</small>
+              </div>
+            </div>
+
+            <form class="row g-2 m-2 align-items-end" [formGroup]="filterForm" data-testid="filters"
+              [attr.aria-label]="'INVENTORY.LOTS.FILTROS_DE_LOTES' | translate" (ngSubmit)="reload()">
+              <div class="col-12 col-md-3">
+                <label for="lot-search">{{ 'INVENTORY.LOTS.CODIGO_DE_LOTE' | translate }}</label>
+                <input id="lot-search" type="search" class="form-control" formControlName="search"
+                  [placeholder]="'INVENTORY.LOTS.BUSCAR_POR_CODIGO' | translate" />
+              </div>
+              <div class="col-12 col-sm-6 col-md-3">
+                <label for="lot-warehouse">{{ 'COMMON.ALMACEN' | translate }}</label>
+                <select id="lot-warehouse" class="form-select form-control" formControlName="warehouseId">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  @for (warehouse of warehouses; track warehouse.id) {
+                  <option [value]="warehouse.id">{{ warehouse.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-12 col-sm-6 col-md-3">
+                <label for="lot-status">{{ 'COMMON.ESTADO' | translate }}</label>
+                <select id="lot-status" class="form-select form-control" formControlName="status">
+                  <option value="">{{ 'COMMON.TODOS' | translate }}</option>
+                  <option value="refrigerating">{{ 'INVENTORY.LOTS.EN_REFRIGERACION' | translate }}</option>
+                  <option value="released">{{ 'INVENTORY.LOTS.LIBERADO' | translate }}</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-3 d-flex align-items-center gap-3">
+                <div class="form-check mb-0">
+                  <input id="lot-with-stock" type="checkbox" class="form-check-input" formControlName="withStock" />
+                  <label class="form-check-label" for="lot-with-stock">{{ 'INVENTORY.LOTS.SOLO_CON_STOCK' | translate }}</label>
+                </div>
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+            </form>
+
+            @if (errorMessage) {
+            <div class="alert alert-danger m-2 d-flex justify-content-between align-items-center" role="alert" data-testid="error">
+              <span>{{ errorMessage }}</span>
+              <button type="button" class="btn btn-sm btn-light" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            }
+
+            @if (loading && !rows.length) {
+            <p class="m-3" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (!rows.length && !errorMessage) {
+            <p class="text-body-secondary m-3" data-testid="empty">
+              {{ (filtersActive || productId ? 'INVENTORY.LOTS.SIN_LOTES_PARA_LOS_FILTROS' : 'INVENTORY.LOTS.AUN_NO_HAY_LOTES') | translate }}
+            </p>
+            } @else if (rows.length) {
+            <div class="table-responsive">
+              <table class="table align-middle inventory-table">
+                <caption class="visually-hidden">{{ 'INVENTORY.LOTS.LISTA_DE_LOTES' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'INVENTORY.LOTS.LOTE' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ALMACEN' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'INVENTORY.LOTS.CANTIDAD_FISICA' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'INVENTORY.LOTS.DISPONIBLE_PARA_EMPAQUE' | translate }}</th>
+                    <th scope="col">{{ 'INVENTORY.LOTS.FECHA_DEL_LOTE' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ACCIONES' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of rows; track row.id) {
+                  <tr data-testid="lot-row">
+                    <td [attr.data-label]="'INVENTORY.LOTS.LOTE' | translate" class="fw-bold" data-testid="code">{{ row.code }}</td>
+                    <td [attr.data-label]="'COMMON.PRODUCTO' | translate">{{ row.productName }}</td>
+                    <td [attr.data-label]="'COMMON.ALMACEN' | translate">{{ row.warehouseName }}</td>
+                    <td [attr.data-label]="'COMMON.ESTADO' | translate" data-testid="status">
+                      @if (row.status === 'released') {
+                      <span class="badge-outline col-green d-inline-block">{{ statusLabel(row.status) }}</span>
+                      } @else {
+                      <span class="badge-outline col-orange d-inline-block">{{ statusLabel(row.status) }}</span>
+                      }
+                    </td>
+                    <td [attr.data-label]="'INVENTORY.LOTS.CANTIDAD_FISICA' | translate" class="text-end lot-quantity" data-testid="physical">
+                      {{ display(row.physicalQuantity) }} {{ row.unit?.abbreviation }}
+                    </td>
+                    <td [attr.data-label]="'INVENTORY.LOTS.DISPONIBLE_PARA_EMPAQUE' | translate" class="text-end lot-quantity" data-testid="available">
+                      {{ display(row.availableQuantity) }} {{ row.unit?.abbreviation }}
+                      @if (row.status === 'refrigerating') {
+                      <small class="d-block text-body-secondary" data-testid="blocked-note">{{ 'INVENTORY.LOTS.BLOQUEADO_HASTA_SU_LIBERACION' | translate }}</small>
+                      }
+                    </td>
+                    <td [attr.data-label]="'INVENTORY.LOTS.FECHA_DEL_LOTE' | translate">{{ row.lotDate | date: 'dd/MM/yyyy' }}</td>
+                    <td [attr.data-label]="'COMMON.ACCIONES' | translate">
+                      <a class="btn btn-light btn-sm" [routerLink]="stockLink(row)" data-testid="stock-link">{{ 'INVENTORY.LOTS.VER_EXISTENCIA' | translate }}</a>
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (total > pageSize) {
+            <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize"
+              [page]="page" [maxSize]="5" [boundaryLinks]="true" [attr.aria-label]="'INVENTORY.LOTS.PAGINAS_DE_LOTES' | translate"
+              (pageChange)="onPage($event)" />
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
