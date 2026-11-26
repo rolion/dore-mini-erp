@@ -18,6 +18,7 @@
 | 2026-11-26 | PUBLISH → REVIEW → PUBLISH | Correcciones REV-02..07 y Quality Gate ciclo 2 PASS | delivery-publish |
 | 2026-11-26 | PUBLISH → REVIEW → PUBLISH | Plan v2..v4 (pedidos del usuario) y Quality Gate ciclo 3 PASS | delivery-publish |
 | 2026-11-26 | PUBLISH → REVIEW → PUBLISH | Arreglo del filtro de estado de la lista y Quality Gate ciclo 4 PASS | delivery-publish |
+| 2026-11-26 | PUBLISH → REVIEW → PUBLISH | Líneas de ingredientes del formulario en tarjetas (plan v5) y Quality Gate ciclo 5 PASS | delivery-publish |
 
 ## Investigación
 
@@ -103,6 +104,8 @@ Implementado el plan v1 sin cambios de Specification.
 **Notas de verificación (no es el Quality Gate):** suite de frontend completa en verde (1870 pruebas), `npm run i18n:check` sin faltantes, `tsc` sin errores, `ruff`/`flake8` limpios en `modules/production`. Backend: ver Review.
 
 ## Review
+**Quality Gate ciclo 5: PASS** (HEAD `feedcc6c`, subagente aislado): cubre las líneas de ingredientes del formulario en tarjetas < 957 px (plan v5, UI-03). Backend 303 OK, bandit limpio; frontend 1876 OK, lint, `i18n:check`, build y `npm audit` OK. Sin Critical/High. Hallazgos Low nuevos: botón quitar de 36 px (< 44 px del sistema), `:host ::ng-deep .btn-tbl-edit` innecesario en el formulario y copiado de la lista, fallback HEX `#dee2e6`/`#ffc107` en el scss, campo Cantidad de la tarjeta sin `text-end`, y sin prueba de cambio de breakpoint en caliente ni de errores por línea en la variante compacta. Revisión visual en navegador: no verificada.
+
 **Quality Gate ciclo 4: PASS** (HEAD `4b833609`, subagente aislado): cubre el arreglo del filtro de estado de la lista (formulario sin FormGroup recargaba la página; ahora `[formGroup]="filters"`, con prueba de regresión que falla sin el arreglo). Backend 303 OK, bandit limpio; frontend 1875 OK, lint, `i18n:check`, build y `npm audit` OK. Sin hallazgos nuevos; siguen los Low del ciclo 3. Revisión visual en navegador: no verificada.
 
 **Quality Gate ciclo 3: PASS** (HEAD `7f163be9`, subagente aislado): cubre plan v2..v4 (API snake_case, detalle y lista en tarjetas < 957 px, iconos de acción). Backend 303 OK, `makemigrations --check` sin cambios, bandit limpio; frontend 1874 OK (líneas 89,2 %), lint, `i18n:check`, build y `npm audit` OK. Sin Critical/High. Hallazgos Low no bloqueantes: HEX de `_table-actions` repetidos en `recipe-list.component.scss` (DESIGN), objetivo táctil de 36 px en tarjetas (DESIGN), posible desorden del mensaje de error del toggle en la fila de acciones (IMPLEMENTATION, no verificado visualmente), `COMPACT_QUERY` duplicada (PLAN) y N-03 (foco sin prueba directa). Revisión visual en navegador: no verificada.
