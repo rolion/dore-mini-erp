@@ -51,7 +51,9 @@ class DeliveryTestCase(APITestCase):
             self.assertEqual(response.status_code, 201, response.content)
         if ready:
             for action in ('prepare', 'ready'):
-                self.assertEqual(client.post(url(created, f'{action}/'), {}, format='json').status_code, 200)
+                response = client.post(url(created, f'{action}/'), {}, format='json')
+                self.assertEqual(response.status_code, 200)
+            created = response.json()  # ya confirmado: lleva el código NV- y su período
         return created
 
     def deliver(self, order, warehouse=None, expected_status=200, **extra):

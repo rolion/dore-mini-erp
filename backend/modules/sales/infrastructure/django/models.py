@@ -102,7 +102,7 @@ class OrderNumberCounterModel(models.Model):
     """Último número asignado de la serie de ventas de una empresa en un período fiscal."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    company_id = models.UUIDField()
+    company_id = models.UUIDField(db_index=True)
     fiscal_period_id = models.UUIDField()
     last_number = models.PositiveIntegerField(default=0)
 

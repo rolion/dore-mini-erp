@@ -1,6 +1,6 @@
 # TASK-numeracion-correlativa-pedidos-venta: Numeración correlativa de pedidos de venta por período fiscal
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-numeracion-correlativa-pedidos-venta
@@ -14,6 +14,7 @@
 | 2026-11-25 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-11-25 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-11-25 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-25 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2445) y Karma (1664) en verde por verificación propia | delivery-build |
 
 ## Investigación
 
@@ -82,7 +83,31 @@ Ver `docs/adr/ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo.md`.
 `docs/plans/PLAN-2026-11-25-numeracion-correlativa-pedidos-venta.md` (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** El pedido recibe `(período fiscal, número)` al confirmarse (`NEW → IN_PREPARATION`), dentro de la transacción de la confirmación. `code` pasa a `NV-000001`; los pedidos sin número conservan la etiqueta provisional `P-XXXXXXXX`. El API añade `number` y `fiscal_period {id, name}`.
+
+**Backend (qué cubre cada parte)**
+- Dominio `sales/domain/order.py`: `OrderNumber`, `Order.number`, `ensure_confirmable()` y `start_preparation(number)` (INV-01..04, AC-03). `OrderSummary` lleva `number` y `code`.
+- Puerto `OrderNumbering` (`application/ports.py`) usado por `StartOrderPreparation` y `PlaceOrder` (AC-02, AC-05, AC-06, AC-10); `ensure_confirmable()` corre antes de numerar para no consumir número en confirmaciones inválidas (EDGE-01).
+- Adaptador `OrderNumberingAdapter` (`infrastructure/adapters.py`): `accounting.services.lock_open_period` + contador con `select_for_update`; traduce a `fiscal_period_missing` / `fiscal_period_closed` (409 por el `RuleConflict` existente). Descripción del asiento de entrega con el período (AC-11).
+- Modelos y migraciones: `0006` (columnas nulas, `OrderNumberCounterModel`, restricción única parcial y dos CHECK) y `0007` (numeración del histórico, repetible; AC-12).
+- API: `code`, `number`, `fiscal_period` en lista y detalle (API-01..03).
+
+**Frontend.** `fiscalPeriod` en modelo y mapeo; lista (tabla y tarjetas) y detalle muestran el período solo si hay número (UI-01, UI-02); componente `app-fiscal-period-alert` (enlace a Contabilidad solo si el módulo está habilitado) en detalle y en `order-create` (UI-03); claves es/en/pt `SALES.FISCAL_PERIOD.*`, `SALES.ORDER_LIST.PERIODO`, `SALES.ORDER_DETAIL.PERIODO_FISCAL`. Diálogos e historial de clientes consumen `code` sin cambios (UI-04). Pantallas de referencia: Lista y «Detalle de documento en curso» del sistema de diseño; sin componentes nuevos de `shared/`.
+
+**Pruebas añadidas.** `test_order_number_domain` (dominio y casos de uso con fakes), `test_order_numbering` (serie por período/empresa, `order_date`, cancelados, snapshot, bloqueos, rollback, restricciones de BD, API), `test_order_numbering_concurrency` (8 confirmaciones simultáneas → `{1..8}`; dos períodos y dos empresas; mismo pedido dos veces; confirmar vs. cerrar), `test_order_number_migration` (0007 e idempotencia). Karma: `fiscal-period-alert`, detalle, `order-create`, lista y servicio. **Mutación comprobada:** quitando `lock_open_period` y `select_for_update`, las tres pruebas de carrera de numeración fallan; con ellos pasan.
+
+**Pruebas heredadas ajustadas.** Fixture `sales/tests/periods.py` (período abierto amplio) en `SalesApiTestCase`, `DeliveryTestCase` y en los tests de importación que confirman pedidos; `FakeOrderNumbering`/`fake_number` en `sales/tests/fakes.py`; claves nuevas en `DETAIL_KEYS`/`SUMMARY_KEYS`; `Books` reemplaza el período amplio por el suyo.
+
+**Desviaciones respecto al plan.**
+- `ensure_confirmable()` es un método nuevo del agregado (no estaba en el plan): permite validar antes de numerar. Detalle de implementación.
+- La migración `0007` depende de `('accounting', '0009_fiscal_period')`, como anticipó el ADR.
+- Enlace de la alerta: `/pocketbiz/accounting/settings?tab=periods` (la pestaña `periods` ya existe).
+- Para ejecutar pruebas se copió `backend/.env` del repositorio principal (con autorización del usuario) y se enlazó `node_modules`; ambos están en `.gitignore`.
+
+**Deuda técnica / notas.** Contador no extraído a `shared/` (ADR decisión 7). Pedidos heredados cancelados o fuera de período siguen con etiqueta provisional (limitación conocida). Sin Contabilidad/sin período no se puede confirmar (decisión del usuario). Avisos de lint previos sin tocar (E501/E301 en archivos de `sales`); cero avisos nuevos en líneas cambiadas (`flake8`/`ruff`).
+
+**Verificación propia (no es el Quality Gate).** `ng lint` y `i18n:check` sin hallazgos; `ng build` compila; Karma de `features` y `core`: 1664 pruebas OK; backend: pruebas de `sales`, `reporting`, `customers`, `data_import`, `modularity`, `accounting` y las nuevas en verde en la corrida por módulos; suite completa del backend (`python manage.py test`, PostgreSQL): 2445 pruebas OK. Una primera corrida de la suite completa dio cientos de errores por ejecutarse a la vez que otra sobre la misma base de pruebas; repetida sola y con base propia, quedaron 3 fallos reales (dos pruebas de `sales` que esperaban la etiqueta antigua en la referencia del movimiento de inventario y la guarda `company_id` indexado del contador), corregidos y re-ejecutada la suite completa en verde. `0006` se regeneró antes de cualquier merge para indexar `company_id` del contador.
 
 ## Review
 _Pendiente_
