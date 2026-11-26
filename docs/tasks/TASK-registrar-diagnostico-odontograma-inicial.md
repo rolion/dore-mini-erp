@@ -1,6 +1,6 @@
 # TASK-registrar-diagnostico-odontograma-inicial: Registrar diagnóstico y odontograma inicial
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-diagnostico-odontograma-inicial
@@ -14,6 +14,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → PLANNING | Investigación hecha; Specification BLOCKED por catálogo clínico sin validar (decisión del usuario: detener hasta validarlo) | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | El usuario decide usar la lista inicial del catálogo y modificarla luego; DDR, ADR y PLAN v1 (COMPLETO) listos | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa de backend y frontend según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,23 @@ No hay forma de registrar estado dental por pieza/superficie; la pieza solo apar
 `docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md` (v1, modo COMPLETO, Specification READY). Decisiones del usuario: catálogo inicial provisional (propuesta técnica a validar con el odontólogo después), evaluación = foto completa, permisos solo administrador con profesional opcional de Personal. Pregunta abierta no bloqueante: validación clínica del catálogo (versión aprobada, nombre del odontólogo y fecha, a adjuntar a la tarjeta).
 
 ## Implementación
-_Pendiente_
+
+**Backend** (`backend/modules/dentistry/`): `domain/odontogram_catalog.py` (catálogo provisional, FDI, superficies; INV-01…04), `domain/odontogram.py` (agregado `Evaluation`: validación, `confirm`, `amend`, inmutabilidad; INV-05…11), `infrastructure/evaluation_models.py` + migración `0005_odontogram_evaluations` (aditiva), `evaluation_repository.py`, `application/evaluations.py` (casos de uso, bloqueo de la fila del paciente, un solo borrador, INV-12), `api/evaluation_views.py` y rutas API-01…05, adaptador `ProfessionalLookup` hacia la fachada de Personal.
+
+**Frontend** (`features/dentistry/`): ruta `patients/:id/odontogram`, botón «Odontograma» en la ficha, servicio API tipado, utilidades FDI, componente SVG del gráfico (botones por pieza, leyenda textual, T/P, teclado), página con selector de versión, tabla equivalente, panel de pieza, hallazgos generales y diálogos de confirmar/corregir/descartar; 121 claves i18n en es/en/pt.
+
+**Cobertura:** AC-01…AC-10, AC-12 y AC-13 con `test_odontogram_domain.py` (16) y `test_odontogram_api.py`; AC-11 con specs Karma de utilidades, servicio, gráfico y página.
+
+**Desviaciones respecto al plan**
+- La tabla usa `table-responsive` y no la variante apilada < `lg` del DDR (ajuste menor pendiente).
+- Los nombres de `allowed_actions` (`edit`, `confirm`, `discard`, `amend`) los define el plan solo implícitamente; quedaron fijados en backend y en `models/odontogram.ts`.
+- Un borrador nuevo sin guardar se cancela sin diálogo; uno guardado pide confirmación y hace `DELETE`.
+- Se actualizó un test de PB-ODO-001 que afirmaba que la ficha no mostraba «Odontograma».
+- `design-system.md` y `ddd.md` ya se actualizaron en el commit de documentos (patrón Odontograma, nota PB-ODO-002).
+
+**Deuda técnica:** la migración generada excede 120 caracteres por línea (igual que migraciones previas; no se edita); catálogo clínico pendiente de validación por el odontólogo (`pending_clinical_validation: true`).
+
+**Pantalla de referencia:** Detalle con pestañas/acciones de ciclo de vida y diálogo de acción irreversible con motivo; componente nuevo `odontogram-chart` (no se movió a `shared/` por tener un único uso).
 
 ## Review
 _Pendiente_
