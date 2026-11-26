@@ -1,6 +1,6 @@
 # TASK-menu-por-tipo-de-empresa: Tipo de empresa al registrarse: módulos iniciales y orden del menú
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-menu-por-tipo-de-empresa
@@ -15,6 +15,7 @@
 | 2026-11-26 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PLAN v1 | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS (2 hallazgos Low: REV-01 cerrado, REV-02 aceptado) | delivery-publish |
 
 ## Investigación
 
@@ -111,7 +112,12 @@ Ver [PLAN-2026-11-26-menu-por-tipo-de-empresa](../plans/PLAN-2026-11-26-menu-por
 **Verificación propia (no es el Quality Gate).** Frontend: `ng lint` limpio, `tsc` limpio, `i18n:check` 0 faltantes, 1866 pruebas Karma OK, `ng build` OK. Backend: `ruff` limpio en lo cambiado; `accounts`, `modularity` y `data_import` (238 pruebas) OK; suite completa 2514 pruebas OK.
 
 ## Review
-_Pendiente_
+**Resultado: PASS** (Quality Gate en subagente aislado, 2026-11-26). Sin hallazgos Critical/High; ningún test falla.
+- Backend: `accounts + modularity + data_import + shared` 250 pruebas OK; regresión `catalog + purchases` 535 OK; `makemigrations --check`: sin cambios. Suite completa (2514 pruebas) OK en la corrida del implementador.
+- Frontend: 1866 pruebas Karma OK, `npm run lint` limpio, `i18n:check` 0 faltantes, `npm run build` OK.
+- Seguridad/DDD: `bandit` sin hallazgos; dominio sin Django; `accounts` no importa módulos de negocio ni al revés; sin lógica de negocio en vistas/serializers.
+- Hallazgos: [REV-01](../reviews/REV-2026-11-26-menu-por-tipo-de-empresa-01.md) (E501, Low) **cerrado**: línea partida, `ruff`/`flake8` limpios y `data_import` 63 OK. [REV-02](../reviews/REV-2026-11-26-menu-por-tipo-de-empresa-02.md) (prueba de AC-03 débil, Low) abierto, aceptado como limitación.
+- No verificado: revisión visual en navegador (signup y sidebar), `npm audit`.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/126 listo para aprobación humana; no se mergea. Cambio sensible: toca base de datos (migración `accounts/0003`) y el contrato de registro, con ADR `ADR-menu-por-tipo-de-empresa-plantilla-inicial`. Rollback: `migrate accounts 0002`.

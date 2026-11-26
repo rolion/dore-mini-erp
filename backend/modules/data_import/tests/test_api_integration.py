@@ -133,8 +133,8 @@ class FullSequenceTests(APITestCase):
 
     def test_valuation_then_import_with_purchases_inventory_and_accounting(self):
         registered = self.client.post('/api/auth/register/', {
-            'company_name': 'Dore', 'company_type': 'compraventa', 'username': 'demo', 'first_name': 'd', 'last_name': 'd', 'email': 'd@e.com',
-            'password': 'Sup3r-secreta-123'}, format='json')
+            'company_name': 'Dore', 'company_type': 'compraventa', 'username': 'demo', 'first_name': 'd',
+            'last_name': 'd', 'email': 'd@e.com', 'password': 'Sup3r-secreta-123'}, format='json')
         self.assertEqual(registered.status_code, 201, registered.content)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + registered.json()['token'])
         company_id = registered.json()['user']['company']['id']
