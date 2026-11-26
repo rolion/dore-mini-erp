@@ -31,7 +31,8 @@
     },
     "DENTISTRY": {
       "TEXT": "Odontología",
-      "PATIENTS": "Pacientes"
+      "PATIENTS": "Pacientes",
+      "BUDGETS": "Presupuestos"
     },
     "MAIN": {
       "TEXT": "-- Principal"
@@ -335,7 +336,17 @@
       "CONFIRMA_LA_CONTRASENA": "Confirma la contraseña.",
       "LAS_CONTRASENAS_NO_COINCIDEN": "Las contraseñas no coinciden.",
       "INGRESA_UN_CORREO_VALIDO": "Ingresa un correo válido.",
-      "NO_PUEDE_SUPERAR_CARACTERES": "No puede superar {{p0}} caracteres."
+      "NO_PUEDE_SUPERAR_CARACTERES": "No puede superar {{p0}} caracteres.",
+      "TIPO_DE_EMPRESA": "Tipo de empresa",
+      "SELECCIONA_UN_TIPO": "Selecciona un tipo",
+      "EL_TIPO_DE_EMPRESA_ES_OBLIGATORIO": "Selecciona el tipo de empresa.",
+      "TIPO_DE_EMPRESA_AYUDA": "Define los módulos con los que empiezas. Podrás activar más después en Ajustes.",
+      "TIPO_COMPRAVENTA": "Compraventa",
+      "TIPO_COMPRAVENTA_AYUDA": "Compras y ventas de productos, con inventario.",
+      "TIPO_SERVICIOS": "Servicios",
+      "TIPO_SERVICIOS_AYUDA": "Cotizaciones, cobros y agenda.",
+      "TIPO_ODONTOLOGIA": "Odontología",
+      "TIPO_ODONTOLOGIA_AYUDA": "Servicios de atención odontológica."
     }
   },
   "CUSTOMERS": {

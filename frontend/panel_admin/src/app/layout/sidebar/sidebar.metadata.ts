@@ -1,5 +1,7 @@
 // Sidebar route metadata
 export interface RouteInfo {
+  /** Identifica el ítem de primer nivel para ordenarlo según el tipo de empresa (`module` no basta: se repite). */
+  id?: string;
   path: string;
   title: string;
   iconType: string;

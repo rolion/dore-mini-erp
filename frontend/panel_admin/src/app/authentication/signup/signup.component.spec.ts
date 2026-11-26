@@ -17,6 +17,7 @@ describe('SignupComponent', () => {
   const user: User = { id: 1, username: 'maria', firstName: 'María', lastName: 'Q', token: 't' };
   const validValues = {
     companyName: '  Cuñapés SRL ',
+    companyType: 'servicios' as const,
     firstName: 'María',
     lastName: 'Quispe',
     username: 'maria',
@@ -65,6 +66,30 @@ describe('SignupComponent', () => {
     expect(el().querySelector('label[for="signup-company"]')?.textContent).toContain('Nombre de la empresa');
   });
 
+  it('offers the three company types, required, with a help text that follows the choice (AC-08)', () => {
+    const select = el().querySelector<HTMLSelectElement>('#signup-company-type');
+    const options = Array.from(select?.options ?? []).map((o) => o.value);
+    expect(options).toEqual(['', 'compraventa', 'servicios', 'odontologia']);
+    expect(el().querySelector('label[for="signup-company-type"]')?.textContent).toContain('Tipo de empresa');
+    expect(text('#signup-company-type-help')).toContain('Podrás activar más después en Ajustes');
+
+    component.registerForm.patchValue({ companyType: 'odontologia' });
+    fixture.detectChanges();
+    expect(text('#signup-company-type-help')).toBe('Servicios de atención odontológica.');
+  });
+
+  it('requires the company type and shows the server error under the field (AC-08)', () => {
+    component.registerForm.patchValue({ ...validValues, companyType: '' });
+    submit();
+    expect(auth.register).not.toHaveBeenCalled();
+    expect(component.fieldError('companyType')).toBe('Selecciona el tipo de empresa.');
+
+    auth.register.and.returnValue(throwError(() => new RegisterError('Revisa', { companyType: 'Valor inválido.' })));
+    component.registerForm.patchValue({ companyType: 'servicios' });
+    submit();
+    expect(component.fieldError('companyType')).toBe('Valor inválido.');
+  });
+
   it('does not call the backend with an empty form and marks the fields (AC-14)', () => {
     submit();
     expect(auth.register).not.toHaveBeenCalled();
@@ -95,6 +120,7 @@ describe('SignupComponent', () => {
 
     expect(auth.register).toHaveBeenCalledOnceWith({
       companyName: 'Cuñapés SRL',
+      companyType: 'servicios',
       firstName: 'María',
       lastName: 'Quispe',
       username: 'maria',

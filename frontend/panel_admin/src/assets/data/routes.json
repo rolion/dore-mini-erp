@@ -1,6 +1,7 @@
 {
   "routes": [
     {
+      "id": "dashboard",
       "path": "/pocketbiz/dashboard/main",
       "title": "MENUITEMS.DASHBOARD.TEXT",
       "iconType": "feather",
@@ -13,6 +14,7 @@
       "module": "reporting"
     },
     {
+      "id": "catalog",
       "path": "",
       "title": "MENUITEMS.CATALOG.TEXT",
       "iconType": "feather",
@@ -49,6 +51,7 @@
       "module": "catalog"
     },
     {
+      "id": "customers",
       "path": "/pocketbiz/customers",
       "title": "MENUITEMS.CUSTOMER.TEXT",
       "iconType": "feather",
@@ -61,6 +64,7 @@
       "module": "customers"
     },
     {
+      "id": "dentistry",
       "path": "",
       "title": "MENUITEMS.DENTISTRY.TEXT",
       "iconType": "feather",
@@ -85,6 +89,7 @@
       ]
     },
     {
+      "id": "sales",
       "path": "",
       "title": "MENUITEMS.SALES.TEXT",
       "iconType": "feather",
@@ -132,6 +137,7 @@
       "module": "sales"
     },
     {
+      "id": "expenses",
       "path": "",
       "title": "MENUITEMS.EXPENSES.TEXT",
       "iconType": "feather",
@@ -178,6 +184,7 @@
       "module": "expenses"
     },
     {
+      "id": "reports",
       "path": "/pocketbiz/reports",
       "title": "MENUITEMS.REPORTS.TEXT",
       "iconType": "feather",
@@ -190,6 +197,7 @@
       "module": "reporting"
     },
     {
+      "id": "purchases",
       "path": "",
       "title": "MENUITEMS.PURCHASES.TEXT",
       "iconType": "feather",
@@ -236,6 +244,7 @@
       "module": "purchases"
     },
     {
+      "id": "inventory",
       "path": "",
       "title": "MENUITEMS.INVENTORY.TEXT",
       "iconType": "feather",
@@ -327,6 +336,7 @@
       "module": "inventory"
     },
     {
+      "id": "accounting",
       "path": "",
       "title": "MENUITEMS.ACCOUNTING.TEXT",
       "adminOnly": true,
@@ -407,6 +417,7 @@
       "module": "accounting"
     },
     {
+      "id": "settings",
       "path": "",
       "title": "MENUITEMS.SETTINGS.TEXT",
       "iconType": "feather",
@@ -430,6 +441,7 @@
       ]
     },
     {
+      "id": "agenda",
       "path": "",
       "title": "MENUITEMS.AGENDA.TEXT",
       "iconType": "feather",
@@ -465,6 +477,7 @@
       ]
     },
     {
+      "id": "personnel",
       "path": "",
       "title": "MENUITEMS.PERSONNEL.TEXT",
       "iconType": "feather",
@@ -500,6 +513,7 @@
       ]
     },
     {
+      "id": "quotations",
       "path": "",
       "title": "MENUITEMS.QUOTATIONS.TEXT",
       "iconType": "feather",
@@ -524,6 +538,7 @@
       ]
     },
     {
+      "id": "receivables",
       "path": "",
       "title": "MENUITEMS.RECEIVABLES.TEXT",
       "iconType": "feather",
