@@ -139,6 +139,9 @@
                 <header class="purchase-card-header">
                   <div class="min-w-0">
                     <a class="fw-bold text-break" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
+                    @if (row.fiscalPeriod) {
+                    <small class="d-block text-secondary" data-testid="card-period">{{ 'PURCHASES.PURCHASE_LIST.PERIODO' | translate: { name: row.fiscalPeriod.name } }}</small>
+                    }
                     @if (row.externalReference) {
                     <small class="d-block text-secondary text-break">{{ row.externalReference }}</small>
                     }
@@ -203,6 +206,9 @@
               <ngx-datatable-column [name]="'PURCHASES.PURCHASE_LIST.REFERENCIA' | translate" [sortable]="false" [flexGrow]="1.2" [minWidth]="135">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold text-nowrap" [routerLink]="['/pocketbiz/purchases', row.id]">{{ row.reference }}</a>
+                  @if (row.fiscalPeriod) {
+                  <small class="d-block text-muted" data-testid="row-period">{{ 'PURCHASES.PURCHASE_LIST.PERIODO' | translate: { name: row.fiscalPeriod.name } }}</small>
+                  }
                   @if (row.externalReference) {
                   <small class="d-block text-muted">{{ row.externalReference }}</small>
                   }

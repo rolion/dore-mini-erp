@@ -173,6 +173,12 @@
     "LANGUAGE_LOAD_ERROR": "Could not change the language. Try again."
   },
   "COMMON": {
+    "FISCAL_PERIOD": {
+      "SIN_PERIODO": "The date is not inside any fiscal period, so it cannot be confirmed. Create the period in Accounting.",
+      "CERRADO": "The fiscal period of the date is closed, so it cannot be confirmed. Reopen it in Accounting.",
+      "CERRADO_NOMBRE": "The fiscal period “{{name}}” is closed, so it cannot be confirmed. Reopen it in Accounting.",
+      "IR_A_PERIODOS": "Go to fiscal periods"
+    },
     "591_7XXXXXXX": "+591 7xxxxxxx",
     "ACCIONES": "Actions",
     "ACTIVO": "Active",
@@ -1436,6 +1442,7 @@
       "PROVEEDOR_CREADO": "Supplier created"
     },
     "PURCHASE_DETAIL": {
+      "PERIODO_FISCAL": "Fiscal period",
       "DETALLE_DE_LA_COMPRA": "Purchase details",
       "RESUMEN": "Summary",
       "RECEPCIONES": "Receipts",
@@ -1506,6 +1513,7 @@
       "COMPRA_GUARDADA": "Purchase saved"
     },
     "PURCHASE_LIST": {
+      "PERIODO": "Period {{name}}",
       "NUEVA_COMPRA": "New purchase",
       "BUSCAR": "Search",
       "REFERENCIA_INTERNA_O_EXTERNA": "Internal or external reference",
@@ -1864,12 +1872,6 @@
       "EL_PEDIDO_YA_NO_ADMITE": "The order no longer accepts changes.",
       "PEDIDO_ACTUALIZADO": "Order updated",
       "PEDIDO_CREADO": "Order created"
-    },
-    "FISCAL_PERIOD": {
-      "SIN_PERIODO": "The order date is not inside any fiscal period, so it cannot be confirmed. Create the period in Accounting.",
-      "CERRADO": "The fiscal period of the order date is closed, so it cannot be confirmed. Reopen it in Accounting.",
-      "CERRADO_NOMBRE": "The fiscal period “{{name}}” is closed, so it cannot be confirmed. Reopen it in Accounting.",
-      "IR_A_PERIODOS": "Go to fiscal periods"
     },
     "ORDER_CREATE": {
       "DETALLE_DEL_PEDIDO": "Order details",

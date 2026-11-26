@@ -8,6 +8,7 @@ import importlib
 
 from django.apps import apps
 
+from .numbering_support import fake_number
 from modules.purchases.domain.enums import InventoryMode, ReceiptStatus
 from modules.purchases.domain.exceptions import ReceiptConflict
 from modules.purchases.domain.purchase import ItemDraft, Purchase, ReceiptLineDraft
@@ -28,7 +29,7 @@ class ReceiptRepositoryTests(TestCase):
         purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY, items=[
             ItemDraft(uuid4(), '10', '5.00', product_name='Harina', unit_abbreviation='kg'),
             ItemDraft(uuid4(), '4', '2.00', product_name='Bolsa', unit_abbreviation='u')])
-        purchase.confirm(NOW)
+        purchase.confirm(NOW, fake_number())
         self.purchase = self.purchases.save(purchase)
 
     def receive(self, quantities, warehouse_id=None):

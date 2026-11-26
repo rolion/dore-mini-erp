@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTestTranslations } from '../../../../core/i18n/testing';
-import { ModulesService } from '../../../../core/service/modules.service';
+import { provideTestTranslations } from '../../../core/i18n/testing';
+import { ModulesService } from '../../../core/service/modules.service';
 import { FiscalPeriodAlertComponent, FiscalPeriodErrorCode, isFiscalPeriodErrorCode } from './fiscal-period-alert.component';
 
 describe('FiscalPeriodAlertComponent', () => {

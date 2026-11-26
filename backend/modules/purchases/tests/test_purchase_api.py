@@ -8,6 +8,7 @@ from django.db import connection
 from rest_framework.test import APITestCase, APITransactionTestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.sales.tests.periods import open_test_period
 from modules.catalog.infrastructure.django.models import ProductModel, UnitModel
 from modules.modularity.infrastructure.django.models import CompanyModuleModel
 from modules.purchases.infrastructure.django.models import PurchaseItemModel, PurchaseModel, SupplierModel
@@ -16,7 +17,8 @@ from modules.purchases.tests.test_api import enable_purchases
 LIST_URL = '/api/purchases/'
 DETAIL_FIELDS = {'id', 'supplier', 'purchase_date', 'external_reference', 'notes', 'status', 'currency', 'editable',
                  'items', 'total', 'created_at', 'updated_at', 'reference', 'reception_status', 'payment_status',
-                 'confirmed_at', 'cancelled_at', 'cancellation_reason', 'allowed_actions', 'paid_total', 'balance'}
+                 'confirmed_at', 'cancelled_at', 'cancellation_reason', 'allowed_actions', 'paid_total', 'balance',
+                 'number', 'fiscal_period'}
 ITEM_FIELDS = {'id', 'product_id', 'product_name', 'unit_abbreviation', 'quantity', 'unit_price', 'subtotal',
                'received_quantity', 'pending_quantity'}
 
@@ -28,6 +30,7 @@ def detail_url(purchase_id):
 class PurchaseApiTestCase(APITestCase):
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
         enable_purchases(self.company)
         self.supplier = SupplierModel.objects.create(company_id=self.company.id, name='Distribuidora Sur')
@@ -237,7 +240,7 @@ class ListPurchaseTests(PurchaseApiTestCase):
         first = body['results'][0]
         self.assertEqual(set(first), {'id', 'purchase_date', 'supplier', 'external_reference', 'total', 'currency',
                                       'status', 'items_count', 'reference', 'reception_status',
-                                      'payment_status', 'paid_total', 'balance'})
+                                      'payment_status', 'paid_total', 'balance', 'number', 'fiscal_period'})
         self.assertEqual((first['supplier']['name'], first['total'], first['items_count']),
                          ('Distribuidora Sur', '25.00', 1))
         filtered = self.client.get(LIST_URL, {'supplier_id': str(other_supplier.id)}).json()

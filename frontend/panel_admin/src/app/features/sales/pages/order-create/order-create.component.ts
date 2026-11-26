@@ -2,7 +2,7 @@ import {
   FiscalPeriodAlertComponent,
   FiscalPeriodErrorCode,
   isFiscalPeriodErrorCode,
-} from '../../components/fiscal-period-alert/fiscal-period-alert.component';
+} from '../../../../shared/components/fiscal-period-alert/fiscal-period-alert.component';
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';

@@ -29,7 +29,7 @@ class ConfirmPurchaseApiTests(PurchaseApiTestCase):
         self.assertEqual((body['status'], body['editable'], body['allowed_actions']), ('confirmed', False, ['receive', 'pay', 'cancel']))
         self.assertEqual((body['reception_status'], body['payment_status']), ('not_received', 'unpaid'))
         self.assertIsNotNone(body['confirmed_at'])
-        self.assertRegex(body['reference'], r'^COM-[0-9A-F]{8}$')
+        self.assertRegex(body['reference'], r'^NC-\d{6}$')  # al confirmar recibe su número correlativo
         patch = self.client.patch(detail_url(purchase['id']), {'items': []}, format='json')
         self.assertEqual(patch.status_code, 409)
         self.assertEqual(self.client.get(detail_url(purchase['id'])).json()['items'][0]['unit_price'], '10.00')

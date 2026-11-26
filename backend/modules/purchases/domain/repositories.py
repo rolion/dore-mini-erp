@@ -6,7 +6,7 @@ from uuid import UUID
 
 from .enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from .payment import Payment
-from .purchase import Purchase
+from .purchase import Purchase, PurchaseNumber
 from .receipt import Receipt
 from .supplier import Supplier
 
@@ -29,6 +29,7 @@ class PurchaseSummary:
     payment_status: PaymentStatus | None = None
     paid_total: Decimal | None = None
     balance: Decimal | None = None
+    number: PurchaseNumber | None = None
 
 
 @dataclass(frozen=True)

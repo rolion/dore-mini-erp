@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
 
+from .numbering_support import FakeNumbering
 from modules.purchases.application.ports import Actor, StockEntryMovement, StockProductInfo, StockWarehouse
 from modules.purchases.application.receipt_commands import (
     WAREHOUSE_INVALID,
@@ -83,7 +84,7 @@ class ReceptionCase(PurchaseApplicationCase):
         self.purchase = self.create(items=[
             self.item(self.flour, '10'), ])
         from modules.purchases.application.purchase_commands import ConfirmPurchase
-        ConfirmPurchase(self.purchases, self.suppliers).execute(self.purchase.id, NOW)
+        ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(self.purchase.id, NOW)
         self.item_id = self.purchase.items[0].id
 
     def item(self, info, quantity):
@@ -184,7 +185,7 @@ class RegisterReceptionTests(ReceptionCase):
         self.register('4', receipt_id=rid)
         other = self.create()
         from modules.purchases.application.purchase_commands import ConfirmPurchase
-        ConfirmPurchase(self.purchases, self.suppliers).execute(other.id, NOW)
+        ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(other.id, NOW)
         with self.assertRaises(ReceiptConflict):
             self.register(receipt_id=rid, purchase_id=other.id, lines=[ReceiptLineInput(other.items[0].id, '1')])
 

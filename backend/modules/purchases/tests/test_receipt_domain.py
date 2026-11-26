@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest import TestCase
 from uuid import uuid4
 
+from .numbering_support import fake_number
 from modules.purchases.domain.enums import InventoryMode, PaymentStatus, ReceiptStatus, ReceptionStatus
 from modules.purchases.domain.exceptions import (
     PurchaseNotReceivable,
@@ -19,7 +20,7 @@ USER = uuid4()
 
 def confirmed(*quantities):
     purchase = make([draft(q, '10.00') for q in quantities])
-    purchase.confirm(NOW)
+    purchase.confirm(NOW, fake_number())
     return purchase
 
 

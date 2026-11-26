@@ -32,7 +32,7 @@ from modules.purchases.domain.exceptions import (
     ReceiptNotFound,
 )
 from modules.purchases.application.receipt_commands import RevertStockShortage
-from modules.purchases.infrastructure.adapters import ProductCatalogAdapter
+from modules.purchases.infrastructure.adapters import ProductCatalogAdapter, PurchaseNumberingAdapter
 from modules.purchases.infrastructure.django.payment_repository import DjangoPaymentRepository
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
 from modules.purchases.infrastructure.django.receipt_repository import DjangoReceiptRepository
@@ -198,7 +198,8 @@ class PurchaseConfirmView(APIView):
     required_modules = REQUIRED_MODULES
 
     def post(self, request, purchase_id):
-        use_case = ConfirmPurchase(_purchases(request), _suppliers(request))
+        use_case = ConfirmPurchase(_purchases(request), _suppliers(request),
+                                   PurchaseNumberingAdapter(company_id_from(request)))
         purchase = _run(use_case.execute, purchase_id=purchase_id, now=timezone.now())
         return Response(_detail(request, purchase))
 
