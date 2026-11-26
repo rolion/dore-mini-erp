@@ -81,7 +81,7 @@ DDR: `docs/design/DDR-gestionar-recetas-produccion-pantallas-recetas.md`.
 ADR: `docs/adr/ADR-gestionar-recetas-produccion-modulo-production.md`.
 
 ## Plan
-`docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md` (v4, COMPLETO; v2 enmienda API-01..05 a snake_case, v3 añade el detalle móvil < 957 px y v4 la lista en tarjetas < 957 px, todas con aprobación del usuario). Specification readiness: **READY**.
+`docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md` (v5, COMPLETO; v2 enmienda API-01..05 a snake_case, v3 añade el detalle móvil < 957 px, v4 la lista en tarjetas y v5 las líneas del formulario en tarjetas, todas con aprobación del usuario). Specification readiness: **READY**.
 
 ## Implementación
 Implementado el plan v1 sin cambios de Specification.

@@ -1,4 +1,4 @@
-# PLAN-2026-11-26-gestionar-recetas-produccion (v4)
+# PLAN-2026-11-26-gestionar-recetas-produccion (v5)
 
 **Task:** TASK-gestionar-recetas-produccion · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-gestionar-recetas-produccion-pantallas-recetas · ADR-gestionar-recetas-produccion-modulo-production
@@ -71,7 +71,7 @@ Campos en `snake_case`, como el resto de la API (Catálogo, Servicios). Cantidad
 ## UI behavior
 - UI-01 Menú «Producción» (módulo `production`) con «Recetas».
 - UI-02 Lista según plantilla «Lista» (DDR); estados cargando/vacío/error. Por debajo de 957 px la tabla se reemplaza por una tarjeta por receta (nombre con enlace y acciones ver/editar/activar-desactivar; filas Producto resultante, Rendimiento base y Estado).
-- UI-03 Formulario con líneas de un solo paso: unidad del ingrediente y del rendimiento mostradas de solo lectura al elegir el producto; errores por campo y por línea.
+- UI-03 Por debajo de 957 px las líneas de ingredientes se muestran como una tarjeta por ingrediente (título «Ingrediente N» con botón quitar; campos Producto y Cantidad; Unidad de solo lectura), con las mismas validaciones y errores por línea. Formulario con líneas de un solo paso: unidad del ingrediente y del rendimiento mostradas de solo lectura al elegir el producto; errores por campo y por línea.
 - UI-04 Detalle con ingredientes, aviso EDGE-05 y acciones Editar / Activar-Desactivar / Volver. Por debajo de 957 px (`max-width: 956.98px`): los datos se muestran en filas «etiqueta | valor» (Estado, Producto resultante, Rendimiento base, Creada, Actualizada) y la tabla de ingredientes se reemplaza por una tarjeta por ingrediente con filas «Producto | nombre» y «Cantidad | valor unidad».
 
 ## Non-functional requirements
@@ -142,3 +142,4 @@ Ninguna.
 - **v2** (2026-11-26): [Specification] API-01..API-05 pasan de camelCase a snake_case (como Catálogo y Servicios; la implementación ya lo hacía). Aprobado explícitamente por el usuario en el chat. Solicitado por delivery-publish, REV-2026-11-26-gestionar-recetas-produccion-01.
 - **v3** (2026-11-26): [Specification] UI-04 añade el diseño de detalle para pantallas < 957 px (filas etiqueta | valor y tarjetas de ingredientes). Pedido y aprobado explícitamente por el usuario en el chat tras ver el detalle en móvil.
 - **v4** (2026-11-26): [Specification] UI-02 añade la lista en tarjetas para pantallas < 957 px. Pedido y aprobado explícitamente por el usuario en el chat.
+- **v5** (2026-11-26): [Specification] UI-03 añade las líneas de ingredientes en tarjetas para pantallas < 957 px. Pedido y aprobado explícitamente por el usuario en el chat.

@@ -1,3 +1,4 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, DestroyRef, ElementRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -9,6 +10,9 @@ import { HasUnsavedChanges } from '../../../../core/guard/unsaved-changes.guard'
 import { ProductsApiService } from '../../../products/services/products-api.service';
 import { Recipe, RecipeApiError, RecipeFieldErrors, RecipeInput, RecipeLineErrors, formatQuantity } from '../../models/recipe';
 import { RecipesApiService } from '../../services/recipes-api.service';
+
+/** Por debajo de 957 px las líneas de ingredientes pasan a tarjetas. */
+export const COMPACT_QUERY = '(max-width: 956.98px)';
 
 export interface ProductOption {
   id: string;
@@ -33,6 +37,7 @@ export function positiveQuantity(control: AbstractControl): ValidationErrors | n
   selector: 'app-recipe-form',
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgSelectModule],
   templateUrl: './recipe-form.component.html',
+  styleUrl: './recipe-form.component.scss',
 })
 export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
   private api = inject(RecipesApiService);
@@ -41,6 +46,9 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private breakpoints = inject(BreakpointObserver);
+  /** Pantalla estrecha (< 957 px): tarjetas en lugar de tabla. */
+  compact = false;
 
   readonly recipeId = this.route.snapshot.paramMap.get('id');
   readonly form = new FormGroup({
@@ -65,6 +73,7 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
   get result(): ProductOption | null { return this.form.controls.result.value; }
 
   ngOnInit(): void {
+    this.breakpoints.observe(COMPACT_QUERY).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(state => this.compact = state.matches);
     merge(of(''), this.productInput$.pipe(debounceTime(300), distinctUntilChanged())).pipe(
       tap(() => this.productsLoading = true),
       switchMap(term => this.searchProducts(term)),

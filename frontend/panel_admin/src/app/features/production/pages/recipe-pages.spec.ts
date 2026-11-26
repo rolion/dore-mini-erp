@@ -10,7 +10,7 @@ import { Recipe, RecipeApiError } from '../models/recipe';
 import { RecipeFiltersState, RecipesApiService } from '../services/recipes-api.service';
 import { COMPACT_QUERY, RecipeDetailComponent } from './recipe-detail/recipe-detail.component';
 import { COMPACT_QUERY as LIST_COMPACT_QUERY } from './recipe-list/recipe-list.component';
-import { RecipeFormComponent, positiveQuantity } from './recipe-form/recipe-form.component';
+import { COMPACT_QUERY as FORM_COMPACT_QUERY, RecipeFormComponent, positiveQuantity } from './recipe-form/recipe-form.component';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 
 const recipe: Recipe = {
@@ -166,8 +166,12 @@ describe('RecipeDetailComponent', () => {
 describe('RecipeFormComponent', () => {
   let api: jasmine.SpyObj<RecipesApiService>;
   let products: jasmine.SpyObj<ProductsApiService>;
+  let compactForm = false;
   function create(id: string | null = null) {
+    const breakpoints = jasmine.createSpyObj<BreakpointObserver>('breakpoints', ['observe']);
+    breakpoints.observe.and.callFake(() => new BehaviorSubject({ matches: compactForm, breakpoints: {} }));
     TestBed.configureTestingModule({ imports: [RecipeFormComponent], providers: [...provideTestTranslations(), provideRouter([]),
+      { provide: BreakpointObserver, useValue: breakpoints },
       { provide: RecipesApiService, useValue: api }, { provide: ProductsApiService, useValue: products },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap(id ? { id } : {}) } } }] });
     const fixture = TestBed.createComponent(RecipeFormComponent);
@@ -175,6 +179,7 @@ describe('RecipeFormComponent', () => {
     return fixture;
   }
   beforeEach(() => {
+    compactForm = false;
     api = jasmine.createSpyObj<RecipesApiService>('api', ['get', 'create', 'update']);
     products = jasmine.createSpyObj<ProductsApiService>('products', ['list']);
     products.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [product('p-1', 'Queso', 'u-2', 'kg')] }));
@@ -221,6 +226,29 @@ describe('RecipeFormComponent', () => {
     component.lines.at(0).controls.product.setValue({ id: 'p-res', name: 'Cuñapé', unitId: 'u-1', unitAbbreviation: 'u' });
     component.save();
     expect(api.create).not.toHaveBeenCalled();
+  });
+
+  it('below 957 px renders one card per ingredient with product, quantity and unit instead of a table', () => {
+    compactForm = true;
+    const fixture = create();
+    const component = fixture.componentInstance;
+    fill(component);
+    component.addLine({ id: 'p-2', name: 'Almidón', unitId: 'u-2', unitAbbreviation: 'kg' }, '2');
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(FORM_COMPACT_QUERY).toBe('(max-width: 956.98px)');
+    expect(root.querySelector('table')).toBeNull();
+    const cards = root.querySelectorAll('[data-testid="ingredient-card"]');
+    expect(cards.length).toBe(2);
+    expect(cards[0].querySelector('[data-testid="line-unit"]')?.textContent).toContain('kg');
+    expect(cards[0].querySelector('input.form-control')?.getAttribute('id')).toBe('line-quantity-0');
+    (cards[1].querySelector('button.btn-tbl-delete') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(root.querySelectorAll('[data-testid="ingredient-card"]').length).toBe(1);
+    api.create.and.returnValue(of(recipe));
+    spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+    component.save();
+    expect(api.create).toHaveBeenCalledWith(jasmine.objectContaining({ ingredients: [{ productId: 'p-1', unitId: 'u-2', quantity: '1.5' }] }));
   });
 
   it('explains why the result product cannot be an ingredient (REV-02)', () => {

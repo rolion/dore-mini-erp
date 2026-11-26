@@ -3504,7 +3504,8 @@
         "NOT_FOUND": "Receita não encontrada.",
         "GENERIC": "Não foi possível concluir a operação."
       },
-      "RESULT_AS_INGREDIENT": "O produto resultante não pode ser ingrediente da própria receita."
+      "RESULT_AS_INGREDIENT": "O produto resultante não pode ser ingrediente da própria receita.",
+      "INGREDIENT_TITLE": "Ingrediente {{n}}"
     }
   }
 }

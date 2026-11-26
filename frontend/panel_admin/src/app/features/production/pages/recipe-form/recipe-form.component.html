@@ -48,48 +48,87 @@
       @if (server.ingredients || (submitted && lines.length === 0)) {
       <div class="alert alert-warning" role="alert" data-testid="ingredients-error">{{ server.ingredients || ('PRODUCTION.RECIPES.INGREDIENTS_REQUIRED' | translate) }}</div>
       }
-      <div class="table-responsive">
-        <table class="table align-middle" formArrayName="ingredients">
-          <thead><tr>
-            <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
-            <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
-            <th scope="col">{{ 'COMMON.UNIDAD' | translate }}</th>
-            <th scope="col"><span class="visually-hidden">{{ 'COMMON.ACCIONES' | translate }}</span></th>
-          </tr></thead>
-          <tbody>
-            @for (line of lines.controls; track line; let i = $index) {
-            <tr [formGroupName]="i" [class.table-warning]="isDuplicate(i) || isResultAsIngredient(i) || lineErrors(i).productId || lineErrors(i).quantity || lineErrors(i).unitId" data-testid="ingredient-line">
-              <td>
-                <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
-                  [compareWith]="sameProduct" formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate"
-                  [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" appendTo="body"
-                  [attr.aria-label]="'PRODUCTION.RECIPES.INGREDIENT_N' | translate: { n: i + 1 }" />
-                @if (isResultAsIngredient(i)) { <small class="text-danger d-block" data-testid="result-ingredient-error">{{ 'PRODUCTION.RECIPES.RESULT_AS_INGREDIENT' | translate }}</small> }
-                @if (isDuplicate(i)) { <small class="text-danger d-block" data-testid="duplicate-error">{{ 'PRODUCTION.RECIPES.DUPLICATE' | translate }}</small> }
-                @if (lineErrors(i).productId || (submitted && line.controls.product.invalid)) {
-                <small class="text-danger d-block" data-testid="product-error">{{ lineErrors(i).productId || ('PRODUCTION.RECIPES.PRODUCT_REQUIRED' | translate) }}</small>
-                }
-              </td>
-              <td>
-                <input class="form-control text-end" formControlName="quantity" inputmode="decimal" autocomplete="off"
-                  [attr.aria-label]="'PRODUCTION.RECIPES.QUANTITY_N' | translate: { n: i + 1 }">
-                @if (lineErrors(i).quantity || (submitted && line.controls.quantity.invalid)) {
-                <small class="text-danger d-block" data-testid="quantity-error">{{ lineErrors(i).quantity || ('PRODUCTION.RECIPES.QUANTITY_INVALID' | translate) }}</small>
-                }
-              </td>
-              <td data-testid="line-unit">
-                {{ line.controls.product.value?.unitAbbreviation || '—' }}
-                @if (lineErrors(i).unitId) { <small class="text-danger d-block">{{ lineErrors(i).unitId }}</small> }
-              </td>
-              <td>
-                <button type="button" class="btn btn-tbl-edit btn-tbl-delete" (click)="removeLine(i)"
-                  [title]="'COMMON.QUITAR' | translate" [attr.aria-label]="'PRODUCTION.RECIPES.REMOVE_INGREDIENT' | translate: { n: i + 1 }"><i class="fas fa-trash" aria-hidden="true"></i></button>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
+      @if (compact) {
+      <ul class="list-unstyled ingredient-cards" formArrayName="ingredients" data-testid="ingredient-cards">
+        @for (line of lines.controls; track line; let i = $index) {
+        <li class="card ingredient-card" [formGroupName]="i" [class.ingredient-card-warning]="isDuplicate(i) || isResultAsIngredient(i) || lineErrors(i).productId || lineErrors(i).quantity || lineErrors(i).unitId" data-testid="ingredient-card">
+          <div class="ingredient-card-header">
+            <span>{{ 'PRODUCTION.RECIPES.INGREDIENT_TITLE' | translate: { n: i + 1 } }}</span>
+            <button type="button" class="btn btn-tbl-edit btn-tbl-delete" (click)="removeLine(i)"
+              [title]="'COMMON.QUITAR' | translate" [attr.aria-label]="'PRODUCTION.RECIPES.REMOVE_INGREDIENT' | translate: { n: i + 1 }"><i class="fas fa-trash" aria-hidden="true"></i></button>
+          </div>
+          <div class="ingredient-card-body">
+            <div class="form-group">
+              <label [for]="'line-product-' + i">{{ 'COMMON.PRODUCTO' | translate }}</label>
+              <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
+                [compareWith]="sameProduct" formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate"
+                [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" appendTo="body" />
+              @if (isResultAsIngredient(i)) { <small class="text-danger d-block" data-testid="result-ingredient-error">{{ 'PRODUCTION.RECIPES.RESULT_AS_INGREDIENT' | translate }}</small> }
+              @if (isDuplicate(i)) { <small class="text-danger d-block" data-testid="duplicate-error">{{ 'PRODUCTION.RECIPES.DUPLICATE' | translate }}</small> }
+              @if (lineErrors(i).productId || (submitted && line.controls.product.invalid)) {
+              <small class="text-danger d-block" data-testid="product-error">{{ lineErrors(i).productId || ('PRODUCTION.RECIPES.PRODUCT_REQUIRED' | translate) }}</small>
+              }
+            </div>
+            <div class="form-group">
+              <label [for]="'line-quantity-' + i">{{ 'COMMON.CANTIDAD' | translate }}</label>
+              <input [id]="'line-quantity-' + i" class="form-control" formControlName="quantity" inputmode="decimal" autocomplete="off">
+              @if (lineErrors(i).quantity || (submitted && line.controls.quantity.invalid)) {
+              <small class="text-danger d-block" data-testid="quantity-error">{{ lineErrors(i).quantity || ('PRODUCTION.RECIPES.QUANTITY_INVALID' | translate) }}</small>
+              }
+            </div>
+            <dl class="ingredient-unit-row mb-0" data-testid="line-unit">
+              <dt>{{ 'COMMON.UNIDAD' | translate }}</dt>
+              <dd>{{ line.controls.product.value?.unitAbbreviation || '—' }}
+                @if (lineErrors(i).unitId) { <small class="text-danger d-block">{{ lineErrors(i).unitId }}</small> }</dd>
+            </dl>
+          </div>
+        </li>
+        }
+      </ul>
+      } @else {
+        <div class="table-responsive">
+          <table class="table align-middle" formArrayName="ingredients">
+            <thead><tr>
+              <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+              <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
+              <th scope="col">{{ 'COMMON.UNIDAD' | translate }}</th>
+              <th scope="col"><span class="visually-hidden">{{ 'COMMON.ACCIONES' | translate }}</span></th>
+            </tr></thead>
+            <tbody>
+              @for (line of lines.controls; track line; let i = $index) {
+              <tr [formGroupName]="i" [class.table-warning]="isDuplicate(i) || isResultAsIngredient(i) || lineErrors(i).productId || lineErrors(i).quantity || lineErrors(i).unitId" data-testid="ingredient-line">
+                <td>
+                  <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
+                    [compareWith]="sameProduct" formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate"
+                    [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" appendTo="body"
+                    [attr.aria-label]="'PRODUCTION.RECIPES.INGREDIENT_N' | translate: { n: i + 1 }" />
+                  @if (isResultAsIngredient(i)) { <small class="text-danger d-block" data-testid="result-ingredient-error">{{ 'PRODUCTION.RECIPES.RESULT_AS_INGREDIENT' | translate }}</small> }
+                  @if (isDuplicate(i)) { <small class="text-danger d-block" data-testid="duplicate-error">{{ 'PRODUCTION.RECIPES.DUPLICATE' | translate }}</small> }
+                  @if (lineErrors(i).productId || (submitted && line.controls.product.invalid)) {
+                  <small class="text-danger d-block" data-testid="product-error">{{ lineErrors(i).productId || ('PRODUCTION.RECIPES.PRODUCT_REQUIRED' | translate) }}</small>
+                  }
+                </td>
+                <td>
+                  <input class="form-control text-end" formControlName="quantity" inputmode="decimal" autocomplete="off"
+                    [attr.aria-label]="'PRODUCTION.RECIPES.QUANTITY_N' | translate: { n: i + 1 }">
+                  @if (lineErrors(i).quantity || (submitted && line.controls.quantity.invalid)) {
+                  <small class="text-danger d-block" data-testid="quantity-error">{{ lineErrors(i).quantity || ('PRODUCTION.RECIPES.QUANTITY_INVALID' | translate) }}</small>
+                  }
+                </td>
+                <td data-testid="line-unit">
+                  {{ line.controls.product.value?.unitAbbreviation || '—' }}
+                  @if (lineErrors(i).unitId) { <small class="text-danger d-block">{{ lineErrors(i).unitId }}</small> }
+                </td>
+                <td>
+                  <button type="button" class="btn btn-tbl-edit btn-tbl-delete" (click)="removeLine(i)"
+                    [title]="'COMMON.QUITAR' | translate" [attr.aria-label]="'PRODUCTION.RECIPES.REMOVE_INGREDIENT' | translate: { n: i + 1 }"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
       <button type="button" class="btn btn-light mb-3" (click)="addLine()" data-testid="add-line"><i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'PRODUCTION.RECIPES.ADD_INGREDIENT' | translate }}</button>
 
       <div>
