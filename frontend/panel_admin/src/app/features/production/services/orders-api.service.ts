@@ -5,8 +5,8 @@ import { environment } from '../../../../environments/environment';
 import { tr } from '../../../core/i18n/translate';
 import { Page } from '../../../shared/models/page';
 import {
-  OrderApiError, OrderCreateInput, OrderFieldErrors, OrderStatusFilter, OrderUpdateInput, OrderWarehouse, OrderWarehouseDto,
-  ProductionOrder, ProductionOrderDto,
+  OrderApiError, OrderCreateInput, OrderFieldErrors, OrderShortage, OrderStatusFilter, OrderUpdateInput, OrderWarehouse,
+  OrderWarehouseDto, ProductionOrder, ProductionOrderDto, RefrigerateInput,
 } from '../models/order';
 
 function fromDto(dto: ProductionOrderDto): ProductionOrder {
@@ -23,10 +23,14 @@ function fromDto(dto: ProductionOrderDto): ProductionOrder {
     ingredients: dto.ingredients.map(line => ({
       productId: line.product_id, productName: line.product_name, unitId: line.unit_id,
       unitAbbreviation: line.unit_abbreviation, quantityPerPreparation: line.quantity_per_preparation,
-      expectedQuantity: line.expected_quantity,
+      expectedQuantity: line.expected_quantity, actualQuantity: line.actual_quantity,
     })),
     createdAt: dto.created_at,
     startedAt: dto.started_at,
+    actualOutput: dto.actual_output,
+    enteredAt: dto.entered_at,
+    lot: dto.lot,
+    costTotal: dto.cost_total,
   };
 }
 
@@ -41,7 +45,29 @@ function fieldErrors(body: unknown): OrderFieldErrors {
   return {
     recipeId: text(record['recipe_id']), warehouseId: text(record['warehouse_id']),
     preparations: text(record['preparations']), detail: text(record['detail']),
+    actualOutput: text(record['actual_output']), enteredAt: text(record['entered_at']),
+    ingredients: ingredientsText(record['ingredients']), code: typeof record['code'] === 'string' ? record['code'] : undefined,
   };
+}
+
+/** Errores de `ingredients`: texto suelto o, por línea, los de `actual_quantity`. */
+function ingredientsText(value: unknown): string | undefined {
+  if (!Array.isArray(value)) return text(value);
+  const messages = value.map(item => (item && typeof item === 'object' ? text((item as Record<string, unknown>)['actual_quantity']) : text(item)));
+  return messages.filter((message): message is string => !!message).join(' ') || undefined;
+}
+
+function shortagesOf(body: unknown): OrderShortage[] {
+  const list = body && typeof body === 'object' ? (body as Record<string, unknown>)['shortages'] : null;
+  if (!Array.isArray(list)) return [];
+  return list.map(raw => {
+    const item = raw as Record<string, string | null>;
+    return {
+      productId: String(item['product_id']), productName: String(item['product_name'] ?? ''),
+      unitAbbreviation: item['unit_abbreviation'] ?? null, requested: String(item['requested']),
+      available: String(item['available']), missing: String(item['missing']),
+    };
+  });
 }
 
 function apiError(error: HttpErrorResponse): Observable<never> {
@@ -53,7 +79,7 @@ function apiError(error: HttpErrorResponse): Observable<never> {
     : error.status === 403 ? tr('PRODUCTION.ORDERS.ERRORS.FORBIDDEN')
     : error.status === 404 ? tr('PRODUCTION.ORDERS.ERRORS.NOT_FOUND')
     : error.status === 409 ? (fields.detail ?? tr('PRODUCTION.ORDERS.ERRORS.CONFLICT')) : tr('PRODUCTION.ORDERS.ERRORS.GENERIC');
-  return throwError(() => new OrderApiError(message, error.status, fields, invalidPage));
+  return throwError(() => new OrderApiError(message, error.status, fields, invalidPage, shortagesOf(body)));
 }
 
 @Injectable({ providedIn: 'root' })
@@ -86,6 +112,13 @@ export class OrdersApiService {
 
   start(id: string): Observable<ProductionOrder> {
     return this.request(this.http.post<ProductionOrderDto>(`${this.url}${id}/start/`, {}));
+  }
+
+  refrigerate(id: string, input: RefrigerateInput): Observable<ProductionOrder> {
+    return this.request(this.http.post<ProductionOrderDto>(`${this.url}${id}/refrigerate/`, {
+      entered_at: input.enteredAt, actual_output: input.actualOutput,
+      ingredients: input.ingredients.map(line => ({ product_id: line.productId, actual_quantity: line.actualQuantity })),
+    }));
   }
 
   warehouses(): Observable<OrderWarehouse[]> {

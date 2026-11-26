@@ -3569,7 +3569,8 @@
       "PAGES": "Páginas de órdenes",
       "STATUS": {
         "DRAFT": "Borrador",
-        "IN_PREPARATION": "En preparación"
+        "IN_PREPARATION": "En preparación",
+        "REFRIGERATING": "En refrigeración"
       },
       "ERRORS": {
         "NETWORK": "No se pudo conectar con el servidor.",
@@ -3578,6 +3579,24 @@
         "NOT_FOUND": "Orden no encontrada.",
         "CONFLICT": "La orden no está en un estado que permita esta operación.",
         "GENERIC": "No se pudo completar la operación."
+      },
+      "REFRIGERATE": {
+        "ACTION": "Pasar a refrigeración",
+        "TITLE": "Pasar a refrigeración",
+        "HELP": "Corrige el consumo real si fue distinto de lo previsto. Se descontarán del almacén de la orden.",
+        "ACTUAL_OUTPUT": "Cantidad elaborada",
+        "ACTUAL_CONSUMPTION": "Consumo real",
+        "ENTERED_AT": "Fecha y hora de ingreso",
+        "OUTPUT_INVALID": "Ingresa una cantidad mayor que cero (hasta 4 decimales).",
+        "QUANTITY_INVALID": "Ingresa una cantidad válida (0 o más, hasta 4 decimales).",
+        "ENTERED_REQUIRED": "Indica la fecha y hora de ingreso.",
+        "SHORTAGE_ALERT": "No hay existencias suficientes. La orden sigue en preparación.",
+        "MISSING": "Falta {{missing}} {{unit}} (hay {{available}}).",
+        "REGISTERED": "Producción registrada",
+        "EXPECTED": "previsto",
+        "LOT": "Lote",
+        "COST": "Costo total consumido",
+        "NO_COST": "Sin costo"
       }
     }
   }

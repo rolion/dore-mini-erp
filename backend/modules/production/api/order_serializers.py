@@ -11,3 +11,15 @@ class OrderCreateSerializer(serializers.Serializer):
 class OrderUpdateSerializer(serializers.Serializer):
     warehouse_id = serializers.UUIDField()
     preparations = serializers.JSONField(required=False, allow_null=True)
+
+
+class RefrigerationIngredientSerializer(serializers.Serializer):
+    product_id = serializers.UUIDField()
+    # Cantidad tal como llega; el dominio la valida (número, decimales, signo).
+    actual_quantity = serializers.JSONField(required=False, allow_null=True)
+
+
+class OrderRefrigerateSerializer(serializers.Serializer):
+    entered_at = serializers.DateTimeField()
+    actual_output = serializers.JSONField(required=False, allow_null=True)
+    ingredients = RefrigerationIngredientSerializer(many=True)

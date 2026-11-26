@@ -1,0 +1,62 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'PRODUCTION.MODULE' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/production/orders">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</a></li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="card-header"><h4>{{ 'PRODUCTION.ORDERS.REFRIGERATE.TITLE' | translate }}@if (order) { · {{ number(order.number) }} }</h4></div>
+    @if (loading) { <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+    @if (error) { <div role="alert" class="alert alert-danger m-4" data-testid="form-error">{{ error }}</div> }
+    @if (order) {
+    <form class="register-form m-4" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <dl class="row">
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt><dd class="col-sm-9">{{ order.recipe.name }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.ALMACEN' | translate }}</dt><dd class="col-sm-9">{{ order.warehouse.name }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="expected-output">{{ quantity(order.expectedOutput) }} {{ order.resultProduct.unit?.abbreviation }}</dd>
+      </dl>
+      <div class="row">
+        <div class="form-group col-md-6">
+          <label for="actual-output">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_OUTPUT' | translate }} ({{ order.resultProduct.unit?.abbreviation }}) <span class="text-danger">*</span></label>
+          <input id="actual-output" class="form-control" type="text" inputmode="decimal" formControlName="actualOutput" data-testid="actual-output">
+          @if (server.actualOutput || (submitted && form.controls.actualOutput.invalid)) {
+          <small class="text-danger d-block" data-testid="output-error">{{ server.actualOutput || ('PRODUCTION.ORDERS.REFRIGERATE.OUTPUT_INVALID' | translate) }}</small>
+          }
+        </div>
+        <div class="form-group col-md-6">
+          <label for="entered-at">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ENTERED_AT' | translate }} <span class="text-danger">*</span></label>
+          <input id="entered-at" class="form-control" type="datetime-local" formControlName="enteredAt" data-testid="entered-at">
+          @if (server.enteredAt || (submitted && form.controls.enteredAt.invalid)) {
+          <small class="text-danger d-block" data-testid="entered-error">{{ server.enteredAt || ('PRODUCTION.ORDERS.REFRIGERATE.ENTERED_REQUIRED' | translate) }}</small>
+          }
+        </div>
+      </div>
+      <h5>{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
+      <p class="text-muted">{{ 'PRODUCTION.ORDERS.REFRIGERATE.HELP' | translate }}</p>
+      @if (server.ingredients) { <small class="text-danger d-block" data-testid="ingredients-error">{{ server.ingredients }}</small> }
+      <ul class="list-unstyled line-cards" formArrayName="lines" data-testid="lines">
+        @for (line of order.ingredients; track line.productId; let i = $index) {
+        <li class="card line-card" [class.short-row]="shortageOf(line.productId)" data-testid="line">
+          <div class="fw-bold">{{ line.productName }}</div>
+          <div class="text-muted">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}: {{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</div>
+          <label class="mt-2" [for]="'line-' + i">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }} ({{ line.unitAbbreviation || '—' }})</label>
+          <input [id]="'line-' + i" class="form-control" type="text" inputmode="decimal" [formControlName]="i" data-testid="line-input">
+          @if (lineInvalid(i)) { <small class="text-danger d-block" data-testid="line-error">{{ 'PRODUCTION.ORDERS.REFRIGERATE.QUANTITY_INVALID' | translate }}</small> }
+          @if (shortageOf(line.productId); as short) {
+          <small class="text-danger d-block" role="alert" data-testid="shortage">{{ 'PRODUCTION.ORDERS.REFRIGERATE.MISSING' | translate: { missing: quantity(short.missing), unit: short.unitAbbreviation || '', available: quantity(short.available) } }}</small>
+          }
+        </li>
+        }
+      </ul>
+      <div class="mt-3">
+        <button type="submit" class="btn btn-primary" [disabled]="saving" data-testid="submit">
+          @if (saving) { <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> }
+          {{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTION' | translate }}</button>
+        <a class="btn btn-light ms-2" [routerLink]="['/pocketbiz/production/orders', order.id]">{{ 'COMMON.CANCELAR' | translate }}</a>
+      </div>
+    </form>
+    }
+  </div></div>
+</section>

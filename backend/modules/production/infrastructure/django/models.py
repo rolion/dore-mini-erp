@@ -58,6 +58,13 @@ class ProductionOrderModel(models.Model):
     warehouse_id = models.UUIDField()
     preparations = models.PositiveIntegerField()
     started_at = models.DateTimeField(null=True, blank=True)
+    # Registro de producción al pasar a refrigeración (lote por id y código, sin FK a Inventario).
+    actual_output = models.DecimalField(max_digits=16, decimal_places=4, null=True, blank=True)
+    entered_at = models.DateTimeField(null=True, blank=True)
+    refrigerated_at = models.DateTimeField(null=True, blank=True)
+    lot_id = models.UUIDField(null=True, blank=True)
+    lot_code = models.CharField(max_length=30, blank=True, default='')
+    cost_total = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -69,7 +76,9 @@ class ProductionOrderModel(models.Model):
             models.CheckConstraint(condition=models.Q(preparations__gt=0), name='production_order_preparations_gt_0'),
             models.CheckConstraint(
                 condition=(models.Q(status='draft', started_at__isnull=True)
-                           | models.Q(status='in_preparation', started_at__isnull=False)),
+                           | models.Q(status='in_preparation', started_at__isnull=False)
+                           | models.Q(status='refrigerating', started_at__isnull=False, lot_id__isnull=False,
+                                      actual_output__isnull=False, entered_at__isnull=False)),
                 name='production_order_started_with_status'),
         ]
 
@@ -82,6 +91,7 @@ class ProductionOrderIngredientModel(models.Model):
     unit_id = models.UUIDField(null=True, blank=True)
     unit_abbreviation = models.CharField(max_length=20, null=True, blank=True)
     quantity_per_preparation = models.DecimalField(max_digits=14, decimal_places=4)
+    actual_quantity = models.DecimalField(max_digits=16, decimal_places=4, null=True, blank=True)
     position = models.PositiveIntegerField()
 
     class Meta:

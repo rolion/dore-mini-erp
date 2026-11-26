@@ -1,0 +1,18 @@
+// Líneas de consumo; bajo 957 px la tabla pasa a tarjetas (ver la plantilla).
+.line-card {
+  box-shadow: none;
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  padding: 0.5rem 1rem;
+}
+
+.short-row {
+  background-color: var(--bs-danger-bg-subtle, #f8d7da);
+}
+
+.line-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
