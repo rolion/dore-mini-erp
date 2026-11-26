@@ -131,7 +131,8 @@ class DjangoPurchaseRepository:
             text = f.search.strip().lower()
             # `NC-000012` o `12`: el número de la serie (un número por período: devuelve todos los períodos).
             digits = text.removeprefix('nc-')
-            if digits.isdigit() and int(digits) > 0 and len(digits) <= 9:
+            # `isascii`: `isdigit()` acepta superíndices (`²`) que `int()` rechaza (500).
+            if digits.isascii() and digits.isdigit() and int(digits) > 0 and len(digits) <= 9:
                 match |= Q(number=int(digits))
             # La referencia provisional es COM- + los 8 primeros hex del id (borradores y heredadas sin número).
             prefix = text.removeprefix('com-')

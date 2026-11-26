@@ -74,3 +74,13 @@ class BackfillTests(TransactionTestCase):
         self.migrate(BEFORE)
         self.migrate(AFTER)
         self.assertEqual((self.number(first), self.number(second)), (('2026', 1), ('2026', 2)))
+
+    def test_same_confirmation_time_is_broken_by_creation_time(self):  # AC-12
+        self.migrate(BEFORE)
+        company = uuid4()
+        FiscalPeriodModel.objects.create(
+            company_id=company, name='2026', start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+        newer = make(company, date(2026, 5, 1), 'confirmed', confirmed_minutes=10, created_minutes=9)
+        older = make(company, date(2026, 5, 1), 'confirmed', confirmed_minutes=10, created_minutes=1)
+        self.migrate(AFTER)
+        self.assertEqual((self.number(older), self.number(newer)), (('2026', 1), ('2026', 2)))

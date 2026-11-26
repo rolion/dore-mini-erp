@@ -174,11 +174,11 @@
   },
   "COMMON": {
     "FISCAL_PERIOD": {
-    "SIN_PERIODO": "La fecha del pedido no está dentro de ningún período fiscal, por eso no se puede confirmar. Cree el período en Contabilidad.",
-    "CERRADO": "El período fiscal de la fecha del pedido está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
-    "CERRADO_NOMBRE": "El período fiscal «{{name}}» está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
-    "IR_A_PERIODOS": "Ir a períodos fiscales"
-  },
+      "SIN_PERIODO": "La fecha no está dentro de ningún período fiscal, por eso no se puede confirmar. Cree el período en Contabilidad.",
+      "CERRADO": "El período fiscal de la fecha está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+      "CERRADO_NOMBRE": "El período fiscal «{{name}}» está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+      "IR_A_PERIODOS": "Ir a períodos fiscales"
+    },
     "591_7XXXXXXX": "+591 7xxxxxxx",
     "ACCIONES": "Acciones",
     "ACTIVO": "Activo",

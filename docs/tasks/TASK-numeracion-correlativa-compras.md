@@ -15,6 +15,7 @@
 | 2026-11-26 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2492) y Karma (644 de los módulos tocados) en verde por verificación propia | delivery-build |
+| 2026-11-26 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 y REV-02 (Medium: 500 con dígitos Unicode en la búsqueda y texto «pedido» en el aviso compartido) y REV-03 (Low: huecos de prueba) corregidos y marcados Resueltos; se repite el Quality Gate sobre el estado final | delivery-publish |
 
 ## Investigación
 
@@ -108,7 +109,13 @@ Ver `docs/adr/ADR-numeracion-correlativa-compras-contador-por-periodo.md`.
 **Verificación propia (no es el Quality Gate).** `ng lint` y `i18n:check` sin hallazgos; `ng build` compila; Karma de `purchases`, `sales`, `shared` y `core/i18n`: 644 pruebas OK; backend: suite completa (`python manage.py test`, PostgreSQL) 2492 pruebas OK, y `modules.purchases` repetido tras el último ajuste de formato de líneas: OK.
 
 ## Review
-_Pendiente_
+
+**Ciclo 1 (subagente aislado, contexto limpio, HEAD 35e566ae).** Ejecutó: backend completo `Ran 2492 tests ... OK`, Karma `TOTAL: 1853 SUCCESS`, `ng lint` sin hallazgos, `i18n:check` 2512 / 0 faltantes, `ng build` compila, `makemigrations --check`: sin cambios, `ruff`/`flake8` sin avisos en líneas cambiadas, bandit sin hallazgos; mutación (sin `lock_open_period` ni `select_for_update`): 5 de 6 pruebas de carrera fallan. Sin Critical/High; hallazgos:
+- [REV-01](../reviews/REV-2026-11-26-numeracion-correlativa-compras-01.md) (Medium) la búsqueda lanzaba 500 con dígitos no ASCII (`²`) → Resuelto, con prueba que lo reproduce.
+- [REV-02](../reviews/REV-2026-11-26-numeracion-correlativa-compras-02.md) (Medium) el aviso compartido hablaba de «pedido» en compras → Resuelto.
+- [REV-03](../reviews/REV-2026-11-26-numeracion-correlativa-compras-03.md) (Low) huecos de cobertura (textos de asiento, API-03, EDGE-02, desempate de la migración) → Resuelto.
+
+Tras las correcciones se repite el Quality Gate (ciclo 2) sobre el estado final.
 
 ## Publicación
 _Pendiente_

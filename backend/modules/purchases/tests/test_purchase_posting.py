@@ -269,6 +269,7 @@ class LinkAndIndependenceTests(PostingTestCase):
         self.assertEqual((receipt['accounting_entry']['total'], receipt['accounting_enabled']), ('100.00', True))
         self.assertIn(purchase['reference'], entry.description)
         self.assertIn(receipt['reference'], entry.description)
+        self.assertIn('(Año)', entry.description)  # AC-11: el texto contable lleva el período
         detail = self.client.get(purchase_url(purchase['id'], f'receipts/{receipt["id"]}/')).json()
         self.assertEqual(detail['accounting_entry']['id'], str(entry.id))
 

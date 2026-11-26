@@ -1,5 +1,6 @@
 """Numeración correlativa de compras por período fiscal con BD real (TASK-numeracion-correlativa-compras)."""
 from datetime import date
+from decimal import Decimal
 from uuid import uuid4
 
 from django.db import IntegrityError, transaction
@@ -9,7 +10,7 @@ from modules.accounting.infrastructure.django.models import FiscalPeriodModel
 from modules.accounts.testing import make_company
 from modules.purchases.application.purchase_commands import CancelPurchase, ConfirmPurchase
 from modules.purchases.domain.exceptions import PurchaseNumberingRejected
-from modules.purchases.domain.purchase import ItemDraft, Purchase
+from modules.purchases.domain.purchase import ItemDraft, Purchase, PurchaseNumber
 from modules.purchases.infrastructure.adapters import PurchaseNumberingAdapter, _period_suffix
 from modules.purchases.infrastructure.django.models import PurchaseModel, PurchaseNumberCounterModel, SupplierModel
 from modules.purchases.infrastructure.django.purchase_repository import DjangoPurchaseRepository
@@ -205,6 +206,18 @@ class ApiTests(PurchaseApiTestCase):
         self.assertIn(draft['id'], ids(draft['reference']))
         self.assertNotIn(draft['id'], ids('NC-000001'))
 
+    def test_the_list_search_ignores_non_ascii_digits_instead_of_failing(self):  # AC-11 (REV-01)
+        self.create()
+        for text in ('²', 'nc-²', '①', '٣'):
+            response = self.client.get(LIST_URL, {'q': text})
+            self.assertEqual(response.status_code, 200, (text, response.content))
+
+    def test_confirm_with_no_periods_at_all_is_a_409(self):  # EDGE-02
+        FiscalPeriodModel.objects.filter(company_id=self.company.id).delete()
+        purchase = self.create()
+        response = self.client.post(self.confirm_url(purchase), {}, format='json')
+        self.assertEqual((response.status_code, response.json()['code']), (409, 'fiscal_period_missing'))
+
 
 class ImportedPurchaseTests(TestCase):
     """AC-10: la «compra inferida» de la importación de ventas numera igual y se rechaza sin período abierto."""
@@ -243,3 +256,45 @@ class ImportedPurchaseTests(TestCase):
             self.import_purchase(date(2026, 8, 3))
         self.assertEqual(closed.exception.code, 'fiscal_period_closed')
         self.assertEqual(PurchaseModel.objects.filter(company_id=self.company.id).count(), 0)
+
+
+class AccountingTextTests(TestCase):
+    """AC-11: las descripciones de los asientos nombran el código NC y el período (el número se repite)."""
+
+    def setUp(self):
+        from types import SimpleNamespace
+        from unittest import mock
+
+        from modules.purchases.infrastructure.adapters import PurchasePostingAdapter
+        self.company = make_company('Empresa A')
+        self.number = PurchaseNumber(uuid4(), 'Gestión 2026', 7)
+        self.purchase = SimpleNamespace(reference=self.number.code, number=self.number)
+        self.receipt = SimpleNamespace(id=uuid4(), reference='REC-1', receipt_date=date(2026, 3, 1))
+        self.payment = SimpleNamespace(id=uuid4(), reference='PAG-1', payment_date=date(2026, 3, 1),
+                                       payment_method=SimpleNamespace(value='CASH'))
+        self.actor = SimpleNamespace(user_id=None, user_name='ana')
+        self.adapter = PurchasePostingAdapter(self.company.id)
+        patcher = mock.patch.object(PurchasePostingAdapter, 'is_available', return_value=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_receipt_recognition_text(self):  # AC-11
+        from unittest import mock
+        with mock.patch('modules.purchases.infrastructure.adapters.accounting_services.post_automatic_entry') as post:
+            self.adapter.recognize_receipt(self.purchase, self.receipt, Decimal('10.00'), self.actor)
+        self.assertEqual(post.call_args.args[4], 'Compra NC-000007 (Gestión 2026) - recepcion REC-1')
+
+    def test_payment_and_advance_text(self):  # AC-11
+        from unittest import mock
+        with mock.patch('modules.purchases.infrastructure.adapters.accounting_services.post_automatic_entry') as post:
+            self.adapter.record_payment(self.purchase, self.payment, Decimal('5.00'), Decimal('2.00'), self.actor)
+        self.assertEqual([c.args[4] for c in post.call_args_list],
+                         ['Pago PAG-1 de la compra NC-000007 (Gestión 2026)',
+                          'Anticipo PAG-1 de la compra NC-000007 (Gestión 2026)'])
+
+    def test_receipt_reversal_text(self):  # AC-11
+        from unittest import mock
+        with mock.patch('modules.purchases.infrastructure.adapters.accounting_services.reverse_automatic_entry') as rev:
+            self.adapter.reverse_receipt(self.purchase, self.receipt, 'error de carga', self.actor)
+        self.assertEqual(rev.call_args.args[4],
+                         'Recepcion REC-1 de la compra NC-000007 (Gestión 2026) revertida: error de carga')
