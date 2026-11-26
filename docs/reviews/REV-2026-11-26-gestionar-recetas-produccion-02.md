@@ -1,6 +1,6 @@
 # REV-2026-11-26-gestionar-recetas-produccion-02: Sin mensaje cuando el resultado se usa como ingrediente
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md (v1)
@@ -19,3 +19,6 @@ Envío bloqueado en silencio.
 
 ## Evidence
 `RecipeFormComponent.hasLocalProblems` devuelve true y `save()` hace `return`.
+
+## Resolution
+Resolved (ciclo de correcciones 2026-11-26), pendiente de verificación por el Quality Gate ciclo 2.

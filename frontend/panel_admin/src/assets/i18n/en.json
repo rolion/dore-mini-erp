@@ -3503,7 +3503,8 @@
         "FORBIDDEN": "You do not have permission to access recipes.",
         "NOT_FOUND": "Recipe not found.",
         "GENERIC": "The operation could not be completed."
-      }
+      },
+      "RESULT_AS_INGREDIENT": "The resulting product cannot be an ingredient of its own recipe."
     }
   }
 }

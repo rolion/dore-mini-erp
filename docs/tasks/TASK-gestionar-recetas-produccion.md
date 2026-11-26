@@ -93,7 +93,7 @@ Implementado el plan v1 sin cambios de Specification.
 - API en `snake_case` (como el resto de Catálogo/Servicios) en lugar de camelCase en API-01..API-05; los nombres de campo son un detalle de formato, el contenido y las reglas no cambian.
 - El módulo `production` no declara `optional=('inventory',)` (no hay integración todavía); se actualizó el ADR.
 - La lista usa una tabla con `table-responsive` (scroll horizontal en pantallas estrechas) en vez de la variante de tarjetas bajo 992 px que mencionaba el DDR; queda como deuda visual menor.
-- `PUT` con id de otra empresa responde 404 antes de validar el cuerpo (consistente con el resto).
+- `PUT` valida primero forma y tipos del cuerpo (400) y después busca la receta (404 si es de otra empresa); un cuerpo inválido da 400 antes que 404, sin filtrar datos entre empresas.
 
 **Deuda técnica:** variante compacta de tarjetas para la lista; el selector de producto busca los primeros 20 coincidentes (typeahead), sin paginación infinita.
 

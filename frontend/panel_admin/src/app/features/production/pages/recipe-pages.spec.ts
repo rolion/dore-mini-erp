@@ -164,6 +164,24 @@ describe('RecipeFormComponent', () => {
     expect(api.create).not.toHaveBeenCalled();
   });
 
+  it('explains why the result product cannot be an ingredient (REV-02)', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    fill(component);
+    component.lines.at(0).controls.product.setValue({ id: 'p-res', name: 'Cuñapé', unitId: 'u-1', unitAbbreviation: 'u' });
+    component.save();
+    fixture.detectChanges();
+    expect(api.create).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('[data-testid="result-ingredient-error"]')).not.toBeNull();
+  });
+
+  it('warns in the form when a saved product is inactive (REV-03)', () => {
+    api.get.and.returnValue(of({ ...recipe, ingredients: [{ ...recipe.ingredients[0], productActive: false }] }));
+    const fixture = create('recipe-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="product-warning"]')).not.toBeNull();
+  });
+
   it('keeps what was typed and shows server errors by field and line', () => {
     api.create.and.returnValue(throwError(() => new RecipeApiError('Revisa', 400,
       { name: 'Duplicada', lines: { 0: { quantity: 'Sin fracciones' } } })));

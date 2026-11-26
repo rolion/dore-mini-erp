@@ -14,7 +14,9 @@ Primer uso del menú **Producción**. La persona responsable crea y mantiene rec
 - **Detalle** `/production/recipes/:id`: datos, tabla de ingredientes de solo lectura, acciones.
 
 ## Componentes/patrones elegidos
-- Lista: plantilla «Lista» (referencia `features/products/pages/product-list`, `features/services`): filtro de estado por defecto **Activos**, buscador, botón «+», `ngx-datatable` con paginación de servidor, badge de estado.
+- Foco: tras un error de validación el foco va al control del primer error.
+- Variante de tarjetas bajo 992 px: **pendiente** (la lista usa `table-responsive`).
+- Lista: plantilla «Lista» (referencia `features/products/pages/product-list`, `features/services`): filtro de estado por defecto **Activos**, buscador, botón «+», tabla Bootstrap con `ngb-pagination` de servidor (patrón de `features/services`, no `ngx-datatable`), badge de estado.
 - Formulario: plantilla «Formulario con líneas» de `stock-opening`, **sin** paso de resumen (guardar es reversible; variante de un solo paso del §5): cabecera con Nombre, Producto resultante (`ng-select`), Rendimiento base (número + unidad base del producto, solo lectura); tabla de ingredientes con selector de producto sin repetidos, cantidad, unidad (solo lectura, derivada del producto), quitar y «+ Agregar ingrediente». Pie: Guardar / Cancelar (`unsavedChangesGuard`).
 - Detalle: plantilla «Detalle» (`dl.row`, badge, fechas `dd/MM/yyyy HH:mm`), acciones Editar (primario), Activar/Desactivar (`btn-warning`, con confirmación al desactivar), Volver.
 - Sin componentes nuevos de Oreva ni desviaciones del sistema de diseño.

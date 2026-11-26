@@ -1,6 +1,6 @@
 # REV-2026-11-26-gestionar-recetas-produccion-06: El TASK describe mal el orden 404/400 del PUT
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md (v1)
@@ -19,3 +19,6 @@ Texto y comportamiento alineados.
 
 ## Evidence
 `api/views.py` (`_values` se evalúa antes de `_run`).
+
+## Resolution
+Resolved (ciclo de correcciones 2026-11-26), pendiente de verificación por el Quality Gate ciclo 2.

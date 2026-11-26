@@ -1,7 +1,8 @@
 from decimal import Decimal
 from uuid import uuid4
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
+from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
@@ -134,6 +135,48 @@ class RecipeApiTests(APITestCase):
         self.assertEqual(self.client.get(f"{URL}{body['id']}/").json()['ingredients'], body['ingredients'])
         self.assertEqual(self.client.get(URL, {'status': 'nope'}).status_code, 400)
         self.assertEqual(self.client.get(URL, {'page': '0'}).status_code, 400)
+
+    def test_search_by_name_is_case_insensitive_and_scoped(self):  # AC-03 (REV-05)
+        self.create(name='Queso fresco')
+        self.create(name='Masa base')
+        names = lambda **params: [r['name'] for r in self.client.get(URL, params).json()['results']]  # noqa: E731
+        self.assertEqual(names(q='QUESO'), ['Queso fresco'])
+        self.assertEqual(names(q=' masa '), ['Masa base'])
+        self.assertEqual(names(q='nada'), [])
+
+    def test_detail_reports_live_product_state(self):  # EDGE-05 (REV-05)
+        body = self.create()
+        ProductModel.objects.filter(pk=self.cheese.id).update(active=False)
+        ProductModel.objects.filter(pk=self.flour.id).update(base_unit=None)
+        detail = self.client.get(f"{URL}{body['id']}/").json()
+        lines = {line['product_name']: line for line in detail['ingredients']}
+        self.assertFalse(lines['Queso']['product_active'])
+        self.assertIsNone(lines['Almidón']['unit_abbreviation'])
+        resaved = self.client.put(f"{URL}{body['id']}/", self.payload(), format='json')
+        self.assertEqual(resaved.status_code, 400)
+
+    def test_more_than_four_decimals_rejected(self):  # EDGE-02 (REV-05)
+        for field_change in ({'yield_quantity': '1.00001'},
+                             {'ingredients': [{'product_id': str(self.cheese.id), 'unit_id': str(self.kilo.id),
+                                               'quantity': '0.00001'}]}):
+            response = self.client.post(URL, self.payload(**field_change), format='json')
+            self.assertEqual(response.status_code, 400, response.content)
+
+    def test_invalid_pagination_params(self):  # EDGE-03 (REV-05)
+        self.create()
+        for params in ({'page_size': '0'}, {'page_size': 'x'}, {'page': '-1'}):
+            self.assertEqual(self.client.get(URL, params).status_code, 400, params)
+        self.assertEqual(self.client.get(URL, {'page': '99'}).status_code, 400)
+
+    def test_list_query_count_does_not_grow_with_rows(self):  # REV-05 (sin N+1)
+        self.create(name='R1')
+        with CaptureQueriesContext(connection) as baseline:
+            self.client.get(URL)
+            expected = len(baseline)
+        for number in range(2, 6):
+            self.create(name=f'R{number}')
+        with self.assertNumQueries(expected):
+            self.assertEqual(self.client.get(URL).json()['count'], 5)
 
     def test_no_delete(self):  # AC-07
         body = self.create()

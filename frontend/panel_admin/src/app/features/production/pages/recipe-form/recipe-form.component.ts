@@ -1,4 +1,4 @@
-import { Component, DestroyRef, HostListener, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormArray, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -40,6 +40,7 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly recipeId = this.route.snapshot.paramMap.get('id');
   readonly form = new FormGroup({
@@ -55,6 +56,8 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
   saving = false;
   submitted = false;
   error = '';
+  /** La receta guardada tiene un producto inactivo o sin unidad base: hay que corregirlo para poder guardar. */
+  staleProducts = false;
   server: RecipeFieldErrors = { lines: {} };
   readonly quantity = formatQuantity;
 
@@ -88,6 +91,8 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
   }
 
   private patch(recipe: Recipe): void {
+    this.staleProducts = !recipe.resultProduct.active || !recipe.resultProduct.unit
+      || recipe.ingredients.some(line => !line.productActive || !line.unitAbbreviation);
     this.form.controls.name.setValue(recipe.name);
     this.form.controls.result.setValue({
       id: recipe.resultProduct.id, name: recipe.resultProduct.name ?? '', unitId: recipe.resultProduct.unit?.id ?? null,
@@ -123,6 +128,11 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
     return !!id && this.lines.controls.some((line, other) => other !== index && line.controls.product.value?.id === id);
   }
 
+  isResultAsIngredient(index: number): boolean {
+    const id = this.lines.at(index).controls.product.value?.id;
+    return !!id && id === this.result?.id;
+  }
+
   lineErrors(index: number): RecipeLineErrors { return this.server.lines[index] ?? {}; }
 
   hasUnsavedChanges(): boolean { return this.form.dirty && !this.saving; }
@@ -134,7 +144,7 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
 
   private get hasLocalProblems(): boolean {
     return this.form.invalid || this.lines.length === 0 || this.lines.controls.some((_, index) => this.isDuplicate(index))
-      || this.lines.controls.some(line => line.controls.product.value?.id === this.result?.id);
+      || this.lines.controls.some((_, index) => this.isResultAsIngredient(index));
   }
 
   save(): void {
@@ -142,7 +152,8 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
     this.error = '';
     this.server = { lines: {} };
     this.form.markAllAsTouched();
-    if (this.saving || this.hasLocalProblems) return;
+    if (this.saving) return;
+    if (this.hasLocalProblems) { this.focusFirstError(); return; }
     const value = this.form.getRawValue();
     const input: RecipeInput = {
       name: value.name,
@@ -161,7 +172,16 @@ export class RecipeFormComponent implements OnInit, HasUnsavedChanges {
         this.form.markAsPristine();
         void this.router.navigate(['/pocketbiz/production/recipes', recipe.id]);
       },
-      error: (error: RecipeApiError) => { this.error = error.message; this.server = error.fields; },
+      error: (error: RecipeApiError) => { this.error = error.message; this.server = error.fields; this.focusFirstError(); },
+    });
+  }
+
+  /** Lleva el foco al control del primer error visible (accesibilidad del formulario). */
+  private focusFirstError(): void {
+    setTimeout(() => {
+      const message = this.host.nativeElement.querySelector('small.text-danger, [data-testid="ingredients-error"]');
+      const control = message?.parentElement?.querySelector<HTMLElement>('input, select, .ng-input input');
+      (control ?? (message as HTMLElement | null))?.focus?.();
     });
   }
 

@@ -9,6 +9,7 @@
     <div class="card-header"><h4>{{ (recipeId ? 'PRODUCTION.RECIPES.EDIT_TITLE' : 'PRODUCTION.RECIPES.NEW_TITLE') | translate }}</h4></div>
     @if (loading) { <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
     @if (error) { <div role="alert" class="alert alert-danger m-4" data-testid="form-error">{{ error }}</div> }
+    @if (staleProducts) { <div role="status" class="alert alert-warning m-4" data-testid="product-warning">{{ 'PRODUCTION.RECIPES.PRODUCT_WARNING' | translate }}</div> }
     @if (!loading) {
     <form class="register-form m-4" [formGroup]="form" (ngSubmit)="save()" novalidate>
       <div class="row">
@@ -57,12 +58,13 @@
           </tr></thead>
           <tbody>
             @for (line of lines.controls; track line; let i = $index) {
-            <tr [formGroupName]="i" [class.table-warning]="isDuplicate(i) || lineErrors(i).productId || lineErrors(i).quantity || lineErrors(i).unitId" data-testid="ingredient-line">
+            <tr [formGroupName]="i" [class.table-warning]="isDuplicate(i) || isResultAsIngredient(i) || lineErrors(i).productId || lineErrors(i).quantity || lineErrors(i).unitId" data-testid="ingredient-line">
               <td>
                 <ng-select [labelForId]="'line-product-' + i" [items]="productOptions" bindLabel="name" [typeahead]="productInput$" [loading]="productsLoading"
                   [compareWith]="sameProduct" formControlName="product" [placeholder]="'COMMON.BUSCAR_PRODUCTO' | translate"
                   [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" appendTo="body"
                   [attr.aria-label]="'PRODUCTION.RECIPES.INGREDIENT_N' | translate: { n: i + 1 }" />
+                @if (isResultAsIngredient(i)) { <small class="text-danger d-block" data-testid="result-ingredient-error">{{ 'PRODUCTION.RECIPES.RESULT_AS_INGREDIENT' | translate }}</small> }
                 @if (isDuplicate(i)) { <small class="text-danger d-block" data-testid="duplicate-error">{{ 'PRODUCTION.RECIPES.DUPLICATE' | translate }}</small> }
                 @if (lineErrors(i).productId || (submitted && line.controls.product.invalid)) {
                 <small class="text-danger d-block" data-testid="product-error">{{ lineErrors(i).productId || ('PRODUCTION.RECIPES.PRODUCT_REQUIRED' | translate) }}</small>

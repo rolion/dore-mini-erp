@@ -19,3 +19,6 @@ Tabla Bootstrap, sin foco al error.
 
 ## Evidence
 `recipe-list.component.html`, `recipe-form.component.html`.
+
+## Resolution
+Partially resolved (ciclo de correcciones 2026-11-26): foco al primer error implementado y desviaciones documentadas en el DDR; la variante de tarjetas bajo 992 px sigue pendiente como deuda visual.
