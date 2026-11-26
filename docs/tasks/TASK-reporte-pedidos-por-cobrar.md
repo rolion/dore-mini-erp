@@ -1,6 +1,6 @@
 # TASK-reporte-pedidos-por-cobrar: Reporte «Pedidos por cobrar»
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-reporte-pedidos-por-cobrar
@@ -12,6 +12,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → PLANNING → ENGINEERING | NEEDS_PLAN, sin DDR; PLAN v1 READY, PR abierto | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -56,7 +57,8 @@ docs/plans/PLAN-2026-11-26-reporte-pedidos-por-cobrar.md (v1, COMPACTO, READY).
 **Verificación propia.** Backend: `test_receivable_report` + `test_paid_report` 19 OK; `ruff`/`flake8` sin avisos en lo nuevo. Frontend: specs del reporte y del menú 20 OK; `i18n:check` 0 faltantes.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS.** Backend: suite completa 2533 pruebas OK. Frontend: 1883 de 1883, `build`, `i18n:check` y `npm run lint` OK. Lint Python: solo avisos previos al PR. Sin revisión visual en navegador (no verificada).
+Hallazgos Low, no bloqueantes: L-1 textos de los archivos exportados solo en español (heredado); L-2 las etiquetas compartidas viven en `SALES.PAID_REPORT.*` (podría renombrarse a un espacio neutral más adelante).
 
 ## Publicación
-_Pendiente_
+PR #130 completo y listo para aprobación humana. Sin ADR, migraciones ni dependencias nuevas.
