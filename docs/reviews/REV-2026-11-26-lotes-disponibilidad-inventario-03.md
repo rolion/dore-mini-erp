@@ -1,6 +1,6 @@
 # REV-2026-11-26-lotes-disponibilidad-inventario-03: Desvíos menores frente a DDR/ADR sin declarar
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-26-lotes-disponibilidad-inventario.md (v1)
@@ -19,3 +19,6 @@ Según DDR/ADR.
 
 ## Evidence
 Revisión de código del Quality Gate; sin impacto funcional.
+
+## Resolution
+Los desvíos (a)..(d) quedan declarados en `## Implementación` del TASK; sin impacto funcional.

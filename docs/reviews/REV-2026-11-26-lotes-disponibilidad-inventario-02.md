@@ -19,3 +19,6 @@ Devuelve lot: {id, code} | null (movement_views.py:66); frontend y prueba lo asu
 
 ## Evidence
 Cambio aditivo, no rompe nada. Resolver declarando la desviación (actualizar PLAN/ADR) o alineando el contrato.
+
+## Resolution
+Pendiente de decisión del usuario: cambiar el contrato escrito en PLAN/ADR (`lot_id`/`lot_code` planos) por `lot: {id, code}` anidado es un cambio de Specification y requiere aprobación explícita. Es aditivo; el código y el frontend ya usan el anidado.

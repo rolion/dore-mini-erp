@@ -196,6 +196,13 @@ class LotOutputRulesTests(LotTestCase):
         self.assertEqual(inventory.get_lot(self.company.id, refrigerating.id).physical_quantity, Decimal('118'))
         self.assertEqual(inventory.get_lot(self.company.id, released.id).physical_quantity, Decimal('60'))
 
+    def test_get_balances_can_exclude_lot_stock(self):  # REV-01
+        self.move('in', '22')
+        self.make_lot('118')
+        both = inventory.get_balances(self.company.id, self.wh, [self.product])
+        unlotted = inventory.get_balances(self.company.id, self.wh, [self.product], unlotted=True)
+        self.assertEqual((both[self.product], unlotted[self.product]), (Decimal('140'), Decimal('22')))
+
     def test_document_outputs_use_the_same_rule(self):  # AC-09
         self.move('in', '22')
         self.make_lot('118')

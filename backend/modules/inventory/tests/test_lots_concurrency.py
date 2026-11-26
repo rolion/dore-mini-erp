@@ -43,6 +43,8 @@ class LotConcurrencyTests(TransactionTestCase):
     def test_the_same_source_created_at_once_makes_one_lot(self):  # AC-02
         _run_together(self.create(1), self.create(1))
         self.assertEqual(StockLotModel.objects.count(), 1)
+        self.create(2)()  # el siguiente lote es el número 2: la carrera no gastó ningún número
+        self.assertEqual(sorted(StockLotModel.objects.values_list('number', flat=True)), [1, 2])
 
     def test_two_outputs_of_the_same_lot_cannot_both_take_the_last_units(self):  # AC-07, INV-01
         lot = inventory.create_lot(

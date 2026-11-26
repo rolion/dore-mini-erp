@@ -1,6 +1,6 @@
 # TASK-lotes-disponibilidad-inventario: Disponibilidad de cuñapés por lote en Inventario
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-lotes-disponibilidad-inventario (base: `produccion`)
@@ -17,6 +17,7 @@
 | 2026-11-26 | PLANNING → ENGINEERING | PLAN v1 READY (decisiones de negocio respondidas por el usuario) | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suites de inventory, sales, purchases, costing, data_import y shared (1218) y Karma de inventory/layout/i18n (237) en verde por verificación propia | delivery-build |
 | 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS (subagente aislado); REV-01 Medium abierto, REV-02..04 Low; revisión visual no verificada | delivery-publish |
+| 2026-11-26 | PUBLISH → ENGINEERING → REVIEW | El usuario pidió corregir REV-01 (Medium); corregido con prueba de regresión; se repite el Quality Gate sobre el estado final | delivery-publish / delivery-build |
 
 ## Investigación
 
@@ -103,6 +104,9 @@ Ver `docs/plans/PLAN-2026-11-26-lotes-disponibilidad-inventario.md` (v1, COMPLET
 2. La lista de Lotes reutiliza la tabla responsive `inventory-table` (se apila en < 768 px, como `stock-list`/`stock-detail`) en lugar de `ngx-datatable` + tarjetas propias; los filtros son un formulario simple (4 campos) sin panel colapsable. Es coherente con el sistema de diseño y evita duplicar la variante de tarjetas.
 3. `inventory → accounting` se añadió a `ALLOWED_DEPENDENCIES` de `test_boundaries.py` (el plan lo implicaba por el helper de numeración; la prueba de fronteras lo exigió explícitamente).
 4. Se añadió la opción «Orden de producción» al filtro de origen de movimientos (`production_order` ya existe en el catálogo cerrado del dominio).
+5. (REV-03) La lista de Lotes no enlaza el código; usa el botón «Ver existencia» en Acciones, como `stock-list`. La sección de lotes de `stock-detail` pide hasta 100 lotes (máximo del servidor) sin estado de carga propio. El filtro `?product_id=` de la lista no tiene indicador visible (nadie enlaza aún). El ADR nombra `get_lot_balances`; se implementó `list_lots_for_product`.
+6. (REV-02, pendiente de aprobación) El movimiento expone `lot: {id, code} | null` anidado en vez de `lot_id`/`lot_code` planos del PLAN/ADR. Aditivo; cambiar el texto del contrato requiere aprobación del usuario.
+7. (REV-01, corregido tras el Quality Gate) `inventory.services.get_balances` acepta `unlotted`; Ventas (control previo y vista previa de entrega) y la importación de ventas lo usan para no contar el stock de lotes. Costeo conserva el físico.
 
 **Deuda técnica / notas.** (a) Los ajustes sobre un producto con lotes solo alcanzan el stock sin lote (documentado, fuera de alcance). (b) Crear lotes exige período fiscal abierto (misma decisión que ventas/compras). (c) La interpretación del código `L-YYYYMMDD-NNNN` (fecha del lote + correlativo por período fiscal) queda por confirmar en la revisión; solo afecta a `format_lot_code`. (d) Verificación visual en navegador no realizada en esta etapa.
 

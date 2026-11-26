@@ -140,7 +140,8 @@ class StockOutputAdapter:
         return inventory_services.get_warehouse_names(self.company_id, warehouse_ids)
 
     def balances(self, warehouse_id: UUID, product_ids: Iterable[UUID]) -> dict[UUID, Decimal]:
-        return inventory_services.get_balances(self.company_id, warehouse_id, product_ids)
+        # Una venta no indica lote: solo puede contar con el stock sin lote (el refrigerando está bloqueado).
+        return inventory_services.get_balances(self.company_id, warehouse_id, product_ids, unlotted=True)
 
     def register_outputs(self, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], order_id: UUID,
                          reference: str, actor: Actor) -> None:

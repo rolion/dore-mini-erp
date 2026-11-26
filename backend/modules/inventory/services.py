@@ -207,9 +207,14 @@ def get_stock_products(company_id: UUID, product_ids) -> dict[UUID, StockProduct
             for pid, p in found.items() if p.tracks_stock}
 
 
-def get_balances(company_id: UUID, warehouse_id: UUID, product_ids) -> dict[UUID, Decimal]:
-    """Existencia de cada producto en el almacén (0 sin movimientos), en una consulta."""
-    return DjangoStockMovementRepository(company_id).balances_for(warehouse_id, list(product_ids))
+def get_balances(company_id: UUID, warehouse_id: UUID, product_ids, *, unlotted: bool = False) -> dict[UUID, Decimal]:
+    """Existencia de cada producto en el almacén (0 sin movimientos), en una consulta.
+
+    Con `unlotted` solo cuenta el stock sin lote: lo único que puede consumir una salida sin lote (una venta). El
+    físico de los lotes (también el de los liberados) se gasta indicando el lote, y el de los lotes en refrigeración
+    está bloqueado.
+    """
+    return DjangoStockMovementRepository(company_id).balances_for(warehouse_id, list(product_ids), unlotted=unlotted)
 
 
 def list_movements_for_source(company_id: UUID, source_type: str, source_id: str) -> list[SourceMovement]:
