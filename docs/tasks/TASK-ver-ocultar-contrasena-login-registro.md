@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-ver-ocultar-contrasena-login-registro
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/137
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
