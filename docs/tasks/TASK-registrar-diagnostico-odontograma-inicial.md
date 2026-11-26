@@ -105,7 +105,7 @@ No hay forma de registrar estado dental por pieza/superficie; la pieza solo apar
 ## Review
 - **Quality Gate #1: FAIL** — REV-01…07 (guardas de `company_id` y fronteras, cliente inactivo → 500, orden de bloqueos, foco/aria, fechas, scss, tabla apilada, breadcrumb); corregidos.
 - **Quality Gate #2: PASS** — backend 2597 pruebas OK, frontend 1936 OK, lint/i18n/build/bandit/`npm audit` limpios, revisión visual en navegador (escritorio y móvil, claro y oscuro; diálogos en móvil/oscuro no verificados). REV-01…07 cerrados.
-- **Hallazgo abierto:** REV-08 (Low, DESIGN): contraste bajo en tema oscuro de piezas «Sin evaluar» y muestra «Implante»; no bloquea.
+- **REV-08 (Low, DESIGN), corregido tras el PASS:**: contraste bajo en tema oscuro de piezas «Sin evaluar» y muestra «Implante»; no bloquea.
 - Informes: `docs/reviews/REV-2026-11-26-registrar-diagnostico-odontograma-inicial-01…08.md`.
 
 ## Publicación

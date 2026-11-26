@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-08: En tema oscuro los contornos de las piezas «Sin evaluar» y el borde de «Implante» son casi invisibles
 
-**Status:** Open
+**Status:** Resuelto (build; verificado por specs, build y lint; sin re-inspección visual)
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -19,3 +19,6 @@ En tema oscuro (escritorio 1440 px y móvil 390 px) las piezas sin hallazgos apa
 
 ## Evidence
 Revisión visual en navegador con el tema oscuro del panel de ajustes. Estilos computados de `.odo-tooth.unevaluated polygon`: `stroke: rgb(33, 37, 41)` sobre fondo de tarjeta `rgb(22, 25, 42)` (contraste ≈ 1.1:1). `getComputedStyle(body).color` = `rgb(0, 0, 0)` y `--bs-body-color` = `#212529` aun con `body.dark`.
+
+## Resolución
+El scss del gráfico usa `--o-line` (`--bs-body-color` por defecto y `--bs-white` bajo `:host-context(.dark)`) para contornos y muestras de la leyenda, y `fill-dark` se aclara en tema oscuro. `npm run build` sin aviso de presupuesto en este archivo, 105 specs de Odontología y `npm run lint` en verde.
