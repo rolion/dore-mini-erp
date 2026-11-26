@@ -162,3 +162,21 @@ class PaidReportHostileNamesTests(PaidReportFixtures, APITestCase):
         response = self.client.get(f'{REPORT_URL}export/pdf/')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.content.startswith(b'%PDF'))
+
+
+class PaidReportExportRangeTests(PaidReportFixtures, APITestCase):
+    def test_export_honours_date_range_and_period(self):  # AC-05
+        self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
+        authenticate(self.client, make_admin(self.company, username='ana'))
+        self.make_order(self.company, order_date=date(2026, 7, 31), period=(PERIOD_A, 'Julio'))
+        august = self.make_order(self.company, order_date=date(2026, 8, 15), period=(PERIOD_B, 'Agosto'))
+        self.make_order(self.company, order_date=date(2026, 9, 1), period=(PERIOD_A, 'Julio'))
+        for query in ('date_from=2026-08-01&date_to=2026-08-31', f'fiscal_period_id={PERIOD_B}'):
+            for fmt in ('xlsx', 'pdf'):
+                response = self.client.get(f'{REPORT_URL}export/{fmt}/?{query}')
+                self.assertEqual(response.status_code, 200)
+                if fmt == 'xlsx':
+                    sheet = load_workbook(BytesIO(response.content)).active
+                    codes = [row[0].value for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row - 1)]
+                    self.assertEqual(codes, [august.code], query)
