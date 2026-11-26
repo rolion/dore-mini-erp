@@ -1,4 +1,4 @@
-# PLAN-2026-11-26-gestionar-recetas-produccion (v2)
+# PLAN-2026-11-26-gestionar-recetas-produccion (v3)
 
 **Task:** TASK-gestionar-recetas-produccion · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-gestionar-recetas-produccion-pantallas-recetas · ADR-gestionar-recetas-produccion-modulo-production
@@ -72,7 +72,7 @@ Campos en `snake_case`, como el resto de la API (Catálogo, Servicios). Cantidad
 - UI-01 Menú «Producción» (módulo `production`) con «Recetas».
 - UI-02 Lista según plantilla «Lista» (DDR); estados cargando/vacío/error.
 - UI-03 Formulario con líneas de un solo paso: unidad del ingrediente y del rendimiento mostradas de solo lectura al elegir el producto; errores por campo y por línea.
-- UI-04 Detalle con ingredientes, aviso EDGE-05 y acciones Editar / Activar-Desactivar / Volver.
+- UI-04 Detalle con ingredientes, aviso EDGE-05 y acciones Editar / Activar-Desactivar / Volver. Por debajo de 957 px (`max-width: 956.98px`): los datos se muestran en filas «etiqueta | valor» (Estado, Producto resultante, Rendimiento base, Creada, Actualizada) y la tabla de ingredientes se reemplaza por una tarjeta por ingrediente con filas «Producto | nombre» y «Cantidad | valor unidad».
 
 ## Non-functional requirements
 Dinero no interviene; cantidades en `Decimal`. i18n es/en/pt con las mismas claves. Sin consultas N+1 en la lista (`select_related`/prefetch o lote vía fachada).
@@ -140,3 +140,4 @@ Ninguna.
 
 ## Changelog
 - **v2** (2026-11-26): [Specification] API-01..API-05 pasan de camelCase a snake_case (como Catálogo y Servicios; la implementación ya lo hacía). Aprobado explícitamente por el usuario en el chat. Solicitado por delivery-publish, REV-2026-11-26-gestionar-recetas-produccion-01.
+- **v3** (2026-11-26): [Specification] UI-04 añade el diseño de detalle para pantallas < 957 px (filas etiqueta | valor y tarjetas de ingredientes). Pedido y aprobado explícitamente por el usuario en el chat tras ver el detalle en móvil.

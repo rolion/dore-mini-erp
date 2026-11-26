@@ -11,7 +11,7 @@ Primer uso del menú **Producción**. La persona responsable crea y mantiene rec
 - Menú lateral: grupo **Producción** (módulo `production`) con el ítem **Recetas** (`/pocketbiz/production/recipes`). «Órdenes de producción» no aparece hasta su tarjeta.
 - **Lista** `/production/recipes`: columnas Receta (enlace al detalle), Producto resultante, Rendimiento base (`24 unidad`), Estado, Acciones (ver, editar, activar/desactivar).
 - **Alta/Edición** `/production/recipes/new` y `/:id/edit`.
-- **Detalle** `/production/recipes/:id`: datos, tabla de ingredientes de solo lectura, acciones.
+- **Detalle** `/production/recipes/:id`: datos, tabla de ingredientes de solo lectura, acciones. Por debajo de 957 px: datos en filas «etiqueta | valor» y una tarjeta por ingrediente («Producto | nombre», «Cantidad | valor unidad»), sin tabla.
 
 ## Componentes/patrones elegidos
 - Foco: tras un error de validación el foco va al control del primer error.

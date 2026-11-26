@@ -1,13 +1,14 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../core/i18n/testing';
 import { Page } from '../../../shared/models/page';
 import { Product } from '../../products/models/product';
 import { ProductsApiService } from '../../products/services/products-api.service';
 import { Recipe, RecipeApiError } from '../models/recipe';
 import { RecipeFiltersState, RecipesApiService } from '../services/recipes-api.service';
-import { RecipeDetailComponent } from './recipe-detail/recipe-detail.component';
+import { COMPACT_QUERY, RecipeDetailComponent } from './recipe-detail/recipe-detail.component';
 import { RecipeFormComponent, positiveQuantity } from './recipe-form/recipe-form.component';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 
@@ -78,11 +79,13 @@ describe('RecipeListComponent', () => {
 });
 
 describe('RecipeDetailComponent', () => {
-  function setup(value: Recipe) {
+  function setup(value: Recipe, compact = false) {
     const api = jasmine.createSpyObj<RecipesApiService>('api', ['get']);
     api.get.and.returnValue(of(value));
+    const breakpoints = jasmine.createSpyObj<BreakpointObserver>('breakpoints', ['observe']);
+    breakpoints.observe.and.callFake(() => new BehaviorSubject({ matches: compact, breakpoints: {} }));
     TestBed.configureTestingModule({ imports: [RecipeDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
-      { provide: RecipesApiService, useValue: api },
+      { provide: RecipesApiService, useValue: api }, { provide: BreakpointObserver, useValue: breakpoints },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'recipe-1' }) } } }] });
     const fixture = TestBed.createComponent(RecipeDetailComponent);
     fixture.detectChanges();
@@ -96,6 +99,25 @@ describe('RecipeDetailComponent', () => {
     expect(fixture.nativeElement.querySelector('[data-testid="detail-yield"]').textContent).toContain('24 u');
     expect(fixture.nativeElement.querySelectorAll('[data-testid="ingredient-row"]').length).toBe(1);
     expect(fixture.nativeElement.querySelector('[data-testid="product-warning"]')).toBeNull();
+  });
+
+  it('below 957 px shows label|value rows and one card per ingredient instead of a table', () => {
+    const fixture = setup(recipe, true);
+    const root = fixture.nativeElement as HTMLElement;
+    expect(COMPACT_QUERY).toBe('(max-width: 956.98px)');
+    const rows = Array.from(root.querySelectorAll('[data-testid="recipe-info"] .recipe-row')).map(row => row.textContent.trim());
+    expect(rows.length).toBe(5);
+    expect(rows[0]).toContain('Estado');
+    expect(rows[1]).toContain('Cuñapé a granel');
+    expect(rows[2]).toContain('24 u');
+    expect(root.querySelector('[data-testid="ingredient-table"]')).toBeNull();
+    const cards = root.querySelectorAll('[data-testid="ingredient-card"]');
+    expect(cards.length).toBe(1);
+    const card = cards[0].textContent ?? '';
+    expect(card).toContain('Producto');
+    expect(card).toContain('Queso');
+    expect(card).toContain('Cantidad');
+    expect(card).toContain('1.5 kg');
   });
 
   it('warns when a product is inactive', () => {
