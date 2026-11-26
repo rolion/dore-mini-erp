@@ -1,6 +1,6 @@
 # REV-2026-11-26-crear-iniciar-orden-receta-01: EDGE-01 se prueba solo en secuencia, no con creaciones concurrentes
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-crear-iniciar-orden-receta.md (v1)

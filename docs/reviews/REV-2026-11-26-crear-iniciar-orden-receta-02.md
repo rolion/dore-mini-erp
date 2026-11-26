@@ -1,6 +1,6 @@
 # REV-2026-11-26-crear-iniciar-orden-receta-02: pruebas de AC-04 y AC-05 con aserciones débiles
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-crear-iniciar-orden-receta.md (v1)

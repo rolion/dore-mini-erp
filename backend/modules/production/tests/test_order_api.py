@@ -1,10 +1,14 @@
 from decimal import Decimal
+from threading import Barrier, Thread
 from uuid import uuid4
 
+from django.db import connection, transaction
+from django.test import TransactionTestCase
 from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
-from modules.inventory.infrastructure.django.models import StockMovementModel, WarehouseModel
+from modules.inventory import services as inventory_services
+from modules.inventory.infrastructure.django.models import StockLotModel, StockMovementModel, WarehouseModel
 from modules.catalog.infrastructure.django.models import ProductModel, UnitModel
 from modules.modularity.infrastructure.django.models import CompanyModuleModel, CompanySettingsModel
 
@@ -110,11 +114,26 @@ class OrderApiTests(APITestCase):
         eggs = self.product('Huevo', self.unit)
         changes = self.payload(name='Otra', yield_quantity='12', ingredients=[
             {'product_id': str(eggs.id), 'unit_id': str(self.unit.id), 'quantity': '3'}])
-        self.client.put(f"/api/recipes/{self.recipe['id']}/", changes, format='json')
-        self.client.post(f"/api/recipes/{self.recipe['id']}/deactivate/")
+        edited = self.client.put(f"/api/recipes/{self.recipe['id']}/", changes, format='json')
+        self.assertEqual(edited.status_code, 200, edited.content)
+        self.assertEqual((edited.json()['name'], edited.json()['yield_quantity']), ('Otra', '12.0000'))
+        self.assertEqual(self.client.post(f"/api/recipes/{self.recipe['id']}/deactivate/").status_code, 200)
+        self.assertEqual(self.client.get(f"/api/recipes/{self.recipe['id']}/").json()['active'], False)
         self.assertEqual(self.client.get(f"{URL}{body['id']}/").json(), body)
 
+    def stock_snapshot(self):
+        return {'balances': {p.id: inventory_services.get_balance(self.company.id, p.id, self.warehouse.id)
+                             for p in (self.cheese, self.flour, self.result)},
+                'movements': StockMovementModel.objects.count(),
+                'lots': StockLotModel.objects.count()}
+
     def test_draft_edit_and_start_do_not_touch_stock(self):  # AC-05, AC-06, INV-09
+        ProductModel.objects.filter(pk=self.cheese.pk).update(tracks_stock=True)
+        inventory_services.record_movement(
+            self.company.id, product_id=self.cheese.id, warehouse_id=self.warehouse.id, kind='in',
+            quantity=Decimal('10'), user_id=self.user.id, user_name='prod-admin', reference='Seed')
+        before = self.stock_snapshot()
+        self.assertEqual((before['balances'][self.cheese.id], before['movements']), (Decimal('10'), 1))
         body = self.make_order()
         other = WarehouseModel.objects.create(company_id=self.company.id, name='Cocina')
         edited = self.client.put(f"{URL}{body['id']}/", {'warehouse_id': str(other.id), 'preparations': 2},
@@ -125,7 +144,7 @@ class OrderApiTests(APITestCase):
         self.assertEqual(started.status_code, 200, started.content)
         self.assertEqual(started.json()['status'], 'in_preparation')
         self.assertIsNotNone(started.json()['started_at'])
-        self.assertEqual(StockMovementModel.objects.count(), 0)
+        self.assertEqual(self.stock_snapshot(), before)
         again = self.client.post(f"{URL}{body['id']}/start/")
         self.assertEqual(again.status_code, 409)
         self.assertEqual(self.client.get(f"{URL}{body['id']}/").json()['started_at'], started.json()['started_at'])
@@ -181,9 +200,39 @@ class OrderApiTests(APITestCase):
         response = self.client.get(URL)
         self.assertEqual((response.status_code, response.json()['code']), (403, 'module_disabled'))
 
-    def test_numbers_are_unique_per_company(self):  # EDGE-01, INV-08
+    def test_numbers_are_sequential_per_company(self):  # EDGE-01, INV-08
         from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
         self.make_order()
         other = make_company('Producción E')
         self.assertEqual(DjangoProductionOrderRepository(other.id)._next_number(), 1)
         self.assertEqual(Decimal(self.make_order()['number']), 2)
+
+
+class OrderNumberConcurrencyTests(TransactionTestCase):
+    """EDGE-01: creaciones simultáneas (hilos y conexiones reales) no repiten ni saltan números."""
+
+    THREADS = 8
+
+    def test_concurrent_numbers_are_unique_and_consecutive(self):
+        from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
+        company = make_company('Producción Concurrente')
+        barrier = Barrier(self.THREADS)
+        numbers, errors = [], []
+
+        def take_number():
+            try:
+                barrier.wait(timeout=10)
+                with transaction.atomic():
+                    numbers.append(DjangoProductionOrderRepository(company.id)._next_number())
+            except Exception as exc:  # pragma: no cover - se informa en la aserción
+                errors.append(repr(exc))
+            finally:
+                connection.close()
+
+        threads = [Thread(target=take_number) for _ in range(self.THREADS)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=30)
+        self.assertEqual(errors, [])
+        self.assertEqual(sorted(numbers), list(range(1, self.THREADS + 1)))
