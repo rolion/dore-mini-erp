@@ -1,6 +1,6 @@
 # TASK-ver-ocultar-contrasena-login-registro: Ver/ocultar contraseña en login y registro
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-ver-ocultar-contrasena-login-registro
@@ -12,6 +12,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → PLANNING | NEEDS_PLAN, sin diseño ni arquitectura | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, plan v1 | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -45,7 +46,7 @@ No aplica según veredicto.
 docs/plans/PLAN-2026-11-26-ver-ocultar-contrasena-login-registro.md (v1, COMPACTO)
 
 ## Implementación
-_Pendiente_
+Nuevo `shared/components/password-toggle` (botón `eye`/`eye-off`, `aria-label` i18n es/en/pt, `aria-pressed`, `type="button"`) que alterna el `type` del input recibido; integrado en signin (1 campo) y signup (2 campos) con clase `psr-password` (padding derecho; RTL y tema oscuro cubiertos en SCSS). Cubre AC-01..AC-04. Pruebas: spec del componente y asserts en specs de signin/signup (44 de 44 en el subconjunto auth + i18n); `npm run lint` e `i18n:check` limpios. Sin desviaciones del plan. Pantalla de referencia: signin/signup (Autenticación); `design-system.md` actualizado. Nota: AC-04 (posición visual/RTL/oscuro) no verificado visualmente en navegador. Deuda: `reset` sin toggle (fuera de alcance).
 
 ## Review
 _Pendiente_

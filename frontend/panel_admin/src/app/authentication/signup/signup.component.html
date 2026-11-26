@@ -88,8 +88,9 @@
                   <div class="form-group position-relative">
                     <label for="signup-password">{{ 'AUTH.SIGNUP.CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="key" class="login-icons"></i-feather>
-                    <input id="signup-password" type="password" class="form-control psl-5" formControlName="password"
+                    <input #pw id="signup-password" type="password" class="form-control psl-5 psr-password" formControlName="password"
                       [placeholder]="'AUTH.SIGNUP.CONTRASENA' | translate" autocomplete="new-password">
+                    <app-password-toggle [target]="pw"></app-password-toggle>
                     @if (fieldError('password')) {
                       <small class="form-text text-danger">{{ fieldError('password') }}</small>
                     }
@@ -99,8 +100,9 @@
                   <div class="form-group position-relative">
                     <label for="signup-confirm-password">{{ 'AUTH.SIGNUP.CONFIRMAR_CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="key" class="login-icons"></i-feather>
-                    <input id="signup-confirm-password" type="password" class="form-control psl-5"
+                    <input #cpw id="signup-confirm-password" type="password" class="form-control psl-5 psr-password"
                       formControlName="confirmPassword" [placeholder]="'AUTH.SIGNUP.CONFIRMAR_CONTRASENA' | translate" autocomplete="new-password">
+                    <app-password-toggle [target]="cpw"></app-password-toggle>
                     @if (fieldError('confirmPassword')) {
                       <small class="form-text text-danger">{{ fieldError('confirmPassword') }}</small>
                     }

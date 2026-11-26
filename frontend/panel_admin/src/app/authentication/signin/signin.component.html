@@ -24,8 +24,9 @@
                       <div class="form-group position-relative">
                         <label>{{ 'AUTH.SIGNIN.CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                         <i-feather name="key" class="login-icons"></i-feather>
-                        <input type="password" class="form-control psl-5" formControlName="password"
+                        <input #pw type="password" class="form-control psl-5 psr-password" formControlName="password"
                           [placeholder]="'AUTH.SIGNIN.CONTRASENA' | translate" autocomplete="current-password">
+                        <app-password-toggle [target]="pw"></app-password-toggle>
                         </div>
                       </div>
                       <div class="col-lg-12">

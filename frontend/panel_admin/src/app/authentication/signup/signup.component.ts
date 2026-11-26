@@ -13,6 +13,7 @@ import {
 import { FeatherModule } from 'angular-feather';
 import { finalize } from 'rxjs';
 import { AuthService, REGISTERABLE_COMPANY_TYPES, RegisterableCompanyType, RegisterError, RegisterField } from '@core';
+import { PasswordToggleComponent } from '../../shared/components/password-toggle/password-toggle.component';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
 export const DEFAULT_ROUTE_AFTER_SIGNUP = APP_PATHS.dashboard;
@@ -60,7 +61,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   selector: 'app-signup',
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.sass'],
-  imports: [TranslatePipe, ReactiveFormsModule, FeatherModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, FeatherModule, RouterLink, PasswordToggleComponent],
 })
 export class SignupComponent {
   private formBuilder = inject(NonNullableFormBuilder);
