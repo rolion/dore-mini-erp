@@ -1,7 +1,7 @@
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
-from modules.accounts.models import User
+from modules.accounts.models import REGISTRABLE_TYPES, User
 
 
 class LoginSerializer(serializers.Serializer):
@@ -11,6 +11,7 @@ class LoginSerializer(serializers.Serializer):
 
 class RegisterSerializer(serializers.Serializer):
     company_name = serializers.CharField(max_length=150)
+    company_type = serializers.ChoiceField(choices=[(t.value, t.label) for t in REGISTRABLE_TYPES])
     username = serializers.CharField(max_length=150, validators=[UnicodeUsernameValidator()])
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
@@ -29,4 +30,4 @@ class UserSerializer(serializers.ModelSerializer):
     def get_company(self, user: User) -> dict | None:
         if user.company is None:
             return None
-        return {'id': str(user.company.id), 'name': user.company.name}
+        return {'id': str(user.company.id), 'name': user.company.name, 'type': user.company.company_type}

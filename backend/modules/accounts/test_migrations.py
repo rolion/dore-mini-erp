@@ -77,3 +77,26 @@ class IsolationMigrationTests(TransactionTestCase):
             list(new.get_model('accounts', 'Company').objects.values_list('name', flat=True)),
             ['Empresa por defecto'])
         self.assertEqual(new.get_model('catalog', 'ProductModel').objects.count(), 0)
+
+
+class CompanyTypeMigrationTests(TransactionTestCase):
+    """AC-06: las empresas anteriores al tipo quedan como `general` y la migración es reversible."""
+
+    def migrate(self, targets):
+        MigrationExecutor(connection).migrate(targets)
+        return MigrationExecutor(connection).loader.project_state(targets).apps
+
+    def tearDown(self):
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())
+
+    def test_existing_companies_become_general_and_it_is_reversible(self):
+        old = self.migrate([('accounts', '0002_company_and_role')])
+        old.get_model('accounts', 'Company').objects.create(name='Previa SRL')
+        self.assertNotIn('company_type', _columns('accounts_company'))
+
+        new = self.migrate([('accounts', '0003_company_type')])
+        self.assertEqual(new.get_model('accounts', 'Company').objects.get(name='Previa SRL').company_type, 'general')
+
+        self.migrate([('accounts', '0002_company_and_role')])
+        self.assertNotIn('company_type', _columns('accounts_company'))

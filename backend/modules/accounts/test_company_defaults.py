@@ -25,6 +25,7 @@ from modules.accounting.infrastructure.django.models import (
 from modules.accounts.models import Company
 from modules.expenses.infrastructure.django.models import ExpenseCategoryModel
 from modules.inventory.infrastructure.django.models import WarehouseModel
+from modules.modularity.domain.company_types import template_modules
 from modules.modularity.infrastructure.django.models import CompanyModuleModel, CompanySettingModel
 from modules.purchases.infrastructure.django.models import SettingsModel as PurchasesSettingsModel
 from shared import company_defaults
@@ -50,7 +51,8 @@ class SnapshotTests(TestCase):
 
 class RegisterSeedsDefaultsTests(APITestCase):
     payload = {
-        'company_name': 'Nueva SRL', 'username': 'nuevo', 'first_name': 'Ana', 'last_name': 'Paz',
+        'company_name': 'Nueva SRL', 'company_type': 'odontologia', 'username': 'nuevo',
+        'first_name': 'Ana', 'last_name': 'Paz',
         'email': 'ana@example.com', 'password': 'Cl4ve-segura-2026',
     }
 
@@ -93,8 +95,7 @@ class RegisterSeedsDefaultsTests(APITestCase):
     def test_modules_cutoff_period_and_coverage(self):  # AC-04
         company = self.register()
         enabled = set(CompanyModuleModel.objects.filter(company_id=company.id).values_list('module_key', flat=True))
-        self.assertEqual(enabled, set(SNAPSHOT['modularity']['modules']))
-        self.assertEqual(len(enabled), 14)
+        self.assertEqual(enabled, set(template_modules('odontologia')))  # el tipo elige los módulos iniciales
         today = timezone.localdate()  # el alta usa la zona horaria del proyecto, no la del sistema
         self.assertEqual(SettingsModel.objects.get(company_id=company.id).cutoff_date, today)
         period = FiscalPeriodModel.objects.get(company_id=company.id)

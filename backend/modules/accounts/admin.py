@@ -6,8 +6,9 @@ from .models import Company, User
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'is_active', 'created_at')
-    list_filter = ('is_active',)
+    list_display = ('name', 'company_type', 'is_active', 'created_at')
+    list_filter = ('company_type', 'is_active')
+    readonly_fields = ('company_type',)  # lo fija el registro y no cambia después
     search_fields = ('name',)
 
 

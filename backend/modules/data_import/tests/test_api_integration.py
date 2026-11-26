@@ -133,11 +133,14 @@ class FullSequenceTests(APITestCase):
 
     def test_valuation_then_import_with_purchases_inventory_and_accounting(self):
         registered = self.client.post('/api/auth/register/', {
-            'company_name': 'Dore', 'username': 'demo', 'first_name': 'd', 'last_name': 'd', 'email': 'd@e.com',
+            'company_name': 'Dore', 'company_type': 'compraventa', 'username': 'demo', 'first_name': 'd', 'last_name': 'd', 'email': 'd@e.com',
             'password': 'Sup3r-secreta-123'}, format='json')
         self.assertEqual(registered.status_code, 201, registered.content)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + registered.json()['token'])
         company_id = registered.json()['user']['company']['id']
+        # La valoración inicial pertenece a Costeo, que la plantilla de compraventa no trae: se habilita después.
+        enabled = self.client.post('/api/modules/costing/enable/')
+        self.assertEqual(enabled.status_code, 200, enabled.content)
 
         adopted = self.client.post('/api/valuation/adopt/', {'adoption_id': str(uuid4()), 'lines': []}, format='json')
         self.assertIn(adopted.status_code, (200, 201), adopted.content)
