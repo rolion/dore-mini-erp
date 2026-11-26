@@ -9,6 +9,12 @@
   background-color: var(--bs-danger-bg-subtle, #f8d7da);
 }
 
+// En tema oscuro el texto de la tarjeta es claro: el fondo rosa claro lo dejaba ilegible; se usa un rojo translúcido.
+:host-context(.dark) .short-row {
+  background-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.22);
+  border-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.6);
+}
+
 .line-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
