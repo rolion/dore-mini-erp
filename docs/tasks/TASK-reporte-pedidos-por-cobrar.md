@@ -1,16 +1,17 @@
 # TASK-reporte-pedidos-por-cobrar: Reporte «Pedidos por cobrar»
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-reporte-pedidos-por-cobrar
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/130
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
 |---|---|---|---|
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → PLANNING → ENGINEERING | NEEDS_PLAN, sin DDR; PLAN v1 READY, PR abierto | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -46,7 +47,13 @@ No aplica según veredicto.
 docs/plans/PLAN-2026-11-26-reporte-pedidos-por-cobrar.md (v1, COMPACTO, READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend: base `_OrdersReport` con `PaidOrdersReport` y el nuevo `ReceivableOrdersReport` (no cancelados ni devueltos, `has_balance=True`); vistas de lista y exportación parametrizadas (`_OrdersReportView`, `_OrdersReportExportView`); `report_export` recibe el título; rutas `receivable-report/` y `receivable-report/export/{xlsx|pdf}/`. Frontend: la pantalla, el servicio y el modelo `paid-report` pasan a `sales-report` y se parametrizan por `kind` (`data.report` de la ruta); nueva ruta `sales/reports/receivable`, submenú «Pedidos por cobrar» e i18n es/en/pt (`SALES.RECEIVABLE_REPORT`).
+
+**Cobertura.** AC-01..05 y AC-07: `test_receivable_report.py`; AC-06: `routes.json`, componente y `sidebar-menu.spec`; AC-08: `test_paid_report.py` y specs de ingresos siguen pasando tras el renombre.
+
+**Desviaciones.** Ninguna respecto al plan. Los textos de los archivos exportados siguen solo en español (limitación heredada del reporte de ingresos).
+
+**Verificación propia.** Backend: `test_receivable_report` + `test_paid_report` 19 OK; `ruff`/`flake8` sin avisos en lo nuevo. Frontend: specs del reporte y del menú 20 OK; `i18n:check` 0 faltantes.
 
 ## Review
 _Pendiente_

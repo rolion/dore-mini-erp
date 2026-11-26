@@ -31,10 +31,10 @@ def _money(value: Decimal) -> str:
     return f'{value:,.2f}'
 
 
-def build_xlsx(rows, totals) -> bytes:
+def build_xlsx(rows, totals, title: str = TITLE) -> bytes:
     workbook = Workbook()
     sheet = workbook.active
-    sheet.title = TITLE
+    sheet.title = title
     sheet.append(HEADERS)
     for cell in sheet[1]:
         cell.font = Font(bold=True)
@@ -58,12 +58,12 @@ def build_xlsx(rows, totals) -> bytes:
     return buffer.getvalue()
 
 
-def build_pdf(rows, totals, filters_text: str, generated_on: date) -> bytes:
+def build_pdf(rows, totals, filters_text: str, generated_on: date, title: str = TITLE) -> bytes:
     buffer = BytesIO()
-    document = SimpleDocTemplate(buffer, pagesize=A4, title=TITLE, leftMargin=36, rightMargin=36,
+    document = SimpleDocTemplate(buffer, pagesize=A4, title=title, leftMargin=36, rightMargin=36,
                                  topMargin=36, bottomMargin=36)
     styles = getSampleStyleSheet()
-    story = [Paragraph(TITLE, styles['Title']),
+    story = [Paragraph(escape(title), styles['Title']),
              Paragraph(f'{filters_text} · Generado el {generated_on.strftime("%d/%m/%Y")}', styles['Normal']),
              Spacer(1, 12)]
     data = [list(HEADERS)]

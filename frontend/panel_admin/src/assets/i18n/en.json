@@ -164,6 +164,7 @@
       "LIST": {
         "ORDERS": "Orders",
         "INCOME_REPORT": "Income by sale",
+        "RECEIVABLE_REPORT": "Orders receivable",
         "IMPORT": "Import sales",
         "SETTINGS": "Settings"
       }
@@ -2009,6 +2010,11 @@
       "TOTALS": "Totals ({{count}} orders)",
       "SHOWING": "Showing {{from}}–{{to}} of {{total}}",
       "EXPORT_TOO_LARGE": "The report has too many orders to export: narrow the dates or the fiscal period."
+    },
+    "RECEIVABLE_REPORT": {
+      "TITLE": "Orders receivable",
+      "SUBTITLE": "Orders with an outstanding balance",
+      "EMPTY": "No records"
     }
   },
   "SERVICES": {

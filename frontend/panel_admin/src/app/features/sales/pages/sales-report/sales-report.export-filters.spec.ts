@@ -4,19 +4,19 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { ModulesService } from '../../../../core/service/modules.service';
-import { PaidReportComponent } from './paid-report.component';
+import { SalesReportComponent } from './sales-report.component';
 
 const EMPTY = { count: 1, results: [{ id: 'o', code: 'P', order_date: '2026-08-02', customer: null, total: '1.00', balance: '0.00' }], totals: { orders_count: 1, total: '1.00', balance: '0.00' } };
 
-describe('PaidReportComponent export filters (UI path, real service)', () => {
+describe('SalesReportComponent export filters (UI path, real service)', () => {
   it('exports with the dates typed in the inputs', () => {
     TestBed.configureTestingModule({
-      imports: [PaidReportComponent],
+      imports: [SalesReportComponent],
       providers: [...provideTestTranslations(), provideRouter([]), provideHttpClient(), provideHttpClientTesting(),
         { provide: ModulesService, useValue: { isDisabled: () => true } }],
     });
     const http = TestBed.inject(HttpTestingController);
-    const fixture = TestBed.createComponent(PaidReportComponent);
+    const fixture = TestBed.createComponent(SalesReportComponent);
     fixture.detectChanges();
     http.expectOne((r) => r.url.endsWith('/orders/paid-report/')).flush(EMPTY);
     const root = fixture.nativeElement as HTMLElement;

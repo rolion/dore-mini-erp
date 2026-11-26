@@ -157,6 +157,7 @@
       "LIST": {
         "ORDERS": "Pedidos",
         "INCOME_REPORT": "Ingresos por venta",
+        "RECEIVABLE_REPORT": "Pedidos por cobrar",
         "IMPORT": "Importar ventas",
         "SETTINGS": "Configuración"
       }
@@ -2009,6 +2010,11 @@
       "TOTALS": "Totales ({{count}} pedidos)",
       "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
       "EXPORT_TOO_LARGE": "El reporte tiene demasiados pedidos para exportar: acota las fechas o el período fiscal."
+    },
+    "RECEIVABLE_REPORT": {
+      "TITLE": "Pedidos por cobrar",
+      "SUBTITLE": "Pedidos con saldo pendiente de cobro",
+      "EMPTY": "Sin registros"
     }
   },
   "SERVICES": {
