@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-recetas-produccion (base: `produccion`)
-**Pull Request:** _se completa al abrirlo_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/127
 **Fuente:** https://trello.com/c/s8CrL2N0/1-dore-prod-001-gestionar-recetas-de-producci%C3%B3n
 
 ## Historial de transiciones
