@@ -133,6 +133,9 @@
               @if (serverErrors.items) {
               <div class="alert alert-danger" role="alert" data-testid="items-error">{{ serverErrors.items }}</div>
               }
+              @if (fiscalPeriodError) {
+              <app-fiscal-period-alert [code]="fiscalPeriodError" />
+              }
               @if (shortages.length) {
               <div class="alert alert-warning" role="alert" data-testid="stock-alert">
                 <p class="mb-1">{{ 'SALES.ORDER_CREATE.STOCK_INSUFICIENTE' | translate: { warehouse: shortageWarehouse } }}</p>

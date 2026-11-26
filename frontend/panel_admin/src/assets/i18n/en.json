@@ -1805,6 +1805,7 @@
       "SALIDA_DE_INVENTARIO": "Inventory outbound"
     },
     "ORDER_DETAIL": {
+      "PERIODO_FISCAL": "Fiscal period: {{name}}",
       "PEDIDO": "Order {{p0}}",
       "CANCELAR_PEDIDO": "Cancel order",
       "VOLVER_A_PEDIDOS": "Back to orders",
@@ -1864,6 +1865,11 @@
       "PEDIDO_ACTUALIZADO": "Order updated",
       "PEDIDO_CREADO": "Order created"
     },
+    "FISCAL_PERIOD": {
+      "SIN_PERIODO": "The order date is not inside any fiscal period, so it cannot be confirmed. Create the period in Accounting.",
+      "CERRADO": "The fiscal period of the order date is closed, so it cannot be confirmed. Reopen it in Accounting.",
+      "IR_A_PERIODOS": "Go to fiscal periods"
+    },
     "ORDER_CREATE": {
       "DETALLE_DEL_PEDIDO": "Order details",
       "ALMACEN": "Warehouse",
@@ -1886,6 +1892,7 @@
       "PEDIDO_CAMBIO": "The order changed after the payment form was opened. It was refreshed with the current data."
     },
     "ORDER_LIST": {
+      "PERIODO": "Period {{name}}",
       "NUEVO_PEDIDO": "New order",
       "ATAJOS_DE_VISTA": "View shortcuts",
       "ESTADO_DE_ENTREGA": "Delivery status",

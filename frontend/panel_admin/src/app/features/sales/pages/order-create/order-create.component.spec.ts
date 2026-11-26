@@ -290,6 +290,23 @@ describe('OrderCreateComponent', () => {
       expect(component.saving).toBeFalse();
     });
 
+    it('keeps what was typed and explains a fiscal period block on a 409 (AC-13, UI-03)', () => {
+      ordersApi.start.and.returnValue(throwError(() => new OrderRuleError('x', 'fiscal_period_closed')));
+      setup();
+      fillHeader();
+      add(BAGS, 1);
+      component.onSubmit();
+      fixture.detectChanges();
+      expect(navigate).not.toHaveBeenCalled();
+      expect(component.lines.length).toBe(1);
+      expect(text('fiscal-period-message')).toContain('está cerrado');
+      expect(component.saving).toBeFalse();
+      fillHeader();
+      component.form.controls.notes.setValue('cambió algo');
+      fixture.detectChanges();
+      expect(element.querySelector('[data-testid="alert-fiscal-period"]')).toBeNull();
+    });
+
     it('marks only the short product when two products share a name (REV-09)', () => {
       const twin = product({ id: 'p-3', name: 'Bolsas', tracksStock: true });
       const shortage = { productId: 'p-3', productName: 'Bolsas', unit: 'u', requested: '4.0000', available: '1.0000' };

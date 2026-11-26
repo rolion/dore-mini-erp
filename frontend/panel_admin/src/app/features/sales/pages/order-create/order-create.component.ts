@@ -1,3 +1,8 @@
+import {
+  FiscalPeriodAlertComponent,
+  FiscalPeriodErrorCode,
+  isFiscalPeriodErrorCode,
+} from '../../components/fiscal-period-alert/fiscal-period-alert.component';
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AsyncPipe } from '@angular/common';
@@ -83,6 +88,7 @@ type HeaderField = 'customerId' | 'salesChannel' | 'orderDate' | 'expectedDelive
     NgFooterTemplateDirective,
     NgOptionTemplateDirective,
     MoneyPipe,
+    FiscalPeriodAlertComponent,
   ],
 })
 export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
@@ -114,6 +120,8 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
   serverErrors: Partial<Record<HeaderField | 'items' | 'discount', string>> = {};
   /** Faltantes de un 409 `insufficient_stock`: dejan la fila marcada y un aviso con el detalle. */
   shortages: StockShortage[] = [];
+  /** Bloqueo del servidor al confirmar por el período fiscal de la fecha del pedido; el borrador no se pierde. */
+  fiscalPeriodError: FiscalPeriodErrorCode | null = null;
   shortageWarehouse = '';
 
   readonly customerInput$ = new Subject<string>();
@@ -221,6 +229,7 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
     const reset = (): void => {
       this.serverErrors = {};
       this.shortages = [];
+      this.fiscalPeriodError = null;
     };
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(reset);
     this.discountControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(reset);
@@ -396,6 +405,10 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
   }
 
   private showServerError(err: OrderApiError): void {
+    if (err instanceof OrderRuleError && isFiscalPeriodErrorCode(err.code)) {
+      this.fiscalPeriodError = err.code;
+      return;
+    }
     if (err instanceof OrderRuleError && err.code === 'insufficient_stock') {
       this.shortages = err.shortages;
       this.shortageWarehouse = err.warehouseName;

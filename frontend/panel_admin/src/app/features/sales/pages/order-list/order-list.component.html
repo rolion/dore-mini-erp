@@ -196,6 +196,9 @@
                     <div class="order-card__title">
                       <a class="fw-bold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.code }}</a>
                       <small class="text-body-secondary d-block">{{ row.orderDate | date: 'dd/MM/yyyy' }}</small>
+                      @if (row.fiscalPeriod) {
+                      <small class="text-body-secondary d-block" data-testid="card-period">{{ 'SALES.ORDER_LIST.PERIODO' | translate: { name: row.fiscalPeriod.name } }}</small>
+                      }
                     </div>
                     <a class="btn btn-tbl-edit btn-tbl-view order-card__action" data-testid="card-view" [routerLink]="['/pocketbiz/sales/orders', row.id]"
                       [title]="'SALES.ORDER_LIST.VER_PEDIDO' | translate"
@@ -250,6 +253,9 @@
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   <a class="fw-bold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.code }}</a>
                   <div><small class="text-muted">{{ row.orderDate | date: 'dd/MM/yyyy' }}</small></div>
+                  @if (row.fiscalPeriod) {
+                  <div><small class="text-muted" data-testid="row-period">{{ 'SALES.ORDER_LIST.PERIODO' | translate: { name: row.fiscalPeriod.name } }}</small></div>
+                  }
                 </ng-template>
               </ngx-datatable-column>
               <ngx-datatable-column [name]="'SALES.ORDER_LIST.CLIENTE' | translate" [sortable]="false" [width]="170">

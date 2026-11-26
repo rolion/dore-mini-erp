@@ -104,10 +104,17 @@ export interface StockOutput {
   movements: StockOutputMovement[];
 }
 
+export interface OrderFiscalPeriod {
+  id: string;
+  name: string;
+}
+
 export interface Order {
   id: string;
-  /** Etiqueta corta para mostrar; el identificador es `id`. */
+  /** `NV-000001` si el pedido ya se confirmó; si no, una etiqueta provisional. El identificador es `id`. */
   code: string;
+  /** Período fiscal con que se numeró el pedido (el número se repite entre períodos); null sin confirmar. */
+  fiscalPeriod: OrderFiscalPeriod | null;
   customer: OrderCustomer | null;
   salesChannel: SalesChannel;
   orderDate: string;
@@ -225,6 +232,7 @@ export interface StockShortage {
 export interface OrderSummary {
   id: string;
   code: string;
+  fiscalPeriod: OrderFiscalPeriod | null;
   customer: OrderCustomer | null;
   salesChannel: SalesChannel;
   orderDate: string;
@@ -303,6 +311,8 @@ export interface PaymentDto {
 export interface OrderDto {
   id: string;
   code: string;
+  number: number | null;
+  fiscal_period: OrderFiscalPeriod | null;
   customer: OrderCustomer | null;
   sales_channel: SalesChannel;
   order_date: string;
@@ -400,6 +410,8 @@ export interface DeliveryPreviewDto {
 export interface OrderSummaryDto {
   id: string;
   code: string;
+  number: number | null;
+  fiscal_period: OrderFiscalPeriod | null;
   customer: OrderCustomer | null;
   sales_channel: SalesChannel;
   order_date: string;

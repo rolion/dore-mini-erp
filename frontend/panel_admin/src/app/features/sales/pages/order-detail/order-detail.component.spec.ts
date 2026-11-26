@@ -11,6 +11,7 @@ import { Page } from '../../../../shared/models/page';
 import { ProductsApiService } from '../../../products';
 import { DeliveryPreview, FieldErrors, Order, OrderApiError, OrderItem, OrderRuleError } from '../../models/order';
 import { ReturnDialogComponent } from '../../components/return-dialog/return-dialog.component';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { NO_STOCK_PREVIEW, makeItem, makeOrder, makePayment, makePreview, makeReturnPreview } from '../../testing/order-fixtures';
 import { OrderDetailComponent } from './order-detail.component';
@@ -72,6 +73,7 @@ describe('OrderDetailComponent', () => {
         { provide: OrdersApiService, useValue: api },
         { provide: ProductsApiService, useValue: products },
         { provide: ToastrService, useValue: toastr },
+        { provide: ModulesService, useValue: { enabledKeysValue: new Set(['sales', 'accounting']) } },
         { provide: ActivatedRoute, useValue: { paramMap: params$.asObservable() } },
         { provide: SalesSettingsService, useValue: { defaults: () => of(NO_SALES_DEFAULTS) } },
       ],
@@ -533,6 +535,41 @@ describe('OrderDetailComponent', () => {
       pending.complete();
       fixture.detectChanges();
       expect(component.busy).toBeFalse();
+    });
+  });
+
+  describe('fiscal period (AC-13)', () => {
+    it('shows the numbered code and its period under the title (UI-02)', () => {
+      const element = setup(makeOrder({
+        code: 'NV-000007', status: 'IN_PREPARATION', fiscalPeriod: { id: 'fp-1', name: 'Gestión 2026' },
+      }));
+      expect(text(element, 'order-code')).toBe('Pedido NV-000007');
+      expect(text(element, 'order-period')).toBe('Período fiscal: Gestión 2026');
+    });
+
+    it('shows no period for an order that is not confirmed yet (UI-02)', () => {
+      expect(q(setup(), 'order-period')).toBeNull();
+    });
+
+    it('explains a fiscal period block on confirming, with the link to Accounting (UI-03)', () => {
+      api.prepare.and.returnValue(throwError(() => new OrderRuleError('x', 'fiscal_period_missing')));
+      const element = setup();
+      component.runPrimary();
+      fixture.detectChanges();
+      expect(text(element, 'fiscal-period-message')).toContain('ningún período fiscal');
+      expect(q(element, 'fiscal-period-link')).not.toBeNull();
+      expect(toastr.error).not.toHaveBeenCalled();
+    });
+
+    it('clears the block when the next action starts (UI-03)', () => {
+      api.prepare.and.returnValues(throwError(() => new OrderRuleError('x', 'fiscal_period_closed')), of(makeOrder({ status: 'IN_PREPARATION' })));
+      const element = setup();
+      component.runPrimary();
+      fixture.detectChanges();
+      expect(q(element, 'alert-fiscal-period')).not.toBeNull();
+      component.runPrimary();
+      fixture.detectChanges();
+      expect(q(element, 'alert-fiscal-period')).toBeNull();
     });
   });
 

@@ -196,6 +196,7 @@ function toOrder(dto: OrderDto): Order {
   return {
     id: dto.id,
     code: dto.code,
+    fiscalPeriod: dto.fiscal_period,
     customer: dto.customer,
     salesChannel: dto.sales_channel,
     orderDate: dto.order_date,
@@ -233,6 +234,7 @@ function toSummary(dto: OrderSummaryDto): OrderSummary {
   return {
     id: dto.id,
     code: dto.code,
+    fiscalPeriod: dto.fiscal_period,
     customer: dto.customer,
     salesChannel: dto.sales_channel,
     orderDate: dto.order_date,
