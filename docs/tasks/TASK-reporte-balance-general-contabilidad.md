@@ -87,5 +87,7 @@ Quality Gate 1 (subagente aislado): **FAIL**. Ejecutado OK: dominio (10), fronte
 
 Quality Gate 2 (subagente aislado, estado c1a9d5b7): **PASS con reservas**. Sin hallazgos Critical/High/Medium abiertos; REV-01 y REV-02 verificados como corregidos (por lectura y cálculo a mano de cada aserción). Reservas: pruebas de API sin ejecutar (sin PostgreSQL), `ruff` no instalado, sin revisión visual en navegador.
 
+**Cierre de reservas (2026-11-26):** con PostgreSQL real y el entorno del proyecto (Django 5.2), `manage.py test modules.accounting` pasa 470 pruebas, incluidas las 7 de `test_balance_sheet_api` y las 10 de dominio; `ruff check` y `flake8` limpios en lo nuevo. **Sigue sin ejecutar:** revisión visual en navegador.
+
 ## Publicación
 PR #133 listo para aprobación humana, con las reservas de `## Review`. Sin cambios sensibles (sin migraciones, auth ni infraestructura; sin ADR). Pendiente de la persona: correr `test_balance_sheet_api` con PostgreSQL (o confiar en CI), mirar la pantalla y confirmar la convención de rango (corte = «Hasta»).
