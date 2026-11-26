@@ -16,6 +16,7 @@
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa del plan v1 | delivery-build |
 | 2026-11-26 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS (1 Medium y 6 Low abiertos) | delivery-publish |
 | 2026-11-26 | PUBLISH → REVIEW → PUBLISH | Correcciones REV-02..07 y Quality Gate ciclo 2 PASS | delivery-publish |
+| 2026-11-26 | PUBLISH → REVIEW → PUBLISH | Plan v2..v4 (pedidos del usuario) y Quality Gate ciclo 3 PASS | delivery-publish |
 
 ## Investigación
 
@@ -101,6 +102,8 @@ Implementado el plan v1 sin cambios de Specification.
 **Notas de verificación (no es el Quality Gate):** suite de frontend completa en verde (1870 pruebas), `npm run i18n:check` sin faltantes, `tsc` sin errores, `ruff`/`flake8` limpios en `modules/production`. Backend: ver Review.
 
 ## Review
+**Quality Gate ciclo 3: PASS** (HEAD `7f163be9`, subagente aislado): cubre plan v2..v4 (API snake_case, detalle y lista en tarjetas < 957 px, iconos de acción). Backend 303 OK, `makemigrations --check` sin cambios, bandit limpio; frontend 1874 OK (líneas 89,2 %), lint, `i18n:check`, build y `npm audit` OK. Sin Critical/High. Hallazgos Low no bloqueantes: HEX de `_table-actions` repetidos en `recipe-list.component.scss` (DESIGN), objetivo táctil de 36 px en tarjetas (DESIGN), posible desorden del mensaje de error del toggle en la fila de acciones (IMPLEMENTATION, no verificado visualmente), `COMPACT_QUERY` duplicada (PLAN) y N-03 (foco sin prueba directa). Revisión visual en navegador: no verificada.
+
 **Quality Gate ciclo 2: PASS** (HEAD `c6f7789b`, subagente aislado): backend 303 OK (production, catalog, modularity, accounts, límites), `makemigrations --check` sin cambios, bandit limpio; frontend 1872 OK (líneas 89,2 %), lint, `i18n:check`, build y `npm audit` OK. Verificadas REV-02, 03, 05, 06, 07; REV-04 parcial (abierto); REV-01 abierto a la espera de decisión del usuario. Hallazgos nuevos Low: N-01 (ADR desactualizado, corregido) y N-02 (DDR contradictorio, corregido); N-03 `focusFirstError()` sin prueba unitaria directa (abierto). Revisión visual en navegador: no verificada.
 
 **Quality Gate ciclo 1: PASS** (subagente aislado, 2026-11-26). Sin hallazgos Critical/High.
