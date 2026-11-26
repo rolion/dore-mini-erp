@@ -1,6 +1,6 @@
 # TASK-gestionar-recetas-produccion: Gestionar recetas de producción
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-recetas-produccion (base: `produccion`)
@@ -14,6 +14,7 @@
 | 2026-11-26 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto contra `produccion` | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa del plan v1 | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS (1 Medium y 6 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -99,7 +100,12 @@ Implementado el plan v1 sin cambios de Specification.
 **Notas de verificación (no es el Quality Gate):** suite de frontend completa en verde (1870 pruebas), `npm run i18n:check` sin faltantes, `tsc` sin errores, `ruff`/`flake8` limpios en `modules/production`. Backend: ver Review.
 
 ## Review
-_Pendiente_
+**Quality Gate ciclo 1: PASS** (subagente aislado, 2026-11-26). Sin hallazgos Critical/High.
+
+Ejecutado: backend `modules.production/catalog/modularity/accounts/sales.test_boundaries` 298 OK (más suite completa 2517 OK del implementador); `makemigrations --check` sin cambios; ruff/flake8 sin avisos en `modules/production` (5 E501 preexistentes en líneas ya largas); bandit sin salida; frontend `ng test --code-coverage` 1870 OK (líneas 89,18 %, ramas 78,43 %); `npm run lint` OK; `i18n:check` 0 faltantes; `npm run build` OK; `npm audit` 0 vulnerabilidades.
+**No realizado:** revisión visual en navegador (móvil/escritorio, claro/oscuro) y prueba manual contra servidor levantado.
+
+Hallazgos (todos Open, no bloquean): REV-2026-11-26-gestionar-recetas-produccion-01 (Medium, SPECIFICATION: contrato API en snake_case vs camelCase de API-01..05; enmendar requiere aprobación del usuario), -02 a -07 (Low: mensaje de resultado-como-ingrediente, aviso en formulario, desviaciones del DDR, huecos de prueba backend, texto 404/400 del PUT, descripción del módulo).
 
 ## Publicación
-_Pendiente_
+PR #127 listo para aprobación humana contra `produccion`; no se mergea. Cambios con base de datos (migración nueva `production/0001_initial`) y ADR: requieren revisión humana. Pendiente: decidir REV-01 (Specification) y los Low.
