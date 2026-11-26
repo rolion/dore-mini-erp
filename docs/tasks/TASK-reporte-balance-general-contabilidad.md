@@ -1,6 +1,6 @@
 # TASK-reporte-balance-general-contabilidad: Reporte de Balance general en Contabilidad
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-reporte-balance-general-contabilidad
@@ -16,6 +16,7 @@
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas (pruebas de API backend sin ejecutar: sin PostgreSQL ni `DATABASE_URL`) | delivery-build |
 | 2026-11-26 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 High: pruebas de API mal armadas; REV-02 Medium: API-01 del plan desfasado) | delivery-publish |
 | 2026-11-26 | ENGINEERING → REVIEW | REV-01 y REV-02 corregidos; se repite el Quality Gate | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate ronda 2 PASS con reservas (pruebas de API, ruff y revisión visual sin ejecutar) | delivery-publish |
 
 ## Investigación
 
@@ -84,5 +85,7 @@ docs/plans/PLAN-2026-11-26-reporte-balance-general-contabilidad.md (v2, COMPLETO
 ## Review
 Quality Gate 1 (subagente aislado): **FAIL**. Ejecutado OK: dominio (10), frontend 1899, lint, i18n:check, build, `npm audit` (0), flake8, límites DDD. Hallazgos: [REV-01](../reviews/REV-2026-11-26-reporte-balance-general-contabilidad-01.md) (High, pruebas de API sin período fiscal y con cuenta sin clasificar; **corregido**), [REV-02](../reviews/REV-2026-11-26-reporte-balance-general-contabilidad-02.md) (Medium, API-01 del plan desfasado; **corregido**, PLAN v2). Lows tratados: importes de los avisos ahora con `money` y aviso de «sin clasificar» visible aunque los totales sean 0; sin atender (deuda menor): `aria-invalid`/`aria-live` en filtros y estados. **No ejecutado:** pruebas de API (sin PostgreSQL), `ruff`, revisión visual en navegador.
 
+Quality Gate 2 (subagente aislado, estado c1a9d5b7): **PASS con reservas**. Sin hallazgos Critical/High/Medium abiertos; REV-01 y REV-02 verificados como corregidos (por lectura y cálculo a mano de cada aserción). Reservas: pruebas de API sin ejecutar (sin PostgreSQL), `ruff` no instalado, sin revisión visual en navegador.
+
 ## Publicación
-_Pendiente_
+PR #133 listo para aprobación humana, con las reservas de `## Review`. Sin cambios sensibles (sin migraciones, auth ni infraestructura; sin ADR). Pendiente de la persona: correr `test_balance_sheet_api` con PostgreSQL (o confiar en CI), mirar la pantalla y confirmar la convención de rango (corte = «Hasta»).
