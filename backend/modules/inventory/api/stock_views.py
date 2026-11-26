@@ -26,6 +26,7 @@ from modules.inventory.domain.exceptions import (
     WarehouseNotFound,
 )
 from modules.inventory.infrastructure.adapters import CatalogProductDirectory
+from modules.inventory.infrastructure.django.lot_repository import DjangoStockLotRepository
 from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 from shared.tenancy import company_id_from
@@ -182,7 +183,7 @@ def _position_row(position: StockPosition) -> dict:
         'category': position.product.category, 'can_buy': position.product.can_buy,
         'can_sell': position.product.can_sell,
         'quantity': position.quantity, 'balance_state': position.state.value,
-        'unit': _unit(position.product),
+        'unit': _unit(position.product), 'has_lots': position.has_lots,
     }
 
 
@@ -197,12 +198,13 @@ class StockListView(APIView):
         try:
             positions = ListStock(
                 DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
-                CatalogProductDirectory(company_id)).execute(query)
+                CatalogProductDirectory(company_id), DjangoStockLotRepository(company_id)).execute(query)
         except WarehouseNotFound as exc:
             raise NotFound(WAREHOUSE_NOT_FOUND) from exc
         paginator = WarehousePagination()
         page = paginator.paginate_queryset(positions, request, view=self)
-        return paginator.get_paginated_response(StockBalanceSerializer([_position_row(p) for p in page], many=True).data)
+        rows = [_position_row(p) for p in page]
+        return paginator.get_paginated_response(StockBalanceSerializer(rows, many=True).data)
 
 
 class StockDetailView(APIView):
@@ -213,7 +215,8 @@ class StockDetailView(APIView):
         try:
             position = GetStockPosition(
                 DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
-                CatalogProductDirectory(company_id)).execute(product_id, warehouse_id)
+                CatalogProductDirectory(company_id), DjangoStockLotRepository(company_id)).execute(
+                product_id, warehouse_id)
         except WarehouseNotFound as exc:
             raise NotFound(WAREHOUSE_NOT_FOUND) from exc
         except StockPositionNotFound as exc:

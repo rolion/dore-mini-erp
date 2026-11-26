@@ -37,6 +37,7 @@ SOURCE_TYPES: dict[str, SourceTypeDefinition] = {
         SourceTypeDefinition('purchase_receipt', 'Recepción de compra', 'purchases'),
         SourceTypeDefinition('inventory_adjustment', 'Ajuste de inventario', 'inventory'),
         SourceTypeDefinition('inventory_opening', 'Apertura de existencias', 'inventory'),
+        SourceTypeDefinition('production_order', 'Orden de producción', 'production'),
     )
 }
 
@@ -104,16 +105,19 @@ class StockMovement:
     reverses_id: UUID | None = None
     created_at: datetime | None = None
     reversed_by_id: UUID | None = field(default=None, compare=False)
+    lot_id: UUID | None = None  # nulo = stock sin lote
+    lot_code: str | None = field(default=None, compare=False)
 
     @classmethod
     def record(cls, *, product_id: UUID, warehouse_id: UUID, kind: MovementKind, quantity: object,
                occurred_at: datetime, user_id: UUID | None, user_name: str, reference: str = '',
-               reason: str = '', source: MovementSource | None = None) -> 'StockMovement':
+               reason: str = '', source: MovementSource | None = None,
+               lot_id: UUID | None = None) -> 'StockMovement':
         return cls(
             id=uuid4(), product_id=product_id, warehouse_id=warehouse_id, kind=MovementKind(kind),
             quantity=parse_quantity(quantity), occurred_at=occurred_at, user_id=user_id,
             user_name=_text(user_name, 'user_name'), reference=_text(reference, 'reference'),
-            reason=_text(reason, 'reason'), source=source)
+            reason=_text(reason, 'reason'), source=source, lot_id=lot_id)
 
     @property
     def signed_quantity(self) -> Decimal:
@@ -124,6 +128,7 @@ class StockMovement:
         """Marca este movimiento como revertido y devuelve el contramovimiento (opuesto, vinculado).
 
         El contramovimiento no repite el origen: se vincula por `reverses_id` y no choca con la idempotencia.
+        Hereda el lote del original (INV-05).
         """
         if self.status is MovementStatus.REVERSED:
             raise MovementConflict('already_reversed', 'El movimiento ya fue revertido.')
@@ -135,7 +140,7 @@ class StockMovement:
             id=uuid4(), product_id=self.product_id, warehouse_id=self.warehouse_id, kind=self.kind.opposite,
             quantity=self.quantity, occurred_at=occurred_at, user_id=user_id, user_name=_text(user_name, 'user_name'),
             reference=self.reference, reason=reason,
-            source=None, reverses_id=self.id)
+            source=None, reverses_id=self.id, lot_id=self.lot_id)
 
 
 _BLOCKED_SOURCES = {

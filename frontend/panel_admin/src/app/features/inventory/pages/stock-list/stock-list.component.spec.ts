@@ -24,6 +24,7 @@ const ROW: StockBalance = {
   quantity: '10.000',
   balanceState: 'positive',
   unit: { abbreviation: 'u', allowsFractions: false },
+  hasLots: false,
 };
 
 describe('StockListComponent', () => {

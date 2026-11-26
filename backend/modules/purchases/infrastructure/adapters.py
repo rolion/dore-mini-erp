@@ -36,6 +36,7 @@ from modules.purchases.domain.exceptions import (
 from modules.purchases.domain.purchase import PurchaseNumber
 from modules.purchases.infrastructure.django.models import PurchaseNumberCounterModel
 from shared import module_gate
+from shared.fiscal_numbering import allocate_period_number
 
 INVENTORY_MODULE = 'inventory'
 COSTING_MODULE = 'costing'
@@ -177,7 +178,7 @@ class PurchaseNumberingAdapter:
 
     def next_number(self, purchase_date: date) -> PurchaseNumber:
         try:
-            period = accounting_services.lock_open_period(self.company_id, purchase_date)
+            period, number = allocate_period_number(self.company_id, purchase_date, PurchaseNumberCounterModel)
         except accounting_services.DateOutsideFiscalPeriod:
             raise PurchaseNumberingRejected(
                 'fiscal_period_missing',
@@ -188,11 +189,7 @@ class PurchaseNumberingAdapter:
                 'fiscal_period_closed',
                 f'El período fiscal «{exc.name}» está cerrado: no se puede confirmar una compra con fecha '
                 f'{purchase_date.isoformat()}. Reabra el período en Contabilidad.', {'period': exc.name}) from None
-        counter, _ = PurchaseNumberCounterModel.objects.select_for_update().get_or_create(
-            company_id=self.company_id, fiscal_period_id=period.id)
-        counter.last_number += 1
-        counter.save(update_fields=['last_number'])
-        return PurchaseNumber(period.id, period.name, counter.last_number)
+        return PurchaseNumber(period.id, period.name, number)
 
 
 class PurchasePostingAdapter:

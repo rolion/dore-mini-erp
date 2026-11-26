@@ -25,6 +25,52 @@ class WarehouseModel(models.Model):
         ]
 
 
+class StockLotModel(models.Model):
+    """Lote de un producto a granel en un almacén. Su saldo sale de los movimientos que lo referencian."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField()
+    product_id = models.UUIDField()
+    warehouse = models.ForeignKey(WarehouseModel, on_delete=models.PROTECT, related_name='+')
+    code = models.CharField(max_length=30)
+    fiscal_period_id = models.UUIDField()
+    fiscal_period_name = models.CharField(max_length=100)
+    number = models.PositiveIntegerField()
+    lot_date = models.DateField()
+    status = models.CharField(max_length=15, default='refrigerating')
+    released_at = models.DateTimeField(null=True, blank=True)
+    released_by_id = models.UUIDField(null=True, blank=True)
+    released_by_name = models.CharField(max_length=200, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'inventory_stock_lot'
+        ordering = ['-lot_date', '-number', 'id']
+        indexes = [
+            models.Index(fields=['company_id', 'product_id', 'warehouse'], name='inv_lot_company_prod_wh_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'code'], name='inv_lot_code_uniq'),
+            models.UniqueConstraint(fields=['company_id', 'fiscal_period_id', 'number'], name='inv_lot_number_uniq'),
+            models.CheckConstraint(condition=models.Q(number__gt=0), name='inv_lot_number_positive'),
+        ]
+
+
+class LotNumberCounterModel(models.Model):
+    """Último número asignado de la serie de lotes de una empresa en un período fiscal."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    fiscal_period_id = models.UUIDField()
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'inventory_lot_number_counter'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'fiscal_period_id'], name='inv_lot_counter_unique'),
+        ]
+
+
 class StockMovementModel(models.Model):
     """Libro de movimientos: solo se inserta; lo único que se actualiza es `status` al revertir."""
 
@@ -33,6 +79,8 @@ class StockMovementModel(models.Model):
     # Sin FK al producto (es de otro módulo); el almacén sí es de este módulo.
     product_id = models.UUIDField()
     warehouse = models.ForeignKey(WarehouseModel, on_delete=models.PROTECT, related_name='+')
+    # Lote al que pertenece el movimiento; nulo = stock sin lote (todo el stock anterior a los lotes).
+    lot = models.ForeignKey(StockLotModel, null=True, blank=True, on_delete=models.PROTECT, related_name='movements')
     kind = models.CharField(max_length=3)
     quantity = models.DecimalField(max_digits=16, decimal_places=4)
     occurred_at = models.DateTimeField()

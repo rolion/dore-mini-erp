@@ -4,6 +4,7 @@ from decimal import Decimal
 from rest_framework.test import APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.sales.tests.periods import open_test_period
 from modules.catalog.infrastructure.django.models import ProductModel
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.inventory.tests.policy import set_negative_stock
@@ -125,6 +126,17 @@ class PlaceOrderTests(DeliveryTestCase):
         self.warehouse.active = False
         self.warehouse.save()
         self.assertIn('warehouse_id', self.start(expected_status=400))
+
+    def test_stock_in_a_refrigerating_lot_does_not_count_for_a_sale(self):  # REV-01, AC-09
+        from modules.inventory import services as inventory
+        open_test_period(self.company.id)
+        self.stock(self.bags, 1)
+        inventory.create_lot(
+            self.company.id, product_id=self.bags.id, warehouse_id=self.warehouse.id, quantity=Decimal('10'),
+            source_type='production_order', source_id='OP-1', user_id=None, user_name='ana')
+        body = self.start([(self.bags, 4)], expected_status=409)
+        self.assertEqual(body['code'], 'insufficient_stock')
+        self.assertEqual(OrderModel.objects.count(), 0)  # no se consume número ni queda pedido
 
     def test_insufficient_stock_rejects_everything(self):  # AC-06, INV-05, INV-06
         self.stock(self.bags, 1)

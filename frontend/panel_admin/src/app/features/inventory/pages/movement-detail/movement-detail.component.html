@@ -51,6 +51,8 @@
               <dd class="col-sm-9">{{ m.reference || '—' }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.MOTIVO' | translate }}</dt>
               <dd class="col-sm-9">{{ m.reason || '—' }}</dd>
+              <dt class="col-sm-3">{{ 'INVENTORY.LOTS.LOTE' | translate }}</dt>
+              <dd class="col-sm-9" data-testid="lot">{{ m.lot?.code || '—' }}</dd>
               <dt class="col-sm-3">{{ 'COMMON.ORIGEN' | translate }}</dt>
               <dd class="col-sm-9" data-testid="source">
                 @if (m.source; as source) {

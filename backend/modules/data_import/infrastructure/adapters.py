@@ -98,7 +98,7 @@ class SalesImportAdapter:
         return self._suppliers.get(key)
 
     def stock_balance(self, warehouse_id: UUID, product_id: UUID) -> Decimal:
-        balances = inventory_services.get_balances(self.company_id, warehouse_id, [product_id])
+        balances = inventory_services.get_balances(self.company_id, warehouse_id, [product_id], unlotted=True)
         return balances.get(product_id, Decimal('0'))
 
     def allow_negative_stock(self) -> bool:

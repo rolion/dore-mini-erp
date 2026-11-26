@@ -7,6 +7,8 @@ import { InventoryApiError } from '../../models/api-error';
 import { StockMovement } from '../../models/movement';
 import { StockPosition } from '../../models/stock';
 import { MovementsApiService } from '../../services/movements-api.service';
+import { LotsApiService, toLot } from '../../services/lots-api.service';
+import { LOT_DTO } from '../../services/lots-api.service.spec';
 import { StockApiService } from '../../services/stock-api.service';
 import { makeMovement } from '../../testing/inventory-fixtures';
 import { StockDetailComponent } from './stock-detail.component';
@@ -27,6 +29,7 @@ const POSITION: StockPosition = {
   hasHistory: true,
   canRegisterOpening: false,
   canRegisterAdjustment: true,
+  hasLots: false,
 };
 
 function page(results: StockMovement[]): Page<StockMovement> {
@@ -36,6 +39,7 @@ function page(results: StockMovement[]): Page<StockMovement> {
 describe('StockDetailComponent', () => {
   let stockApi: jasmine.SpyObj<StockApiService>;
   let movementsApi: jasmine.SpyObj<MovementsApiService>;
+  let lotsApi: jasmine.SpyObj<LotsApiService>;
   let fixture: ComponentFixture<StockDetailComponent>;
   let router: Router;
 
@@ -44,10 +48,13 @@ describe('StockDetailComponent', () => {
     stockApi.get.and.returnValue(position instanceof Error ? throwError(() => position) : of(position));
     movementsApi = jasmine.createSpyObj<MovementsApiService>('MovementsApiService', ['list']);
     movementsApi.list.and.returnValue(of(page(movements)));
+    lotsApi = jasmine.createSpyObj<LotsApiService>('LotsApiService', ['list']);
+    lotsApi.list.and.returnValue(of({ count: 1, next: null, previous: null, results: [toLot(LOT_DTO)] }));
     await TestBed.configureTestingModule({
       imports: [StockDetailComponent],
       providers: [...provideTestTranslations(), 
         provideRouter([]),
+        { provide: LotsApiService, useValue: lotsApi },
         { provide: StockApiService, useValue: stockApi },
         { provide: MovementsApiService, useValue: movementsApi },
         {
@@ -64,6 +71,21 @@ describe('StockDetailComponent', () => {
 
   const el = () => fixture.nativeElement as HTMLElement;
   const text = (testId: string) => el().querySelector(`[data-testid="${testId}"]`)?.textContent ?? '';
+
+  it('lists the lots with physical and available quantity only when the product has lots (AC-14)', async () => {
+    await setup({ ...POSITION, hasLots: true });
+    expect(lotsApi.list).toHaveBeenCalledWith({ productId: 'p-1', warehouseId: 'w-1', pageSize: 100 });
+    const row = el().querySelector('[data-testid="lot-row"]');
+    expect(row?.textContent).toContain('L-20261126-0001');
+    expect(row?.textContent).toContain('118');
+    expect(row?.textContent).toContain('En refrigeración');
+  });
+
+  it('does not ask for lots nor shows the section when the product has none (AC-12)', async () => {
+    await setup();
+    expect(lotsApi.list).not.toHaveBeenCalled();
+    expect(el().querySelector('[data-testid="lots-title"]')).toBeNull();
+  });
 
   it('shows name, unit, warehouse and current balance, and loads the history of the pair (AC-04)', async () => {
     await setup();

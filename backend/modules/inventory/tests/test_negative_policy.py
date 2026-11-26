@@ -177,7 +177,7 @@ class PolicyReadInsideLockTests(SimpleTestCase):
             def find_by_source(self, _movement):
                 return None
 
-            def balance(self, *_):
+            def balance(self, *_, **__):
                 return Decimal('0')
 
             def get(self, _movement_id):

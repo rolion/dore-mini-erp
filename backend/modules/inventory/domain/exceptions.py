@@ -127,7 +127,8 @@ class BalanceChanged(AdjustmentConflict):
     """El saldo cambió desde el conteo: hay que revisar la diferencia con el saldo vigente."""
 
     def __init__(self, current_balance):
-        super().__init__('balance_changed', 'El saldo cambió desde el conteo; revisa la diferencia y confirma de nuevo.')
+        super().__init__(
+            'balance_changed', 'El saldo cambió desde el conteo; revisa la diferencia y confirma de nuevo.')
         self.current_balance = current_balance
 
 
@@ -142,3 +143,17 @@ class StockPositionNotFound(Exception):
     def __init__(self, product_id: UUID):
         super().__init__(f'Producto {product_id} sin control de stock o inexistente.')
         self.product_id = product_id
+
+
+class LotNotFound(Exception):
+    def __init__(self, lot_id: UUID):
+        super().__init__(f'Lote {lot_id} no encontrado.')
+        self.lot_id = lot_id
+
+
+class LotNumberingRejected(MovementConflict):
+    """No se puede numerar el lote: sin período fiscal abierto para su fecha (`fiscal_period_missing`/`_closed`)."""
+
+    def __init__(self, code: str, message: str, extra: dict | None = None):
+        super().__init__(code, message)
+        self.extra = extra or {}

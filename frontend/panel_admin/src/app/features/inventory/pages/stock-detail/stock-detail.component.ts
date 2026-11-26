@@ -16,7 +16,9 @@ import {
   SOURCE_ROUTES,
   StockMovement,
 } from '../../models/movement';
+import { LOT_STATUS_LABELS, LotStatus, StockLot } from '../../models/lot';
 import { StockPosition, formatQuantity } from '../../models/stock';
+import { LotsApiService } from '../../services/lots-api.service';
 import { MovementsApiService } from '../../services/movements-api.service';
 import { StockApiService } from '../../services/stock-api.service';
 
@@ -41,7 +43,12 @@ export class StockDetailComponent implements OnInit {
   movementsLoading = false;
   movementsError = '';
 
+  /** Lotes del producto en este almacén (solo si tiene): físico y disponible para empaque de cada uno. */
+  lots: StockLot[] = [];
+  lotsError = '';
+
   private stockApi = inject(StockApiService);
+  private lotsApi = inject(LotsApiService);
   private movementsApi = inject(MovementsApiService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -95,6 +102,7 @@ export class StockDetailComponent implements OnInit {
           this.position = position;
           this.loading = false;
           this.reloadMovements();
+          this.loadLots(position);
         },
         error: (err: InventoryApiError) => {
           this.loading = false;
@@ -102,6 +110,23 @@ export class StockDetailComponent implements OnInit {
           this.errorMessage = this.notFound ? '' : err.message;
         },
       });
+  }
+
+  private loadLots(position: StockPosition): void {
+    this.lots = [];
+    this.lotsError = '';
+    if (!position.hasLots) return;
+    this.lotsApi
+      .list({ productId: position.productId, warehouseId: position.warehouseId, pageSize: 100 })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (page) => (this.lots = page.results),
+        error: (err: InventoryApiError) => (this.lotsError = err.message),
+      });
+  }
+
+  lotStatusLabel(status: LotStatus): string {
+    return LOT_STATUS_LABELS[status];
   }
 
   reloadMovements(): void {

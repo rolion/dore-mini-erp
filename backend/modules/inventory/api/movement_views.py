@@ -63,6 +63,7 @@ class MovementPresenter:
             'unit': {'abbreviation': product.unit_abbreviation if product else None},
             'status': movement.status.value,
             'source': self._source(movement),
+            'lot': {'id': movement.lot_id, 'code': movement.lot_code} if movement.lot_id else None,
         }
         if detail:
             data.update({

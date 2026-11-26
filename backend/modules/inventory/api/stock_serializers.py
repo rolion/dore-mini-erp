@@ -63,6 +63,7 @@ class StockBalanceSerializer(serializers.Serializer):
     quantity = serializers.DecimalField(max_digits=16, decimal_places=4)
     balance_state = serializers.ChoiceField(choices=['zero', 'positive', 'negative'])
     unit = UnitSerializer(allow_null=True)
+    has_lots = serializers.BooleanField()
 
 
 class StockPositionSerializer(StockBalanceSerializer):
