@@ -28,7 +28,8 @@ def to_entity(model: StockMovementModel, reversed_by_id: UUID | None = None) -> 
         id=model.id, product_id=model.product_id, warehouse_id=model.warehouse_id, kind=MovementKind(model.kind),
         quantity=model.quantity, occurred_at=model.occurred_at, user_id=model.user_id, user_name=model.user_name,
         reference=model.reference, reason=model.reason, source=source, status=MovementStatus(model.status),
-        reverses_id=model.reverses_id, created_at=model.created_at, reversed_by_id=reversed_by_id)
+        reverses_id=model.reverses_id, created_at=model.created_at, reversed_by_id=reversed_by_id,
+        lot_id=model.lot_id, lot_code=model.lot.code if model.lot_id else None)
 
 
 class MovementList:
@@ -91,7 +92,7 @@ class DjangoStockMovementRepository:
         self.company_id = company_id
 
     def _movements(self) -> QuerySet:
-        return StockMovementModel.objects.filter(company_id=self.company_id)
+        return StockMovementModel.objects.filter(company_id=self.company_id).select_related('lot')
 
     @contextmanager
     def locked(self, warehouse_id: UUID):
@@ -122,10 +123,17 @@ class DjangoStockMovementRepository:
             product_id=movement.product_id, warehouse_id=movement.warehouse_id, kind=movement.kind.value).first()
         return to_entity(model) if model else None
 
-    def balance(self, product_id: UUID, warehouse_id: UUID) -> Decimal:
-        total = self._movements().filter(product_id=product_id, warehouse_id=warehouse_id).aggregate(
-            total=_signed_sum())['total']
-        return total or ZERO
+    def balance(self, product_id: UUID, warehouse_id: UUID, *, lot_id: UUID | None = None,
+                unlotted: bool = False) -> Decimal:
+        queryset = self._movements().filter(product_id=product_id, warehouse_id=warehouse_id)
+        if lot_id is not None:
+            queryset = queryset.filter(lot_id=lot_id)
+        elif unlotted:
+            queryset = queryset.filter(lot__isnull=True)
+        return queryset.aggregate(total=_signed_sum())['total'] or ZERO
+
+    def lot_has_movements(self, lot_id: UUID) -> bool:
+        return self._movements().filter(lot_id=lot_id).exists()
 
     def insert(self, movement: StockMovement) -> StockMovement:
         source = movement.source
@@ -138,7 +146,7 @@ class DjangoStockMovementRepository:
                     reference=movement.reference, reason=movement.reason,
                     source_type=source.type if source else None, source_id=source.id if source else '',
                     source_line=source.line if source else '', status=movement.status.value,
-                    reverses_id=movement.reverses_id)
+                    reverses_id=movement.reverses_id, lot_id=movement.lot_id)
         except IntegrityError:  # carrera: la restricción única manda
             existing = self.find_by_source(movement)
             if existing is not None:
@@ -171,9 +179,11 @@ class DjangoStockMovementRepository:
                 queryset = queryset.filter(source_id=filters.source_id)
         return MovementList(queryset)
 
-    def balances_for(self, warehouse_id: UUID, product_ids) -> dict[UUID, Decimal]:
-        rows = (self._movements().filter(warehouse_id=warehouse_id, product_id__in=list(product_ids))
-                .values('product_id').annotate(total=_signed_sum()))
+    def balances_for(self, warehouse_id: UUID, product_ids, unlotted: bool = False) -> dict[UUID, Decimal]:
+        queryset = self._movements().filter(warehouse_id=warehouse_id, product_id__in=list(product_ids))
+        if unlotted:
+            queryset = queryset.filter(lot__isnull=True)
+        rows = queryset.values('product_id').annotate(total=_signed_sum())
         balances = {product_id: ZERO for product_id in product_ids}
         balances.update({row['product_id']: row['total'] or ZERO for row in rows})
         return balances

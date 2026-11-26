@@ -6,6 +6,7 @@ from typing import Protocol, Sequence
 from uuid import UUID
 
 from .adjustment import StockAdjustment
+from .lot import LotPosition, LotStatus, StockLot
 from .movement import MovementKind, StockMovement
 from .stock import StockBalanceEntry
 from .warehouse import Warehouse
@@ -51,7 +52,12 @@ class StockMovementRepository(Protocol):
         """El movimiento equivalente (misma operación de origen, producto, almacén y tipo), si existe."""
         ...
 
-    def balance(self, product_id: UUID, warehouse_id: UUID) -> Decimal: ...
+    def balance(self, product_id: UUID, warehouse_id: UUID, *, lot_id: UUID | None = None,
+                unlotted: bool = False) -> Decimal:
+        """Saldo del producto en el almacén: físico (todo), de un lote (`lot_id`) o solo el stock sin lote."""
+        ...
+
+    def lot_has_movements(self, lot_id: UUID) -> bool: ...
 
     def insert(self, movement: StockMovement) -> StockMovement: ...
 
@@ -75,8 +81,12 @@ class StockMovementRepository(Protocol):
 
     def has_nonzero_balance(self, warehouse_id: UUID) -> bool: ...
 
-    def balances_for(self, warehouse_id: UUID, product_ids: Sequence[UUID]) -> dict[UUID, Decimal]:
-        """Existencia de cada producto indicado en el almacén (0 si no tiene movimientos), en una consulta."""
+    def balances_for(self, warehouse_id: UUID, product_ids: Sequence[UUID],
+                     unlotted: bool = False) -> dict[UUID, Decimal]:
+        """Existencia de cada producto indicado en el almacén (0 si no tiene movimientos), en una consulta.
+
+        Con `unlotted` solo cuenta el stock sin lote, que es el que puede consumir una salida sin lote.
+        """
         ...
 
 
@@ -94,3 +104,32 @@ class StockAdjustmentRepository(Protocol):
     def insert(self, adjustment: StockAdjustment) -> StockAdjustment: ...
 
     def list(self, filters: AdjustmentFilters) -> Sequence[StockAdjustment]: ...
+
+
+@dataclass(frozen=True)
+class LotFilters:
+    search: str | None = None  # parte del código
+    product_id: UUID | None = None
+    warehouse_id: UUID | None = None
+    status: LotStatus | None = None
+    with_stock: bool = False  # solo lotes con saldo físico distinto de cero
+
+
+class StockLotRepository(Protocol):
+    def get(self, lot_id: UUID) -> StockLot | None: ...
+
+    def insert(self, lot: StockLot) -> StockLot: ...
+
+    def save_release(self, lot: StockLot) -> None:
+        """Persiste el paso a liberado (estado, fecha y persona)."""
+        ...
+
+    def get_position(self, lot_id: UUID) -> LotPosition | None: ...
+
+    def list(self, filters: LotFilters) -> Sequence[LotPosition]: ...
+
+    def for_product(self, product_id: UUID, warehouse_id: UUID) -> Sequence[LotPosition]: ...
+
+    def pairs_with_lots(self) -> set[tuple[UUID, UUID]]:
+        """Pares `(producto, almacén)` que tienen al menos un lote."""
+        ...

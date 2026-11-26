@@ -13,7 +13,7 @@ from modules.inventory.domain.exceptions import (
     WarehouseNotFound,
 )
 from modules.inventory.domain.movement import MovementKind, MovementSource, StockMovement
-from modules.inventory.domain.repositories import StockMovementRepository, WarehouseRepository
+from modules.inventory.domain.repositories import StockLotRepository, StockMovementRepository, WarehouseRepository
 from modules.inventory.domain.stock import (
     SOURCE_TYPE,
     BalanceState,
@@ -143,6 +143,7 @@ class StockPosition:
     warehouse_active: bool
     quantity: Decimal
     has_history: bool = False
+    has_lots: bool = False
 
     @property
     def state(self) -> BalanceState:
@@ -174,10 +175,12 @@ class StockQuery:
 class ListStock:
     """Existencias: todos los productos con control de stock por cada almacén, ordenadas por producto y almacén."""
 
-    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory):
+    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory,
+                 lots: StockLotRepository | None = None):
         self.stock = stock
         self.warehouses = warehouses
         self.products = products
+        self.lots = lots
 
     def execute(self, query: StockQuery) -> list[StockPosition]:
         if query.warehouse_id is not None:
@@ -190,9 +193,11 @@ class ListStock:
         products = self.products.list_stock_products(
             query.search, query.active, category=query.category, can_buy=query.can_buy, can_sell=query.can_sell)
         balances = {(e.product_id, e.warehouse_id): e.quantity for e in self.stock.list_balances()}
+        with_lots = self.lots.pairs_with_lots() if self.lots is not None else set()
         positions = [
             StockPosition(product, warehouse.id, warehouse.name, warehouse.active,
-                          balances.get((product.id, warehouse.id), ZERO))
+                          balances.get((product.id, warehouse.id), ZERO),
+                          has_lots=(product.id, warehouse.id) in with_lots)
             for product in products for warehouse in sorted(warehouses, key=lambda w: (w.name.lower(), str(w.id)))
         ]
         return [p for p in positions if _matches_balance(p, query.balance)]
@@ -209,10 +214,12 @@ def _matches_balance(position: StockPosition, wanted: str | None) -> bool:
 class GetStockPosition:
     """Detalle de un par producto/almacén; el producto puede estar inactivo."""
 
-    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory):
+    def __init__(self, stock: StockMovementRepository, warehouses: WarehouseRepository, products: ProductDirectory,
+                 lots: StockLotRepository | None = None):
         self.stock = stock
         self.warehouses = warehouses
         self.products = products
+        self.lots = lots
 
     def execute(self, product_id: UUID, warehouse_id: UUID) -> StockPosition:
         product = self.products.get_products([product_id]).get(product_id)
@@ -223,4 +230,5 @@ class GetStockPosition:
             raise WarehouseNotFound(warehouse_id)
         return StockPosition(
             product, warehouse.id, warehouse.name, warehouse.active, self.stock.balance(product_id, warehouse_id),
-            has_history=bool(self.stock.products_with_history(warehouse_id, [product_id])))
+            has_history=bool(self.stock.products_with_history(warehouse_id, [product_id])),
+            has_lots=self.lots is not None and (product_id, warehouse_id) in self.lots.pairs_with_lots())

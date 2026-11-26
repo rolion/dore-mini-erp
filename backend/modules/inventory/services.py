@@ -4,10 +4,11 @@ Es la única vía de entrada entre módulos: recibe `company_id` como primer arg
 """
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from modules.inventory.application.lot_use_cases import CreateLot, GetLot, ReleaseLot
 from modules.inventory.application.movement_use_cases import (
     GetBalance,
     OutputLine,
@@ -18,13 +19,21 @@ from modules.inventory.application.movement_use_cases import (
 )
 from modules.inventory.domain.exceptions import (  # noqa: F401  (se reexportan para quien llama a la fachada)
     InsufficientStock,
+    LotNotFound,
+    LotNumberingRejected,
     MovementConflict,
     MovementNotFound,
     MovementValidationError,
     Shortage,
 )
+from modules.inventory.domain.lot import LotPosition
 from modules.inventory.domain.movement import MovementSource, StockMovement
-from modules.inventory.infrastructure.adapters import CatalogProductDirectory, ModularityInventoryPolicy
+from modules.inventory.infrastructure.adapters import (
+    CatalogProductDirectory,
+    LotNumberingAdapter,
+    ModularityInventoryPolicy,
+)
+from modules.inventory.infrastructure.django.lot_repository import DjangoStockLotRepository
 from modules.inventory.infrastructure.django.movement_repository import DjangoStockMovementRepository
 from modules.inventory.infrastructure.django.repositories import DjangoWarehouseRepository
 
@@ -41,6 +50,7 @@ class MovementRecord:
     occurred_at: datetime | None = None
     reference: str = ''
     user_name: str = ''
+    lot_id: UUID | None = None
 
 
 def _record(movement: StockMovement) -> MovementRecord:
@@ -48,14 +58,19 @@ def _record(movement: StockMovement) -> MovementRecord:
         id=movement.id, product_id=movement.product_id, warehouse_id=movement.warehouse_id,
         kind=movement.kind.value, quantity=movement.quantity, status=movement.status.value,
         reverses_id=movement.reverses_id, occurred_at=movement.occurred_at, reference=movement.reference,
-        user_name=movement.user_name)
+        user_name=movement.user_name, lot_id=movement.lot_id)
 
 
 def record_movement(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, kind: str, quantity: Decimal,
                     user_id: UUID | None, user_name: str, reference: str = '', reason: str = '',
                     source_type: str | None = None, source_id: str = '', source_line: str = '',
-                    occurred_at: datetime | None = None) -> tuple[MovementRecord, bool]:
+                    occurred_at: datetime | None = None,
+                    lot_id: UUID | None = None) -> tuple[MovementRecord, bool]:
     """Registra una entrada (`in`) o salida (`out`); devuelve `(movimiento, creado)`.
+
+    Sin `lot_id` una salida solo consume el stock sin lote. Con `lot_id` (empaque) la salida exige un lote liberado
+    con saldo suficiente: `MovementConflict('lot_not_released')` o `InsufficientStock`. Las entradas a un lote se crean
+    con `create_lot`.
 
     Es idempotente por operación de origen: repetir la misma `(source_type, source_id, source_line)` con el mismo
     producto, almacén y tipo devuelve el movimiento existente con `creado=False`.
@@ -63,10 +78,12 @@ def record_movement(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, k
     source = MovementSource(source_type, source_id, source_line) if source_type else None
     use_case = RecordMovement(
         DjangoStockMovementRepository(company_id), DjangoWarehouseRepository(company_id),
-        CatalogProductDirectory(company_id), ModularityInventoryPolicy(company_id))
+        CatalogProductDirectory(company_id), ModularityInventoryPolicy(company_id),
+        DjangoStockLotRepository(company_id))
     movement, created = use_case.execute(
         product_id=product_id, warehouse_id=warehouse_id, kind=kind, quantity=quantity, user_id=user_id,
-        user_name=user_name, reference=reference, reason=reason, source=source, occurred_at=occurred_at)
+        user_name=user_name, reference=reference, reason=reason, source=source, occurred_at=occurred_at,
+        lot_id=lot_id)
     return _record(movement), created
 
 
@@ -77,7 +94,8 @@ def reverse_movement(company_id: UUID, movement_id: UUID, *, user_id: UUID | Non
     Con `manual_only` rechaza los movimientos de Ventas y Compras (se corrigen desde su documento).
     """
     counter = ReverseMovement(
-        DjangoStockMovementRepository(company_id), ModularityInventoryPolicy(company_id)).execute(
+        DjangoStockMovementRepository(company_id), ModularityInventoryPolicy(company_id),
+        DjangoStockLotRepository(company_id)).execute(
         movement_id, user_id=user_id, user_name=user_name, reason=reason, manual_only=manual_only)
     return _record(counter)
 
@@ -90,7 +108,8 @@ def reverse_source_movements(company_id: UUID, source_type: str, source_id: str,
     líneas faltantes sin cambiar nada. Sin movimientos confirmados pendientes devuelve `[]`.
     """
     counters = ReverseSourceMovements(
-        DjangoStockMovementRepository(company_id), ModularityInventoryPolicy(company_id)).execute(
+        DjangoStockMovementRepository(company_id), ModularityInventoryPolicy(company_id),
+        DjangoStockLotRepository(company_id)).execute(
         source_type, source_id, user_id=user_id, user_name=user_name, reason=reason)
     return [_record(c) for c in counters]
 
@@ -270,3 +289,78 @@ def get_product_names(company_id: UUID, product_ids) -> dict[UUID, tuple[str, st
     """Nombre y unidad base de los productos indicados (para mostrar datos ya registrados por otros módulos)."""
     found = CatalogProductDirectory(company_id).get_products(product_ids)
     return {pid: (p.name, p.unit_abbreviation) for pid, p in found.items()}
+
+
+# --- Lotes (Producción: crear, liberar y consultar) ----------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class LotRecord:
+    """Lote con su saldo físico y su disponible para empaque (solo si está liberado)."""
+
+    id: UUID
+    code: str
+    product_id: UUID
+    warehouse_id: UUID
+    warehouse_name: str
+    status: str  # 'refrigerating' | 'released'
+    lot_date: date
+    physical_quantity: Decimal
+    available_quantity: Decimal
+    fiscal_period_name: str
+    created_at: datetime | None = None
+    released_at: datetime | None = None
+    released_by_name: str = ''
+
+
+def _lot_record(position: LotPosition) -> LotRecord:
+    lot = position.lot
+    return LotRecord(
+        id=lot.id, code=lot.code, product_id=lot.product_id, warehouse_id=lot.warehouse_id,
+        warehouse_name=position.warehouse_name, status=lot.status.value, lot_date=lot.lot_date,
+        physical_quantity=position.physical, available_quantity=position.available,
+        fiscal_period_name=lot.number.period_name, created_at=lot.created_at, released_at=lot.released_at,
+        released_by_name=lot.released_by_name)
+
+
+def create_lot(company_id: UUID, *, product_id: UUID, warehouse_id: UUID, quantity: Decimal, source_type: str,
+               source_id: str, user_id: UUID | None, user_name: str, reference: str = '',
+               occurred_at: datetime | None = None) -> tuple[LotRecord, MovementRecord, bool]:
+    """Crea un lote **en refrigeración** con su entrada inicial; devuelve `(lote, movimiento, creado)`.
+
+    Una sola transacción: el número `L-YYYYMMDD-NNNN` (correlativo del período fiscal), el lote y la entrada. Es
+    idempotente por `(source_type, source_id)`: repetir devuelve el mismo lote con `creado=False`, sin gastar número.
+    Sin período fiscal abierto para la fecha lanza `LotNumberingRejected` (`fiscal_period_missing`/`_closed`).
+    """
+    use_case = CreateLot(
+        DjangoStockMovementRepository(company_id), DjangoStockLotRepository(company_id),
+        DjangoWarehouseRepository(company_id), CatalogProductDirectory(company_id), LotNumberingAdapter(company_id),
+        ModularityInventoryPolicy(company_id))
+    result = use_case.execute(
+        product_id=product_id, warehouse_id=warehouse_id, quantity=quantity,
+        source=MovementSource(source_type, source_id), user_id=user_id, user_name=user_name, reference=reference,
+        occurred_at=occurred_at)
+    position = DjangoStockLotRepository(company_id).get_position(result.lot.id)
+    return _lot_record(position), _record(result.movement), result.created
+
+
+def release_lot(company_id: UUID, lot_id: UUID, *, user_id: UUID | None,
+                user_name: str) -> tuple[LotRecord, bool]:
+    """Libera el lote (su stock físico pasa a estar disponible para empaque); devuelve `(lote, cambió)`.
+
+    Idempotente: liberar un lote ya liberado no cambia nada (`cambió=False`). No aplica el tiempo mínimo de
+    refrigeración: esa regla es de quien llama (Producción). Lanza `LotNotFound` si el lote no existe.
+    """
+    position, changed = ReleaseLot(DjangoStockMovementRepository(company_id), DjangoStockLotRepository(company_id)
+                                   ).execute(lot_id, user_id=user_id, user_name=user_name)
+    return _lot_record(position), changed
+
+
+def get_lot(company_id: UUID, lot_id: UUID) -> LotRecord:
+    """El lote con su físico y disponible vigentes. Lanza `LotNotFound` si no existe en la empresa."""
+    return _lot_record(GetLot(DjangoStockLotRepository(company_id)).execute(lot_id))
+
+
+def list_lots_for_product(company_id: UUID, product_id: UUID, warehouse_id: UUID) -> list[LotRecord]:
+    """Lotes del producto en el almacén, del más reciente al más antiguo, con físico y disponible."""
+    return [_lot_record(p) for p in DjangoStockLotRepository(company_id).for_product(product_id, warehouse_id)]

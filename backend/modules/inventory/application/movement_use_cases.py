@@ -14,6 +14,7 @@ from modules.inventory.domain.exceptions import (
     MovementValidationError,
     Shortage,
 )
+from modules.inventory.domain.lot import StockLot
 from modules.inventory.domain.movement import (
     MovementKind,
     MovementSource,
@@ -23,6 +24,7 @@ from modules.inventory.domain.movement import (
 )
 from modules.inventory.domain.repositories import (
     MovementFilters,
+    StockLotRepository,
     StockMovementRepository,
     WarehouseRepository,
 )
@@ -30,23 +32,43 @@ from modules.inventory.domain.repositories import (
 from .movement_ports import BlockNegativeStock, InventoryPolicy, ProductDirectory
 
 
+def check_lot_output(repository: StockMovementRepository, lot: StockLot, quantity: Decimal, *,
+                     require_released: bool = True) -> None:
+    """Salida de un lote: liberado (salvo reversiones) y con saldo; el lote nunca queda negativo (INV-01, INV-02).
+
+    Se aplica siempre, también con la política de stock negativo: esa política solo relaja el stock sin lote.
+    """
+    if require_released and not lot.is_released:
+        raise MovementConflict(
+            'lot_not_released', f'El lote {lot.code} sigue en refrigeración: su stock está bloqueado hasta liberarlo.')
+    available = repository.balance(lot.product_id, lot.warehouse_id, lot_id=lot.id)
+    if available < quantity:
+        raise InsufficientStock(
+            f'El lote {lot.code} no tiene saldo suficiente.', product_id=lot.product_id,
+            warehouse_id=lot.warehouse_id, requested=quantity, available=available)
+
+
 class RecordMovement:
     """Registra una entrada o salida. Repetir la misma operación de origen devuelve el movimiento ya registrado."""
 
     def __init__(self, repository: StockMovementRepository, warehouses: WarehouseRepository,
-                 products: ProductDirectory, policy: InventoryPolicy | None = None):
+                 products: ProductDirectory, policy: InventoryPolicy | None = None,
+                 lots: StockLotRepository | None = None):
         self.repository = repository
         self.warehouses = warehouses
         self.products = products
         self.policy = policy or BlockNegativeStock()
+        self.lots = lots
 
     def execute(self, *, product_id: UUID, warehouse_id: UUID, kind: MovementKind | str, quantity: object,
                 user_id: UUID | None, user_name: str, reference: str = '', reason: str = '',
-                source: MovementSource | None = None, occurred_at: datetime | None = None) -> tuple[StockMovement, bool]:
+                source: MovementSource | None = None, occurred_at: datetime | None = None,
+                lot_id: UUID | None = None) -> tuple[StockMovement, bool]:
+        """`lot_id`: salida de un lote liberado, o la entrada inicial de un lote recién creado (INV-02, INV-04)."""
         movement = StockMovement.record(
             product_id=product_id, warehouse_id=warehouse_id, kind=MovementKind(kind), quantity=quantity,
             occurred_at=occurred_at or timezone.now(), user_id=user_id, user_name=user_name,
-            reference=reference, reason=reason, source=source)
+            reference=reference, reason=reason, source=source, lot_id=lot_id)
         product = self.products.get_products([product_id]).get(product_id)
         if product is None:
             raise MovementValidationError({'product_id': ['El producto no existe.']})
@@ -73,13 +95,27 @@ class RecordMovement:
             return self.repository.insert(movement), True
 
     def _check_balance(self, movement: StockMovement) -> None:
+        if movement.lot_id is not None:
+            self._check_lot(movement)
+            return
         # La política se lee ya bajo el bloqueo del almacén: la misma sección crítica valida y registra.
+        # Una salida sin lote solo consume el stock sin lote (INV-03).
         if movement.kind is MovementKind.OUT and not self.policy.allow_negative_stock():
-            available = self.repository.balance(movement.product_id, movement.warehouse_id)
+            available = self.repository.balance(movement.product_id, movement.warehouse_id, unlotted=True)
             if available < movement.quantity:
                 raise InsufficientStock(
                     'No hay saldo suficiente para registrar la salida.', product_id=movement.product_id,
                     warehouse_id=movement.warehouse_id, requested=movement.quantity, available=available)
+
+    def _check_lot(self, movement: StockMovement) -> None:
+        lot = self.lots.get(movement.lot_id) if self.lots is not None else None
+        if lot is None or lot.product_id != movement.product_id or lot.warehouse_id != movement.warehouse_id:
+            raise MovementValidationError({'lot_id': ['El lote no existe o no corresponde al producto y almacén.']})
+        if movement.kind is MovementKind.IN:  # INV-04: solo la entrada que acompaña al lote recién creado
+            if self.repository.lot_has_movements(lot.id):
+                raise MovementValidationError({'lot_id': ['No se puede agregar stock a un lote existente.']})
+            return
+        check_lot_output(self.repository, lot, movement.quantity)
 
 
 @dataclass(frozen=True)
@@ -153,7 +189,8 @@ class RecordOutputs:
         # La política se lee ya bajo el bloqueo del almacén, igual que en RecordMovement.
         if not pending or self.policy.allow_negative_stock():
             return
-        balances = self.repository.balances_for(warehouse_id, [m.product_id for m in pending])
+        # Las salidas de un documento no indican lote: solo consumen el stock sin lote (INV-03).
+        balances = self.repository.balances_for(warehouse_id, [m.product_id for m in pending], unlotted=True)
         shortages: list[Shortage] = []
         for movement in pending:
             available = balances.get(movement.product_id, Decimal('0'))
@@ -170,9 +207,11 @@ class RecordOutputs:
 class ReverseMovement:
     """Revierte un movimiento desde Inventario; con `manual_only` rechaza los que se corrigen desde su documento."""
 
-    def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None):
+    def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None,
+                 lots: StockLotRepository | None = None):
         self.repository = repository
         self.policy = policy or BlockNegativeStock()
+        self.lots = lots
 
     def execute(self, movement_id: UUID, *, user_id: UUID | None, user_name: str,
                 reason: str, manual_only: bool = False) -> StockMovement:
@@ -187,15 +226,26 @@ class ReverseMovement:
                     raise MovementConflict(*block)
             counter = original.reverse(
                 occurred_at=timezone.now(), user_id=user_id, user_name=user_name, reason=reason)
-            if counter.kind is MovementKind.OUT and not self.policy.allow_negative_stock():
-                available = self.repository.balance(counter.product_id, counter.warehouse_id)
-                if available < counter.quantity:
-                    raise InsufficientStock(
-                        'No hay saldo suficiente para revertir esta entrada.', product_id=counter.product_id,
-                        warehouse_id=counter.warehouse_id, requested=counter.quantity, available=available)
+            if counter.kind is MovementKind.OUT:
+                self._check_counter(counter)
             created = self.repository.insert(counter)
             self.repository.mark_reversed(original.id)
             return created
+
+    def _check_counter(self, counter: StockMovement) -> None:
+        if counter.lot_id is not None:  # INV-05: el lote hereda el saldo exigido, sin pedir que esté liberado
+            lot = self.lots.get(counter.lot_id) if self.lots is not None else None
+            if lot is None:
+                raise MovementValidationError({'lot_id': ['El lote del movimiento no existe.']})
+            check_lot_output(self.repository, lot, counter.quantity, require_released=False)
+            return
+        if self.policy.allow_negative_stock():
+            return
+        available = self.repository.balance(counter.product_id, counter.warehouse_id, unlotted=True)
+        if available < counter.quantity:
+            raise InsufficientStock(
+                'No hay saldo suficiente para revertir esta entrada.', product_id=counter.product_id,
+                warehouse_id=counter.warehouse_id, requested=counter.quantity, available=available)
 
 
 class ReverseSourceMovements:
@@ -205,9 +255,11 @@ class ReverseSourceMovements:
     conjunto y las inserciones. Sin movimientos confirmados pendientes no hace nada.
     """
 
-    def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None):
+    def __init__(self, repository: StockMovementRepository, policy: InventoryPolicy | None = None,
+                 lots: StockLotRepository | None = None):
         self.repository = repository
         self.policy = policy or BlockNegativeStock()
+        self.lots = lots
 
     def execute(self, source_type: str, source_id: str, *, user_id: UUID | None, user_name: str,
                 reason: str) -> list[StockMovement]:
@@ -232,16 +284,22 @@ class ReverseSourceMovements:
                 if m.status is MovementStatus.CONFIRMED]
 
     def _check_balances(self, counters: list[StockMovement]) -> None:
-        if self.policy.allow_negative_stock():
-            return
-        outputs: dict[tuple[UUID, UUID], Decimal] = {}
+        outputs: dict[tuple[UUID, UUID, UUID | None], Decimal] = {}
         for counter in counters:
             if counter.kind is MovementKind.OUT:
-                key = (counter.warehouse_id, counter.product_id)
+                key = (counter.warehouse_id, counter.product_id, counter.lot_id)
                 outputs[key] = outputs.get(key, Decimal('0')) + counter.quantity
         shortages: list[tuple[UUID, Shortage]] = []
-        for (warehouse_id, product_id), requested in outputs.items():
-            available = self.repository.balance(product_id, warehouse_id)
+        for (warehouse_id, product_id, lot_id), requested in outputs.items():
+            if lot_id is not None:  # INV-05: un lote nunca queda negativo, ni con la política de stock negativo
+                lot = self.lots.get(lot_id) if self.lots is not None else None
+                if lot is None:
+                    raise MovementValidationError({'lot_id': ['El lote del movimiento no existe.']})
+                check_lot_output(self.repository, lot, requested, require_released=False)
+                continue
+            if self.policy.allow_negative_stock():
+                continue
+            available = self.repository.balance(product_id, warehouse_id, unlotted=True)
             if available < requested:
                 shortages.append((warehouse_id, Shortage(product_id, requested, available)))
         if shortages:

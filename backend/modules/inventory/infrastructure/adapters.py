@@ -1,13 +1,19 @@
 """Adaptadores de los puertos de Inventario sobre las fachadas públicas de otros módulos.
 
-Es el único lugar de Inventario que conoce a Catalog y Modularity, y solo por sus `services.py`.
+Es el único lugar de Inventario que conoce a Catalog, Modularity y Accounting, y solo por sus `services.py`.
 """
 from collections.abc import Iterable
+from datetime import date
 from uuid import UUID
 
+from modules.accounting import services as accounting_services
 from modules.catalog import services as catalog_services
 from modules.inventory.application.movement_ports import ProductInfo
+from modules.inventory.domain.exceptions import LotNumberingRejected
+from modules.inventory.domain.lot import LotNumber
+from modules.inventory.infrastructure.django.models import LotNumberCounterModel
 from modules.modularity import services as modularity_services
+from shared.fiscal_numbering import allocate_period_number
 
 
 def _info(p) -> ProductInfo:
@@ -40,3 +46,25 @@ class ModularityInventoryPolicy:
 
     def allow_negative_stock(self) -> bool:
         return modularity_services.get_inventory_settings(self.company_id).allow_negative_stock
+
+
+class LotNumberingAdapter:
+    """Serie de lotes por período fiscal (ADR lotes): bloquea el período y su contador en la transacción del lote."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def next_number(self, lot_date: date) -> LotNumber:
+        try:
+            period, number = allocate_period_number(self.company_id, lot_date, LotNumberCounterModel)
+        except accounting_services.DateOutsideFiscalPeriod:
+            raise LotNumberingRejected(
+                'fiscal_period_missing',
+                f'La fecha del lote ({lot_date.isoformat()}) no está dentro de ningún período fiscal. '
+                'Cree el período en Contabilidad para poder crear el lote.') from None
+        except accounting_services.FiscalPeriodClosed as exc:
+            raise LotNumberingRejected(
+                'fiscal_period_closed',
+                f'El período fiscal «{exc.name}» está cerrado: no se puede crear un lote con fecha '
+                f'{lot_date.isoformat()}. Reabra el período en Contabilidad.', {'period': exc.name}) from None
+        return LotNumber(period.id, period.name, number)
