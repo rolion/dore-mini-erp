@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-iniciar-orden-receta (base: `produccion`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/131
 **Fuente:** https://trello.com/c/oASF4BMf/3-dore-prod-003-crear-e-iniciar-una-orden-desde-una-receta
 
 ## Historial de transiciones
