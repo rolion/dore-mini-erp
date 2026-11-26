@@ -12,6 +12,7 @@ from .ports import (
     Clock,
     CustomerDirectory,
     DeliveryCosting,
+    OrderNumbering,
     ProductCatalog,
     SalesPosting,
     SalesSettingsReader,
@@ -174,14 +175,17 @@ class ApplyOrderDiscount:
 
 
 class StartOrderPreparation:
-    """Confirma el pedido (NEW -> IN_PREPARATION). No genera asiento: el ingreso se reconoce al entregar."""
+    """Confirma el pedido (NEW -> IN_PREPARATION) y le asigna su número correlativo del período fiscal, todo en la
+    misma transacción. No genera asiento: el ingreso se reconoce al entregar."""
 
-    def __init__(self, repository: OrderRepository):
+    def __init__(self, repository: OrderRepository, numbering: OrderNumbering):
         self.repository = repository
+        self.numbering = numbering
 
     def execute(self, order_id: UUID) -> Order:
         order = _load_for_update(self.repository, order_id)
-        order.start_preparation()
+        order.ensure_confirmable()
+        order.start_preparation(self.numbering.next_number(order.order_date))
         return self.repository.save(order)
 
 

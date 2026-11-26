@@ -21,7 +21,7 @@ from modules.sales.application.queries import GetOrder, ListOrders
 from modules.sales.domain.enums import OrderStatus, PaymentStatus
 from modules.sales.domain.exceptions import OrderNotFound, OrderRuleViolation, OrderValidationError
 
-from .fakes import NOW, TODAY, FakeCustomers, FakeProducts, FixedClock, InMemoryOrderRepository
+from .fakes import NOW, TODAY, FakeCustomers, FakeProducts, FixedClock, InMemoryOrderRepository, FakeOrderNumbering
 
 D = Decimal
 
@@ -43,7 +43,7 @@ class ApplicationTestCase(SimpleTestCase):
 
     def confirmed(self):
         order = self.add_item(self.create())
-        return StartOrderPreparation(self.repository).execute(order.id)
+        return StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(order.id)
 
 
 class CreateOrderTests(ApplicationTestCase):
@@ -171,7 +171,7 @@ class WorkflowTests(ApplicationTestCase):
     def test_full_cycle_with_partial_payments(self):  # AC-09, AC-12, AC-13, AC-15
         order = self.add_item(self.create(), quantity=2)
         ApplyOrderDiscount(self.repository).execute(order.id, '10.00')
-        order = StartOrderPreparation(self.repository).execute(order.id)
+        order = StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(order.id)
         order = MarkOrderReady(self.repository).execute(order.id)
         order = DeliverOrder(self.repository, self.clock).execute(order.id)
         self.assertEqual((order.status, order.delivered_date, order.total), (OrderStatus.DELIVERED, TODAY, D('60.00')))
@@ -186,7 +186,7 @@ class WorkflowTests(ApplicationTestCase):
         order = self.create()
         saves = self.repository.saves
         with self.assertRaises(OrderRuleViolation):
-            StartOrderPreparation(self.repository).execute(order.id)
+            StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(order.id)
         with self.assertRaises(OrderRuleViolation):
             MarkOrderReady(self.repository).execute(order.id)
         self.assertEqual(self.repository.saves, saves)
@@ -208,7 +208,7 @@ class WorkflowTests(ApplicationTestCase):
 
     def test_unknown_order_raises_not_found(self):  # AC-17
         for call in (
-            lambda: StartOrderPreparation(self.repository).execute(uuid4()),
+            lambda: StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(uuid4()),
             lambda: RegisterPayment(self.repository, self.clock).execute(uuid4(), '1.00', 'CASH'),
             lambda: GetOrder(self.repository).execute(uuid4()),
         ):

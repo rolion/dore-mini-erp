@@ -15,7 +15,13 @@ from modules.sales.application.commands import (
 )
 from modules.sales.application.ports import AT_CONFIRM, AT_DELIVERY
 from modules.sales.domain.exceptions import OrderRuleViolation
-from modules.sales.tests.fakes import FakeCustomers, FakeProducts, FixedClock, InMemoryOrderRepository
+from modules.sales.tests.fakes import (
+    FakeCustomers,
+    FakeOrderNumbering,
+    FakeProducts,
+    FixedClock,
+    InMemoryOrderRepository,
+)
 
 
 class FakePosting:
@@ -63,11 +69,11 @@ class PostingCommandsTests(SimpleTestCase):
         AddOrderItem(self.repository, self.products).execute(order.id, self.products.add(price='100.00').id, 3)
 
     def ready(self):
-        StartOrderPreparation(self.repository).execute(self.order_id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order_id)
         MarkOrderReady(self.repository).execute(self.order_id)
 
     def test_confirming_takes_no_posting_port(self):  # AC-03
-        order = StartOrderPreparation(self.repository).execute(self.order_id)
+        order = StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order_id)
         self.assertEqual(order.status.value, 'IN_PREPARATION')
 
     def test_delivering_recognizes_after_the_state_change_and_saves_once(self):  # AC-05
@@ -96,19 +102,19 @@ class PostingCommandsTests(SimpleTestCase):
         self.assertEqual(len(posting.calls), 1)
 
     def test_cancel_reverses_only_the_recognition_at_confirm_and_only_without_payments(self):  # AC-10, AC-11
-        StartOrderPreparation(self.repository).execute(self.order_id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order_id)
         posting = FakePosting(state=AT_CONFIRM)
         CancelOrder(self.repository, self.clock, posting).execute(self.order_id, 'Error')
         self.assertEqual([call[0] for call in posting.calls], ['reverse'])
 
     def test_cancel_without_recognition_posts_nothing(self):  # AC-11
-        StartOrderPreparation(self.repository).execute(self.order_id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order_id)
         posting = FakePosting(state=None)
         CancelOrder(self.repository, self.clock, posting).execute(self.order_id, 'Error')
         self.assertEqual(posting.calls, [])
 
     def test_cancel_with_payments_needs_the_refund_confirmation_and_then_reverses_them(self):  # AC-02
-        StartOrderPreparation(self.repository).execute(self.order_id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order_id)
         RegisterPayment(self.repository, self.clock).execute(self.order_id, '10.00', 'CASH', None, '')
         for state in (None, AT_CONFIRM, AT_DELIVERY):
             posting = FakePosting(state=state)
@@ -121,7 +127,7 @@ class PostingCommandsTests(SimpleTestCase):
         self.assertEqual(posting.calls, [('reverse_payments', 1)])
 
     def test_the_total_is_locked_only_when_the_port_says_so(self):  # AC-12
-        StartOrderPreparation(self.repository).execute(self.order_id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order_id)
         product = self.products.add(name='Otro', price='10.00')
         with self.assertRaises(OrderRuleViolation) as caught:
             AddOrderItem(self.repository, self.products, FakePosting(locked=True)).execute(self.order_id, product.id, 1)

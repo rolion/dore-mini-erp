@@ -186,6 +186,7 @@ def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: s
     from modules.sales.infrastructure.adapters import (
         CustomerDirectoryAdapter,
         DeliveryCostingAdapter,
+        OrderNumberingAdapter,
         ProductCatalogAdapter,
         SalesPostingAdapter,
         StockOutputAdapter,
@@ -217,7 +218,7 @@ def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: s
         if discount:
             order.apply_discount(discount)  # el archivo manda: sin el tope porcentual de la empresa
         order = repository.save(order)
-        StartOrderPreparation(repository).execute(order.id)
+        StartOrderPreparation(repository, OrderNumberingAdapter(company_id)).execute(order.id)
         MarkOrderReady(repository).execute(order.id)
         DeliverOrder(repository, clock, StockOutputAdapter(company_id), posting,
                      DeliveryCostingAdapter(company_id, post_accounting)).execute(

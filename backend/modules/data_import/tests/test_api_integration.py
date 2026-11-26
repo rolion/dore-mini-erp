@@ -15,6 +15,7 @@ from rest_framework.test import APITestCase
 from uuid import uuid4
 
 from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.sales.tests.periods import open_test_period
 from modules.catalog.infrastructure.django.models import ProductModel
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.accounting.infrastructure.django.models import JournalEntryModel
@@ -45,6 +46,7 @@ OPTIONS = {'infer_products': True, 'infer_customers': True, 'infer_inventory': F
 class SalesImportEndToEndTests(APITestCase):
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def _upload(self):
@@ -140,6 +142,7 @@ class ReuploadTests(APITestCase):
 
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def _run(self, text, name):
@@ -178,6 +181,7 @@ class BackgroundQueueTests(APITestCase):
 
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def _previewed(self, text=CSV):
@@ -234,6 +238,7 @@ class BackgroundQueueTests(APITestCase):
         self.client.post(f'{url}/execute/', {**body, 'idempotency_key': str(uuid4())}, format='json')
         call_command('run_import_worker', '--once', stdout=StringIO())
         other = make_company('Empresa B')
+        open_test_period(other.id)
         authenticate(self.client, make_admin(other, username='beto'))
         self.assertEqual(self.client.get(f'{url}/').status_code, 404)
         self.assertEqual(OrderModel.objects.filter(company_id=other.id).count(), 0)
@@ -269,6 +274,7 @@ class BackgroundQueueTests(APITestCase):
         url_a, body_a = self._previewed()
         self.client.post(f'{url_a}/execute/', {**body_a, 'idempotency_key': str(uuid4())}, format='json')
         other = make_company('Empresa B')
+        open_test_period(other.id)
         authenticate(self.client, make_admin(other, username='beto'))
         url_b, body_b = self._previewed()
         queued = self.client.post(f'{url_b}/execute/', {**body_b, 'idempotency_key': str(uuid4())}, format='json')

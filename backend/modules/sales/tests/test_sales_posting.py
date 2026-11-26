@@ -38,6 +38,7 @@ from modules.sales.domain.order import Order
 from modules.sales.infrastructure.adapters import SalesPostingAdapter, SystemClock
 from modules.sales.infrastructure.django.models import PaymentModel
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
+from modules.sales.tests.fakes import FakeOrderNumbering
 from modules.sales.tests.test_api import SalesApiTestCase
 from modules.sales.tests.test_payment_ledger import configure, enable
 
@@ -58,6 +59,7 @@ class Books:
         self.cxc = make_account(company.id, 'Cuentas por cobrar', 'ASSET', '112001')
         self.ingresos = make_account(company.id, 'Ingresos por ventas', 'INCOME', '410001')
         self.anticipos = make_account(company.id, 'Anticipos de clientes', 'LIABILITY', '210001')
+        FiscalPeriodModel.objects.filter(company_id=company.id).delete()  # reemplaza el período amplio de pruebas
         make_period(company.id, 'Año', TODAY - timedelta(days=200), TODAY + timedelta(days=100))
         configure(company, 'CASH', self.caja)
         configure(company, 'QR', self.banco)
@@ -556,7 +558,7 @@ class PostingConcurrencyTests(TransactionTestCase):
         order.add_item(uuid4(), 'Pack', Decimal('150.00'), 2)
         self.order = self.repository.save(order)
         with transaction.atomic():
-            StartOrderPreparation(self.repository).execute(self.order.id)
+            StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(self.order.id)
 
     def posting(self):
         return SalesPostingAdapter(self.company.id)

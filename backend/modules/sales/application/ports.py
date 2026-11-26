@@ -9,6 +9,8 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
+from modules.sales.domain.order import OrderNumber
+
 
 @dataclass(frozen=True)
 class ProductInfo:
@@ -40,6 +42,16 @@ class CustomerDirectory(Protocol):
 
 class SalesSettingsReader(Protocol):
     def max_discount_percent(self) -> Decimal: ...
+
+
+class OrderNumbering(Protocol):
+    """Asigna el siguiente número de la serie de ventas del período fiscal que contiene `order_date`.
+
+    Debe ejecutarse dentro de la transacción de la confirmación (el número se revierte con ella). Lanza
+    `OrderRuleViolation` con `fiscal_period_missing` o `fiscal_period_closed` si no hay período abierto.
+    """
+
+    def next_number(self, order_date: date) -> OrderNumber: ...
 
 
 class Clock(Protocol):

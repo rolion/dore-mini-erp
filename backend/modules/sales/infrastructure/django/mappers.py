@@ -1,5 +1,5 @@
 from modules.sales.domain.enums import OrderStatus, PaymentMethod, PaymentStatus, SalesChannel
-from modules.sales.domain.order import Order, OrderItem, Payment
+from modules.sales.domain.order import Order, OrderItem, OrderNumber, Payment
 from modules.sales.domain.repositories import OrderSummary
 
 from .models import OrderModel, PaymentModel
@@ -25,6 +25,8 @@ def to_entity(model: OrderModel) -> Order:
         return_reason=model.return_reason,
         refund_acknowledged=model.refund_acknowledged,
         warehouse_id=model.warehouse_id,
+        number=(OrderNumber(model.fiscal_period_id, model.fiscal_period_name, model.number)
+                if model.number is not None else None),
         items=[
             OrderItem(id=item.id, product_id=item.product_id, product_name=item.product_name,
                       unit_price=item.unit_price, quantity=item.quantity)
@@ -52,6 +54,8 @@ def to_summary(model: OrderModel) -> OrderSummary:
         payment_status=PaymentStatus(model.payment_status),
         total=model.total,
         paid_total=model.paid_total,
+        number=(OrderNumber(model.fiscal_period_id, model.fiscal_period_name, model.number)
+                if model.number is not None else None),
     )
 
 
@@ -72,6 +76,9 @@ def to_order_values(order: Order) -> dict[str, object]:
         'return_reason': order.return_reason,
         'refund_acknowledged': order.refund_acknowledged,
         'warehouse_id': order.warehouse_id,
+        'fiscal_period_id': order.number.period_id if order.number else None,
+        'fiscal_period_name': order.number.period_name if order.number else '',
+        'number': order.number.number if order.number else None,
         'subtotal': order.subtotal,
         'discount': order.discount,
         'total': order.total,

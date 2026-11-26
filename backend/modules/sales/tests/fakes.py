@@ -5,11 +5,34 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from modules.sales.application.ports import CustomerInfo, ProductInfo
-from modules.sales.domain.order import Order
+from modules.sales.domain.order import Order, OrderNumber
 from modules.sales.domain.repositories import OrderFilters, OrderSummary
 
 TODAY = date(2026, 10, 8)
 NOW = datetime(2026, 10, 8, 12, 0, tzinfo=timezone.utc)
+
+
+_PERIOD_ID = UUID('00000000-0000-4000-8000-000000000026')
+_numbers = iter(range(1, 10_000_000))
+
+
+def fake_number() -> OrderNumber:
+    """Número de pedido único en todo el proceso de pruebas (serie ficticia del período 2026)."""
+    return OrderNumber(_PERIOD_ID, '2026', next(_numbers))
+
+
+class FakeOrderNumbering:
+    """Puerto de numeración en memoria: devuelve números únicos; puede simular la falta o el cierre del período."""
+
+    def __init__(self, error=None):
+        self.error = error
+        self.calls: list[date] = []
+
+    def next_number(self, order_date):
+        self.calls.append(order_date)
+        if self.error is not None:
+            raise self.error
+        return fake_number()
 
 
 class InMemoryOrderRepository:
