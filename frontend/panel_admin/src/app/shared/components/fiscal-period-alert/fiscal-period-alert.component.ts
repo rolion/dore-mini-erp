@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { ModulesService } from '../../../../core/service/modules.service';
+import { ModulesService } from '../../../core/service/modules.service';
 
 /** Códigos 409 con los que el servidor bloquea confirmar un pedido por su período fiscal. */
 export const FISCAL_PERIOD_ERROR_CODES = ['fiscal_period_missing', 'fiscal_period_closed'] as const;
@@ -24,7 +24,7 @@ export function isFiscalPeriodErrorCode(code: string): code is FiscalPeriodError
       <span data-testid="fiscal-period-message">{{ messageKey() | translate: { name: periodName() } }}</span>
       @if (accountingEnabled()) {
         <a routerLink="/pocketbiz/accounting/settings" [queryParams]="{ tab: 'periods' }"
-           class="ms-1 text-reset text-decoration-underline" data-testid="fiscal-period-link">{{ 'SALES.FISCAL_PERIOD.IR_A_PERIODOS' | translate }}</a>
+           class="ms-1 text-reset text-decoration-underline" data-testid="fiscal-period-link">{{ 'COMMON.FISCAL_PERIOD.IR_A_PERIODOS' | translate }}</a>
       }
     </div>
   `,
@@ -37,8 +37,8 @@ export class FiscalPeriodAlertComponent {
   readonly periodName = input<string>('');
 
   readonly messageKey = computed(() => {
-    if (this.code() !== 'fiscal_period_closed') return 'SALES.FISCAL_PERIOD.SIN_PERIODO';
-    return this.periodName() ? 'SALES.FISCAL_PERIOD.CERRADO_NOMBRE' : 'SALES.FISCAL_PERIOD.CERRADO';
+    if (this.code() !== 'fiscal_period_closed') return 'COMMON.FISCAL_PERIOD.SIN_PERIODO';
+    return this.periodName() ? 'COMMON.FISCAL_PERIOD.CERRADO_NOMBRE' : 'COMMON.FISCAL_PERIOD.CERRADO';
   });
 
   accountingEnabled(): boolean {

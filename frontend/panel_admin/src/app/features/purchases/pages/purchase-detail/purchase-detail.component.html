@@ -59,10 +59,19 @@
             @if (loading) {
             <p class="m-4" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
             }
+            @if (fiscalPeriodError) {
+            <div class="mx-4 mt-4">
+              <app-fiscal-period-alert [code]="fiscalPeriodError" [periodName]="fiscalPeriodName" />
+            </div>
+            }
             @if (purchase; as p) {
             <dl class="row m-4">
               <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.REFERENCIA_INTERNA' | translate }}</dt>
               <dd class="col-sm-9" data-testid="reference">{{ p.reference }}</dd>
+              @if (p.fiscalPeriod) {
+              <dt class="col-sm-3">{{ 'PURCHASES.PURCHASE_DETAIL.PERIODO_FISCAL' | translate }}</dt>
+              <dd class="col-sm-9" data-testid="fiscal-period">{{ p.fiscalPeriod.name }}</dd>
+              }
               <dt class="col-sm-3">{{ 'COMMON.PROVEEDOR' | translate }}</dt>
               <dd class="col-sm-9" data-testid="supplier">
                 {{ p.supplier.name }}

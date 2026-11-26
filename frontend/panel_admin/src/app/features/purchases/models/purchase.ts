@@ -72,6 +72,11 @@ export interface PurchaseItem {
   pendingQuantity: string;
 }
 
+export interface PurchaseFiscalPeriod {
+  id: string;
+  name: string;
+}
+
 export interface Purchase {
   id: string;
   supplier: PurchaseDetailSupplier;
@@ -81,8 +86,10 @@ export interface Purchase {
   status: PurchaseStatus;
   currency: string;
   editable: boolean;
-  /** Referencia interna provisional (`COM-XXXXXXXX`). */
+  /** `NC-000001` si la compra ya se confirmó; si no, una etiqueta provisional (`COM-XXXXXXXX`). */
   reference: string;
+  /** Período fiscal con que se numeró la compra (el número se repite entre períodos); null sin confirmar. */
+  fiscalPeriod: PurchaseFiscalPeriod | null;
   receptionStatus: ReceptionStatus;
   paymentStatus: PaymentStatus;
   confirmedAt: string | null;
@@ -107,8 +114,9 @@ export interface PurchaseSummary {
   currency: string;
   status: PurchaseStatus;
   itemsCount: number;
-  /** Referencia interna provisional (`COM-XXXXXXXX`). */
+  /** `NC-000001` si la compra ya se confirmó; si no, una etiqueta provisional (`COM-XXXXXXXX`). */
   reference: string;
+  fiscalPeriod: PurchaseFiscalPeriod | null;
   /** Seguimiento: solo las compras confirmadas lo tienen; borrador y cancelada vienen en `null`. */
   receptionStatus: ReceptionStatus | null;
   paymentStatus: PaymentStatus | null;
@@ -172,6 +180,8 @@ export interface PurchaseDto {
   currency: string;
   editable: boolean;
   reference: string;
+  number: number | null;
+  fiscal_period: PurchaseFiscalPeriod | null;
   reception_status: ReceptionStatus;
   payment_status: PaymentStatus;
   confirmed_at: string | null;
@@ -196,6 +206,8 @@ export interface PurchaseSummaryDto {
   status: PurchaseStatus;
   items_count: number;
   reference: string;
+  number: number | null;
+  fiscal_period: PurchaseFiscalPeriod | null;
   reception_status: ReceptionStatus | null;
   payment_status: PaymentStatus | null;
   paid_total: string | null;
@@ -220,6 +232,10 @@ export class PurchaseApiError extends Error {
     message: string,
     readonly status: number,
     readonly fieldErrors: PurchaseFieldErrors = { header: {}, items: [] },
+    /** Código del 409 (`fiscal_period_missing`, `fiscal_period_closed`, …); vacío si el servidor no lo envió. */
+    readonly code: string = '',
+    /** Nombre del período de un 409 `fiscal_period_closed` (vacío en otros errores). */
+    readonly periodName: string = '',
   ) {
     super(message);
     this.name = 'PurchaseApiError';

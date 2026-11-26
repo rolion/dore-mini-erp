@@ -13,7 +13,7 @@ import {
   FiscalPeriodAlertComponent,
   FiscalPeriodErrorCode,
   isFiscalPeriodErrorCode,
-} from '../../components/fiscal-period-alert/fiscal-period-alert.component';
+} from '../../../../shared/components/fiscal-period-alert/fiscal-period-alert.component';
 import {
   AddItemEvent,
   OrderItemsComponent,

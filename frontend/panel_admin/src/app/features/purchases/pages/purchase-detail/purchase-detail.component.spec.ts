@@ -1,4 +1,5 @@
 import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { ModulesService } from '../../../../core/service/modules.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -40,6 +41,7 @@ describe('PurchaseDetailComponent', () => {
         { provide: NgbModal, useValue: modal },
         { provide: ReceiptsApiService, useValue: receiptsApi },
         { provide: PaymentsApiService, useValue: paymentsApi },
+        { provide: ModulesService, useValue: { enabledKeysValue: new Set(['purchases', 'accounting']) } },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -193,6 +195,46 @@ describe('PurchaseDetailComponent', () => {
     expect(toastr.success).toHaveBeenCalledWith('Compra confirmada');
     expect(byId('confirm')).toBeNull();
     expect(byId('receive')).not.toBeNull();
+  });
+
+  it('shows the period under the numbered reference and nothing for a draft (UI-02)', async () => {
+    await setup(makeConfirmedPurchase({ reference: 'NC-000007', fiscalPeriod: { id: 'fp-1', name: 'Gestión 2026' } }));
+    expect(byId('reference')?.textContent?.trim()).toBe('NC-000007');
+    expect(byId('fiscal-period')?.textContent?.trim()).toBe('Gestión 2026');
+    TestBed.resetTestingModule();
+    await setup(makePurchase());
+    expect(byId('fiscal-period')).toBeNull();
+  });
+
+  it('explains a fiscal period block on confirming, naming the closed period, without a toast (UI-03)', async () => {
+    await setup(makePurchase());
+    dialog({ close: true });
+    api.confirm.and.returnValue(throwError(() => new PurchaseApiError('x', 409, { header: {}, items: [] },
+      'fiscal_period_closed', 'Gestión 2026')));
+    byId('confirm')?.click();
+    await flush();
+    fixture.detectChanges();
+    expect(byId('fiscal-period-message')?.textContent).toContain('«Gestión 2026»');
+    expect(byId('fiscal-period-link')).not.toBeNull();
+    expect(toastr.error).not.toHaveBeenCalled();
+  });
+
+  it('keeps the toast for any other error and clears the block on the next action (UI-03)', async () => {
+    await setup(makePurchase());
+    dialog({ close: true });
+    api.confirm.and.returnValues(
+      throwError(() => new PurchaseApiError('x', 409, { header: {}, items: [] }, 'fiscal_period_missing')),
+      throwError(() => new PurchaseApiError('Otro error', 409)),
+    );
+    byId('confirm')?.click();
+    await flush();
+    fixture.detectChanges();
+    expect(byId('alert-fiscal-period')).not.toBeNull();
+    byId('confirm')?.click();
+    await flush();
+    fixture.detectChanges();
+    expect(byId('alert-fiscal-period')).toBeNull();
+    expect(toastr.error).toHaveBeenCalledWith('Otro error');
   });
 
   it('does nothing when the confirmation dialog is dismissed (AC-15)', async () => {

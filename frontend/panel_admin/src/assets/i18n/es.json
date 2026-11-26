@@ -173,6 +173,12 @@
     "LANGUAGE_LOAD_ERROR": "No se pudo cambiar el idioma. Inténtalo de nuevo."
   },
   "COMMON": {
+    "FISCAL_PERIOD": {
+    "SIN_PERIODO": "La fecha del pedido no está dentro de ningún período fiscal, por eso no se puede confirmar. Cree el período en Contabilidad.",
+    "CERRADO": "El período fiscal de la fecha del pedido está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+    "CERRADO_NOMBRE": "El período fiscal «{{name}}» está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+    "IR_A_PERIODOS": "Ir a períodos fiscales"
+  },
     "591_7XXXXXXX": "+591 7xxxxxxx",
     "ACCIONES": "Acciones",
     "ACTIVO": "Activo",
@@ -1436,6 +1442,7 @@
       "PROVEEDOR_CREADO": "Proveedor creado"
     },
     "PURCHASE_DETAIL": {
+      "PERIODO_FISCAL": "Período fiscal",
       "DETALLE_DE_LA_COMPRA": "Detalle de la compra",
       "RESUMEN": "Resumen",
       "RECEPCIONES": "Recepciones",
@@ -1506,6 +1513,7 @@
       "COMPRA_GUARDADA": "Compra guardada"
     },
     "PURCHASE_LIST": {
+      "PERIODO": "Período {{name}}",
       "NUEVA_COMPRA": "Nueva compra",
       "BUSCAR": "Buscar",
       "REFERENCIA_INTERNA_O_EXTERNA": "Referencia interna o externa",
@@ -1864,12 +1872,6 @@
       "EL_PEDIDO_YA_NO_ADMITE": "El pedido ya no admite cambios.",
       "PEDIDO_ACTUALIZADO": "Pedido actualizado",
       "PEDIDO_CREADO": "Pedido creado"
-    },
-    "FISCAL_PERIOD": {
-      "SIN_PERIODO": "La fecha del pedido no está dentro de ningún período fiscal, por eso no se puede confirmar. Cree el período en Contabilidad.",
-      "CERRADO": "El período fiscal de la fecha del pedido está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
-      "CERRADO_NOMBRE": "El período fiscal «{{name}}» está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
-      "IR_A_PERIODOS": "Ir a períodos fiscales"
     },
     "ORDER_CREATE": {
       "DETALLE_DEL_PEDIDO": "Detalle del pedido",

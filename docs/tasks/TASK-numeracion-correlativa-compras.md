@@ -1,6 +1,6 @@
 # TASK-numeracion-correlativa-compras: Numeración correlativa de compras por período fiscal
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-numeracion-correlativa-compras
@@ -14,6 +14,7 @@
 | 2026-11-26 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-11-26 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2492) y Karma (644 de los módulos tocados) en verde por verificación propia | delivery-build |
 
 ## Investigación
 
@@ -81,7 +82,30 @@ Ver `docs/adr/ADR-numeracion-correlativa-compras-contador-por-periodo.md`.
 `docs/plans/PLAN-2026-11-26-numeracion-correlativa-compras.md` (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** La compra recibe `(período fiscal, número)` al confirmarse (`draft → confirmed`), dentro de la transacción de la confirmación. `reference` pasa a `NC-000001`; borradores y heredadas sin número conservan la etiqueta provisional `COM-XXXXXXXX`. El API añade `number` y `fiscal_period {id, name}`.
+
+**Backend (qué cubre cada parte)**
+- Dominio `purchases/domain/purchase.py`: `PurchaseNumber`, `Purchase.number`, `ensure_confirmable()`, `confirm(now, number, ...)`, `provisional_reference()` (INV-01..06, AC-03). `PurchaseSummary` lleva `number`.
+- Puerto `PurchaseNumbering` (`application/ports.py`) usado por `ConfirmPurchase`; `ensure_confirmable()` corre antes de numerar (AC-02) y la confirmación repetida sigue idempotente sin numerar (EDGE-01). `PurchaseNumberingRejected` (subclase de `PostingRejected`) para `fiscal_period_missing`/`fiscal_period_closed`: la API (409 `{code, detail, period?}`) y la importación (`ImportRejected(code)`) ya la traducen sin cambios (AC-05, AC-06, AC-10).
+- Adaptador `PurchaseNumberingAdapter` (`infrastructure/adapters.py`): `accounting.services.lock_open_period` + contador con `select_for_update` (AC-01, AC-04, AC-07..AC-09). Descripciones de asientos de recepción, pago/anticipo y reversión con el período (AC-11).
+- Modelos y migraciones: `0010` (columnas nulas, `PurchaseNumberCounterModel` con `company_id` indexado, restricción única parcial y dos CHECK) y `0011` (numera las compras con `confirmed_at`, incluidas las canceladas que se confirmaron, en orden `confirmed_at, created_at, id`; repetible; AC-12).
+- Repositorio: `reference`/`number` en el resumen y búsqueda por `NC-000012`, por número y por prefijo de id (`com-…`) (AC-11). API: `reference`, `number`, `fiscal_period` en lista y detalle (API-01..03). `import_received_purchase` numera con el mismo adaptador (AC-10).
+
+**Frontend.** `fiscalPeriod` en modelos y mapeo; lista (tabla y tarjetas) y detalle (fila «Período fiscal») muestran el período solo con número (UI-01, UI-02); `PurchaseApiError` con `code` y `periodName`; el detalle muestra `app-fiscal-period-alert` en lugar del toast para los dos códigos (UI-03). **`app-fiscal-period-alert` se movió de `features/sales/components` a `shared/components`** (segundo módulo que lo usa) y sus claves pasaron de `SALES.FISCAL_PERIOD.*` a `COMMON.FISCAL_PERIOD.*` (es/en/pt); cambian solo imports en ventas. Claves nuevas `PURCHASES.PURCHASE_DETAIL.PERIODO_FISCAL` y `PURCHASES.PURCHASE_LIST.PERIODO`. Pantallas de referencia: Lista con seguimiento de estados (`purchase-list`) y Detalle con acciones de ciclo de vida (`purchase-detail`); sin patrones nuevos.
+
+**Pruebas añadidas.** `test_purchase_number_domain` (dominio y casos de uso con fakes), `test_purchase_numbering` (serie por período/empresa e independiente de ventas, `purchase_date`, borradores, canceladas, snapshot, bloqueos, rollback, restricciones de BD, API y búsqueda, compra inferida de la importación), `test_purchase_numbering_concurrency` (8 confirmaciones simultáneas → `{1..8}`; dos períodos y dos empresas; la misma compra dos veces; confirmar vs. cerrar con sincronización determinista; confirmar tras cierre firme), `test_purchase_number_migration` (0011 e idempotencia). Karma: componente movido, detalle, lista y servicio. **Mutación comprobada:** sustituyendo `lock_open_period` por `period_for` y quitando `select_for_update`, 5 de 6 pruebas de carrera fallan; con ellos pasan.
+
+**Pruebas heredadas ajustadas.** `numbering_support.py` (`fake_number`, `FakeNumbering`); `PurchaseApiTestCase` crea un período abierto amplio (`open_test_period`, reutilizado de `sales/tests/periods.py`); `PaymentBooks` y `PurchasePostingBase` reemplazan ese período por el suyo; claves nuevas en los conjuntos de campos del API; las aserciones de la referencia de una compra confirmada pasan de `COM-…` a `NC-…`.
+
+**Desviaciones respecto al plan.**
+- `PurchaseNumberingRejected` hereda de `PostingRejected` (detalle de implementación): evita tocar el traductor 409 de las vistas y el de la importación, que ya cubren `PostingRejected`.
+- Las claves del componente compartido se movieron a `COMMON.FISCAL_PERIOD.*` (el plan solo anticipaba mover el componente).
+- Para ejecutar las pruebas se usa el `backend/.env` copiado en el worktree (con autorización previa del usuario) y el `node_modules` enlazado; ambos están en `.gitignore`.
+
+**Deuda técnica / notas.** Contador no extraído a `shared/` (ADR decisión 8): quedan dos implementaciones con la misma forma. Compras heredadas con fecha fuera de todo período siguen con la etiqueta provisional. Sin período/Contabilidad no se puede confirmar (misma decisión que ventas). Avisos de lint previos sin tocar; cero avisos nuevos en líneas cambiadas (`flake8`; `ruff` solo avisa líneas previas).
+
+**Verificación propia (no es el Quality Gate).** `ng lint` y `i18n:check` sin hallazgos; `ng build` compila; Karma de `purchases`, `sales`, `shared` y `core/i18n`: 644 pruebas OK; backend: suite completa (`python manage.py test`, PostgreSQL) 2492 pruebas OK, y `modules.purchases` repetido tras el último ajuste de formato de líneas: OK.
 
 ## Review
 _Pendiente_

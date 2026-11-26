@@ -1,3 +1,8 @@
+import {
+  FiscalPeriodAlertComponent,
+  FiscalPeriodErrorCode,
+  isFiscalPeriodErrorCode,
+} from '../../../../shared/components/fiscal-period-alert/fiscal-period-alert.component';
 import { tr } from '../../../../core/i18n/translate';
 import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
@@ -29,7 +34,15 @@ import { PurchasesApiService } from '../../services/purchases-api.service';
 @Component({
   selector: 'app-purchase-detail',
   templateUrl: './purchase-detail.component.html',
-  imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe, PurchaseReceiptsTabComponent, PurchasePaymentsTabComponent],
+  imports: [
+    TranslatePipe,
+    RouterLink,
+    DatePipe,
+    MoneyPipe,
+    PurchaseReceiptsTabComponent,
+    PurchasePaymentsTabComponent,
+    FiscalPeriodAlertComponent,
+  ],
 })
 export class PurchaseDetailComponent implements OnInit {
   readonly statusLabels = PURCHASE_STATUS_LABELS;
@@ -42,6 +55,9 @@ export class PurchaseDetailComponent implements OnInit {
   tab: 'summary' | 'receptions' | 'payments' = 'summary';
   /** Hay una acción de ciclo de vida en curso. */
   busy = false;
+  /** Bloqueo del servidor al confirmar por el período fiscal de la fecha de la compra. */
+  fiscalPeriodError: FiscalPeriodErrorCode | null = null;
+  fiscalPeriodName = '';
 
   private api = inject(PurchasesApiService);
   private route = inject(ActivatedRoute);
@@ -92,6 +108,8 @@ export class PurchaseDetailComponent implements OnInit {
 
   private run(action: Observable<Purchase>, successMessage: string): void {
     this.busy = true;
+    this.fiscalPeriodError = null;
+    this.fiscalPeriodName = '';
     action
       .pipe(
         finalize(() => (this.busy = false)),
@@ -103,7 +121,12 @@ export class PurchaseDetailComponent implements OnInit {
           this.toastr.success(successMessage);
         },
         error: (err: PurchaseApiError) => {
-          this.toastr.error(err.message);
+          if (isFiscalPeriodErrorCode(err.code)) {
+            this.fiscalPeriodError = err.code; // se explica en una alerta con enlace, no en un aviso pasajero
+            this.fiscalPeriodName = err.periodName;
+          } else {
+            this.toastr.error(err.message);
+          }
           // Si la compra cambió en otra parte (409/400), se vuelve a leer para reflejar el estado real.
           if (err.status === 409 || err.status === 400) this.reload();
         },
