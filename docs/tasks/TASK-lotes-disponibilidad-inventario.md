@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-lotes-disponibilidad-inventario (base: `produccion`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/128
 **Fuente:** https://trello.com/c/12PuWhBD/2-dore-prod-002-controlar-disponibilidad-de-cu%C3%B1ap%C3%A9s-por-lote-en-inventario
 
 ## Historial de transiciones
