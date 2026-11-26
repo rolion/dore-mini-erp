@@ -1,18 +1,18 @@
 import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideTestTranslations } from '../../../core/i18n/testing';
-import { SalesReportApiService } from './sales-report-api.service';
+import { provideTestTranslations } from '../../core/i18n/testing';
+import { DocumentReportApiService } from './document-report-api.service';
 
 const FILTERS = { dateFrom: '2026-01-01', dateTo: '2026-03-31', fiscalPeriodId: 'p1' };
 
-describe('SalesReportApiService', () => {
-  let service: SalesReportApiService;
+describe('DocumentReportApiService', () => {
+  let service: DocumentReportApiService;
   let http: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
-    service = TestBed.inject(SalesReportApiService);
+    service = TestBed.inject(DocumentReportApiService);
     http = TestBed.inject(HttpTestingController);
   });
 
@@ -78,5 +78,14 @@ describe('SalesReportApiService', () => {
     http.expectOne((r) => r.url.endsWith('/orders/receivable-report/')).flush({ count: 0, results: [], totals: { orders_count: 0, total: '0.00', balance: '0.00' } });
     service.export('receivable', 'xlsx', FILTERS).subscribe();
     http.expectOne((r) => r.url.endsWith('/orders/receivable-report/export/xlsx/')).flush(new Blob(['x']));
+  });
+
+  it('uses the purchases endpoints for the purchase reports (AC-05)', () => {
+    for (const [kind, path] of [['purchases-paid', 'paid-report'], ['purchases-payable', 'payable-report']] as const) {
+      service.list(kind, FILTERS, 1, 10).subscribe();
+      http.expectOne((r) => r.url.endsWith(`/purchases/${path}/`)).flush({ count: 0, results: [], totals: { orders_count: 0, total: '0.00', balance: '0.00' } });
+      service.export(kind, 'pdf', FILTERS).subscribe();
+      http.expectOne((r) => r.url.endsWith(`/purchases/${path}/export/pdf/`)).flush(new Blob(['x']));
+    }
   });
 });

@@ -1,12 +1,12 @@
 <section class="main-content">
   <ul class="breadcrumb breadcrumb-style">
     <li class="breadcrumb-item">
-      <h5 class="page-title m-b-0">{{ titleKey | translate }}</h5>
+      <h5 class="page-title m-b-0">{{ config.titleKey | translate }}</h5>
     </li>
     <li class="breadcrumb-item bcrumb-1">
       <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
     </li>
-    <li class="breadcrumb-item">{{ titleKey | translate }}</li>
+    <li class="breadcrumb-item">{{ config.titleKey | translate }}</li>
   </ul>
   <div class="section-body">
     <div class="row clearfix">
@@ -15,8 +15,8 @@
           <div class="p-10">
             <div class="ngxTableHeader">
               <div class="table-title">
-                <h2><strong>{{ titleKey | translate }}</strong></h2>
-                <small class="text-muted">{{ subtitleKey | translate }}</small>
+                <h2><strong>{{ config.titleKey | translate }}</strong></h2>
+                <small class="text-muted">{{ config.subtitleKey | translate }}</small>
               </div>
               <div class="d-flex gap-2">
                 <button type="button" class="btn btn-outline-secondary" data-testid="export-pdf"
@@ -72,14 +72,14 @@
               <button type="button" class="btn btn-sm btn-outline-danger" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
             </div>
             } @else if (report && !report.count) {
-            <p class="m-3 text-muted" data-testid="empty">{{ emptyKey | translate }}</p>
+            <p class="m-3 text-muted" data-testid="empty">{{ config.emptyKey | translate }}</p>
             } @else if (report) {
             <div class="table-responsive m-2">
               <table class="table table-hover align-middle" data-testid="report-table">
                 <thead>
                   <tr>
-                    <th scope="col">{{ 'SALES.PAID_REPORT.COL_ORDER' | translate }}</th>
-                    <th scope="col">{{ 'SALES.PAID_REPORT.COL_CUSTOMER' | translate }}</th>
+                    <th scope="col">{{ config.documentColumnKey | translate }}</th>
+                    <th scope="col">{{ config.partyColumnKey | translate }}</th>
                     <th scope="col" class="text-end">{{ 'SALES.PAID_REPORT.COL_TOTAL' | translate }}</th>
                     <th scope="col" class="text-end">{{ 'SALES.PAID_REPORT.COL_BALANCE' | translate }}</th>
                   </tr>
@@ -87,7 +87,7 @@
                 <tbody>
                   @for (row of report.rows; track row.id) {
                   <tr data-testid="report-row">
-                    <td><a class="fw-semibold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.code }}</a></td>
+                    <td><a class="fw-semibold" [routerLink]="[config.detailRoute, row.id]">{{ row.code }}</a></td>
                     <td>{{ row.customerName ?? '—' }}</td>
                     <td class="text-end">{{ row.total | money }}</td>
                     <td class="text-end">{{ row.balance | money }}</td>
@@ -96,7 +96,7 @@
                 </tbody>
                 <tfoot>
                   <tr class="fw-bold" data-testid="report-totals">
-                    <td colspan="2">{{ 'SALES.PAID_REPORT.TOTALS' | translate: { count: report.totals.ordersCount } }}</td>
+                    <td colspan="2">{{ config.totalsKey | translate: { count: report.totals.ordersCount } }}</td>
                     <td class="text-end">{{ report.totals.total | money }}</td>
                     <td class="text-end">{{ report.totals.balance | money }}</td>
                   </tr>

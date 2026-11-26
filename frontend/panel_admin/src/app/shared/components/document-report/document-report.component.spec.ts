@@ -1,15 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { provideTestTranslations } from '../../../../core/i18n/testing';
-import { ModulesService } from '../../../../core/service/modules.service';
-import { fiscalPeriod } from '../../../accounting/testing/fiscal-period-fixtures';
-import { FiscalPeriodsApiService } from '../../../accounting/services/fiscal-periods-api.service';
-import { SalesReportPage } from '../../models/sales-report';
-import { SalesReportApiService } from '../../services/sales-report-api.service';
-import { SalesReportComponent } from './sales-report.component';
+import { provideTestTranslations } from '../../../core/i18n/testing';
+import { ModulesService } from '../../../core/service/modules.service';
+import { fiscalPeriod } from '../../../features/accounting/testing/fiscal-period-fixtures';
+import { FiscalPeriodsApiService } from '../../../features/accounting/services/fiscal-periods-api.service';
+import { DocumentReportPage } from '../../models/document-report';
+import { DocumentReportApiService } from '../../services/document-report-api.service';
+import { DocumentReportComponent } from './document-report.component';
 
-const PAGE: SalesReportPage = {
+const PAGE: DocumentReportPage = {
   count: 2,
   rows: [
     { id: 'o1', code: 'PED-1', orderDate: '2026-02-01', customerName: 'Ana Pérez', total: '100.00', balance: '0.00' },
@@ -17,39 +17,39 @@ const PAGE: SalesReportPage = {
   ],
   totals: { ordersCount: 2, total: '150.00', balance: '0.00' },
 };
-const EMPTY: SalesReportPage = { count: 0, rows: [], totals: { ordersCount: 0, total: '0.00', balance: '0.00' } };
+const EMPTY: DocumentReportPage = { count: 0, rows: [], totals: { ordersCount: 0, total: '0.00', balance: '0.00' } };
 
-describe('SalesReportComponent', () => {
-  let fixture: ComponentFixture<SalesReportComponent>;
-  let component: SalesReportComponent;
-  let api: jasmine.SpyObj<SalesReportApiService>;
+describe('DocumentReportComponent', () => {
+  let fixture: ComponentFixture<DocumentReportComponent>;
+  let component: DocumentReportComponent;
+  let api: jasmine.SpyObj<DocumentReportApiService>;
   let periods: jasmine.SpyObj<FiscalPeriodsApiService>;
   let accountingDisabled: boolean;
 
   const root = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const text = (testId: string): string => root().querySelector(`[data-testid="${testId}"]`)?.textContent ?? '';
 
-  function start(report?: 'receivable'): void {
+  function start(report?: 'receivable' | 'purchases-payable'): void {
     if (report) {
       TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { report } } } });
     }
-    fixture = TestBed.createComponent(SalesReportComponent);
+    fixture = TestBed.createComponent(DocumentReportComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }
 
   beforeEach(() => {
     accountingDisabled = false;
-    api = jasmine.createSpyObj<SalesReportApiService>('SalesReportApiService', ['list', 'export']);
+    api = jasmine.createSpyObj<DocumentReportApiService>('DocumentReportApiService', ['list', 'export']);
     api.list.and.returnValue(of(PAGE));
     periods = jasmine.createSpyObj<FiscalPeriodsApiService>('FiscalPeriodsApiService', ['list']);
     periods.list.and.returnValue(of([fiscalPeriod()]));
     TestBed.configureTestingModule({
-      imports: [SalesReportComponent],
+      imports: [DocumentReportComponent],
       providers: [
         ...provideTestTranslations(),
         provideRouter([]),
-        { provide: SalesReportApiService, useValue: api },
+        { provide: DocumentReportApiService, useValue: api },
         { provide: FiscalPeriodsApiService, useValue: periods },
         { provide: ModulesService, useValue: { isDisabled: () => accountingDisabled } },
       ],
@@ -142,5 +142,15 @@ describe('SalesReportComponent', () => {
     spyOn(HTMLAnchorElement.prototype, 'click');
     component.export('xlsx');
     expect(api.export).toHaveBeenCalledWith('receivable', 'xlsx', { dateFrom: '', dateTo: '', fiscalPeriodId: '' });
+  });
+
+  it('shows purchase labels and links purchases to their detail (AC-06)', () => {
+    start('purchases-payable');
+    expect(root().querySelector('h2')?.textContent).toContain('Compras por pagar');
+    expect(root().querySelector('th')?.textContent).toContain('Compra');
+    expect(root().querySelectorAll('th')[1]?.textContent).toContain('Proveedor');
+    expect(root().querySelector('[data-testid="report-row"] a')?.getAttribute('href')).toBe('/pocketbiz/purchases/o1');
+    expect(text('report-totals')).toContain('2 compras');
+    expect(api.list).toHaveBeenCalledOnceWith('purchases-payable', { dateFrom: '', dateTo: '', fiscalPeriodId: '' }, 1, 10);
   });
 });

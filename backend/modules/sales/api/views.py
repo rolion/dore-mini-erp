@@ -44,11 +44,7 @@ from modules.sales.infrastructure.adapters import (
     SystemClock,
 )
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
-from shared.tenancy import company_id_from
-
-from .filters import parse_order_filters
-from .pagination import OrderPagination
-from .report_export import (
+from shared.report_export import (
     MAX_EXPORT_ROWS,
     PDF_CONTENT_TYPE,
     XLSX_CONTENT_TYPE,
@@ -56,6 +52,10 @@ from .report_export import (
     build_xlsx,
     report_rows,
 )
+from shared.tenancy import company_id_from
+
+from .filters import parse_order_filters
+from .pagination import OrderPagination
 from .serializers import (
     CancelSerializer,
     DeliverSerializer,
@@ -78,6 +78,7 @@ from .serializers import (
 ORDER_NOT_FOUND = 'Pedido no encontrado.'
 ITEM_NOT_FOUND = 'Ítem no encontrado.'
 CUSTOMERS_DISABLED = 'El módulo Clientes no está habilitado.'
+SALES_HEADERS = ('Pedido', 'Cliente', 'Total', 'Saldo')
 
 
 class RuleConflict(APIException):
@@ -384,15 +385,18 @@ class _OrdersReportExportView(APIView):
                 f'El reporte tiene más de {MAX_EXPORT_ROWS} pedidos: acote las fechas o el período fiscal.']})
         summaries = list(report.orders)
         context = _customer_context(request, {o.customer_id for o in summaries if o.customer_id})
-        rows = report_rows(summaries, context['customer_names'], context['customers_available'])
+        rows = report_rows([(o.code, o.customer_id, o.total, o.balance) for o in summaries],
+                           context['customer_names'], context['customers_available'])
         today = timezone.localdate()
         if file_format == 'xlsx':
-            content, content_type = build_xlsx(rows, report.totals, self.title), XLSX_CONTENT_TYPE
+            content, content_type = build_xlsx(rows, report.totals, self.title, SALES_HEADERS), XLSX_CONTENT_TYPE
         else:
             text = _filters_text(filters, self.everything_text)
-            content, content_type = build_pdf(rows, report.totals, text, today, self.title), PDF_CONTENT_TYPE
+            content = build_pdf(rows, report.totals, text, today, self.title, SALES_HEADERS)
+            content_type = PDF_CONTENT_TYPE
         response = HttpResponse(content, content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{self.file_slug}-{today.isoformat()}.{file_format}"'
+        name = f'{self.file_slug}-{today.isoformat()}.{file_format}'
+        response['Content-Disposition'] = f'attachment; filename="{name}"'
         return response
 
 

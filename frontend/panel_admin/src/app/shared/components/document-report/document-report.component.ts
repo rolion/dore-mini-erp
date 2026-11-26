@@ -5,49 +5,53 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { catchError, finalize, of } from 'rxjs';
-import { ModulesService } from '../../../../core/service/modules.service';
-import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
-import { FiscalPeriod } from '../../../accounting/models/fiscal-period';
-import { FiscalPeriodsApiService } from '../../../accounting/services/fiscal-periods-api.service';
-import { SalesReportFilters, SalesReportFormat, SalesReportKind, SalesReportPage } from '../../models/sales-report';
-import { SalesReportApiService } from '../../services/sales-report-api.service';
+import { ModulesService } from '../../../core/service/modules.service';
+import { MoneyPipe } from '../../pipes/money.pipe';
+import { FiscalPeriod } from '../../../features/accounting/models/fiscal-period';
+import { FiscalPeriodsApiService } from '../../../features/accounting/services/fiscal-periods-api.service';
+import {
+  DOCUMENT_REPORT_CONFIG,
+  DOCUMENT_REPORT_KINDS,
+  DocumentReportFilters,
+  DocumentReportFormat,
+  DocumentReportKind,
+  DocumentReportPage,
+} from '../../models/document-report';
+import { DocumentReportApiService } from '../../services/document-report-api.service';
 
 export const PAGE_SIZE = 10;
 
 /**
- * Reporte de pedidos con filtros de fecha y período fiscal y exportación: «Ingresos por venta» (entregados y pagados)
- * o «Pedidos por cobrar» (con saldo), según `data.report` de la ruta.
+ * Reporte de documentos (pedidos o compras) con filtros de fecha y período fiscal y exportación a PDF o Excel; el tipo
+ * (`DocumentReportKind`) viene de `data.report` de la ruta y fija endpoint, textos y enlace al detalle.
  */
 @Component({
-  selector: 'app-sales-report',
-  templateUrl: './sales-report.component.html',
+  selector: 'app-document-report',
+  templateUrl: './document-report.component.html',
   imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgbPagination, MoneyPipe],
 })
-export class SalesReportComponent implements OnInit {
+export class DocumentReportComponent implements OnInit {
   readonly pageSize = PAGE_SIZE;
   readonly filterForm = inject(FormBuilder).nonNullable.group({ dateFrom: [''], dateTo: [''], fiscalPeriodId: [''] });
 
-  report: SalesReportPage | null = null;
+  report: DocumentReportPage | null = null;
   page = 1;
   loading = false;
   errorMessage = '';
   exportError = '';
-  exporting: SalesReportFormat | null = null;
+  exporting: DocumentReportFormat | null = null;
   rangeInvalid = false;
   periods: FiscalPeriod[] = [];
 
-  private api = inject(SalesReportApiService);
+  private api = inject(DocumentReportApiService);
   private periodsApi = inject(FiscalPeriodsApiService);
   private modules = inject(ModulesService);
   private route = inject(ActivatedRoute);
-  readonly kind: SalesReportKind = this.route.snapshot.data['report'] === 'receivable' ? 'receivable' : 'paid';
-  readonly titleKey = this.kind === 'paid' ? 'SALES.PAID_REPORT.TITLE' : 'SALES.RECEIVABLE_REPORT.TITLE';
-  readonly subtitleKey = this.kind === 'paid' ? 'SALES.PAID_REPORT.SUBTITLE' : 'SALES.RECEIVABLE_REPORT.SUBTITLE';
-  readonly emptyKey = this.kind === 'paid' ? 'SALES.PAID_REPORT.EMPTY' : 'SALES.RECEIVABLE_REPORT.EMPTY';
-  private readonly fileName = this.kind === 'paid' ? 'ingresos-por-venta' : 'pedidos-por-cobrar';
+  readonly kind: DocumentReportKind = this.reportKind();
+  readonly config = DOCUMENT_REPORT_CONFIG[this.kind];
   private destroyRef = inject(DestroyRef);
 
-  get filters(): SalesReportFilters {
+  get filters(): DocumentReportFilters {
     return this.filterForm.getRawValue();
   }
 
@@ -110,7 +114,7 @@ export class SalesReportComponent implements OnInit {
       });
   }
 
-  export(format: SalesReportFormat): void {
+  export(format: DocumentReportFormat): void {
     if (this.exporting || this.rangeInvalid) return;
     this.exporting = format;
     this.exportError = '';
@@ -121,9 +125,14 @@ export class SalesReportComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (blob) => this.download(blob, `${this.fileName}.${format}`),
+        next: (blob) => this.download(blob, `${this.config.fileName}.${format}`),
         error: (err: Error) => (this.exportError = err.message),
       });
+  }
+
+  private reportKind(): DocumentReportKind {
+    const report: unknown = this.route.snapshot.data['report'];
+    return DOCUMENT_REPORT_KINDS.find((kind) => kind === report) ?? 'paid';
   }
 
   private download(blob: Blob, filename: string): void {

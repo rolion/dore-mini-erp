@@ -7,7 +7,7 @@ from django.db.models.functions import Cast, Coalesce
 
 from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from modules.purchases.domain.purchase import Purchase, PurchaseNumber, provisional_reference
-from modules.purchases.domain.repositories import PurchaseFilters, PurchaseSummary
+from modules.purchases.domain.repositories import PurchaseFilters, PurchaseSummary, PurchaseTotals
 
 from .mappers import purchase_to_entity, purchase_to_model_values
 from .models import PaymentModel, PurchaseItemModel, PurchaseModel, SupplierModel
@@ -107,6 +107,13 @@ class DjangoPurchaseRepository:
             queryset = self._apply(queryset, filters)
         return PurchaseList(self.company_id, queryset)
 
+    def totals(self, filters: PurchaseFilters) -> PurchaseTotals:
+        """Cantidad y sumas de total y saldo de todo el conjunto filtrado (no solo de una página)."""
+        queryset = self._apply(self._purchases().annotate(paid_total=self._paid_total()), filters)
+        row = queryset.aggregate(count=Count('id'), total=Sum('total'), paid=Sum('paid_total'))
+        total, paid = row['total'] or Decimal('0.00'), row['paid'] or Decimal('0.00')
+        return PurchaseTotals(purchases_count=row['count'], total=total, balance=total - paid)
+
     @staticmethod
     def _apply(queryset: QuerySet, f: PurchaseFilters) -> QuerySet:
         if f.supplier_id is not None:
@@ -115,6 +122,8 @@ class DjangoPurchaseRepository:
             queryset = queryset.filter(purchase_date__gte=f.date_from)
         if f.date_to is not None:
             queryset = queryset.filter(purchase_date__lte=f.date_to)
+        if f.fiscal_period_id is not None:
+            queryset = queryset.filter(fiscal_period_id=f.fiscal_period_id)
         if f.status is not None:
             queryset = queryset.filter(status=f.status.value)
         # Recepción y pago solo existen en compras confirmadas.

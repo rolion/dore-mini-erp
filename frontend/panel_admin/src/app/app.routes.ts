@@ -226,8 +226,8 @@ export const APP_ROUTE: Route[] = [
                 canActivate: [moduleGuard],
                 data: { module: 'sales', report: 'paid' },
                 loadComponent: () =>
-                    import('./features/sales/pages/sales-report/sales-report.component').then(
-                        (m) => m.SalesReportComponent
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
                     ),
             },
             {
@@ -235,8 +235,8 @@ export const APP_ROUTE: Route[] = [
                 canActivate: [moduleGuard],
                 data: { module: 'sales', report: 'receivable' },
                 loadComponent: () =>
-                    import('./features/sales/pages/sales-report/sales-report.component').then(
-                        (m) => m.SalesReportComponent
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
                     ),
             },
             {
@@ -278,6 +278,24 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () =>
                     import('./features/settings/pages/coming-soon/coming-soon.component').then(
                         (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'purchases/reports/paid',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases', report: 'purchases-paid' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
+                    ),
+            },
+            {
+                path: 'purchases/reports/payable',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases', report: 'purchases-payable' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
                     ),
             },
             {
