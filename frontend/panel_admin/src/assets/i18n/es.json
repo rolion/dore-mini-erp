@@ -10,7 +10,8 @@
         "JOURNAL": "Movimientos",
         "BALANCES": "Saldos",
         "CASH_FLOW": "Flujo de dinero",
-        "INCOME_EXPENSE": "Ingresos y egresos"
+        "INCOME_EXPENSE": "Ingresos y egresos",
+        "BALANCE_SHEET": "Balance general"
       }
     },
     "AGENDA": {
@@ -3177,6 +3178,24 @@
       "SIN_REGISTROS": "Sin registros",
       "VER_MOVIMIENTOS": "Ver movimientos de {{name}}",
       "NOTA_APERTURA": "Los saldos salen solo de los asientos. Con «Desde» se muestra el saldo inicial anterior a esa fecha; las aperturas se registran como asientos."
+    },
+    "BALANCE_SHEET": {
+      "NOTA_RANGO": "Los saldos son acumulados hasta «Hasta». Con «Desde» se separa el saldo inicial (anterior a esa fecha) del movimiento del rango.",
+      "SECCION_ASSET": "Activo",
+      "SECCION_LIABILITY": "Pasivo",
+      "SECCION_EQUITY": "Patrimonio",
+      "SALDO_INICIAL": "Saldo inicial",
+      "MOVIMIENTO": "Movimiento",
+      "SALDO_FINAL": "Saldo final",
+      "RESULTADOS_ANTERIORES": "Resultados de ejercicios anteriores",
+      "RESULTADO_PERIODO": "Resultado del período",
+      "TOTAL_SECCION": "Total {{section}}",
+      "TOTAL_ACTIVO": "Total Activo",
+      "TOTAL_PASIVO_PATRIMONIO": "Total Pasivo + Patrimonio",
+      "ECUACION": "Activo = Pasivo + Patrimonio",
+      "DIFERENCIA": "Diferencia: {{amount}}",
+      "AVISO_SIN_CLASIFICAR": "Hay cuentas sin clasificar con saldo ({{amount}}); no entran en el balance y por eso puede no cuadrar. Clasifíquelas en Cuentas.",
+      "SIN_REGISTROS": "Sin registros"
     },
     "POSTING": {
       "TAB": "Asientos automáticos",

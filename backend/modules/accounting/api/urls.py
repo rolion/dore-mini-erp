@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .balance_sheet_views import BalanceSheetView
 from .balance_views import BalanceListView
 from .cash_flow_views import CashFlowMovementsView, CashFlowView
 from .income_expense_views import IncomeExpenseView
@@ -62,6 +63,7 @@ urlpatterns = [
     path('cash-flow/', CashFlowView.as_view(), name='accounting-cash-flow'),
     path('cash-flow/movements/', CashFlowMovementsView.as_view(), name='accounting-cash-flow-movements'),
     path('income-expense/', IncomeExpenseView.as_view(), name='accounting-income-expense'),
+    path('balance-sheet/', BalanceSheetView.as_view(), name='accounting-balance-sheet'),
     path('balances/', BalanceListView.as_view(), name='accounting-balance-list'),
     path('entries/', EntryListView.as_view(), name='accounting-entry-list'),
     path('entries/<uuid:entry_id>/', EntryDetailView.as_view(), name='accounting-entry-detail'),

@@ -447,6 +447,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/accounting/balance-sheet",
+          "title": "MENUITEMS.ACCOUNTING.LIST.BALANCE_SHEET",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/accounting/settings",
           "title": "MENUITEMS.ACCOUNTING.LIST.SETTINGS",
           "iconType": "",

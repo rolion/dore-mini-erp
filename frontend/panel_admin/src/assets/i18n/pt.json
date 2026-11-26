@@ -10,7 +10,8 @@
         "JOURNAL": "Movimentos",
         "BALANCES": "Saldos",
         "CASH_FLOW": "Fluxo de dinheiro",
-        "INCOME_EXPENSE": "Receitas e despesas"
+        "INCOME_EXPENSE": "Receitas e despesas",
+        "BALANCE_SHEET": "Balanço patrimonial"
       }
     },
     "AGENDA": {
@@ -3177,6 +3178,24 @@
       "SIN_REGISTROS": "Sem registros",
       "VER_MOVIMIENTOS": "Ver movimentos de {{name}}",
       "NOTA_APERTURA": "Os saldos vêm somente dos lançamentos. Com “De”, mostra-se o saldo inicial anterior a essa data; as aberturas são registradas como lançamentos."
+    },
+    "BALANCE_SHEET": {
+      "NOTA_RANGO": "Os saldos são acumulados até “Até”. Com “De”, separa-se o saldo inicial (anterior a essa data) do movimento do período.",
+      "SECCION_ASSET": "Ativo",
+      "SECCION_LIABILITY": "Passivo",
+      "SECCION_EQUITY": "Patrimônio líquido",
+      "SALDO_INICIAL": "Saldo inicial",
+      "MOVIMIENTO": "Movimento",
+      "SALDO_FINAL": "Saldo final",
+      "RESULTADOS_ANTERIORES": "Resultados de exercícios anteriores",
+      "RESULTADO_PERIODO": "Resultado do período",
+      "TOTAL_SECCION": "Total {{section}}",
+      "TOTAL_ACTIVO": "Total do ativo",
+      "TOTAL_PASIVO_PATRIMONIO": "Total do passivo + patrimônio líquido",
+      "ECUACION": "Ativo = Passivo + Patrimônio líquido",
+      "DIFERENCIA": "Diferença: {{amount}}",
+      "AVISO_SIN_CLASIFICAR": "Há contas sem classificação com saldo ({{amount}}); ficam fora do balanço, por isso pode não fechar. Classifique-as em Contas.",
+      "SIN_REGISTROS": "Sem registros"
     },
     "POSTING": {
       "TAB": "Lançamentos automáticos",
