@@ -17,6 +17,8 @@ from .views import (
     OrderStartView,
     PaidOrdersReportExportView,
     PaidOrdersReportView,
+    ReceivableOrdersReportExportView,
+    ReceivableOrdersReportView,
 )
 
 # Los ids van como `str` y la vista los convierte: un id mal formado responde 404 `{detail}`, no una página HTML.
@@ -27,6 +29,9 @@ urlpatterns = [
     path('paid-report/', PaidOrdersReportView.as_view(), name='order-paid-report'),
     path('paid-report/export/<str:file_format>/', PaidOrdersReportExportView.as_view(),
          name='order-paid-report-export'),
+    path('receivable-report/', ReceivableOrdersReportView.as_view(), name='order-receivable-report'),
+    path('receivable-report/export/<str:file_format>/', ReceivableOrdersReportExportView.as_view(),
+         name='order-receivable-report-export'),
     path('<str:order_id>/', OrderDetailView.as_view(), name='order-detail'),
     path('<str:order_id>/items/', OrderItemListView.as_view(), name='order-item-list'),
     path('<str:order_id>/items/<str:item_id>/', OrderItemDetailView.as_view(), name='order-item-detail'),

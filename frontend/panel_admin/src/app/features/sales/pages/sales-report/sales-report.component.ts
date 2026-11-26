@@ -1,7 +1,7 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { catchError, finalize, of } from 'rxjs';
@@ -9,36 +9,45 @@ import { ModulesService } from '../../../../core/service/modules.service';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { FiscalPeriod } from '../../../accounting/models/fiscal-period';
 import { FiscalPeriodsApiService } from '../../../accounting/services/fiscal-periods-api.service';
-import { PaidReportFilters, PaidReportFormat, PaidReportPage } from '../../models/paid-report';
-import { PaidReportApiService } from '../../services/paid-report-api.service';
+import { SalesReportFilters, SalesReportFormat, SalesReportKind, SalesReportPage } from '../../models/sales-report';
+import { SalesReportApiService } from '../../services/sales-report-api.service';
 
 export const PAGE_SIZE = 10;
 
-/** «Ingresos por venta»: pedidos entregados y pagados, con filtros de fecha y período fiscal y exportación. */
+/**
+ * Reporte de pedidos con filtros de fecha y período fiscal y exportación: «Ingresos por venta» (entregados y pagados)
+ * o «Pedidos por cobrar» (con saldo), según `data.report` de la ruta.
+ */
 @Component({
-  selector: 'app-paid-report',
-  templateUrl: './paid-report.component.html',
+  selector: 'app-sales-report',
+  templateUrl: './sales-report.component.html',
   imports: [TranslatePipe, RouterLink, ReactiveFormsModule, NgbPagination, MoneyPipe],
 })
-export class PaidReportComponent implements OnInit {
+export class SalesReportComponent implements OnInit {
   readonly pageSize = PAGE_SIZE;
   readonly filterForm = inject(FormBuilder).nonNullable.group({ dateFrom: [''], dateTo: [''], fiscalPeriodId: [''] });
 
-  report: PaidReportPage | null = null;
+  report: SalesReportPage | null = null;
   page = 1;
   loading = false;
   errorMessage = '';
   exportError = '';
-  exporting: PaidReportFormat | null = null;
+  exporting: SalesReportFormat | null = null;
   rangeInvalid = false;
   periods: FiscalPeriod[] = [];
 
-  private api = inject(PaidReportApiService);
+  private api = inject(SalesReportApiService);
   private periodsApi = inject(FiscalPeriodsApiService);
   private modules = inject(ModulesService);
+  private route = inject(ActivatedRoute);
+  readonly kind: SalesReportKind = this.route.snapshot.data['report'] === 'receivable' ? 'receivable' : 'paid';
+  readonly titleKey = this.kind === 'paid' ? 'SALES.PAID_REPORT.TITLE' : 'SALES.RECEIVABLE_REPORT.TITLE';
+  readonly subtitleKey = this.kind === 'paid' ? 'SALES.PAID_REPORT.SUBTITLE' : 'SALES.RECEIVABLE_REPORT.SUBTITLE';
+  readonly emptyKey = this.kind === 'paid' ? 'SALES.PAID_REPORT.EMPTY' : 'SALES.RECEIVABLE_REPORT.EMPTY';
+  private readonly fileName = this.kind === 'paid' ? 'ingresos-por-venta' : 'pedidos-por-cobrar';
   private destroyRef = inject(DestroyRef);
 
-  get filters(): PaidReportFilters {
+  get filters(): SalesReportFilters {
     return this.filterForm.getRawValue();
   }
 
@@ -87,7 +96,7 @@ export class PaidReportComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
     this.api
-      .list(this.filters, this.page, PAGE_SIZE)
+      .list(this.kind, this.filters, this.page, PAGE_SIZE)
       .pipe(
         finalize(() => (this.loading = false)),
         takeUntilDestroyed(this.destroyRef),
@@ -101,18 +110,18 @@ export class PaidReportComponent implements OnInit {
       });
   }
 
-  export(format: PaidReportFormat): void {
+  export(format: SalesReportFormat): void {
     if (this.exporting || this.rangeInvalid) return;
     this.exporting = format;
     this.exportError = '';
     this.api
-      .export(format, this.filters)
+      .export(this.kind, format, this.filters)
       .pipe(
         finalize(() => (this.exporting = null)),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (blob) => this.download(blob, `ingresos-por-venta.${format}`),
+        next: (blob) => this.download(blob, `${this.fileName}.${format}`),
         error: (err: Error) => (this.exportError = err.message),
       });
   }

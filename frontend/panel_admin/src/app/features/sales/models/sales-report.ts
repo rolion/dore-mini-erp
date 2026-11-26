@@ -1,5 +1,10 @@
-/** Reporte «Ingresos por venta»: pedidos entregados y pagados (API `/api/orders/paid-report/`). */
-export interface PaidReportRow {
+/**
+ * Reportes de pedidos con las mismas columnas y filtros: «Ingresos por venta» (`paid`, entregados y pagados) y
+ * «Pedidos por cobrar» (`receivable`, con saldo pendiente). API `/api/orders/{paid|receivable}-report/`.
+ */
+export type SalesReportKind = 'paid' | 'receivable';
+
+export interface SalesReportRow {
   id: string;
   code: string;
   orderDate: string;
@@ -9,28 +14,28 @@ export interface PaidReportRow {
   balance: string;
 }
 
-export interface PaidReportTotals {
+export interface SalesReportTotals {
   ordersCount: number;
   total: string;
   balance: string;
 }
 
-export interface PaidReportPage {
+export interface SalesReportPage {
   count: number;
-  rows: PaidReportRow[];
-  totals: PaidReportTotals;
+  rows: SalesReportRow[];
+  totals: SalesReportTotals;
 }
 
-export interface PaidReportFilters {
+export interface SalesReportFilters {
   /** `yyyy-MM-dd` o vacío. */
   dateFrom: string;
   dateTo: string;
   fiscalPeriodId: string;
 }
 
-export type PaidReportFormat = 'pdf' | 'xlsx';
+export type SalesReportFormat = 'pdf' | 'xlsx';
 
-export interface PaidReportRowDto {
+export interface SalesReportRowDto {
   id: string;
   code: string;
   order_date: string;
@@ -39,13 +44,13 @@ export interface PaidReportRowDto {
   balance: string;
 }
 
-export interface PaidReportPageDto {
+export interface SalesReportPageDto {
   count: number;
-  results: PaidReportRowDto[];
+  results: SalesReportRowDto[];
   totals: { orders_count: number; total: string; balance: string };
 }
 
-export function toPaidReportPage(dto: PaidReportPageDto): PaidReportPage {
+export function toSalesReportPage(dto: SalesReportPageDto): SalesReportPage {
   return {
     count: dto.count,
     rows: dto.results.map((row) => ({

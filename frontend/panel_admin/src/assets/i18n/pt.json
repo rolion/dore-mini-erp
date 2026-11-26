@@ -157,6 +157,7 @@
       "LIST": {
         "ORDERS": "Pedidos",
         "INCOME_REPORT": "Receitas por venda",
+        "RECEIVABLE_REPORT": "Pedidos a receber",
         "IMPORT": "Importar vendas",
         "SETTINGS": "Configuração"
       }
@@ -2009,6 +2010,11 @@
       "TOTALS": "Totais ({{count}} pedidos)",
       "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
       "EXPORT_TOO_LARGE": "O relatório tem pedidos demais para exportar: reduza as datas ou o período fiscal."
+    },
+    "RECEIVABLE_REPORT": {
+      "TITLE": "Pedidos a receber",
+      "SUBTITLE": "Pedidos com saldo pendente de recebimento",
+      "EMPTY": "Sem registros"
     }
   },
   "SERVICES": {

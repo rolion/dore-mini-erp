@@ -224,10 +224,19 @@ export const APP_ROUTE: Route[] = [
             {
                 path: 'sales/reports/income',
                 canActivate: [moduleGuard],
-                data: { module: 'sales' },
+                data: { module: 'sales', report: 'paid' },
                 loadComponent: () =>
-                    import('./features/sales/pages/paid-report/paid-report.component').then(
-                        (m) => m.PaidReportComponent
+                    import('./features/sales/pages/sales-report/sales-report.component').then(
+                        (m) => m.SalesReportComponent
+                    ),
+            },
+            {
+                path: 'sales/reports/receivable',
+                canActivate: [moduleGuard],
+                data: { module: 'sales', report: 'receivable' },
+                loadComponent: () =>
+                    import('./features/sales/pages/sales-report/sales-report.component').then(
+                        (m) => m.SalesReportComponent
                     ),
             },
             {
