@@ -1,6 +1,6 @@
 # TASK-numeracion-correlativa-pedidos-venta: Numeración correlativa de pedidos de venta por período fiscal
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-numeracion-correlativa-pedidos-venta
@@ -17,6 +17,7 @@
 | 2026-11-25 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2445) y Karma (1664) en verde por verificación propia | delivery-build |
 | 2026-11-25 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 y REV-02 (Medium, huecos de prueba) y REV-03/REV-04 (Low) corregidos y marcados Resueltos; se repite el Quality Gate sobre el estado final | delivery-publish |
 | 2026-11-25 | REVIEW → PUBLISH | Quality Gate ciclo 2 (subagente aislado): PASS, sin Critical/High; REV-05 (Low) resuelto con una aserción; revisión visual no realizada | delivery-publish |
+| 2026-11-25 | PUBLISH → REVIEW | El usuario pidió numerar también los cancelados heredados (cambio de Specification AC-12 aprobado en el chat; PLAN v2, migración `0008`); se repite el Quality Gate | delivery-publish |
 
 ## Investigación
 
@@ -47,7 +48,7 @@ Los pedidos de venta solo tienen UUID; la etiqueta `P-XXXXXXXX` se deriva de él
 - Último migration de sales: `0005_order_return_and_refund.py`.
 
 ### Hipótesis / supuestos no confirmados
-- Los pedidos `CANCELLED` anteriores a este cambio no permiten saber si pasaron por la confirmación (no hay historial de transiciones en `OrderModel`). Se asume **no numerarlos**.
+- Los pedidos `CANCELLED` anteriores a este cambio no permiten saber si pasaron por la confirmación (no hay historial de transiciones en `OrderModel`). Se asumió no numerarlos; **el usuario lo revirtió** (PLAN v2): se numeran con `0008`.
 - Pedidos ya confirmados con `order_date` fuera de cualquier período fiscal: se asume dejarlos sin número (siguen mostrando la etiqueta provisional).
 - Que el nombre del período (`FiscalPeriodModel.name`) puede cambiar con `RenamePeriod`; por eso se copia al pedido como instantánea al numerar.
 
@@ -107,7 +108,7 @@ Ver `docs/adr/ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo.md`.
 - Enlace de la alerta: `/pocketbiz/accounting/settings?tab=periods` (la pestaña `periods` ya existe).
 - Para ejecutar pruebas se copió `backend/.env` del repositorio principal (con autorización del usuario) y se enlazó `node_modules`; ambos están en `.gitignore`.
 
-**Deuda técnica / notas.** Contador no extraído a `shared/` (ADR decisión 7). Pedidos heredados cancelados o fuera de período siguen con etiqueta provisional (limitación conocida). Sin Contabilidad/sin período no se puede confirmar (decisión del usuario). Avisos de lint previos sin tocar (E501/E301 en archivos de `sales`); cero avisos nuevos en líneas cambiadas (`flake8`/`ruff`).
+**Deuda técnica / notas.** Contador no extraído a `shared/` (ADR decisión 7). Pedidos heredados con fecha fuera de todo período siguen con etiqueta provisional (limitación conocida); los cancelados heredados se numeran con `0008` (PLAN v2). Sin Contabilidad/sin período no se puede confirmar (decisión del usuario). Avisos de lint previos sin tocar (E501/E301 en archivos de `sales`); cero avisos nuevos en líneas cambiadas (`flake8`/`ruff`).
 
 **Verificación propia (no es el Quality Gate).** `ng lint` y `i18n:check` sin hallazgos; `ng build` compila; Karma de `features` y `core`: 1664 pruebas OK; backend: pruebas de `sales`, `reporting`, `customers`, `data_import`, `modularity`, `accounting` y las nuevas en verde en la corrida por módulos; suite completa del backend (`python manage.py test`, PostgreSQL): 2445 pruebas OK. Una primera corrida de la suite completa dio cientos de errores por ejecutarse a la vez que otra sobre la misma base de pruebas; repetida sola y con base propia, quedaron 3 fallos reales (dos pruebas de `sales` que esperaban la etiqueta antigua en la referencia del movimiento de inventario y la guarda `company_id` indexado del contador), corregidos y re-ejecutada la suite completa en verde. `0006` se regeneró antes de cualquier merge para indexar `company_id` del contador.
 

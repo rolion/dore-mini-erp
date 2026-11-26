@@ -29,4 +29,4 @@ El pedido pasa a tener un número `NV-000001` que se repite entre períodos fisc
 - El backend es la barrera: el 409 `fiscal_period_missing`/`fiscal_period_closed` lo impone el servidor; el frontend solo lo explica.
 
 ## Consecuencias
-Pedidos heredados sin número (cancelados antiguos o fuera de período) siguen mostrando la etiqueta provisional: deuda visual aceptada. Los textos nuevos van en `es`, `en` y `pt`.
+Pedidos heredados con fecha fuera de todo período siguen sin número y muestran la etiqueta provisional: deuda visual aceptada. Los textos nuevos van en `es`, `en` y `pt`.

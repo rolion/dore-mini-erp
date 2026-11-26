@@ -1,4 +1,4 @@
-# PLAN-2026-11-25-numeracion-correlativa-pedidos-venta (v1)
+# PLAN-2026-11-25-numeracion-correlativa-pedidos-venta (v2)
 
 **Task:** TASK-numeracion-correlativa-pedidos-venta · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-numeracion-correlativa-pedidos-venta-codigo-y-bloqueo · ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo
@@ -48,7 +48,7 @@ Al confirmar, el pedido recibe `(período fiscal, número)` del período que con
 - **AC-09** Si la confirmación falla después de numerar, el contador no avanza (el siguiente pedido recibe ese número).
 - **AC-10** `PlaceOrder` (creación + confirmación en un paso) y la importación de ventas numeran igual; en importación, una fecha sin período/cerrada rechaza solo esa fila con el mismo código.
 - **AC-11** El API de lista, detalle, vista previa de devolución, historial de compras del cliente y asientos automáticos usan el nuevo código; la descripción de la entrega incluye el período.
-- **AC-12** Migración de datos: pedidos ya confirmados quedan numerados por empresa y período en orden `created_at, id`; el contador queda en el máximo; los de fecha fuera de período y los cancelados heredados quedan sin número; la migración se puede repetir sin duplicar.
+- **AC-12** (v2) Migración de datos: pedidos ya confirmados quedan numerados por empresa y período en orden `created_at, id` (`0007`); los cancelados heredados con fecha dentro de un período reciben los siguientes números de su período (`0008`, aunque quizá nunca se confirmaron); el contador queda en el máximo; los NEW y los de fecha fuera de todo período quedan sin número; ambas migraciones se pueden repetir sin duplicar.
 - **AC-13** UI: lista y detalle muestran el código y, si hay número, el período; el 409 de período se explica en `alert-warning` sin perder lo escrito; textos en es/en/pt.
 
 ## Edge cases / Error cases
@@ -92,7 +92,7 @@ Compras (`NC-xxxxxx`); extraer el contador a `shared/`; búsqueda de pedidos por
 - Rollback: forzar fallo tras numerar y comprobar contador intacto (AC-09, INV-02).
 - API: 409 con ambos códigos, cuerpo con `number`/`fiscal_period`, vista previa de devolución (AC-05, AC-06, AC-11, API-01..03).
 - Importación de ventas: fila rechazada con el código del período (AC-10).
-- Migración de datos `0007` con datos sembrados antes de migrar: empresas, períodos (abierto/cerrado), fuera de período, cancelados, orden `created_at`, repetición idempotente (AC-12).
+- Migraciones de datos `0007` y `0008` con datos sembrados antes de migrar: empresas, períodos (abierto/cerrado), fuera de período, cancelados (los numera `0008`), orden `created_at`, repetición idempotente (AC-12).
 ## Concurrency tests (obligatorios, `TransactionTestCase` + hilos, PostgreSQL)
 - N≥8 confirmaciones simultáneas de pedidos distintos del mismo período → conjunto exacto `{1..N}`, sin duplicados ni huecos (AC-07, INV-01).
 - Confirmaciones simultáneas en dos períodos y en dos empresas → cada serie independiente y completa (INV-05).
@@ -135,7 +135,7 @@ Columnas `fiscal_period_id`, `fiscal_period_name`, `number` en el pedido; tabla 
 - **Backend aplicación:** `sales/application/ports.py` (puerto `OrderNumbering`), `commands.py` (`StartOrderPreparation`), `placement.py` (`PlaceOrder`), `sales/services.py` (composición y `ImportedSale.code`).
 - **Backend infraestructura:** `sales/infrastructure/django/models.py` (campos + `OrderNumberCounterModel`), `mappers.py`, `repositories.py`, `sales/infrastructure/adapters.py` (adaptador de numeración y descripción del asiento, línea 313).
 - **API:** `sales/api/serializers.py` (`code`, `number`, `fiscal_period`), `sales/api/views.py` (409).
-- **Migraciones:** `sales/migrations/0006_order_number_fields.py` (esquema), `0007_backfill_order_numbers.py` (datos).
+- **Migraciones:** `sales/migrations/0006_order_number_fields.py` (esquema), `0007_backfill_order_numbers.py` y `0008_backfill_cancelled_order_numbers.py` (datos).
 - **Frontend:** `features/sales/models/order.ts`, `services/orders-api.service.ts`, `pages/order-list`, `pages/order-detail`, `pages/order-create`, `assets/i18n/{es,en,pt}.json`; revisar `features/customers` (solo `code`).
 - **Tests:** `sales/tests/` (fakes, dominio, aplicación, API, repositorio, concurrencia nueva), fixture de período compartido para tests, ajustes en `accounting/tests`, `reporting/tests`, `modularity/tests`, `data_import` y specs de frontend que esperan `P-`.
 - **Docs:** `docs/architecture/ddd.md` solo si menciona el código del pedido (revisar); nota en el TASK.
@@ -162,3 +162,6 @@ Dos migraciones nuevas, nunca editar las aplicadas: `0006` aditiva (columnas nul
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-25): [Specification] AC-12 cambia tras aprobación explícita del usuario en el chat: los pedidos CANCELLED heredados también se numeran (migración `0008`, a continuación de la serie ya asignada por `0007`), en vez de quedar con la etiqueta provisional. Origen: el usuario vio en la lista pedidos cancelados antiguos sin `NV-`.
