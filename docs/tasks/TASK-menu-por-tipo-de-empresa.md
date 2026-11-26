@@ -1,6 +1,6 @@
 # TASK-menu-por-tipo-de-empresa: Tipo de empresa al registrarse: módulos iniciales y orden del menú
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-menu-por-tipo-de-empresa
@@ -14,6 +14,7 @@
 | 2026-11-26 | ARCHITECTURE → DESIGN | ADR escrito; falta el diseño del selector y del menú | delivery-start |
 | 2026-11-26 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PLAN v1 | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -85,7 +86,29 @@ Ver [ADR-menu-por-tipo-de-empresa-plantilla-inicial](../adr/ADR-menu-por-tipo-de
 Ver [PLAN-2026-11-26-menu-por-tipo-de-empresa](../plans/PLAN-2026-11-26-menu-por-tipo-de-empresa.md) (v1, COMPLETO, Specification READY).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** El registro exige `company_type` (`compraventa`, `servicios`, `odontologia`), lo guarda en `Company` y lo pasa como `profile` al puerto de defaults; la sección `modularity` habilita los módulos de la plantilla del tipo. El tipo viaja en `user.company.type` y el sidebar reordena `routes.json` con `arrangeRoutes`. Empresas existentes quedan `general` (migración `0003`, default).
+
+**Cobertura por parte.**
+- INV-01, AC-06: `accounts/models.py` (`CompanyType`, `company_type`, `REGISTRABLE_TYPES`), `migrations/0003_company_type.py`, admin con el tipo en solo lectura.
+- INV-02/03: `modularity/domain/company_types.py` + `modularity/tests/test_company_types.py` (dependencias, contenido y paridad con `accounts`).
+- AC-02/03/07: `shared/company_defaults/__init__.py` (`profile` en `ctx`), `modularity/infrastructure/defaults.py` (plantilla si hay perfil, snapshot si no).
+- AC-01/04: `RegisterSerializer.company_type` (ChoiceField de los tres públicos) y `UserSerializer.company.type`.
+- AC-05: `accounts/test_company_types.py` (habilitar y deshabilitar tras el alta).
+- AC-08/12: signup (`select` con ayuda variable, error de servidor bajo el campo) e i18n es/en/pt.
+- AC-09/10/11: `layout/sidebar/menu-layout.ts` (`arrangeRoutes`), `id` por ítem en `routes.json`, integración en `SidebarComponent`.
+- Docs: `CLAUDE.md` y `design-system.md` (sección 6).
+
+**Desviaciones respecto al plan.**
+- `arrangeRoutes` se aplica **después** de `visibleRoutes` (el plan decía antes): así, si Odontología no está habilitada, Cotizaciones queda como ítem propio y no se pierde el acceso. Se agregó el test correspondiente.
+- La prueba de integración de `data_import` registra con `compraventa` y habilita `costing` después: la valoración inicial es de Costeo, que ya no viene en todas las empresas.
+- Se copió `backend/.env` del repo principal al worktree (ignorado por git) por indicación del usuario, para poder correr las pruebas.
+
+**Deuda técnica / observaciones.** Dos listas deben mantenerse sincronizadas (`CompanyType` en `accounts` y `TEMPLATES` en `modularity`), protegidas por un test. «Productos» sigue visible en el catálogo de todos los tipos (fuera de alcance).
+
+**UI.** Pantalla de referencia: plantilla «Autenticación» (`signup`) con `form-select` ya usado en el sistema; sin componentes compartidos nuevos.
+
+**Verificación propia (no es el Quality Gate).** Frontend: `ng lint` limpio, `tsc` limpio, `i18n:check` 0 faltantes, 1866 pruebas Karma OK, `ng build` OK. Backend: `ruff` limpio en lo cambiado; `accounts`, `modularity` y `data_import` (238 pruebas) OK; suite completa en curso al escribir esta nota.
 
 ## Review
 _Pendiente_
