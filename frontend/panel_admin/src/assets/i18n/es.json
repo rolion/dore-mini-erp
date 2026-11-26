@@ -156,6 +156,7 @@
       "TEXT": "Ventas",
       "LIST": {
         "ORDERS": "Pedidos",
+        "INCOME_REPORT": "Ingresos por venta",
         "IMPORT": "Importar ventas",
         "SETTINGS": "Configuración"
       }
@@ -1988,6 +1989,26 @@
       "EVENT_SALE_PAYMENT": "Cobro de la venta",
       "REEMBOLSADO": "Reembolsado",
       "REEMBOLSO_REGISTRADO": "El reembolso quedó registrado: el dinero se devolvió fuera de PocketBiz."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Ingresos por venta",
+      "SUBTITLE": "Pedidos entregados y pagados",
+      "EXPORT_PDF": "Exportar PDF",
+      "EXPORT_EXCEL": "Exportar Excel",
+      "DATE_FROM": "Fecha inicio",
+      "DATE_TO": "Fecha fin",
+      "FISCAL_PERIOD": "Período fiscal",
+      "ALL_PERIODS": "Todos los períodos",
+      "RANGE_INVALID": "La fecha final no puede ser anterior a la inicial.",
+      "LOADING": "Cargando…",
+      "EMPTY": "Sin registros",
+      "COL_ORDER": "Pedido",
+      "COL_CUSTOMER": "Cliente",
+      "COL_TOTAL": "Total",
+      "COL_BALANCE": "Saldo",
+      "TOTALS": "Totales ({{count}} pedidos)",
+      "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
+      "EXPORT_TOO_LARGE": "El reporte tiene demasiados pedidos para exportar: acota las fechas o el período fiscal."
     }
   },
   "SERVICES": {

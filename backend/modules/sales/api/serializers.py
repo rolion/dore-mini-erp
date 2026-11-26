@@ -256,3 +256,23 @@ class OrderSummarySerializer(_CustomerMixin):
     total = _money()
     paid_total = _money()
     balance = _money()
+
+
+class PaidReportRowSerializer(serializers.Serializer):
+    """Fila del reporte «Ingresos por venta»: pedido, cliente, total y saldo."""
+
+    id = serializers.UUIDField(read_only=True)
+    code = serializers.CharField(read_only=True)
+    order_date = serializers.DateField(read_only=True)
+    customer = serializers.SerializerMethodField()
+    total = _money()
+    balance = _money()
+
+    def get_customer(self, obj):
+        if obj.customer_id is None or not self.context.get('customers_available', True):
+            return None
+        return {'id': obj.customer_id, 'name': self.context.get('customer_names', {}).get(obj.customer_id, '')}
+
+
+def paid_report_totals_data(totals) -> dict:
+    return {'orders_count': totals.orders_count, 'total': f'{totals.total:.2f}', 'balance': f'{totals.balance:.2f}'}

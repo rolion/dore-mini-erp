@@ -1,0 +1,119 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'SALES.PAID_REPORT.TITLE' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'SALES.PAID_REPORT.TITLE' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'SALES.PAID_REPORT.TITLE' | translate }}</strong></h2>
+                <small class="text-muted">{{ 'SALES.PAID_REPORT.SUBTITLE' | translate }}</small>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-testid="export-pdf"
+                  [disabled]="exporting !== null || !report?.count" (click)="export('pdf')">
+                  <i class="fas fa-file-pdf" aria-hidden="true"></i> {{ 'SALES.PAID_REPORT.EXPORT_PDF' | translate }}
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-testid="export-xlsx"
+                  [disabled]="exporting !== null || !report?.count" (click)="export('xlsx')">
+                  <i class="fas fa-file-excel" aria-hidden="true"></i> {{ 'SALES.PAID_REPORT.EXPORT_EXCEL' | translate }}
+                </button>
+              </div>
+            </div>
+
+            <form class="row g-2 align-items-end m-2" [formGroup]="filterForm" (ngSubmit)="applyFilters()" data-testid="filters">
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="form-label" for="report-date-from">{{ 'SALES.PAID_REPORT.DATE_FROM' | translate }}</label>
+                <input id="report-date-from" type="date" class="form-control" formControlName="dateFrom" (change)="applyFilters()" />
+              </div>
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="form-label" for="report-date-to">{{ 'SALES.PAID_REPORT.DATE_TO' | translate }}</label>
+                <input id="report-date-to" type="date" class="form-control" formControlName="dateTo" (change)="applyFilters()" />
+              </div>
+              @if (periods.length) {
+              <div class="col-12 col-sm-6 col-lg-3">
+                <label class="form-label" for="report-period">{{ 'SALES.PAID_REPORT.FISCAL_PERIOD' | translate }}</label>
+                <select id="report-period" class="form-select" formControlName="fiscalPeriodId" (change)="applyFilters()">
+                  <option value="">{{ 'SALES.PAID_REPORT.ALL_PERIODS' | translate }}</option>
+                  @for (period of periods; track period.id) {
+                  <option [value]="period.id">{{ period.name }}</option>
+                  }
+                </select>
+              </div>
+              }
+              <div class="col-12 col-sm-6 col-lg-3">
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!hasFilters" (click)="clearFilters()">
+                  {{ 'COMMON.LIMPIAR_FILTROS' | translate }}
+                </button>
+              </div>
+            </form>
+
+            @if (rangeInvalid) {
+            <div class="alert alert-warning m-2" role="alert" data-testid="range-error">{{ 'SALES.PAID_REPORT.RANGE_INVALID' | translate }}</div>
+            }
+            @if (exportError) {
+            <div class="alert alert-danger m-2" role="alert" data-testid="export-error">{{ exportError }}</div>
+            }
+
+            @if (loading && !report) {
+            <p class="m-3 text-muted" data-testid="loading" role="status">{{ 'SALES.PAID_REPORT.LOADING' | translate }}</p>
+            } @else if (errorMessage) {
+            <div class="alert alert-danger m-2 d-flex justify-content-between align-items-center" role="alert" data-testid="error">
+              <span>{{ errorMessage }}</span>
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            } @else if (report && !report.count) {
+            <p class="m-3 text-muted" data-testid="empty">{{ 'SALES.PAID_REPORT.EMPTY' | translate }}</p>
+            } @else if (report) {
+            <div class="table-responsive m-2">
+              <table class="table table-hover align-middle" data-testid="report-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'SALES.PAID_REPORT.COL_ORDER' | translate }}</th>
+                    <th scope="col">{{ 'SALES.PAID_REPORT.COL_CUSTOMER' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'SALES.PAID_REPORT.COL_TOTAL' | translate }}</th>
+                    <th scope="col" class="text-end">{{ 'SALES.PAID_REPORT.COL_BALANCE' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of report.rows; track row.id) {
+                  <tr data-testid="report-row">
+                    <td><a class="fw-semibold" [routerLink]="['/pocketbiz/sales/orders', row.id]">{{ row.code }}</a></td>
+                    <td>{{ row.customerName ?? '—' }}</td>
+                    <td class="text-end">{{ row.total | money }}</td>
+                    <td class="text-end">{{ row.balance | money }}</td>
+                  </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="fw-bold" data-testid="report-totals">
+                    <td colspan="2">{{ 'SALES.PAID_REPORT.TOTALS' | translate: { count: report.totals.ordersCount } }}</td>
+                    <td class="text-end">{{ report.totals.total | money }}</td>
+                    <td class="text-end">{{ report.totals.balance | money }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center m-2 gap-2">
+              <small class="text-muted" data-testid="summary" tabindex="-1">
+                {{ 'SALES.PAID_REPORT.SHOWING' | translate: { from: from, to: to, total: report.count } }}
+              </small>
+              <ngb-pagination [collectionSize]="report.count" [pageSize]="pageSize" [page]="page" [maxSize]="5"
+                [boundaryLinks]="true" (pageChange)="changePage($event)" />
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

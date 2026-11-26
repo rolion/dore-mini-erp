@@ -1,0 +1,75 @@
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { provideTestTranslations } from '../../../core/i18n/testing';
+import { PaidReportApiService } from './paid-report-api.service';
+
+const FILTERS = { dateFrom: '2026-01-01', dateTo: '2026-03-31', fiscalPeriodId: 'p1' };
+
+describe('PaidReportApiService', () => {
+  let service: PaidReportApiService;
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting()] });
+    service = TestBed.inject(PaidReportApiService);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('sends filters and paging as query params and maps the page (AC-02, AC-03, AC-04)', () => {
+    let result: unknown;
+    service.list(FILTERS, 2, 10).subscribe((page) => (result = page));
+    const req = http.expectOne((r) => r.url.endsWith('/orders/paid-report/'));
+    expect(req.request.params.get('date_from')).toBe('2026-01-01');
+    expect(req.request.params.get('date_to')).toBe('2026-03-31');
+    expect(req.request.params.get('fiscal_period_id')).toBe('p1');
+    expect(req.request.params.get('page')).toBe('2');
+    expect(req.request.params.get('page_size')).toBe('10');
+    req.flush({
+      count: 1,
+      results: [{ id: 'o1', code: 'PED-1', order_date: '2026-02-01', customer: { id: 'c1', name: 'Ana' }, total: '10.00', balance: '0.00' }],
+      totals: { orders_count: 1, total: '10.00', balance: '0.00' },
+    });
+    expect(result).toEqual({
+      count: 1,
+      rows: [{ id: 'o1', code: 'PED-1', orderDate: '2026-02-01', customerName: 'Ana', total: '10.00', balance: '0.00' }],
+      totals: { ordersCount: 1, total: '10.00', balance: '0.00' },
+    });
+  });
+
+  it('omits empty filters', () => {
+    service.list({ dateFrom: '', dateTo: '', fiscalPeriodId: '' }, 1, 10).subscribe();
+    const req = http.expectOne((r) => r.url.endsWith('/orders/paid-report/'));
+    expect(req.request.params.has('date_from')).toBeFalse();
+    expect(req.request.params.has('fiscal_period_id')).toBeFalse();
+    req.flush({ count: 0, results: [], totals: { orders_count: 0, total: '0.00', balance: '0.00' } });
+  });
+
+  it('turns a server error into an Error with its message', () => {
+    let message = '';
+    service.list(FILTERS, 1, 10).subscribe({ error: (err: Error) => (message = err.message) });
+    http.expectOne((r) => r.url.endsWith('/orders/paid-report/')).flush({ date_to: ['Rango inválido.'] }, { status: 400, statusText: 'Bad' });
+    expect(message).toBe('Rango inválido.');
+  });
+
+  it('downloads each format as a blob with the same filters (AC-05)', () => {
+    for (const format of ['pdf', 'xlsx'] as const) {
+      let blob: Blob | undefined;
+      service.export(format, FILTERS).subscribe((b) => (blob = b));
+      const req = http.expectOne((r) => r.url.endsWith(`/orders/paid-report/export/${format}/`));
+      expect(req.request.responseType).toBe('blob');
+      expect(req.request.params.get('fiscal_period_id')).toBe('p1');
+      req.flush(new Blob(['x']));
+      expect(blob).toBeDefined();
+    }
+  });
+
+  it('reports the row limit on a 400 export', () => {
+    let error: unknown;
+    service.export('pdf', FILTERS).subscribe({ error: (err: unknown) => (error = err) });
+    http.expectOne((r) => r.url.includes('/export/pdf/')).error(new ProgressEvent('x'), { status: 400 } as Partial<HttpErrorResponse>);
+    expect((error as Error).message).toContain('demasiados pedidos');
+  });
+});

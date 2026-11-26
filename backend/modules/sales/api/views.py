@@ -1,6 +1,8 @@
 from uuid import UUID
 
 from django.db import transaction
+from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.response import Response
@@ -23,7 +25,7 @@ from modules.sales.application.delivery import PreviewOrderDelivery
 from modules.sales.application.placement import PlaceOrder
 from modules.sales.application.returns import PreviewOrderReturn, ReturnOrder
 from modules.sales.application.ports import Actor
-from modules.sales.application.queries import GetOrder, ListOrders
+from modules.sales.application.queries import GetOrder, ListOrders, PaidOrdersReport
 from modules.sales.domain.exceptions import (
     InsufficientStockForDelivery,
     OrderItemNotFound,
@@ -46,6 +48,14 @@ from shared.tenancy import company_id_from
 
 from .filters import parse_order_filters
 from .pagination import OrderPagination
+from .report_export import (
+    MAX_EXPORT_ROWS,
+    PDF_CONTENT_TYPE,
+    XLSX_CONTENT_TYPE,
+    build_pdf,
+    build_xlsx,
+    report_rows,
+)
 from .serializers import (
     CancelSerializer,
     DeliverSerializer,
@@ -57,8 +67,10 @@ from .serializers import (
     OrderSerializer,
     OrderStartSerializer,
     OrderSummarySerializer,
+    PaidReportRowSerializer,
     PaymentInputSerializer,
     delivery_preview_data,
+    paid_report_totals_data,
     quantity_text,
     return_preview_data,
 )
@@ -329,3 +341,62 @@ class OrderPaymentView(APIView):
         use_case = RegisterPayment(_repository(request), SystemClock(), _posting(request))
         order = _run(use_case, order_id=order_id, actor=_actor(request), **data)
         return _order_response(request, order, status.HTTP_200_OK if use_case.replayed else status.HTTP_201_CREATED)
+
+
+def _paid_report_filters(request):
+    """Solo fechas y período fiscal: el estado y el pago los fija el reporte (no son filtros de la persona)."""
+    filters = parse_order_filters({key: request.query_params.get(key) for key in
+                                   ('date_from', 'date_to', 'fiscal_period_id')})
+    return filters
+
+
+class PaidOrdersReportView(APIView):
+    """Reporte «Ingresos por venta»: pedidos entregados y pagados, paginado, con totales del conjunto filtrado."""
+
+    required_modules = ('sales',)
+
+    def get(self, request):
+        report = _run(PaidOrdersReport(_repository(request)), mutates=False, filters=_paid_report_filters(request))
+        paginator = OrderPagination()
+        page = paginator.paginate_queryset(report.orders, request, view=self)
+        context = _customer_context(request, {o.customer_id for o in page if o.customer_id})
+        response = paginator.get_paginated_response(PaidReportRowSerializer(page, many=True, context=context).data)
+        response.data['totals'] = paid_report_totals_data(report.totals)
+        return response
+
+
+class PaidOrdersReportExportView(APIView):
+    """Descarga el reporte completo (sin paginar) con los mismos filtros, en `xlsx` o `pdf`."""
+
+    required_modules = ('sales',)
+
+    def get(self, request, file_format):
+        if file_format not in ('xlsx', 'pdf'):
+            raise NotFound('Formato no disponible.')
+        filters = _paid_report_filters(request)
+        report = _run(PaidOrdersReport(_repository(request)), mutates=False, filters=filters)
+        if report.totals.orders_count > MAX_EXPORT_ROWS:
+            raise ValidationError({'detail': [
+                f'El reporte tiene más de {MAX_EXPORT_ROWS} pedidos: acote las fechas o el período fiscal.']})
+        summaries = list(report.orders)
+        context = _customer_context(request, {o.customer_id for o in summaries if o.customer_id})
+        rows = report_rows(summaries, context['customer_names'], context['customers_available'])
+        today = timezone.localdate()
+        if file_format == 'xlsx':
+            content, content_type = build_xlsx(rows, report.totals), XLSX_CONTENT_TYPE
+        else:
+            content, content_type = build_pdf(rows, report.totals, _filters_text(filters), today), PDF_CONTENT_TYPE
+        response = HttpResponse(content, content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="ingresos-por-venta-{today.isoformat()}.{file_format}"'
+        return response
+
+
+def _filters_text(filters) -> str:
+    parts = []
+    if filters.date_from:
+        parts.append(f'Desde {filters.date_from.strftime("%d/%m/%Y")}')
+    if filters.date_to:
+        parts.append(f'Hasta {filters.date_to.strftime("%d/%m/%Y")}')
+    if filters.fiscal_period_id:
+        parts.append('Período fiscal seleccionado')
+    return ' · '.join(parts) or 'Todos los pedidos pagados hasta la fecha'

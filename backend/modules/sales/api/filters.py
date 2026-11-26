@@ -67,6 +67,7 @@ def parse_order_filters(params) -> OrderFilters:
         return raw == 'true'
 
     read('date_field', choice((ORDER_DATE, EXPECTED_DELIVERY_DATE)))
+    read('fiscal_period_id', lambda raw: UUID(raw))
     read('has_balance', boolean)
     read('ordering', choice((NEWEST_FIRST, BY_EXPECTED_DELIVERY)))
 
@@ -84,5 +85,6 @@ def parse_order_filters(params) -> OrderFilters:
         date_from=values.get('date_from'),
         date_to=values.get('date_to'),
         has_balance=values.get('has_balance'),
+        fiscal_period_id=values.get('fiscal_period_id'),
         ordering=values.get('ordering', NEWEST_FIRST),
     )
