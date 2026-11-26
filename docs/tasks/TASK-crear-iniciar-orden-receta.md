@@ -1,6 +1,6 @@
 # TASK-crear-iniciar-orden-receta: Crear e iniciar una orden de producción desde una receta
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-iniciar-orden-receta (base: `produccion`)
@@ -14,6 +14,7 @@
 | 2026-11-26 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto contra `produccion` | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa del plan v1 | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS (3 Low: REV-03 resuelto, REV-01 y REV-02 abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -91,7 +92,7 @@ Plan v1 implementado sin cambios de Specification.
 **Deuda técnica:** ninguna nueva; las recetas activas del formulario se buscan con `page_size=20` y búsqueda por texto.
 
 ## Review
-_Pendiente_
+**PASS** (subagente aislado). Backend: suite completa 2577 OK; 413 OK en production/modularity/accounts/boundaries/inventory; `makemigrations --check` limpio; ruff/flake8 sin avisos nuevos; bandit sin hallazgos. Frontend: lint, `i18n:check` (2609 claves, 0 faltantes), 1911/1911 pruebas y build OK. Hallazgos Low: [REV-01](../reviews/REV-2026-11-26-crear-iniciar-orden-receta-01.md) (EDGE-01 sin prueba concurrente), [REV-02](../reviews/REV-2026-11-26-crear-iniciar-orden-receta-02.md) (aserciones débiles AC-04/AC-05), [REV-03](../reviews/REV-2026-11-26-crear-iniciar-orden-receta-03.md) (nota de ddd.md; resuelto). Revisión visual en navegador: **no verificada**.
 
 ## Publicación
-_Pendiente_
+PR #131 listo para aprobación humana (base `produccion`, no se mergea). Cambio con impacto arquitectónico (ADR: nueva dependencia Producción → Inventario, cambio de `requires`, migración).
