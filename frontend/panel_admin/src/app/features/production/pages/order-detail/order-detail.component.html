@@ -107,7 +107,7 @@
       <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.LOT' | translate }}</dt>
       <dd class="col-sm-9" data-testid="lot-code">{{ order.lot?.code }}</dd>
       <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.COST' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="cost">{{ order.costTotal ?? ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</dd>
+      <dd class="col-sm-9" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</dd>
     </dl>
   </section>
   }

@@ -56,7 +56,7 @@ La orden llega a En preparación y no avanza (`production_order.py:106-111`).
 - EDGE-01: consumo 0 de un ingrediente → no genera salida para esa línea.
 - EDGE-02: todos los consumos en 0 → permitido (S3), el lote entra con costo total 0 / sin costo.
 - EDGE-03: dos envíos concurrentes → uno gana (bloqueo de la orden), el otro 409.
-- EDGE-04: almacén desactivado tras iniciar → la operación procede solo si el almacén existe en la empresa (S5).
+- EDGE-04: almacén desactivado tras iniciar → Inventario lo rechaza (400, sin cambios), igual que al iniciar la orden (S5, ajustado tras REV-02).
 - EDGE-05: producto/ingrediente que ya no controla stock → error por línea (lo informa Inventario).
 
 ## Authorization / permissions
@@ -81,7 +81,7 @@ Liberar el lote, empaque, deshacer/cancelar la producción, asientos contables, 
 - S2: sin Costeo/valoración o sin promedio no se bloquea; costo vacío.
 - S3: se permiten consumos 0 y rendimiento real distinto al previsto sin justificación.
 - S4: fecha de ingreso ≥ inicio y no futura (tolerancia 5 min).
-- S5: el almacén solo debe existir en la empresa al pasar a refrigeración.
+- S5: el almacén debe seguir activo al pasar a refrigeración; si no, Inventario rechaza la operación sin cambios (ajustado: antes decía «solo debe existir»).
 - S6: el lote toma la fecha local de `entered_at`; requiere período fiscal abierto.
 - S7: no se generan asientos contables.
 

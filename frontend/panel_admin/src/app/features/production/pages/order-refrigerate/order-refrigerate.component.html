@@ -38,12 +38,13 @@
       @if (server.ingredients) { <small class="text-danger d-block" data-testid="ingredients-error">{{ server.ingredients }}</small> }
       <ul class="list-unstyled line-cards" formArrayName="lines" data-testid="lines">
         @for (line of order.ingredients; track line.productId; let i = $index) {
-        <li class="card line-card" [class.short-row]="shortageOf(line.productId)" data-testid="line">
+        <li class="card line-card" [class.short-row]="shortageOf(line.productId) || server.ingredientLines?.[i]" data-testid="line">
           <div class="fw-bold">{{ line.productName }}</div>
           <div class="text-muted">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}: {{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</div>
           <label class="mt-2" [for]="'line-' + i">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }} ({{ line.unitAbbreviation || '—' }})</label>
           <input [id]="'line-' + i" class="form-control" type="text" inputmode="decimal" [formControlName]="i" data-testid="line-input">
           @if (lineInvalid(i)) { <small class="text-danger d-block" data-testid="line-error">{{ 'PRODUCTION.ORDERS.REFRIGERATE.QUANTITY_INVALID' | translate }}</small> }
+          @if (server.ingredientLines?.[i]; as lineError) { <small class="text-danger d-block" role="alert" data-testid="line-server-error">{{ lineError }}</small> }
           @if (shortageOf(line.productId); as short) {
           <small class="text-danger d-block" role="alert" data-testid="shortage">{{ 'PRODUCTION.ORDERS.REFRIGERATE.MISSING' | translate: { missing: quantity(short.missing), unit: short.unitAbbreviation || '', available: quantity(short.available) } }}</small>
           }

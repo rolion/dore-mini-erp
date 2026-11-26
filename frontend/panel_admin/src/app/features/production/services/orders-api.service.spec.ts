@@ -113,6 +113,16 @@ describe('OrdersApiService', () => {
       recipeId: 'Receta no válida.', warehouseId: 'Almacén no válido.', preparations: 'Debe ser mayor que cero.' }));
   });
 
+  it('keeps per-line ingredient errors aligned with the rows', () => {
+    let failure: OrderApiError | undefined;
+    api.refrigerate('order-1', { enteredAt: '2026-11-26T15:00:00.000Z', actualOutput: '118', ingredients: [] })
+      .subscribe({ error: (error: OrderApiError) => failure = error });
+    http.expectOne('/api/production-orders/order-1/refrigerate/').flush(
+      { ingredients: [{}, { actual_quantity: ['El ingrediente no controla stock.'] }] }, { status: 400, statusText: 'Bad Request' });
+    expect(failure?.fields.ingredientLines).toEqual([undefined, 'El ingrediente no controla stock.']);
+    expect(failure?.fields.ingredients).toBeUndefined();
+  });
+
   it('reports a conflict on a repeated start with the server detail', () => {
     let failure: OrderApiError | undefined;
     api.start('order-1').subscribe({ error: (error: OrderApiError) => failure = error });

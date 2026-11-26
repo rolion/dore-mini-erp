@@ -46,15 +46,22 @@ function fieldErrors(body: unknown): OrderFieldErrors {
     recipeId: text(record['recipe_id']), warehouseId: text(record['warehouse_id']),
     preparations: text(record['preparations']), detail: text(record['detail']),
     actualOutput: text(record['actual_output']), enteredAt: text(record['entered_at']),
-    ingredients: ingredientsText(record['ingredients']), code: typeof record['code'] === 'string' ? record['code'] : undefined,
+    ingredients: ingredientsText(record['ingredients']), ingredientLines: ingredientLines(record['ingredients']), code: typeof record['code'] === 'string' ? record['code'] : undefined,
   };
 }
 
-/** Errores de `ingredients`: texto suelto o, por línea, los de `actual_quantity`. */
+/** Errores de `ingredients` que no son de una línea: texto suelto o mensajes sueltos de la lista. */
 function ingredientsText(value: unknown): string | undefined {
   if (!Array.isArray(value)) return text(value);
-  const messages = value.map(item => (item && typeof item === 'object' ? text((item as Record<string, unknown>)['actual_quantity']) : text(item)));
+  const messages = value.filter(item => typeof item === 'string').map(item => text(item));
   return messages.filter((message): message is string => !!message).join(' ') || undefined;
+}
+
+/** Errores por línea (`actual_quantity`) en el orden de la lista; `undefined` si ninguna tiene error. */
+function ingredientLines(value: unknown): (string | undefined)[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const lines = value.map(item => (item && typeof item === 'object' ? text((item as Record<string, unknown>)['actual_quantity']) : undefined));
+  return lines.some(message => !!message) ? lines : undefined;
 }
 
 function shortagesOf(body: unknown): OrderShortage[] {

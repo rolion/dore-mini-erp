@@ -14,6 +14,7 @@
 | 2026-11-26 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: transacción entre Producción, Inventario y Costeo | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
+| 2026-11-26 | REVIEW → ENGINEERING → REVIEW | Quality Gate 1 PASS con hallazgos menores; REV-01..03 corregidos | delivery-publish / delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,7 @@ Atomicidad entre tres módulos (todo en un `transaction.atomic`); doble clic/rei
 **Deuda técnica:** `test_order_api.py` crece (no se separó la clase para no duplicar el `setUp`).
 
 ## Review
-_Pendiente_
+Quality Gate ciclo 1: PASS con observaciones (REV-01 Low, REV-02 Medium, REV-03 Low). Los tres se corrigieron en `delivery-build` (ver «Resolución» en cada REV); se repite el gate sobre el estado final.
 
 ## Publicación
 _Pendiente_

@@ -114,7 +114,7 @@ class OrderListCreateView(APIView):
     def get(self, request):
         status = request.query_params.get('status', 'all')
         if status != 'all' and status not in OrderStatus.ALL:
-            raise ValidationError({'status': ['Usa all, draft o in_preparation.']})
+            raise ValidationError({'status': ['Usa all, draft, in_preparation o refrigerating.']})
         orders = _orders(request).repository.list(status=status)
         paginator = RecipePagination()
         page = paginator.paginate_queryset(orders, request, view=self)

@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 import { tr } from '../../../../core/i18n/translate';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { OrderApiError, ProductionOrder, formatOrderNumber } from '../../models/order';
 import { formatQuantity } from '../../models/recipe';
 import { OrdersApiService } from '../../services/orders-api.service';
@@ -16,7 +17,7 @@ export const COMPACT_QUERY = '(max-width: 956.98px)';
 
 @Component({
   selector: 'app-order-detail',
-  imports: [TranslatePipe, RouterLink, DatePipe, NgTemplateOutlet],
+  imports: [TranslatePipe, RouterLink, DatePipe, NgTemplateOutlet, MoneyPipe],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.scss',
 })

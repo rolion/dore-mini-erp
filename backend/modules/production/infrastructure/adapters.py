@@ -55,6 +55,7 @@ class InventoryStock:
 
     def consume(self, order: ProductionOrder, lines: list[tuple[UUID, Decimal]], when: datetime,
                 actor: Actor) -> None:
+        self._check_lines(order, lines)
         try:
             inventory_services.record_outputs(
                 self.company_id, warehouse_id=order.warehouse_id, lines=lines, source_type=SOURCE_TYPE,
@@ -70,6 +71,25 @@ class InventoryStock:
             raise OrderValidationError({'non_field_errors': [m for msgs in exc.errors.values() for m in msgs]}) from exc
         except inventory_services.MovementConflict as exc:
             raise RefrigerationRejected(exc.code, str(exc)) from exc
+
+    def _check_lines(self, order: ProductionOrder, lines: list[tuple[UUID, Decimal]]) -> None:
+        """Errores por línea (en el orden de la orden): ingredientes sin control de stock o sin fracciones."""
+        quantities = dict(lines)
+        tracked = inventory_services.get_stock_products(self.company_id, list(quantities))
+        errors: list[dict] = []
+        for line in order.ingredients:
+            quantity = quantities.get(line.product_id)
+            product = tracked.get(line.product_id)
+            if quantity is None:
+                errors.append({})
+            elif product is None:
+                errors.append({'actual_quantity': ['El ingrediente no controla stock.']})
+            elif not product.allows_fractions and quantity != quantity.to_integral_value():
+                errors.append({'actual_quantity': ['Este ingrediente solo admite cantidades enteras.']})
+            else:
+                errors.append({})
+        if any(errors):
+            raise OrderValidationError({'ingredients': errors})
 
     def enter_lot(self, order: ProductionOrder, quantity: Decimal, when: datetime, actor: Actor) -> LotView:
         try:

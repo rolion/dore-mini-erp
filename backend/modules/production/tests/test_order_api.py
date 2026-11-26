@@ -382,6 +382,72 @@ class OrderApiTests(APITestCase):
             inventory_services.reverse_movement(
                 self.company.id, movement.id, user_id=None, user_name='ana', reason='Prueba', manual_only=True)
 
+    def test_refrigerate_rejects_fractions_for_whole_units(self):  # INV-02
+        self.prepare_stock()
+        order = self.started_order()
+        response = self.refrigerate(order, output='118.5')  # el granel se cuenta en unidades enteras
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertIn('actual_output', response.json())
+        self.assertEqual(self.client.get(f"{URL}{order['id']}/").json()['status'], 'in_preparation')
+        egg = self.product('Huevo', self.unit)
+        ProductModel.objects.filter(pk=egg.pk).update(tracks_stock=True)
+        inventory_services.record_movement(
+            self.company.id, product_id=egg.id, warehouse_id=self.warehouse.id, kind='in', quantity=Decimal('50'),
+            user_id=self.user.id, user_name='prod-admin', reference='Seed')
+        recipe = self.create(name='Con huevo', ingredients=[
+            {'product_id': str(egg.id), 'unit_id': str(self.unit.id), 'quantity': '2'}])
+        eggs = self.make_order(recipe_id=recipe['id'])
+        self.assertEqual(self.client.post(f"{URL}{eggs['id']}/start/").status_code, 200)
+        before = self.stock_snapshot()
+        response = self.client.post(
+            f"{URL}{eggs['id']}/refrigerate/",
+            {'entered_at': timezone.now().isoformat(), 'actual_output': '118',
+             'ingredients': [{'product_id': str(egg.id), 'actual_quantity': '9.5'}]}, format='json')
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json()['ingredients'],
+                         [{'actual_quantity': ['Este ingrediente solo admite cantidades enteras.']}])
+        self.assertEqual(self.stock_snapshot(), before)
+
+    def test_refrigerate_flags_the_line_of_an_ingredient_without_stock_control(self):  # EDGE-05
+        self.prepare_stock()
+        ProductModel.objects.filter(pk=self.flour.pk).update(tracks_stock=False)
+        order = self.started_order()
+        before = self.stock_snapshot()
+        response = self.refrigerate(order)
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json()['ingredients'],
+                         [{}, {'actual_quantity': ['El ingrediente no controla stock.']}])
+        self.assertEqual(self.stock_snapshot(), before)
+
+    def test_refrigerate_with_a_deactivated_warehouse_changes_nothing(self):  # EDGE-04, S5
+        self.prepare_stock()
+        order = self.started_order()
+        before = self.stock_snapshot()
+        WarehouseModel.objects.filter(pk=self.warehouse.pk).update(active=False)
+        response = self.refrigerate(order)
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(self.stock_snapshot(), before)
+        self.assertEqual(self.client.get(f"{URL}{order['id']}/").json()['status'], 'in_preparation')
+
+    def test_refrigerate_without_average_cost_keeps_cost_empty(self):  # AC-05, INV-07, S2
+        self.prepare_stock()
+        CompanyModuleModel.objects.create(company_id=self.company.id, module_key='costing')
+        lines = parse_lines([
+            {'product_id': self.cheese.id, 'reconciled_quantity': '20', 'total_value': '200.00',
+             'declared_zero': False, 'source': None}])  # el almidón no tiene costo promedio
+        DjangoAdoptionRepository(self.company.id).save(
+            ValuationAdoption.adopt(uuid4(), timezone.now(), None, 'ana', lines))
+        order = self.started_order()
+        response = self.refrigerate(order)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(response.json()['cost_total'])
+        self.assertEqual(costing_services.get_average_costs(self.company.id, [self.result.id]), {})
+
+    def test_list_filter_message_names_refrigerating(self):  # AC-09
+        response = self.client.get(URL, {'status': 'x'})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('refrigerating', response.json()['status'][0])
+
 
 class OrderNumberConcurrencyTests(TransactionTestCase):
     """EDGE-01: creaciones simultáneas (hilos y conexiones reales) no repiten ni saltan números."""
@@ -411,3 +477,59 @@ class OrderNumberConcurrencyTests(TransactionTestCase):
             thread.join(timeout=30)
         self.assertEqual(errors, [])
         self.assertEqual(sorted(numbers), list(range(1, self.THREADS + 1)))
+
+
+class OrderRefrigerateConcurrencyTests(TransactionTestCase):
+    """EDGE-03: dos envíos simultáneos (hilos y conexiones reales): uno gana, el otro recibe 409, sin duplicar."""
+
+    def test_two_simultaneous_submissions_register_once(self):
+        from rest_framework.test import APIClient
+        company = make_company('Producción Carrera')
+        user = make_admin(company, username='carrera-admin')
+        CompanySettingsModel.objects.create(company_id=company.id)
+        CompanyModuleModel.objects.create(company_id=company.id, module_key='production')
+        unit = UnitModel.objects.create(company_id=company.id, name='Unidad', abbreviation='u')
+        kilo = UnitModel.objects.create(company_id=company.id, name='Kilogramo', abbreviation='kg',
+                                        allows_fractions=True)
+        make = lambda name, base: ProductModel.objects.create(  # noqa: E731
+            company_id=company.id, name=name, base_unit=base, sale_price=Decimal('1.00'), tracks_stock=True)
+        result, cheese = make('Cuñapé', unit), make('Queso', kilo)
+        warehouse = WarehouseModel.objects.create(company_id=company.id, name='Central', is_default=True)
+        open_test_period(company.id)
+        inventory_services.record_movement(
+            company.id, product_id=cheese.id, warehouse_id=warehouse.id, kind='in', quantity=Decimal('20'),
+            user_id=user.id, user_name='carrera-admin', reference='Seed')
+        client = APIClient()
+        authenticate(client, user)
+        recipe = client.post('/api/recipes/', {
+            'name': 'Q', 'result_product_id': str(result.id), 'yield_quantity': '24',
+            'ingredients': [{'product_id': str(cheese.id), 'unit_id': str(kilo.id), 'quantity': '1.5'}]},
+            format='json').json()
+        order = client.post(URL, {'recipe_id': recipe['id'], 'warehouse_id': str(warehouse.id), 'preparations': 5},
+                            format='json').json()
+        client.post(f"{URL}{order['id']}/start/")
+        payload = {'entered_at': timezone.now().isoformat(), 'actual_output': '118',
+                   'ingredients': [{'product_id': str(cheese.id), 'actual_quantity': '7.5'}]}
+        barrier, statuses = Barrier(2), []
+
+        def submit():
+            try:
+                worker = APIClient()
+                authenticate(worker, user)
+                barrier.wait(timeout=10)
+                statuses.append(worker.post(f"{URL}{order['id']}/refrigerate/", payload, format='json').status_code)
+            except Exception as exc:  # pragma: no cover - se informa en la aserción
+                statuses.append(repr(exc))
+            finally:
+                connection.close()
+
+        threads = [Thread(target=submit) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=60)
+        self.assertEqual(sorted(statuses), [200, 409])
+        self.assertEqual(StockLotModel.objects.filter(company_id=company.id).count(), 1)
+        self.assertEqual(StockMovementModel.objects.filter(company_id=company.id, source_type='production_order')
+                         .count(), 2)  # una salida de queso y una entrada del lote
+        self.assertEqual(inventory_services.get_balance(company.id, cheese.id, warehouse.id), Decimal('12.5'))

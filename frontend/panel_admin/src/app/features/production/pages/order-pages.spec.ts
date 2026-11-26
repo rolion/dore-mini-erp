@@ -136,6 +136,17 @@ describe('OrderDetailComponent', () => {
     expect(root.querySelector('[data-testid="actual-quantity"]')?.textContent).toContain('7 kg');
   });
 
+  it('formats the total cost as money when there is one', () => {  // REV-03
+    const costed: ProductionOrder = {
+      ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
+      lot: { id: 'lot-1', code: 'L-20261126-0001' }, costTotal: '95.00',
+      ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
+    };
+    TestBed.resetTestingModule();
+    const root = setup(costed).nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('Bs 95.00');
+  });
+
   it('below 957 px shows label|value rows and ingredient cards', () => {
     const fixture = setup(order, true);
     const root = fixture.nativeElement as HTMLElement;
@@ -385,6 +396,19 @@ describe('OrderRefrigerateComponent', () => {
     expect(inputs(root).line.value).toBe('9');
     expect(router.navigate).not.toHaveBeenCalled();
     expect(fixture.componentInstance.saving).toBeFalse();
+  });
+
+  it('marks the row the server flagged and keeps what was typed', () => {  // REV-03
+    const fixture = setup();
+    const root = fixture.nativeElement as HTMLElement;
+    type(inputs(root).line, '9.5');
+    api.refrigerate.and.returnValue(throwError(() => new OrderApiError('x', 400, {
+      ingredientLines: ['Este ingrediente solo admite cantidades enteras.'] })));
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(root.querySelector('[data-testid="line-server-error"]')?.textContent).toContain('solo admite cantidades enteras');
+    expect(root.querySelector('.short-row')).not.toBeNull();
+    expect(inputs(root).line.value).toBe('9.5');
   });
 
   it('leaves for the detail when the order is not in preparation', () => {

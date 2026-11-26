@@ -108,6 +108,8 @@ export interface OrderFieldErrors {
   actualOutput?: string;
   enteredAt?: string;
   ingredients?: string;
+  /** Error por línea de `ingredients` (mismo orden que las filas de la orden; `undefined` = sin error). */
+  ingredientLines?: (string | undefined)[];
   /** Código del 409 (`insufficient_stock`, `fiscal_period_missing`…). */
   code?: string;
   recipeId?: string;
