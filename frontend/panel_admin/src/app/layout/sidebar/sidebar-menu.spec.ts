@@ -41,6 +41,8 @@ describe('Sidebar menu (routes.json)', () => {
     expect(purchases.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/purchases',
       '/pocketbiz/purchases/suppliers',
+      '/pocketbiz/purchases/reports/paid',
+      '/pocketbiz/purchases/reports/payable',
       '/pocketbiz/purchases/settings',
     ]);
     expect(purchases.submenu[0].title).toBe('MENUITEMS.PURCHASES.LIST.PURCHASES');
@@ -104,7 +106,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(51);
+    expect(titles.length).toBe(53);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

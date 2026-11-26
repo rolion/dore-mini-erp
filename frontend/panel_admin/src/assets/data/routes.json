@@ -252,6 +252,28 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/purchases/reports/paid",
+          "title": "MENUITEMS.PURCHASES.LIST.PAID_REPORT",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/purchases/reports/payable",
+          "title": "MENUITEMS.PURCHASES.LIST.PAYABLE_REPORT",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/purchases/settings",
           "title": "MENUITEMS.PURCHASES.LIST.SETTINGS",
           "iconType": "",
