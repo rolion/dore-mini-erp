@@ -1,0 +1,74 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'PRODUCTION.RECIPES.TITLE' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'PRODUCTION.MODULE' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/production/recipes">{{ 'PRODUCTION.RECIPES.TITLE' | translate }}</a></li>
+  </ul>
+  <div class="section-body"><div class="card">
+    @if (loading) { <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+    @if (error) { <div role="alert" class="alert alert-danger m-4">{{ error }} <button class="btn btn-light" type="button" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
+    @if (recipe) {
+    <div class="card-header"><h4>{{ recipe.name }}</h4></div>
+    @if (hasProductWarning) { <div class="alert alert-warning m-4" role="status" data-testid="product-warning">{{ 'PRODUCTION.RECIPES.PRODUCT_WARNING' | translate }}</div> }
+    @if (compact) {
+    <dl class="recipe-info" data-testid="recipe-info">
+      <div class="recipe-row"><dt>{{ 'COMMON.ESTADO' | translate }}</dt>
+        <dd><span class="badge-outline" [class.col-green]="recipe.active" [class.col-red]="!recipe.active">{{ recipe.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></dd></div>
+      <div class="recipe-row"><dt>{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt><dd>{{ recipe.resultProduct.name }}</dd></div>
+      <div class="recipe-row"><dt>{{ 'PRODUCTION.RECIPES.YIELD' | translate }}</dt><dd data-testid="detail-yield">{{ quantity(recipe.yieldQuantity) }} {{ recipe.resultProduct.unit?.abbreviation }}</dd></div>
+      <div class="recipe-row"><dt>{{ 'PRODUCTION.RECIPES.CREATED_AT' | translate }}</dt><dd>{{ recipe.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+      <div class="recipe-row"><dt>{{ 'PRODUCTION.RECIPES.UPDATED_AT' | translate }}</dt><dd>{{ recipe.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+    </dl>
+    <h5 class="mx-3">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
+    <ul class="list-unstyled ingredient-cards" data-testid="ingredient-cards">
+      @for (line of recipe.ingredients; track line.productId) {
+      <li class="card ingredient-card" [class.ingredient-card-warning]="!line.productActive || !line.unitAbbreviation" data-testid="ingredient-card">
+        <dl class="mb-0">
+          <div class="recipe-row"><dt>{{ 'COMMON.PRODUCTO' | translate }}</dt><dd>{{ line.productName }}</dd></div>
+          <div class="recipe-row"><dt>{{ 'COMMON.CANTIDAD' | translate }}</dt><dd>{{ quantity(line.quantity) }} {{ line.unitAbbreviation || '—' }}</dd></div>
+        </dl>
+      </li>
+      }
+    </ul>
+    } @else {
+      <dl class="row m-4">
+        <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
+        <dd class="col-sm-9"><span class="badge-outline" [class.col-green]="recipe.active" [class.col-red]="!recipe.active">{{ recipe.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt>
+        <dd class="col-sm-9">{{ recipe.resultProduct.name }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.YIELD' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="detail-yield">{{ quantity(recipe.yieldQuantity) }} {{ recipe.resultProduct.unit?.abbreviation }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.CREATED_AT' | translate }}</dt>
+        <dd class="col-sm-9">{{ recipe.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.UPDATED_AT' | translate }}</dt>
+        <dd class="col-sm-9">{{ recipe.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      </dl>
+      <div class="table-responsive mx-4">
+        <table class="table align-middle" data-testid="ingredient-table">
+          <caption>{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</caption>
+          <thead><tr>
+            <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'COMMON.CANTIDAD' | translate }}</th>
+            <th scope="col">{{ 'COMMON.UNIDAD' | translate }}</th>
+          </tr></thead>
+          <tbody>
+            @for (line of recipe.ingredients; track line.productId) {
+            <tr [class.table-warning]="!line.productActive || !line.unitAbbreviation" data-testid="ingredient-row">
+              <td>{{ line.productName }}</td>
+              <td class="text-end">{{ quantity(line.quantity) }}</td>
+              <td>{{ line.unitAbbreviation || '—' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    <div class="m-4 recipe-actions">
+      <a class="btn btn-primary" [routerLink]="['/pocketbiz/production/recipes', recipe.id, 'edit']">{{ 'COMMON.EDITAR' | translate }}</a>
+      <app-recipe-toggle [recipe]="recipe" (updated)="onUpdated($event)" />
+      <a class="btn btn-light" routerLink="/pocketbiz/production/recipes">{{ 'COMMON.VOLVER' | translate }}</a>
+    </div>
+    }
+  </div></div>
+</section>

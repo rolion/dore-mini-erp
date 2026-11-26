@@ -328,6 +328,30 @@
     },
     {
       "path": "",
+      "title": "MENUITEMS.PRODUCTION.TEXT",
+      "iconType": "feather",
+      "icon": "layers",
+      "class": "menu-toggle",
+      "groupTitle": false,
+      "badge": "",
+      "badgeClass": "",
+      "submenu": [
+        {
+          "path": "/pocketbiz/production/recipes",
+          "title": "MENUITEMS.PRODUCTION.LIST.RECIPES",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        }
+      ],
+      "module": "production"
+    },
+    {
+      "path": "",
       "title": "MENUITEMS.ACCOUNTING.TEXT",
       "adminOnly": true,
       "iconType": "feather",

@@ -165,6 +165,12 @@
         "IMPORT": "Import sales",
         "SETTINGS": "Settings"
       }
+    },
+    "PRODUCTION": {
+      "TEXT": "Production",
+      "LIST": {
+        "RECIPES": "Recipes"
+      }
     }
   },
   "HEADER": {
@@ -3450,5 +3456,56 @@
     "ERR_GENERIC": "An unexpected error occurred. Please try again.",
     "ERR_VALIDATION": "Check the data you entered.",
     "ERR_NOT_FOUND": "Import not found."
+  },
+  "PRODUCTION": {
+    "MODULE": "Production",
+    "RECIPES": {
+      "TITLE": "Recipes",
+      "NEW": "New recipe",
+      "NEW_TITLE": "New recipe",
+      "EDIT_TITLE": "Edit recipe",
+      "RECIPE": "Recipe",
+      "RESULT_PRODUCT": "Resulting product",
+      "YIELD": "Base yield",
+      "YIELD_HELP": "Quantity produced by one batch, in the base unit of the resulting product.",
+      "INGREDIENTS": "Ingredients",
+      "ADD_INGREDIENT": "Add ingredient",
+      "REMOVE_INGREDIENT": "Remove ingredient {{n}}",
+      "INGREDIENT_N": "Product of ingredient {{n}}",
+      "QUANTITY_N": "Quantity of ingredient {{n}}",
+      "NAME_REQUIRED": "Name is required.",
+      "RESULT_REQUIRED": "Choose the resulting product.",
+      "PRODUCT_REQUIRED": "Choose a product.",
+      "QUANTITY_INVALID": "Enter a number greater than zero, with up to 4 decimals.",
+      "INGREDIENTS_REQUIRED": "Add at least one ingredient.",
+      "DUPLICATE": "This product is already in the recipe.",
+      "PRODUCT_WARNING": "A product in this recipe is inactive or has no base unit. Fix it by editing the recipe before saving.",
+      "ACTIVATE": "Activate",
+      "DEACTIVATE": "Deactivate",
+      "CONFIRM_TITLE": "{{action}} recipe “{{name}}”",
+      "CONFIRM_DEACTIVATE_TEXT": "It will not be offered for new production orders; earlier orders keep their information.",
+      "CONFIRM_ACTIVATE_TEXT": "It will be available again for new production orders.",
+      "ACTIVATED": "Recipe activated.",
+      "DEACTIVATED": "Recipe deactivated.",
+      "SAVING": "Saving…",
+      "VIEW": "View recipe",
+      "FILTERS": "Recipe filters",
+      "APPLY": "Apply",
+      "EMPTY": "There are no active recipes yet.",
+      "EMPTY_FILTER": "No recipes match these filters.",
+      "TOTAL": "Total: {{count}} recipes",
+      "PAGES": "Recipe pages",
+      "CREATED_AT": "Created",
+      "UPDATED_AT": "Updated",
+      "ERRORS": {
+        "NETWORK": "Could not connect to the server.",
+        "VALIDATION": "Check the data you entered.",
+        "FORBIDDEN": "You do not have permission to access recipes.",
+        "NOT_FOUND": "Recipe not found.",
+        "GENERIC": "The operation could not be completed."
+      },
+      "RESULT_AS_INGREDIENT": "The resulting product cannot be an ingredient of its own recipe.",
+      "INGREDIENT_TITLE": "Ingredient {{n}}"
+    }
   }
 }

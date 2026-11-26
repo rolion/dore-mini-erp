@@ -13,9 +13,9 @@ describe('Sidebar menu (routes.json)', () => {
   const routes = routesFile.routes as RouteInfo[];
 
   it('has the business menu, Dentistry, Purchases, Inventory and Settings > Modules', () => {
-    expect(routes.length).toBe(15);
+    expect(routes.length).toBe(16);
 
-    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, accounting, settings, agenda, personnel, quotations, receivables] = routes;
+    const [dashboard, catalog, customer, dentistry, orders, expenses, reports, purchases, inventory, production, accounting, settings, agenda, personnel, quotations, receivables] = routes;
     expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
@@ -37,6 +37,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(personnel.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/personnel/professionals', '/pocketbiz/personnel/specialties',
     ]);
+    expect(production.module).toBe('production');
     expect(purchases.module).toBe('purchases');
     expect(purchases.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/purchases',
@@ -104,7 +105,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(48);
+    expect(titles.length).toBe(50);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
@@ -143,5 +144,15 @@ describe('Sidebar menu (routes.json)', () => {
     expect(visibleRoutes(routes, new Set(['inventory', 'costing'])).find((r) => r.module === 'inventory')?.submenu.length)
       .toBe(7);
     expect(es.MENUITEMS.INVENTORY.LIST.VALUATION).toBe('Valoración');
+  });
+
+  it('shows Producción → Recetas only when the production module is enabled (DORE-PROD-001 AC-09, AC-10)', () => {
+    const production = (enabled: string[]) => visibleRoutes(routes, new Set(enabled)).find((route) => route.module === 'production');
+    expect(production(['catalog'])).toBeUndefined();
+    const menu = production(['catalog', 'production']);
+    expect(menu?.submenu.map((item) => item.path)).toEqual(['/pocketbiz/production/recipes']);
+    expect(translate(es, 'MENUITEMS.PRODUCTION.TEXT')).toBe('Producción');
+    expect(translate(en, 'MENUITEMS.PRODUCTION.LIST.RECIPES')).toBe('Recipes');
+    expect(translate(pt, 'MENUITEMS.PRODUCTION.LIST.RECIPES')).toBe('Receitas');
   });
 });
