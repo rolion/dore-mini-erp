@@ -16,7 +16,7 @@ Plantilla «Lista de solo lectura con filtros» (referencia `features/inventory/
 - Columnas: Pedido (código, enlace al detalle), Cliente («—» si no hay o Clientes está deshabilitado), Total y Saldo (`money`, a la derecha).
 - Pie con «Totales» (suma de Total y Saldo del conjunto filtrado, no solo de la página).
 - Botones «Exportar PDF» y «Exportar Excel» (`btn btn-outline-secondary`, iconos `fas`) en la cabecera de la tarjeta; descargan con los filtros vigentes, todas las filas, y se deshabilitan mientras descargan o si no hay filas.
-- Sin desviaciones del sistema de diseño.
+- **Desviación aceptada (implementación):** tabla Bootstrap `table-responsive` con `ngb-pagination` en lugar de `ngx-datatable`, y sin la variante compacta con panel «Filtros»: son solo tres filtros, que se apilan en móvil, y una tabla de cuatro columnas se desplaza horizontalmente sin perder datos. Misma estructura (breadcrumb, `.card`, filtros en fila, resumen «Mostrando n–m de N»).
 
 ## Alternativas consideradas
 Exportar solo la página visible (descartado: un reporte exportado debe ser completo); imprimir con `window.print` (descartado: no hay Excel y el formato depende del navegador).

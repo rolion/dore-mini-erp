@@ -13,6 +13,7 @@
 | 2026-11-26 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, diseño requerido; DDR y PLAN v1 | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-26 | REVIEW → ENGINEERING → REVIEW | Quality Gate 1 FAIL (H-01 prueba con parche erróneo, H-02 fórmulas en Excel, H-03 marcado en PDF); corregidos | delivery-publish |
 
 ## Investigación
 
@@ -79,7 +80,9 @@ docs/plans/PLAN-2026-11-26-reporte-ingresos-por-venta.md (v1, COMPACTO, READY).
 - Tabla simple `table-responsive` + `ngb-pagination` en lugar de `ngx-datatable` y sin la variante compacta con panel de filtros: los filtros son solo tres y caben apilados en móvil.
 - `reportlab==4.2.5` añadido a `requirements/base.txt` (confirmado por el usuario).
 
-**Verificación propia.** Frontend: `ng test` de los specs nuevos y de `sidebar-menu.spec` (17 de 17 OK); `npm run i18n:check` OK. Backend: `ruff`/`flake8` sin avisos nuevos y `manage.py check` OK, pero **las pruebas de `test_paid_report.py` no se pudieron ejecutar**: el worktree no tiene `backend/.env` ni `DATABASE_URL` y el proyecto prohíbe leer `.env`. Debe correrlas `delivery-publish` o la persona con su entorno.
+**Corrección tras Quality Gate 1.** H-01 (prueba de módulo deshabilitado parcheaba `is_enabled`; ahora `enabled_keys` y comprueba 403 `module_disabled`), H-02 (nombres que empiezan por «=» se guardan como texto en el Excel), H-03 (nombres escapados en el PDF), con pruebas. H-05: la desviación de tabla queda registrada en el DDR. H-06 (textos de los archivos exportados solo en español) queda como limitación conocida.
+
+**Verificación propia.** Frontend: `ng test` de los specs nuevos y de `sidebar-menu.spec` (17 de 17 OK); `npm run i18n:check` OK. Backend: `python manage.py test modules.sales` 476 pruebas OK (con `backend/.env` copiado por la persona al worktree); `ruff`/`flake8` sin avisos nuevos.
 
 **Deuda / notas.** `ng lint` no tiene `eslint.config` en el proyecto. La prueba de módulo deshabilitado (AC-07) parchea `shared.module_gate.is_enabled`; si el permiso importa la función por nombre habrá que ajustar el parche.
 

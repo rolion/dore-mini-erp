@@ -2,6 +2,7 @@
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font
@@ -42,6 +43,10 @@ def build_xlsx(rows, totals) -> bytes:
     sheet.append(['Totales', f'{totals.orders_count} pedidos', totals.total, totals.balance])
     for cell in sheet[sheet.max_row]:
         cell.font = Font(bold=True)
+    for row in sheet.iter_rows(min_row=2, max_col=2):
+        for cell in row:  # un texto que empieza por «=» (p. ej. un nombre de cliente) nunca debe ser una fórmula
+            if isinstance(cell.value, str) and cell.value.startswith('='):
+                cell.data_type = 's'
     for row in sheet.iter_rows(min_row=2, min_col=3, max_col=4):
         for cell in row:
             cell.number_format = '#,##0.00'
@@ -62,7 +67,7 @@ def build_pdf(rows, totals, filters_text: str, generated_on: date) -> bytes:
              Paragraph(f'{filters_text} · Generado el {generated_on.strftime("%d/%m/%Y")}', styles['Normal']),
              Spacer(1, 12)]
     data = [list(HEADERS)]
-    data += [[code, Paragraph(customer, styles['Normal']), _money(total), _money(balance)]
+    data += [[code, Paragraph(escape(customer), styles['Normal']), _money(total), _money(balance)]
              for code, customer, total, balance in rows]
     data.append(['Totales', f'{totals.orders_count} pedidos', _money(totals.total), _money(totals.balance)])
     table = Table(data, colWidths=[110, 230, 90, 90], repeatRows=1)

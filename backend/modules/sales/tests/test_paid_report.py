@@ -100,9 +100,11 @@ class PaidReportApiTests(PaidReportFixtures, APITestCase):
         self.assertEqual(self.client.get(REPORT_URL).status_code, 401)
 
     def test_company_without_the_sales_module_is_refused(self):  # AC-07
-        with mock.patch('shared.module_gate.is_enabled', return_value=False):
+        with mock.patch('shared.module_gate.enabled_keys', return_value=set()):
             response = self.client.get(REPORT_URL)
-        self.assertIn(response.status_code, (403, 404))
+            export = self.client.get(f'{REPORT_URL}export/xlsx/')
+        self.assertEqual((response.status_code, export.status_code), (403, 403))
+        self.assertEqual(response.json()['code'], 'module_disabled')
 
 
 class PaidReportExportTests(PaidReportFixtures, APITestCase):
@@ -136,3 +138,27 @@ class PaidReportExportTests(PaidReportFixtures, APITestCase):
         self.assertEqual(self.client.get(f'{REPORT_URL}export/csv/').status_code, 404)
         with mock.patch('modules.sales.api.views.MAX_EXPORT_ROWS', 1):
             self.assertEqual(self.client.get(f'{REPORT_URL}export/xlsx/').status_code, 400)
+
+
+class PaidReportHostileNamesTests(PaidReportFixtures, APITestCase):
+    """Un nombre de cliente con marcado o fórmula no rompe ni ejecuta nada al exportar."""
+
+    def setUp(self):
+        self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
+        authenticate(self.client, make_admin(self.company, username='ana'))
+        formula = CustomerModel.objects.create(company_id=self.company.id, name='=HYPERLINK("http://x","a")')
+        markup = CustomerModel.objects.create(company_id=self.company.id, name='Ana <b>x & <img src="y">')
+        self.make_order(self.company, customer_id=formula.id)
+        self.make_order(self.company, customer_id=markup.id)
+
+    def test_excel_stores_a_formula_like_name_as_text(self):  # AC-05
+        sheet = load_workbook(BytesIO(self.client.get(f'{REPORT_URL}export/xlsx/').content)).active
+        cells = [cell for row in sheet.iter_rows(min_row=2, max_row=3, min_col=2, max_col=2) for cell in row]
+        self.assertTrue(any(cell.value == '=HYPERLINK("http://x","a")' for cell in cells))
+        self.assertEqual({cell.data_type for cell in cells}, {'s'})
+
+    def test_pdf_survives_markup_in_names(self):  # AC-05
+        response = self.client.get(f'{REPORT_URL}export/pdf/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.content.startswith(b'%PDF'))
