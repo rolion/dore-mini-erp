@@ -163,6 +163,7 @@
       "TEXT": "Sales",
       "LIST": {
         "ORDERS": "Orders",
+        "INCOME_REPORT": "Income by sale",
         "IMPORT": "Import sales",
         "SETTINGS": "Settings"
       }
@@ -1988,6 +1989,26 @@
       "EVENT_SALE_PAYMENT": "Sale payment",
       "REEMBOLSADO": "Refunded",
       "REEMBOLSO_REGISTRADO": "The refund was recorded: the money was returned outside PocketBiz."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Income by sale",
+      "SUBTITLE": "Delivered and paid orders",
+      "EXPORT_PDF": "Export PDF",
+      "EXPORT_EXCEL": "Export Excel",
+      "DATE_FROM": "Start date",
+      "DATE_TO": "End date",
+      "FISCAL_PERIOD": "Fiscal period",
+      "ALL_PERIODS": "All periods",
+      "RANGE_INVALID": "The end date cannot be earlier than the start date.",
+      "LOADING": "Loading…",
+      "EMPTY": "No records",
+      "COL_ORDER": "Order",
+      "COL_CUSTOMER": "Customer",
+      "COL_TOTAL": "Total",
+      "COL_BALANCE": "Balance",
+      "TOTALS": "Totals ({{count}} orders)",
+      "SHOWING": "Showing {{from}}–{{to}} of {{total}}",
+      "EXPORT_TOO_LARGE": "The report has too many orders to export: narrow the dates or the fiscal period."
     }
   },
   "SERVICES": {

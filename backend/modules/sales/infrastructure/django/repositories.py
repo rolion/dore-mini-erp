@@ -1,10 +1,11 @@
+from decimal import Decimal
 from uuid import UUID
 
 from django.db import transaction
-from django.db.models import F, QuerySet
+from django.db.models import Count, F, QuerySet, Sum
 
 from modules.sales.domain.order import Order
-from modules.sales.domain.repositories import BY_EXPECTED_DELIVERY, OrderFilters
+from modules.sales.domain.repositories import BY_EXPECTED_DELIVERY, OrderFilters, OrderTotals
 
 from .mappers import to_entity, to_item_values, to_order_values, to_payment_model, to_summary
 from .models import OrderItemModel, OrderModel, PaymentModel
@@ -73,7 +74,7 @@ class DjangoOrderRepository:
         new = [to_payment_model(payment, model) for payment in order.payments if payment.id not in existing]
         PaymentModel.objects.bulk_create(new)
 
-    def list(self, filters: OrderFilters) -> OrderSummaryList:
+    def _filtered(self, filters: OrderFilters) -> QuerySet:
         queryset = self._orders()
         if filters.statuses:
             queryset = queryset.filter(status__in=[s.value for s in filters.statuses])
@@ -87,10 +88,22 @@ class DjangoOrderRepository:
             queryset = queryset.filter(**{f'{filters.date_field}__gte': filters.date_from})
         if filters.date_to is not None:
             queryset = queryset.filter(**{f'{filters.date_field}__lte': filters.date_to})
+        if filters.fiscal_period_id is not None:
+            queryset = queryset.filter(fiscal_period_id=filters.fiscal_period_id)
         if filters.has_balance is True:
             queryset = queryset.filter(total__gt=F('paid_total'))
         elif filters.has_balance is False:
             queryset = queryset.filter(total__lte=F('paid_total'))
+        return queryset
+
+    def totals(self, filters: OrderFilters) -> OrderTotals:
+        """Cantidad y sumas de total y saldo de todo el conjunto filtrado (no solo de una página)."""
+        row = self._filtered(filters).aggregate(count=Count('id'), total=Sum('total'), paid=Sum('paid_total'))
+        total, paid = row['total'] or Decimal('0.00'), row['paid'] or Decimal('0.00')
+        return OrderTotals(orders_count=row['count'], total=total, balance=total - paid)
+
+    def list(self, filters: OrderFilters) -> OrderSummaryList:
+        queryset = self._filtered(filters)
         if filters.ordering == BY_EXPECTED_DELIVERY:
             queryset = queryset.order_by(F('expected_delivery_date').asc(nulls_last=True), 'order_date', 'id')
         else:

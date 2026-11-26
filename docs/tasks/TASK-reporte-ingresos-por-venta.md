@@ -1,6 +1,6 @@
 # TASK-reporte-ingresos-por-venta: Reporte «Ingresos por venta» (ventas entregadas y pagadas)
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-reporte-ingresos-por-venta
@@ -12,6 +12,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, diseño requerido; DDR y PLAN v1 | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,18 @@ No aplica según veredicto.
 docs/plans/PLAN-2026-11-26-reporte-ingresos-por-venta.md (v1, COMPACTO, READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend (sales): `OrderFilters.fiscal_period_id` + filtro en el repositorio y `totals()`; caso de uso `PaidOrdersReport` (fija DELIVERED + PAID); `GET /api/orders/paid-report/` (paginado, con `totals`) y `GET /api/orders/paid-report/export/{xlsx|pdf}/` (`api/report_export.py`, tope de 5 000 filas). Frontend: pantalla `features/sales/pages/paid-report`, servicio y modelo, ruta `sales/reports/income`, submenú «Ingresos por venta» e i18n es/en/pt.
+
+**Cobertura.** AC-01..04 y AC-07: `PaidOrdersReport` + `test_paid_report.py`; AC-05: `report_export.py` y pruebas de exportación; AC-06: ruta, `routes.json`, componente y specs.
+
+**Desviaciones.**
+- La API real cuelga de `/api/orders/` (no `/api/sales/orders/`); el contrato del PLAN se aplicó con ese prefijo.
+- Tabla simple `table-responsive` + `ngb-pagination` en lugar de `ngx-datatable` y sin la variante compacta con panel de filtros: los filtros son solo tres y caben apilados en móvil.
+- `reportlab==4.2.5` añadido a `requirements/base.txt` (confirmado por el usuario).
+
+**Verificación propia.** Frontend: `ng test` de los specs nuevos y de `sidebar-menu.spec` (17 de 17 OK); `npm run i18n:check` OK. Backend: `ruff`/`flake8` sin avisos nuevos y `manage.py check` OK, pero **las pruebas de `test_paid_report.py` no se pudieron ejecutar**: el worktree no tiene `backend/.env` ni `DATABASE_URL` y el proyecto prohíbe leer `.env`. Debe correrlas `delivery-publish` o la persona con su entorno.
+
+**Deuda / notas.** `ng lint` no tiene `eslint.config` en el proyecto. La prueba de módulo deshabilitado (AC-07) parchea `shared.module_gate.is_enabled`; si el permiso importa la función por nombre habrá que ajustar el parche.
 
 ## Review
 _Pendiente_

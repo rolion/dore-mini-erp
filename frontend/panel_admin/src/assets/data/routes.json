@@ -111,6 +111,17 @@
           "submenu": []
         },
         {
+          "path": "/pocketbiz/sales/reports/income",
+          "title": "MENUITEMS.SALES.LIST.INCOME_REPORT",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
           "path": "/pocketbiz/sales/import",
           "title": "MENUITEMS.SALES.LIST.IMPORT",
           "adminOnly": true,

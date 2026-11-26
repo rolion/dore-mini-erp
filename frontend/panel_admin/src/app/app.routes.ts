@@ -222,6 +222,15 @@ export const APP_ROUTE: Route[] = [
                     import('./features/sales/sales.routes').then((m) => m.SALES_ORDERS_ROUTE),
             },
             {
+                path: 'sales/reports/income',
+                canActivate: [moduleGuard],
+                data: { module: 'sales' },
+                loadComponent: () =>
+                    import('./features/sales/pages/paid-report/paid-report.component').then(
+                        (m) => m.PaidReportComponent
+                    ),
+            },
+            {
                 // Importar ventas (asistente e historial): bajo Ventas; el servidor exige rol admin.
                 path: 'sales/import',
                 canActivate: [moduleGuard],
