@@ -1,6 +1,6 @@
 # TASK-reporte-ingresos-por-venta: Reporte «Ingresos por venta» (ventas entregadas y pagadas)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-reporte-ingresos-por-venta
@@ -14,6 +14,7 @@
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-26 | REVIEW → ENGINEERING → REVIEW | Quality Gate 1 FAIL (H-01 prueba con parche erróneo, H-02 fórmulas en Excel, H-03 marcado en PDF); corregidos | delivery-publish |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate 2 PASS | delivery-publish |
 
 ## Investigación
 
@@ -84,10 +85,11 @@ docs/plans/PLAN-2026-11-26-reporte-ingresos-por-venta.md (v1, COMPACTO, READY).
 
 **Verificación propia.** Frontend: `ng test` de los specs nuevos y de `sidebar-menu.spec` (17 de 17 OK); `npm run i18n:check` OK. Backend: `python manage.py test modules.sales` 476 pruebas OK (con `backend/.env` copiado por la persona al worktree); `ruff`/`flake8` sin avisos nuevos.
 
-**Deuda / notas.** `ng lint` no tiene `eslint.config` en el proyecto. La prueba de módulo deshabilitado (AC-07) parchea `shared.module_gate.is_enabled`; si el permiso importa la función por nombre habrá que ajustar el parche.
+**Deuda / notas.** La prueba de módulo deshabilitado (AC-07) parchea `shared.module_gate.is_enabled`; si el permiso importa la función por nombre habrá que ajustar el parche.
 
 ## Review
-_Pendiente_
+**Quality Gate 1: FAIL** (H-01 High, H-02/H-03 Medium; corregidos). **Quality Gate 2: PASS.** Backend: suite completa 2526 pruebas OK. Frontend: 1880 de 1880, `build`, `i18n:check` y `npm run lint` OK. Lint Python: solo avisos previos al PR. Sin revisión visual en navegador (no verificada).
+Hallazgos Low abiertos, no bloqueantes: H-06 textos de exportación solo en español; H-07 un `fiscal_period_id` válido pero inexistente devuelve lista vacía (AC-03 dice 400; cambiar el AC requiere tu aprobación); H-08 `design-system.md` sin la línea prevista (opcional según el DDR); H-10 prefijo `/api/orders/` en lugar de `/api/sales/orders/`.
 
 ## Publicación
-_Pendiente_
+PR #129 completo y listo para aprobación humana. No incluye ADR ni cambios de autenticación, base de datos o infraestructura; añade la dependencia `reportlab`.
