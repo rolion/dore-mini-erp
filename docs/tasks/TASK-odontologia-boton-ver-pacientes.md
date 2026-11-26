@@ -1,6 +1,6 @@
 # TASK-odontologia-boton-ver-pacientes: Botón "ver" de la tabla de pacientes (Odontología)
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** TRIVIAL_FIX
 **Diseño requerido:** NO
 **Rama:** task/TASK-odontologia-boton-ver-pacientes
@@ -12,6 +12,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → ENGINEERING | TRIVIAL_FIX, sin plan ni PR previo | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -43,10 +44,10 @@ No aplica según veredicto.
 No aplica — TRIVIAL_FIX. Cambio: crear `patient-list.component.scss` con `@use '../../../shared/styles/table-actions';` y añadir `styleUrl` al componente.
 
 ## Implementación
-Se añadió `patient-list.component.scss` con `@use` de `shared/styles/table-actions` y `styleUrl` en el componente (mismo patrón que `service-list`). Resultado esperado: botón «ver» azul (`#1677ff`) con icono centrado. Sin desviaciones. No se pudo compilar ni ejecutar pruebas: el worktree no tiene `node_modules`.
+Se añadió `patient-list.component.scss` con `@use` de `shared/styles/table-actions` y `styleUrl` en el componente (mismo patrón que `service-list`). Resultado esperado: botón «ver» azul (`#1677ff`) con icono centrado. Sin desviaciones. El build lo verificó el Quality Gate (ver Review).
 
 ## Review
-_Pendiente_
+**PASS** (subagente aislado, 2026-11-26): `npm run build` OK (solo avisos de la plantilla), `npm run lint` OK, pruebas de `features/dentistry` 70 OK. Sin hallazgos Critical/High/Medium. Revisión visual **no verificada** (no se levantó la app).
 
 ## Publicación
-_Pendiente_
+PR #135 listo para aprobación humana. Cambio sin impacto arquitectónico, de auth ni de base de datos.
