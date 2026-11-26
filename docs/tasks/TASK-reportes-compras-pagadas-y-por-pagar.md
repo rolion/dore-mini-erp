@@ -1,16 +1,17 @@
 # TASK-reportes-compras-pagadas-y-por-pagar: Reportes «Compras pagadas» y «Compras por pagar»
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-reportes-compras-pagadas-y-por-pagar
-**Pull Request:** _se completa al abrir el PR_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/132
 
 ## Historial de transiciones
 | Fecha (UTC) | Transición | Motivo | Origen |
 |---|---|---|---|
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → PLANNING → ENGINEERING | NEEDS_PLAN, sin DDR; PLAN v1 READY, PR abierto | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -51,7 +52,13 @@ No aplica según veredicto.
 docs/plans/PLAN-2026-11-26-reportes-compras-pagadas-y-por-pagar.md (v1, COMPACTO, READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend: el generador de archivos pasa de `sales/api/report_export.py` a `shared/report_export.py` (cabeceras y título parametrizables, `ReportTotals`); en `purchases`, `PurchaseFilters.fiscal_period_id`, `PurchaseRepository.totals()`, casos de uso `PaidPurchasesReport` / `PayablePurchasesReport` (`application/purchase_report_queries.py`) y vistas de lista y exportación (`api/purchase_report_views.py`) en `/api/purchases/paid-report/` y `/api/purchases/payable-report/`. Frontend: la pantalla, el servicio y el modelo de reporte pasan de `features/sales` a `shared/` (`DocumentReport*`), con una configuración por tipo (`paid`, `receivable`, `purchases-paid`, `purchases-payable`) que fija endpoint, textos, etiquetas de columna y enlace al detalle; rutas `purchases/reports/paid` y `purchases/reports/payable`, submenús de Compras e i18n es/en/pt.
+
+**Cobertura.** AC-01..05 y AC-07: `purchases/tests/test_purchase_reports.py`; AC-06: rutas, `routes.json`, spec de la pantalla con el tipo de compras y `sidebar-menu.spec`; AC-08: `test_paid_report.py`, `test_receivable_report.py` y los specs de la pantalla para ventas siguen pasando tras el movimiento.
+
+**Desviaciones.** El archivo de exportación de ventas conserva sus cabeceras («Pedido», «Cliente») pasándolas como parámetro. El movimiento a `shared/` fue necesario por la regla de `CLAUDE.md` (lo que usa un segundo módulo va a `shared/`).
+
+**Verificación propia.** Backend: 27 pruebas de los tres reportes OK; `ruff`/`flake8` sin avisos nuevos. Frontend: specs de la pantalla, el servicio y el menú 22 OK; `i18n:check` 0 faltantes. Un error propio detectado por las pruebas: el reemplazo de `titleKey` dañó `subtitleKey` en la plantilla; corregido.
 
 ## Review
 _Pendiente_

@@ -42,7 +42,7 @@ export interface DashboardSummary {
   salesCriteria: string | null;
 }
 
-export interface SalesReport {
+export interface DocumentReport {
   period: Period;
   total: string;
   ordersCount: number;

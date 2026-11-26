@@ -7,7 +7,7 @@ import {
   PendingReport,
   Period,
   ProductsReport,
-  SalesReport,
+  DocumentReport,
 } from '../models/report';
 
 export const MONTH: Period = { kind: 'month', dateFrom: '2026-10-01', dateTo: '2026-10-31' };
@@ -29,7 +29,7 @@ export function makeSummary(overrides: Partial<DashboardSummary> = {}): Dashboar
   };
 }
 
-export function makeSales(overrides: Partial<SalesReport> = {}): SalesReport {
+export function makeSales(overrides: Partial<DocumentReport> = {}): DocumentReport {
   return { period: MONTH, total: '1200.00', ordersCount: 4, averageTicket: '300.00', criteria: 'Ventas: criterio.', ...overrides };
 }
 

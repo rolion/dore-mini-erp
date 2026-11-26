@@ -131,6 +131,8 @@
       "LIST": {
         "PURCHASES": "Compras",
         "SUPPLIERS": "Fornecedores",
+        "PAID_REPORT": "Compras pagas",
+        "PAYABLE_REPORT": "Compras a pagar",
         "SETTINGS": "Configuração"
       }
     },
@@ -1688,6 +1690,18 @@
       "ADMITE_COMO_MAXIMO_3_DECIMALES": "Admite no máximo 3 casas decimais.",
       "LA_UNIDAD_NO_ADMITE_FRACCIONES": "A unidade não admite frações: use uma quantidade inteira.",
       "NO_PUEDE_SUPERAR_EL_PENDIENTE": "Não pode ultrapassar o pendente ({{p0}})."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Compras pagas",
+      "SUBTITLE": "Compras confirmadas e pagas por completo",
+      "EMPTY": "Sem registros",
+      "COL_PURCHASE": "Compra",
+      "COL_SUPPLIER": "Fornecedor"
+    },
+    "PAYABLE_REPORT": {
+      "TITLE": "Compras a pagar",
+      "SUBTITLE": "Compras confirmadas com saldo pendente de pagamento",
+      "EMPTY": "Sem registros"
     }
   },
   "REPORTING": {
