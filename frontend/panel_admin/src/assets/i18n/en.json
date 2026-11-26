@@ -31,7 +31,8 @@
     },
     "DENTISTRY": {
       "TEXT": "Dentistry",
-      "PATIENTS": "Patients"
+      "PATIENTS": "Patients",
+      "BUDGETS": "Treatment plans"
     },
     "PERSONNEL": {
       "TEXT": "Personnel",
@@ -335,7 +336,17 @@
       "CONFIRMA_LA_CONTRASENA": "Confirm the password.",
       "LAS_CONTRASENAS_NO_COINCIDEN": "The passwords do not match.",
       "INGRESA_UN_CORREO_VALIDO": "Enter a valid email.",
-      "NO_PUEDE_SUPERAR_CARACTERES": "It cannot exceed {{p0}} characters."
+      "NO_PUEDE_SUPERAR_CARACTERES": "It cannot exceed {{p0}} characters.",
+      "TIPO_DE_EMPRESA": "Company type",
+      "SELECCIONA_UN_TIPO": "Select a type",
+      "EL_TIPO_DE_EMPRESA_ES_OBLIGATORIO": "Select the company type.",
+      "TIPO_DE_EMPRESA_AYUDA": "This sets the modules you start with. You can turn on more later in Settings.",
+      "TIPO_COMPRAVENTA": "Buying and selling",
+      "TIPO_COMPRAVENTA_AYUDA": "Buying and selling products, with inventory.",
+      "TIPO_SERVICIOS": "Services",
+      "TIPO_SERVICIOS_AYUDA": "Quotes, collections and scheduling.",
+      "TIPO_ODONTOLOGIA": "Dentistry",
+      "TIPO_ODONTOLOGIA_AYUDA": "Dental care services."
     }
   },
   "CUSTOMERS": {

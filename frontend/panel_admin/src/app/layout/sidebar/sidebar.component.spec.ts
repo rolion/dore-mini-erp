@@ -120,6 +120,40 @@ describe('SidebarComponent', () => {
     });
   });
 
+  describe('menu by company type (AC-09, AC-11)', () => {
+    const base = { iconType: '', icon: '', class: '', groupTitle: false, badge: '', badgeClass: '', submenu: [] };
+    const moduleDto = (key: string) => ({
+      key, name: key, description: '', is_base: false, enabled: true, requires: [], optional: [], missing_requires: [],
+    });
+    const render = (type: string | undefined) => {
+      create({
+        id: 1, username: 'ana', firstName: '', lastName: '', token: 't', role: 'admin',
+        company: { id: 'c-1', name: 'Demo', type },
+      });
+      const http = TestBed.inject(HttpTestingController);
+      http.expectOne('assets/data/routes.json').flush({
+        routes: [
+          { ...base, id: 'dashboard', path: '/dash', title: 'Inicio' },
+          { ...base, id: 'sales', path: '/sales', title: 'Ventas', module: 'sales' },
+          { ...base, id: 'customers', path: '/customers', title: 'Clientes', module: 'customers' },
+          { ...base, id: 'settings', path: '/settings/modules', title: 'Módulos' },
+        ],
+      });
+      http.expectOne((req) => req.url.endsWith('/modules/')).flush(['sales', 'customers'].map(moduleDto));
+      fixture.detectChanges();
+      return component.sidebarItems.map((item) => item.id);
+    };
+
+    it('orders the items of the company type and keeps Settings last', () => {
+      expect(render('compraventa')).toEqual(['dashboard', 'customers', 'sales', 'settings']);
+    });
+
+    it('keeps the original order for general companies and for sessions saved before the type', () => {
+      expect(render('general')).toEqual(['dashboard', 'sales', 'customers', 'settings']);
+      expect(render(undefined)).toEqual(['dashboard', 'sales', 'customers', 'settings']);
+    });
+  });
+
   it('renders the main and the collapsed PocketBiz logos without the old brand text (AC-03)', () => {
     const el: HTMLElement = fixture.nativeElement;
     const sources = Array.from(

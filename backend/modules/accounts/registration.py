@@ -26,8 +26,8 @@ def _conflicts(company_name: str, username: str) -> dict[str, list[str]]:
     return errors
 
 
-def register_company_admin(*, company_name: str, username: str, first_name: str, last_name: str,
-                           email: str, password: str):
+def register_company_admin(*, company_name: str, company_type: str, username: str, first_name: str,
+                           last_name: str, email: str, password: str):
     """Crea la empresa y su primer usuario admin en una sola transacción; devuelve el usuario."""
     User = get_user_model()
     company_name = ' '.join(company_name.split())
@@ -41,8 +41,9 @@ def register_company_admin(*, company_name: str, username: str, first_name: str,
         raise RegistrationError(errors)
     try:
         with transaction.atomic():
-            company = Company.objects.create(name=company_name)
-            company_defaults.apply_all(company.id)  # configuración por defecto, atómica con el alta
+            company = Company.objects.create(name=company_name, company_type=company_type)
+            # Configuración por defecto atómica con el alta; el tipo elige los módulos iniciales.
+            company_defaults.apply_all(company.id, profile=company_type)
             return User.objects.create_user(
                 username=username, password=password, first_name=first_name, last_name=last_name,
                 email=email, company=company, role=UserRole.ADMIN,

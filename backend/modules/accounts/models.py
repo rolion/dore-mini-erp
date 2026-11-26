@@ -5,11 +5,25 @@ from django.db import models
 from django.db.models.functions import Lower
 
 
+class CompanyType(models.TextChoices):
+    """Tipo elegido al registrarse: define los módulos iniciales; no se cambia después."""
+
+    COMPRAVENTA = 'compraventa', 'Compraventa'
+    SERVICIOS = 'servicios', 'Servicios'
+    ODONTOLOGIA = 'odontologia', 'Odontología'
+    GENERAL = 'general', 'General'  # empresas anteriores al tipo; no se ofrece en el registro
+
+
+# Tipos que una persona puede elegir al registrarse.
+REGISTRABLE_TYPES = (CompanyType.COMPRAVENTA, CompanyType.SERVICIOS, CompanyType.ODONTOLOGIA)
+
+
 class Company(models.Model):
     """Empresa propietaria de los datos de negocio. Las empresas no se borran: se desactivan."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
+    company_type = models.CharField(max_length=20, choices=CompanyType.choices, default=CompanyType.GENERAL)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
