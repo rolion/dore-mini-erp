@@ -1,6 +1,7 @@
 from modules.customers.services import get_customers_administrative, search_customer_ids
 from modules.dentistry.domain.patient import PatientArchived, PatientNotFound
 from modules.dentistry.domain.proforma import DentalProformaValidationError
+from modules.personnel.services import professional_exists, professional_names
 from modules.service_catalog.services import ServiceSnapshot, get_service_for_new_use
 
 
@@ -13,6 +14,19 @@ class CustomersAdapter:
 
     def search_ids(self, search):
         return search_customer_ids(self.company_id, search)
+
+
+class ProfessionalLookup:
+    """Profesionales de Personal (fachada pública) para identificar a quien atiende una evaluación."""
+
+    def __init__(self, company_id):
+        self.company_id = company_id
+
+    def exists(self, professional_id) -> bool:
+        return professional_exists(self.company_id, professional_id)
+
+    def names(self, ids) -> dict:
+        return professional_names(self.company_id, set(ids))
 
 
 class ServiceLookup:

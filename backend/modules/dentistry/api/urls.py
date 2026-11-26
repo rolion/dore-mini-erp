@@ -3,10 +3,18 @@ from .proforma_views import (
     PatientProformaListCreateView, ProformaActionView, ProformaDecisionView, ProformaDetailView,
     ProformaPrintableView, ProformaRectifyView,
 )
+from .evaluation_views import (
+    CatalogView, EvaluationAmendView, EvaluationConfirmView, EvaluationDetailView, PatientEvaluationListView,
+)
 from .views import CapabilitiesView, PatientListView, PatientDetailView, PatientStateView, PatientHistoryView
 
 urlpatterns = [
     path('capabilities/', CapabilitiesView.as_view()),
+    path('odontogram/catalog/', CatalogView.as_view()),
+    path('patients/<uuid:customer_id>/evaluations/', PatientEvaluationListView.as_view()),
+    path('evaluations/<uuid:evaluation_id>/', EvaluationDetailView.as_view()),
+    path('evaluations/<uuid:evaluation_id>/confirm/', EvaluationConfirmView.as_view()),
+    path('evaluations/<uuid:evaluation_id>/amend/', EvaluationAmendView.as_view()),
     path('patients/', PatientListView.as_view()),
     path('patients/<uuid:customer_id>/', PatientDetailView.as_view()),
     path('patients/<uuid:customer_id>/archive/', PatientStateView.as_view(action='archive')),
