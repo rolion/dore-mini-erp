@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-diagnostico-odontograma-inicial
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/136
 **Fuente:** https://trello.com/c/2dTNRKfq/9-pb-odo-002-registrar-diagn%C3%B3stico-y-odontograma-inicial
 **Specification readiness:** READY (catálogo clínico provisional, a validar luego)
 
