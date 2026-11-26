@@ -100,6 +100,7 @@ export class OrderDetailComponent implements OnInit {
   postingIssues: PostingIssue[] = [];
   /** Bloqueo del servidor al confirmar por el período fiscal de la fecha del pedido. */
   fiscalPeriodError: FiscalPeriodErrorCode | null = null;
+  fiscalPeriodName = '';
 
   private api = inject(OrdersApiService);
   private route = inject(ActivatedRoute);
@@ -408,6 +409,7 @@ export class OrderDetailComponent implements OnInit {
     this.fieldErrors = {};
     this.postingIssues = [];
     this.fiscalPeriodError = null;
+    this.fiscalPeriodName = '';
     request()
       .pipe(
         finalize(() => (this.busy = false)),
@@ -430,6 +432,7 @@ export class OrderDetailComponent implements OnInit {
     }
     if (err instanceof OrderRuleError && isFiscalPeriodErrorCode(err.code)) {
       this.fiscalPeriodError = err.code;
+      this.fiscalPeriodName = err.periodName;
     } else if (err instanceof OrderRuleError && err.postingIssues.length) {
       // Se explica en una alerta con enlace a la configuración, no solo en un aviso pasajero.
       this.postingIssues = err.postingIssues;

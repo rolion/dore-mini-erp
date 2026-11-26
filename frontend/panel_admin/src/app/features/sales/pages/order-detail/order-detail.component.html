@@ -47,7 +47,7 @@
     </div>
 
     @if (fiscalPeriodError) {
-    <app-fiscal-period-alert [code]="fiscalPeriodError" />
+    <app-fiscal-period-alert [code]="fiscalPeriodError" [periodName]="fiscalPeriodName" />
     }
     @if (postingIssues.length) {
     <div class="mb-3">

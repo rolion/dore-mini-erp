@@ -1868,6 +1868,7 @@
     "FISCAL_PERIOD": {
       "SIN_PERIODO": "A data do pedido não está dentro de nenhum período fiscal, por isso não pode ser confirmado. Crie o período em Contabilidade.",
       "CERRADO": "O período fiscal da data do pedido está fechado, por isso não pode ser confirmado. Reabra-o em Contabilidade.",
+      "CERRADO_NOMBRE": "O período fiscal «{{name}}» está fechado, por isso não pode ser confirmado. Reabra-o em Contabilidade.",
       "IR_A_PERIODOS": "Ir para períodos fiscais"
     },
     "ORDER_CREATE": {

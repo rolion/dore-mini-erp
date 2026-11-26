@@ -472,6 +472,8 @@ export class OrderRuleError extends OrderApiError {
     readonly warehouseName: string = '',
     /** Faltantes de configuración contable de un 409 `posting_configuration_missing` (vacío en otros conflictos). */
     readonly postingIssues: PostingIssue[] = [],
+    /** Nombre del período de un 409 `fiscal_period_closed` (vacío en otros conflictos). */
+    readonly periodName: string = '',
   ) {
     super(message, 409);
     this.name = 'OrderRuleError';

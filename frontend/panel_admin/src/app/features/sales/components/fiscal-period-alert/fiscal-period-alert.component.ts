@@ -21,7 +21,7 @@ export function isFiscalPeriodErrorCode(code: string): code is FiscalPeriodError
   template: `
     <div class="alert alert-warning bg-warning-subtle text-warning-emphasis border-warning-subtle mb-3" role="alert"
          data-testid="alert-fiscal-period">
-      <span data-testid="fiscal-period-message">{{ messageKey() | translate }}</span>
+      <span data-testid="fiscal-period-message">{{ messageKey() | translate: { name: periodName() } }}</span>
       @if (accountingEnabled()) {
         <a routerLink="/pocketbiz/accounting/settings" [queryParams]="{ tab: 'periods' }"
            class="ms-1 text-reset text-decoration-underline" data-testid="fiscal-period-link">{{ 'SALES.FISCAL_PERIOD.IR_A_PERIODOS' | translate }}</a>
@@ -33,10 +33,13 @@ export class FiscalPeriodAlertComponent {
   private readonly modules = inject(ModulesService);
 
   readonly code = input.required<FiscalPeriodErrorCode>();
+  /** Nombre del período cerrado (si el servidor lo informó): el aviso lo nombra. */
+  readonly periodName = input<string>('');
 
-  readonly messageKey = computed(() =>
-    this.code() === 'fiscal_period_closed' ? 'SALES.FISCAL_PERIOD.CERRADO' : 'SALES.FISCAL_PERIOD.SIN_PERIODO',
-  );
+  readonly messageKey = computed(() => {
+    if (this.code() !== 'fiscal_period_closed') return 'SALES.FISCAL_PERIOD.SIN_PERIODO';
+    return this.periodName() ? 'SALES.FISCAL_PERIOD.CERRADO_NOMBRE' : 'SALES.FISCAL_PERIOD.CERRADO';
+  });
 
   accountingEnabled(): boolean {
     return this.modules.enabledKeysValue?.has('accounting') ?? false;

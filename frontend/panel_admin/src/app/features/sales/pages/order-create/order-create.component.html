@@ -134,7 +134,7 @@
               <div class="alert alert-danger" role="alert" data-testid="items-error">{{ serverErrors.items }}</div>
               }
               @if (fiscalPeriodError) {
-              <app-fiscal-period-alert [code]="fiscalPeriodError" />
+              <app-fiscal-period-alert [code]="fiscalPeriodError" [periodName]="fiscalPeriodName" />
               }
               @if (shortages.length) {
               <div class="alert alert-warning" role="alert" data-testid="stock-alert">

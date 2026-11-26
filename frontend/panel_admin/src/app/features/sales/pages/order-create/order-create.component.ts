@@ -122,6 +122,7 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
   shortages: StockShortage[] = [];
   /** Bloqueo del servidor al confirmar por el período fiscal de la fecha del pedido; el borrador no se pierde. */
   fiscalPeriodError: FiscalPeriodErrorCode | null = null;
+  fiscalPeriodName = '';
   shortageWarehouse = '';
 
   readonly customerInput$ = new Subject<string>();
@@ -230,6 +231,7 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
       this.serverErrors = {};
       this.shortages = [];
       this.fiscalPeriodError = null;
+      this.fiscalPeriodName = '';
     };
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(reset);
     this.discountControl.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(reset);
@@ -407,6 +409,7 @@ export class OrderCreateComponent implements OnInit, HasUnsavedChanges {
   private showServerError(err: OrderApiError): void {
     if (err instanceof OrderRuleError && isFiscalPeriodErrorCode(err.code)) {
       this.fiscalPeriodError = err.code;
+      this.fiscalPeriodName = err.periodName;
       return;
     }
     if (err instanceof OrderRuleError && err.code === 'insufficient_stock') {

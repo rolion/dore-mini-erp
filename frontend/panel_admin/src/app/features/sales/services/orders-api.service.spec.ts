@@ -273,6 +273,12 @@ describe('OrdersApiService', () => {
       expect(error.status).toBe(409);
     });
 
+    it('carries the closed period name of a fiscal_period_closed 409 (UI-03)', () => {
+      const error = failWith(409, { code: 'fiscal_period_closed', detail: 'Cerrado.', period: 'Gestión 2026' }) as OrderRuleError;
+      expect(error.code).toBe('fiscal_period_closed');
+      expect(error.periodName).toBe('Gestión 2026');
+    });
+
     it('maps a posting_configuration_missing 409 with its issues (VEN-01)', () => {
       const issues = [{ code: 'role_unconfigured', subject: 'Ingresos por ventas', message: 'Falta configurar la cuenta.' }];
       const error = failWith(409, { code: 'posting_configuration_missing', detail: 'Falta configurar la cuenta.', issues }) as OrderRuleError;

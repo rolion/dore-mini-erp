@@ -561,6 +561,14 @@ describe('OrderDetailComponent', () => {
       expect(toastr.error).not.toHaveBeenCalled();
     });
 
+    it('names the closed period in the block (UI-03)', () => {
+      api.prepare.and.returnValue(throwError(() => new OrderRuleError('x', 'fiscal_period_closed', [], '', [], 'Gestión 2026')));
+      const element = setup();
+      component.runPrimary();
+      fixture.detectChanges();
+      expect(text(element, 'fiscal-period-message')).toContain('«Gestión 2026»');
+    });
+
     it('clears the block when the next action starts (UI-03)', () => {
       api.prepare.and.returnValues(throwError(() => new OrderRuleError('x', 'fiscal_period_closed')), of(makeOrder({ status: 'IN_PREPARATION' })));
       const element = setup();

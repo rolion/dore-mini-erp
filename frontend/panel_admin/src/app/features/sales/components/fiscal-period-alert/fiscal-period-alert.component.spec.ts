@@ -8,9 +8,10 @@ describe('FiscalPeriodAlertComponent', () => {
   let fixture: ComponentFixture<FiscalPeriodAlertComponent>;
   let enabled: Set<string>;
 
-  function render(code: FiscalPeriodErrorCode): HTMLElement {
+  function render(code: FiscalPeriodErrorCode, periodName = ''): HTMLElement {
     fixture = TestBed.createComponent(FiscalPeriodAlertComponent);
     fixture.componentRef.setInput('code', code);
+    fixture.componentRef.setInput('periodName', periodName);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }
@@ -35,6 +36,11 @@ describe('FiscalPeriodAlertComponent', () => {
   it('explains that the period is closed (UI-03)', () => {
     const element = render('fiscal_period_closed');
     expect(element.querySelector('[data-testid="fiscal-period-message"]')?.textContent).toContain('está cerrado');
+  });
+
+  it('names the closed period when the server reports it (UI-03)', () => {
+    const element = render('fiscal_period_closed', 'Gestión 2026');
+    expect(element.querySelector('[data-testid="fiscal-period-message"]')?.textContent).toContain('«Gestión 2026»');
   });
 
   it('offers the link to the periods only when Accounting is enabled (UI-03)', () => {

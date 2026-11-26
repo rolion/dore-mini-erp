@@ -192,6 +192,11 @@ function toShortages(body: unknown): StockShortage[] {
   });
 }
 
+function toPeriodName(body: unknown): string {
+  const period = (body as { period?: unknown } | null)?.period;
+  return typeof period === 'string' ? period : '';
+}
+
 function toOrder(dto: OrderDto): Order {
   return {
     id: dto.id,
@@ -299,6 +304,7 @@ function toApiError(err: HttpErrorResponse): OrderApiError {
       rule.code === 'insufficient_stock' ? toShortages(err.error) : [],
       typeof warehouse?.name === 'string' ? warehouse.name : '',
       rule.code === 'posting_configuration_missing' ? toPostingIssues(err.error) : [],
+      rule.code === 'fiscal_period_closed' ? toPeriodName(err.error) : '',
     );
   }
   return new OrderApiError(GENERIC_ERROR_MESSAGE(), err.status);

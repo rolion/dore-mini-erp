@@ -15,6 +15,7 @@
 | 2026-11-25 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-11-25 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-25 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2445) y Karma (1664) en verde por verificación propia | delivery-build |
+| 2026-11-25 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 y REV-02 (Medium, huecos de prueba) y REV-03/REV-04 (Low) corregidos y marcados Resueltos; se repite el Quality Gate sobre el estado final | delivery-publish |
 
 ## Investigación
 
@@ -110,7 +111,14 @@ Ver `docs/adr/ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo.md`.
 **Verificación propia (no es el Quality Gate).** `ng lint` y `i18n:check` sin hallazgos; `ng build` compila; Karma de `features` y `core`: 1664 pruebas OK; backend: pruebas de `sales`, `reporting`, `customers`, `data_import`, `modularity`, `accounting` y las nuevas en verde en la corrida por módulos; suite completa del backend (`python manage.py test`, PostgreSQL): 2445 pruebas OK. Una primera corrida de la suite completa dio cientos de errores por ejecutarse a la vez que otra sobre la misma base de pruebas; repetida sola y con base propia, quedaron 3 fallos reales (dos pruebas de `sales` que esperaban la etiqueta antigua en la referencia del movimiento de inventario y la guarda `company_id` indexado del contador), corregidos y re-ejecutada la suite completa en verde. `0006` se regeneró antes de cualquier merge para indexar `company_id` del contador.
 
 ## Review
-_Pendiente_
+
+**Ciclo 1 (subagente aislado, contexto limpio).** Ejecutó: suite completa del backend (2445 OK), Karma completo (1844 OK), `ng lint`, `i18n:check`, `ng build`, `ruff`/`flake8` (0 avisos en líneas cambiadas) y `bandit` (sin hallazgos); `npm audit` y revisión visual en navegador no se realizaron. Veredicto: sin Critical/High, con 4 hallazgos:
+- [REV-01](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-01.md) (Medium) prueba AC-08 débil → Resuelto (verificado por mutación).
+- [REV-02](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-02.md) (Medium) sin prueba de importación con período faltante/cerrado → Resuelto.
+- [REV-03](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-03.md) (Low) vista previa de devolución sin aserción → Resuelto.
+- [REV-04](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-04.md) (Low) aviso de período cerrado sin nombre → Resuelto.
+
+Tras las correcciones se repite el Quality Gate (ciclo 2) sobre el estado final.
 
 ## Publicación
 _Pendiente_

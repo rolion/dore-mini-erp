@@ -1868,6 +1868,7 @@
     "FISCAL_PERIOD": {
       "SIN_PERIODO": "The order date is not inside any fiscal period, so it cannot be confirmed. Create the period in Accounting.",
       "CERRADO": "The fiscal period of the order date is closed, so it cannot be confirmed. Reopen it in Accounting.",
+      "CERRADO_NOMBRE": "The fiscal period “{{name}}” is closed, so it cannot be confirmed. Reopen it in Accounting.",
       "IR_A_PERIODOS": "Go to fiscal periods"
     },
     "ORDER_CREATE": {

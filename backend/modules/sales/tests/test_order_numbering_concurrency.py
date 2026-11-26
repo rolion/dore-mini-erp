@@ -1,8 +1,8 @@
 """Carrera de numeración (TASK-numeracion-correlativa-pedidos-venta, AC-07/AC-08): PostgreSQL real e hilos."""
 import threading
+import time
 from datetime import date, datetime, timezone
 
-from django.db import transaction
 from django.test import TransactionTestCase
 
 from modules.accounting.application.fiscal_periods import CloseFiscalPeriod
@@ -12,7 +12,7 @@ from modules.accounting.tests.test_concurrency import _run_together
 from modules.sales.application.commands import StartOrderPreparation
 from modules.sales.domain.exceptions import OrderRuleViolation
 from modules.sales.infrastructure.adapters import OrderNumberingAdapter
-from modules.sales.infrastructure.django.models import OrderModel
+from modules.sales.infrastructure.django.models import OrderModel, OrderNumberCounterModel
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
 
 from .test_order_numbering import make_order, make_period
@@ -72,30 +72,40 @@ class ConcurrentNumberingTests(TransactionTestCase):
         self.assertEqual(numbers(self.company), [1])
         self.assertEqual(make_order(self.company, date(2026, 3, 2)).number.number, 2)
 
-    def test_confirming_against_a_close_never_numbers_inside_a_closed_period(self):  # AC-08
-        orders = [make_order(self.company, date(2026, 3, 1), confirm=False) for _ in range(4)]
-        started = threading.Event()
+    def test_a_close_waits_for_the_confirmation_in_flight(self):  # AC-08
+        """La confirmación retiene el bloqueo del período; el cierre arranca después y debe esperarla."""
+        order = make_order(self.company, date(2026, 3, 1), confirm=False)
+        locked = threading.Event()
+        events = []
 
-        def close():
-            started.wait(timeout=10)
+        def confirming():
+            repository = DjangoOrderRepository(self.company.id)
+            numbering = OrderNumberingAdapter(self.company.id)
+            confirmed = repository.get_for_update(order.id)
+            confirmed.ensure_confirmable()
+            confirmed.start_preparation(numbering.next_number(confirmed.order_date))  # toma el período
+            repository.save(confirmed)
+            locked.set()
+            time.sleep(0.5)  # la confirmación sigue abierta mientras el cierre intenta entrar
+            events.append('numbered')
+
+        def closing():
+            self.assertTrue(locked.wait(timeout=10))
             CloseFiscalPeriod(DjangoFiscalPeriodRepository(self.company.id)).execute(
                 self.period.id, 'Ana', datetime(2026, 11, 25, tzinfo=timezone.utc))
+            events.append('closed')
 
-        def first_confirm():
-            started.set()
-            confirm(self.company, orders[0])()
+        outcomes = _run_together(confirming, closing)
+        self.assertEqual(outcomes, [None, None])
+        self.assertEqual(events, ['numbered', 'closed'])
+        self.assertEqual(numbers(self.company), [1])  # quedó numerada en el período antes de cerrarse
+        self.assertEqual(self.period.__class__.objects.get(pk=self.period.id).status, 'CLOSED')
 
-        jobs = [first_confirm, close] + [confirm(self.company, order) for order in orders[1:]]
-        outcomes = _run_together(*jobs)
-        unexpected = [o for o in outcomes if o is not None
-                      and not (isinstance(o, OrderRuleViolation) and o.code == 'fiscal_period_closed')]
-        self.assertEqual(unexpected, [])
-        numbered = numbers(self.company)
-        self.assertEqual(numbered, list(range(1, len(numbered) + 1)))  # sin huecos entre los numerados antes del cierre
-        closed_at = self.period.__class__.objects.get(pk=self.period.id)
-        self.assertEqual(closed_at.status, 'CLOSED')
-        # después del cierre firme, ya no se numera
-        late = make_order(self.company, date(2026, 3, 2), confirm=False)
-        with self.assertRaises(OrderRuleViolation) as caught, transaction.atomic():
-            confirm(self.company, late)()
-        self.assertEqual(caught.exception.code, 'fiscal_period_closed')
+    def test_after_a_committed_close_confirming_is_rejected_without_numbering(self):  # AC-08, AC-06
+        _run_together(lambda: CloseFiscalPeriod(DjangoFiscalPeriodRepository(self.company.id)).execute(
+            self.period.id, 'Ana', datetime(2026, 11, 25, tzinfo=timezone.utc)))
+        orders = [make_order(self.company, date(2026, 3, 1), confirm=False) for _ in range(3)]
+        outcomes = _run_together(*[confirm(self.company, order) for order in orders])
+        self.assertTrue(all(isinstance(o, OrderRuleViolation) and o.code == 'fiscal_period_closed' for o in outcomes))
+        self.assertEqual(numbers(self.company), [])
+        self.assertFalse(OrderNumberCounterModel.objects.filter(company_id=self.company.id).exists())

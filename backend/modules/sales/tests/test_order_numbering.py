@@ -185,6 +185,15 @@ class ApiTests(APITestCase):
         self.assertEqual((response.status_code, response.json()['code']), (409, 'fiscal_period_missing'))
         self.assertEqual(self.client.get(f"{LIST_URL}{created['id']}/").json()['status'], 'NEW')
 
+    def test_the_return_preview_uses_the_numbered_code(self):  # API-03, AC-11
+        make_period(self.company, 'Gestión 2026', date(2026, 1, 1), date(2026, 12, 31))
+        order = self.start('2026-03-01').json()
+        for action in ('ready', 'deliver'):
+            response = self.client.post(f"{LIST_URL}{order['id']}/{action}/", {}, format='json')
+            self.assertEqual(response.status_code, 200, response.content)
+        preview = self.client.get(f"{LIST_URL}{order['id']}/return-preview/")
+        self.assertEqual((preview.status_code, preview.json()['order_code']), (200, 'NV-000001'))
+
     def test_the_delivery_entry_description_carries_the_period(self):  # AC-11
         make_period(self.company, 'Gestión 2026', date(2026, 1, 1), date(2026, 12, 31))
         order = make_order(self.company, date(2026, 3, 1))
