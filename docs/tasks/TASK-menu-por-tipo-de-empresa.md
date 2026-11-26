@@ -108,7 +108,7 @@ Ver [PLAN-2026-11-26-menu-por-tipo-de-empresa](../plans/PLAN-2026-11-26-menu-por
 
 **UI.** Pantalla de referencia: plantilla «Autenticación» (`signup`) con `form-select` ya usado en el sistema; sin componentes compartidos nuevos.
 
-**Verificación propia (no es el Quality Gate).** Frontend: `ng lint` limpio, `tsc` limpio, `i18n:check` 0 faltantes, 1866 pruebas Karma OK, `ng build` OK. Backend: `ruff` limpio en lo cambiado; `accounts`, `modularity` y `data_import` (238 pruebas) OK; suite completa en curso al escribir esta nota.
+**Verificación propia (no es el Quality Gate).** Frontend: `ng lint` limpio, `tsc` limpio, `i18n:check` 0 faltantes, 1866 pruebas Karma OK, `ng build` OK. Backend: `ruff` limpio en lo cambiado; `accounts`, `modularity` y `data_import` (238 pruebas) OK; suite completa 2514 pruebas OK.
 
 ## Review
 _Pendiente_
