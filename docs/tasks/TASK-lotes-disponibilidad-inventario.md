@@ -1,6 +1,6 @@
 # TASK-lotes-disponibilidad-inventario: Disponibilidad de cuñapés por lote en Inventario
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-lotes-disponibilidad-inventario (base: `produccion`)
@@ -16,6 +16,7 @@
 | 2026-11-26 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | PLAN v1 READY (decisiones de negocio respondidas por el usuario) | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suites de inventory, sales, purchases, costing, data_import y shared (1218) y Karma de inventory/layout/i18n (237) en verde por verificación propia | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS (subagente aislado); REV-01 Medium abierto, REV-02..04 Low; revisión visual no verificada | delivery-publish |
 
 ## Investigación
 
@@ -108,7 +109,10 @@ Ver `docs/plans/PLAN-2026-11-26-lotes-disponibilidad-inventario.md` (v1, COMPLET
 **UI.** Pantalla de referencia: `movement-list`/`stock-list` (lista de solo lectura con filtros) y `stock-detail` (detalle con tabla embebida); componentes reutilizados: `inventory-table`, `badge-outline`, `ngb-pagination`; no se crearon componentes compartidos nuevos.
 
 ## Review
-_Pendiente_
+**Quality Gate (subagente aislado): PASS** con una reserva visual y un hallazgo Medium abierto.
+- Backend completo: 2533 pruebas OK; Karma completo: 1864 OK; `npm run lint`, `i18n:check`, `npm run build`, ruff, flake8, bandit y `npm audit`: sin hallazgos; sin secretos en el diff.
+- No realizado: revisión visual en navegador (móvil/escritorio, tema claro/oscuro) → **no verificada**; mutación propia de las pruebas de carrera (la hizo el implementador).
+- Hallazgos: [REV-01](../reviews/REV-2026-11-26-lotes-disponibilidad-inventario-01.md) Medium IMPLEMENTATION (control previo de Ventas cuenta el stock refrigerando); REV-02 (Low, contrato `lot` anidado), REV-03 (Low, desvíos menores DDR/ADR) y REV-04 (Low, prueba de carrera de AC-02), en `docs/reviews/`.
 
 ## Publicación
-_Pendiente_
+PR #128 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migración aditiva `inventory/0004`) y **arquitectura** (ADR `ADR-lotes-disponibilidad-inventario-modelo-lotes`, nueva dependencia `inventory → accounting`, refactor de la numeración de ventas/compras). Pendiente de la persona: decidir REV-01 (corregir antes del merge o aceptarlo como deuda), revisión visual y confirmar la interpretación del código `L-YYYYMMDD-NNNN`.
