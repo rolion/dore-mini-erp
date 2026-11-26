@@ -34,7 +34,7 @@ describe('PatientDetailComponent', () => {
     expect(text()).toContain('Ana'); expect(text()).toContain('Dato clínico privado');
     expect(text()).toContain('Ver cliente');
     expect(text()).not.toContain('ID cliente'); expect(text()).not.toContain('Editar ficha');
-    expect(text()).not.toContain('Odontograma');
+    expect(text()).toContain('Odontograma'); // PB-ODO-002: acceso al odontograma desde la ficha
     expect(root().querySelector('textarea')).toBeNull();
     expect(text().indexOf('Resumen clínico')).toBeLessThan(text().indexOf('Antecedentes médicos'));
     expect(text().indexOf('Antecedentes médicos')).toBeLessThan(text().indexOf('Datos personales'));

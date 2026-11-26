@@ -28,6 +28,7 @@
         @if (p.active) {
           <button class="btn btn-warning" type="button" [disabled]="saving" (click)="toggleActive()">{{ 'DENTISTRY.PATIENT_DETAIL.ARCHIVAR_PERFIL' | translate }}</button>
         }
+        <a class="btn btn-primary" [routerLink]="['/pocketbiz/dentistry/patients', id, 'odontogram']">{{ 'DENTISTRY.PATIENT_DETAIL.ODONTOGRAMA' | translate }}</a>
         <a class="btn btn-light" routerLink="/pocketbiz/dentistry/patients" [queryParams]="backFilters">{{ 'DENTISTRY.PATIENT_DETAIL.VOLVER_A_PACIENTES' | translate }}</a>
       </div>
     </header>
