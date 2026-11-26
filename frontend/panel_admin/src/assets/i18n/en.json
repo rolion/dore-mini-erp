@@ -10,7 +10,8 @@
         "JOURNAL": "Movements",
         "BALANCES": "Balances",
         "CASH_FLOW": "Cash flow",
-        "INCOME_EXPENSE": "Income and expenses"
+        "INCOME_EXPENSE": "Income and expenses",
+        "BALANCE_SHEET": "Balance sheet"
       }
     },
     "AGENDA": {
@@ -3162,6 +3163,24 @@
       "SIN_REGISTROS": "No records",
       "VER_MOVIMIENTOS": "View movements of {{name}}",
       "NOTA_APERTURA": "Balances come only from journal entries. With “From”, the opening balance before that date is shown; openings are recorded as entries."
+    },
+    "BALANCE_SHEET": {
+      "NOTA_RANGO": "Balances are cumulative up to “To”. With “From”, the opening balance (before that date) is separated from the movement in the range.",
+      "SECCION_ASSET": "Assets",
+      "SECCION_LIABILITY": "Liabilities",
+      "SECCION_EQUITY": "Equity",
+      "SALDO_INICIAL": "Opening balance",
+      "MOVIMIENTO": "Movement",
+      "SALDO_FINAL": "Closing balance",
+      "RESULTADOS_ANTERIORES": "Results of previous periods",
+      "RESULTADO_PERIODO": "Result for the period",
+      "TOTAL_SECCION": "Total {{section}}",
+      "TOTAL_ACTIVO": "Total assets",
+      "TOTAL_PASIVO_PATRIMONIO": "Total liabilities + equity",
+      "ECUACION": "Assets = Liabilities + Equity",
+      "DIFERENCIA": "Difference: {{amount}}",
+      "AVISO_SIN_CLASIFICAR": "There are unclassified accounts with a balance ({{amount}}); they are left out of the balance sheet, so it may not balance. Classify them in Accounts.",
+      "SIN_REGISTROS": "No records"
     },
     "POSTING": {
       "TAB": "Automatic entries",

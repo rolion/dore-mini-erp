@@ -163,6 +163,12 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/accounting/pages/income-expense/income-expense.component').then(m => m.IncomeExpenseComponent),
             },
             {
+                path: 'accounting/balance-sheet',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/balance-sheet/balance-sheet.component').then(m => m.BalanceSheetComponent),
+            },
+            {
                 path: 'accounting/entries',
                 canActivate: [moduleGuard],
                 data: { module: 'accounting' },
