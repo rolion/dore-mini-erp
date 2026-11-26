@@ -54,6 +54,18 @@ class TaskTests(SimpleTestCase):
         task.archive()
         self.assertEqual(task.status, ARCHIVED)
 
+    def test_archive_from_done_keeps_completed_at(self):  # INV-03 (PLAN v3), REV-09
+        task = make_task()
+        task.complete(NOW)
+        task.archive()
+        self.assertEqual((task.status, task.completed_at), (ARCHIVED, NOW))
+
+    def test_archive_from_cancelled_has_no_completed_at(self):  # INV-03
+        task = make_task()
+        task.cancel()
+        task.archive()
+        self.assertEqual((task.status, task.completed_at), (ARCHIVED, None))
+
     def test_invalid_transitions(self):
         task = make_task()
         for action in (task.reopen, task.archive):  # una pendiente no se reabre ni se archiva

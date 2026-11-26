@@ -127,6 +127,16 @@ class TransitionTests(TaskApiBase):
         for action in ('cancel', 'reopen', 'archive', 'complete'):
             self.act(task['id'], action, expected=409)
 
+    def test_archive_from_done_keeps_completed_at(self):  # AC-04, INV-03 (PLAN v3), REV-09
+        task = self.task()
+        done = self.act(task['id'], 'complete')
+        archived = self.act(task['id'], 'archive')
+        self.assertEqual(archived['status'], 'archived')
+        self.assertEqual(archived['completed_at'], done['completed_at'])
+        stored = TaskModel.objects.get(pk=task['id'])
+        self.assertEqual((stored.status, stored.completed_at is not None), ('archived', True))
+        self.assertEqual(self.listing(status='all')['count'], 0)  # archivada: fuera de toda lista
+
     def test_archived_hidden_from_every_list(self):  # AC-04, INV-08
         task = self.task()
         self.act(task['id'], 'cancel')

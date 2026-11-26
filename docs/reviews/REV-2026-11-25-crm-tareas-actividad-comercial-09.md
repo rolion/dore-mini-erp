@@ -1,6 +1,6 @@
 # REV-2026-11-25-crm-tareas-actividad-comercial-09: Sin prueba de que archivar una tarea hecha conserva completed_at (INV-03 v3)
 
-**Status:** Open
+**Status:** Resolved (2026-11-25: pruebas de dominio y API añadidas; modules.crm 145 OK)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-25-crm-tareas-actividad-comercial.md (v3)
