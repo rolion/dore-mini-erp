@@ -1,6 +1,6 @@
 # TASK-numeracion-correlativa-compras: Numeración correlativa de compras por período fiscal
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-numeracion-correlativa-compras
@@ -16,6 +16,7 @@
 | 2026-11-26 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2492) y Karma (644 de los módulos tocados) en verde por verificación propia | delivery-build |
 | 2026-11-26 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 y REV-02 (Medium: 500 con dígitos Unicode en la búsqueda y texto «pedido» en el aviso compartido) y REV-03 (Low: huecos de prueba) corregidos y marcados Resueltos; se repite el Quality Gate sobre el estado final | delivery-publish |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate ciclo 2 (subagente aislado): PASS, sin hallazgos nuevos; revisión visual no realizada | delivery-publish |
 
 ## Investigación
 
@@ -115,7 +116,10 @@ Ver `docs/adr/ADR-numeracion-correlativa-compras-contador-por-periodo.md`.
 - [REV-02](../reviews/REV-2026-11-26-numeracion-correlativa-compras-02.md) (Medium) el aviso compartido hablaba de «pedido» en compras → Resuelto.
 - [REV-03](../reviews/REV-2026-11-26-numeracion-correlativa-compras-03.md) (Low) huecos de cobertura (textos de asiento, API-03, EDGE-02, desempate de la migración) → Resuelto.
 
-Tras las correcciones se repite el Quality Gate (ciclo 2) sobre el estado final.
+**Ciclo 2 (subagente aislado, estado final, HEAD 869ada67).** Ejecutó: backend completo `Ran 2498 tests ... OK`, Karma `TOTAL: 1853 SUCCESS`, `ng lint` sin hallazgos, `i18n:check` 2512 / 0 faltantes, `ng build` compila, `makemigrations --check`: sin cambios, `ruff`/`flake8` sin avisos en líneas cambiadas, bandit sin hallazgos. Verificó REV-01..03 (REV-01 con mutación propia: sin `isascii()` la prueba falla con `ValueError`) y que el JSON de i18n solo cambió las claves esperadas. **Veredicto: PASS**, sin hallazgos nuevos.
+
+**No verificado:** revisión visual en navegador (móvil/escritorio, claro/oscuro), `npm audit`, estabilidad de las pruebas con hilos en repeticiones, y las migraciones `0010`/`0011` contra datos reales. Nota menor: la búsqueda por número con más de 9 dígitos (ceros a la izquierda) no encuentra la compra; el plan solo promete `NC-000012` o `12`.
 
 ## Publicación
-_Pendiente_
+
+PR https://github.com/rolion/dore-mini-erp/pull/125 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migraciones `0010` y `0011` sobre `purchases_purchase`, con numeración del histórico) y **arquitectura** (ADR `ADR-numeracion-correlativa-compras-contador-por-periodo`); lo aprueba un humano. Antes del merge conviene probar `0010`/`0011` contra una copia de producción; el despliegue ya hace backup antes de `migrate`. Toca también código de ventas ya mergeado, solo para mover `app-fiscal-period-alert` a `shared/` (imports y claves de i18n), sin cambio de comportamiento.
