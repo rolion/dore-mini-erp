@@ -1,6 +1,6 @@
 # TASK-numeracion-correlativa-pedidos-venta: Numeración correlativa de pedidos de venta por período fiscal
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-numeracion-correlativa-pedidos-venta
@@ -18,6 +18,7 @@
 | 2026-11-25 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 y REV-02 (Medium, huecos de prueba) y REV-03/REV-04 (Low) corregidos y marcados Resueltos; se repite el Quality Gate sobre el estado final | delivery-publish |
 | 2026-11-25 | REVIEW → PUBLISH | Quality Gate ciclo 2 (subagente aislado): PASS, sin Critical/High; REV-05 (Low) resuelto con una aserción; revisión visual no realizada | delivery-publish |
 | 2026-11-25 | PUBLISH → REVIEW | El usuario pidió numerar también los cancelados heredados (cambio de Specification AC-12 aprobado en el chat; PLAN v2, migración `0008`); se repite el Quality Gate | delivery-publish |
+| 2026-11-25 | REVIEW → PUBLISH | Quality Gate ciclo 3 (subagente aislado, PLAN v2 / `0008`): PASS, sin Critical/High; REV-06 (Low, documental) resuelto; revisión visual no realizada | delivery-publish |
 
 ## Investigación
 
@@ -93,7 +94,7 @@ Ver `docs/adr/ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo.md`.
 - Dominio `sales/domain/order.py`: `OrderNumber`, `Order.number`, `ensure_confirmable()` y `start_preparation(number)` (INV-01..04, AC-03). `OrderSummary` lleva `number` y `code`.
 - Puerto `OrderNumbering` (`application/ports.py`) usado por `StartOrderPreparation` y `PlaceOrder` (AC-02, AC-05, AC-06, AC-10); `ensure_confirmable()` corre antes de numerar para no consumir número en confirmaciones inválidas (EDGE-01).
 - Adaptador `OrderNumberingAdapter` (`infrastructure/adapters.py`): `accounting.services.lock_open_period` + contador con `select_for_update`; traduce a `fiscal_period_missing` / `fiscal_period_closed` (409 por el `RuleConflict` existente). Descripción del asiento de entrega con el período (AC-11).
-- Modelos y migraciones: `0006` (columnas nulas, `OrderNumberCounterModel`, restricción única parcial y dos CHECK) y `0007` (numeración del histórico, repetible; AC-12).
+- Modelos y migraciones: `0006` (columnas nulas, `OrderNumberCounterModel`, restricción única parcial y dos CHECK) `0007` (numeración del histórico confirmado) y `0008` (numera los CANCELLED heredados a continuación; PLAN v2; ambas repetibles; AC-12).
 - API: `code`, `number`, `fiscal_period` en lista y detalle (API-01..03).
 
 **Frontend.** `fiscalPeriod` en modelo y mapeo; lista (tabla y tarjetas) y detalle muestran el período solo si hay número (UI-01, UI-02); componente `app-fiscal-period-alert` (enlace a Contabilidad solo si el módulo está habilitado) en detalle y en `order-create` (UI-03); claves es/en/pt `SALES.FISCAL_PERIOD.*`, `SALES.ORDER_LIST.PERIODO`, `SALES.ORDER_DETAIL.PERIODO_FISCAL`. Diálogos e historial de clientes consumen `code` sin cambios (UI-04). Pantallas de referencia: Lista y «Detalle de documento en curso» del sistema de diseño; sin componentes nuevos de `shared/`.
@@ -123,8 +124,10 @@ Ver `docs/adr/ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo.md`.
 **Ciclo 2 (subagente aislado, estado final).** Ejecutó: backend completo `Ran 2449 tests ... OK` (PostgreSQL), Karma `TOTAL: 1847 SUCCESS`, `ng lint` sin hallazgos, `i18n:check` 2510 claves / 0 faltantes, `ng build` compila, `ruff`/`flake8` sin avisos en líneas cambiadas, `bandit` sin hallazgos. Verificó REV-01..04 (REV-01 con mutación propia: sin `lock_open_period` fallan 2 de 5 pruebas de carrera). **Veredicto: PASS**, sin Critical/High. Hallazgo nuevo:
 - [REV-05](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-05.md) (Low) sin aserción de `period` en el 409 → Resuelto con una aserción añadida después del gate y una ejecución dirigida (`test_order_numbering`: 19 OK); el resto del estado quedó cubierto por el ciclo 2.
 
-**No verificado:** revisión visual en navegador (móvil/escritorio, claro/oscuro), `npm audit`, estabilidad de las pruebas con hilos en repeticiones, y la migración `0007` contra datos reales.
+**Ciclo 3 (subagente aislado, tras el PLAN v2 y la migración `0008`).** Ejecutó: backend completo `Ran 2451 tests ... OK` (base creada de cero con las 8 migraciones de `sales`), `makemigrations --check`: sin cambios, Karma `TOTAL: 1847 SUCCESS`, `ng lint` sin hallazgos, `i18n:check` 2510 / 0 faltantes, `ng build` compila, `ruff`/`flake8` sin avisos en líneas cambiadas, bandit sin hallazgos en el diff. Revisó `0008` (idempotencia, orden, continuidad del contador, NEW y fuera de período sin número, empresas independientes) y la coherencia documental. **Veredicto: PASS.** Hallazgo nuevo: [REV-06](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-06.md) (Low, documental: descripción del PR y TASK no mencionaban `0008`) → Resuelto. Brecha menor anotada: ninguna prueba de `0008` cubre un cancelado con fecha en período cerrado (se numera igual que en `0007`, que sí lo prueba).
+
+**No verificado:** revisión visual en navegador (móvil/escritorio, claro/oscuro), `npm audit`, estabilidad de las pruebas con hilos en repeticiones, y las migraciones `0007`/`0008` contra datos reales.
 
 ## Publicación
 
-PR https://github.com/rolion/dore-mini-erp/pull/124 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migraciones `0006` y `0007` sobre `sales_order`, con numeración del histórico) y **arquitectura** (ADR `ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo`); lo aprueba un humano. Antes del merge conviene probar `0007` contra una copia de producción; el despliegue ya hace backup antes de `migrate`.
+PR https://github.com/rolion/dore-mini-erp/pull/124 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migraciones `0006`, `0007` y `0008` sobre `sales_order`, con numeración del histórico) y **arquitectura** (ADR `ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo`); lo aprueba un humano. Antes del merge conviene probar `0007` y `0008` contra una copia de producción; el despliegue ya hace backup antes de `migrate`.
