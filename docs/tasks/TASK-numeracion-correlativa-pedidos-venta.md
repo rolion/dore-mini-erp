@@ -1,6 +1,6 @@
 # TASK-numeracion-correlativa-pedidos-venta: Numeración correlativa de pedidos de venta por período fiscal
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-numeracion-correlativa-pedidos-venta
@@ -16,6 +16,7 @@
 | 2026-11-25 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-25 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suite backend (2445) y Karma (1664) en verde por verificación propia | delivery-build |
 | 2026-11-25 | REVIEW → REVIEW | Quality Gate ciclo 1 (subagente aislado): sin Critical/High; REV-01 y REV-02 (Medium, huecos de prueba) y REV-03/REV-04 (Low) corregidos y marcados Resueltos; se repite el Quality Gate sobre el estado final | delivery-publish |
+| 2026-11-25 | REVIEW → PUBLISH | Quality Gate ciclo 2 (subagente aislado): PASS, sin Critical/High; REV-05 (Low) resuelto con una aserción; revisión visual no realizada | delivery-publish |
 
 ## Investigación
 
@@ -118,7 +119,11 @@ Ver `docs/adr/ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo.md`.
 - [REV-03](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-03.md) (Low) vista previa de devolución sin aserción → Resuelto.
 - [REV-04](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-04.md) (Low) aviso de período cerrado sin nombre → Resuelto.
 
-Tras las correcciones se repite el Quality Gate (ciclo 2) sobre el estado final.
+**Ciclo 2 (subagente aislado, estado final).** Ejecutó: backend completo `Ran 2449 tests ... OK` (PostgreSQL), Karma `TOTAL: 1847 SUCCESS`, `ng lint` sin hallazgos, `i18n:check` 2510 claves / 0 faltantes, `ng build` compila, `ruff`/`flake8` sin avisos en líneas cambiadas, `bandit` sin hallazgos. Verificó REV-01..04 (REV-01 con mutación propia: sin `lock_open_period` fallan 2 de 5 pruebas de carrera). **Veredicto: PASS**, sin Critical/High. Hallazgo nuevo:
+- [REV-05](../reviews/REV-2026-11-25-numeracion-correlativa-pedidos-venta-05.md) (Low) sin aserción de `period` en el 409 → Resuelto con una aserción añadida después del gate y una ejecución dirigida (`test_order_numbering`: 19 OK); el resto del estado quedó cubierto por el ciclo 2.
+
+**No verificado:** revisión visual en navegador (móvil/escritorio, claro/oscuro), `npm audit`, estabilidad de las pruebas con hilos en repeticiones, y la migración `0007` contra datos reales.
 
 ## Publicación
-_Pendiente_
+
+PR https://github.com/rolion/dore-mini-erp/pull/124 listo para aprobación humana (no se mergea). Cambio sensible: **base de datos** (migraciones `0006` y `0007` sobre `sales_order`, con numeración del histórico) y **arquitectura** (ADR `ADR-numeracion-correlativa-pedidos-venta-contador-por-periodo`); lo aprueba un humano. Antes del merge conviene probar `0007` contra una copia de producción; el despliegue ya hace backup antes de `migrate`.

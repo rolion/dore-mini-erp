@@ -174,6 +174,7 @@ class ApiTests(APITestCase):
         make_period(self.company, 'Gestión 2026', date(2026, 1, 1), date(2026, 12, 31), status='CLOSED')
         response = self.start('2026-03-01')
         self.assertEqual((response.status_code, response.json()['code']), (409, 'fiscal_period_closed'))
+        self.assertEqual(response.json()['period'], 'Gestión 2026')  # la UI nombra el período cerrado
         self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 0)
 
     def test_prepare_without_period_is_a_409_and_the_order_stays_new(self):  # AC-05, API-02
