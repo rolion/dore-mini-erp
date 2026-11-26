@@ -9,6 +9,7 @@ import { ProductsApiService } from '../../products/services/products-api.service
 import { Recipe, RecipeApiError } from '../models/recipe';
 import { RecipeFiltersState, RecipesApiService } from '../services/recipes-api.service';
 import { COMPACT_QUERY, RecipeDetailComponent } from './recipe-detail/recipe-detail.component';
+import { COMPACT_QUERY as LIST_COMPACT_QUERY } from './recipe-list/recipe-list.component';
 import { RecipeFormComponent, positiveQuantity } from './recipe-form/recipe-form.component';
 import { RecipeListComponent } from './recipe-list/recipe-list.component';
 
@@ -40,10 +41,29 @@ describe('positiveQuantity', () => {
 
 describe('RecipeListComponent', () => {
   let api: jasmine.SpyObj<RecipesApiService>;
+  let compact: boolean;
   beforeEach(() => {
+    compact = false;
     api = jasmine.createSpyObj<RecipesApiService>('api', ['list']);
+    const breakpoints = jasmine.createSpyObj<BreakpointObserver>('breakpoints', ['observe']);
+    breakpoints.observe.and.callFake(() => new BehaviorSubject({ matches: compact, breakpoints: {} }));
     TestBed.configureTestingModule({ imports: [RecipeListComponent], providers: [...provideTestTranslations(), provideRouter([]),
-      RecipeFiltersState, { provide: RecipesApiService, useValue: api }] });
+      RecipeFiltersState, { provide: RecipesApiService, useValue: api }, { provide: BreakpointObserver, useValue: breakpoints }] });
+  });
+
+  it('below 957 px shows one card per recipe instead of the table', () => {
+    compact = true;
+    api.list.and.returnValue(of(page([recipe])));
+    const fixture = TestBed.createComponent(RecipeListComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(LIST_COMPACT_QUERY).toBe('(max-width: 956.98px)');
+    expect(root.querySelector('[data-testid="recipe-table"]')).toBeNull();
+    const cards = root.querySelectorAll('[data-testid="recipe-card"]');
+    expect(cards.length).toBe(1);
+    const text = cards[0].textContent ?? '';
+    for (const expected of ['Queso', 'Cuñapé a granel', '24 u', 'Activo']) expect(text).toContain(expected);
+    expect(cards[0].querySelectorAll('a[aria-label], button[aria-label]').length).toBe(3);
   });
 
   it('lists recipe, product, yield with unit and status, active by default', () => {

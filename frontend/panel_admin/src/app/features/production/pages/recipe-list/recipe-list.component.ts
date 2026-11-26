@@ -1,3 +1,4 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -10,15 +11,22 @@ import { RecipeToggleComponent } from '../../components/recipe-toggle.component'
 import { Recipe, RecipeApiError, RecipeStatus, formatQuantity } from '../../models/recipe';
 import { RecipeFiltersState, RecipesApiService } from '../../services/recipes-api.service';
 
+/** Por debajo de 957 px la lista pasa a tarjetas. */
+export const COMPACT_QUERY = '(max-width: 956.98px)';
+
 @Component({
   selector: 'app-recipe-list',
   imports: [TranslatePipe, ReactiveFormsModule, RouterLink, NgbPagination, RecipeToggleComponent],
   templateUrl: './recipe-list.component.html',
+  styleUrl: './recipe-list.component.scss',
 })
 export class RecipeListComponent implements OnInit {
   readonly state = inject(RecipeFiltersState);
   private api = inject(RecipesApiService);
   private destroyRef = inject(DestroyRef);
+  private breakpoints = inject(BreakpointObserver);
+  /** Pantalla estrecha (< 957 px): tarjetas en lugar de tabla. */
+  compact = false;
   private reload$ = new Subject<void>();
   search = new FormControl(this.state.search, { nonNullable: true });
   status = new FormControl<RecipeStatus>(this.state.status, { nonNullable: true });
@@ -31,6 +39,7 @@ export class RecipeListComponent implements OnInit {
   readonly quantity = formatQuantity;
 
   ngOnInit(): void {
+    this.breakpoints.observe(COMPACT_QUERY).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(state => this.compact = state.matches);
     this.reload$.pipe(startWith(undefined), switchMap(() => {
       this.loading = true;
       this.error = '';

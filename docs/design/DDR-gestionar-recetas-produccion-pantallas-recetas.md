@@ -15,11 +15,11 @@ Primer uso del menú **Producción**. La persona responsable crea y mantiene rec
 
 ## Componentes/patrones elegidos
 - Foco: tras un error de validación el foco va al control del primer error.
-- Variante de tarjetas bajo 992 px: **pendiente** (la lista usa `table-responsive`).
+- Variante de tarjetas: por debajo de 957 px (`max-width: 956.98px`, igual que Productos y Servicios) la lista pasa a una tarjeta por receta, como `features/services`.
 - Lista: plantilla «Lista» (referencia `features/products/pages/product-list`, `features/services`): filtro de estado por defecto **Activos**, buscador, botón «+», tabla Bootstrap con `ngb-pagination` de servidor (patrón de `features/services`, no `ngx-datatable`), badge de estado.
 - Formulario: plantilla «Formulario con líneas» de `stock-opening`, **sin** paso de resumen (guardar es reversible; variante de un solo paso del §5): cabecera con Nombre, Producto resultante (`ng-select`), Rendimiento base (número + unidad base del producto, solo lectura); tabla de ingredientes con selector de producto sin repetidos, cantidad, unidad (solo lectura, derivada del producto), quitar y «+ Agregar ingrediente». Pie: Guardar / Cancelar (`unsavedChangesGuard`).
 - Detalle: plantilla «Detalle» (`dl.row`, badge, fechas `dd/MM/yyyy HH:mm`), acciones Editar (primario), Activar/Desactivar (`btn-warning`, con confirmación al desactivar), Volver.
-- Sin componentes nuevos de Oreva. Desviaciones del sistema de diseño aceptadas: tabla Bootstrap con `ngb-pagination` en lugar de `ngx-datatable` (igual que `features/services`) y variante de tarjetas pendiente; ver REV-04.
+- Sin componentes nuevos de Oreva. Desviaciones del sistema de diseño aceptadas: tabla Bootstrap con `ngb-pagination` en lugar de `ngx-datatable` (igual que `features/services`) ; la variante de tarjetas ya está implementada (REV-04).
 
 ## Alternativas consideradas
 - Elegir la unidad por ingrediente en un selector: descartado; sin conversiones solo cabe la unidad base, mostrarla fija evita errores.
