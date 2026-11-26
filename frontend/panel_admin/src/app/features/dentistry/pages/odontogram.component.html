@@ -1,0 +1,331 @@
+<section class="main-content">
+  @if (loading && !patient) { <p role="status">{{ 'DENTISTRY.ODONTOGRAM.CARGANDO' | translate }}</p> }
+  @if (error) {
+    <div class="alert alert-danger" role="alert">{{ error }}
+      <button class="btn btn-light ms-2" type="button" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+    </div>
+  }
+  @if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
+  @if (patient && catalog) {
+    <header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+      <div>
+        <nav [attr.aria-label]="'DENTISTRY.ODONTOGRAM.MIGAS_ARIA' | translate">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item">{{ 'DENTISTRY.ODONTOGRAM.MIGA_ODONTOLOGIA' | translate }}</li>
+            <li class="breadcrumb-item"><a routerLink="/pocketbiz/dentistry/patients">{{ 'DENTISTRY.ODONTOGRAM.MIGA_PACIENTES' | translate }}</a></li>
+            <li class="breadcrumb-item"><a [routerLink]="['/pocketbiz/dentistry/patients', id]">{{ patient.customer.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ 'DENTISTRY.ODONTOGRAM.TITULO' | translate }}</li>
+          </ol>
+        </nav>
+        <h3 class="mb-0 fw-bold text-reset">{{ 'DENTISTRY.ODONTOGRAM.TITULO' | translate }}</h3>
+      </div>
+      <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/patients', id]">{{ 'DENTISTRY.ODONTOGRAM.VOLVER_A_FICHA' | translate }}</a>
+    </header>
+
+    @if (archived) {
+      <div class="alert alert-secondary" role="status">{{ 'DENTISTRY.ODONTOGRAM.PERFIL_ARCHIVADO' | translate }}</div>
+    }
+    @if (catalog.pending_clinical_validation) {
+      <div class="alert alert-info" role="status">{{ 'DENTISTRY.ODONTOGRAM.CATALOGO_PROVISIONAL' | translate }}</div>
+    }
+
+    @if (!hasEvaluation) {
+      <div class="card shadow-sm border-0"><div class="card-body text-center py-5">
+        <p class="mb-3" data-testid="empty">{{ 'DENTISTRY.ODONTOGRAM.VACIO' | translate }}</p>
+        @if (canCreate) {
+          <button class="btn btn-primary" type="button" (click)="startNew()">{{ 'DENTISTRY.ODONTOGRAM.REGISTRAR_INICIAL' | translate }}</button>
+        }
+      </div></div>
+    } @else {
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-transparent border-bottom py-3 d-flex flex-wrap align-items-end justify-content-between gap-3">
+          <div class="d-flex flex-wrap align-items-end gap-3">
+            <div>
+              <label class="form-label mb-1" for="odo-version">{{ 'DENTISTRY.ODONTOGRAM.EVALUACION' | translate }}</label>
+              <select id="odo-version" class="form-select" [disabled]="busy" (change)="onSelectEvaluation($any($event.target).value)">
+                @if (isNew) { <option selected value="">{{ 'DENTISTRY.ODONTOGRAM.NUEVA_SIN_GUARDAR' | translate }}</option> }
+                @for (evaluation of evaluations; track evaluation.id) {
+                  <option [value]="evaluation.id" [selected]="evaluation.id === current?.id">{{ optionLabel(evaluation) }}</option>
+                }
+              </select>
+            </div>
+            @if (current) {
+              <span class="badge rounded-pill" [class.col-orange]="current.status === 'draft'" [class.col-green]="current.status === 'confirmed'"
+                data-testid="status-badge">{{ statusLabel(current) }}</span>
+            } @else {
+              <span class="badge rounded-pill col-orange" data-testid="status-badge">{{ 'DENTISTRY.ODONTOGRAM.BORRADOR' | translate }}</span>
+            }
+            @if (canCreate) {
+              <button class="btn btn-sm btn-light" type="button" [disabled]="busy" (click)="startNew()">{{ 'DENTISTRY.ODONTOGRAM.NUEVA_EVALUACION' | translate }}</button>
+            }
+          </div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="small" [class.text-danger]="state === 'error'" role="status" aria-live="polite" data-testid="save-status">{{ statusText }}</span>
+            @if (state === 'error') { <button class="btn btn-sm btn-light text-danger" type="button" [disabled]="busy" (click)="saveDraft()">{{ 'COMMON.REINTENTAR' | translate }}</button> }
+            @if (editable) {
+              <button class="btn btn-light" type="button" [disabled]="busy" (click)="openDiscard(discardDialog)">{{ 'DENTISTRY.ODONTOGRAM.DESCARTAR_BORRADOR' | translate }}</button>
+              <button class="btn btn-secondary" type="button" [disabled]="busy" (click)="saveDraft()">{{ 'DENTISTRY.ODONTOGRAM.GUARDAR_BORRADOR' | translate }}</button>
+              <button class="btn btn-primary" type="button" [disabled]="busy || !confirmable" (click)="openConfirm(confirmDialog)">{{ 'DENTISTRY.ODONTOGRAM.CONFIRMAR_EVALUACION' | translate }}</button>
+            }
+            @if (current && can('amend')) {
+              <button class="btn btn-warning" type="button" [disabled]="busy" (click)="openAmend(amendDialog)">{{ 'DENTISTRY.ODONTOGRAM.CORREGIR' | translate }}</button>
+            }
+          </div>
+        </div>
+        <div class="card-body">
+          @if (saveError) { <div class="alert alert-danger" role="alert" data-testid="save-error">{{ saveError }}</div> }
+          @if (current && current.status === 'confirmed') {
+            <div class="alert alert-secondary" role="status">{{ 'DENTISTRY.ODONTOGRAM.CONFIRMADA_SOLO_LECTURA' | translate }}</div>
+          }
+          <form [formGroup]="headerForm" class="row g-3" novalidate (ngSubmit)="saveDraft()">
+            <div class="col-md-4">
+              <label class="form-label" for="odo-dentition">{{ 'DENTISTRY.ODONTOGRAM.DENTICION' | translate }}</label>
+              <select id="odo-dentition" class="form-select" formControlName="dentition">
+                @for (code of dentitions; track code) { <option [value]="code">{{ dentitionName(code) }}</option> }
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="odo-date">{{ 'DENTISTRY.ODONTOGRAM.FECHA_CLINICA' | translate }}</label>
+              <input id="odo-date" type="date" class="form-control" formControlName="clinical_date" [max]="today"
+                [attr.aria-invalid]="headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched ? 'true' : null"
+                [attr.aria-describedby]="headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched ? 'odo-date-error' : null">
+              @if (headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched) {
+                <div id="odo-date-error" class="text-danger small mt-1" role="alert">{{ 'DENTISTRY.ODONTOGRAM.ERR_FECHA' | translate }}</div>
+              }
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="odo-professional">{{ 'DENTISTRY.ODONTOGRAM.PROFESIONAL' | translate }}</label>
+              <select id="odo-professional" class="form-select" formControlName="professional_id">
+                <option value="">{{ 'DENTISTRY.ODONTOGRAM.SIN_PROFESIONAL' | translate }}</option>
+                @for (item of professionalOptions; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+              </select>
+            </div>
+          </form>
+          @if (current) {
+            <dl class="row small text-muted mt-3 mb-0">
+              <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.AUTOR' | translate }}</dt>
+              <dd class="col-sm-9">{{ current.author.name }} · {{ 'DENTISTRY.ODONTOGRAM.REGISTRADA' | translate }} {{ current.created_at | date: 'dd/MM/yyyy HH:mm' }}</dd>
+              @if (current.confirmed_at) {
+                <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.CONFIRMADA_EL' | translate }}</dt>
+                <dd class="col-sm-9">{{ current.confirmed_at | date: 'dd/MM/yyyy HH:mm' }}@if (current.confirmed_by) { · {{ current.confirmed_by.name }} }</dd>
+              }
+              @if (current.amends_id) {
+                <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.CORRIGE' | translate }}</dt>
+                <dd class="col-sm-9">
+                  <button type="button" class="btn btn-link p-0 align-baseline" (click)="goTo(current.amends_id)">{{ 'DENTISTRY.ODONTOGRAM.CORRIGE_A' | translate: { n: current.amends_sequence } }}</button>
+                  — {{ current.amendment_reason }}
+                </dd>
+              }
+              @if (current.replaced_by_id) {
+                <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.REEMPLAZO' | translate }}</dt>
+                <dd class="col-sm-9"><button type="button" class="btn btn-link p-0 align-baseline" (click)="goTo(current.replaced_by_id)">{{ 'DENTISTRY.ODONTOGRAM.REEMPLAZADA_POR' | translate: { n: current.replaced_by_sequence } }}</button></dd>
+              }
+            </dl>
+          }
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-transparent border-bottom py-3">
+              <ul class="nav nav-pills" role="tablist" [attr.aria-label]="'DENTISTRY.ODONTOGRAM.VISTA_ARIA' | translate" (keydown)="onTabKey($event)">
+                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="view === 'chart'" role="tab" id="odo-tab-chart" aria-controls="odo-panel"
+                  [attr.tabindex]="view === 'chart' ? 0 : -1" [attr.aria-selected]="view === 'chart'" (click)="view = 'chart'">{{ 'DENTISTRY.ODONTOGRAM.VISTA_GRAFICO' | translate }}</button></li>
+                <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="view === 'table'" role="tab" id="odo-tab-table" aria-controls="odo-panel"
+                  [attr.tabindex]="view === 'table' ? 0 : -1" [attr.aria-selected]="view === 'table'" (click)="view = 'table'">{{ 'DENTISTRY.ODONTOGRAM.VISTA_TABLA' | translate }}</button></li>
+              </ul>
+            </div>
+            <div class="card-body" id="odo-panel" role="tabpanel" [attr.aria-labelledby]="view === 'chart' ? 'odo-tab-chart' : 'odo-tab-table'">
+              @if (view === 'chart') {
+                <app-odontogram-chart [dentition]="dentition" [catalog]="catalog" [findings]="shownFindings" [selected]="selectedPiece" (pieceSelected)="selectPiece($event)" />
+              } @else {
+                @if (rows.length === 0) {
+                  <p class="text-muted mb-0" data-testid="table-empty">{{ 'DENTISTRY.ODONTOGRAM.TABLA_VACIA' | translate }}</p>
+                } @else {
+                  <ul class="list-unstyled d-lg-none mb-0" data-testid="findings-stacked">
+                    @for (row of rows; track $index) {
+                      <li class="border rounded p-2 mb-2">
+                        <p class="fw-semibold mb-1">{{ row.piece }} · <strong>{{ row.abbr }}</strong> {{ row.condition }}</p>
+                        <dl class="row small mb-0">
+                          <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_DENTICION' | translate }}</dt><dd class="col-7">{{ row.dentition }}</dd>
+                          <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_SUPERFICIES' | translate }}</dt><dd class="col-7">{{ row.surfaces }}</dd>
+                          @if (row.diagnosis) { <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_DIAGNOSTICO' | translate }}</dt><dd class="col-7">{{ row.diagnosis }}</dd> }
+                          @if (row.notes) { <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_NOTAS' | translate }}</dt><dd class="col-7">{{ row.notes }}</dd> }
+                        </dl>
+                      </li>
+                    }
+                  </ul>
+                  <div class="table-responsive d-none d-lg-block">
+                    <table class="table table-sm align-middle" data-testid="findings-table">
+                      <caption class="visually-hidden">{{ 'DENTISTRY.ODONTOGRAM.TABLA_CAPTION' | translate }}</caption>
+                      <thead><tr>
+                        <th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_PIEZA' | translate }}</th>
+                        <th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_DENTICION' | translate }}</th>
+                        <th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_SUPERFICIES' | translate }}</th>
+                        <th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_CONDICION' | translate }}</th>
+                        <th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_DIAGNOSTICO' | translate }}</th>
+                        <th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_NOTAS' | translate }}</th>
+                      </tr></thead>
+                      <tbody>
+                        @for (row of rows; track $index) {
+                          <tr>
+                            <th scope="row">{{ row.piece }}</th><td>{{ row.dentition }}</td><td>{{ row.surfaces }}</td>
+                            <td><strong>{{ row.abbr }}</strong> · {{ row.condition }}</td><td>{{ row.diagnosis }}</td><td>{{ row.notes }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-transparent border-bottom py-3"><h4 class="h6 mb-0 fw-semibold">{{ 'DENTISTRY.ODONTOGRAM.HALLAZGOS_GENERALES' | translate }}</h4></div>
+            <div class="card-body">
+              @if (shownGeneral.length === 0) {
+                <p class="text-muted" data-testid="general-empty">{{ 'DENTISTRY.ODONTOGRAM.SIN_GENERALES' | translate }}</p>
+              } @else {
+                <div class="table-responsive"><table class="table table-sm align-middle" data-testid="general-table">
+                  <thead><tr><th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_DIAGNOSTICO' | translate }}</th><th scope="col">{{ 'DENTISTRY.ODONTOGRAM.COL_NOTAS' | translate }}</th>@if (editable) { <th scope="col"><span class="visually-hidden">{{ 'COMMON.ACCIONES' | translate }}</span></th> }</tr></thead>
+                  <tbody>
+                    @for (item of shownGeneral; track $index) {
+                      <tr><td>{{ item.diagnosis }}</td><td>{{ item.notes }}</td>
+                        @if (editable) { <td class="text-end"><button type="button" class="btn btn-sm btn-light text-danger" [attr.aria-label]="'DENTISTRY.ODONTOGRAM.QUITAR_ARIA' | translate: { text: item.diagnosis }" (click)="removeGeneral(item)">{{ 'COMMON.QUITAR' | translate }}</button></td> }
+                      </tr>
+                    }
+                  </tbody>
+                </table></div>
+              }
+              @if (editable) {
+                <form [formGroup]="generalForm" (ngSubmit)="addGeneral()" novalidate>
+                  <p class="small text-muted">{{ 'DENTISTRY.ODONTOGRAM.GENERAL_AYUDA' | translate }}</p>
+                  <div class="row g-2">
+                    <div class="col-md-6">
+                      <label class="form-label" for="odo-general-diagnosis">{{ 'DENTISTRY.ODONTOGRAM.DIAGNOSTICO' | translate }}</label>
+                      <textarea id="odo-general-diagnosis" class="form-control" rows="2" formControlName="diagnosis" [attr.maxlength]="diagnosisMax"
+                        [attr.aria-invalid]="generalInvalid ? 'true' : null" [attr.aria-describedby]="generalInvalid ? 'odo-general-errors' : null"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" for="odo-general-notes">{{ 'DENTISTRY.ODONTOGRAM.NOTAS' | translate }}</label>
+                      <textarea id="odo-general-notes" class="form-control" rows="2" formControlName="notes" [attr.maxlength]="notesMax"></textarea>
+                    </div>
+                  </div>
+                  <div id="odo-general-errors">
+                    @for (message of generalErrors; track message) { <div class="text-danger small mt-1" role="alert">{{ message }}</div> }
+                  </div>
+                  <button class="btn btn-sm btn-light mt-2" type="submit" [disabled]="busy">{{ 'DENTISTRY.ODONTOGRAM.AGREGAR_GENERAL' | translate }}</button>
+                </form>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <section class="card shadow-sm border-0 mb-4" aria-labelledby="odo-piece-title" data-testid="piece-panel">
+            <div class="card-header bg-transparent border-bottom py-3"><h4 id="odo-piece-title" class="h6 mb-0 fw-semibold">
+              @if (selectedPiece !== null) { {{ pieceTitle }} } @else { {{ 'DENTISTRY.ODONTOGRAM.PIEZA_SELECCIONADA' | translate }} }
+            </h4></div>
+            <div class="card-body">
+              @if (selectedPiece === null) {
+                <p class="text-muted mb-0">{{ 'DENTISTRY.ODONTOGRAM.SELECCIONA_PIEZA' | translate }}</p>
+              } @else {
+                <h5 class="h6">{{ 'DENTISTRY.ODONTOGRAM.HALLAZGOS_PIEZA' | translate }}</h5>
+                @if (selectedFindings.length === 0) {
+                  <p class="text-muted" data-testid="piece-empty">{{ 'DENTISTRY.ODONTOGRAM.SIN_EVALUAR' | translate }}</p>
+                } @else {
+                  <ul class="list-unstyled">
+                    @for (finding of selectedFindings; track $index) {
+                      <li class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <span><strong>{{ findingText(finding) }}</strong>@if (finding.diagnosis) { <br><span class="small">{{ finding.diagnosis }}</span> }@if (finding.notes) { <br><span class="small text-muted">{{ finding.notes }}</span> }</span>
+                        @if (editable) {
+                          <button type="button" class="btn btn-sm btn-light text-danger" [attr.aria-label]="'DENTISTRY.ODONTOGRAM.QUITAR_ARIA' | translate: { text: findingText(finding) }" (click)="removeFinding(finding)">{{ 'COMMON.QUITAR' | translate }}</button>
+                        }
+                      </li>
+                    }
+                  </ul>
+                }
+                @if (editable) {
+                  <form [formGroup]="findingForm" (ngSubmit)="addFinding()" novalidate data-testid="finding-form">
+                    <div class="mb-2">
+                      <label class="form-label" for="odo-condition">{{ 'DENTISTRY.ODONTOGRAM.CONDICION' | translate }}</label>
+                      <select id="odo-condition" class="form-select" formControlName="condition" [attr.aria-invalid]="findingInvalid.condition ? 'true' : null"
+                        [attr.aria-describedby]="findingInvalid.condition ? 'odo-finding-errors' : null">
+                        <option value="">{{ 'DENTISTRY.ODONTOGRAM.ELEGIR_CONDICION' | translate }}</option>
+                        @for (condition of catalog.conditions; track condition.code) { <option [value]="condition.code">{{ conditionLabel(condition) }}</option> }
+                      </select>
+                    </div>
+                    <fieldset class="mb-2" [disabled]="surfacesDisabled" [attr.aria-invalid]="findingInvalid.surfaces ? 'true' : null"
+                      [attr.aria-describedby]="findingInvalid.surfaces ? 'odo-finding-errors' : null">
+                      <legend class="form-label fs-6">{{ 'DENTISTRY.ODONTOGRAM.SUPERFICIES' | translate }}</legend>
+                      @if (surfacesDisabled) { <p class="small text-muted mb-1">{{ 'DENTISTRY.ODONTOGRAM.NO_APLICA_SUPERFICIES' | translate }}</p> }
+                      @for (code of pieceSurfaces; track code) {
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="checkbox" [id]="'odo-surface-' + code" [checked]="surfaceChecked(code)" (change)="toggleSurface(code, $any($event.target).checked)">
+                          <label class="form-check-label" [for]="'odo-surface-' + code">{{ surfaceLabel(code) }}</label>
+                        </div>
+                      }
+                    </fieldset>
+                    <div class="mb-2">
+                      <label class="form-label" for="odo-diagnosis">{{ 'DENTISTRY.ODONTOGRAM.DIAGNOSTICO' | translate }}</label>
+                      <textarea id="odo-diagnosis" class="form-control" rows="2" formControlName="diagnosis" [attr.maxlength]="diagnosisMax"
+                        [attr.aria-invalid]="findingInvalid.diagnosis ? 'true' : null" [attr.aria-describedby]="findingInvalid.diagnosis ? 'odo-finding-errors' : null"></textarea>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" for="odo-notes">{{ 'DENTISTRY.ODONTOGRAM.NOTAS' | translate }}@if (selectedCondition?.requires_note) { <span class="text-danger" aria-hidden="true"> *</span> }</label>
+                      <textarea id="odo-notes" class="form-control" rows="2" formControlName="notes" [attr.maxlength]="notesMax"
+                        [attr.aria-required]="selectedCondition?.requires_note ? 'true' : null"
+                        [attr.aria-invalid]="findingInvalid.notes ? 'true' : null" [attr.aria-describedby]="findingInvalid.notes ? 'odo-finding-errors' : null"></textarea>
+                      @if (findingForm.controls.notes.value.length >= notesMax * 0.8) { <small class="text-muted">{{ findingForm.controls.notes.value.length }} / {{ notesMax }}</small> }
+                    </div>
+                    <div id="odo-finding-errors">
+                      @for (message of findingErrors; track message) { <div class="text-danger small" role="alert">{{ message }}</div> }
+                    </div>
+                    <button class="btn btn-sm btn-primary mt-2" type="submit" [disabled]="busy">{{ 'DENTISTRY.ODONTOGRAM.AGREGAR_HALLAZGO' | translate }}</button>
+                  </form>
+                }
+              }
+            </div>
+          </section>
+        </div>
+      </div>
+    }
+  }
+</section>
+
+<ng-template #confirmDialog let-modal>
+  <div class="modal-header"><h4 class="modal-title h5">{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_CONFIRMAR_TITULO' | translate }}</h4></div>
+  <div class="modal-body">
+    <p>{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_CONFIRMAR_TEXTO' | translate: { count: confirmedCount } }}</p>
+    <div class="alert alert-info mb-0">{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_CONFIRMAR_AVISO' | translate }}</div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modal.dismiss()">{{ 'DENTISTRY.ODONTOGRAM.VOLVER' | translate }}</button>
+    <button type="button" class="btn btn-primary" data-testid="confirm-accept" (click)="modal.close()">{{ 'DENTISTRY.ODONTOGRAM.CONFIRMAR' | translate }}</button>
+  </div>
+</ng-template>
+
+<ng-template #amendDialog let-modal>
+  <div class="modal-header"><h4 class="modal-title h5">{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_CORREGIR_TITULO' | translate }}</h4></div>
+  <div class="modal-body">
+    <p>{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_CORREGIR_TEXTO' | translate }}</p>
+    <label class="form-label" for="odo-reason">{{ 'DENTISTRY.ODONTOGRAM.MOTIVO_ENMIENDA' | translate }}</label>
+    <textarea id="odo-reason" class="form-control" rows="3" [formControl]="reasonControl" [attr.maxlength]="reasonMax" aria-required="true"></textarea>
+    <small class="text-muted">{{ reasonControl.value.length }} / {{ reasonMax }}</small>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modal.dismiss()">{{ 'DENTISTRY.ODONTOGRAM.VOLVER' | translate }}</button>
+    <button type="button" class="btn btn-warning" data-testid="amend-accept" [disabled]="!reasonControl.value.trim()" (click)="modal.close(reasonControl.value)">{{ 'DENTISTRY.ODONTOGRAM.CREAR_CORRECCION' | translate }}</button>
+  </div>
+</ng-template>
+
+<ng-template #discardDialog let-modal>
+  <div class="modal-header"><h4 class="modal-title h5">{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_DESCARTAR_TITULO' | translate }}</h4></div>
+  <div class="modal-body"><p class="mb-0">{{ 'DENTISTRY.ODONTOGRAM.DIALOGO_DESCARTAR_TEXTO' | translate }}</p></div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" (click)="modal.dismiss()">{{ 'DENTISTRY.ODONTOGRAM.VOLVER' | translate }}</button>
+    <button type="button" class="btn btn-danger" data-testid="discard-accept" (click)="modal.close()">{{ 'DENTISTRY.ODONTOGRAM.DESCARTAR' | translate }}</button>
+  </div>
+</ng-template>
