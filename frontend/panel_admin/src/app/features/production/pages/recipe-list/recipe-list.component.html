@@ -10,7 +10,7 @@
         <a routerLink="/pocketbiz/production/recipes/new" class="btn btn-primary" data-testid="add-recipe">
           <i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'PRODUCTION.RECIPES.NEW' | translate }}</a>
       </div>
-      <form class="row g-2 m-2 align-items-end" (ngSubmit)="applyFilters()" [attr.aria-label]="'PRODUCTION.RECIPES.FILTERS' | translate">
+      <form class="row g-2 m-2 align-items-end" [formGroup]="filters" (ngSubmit)="applyFilters()" [attr.aria-label]="'PRODUCTION.RECIPES.FILTERS' | translate">
         <div class="col-md-5">
           <label for="recipe-search">{{ 'COMMON.BUSCAR_POR_NOMBRE' | translate }}</label>
           <input id="recipe-search" type="search" class="form-control" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE' | translate" [formControl]="search">

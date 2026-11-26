@@ -1,7 +1,7 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -30,6 +30,8 @@ export class RecipeListComponent implements OnInit {
   private reload$ = new Subject<void>();
   search = new FormControl(this.state.search, { nonNullable: true });
   status = new FormControl<RecipeStatus>(this.state.status, { nonNullable: true });
+  /** Sin un FormGroup el navegador enviaría el formulario y recargaría la página (perdiendo el filtro). */
+  readonly filters = new FormGroup({ search: this.search, status: this.status });
   rows: Recipe[] = [];
   total = 0;
   pageSize = 20;

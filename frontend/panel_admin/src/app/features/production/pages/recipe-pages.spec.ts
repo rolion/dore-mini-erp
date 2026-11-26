@@ -87,6 +87,23 @@ describe('RecipeListComponent', () => {
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Falló');
   });
 
+  it('submitting the filter form applies it without a native page reload (inactive filter bug)', () => {
+    api.list.and.returnValue(of(page([{ ...recipe, active: false }])));
+    const fixture = TestBed.createComponent(RecipeListComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const select = root.querySelector<HTMLSelectElement>('#recipe-status');
+    select!.value = 'inactive';
+    select!.dispatchEvent(new Event('change'));
+    const submit = new Event('submit', { cancelable: true });
+    root.querySelector('form')!.dispatchEvent(submit);
+    fixture.detectChanges();
+    expect(submit.defaultPrevented).toBeTrue();
+    expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ status: 'inactive', page: 1 }));
+    expect(fixture.componentInstance.state.status).toBe('inactive');
+    expect(root.querySelectorAll('[data-testid="recipe-row"]').length).toBe(1);
+  });
+
   it('applies the status filter and resets the page', () => {
     api.list.and.returnValue(of(page([])));
     const fixture = TestBed.createComponent(RecipeListComponent);
