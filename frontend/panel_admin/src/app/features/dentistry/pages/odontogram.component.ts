@@ -1,11 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, TemplateRef, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, TemplateRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Observable, catchError, finalize, forkJoin, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { tr } from '../../../core/i18n/translate';
 import { HasUnsavedChanges } from '../../../core/guard/unsaved-changes.guard';
 import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
@@ -40,6 +40,7 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
   private modal = inject(NgbModal);
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly id = this.route.snapshot.paramMap.get('id') ?? '';
   readonly today = localDateInput();
@@ -66,6 +67,8 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
   selectedPiece: number | null = null;
   findingErrors: string[] = [];
   generalErrors: string[] = [];
+  findingInvalid = { condition: false, surfaces: false, notes: false, diagnosis: false };
+  generalInvalid = false;
   dirty = false;
 
   readonly headerForm = this.fb.group({
@@ -148,8 +151,13 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
   }
   optionLabel(evaluation: Evaluation): string {
     return tr('DENTISTRY.ODONTOGRAM.OPCION', {
-      n: evaluation.sequence, date: evaluation.clinical_date, status: this.statusLabel(evaluation), author: evaluation.author.name,
+      n: evaluation.sequence, date: this.formatDate(evaluation.clinical_date), status: this.statusLabel(evaluation), author: evaluation.author.name,
     });
+  }
+  /** `yyyy-MM-dd` → `dd/MM/yyyy` sin pasar por Date (evita desfases de zona horaria). */
+  formatDate(iso: string): string {
+    const [year, month, day] = iso.split('-');
+    return year && month && day ? `${day}/${month}/${year}` : iso;
   }
   dentitionName(code: Dentition): string { return tr(`DENTISTRY.ODONTOGRAM.DENT_${code.toUpperCase()}`); }
   conditionLabel(condition: OdontogramCondition): string { return `${condition.abbr} · ${conditionName(this.catalog, condition.code)}`; }
@@ -238,6 +246,26 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
     this.syncHeader();
   }
 
+  private focusFirst(ids: string[]): void {
+    const id = ids[0];
+    if (!id) return;
+    queueMicrotask(() => this.host.nativeElement.querySelector<HTMLElement>(`#${id}`)?.focus());
+  }
+
+  onTabKey(event: KeyboardEvent): void {
+    const views: OdontogramView[] = ['chart', 'table'];
+    const index = views.indexOf(this.view);
+    let next = -1;
+    if (event.key === 'ArrowRight') next = (index + 1) % views.length;
+    else if (event.key === 'ArrowLeft') next = (index + views.length - 1) % views.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = views.length - 1;
+    if (next < 0) return;
+    event.preventDefault();
+    this.view = views[next];
+    queueMicrotask(() => this.host.nativeElement.querySelector<HTMLElement>(`#odo-tab-${this.view}`)?.focus());
+  }
+
   // ----- Edición local -----
   private markDirty(): void {
     this.dirty = true;
@@ -252,6 +280,7 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
   private resetFindingForm(): void {
     this.findingForm.reset({ condition: '', surfaces: [], diagnosis: '', notes: '' });
     this.findingErrors = [];
+    this.findingInvalid = { condition: false, surfaces: false, notes: false, diagnosis: false };
   }
 
   toggleSurface(code: SurfaceCode, checked: boolean): void {
@@ -264,14 +293,26 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
     const value = this.findingForm.getRawValue();
     const condition = this.selectedCondition;
     const errors: string[] = [];
-    if (!condition) errors.push(tr('DENTISTRY.ODONTOGRAM.ERR_CONDICION'));
+    const invalid = { condition: false, surfaces: false, notes: false, diagnosis: false };
+    if (!condition) { errors.push(tr('DENTISTRY.ODONTOGRAM.ERR_CONDICION')); invalid.condition = true; }
     const surfaces = condition?.scope === 'whole' ? [] : this.pieceSurfaces.filter(code => value.surfaces.includes(code));
-    if (condition?.scope === 'surfaces' && surfaces.length === 0) errors.push(tr('DENTISTRY.ODONTOGRAM.SUPERFICIES_AYUDA'));
-    if (condition?.requires_note && !value.notes.trim()) errors.push(tr('DENTISTRY.ODONTOGRAM.NOTA_OBLIGATORIA'));
-    if (value.diagnosis.length > DIAGNOSIS_MAX || value.notes.length > NOTES_MAX) errors.push(tr('DENTISTRY.ODONTOGRAM.ERR_LARGO'));
-    if (condition && this.selectedFindings.some(finding => finding.condition === condition.code)) errors.push(tr('DENTISTRY.ODONTOGRAM.ERR_DUPLICADO'));
+    if (condition?.scope === 'surfaces' && surfaces.length === 0) { errors.push(tr('DENTISTRY.ODONTOGRAM.SUPERFICIES_AYUDA')); invalid.surfaces = true; }
+    if (condition?.requires_note && !value.notes.trim()) { errors.push(tr('DENTISTRY.ODONTOGRAM.NOTA_OBLIGATORIA')); invalid.notes = true; }
+    if (value.diagnosis.length > DIAGNOSIS_MAX || value.notes.length > NOTES_MAX) {
+      errors.push(tr('DENTISTRY.ODONTOGRAM.ERR_LARGO'));
+      invalid.diagnosis = value.diagnosis.length > DIAGNOSIS_MAX;
+      invalid.notes = invalid.notes || value.notes.length > NOTES_MAX;
+    }
+    if (condition && this.selectedFindings.some(finding => finding.condition === condition.code)) { errors.push(tr('DENTISTRY.ODONTOGRAM.ERR_DUPLICADO')); invalid.condition = true; }
+    this.findingInvalid = invalid;
     this.findingErrors = errors;
-    if (errors.length || !condition) return;
+    if (errors.length || !condition) {
+      const first = invalid.condition ? 'odo-condition'
+        : invalid.surfaces ? `odo-surface-${this.pieceSurfaces[0] ?? ''}`
+          : invalid.diagnosis ? 'odo-diagnosis' : invalid.notes ? 'odo-notes' : '';
+      this.focusFirst(first ? [first] : []);
+      return;
+    }
     this.findings = [...this.findings, {
       piece: this.selectedPiece, surfaces, condition: condition.code, diagnosis: value.diagnosis.trim(), notes: value.notes.trim(),
     }];
@@ -288,9 +329,10 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
     if (!this.editable) return;
     const value = this.generalForm.getRawValue();
     this.generalErrors = [];
+    this.generalInvalid = false;
     if (!value.diagnosis.trim()) this.generalErrors.push(tr('DENTISTRY.ODONTOGRAM.ERR_DIAGNOSTICO'));
     if (value.diagnosis.length > DIAGNOSIS_MAX || value.notes.length > NOTES_MAX) this.generalErrors.push(tr('DENTISTRY.ODONTOGRAM.ERR_LARGO'));
-    if (this.generalErrors.length) return;
+    if (this.generalErrors.length) { this.generalInvalid = true; this.focusFirst(['odo-general-diagnosis']); return; }
     this.generalFindings = [...this.generalFindings, { diagnosis: value.diagnosis.trim(), notes: value.notes.trim() }];
     this.generalForm.reset({ diagnosis: '', notes: '' });
     this.markDirty();
@@ -337,14 +379,18 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
   }
 
   saveDraft(): void {
-    if (!this.editable || this.headerForm.invalid) { this.headerForm.markAllAsTouched(); return; }
+    if (!this.editable || this.headerForm.invalid) { this.headerForm.markAllAsTouched(); this.focusFirst(['odo-date']); return; }
     this.run(() => this.persist(), tr('DENTISTRY.ODONTOGRAM.OK_BORRADOR'));
   }
 
   openConfirm(dialog: TemplateRef<unknown>): void {
     if (this.busy || !(this.isNew || this.can('confirm')) || this.headerForm.invalid) return;
     this.modal.open(dialog, { centered: true, backdrop: 'static' }).result.then(
-      () => this.run(() => this.persist().pipe(switchMap(evaluation => this.api.confirm(evaluation.id))), tr('DENTISTRY.ODONTOGRAM.OK_CONFIRMADA')),
+      () => this.run(() => this.persist().pipe(
+        // Si crear/guardar tuvo éxito y confirmar falla, la pantalla ya refleja el borrador del servidor y el reintento lo confirma.
+        tap(evaluation => { if (evaluation !== this.current) { this.applyEvaluation(evaluation); this.refreshList(); } }),
+        switchMap(evaluation => this.api.confirm(evaluation.id)),
+      ), tr('DENTISTRY.ODONTOGRAM.OK_CONFIRMADA')),
       () => undefined,
     );
   }

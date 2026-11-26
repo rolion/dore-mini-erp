@@ -18,6 +18,7 @@ describe('OdontogramComponent', () => {
   let fixture: ComponentFixture<OdontogramComponent>;
   let api: jasmine.SpyObj<OdontogramApiService>;
   const root = () => fixture.nativeElement as HTMLElement;
+  const component = () => fixture.componentInstance;
   const text = () => root().textContent ?? '';
   const body = (selector: string) => document.querySelector<HTMLButtonElement>(selector);
   const button = (label: string) => Array.from(root().querySelectorAll('button')).find(b => b.textContent?.trim().includes(label));
@@ -233,5 +234,91 @@ describe('OdontogramComponent', () => {
     (root().querySelectorAll('form')[1] as HTMLFormElement).dispatchEvent(new Event('submit')); fixture.detectChanges();
     expect(root().querySelector('[data-testid="general-table"]')?.textContent).toContain('Bruxismo');
     expect(root().querySelectorAll('[data-testid="findings-table"]').length).toBe(0);
+  });
+
+  it('keeps the created draft on screen when confirming fails after creating it, so a retry confirms it (REV-02)', async () => {
+    await setup([], null);
+    button('Registrar evaluación inicial')?.click(); fixture.detectChanges();
+    tooth(16).click(); fixture.detectChanges(); type('odo-condition', 'healthy');
+    (root().querySelector('[data-testid="finding-form"]') as HTMLFormElement).dispatchEvent(new Event('submit')); fixture.detectChanges();
+    const created = makeEvaluation({ id: 'e-9', sequence: 3, findings: [{ piece: 16, surfaces: [], condition: 'healthy', diagnosis: '', notes: '' }] });
+    api.create.and.returnValue(of(created));
+    api.confirm.and.returnValues(throwError(() => new HttpErrorResponse({ status: 409, error: { detail: 'Perfil archivado.' } })),
+      of(makeEvaluation({ id: 'e-9', sequence: 3, status: 'confirmed', allowed_actions: ['amend'] })));
+    button('Confirmar evaluación')?.click(); fixture.detectChanges();
+    body('[data-testid="confirm-accept"]')?.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(api.create).toHaveBeenCalledTimes(1);
+    expect(component().isNew).toBeFalse(); expect(component().current?.id).toBe('e-9');
+    expect(api.list).toHaveBeenCalledTimes(2);
+    expect(root().querySelector('[data-testid="save-error"]')?.textContent).toContain('Perfil archivado.');
+    expect(button('Guardar borrador')?.disabled).toBeFalse();
+    button('Confirmar evaluación')?.click(); fixture.detectChanges();
+    (Array.from(document.querySelectorAll<HTMLButtonElement>('[data-testid="confirm-accept"]')).pop())?.click(); await fixture.whenStable(); fixture.detectChanges();
+    expect(api.create).toHaveBeenCalledTimes(1);
+    expect(api.confirm).toHaveBeenCalledTimes(2);
+    expect(api.confirm.calls.mostRecent().args).toEqual(['e-9']);
+    expect(text()).toContain('Evaluación confirmada.');
+  });
+
+  it('marks the invalid fields, links their message and moves focus to the first one (REV-05)', async () => {
+    await setup([makeEvaluation()]);
+    tooth(16).click(); fixture.detectChanges();
+    const submit = () => { (root().querySelector('[data-testid="finding-form"]') as HTMLFormElement).dispatchEvent(new Event('submit')); fixture.detectChanges(); };
+    submit(); await fixture.whenStable();
+    expect(field('odo-condition').getAttribute('aria-invalid')).toBe('true');
+    expect(field('odo-condition').getAttribute('aria-describedby')).toBe('odo-finding-errors');
+    expect(document.activeElement).toBe(field('odo-condition'));
+    type('odo-condition', 'other'); submit(); await fixture.whenStable();
+    expect(field('odo-notes').getAttribute('aria-invalid')).toBe('true');
+    expect(field('odo-condition').getAttribute('aria-invalid')).toBeNull();
+    expect(document.activeElement).toBe(field('odo-notes'));
+    const general = root().querySelectorAll('form')[1] as HTMLFormElement;
+    general.dispatchEvent(new Event('submit')); fixture.detectChanges(); await fixture.whenStable();
+    expect(field('odo-general-diagnosis').getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(field('odo-general-diagnosis'));
+  });
+
+  it('shows the date error, flags the date field and focuses it when saving with an empty clinical date (REV-05)', async () => {
+    await setup([makeEvaluation()]);
+    type('odo-date', ''); button('Guardar borrador')?.click(); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
+    expect(api.update).not.toHaveBeenCalled();
+    expect(field('odo-date').getAttribute('aria-invalid')).toBe('true');
+    expect(field('odo-date').getAttribute('aria-describedby')).toBe('odo-date-error');
+    expect(root().querySelector('#odo-date-error')?.textContent).toContain('fecha clínica válida');
+    expect(document.activeElement).toBe(field('odo-date'));
+  });
+
+  it('implements the tabs keyboard pattern with a roving tabindex (REV-05)', async () => {
+    await setup([makeEvaluation()]);
+    const chartTab = root().querySelector<HTMLButtonElement>('#odo-tab-chart') as HTMLButtonElement;
+    const tableTab = root().querySelector<HTMLButtonElement>('#odo-tab-table') as HTMLButtonElement;
+    expect(chartTab.getAttribute('tabindex')).toBe('0'); expect(tableTab.getAttribute('tabindex')).toBe('-1');
+    chartTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); fixture.detectChanges(); await fixture.whenStable();
+    expect(tableTab.getAttribute('aria-selected')).toBe('true'); expect(tableTab.getAttribute('tabindex')).toBe('0');
+    expect(document.activeElement).toBe(tableTab);
+    tableTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true })); fixture.detectChanges(); await fixture.whenStable();
+    expect(chartTab.getAttribute('aria-selected')).toBe('true');
+    chartTab.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true })); fixture.detectChanges();
+    expect(tableTab.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('formats dates as dd/MM/yyyy and dd/MM/yyyy HH:mm and shows a stacked list for narrow screens (REV-06)', async () => {
+    const evaluation = makeEvaluation({ clinical_date: '2026-11-05', created_at: '2026-11-05T14:30:00', findings: [
+      { piece: 54, surfaces: ['O'], condition: 'caries', diagnosis: 'Caries oclusal', notes: '' }] });
+    await setup([evaluation]);
+    expect(field('odo-version').textContent).toContain('05/11/2026');
+    expect(text()).toContain('05/11/2026 14:30');
+    button('Tabla')?.click(); fixture.detectChanges();
+    const stacked = root().querySelector('[data-testid="findings-stacked"]') as HTMLElement;
+    expect(stacked.classList).toContain('d-lg-none');
+    expect(stacked.textContent).toContain('54'); expect(stacked.textContent).toContain('O · Oclusal'); expect(stacked.textContent).toContain('Caries oclusal');
+    expect(root().querySelector('[data-testid="findings-table"]')?.closest('.table-responsive')?.classList).toContain('d-none');
+  });
+
+  it('shows a semantic breadcrumb with links to the list and the patient file (REV-06)', async () => {
+    await setup([makeEvaluation()]);
+    const nav = root().querySelector('nav ol.breadcrumb') as HTMLElement;
+    expect(nav.querySelector('li.active')?.getAttribute('aria-current')).toBe('page');
+    expect(Array.from(nav.querySelectorAll('a')).map(a => a.getAttribute('href'))).toEqual(['/pocketbiz/dentistry/patients', '/pocketbiz/dentistry/patients/c-1']);
   });
 });

@@ -15,6 +15,8 @@
 | 2026-11-26 | INVESTIGATION → PLANNING | Investigación hecha; Specification BLOCKED por catálogo clínico sin validar (decisión del usuario: detener hasta validarlo) | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | El usuario decide usar la lista inicial del catálogo y modificarla luego; DDR, ADR y PLAN v1 (COMPLETO) listos | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa de backend y frontend según PLAN v1 | delivery-build |
+| 2026-11-26 | REVIEW → ENGINEERING | Quality Gate #1 FAIL: REV-07 (High), REV-01/02 (Medium), REV-03…06 (Low) | delivery-publish |
+| 2026-11-26 | ENGINEERING → REVIEW | Corregidos REV-01…07 (guardas de company_id y fronteras, cliente inactivo 409, orden de bloqueos, foco/aria, fechas, scss, tabla apilada, breadcrumb) | delivery-build |
 
 ## Investigación
 
@@ -95,10 +97,12 @@ No hay forma de registrar estado dental por pieza/superficie; la pieza solo apar
 
 **Deuda técnica:** la migración generada excede 120 caracteres por línea (igual que migraciones previas; no se edita); catálogo clínico pendiente de validación por el odontólogo (`pending_clinical_validation: true`).
 
+**Correcciones tras Quality Gate #1:** `_lock_patient`/`_locked_row` con orden único de bloqueos y 409 para perfil archivado o cliente inactivo; hijos de evaluación en `CHILD_MODELS` y `dentistry → personnel` autorizado en la prueba de fronteras; reintento de confirmar sobre el borrador ya creado; foco y `aria-invalid`; fechas dd/MM/yyyy HH:mm; scss bajo presupuesto; lista apilada < lg; breadcrumb con enlaces. Pruebas nuevas: cliente inactivo, cambio de dentición, profesional ajeno en PUT y confirmaciones simultáneas.
+
 **Pantalla de referencia:** Detalle con pestañas/acciones de ciclo de vida y diálogo de acción irreversible con motivo; componente nuevo `odontogram-chart` (no se movió a `shared/` por tener un único uso).
 
 ## Review
-_Pendiente_
+**Quality Gate #1: FAIL** — 7 hallazgos en `docs/reviews/REV-2026-11-26-registrar-diagnostico-odontograma-inicial-01…07.md`, todos corregidos y pendientes de re-revisión (Quality Gate #2).
 
 ## Publicación
 _Pendiente_

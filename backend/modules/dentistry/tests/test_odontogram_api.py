@@ -1,7 +1,11 @@
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from threading import Barrier
 from unittest.mock import patch
 from uuid import uuid4
 
+from django.db import close_old_connections
+from django.test import TransactionTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient, APITestCase
 
@@ -209,3 +213,66 @@ class EvaluationApiTests(APITestCase):
         before = (DentalProformaModel.objects.count(), DentalProformaLineModel.objects.count())
         self.confirmed()
         self.assertEqual((DentalProformaModel.objects.count(), DentalProformaLineModel.objects.count()), before)
+
+    def test_inactive_customer_blocks_changes_with_409(self):  # INV-12 (REV-01)
+        confirmed = self.confirmed()
+        draft = self.client.post(f'{ROOT}evaluations/{confirmed["id"]}/amend/', {'reason': 'x'}, format='json').json()
+        CustomerModel.objects.filter(id=self.customer.id).update(active=False)
+        self.assertEqual(self.create().status_code, 409)
+        self.assertEqual(self.client.put(f'{ROOT}evaluations/{draft["id"]}/', self.body(), format='json').status_code,
+                         409)
+        self.assertEqual(self.client.post(f'{ROOT}evaluations/{draft["id"]}/confirm/').status_code, 409)
+        self.assertEqual(self.client.delete(f'{ROOT}evaluations/{draft["id"]}/').status_code, 409)
+        self.assertEqual(self.client.post(f'{ROOT}evaluations/{confirmed["id"]}/amend/', {'reason': 'y'},
+                                          format='json').status_code, 409)
+        self.assertEqual(self.client.get(self.list_url).status_code, 200)
+
+    def test_archived_message_does_not_mention_proformas(self):
+        self.client.post(f'{PATIENTS}{self.customer.id}/archive/')
+        self.assertNotIn('proforma', str(self.create().json()).lower())
+
+    def test_changing_dentition_with_invalid_pieces_keeps_the_draft(self):  # edge case del plan
+        draft = self.create().json()
+        url = f'{ROOT}evaluations/{draft["id"]}/'
+        response = self.client.put(url, self.body(dentition='permanent'), format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('findings', response.json())
+        kept = self.client.get(url).json()
+        self.assertEqual((kept['dentition'], len(kept['findings'])), ('mixed', 2))
+
+    def test_professional_is_checked_on_update_too(self):
+        draft = self.create().json()
+        other = ProfessionalModel.objects.create(company_id=uuid4(), name='Ajeno', created_by=1, updated_by=1)
+        response = self.client.put(f'{ROOT}evaluations/{draft["id"]}/', self.body(professional_id=str(other.id)),
+                                   format='json')
+        self.assertEqual(response.status_code, 400)
+
+
+class ConcurrentEvaluationTests(TransactionTestCase):
+    def test_two_simultaneous_confirms_leave_one_confirmation(self):  # REV-03/04
+        company = make_company()
+        user = make_admin(company)
+        client = APIClient()
+        token = authenticate(client, user)
+        enable(client)
+        customer = CustomerModel.objects.create(company_id=company.id, name='Concurrente')
+        client.post(PATIENTS, {'customer_id': str(customer.id)}, format='json')
+        draft = client.post(f'{PATIENTS}{customer.id}/evaluations/', {
+            'dentition': 'permanent', 'clinical_date': timezone.localdate().isoformat(),
+            'findings': [{'piece': 16, 'condition': 'healthy'}]}, format='json').json()
+        barrier = Barrier(2)
+
+        def confirm():
+            close_old_connections()
+            try:
+                worker = APIClient()
+                worker.credentials(HTTP_AUTHORIZATION=f'Token {token.key}')
+                barrier.wait(timeout=10)
+                return worker.post(f'{ROOT}evaluations/{draft["id"]}/confirm/').status_code
+            finally:
+                close_old_connections()
+
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            results = list(workers.map(lambda _: confirm(), range(2)))
+        self.assertEqual(sorted(results), [200, 409])
+        self.assertEqual(EvaluationModel.objects.filter(status='confirmed').count(), 1)

@@ -2,7 +2,8 @@
 from django.db import transaction
 from django.utils import timezone
 
-from modules.dentistry.domain.patient import PatientNotFound
+from modules.dentistry.domain.patient import PatientArchived, PatientNotFound
+from modules.dentistry.domain.proforma import DentalProformaValidationError
 from modules.dentistry.domain.odontogram import (
     CONFIRMED, DRAFT, Evaluation, EvaluationStateError, EvaluationValidationError,
 )
@@ -21,9 +22,20 @@ class EvaluationCommands:
             raise EvaluationValidationError({'professional_id': ['El profesional no existe en esta empresa.']})
 
     def _lock_patient(self, customer_id):
-        """Serializa altas y enmiendas del mismo paciente y exige un perfil activo."""
+        """Serializa altas y enmiendas del mismo paciente y exige un perfil y un cliente activos."""
         self.patients.get(customer_id, locked=True)
-        self.gate.require_active(customer_id)
+        try:
+            self.gate.require_active(customer_id)
+        except PatientArchived as exc:
+            raise EvaluationStateError('Reactiva el perfil odontológico antes de registrar evaluaciones.') from exc
+        except DentalProformaValidationError as exc:
+            raise EvaluationStateError('El cliente está inactivo; actívalo antes de registrar evaluaciones.') from exc
+
+    def _locked_row(self, evaluation_id):
+        """Orden único de bloqueos (paciente y luego evaluación) para que operaciones simultáneas se serialicen."""
+        row = self.repository.get(evaluation_id)
+        self.patients.get(row.customer_id, locked=True)
+        return self.repository.get(evaluation_id, locked=True)
 
     def _ensure_no_draft(self, customer_id):
         draft = self.repository.draft_of(customer_id)
@@ -43,7 +55,7 @@ class EvaluationCommands:
 
     @transaction.atomic
     def update(self, evaluation_id, data):
-        row = self.repository.get(evaluation_id, locked=True)
+        row = self._locked_row(evaluation_id)
         evaluation = self.repository.entity(row)
         evaluation.ensure_draft()  # una confirmada responde 409 antes de cualquier otra comprobación
         self._lock_patient(row.customer_id)
@@ -56,14 +68,14 @@ class EvaluationCommands:
 
     @transaction.atomic
     def discard(self, evaluation_id):
-        row = self.repository.get(evaluation_id, locked=True)
+        row = self._locked_row(evaluation_id)
         self.repository.entity(row).ensure_discardable()
         self._lock_patient(row.customer_id)
         self.repository.delete(row)
 
     @transaction.atomic
     def confirm(self, evaluation_id, author_id, author_name):
-        row = self.repository.get(evaluation_id, locked=True)
+        row = self._locked_row(evaluation_id)
         evaluation = self.repository.entity(row)
         evaluation.confirm()  # 409 si ya estaba confirmada; 400 si no tiene hallazgos
         self._lock_patient(row.customer_id)
@@ -72,9 +84,8 @@ class EvaluationCommands:
 
     @transaction.atomic
     def amend(self, evaluation_id, reason, author_id, author_name):
-        source = self.repository.get(evaluation_id)
+        source = self._locked_row(evaluation_id)
         self._lock_patient(source.customer_id)
-        source = self.repository.get(evaluation_id, locked=True)
         evaluation = self.repository.entity(source)
         amendment = evaluation.amend(reason)
         self._ensure_no_draft(source.customer_id)

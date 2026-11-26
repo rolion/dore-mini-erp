@@ -9,7 +9,14 @@
   @if (patient && catalog) {
     <header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
       <div>
-        <p class="text-muted mb-1">{{ 'DENTISTRY.ODONTOGRAM.MIGAS' | translate }} › {{ patient.customer.name }}</p>
+        <nav [attr.aria-label]="'DENTISTRY.ODONTOGRAM.MIGAS_ARIA' | translate">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item">{{ 'DENTISTRY.ODONTOGRAM.MIGA_ODONTOLOGIA' | translate }}</li>
+            <li class="breadcrumb-item"><a routerLink="/pocketbiz/dentistry/patients">{{ 'DENTISTRY.ODONTOGRAM.MIGA_PACIENTES' | translate }}</a></li>
+            <li class="breadcrumb-item"><a [routerLink]="['/pocketbiz/dentistry/patients', id]">{{ patient.customer.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ 'DENTISTRY.ODONTOGRAM.TITULO' | translate }}</li>
+          </ol>
+        </nav>
         <h3 class="mb-0 fw-bold text-reset">{{ 'DENTISTRY.ODONTOGRAM.TITULO' | translate }}</h3>
       </div>
       <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/patients', id]">{{ 'DENTISTRY.ODONTOGRAM.VOLVER_A_FICHA' | translate }}</a>
@@ -80,7 +87,11 @@
             <div class="col-md-4">
               <label class="form-label" for="odo-date">{{ 'DENTISTRY.ODONTOGRAM.FECHA_CLINICA' | translate }}</label>
               <input id="odo-date" type="date" class="form-control" formControlName="clinical_date" [max]="today"
-                [attr.aria-invalid]="headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched ? 'true' : null">
+                [attr.aria-invalid]="headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched ? 'true' : null"
+                [attr.aria-describedby]="headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched ? 'odo-date-error' : null">
+              @if (headerForm.controls.clinical_date.invalid && headerForm.controls.clinical_date.touched) {
+                <div id="odo-date-error" class="text-danger small mt-1" role="alert">{{ 'DENTISTRY.ODONTOGRAM.ERR_FECHA' | translate }}</div>
+              }
             </div>
             <div class="col-md-4">
               <label class="form-label" for="odo-professional">{{ 'DENTISTRY.ODONTOGRAM.PROFESIONAL' | translate }}</label>
@@ -93,10 +104,10 @@
           @if (current) {
             <dl class="row small text-muted mt-3 mb-0">
               <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.AUTOR' | translate }}</dt>
-              <dd class="col-sm-9">{{ current.author.name }} · {{ 'DENTISTRY.ODONTOGRAM.REGISTRADA' | translate }} {{ current.created_at | date: 'short' }}</dd>
+              <dd class="col-sm-9">{{ current.author.name }} · {{ 'DENTISTRY.ODONTOGRAM.REGISTRADA' | translate }} {{ current.created_at | date: 'dd/MM/yyyy HH:mm' }}</dd>
               @if (current.confirmed_at) {
                 <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.CONFIRMADA_EL' | translate }}</dt>
-                <dd class="col-sm-9">{{ current.confirmed_at | date: 'short' }}@if (current.confirmed_by) { · {{ current.confirmed_by.name }} }</dd>
+                <dd class="col-sm-9">{{ current.confirmed_at | date: 'dd/MM/yyyy HH:mm' }}@if (current.confirmed_by) { · {{ current.confirmed_by.name }} }</dd>
               }
               @if (current.amends_id) {
                 <dt class="col-sm-3">{{ 'DENTISTRY.ODONTOGRAM.CORRIGE' | translate }}</dt>
@@ -118,11 +129,11 @@
         <div class="col-lg-8">
           <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-transparent border-bottom py-3">
-              <ul class="nav nav-pills" role="tablist" [attr.aria-label]="'DENTISTRY.ODONTOGRAM.VISTA_ARIA' | translate">
+              <ul class="nav nav-pills" role="tablist" [attr.aria-label]="'DENTISTRY.ODONTOGRAM.VISTA_ARIA' | translate" (keydown)="onTabKey($event)">
                 <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="view === 'chart'" role="tab" id="odo-tab-chart" aria-controls="odo-panel"
-                  [attr.aria-selected]="view === 'chart'" (click)="view = 'chart'">{{ 'DENTISTRY.ODONTOGRAM.VISTA_GRAFICO' | translate }}</button></li>
+                  [attr.tabindex]="view === 'chart' ? 0 : -1" [attr.aria-selected]="view === 'chart'" (click)="view = 'chart'">{{ 'DENTISTRY.ODONTOGRAM.VISTA_GRAFICO' | translate }}</button></li>
                 <li class="nav-item" role="presentation"><button type="button" class="nav-link" [class.active]="view === 'table'" role="tab" id="odo-tab-table" aria-controls="odo-panel"
-                  [attr.aria-selected]="view === 'table'" (click)="view = 'table'">{{ 'DENTISTRY.ODONTOGRAM.VISTA_TABLA' | translate }}</button></li>
+                  [attr.tabindex]="view === 'table' ? 0 : -1" [attr.aria-selected]="view === 'table'" (click)="view = 'table'">{{ 'DENTISTRY.ODONTOGRAM.VISTA_TABLA' | translate }}</button></li>
               </ul>
             </div>
             <div class="card-body" id="odo-panel" role="tabpanel" [attr.aria-labelledby]="view === 'chart' ? 'odo-tab-chart' : 'odo-tab-table'">
@@ -132,7 +143,20 @@
                 @if (rows.length === 0) {
                   <p class="text-muted mb-0" data-testid="table-empty">{{ 'DENTISTRY.ODONTOGRAM.TABLA_VACIA' | translate }}</p>
                 } @else {
-                  <div class="table-responsive">
+                  <ul class="list-unstyled d-lg-none mb-0" data-testid="findings-stacked">
+                    @for (row of rows; track $index) {
+                      <li class="border rounded p-2 mb-2">
+                        <p class="fw-semibold mb-1">{{ row.piece }} · <strong>{{ row.abbr }}</strong> {{ row.condition }}</p>
+                        <dl class="row small mb-0">
+                          <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_DENTICION' | translate }}</dt><dd class="col-7">{{ row.dentition }}</dd>
+                          <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_SUPERFICIES' | translate }}</dt><dd class="col-7">{{ row.surfaces }}</dd>
+                          @if (row.diagnosis) { <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_DIAGNOSTICO' | translate }}</dt><dd class="col-7">{{ row.diagnosis }}</dd> }
+                          @if (row.notes) { <dt class="col-5">{{ 'DENTISTRY.ODONTOGRAM.COL_NOTAS' | translate }}</dt><dd class="col-7">{{ row.notes }}</dd> }
+                        </dl>
+                      </li>
+                    }
+                  </ul>
+                  <div class="table-responsive d-none d-lg-block">
                     <table class="table table-sm align-middle" data-testid="findings-table">
                       <caption class="visually-hidden">{{ 'DENTISTRY.ODONTOGRAM.TABLA_CAPTION' | translate }}</caption>
                       <thead><tr>
@@ -181,14 +205,17 @@
                   <div class="row g-2">
                     <div class="col-md-6">
                       <label class="form-label" for="odo-general-diagnosis">{{ 'DENTISTRY.ODONTOGRAM.DIAGNOSTICO' | translate }}</label>
-                      <textarea id="odo-general-diagnosis" class="form-control" rows="2" formControlName="diagnosis" [attr.maxlength]="diagnosisMax"></textarea>
+                      <textarea id="odo-general-diagnosis" class="form-control" rows="2" formControlName="diagnosis" [attr.maxlength]="diagnosisMax"
+                        [attr.aria-invalid]="generalInvalid ? 'true' : null" [attr.aria-describedby]="generalInvalid ? 'odo-general-errors' : null"></textarea>
                     </div>
                     <div class="col-md-6">
                       <label class="form-label" for="odo-general-notes">{{ 'DENTISTRY.ODONTOGRAM.NOTAS' | translate }}</label>
                       <textarea id="odo-general-notes" class="form-control" rows="2" formControlName="notes" [attr.maxlength]="notesMax"></textarea>
                     </div>
                   </div>
-                  @for (message of generalErrors; track message) { <div class="text-danger small mt-1" role="alert">{{ message }}</div> }
+                  <div id="odo-general-errors">
+                    @for (message of generalErrors; track message) { <div class="text-danger small mt-1" role="alert">{{ message }}</div> }
+                  </div>
                   <button class="btn btn-sm btn-light mt-2" type="submit" [disabled]="busy">{{ 'DENTISTRY.ODONTOGRAM.AGREGAR_GENERAL' | translate }}</button>
                 </form>
               }
@@ -224,12 +251,14 @@
                   <form [formGroup]="findingForm" (ngSubmit)="addFinding()" novalidate data-testid="finding-form">
                     <div class="mb-2">
                       <label class="form-label" for="odo-condition">{{ 'DENTISTRY.ODONTOGRAM.CONDICION' | translate }}</label>
-                      <select id="odo-condition" class="form-select" formControlName="condition">
+                      <select id="odo-condition" class="form-select" formControlName="condition" [attr.aria-invalid]="findingInvalid.condition ? 'true' : null"
+                        [attr.aria-describedby]="findingInvalid.condition ? 'odo-finding-errors' : null">
                         <option value="">{{ 'DENTISTRY.ODONTOGRAM.ELEGIR_CONDICION' | translate }}</option>
                         @for (condition of catalog.conditions; track condition.code) { <option [value]="condition.code">{{ conditionLabel(condition) }}</option> }
                       </select>
                     </div>
-                    <fieldset class="mb-2" [disabled]="surfacesDisabled">
+                    <fieldset class="mb-2" [disabled]="surfacesDisabled" [attr.aria-invalid]="findingInvalid.surfaces ? 'true' : null"
+                      [attr.aria-describedby]="findingInvalid.surfaces ? 'odo-finding-errors' : null">
                       <legend class="form-label fs-6">{{ 'DENTISTRY.ODONTOGRAM.SUPERFICIES' | translate }}</legend>
                       @if (surfacesDisabled) { <p class="small text-muted mb-1">{{ 'DENTISTRY.ODONTOGRAM.NO_APLICA_SUPERFICIES' | translate }}</p> }
                       @for (code of pieceSurfaces; track code) {
@@ -241,15 +270,19 @@
                     </fieldset>
                     <div class="mb-2">
                       <label class="form-label" for="odo-diagnosis">{{ 'DENTISTRY.ODONTOGRAM.DIAGNOSTICO' | translate }}</label>
-                      <textarea id="odo-diagnosis" class="form-control" rows="2" formControlName="diagnosis" [attr.maxlength]="diagnosisMax"></textarea>
+                      <textarea id="odo-diagnosis" class="form-control" rows="2" formControlName="diagnosis" [attr.maxlength]="diagnosisMax"
+                        [attr.aria-invalid]="findingInvalid.diagnosis ? 'true' : null" [attr.aria-describedby]="findingInvalid.diagnosis ? 'odo-finding-errors' : null"></textarea>
                     </div>
                     <div class="mb-2">
                       <label class="form-label" for="odo-notes">{{ 'DENTISTRY.ODONTOGRAM.NOTAS' | translate }}@if (selectedCondition?.requires_note) { <span class="text-danger" aria-hidden="true"> *</span> }</label>
                       <textarea id="odo-notes" class="form-control" rows="2" formControlName="notes" [attr.maxlength]="notesMax"
-                        [attr.aria-required]="selectedCondition?.requires_note ? 'true' : null"></textarea>
+                        [attr.aria-required]="selectedCondition?.requires_note ? 'true' : null"
+                        [attr.aria-invalid]="findingInvalid.notes ? 'true' : null" [attr.aria-describedby]="findingInvalid.notes ? 'odo-finding-errors' : null"></textarea>
                       @if (findingForm.controls.notes.value.length >= notesMax * 0.8) { <small class="text-muted">{{ findingForm.controls.notes.value.length }} / {{ notesMax }}</small> }
                     </div>
-                    @for (message of findingErrors; track message) { <div class="text-danger small" role="alert">{{ message }}</div> }
+                    <div id="odo-finding-errors">
+                      @for (message of findingErrors; track message) { <div class="text-danger small" role="alert">{{ message }}</div> }
+                    </div>
                     <button class="btn btn-sm btn-primary mt-2" type="submit" [disabled]="busy">{{ 'DENTISTRY.ODONTOGRAM.AGREGAR_HALLAZGO' | translate }}</button>
                   </form>
                 }
