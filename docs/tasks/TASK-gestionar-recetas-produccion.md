@@ -79,7 +79,7 @@ DDR: `docs/design/DDR-gestionar-recetas-produccion-pantallas-recetas.md`.
 ADR: `docs/adr/ADR-gestionar-recetas-produccion-modulo-production.md`.
 
 ## Plan
-`docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md` (v1, COMPLETO). Specification readiness: **READY**.
+`docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md` (v2, COMPLETO; v2 enmienda API-01..05 a snake_case con aprobación del usuario). Specification readiness: **READY**.
 
 ## Implementación
 Implementado el plan v1 sin cambios de Specification.
@@ -91,7 +91,7 @@ Implementado el plan v1 sin cambios de Specification.
 **Pruebas:** backend `modules/production/tests/test_domain.py` y `test_api.py` (AC-01..AC-09, fachada, aislamiento entre empresas); frontend `recipes-api.service.spec.ts`, `recipe-pages.spec.ts` y `sidebar-menu.spec.ts`. E2E: no, como el plan.
 
 **Desviaciones respecto al plan (sin tocar la Specification):**
-- API en `snake_case` (como el resto de Catálogo/Servicios) en lugar de camelCase en API-01..API-05; los nombres de campo son un detalle de formato, el contenido y las reglas no cambian.
+- API en `snake_case` en lugar de camelCase en API-01..API-05: resuelto con el plan v2, que enmienda la Specification con aprobación explícita del usuario (REV-01).
 - El módulo `production` no declara `optional=('inventory',)` (no hay integración todavía); se actualizó el ADR.
 - La lista usa una tabla con `table-responsive` (scroll horizontal en pantallas estrechas) en vez de la variante de tarjetas bajo 992 px que mencionaba el DDR; queda como deuda visual menor.
 - `PUT` valida primero forma y tipos del cuerpo (400) y después busca la receta (404 si es de otra empresa); un cuerpo inválido da 400 antes que 404, sin filtrar datos entre empresas.

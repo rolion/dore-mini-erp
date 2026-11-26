@@ -1,4 +1,4 @@
-# PLAN-2026-11-26-gestionar-recetas-produccion (v1)
+# PLAN-2026-11-26-gestionar-recetas-produccion (v2)
 
 **Task:** TASK-gestionar-recetas-produccion · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-gestionar-recetas-produccion-pantallas-recetas · ADR-gestionar-recetas-produccion-modulo-production
@@ -61,12 +61,12 @@ Con el módulo habilitado, la persona gestiona recetas desde Producción → Rec
 Usuario autenticado con empresa y módulo habilitado (mismo criterio que Catálogo); la empresa sale del usuario (`shared/tenancy.py`), nunca del cuerpo.
 
 ## API contract
-- API-01 `GET /api/recipes/?status=active|inactive|all&q=&page=&page_size=` → `{count,next,previous,results:[{id,name,resultProduct:{id,name,unit:{id,abbreviation}},yieldQuantity,active}]}`.
-- API-02 `POST /api/recipes/` cuerpo `{name,resultProductId,yieldQuantity,ingredients:[{productId,unitId,quantity}]}` → 201 con el detalle.
-- API-03 `GET /api/recipes/<id>/` → detalle (+ `ingredients:[{productId,productName,unitId,unitAbbreviation,quantity,productActive}]`, `createdAt`, `updatedAt`).
+- API-01 `GET /api/recipes/?status=active|inactive|all&q=&page=&page_size=` → `{count,next,previous,results:[{id,name,result_product:{id,name,active,unit:{id,abbreviation}},yield_quantity,ingredients,active,created_at,updated_at}]}`.
+- API-02 `POST /api/recipes/` cuerpo `{name,result_product_id,yield_quantity,ingredients:[{product_id,unit_id,quantity}]}` → 201 con el detalle.
+- API-03 `GET /api/recipes/<id>/` → detalle (+ `ingredients:[{product_id,product_name,product_active,unit_id,unit_abbreviation,quantity}]`, `created_at`, `updated_at`).
 - API-04 `PUT /api/recipes/<id>/` mismo cuerpo que API-02 → 200.
 - API-05 `POST /api/recipes/<id>/activate/` y `/deactivate/` → 200 con el detalle.
-Cantidades como cadenas decimales; errores `{campo: [mensajes]}` y `ingredients: [{...}]` por línea, como el resto de la API. Aditivo.
+Campos en `snake_case`, como el resto de la API (Catálogo, Servicios). Cantidades como cadenas decimales; errores `{campo: [mensajes]}` y `ingredients: [{...}]` por línea. Aditivo.
 
 ## UI behavior
 - UI-01 Menú «Producción» (módulo `production`) con «Recetas».
@@ -137,3 +137,6 @@ EDGE-05 (productos cambiados después); módulo nuevo en el registro puede afect
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-26): [Specification] API-01..API-05 pasan de camelCase a snake_case (como Catálogo y Servicios; la implementación ya lo hacía). Aprobado explícitamente por el usuario en el chat. Solicitado por delivery-publish, REV-2026-11-26-gestionar-recetas-produccion-01.
