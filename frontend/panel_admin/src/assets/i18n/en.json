@@ -170,7 +170,8 @@
     "PRODUCTION": {
       "TEXT": "Production",
       "LIST": {
-        "RECIPES": "Recipes"
+        "RECIPES": "Recipes",
+        "ORDERS": "Production orders"
       }
     }
   },
@@ -3530,6 +3531,54 @@
       },
       "RESULT_AS_INGREDIENT": "The resulting product cannot be an ingredient of its own recipe.",
       "INGREDIENT_TITLE": "Ingredient {{n}}"
+    },
+    "ORDERS": {
+      "TITLE": "Production orders",
+      "NEW": "New order",
+      "NEW_TITLE": "New production order",
+      "EDIT_TITLE": "Edit production order",
+      "NUMBER": "No.",
+      "PREPARATIONS": "Preparations",
+      "PREPARATIONS_HELP": "How many times the recipe will be made (whole number from 1 to 99999).",
+      "PREPARATIONS_INVALID": "Enter a whole number between 1 and 99999.",
+      "EXPECTED_OUTPUT": "Expected output",
+      "PER_PREPARATION": "Per preparation",
+      "EXPECTED_TOTAL": "Expected total",
+      "PREVIEW": "Expected",
+      "PREVIEW_EMPTY": "Choose a recipe and enter the preparations to see what is expected.",
+      "WILL_PRODUCE": "You will produce {{quantity}} {{unit}} of {{product}}",
+      "CHOOSE_RECIPE": "Choose an active recipe",
+      "CHOOSE_WAREHOUSE": "Choose a warehouse",
+      "RECIPE_REQUIRED": "Choose a recipe.",
+      "WAREHOUSE_REQUIRED": "Choose a warehouse.",
+      "NO_RECIPES": "There are no active recipes. Create or activate one in",
+      "NO_WAREHOUSES": "There are no active warehouses.",
+      "GO_INVENTORY_SETTINGS": "Set up warehouses in Inventory",
+      "SAVE_DRAFT": "Save draft",
+      "START": "Start preparation",
+      "NO_STOCK_NOTE": "Saving or starting the order does not change stock.",
+      "CONFIRM_START_TITLE": "Start preparing {{number}}?",
+      "CONFIRM_START_TEXT": "It does not change stock. The order can no longer be edited.",
+      "STARTED": "The order is in preparation.",
+      "CREATED_AT": "Created",
+      "STARTED_AT": "Started",
+      "FILTERS": "Order filters",
+      "EMPTY": "There are no production orders yet.",
+      "EMPTY_FILTER": "No orders for this filter.",
+      "TOTAL": "Total: {{count}} orders",
+      "PAGES": "Order pages",
+      "STATUS": {
+        "DRAFT": "Draft",
+        "IN_PREPARATION": "In preparation"
+      },
+      "ERRORS": {
+        "NETWORK": "Could not connect to the server.",
+        "VALIDATION": "Check the data you entered.",
+        "FORBIDDEN": "You do not have permission to access production orders.",
+        "NOT_FOUND": "Order not found.",
+        "CONFLICT": "The order is not in a state that allows this operation.",
+        "GENERIC": "The operation could not be completed."
+      }
     }
   }
 }

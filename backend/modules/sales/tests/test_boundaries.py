@@ -20,7 +20,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     # Los lotes se numeran por período fiscal (ADR lotes-disponibilidad-inventario): `inventory → accounting`.
     'inventory': {'accounting', 'catalog', 'modularity'},
     'costing': {'inventory'},
-    'production': {'catalog'},
+    'production': {'catalog', 'inventory'},
     'customers': set(),
     'dentistry': {'customers', 'service_catalog'},
     'expenses': {'accounting'},

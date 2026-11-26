@@ -28,7 +28,7 @@ class CatalogTests(SimpleTestCase):
         self.assertEqual(requires['purchases'], {'catalog'})  # CONT-06: sin dependencia funcional de Gastos
         self.assertEqual(set(d.BY_KEY['purchases'].optional), {'expenses'})
         self.assertEqual(requires['inventory'], {'catalog'})
-        self.assertEqual(requires['production'], {'catalog'})  # DORE-PROD-001
+        self.assertEqual(requires['production'], {'catalog', 'inventory'})  # DORE-PROD-001
         self.assertNotIn('production', d.DEFAULT_ENABLED_KEYS)
         self.assertEqual(requires['costing'], {'inventory'})
         self.assertNotIn('costing', d.DEFAULT_ENABLED_KEYS)

@@ -1,0 +1,109 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'PRODUCTION.MODULE' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/production/orders">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</a></li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="card-header"><h4>{{ (isEdit ? 'PRODUCTION.ORDERS.EDIT_TITLE' : 'PRODUCTION.ORDERS.NEW_TITLE') | translate }}@if (order) { · {{ number(order.number) }} }</h4></div>
+    @if (loading) { <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+    @if (error) { <div role="alert" class="alert alert-danger m-4" data-testid="form-error">{{ error }}</div> }
+    @if (server.detail) { <div role="alert" class="alert alert-danger m-4" data-testid="detail-error">{{ server.detail }}</div> }
+    @if (noRecipes) {
+    <div role="status" class="alert alert-warning m-4" data-testid="no-recipes">{{ 'PRODUCTION.ORDERS.NO_RECIPES' | translate }}
+      <a routerLink="/pocketbiz/production/recipes">{{ 'PRODUCTION.RECIPES.TITLE' | translate }}</a></div>
+    }
+    @if (noWarehouses) {
+    <div role="status" class="alert alert-warning m-4" data-testid="no-warehouses">{{ 'PRODUCTION.ORDERS.NO_WAREHOUSES' | translate }}
+      <a routerLink="/pocketbiz/inventory/configuration">{{ 'PRODUCTION.ORDERS.GO_INVENTORY_SETTINGS' | translate }}</a></div>
+    }
+    @if (!loading && (!isEdit || order)) {
+    <form class="register-form m-4" [formGroup]="form" (ngSubmit)="saveDraft()" novalidate>
+      <div class="row">
+        <div class="form-group col-md-6">
+          @if (order) {
+          <span class="d-block fw-bold">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</span>
+          <p class="mb-0" data-testid="recipe-readonly">{{ order.recipe.name }}</p>
+          } @else {
+          <label for="order-recipe">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }} <span class="text-danger">*</span></label>
+          <ng-select labelForId="order-recipe" [items]="recipeOptions" bindLabel="name" [typeahead]="recipeInput$" [loading]="recipesLoading"
+            [compareWith]="sameItem" formControlName="recipe" [placeholder]="'PRODUCTION.ORDERS.CHOOSE_RECIPE' | translate"
+            [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH' | translate" [clearable]="false" />
+          @if (server.recipeId || (submitted && !noRecipes && !form.controls.recipe.value)) {
+          <small class="text-danger d-block" data-testid="recipe-error">{{ server.recipeId || ('PRODUCTION.ORDERS.RECIPE_REQUIRED' | translate) }}</small>
+          }
+          }
+        </div>
+        <div class="form-group col-md-6">
+          <label for="order-warehouse">{{ 'COMMON.ALMACEN' | translate }} <span class="text-danger">*</span></label>
+          <ng-select labelForId="order-warehouse" [items]="warehouses" bindLabel="name" [compareWith]="sameItem" formControlName="warehouse"
+            [placeholder]="'PRODUCTION.ORDERS.CHOOSE_WAREHOUSE' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [clearable]="false" />
+          @if (server.warehouseId || (submitted && !noWarehouses && !form.controls.warehouse.value)) {
+          <small class="text-danger d-block" data-testid="warehouse-error">{{ server.warehouseId || ('PRODUCTION.ORDERS.WAREHOUSE_REQUIRED' | translate) }}</small>
+          }
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-group col-md-4">
+          <label for="order-preparations">{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }} <span class="text-danger">*</span></label>
+          <input id="order-preparations" class="form-control" formControlName="preparations" inputmode="numeric" autocomplete="off" aria-describedby="order-preparations-help">
+          <small id="order-preparations-help" class="form-text text-muted d-block">{{ 'PRODUCTION.ORDERS.PREPARATIONS_HELP' | translate }}</small>
+          @if (server.preparations || (submitted && form.controls.preparations.invalid)) {
+          <small class="text-danger d-block" data-testid="preparations-error">{{ server.preparations || ('PRODUCTION.ORDERS.PREPARATIONS_INVALID' | translate) }}</small>
+          }
+        </div>
+      </div>
+
+      <section class="preview-panel" data-testid="preview" aria-live="polite">
+        <h5>{{ 'PRODUCTION.ORDERS.PREVIEW' | translate }}</h5>
+        @if (preview; as p) {
+        <p class="fw-bold" data-testid="preview-output">{{ 'PRODUCTION.ORDERS.WILL_PRODUCE' | translate: { quantity: quantity(p.output), unit: p.unit, product: p.productName } }}</p>
+        @if (compact) {
+        <ul class="list-unstyled ingredient-cards" data-testid="preview-cards">
+          @for (line of p.lines; track $index) {
+          <li class="card ingredient-card" data-testid="preview-card">
+            <dl class="mb-0">
+              <div class="preview-row"><dt>{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</dt><dd>{{ line.name }}</dd></div>
+              <div class="preview-row"><dt>{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</dt><dd>{{ line.perPreparation }} {{ line.unit }}</dd></div>
+              <div class="preview-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</dt><dd>{{ line.total }} {{ line.unit }}</dd></div>
+            </dl>
+          </li>
+          }
+        </ul>
+        } @else {
+        <div class="table-responsive">
+          <table class="table align-middle mb-0" data-testid="preview-table">
+            <caption class="visually-hidden">{{ 'PRODUCTION.ORDERS.PREVIEW' | translate }}</caption>
+            <thead><tr>
+              <th scope="col">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</th>
+              <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</th>
+              <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</th>
+            </tr></thead>
+            <tbody>
+              @for (line of p.lines; track $index) {
+              <tr data-testid="preview-row">
+                <td>{{ line.name }}</td>
+                <td class="text-end">{{ line.perPreparation }} {{ line.unit }}</td>
+                <td class="text-end">{{ line.total }} {{ line.unit }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
+        } @else {
+        <p class="text-muted mb-0" data-testid="preview-empty">{{ 'PRODUCTION.ORDERS.PREVIEW_EMPTY' | translate }}</p>
+        }
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-light" [disabled]="saving || blocked" data-testid="save-draft">{{ (saving ? 'PRODUCTION.RECIPES.SAVING' : 'PRODUCTION.ORDERS.SAVE_DRAFT') | translate }}</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving || blocked" (click)="startPreparation()" data-testid="start">{{ 'PRODUCTION.ORDERS.START' | translate }}</button>
+        <button type="button" class="btn btn-light" (click)="cancel()">{{ 'COMMON.CANCELAR' | translate }}</button>
+      </div>
+      <small class="form-text text-muted d-block mt-2">{{ 'PRODUCTION.ORDERS.NO_STOCK_NOTE' | translate }}</small>
+    </form>
+    }
+  </div></div>
+</section>

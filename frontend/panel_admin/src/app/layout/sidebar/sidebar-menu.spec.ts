@@ -106,7 +106,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(51);
+    expect(titles.length).toBe(52);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {
@@ -151,9 +151,12 @@ describe('Sidebar menu (routes.json)', () => {
     const production = (enabled: string[]) => visibleRoutes(routes, new Set(enabled)).find((route) => route.module === 'production');
     expect(production(['catalog'])).toBeUndefined();
     const menu = production(['catalog', 'production']);
-    expect(menu?.submenu.map((item) => item.path)).toEqual(['/pocketbiz/production/recipes']);
+    expect(menu?.submenu.map((item) => item.path)).toEqual(['/pocketbiz/production/recipes', '/pocketbiz/production/orders']);
     expect(translate(es, 'MENUITEMS.PRODUCTION.TEXT')).toBe('Producción');
     expect(translate(en, 'MENUITEMS.PRODUCTION.LIST.RECIPES')).toBe('Recipes');
     expect(translate(pt, 'MENUITEMS.PRODUCTION.LIST.RECIPES')).toBe('Receitas');
+    expect(translate(es, 'MENUITEMS.PRODUCTION.LIST.ORDERS')).toBe('Órdenes de producción');
+    expect(translate(en, 'MENUITEMS.PRODUCTION.LIST.ORDERS')).toBe('Production orders');
+    expect(translate(pt, 'MENUITEMS.PRODUCTION.LIST.ORDERS')).toBe('Ordens de produção');
   });
 });

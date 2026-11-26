@@ -1,0 +1,86 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'PRODUCTION.MODULE' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/production/orders">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</a></li>
+  </ul>
+  <div class="section-body"><div class="card">
+    @if (loading) { <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+    @if (error) { <div role="alert" class="alert alert-danger m-4">{{ error }} <button class="btn btn-light" type="button" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
+    @if (order) {
+    <div class="card-header"><h4 data-testid="order-number">{{ number(order.number) }}</h4></div>
+    <div class="m-4 order-actions" data-testid="order-actions">
+      @if (order.status === 'draft') {
+      <button type="button" class="btn btn-primary" [disabled]="starting" (click)="start()" data-testid="start">{{ 'PRODUCTION.ORDERS.START' | translate }}</button>
+      <a class="btn btn-warning" [routerLink]="['/pocketbiz/production/orders', order.id, 'edit']" data-testid="edit">{{ 'COMMON.EDITAR' | translate }}</a>
+      }
+      <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
+    </div>
+    @if (success) { <div role="status" class="alert alert-success mx-4" data-testid="success">{{ success }}</div> }
+    @if (actionError) { <div role="alert" class="alert alert-danger mx-4" data-testid="action-error">{{ actionError }}</div> }
+    @if (compact) {
+    <dl class="order-info" data-testid="order-info">
+      <div class="order-row"><dt>{{ 'COMMON.ESTADO' | translate }}</dt><dd><span class="badge-outline" [class]="statusClass">{{ statusKey | translate }}</span></dd></div>
+      <div class="order-row"><dt>{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt><dd>{{ order.recipe.name }}</dd></div>
+      <div class="order-row"><dt>{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt><dd>{{ order.resultProduct.name }}</dd></div>
+      <div class="order-row"><dt>{{ 'COMMON.ALMACEN' | translate }}</dt><dd>{{ order.warehouse.name }}</dd></div>
+      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt><dd>{{ order.preparations }}</dd></div>
+      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt><dd data-testid="detail-output">{{ quantity(order.expectedOutput) }} {{ order.resultProduct.unit?.abbreviation }}</dd></div>
+      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt><dd>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt><dd data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
+    </dl>
+    <h5 class="mx-3">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
+    <ul class="list-unstyled ingredient-cards" data-testid="ingredient-cards">
+      @for (line of order.ingredients; track line.productId) {
+      <li class="card ingredient-card" data-testid="ingredient-card">
+        <dl class="mb-0">
+          <div class="order-row"><dt>{{ 'COMMON.PRODUCTO' | translate }}</dt><dd>{{ line.productName }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</dt><dd>{{ quantity(line.quantityPerPreparation) }} {{ line.unitAbbreviation || '—' }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</dt><dd>{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</dd></div>
+        </dl>
+      </li>
+      }
+    </ul>
+    } @else {
+      <dl class="row m-4">
+        <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
+        <dd class="col-sm-9"><span class="badge-outline" [class]="statusClass">{{ statusKey | translate }}</span></dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt>
+        <dd class="col-sm-9">{{ order.recipe.name }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt>
+        <dd class="col-sm-9">{{ order.resultProduct.name }}</dd>
+        <dt class="col-sm-3">{{ 'COMMON.ALMACEN' | translate }}</dt>
+        <dd class="col-sm-9">{{ order.warehouse.name }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt>
+        <dd class="col-sm-9">{{ order.preparations }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="detail-output">{{ quantity(order.expectedOutput) }} {{ order.resultProduct.unit?.abbreviation }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt>
+        <dd class="col-sm-9">{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt>
+        <dd class="col-sm-9" data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd>
+      </dl>
+      <div class="table-responsive mx-4 mb-4">
+        <table class="table align-middle" data-testid="ingredient-table">
+          <caption>{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</caption>
+          <thead><tr>
+            <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</th>
+          </tr></thead>
+          <tbody>
+            @for (line of order.ingredients; track line.productId) {
+            <tr data-testid="ingredient-row">
+              <td>{{ line.productName }}</td>
+              <td class="text-end">{{ quantity(line.quantityPerPreparation) }} {{ line.unitAbbreviation || '—' }}</td>
+              <td class="text-end">{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    }
+  </div></div>
+</section>

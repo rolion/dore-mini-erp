@@ -39,3 +39,59 @@ class RecipeIngredientModel(models.Model):
             models.UniqueConstraint(fields=['recipe', 'product_id'], name='production_ingredient_product_unique'),
             models.CheckConstraint(condition=models.Q(quantity__gt=0), name='production_ingredient_quantity_positive'),
         ]
+
+
+class ProductionOrderModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    number = models.PositiveIntegerField()
+    status = models.CharField(max_length=20, default='draft')
+    # Copia de la receta al crear (sin FK: la orden no depende de ella después).
+    recipe_id = models.UUIDField()
+    recipe_name = models.CharField(max_length=150)
+    result_product_id = models.UUIDField()
+    result_product_name = models.CharField(max_length=200)
+    result_unit_id = models.UUIDField(null=True, blank=True)
+    result_unit_abbreviation = models.CharField(max_length=20, null=True, blank=True)
+    yield_per_preparation = models.DecimalField(max_digits=14, decimal_places=4)
+    # Referencia a Inventario: UUID sin FK.
+    warehouse_id = models.UUIDField()
+    preparations = models.PositiveIntegerField()
+    started_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'production_order'
+        ordering = ['-number']
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'number'], name='production_order_number_unique'),
+            models.CheckConstraint(condition=models.Q(preparations__gt=0), name='production_order_preparations_gt_0'),
+            models.CheckConstraint(
+                condition=(models.Q(status='draft', started_at__isnull=True)
+                           | models.Q(status='in_preparation', started_at__isnull=False)),
+                name='production_order_started_with_status'),
+        ]
+
+
+class ProductionOrderIngredientModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    order = models.ForeignKey(ProductionOrderModel, on_delete=models.CASCADE, related_name='ingredients')
+    product_id = models.UUIDField()
+    product_name = models.CharField(max_length=200)
+    unit_id = models.UUIDField(null=True, blank=True)
+    unit_abbreviation = models.CharField(max_length=20, null=True, blank=True)
+    quantity_per_preparation = models.DecimalField(max_digits=14, decimal_places=4)
+    position = models.PositiveIntegerField()
+
+    class Meta:
+        db_table = 'production_order_ingredient'
+        ordering = ['position']
+
+
+class ProductionOrderCounterModel(models.Model):
+    company_id = models.UUIDField(unique=True, db_index=True)
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'production_order_counter'

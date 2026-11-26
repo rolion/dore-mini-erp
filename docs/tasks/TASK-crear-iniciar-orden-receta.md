@@ -1,6 +1,6 @@
 # TASK-crear-iniciar-orden-receta: Crear e iniciar una orden de producción desde una receta
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-crear-iniciar-orden-receta (base: `produccion`)
@@ -13,6 +13,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta DORE-PROD-003 | delivery-start |
 | 2026-11-26 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto contra `produccion` | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa del plan v1 | delivery-build |
 
 ## Investigación
 
@@ -80,7 +81,14 @@ Ver `docs/adr/ADR-crear-iniciar-orden-receta-agregado-orden-produccion.md`.
 Ver `docs/plans/PLAN-2026-11-26-crear-iniciar-orden-receta.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+Plan v1 implementado sin cambios de Specification.
+
+**Backend** (`backend/modules/production/`): `domain/production_order.py` (agregado, INV-01, 03-05, 07), `application/orders.py` (casos de uso con puertos `WarehouseDirectory`/`RecipeSource`; INV-02, INV-06), `infrastructure/django/{models,order_repository}.py` + migración `0002_production_orders` (INV-08, contador bloqueado con `select_for_update`), adaptador `InventoryWarehouses` sobre `inventory.services` (INV-09: sin movimientos), API `api/order_*.py` en `api/production-orders/` (API-01..05). Módulo `production` ahora `requires=('catalog','inventory')`; actualizados `test_boundaries`, `modularity/tests/test_domain.py`, `test_guards.py` y `ddd.md`.
+**Frontend** (`features/production/`): modelos con aritmética decimal por enteros escalados, `orders-api.service`, páginas `order-list`, `order-form`, `order-detail`, ruta `production/orders`, ítem de menú, i18n es/en/pt. Referencias seguidas: `purchase-list`, `purchase-form`, `purchase-detail` y las pantallas de recetas; sin componentes compartidos nuevos.
+**Pruebas:** `test_order_domain.py` y `test_order_api.py` cubren AC-01..AC-10, EDGE-01, 03, 04; specs de servicio, lista, formulario, detalle y menú (AC-11, AC-12).
+
+**Desviaciones:** la lista devuelve cada orden con la misma forma que el detalle (el plan lo dejaba implícito). El almacén se revalida al iniciar solo si la orden es borrador. Un `PUT`/`start` en estado inválido responde 409.
+**Deuda técnica:** ninguna nueva; las recetas activas del formulario se buscan con `page_size=20` y búsqueda por texto.
 
 ## Review
 _Pendiente_
