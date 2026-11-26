@@ -66,6 +66,8 @@ def purchase_representation(detail) -> dict:
         'currency': CURRENCY,
         'editable': purchase.editable,
         'reference': purchase.reference,
+        'number': purchase.number.number if purchase.number else None,
+        'fiscal_period': _fiscal_period(purchase.number),
         'reception_status': purchase.reception_status.value,
         'payment_status': purchase.payment_status.value,
         'confirmed_at': purchase.confirmed_at,
@@ -91,6 +93,11 @@ def purchase_representation(detail) -> dict:
     }
 
 
+def _fiscal_period(number) -> dict | None:
+    """`{id, name}` del período con que se numeró la compra; `None` si aún no tiene número."""
+    return {'id': number.period_id, 'name': number.period_name} if number is not None else None
+
+
 def summary_representation(summary) -> dict:
     return {
         'id': summary.id,
@@ -102,6 +109,8 @@ def summary_representation(summary) -> dict:
         'status': summary.status.value,
         'items_count': summary.items_count,
         'reference': summary.reference,
+        'number': summary.number.number if summary.number else None,
+        'fiscal_period': _fiscal_period(summary.number),
         # Solo las compras confirmadas tienen recepción, pago y saldo; el resto va en `null`.
         'reception_status': summary.reception_status.value if summary.reception_status else None,
         'payment_status': summary.payment_status.value if summary.payment_status else None,

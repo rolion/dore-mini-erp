@@ -104,3 +104,8 @@ class PostingRejected(Exception):
         super().__init__(message)
         self.code = code
         self.extra = extra or {}
+
+
+class PurchaseNumberingRejected(PostingRejected):
+    """No se puede numerar la compra al confirmar: sin período fiscal (`fiscal_period_missing`) o con el período
+    cerrado (`fiscal_period_closed`, con `extra={'period': nombre}`). Es un 409 como los rechazos de Contabilidad."""

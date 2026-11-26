@@ -6,7 +6,7 @@ from django.db.models import CharField, Count, DecimalField, OuterRef, Q, QueryS
 from django.db.models.functions import Cast, Coalesce
 
 from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
-from modules.purchases.domain.purchase import Purchase
+from modules.purchases.domain.purchase import Purchase, PurchaseNumber, provisional_reference
 from modules.purchases.domain.repositories import PurchaseFilters, PurchaseSummary
 
 from .mappers import purchase_to_entity, purchase_to_model_values
@@ -38,10 +38,12 @@ class PurchaseList:
     def _summary(m, supplier_name: str) -> PurchaseSummary:
         status = PurchaseStatus(m.status)
         confirmed = status is PurchaseStatus.CONFIRMED
+        number = (PurchaseNumber(m.fiscal_period_id, m.fiscal_period_name, m.number)
+                  if m.number is not None else None)
         return PurchaseSummary(
             id=m.id, purchase_date=m.purchase_date, supplier_id=m.supplier_id, supplier_name=supplier_name,
             external_reference=m.external_reference, total=m.total, status=status, items_count=m.items_count,
-            reference=f'COM-{m.id.hex[:8].upper()}',
+            reference=number.code if number else provisional_reference(m.id), number=number,
             reception_status=ReceptionStatus(m.reception_status) if confirmed else None,
             payment_status=PaymentStatus(m.payment_status) if confirmed else None,
             paid_total=m.paid_total if confirmed else None,
@@ -126,8 +128,13 @@ class DjangoPurchaseRepository:
             queryset = queryset.filter(payment_status__in=[PaymentStatus.UNPAID.value, PaymentStatus.PARTIAL.value])
         if f.search:
             match = Q(external_reference__icontains=f.search)
-            prefix = f.search.lower().removeprefix('com-')
-            # La referencia interna es COM- + los 8 primeros hex del id: se busca por prefijo del id en texto.
+            text = f.search.strip().lower()
+            # `NC-000012` o `12`: el número de la serie (un número por período: devuelve todos los períodos).
+            digits = text.removeprefix('nc-')
+            if digits.isdigit() and int(digits) > 0 and len(digits) <= 9:
+                match |= Q(number=int(digits))
+            # La referencia provisional es COM- + los 8 primeros hex del id (borradores y heredadas sin número).
+            prefix = text.removeprefix('com-')
             if 1 <= len(prefix) <= 8 and set(prefix) <= HEX_DIGITS:
                 queryset = queryset.annotate(id_text=Cast('id', CharField())).filter(
                     match | Q(id_text__startswith=prefix))

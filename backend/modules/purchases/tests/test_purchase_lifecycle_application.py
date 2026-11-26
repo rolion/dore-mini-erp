@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from .numbering_support import FakeNumbering
 from modules.purchases.application.purchase_commands import CancelPurchase, ConfirmPurchase
 from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus
 from modules.purchases.domain.exceptions import (
@@ -16,7 +17,7 @@ LATER = datetime(2026, 10, 31, 12, 0, tzinfo=timezone.utc)
 
 class ConfirmPurchaseTests(PurchaseApplicationCase):
     def confirm(self, purchase, now=NOW):
-        return ConfirmPurchase(self.purchases, self.suppliers).execute(purchase.id, now)
+        return ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(purchase.id, now)
 
     def test_confirms_a_valid_draft(self):  # AC-01
         purchase = self.confirm(self.create())
@@ -38,7 +39,7 @@ class ConfirmPurchaseTests(PurchaseApplicationCase):
 
     def test_unknown_purchase(self):
         with self.assertRaises(PurchaseNotFound):
-            ConfirmPurchase(self.purchases, self.suppliers).execute(uuid4(), NOW)
+            ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(uuid4(), NOW)
 
     def test_inactive_product_does_not_block(self):  # EDGE-02
         purchase = self.create()
@@ -52,7 +53,7 @@ class CancelPurchaseTests(PurchaseApplicationCase):
 
     def test_cancels_draft_and_confirmed(self):  # AC-05, AC-06
         cancelled_draft = self.cancel(self.create())
-        confirmed = ConfirmPurchase(self.purchases, self.suppliers).execute(self.create().id, NOW)
+        confirmed = ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(self.create().id, NOW)
         self.cancel(confirmed)
         self.assertEqual((cancelled_draft.status, confirmed.status),
                          (PurchaseStatus.CANCELLED, PurchaseStatus.CANCELLED))
@@ -64,7 +65,7 @@ class CancelPurchaseTests(PurchaseApplicationCase):
         self.assertEqual(purchase.status, PurchaseStatus.DRAFT)
 
     def test_blocked_by_activity(self):  # AC-08
-        purchase = ConfirmPurchase(self.purchases, self.suppliers).execute(self.create().id, NOW)
+        purchase = ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(self.create().id, NOW)
         purchase.payment_status = PaymentStatus.PARTIAL
         with self.assertRaises(PurchaseCancellationBlocked):
             self.cancel(purchase)

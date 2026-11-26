@@ -17,6 +17,7 @@ from modules.accounting.infrastructure.django.models import (
     SettingsModel,
 )
 from modules.accounting.infrastructure.django.repositories import DjangoFiscalPeriodRepository
+from modules.accounting.infrastructure.django.models import FiscalPeriodModel
 from modules.accounting.tests.journal_support import make_account, make_period
 from modules.inventory.infrastructure.django.models import StockMovementModel
 from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
@@ -49,6 +50,7 @@ class PostingTestCase(ReceiptApiTestCase):
             accounting.set_role_account(self.company.id, 'PAYABLE', self.payable_account.id)
 
     def make_periods(self):
+        FiscalPeriodModel.objects.filter(company_id=self.company.id).delete()  # reemplaza el período amplio de pruebas
         return make_period(self.company.id, 'Año', TODAY - timedelta(days=200), TODAY + timedelta(days=100))
 
     def journal(self):

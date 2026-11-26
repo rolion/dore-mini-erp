@@ -27,7 +27,14 @@ from modules.purchases.application.ports import (
     StockProductInfo,
     StockWarehouse,
 )
-from modules.purchases.domain.exceptions import PostingRejected, PurchaseValidationError, StockShortage
+from modules.purchases.domain.exceptions import (
+    PostingRejected,
+    PurchaseNumberingRejected,
+    PurchaseValidationError,
+    StockShortage,
+)
+from modules.purchases.domain.purchase import PurchaseNumber
+from modules.purchases.infrastructure.django.models import PurchaseNumberCounterModel
 from shared import module_gate
 
 INVENTORY_MODULE = 'inventory'
@@ -152,6 +159,42 @@ class AccountingClassifications:
         return accounting_services.coverage_status(self.company_id, on).covered
 
 
+def _period_suffix(purchase) -> str:
+    """El número se repite entre períodos: el texto contable lleva el período para no ser ambiguo."""
+    return f' ({purchase.number.period_name})' if purchase.number is not None else ''
+
+
+class PurchaseNumberingAdapter:
+    """Serie de compras por período fiscal (ADR numeración correlativa de compras): bloquea el período y su contador.
+
+    `lock_open_period` toma la fila del período con `select_for_update`: serializa las confirmaciones del mismo
+    período entre sí y frente a su cierre. El contador se incrementa bajo ese bloqueo y en la transacción de la
+    confirmación, así un fallo posterior revierte también el número (sin huecos).
+    """
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def next_number(self, purchase_date: date) -> PurchaseNumber:
+        try:
+            period = accounting_services.lock_open_period(self.company_id, purchase_date)
+        except accounting_services.DateOutsideFiscalPeriod:
+            raise PurchaseNumberingRejected(
+                'fiscal_period_missing',
+                f'La fecha de la compra ({purchase_date.isoformat()}) no está dentro de ningún período fiscal. '
+                'Cree el período en Contabilidad para poder confirmarla.') from None
+        except accounting_services.FiscalPeriodClosed as exc:
+            raise PurchaseNumberingRejected(
+                'fiscal_period_closed',
+                f'El período fiscal «{exc.name}» está cerrado: no se puede confirmar una compra con fecha '
+                f'{purchase_date.isoformat()}. Reabra el período en Contabilidad.', {'period': exc.name}) from None
+        counter, _ = PurchaseNumberCounterModel.objects.select_for_update().get_or_create(
+            company_id=self.company_id, fiscal_period_id=period.id)
+        counter.last_number += 1
+        counter.save(update_fields=['last_number'])
+        return PurchaseNumber(period.id, period.name, counter.last_number)
+
+
 class PurchasePostingAdapter:
     """Contabiliza la recepción de mercadería en Contabilidad (solo por su fachada), si está habilitada."""
 
@@ -174,7 +217,7 @@ class PurchasePostingAdapter:
         with _posting_errors():
             accounting_services.post_automatic_entry(
                 self.company_id, PURCHASE_RECOGNITION, receipt.id, receipt.receipt_date,
-                f'Compra {purchase.reference} - recepcion {receipt.reference}', amount,
+                f'Compra {purchase.reference}{_period_suffix(purchase)} - recepcion {receipt.reference}', amount,
                 advance_applied=advance_applied if advance_applied > 0 else None,
                 created_by=actor.user_id, created_by_name=actor.user_name)
 
@@ -188,7 +231,8 @@ class PurchasePostingAdapter:
             with _posting_errors():
                 accounting_services.post_automatic_entry(
                     self.company_id, event, payment.id, payment.payment_date,
-                    f'{label} {payment.reference} de la compra {purchase.reference}', amount, method=method,
+                    f'{label} {payment.reference} de la compra {purchase.reference}{_period_suffix(purchase)}',
+                    amount, method=method,
                     created_by=actor.user_id, created_by_name=actor.user_name)
 
     def preview_payment(self, purchase, amount: Decimal, method: str, on: date, debt: Decimal,
@@ -223,7 +267,8 @@ class PurchasePostingAdapter:
         with _posting_errors():
             accounting_services.reverse_automatic_entry(
                 self.company_id, PURCHASE_RECOGNITION, receipt.id, timezone.localdate(),
-                f'Recepcion {receipt.reference} de la compra {purchase.reference} revertida: {reason}',
+                f'Recepcion {receipt.reference} de la compra {purchase.reference}{_period_suffix(purchase)} '
+                f'revertida: {reason}',
                 created_by=actor.user_id, created_by_name=actor.user_name)
 
     def recognized_totals(self, receipt_ids: Iterable[UUID]) -> dict[UUID, Decimal]:

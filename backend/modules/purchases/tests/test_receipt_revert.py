@@ -9,6 +9,7 @@ from django.db import close_old_connections, connection, transaction
 from django.test import SimpleTestCase, TransactionTestCase
 from django.utils import timezone as dj_timezone
 
+from .numbering_support import fake_number
 from modules.inventory import services as inventory
 from modules.inventory.infrastructure.django.models import StockMovementModel
 from modules.purchases.application.ports import Actor
@@ -315,7 +316,7 @@ class ReceiptRevertConcurrencyTests(TransactionTestCase):
         supplier = SupplierModel.objects.create(company_id=self.company_id, name='Sur')
         purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY,
                                    items=[ItemDraft(uuid4(), '10', '5.00', product_name='Harina')])
-        purchase.confirm(NOW)
+        purchase.confirm(NOW, fake_number())
         self.purchase = DjangoPurchaseRepository(self.company_id).save(purchase)
         receipts = DjangoReceiptRepository(self.company_id)
         with transaction.atomic():
@@ -371,7 +372,7 @@ class InventoryReceiptRevertConcurrencyTests(TransactionTestCase):
         supplier = SupplierModel.objects.create(company_id=company.id, name='Sur')
         purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY,
                                    items=[ItemDraft(product.id, '10', '5.00', product_name='Arroz')])
-        purchase.confirm(NOW)
+        purchase.confirm(NOW, fake_number())
         self.purchase = DjangoPurchaseRepository(company.id).save(purchase)
         self.adapter = StockEntryAdapter
         with transaction.atomic():

@@ -10,6 +10,7 @@ from django.db import close_old_connections, transaction
 from django.test import TransactionTestCase
 from django.utils import timezone
 
+from .numbering_support import fake_number
 from modules.accounting import services as accounting
 from modules.accounting.application.fiscal_periods import CloseFiscalPeriod
 from modules.accounting.infrastructure.django.models import JournalEntryModel
@@ -271,7 +272,7 @@ class ConcurrencyTests(TransactionTestCase):
         supplier = SupplierModel.objects.create(company_id=self.company.id, name='Sur')
         purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY,
                                    items=[ItemDraft(uuid4(), '100', '10.00', product_name='Harina')])
-        purchase.confirm(timezone.now())
+        purchase.confirm(timezone.now(), fake_number())
         self.purchase = DjangoPurchaseRepository(self.company.id).save(purchase)
 
     def register(self, amount):

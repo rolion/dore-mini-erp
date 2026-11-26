@@ -6,6 +6,8 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
+from modules.purchases.domain.purchase import PurchaseNumber
+
 
 @dataclass(frozen=True)
 class ProductInfo:
@@ -19,6 +21,16 @@ class ProductInfo:
 
 class ProductCatalog(Protocol):
     def get_products(self, product_ids: Iterable[UUID]) -> dict[UUID, ProductInfo]: ...
+
+
+class PurchaseNumbering(Protocol):
+    """Asigna el siguiente número de la serie de compras del período fiscal que contiene `purchase_date`.
+
+    Debe ejecutarse dentro de la transacción de la confirmación (el número se revierte con ella). Lanza
+    `PurchaseNumberingRejected` con `fiscal_period_missing` o `fiscal_period_closed` si no hay período abierto.
+    """
+
+    def next_number(self, purchase_date: date) -> PurchaseNumber: ...
 
 
 @dataclass(frozen=True)

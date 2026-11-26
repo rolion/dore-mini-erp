@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from django.test import SimpleTestCase
 
+from .numbering_support import FakeNumbering, fake_number
 from modules.accounting import services as accounting_services
 from modules.purchases.api.receipt_serializers import receipt_representation
 from modules.purchases.application.ports import PostedEntry
@@ -32,7 +33,7 @@ D = Decimal
 def purchase_of(quantity, price):
     purchase = Purchase.create(supplier_id=uuid4(), purchase_date=TODAY,
                                items=[ItemDraft(uuid4(), quantity, price, product_name='Harina')])
-    purchase.confirm(NOW)
+    purchase.confirm(NOW, fake_number())
     return purchase
 
 
@@ -134,13 +135,13 @@ class RegisterReceptionPostingTests(PostingReceptionCase):
 
     def test_zero_priced_line_publishes_nothing(self):  # INV-04
         purchase = self.create(items=[ItemInput(self.flour.id, '10', '0.00')])
-        ConfirmPurchase(self.purchases, self.suppliers).execute(purchase.id, NOW)
+        ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(purchase.id, NOW)
         self.register_posting('10', item_id=purchase.items[0].id, purchase_id=purchase.id)
         self.assertEqual(self.recognitions(), [])
 
     def test_net_recognized_equals_the_total_after_reverting_an_intermediate_reception(self):  # INV-01, REV-01
         purchase = self.create(items=[ItemInput(self.flour.id, '0.3', '0.15')])
-        ConfirmPurchase(self.purchases, self.suppliers).execute(purchase.id, NOW)
+        ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(purchase.id, NOW)
         item = purchase.items[0].id
         first, _ = self.register_posting('0.1', item_id=item, purchase_id=purchase.id)
         second, _ = self.register_posting('0.1', item_id=item, purchase_id=purchase.id)

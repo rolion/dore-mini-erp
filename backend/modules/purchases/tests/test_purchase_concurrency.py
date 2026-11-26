@@ -7,6 +7,7 @@ from uuid import uuid4
 from django.db import close_old_connections, transaction
 from django.test import TransactionTestCase
 
+from .numbering_support import FakeNumbering
 from modules.purchases.application.purchase_commands import CancelPurchase, ConfirmPurchase
 from modules.purchases.domain.enums import PurchaseStatus
 from modules.purchases.domain.purchase import ItemDraft, Purchase
@@ -65,8 +66,8 @@ class RowLockConcurrencyTests(TransactionTestCase):
         return results, saves
 
     def confirm(self, now):
-        return lambda: ConfirmPurchase(DjangoPurchaseRepository(self.company_id), self.suppliers).execute(
-            self.purchase_id, now)
+        confirm = ConfirmPurchase(DjangoPurchaseRepository(self.company_id), self.suppliers, FakeNumbering())
+        return lambda: confirm.execute(self.purchase_id, now)
 
     def cancel(self, reason, now):
         return lambda: CancelPurchase(DjangoPurchaseRepository(self.company_id)).execute(self.purchase_id, reason, now)

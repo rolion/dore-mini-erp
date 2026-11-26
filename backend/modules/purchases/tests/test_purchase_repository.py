@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from django.test import TestCase
 
+from .numbering_support import fake_number
 from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from modules.purchases.domain.purchase import ItemDraft, Purchase
 from modules.purchases.infrastructure.django.models import SupplierModel
@@ -37,7 +38,7 @@ class PurchaseRepositoryTests(TestCase):
         self.assertEqual((fresh.reception_status, fresh.payment_status),
                          (ReceptionStatus.NOT_RECEIVED, PaymentStatus.UNPAID))
         confirmed = build(self.supplier.id)
-        confirmed.confirm(now)
+        confirmed.confirm(now, fake_number())
         self.repo.save(confirmed)
         loaded = self.repo.get(confirmed.id)
         self.assertEqual((loaded.status, loaded.confirmed_at, loaded.editable), (PurchaseStatus.CONFIRMED, now, False))

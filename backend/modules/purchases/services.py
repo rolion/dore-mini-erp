@@ -85,6 +85,7 @@ def import_received_purchase(company_id: UUID, *, supplier_id: UUID, purchase_da
     from modules.purchases.domain import exceptions as errors
     from modules.purchases.infrastructure.adapters import (
         ProductCatalogAdapter,
+        PurchaseNumberingAdapter,
         PurchasePostingAdapter,
         StockEntryAdapter,
     )
@@ -107,7 +108,8 @@ def import_received_purchase(company_id: UUID, *, supplier_id: UUID, purchase_da
             supplier_id=supplier_id, purchase_date=purchase_date, external_reference=external_reference,
             notes='Compra inferida por importación de ventas',
             items=[ItemInput(product_id, quantity, unit_cost) for product_id, quantity, unit_cost in lines])
-        purchase = ConfirmPurchase(purchases, suppliers).execute(purchase.id, timezone.now())
+        purchase = ConfirmPurchase(purchases, suppliers, PurchaseNumberingAdapter(company_id)).execute(
+            purchase.id, timezone.now())
         posting = PurchasePostingAdapter(company_id) if post_accounting else None
         payments = DjangoPaymentRepository(company_id)
         receipt, _ = RegisterReception(
