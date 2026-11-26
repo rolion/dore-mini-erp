@@ -1,6 +1,6 @@
 # TASK-reporte-balance-general-contabilidad: Reporte de Balance general en Contabilidad
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-reporte-balance-general-contabilidad
@@ -13,6 +13,7 @@
 | 2026-11-26 | INVESTIGATION → DESIGN | NEEDS_PLAN, pantalla nueva | delivery-start |
 | 2026-11-26 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR abiertos | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas (pruebas de API backend sin ejecutar: sin PostgreSQL ni `DATABASE_URL`) | delivery-build |
 
 ## Investigación
 
@@ -71,7 +72,12 @@ No aplica según veredicto.
 docs/plans/PLAN-2026-11-26-reporte-balance-general-contabilidad.md (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+- **Backend** (`backend/modules/accounting/`): `domain/balance_sheet.py` (INV-01..INV-06; AC-01, AC-03, AC-04, AC-05), `application/balance_sheet.py` (`GetBalanceSheet`: valida el rango y reutiliza `movements_by_account`; AC-02, AC-03, AC-06), `api/balance_sheet_serializers.py` y `api/balance_sheet_views.py`, ruta `balance-sheet/` (API-01, AC-07; `required_modules = ('accounting',)`, repositorios con `company_id`). Sin migraciones ni consulta nueva.
+- **Frontend** (`features/accounting/`): `models/balance-sheet.ts` (importes como texto, sin float), `services/balance-sheet-api.service.ts`, `pages/balance-sheet/` (filtros Desde/Hasta en la URL, tres secciones, filas de resultado en Patrimonio, bloque de ecuación con badge Cuadra/No cuadra y diferencia, aviso de cuentas sin clasificar, estados cargando/error/vacío; UI-01..04, AC-08, AC-09), ruta `accounting/balance-sheet`, entrada de menú, claves `ACCOUNTING.BALANCE_SHEET.*` y `MENUITEMS.ACCOUNTING.LIST.BALANCE_SHEET` en es/en/pt (UI-05, AC-10).
+- **UI:** plantilla «Lista de solo lectura con filtros» siguiendo `pages/balances` e `income-expense` (breadcrumb, `.card`, `table-responsive`, SCSS compacto en móvil); reutiliza `MoneyPipe`. Sin componentes compartidos nuevos.
+- **Pruebas:** dominio y caso de uso (10, ejecutadas, OK); API (`test_balance_sheet_api.py`, 7 casos: **escritos pero no ejecutados**, el entorno no tiene PostgreSQL ni `DATABASE_URL` y no se lee `.env`); frontend suite completa 1899 OK (modelo, servicio, componente, menú), `ng lint` y `i18n:check` OK, `ng build` OK. `flake8` limpio en lo nuevo; `ruff` no está instalado.
+- **Desviaciones del plan:** ninguna de alcance. El contador de títulos de `sidebar-menu.spec.ts` pasó de 50 a 51 por la nueva entrada de menú. Fórmula del resultado simplificada a Σ(Haber − Debe) de INCOME/COST/EXPENSE (equivale a Ingresos − Costos − Gastos).
+- **Deuda / pendiente:** correr `DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test modules.accounting.tests.test_balance_sheet_api` con una BD de pruebas; revisión visual en navegador pendiente.
 
 ## Review
 _Pendiente_
