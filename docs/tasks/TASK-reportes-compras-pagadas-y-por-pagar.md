@@ -1,6 +1,6 @@
 # TASK-reportes-compras-pagadas-y-por-pagar: Reportes «Compras pagadas» y «Compras por pagar»
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-reportes-compras-pagadas-y-por-pagar
@@ -12,6 +12,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-26 | INVESTIGATION → PLANNING → ENGINEERING | NEEDS_PLAN, sin DDR; PLAN v1 READY, PR abierto | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS con observaciones; H-1..H-3 corregidos | delivery-publish |
 
 ## Investigación
 
@@ -61,7 +62,8 @@ docs/plans/PLAN-2026-11-26-reportes-compras-pagadas-y-por-pagar.md (v1, COMPACTO
 **Verificación propia.** Backend: 27 pruebas de los tres reportes OK; `ruff`/`flake8` sin avisos nuevos. Frontend: specs de la pantalla, el servicio y el menú 22 OK; `i18n:check` 0 faltantes. Un error propio detectado por las pruebas: el reemplazo de `titleKey` dañó `subtitleKey` en la plantilla; corregido.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS con observaciones.** Backend: suite completa 2541 pruebas OK. Frontend: 1885 de 1885, `build`, `i18n:check` y `npm run lint` OK. Sin revisión visual en navegador (no verificada).
+Hallazgos y resolución: H-1 (Medium) los totales de compras decían «pedidos» en pantalla y archivos: corregido con etiqueta parametrizada (`count_label`, `totalsKey`) y pruebas; H-2 (Low) línea de 124 caracteres en `sales/api/views.py`: corregida; H-3 (Low) pruebas faltantes de PDF con marcado y de fechas inválidas en la exportación de compras: añadidas. Estas correcciones se verificaron localmente (28 pruebas de los tres reportes del backend, 19 del frontend, `ruff`/`flake8`, `i18n:check`) pero **no se repitió el Quality Gate completo**. Observación aceptada: etiquetas compartidas viven en `SALES.PAID_REPORT.*`.
 
 ## Publicación
-_Pendiente_
+PR #132 completo y listo para aprobación humana. Sin ADR, migraciones ni dependencias nuevas.

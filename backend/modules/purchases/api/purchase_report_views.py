@@ -81,10 +81,10 @@ class _PurchasesReportExportView(APIView):
         totals = ReportTotals(report.totals.purchases_count, report.totals.total, report.totals.balance)
         today = timezone.localdate()
         if file_format == 'xlsx':
-            content, content_type = build_xlsx(rows, totals, self.title, HEADERS), XLSX_CONTENT_TYPE
+            content, content_type = build_xlsx(rows, totals, self.title, HEADERS, 'compras'), XLSX_CONTENT_TYPE
         else:
             content, content_type = (build_pdf(rows, totals, _filters_text(filters, self.everything_text), today,
-                                               self.title, HEADERS), PDF_CONTENT_TYPE)
+                                               self.title, HEADERS, 'compras'), PDF_CONTENT_TYPE)
         response = HttpResponse(content, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{self.file_slug}-{today.isoformat()}.{file_format}"'
         return response

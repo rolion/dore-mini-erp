@@ -15,6 +15,7 @@ export interface DocumentReportConfig {
   subtitleKey: string;
   emptyKey: string;
   documentColumnKey: string;
+  totalsKey: string;
   partyColumnKey: string;
   /** Prefijo de la ruta del detalle: se le añade `/<id>`. */
   detailRoute: string;
@@ -28,6 +29,7 @@ export const DOCUMENT_REPORT_CONFIG: Record<DocumentReportKind, DocumentReportCo
     subtitleKey: 'SALES.PAID_REPORT.SUBTITLE',
     emptyKey: 'SALES.PAID_REPORT.EMPTY',
     documentColumnKey: 'SALES.PAID_REPORT.COL_ORDER',
+    totalsKey: 'SALES.PAID_REPORT.TOTALS',
     partyColumnKey: 'SALES.PAID_REPORT.COL_CUSTOMER',
     detailRoute: '/pocketbiz/sales/orders',
     fileName: 'ingresos-por-venta',
@@ -38,6 +40,7 @@ export const DOCUMENT_REPORT_CONFIG: Record<DocumentReportKind, DocumentReportCo
     subtitleKey: 'SALES.RECEIVABLE_REPORT.SUBTITLE',
     emptyKey: 'SALES.RECEIVABLE_REPORT.EMPTY',
     documentColumnKey: 'SALES.PAID_REPORT.COL_ORDER',
+    totalsKey: 'SALES.PAID_REPORT.TOTALS',
     partyColumnKey: 'SALES.PAID_REPORT.COL_CUSTOMER',
     detailRoute: '/pocketbiz/sales/orders',
     fileName: 'pedidos-por-cobrar',
@@ -48,6 +51,7 @@ export const DOCUMENT_REPORT_CONFIG: Record<DocumentReportKind, DocumentReportCo
     subtitleKey: 'PURCHASES.PAID_REPORT.SUBTITLE',
     emptyKey: 'PURCHASES.PAID_REPORT.EMPTY',
     documentColumnKey: 'PURCHASES.PAID_REPORT.COL_PURCHASE',
+    totalsKey: 'PURCHASES.PAID_REPORT.TOTALS',
     partyColumnKey: 'PURCHASES.PAID_REPORT.COL_SUPPLIER',
     detailRoute: '/pocketbiz/purchases',
     fileName: 'compras-pagadas',
@@ -58,6 +62,7 @@ export const DOCUMENT_REPORT_CONFIG: Record<DocumentReportKind, DocumentReportCo
     subtitleKey: 'PURCHASES.PAYABLE_REPORT.SUBTITLE',
     emptyKey: 'PURCHASES.PAYABLE_REPORT.EMPTY',
     documentColumnKey: 'PURCHASES.PAID_REPORT.COL_PURCHASE',
+    totalsKey: 'PURCHASES.PAID_REPORT.TOTALS',
     partyColumnKey: 'PURCHASES.PAID_REPORT.COL_SUPPLIER',
     detailRoute: '/pocketbiz/purchases',
     fileName: 'compras-por-pagar',

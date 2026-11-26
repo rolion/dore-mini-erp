@@ -1696,7 +1696,8 @@
       "SUBTITLE": "Confirmed purchases paid in full",
       "EMPTY": "No records",
       "COL_PURCHASE": "Purchase",
-      "COL_SUPPLIER": "Supplier"
+      "COL_SUPPLIER": "Supplier",
+      "TOTALS": "Totals ({{count}} purchases)"
     },
     "PAYABLE_REPORT": {
       "TITLE": "Purchases payable",

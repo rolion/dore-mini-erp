@@ -104,7 +104,7 @@ class PurchaseReportTests(PaymentApiTestCase):
         rows = [[cell.value for cell in row] for row in book.active.iter_rows()]
         self.assertEqual(rows[0], ['Compra', 'Proveedor', 'Total', 'Saldo'])
         self.assertEqual(len(rows), 4)  # encabezado, dos compras y totales
-        self.assertEqual(rows[-1], ['Totales', '2 pedidos', 100, 80])
+        self.assertEqual(rows[-1], ['Totales', '2 compras', 100, 80])
         self.assertEqual({row[1] for row in rows[1:3]}, {'=HYPERLINK("x")'})
         self.assertEqual({book.active.cell(row=2, column=2).data_type, book.active.cell(row=3, column=2).data_type},
                          {'s'})
@@ -115,3 +115,12 @@ class PurchaseReportTests(PaymentApiTestCase):
         with mock.patch('modules.purchases.api.purchase_report_views.MAX_EXPORT_ROWS', 1):
             self.assertEqual(self.client.get(f'{PAYABLE_URL}export/xlsx/').status_code, 400)
         self.assertEqual(ids['paid'] in self.ids(PAID_URL), True)
+
+    def test_pdf_survives_markup_in_supplier_names_and_export_validates_dates(self):  # AC-02, AC-05
+        self.scenario()
+        SupplierModel.objects.filter(pk=self.supplier.pk).update(name='Ana <b>x & <img src="y">')
+        pdf = self.client.get(f'{PAYABLE_URL}export/pdf/')
+        self.assertEqual(pdf.status_code, 200)
+        self.assertTrue(pdf.content.startswith(b'%PDF'))
+        bad = self.client.get(f'{PAYABLE_URL}export/xlsx/', {'date_from': '2026-02-01', 'date_to': '2026-01-01'})
+        self.assertEqual(bad.status_code, 400)

@@ -392,7 +392,8 @@ class _OrdersReportExportView(APIView):
             content, content_type = build_xlsx(rows, report.totals, self.title, SALES_HEADERS), XLSX_CONTENT_TYPE
         else:
             text = _filters_text(filters, self.everything_text)
-            content, content_type = build_pdf(rows, report.totals, text, today, self.title, SALES_HEADERS), PDF_CONTENT_TYPE
+            content = build_pdf(rows, report.totals, text, today, self.title, SALES_HEADERS)
+            content_type = PDF_CONTENT_TYPE
         response = HttpResponse(content, content_type=content_type)
         name = f'{self.file_slug}-{today.isoformat()}.{file_format}'
         response['Content-Disposition'] = f'attachment; filename="{name}"'

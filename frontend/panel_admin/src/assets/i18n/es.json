@@ -1696,7 +1696,8 @@
       "SUBTITLE": "Compras confirmadas y pagadas por completo",
       "EMPTY": "Sin registros",
       "COL_PURCHASE": "Compra",
-      "COL_SUPPLIER": "Proveedor"
+      "COL_SUPPLIER": "Proveedor",
+      "TOTALS": "Totales ({{count}} compras)"
     },
     "PAYABLE_REPORT": {
       "TITLE": "Compras por pagar",

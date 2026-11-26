@@ -150,6 +150,7 @@ describe('DocumentReportComponent', () => {
     expect(root().querySelector('th')?.textContent).toContain('Compra');
     expect(root().querySelectorAll('th')[1]?.textContent).toContain('Proveedor');
     expect(root().querySelector('[data-testid="report-row"] a')?.getAttribute('href')).toBe('/pocketbiz/purchases/o1');
+    expect(text('report-totals')).toContain('2 compras');
     expect(api.list).toHaveBeenCalledOnceWith('purchases-payable', { dateFrom: '', dateTo: '', fiscalPeriodId: '' }, 1, 10);
   });
 });

@@ -42,7 +42,8 @@ def _money(value: Decimal) -> str:
     return f'{value:,.2f}'
 
 
-def build_xlsx(rows, totals, title: str = TITLE, headers: tuple[str, ...] = HEADERS) -> bytes:
+def build_xlsx(rows, totals, title: str = TITLE, headers: tuple[str, ...] = HEADERS,
+               count_label: str = 'pedidos') -> bytes:
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = title
@@ -51,7 +52,7 @@ def build_xlsx(rows, totals, title: str = TITLE, headers: tuple[str, ...] = HEAD
         cell.font = Font(bold=True)
     for code, customer, total, balance in rows:
         sheet.append([code, customer, total, balance])
-    sheet.append(['Totales', f'{totals.orders_count} pedidos', totals.total, totals.balance])
+    sheet.append(['Totales', f'{totals.orders_count} {count_label}', totals.total, totals.balance])
     for cell in sheet[sheet.max_row]:
         cell.font = Font(bold=True)
     for row in sheet.iter_rows(min_row=2, max_col=2):
@@ -70,7 +71,7 @@ def build_xlsx(rows, totals, title: str = TITLE, headers: tuple[str, ...] = HEAD
 
 
 def build_pdf(rows, totals, filters_text: str, generated_on: date, title: str = TITLE,
-              headers: tuple[str, ...] = HEADERS) -> bytes:
+              headers: tuple[str, ...] = HEADERS, count_label: str = 'pedidos') -> bytes:
     buffer = BytesIO()
     document = SimpleDocTemplate(buffer, pagesize=A4, title=title, leftMargin=36, rightMargin=36,
                                  topMargin=36, bottomMargin=36)
@@ -81,7 +82,7 @@ def build_pdf(rows, totals, filters_text: str, generated_on: date, title: str = 
     data = [list(headers)]
     data += [[code, Paragraph(escape(customer), styles['Normal']), _money(total), _money(balance)]
              for code, customer, total, balance in rows]
-    data.append(['Totales', f'{totals.orders_count} pedidos', _money(totals.total), _money(totals.balance)])
+    data.append(['Totales', f'{totals.orders_count} {count_label}', _money(totals.total), _money(totals.balance)])
     table = Table(data, colWidths=[110, 230, 90, 90], repeatRows=1)
     table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),

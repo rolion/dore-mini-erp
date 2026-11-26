@@ -96,7 +96,7 @@
                 </tbody>
                 <tfoot>
                   <tr class="fw-bold" data-testid="report-totals">
-                    <td colspan="2">{{ 'SALES.PAID_REPORT.TOTALS' | translate: { count: report.totals.ordersCount } }}</td>
+                    <td colspan="2">{{ config.totalsKey | translate: { count: report.totals.ordersCount } }}</td>
                     <td class="text-end">{{ report.totals.total | money }}</td>
                     <td class="text-end">{{ report.totals.balance | money }}</td>
                   </tr>
