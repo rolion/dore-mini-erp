@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-produccion-refrigeracion (base: `produccion`)
-**Pull Request:** _se enlaza al abrirlo (base `produccion`)_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/134 (base `produccion`)
 **Fuente:** https://trello.com/c/4reKLdFV/4-dore-prod-004-registrar-producci%C3%B3n-real-y-pasar-el-lote-a-refrigeraci%C3%B3n
 
 ## Historial de transiciones
