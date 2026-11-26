@@ -166,6 +166,12 @@
         "PROFESSIONALS": "Profesionales",
         "SPECIALTIES": "Especialidades"
       }
+    },
+    "PRODUCTION": {
+      "TEXT": "Producción",
+      "LIST": {
+        "RECIPES": "Recetas"
+      }
     }
   },
   "HEADER": {
@@ -3474,5 +3480,56 @@
     "ERR_GENERIC": "Ocurrió un error inesperado. Inténtalo de nuevo.",
     "ERR_VALIDATION": "Revisa los datos ingresados.",
     "ERR_NOT_FOUND": "Importación no encontrada."
+  },
+  "PRODUCTION": {
+    "MODULE": "Producción",
+    "RECIPES": {
+      "TITLE": "Recetas",
+      "NEW": "Nueva receta",
+      "NEW_TITLE": "Nueva receta",
+      "EDIT_TITLE": "Editar receta",
+      "RECIPE": "Receta",
+      "RESULT_PRODUCT": "Producto resultante",
+      "YIELD": "Rendimiento base",
+      "YIELD_HELP": "Cantidad que produce una preparación, en la unidad base del producto resultante.",
+      "INGREDIENTS": "Ingredientes",
+      "ADD_INGREDIENT": "Agregar ingrediente",
+      "REMOVE_INGREDIENT": "Quitar el ingrediente {{n}}",
+      "INGREDIENT_N": "Producto del ingrediente {{n}}",
+      "QUANTITY_N": "Cantidad del ingrediente {{n}}",
+      "NAME_REQUIRED": "El nombre es obligatorio.",
+      "RESULT_REQUIRED": "Elige el producto resultante.",
+      "PRODUCT_REQUIRED": "Elige un producto.",
+      "QUANTITY_INVALID": "Ingresa un número mayor que cero, con hasta 4 decimales.",
+      "INGREDIENTS_REQUIRED": "Agrega al menos un ingrediente.",
+      "DUPLICATE": "Este producto ya está en la receta.",
+      "PRODUCT_WARNING": "Algún producto de esta receta está inactivo o no tiene unidad base. Corrígelo al editar la receta antes de guardarla.",
+      "ACTIVATE": "Activar",
+      "DEACTIVATE": "Desactivar",
+      "CONFIRM_TITLE": "{{action}} la receta «{{name}}»",
+      "CONFIRM_DEACTIVATE_TEXT": "No se ofrecerá en nuevas órdenes de producción; las órdenes anteriores conservan su información.",
+      "CONFIRM_ACTIVATE_TEXT": "Volverá a estar disponible para nuevas órdenes de producción.",
+      "ACTIVATED": "Receta activada.",
+      "DEACTIVATED": "Receta desactivada.",
+      "SAVING": "Guardando…",
+      "VIEW": "Ver receta",
+      "FILTERS": "Filtros de recetas",
+      "APPLY": "Aplicar",
+      "EMPTY": "Aún no hay recetas activas.",
+      "EMPTY_FILTER": "No hay recetas para estos filtros.",
+      "TOTAL": "Total: {{count}} recetas",
+      "PAGES": "Páginas de recetas",
+      "CREATED_AT": "Creada",
+      "UPDATED_AT": "Actualizada",
+      "ERRORS": {
+        "NETWORK": "No se pudo conectar con el servidor.",
+        "VALIDATION": "Revisa los datos ingresados.",
+        "FORBIDDEN": "No tienes permiso para acceder a las recetas.",
+        "NOT_FOUND": "Receta no encontrada.",
+        "GENERIC": "No se pudo completar la operación."
+      },
+      "RESULT_AS_INGREDIENT": "El producto resultante no puede ser ingrediente de su propia receta.",
+      "INGREDIENT_TITLE": "Ingrediente {{n}}"
+    }
   }
 }

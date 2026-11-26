@@ -3,10 +3,11 @@ from django.apps import apps
 from django.test import SimpleTestCase
 from django.urls import URLPattern, URLResolver, get_resolver
 
-BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases', 'costing', 'dentistry')
+BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases', 'costing', 'dentistry', 'production')
 # Tablas hijas: heredan la empresa de su pedido por la FK interna de Sales y se consultan siempre a través de él.
 CHILD_MODELS = {'sales.OrderItemModel', 'sales.PaymentModel', 'purchases.PurchaseItemModel',
-                'purchases.ReceiptItemModel', 'dentistry.DentalProformaLineModel'}
+                'purchases.ReceiptItemModel', 'dentistry.DentalProformaLineModel',
+                'production.RecipeIngredientModel'}
 PUBLIC_PREFIXES = ('api/auth/', 'api/health/')
 
 
@@ -39,7 +40,8 @@ class CompanyColumnTests(SimpleTestCase):
         parents = {'sales.OrderItemModel': ('order', 'sales.OrderModel'), 'sales.PaymentModel': ('order', 'sales.OrderModel'),
                    'purchases.PurchaseItemModel': ('purchase', 'purchases.PurchaseModel'),
                    'purchases.ReceiptItemModel': ('receipt', 'purchases.ReceiptModel'),
-                   'dentistry.DentalProformaLineModel': ('proforma', 'dentistry.DentalProformaModel')}
+                   'dentistry.DentalProformaLineModel': ('proforma', 'dentistry.DentalProformaModel'),
+                   'production.RecipeIngredientModel': ('recipe', 'production.RecipeModel')}
         for label in CHILD_MODELS:
             model = apps.get_model(label)
             self.assertEqual([f.name for f in model._meta.get_fields() if f.name == 'company_id'], [], label)

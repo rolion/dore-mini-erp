@@ -208,6 +208,13 @@ export const APP_ROUTE: Route[] = [
                     import('./features/services/services.routes').then((m) => m.SERVICES_ROUTE),
             },
             {
+                path: 'production/recipes',
+                canActivate: [moduleGuard],
+                data: { module: 'production' },
+                loadChildren: () =>
+                    import('./features/production/production.routes').then((m) => m.RECIPES_ROUTE),
+            },
+            {
                 path: 'customers',
                 canActivate: [moduleGuard],
                 data: { module: 'customers' },

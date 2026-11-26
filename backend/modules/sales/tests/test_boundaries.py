@@ -20,6 +20,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     # Los lotes se numeran por período fiscal (ADR lotes-disponibilidad-inventario): `inventory → accounting`.
     'inventory': {'accounting', 'catalog', 'modularity'},
     'costing': {'inventory'},
+    'production': {'catalog'},
     'customers': set(),
     'dentistry': {'customers', 'service_catalog'},
     'expenses': {'accounting'},
@@ -34,7 +35,8 @@ NON_BUSINESS_ALLOWED = {'modularity'}
 # Módulos que consumen a otros: solo desde sus adaptadores de infraestructura.
 CONSUMERS = (
     'accounting', 'expenses', 'sales', 'reporting', 'inventory', 'purchases', 'costing', 'dentistry', 'service_catalog',
-    'agenda', 'quotations', 'receivables', 'data_import')
+    'agenda', 'quotations', 'receivables', 'data_import',
+    'production')
 
 
 def source_files(base: Path):

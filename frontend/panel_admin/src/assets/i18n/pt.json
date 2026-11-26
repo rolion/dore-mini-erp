@@ -166,6 +166,12 @@
         "PROFESSIONALS": "Profissionais",
         "SPECIALTIES": "Especialidades"
       }
+    },
+    "PRODUCTION": {
+      "TEXT": "Produção",
+      "LIST": {
+        "RECIPES": "Receitas"
+      }
     }
   },
   "HEADER": {
@@ -3474,5 +3480,56 @@
     "ERR_GENERIC": "Ocorreu um erro inesperado. Tente novamente.",
     "ERR_VALIDATION": "Revise os dados informados.",
     "ERR_NOT_FOUND": "Importação não encontrada."
+  },
+  "PRODUCTION": {
+    "MODULE": "Produção",
+    "RECIPES": {
+      "TITLE": "Receitas",
+      "NEW": "Nova receita",
+      "NEW_TITLE": "Nova receita",
+      "EDIT_TITLE": "Editar receita",
+      "RECIPE": "Receita",
+      "RESULT_PRODUCT": "Produto resultante",
+      "YIELD": "Rendimento base",
+      "YIELD_HELP": "Quantidade que uma preparação produz, na unidade base do produto resultante.",
+      "INGREDIENTS": "Ingredientes",
+      "ADD_INGREDIENT": "Adicionar ingrediente",
+      "REMOVE_INGREDIENT": "Remover o ingrediente {{n}}",
+      "INGREDIENT_N": "Produto do ingrediente {{n}}",
+      "QUANTITY_N": "Quantidade do ingrediente {{n}}",
+      "NAME_REQUIRED": "O nome é obrigatório.",
+      "RESULT_REQUIRED": "Escolha o produto resultante.",
+      "PRODUCT_REQUIRED": "Escolha um produto.",
+      "QUANTITY_INVALID": "Informe um número maior que zero, com até 4 casas decimais.",
+      "INGREDIENTS_REQUIRED": "Adicione pelo menos um ingrediente.",
+      "DUPLICATE": "Este produto já está na receita.",
+      "PRODUCT_WARNING": "Algum produto desta receita está inativo ou não tem unidade base. Corrija ao editar a receita antes de salvar.",
+      "ACTIVATE": "Ativar",
+      "DEACTIVATE": "Desativar",
+      "CONFIRM_TITLE": "{{action}} a receita «{{name}}»",
+      "CONFIRM_DEACTIVATE_TEXT": "Não será oferecida em novas ordens de produção; as ordens anteriores mantêm suas informações.",
+      "CONFIRM_ACTIVATE_TEXT": "Voltará a estar disponível para novas ordens de produção.",
+      "ACTIVATED": "Receita ativada.",
+      "DEACTIVATED": "Receita desativada.",
+      "SAVING": "Salvando…",
+      "VIEW": "Ver receita",
+      "FILTERS": "Filtros de receitas",
+      "APPLY": "Aplicar",
+      "EMPTY": "Ainda não há receitas ativas.",
+      "EMPTY_FILTER": "Não há receitas para estes filtros.",
+      "TOTAL": "Total: {{count}} receitas",
+      "PAGES": "Páginas de receitas",
+      "CREATED_AT": "Criada",
+      "UPDATED_AT": "Atualizada",
+      "ERRORS": {
+        "NETWORK": "Não foi possível conectar ao servidor.",
+        "VALIDATION": "Revise os dados informados.",
+        "FORBIDDEN": "Você não tem permissão para acessar as receitas.",
+        "NOT_FOUND": "Receita não encontrada.",
+        "GENERIC": "Não foi possível concluir a operação."
+      },
+      "RESULT_AS_INGREDIENT": "O produto resultante não pode ser ingrediente da própria receita.",
+      "INGREDIENT_TITLE": "Ingrediente {{n}}"
+    }
   }
 }
