@@ -14,6 +14,8 @@
 | 2026-11-26 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas del plan completas (pruebas de API backend sin ejecutar: sin PostgreSQL ni `DATABASE_URL`) | delivery-build |
+| 2026-11-26 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 High: pruebas de API mal armadas; REV-02 Medium: API-01 del plan desfasado) | delivery-publish |
+| 2026-11-26 | ENGINEERING → REVIEW | REV-01 y REV-02 corregidos; se repite el Quality Gate | delivery-build |
 
 ## Investigación
 
@@ -69,7 +71,7 @@ DDR-reporte-balance-general-contabilidad-pantalla-balance (docs/design/).
 No aplica según veredicto.
 
 ## Plan
-docs/plans/PLAN-2026-11-26-reporte-balance-general-contabilidad.md (v1, COMPLETO).
+docs/plans/PLAN-2026-11-26-reporte-balance-general-contabilidad.md (v2, COMPLETO).
 
 ## Implementación
 - **Backend** (`backend/modules/accounting/`): `domain/balance_sheet.py` (INV-01..INV-06; AC-01, AC-03, AC-04, AC-05), `application/balance_sheet.py` (`GetBalanceSheet`: valida el rango y reutiliza `movements_by_account`; AC-02, AC-03, AC-06), `api/balance_sheet_serializers.py` y `api/balance_sheet_views.py`, ruta `balance-sheet/` (API-01, AC-07; `required_modules = ('accounting',)`, repositorios con `company_id`). Sin migraciones ni consulta nueva.
@@ -80,7 +82,7 @@ docs/plans/PLAN-2026-11-26-reporte-balance-general-contabilidad.md (v1, COMPLETO
 - **Deuda / pendiente:** correr `DJANGO_SETTINGS_MODULE=config.settings.test python manage.py test modules.accounting.tests.test_balance_sheet_api` con una BD de pruebas; revisión visual en navegador pendiente.
 
 ## Review
-_Pendiente_
+Quality Gate 1 (subagente aislado): **FAIL**. Ejecutado OK: dominio (10), frontend 1899, lint, i18n:check, build, `npm audit` (0), flake8, límites DDD. Hallazgos: [REV-01](../reviews/REV-2026-11-26-reporte-balance-general-contabilidad-01.md) (High, pruebas de API sin período fiscal y con cuenta sin clasificar; **corregido**), [REV-02](../reviews/REV-2026-11-26-reporte-balance-general-contabilidad-02.md) (Medium, API-01 del plan desfasado; **corregido**, PLAN v2). Lows tratados: importes de los avisos ahora con `money` y aviso de «sin clasificar» visible aunque los totales sean 0; sin atender (deuda menor): `aria-invalid`/`aria-live` en filtros y estados. **No ejecutado:** pruebas de API (sin PostgreSQL), `ruff`, revisión visual en navegador.
 
 ## Publicación
 _Pendiente_

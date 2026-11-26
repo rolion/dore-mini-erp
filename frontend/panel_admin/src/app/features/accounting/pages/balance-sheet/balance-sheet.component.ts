@@ -59,7 +59,7 @@ export class BalanceSheetComponent implements OnInit {
   }
 
   get empty(): boolean {
-    return !this.loading && !this.errorMessage && !!this.sheet && isBalanceSheetEmpty(this.sheet);
+    return !this.loading && !this.errorMessage && !!this.sheet && isBalanceSheetEmpty(this.sheet) && !this.hasUnclassified;
   }
 
   get hasUnclassified(): boolean {

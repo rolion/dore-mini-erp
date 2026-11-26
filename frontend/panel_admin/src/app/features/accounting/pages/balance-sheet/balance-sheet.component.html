@@ -70,7 +70,7 @@
 
             @if (hasUnclassified) {
             <div class="alert alert-warning m-2" role="alert" data-testid="unclassified-warning">
-              {{ 'ACCOUNTING.BALANCE_SHEET.AVISO_SIN_CLASIFICAR' | translate: { amount: sheet.totals.unclassifiedBalance } }}
+              {{ 'ACCOUNTING.BALANCE_SHEET.AVISO_SIN_CLASIFICAR' | translate: { amount: (sheet.totals.unclassifiedBalance | money) } }}
             </div>
             }
 
@@ -152,7 +152,7 @@
                 <span class="badge-outline col-green" data-testid="balanced-badge">{{ 'ACCOUNTING.BALANCES.CUADRA' | translate }}</span>
                 } @else {
                 <span class="badge-outline col-red" data-testid="unbalanced-badge">{{ 'ACCOUNTING.BALANCES.NO_CUADRA' | translate }}</span>
-                <small class="d-block fw-normal" data-testid="difference">{{ 'ACCOUNTING.BALANCE_SHEET.DIFERENCIA' | translate: { amount: sheet.totals.difference } }}</small>
+                <small class="d-block fw-normal" data-testid="difference">{{ 'ACCOUNTING.BALANCE_SHEET.DIFERENCIA' | translate: { amount: (sheet.totals.difference | money) } }}</small>
                 }
               </dd>
             </dl>

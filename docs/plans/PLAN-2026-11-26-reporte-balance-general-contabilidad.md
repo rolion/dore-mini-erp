@@ -1,4 +1,4 @@
-# PLAN-2026-11-26-reporte-balance-general-contabilidad (v1)
+# PLAN-2026-11-26-reporte-balance-general-contabilidad (v2)
 
 **Task:** TASK-reporte-balance-general-contabilidad · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-reporte-balance-general-contabilidad-pantalla-balance · Ninguno (ADR)
@@ -64,13 +64,14 @@ No existe el reporte. `balances/` devuelve sumas y saldos por cuenta (`api/urls.
 ```json
 {"date_from": null, "date_to": null, "has_opening": false,
  "sections": [{"key": "ASSET", "rows": [{"account_id": "…", "code": "1.1", "name": "Caja", "is_active": true,
-                "opening": "0.00", "movement": "100.00", "closing": "100.00"}], "total": "100.00"},
+                "opening": "0.00", "movement": "100.00", "closing": "100.00"}], "total": {"opening": "0.00", "movement": "100.00", "closing": "100.00"}},
               {"key": "LIABILITY", …}, {"key": "EQUITY", …,
-               "previous_result": "0.00", "period_result": "0.00"}],
+               "previous_result": {"opening": "0.00", "movement": "0.00", "closing": "0.00"},
+               "period_result": {"opening": "0.00", "movement": "0.00", "closing": "0.00"}}],
  "totals": {"assets": "…", "liabilities": "…", "equity": "…", "liabilities_and_equity": "…",
             "difference": "0.00", "balanced": true, "unclassified_balance": "0.00"}}
 ```
-Importes como cadena decimal; `previous_result`/`period_result` también traen `opening/movement/closing` implícitos en `total` de Patrimonio. Compatibilidad: endpoint nuevo, sin cambios a los existentes.
+Importes como cadena decimal. `total`, `previous_result` y `period_result` (estos dos solo en Patrimonio) son objetos `{opening, movement, closing}`; el `total` de Patrimonio ya los incluye. Compatibilidad: endpoint nuevo, sin cambios a los existentes.
 
 ## UI behavior
 - **UI-01** Plantilla «Lista de solo lectura con filtros» (design-system §5) según el DDR: filtros Desde/Hasta + Limpiar, nota explicativa.
@@ -122,7 +123,7 @@ Mismo patrón que Saldos e Ingresos y egresos: dominio puro → caso de uso con 
 Caso de uso `GetBalanceSheet(accounts, journal, periods?)` (no se necesitan períodos): valida el rango, lee cuentas y `movements_by_account(date_from, date_to)`, y delega en `domain/balance_sheet.py` (funciones puras) el armado de secciones, resultados y totales.
 
 ## Files/components affected
-- Backend: `domain/balance_sheet.py` (nuevo), `application/balance_sheet.py` (nuevo), `api/balance_sheet_serializers.py` y `api/balance_sheet_views.py` (nuevos), `api/urls.py` (ruta `balance-sheet/`), tests `tests/test_balance_sheet_domain.py`, `test_balance_sheet_use_case.py`, `test_balance_sheet_api.py`.
+- Backend: `domain/balance_sheet.py` (nuevo), `application/balance_sheet.py` (nuevo), `api/balance_sheet_serializers.py` y `api/balance_sheet_views.py` (nuevos), `api/urls.py` (ruta `balance-sheet/`), tests `tests/test_balance_sheet_domain.py` (incluye las del caso de uso) y `tests/test_balance_sheet_api.py`.
 - Frontend (`features/accounting/`): `models/balance-sheet.ts`, `services/balance-sheet-api.service.ts`, `pages/balance-sheet/` (componente, html, scss), `testing/balance-sheet-fixtures.ts`, specs; `app.routes.ts`, `assets/data/routes.json`, `sidebar-menu.spec.ts`, `assets/i18n/{es,en,pt}.json`.
 - Docs: TASK, DDR, PLAN.
 
@@ -143,3 +144,6 @@ Sin migraciones ni cambios de modelo.
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-26): [Implementation Plan] Ejemplo de API-01 alineado con el contrato implementado (`total`/resultados como objetos) y pruebas del caso de uso dentro de `test_balance_sheet_domain.py`. Solicitado por delivery-publish, REV-2026-11-26-reporte-balance-general-contabilidad-02. Sin cambio de Specification.

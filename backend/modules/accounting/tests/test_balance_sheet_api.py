@@ -6,7 +6,8 @@ from django.db import transaction
 from rest_framework.test import APIClient
 
 from modules.accounting import services
-from modules.accounting.tests.journal_support import make_account
+from modules.accounting.infrastructure.django.models import AccountModel
+from modules.accounting.tests.journal_support import make_account, make_period
 from modules.accounting.tests.test_api import AccountingApiBase
 from modules.accounting.tests.test_entries_api import enable
 
@@ -23,6 +24,9 @@ class BalanceSheetApiTests(AccountingApiBase):
         self.capital = make_account(cid, 'Capital', 'EQUITY', code='311001')
         self.income = make_account(cid, 'Ventas', 'INCOME', code='411001')
         self.expense = make_account(cid, 'Alquiler', 'EXPENSE', code='511001')
+        # Todo asiento exige un período fiscal abierto que contenga su fecha contable.
+        make_period(cid, '2026', date(2026, 1, 1), date(2026, 12, 31))
+        make_period(self.company_b.id, '2026 B', date(2026, 1, 1), date(2026, 12, 31))
 
     def post(self, debit, credit, amount, day, company=None):
         with transaction.atomic():
@@ -75,8 +79,11 @@ class BalanceSheetApiTests(AccountingApiBase):
         self.assertTrue(data['totals']['balanced'])
 
     def test_unclassified_account_with_balance_is_reported(self):  # AC-05
-        loose = make_account(self.company_a.id, 'Vieja', None, code='999001')
+        # Un asiento nuevo rechaza cuentas sin clasificar: se publica con una clasificada y luego se desclasifica
+        # (caso de las cuentas antiguas con movimientos).
+        loose = make_account(self.company_a.id, 'Vieja', 'LIABILITY', code='999001')
         self.post(self.cash, loose, '50.00', date(2026, 1, 2))
+        AccountModel.objects.filter(id=loose.id).update(account_class=None)
         totals = self.get()['totals']
         self.assertEqual(totals['unclassified_balance'], '-50.00')
         self.assertFalse(totals['balanced'])
