@@ -1,6 +1,6 @@
 # TASK-lotes-disponibilidad-inventario: Disponibilidad de cuñapés por lote en Inventario
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-lotes-disponibilidad-inventario (base: `produccion`)
@@ -15,6 +15,7 @@
 | 2026-11-26 | DESIGN → ARCHITECTURE | DDR escrito | delivery-start |
 | 2026-11-26 | ARCHITECTURE → PLANNING | ADR escrito | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | PLAN v1 READY (decisiones de negocio respondidas por el usuario) | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación y pruebas escritas; suites de inventory, sales, purchases, costing, data_import y shared (1218) y Karma de inventory/layout/i18n (237) en verde por verificación propia | delivery-build |
 
 ## Investigación
 
@@ -79,7 +80,32 @@ Ver `docs/adr/ADR-lotes-disponibilidad-inventario-modelo-lotes.md`.
 Ver `docs/plans/PLAN-2026-11-26-lotes-disponibilidad-inventario.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+
+**Resumen.** Los lotes son una dimensión nullable del libro de movimientos (`StockMovementModel.lot`) con la entidad `StockLot`; el saldo de un lote se calcula de sus movimientos y el disponible para empaque es el físico solo si está liberado. Se **extendieron** las funciones existentes (no se creó otro registrador): `RecordMovement` acepta `lot_id`; `RecordOutputs`, `ReverseMovement` y `ReverseSourceMovements` consumen `repository.balance(..., unlotted=True)` / saldo del lote.
+
+| Parte | Archivos principales | Cubre |
+|---|---|---|
+| Modelo y migración | `inventory/infrastructure/django/models.py`, `migrations/0004_stock_lots.py` | INV-07, INV-09 |
+| Helper de numeración | `shared/fiscal_numbering.py`; `LotNumberingAdapter` en `inventory/infrastructure/adapters.py` | AC-03, AC-04, INV-07 |
+| Dominio | `domain/lot.py`, `domain/movement.py` (`lot_id`, `production_order`), `domain/exceptions.py` | INV-04, INV-06 |
+| Repositorios | `movement_repository.py` (`balance(lot_id/unlotted)`, `lot_has_movements`), `lot_repository.py` | INV-01..03 |
+| Reglas de saldo | `application/movement_use_cases.py` (`check_lot_output`, `_check_lot`, reversiones) | INV-01..05, AC-07..10 |
+| Casos de uso y fachada | `application/lot_use_cases.py`, `services.py` (`create_lot`, `release_lot`, `get_lot`, `list_lots_for_product`, `record_movement(lot_id=)`) | AC-01, 02, 04..06 |
+| API | `api/lot_views.py`, `lot_serializers.py`, `lot_urls.py`, `config/urls.py`; `has_lots` en existencias y `lot` en movimientos | AC-11, 13 |
+| Frontend | `features/inventory`: `models/lot.ts`, `services/lots-api.service.ts`, `pages/lot-list`, sección en `stock-detail`, fila en `movement-detail`, ruta `inventory/lots`, menú (`routes.json`), i18n es/en/pt | AC-14 |
+| Helper en ventas/compras | `OrderNumberingAdapter` y `PurchaseNumberingAdapter` ahora llaman a `allocate_period_number` | ADR decisión 7 |
+
+**Pruebas.** Backend: `inventory/tests/test_lots.py` (dominio, creación/idempotencia/numeración, reglas de salida con y sin lote, reversiones, API) y `test_lots_concurrency.py` (PostgreSQL con hilos: numeración y salidas simultáneas; comprobación por mutación hecha: anular el control de saldo del lote hace fallar 3 pruebas, incluida la de carrera). Frontend: `lots-api.service.spec.ts`, `lot-list.component.spec.ts`, ampliación de `stock-detail`, `stock-api`, `sidebar-menu`.
+
+**Desviaciones respecto al plan (todas de detalle, sin cambio de Specification):**
+1. La ruta de la API es `/api/stock-lots/` (consistente con `/api/stock/`, `/api/stock-movements/`), no `/api/inventory/lots/`; PLAN, ADR y `ddd.md` ya lo reflejan.
+2. La lista de Lotes reutiliza la tabla responsive `inventory-table` (se apila en < 768 px, como `stock-list`/`stock-detail`) en lugar de `ngx-datatable` + tarjetas propias; los filtros son un formulario simple (4 campos) sin panel colapsable. Es coherente con el sistema de diseño y evita duplicar la variante de tarjetas.
+3. `inventory → accounting` se añadió a `ALLOWED_DEPENDENCIES` de `test_boundaries.py` (el plan lo implicaba por el helper de numeración; la prueba de fronteras lo exigió explícitamente).
+4. Se añadió la opción «Orden de producción» al filtro de origen de movimientos (`production_order` ya existe en el catálogo cerrado del dominio).
+
+**Deuda técnica / notas.** (a) Los ajustes sobre un producto con lotes solo alcanzan el stock sin lote (documentado, fuera de alcance). (b) Crear lotes exige período fiscal abierto (misma decisión que ventas/compras). (c) La interpretación del código `L-YYYYMMDD-NNNN` (fecha del lote + correlativo por período fiscal) queda por confirmar en la revisión; solo afecta a `format_lot_code`. (d) Verificación visual en navegador no realizada en esta etapa.
+
+**UI.** Pantalla de referencia: `movement-list`/`stock-list` (lista de solo lectura con filtros) y `stock-detail` (detalle con tabla embebida); componentes reutilizados: `inventory-table`, `badge-outline`, `ngb-pagination`; no se crearon componentes compartidos nuevos.
 
 ## Review
 _Pendiente_

@@ -51,7 +51,7 @@ Un producto puede tener lotes. Consultar lotes muestra producto, almacén, lote,
 - AC-08: una salida sin lote no puede consumir unidades de ningún lote (ejemplo 118/60/22: pedir 30 sin lote → rechazado, disponible 22).
 - AC-09: ventas, ajustes y reversiones usan la misma regla (salida sin lote) y siguen idempotentes; los errores de saldo insuficiente del API mantienen su formato.
 - AC-10: la reversión de la entrada de un lote hereda el lote y respeta INV-05; la reversión de una salida con lote devuelve las unidades a ese lote.
-- AC-11: `GET /api/inventory/lots/` lista lotes de la empresa (paginado) con filtros `search`, `product_id`, `warehouse_id`, `status`, `with_stock`; devuelve producto, unidad, almacén, código, estado, `physical_quantity`, `available_quantity`, fechas y liberación; `GET /api/inventory/lots/<id>/` el detalle; otra empresa → 404.
+- AC-11: `GET /api/stock-lots/` lista lotes de la empresa (paginado) con filtros `search`, `product_id`, `warehouse_id`, `status`, `with_stock`; devuelve producto, unidad, almacén, código, estado, `physical_quantity`, `available_quantity`, fechas y liberación; `GET /api/stock-lots/<id>/` el detalle; otra empresa → 404.
 - AC-12: productos sin lotes: respuestas y reglas de Existencias, movimientos, ventas y compras no cambian (solo se añade `has_lots=false`).
 - AC-13: Existencias (lista y detalle) devuelven `has_lots`; el movimiento devuelve `lot_id`/`lot_code` (nulos si no tiene).
 - AC-14: Frontend: pantalla Inventario › Lotes (lista con filtros, estados, badge, físico/disponible), sección «Lotes» en el detalle de existencia, fila «Lote» en el detalle de movimiento y entrada de menú; es/en/pt completos.
@@ -69,7 +69,7 @@ Un producto puede tener lotes. Consultar lotes muestra producto, almacén, lote,
 Lecturas bajo `required_modules=('inventory',)` y la autenticación/empresa del resto de Existencias. Crear/liberar solo por fachada (código de otros módulos), sin endpoints. El frontend no es barrera.
 
 ## API contract
-- API-01 `GET /api/inventory/lots/` y API-02 `GET /api/inventory/lots/<uuid>/` (solo lectura). Cantidades como `DecimalField(16,4)`.
+- API-01 `GET /api/stock-lots/` y API-02 `GET /api/stock-lots/<uuid>/` (solo lectura). Cantidades como `DecimalField(16,4)`.
 - API-03 aditivos: `has_lots` en Existencias; `lot_id`, `lot_code` en movimientos. Sin cambios incompatibles.
 - Errores 409 de numeración: `{code, detail, period?}`.
 
