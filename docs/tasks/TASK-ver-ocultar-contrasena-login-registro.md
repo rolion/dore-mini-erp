@@ -1,6 +1,6 @@
 # TASK-ver-ocultar-contrasena-login-registro: Ver/ocultar contraseña en login y registro
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** NO
 **Rama:** task/TASK-ver-ocultar-contrasena-login-registro
@@ -13,6 +13,7 @@
 | 2026-11-26 | INVESTIGATION → PLANNING | NEEDS_PLAN, sin diseño ni arquitectura | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, plan v1 | delivery-start |
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate PASS | delivery-publish |
 
 ## Investigación
 
@@ -49,7 +50,8 @@ docs/plans/PLAN-2026-11-26-ver-ocultar-contrasena-login-registro.md (v1, COMPACT
 Nuevo `shared/components/password-toggle` (botón `eye`/`eye-off`, `aria-label` i18n es/en/pt, `aria-pressed`, `type="button"`) que alterna el `type` del input recibido; integrado en signin (1 campo) y signup (2 campos) con clase `psr-password` (padding derecho; RTL y tema oscuro cubiertos en SCSS). Cubre AC-01..AC-04. Pruebas: spec del componente y asserts en specs de signin/signup (44 de 44 en el subconjunto auth + i18n); `npm run lint` e `i18n:check` limpios. Sin desviaciones del plan. Pantalla de referencia: signin/signup (Autenticación); `design-system.md` actualizado. Nota: AC-04 (posición visual/RTL/oscuro) no verificado visualmente en navegador. Deuda: `reset` sin toggle (fuera de alcance).
 
 ## Review
-_Pendiente_
+**PASS** (Quality Gate en subagente aislado). Suite completa 1941/1941, `npm run lint`, `i18n:check` (0 faltantes), `npm run build` y `npm audit` (0 vulnerabilidades) OK; backend sin cambios. AC-01..AC-03 verificados con pruebas; AC-04 por lectura de código. **Revisión visual en navegador: no verificada.**
+Hallazgos Low (no bloqueantes, sin REV): (1) el plan nombra las claves `AUTH.COMMON.*` y se implementaron `AUTH.PASSWORD_TOGGLE.MOSTRAR/OCULTAR`; (2) BOM en `password-toggle.component.spec.ts`; (3) `.password-toggle` sin `:focus-visible` ni `cursor: pointer` propios; (4) HEX `#161c2d` y `top: 29px` copiados de `.login-icons`; (5) el componente muta `target().type` directo en el DOM.
 
 ## Publicación
-_Pendiente_
+PR #137 listo para aprobación humana; no se mergea. Sin cambios sensibles (frontend, sin auth ni BD).
