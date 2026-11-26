@@ -162,4 +162,15 @@ describe('SignupComponent', () => {
     const link = el().querySelector<HTMLAnchorElement>('a[href="/pocketbiz/login"]');
     expect(link?.textContent).toContain('Inicia sesión');
   });
+
+  it('toggles each password field independently, hidden at first (AC-01, AC-02)', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    const pw = el.querySelector<HTMLInputElement>('#signup-password') as HTMLInputElement;
+    const confirm = el.querySelector<HTMLInputElement>('#signup-confirm-password') as HTMLInputElement;
+    const buttons = el.querySelectorAll<HTMLButtonElement>('.password-toggle');
+    expect(buttons.length).toBe(2);
+    expect([pw.type, confirm.type]).toEqual(['password', 'password']);
+    buttons[0].click();
+    expect([pw.type, confirm.type]).toEqual(['text', 'password']);
+  });
 });

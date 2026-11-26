@@ -7,6 +7,7 @@ import { NonNullableFormBuilder, Validators, ReactiveFormsModule } from '@angula
 import { FeatherModule } from 'angular-feather';
 import { finalize } from 'rxjs';
 import { AuthService } from '@core';
+import { PasswordToggleComponent } from '../../shared/components/password-toggle/password-toggle.component';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
 export const REQUIRED_FIELDS_MESSAGE = (): string => tr('AUTH.SIGNIN.USUARIO_Y_CONTRASENA_SON_OBLIGATORIOS');
@@ -20,6 +21,7 @@ export const DEFAULT_ROUTE_AFTER_LOGIN = APP_PATHS.dashboard;
         ReactiveFormsModule,
         FeatherModule,
         RouterLink,
+        PasswordToggleComponent,
     ]
 })
 export class SigninComponent {

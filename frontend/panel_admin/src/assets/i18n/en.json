@@ -311,6 +311,10 @@
       "NEW_PASSWORD": "New password",
       "CONFIRM_PASSWORD": "Confirm password"
     },
+    "PASSWORD_TOGGLE": {
+      "MOSTRAR": "Show password",
+      "OCULTAR": "Hide password"
+    },
     "SIGNIN": {
       "POCKETBIZ_VOLVER_AL_INICIO": "PocketBiz, back to home",
       "CONTRASENA": "Password",

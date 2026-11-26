@@ -224,6 +224,27 @@
   width: 16px !important;
   color: #161c2d;
 }
+.psr-password {
+  padding-right: 3rem !important;
+}
+.password-toggle {
+  position: absolute;
+  top: 29px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #161c2d;
+  i-feather {
+    height: 16px !important;
+    width: 16px !important;
+  }
+}
 .social-icon li a {
   color: #3c4858;
   border: 1px solid #3c4858;

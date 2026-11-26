@@ -212,6 +212,7 @@ Todas empiezan con `<section class="main-content">` y un breadcrumb: título (`h
 
 ### Autenticación (referencia: `signin`, `signup`)
 - Tarjeta centrada y angosta (≈480–520 px) con `main-logo.png` y `alt="PocketBiz"`; sin imagen lateral en login.
+- Campos de contraseña: `<app-password-toggle [target]="input">` (`shared/components/password-toggle`) dentro del `form-group position-relative`, con el input `psr-password`; inicia oculto con ojo tachado (`eye-off`) y alterna a `eye`.
 
 ### Diálogo de acción irreversible con motivo (referencia: `features/inventory/components/movement-reverse-dialog`, `features/purchases/components/receipt-revert-dialog`)
 - Acción destructiva de un documento (revertir un movimiento o una recepción) desde su detalle: botón `btn btn-warning` bajo los datos, visible solo si el servidor lo permite (`reversal.allowed` / `can_revert`); si el documento está confirmado pero no es revertible por su origen, se oculta y se explica con `small.text-muted` con el mensaje del servidor. Nunca se ofrece una segunda reversión.
