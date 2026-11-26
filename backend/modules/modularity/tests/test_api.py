@@ -28,7 +28,7 @@ class ListModulesTests(ModulesApiTestCase):
         body = self.client.get(LIST_URL).json()
         self.assertEqual([m['key'] for m in body], ['access', 'catalog', 'services', 'personnel', 'agenda', 'customers',
                                                     'quotations', 'receivables', 'dentistry', 'sales', 'expenses', 'accounting',
-                                                    'reporting', 'purchases', 'inventory', 'costing'])
+                                                    'reporting', 'purchases', 'inventory', 'costing', 'production'])
         self.assertEqual(enabled_keys(self.client),
                          {'access', 'catalog', 'customers', 'sales', 'expenses', 'reporting'})
 

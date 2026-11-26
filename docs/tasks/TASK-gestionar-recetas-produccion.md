@@ -1,6 +1,6 @@
 # TASK-gestionar-recetas-produccion: Gestionar recetas de producción
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-recetas-produccion (base: `produccion`)
@@ -13,6 +13,7 @@
 | 2026-11-26 | (nuevo) → INVESTIGATION | Task creado desde la tarjeta DORE-PROD-001 | delivery-start |
 | 2026-11-26 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Veredicto NEEDS_ARCHITECTURE, diseño SI | delivery-start |
 | 2026-11-26 | PLANNING → ENGINEERING | Specification READY, PR abierto contra `produccion` | delivery-start |
+| 2026-11-26 | ENGINEERING → REVIEW | Implementación completa del plan v1 | delivery-build |
 
 ## Investigación
 
@@ -79,7 +80,23 @@ ADR: `docs/adr/ADR-gestionar-recetas-produccion-modulo-production.md`.
 `docs/plans/PLAN-2026-11-26-gestionar-recetas-produccion.md` (v1, COMPLETO). Specification readiness: **READY**.
 
 ## Implementación
-_Pendiente_
+Implementado el plan v1 sin cambios de Specification.
+
+**Backend** (`backend/modules/production/`, nuevo): dominio `Recipe`/`RecipeIngredient` (INV-01, INV-03..INV-06), casos de uso `RecipeBook` con puerto `ProductCatalog` (INV-02, INV-04), repositorio por `company_id` (INV-07), modelos y migración `0001_initial` (nombre único sin distinguir mayúsculas, cantidades > 0), API `/api/recipes/` (AC-01..AC-08), fachada `catalog.services.get_products_for_production`, módulo `production` en el catálogo de módulos (requiere `catalog`, no habilitado por defecto; AC-09). Guardas actualizadas: `accounts/test_guards.py`, `sales/tests/test_boundaries.py`, `modularity/tests`.
+
+**Frontend** (`features/production/`, nuevo): modelos, `RecipesApiService`, lista, formulario con líneas, detalle, `RecipeToggleComponent`, ruta `production/recipes` con `moduleGuard`, menú «Producción › Recetas» en `routes.json` e i18n es/en/pt (AC-03..AC-04, AC-09, AC-10). Referencias seguidas: `features/services` (lista/detalle/activar) y `features/inventory/pages/stock-opening` (selector de producto con búsqueda y líneas). Reutiliza `ProductsApiService`, `unsavedChangesGuard`, `provideTestTranslations`, badges y botones `btn-tbl-*`; no se crearon componentes compartidos nuevos.
+
+**Pruebas:** backend `modules/production/tests/test_domain.py` y `test_api.py` (AC-01..AC-09, fachada, aislamiento entre empresas); frontend `recipes-api.service.spec.ts`, `recipe-pages.spec.ts` y `sidebar-menu.spec.ts`. E2E: no, como el plan.
+
+**Desviaciones respecto al plan (sin tocar la Specification):**
+- API en `snake_case` (como el resto de Catálogo/Servicios) en lugar de camelCase en API-01..API-05; los nombres de campo son un detalle de formato, el contenido y las reglas no cambian.
+- El módulo `production` no declara `optional=('inventory',)` (no hay integración todavía); se actualizó el ADR.
+- La lista usa una tabla con `table-responsive` (scroll horizontal en pantallas estrechas) en vez de la variante de tarjetas bajo 992 px que mencionaba el DDR; queda como deuda visual menor.
+- `PUT` con id de otra empresa responde 404 antes de validar el cuerpo (consistente con el resto).
+
+**Deuda técnica:** variante compacta de tarjetas para la lista; el selector de producto busca los primeros 20 coincidentes (typeahead), sin paginación infinita.
+
+**Notas de verificación (no es el Quality Gate):** suite de frontend completa en verde (1870 pruebas), `npm run i18n:check` sin faltantes, `tsc` sin errores, `ruff`/`flake8` limpios en `modules/production`. Backend: ver Review.
 
 ## Review
 _Pendiente_

@@ -89,6 +89,29 @@ def get_products_for_inventory(company_id: UUID, product_ids: Iterable[UUID]) ->
     return {model.id: _for_inventory(model) for model in models}
 
 
+@dataclass(frozen=True)
+class ProductForProduction:
+    id: UUID
+    name: str
+    active: bool
+    unit_id: UUID | None
+    unit_abbreviation: str | None
+    allows_fractions: bool
+
+
+def get_products_for_production(company_id: UUID, product_ids: Iterable[UUID]) -> dict[UUID, ProductForProduction]:
+    """Datos de producción de los productos de la empresa (una sola consulta); los ajenos o inexistentes no aparecen.
+
+    Las reglas de "activo" y "con unidad base" las aplica quien produce, no la fachada.
+    """
+    models = (ProductModel.objects.filter(company_id=company_id, pk__in=list(product_ids))
+              .select_related('base_unit'))
+    return {model.id: ProductForProduction(
+        id=model.id, name=model.name, active=model.active,
+        unit_id=model.base_unit_id, unit_abbreviation=model.base_unit.abbreviation if model.base_unit else None,
+        allows_fractions=bool(model.base_unit and model.base_unit.allows_fractions)) for model in models}
+
+
 #: Valor de `category` para pedir los productos sin clasificar.
 NO_CATEGORY = 'none'
 

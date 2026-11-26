@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'modules.service_catalog',
     'modules.inventory',
     'modules.costing',
+    'modules.production',
     'modules.customers',
     'modules.dentistry',
     'modules.sales',
