@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-05: UI-04 incompleto (sin foco al primer campo inválido, aria-invalid solo en la fecha)
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -21,3 +21,7 @@ Ver arriba. El gráfico sí tiene navegación por flechas (prueba `odontogram-ch
 
 ## Evidence
 `grep -n "focus" odontogram.component.ts` → sin resultados; revisión de `odontogram.component.html` líneas 83, 121-126, 191, 252.
+
+
+## Verificación Quality Gate #2
+Cerrado. Verificado en navegador (localhost): Agregar hallazgo sin condición deja el foco en #odo-condition con aria-invalid=true y aria-describedby=odo-finding-errors; pestañas con tabindex itinerante y flechas/Home/End (onTabKey); Karma OK.

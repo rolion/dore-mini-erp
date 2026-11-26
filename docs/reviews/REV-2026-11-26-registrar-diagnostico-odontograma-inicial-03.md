@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-03: Orden de bloqueos inconsistente entre amend y confirm/update/discard (riesgo de deadlock)
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -19,3 +19,7 @@ Un único orden de adquisición de bloqueos (p. ej. siempre paciente y después 
 
 ## Evidence
 Revisión de código con las líneas citadas; no reproducido (requiere transacciones concurrentes reales).
+
+
+## Verificación Quality Gate #2
+Cerrado. `_locked_row` fija un único orden (paciente y luego evaluación) en update/discard/confirm/amend. `ConcurrentEvaluationTests.test_two_simultaneous_confirms_leave_one_confirmation` (TransactionTestCase, 2 hilos) da [200, 409] y una sola confirmación; suite completa OK.

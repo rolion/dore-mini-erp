@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-07: La suite completa falla: guard de company_id y prueba de fronteras entre módulos no contemplan los cambios
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -29,3 +29,7 @@ FAILED (failures=2)
 
 ## Evidence
 Salida literal de `python manage.py test --noinput` completa (DJANGO_SETTINGS_MODULE=config.settings.test, TEST_DATABASE_NAME=test_dore_odo002_full), arriba. No se comprobó contra `main` por separado, pero los dos fallos nombran exclusivamente código añadido por esta rama.
+
+
+## Verificación Quality Gate #2
+Cerrado. `python manage.py test --noinput`: Ran 2597 tests in 457.618s, OK (accounts.test_guards y sales.tests.test_boundaries incluidos).

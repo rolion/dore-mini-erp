@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-02: Confirmar una evaluación nueva que falla tras crear el borrador deja la UI en estado inconsistente
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -19,3 +19,7 @@ El usuario ve el error pero la pantalla sigue en «nueva evaluación sin guardar
 
 ## Evidence
 Revisión de código (líneas citadas). Backend confirma el 409 de segundo borrador (`test_odontogram_api.py:117-119`). No se ejecutó en navegador (revisión visual no verificada).
+
+
+## Verificación Quality Gate #2
+Cerrado. `openConfirm` aplica la evaluación creada/guardada (`tap` → `applyEvaluation` + `refreshList`) antes de `confirm`; si confirmar falla, la pantalla ya refleja el borrador y el reintento lo confirma. Spec de componente añadida; Karma: 1936 SUCCESS.

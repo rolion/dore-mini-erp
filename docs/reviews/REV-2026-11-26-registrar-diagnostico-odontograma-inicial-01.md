@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-01: Cliente inactivo provoca 500 en crear/editar/confirmar/enmendar evaluaciones
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -23,3 +23,7 @@ Prueba temporal (borrada tras ejecutarse; el worktree quedó limpio) con `Custom
 ```
 INACTIVE CUSTOMER POST -> 500 b'\n<!doctype html>\n<html lang="en">\n<head>\n  <title>Server Error (500)</title>...
 ```
+
+
+## Verificación Quality Gate #2
+Cerrado. `_lock_patient` traduce `DentalProformaValidationError` a `EvaluationStateError` (409). Prueba `test_inactive_customer_blocks_changes_with_409` cubre POST/PUT/confirm/DELETE/amend; suite completa: Ran 2597 tests, OK.

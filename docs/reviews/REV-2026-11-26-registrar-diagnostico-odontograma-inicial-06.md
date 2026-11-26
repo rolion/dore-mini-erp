@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-06: Desviaciones menores del checklist de design-system (formato de fecha, presupuesto de estilos, tabla apilada)
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -22,3 +22,7 @@ Ver arriba. No se verificó visualmente (móvil/escritorio, claro/oscuro): revis
 
 ## Evidence
 Salida de `npm run build` (exit 0) con la advertencia de presupuesto citada; revisión de plantillas y TS.
+
+
+## Verificación Quality Gate #2
+Cerrado. Fechas dd/MM/yyyy (HH:mm donde aplica); `npm run build` ya no avisa del presupuesto de odontogram-chart.component.scss (solo avisos previos de customer-list y stock-list); tabla apilada < lg verificada en móvil 390 px; migas semánticas (nav/ol.breadcrumb). Queda un matiz de tema oscuro, registrado aparte como REV-08.

@@ -1,6 +1,6 @@
 # REV-2026-11-26-registrar-diagnostico-odontograma-inicial-04: Casos borde del plan sin prueba automatizada y mensaje de archivado que habla de proformas
 
-**Status:** Resuelto en delivery-build (pendiente de re-revisión)
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-26-registrar-diagnostico-odontograma-inicial.md (v1)
@@ -27,3 +27,7 @@ El comportamiento es correcto, pero no lo protege ninguna prueba del repositorio
 
 ## Evidence
 `grep` de nombres de prueba en `test_odontogram_api.py` y `test_odontogram_domain.py` (no existe prueba de dentición cambiada ni de cliente inactivo).
+
+
+## Verificación Quality Gate #2
+Cerrado. Existen pruebas de cambio de dentición (400 y borrador conservado), cliente inactivo, profesional ajeno en PUT, concurrencia y mensaje de archivado sin la palabra proforma. Suite completa OK.

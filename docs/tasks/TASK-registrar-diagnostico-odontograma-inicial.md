@@ -1,6 +1,6 @@
 # TASK-registrar-diagnostico-odontograma-inicial: Registrar diagnóstico y odontograma inicial
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-registrar-diagnostico-odontograma-inicial
@@ -17,6 +17,7 @@
 | 2026-11-26 | ENGINEERING → REVIEW | Implementación completa de backend y frontend según PLAN v1 | delivery-build |
 | 2026-11-26 | REVIEW → ENGINEERING | Quality Gate #1 FAIL: REV-07 (High), REV-01/02 (Medium), REV-03…06 (Low) | delivery-publish |
 | 2026-11-26 | ENGINEERING → REVIEW | Corregidos REV-01…07 (guardas de company_id y fronteras, cliente inactivo 409, orden de bloqueos, foco/aria, fechas, scss, tabla apilada, breadcrumb) | delivery-build |
+| 2026-11-26 | REVIEW → PUBLISH | Quality Gate #2 PASS (REV-01…07 cerrados; REV-08 Low abierto) | delivery-publish |
 
 ## Investigación
 
@@ -102,7 +103,10 @@ No hay forma de registrar estado dental por pieza/superficie; la pieza solo apar
 **Pantalla de referencia:** Detalle con pestañas/acciones de ciclo de vida y diálogo de acción irreversible con motivo; componente nuevo `odontogram-chart` (no se movió a `shared/` por tener un único uso).
 
 ## Review
-**Quality Gate #1: FAIL** — 7 hallazgos en `docs/reviews/REV-2026-11-26-registrar-diagnostico-odontograma-inicial-01…07.md`, todos corregidos y pendientes de re-revisión (Quality Gate #2).
+- **Quality Gate #1: FAIL** — REV-01…07 (guardas de `company_id` y fronteras, cliente inactivo → 500, orden de bloqueos, foco/aria, fechas, scss, tabla apilada, breadcrumb); corregidos.
+- **Quality Gate #2: PASS** — backend 2597 pruebas OK, frontend 1936 OK, lint/i18n/build/bandit/`npm audit` limpios, revisión visual en navegador (escritorio y móvil, claro y oscuro; diálogos en móvil/oscuro no verificados). REV-01…07 cerrados.
+- **Hallazgo abierto:** REV-08 (Low, DESIGN): contraste bajo en tema oscuro de piezas «Sin evaluar» y muestra «Implante»; no bloquea.
+- Informes: `docs/reviews/REV-2026-11-26-registrar-diagnostico-odontograma-inicial-01…08.md`.
 
 ## Publicación
-_Pendiente_
+PR #136 listo para aprobación humana (no se mergea desde el flujo). Cambio sensible: base de datos (migración aditiva `0005`) y acceso clínico; respaldo en el ADR del task. Pendiente de la persona: validar el catálogo clínico con el odontólogo, decidir sobre REV-08 y aprobar el merge.
