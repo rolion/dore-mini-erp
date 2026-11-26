@@ -41,6 +41,8 @@ Fuente: tarjeta Trello DORE-PROD-003 (lista «Por hacer — orden de implementac
 - Guardas: `backend/modules/accounts/test_guards.py:6-10` (`CHILD_MODELS`: la tabla hija de ingredientes de la orden debe registrarse igual que `production.RecipeIngredientModel`).
 
 ### Hipótesis / supuestos no confirmados
+**Aprobados por el usuario en el chat (2026-11-26): supuestos 1-6.**
+
 Se adoptan por defecto (la tarjeta no los define; ninguno cambia contrato ni dinero):
 1. **Editar un borrador** solo cambia almacén y preparaciones; la receta y su copia no se cambian (para otra receta se crea otra orden). Los ingredientes previstos se recalculan = cantidad por preparación × preparaciones.
 2. La receta se valida **activa solo al crear**; al iniciar no se vuelve a exigir (la orden ya tiene su copia). El almacén sí debe estar activo al crear/editar e iniciar.
