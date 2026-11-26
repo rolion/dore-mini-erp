@@ -76,9 +76,11 @@
                 <td class="text-end">{{ quantity(row.yieldQuantity) }} {{ row.resultProduct.unit?.abbreviation }}</td>
                 <td><span class="badge-outline" [class.col-green]="row.active" [class.col-red]="!row.active">{{ row.active ? ('COMMON.ACTIVO' | translate) : ('COMMON.INACTIVO' | translate) }}</span></td>
                 <td>
-                  <a class="btn btn-tbl-edit btn-tbl-view" [routerLink]="['/pocketbiz/production/recipes', row.id]" [title]="'PRODUCTION.RECIPES.VIEW' | translate" [attr.aria-label]="'PRODUCTION.RECIPES.VIEW' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>
-                  <a class="btn btn-tbl-edit btn-tbl-update" [routerLink]="['/pocketbiz/production/recipes', row.id, 'edit']" [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate"><i class="fas fa-pen" aria-hidden="true"></i></a>
-                  <app-recipe-toggle [recipe]="row" [compact]="true" (updated)="onUpdated($event)" />
+                  <div class="recipe-row-actions">
+                    <a class="btn btn-tbl-edit btn-tbl-view" [routerLink]="['/pocketbiz/production/recipes', row.id]" [title]="'PRODUCTION.RECIPES.VIEW' | translate" [attr.aria-label]="'PRODUCTION.RECIPES.VIEW' | translate"><i class="fas fa-eye" aria-hidden="true"></i></a>
+                    <a class="btn btn-tbl-edit btn-tbl-update" [routerLink]="['/pocketbiz/production/recipes', row.id, 'edit']" [title]="'COMMON.EDITAR' | translate" [attr.aria-label]="'COMMON.EDITAR' | translate"><i class="fas fa-pen" aria-hidden="true"></i></a>
+                    <app-recipe-toggle [recipe]="row" [compact]="true" (updated)="onUpdated($event)" />
+                  </div>
                 </td>
               </tr>
               }

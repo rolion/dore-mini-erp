@@ -1,4 +1,34 @@
+@use '../../../../shared/styles/table-actions';
+
 $action-size: 36px;
+
+// Iconos centrados y colores de acción también en el botón del componente hijo (activar/desactivar):
+// ver = azul, editar = amarillo, desactivar/activar = rojo.
+:host ::ng-deep .btn-tbl-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  line-height: 1 !important;
+  vertical-align: middle;
+
+  i {
+    line-height: 1;
+    margin: 0;
+  }
+
+  &.btn-tbl-view {
+    background-color: #1677ff !important;
+  }
+
+  &.btn-tbl-update {
+    background-color: #ffc107 !important;
+  }
+
+  &.btn-tbl-toggle {
+    background-color: #dc3545 !important;
+  }
+}
 
 // Tarjetas (< 957 px): una columna en móvil, varias en tablet.
 .recipe-cards {
@@ -26,7 +56,8 @@ $action-size: 36px;
   overflow-wrap: anywhere;
 }
 
-.recipe-card-actions {
+.recipe-card-actions,
+.recipe-row-actions {
   display: flex;
   flex: 0 0 auto;
   gap: 0.5rem;
