@@ -7,6 +7,7 @@ from django.db import connection
 from django.utils import timezone
 from rest_framework.test import APIClient, APITestCase
 
+from modules.sales.tests.periods import open_test_period
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.catalog.infrastructure.django.models import ProductModel
 from modules.customers.infrastructure.django.models import CustomerModel
@@ -16,15 +17,16 @@ from modules.sales.infrastructure.django.repositories import DjangoOrderReposito
 LIST_URL = '/api/orders/'
 
 DETAIL_KEYS = {
-    'id', 'code', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date', 'delivered_date', 'notes',
+    'id', 'code', 'number', 'fiscal_period', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date',
+    'delivered_date', 'notes',
     'status', 'payment_status', 'items', 'subtotal', 'discount', 'total', 'paid_total', 'balance', 'payments',
     'cancellation_reason', 'cancelled_at', 'editable', 'allowed_transitions', 'can_register_payment', 'stock_output',
     'warehouse', 'created_at', 'updated_at', 'cancelled_by_name', 'returned_at', 'returned_by_name', 'return_reason',
     'refund_acknowledged', 'reversal',
 }
 SUMMARY_KEYS = {
-    'id', 'code', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date', 'status', 'payment_status',
-    'total', 'paid_total', 'balance',
+    'id', 'code', 'number', 'fiscal_period', 'customer', 'sales_channel', 'order_date', 'expected_delivery_date',
+    'status', 'payment_status', 'total', 'paid_total', 'balance',
 }
 
 
@@ -39,6 +41,7 @@ def today():
 class SalesApiTestCase(APITestCase):
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     # --- fixtures ---

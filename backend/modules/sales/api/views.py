@@ -34,6 +34,7 @@ from modules.sales.domain.exceptions import (
 from modules.sales.infrastructure.adapters import (
     CustomerDirectoryAdapter,
     DeliveryCostingAdapter,
+    OrderNumberingAdapter,
     ProductCatalogAdapter,
     SalesPostingAdapter,
     SalesSettingsAdapter,
@@ -196,7 +197,7 @@ class OrderStartView(APIView):
         data = _validated(OrderStartSerializer, request.data)
         company_id = company_id_from(request)
         use_case = PlaceOrder(_repository(request), _customers(request), _products(request), SystemClock(),
-                              SalesSettingsAdapter(company_id), _stock(request))
+                              OrderNumberingAdapter(company_id), SalesSettingsAdapter(company_id), _stock(request))
         order = _run(use_case, **data)
         return _order_response(request, order, status.HTTP_201_CREATED)
 
@@ -253,7 +254,8 @@ class OrderPrepareView(APIView):
     required_modules = ('sales',)
     def post(self, request, order_id):
         order_id = _uuid(order_id, ORDER_NOT_FOUND)
-        return _order_response(request, _run(StartOrderPreparation(_repository(request)), order_id=order_id))
+        use_case = StartOrderPreparation(_repository(request), OrderNumberingAdapter(company_id_from(request)))
+        return _order_response(request, _run(use_case, order_id=order_id))
 
 
 class OrderReadyView(APIView):

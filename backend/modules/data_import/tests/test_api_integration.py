@@ -1,5 +1,5 @@
 """Importación de ventas de punta a punta contra la base real: catálogo, clientes, pedidos y cobros reales."""
-from datetime import timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from io import StringIO
 
@@ -14,7 +14,9 @@ from django.utils import timezone
 from rest_framework.test import APITestCase
 from uuid import uuid4
 
+from modules.accounting.infrastructure.django.models import FiscalPeriodModel
 from modules.accounts.testing import authenticate, make_admin, make_company
+from modules.sales.tests.periods import open_test_period
 from modules.catalog.infrastructure.django.models import ProductModel
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.accounting.infrastructure.django.models import JournalEntryModel
@@ -45,6 +47,7 @@ OPTIONS = {'infer_products': True, 'infer_customers': True, 'infer_inventory': F
 class SalesImportEndToEndTests(APITestCase):
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def _upload(self):
@@ -79,6 +82,41 @@ class SalesImportEndToEndTests(APITestCase):
         again = self.client.post(f'{run_url}/execute/', body, format='json')  # reintento: no duplica
         self.assertEqual(again.status_code, 200)
         self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 2)
+
+
+class SalesImportFiscalPeriodTests(APITestCase):
+    """AC-10: una fila cuya fecha no tiene período abierto se rechaza sola, con el código del período."""
+
+    def setUp(self):
+        self.company = make_company('Empresa A')
+        authenticate(self.client, make_admin(self.company, username='ana'))
+
+    def _run(self):
+        upload = self.client.post('/api/imports/sales/', {'file': SimpleUploadedFile('v.csv', CSV.encode('utf-8'))},
+                                  format='multipart').json()
+        body = {'mapping': upload['suggested_mapping'], 'options': OPTIONS}
+        run_url = f"/api/imports/sales/{upload['id']}"
+        self.assertEqual(self.client.post(f'{run_url}/preview/', body, format='json').status_code, 200)
+        execute_in_background(self.client, run_url, body)
+        return {row['sale_key']: row for row in self.client.get(f'{run_url}/rows/').json()['results']}
+
+    def test_rows_without_period_are_rejected_and_create_no_orders(self):  # AC-10
+        rows = self._run()
+        self.assertEqual({r['status'] for r in rows.values()}, {'FAILED'})
+        self.assertEqual({r['code'] for r in rows.values()}, {'fiscal_period_missing'})
+        self.assertEqual(OrderModel.objects.filter(company_id=self.company.id).count(), 0)
+
+    def test_only_the_row_in_a_closed_period_is_rejected_and_the_other_is_numbered(self):  # AC-10, AC-06
+        open_test_period(self.company.id, 'Día abierto', date(2026, 8, 3), date(2026, 8, 3))
+        open_test_period(self.company.id, 'Resto cerrado', date(2026, 8, 4), date(2026, 12, 31))
+        FiscalPeriodModel.objects.filter(company_id=self.company.id, name='Resto cerrado').update(status='CLOSED')
+        rows = self._run()
+        by_status = {key: (row['status'], row.get('code')) for key, row in rows.items()}
+        self.assertEqual(sorted(s for s, _ in by_status.values()), ['CREATED', 'FAILED'])
+        self.assertEqual([c for s, c in by_status.values() if s == 'FAILED'], ['fiscal_period_closed'])
+        orders = list(OrderModel.objects.filter(company_id=self.company.id))
+        self.assertEqual(len(orders), 1)  # sin pedidos NEW huérfanos de la fila rechazada
+        self.assertEqual((orders[0].number, orders[0].fiscal_period_name), (1, 'Día abierto'))
 
 
 FULL_CSV = '\n'.join([
@@ -140,6 +178,7 @@ class ReuploadTests(APITestCase):
 
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def _run(self, text, name):
@@ -178,6 +217,7 @@ class BackgroundQueueTests(APITestCase):
 
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         authenticate(self.client, make_admin(self.company, username='ana'))
 
     def _previewed(self, text=CSV):
@@ -234,6 +274,7 @@ class BackgroundQueueTests(APITestCase):
         self.client.post(f'{url}/execute/', {**body, 'idempotency_key': str(uuid4())}, format='json')
         call_command('run_import_worker', '--once', stdout=StringIO())
         other = make_company('Empresa B')
+        open_test_period(other.id)
         authenticate(self.client, make_admin(other, username='beto'))
         self.assertEqual(self.client.get(f'{url}/').status_code, 404)
         self.assertEqual(OrderModel.objects.filter(company_id=other.id).count(), 0)
@@ -269,6 +310,7 @@ class BackgroundQueueTests(APITestCase):
         url_a, body_a = self._previewed()
         self.client.post(f'{url_a}/execute/', {**body_a, 'idempotency_key': str(uuid4())}, format='json')
         other = make_company('Empresa B')
+        open_test_period(other.id)
         authenticate(self.client, make_admin(other, username='beto'))
         url_b, body_b = self._previewed()
         queued = self.client.post(f'{url_b}/execute/', {**body_b, 'idempotency_key': str(uuid4())}, format='json')

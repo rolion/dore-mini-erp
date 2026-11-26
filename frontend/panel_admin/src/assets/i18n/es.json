@@ -1805,6 +1805,7 @@
       "SALIDA_DE_INVENTARIO": "Salida de inventario"
     },
     "ORDER_DETAIL": {
+      "PERIODO_FISCAL": "Período fiscal: {{name}}",
       "PEDIDO": "Pedido {{p0}}",
       "CANCELAR_PEDIDO": "Cancelar pedido",
       "VOLVER_A_PEDIDOS": "Volver a pedidos",
@@ -1864,6 +1865,12 @@
       "PEDIDO_ACTUALIZADO": "Pedido actualizado",
       "PEDIDO_CREADO": "Pedido creado"
     },
+    "FISCAL_PERIOD": {
+      "SIN_PERIODO": "La fecha del pedido no está dentro de ningún período fiscal, por eso no se puede confirmar. Cree el período en Contabilidad.",
+      "CERRADO": "El período fiscal de la fecha del pedido está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+      "CERRADO_NOMBRE": "El período fiscal «{{name}}» está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+      "IR_A_PERIODOS": "Ir a períodos fiscales"
+    },
     "ORDER_CREATE": {
       "DETALLE_DEL_PEDIDO": "Detalle del pedido",
       "ALMACEN": "Almacén",
@@ -1886,6 +1893,7 @@
       "PEDIDO_CAMBIO": "El pedido cambió desde que se abrió el pago. Se actualizó con los datos vigentes."
     },
     "ORDER_LIST": {
+      "PERIODO": "Período {{name}}",
       "NUEVO_PEDIDO": "Nuevo pedido",
       "ATAJOS_DE_VISTA": "Atajos de vista",
       "ESTADO_DE_ENTREGA": "Estado de entrega",

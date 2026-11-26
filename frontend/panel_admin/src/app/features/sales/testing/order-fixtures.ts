@@ -38,6 +38,7 @@ export function makeOrder(overrides: Partial<Order> = {}): Order {
   return {
     id: 'o-1',
     code: 'P-1A2B3C4D',
+    fiscalPeriod: null,
     customer: { id: 'c-1', name: 'Ana Pérez' },
     salesChannel: 'WHATSAPP',
     orderDate: '2026-10-01',
@@ -76,6 +77,7 @@ export function makeSummary(overrides: Partial<OrderSummary> = {}): OrderSummary
   return {
     id: 'o-1',
     code: 'P-1A2B3C4D',
+    fiscalPeriod: null,
     customer: { id: 'c-1', name: 'Ana Pérez' },
     salesChannel: 'WHATSAPP',
     orderDate: '2026-10-01',
@@ -94,6 +96,8 @@ export function makeOrderDto(overrides: Partial<OrderDto> = {}): OrderDto {
   return {
     id: 'o-1',
     code: 'P-1A2B3C4D',
+    number: null,
+    fiscal_period: null,
     customer: { id: 'c-1', name: 'Ana Pérez' },
     sales_channel: 'WHATSAPP',
     order_date: '2026-10-01',

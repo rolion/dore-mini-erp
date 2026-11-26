@@ -10,6 +10,11 @@ import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Observable, catchError, finalize, firstValueFrom, switchMap, tap } from 'rxjs';
 import Swal from 'sweetalert2';
 import {
+  FiscalPeriodAlertComponent,
+  FiscalPeriodErrorCode,
+  isFiscalPeriodErrorCode,
+} from '../../components/fiscal-period-alert/fiscal-period-alert.component';
+import {
   AddItemEvent,
   OrderItemsComponent,
   QuantityChangeEvent,
@@ -69,6 +74,7 @@ const COMPACT_STATUSES: readonly string[] = ['IN_PREPARATION', 'READY', 'DELIVER
   imports: [TranslatePipe, 
     RouterLink,
     PostingIssuesAlertComponent,
+    FiscalPeriodAlertComponent,
     DatePipe,
     MoneyPipe,
     OrderStatusBadgeComponent,
@@ -92,6 +98,9 @@ export class OrderDetailComponent implements OnInit {
   fieldErrors: FieldErrors = {};
   /** Faltantes de configuración contable que bloquearon la última acción (confirmar o cobrar). */
   postingIssues: PostingIssue[] = [];
+  /** Bloqueo del servidor al confirmar por el período fiscal de la fecha del pedido. */
+  fiscalPeriodError: FiscalPeriodErrorCode | null = null;
+  fiscalPeriodName = '';
 
   private api = inject(OrdersApiService);
   private route = inject(ActivatedRoute);
@@ -399,6 +408,8 @@ export class OrderDetailComponent implements OnInit {
     this.busy = true;
     this.fieldErrors = {};
     this.postingIssues = [];
+    this.fiscalPeriodError = null;
+    this.fiscalPeriodName = '';
     request()
       .pipe(
         finalize(() => (this.busy = false)),
@@ -419,7 +430,10 @@ export class OrderDetailComponent implements OnInit {
       this.fieldErrors = err.fieldErrors;
       return;
     }
-    if (err instanceof OrderRuleError && err.postingIssues.length) {
+    if (err instanceof OrderRuleError && isFiscalPeriodErrorCode(err.code)) {
+      this.fiscalPeriodError = err.code;
+      this.fiscalPeriodName = err.periodName;
+    } else if (err instanceof OrderRuleError && err.postingIssues.length) {
       // Se explica en una alerta con enlace a la configuración, no solo en un aviso pasajero.
       this.postingIssues = err.postingIssues;
     } else {

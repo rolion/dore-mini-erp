@@ -40,6 +40,8 @@ describe('OrdersApiService', () => {
           {
             id: 'o-1',
             code: 'P-1A2B3C4D',
+            number: null,
+            fiscal_period: null,
             customer: { id: 'c-1', name: 'Ana Pérez' },
             sales_channel: 'WHATSAPP',
             order_date: '2026-10-01',
@@ -53,6 +55,21 @@ describe('OrdersApiService', () => {
         ],
       });
       expect(result).toEqual({ count: 1, next: null, previous: null, results: [makeSummary()] });
+    });
+
+    it('maps the number code and the fiscal period of a numbered order (API-01)', () => {
+      let result: { results: { code: string; fiscalPeriod: unknown }[] } | undefined;
+      service.list().subscribe((page) => (result = page));
+      http.expectOne('/api/orders/').flush({
+        count: 1, next: null, previous: null,
+        results: [{
+          id: 'o-1', code: 'NV-000001', number: 1, fiscal_period: { id: 'fp-1', name: 'Gestión 2026' },
+          customer: null, sales_channel: 'WHATSAPP', order_date: '2026-10-01', expected_delivery_date: null,
+          status: 'IN_PREPARATION', payment_status: 'PENDING', total: '70.00', paid_total: '0.00', balance: '70.00',
+        }],
+      });
+      expect(result?.results[0].code).toBe('NV-000001');
+      expect(result?.results[0].fiscalPeriod).toEqual({ id: 'fp-1', name: 'Gestión 2026' });
     });
 
     it('translates every filter to its query param (AC-16, AC-23)', () => {
@@ -254,6 +271,12 @@ describe('OrdersApiService', () => {
       expect((error as OrderRuleError).code).toBe('invalid_transition');
       expect(error.message).toBe('Esa acción no está permitida.');
       expect(error.status).toBe(409);
+    });
+
+    it('carries the closed period name of a fiscal_period_closed 409 (UI-03)', () => {
+      const error = failWith(409, { code: 'fiscal_period_closed', detail: 'Cerrado.', period: 'Gestión 2026' }) as OrderRuleError;
+      expect(error.code).toBe('fiscal_period_closed');
+      expect(error.periodName).toBe('Gestión 2026');
     });
 
     it('maps a posting_configuration_missing 409 with its issues (VEN-01)', () => {

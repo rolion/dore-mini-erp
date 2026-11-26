@@ -14,7 +14,12 @@
     @if (order; as o) {
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <h4 class="m-0" data-testid="order-code">{{ 'SALES.ORDER_DETAIL.PEDIDO' | translate: { p0: (o.code) } }}</h4>
+        <div>
+          <h4 class="m-0" data-testid="order-code">{{ 'SALES.ORDER_DETAIL.PEDIDO' | translate: { p0: (o.code) } }}</h4>
+          @if (o.fiscalPeriod) {
+          <small class="text-body-secondary" data-testid="order-period">{{ 'SALES.ORDER_DETAIL.PERIODO_FISCAL' | translate: { name: o.fiscalPeriod.name } }}</small>
+          }
+        </div>
         @if (compactLayout) {
         <app-order-status-badge [status]="o.status" />
         <app-payment-status-badge [status]="o.paymentStatus" />
@@ -41,6 +46,9 @@
       </div>
     </div>
 
+    @if (fiscalPeriodError) {
+    <app-fiscal-period-alert [code]="fiscalPeriodError" [periodName]="fiscalPeriodName" />
+    }
     @if (postingIssues.length) {
     <div class="mb-3">
       <app-posting-issues-alert [issues]="postingIssues" settingsLink="/pocketbiz/sales/settings"

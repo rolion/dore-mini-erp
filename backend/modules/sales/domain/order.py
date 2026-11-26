@@ -23,8 +23,28 @@ MAX_DISCOUNT_PERCENT = Decimal('100')
 
 
 def order_code(order_id: UUID) -> str:
-    """Etiqueta corta para mostrar; no se persiste ni identifica al pedido (el identificador es el UUID)."""
+    """Etiqueta provisional de un pedido sin número (aún sin confirmar o heredado); no identifica al pedido."""
     return 'P-' + str(order_id).replace('-', '')[:8].upper()
+
+
+ORDER_CODE_PREFIX = 'NV-'
+
+
+@dataclass(frozen=True)
+class OrderNumber:
+    """Número correlativo del pedido dentro de un período fiscal de la empresa (serie de ventas).
+
+    No es único entre períodos: la identidad es `(empresa, período, número)`. `period_name` es una instantánea del
+    nombre del período al numerar, para mostrarlo aunque Contabilidad cambie después.
+    """
+
+    period_id: UUID
+    period_name: str
+    number: int
+
+    @property
+    def code(self) -> str:
+        return f'{ORDER_CODE_PREFIX}{self.number:06d}'
 
 
 OPEN_STATUSES = (OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY)
@@ -196,6 +216,9 @@ class Order:
     refund_acknowledged: bool = False
     # Almacén desde el que se atiende el pedido (solo el id: Inventario es otro módulo); None en pedidos anteriores.
     warehouse_id: UUID | None = None
+    # Número correlativo por período fiscal: se asigna una sola vez, al confirmar, y no cambia nunca (ni al cancelar).
+    # None en pedidos sin confirmar y en pedidos heredados que quedaron fuera de todo período.
+    number: OrderNumber | None = None
     items: list[OrderItem] = field(default_factory=list)
     payments: list[Payment] = field(default_factory=list)
     created_at: datetime | None = None
@@ -273,7 +296,8 @@ class Order:
 
     @property
     def code(self) -> str:
-        return order_code(self.id)
+        """`NV-000001` si ya tiene número; si no, la etiqueta provisional derivada del UUID."""
+        return self.number.code if self.number is not None else order_code(self.id)
 
     @property
     def editable(self) -> bool:
@@ -333,11 +357,16 @@ class Order:
 
     # --- estados ----------------------------------------------------------------------------------------------
 
-    def start_preparation(self) -> None:
-        """Confirma el pedido: NEW -> IN_PREPARATION (exige al menos un ítem)."""
+    def ensure_confirmable(self) -> None:
+        """Lanza si el pedido no se puede confirmar (no cambia nada): así no se consume número en vano."""
         self._require_status(OrderStatus.NEW)
         if not self.items:
             raise OrderRuleViolation('empty_order', 'El pedido necesita al menos un producto para confirmarse.')
+
+    def start_preparation(self, number: OrderNumber) -> None:
+        """Confirma el pedido: NEW -> IN_PREPARATION (exige al menos un ítem) y le asigna su número correlativo."""
+        self.ensure_confirmable()
+        self.number = number
         self.status = OrderStatus.IN_PREPARATION
 
     def mark_ready(self) -> None:

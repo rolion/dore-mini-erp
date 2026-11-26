@@ -13,6 +13,7 @@ from django.test import TransactionTestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
+from modules.sales.tests.fakes import fake_number
 from modules.accounting import services as accounting
 from modules.accounting.tests.journal_support import money_account
 from modules.accounting.application.use_cases import ConfigureMethod
@@ -294,7 +295,7 @@ class PaymentLedgerConcurrencyTests(LedgerFixtures, TransactionTestCase):
         repository = DjangoOrderRepository(self.company.id)
         order = Order.create('WHATSAPP', date.today())
         order.add_item(uuid4(), 'Pack', Decimal('150.00'), 2)
-        order.start_preparation()
+        order.start_preparation(fake_number())
         self.order = repository.save(order)
 
     def pay(self, amount, key):

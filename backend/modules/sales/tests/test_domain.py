@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from django.test import SimpleTestCase
 
+from modules.sales.tests.fakes import fake_number
 from modules.sales.domain.enums import OrderStatus, PaymentMethod, PaymentStatus, SalesChannel
 from modules.sales.domain.exceptions import OrderItemNotFound, OrderRuleViolation, OrderValidationError
 from modules.sales.domain.order import Order
@@ -32,7 +33,7 @@ def in_status(status: OrderStatus, price='35.00', quantity=2) -> Order:
     if status is OrderStatus.CANCELLED:
         order.cancel('Cliente desistió', NOW)
         return order
-    steps = [order.start_preparation, order.mark_ready, lambda: order.deliver(None, TODAY),
+    steps = [lambda: order.start_preparation(fake_number()), order.mark_ready, lambda: order.deliver(None, TODAY),
              lambda: order.register_return('Devuelto', NOW)]
     order_of_states = [OrderStatus.NEW, OrderStatus.IN_PREPARATION, OrderStatus.READY, OrderStatus.DELIVERED,
                        OrderStatus.RETURNED]
@@ -176,7 +177,7 @@ class ItemTests(SimpleTestCase):
         self.assertEqual((order.total, order.balance, order.payment_status), (D('0.00'), D('0.00'), PaymentStatus.PAID))
         self.assertFalse(order.can_register_payment)
         self.assertIn('amount', field_errors(self, pay, order, '1.00'))
-        order.start_preparation()
+        order.start_preparation(fake_number())
         order.mark_ready()
         order.deliver(None, TODAY)
         self.assertEqual((order.status, order.payment_status), (OrderStatus.DELIVERED, PaymentStatus.PAID))
@@ -315,7 +316,7 @@ class DiscountTests(SimpleTestCase):
 class TransitionTests(SimpleTestCase):
     def test_happy_path_new_to_delivered(self):  # AC-09
         order = order_with_item()
-        order.start_preparation()
+        order.start_preparation(fake_number())
         self.assertEqual(order.status, OrderStatus.IN_PREPARATION)
         order.mark_ready()
         self.assertEqual(order.status, OrderStatus.READY)
@@ -324,7 +325,7 @@ class TransitionTests(SimpleTestCase):
 
     def test_only_valid_transitions_are_allowed(self):  # AC-09, INV-07
         actions = {
-            'prepare': lambda o: o.start_preparation(),
+            'prepare': lambda o: o.start_preparation(fake_number()),
             'ready': lambda o: o.mark_ready(),
             'deliver': lambda o: o.deliver(None, TODAY),
             'cancel': lambda o: o.cancel('motivo', NOW),
@@ -359,12 +360,12 @@ class TransitionTests(SimpleTestCase):
 
     def test_delivered_order_cannot_return_or_be_cancelled(self):  # AC-09
         order = in_status(OrderStatus.DELIVERED)
-        self.assertEqual(violation_code(self, order.start_preparation), 'invalid_transition')
+        self.assertEqual(violation_code(self, lambda: order.start_preparation(fake_number())), 'invalid_transition')
         self.assertEqual(violation_code(self, order.cancel, 'tarde', NOW), 'invalid_transition')
 
     def test_preparation_requires_an_item(self):  # AC-02
         order = new_order()
-        self.assertEqual(violation_code(self, order.start_preparation), 'empty_order')
+        self.assertEqual(violation_code(self, lambda: order.start_preparation(fake_number())), 'empty_order')
         self.assertEqual(order.status, OrderStatus.NEW)
 
     def test_editable_flag_follows_status(self):  # INV-04
@@ -552,7 +553,7 @@ class DeliveryAndPaymentAreIndependentTests(SimpleTestCase):
         pay(order, '70.00')
         self.assertEqual((order.status, order.payment_status, order.balance),
                          (OrderStatus.NEW, PaymentStatus.PAID, D('0.00')))
-        order.start_preparation()
+        order.start_preparation(fake_number())
         order.mark_ready()
         self.assertEqual(order.payment_status, PaymentStatus.PAID)
         order.deliver(None, TODAY)

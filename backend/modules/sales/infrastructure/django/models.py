@@ -26,6 +26,11 @@ class OrderModel(models.Model):
     returned_by_name = models.CharField(max_length=255, blank=True, default='')
     return_reason = models.TextField(blank=True, default='')
     refund_acknowledged = models.BooleanField(default=False)
+    # Número correlativo de la serie de ventas por período fiscal: se asigna al confirmar y no cambia (ver ADR).
+    # `fiscal_period_id` es solo UUID, sin FK (el período es de Contabilidad); el nombre es una instantánea.
+    fiscal_period_id = models.UUIDField(null=True, blank=True)
+    fiscal_period_name = models.CharField(max_length=80, blank=True, default='')
+    number = models.PositiveIntegerField(null=True, blank=True)
     # Derivados: solo los escribe el repositorio a partir del agregado (permiten filtrar y paginar en SQL).
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -42,6 +47,13 @@ class OrderModel(models.Model):
             models.CheckConstraint(condition=Q(discount__gte=0), name='sales_order_discount_gte_0'),
             models.CheckConstraint(condition=Q(total__gte=0), name='sales_order_total_gte_0'),
             models.CheckConstraint(condition=Q(paid_total__gte=0), name='sales_order_paid_total_gte_0'),
+            models.CheckConstraint(condition=Q(number__isnull=True) | Q(number__gt=0), name='sales_order_number_gt_0'),
+            models.CheckConstraint(
+                condition=(Q(number__isnull=True, fiscal_period_id__isnull=True)
+                           | Q(number__isnull=False, fiscal_period_id__isnull=False)),
+                name='sales_order_number_with_period'),
+            models.UniqueConstraint(fields=['company_id', 'fiscal_period_id', 'number'],
+                                    condition=Q(number__isnull=False), name='sales_order_number_unique'),
         ]
 
 
@@ -83,4 +95,19 @@ class PaymentModel(models.Model):
             models.CheckConstraint(condition=Q(amount__gt=0), name='sales_payment_amount_gt_0'),
             models.UniqueConstraint(fields=['order', 'idempotency_key'], condition=Q(idempotency_key__isnull=False),
                                     name='sales_payment_order_key_unique'),
+        ]
+
+
+class OrderNumberCounterModel(models.Model):
+    """Último número asignado de la serie de ventas de una empresa en un período fiscal."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    fiscal_period_id = models.UUIDField()
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'sales_order_number_counter'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'fiscal_period_id'], name='sales_order_counter_unique'),
         ]

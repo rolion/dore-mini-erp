@@ -7,7 +7,7 @@ from modules.sales.application.returns import PreviewOrderReturn, ReturnOrder
 from modules.sales.domain.enums import OrderStatus, PaymentStatus
 from modules.sales.domain.exceptions import OrderNotFound, OrderRuleViolation
 
-from .fakes import FixedClock
+from .fakes import FixedClock, FakeOrderNumbering
 from .test_application import ApplicationTestCase
 from .test_delivery_application import FakeStock
 from .test_sales_posting_application import FakePosting
@@ -29,7 +29,7 @@ class ReturnApplicationTests(ApplicationTestCase):
 
     def delivered(self, paid=None):
         order = self.add_item(self.create(), self.products.add(price='100.00'), 2)
-        StartOrderPreparation(self.repository).execute(order.id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(order.id)
         MarkOrderReady(self.repository).execute(order.id)
         if paid:
             RegisterPayment(self.repository, self.clock).execute(order.id, paid, 'CASH', None, '')

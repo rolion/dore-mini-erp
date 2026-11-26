@@ -7,6 +7,7 @@ from django.db import connection
 from django.test import TransactionTestCase
 from rest_framework.test import APIClient, APITestCase
 
+from modules.sales.tests.periods import open_test_period
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.inventory import services as inventory
 from modules.inventory.infrastructure.django.models import StockMovementModel, WarehouseModel
@@ -25,6 +26,7 @@ def url(order, suffix=''):
 class DeliveryTestCase(APITestCase):
     def setUp(self):
         self.company = make_company('Empresa A')
+        open_test_period(self.company.id)
         self.user = make_admin(self.company, username='ana')
         authenticate(self.client, self.user)
         set_enabled(self.company, ENABLED)
@@ -49,7 +51,9 @@ class DeliveryTestCase(APITestCase):
             self.assertEqual(response.status_code, 201, response.content)
         if ready:
             for action in ('prepare', 'ready'):
-                self.assertEqual(client.post(url(created, f'{action}/'), {}, format='json').status_code, 200)
+                response = client.post(url(created, f'{action}/'), {}, format='json')
+                self.assertEqual(response.status_code, 200)
+            created = response.json()  # ya confirmado: lleva el código NV- y su período
         return created
 
     def deliver(self, order, warehouse=None, expected_status=200, **extra):
@@ -292,7 +296,9 @@ class DeliveryPreviewTests(DeliveryTestCase):
         foreign = make_warehouse(make_company('Empresa B'), 'Ajeno')
         self.preview(ready, expected_status=400, warehouse_id=str(foreign.id))
         other_client = APIClient()
-        authenticate(other_client, make_admin(make_company('Empresa C'), username='luis'))
+        company_c = make_company('Empresa C')
+        open_test_period(company_c.id)
+        authenticate(other_client, make_admin(company_c, username='luis'))
         response = other_client.get(url(ready, 'delivery-preview/'))
         self.assertEqual(response.status_code, 404)
         response = other_client.post(url(ready, 'deliver/'), {'warehouse_id': str(self.warehouse.id)}, format='json')
@@ -302,6 +308,7 @@ class DeliveryPreviewTests(DeliveryTestCase):
 class TwoCompaniesTests(DeliveryTestCase):
     def test_same_names_in_two_companies_never_mix_stock_or_movements(self):  # AC-15, REV-02
         other_company = make_company('Empresa B')
+        open_test_period(other_company.id)
         other_client = APIClient()
         authenticate(other_client, make_admin(other_company, username='luis'))
         set_enabled(other_company, ENABLED)
@@ -357,6 +364,7 @@ class MovementsByOrderTests(DeliveryTestCase):
 class ConcurrentDeliveryTests(TransactionTestCase):
     def setUp(self):
         self.company = make_company('Empresa C')
+        open_test_period(self.company.id)
         self.user = make_admin(self.company, username='ana')
         set_enabled(self.company, ENABLED)
         self.warehouse = make_warehouse(self.company)
