@@ -1,0 +1,93 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate"><i class="fas fa-home" aria-hidden="true"></i></a></li>
+    <li class="breadcrumb-item">{{ 'PRODUCTION.MODULE' | translate }}</li><li class="breadcrumb-item">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</li>
+  </ul>
+  <div class="section-body"><div class="card">
+    <div class="p-10">
+      <div class="m-2">
+        <a routerLink="/pocketbiz/production/orders/new" class="btn btn-primary" data-testid="add-order">
+          <i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'PRODUCTION.ORDERS.NEW' | translate }}</a>
+      </div>
+      <form class="row g-2 m-2 align-items-end" [formGroup]="filters" (ngSubmit)="applyFilters()" [attr.aria-label]="'PRODUCTION.ORDERS.FILTERS' | translate">
+        <div class="col-md-4">
+          <label for="order-status">{{ 'COMMON.ESTADO' | translate }}</label>
+          <select id="order-status" class="form-select form-control" [formControl]="status">
+            <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
+            <option value="draft">{{ 'PRODUCTION.ORDERS.STATUS.DRAFT' | translate }}</option>
+            <option value="in_preparation">{{ 'PRODUCTION.ORDERS.STATUS.IN_PREPARATION' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-primary me-2" data-testid="apply-filters">{{ 'PRODUCTION.RECIPES.APPLY' | translate }}</button>
+          <button type="button" class="btn btn-light" [disabled]="isDefaultFilter && status.value === 'all'" (click)="clearFilters()" data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+        </div>
+      </form>
+      @if (error) { <div role="alert" class="alert alert-danger m-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
+      @if (loading && !rows.length) { <p class="m-2" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
+      @if (!loading && !error && total === 0) {
+        <div class="m-2" data-testid="order-empty">
+          <p>{{ (isDefaultFilter ? 'PRODUCTION.ORDERS.EMPTY' : 'PRODUCTION.ORDERS.EMPTY_FILTER') | translate }}</p>
+          @if (isDefaultFilter) { <a routerLink="/pocketbiz/production/orders/new" class="btn btn-primary">{{ 'PRODUCTION.ORDERS.NEW' | translate }}</a> }
+        </div>
+      }
+      @if (rows.length) {
+      @if (compact) {
+      <ul class="list-unstyled order-cards m-2 p-0" data-testid="order-cards">
+        @for (row of rows; track row.id) {
+        <li class="card order-card m-0" data-testid="order-card">
+          <div class="order-card-header">
+            <a class="fw-bold" [routerLink]="['/pocketbiz/production/orders', row.id]">{{ number(row.number) }}</a>
+            <span class="badge-outline" [class]="statusClass(row.status)">{{ statusKey(row.status) | translate }}</span>
+          </div>
+          <dl class="order-card-body mb-0">
+            <div class="order-card-row"><dt>{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt><dd>{{ row.recipe.name }}</dd></div>
+            <div class="order-card-row"><dt>{{ 'COMMON.ALMACEN' | translate }}</dt><dd>{{ row.warehouse.name }}</dd></div>
+            <div class="order-card-row"><dt>{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt><dd>{{ row.preparations }}</dd></div>
+            <div class="order-card-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt><dd>{{ quantity(row.expectedOutput) }} {{ row.resultProduct.unit?.abbreviation }}</dd></div>
+            <div class="order-card-row"><dt>{{ 'COMMON.FECHA' | translate }}</dt><dd>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+          </dl>
+        </li>
+        }
+      </ul>
+      } @else {
+        <div class="table-responsive">
+          <table class="table align-middle" data-testid="order-table">
+            <caption class="visually-hidden">{{ 'PRODUCTION.ORDERS.TITLE' | translate }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ 'PRODUCTION.ORDERS.NUMBER' | translate }}</th>
+                <th scope="col">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</th>
+                <th scope="col">{{ 'COMMON.ALMACEN' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</th>
+                <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+                <th scope="col">{{ 'COMMON.FECHA' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows; track row.id) {
+              <tr data-testid="order-row">
+                <td><a class="fw-bold" [routerLink]="['/pocketbiz/production/orders', row.id]">{{ number(row.number) }}</a></td>
+                <td>{{ row.recipe.name }}</td>
+                <td>{{ row.warehouse.name }}</td>
+                <td class="text-end">{{ row.preparations }}</td>
+                <td class="text-end">{{ quantity(row.expectedOutput) }} {{ row.resultProduct.unit?.abbreviation }}</td>
+                <td><span class="badge-outline" [class]="statusClass(row.status)">{{ statusKey(row.status) | translate }}</span></td>
+                <td>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <p class="m-2 text-muted" data-testid="order-total">{{ 'PRODUCTION.ORDERS.TOTAL' | translate: { count: total } }}</p>
+      @if (total > pageSize) {
+      <ngb-pagination class="d-flex justify-content-center" [collectionSize]="total" [pageSize]="pageSize" [page]="state.pageIndex + 1" [maxSize]="5"
+        [boundaryLinks]="true" [attr.aria-label]="'PRODUCTION.ORDERS.PAGES' | translate" (pageChange)="onPage($event)" />
+      }
+      }
+    </div>
+  </div></div>
+</section>

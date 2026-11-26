@@ -35,7 +35,8 @@ MODULE_CATALOG: tuple[ModuleDefinition, ...] = (
     ModuleDefinition('inventory', 'Inventario', 'Existencias de productos.',
                      requires=('catalog',), optional=('sales', 'purchases')),
     ModuleDefinition('costing', 'Costeo', 'Valoración y costo de las existencias.', requires=('inventory',)),
-    ModuleDefinition('production', 'Producción', 'Recetas de producción.', requires=('catalog',)),
+    ModuleDefinition('production', 'Producción', 'Recetas y órdenes de producción.',
+                     requires=('catalog', 'inventory')),
 )
 
 BY_KEY: dict[str, ModuleDefinition] = {module.key: module for module in MODULE_CATALOG}

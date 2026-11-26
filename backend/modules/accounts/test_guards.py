@@ -7,7 +7,7 @@ BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases', 'cost
 # Tablas hijas: heredan la empresa de su pedido por la FK interna de Sales y se consultan siempre a través de él.
 CHILD_MODELS = {'sales.OrderItemModel', 'sales.PaymentModel', 'purchases.PurchaseItemModel',
                 'purchases.ReceiptItemModel', 'dentistry.DentalProformaLineModel',
-                'production.RecipeIngredientModel'}
+                'production.RecipeIngredientModel', 'production.ProductionOrderIngredientModel'}
 PUBLIC_PREFIXES = ('api/auth/', 'api/health/')
 
 
@@ -41,7 +41,8 @@ class CompanyColumnTests(SimpleTestCase):
                    'purchases.PurchaseItemModel': ('purchase', 'purchases.PurchaseModel'),
                    'purchases.ReceiptItemModel': ('receipt', 'purchases.ReceiptModel'),
                    'dentistry.DentalProformaLineModel': ('proforma', 'dentistry.DentalProformaModel'),
-                   'production.RecipeIngredientModel': ('recipe', 'production.RecipeModel')}
+                   'production.RecipeIngredientModel': ('recipe', 'production.RecipeModel'),
+                   'production.ProductionOrderIngredientModel': ('order', 'production.ProductionOrderModel')}
         for label in CHILD_MODELS:
             model = apps.get_model(label)
             self.assertEqual([f.name for f in model._meta.get_fields() if f.name == 'company_id'], [], label)

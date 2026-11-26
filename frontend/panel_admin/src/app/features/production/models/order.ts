@@ -1,0 +1,132 @@
+import { formatQuantity } from './recipe';
+
+export type OrderStatus = 'draft' | 'in_preparation';
+export type OrderStatusFilter = 'all' | OrderStatus;
+
+/** Tope de preparaciones que acepta el servidor (EDGE-02). */
+export const MAX_PREPARATIONS = 99999;
+
+export interface ProductionOrderIngredient {
+  productId: string;
+  productName: string | null;
+  unitId: string | null;
+  unitAbbreviation: string | null;
+  /** Cadena decimal con 4 decimales (nunca número). */
+  quantityPerPreparation: string;
+  expectedQuantity: string;
+}
+
+export interface ProductionOrder {
+  id: string;
+  number: number;
+  status: OrderStatus;
+  recipe: { id: string; name: string };
+  resultProduct: { id: string; name: string | null; unit: { id: string; abbreviation: string } | null };
+  warehouse: { id: string; name: string };
+  preparations: number;
+  yieldPerPreparation: string;
+  expectedOutput: string;
+  ingredients: ProductionOrderIngredient[];
+  createdAt: string;
+  startedAt: string | null;
+}
+
+export interface ProductionOrderDto {
+  id: string;
+  number: number;
+  status: OrderStatus;
+  recipe: { id: string; name: string };
+  result_product: { id: string; name: string | null; unit: { id: string; abbreviation: string } | null };
+  warehouse: { id: string; name: string };
+  preparations: number;
+  yield_per_preparation: string;
+  expected_output: string;
+  ingredients: {
+    product_id: string;
+    product_name: string | null;
+    unit_id: string | null;
+    unit_abbreviation: string | null;
+    quantity_per_preparation: string;
+    expected_quantity: string;
+  }[];
+  created_at: string;
+  started_at: string | null;
+}
+
+export interface OrderWarehouse {
+  id: string;
+  name: string;
+  isDefault: boolean;
+}
+
+export interface OrderWarehouseDto {
+  id: string;
+  name: string;
+  is_default: boolean;
+}
+
+export interface OrderCreateInput {
+  recipeId: string;
+  warehouseId: string;
+  preparations: number;
+}
+
+export interface OrderUpdateInput {
+  warehouseId: string;
+  preparations: number;
+}
+
+export interface OrderFieldErrors {
+  recipeId?: string;
+  warehouseId?: string;
+  preparations?: string;
+  detail?: string;
+}
+
+export class OrderApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly fields: OrderFieldErrors = {},
+    readonly invalidPage = false,
+  ) {
+    super(message);
+  }
+}
+
+/** Número de orden mostrado como «OP-0001» (4 dígitos como mínimo). */
+export function formatOrderNumber(value: number): string {
+  return `OP-${String(value).padStart(4, '0')}`;
+}
+
+const SCALE = 4;
+const DECIMAL = /^\d+(\.\d{1,4})?$/;
+
+/** Cantidad decimal → entero escalado a 4 decimales (sin pasar por `float`); `null` si no es válida. */
+export function toScaled(value: string): bigint | null {
+  const text = value.trim();
+  if (!DECIMAL.test(text)) return null;
+  const [whole, fraction = ''] = text.split('.');
+  return BigInt(whole + fraction.padEnd(SCALE, '0'));
+}
+
+/** Entero escalado → cadena sin ceros sobrantes («120», «7.5»). */
+export function fromScaled(value: bigint): string {
+  const digits = value.toString().padStart(SCALE + 1, '0');
+  return formatQuantity(`${digits.slice(0, -SCALE)}.${digits.slice(-SCALE)}`);
+}
+
+/** Cantidad × preparaciones con aritmética entera; `null` si algún dato no es válido. */
+export function multiplyQuantity(quantity: string, preparations: number): string | null {
+  const scaled = toScaled(quantity);
+  if (scaled === null || !Number.isInteger(preparations)) return null;
+  return fromScaled(scaled * BigInt(preparations));
+}
+
+/** Preparaciones válidas: entero de 1 a 99999 escrito solo con dígitos. */
+export function parsePreparations(value: string): number | null {
+  const text = value.trim();
+  if (!/^\d+$/.test(text)) return null;
+  const parsed = Number(text);
+  return parsed >= 1 && parsed <= MAX_PREPARATIONS ? parsed : null;
+}

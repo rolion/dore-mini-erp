@@ -170,7 +170,8 @@
     "PRODUCTION": {
       "TEXT": "Produção",
       "LIST": {
-        "RECIPES": "Receitas"
+        "RECIPES": "Receitas",
+        "ORDERS": "Ordens de produção"
       }
     }
   },
@@ -3530,6 +3531,54 @@
       },
       "RESULT_AS_INGREDIENT": "O produto resultante não pode ser ingrediente da própria receita.",
       "INGREDIENT_TITLE": "Ingrediente {{n}}"
+    },
+    "ORDERS": {
+      "TITLE": "Ordens de produção",
+      "NEW": "Nova ordem",
+      "NEW_TITLE": "Nova ordem de produção",
+      "EDIT_TITLE": "Editar ordem de produção",
+      "NUMBER": "N.º",
+      "PREPARATIONS": "Preparações",
+      "PREPARATIONS_HELP": "Quantas vezes a receita será feita (número inteiro de 1 a 99999).",
+      "PREPARATIONS_INVALID": "Informe um número inteiro entre 1 e 99999.",
+      "EXPECTED_OUTPUT": "Produção prevista",
+      "PER_PREPARATION": "Por preparação",
+      "EXPECTED_TOTAL": "Total previsto",
+      "PREVIEW": "Previsto",
+      "PREVIEW_EMPTY": "Escolha uma receita e informe as preparações para ver o previsto.",
+      "WILL_PRODUCE": "Você produzirá {{quantity}} {{unit}} de {{product}}",
+      "CHOOSE_RECIPE": "Escolha uma receita ativa",
+      "CHOOSE_WAREHOUSE": "Escolha um armazém",
+      "RECIPE_REQUIRED": "Escolha uma receita.",
+      "WAREHOUSE_REQUIRED": "Escolha um armazém.",
+      "NO_RECIPES": "Não há receitas ativas. Crie ou ative uma em",
+      "NO_WAREHOUSES": "Não há armazéns ativos.",
+      "GO_INVENTORY_SETTINGS": "Configurar armazéns no Estoque",
+      "SAVE_DRAFT": "Salvar rascunho",
+      "START": "Iniciar preparação",
+      "NO_STOCK_NOTE": "Salvar ou iniciar a ordem não altera o estoque.",
+      "CONFIRM_START_TITLE": "Iniciar a preparação de {{number}}?",
+      "CONFIRM_START_TEXT": "Não altera o estoque. A ordem não poderá mais ser editada.",
+      "STARTED": "A ordem está em preparação.",
+      "CREATED_AT": "Criada",
+      "STARTED_AT": "Iniciada",
+      "FILTERS": "Filtros de ordens",
+      "EMPTY": "Ainda não há ordens de produção.",
+      "EMPTY_FILTER": "Não há ordens para este filtro.",
+      "TOTAL": "Total: {{count}} ordens",
+      "PAGES": "Páginas de ordens",
+      "STATUS": {
+        "DRAFT": "Rascunho",
+        "IN_PREPARATION": "Em preparação"
+      },
+      "ERRORS": {
+        "NETWORK": "Não foi possível conectar ao servidor.",
+        "VALIDATION": "Revise os dados informados.",
+        "FORBIDDEN": "Você não tem permissão para acessar as ordens de produção.",
+        "NOT_FOUND": "Ordem não encontrada.",
+        "CONFLICT": "A ordem não está em um estado que permita esta operação.",
+        "GENERIC": "Não foi possível concluir a operação."
+      }
     }
   }
 }
