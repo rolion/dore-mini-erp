@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-atencion-odontologica-desde-citas
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/138
 **Fuente:** https://trello.com/c/MI9tzlmQ/24-pb-odo-007-gestionar-atenci%C3%B3n-odontol%C3%B3gica-desde-citas
 **Specification readiness:** READY (decisiones de negocio resueltas con el usuario el 2026-11-27, ver Investigación)
 
