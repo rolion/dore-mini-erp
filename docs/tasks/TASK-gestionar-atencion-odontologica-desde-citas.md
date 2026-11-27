@@ -1,6 +1,6 @@
 # TASK-gestionar-atencion-odontologica-desde-citas: Gestionar atención odontológica desde citas
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-atencion-odontologica-desde-citas
@@ -15,6 +15,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE, diseño requerido; 4 decisiones de negocio respondidas | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 READY y PR abierto | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
+| 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS (7 hallazgos Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -110,7 +111,11 @@ Ver `docs/adr/ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion
 **UI.** Listado según la plantilla *Lista de solo lectura con filtros* (referencia `inventory/pages/movement-list`, tabla `inventory-table`) y detalle según *Detalle de documento en curso con acciones en la cabecera*; reutiliza badges de Agenda (`STATUS_CLASSES`), el patrón de diálogo `<dialog>` con motivo de Agenda y `fetchAll`/`formatDateTime` de Agenda. Sin componentes nuevos en `shared/`; sin cambios al `design-system.md`.
 
 ## Review
-_Pendiente_
+**Quality Gate (subagente aislado, 2026-11-27): PASS.** Sin hallazgos Critical/High.
+- Backend: suite completa `Ran 2625 tests` OK; `makemigrations --check` sin cambios; `manage.py check` limpio; `ruff`/`flake8` sin avisos propios (solo un E501 preexistente en `test_boundaries.py:34`); `bandit` sin issues.
+- Frontend: `ng test` 1956/1956 OK; `ng lint` limpio; `i18n:check` 0 faltantes; `ng build` OK; `npm audit --omit=dev` 0 vulnerabilidades.
+- No verificado: revisión visual en navegador (claro/oscuro, 390/1440 px), E2E real con Playwright, prueba de migración con `MigrationExecutor`.
+- Hallazgos Low abiertos (no bloquean): REV-01 mensaje/`VAL_*` con paciente archivado al crear odontograma; REV-02 «Finalizar» descarta observaciones sin guardar; REV-03 listado sin acotar conjuntos de IDs; REV-04 carrera `finish` vs enmienda; REV-05 error permanente en «Atenciones» con Agenda/Personal deshabilitados; REV-06 HEX/`select`/spinner en el detalle; REV-07 plan v1 desactualizado (API-01, API-07, E2E, AC-12). Archivos: `docs/reviews/REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-01..07.md`.
 
 ## Publicación
-_Pendiente_
+PR https://github.com/rolion/dore-mini-erp/pull/138 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migración 0006 aditiva) y autorización clínica; respaldado por ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma. Pendiente humano: decidir si se exige E2E real (Playwright) y si los REV Low se corrigen ahora o después.
