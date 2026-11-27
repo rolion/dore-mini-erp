@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-integracion-whatsapp-cloud-api` (base: `crm`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/141
 **Fuente:** https://trello.com/c/P0ScFUjk/16-pb-crm-016-integraci%C3%B3n-whatsapp-cloud-api
 
 ## Historial de transiciones
