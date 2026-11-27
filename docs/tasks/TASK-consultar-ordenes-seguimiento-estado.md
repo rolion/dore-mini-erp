@@ -1,6 +1,6 @@
 # TASK-consultar-ordenes-seguimiento-estado: Consultar órdenes de producción y seguir su estado
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-ordenes-seguimiento-estado (base: `produccion`)
@@ -16,6 +16,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas escritas; verificación propia: `modules.production` 148 OK, Karma de production + i18n/core en verde, `ng lint` y `i18n:check` limpios | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS (subagente aislado): 0 Critical/High; REV-01 y REV-02 Low abiertos; revisión visual no verificada | delivery-publish |
+| 2026-11-27 | PUBLISH → PLANNING → ENGINEERING → REVIEW | El usuario pidió mejorar la UI del detalle (crítica de diseño) en este mismo PR: DDR de rediseño y PLAN v2 (cambio de Specification aprobado en el chat); implementado y verificado por el autor; falta repetir el Quality Gate aislado | delivery-start / delivery-build |
 
 ## Investigación
 
@@ -67,13 +68,13 @@ Aislamiento por `company_id`, cantidades como cadena decimal con 4 decimales, te
 **SI** — cambia columnas, filtros y detalle de pantallas existentes (DDR corto).
 
 ## Diseño
-DDR: `docs/design/DDR-consultar-ordenes-seguimiento-estado-lista-y-detalle.md`.
+DDR: `docs/design/DDR-consultar-ordenes-seguimiento-estado-lista-y-detalle.md` (parte Lista vigente). El detalle fue rediseñado tras una crítica de diseño pedida por el usuario: `docs/design/DDR-consultar-ordenes-seguimiento-estado-detalle-orden-rediseno.md` (reemplaza la parte Detalle).
 
 ## Arquitectura
 No aplica según veredicto.
 
 ## Plan
-`docs/plans/PLAN-2026-11-27-consultar-ordenes-seguimiento-estado.md` (v1, COMPLETO, READY).
+`docs/plans/PLAN-2026-11-27-consultar-ordenes-seguimiento-estado.md` (v2, COMPLETO, READY; v2 cambia UI-02, añade UI-04/AC-08 y amplía AC-06, con aprobación explícita del usuario).
 
 ## Implementación
 **Backend** — `GET /api/production-orders/` acepta `recipe_id`, `date_from`, `date_to` (validados; 400 con el campo, incluido rango invertido) combinables con `status` (`order_views.py` `_list_filters`, `order_repository.py` `list`) → AC-01, EDGE-01/03. `lot` ahora trae `status`, `physical_quantity`, `available_quantity` leídos de `inventory.services.get_lot` mediante el adaptador `InventoryLots` (`adapters.py`); si el lote no existe los saldos son `null` → AC-02/03, INV-01/02, EDGE-02. Sin migraciones ni cambios de dominio.
@@ -91,3 +92,6 @@ Revisión visual: **no verificada** (la app no se levantó).
 
 ## Publicación
 PR #142 listo para aprobación humana (base `produccion`). Sin ADR, migraciones, auth ni infraestructura. No se mergea.
+
+### Rediseño del detalle (v2 del plan)
+`order-detail.component.{html,scss,ts}` reescritos según el DDR de rediseño: cabecera con `app-status-badge` y receta·producto·almacén, línea de etapas con fechas (AC-08), tarjetas de cifras clave, paneles «Datos de la orden» y «Lote y refrigeración» con barra de progreso, motivo del botón «Liberar» visible con `aria-describedby`, y columna Diferencia de ingredientes con aritmética entera (AC-06, UI-02, UI-04). Referencia visual: plantilla «Detalle de documento en curso con acciones en la cabecera»; patrón nuevo documentado en `design-system.md` («Detalle con etapas y cifras clave»). Sin cambios de backend. Pruebas: 6 nuevas en `order-pages.spec.ts` (Karma completo 1944/1944; lint, `i18n:check` y build OK). **Revisión visual propia** en el navegador integrado con una orden real en refrigeración: escritorio 1440 px y móvil 390 px correctos, sin scroll horizontal; tema oscuro no verificado (solo variables CSS de Bootstrap). El Quality Gate aislado no se ha repetido sobre este cambio.

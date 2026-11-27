@@ -1,6 +1,6 @@
 # DDR-consultar-ordenes-seguimiento-estado-lista-y-detalle: Lista y detalle de órdenes con saldo a granel
 
-**Estado:** Propuesto
+**Estado:** Propuesto (la parte «Detalle» fue reemplazada por DDR-consultar-ordenes-seguimiento-estado-detalle-orden-rediseno; la parte «Lista» sigue vigente)
 **Task relacionado:** TASK-consultar-ordenes-seguimiento-estado
 **Fecha:** 2026-11-27
 

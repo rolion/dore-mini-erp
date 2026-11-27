@@ -1,7 +1,7 @@
-# PLAN-2026-11-27-consultar-ordenes-seguimiento-estado (v1)
+# PLAN-2026-11-27-consultar-ordenes-seguimiento-estado (v2)
 
 **Task:** TASK-consultar-ordenes-seguimiento-estado · **Modo:** COMPLETO · **Specification readiness:** READY
-**DDRs / ADRs:** DDR-consultar-ordenes-seguimiento-estado-lista-y-detalle / Ninguno
+**DDRs / ADRs:** DDR-consultar-ordenes-seguimiento-estado-lista-y-detalle (parte Lista), DDR-consultar-ordenes-seguimiento-estado-detalle-orden-rediseno (parte Detalle) / Ninguno
 
 ## Objective
 Que el encargado consulte las órdenes por etapa con lo elaborado y el saldo a granel, filtre por fecha, receta y estado, y vea en el detalle las existencias del lote, sin cambiar las acciones de producción ya existentes.
@@ -38,7 +38,8 @@ Lista con columnas Número, Receta, Previstas, Elaboradas, Saldo a granel, Estad
 - AC-03: una orden con 118 elaboradas en refrigeración muestra elaboradas 118 y saldo disponible 0; tras liberar, 118; si Inventario registra un empaque parcial de 60, el saldo visible es 58.
 - AC-04: la lista muestra las columnas indicadas, «—» donde no aplica, y cuatro estados con etiqueta en es/en/pt.
 - AC-05: la lista ofrece filtros Estado, Receta, Desde y Hasta; «Limpiar filtros»; vacío con filtros muestra los activos; los filtros se conservan al volver del detalle.
-- AC-06: el detalle muestra ingredientes previstos y reales, lote, ingreso/transcurrido/mínimo/primera hora (existente) y existencias del lote (físico, disponible, estado).
+- AC-06: el detalle muestra ingredientes previstos y reales (con su diferencia), lote, ingreso/transcurrido/mínimo/primera hora y existencias del lote (físico, disponible, estado).
+- AC-08 (v2): el detalle muestra la etapa actual de la orden (Borrador, En preparación, En refrigeración, Listo para empacar) y las fechas de las etapas alcanzadas.
 - AC-07: las acciones por estado se habilitan solo en el estado correspondiente (Borrador: editar/iniciar; En preparación: registrar producción; En refrigeración: liberar; Listo para empacar: ninguna de producción).
 
 ## Edge cases / Error cases
@@ -56,7 +57,8 @@ Igual que hoy: módulo `production` habilitado y empresa del usuario. Solo lectu
 
 ## UI behavior
 - UI-01: lista según DDR (plantilla «Lista de solo lectura con filtros»; tarjetas bajo 957 px).
-- UI-02: detalle con sección «Existencias del lote».
+- UI-02 (v2): detalle rediseñado según DDR `...-detalle-orden-rediseno`: cabecera con número, `app-status-badge` y receta·producto·almacén; línea de etapas con fechas; tarjetas de cifras clave (previstas, elaboradas, saldo físico, disponible para empaque, costo); tarjetas «Datos de la orden» y «Lote y refrigeración» con barra de progreso hacia la hora habilitada; motivo del botón «Liberar» visible y enlazado por `aria-describedby`; tabla de ingredientes con columna Diferencia (aritmética entera).
+- UI-04 (v2): el detalle no repite datos (ingreso, previsto) y se adapta a móvil (rejilla 1 columna; ingredientes en tarjetas bajo 957 px).
 - UI-03: sin texto hardcodeado; claves en es/en/pt.
 
 ## Non-functional requirements
@@ -86,6 +88,7 @@ NO — flujo cubierto por integración API y pruebas de componente; no es un flu
 | AC-05 | spec lista (filtros, limpiar, vacío, estado conservado) |
 | AC-06 | spec detalle |
 | AC-07 | spec detalle por estado + API existente |
+| AC-08 | spec detalle (etapa actual y fechas por estado) |
 
 # Implementation Plan
 
@@ -112,3 +115,6 @@ Lecturas de lote por orden (ver Non-functional); zona horaria del filtro de fech
 
 ## New dependencies
 Ninguna.
+
+## Changelog
+- **v2** (2026-11-27): [Specification] UI-02 reescrito, UI-04 y AC-08 añadidos y AC-06 ampliado (diferencia de ingredientes) tras la crítica de diseño del detalle; aprobado explícitamente por el usuario en el chat («hazlo en este mismo PR»). [Implementation Plan] Archivos: `order-detail.component.{html,scss,ts}`, `order-pages.spec.ts`, i18n es/en/pt, `design-system.md` (patrón de etapas). Sin cambios de backend.

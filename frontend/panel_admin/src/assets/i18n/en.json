@@ -3617,7 +3617,8 @@
         "DONE": "The batch was released and the order is ready to pack.",
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
-        "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}."
+        "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}.",
+        "OF": "of"
       },
       "ACTUAL_OUTPUT": "Produced",
       "BULK_BALANCE": "Bulk balance",
@@ -3629,7 +3630,15 @@
         "REFRIGERATING": "Refrigerating (blocked for packing)",
         "RELEASED": "Released",
         "PHYSICAL": "Physical balance",
-        "AVAILABLE": "Available for packing"
+        "AVAILABLE": "Available for packing",
+        "BLOCKED": "Blocked for packing until released"
+      },
+      "OF_EXPECTED": "of {{quantity}} planned",
+      "DIFFERENCE": "Difference",
+      "DATA_TITLE": "Order details",
+      "LOT_TITLE": "Lot and refrigeration",
+      "STEPS": {
+        "LABEL": "Order stages"
       }
     }
   }

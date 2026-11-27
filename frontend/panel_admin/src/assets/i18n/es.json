@@ -3617,7 +3617,8 @@
         "DONE": "El lote fue liberado y la orden está lista para empacar.",
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
-        "TOO_EARLY": "Todavía no se cumple el tiempo mínimo de refrigeración. Disponible desde {{date}}."
+        "TOO_EARLY": "Todavía no se cumple el tiempo mínimo de refrigeración. Disponible desde {{date}}.",
+        "OF": "de"
       },
       "ACTUAL_OUTPUT": "Elaboradas",
       "BULK_BALANCE": "Saldo a granel",
@@ -3629,7 +3630,15 @@
         "REFRIGERATING": "En refrigeración (bloqueado para empaque)",
         "RELEASED": "Liberado",
         "PHYSICAL": "Saldo físico",
-        "AVAILABLE": "Disponible para empaque"
+        "AVAILABLE": "Disponible para empaque",
+        "BLOCKED": "Bloqueado para empaque hasta liberar"
+      },
+      "OF_EXPECTED": "de {{quantity}} previstas",
+      "DIFFERENCE": "Diferencia",
+      "DATA_TITLE": "Datos de la orden",
+      "LOT_TITLE": "Lote y refrigeración",
+      "STEPS": {
+        "LABEL": "Etapas de la orden"
       }
     }
   }

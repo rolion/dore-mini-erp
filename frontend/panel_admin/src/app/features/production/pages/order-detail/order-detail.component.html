@@ -9,8 +9,14 @@
     @if (loading) { <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p> }
     @if (error) { <div role="alert" class="alert alert-danger m-4">{{ error }} <button class="btn btn-light" type="button" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
     @if (order) {
-    <div class="card-header"><h4 data-testid="order-number">{{ number(order.number) }}</h4></div>
-    <div class="m-4 order-actions" data-testid="order-actions">
+    <div class="card-header order-header">
+      <div class="order-title">
+        <h4 class="mb-0" data-testid="order-number">{{ number(order.number) }}</h4>
+        <app-status-badge [tone]="statusTone" [label]="statusKey | translate" data-testid="order-status" />
+      </div>
+      <p class="text-muted mb-0 order-subtitle" data-testid="order-subtitle">{{ order.recipe.name }} · {{ order.resultProduct.name }} · {{ order.warehouse.name }}</p>
+    </div>
+    <div class="mx-4 mt-3 order-actions" data-testid="order-actions">
       @if (order.status === 'draft') {
       <button type="button" class="btn btn-primary" [disabled]="starting" (click)="start()" data-testid="start">{{ 'PRODUCTION.ORDERS.START' | translate }}</button>
       <a class="btn btn-warning" [routerLink]="['/pocketbiz/production/orders', order.id, 'edit']" data-testid="edit">{{ 'COMMON.EDITAR' | translate }}</a>
@@ -19,26 +25,102 @@
       <a class="btn btn-primary" [routerLink]="['/pocketbiz/production/orders', order.id, 'refrigerate']" data-testid="refrigerate">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTION' | translate }}</a>
       }
       @if (order.status === 'refrigerating') {
-      <button type="button" class="btn btn-primary" [disabled]="releasing || !canRelease" (click)="release()" data-testid="release">{{ 'PRODUCTION.ORDERS.RELEASE.ACTION' | translate }}</button>
-      @if (!canRelease && releasableFrom) { <small class="text-muted align-self-center" data-testid="release-hint">{{ 'PRODUCTION.ORDERS.RELEASE.AVAILABLE_FROM' | translate: { date: formatDateTime(releasableFrom) } }}</small> }
+      <button type="button" class="btn btn-primary" [disabled]="releasing || !canRelease" [attr.aria-describedby]="!canRelease && releasableFrom ? 'release-hint' : null" (click)="release()" data-testid="release">{{ 'PRODUCTION.ORDERS.RELEASE.ACTION' | translate }}</button>
       }
       <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
     </div>
-    @if (success) { <div role="status" class="alert alert-success mx-4" data-testid="success">{{ success }}</div> }
-    @if (actionError) { <div role="alert" class="alert alert-danger mx-4" data-testid="action-error">{{ actionError }}</div> }
+    @if (order.status === 'refrigerating' && !canRelease && releasableFrom) {
+    <p id="release-hint" class="mx-4 mt-2 mb-0 release-hint" data-testid="release-hint"><i class="fas fa-clock me-1" aria-hidden="true"></i>{{ 'PRODUCTION.ORDERS.RELEASE.AVAILABLE_FROM' | translate: { date: formatDateTime(releasableFrom) } }}</p>
+    }
+    @if (success) { <div role="status" class="alert alert-success mx-4 mt-3 mb-0" data-testid="success">{{ success }}</div> }
+    @if (actionError) { <div role="alert" class="alert alert-danger mx-4 mt-3 mb-0" data-testid="action-error">{{ actionError }}</div> }
+
+    <ol class="order-steps" data-testid="order-steps" [attr.aria-label]="'PRODUCTION.ORDERS.STEPS.LABEL' | translate">
+      @for (step of steps; track step.key) {
+      <li class="order-step" [class.is-done]="step.state === 'done'" [class.is-current]="step.state === 'current'" [attr.aria-current]="step.state === 'current' ? 'step' : null" data-testid="order-step">
+        <span class="order-step-marker" aria-hidden="true">@if (step.state === 'done') { <i class="fas fa-check"></i> } @else { {{ $index + 1 }} }</span>
+        <span class="order-step-label">{{ step.label | translate }}</span>
+        <span class="order-step-date text-muted">{{ step.date ? formatDateTime(step.date) : '—' }}</span>
+      </li>
+      }
+    </ol>
+
+    <div class="order-kpis">
+      <div class="card order-kpi">
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="detail-output">{{ quantity(order.expectedOutput) }} {{ order.resultProduct.unit?.abbreviation }}</strong>
+      </div>
+      @if (order.lot) {
+      <div class="order-kpis-lot" data-testid="registered">
+      <div class="card order-kpi">
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.ACTUAL_OUTPUT' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="actual-output">{{ quantity(order.actualOutput ?? '0') }} {{ order.resultProduct.unit?.abbreviation }}</strong>
+        <span class="order-kpi-hint text-muted">{{ 'PRODUCTION.ORDERS.OF_EXPECTED' | translate: { quantity: quantity(order.expectedOutput) } }}</span>
+      </div>
+      <div class="card order-kpi">
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_STOCK.PHYSICAL' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="lot-physical">{{ order.lot.physicalQuantity === null ? '—' : quantity(order.lot.physicalQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</strong>
+      </div>
+      <div class="card order-kpi order-kpi-main">
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_STOCK.AVAILABLE' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="lot-available">{{ order.lot.availableQuantity === null ? '—' : quantity(order.lot.availableQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</strong>
+        @if (order.status === 'refrigerating') { <span class="order-kpi-hint text-muted">{{ 'PRODUCTION.ORDERS.LOT_STOCK.BLOCKED' | translate }}</span> }
+      </div>
+      <div class="card order-kpi">
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.REFRIGERATE.COST' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</strong>
+      </div>
+      </div>
+      }
+    </div>
+
+    <div class="order-panels">
+      <section class="card order-panel" aria-labelledby="order-data-title" data-testid="order-data">
+        <h5 id="order-data-title">{{ 'PRODUCTION.ORDERS.DATA_TITLE' | translate }}</h5>
+        <dl class="order-dl">
+          <div class="order-row"><dt>{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt><dd>{{ order.recipe.name }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt><dd>{{ order.resultProduct.name }}</dd></div>
+          <div class="order-row"><dt>{{ 'COMMON.ALMACEN' | translate }}</dt><dd>{{ order.warehouse.name }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt><dd>{{ order.preparations }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt><dd>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt><dd data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
+        </dl>
+      </section>
+      @if (order.lot) {
+      <section class="card order-panel" aria-labelledby="order-lot-title" data-testid="lot-stock">
+        <h5 id="order-lot-title">{{ 'PRODUCTION.ORDERS.LOT_TITLE' | translate }}</h5>
+        <dl class="order-dl">
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.REFRIGERATE.LOT' | translate }}</dt><dd data-testid="lot-code">{{ order.lot.code }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.LOT_STOCK.STATUS' | translate }}</dt><dd data-testid="lot-status">{{ order.lot.status === 'released' ? ('PRODUCTION.ORDERS.LOT_STOCK.RELEASED' | translate) : order.lot.status === 'refrigerating' ? ('PRODUCTION.ORDERS.LOT_STOCK.REFRIGERATING' | translate) : '—' }}</dd></div>
+          @if (hasRelease) {
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.ENTERED_AT' | translate }}</dt><dd>{{ order.enteredAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
+          }
+        </dl>
+        @if (hasRelease) {
+        <div data-testid="release-section">
+          <div class="d-flex justify-content-between align-items-baseline">
+            <span class="fw-semibold">{{ 'PRODUCTION.ORDERS.RELEASE.ELAPSED' | translate }}</span>
+            <span data-testid="elapsed-summary"><span data-testid="elapsed">{{ elapsed }}</span> {{ 'PRODUCTION.ORDERS.RELEASE.OF' | translate }} <span data-testid="min-hours">{{ order.release?.minHours }} {{ 'SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate }}</span></span>
+          </div>
+          <div class="progress order-progress" role="progressbar" [attr.aria-label]="'PRODUCTION.ORDERS.RELEASE.ELAPSED' | translate"
+            [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100" data-testid="release-progress">
+            <div class="progress-bar" [style.width.%]="progressPercent"></div>
+          </div>
+          <dl class="order-dl mt-2">
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.FIRST' | translate }}</dt><dd data-testid="releasable-from">{{ releasableFrom ? formatDateTime(releasableFrom) : '—' }}</dd></div>
+            @if (order.status === 'ready_to_pack' && order.releasedAt) {
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_BY' | translate }}</dt><dd data-testid="released-by">{{ order.releasedBy }}</dd></div>
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_AT' | translate }}</dt><dd data-testid="released-at">{{ formatDateTime(order.releasedAt) }}</dd></div>
+            }
+          </dl>
+        </div>
+        }
+      </section>
+      }
+    </div>
+
+    <h5 class="mx-4 mt-2">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
     @if (compact) {
-    <dl class="order-info" data-testid="order-info">
-      <div class="order-row"><dt>{{ 'COMMON.ESTADO' | translate }}</dt><dd><span class="badge-outline" [class]="statusClass">{{ statusKey | translate }}</span></dd></div>
-      <div class="order-row"><dt>{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt><dd>{{ order.recipe.name }}</dd></div>
-      <div class="order-row"><dt>{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt><dd>{{ order.resultProduct.name }}</dd></div>
-      <div class="order-row"><dt>{{ 'COMMON.ALMACEN' | translate }}</dt><dd>{{ order.warehouse.name }}</dd></div>
-      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt><dd>{{ order.preparations }}</dd></div>
-      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt><dd data-testid="detail-output">{{ quantity(order.expectedOutput) }} {{ order.resultProduct.unit?.abbreviation }}</dd></div>
-      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt><dd>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
-      <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt><dd data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
-    </dl>
-    @if (order.status === 'refrigerating' || order.status === 'ready_to_pack') { <ng-container *ngTemplateOutlet="registered" /> }
-    <h5 class="mx-3">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
     <ul class="list-unstyled ingredient-cards" data-testid="ingredient-cards">
       @for (line of order.ingredients; track line.productId) {
       <li class="card ingredient-card" data-testid="ingredient-card">
@@ -48,39 +130,24 @@
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</dt><dd>{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</dd></div>
           @if (line.actualQuantity !== null) {
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</dt><dd data-testid="actual-quantity">{{ quantity(line.actualQuantity) }} {{ line.unitAbbreviation || '—' }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.DIFFERENCE' | translate }}</dt><dd data-testid="difference">{{ difference(line) ?? '—' }}</dd></div>
           }
         </dl>
       </li>
       }
     </ul>
     } @else {
-      @if (order.status === 'refrigerating' || order.status === 'ready_to_pack') { <ng-container *ngTemplateOutlet="registered" /> }
-      <dl class="row m-4">
-        <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
-        <dd class="col-sm-9"><span class="badge-outline" [class]="statusClass">{{ statusKey | translate }}</span></dd>
-        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</dt>
-        <dd class="col-sm-9">{{ order.recipe.name }}</dd>
-        <dt class="col-sm-3">{{ 'PRODUCTION.RECIPES.RESULT_PRODUCT' | translate }}</dt>
-        <dd class="col-sm-9">{{ order.resultProduct.name }}</dd>
-        <dt class="col-sm-3">{{ 'COMMON.ALMACEN' | translate }}</dt>
-        <dd class="col-sm-9">{{ order.warehouse.name }}</dd>
-        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt>
-        <dd class="col-sm-9">{{ order.preparations }}</dd>
-        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt>
-        <dd class="col-sm-9" data-testid="detail-output">{{ quantity(order.expectedOutput) }} {{ order.resultProduct.unit?.abbreviation }}</dd>
-        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt>
-        <dd class="col-sm-9">{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt>
-        <dd class="col-sm-9" data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd>
-      </dl>
       <div class="table-responsive mx-4 mb-4">
         <table class="table align-middle" data-testid="ingredient-table">
-          <caption>{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</caption>
+          <caption class="visually-hidden">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</caption>
           <thead><tr>
             <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</th>
-            @if (order.status === 'refrigerating' || order.status === 'ready_to_pack') { <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</th> }
+            @if (order.lot) {
+            <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</th>
+            <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.DIFFERENCE' | translate }}</th>
+            }
           </tr></thead>
           <tbody>
             @for (line of order.ingredients; track line.productId) {
@@ -88,7 +155,10 @@
               <td>{{ line.productName }}</td>
               <td class="text-end">{{ quantity(line.quantityPerPreparation) }} {{ line.unitAbbreviation || '—' }}</td>
               <td class="text-end">{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</td>
-              @if (line.actualQuantity !== null) { <td class="text-end" data-testid="actual-quantity">{{ quantity(line.actualQuantity) }} {{ line.unitAbbreviation || '—' }}</td> }
+              @if (line.actualQuantity !== null) {
+              <td class="text-end" data-testid="actual-quantity">{{ quantity(line.actualQuantity) }} {{ line.unitAbbreviation || '—' }}</td>
+              <td class="text-end" data-testid="difference">{{ difference(line) ?? '—' }}</td>
+              }
             </tr>
             }
           </tbody>
@@ -98,55 +168,3 @@
     }
   </div></div>
 </section>
-
-<ng-template #registered>
-  @if (order) {
-  <section class="m-4" data-testid="registered" aria-labelledby="registered-title">
-    <h5 id="registered-title">{{ 'PRODUCTION.ORDERS.REFRIGERATE.REGISTERED' | translate }}</h5>
-    <dl class="row">
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_OUTPUT' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="actual-output">{{ quantity(order.actualOutput ?? '0') }} {{ order.resultProduct.unit?.abbreviation }} <span class="text-muted">({{ 'PRODUCTION.ORDERS.REFRIGERATE.EXPECTED' | translate }}: {{ quantity(order.expectedOutput) }})</span></dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ENTERED_AT' | translate }}</dt>
-      <dd class="col-sm-9">{{ order.enteredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.LOT' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="lot-code">{{ order.lot?.code }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.COST' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</dd>
-    </dl>
-  </section>
-  @if (order.lot) {
-  <section class="m-4" data-testid="lot-stock" aria-labelledby="lot-stock-title">
-    <h5 id="lot-stock-title">{{ 'PRODUCTION.ORDERS.LOT_STOCK.TITLE' | translate }}</h5>
-    <dl class="row">
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.LOT_STOCK.STATUS' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="lot-status">{{ order.lot.status === 'released' ? ('PRODUCTION.ORDERS.LOT_STOCK.RELEASED' | translate) : order.lot.status === 'refrigerating' ? ('PRODUCTION.ORDERS.LOT_STOCK.REFRIGERATING' | translate) : '—' }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.LOT_STOCK.PHYSICAL' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="lot-physical">{{ order.lot.physicalQuantity === null ? '—' : quantity(order.lot.physicalQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.LOT_STOCK.AVAILABLE' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="lot-available">{{ order.lot.availableQuantity === null ? '—' : quantity(order.lot.availableQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</dd>
-    </dl>
-  </section>
-  }
-  @if (hasRelease) {
-  <section class="m-4" data-testid="release-section" aria-labelledby="release-title">
-    <h5 id="release-title">{{ 'PRODUCTION.ORDERS.RELEASE.TITLE' | translate }}</h5>
-    <dl class="row">
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.ENTERED_AT' | translate }}</dt>
-      <dd class="col-sm-9">{{ order.enteredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.ELAPSED' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="elapsed">{{ elapsed }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.MIN_HOURS' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="min-hours">{{ order.release?.minHours }} {{ 'SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.FIRST' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="releasable-from">{{ releasableFrom ? formatDateTime(releasableFrom) : '—' }}</dd>
-      @if (order.status === 'ready_to_pack' && order.releasedAt) {
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_BY' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="released-by">{{ order.releasedBy }}</dd>
-      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_AT' | translate }}</dt>
-      <dd class="col-sm-9" data-testid="released-at">{{ formatDateTime(order.releasedAt) }}</dd>
-      }
-    </dl>
-  </section>
-  }
-  }
-</ng-template>

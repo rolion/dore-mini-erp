@@ -248,6 +248,71 @@ describe('OrderDetailComponent', () => {
     expect(root.querySelector('[data-testid="lot-available"]')?.textContent?.trim()).toBe('—');
   });
 
+  describe('layout (DDR detalle-orden-rediseno)', () => {
+    const cooling: ProductionOrder = {
+      ...started, status: 'refrigerating', actualOutput: '20.0000', enteredAt: new Date(Date.now() - 30 * 60000).toISOString(),
+      lot: lotRefrigerating, costTotal: '18.65',
+      ingredients: [
+        { ...started.ingredients[0], actualQuantity: '7.0000' },
+        { ...started.ingredients[0], productId: 'p-2', productName: 'Almidón', unitAbbreviation: 'gr', quantityPerPreparation: '20.0000', expectedQuantity: '20.0000', actualQuantity: '20.0000' },
+      ],
+      release: { minHours: 1, releasableFrom: new Date(Date.now() + 30 * 60000).toISOString(), canRelease: false },
+    };
+
+    it('shows the status badge and recipe · product · warehouse in the header', () => {  // UI-02, AC-08
+      TestBed.resetTestingModule();
+      const root = setup(cooling).nativeElement as HTMLElement;
+      expect(root.querySelector('[data-testid="order-status"]')?.textContent).toContain('En refrigeración');
+      const subtitle = root.querySelector('[data-testid="order-subtitle"]')?.textContent ?? '';
+      for (const part of ['Cuñapé', 'Cuñapé a granel', 'Principal']) expect(subtitle).toContain(part);
+    });
+
+    it('marks done, current and pending stages with their dates', () => {  // AC-08
+      TestBed.resetTestingModule();
+      const root = setup(cooling).nativeElement as HTMLElement;
+      const steps = Array.from(root.querySelectorAll('[data-testid="order-step"]'));
+      expect(steps.map(step => step.classList.contains('is-done'))).toEqual([true, true, false, false]);
+      expect(steps.map(step => step.getAttribute('aria-current'))).toEqual([null, null, 'step', null]);
+      expect(steps[3].textContent).toContain('—');
+      expect(steps[0].textContent).toContain('26/11/2026');
+    });
+
+    it('shows a draft with only the first stage current', () => {  // AC-08
+      TestBed.resetTestingModule();
+      const steps = Array.from((setup(order).nativeElement as HTMLElement).querySelectorAll('[data-testid="order-step"]'));
+      expect(steps.map(step => step.getAttribute('aria-current'))).toEqual(['step', null, null, null]);
+    });
+
+    it('marks every stage done once the order is ready to pack', () => {  // AC-08
+      TestBed.resetTestingModule();
+      const ready: ProductionOrder = { ...cooling, status: 'ready_to_pack', releasedAt: '2026-11-27T04:00:00Z', releasedBy: 'ana',
+        lot: { ...lotRefrigerating, status: 'released', availableQuantity: '20.0000' } };
+      const steps = Array.from((setup(ready).nativeElement as HTMLElement).querySelectorAll('[data-testid="order-step"]'));
+      expect(steps.every(step => step.classList.contains('is-done'))).toBeTrue();
+    });
+
+    it('shows the key figures once and the release progress toward the minimum', () => {  // UI-02, UI-04
+      TestBed.resetTestingModule();
+      const root = setup(cooling).nativeElement as HTMLElement;
+      expect(root.querySelector('[data-testid="actual-output"]')?.textContent).toContain('20 u');
+      expect(root.querySelector('[data-testid="lot-available"]')?.textContent).toContain('0 u');
+      expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('18.65');
+      const bar = root.querySelector('[data-testid="release-progress"]');
+      expect(bar?.getAttribute('role')).toBe('progressbar');
+      expect(Number(bar?.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(45);
+      expect(Number(bar?.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(55);
+      expect(root.querySelector('[data-testid="release"]')?.getAttribute('aria-describedby')).toBe('release-hint');
+      expect(root.querySelector('#release-hint')).not.toBeNull();
+    });
+
+    it('shows the difference between actual and planned consumption only where it differs', () => {  // AC-06
+      TestBed.resetTestingModule();
+      const root = setup(cooling).nativeElement as HTMLElement;
+      const cells = Array.from(root.querySelectorAll('[data-testid="difference"]')).map(cell => (cell.textContent ?? '').trim());
+      expect(cells).toEqual(['−0.5 kg', '—']);
+    });
+  });
+
   it('shows the recorded production, lot and actual consumption once refrigerating', () => {
     const done: ProductionOrder = {
       ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
@@ -337,11 +402,11 @@ describe('OrderDetailComponent', () => {
     expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('Bs 95.00');
   });
 
-  it('below 957 px shows label|value rows and ingredient cards', () => {
+  it('below 957 px shows ingredient cards instead of the table and keeps the order data rows', () => {
     const fixture = setup(order, true);
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector('[data-testid="ingredient-table"]')).toBeNull();
-    expect(root.querySelectorAll('[data-testid="order-info"] .order-row').length).toBe(8);
+    expect(root.querySelectorAll('[data-testid="order-data"] .order-row').length).toBe(6);
     const card = root.querySelector('[data-testid="ingredient-card"]')?.textContent ?? '';
     expect(card).toContain('Queso');
     expect(card).toContain('1.5 kg');
