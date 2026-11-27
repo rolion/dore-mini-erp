@@ -80,7 +80,7 @@ Orden y lote deben cambiar juntos (una transacción); doble clic/reintento; relo
 
 ## Review
 Quality Gate ciclo 1: **FAIL** — REV-01 (High: tests de Modularidad rotos por el tipo `integer`) y REV-02 (Medium: sin prueba unitaria de validación), ambos corregidos (ver `docs/reviews/REV-2026-11-27-liberar-lote-despues-refrigeracion-0{1,2}.md`); además se aplicó L-1 (el botón usa `release.canRelease` del servidor o el reloj local) y L-4 (nota de `ddd.md`). Tras la corrección: modularidad/producción sin BD 37 OK, Karma `production` 63 OK, lint OK; la suite Karma completa del ciclo 1 fue 1928 OK.
-**Pendiente para un PASS:** ejecutar con PostgreSQL las pruebas de API (`OrderReleaseApiTests`, `ProductionSettingsTests`) y `makemigrations --check`; revisión visual no verificada. Sin eso no se declara PASS (la sesión no tiene `DATABASE_URL`).
+**Con PostgreSQL local (ciclo 2):** `makemigrations --check` sin cambios; suite backend completa 2645 tests OK (incluye `OrderReleaseApiTests` y `ProductionSettingsTests`; dos aserciones de mis pruebas se ajustaron al contrato real: `min_hours` llega como texto en el 409 y el 409 de estado no trae `code`). Revisión visual en navegador: no verificada.
 
 ## Publicación
 _Pendiente_

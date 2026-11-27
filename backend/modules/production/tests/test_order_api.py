@@ -484,7 +484,7 @@ class OrderReleaseApiTests(OrderApiTests):
         before = (self.movements(), self.lot_state(order))
         response = self.release(order)
         self.assertEqual(response.status_code, 409, response.content)
-        self.assertEqual((response.json()['code'], response.json()['min_hours']), ('release_too_early', 12))
+        self.assertEqual((response.json()['code'], response.json()['min_hours']), ('release_too_early', '12'))
         self.assertIn('releasable_from', response.json())
         self.assertEqual((self.movements(), self.lot_state(order)), before)
         self.assertEqual(self.client.get(f"{URL}{order['id']}/").json()['status'], 'refrigerating')
@@ -517,7 +517,8 @@ class OrderReleaseApiTests(OrderApiTests):
         self.prepare_stock()
         for order in (self.make_order(), self.started_order()):
             response = self.release(order)
-            self.assertEqual((response.status_code, response.json()['code']), (409, 'order_state'))
+            self.assertEqual(response.status_code, 409, response.content)
+            self.assertIn('refrigeración', response.json()['detail'])
 
     def test_minimum_comes_from_the_company_setting(self):  # AC-07, EDGE-01
         order = self.refrigerated(hours_ago=1)
