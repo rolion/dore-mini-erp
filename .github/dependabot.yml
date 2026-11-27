@@ -1,0 +1,89 @@
+# Dependabot: avisa de dependencias vulnerables o desactualizadas abriendo PRs contra `main`.
+# Dependabot nunca mergea: cada PR lo revisa una persona, y un merge a `main` despliega a producción.
+# Las alertas y las "security updates" se activan en Settings → Code security del repositorio;
+# este archivo solo gobierna las actualizaciones de versión (política, frecuencia y agrupación).
+#
+# Política común:
+# - minor + patch agrupados en un PR por ecosistema; las majors llegan una por una.
+# - majors de Django, Angular, TypeScript, Python y Node se ignoran: son migraciones deliberadas
+#   (Django 5.2 LTS, Angular 21, Python 3.12, Node 22 LTS). Los parches de seguridad de la misma
+#   serie siguen llegando.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/La_Paz
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      python-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: django
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: npm
+    directory: /frontend/panel_admin
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/La_Paz
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/La_Paz
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: docker
+    directory: /frontend/panel_admin
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/La_Paz
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/La_Paz
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
