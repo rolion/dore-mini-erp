@@ -23,7 +23,8 @@
   }
 }
 
-.ingredient-cards {
+.ingredient-cards,
+.packing-cards {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
@@ -31,7 +32,8 @@
   padding: 0;
 }
 
-.ingredient-card {
+.ingredient-card,
+.packing-card {
   box-shadow: none;
   border: 1px solid var(--bs-border-color, #dee2e6);
   padding: 0.5rem 1rem;
@@ -43,4 +45,9 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+// Dentro de la sección «Empaques» (ya tiene margen propio).
+.packing-cards {
+  margin: 0 0 1rem;
 }

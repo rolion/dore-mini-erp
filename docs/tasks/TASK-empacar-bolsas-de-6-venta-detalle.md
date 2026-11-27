@@ -15,6 +15,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS | delivery-publish |
+| 2026-11-27 | PUBLISH → PUBLISH | Revisión visual en navegador; REV-visual-01 (historial no apilado en móvil) corregido | delivery-publish |
 
 ## Investigación
 
@@ -84,7 +85,8 @@ No aplica según veredicto (decisiones en el PLAN).
 
 ## Review
 Quality Gate ciclo 1 (subagente aislado): **PASS** — sin hallazgos Critical/High/Medium. Evidencia: backend con PostgreSQL, suite completa 2656 OK (autor) y `modules.production`+`test_boundaries` 125 OK (revisor); `makemigrations --check` sin cambios; `ruff`/`flake8` limpios; `npm run lint` e `i18n:check` OK; Karma `production` 72 OK (autor). **No verificado:** revisión visual en navegador (UI-01..03 solo por lectura de código).
+**Revisión visual (navegador integrado, base PostgreSQL aparte con datos de prueba):** flujo completo verificado: diálogo con resumen en vivo («36 u del lote … y 6 bolsas; ingresarán 6 packs»), registro (saldo a granel 118 → 82, historial con lote, bolsas, costo «Sin costo» y usuario), validación de campo («Elige un producto») y faltante 409 («Bolsa: necesitas 10, hay 4 (faltan 6)»). Móvil 390 px: diálogo sin desborde. Defecto hallado y corregido: el historial era una tabla con scroll horizontal en móvil (el DDR pide apilada); ahora son tarjetas en pantallas estrechas, como Ingredientes (prueba Karma añadida). Tema oscuro revisado solo en móvil y forzando la clase `dark` de la plantilla; escritorio solo en tema claro.
 Hallazgos Low (no bloquean, sin REV): (1) sin prueba de EDGE-02/EDGE-03; (2) un `request_id` repetido con otros datos devuelve el empaque anterior sin avisar; (3) faltante de carrera sin unidad en el mensaje; (4) selector de productos limitado a 100; (5) `_packing` arma datos en la vista; (6) historial sin paginar.
 
 ## Publicación
-PR #143 (base `produccion`) listo para aprobación humana; no se mergea. Señalar al aprobador: toca base de datos (migración `0005_packing`). Sin ADR ni dependencias nuevas entre módulos. Revisión visual pendiente.
+PR #143 (base `produccion`) listo para aprobación humana; no se mergea. Señalar al aprobador: toca base de datos (migración `0005_packing`). Sin ADR ni dependencias nuevas entre módulos. Revisión visual hecha (ver `## Review`).

@@ -172,6 +172,20 @@ describe('OrderDetailComponent', () => {
       expect(row).toContain('Ana');
     });
 
+    it('stacks the history as cards on narrow screens', () => {  // AC-04, UI-01
+      const value = ready('82.0000');
+      value.packing = { ...value.packing!, packings: [{
+        id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6' }, bagProduct: { id: 'p-bag', name: 'Bolsa' },
+        bulkQuantity: '36.0000', bagsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-20261127-0001' },
+        costTotal: null, unitCost: null, createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' }] };
+      const root: HTMLElement = setup(value, true).nativeElement;
+      expect(root.querySelector('[data-testid="packing-table"]')).toBeNull();
+      const card = root.querySelector('[data-testid="packing-card"]')?.textContent ?? '';
+      expect(card).toContain('Pack x6');
+      expect(card).toContain('L-20261127-0001');
+      expect(card).toContain('Ana');
+    });
+
     it('has no packing section or action outside ready_to_pack', () => {  // AC-08, UI-03
       const root: HTMLElement = setup(started).nativeElement;
       expect(root.querySelector('[data-testid="packing-section"]')).toBeNull();
