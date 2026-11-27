@@ -2,12 +2,14 @@
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
 from modules.production.application.recipes import ProductCatalog
 from modules.production.domain.production_order import (
-    OrderIngredient, OrderNotFound, OrderValidationError, ProductionOrder, parse_preparations)
+    OrderIngredient, OrderNotFound, OrderStateError, OrderStatus, OrderValidationError, ProductionOrder,
+    parse_preparations)
 from modules.production.domain.recipe import Recipe
 
 
@@ -21,6 +23,37 @@ class WarehouseView:
 class WarehouseDirectory(Protocol):
     def active(self) -> list[WarehouseView]: ...
     def names(self, warehouse_ids: Iterable[UUID]) -> dict[UUID, str]: ...
+
+
+@dataclass(frozen=True)
+class Actor:
+    user_id: UUID | None
+    user_name: str
+
+
+@dataclass(frozen=True)
+class LotView:
+    id: UUID
+    code: str
+
+
+class StockGateway(Protocol):
+    """Inventario: salidas de ingredientes y entrada del granel con lote. Lanza `InsufficientIngredients`,
+    `RefrigerationRejected` u `OrderValidationError`."""
+
+    def consume(self, order: ProductionOrder, lines: list[tuple[UUID, Decimal]], when: datetime,
+                actor: Actor) -> None: ...
+
+    def enter_lot(self, order: ProductionOrder, quantity: Decimal, when: datetime, actor: Actor) -> LotView: ...
+
+
+class CostGateway(Protocol):
+    """Costeo opcional: devuelve el costo total consumido (o `None` sin costo) y registra la entrada costeada."""
+
+    def cost_consumption(self, order: ProductionOrder, lines: list[tuple[UUID, Decimal]],
+                         when: datetime) -> Decimal | None: ...
+
+    def cost_entry(self, order: ProductionOrder, quantity: Decimal, total_cost: Decimal, when: datetime) -> None: ...
 
 
 class RecipeSource(Protocol):
@@ -39,7 +72,10 @@ def _utc_now() -> datetime:
 
 class ProductionOrders:
     def __init__(self, repository: OrderRepository, recipes: RecipeSource, catalog: ProductCatalog,
-                 warehouses: WarehouseDirectory, clock: Callable[[], datetime] = _utc_now):
+                 warehouses: WarehouseDirectory, clock: Callable[[], datetime] = _utc_now,
+                 stock: StockGateway | None = None, costs: CostGateway | None = None):
+        self.stock = stock
+        self.costs = costs
         self.repository = repository
         self.recipes = recipes
         self.catalog = catalog
@@ -108,4 +144,28 @@ class ProductionOrders:
         if message and order.status == 'draft':
             raise OrderValidationError({'warehouse_id': message})
         order.start(self.clock())
+        return self.repository.save(order)
+
+    def refrigerate(self, order_id: UUID, *, entered_at: object, actual_output: object, ingredients: object,
+                    actor: Actor) -> ProductionOrder:
+        """Pasa la orden a refrigeración: consume, ingresa el lote con su costo y cambia el estado (todo o nada).
+
+        Debe correr dentro de una transacción: con la orden bloqueada, un reintento ve el estado ya cambiado.
+        """
+        order = self.get(order_id, for_update=True)
+        if order.status != OrderStatus.IN_PREPARATION:
+            raise OrderStateError('La orden no está en preparación.')
+        now = self.clock()
+        entered, output, consumption = order.validate_refrigeration(
+            entered_at=entered_at, actual_output=actual_output, ingredients=ingredients, now=now)
+        lines = [(line.product_id, consumption[line.product_id]) for line in order.ingredients
+                 if consumption[line.product_id] > 0]
+        if lines:
+            self.stock.consume(order, lines, entered, actor)
+        total = self.costs.cost_consumption(order, lines, entered) if lines and self.costs else None
+        lot = self.stock.enter_lot(order, output, entered, actor)
+        if total is not None:
+            self.costs.cost_entry(order, output, total, entered)
+        order.refrigerate(now=now, entered_at=entered, actual_output=output, consumption=consumption,
+                          lot_id=lot.id, lot_code=lot.code, cost_total=total)
         return self.repository.save(order)

@@ -15,6 +15,9 @@
       <button type="button" class="btn btn-primary" [disabled]="starting" (click)="start()" data-testid="start">{{ 'PRODUCTION.ORDERS.START' | translate }}</button>
       <a class="btn btn-warning" [routerLink]="['/pocketbiz/production/orders', order.id, 'edit']" data-testid="edit">{{ 'COMMON.EDITAR' | translate }}</a>
       }
+      @if (order.status === 'in_preparation') {
+      <a class="btn btn-primary" [routerLink]="['/pocketbiz/production/orders', order.id, 'refrigerate']" data-testid="refrigerate">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTION' | translate }}</a>
+      }
       <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
     </div>
     @if (success) { <div role="status" class="alert alert-success mx-4" data-testid="success">{{ success }}</div> }
@@ -30,6 +33,7 @@
       <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt><dd>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
       <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt><dd data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
     </dl>
+    @if (order.status === 'refrigerating') { <ng-container *ngTemplateOutlet="registered" /> }
     <h5 class="mx-3">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
     <ul class="list-unstyled ingredient-cards" data-testid="ingredient-cards">
       @for (line of order.ingredients; track line.productId) {
@@ -38,11 +42,15 @@
           <div class="order-row"><dt>{{ 'COMMON.PRODUCTO' | translate }}</dt><dd>{{ line.productName }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</dt><dd>{{ quantity(line.quantityPerPreparation) }} {{ line.unitAbbreviation || '—' }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</dt><dd>{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</dd></div>
+          @if (line.actualQuantity !== null) {
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</dt><dd data-testid="actual-quantity">{{ quantity(line.actualQuantity) }} {{ line.unitAbbreviation || '—' }}</dd></div>
+          }
         </dl>
       </li>
       }
     </ul>
     } @else {
+      @if (order.status === 'refrigerating') { <ng-container *ngTemplateOutlet="registered" /> }
       <dl class="row m-4">
         <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
         <dd class="col-sm-9"><span class="badge-outline" [class]="statusClass">{{ statusKey | translate }}</span></dd>
@@ -68,6 +76,7 @@
             <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</th>
+            @if (order.status === 'refrigerating') { <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</th> }
           </tr></thead>
           <tbody>
             @for (line of order.ingredients; track line.productId) {
@@ -75,6 +84,7 @@
               <td>{{ line.productName }}</td>
               <td class="text-end">{{ quantity(line.quantityPerPreparation) }} {{ line.unitAbbreviation || '—' }}</td>
               <td class="text-end">{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</td>
+              @if (line.actualQuantity !== null) { <td class="text-end" data-testid="actual-quantity">{{ quantity(line.actualQuantity) }} {{ line.unitAbbreviation || '—' }}</td> }
             </tr>
             }
           </tbody>
@@ -84,3 +94,21 @@
     }
   </div></div>
 </section>
+
+<ng-template #registered>
+  @if (order) {
+  <section class="m-4" data-testid="registered" aria-labelledby="registered-title">
+    <h5 id="registered-title">{{ 'PRODUCTION.ORDERS.REFRIGERATE.REGISTERED' | translate }}</h5>
+    <dl class="row">
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_OUTPUT' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="actual-output">{{ quantity(order.actualOutput ?? '0') }} {{ order.resultProduct.unit?.abbreviation }} <span class="text-muted">({{ 'PRODUCTION.ORDERS.REFRIGERATE.EXPECTED' | translate }}: {{ quantity(order.expectedOutput) }})</span></dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ENTERED_AT' | translate }}</dt>
+      <dd class="col-sm-9">{{ order.enteredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.LOT' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="lot-code">{{ order.lot?.code }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.REFRIGERATE.COST' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</dd>
+    </dl>
+  </section>
+  }
+</ng-template>

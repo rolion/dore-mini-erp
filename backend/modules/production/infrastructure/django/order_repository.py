@@ -15,9 +15,12 @@ def to_entity(model: ProductionOrderModel) -> ProductionOrder:
         result_unit_abbreviation=model.result_unit_abbreviation,
         yield_per_preparation=model.yield_per_preparation, warehouse_id=model.warehouse_id,
         preparations=model.preparations, started_at=model.started_at, created_at=model.created_at,
-        updated_at=model.updated_at,
+        updated_at=model.updated_at, actual_output=model.actual_output, entered_at=model.entered_at,
+        refrigerated_at=model.refrigerated_at, lot_id=model.lot_id, lot_code=model.lot_code,
+        cost_total=model.cost_total,
         ingredients=[OrderIngredient(line.product_id, line.product_name, line.unit_id, line.unit_abbreviation,
-                                     line.quantity_per_preparation) for line in model.ingredients.all()])
+                                     line.quantity_per_preparation, line.actual_quantity)
+                     for line in model.ingredients.all()])
 
 
 class OrderList:
@@ -73,6 +76,12 @@ class DjangoProductionOrderRepository:
             model.preparations = order.preparations
             model.status = order.status
             model.started_at = order.started_at
+            model.actual_output = order.actual_output
+            model.entered_at = order.entered_at
+            model.refrigerated_at = order.refrigerated_at
+            model.lot_id = order.lot_id
+            model.lot_code = order.lot_code
+            model.cost_total = order.cost_total
             model.save()
             if created:
                 ProductionOrderIngredientModel.objects.bulk_create([
@@ -81,6 +90,13 @@ class DjangoProductionOrderRepository:
                         unit_id=line.unit_id, unit_abbreviation=line.unit_abbreviation,
                         quantity_per_preparation=line.quantity_per_preparation, position=position)
                     for position, line in enumerate(order.ingredients)])
+            else:
+                for line in model.ingredients.all():
+                    actual = next((i.actual_quantity for i in order.ingredients if i.product_id == line.product_id),
+                                  None)
+                    if line.actual_quantity != actual:
+                        line.actual_quantity = actual
+                        line.save(update_fields=['actual_quantity'])
         return to_entity(self._orders().get(pk=order.id))
 
     def list(self, *, status: str = 'all') -> OrderList:

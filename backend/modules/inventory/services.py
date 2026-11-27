@@ -164,8 +164,8 @@ class SourceMovement:
 
 
 def record_outputs(company_id: UUID, *, warehouse_id: UUID, lines: list[tuple[UUID, Decimal]], source_type: str,
-                   source_id: str, user_id: UUID | None, user_name: str,
-                   reference: str = '') -> list[tuple[MovementRecord, bool]]:
+                   source_id: str, user_id: UUID | None, user_name: str, reference: str = '',
+                   occurred_at: datetime | None = None) -> list[tuple[MovementRecord, bool]]:
     """Registra las salidas de un documento en un almacén: todas o ninguna (una sola sección crítica).
 
     Cada línea es `(producto, cantidad)`; su identidad de origen es `(source_type, source_id, <producto>)`.
@@ -178,7 +178,8 @@ def record_outputs(company_id: UUID, *, warehouse_id: UUID, lines: list[tuple[UU
     results = use_case.execute(
         warehouse_id=warehouse_id, lines=[OutputLine(product_id, quantity, str(product_id))
                                           for product_id, quantity in lines],
-        source_type=source_type, source_id=source_id, user_id=user_id, user_name=user_name, reference=reference)
+        source_type=source_type, source_id=source_id, user_id=user_id, user_name=user_name, reference=reference,
+        occurred_at=occurred_at)
     return [(_record(movement), created) for movement, created in results]
 
 

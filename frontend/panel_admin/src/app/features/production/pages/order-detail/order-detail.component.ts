@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 import { tr } from '../../../../core/i18n/translate';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { OrderApiError, ProductionOrder, formatOrderNumber } from '../../models/order';
 import { formatQuantity } from '../../models/recipe';
 import { OrdersApiService } from '../../services/orders-api.service';
@@ -16,7 +17,7 @@ export const COMPACT_QUERY = '(max-width: 956.98px)';
 
 @Component({
   selector: 'app-order-detail',
-  imports: [TranslatePipe, RouterLink, DatePipe],
+  imports: [TranslatePipe, RouterLink, DatePipe, NgTemplateOutlet, MoneyPipe],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.scss',
 })
@@ -52,10 +53,15 @@ export class OrderDetailComponent implements OnInit {
   }
 
   get statusKey(): string {
-    return this.order?.status === 'draft' ? 'PRODUCTION.ORDERS.STATUS.DRAFT' : 'PRODUCTION.ORDERS.STATUS.IN_PREPARATION';
+    const status = this.order?.status;
+    return status === 'draft' ? 'PRODUCTION.ORDERS.STATUS.DRAFT'
+      : status === 'refrigerating' ? 'PRODUCTION.ORDERS.STATUS.REFRIGERATING' : 'PRODUCTION.ORDERS.STATUS.IN_PREPARATION';
   }
 
-  get statusClass(): string { return this.order?.status === 'draft' ? 'col-blue' : 'col-orange'; }
+  get statusClass(): string {
+    const status = this.order?.status;
+    return status === 'draft' ? 'col-blue' : status === 'refrigerating' ? 'col-green' : 'col-orange';
+  }
 
   async start(): Promise<void> {
     const order = this.order;

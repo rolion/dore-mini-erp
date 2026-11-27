@@ -3,15 +3,16 @@ from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from modules.production.application.orders import ProductionOrders
+from modules.production.application.orders import Actor, ProductionOrders
 from modules.production.domain.production_order import (
-    OrderNotFound, OrderStateError, OrderStatus, OrderValidationError)
-from modules.production.infrastructure.adapters import CatalogProducts, InventoryWarehouses
+    InsufficientIngredients, OrderNotFound, OrderStateError, OrderStatus, OrderValidationError, RefrigerationRejected)
+from modules.production.infrastructure.adapters import (
+    CatalogProducts, CostingGateway, InventoryStock, InventoryWarehouses)
 from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
 from modules.production.infrastructure.django.repositories import DjangoRecipeRepository
 from shared.tenancy import company_id_from
 
-from .order_serializers import OrderCreateSerializer, OrderUpdateSerializer
+from .order_serializers import OrderCreateSerializer, OrderRefrigerateSerializer, OrderUpdateSerializer
 from .views import RecipePagination
 
 
@@ -21,6 +22,26 @@ class OrderStateConflict(APIException):
     default_code = 'order_state'
 
 
+class InsufficientIngredientsConflict(APIException):
+    """409 `insufficient_stock` con todas las líneas faltantes."""
+
+    status_code = 409
+
+    def __init__(self, exc: InsufficientIngredients):
+        super().__init__({
+            'detail': str(exc), 'code': 'insufficient_stock',
+            'shortages': [{'product_id': str(s.product_id), 'product_name': s.product_name,
+                           'unit_abbreviation': s.unit_abbreviation, 'requested': _qty(s.requested),
+                           'available': _qty(s.available), 'missing': _qty(s.missing)} for s in exc.shortages]})
+
+
+class RefrigerationConflict(APIException):
+    status_code = 409
+
+    def __init__(self, exc: RefrigerationRejected):
+        super().__init__({'detail': str(exc), 'code': exc.code})
+
+
 def _qty(value) -> str:
     return f'{value:.4f}'
 
@@ -28,7 +49,8 @@ def _qty(value) -> str:
 def _orders(request) -> ProductionOrders:
     company_id = company_id_from(request)
     return ProductionOrders(DjangoProductionOrderRepository(company_id), DjangoRecipeRepository(company_id),
-                            CatalogProducts(company_id), InventoryWarehouses(company_id))
+                            CatalogProducts(company_id), InventoryWarehouses(company_id),
+                            stock=InventoryStock(company_id), costs=CostingGateway(company_id))
 
 
 def _serialize(request, orders: list) -> list[dict]:
@@ -50,9 +72,15 @@ def _serialize(request, orders: list) -> list[dict]:
             'unit_abbreviation': line.unit_abbreviation,
             'quantity_per_preparation': _qty(line.quantity_per_preparation),
             'expected_quantity': _qty(order.expected_quantity(line)),
+            'actual_quantity': _qty(line.actual_quantity) if line.actual_quantity is not None else None,
         } for line in order.ingredients],
         'created_at': order.created_at,
         'started_at': order.started_at,
+        'actual_output': _qty(order.actual_output) if order.actual_output is not None else None,
+        'entered_at': order.entered_at,
+        'refrigerated_at': order.refrigerated_at,
+        'lot': {'id': order.lot_id, 'code': order.lot_code} if order.lot_id else None,
+        'cost_total': f'{order.cost_total:.2f}' if order.cost_total is not None else None,
     } for order in orders]
 
 
@@ -67,6 +95,10 @@ def _run(request, callback, **values):
         raise ValidationError(exc.errors) from exc
     except OrderStateError as exc:
         raise OrderStateConflict(str(exc)) from exc
+    except InsufficientIngredients as exc:
+        raise InsufficientIngredientsConflict(exc) from exc
+    except RefrigerationRejected as exc:
+        raise RefrigerationConflict(exc) from exc
 
 
 def _values(serializer_class, request) -> dict:
@@ -82,7 +114,7 @@ class OrderListCreateView(APIView):
     def get(self, request):
         status = request.query_params.get('status', 'all')
         if status != 'all' and status not in OrderStatus.ALL:
-            raise ValidationError({'status': ['Usa all, draft o in_preparation.']})
+            raise ValidationError({'status': ['Usa all, draft, in_preparation o refrigerating.']})
         orders = _orders(request).repository.list(status=status)
         paginator = RecipePagination()
         page = paginator.paginate_queryset(orders, request, view=self)
@@ -110,6 +142,20 @@ class OrderStartView(APIView):
 
     def post(self, request, order_id):
         return Response(_run(request, _orders(request).start, order_id=order_id))
+
+
+class OrderRefrigerateView(APIView):
+    required_modules = ('production',)
+
+    def post(self, request, order_id):
+        serializer = OrderRefrigerateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        user = request.user
+        actor = Actor(user.pk, user.get_full_name().strip() or user.get_username())
+        return Response(_run(request, _orders(request).refrigerate, order_id=order_id,
+                             entered_at=data['entered_at'], actual_output=data.get('actual_output'),
+                             ingredients=[dict(item) for item in data['ingredients']], actor=actor))
 
 
 class OrderWarehousesView(APIView):

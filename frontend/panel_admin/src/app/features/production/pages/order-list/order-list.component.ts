@@ -77,9 +77,10 @@ export class OrderListComponent implements OnInit {
     this.applyFilters();
   }
 
-  statusClass(status: OrderStatus): string { return status === 'draft' ? 'col-blue' : 'col-orange'; }
+  statusClass(status: OrderStatus): string { return status === 'draft' ? 'col-blue' : status === 'in_preparation' ? 'col-orange' : 'col-green'; }
 
   statusKey(status: OrderStatus): string {
-    return status === 'draft' ? 'PRODUCTION.ORDERS.STATUS.DRAFT' : 'PRODUCTION.ORDERS.STATUS.IN_PREPARATION';
+    return status === 'draft' ? 'PRODUCTION.ORDERS.STATUS.DRAFT'
+      : status === 'in_preparation' ? 'PRODUCTION.ORDERS.STATUS.IN_PREPARATION' : 'PRODUCTION.ORDERS.STATUS.REFRIGERATING';
   }
 }

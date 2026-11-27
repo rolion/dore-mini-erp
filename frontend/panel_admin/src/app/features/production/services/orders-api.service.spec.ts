@@ -9,8 +9,8 @@ export const orderDto: ProductionOrderDto = {
   id: 'order-1', number: 7, status: 'draft', recipe: { id: 'r-1', name: 'Cuñapé' },
   result_product: { id: 'p-res', name: 'Cuñapé a granel', unit: { id: 'u-1', abbreviation: 'u' } },
   warehouse: { id: 'w-1', name: 'Principal' }, preparations: 5, yield_per_preparation: '24.0000', expected_output: '120.0000',
-  ingredients: [{ product_id: 'p-1', product_name: 'Queso', unit_id: 'u-2', unit_abbreviation: 'kg', quantity_per_preparation: '1.5000', expected_quantity: '7.5000' }],
-  created_at: '2026-11-26T12:00:00Z', started_at: null,
+  ingredients: [{ product_id: 'p-1', product_name: 'Queso', unit_id: 'u-2', unit_abbreviation: 'kg', quantity_per_preparation: '1.5000', expected_quantity: '7.5000', actual_quantity: null }],
+  created_at: '2026-11-26T12:00:00Z', started_at: null, actual_output: null, entered_at: null, lot: null, cost_total: null,
 };
 
 describe('order helpers', () => {
@@ -77,6 +77,31 @@ describe('OrdersApiService', () => {
     http.expectOne('/api/production-orders/warehouses/').flush([{ id: 'w-1', name: 'Principal', is_default: true }]);
   });
 
+  it('refrigerates with the real consumption and maps shortages from a 409', () => {
+    const input = { enteredAt: '2026-11-26T15:00:00.000Z', actualOutput: '118', ingredients: [{ productId: 'p-1', actualQuantity: '7' }] };
+    api.refrigerate('order-1', input).subscribe(order => {
+      expect(order.status).toBe('refrigerating');
+      expect(order.lot?.code).toBe('L-20261126-0001');
+      expect(order.ingredients[0].actualQuantity).toBe('7.0000');
+      expect(order.actualOutput).toBe('118.0000');
+    });
+    const ok = http.expectOne('/api/production-orders/order-1/refrigerate/');
+    expect(ok.request.method).toBe('POST');
+    expect(ok.request.body).toEqual({ entered_at: input.enteredAt, actual_output: '118', ingredients: [{ product_id: 'p-1', actual_quantity: '7' }] });
+    ok.flush({
+      ...orderDto, status: 'refrigerating', actual_output: '118.0000', entered_at: input.enteredAt, lot: { id: 'lot-1', code: 'L-20261126-0001' },
+      cost_total: null, ingredients: [{ ...orderDto.ingredients[0], actual_quantity: '7.0000' }],
+    });
+    let caught: OrderApiError | undefined;
+    api.refrigerate('order-1', input).subscribe({ error: (error: OrderApiError) => caught = error });
+    http.expectOne('/api/production-orders/order-1/refrigerate/').flush(
+      { detail: 'x', code: 'insufficient_stock', shortages: [{ product_id: 'p-1', product_name: 'Queso', unit_abbreviation: 'kg', requested: '7.0000', available: '5.0000', missing: '2.0000' }] },
+      { status: 409, statusText: 'Conflict' });
+    expect(caught?.status).toBe(409);
+    expect(caught?.fields.code).toBe('insufficient_stock');
+    expect(caught?.shortages).toEqual([{ productId: 'p-1', productName: 'Queso', unitAbbreviation: 'kg', requested: '7.0000', available: '5.0000', missing: '2.0000' }]);
+  });
+
   it('maps server validation errors by field', () => {
     let failure: OrderApiError | undefined;
     api.create({ recipeId: 'x', warehouseId: 'y', preparations: 0 }).subscribe({ error: (error: OrderApiError) => failure = error });
@@ -86,6 +111,16 @@ describe('OrdersApiService', () => {
     expect(failure?.status).toBe(400);
     expect(failure?.fields).toEqual(jasmine.objectContaining({
       recipeId: 'Receta no válida.', warehouseId: 'Almacén no válido.', preparations: 'Debe ser mayor que cero.' }));
+  });
+
+  it('keeps per-line ingredient errors aligned with the rows', () => {
+    let failure: OrderApiError | undefined;
+    api.refrigerate('order-1', { enteredAt: '2026-11-26T15:00:00.000Z', actualOutput: '118', ingredients: [] })
+      .subscribe({ error: (error: OrderApiError) => failure = error });
+    http.expectOne('/api/production-orders/order-1/refrigerate/').flush(
+      { ingredients: [{}, { actual_quantity: ['El ingrediente no controla stock.'] }] }, { status: 400, statusText: 'Bad Request' });
+    expect(failure?.fields.ingredientLines).toEqual([undefined, 'El ingrediente no controla stock.']);
+    expect(failure?.fields.ingredients).toBeUndefined();
   });
 
   it('reports a conflict on a repeated start with the server detail', () => {

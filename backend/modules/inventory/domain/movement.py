@@ -148,6 +148,8 @@ _BLOCKED_SOURCES = {
                     'Las salidas por venta requieren una devolución, que aún no está disponible.'),
     'purchase_receipt': ('reverse_from_origin',
                          'Este movimiento proviene de una recepción: corrígelo desde la recepción en Compras.'),
+    'production_order': ('reverse_from_origin',
+                         'Este movimiento proviene de una orden de producción: no se revierte desde Inventario.'),
 }
 
 

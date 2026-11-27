@@ -1,7 +1,7 @@
 """Agregado Orden de producción (sin Django): copia de la receta, preparaciones previstas y estado."""
 from dataclasses import dataclass, field
-from datetime import datetime
-from decimal import Decimal
+from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 
 PREPARATIONS_MAX = 99999
@@ -11,7 +11,8 @@ _STEP = Decimal('0.0001')
 class OrderStatus:
     DRAFT = 'draft'
     IN_PREPARATION = 'in_preparation'
-    ALL = (DRAFT, IN_PREPARATION)
+    REFRIGERATING = 'refrigerating'
+    ALL = (DRAFT, IN_PREPARATION, REFRIGERATING)
 
 
 class OrderValidationError(Exception):
@@ -28,6 +29,35 @@ class OrderNotFound(Exception):
 
 class OrderStateError(Exception):
     """La orden no está en el estado que exige la operación."""
+
+
+@dataclass(frozen=True)
+class IngredientShortage:
+    product_id: UUID
+    product_name: str
+    unit_abbreviation: str | None
+    requested: Decimal
+    available: Decimal
+
+    @property
+    def missing(self) -> Decimal:
+        return (self.requested - self.available).quantize(_STEP)
+
+
+class InsufficientIngredients(Exception):
+    """Faltan existencias de uno o más ingredientes; `shortages` los lista todos."""
+
+    def __init__(self, shortages: list[IngredientShortage]):
+        self.shortages = shortages
+        super().__init__('No hay existencias suficientes de los ingredientes.')
+
+
+class RefrigerationRejected(Exception):
+    """Inventario no puede registrar el lote (p. ej. sin período fiscal abierto); `code` y `message` accionables."""
+
+    def __init__(self, code: str, message: str):
+        self.code = code
+        super().__init__(message)
 
 
 def parse_preparations(raw: object) -> int:
@@ -50,6 +80,29 @@ def parse_preparations(raw: object) -> int:
     return value
 
 
+QUANTITY_MAX = Decimal('999999999999.9999')
+CLOCK_TOLERANCE = timedelta(minutes=5)
+
+
+def parse_quantity(raw: object, *, allow_zero: bool) -> Decimal:
+    """Decimal finito de a lo sumo 4 decimales; rechaza `bool`, texto, negativos y (si no se admite) cero."""
+    if isinstance(raw, bool) or not isinstance(raw, (int, str, Decimal)):
+        raise ValueError('La cantidad debe ser un número.')
+    try:
+        value = Decimal(str(raw).strip())
+    except InvalidOperation:
+        raise ValueError('La cantidad debe ser un número.') from None
+    if not value.is_finite():
+        raise ValueError('La cantidad debe ser un número.')
+    if value.as_tuple().exponent < -4:
+        raise ValueError('Usa como máximo 4 decimales.')
+    if value < 0 or (value == 0 and not allow_zero):
+        raise ValueError('La cantidad no puede ser negativa.' if allow_zero else 'La cantidad debe ser mayor que cero.')
+    if value > QUANTITY_MAX:
+        raise ValueError('La cantidad es demasiado grande.')
+    return value.quantize(_STEP)
+
+
 @dataclass(frozen=True)
 class OrderIngredient:
     product_id: UUID
@@ -57,6 +110,7 @@ class OrderIngredient:
     unit_id: UUID | None
     unit_abbreviation: str | None
     quantity_per_preparation: Decimal
+    actual_quantity: Decimal | None = None  # consumo real; solo existe tras pasar a refrigeración
 
 
 @dataclass
@@ -77,6 +131,13 @@ class ProductionOrder:
     started_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    # Registro de producción (solo en REFRIGERATING).
+    actual_output: Decimal | None = None
+    entered_at: datetime | None = None
+    refrigerated_at: datetime | None = None
+    lot_id: UUID | None = None
+    lot_code: str = ''
+    cost_total: Decimal | None = None
 
     @classmethod
     def create(cls, *, recipe_id, recipe_name, result_product_id, result_product_name, result_unit_id,
@@ -112,3 +173,62 @@ class ProductionOrder:
             raise OrderStateError('La orden ya fue iniciada.')
         self.status = OrderStatus.IN_PREPARATION
         self.started_at = now
+
+    def validate_refrigeration(self, *, entered_at: object, actual_output: object, ingredients: object,
+                               now: datetime) -> tuple[datetime, Decimal, dict[UUID, Decimal]]:
+        """Normaliza y valida lo capturado (INV-02, INV-03); devuelve `(ingreso, elaborada, consumo por producto)`."""
+        errors: dict = {}
+        output = None
+        try:
+            output = parse_quantity(actual_output, allow_zero=False)
+        except ValueError as exc:
+            errors['actual_output'] = [str(exc)]
+        if not isinstance(entered_at, datetime):
+            errors['entered_at'] = ['La fecha y hora de ingreso es obligatoria.']
+        elif entered_at.tzinfo is None:
+            errors['entered_at'] = ['La fecha y hora de ingreso debe incluir zona horaria.']
+        elif self.started_at is not None and entered_at < self.started_at:
+            errors['entered_at'] = ['El ingreso no puede ser anterior al inicio de la preparación.']
+        elif entered_at > now + CLOCK_TOLERANCE:
+            errors['entered_at'] = ['El ingreso no puede estar en el futuro.']
+        consumption: dict[UUID, Decimal] = {}
+        expected = {line.product_id for line in self.ingredients}
+        if not isinstance(ingredients, list):
+            errors['ingredients'] = ['Indica el consumo real de cada ingrediente.']
+        else:
+            line_errors = []
+            for item in ingredients:
+                product_id = item.get('product_id') if isinstance(item, dict) else None
+                try:
+                    quantity = parse_quantity(item.get('actual_quantity') if isinstance(item, dict) else None,
+                                              allow_zero=True)
+                    if product_id not in expected or product_id in consumption:
+                        raise ValueError('Ingrediente no válido para esta orden.')
+                    consumption[product_id] = quantity
+                    line_errors.append({})
+                except ValueError as exc:
+                    line_errors.append({'actual_quantity': [str(exc)]})
+            if any(line_errors):
+                errors['ingredients'] = line_errors
+            elif set(consumption) != expected:
+                errors['ingredients'] = ['Indica el consumo real de cada ingrediente.']
+        if errors:
+            raise OrderValidationError(errors)
+        return entered_at, output, consumption
+
+    def refrigerate(self, *, now: datetime, entered_at: datetime, actual_output: Decimal,
+                    consumption: dict[UUID, Decimal], lot_id: UUID, lot_code: str,
+                    cost_total: Decimal | None) -> None:
+        """`IN_PREPARATION → REFRIGERATING` con lo realmente consumido y elaborado."""
+        if self.status != OrderStatus.IN_PREPARATION:
+            raise OrderStateError('La orden no está en preparación.')
+        self.status = OrderStatus.REFRIGERATING
+        self.actual_output = actual_output
+        self.entered_at = entered_at
+        self.refrigerated_at = now
+        self.lot_id = lot_id
+        self.lot_code = lot_code
+        self.cost_total = cost_total
+        self.ingredients = [OrderIngredient(line.product_id, line.product_name, line.unit_id, line.unit_abbreviation,
+                                            line.quantity_per_preparation, consumption[line.product_id])
+                            for line in self.ingredients]

@@ -1,7 +1,7 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 import { provideTestTranslations } from '../../../core/i18n/testing';
 import { Page } from '../../../shared/models/page';
@@ -11,14 +11,15 @@ import { OrderFiltersState, OrdersApiService } from '../services/orders-api.serv
 import { RecipesApiService } from '../services/recipes-api.service';
 import { OrderDetailComponent } from './order-detail/order-detail.component';
 import { OrderFormComponent } from './order-form/order-form.component';
+import { OrderRefrigerateComponent } from './order-refrigerate/order-refrigerate.component';
 import { OrderListComponent } from './order-list/order-list.component';
 
 const order: ProductionOrder = {
   id: 'order-1', number: 7, status: 'draft', recipe: { id: 'r-1', name: 'Cuñapé' },
   resultProduct: { id: 'p-res', name: 'Cuñapé a granel', unit: { id: 'u-1', abbreviation: 'u' } },
   warehouse: { id: 'w-1', name: 'Principal' }, preparations: 5, yieldPerPreparation: '24.0000', expectedOutput: '120.0000',
-  ingredients: [{ productId: 'p-1', productName: 'Queso', unitId: 'u-2', unitAbbreviation: 'kg', quantityPerPreparation: '1.5000', expectedQuantity: '7.5000' }],
-  createdAt: '2026-11-26T12:00:00Z', startedAt: null,
+  ingredients: [{ productId: 'p-1', productName: 'Queso', unitId: 'u-2', unitAbbreviation: 'kg', quantityPerPreparation: '1.5000', expectedQuantity: '7.5000', actualQuantity: null }],
+  createdAt: '2026-11-26T12:00:00Z', startedAt: null, actualOutput: null, enteredAt: null, lot: null, costTotal: null,
 };
 const started: ProductionOrder = { ...order, status: 'in_preparation', startedAt: '2026-11-26T13:00:00Z' };
 
@@ -112,6 +113,38 @@ describe('OrderDetailComponent', () => {
     expect(root.querySelector('[data-testid="start"]')).toBeNull();
     expect(root.querySelector('[data-testid="edit"]')).toBeNull();
     expect(root.querySelector('[data-testid="started-at"]')?.textContent).not.toContain('—');
+  });
+
+  it('offers Pass to refrigeration only while in preparation', () => {
+    const preparing = setup(started).nativeElement as HTMLElement;
+    expect(preparing.querySelector('[data-testid="refrigerate"]')).not.toBeNull();
+    expect(preparing.querySelector('[data-testid="registered"]')).toBeNull();
+  });
+
+  it('shows the recorded production, lot and actual consumption once refrigerating', () => {
+    const done: ProductionOrder = {
+      ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
+      lot: { id: 'lot-1', code: 'L-20261126-0001' }, costTotal: null,
+      ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
+    };
+    TestBed.resetTestingModule();
+    const root = setup(done).nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="refrigerate"]')).toBeNull();
+    expect(root.querySelector('[data-testid="actual-output"]')?.textContent).toContain('118');
+    expect(root.querySelector('[data-testid="lot-code"]')?.textContent).toContain('L-20261126-0001');
+    expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('Sin costo');
+    expect(root.querySelector('[data-testid="actual-quantity"]')?.textContent).toContain('7 kg');
+  });
+
+  it('formats the total cost as money when there is one', () => {  // REV-03
+    const costed: ProductionOrder = {
+      ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
+      lot: { id: 'lot-1', code: 'L-20261126-0001' }, costTotal: '95.00',
+      ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
+    };
+    TestBed.resetTestingModule();
+    const root = setup(costed).nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('Bs 95.00');
   });
 
   it('below 957 px shows label|value rows and ingredient cards', () => {
@@ -286,5 +319,100 @@ describe('OrderFormComponent', () => {
     const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
     fixture.componentInstance.ngOnInit();
     expect(navigate).toHaveBeenCalledWith(['/pocketbiz/production/orders', 'order-1']);
+  });
+});
+
+
+describe('OrderRefrigerateComponent', () => {
+  let api: jasmine.SpyObj<OrdersApiService>;
+  let router: Router;
+  function setup(value: ProductionOrder = started) {
+    api = jasmine.createSpyObj<OrdersApiService>('api', ['get', 'refrigerate']);
+    api.get.and.returnValue(of(value));
+    TestBed.configureTestingModule({ imports: [OrderRefrigerateComponent], providers: [...provideTestTranslations(), provideRouter([]),
+      { provide: OrdersApiService, useValue: api },
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'order-1' }) } } }] });
+    router = TestBed.inject(Router);
+    spyOn(router, 'navigate').and.resolveTo(true);
+    const fixture = TestBed.createComponent(OrderRefrigerateComponent);
+    fixture.detectChanges();
+    return fixture;
+  }
+  const inputs = (root: HTMLElement) => ({
+    output: root.querySelector<HTMLInputElement>('[data-testid="actual-output"]') as HTMLInputElement,
+    line: root.querySelector<HTMLInputElement>('[data-testid="line-input"]') as HTMLInputElement,
+    submit: root.querySelector<HTMLButtonElement>('[data-testid="submit"]') as HTMLButtonElement,
+  });
+  const type = (input: HTMLInputElement, value: string) => { input.value = value; input.dispatchEvent(new Event('input')); };
+
+  it('proposes the planned quantities and lets the operator correct them', () => {  // AC-01, AC-11
+    const fixture = setup();
+    const root = fixture.nativeElement as HTMLElement;
+    const { output, line } = inputs(root);
+    expect(output.value).toBe('120');
+    expect(line.value).toBe('7.5');
+    type(output, '118');
+    type(line, '7');
+    api.refrigerate.and.returnValue(of({ ...started, status: 'refrigerating' }));
+    fixture.componentInstance.submit();
+    expect(api.refrigerate).toHaveBeenCalledWith('order-1', jasmine.objectContaining({
+      actualOutput: '118', ingredients: [{ productId: 'p-1', actualQuantity: '7' }] }));
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/production/orders', 'order-1']);
+  });
+
+  it('does not submit invalid quantities', () => {  // AC-06
+    const fixture = setup();
+    const root = fixture.nativeElement as HTMLElement;
+    const { output, line } = inputs(root);
+    type(output, '0');
+    type(line, '-1');
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(api.refrigerate).not.toHaveBeenCalled();
+    expect(root.querySelector('[data-testid="output-error"]')).not.toBeNull();
+    expect(root.querySelector('[data-testid="line-error"]')).not.toBeNull();
+  });
+
+  it('ignores a second submit while the first is in flight', () => {  // AC-04
+    const fixture = setup();
+    api.refrigerate.and.returnValue(new Subject<ProductionOrder>());
+    fixture.componentInstance.submit();
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(api.refrigerate).toHaveBeenCalledTimes(1);
+    expect(inputs(fixture.nativeElement as HTMLElement).submit.disabled).toBeTrue();
+  });
+
+  it('shows the shortage on the affected row and keeps what was typed', () => {  // AC-03
+    const fixture = setup();
+    const root = fixture.nativeElement as HTMLElement;
+    type(inputs(root).line, '9');
+    api.refrigerate.and.returnValue(throwError(() => new OrderApiError('x', 409, { code: 'insufficient_stock' }, false, [
+      { productId: 'p-1', productName: 'Queso', unitAbbreviation: 'kg', requested: '9.0000', available: '5.0000', missing: '4.0000' }])));
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(root.querySelector('[data-testid="form-error"]')?.textContent).toContain('No hay existencias suficientes');
+    expect(root.querySelector('[data-testid="shortage"]')?.textContent).toContain('Falta 4 kg (hay 5)');
+    expect(inputs(root).line.value).toBe('9');
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.saving).toBeFalse();
+  });
+
+  it('marks the row the server flagged and keeps what was typed', () => {  // REV-03
+    const fixture = setup();
+    const root = fixture.nativeElement as HTMLElement;
+    type(inputs(root).line, '9.5');
+    api.refrigerate.and.returnValue(throwError(() => new OrderApiError('x', 400, {
+      ingredientLines: ['Este ingrediente solo admite cantidades enteras.'] })));
+    fixture.componentInstance.submit();
+    fixture.detectChanges();
+    expect(root.querySelector('[data-testid="line-server-error"]')?.textContent).toContain('solo admite cantidades enteras');
+    expect(root.querySelector('.short-row')).not.toBeNull();
+    expect(inputs(root).line.value).toBe('9.5');
+  });
+
+  it('leaves for the detail when the order is not in preparation', () => {
+    setup(order);
+    expect(router.navigate).toHaveBeenCalledWith(['/pocketbiz/production/orders', 'order-1']);
   });
 });

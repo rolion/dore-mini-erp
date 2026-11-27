@@ -3569,7 +3569,8 @@
       "PAGES": "Order pages",
       "STATUS": {
         "DRAFT": "Draft",
-        "IN_PREPARATION": "In preparation"
+        "IN_PREPARATION": "In preparation",
+        "REFRIGERATING": "In refrigeration"
       },
       "ERRORS": {
         "NETWORK": "Could not connect to the server.",
@@ -3578,6 +3579,24 @@
         "NOT_FOUND": "Order not found.",
         "CONFLICT": "The order is not in a state that allows this operation.",
         "GENERIC": "The operation could not be completed."
+      },
+      "REFRIGERATE": {
+        "ACTION": "Move to refrigeration",
+        "TITLE": "Move to refrigeration",
+        "HELP": "Correct the actual consumption if it differed from the planned amount. It will be deducted from the order's warehouse.",
+        "ACTUAL_OUTPUT": "Quantity produced",
+        "ACTUAL_CONSUMPTION": "Actual consumption",
+        "ENTERED_AT": "Entry date and time",
+        "OUTPUT_INVALID": "Enter a quantity greater than zero (up to 4 decimals).",
+        "QUANTITY_INVALID": "Enter a valid quantity (0 or more, up to 4 decimals).",
+        "ENTERED_REQUIRED": "Enter the entry date and time.",
+        "SHORTAGE_ALERT": "Not enough stock. The order stays in preparation.",
+        "MISSING": "Short by {{missing}} {{unit}} ({{available}} available).",
+        "REGISTERED": "Recorded production",
+        "EXPECTED": "planned",
+        "LOT": "Lot",
+        "COST": "Total cost consumed",
+        "NO_COST": "No cost"
       }
     }
   }

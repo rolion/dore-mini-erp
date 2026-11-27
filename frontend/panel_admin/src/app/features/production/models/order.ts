@@ -1,6 +1,6 @@
 import { formatQuantity } from './recipe';
 
-export type OrderStatus = 'draft' | 'in_preparation';
+export type OrderStatus = 'draft' | 'in_preparation' | 'refrigerating';
 export type OrderStatusFilter = 'all' | OrderStatus;
 
 /** Tope de preparaciones que acepta el servidor (EDGE-02). */
@@ -14,6 +14,8 @@ export interface ProductionOrderIngredient {
   /** Cadena decimal con 4 decimales (nunca número). */
   quantityPerPreparation: string;
   expectedQuantity: string;
+  /** Consumo real; solo existe tras pasar a refrigeración. */
+  actualQuantity: string | null;
 }
 
 export interface ProductionOrder {
@@ -29,6 +31,11 @@ export interface ProductionOrder {
   ingredients: ProductionOrderIngredient[];
   createdAt: string;
   startedAt: string | null;
+  actualOutput: string | null;
+  enteredAt: string | null;
+  lot: { id: string; code: string } | null;
+  /** Costo total consumido con 2 decimales; `null` = sin costo. */
+  costTotal: string | null;
 }
 
 export interface ProductionOrderDto {
@@ -48,9 +55,14 @@ export interface ProductionOrderDto {
     unit_abbreviation: string | null;
     quantity_per_preparation: string;
     expected_quantity: string;
+    actual_quantity: string | null;
   }[];
   created_at: string;
   started_at: string | null;
+  actual_output: string | null;
+  entered_at: string | null;
+  lot: { id: string; code: string } | null;
+  cost_total: string | null;
 }
 
 export interface OrderWarehouse {
@@ -76,7 +88,30 @@ export interface OrderUpdateInput {
   preparations: number;
 }
 
+export interface RefrigerateInput {
+  /** ISO 8601 con zona horaria. */
+  enteredAt: string;
+  actualOutput: string;
+  ingredients: { productId: string; actualQuantity: string }[];
+}
+
+export interface OrderShortage {
+  productId: string;
+  productName: string;
+  unitAbbreviation: string | null;
+  requested: string;
+  available: string;
+  missing: string;
+}
+
 export interface OrderFieldErrors {
+  actualOutput?: string;
+  enteredAt?: string;
+  ingredients?: string;
+  /** Error por línea de `ingredients` (mismo orden que las filas de la orden; `undefined` = sin error). */
+  ingredientLines?: (string | undefined)[];
+  /** Código del 409 (`insufficient_stock`, `fiscal_period_missing`…). */
+  code?: string;
   recipeId?: string;
   warehouseId?: string;
   preparations?: string;
@@ -89,6 +124,7 @@ export class OrderApiError extends Error {
     readonly status: number,
     readonly fields: OrderFieldErrors = {},
     readonly invalidPage = false,
+    readonly shortages: OrderShortage[] = [],
   ) {
     super(message);
   }
