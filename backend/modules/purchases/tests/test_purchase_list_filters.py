@@ -7,7 +7,8 @@ from modules.purchases.tests.test_payment_api import PaymentApiTestCase
 from modules.purchases.tests.test_purchase_api import LIST_URL
 
 SUMMARY_FIELDS = {'id', 'purchase_date', 'supplier', 'external_reference', 'total', 'currency', 'status',
-                  'items_count', 'reference', 'reception_status', 'payment_status', 'paid_total', 'balance'}
+                  'items_count', 'reference', 'reception_status', 'payment_status', 'paid_total', 'balance', 'number',
+                  'fiscal_period'}
 
 
 class PurchaseListFilterTests(PaymentApiTestCase):
@@ -46,7 +47,7 @@ class PurchaseListFilterTests(PaymentApiTestCase):
         partial = rows[ids['partial']]
         self.assertEqual((partial['reception_status'], partial['payment_status'], partial['paid_total'],
                           partial['balance'], partial['total']), ('not_received', 'partial', '20.00', '30.00', '50.00'))
-        self.assertRegex(partial['reference'], r'^COM-[0-9A-F]{8}$')
+        self.assertRegex(partial['reference'], r'^NC-\d{6}$')  # confirmada: ya tiene número
         self.assertEqual((rows[ids['unpaid']]['paid_total'], rows[ids['unpaid']]['balance']), ('0.00', '50.00'))
         # Recibida e impaga, y pagada pendiente de recepción: estados separados.
         self.assertEqual((rows[ids['received_unpaid']]['reception_status'], rows[ids['received_unpaid']]['payment_status']),

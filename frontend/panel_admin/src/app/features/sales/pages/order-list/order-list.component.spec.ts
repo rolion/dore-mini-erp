@@ -33,6 +33,7 @@ describe('OrderListComponent', () => {
   let customerOptions: jasmine.SpyObj<CustomerOptionsService>;
 
   const open = makeSummary({ id: 'a', code: 'P-AAAAAAAA' });
+  const numbered = makeSummary({ id: 'n', code: 'NV-000012', fiscalPeriod: { id: 'fp-1', name: 'Gestión 2026' } });
   const owing = makeSummary({
     id: 'b', code: 'P-BBBBBBBB', status: 'DELIVERED', paymentStatus: 'PARTIAL', total: '100.00', paidTotal: '40.00',
     balance: '60.00', customer: null, salesChannel: 'STORE', expectedDeliveryDate: null,
@@ -145,6 +146,16 @@ describe('OrderListComponent', () => {
       const link = element.querySelector('a.fw-bold') as HTMLAnchorElement;
       expect(link.getAttribute('href')).toBe('/pocketbiz/sales/orders/a');
       expect(component.total).toBe(4);
+    });
+
+    it('show the fiscal period only for numbered orders (UI-01)', () => {
+      api.list.and.returnValue(of(page([open, numbered])));
+      const element = start();
+      fixture.detectChanges();
+      const periods = element.querySelectorAll('[data-testid="row-period"]');
+      expect(periods.length).toBe(1);
+      expect(periods[0].textContent).toContain('Período Gestión 2026');
+      expect(element.textContent).toContain('NV-000012');
     });
 
     it('show "Sin cliente", "Venta directa" and a dash for a missing expected date', () => {
@@ -425,6 +436,13 @@ describe('OrderListComponent', () => {
       expect(text).toContain('WhatsApp');
       expect(text).toContain('Bs 70.00');
       expect(card.querySelector('[data-testid="card-view"]')?.getAttribute('href')).toBe('/pocketbiz/sales/orders/a');
+    });
+
+    it('card shows the fiscal period only for numbered orders (UI-01)', () => {
+      api.list.and.returnValue(of(page([open, numbered])));
+      const cards = start().querySelectorAll('[data-testid="order-card"]');
+      expect(cards[0].querySelector('[data-testid="card-period"]')).toBeNull();
+      expect(cards[1].querySelector('[data-testid="card-period"]')?.textContent).toContain('Período Gestión 2026');
     });
 
     it('keeps the filters collapsed until «Filtros» is clicked and collapses them on apply', () => {

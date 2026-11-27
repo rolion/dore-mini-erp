@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import uuid4
 
+from .numbering_support import FakeNumbering
 from modules.purchases.application.payment_commands import RegisterPayment
 from modules.purchases.application.payment_queries import ListPayments
 from modules.purchases.application.ports import Actor
@@ -44,7 +45,7 @@ class PaymentCase(PurchaseApplicationCase):
         super().setUp()
         self.payments = FakePayments()
         self.purchase = self.create(items=[ItemInput(self.flour.id, '10', '5.00')])  # total 50.00
-        ConfirmPurchase(self.purchases, self.suppliers).execute(self.purchase.id, NOW)
+        ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(self.purchase.id, NOW)
 
     def pay(self, amount='20.00', payment_id=None, method='CASH', purchase_id=None, when=TODAY):
         return RegisterPayment(self.purchases, self.payments).execute(
@@ -82,7 +83,7 @@ class RegisterPaymentTests(PaymentCase):
 
     def test_the_id_of_another_purchase_is_a_conflict(self):  # AC-08
         other = self.create(items=[ItemInput(self.flour.id, '1', '5.00')])
-        ConfirmPurchase(self.purchases, self.suppliers).execute(other.id, NOW)
+        ConfirmPurchase(self.purchases, self.suppliers, FakeNumbering()).execute(other.id, NOW)
         payment_id = uuid4()
         self.pay('1.00', payment_id, purchase_id=other.id)
         with self.assertRaises(PaymentConflict):

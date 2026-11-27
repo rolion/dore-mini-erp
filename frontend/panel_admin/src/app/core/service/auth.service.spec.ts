@@ -22,6 +22,7 @@ const LOGIN_RESPONSE = {
 const COMPANY = { id: 'c-1', name: 'Cuñapés SRL' };
 const REGISTER_INPUT: RegisterInput = {
   companyName: 'Cuñapés SRL',
+  companyType: 'servicios',
   username: 'maria',
   firstName: 'María',
   lastName: 'Quispe',
@@ -150,6 +151,7 @@ describe('AuthService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
       company_name: 'Cuñapés SRL',
+      company_type: 'servicios',
       username: 'maria',
       first_name: 'María',
       last_name: 'Quispe',

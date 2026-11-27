@@ -8,6 +8,7 @@ from uuid import uuid4
 from django.db import close_old_connections, connection, transaction
 from django.test import TransactionTestCase
 
+from .numbering_support import fake_number
 from modules.purchases.application.ports import Actor, StockEntryMovement  # noqa: F401
 from modules.purchases.application.receipt_commands import ReceiptLineInput, RegisterReception
 from modules.purchases.domain.exceptions import PurchaseValidationError
@@ -32,7 +33,7 @@ class ReceiptRowLockTests(TransactionTestCase):
         supplier = SupplierModel.objects.create(company_id=self.company_id, name='Sur')
         purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY,
                                    items=[ItemDraft(uuid4(), '10', '5.00', product_name='Harina')])
-        purchase.confirm(NOW)
+        purchase.confirm(NOW, fake_number())
         self.purchase = DjangoPurchaseRepository(self.company_id).save(purchase)
 
     def register(self, quantity):

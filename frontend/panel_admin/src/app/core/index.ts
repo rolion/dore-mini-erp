@@ -10,5 +10,6 @@ export { LocalStorageService } from './service/storage.service';
 // models
 
 export { User } from './models/user';
-export type { RegisterField, RegisterInput, UserCompany } from './models/user';
+export type { CompanyType, RegisterableCompanyType, RegisterField, RegisterInput, UserCompany } from './models/user';
+export { REGISTERABLE_COMPANY_TYPES } from './models/user';
 export { InConfiguration } from './models/config.interface';

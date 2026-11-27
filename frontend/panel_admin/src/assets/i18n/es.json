@@ -10,7 +10,8 @@
         "JOURNAL": "Movimientos",
         "BALANCES": "Saldos",
         "CASH_FLOW": "Flujo de dinero",
-        "INCOME_EXPENSE": "Ingresos y egresos"
+        "INCOME_EXPENSE": "Ingresos y egresos",
+        "BALANCE_SHEET": "Balance general"
       }
     },
     "AGENDA": {
@@ -31,7 +32,8 @@
     },
     "DENTISTRY": {
       "TEXT": "Odontología",
-      "PATIENTS": "Pacientes"
+      "PATIENTS": "Pacientes",
+      "BUDGETS": "Presupuestos"
     },
     "MAIN": {
       "TEXT": "-- Principal"
@@ -56,7 +58,8 @@
         "BOARD": "Tablero",
         "LEADS": "Prospectos",
         "OPPORTUNITIES": "Oportunidades",
-        "TASKS": "Por contactar"
+        "TASKS": "Por contactar",
+        "TRACKING": "Seguimiento comercial"
       }
     },
     "ORDERS": {
@@ -140,6 +143,8 @@
       "LIST": {
         "PURCHASES": "Compras",
         "SUPPLIERS": "Proveedores",
+        "PAID_REPORT": "Compras pagadas",
+        "PAYABLE_REPORT": "Compras por pagar",
         "SETTINGS": "Configuración"
       }
     },
@@ -165,6 +170,8 @@
       "TEXT": "Ventas",
       "LIST": {
         "ORDERS": "Pedidos",
+        "INCOME_REPORT": "Ingresos por venta",
+        "RECEIVABLE_REPORT": "Pedidos por cobrar",
         "IMPORT": "Importar ventas",
         "SETTINGS": "Configuración"
       }
@@ -183,6 +190,12 @@
     "LANGUAGE_LOAD_ERROR": "No se pudo cambiar el idioma. Inténtalo de nuevo."
   },
   "COMMON": {
+    "FISCAL_PERIOD": {
+      "SIN_PERIODO": "La fecha no está dentro de ningún período fiscal, por eso no se puede confirmar. Cree el período en Contabilidad.",
+      "CERRADO": "El período fiscal de la fecha está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+      "CERRADO_NOMBRE": "El período fiscal «{{name}}» está cerrado, por eso no se puede confirmar. Reábralo en Contabilidad.",
+      "IR_A_PERIODOS": "Ir a períodos fiscales"
+    },
     "591_7XXXXXXX": "+591 7xxxxxxx",
     "ACCIONES": "Acciones",
     "ACTIVO": "Activo",
@@ -309,6 +322,10 @@
       "NEW_PASSWORD": "Nueva contraseña",
       "CONFIRM_PASSWORD": "Confirmar contraseña"
     },
+    "PASSWORD_TOGGLE": {
+      "MOSTRAR": "Mostrar contraseña",
+      "OCULTAR": "Ocultar contraseña"
+    },
     "SIGNIN": {
       "POCKETBIZ_VOLVER_AL_INICIO": "PocketBiz, volver al inicio",
       "CONTRASENA": "Contraseña",
@@ -339,7 +356,17 @@
       "CONFIRMA_LA_CONTRASENA": "Confirma la contraseña.",
       "LAS_CONTRASENAS_NO_COINCIDEN": "Las contraseñas no coinciden.",
       "INGRESA_UN_CORREO_VALIDO": "Ingresa un correo válido.",
-      "NO_PUEDE_SUPERAR_CARACTERES": "No puede superar {{p0}} caracteres."
+      "NO_PUEDE_SUPERAR_CARACTERES": "No puede superar {{p0}} caracteres.",
+      "TIPO_DE_EMPRESA": "Tipo de empresa",
+      "SELECCIONA_UN_TIPO": "Selecciona un tipo",
+      "EL_TIPO_DE_EMPRESA_ES_OBLIGATORIO": "Selecciona el tipo de empresa.",
+      "TIPO_DE_EMPRESA_AYUDA": "Define los módulos con los que empiezas. Podrás activar más después en Ajustes.",
+      "TIPO_COMPRAVENTA": "Compraventa",
+      "TIPO_COMPRAVENTA_AYUDA": "Compras y ventas de productos, con inventario.",
+      "TIPO_SERVICIOS": "Servicios",
+      "TIPO_SERVICIOS_AYUDA": "Cotizaciones, cobros y agenda.",
+      "TIPO_ODONTOLOGIA": "Odontología",
+      "TIPO_ODONTOLOGIA_AYUDA": "Servicios de atención odontológica."
     }
   },
   "CUSTOMERS": {
@@ -620,7 +647,8 @@
       "DIALOG_REACTIVAR_TEXTO": "Podrás volver a editarlo. Se conserva toda su historia.",
       "REGISTRO_DE_CAMBIOS": "Registro de cambios",
       "EDAD_ANO": "{{n}} año",
-      "MENOR_EDAD_ANO": "Menor · {{n}} año"
+      "MENOR_EDAD_ANO": "Menor · {{n}} año",
+      "ODONTOGRAMA": "Odontograma"
     },
     "PATIENT_LIST": {
       "PACIENTES": "Pacientes",
@@ -680,6 +708,132 @@
     "ROUTES": {
       "CLINICAL_ACCESS_UNAVAILABLE": "Acceso clínico no disponible",
       "PERMISSION_CHECK_FAILED": "No se pudo verificar el permiso para acceder a Odontología."
+    },
+    "ODONTOGRAM": {
+      "AGREGAR_GENERAL": "Agregar hallazgo general",
+      "AGREGAR_HALLAZGO": "Agregar hallazgo",
+      "ARCADA_INFERIOR": "Arcada inferior",
+      "ARCADA_SUPERIOR": "Arcada superior",
+      "AUTOR": "Autor",
+      "BORRADOR": "Borrador",
+      "CARGANDO": "Cargando odontograma…",
+      "CATALOGO_PROVISIONAL": "Catálogo clínico provisional: pendiente de validación del odontólogo.",
+      "COL_CONDICION": "Condición",
+      "COL_DENTICION": "Dentición",
+      "COL_DIAGNOSTICO": "Diagnóstico",
+      "COL_NOTAS": "Notas",
+      "COL_PIEZA": "Pieza",
+      "COL_SUPERFICIES": "Superficies",
+      "CONDICION": "Condición / hallazgo",
+      "CONDITION_CARIES": "Caries",
+      "CONDITION_CROWN": "Corona",
+      "CONDITION_ENDODONTICS": "Endodoncia",
+      "CONDITION_FILLING": "Obturación",
+      "CONDITION_FRACTURE": "Fractura",
+      "CONDITION_HEALTHY": "Sano",
+      "CONDITION_IMPLANT": "Implante",
+      "CONDITION_MISSING": "Ausente",
+      "CONDITION_OTHER": "Otro",
+      "CONFIRMADA": "Confirmada",
+      "CONFIRMADA_EL": "Confirmada el",
+      "CONFIRMADA_SOLO_LECTURA": "Evaluación confirmada: solo lectura. Usa «Corregir» para registrar cambios.",
+      "CONFIRMAR": "Confirmar",
+      "CONFIRMAR_EVALUACION": "Confirmar evaluación",
+      "CORREGIR": "Corregir (enmienda)",
+      "CORRIGE": "Corrige",
+      "CORRIGE_A": "Corrige a #{{n}}",
+      "CREAR_CORRECCION": "Crear corrección",
+      "DENTICION": "Tipo de dentición",
+      "DENT_MIXED": "Mixta",
+      "DENT_PERMANENT": "Permanente",
+      "DENT_TEMPORARY": "Temporal",
+      "DESCARTAR": "Descartar",
+      "DESCARTAR_BORRADOR": "Descartar borrador",
+      "DIAGNOSTICO": "Diagnóstico",
+      "DIALOGO_CONFIRMAR_AVISO": "Una vez confirmada no se puede editar. Para corregirla se crea una nueva evaluación con motivo; la anterior se conserva.",
+      "DIALOGO_CONFIRMAR_TEXTO": "Se confirmará la evaluación con {{count}} hallazgo(s).",
+      "DIALOGO_CONFIRMAR_TITULO": "Confirmar evaluación",
+      "DIALOGO_CORREGIR_TEXTO": "Se creará una nueva evaluación en borrador con los hallazgos actuales como base. La evaluación confirmada no cambia.",
+      "DIALOGO_CORREGIR_TITULO": "Corregir evaluación",
+      "DIALOGO_DESCARTAR_TEXTO": "Se eliminará el borrador guardado y no se podrá recuperar.",
+      "DIALOGO_DESCARTAR_TITULO": "Descartar borrador",
+      "ELEGIR_CONDICION": "Elige una condición",
+      "ERR_403": "No tienes permiso para acceder al odontograma.",
+      "ERR_404": "No se encontró el paciente o la evaluación.",
+      "ERR_409": "La evaluación cambió o ya está confirmada. Recarga e inténtalo de nuevo.",
+      "ERR_CONDICION": "Elige una condición.",
+      "ERR_DIAGNOSTICO": "El diagnóstico es obligatorio.",
+      "ERR_DUPLICADO": "Esa condición ya está registrada en la pieza.",
+      "ERR_GENERIC": "No se pudo completar la operación. Tus cambios siguen aquí.",
+      "ERR_FECHA": "Indica una fecha clínica válida (no futura).",
+      "ERR_LARGO": "El diagnóstico admite hasta 500 caracteres y las notas hasta 1000.",
+      "ERR_REVISA": "Revisa los datos:",
+      "ESTADO_CAMBIOS": "Cambios sin guardar",
+      "ESTADO_ERROR": "No se pudo guardar. Tus cambios siguen aquí.",
+      "ESTADO_GUARDADO": "Guardado ✓",
+      "ESTADO_GUARDANDO": "Guardando…",
+      "ESTADO_SIN_CAMBIOS": "Sin cambios",
+      "EVALUACION": "Evaluación",
+      "FECHA_CLINICA": "Fecha clínica",
+      "GENERAL_AYUDA": "Hallazgos que no corresponden a una pieza concreta.",
+      "GUARDAR_BORRADOR": "Guardar borrador",
+      "HALLAZGOS_GENERALES": "Hallazgos generales",
+      "HALLAZGOS_PIEZA": "Hallazgos de la pieza",
+      "KIND_CANINE": "Canino",
+      "KIND_INCISOR": "Incisivo",
+      "KIND_MOLAR": "Molar",
+      "KIND_PREMOLAR": "Premolar",
+      "LEYENDA": "Leyenda",
+      "MIGAS_ARIA": "Ruta de navegación",
+      "MIGA_ODONTOLOGIA": "Odontología",
+      "MIGA_PACIENTES": "Pacientes",
+      "MOTIVO_ENMIENDA": "Motivo de la corrección",
+      "NOTAS": "Notas",
+      "NOTA_OBLIGATORIA": "La nota es obligatoria para esta condición.",
+      "NO_APLICA_SUPERFICIES": "Esta condición se registra en la pieza completa.",
+      "NUEVA_EVALUACION": "Nueva evaluación",
+      "NUEVA_SIN_GUARDAR": "Nueva evaluación (sin guardar)",
+      "OK_BORRADOR": "Borrador guardado.",
+      "OK_CONFIRMADA": "Evaluación confirmada.",
+      "OK_CORRECCION": "Corrección creada como borrador.",
+      "OK_DESCARTADO": "Borrador descartado.",
+      "OPCION": "#{{n}} · {{date}} · {{status}} · {{author}}",
+      "PERFIL_ARCHIVADO": "Perfil archivado: solo lectura. Reactiva el perfil odontológico para registrar evaluaciones.",
+      "PIEZA_ARIA": "Pieza {{piece}}, {{type}} {{dent}}, {{summary}}",
+      "PIEZA_COMPLETA": "Pieza completa",
+      "PIEZA_SELECCIONADA": "Pieza seleccionada",
+      "PIEZA_TITULO": "Pieza {{piece}} · {{type}} {{dent}}",
+      "PROFESIONAL": "Profesional",
+      "QUITAR_ARIA": "Quitar {{text}}",
+      "REEMPLAZADA_POR": "Reemplazada por #{{n}}",
+      "REEMPLAZO": "Reemplazo",
+      "REGISTRADA": "Registrada",
+      "REGISTRAR_INICIAL": "Registrar evaluación inicial",
+      "SELECCIONA_PIEZA": "Selecciona una pieza del gráfico para ver o registrar sus hallazgos.",
+      "SIGLA_PERMANENTE": "P",
+      "SIGLA_TEMPORAL": "T",
+      "SIN_EVALUAR": "Sin evaluar",
+      "SIN_EVALUAR_CORTO": "S/E",
+      "SIN_GENERALES": "Sin hallazgos generales.",
+      "SIN_PROFESIONAL": "Sin profesional",
+      "SUPERFICIES": "Superficies",
+      "SUPERFICIES_AYUDA": "Selecciona al menos una superficie.",
+      "SURFACE_D": "Distal",
+      "SURFACE_I": "Incisal",
+      "SURFACE_L": "Lingual",
+      "SURFACE_M": "Mesial",
+      "SURFACE_O": "Oclusal",
+      "SURFACE_P": "Palatina",
+      "SURFACE_V": "Vestibular",
+      "TABLA_CAPTION": "Hallazgos de la evaluación por pieza",
+      "TABLA_VACIA": "Esta evaluación aún no tiene hallazgos por pieza.",
+      "TITULO": "Odontograma",
+      "VACIO": "Este paciente aún no tiene evaluaciones.",
+      "VISTA_ARIA": "Vista del odontograma",
+      "VISTA_GRAFICO": "Gráfico",
+      "VISTA_TABLA": "Tabla",
+      "VOLVER": "Volver",
+      "VOLVER_A_FICHA": "Volver a la ficha"
     }
   },
   "EXPENSES": {
@@ -1446,6 +1600,7 @@
       "PROVEEDOR_CREADO": "Proveedor creado"
     },
     "PURCHASE_DETAIL": {
+      "PERIODO_FISCAL": "Período fiscal",
       "DETALLE_DE_LA_COMPRA": "Detalle de la compra",
       "RESUMEN": "Resumen",
       "RECEPCIONES": "Recepciones",
@@ -1516,6 +1671,7 @@
       "COMPRA_GUARDADA": "Compra guardada"
     },
     "PURCHASE_LIST": {
+      "PERIODO": "Período {{name}}",
       "NUEVA_COMPRA": "Nueva compra",
       "BUSCAR": "Buscar",
       "REFERENCIA_INTERNA_O_EXTERNA": "Referencia interna o externa",
@@ -1677,6 +1833,19 @@
       "ADMITE_COMO_MAXIMO_3_DECIMALES": "Admite como máximo 3 decimales.",
       "LA_UNIDAD_NO_ADMITE_FRACCIONES": "La unidad no admite fracciones: usa una cantidad entera.",
       "NO_PUEDE_SUPERAR_EL_PENDIENTE": "No puede superar el pendiente ({{p0}})."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Compras pagadas",
+      "SUBTITLE": "Compras confirmadas y pagadas por completo",
+      "EMPTY": "Sin registros",
+      "COL_PURCHASE": "Compra",
+      "COL_SUPPLIER": "Proveedor",
+      "TOTALS": "Totales ({{count}} compras)"
+    },
+    "PAYABLE_REPORT": {
+      "TITLE": "Compras por pagar",
+      "SUBTITLE": "Compras confirmadas con saldo pendiente de pago",
+      "EMPTY": "Sin registros"
     }
   },
   "REPORTING": {
@@ -1815,6 +1984,7 @@
       "SALIDA_DE_INVENTARIO": "Salida de inventario"
     },
     "ORDER_DETAIL": {
+      "PERIODO_FISCAL": "Período fiscal: {{name}}",
       "PEDIDO": "Pedido {{p0}}",
       "CANCELAR_PEDIDO": "Cancelar pedido",
       "VOLVER_A_PEDIDOS": "Volver a pedidos",
@@ -1896,6 +2066,7 @@
       "PEDIDO_CAMBIO": "El pedido cambió desde que se abrió el pago. Se actualizó con los datos vigentes."
     },
     "ORDER_LIST": {
+      "PERIODO": "Período {{name}}",
       "NUEVO_PEDIDO": "Nuevo pedido",
       "ATAJOS_DE_VISTA": "Atajos de vista",
       "ESTADO_DE_ENTREGA": "Estado de entrega",
@@ -1977,6 +2148,31 @@
       "EVENT_SALE_PAYMENT": "Cobro de la venta",
       "REEMBOLSADO": "Reembolsado",
       "REEMBOLSO_REGISTRADO": "El reembolso quedó registrado: el dinero se devolvió fuera de PocketBiz."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Ingresos por venta",
+      "SUBTITLE": "Pedidos entregados y pagados",
+      "EXPORT_PDF": "Exportar PDF",
+      "EXPORT_EXCEL": "Exportar Excel",
+      "DATE_FROM": "Fecha inicio",
+      "DATE_TO": "Fecha fin",
+      "FISCAL_PERIOD": "Período fiscal",
+      "ALL_PERIODS": "Todos los períodos",
+      "RANGE_INVALID": "La fecha final no puede ser anterior a la inicial.",
+      "LOADING": "Cargando…",
+      "EMPTY": "Sin registros",
+      "COL_ORDER": "Pedido",
+      "COL_CUSTOMER": "Cliente",
+      "COL_TOTAL": "Total",
+      "COL_BALANCE": "Saldo",
+      "TOTALS": "Totales ({{count}} pedidos)",
+      "SHOWING": "Mostrando {{from}}–{{to}} de {{total}}",
+      "EXPORT_TOO_LARGE": "El reporte tiene demasiados pedidos para exportar: acota las fechas o el período fiscal."
+    },
+    "RECEIVABLE_REPORT": {
+      "TITLE": "Pedidos por cobrar",
+      "SUBTITLE": "Pedidos con saldo pendiente de cobro",
+      "EMPTY": "Sin registros"
     }
   },
   "SERVICES": {
@@ -3125,6 +3321,24 @@
       "VER_MOVIMIENTOS": "Ver movimientos de {{name}}",
       "NOTA_APERTURA": "Los saldos salen solo de los asientos. Con «Desde» se muestra el saldo inicial anterior a esa fecha; las aperturas se registran como asientos."
     },
+    "BALANCE_SHEET": {
+      "NOTA_RANGO": "Los saldos son acumulados hasta «Hasta». Con «Desde» se separa el saldo inicial (anterior a esa fecha) del movimiento del rango.",
+      "SECCION_ASSET": "Activo",
+      "SECCION_LIABILITY": "Pasivo",
+      "SECCION_EQUITY": "Patrimonio",
+      "SALDO_INICIAL": "Saldo inicial",
+      "MOVIMIENTO": "Movimiento",
+      "SALDO_FINAL": "Saldo final",
+      "RESULTADOS_ANTERIORES": "Resultados de ejercicios anteriores",
+      "RESULTADO_PERIODO": "Resultado del período",
+      "TOTAL_SECCION": "Total {{section}}",
+      "TOTAL_ACTIVO": "Total Activo",
+      "TOTAL_PASIVO_PATRIMONIO": "Total Pasivo + Patrimonio",
+      "ECUACION": "Activo = Pasivo + Patrimonio",
+      "DIFERENCIA": "Diferencia: {{amount}}",
+      "AVISO_SIN_CLASIFICAR": "Hay cuentas sin clasificar con saldo ({{amount}}); no entran en el balance y por eso puede no cuadrar. Clasifíquelas en Cuentas.",
+      "SIN_REGISTROS": "Sin registros"
+    },
     "POSTING": {
       "TAB": "Asientos automáticos",
       "TITLE": "Asientos automáticos",
@@ -3729,6 +3943,38 @@
       "ARCHIVAR_TITULO": "Archivar tarea",
       "ARCHIVAR_TEXTO": "La tarea se oculta de todas las listas y no se puede recuperar desde la interfaz.",
       "ARCHIVAR_CONFIRMAR": "Archivar tarea"
+    },
+    "TRACKING": {
+      "TITULO": "Seguimiento comercial",
+      "CREAR_TABLERO": "Crear nuevo tablero",
+      "SIN_TABLEROS": "Aún no tienes tableros de seguimiento. Crea el primero.",
+      "ABRIR_TABLERO": "Abrir el tablero {{name}}",
+      "VOLVER": "Volver a tableros",
+      "AGREGAR_COLUMNA": "Agregar columna",
+      "NUEVA_COLUMNA": "Nueva columna",
+      "NOMBRE_COLUMNA_OBLIGATORIO": "Ingresa el nombre de la columna.",
+      "SIN_COLUMNAS": "Este tablero aún no tiene columnas. Agrega la primera.",
+      "SIN_TARJETAS": "Sin tarjetas",
+      "MENU_COLUMNA": "Opciones de la columna {{name}}",
+      "AGREGAR_TARJETA": "Agregar tarjeta",
+      "ARCHIVAR_COLUMNA": "Archivar columna",
+      "ARCHIVAR": "Archivar",
+      "ARCHIVAR_CONFIRMAR": "¿Archivar la columna «{{name}}»?",
+      "ARCHIVAR_BLOQUEADO": "La columna «{{name}}» tiene {{n}} tarjeta(s) activa(s). Muévelas a otra columna antes de archivarla.",
+      "TABLERO_NO_ENCONTRADO": "No se encontró el tablero.",
+      "NUEVA_TARJETA": "Nueva tarjeta",
+      "NOMBRE_TARJETA_OBLIGATORIO": "Ingresa el nombre de la tarjeta.",
+      "CLIENTE_O_PROSPECTO": "Cliente o prospecto",
+      "CONTACTO_OBLIGATORIO": "Elige un cliente o un prospecto.",
+      "GRUPO_CLIENTES": "Clientes",
+      "GRUPO_PROSPECTOS": "Prospectos",
+      "DESCRIPCION": "Descripción",
+      "DESCRIPCION_MUY_LARGA": "Usa como máximo {{n}} caracteres.",
+      "VER": "Ver",
+      "VER_DE": "Ver «{{title}}»",
+      "TARJETA": "Tarjeta",
+      "AGREGAR_ACTIVIDAD": "Agregar actividad",
+      "CONTACTO_FIJO": "Cliente o prospecto de la tarjeta (no se puede cambiar)."
     }
   }
 }

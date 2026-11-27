@@ -8,6 +8,7 @@ from modules.accounting import services as accounting
 from modules.accounting.application.use_cases import ConfigureMethod
 from modules.accounting.infrastructure.django.models import JournalEntryModel
 from modules.accounting.infrastructure.django.repositories import DjangoAccountRepository, DjangoMethodMappingRepository
+from modules.accounting.infrastructure.django.models import FiscalPeriodModel
 from modules.accounting.tests.journal_support import make_account, make_period, money_account
 from modules.modularity.domain.modules import DEFAULT_ENABLED_KEYS
 from modules.modularity.tests.test_enforcement import set_enabled
@@ -27,6 +28,7 @@ class PaymentBooks:
         self.inventory = make_account(company.id, 'Inventario', 'ASSET', '113001')
         self.payable = make_account(company.id, 'Proveedores', 'LIABILITY', '210101')
         self.advances = make_account(company.id, 'Anticipos a proveedores', 'ASSET', '113101')
+        FiscalPeriodModel.objects.filter(company_id=company.id).delete()  # reemplaza el período amplio de pruebas
         self.period = make_period(company.id, 'Año', TODAY - timedelta(days=200), TODAY + timedelta(days=100))
         for method, account in (('CASH', self.caja), ('BANK_TRANSFER', self.banco), ('QR', self.banco)):
             self.map_method(method, account)

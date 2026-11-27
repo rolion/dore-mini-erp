@@ -65,7 +65,7 @@ class AuthApiTests(APITestCase):
         self.user.save()
         user = self.login().json()['user']
         self.assertEqual(user['role'], 'admin')
-        self.assertEqual(user['company'], {'id': str(company.id), 'name': 'Cuñapés SRL'})
+        self.assertEqual(user['company'], {'id': str(company.id), 'name': 'Cuñapés SRL', 'type': 'general'})
 
     def test_login_of_inactive_company_is_indistinguishable_from_invalid_credentials(self):  # AC-10
         self.user.company = Company.objects.create(name='Cerrada SRL', is_active=False)
@@ -126,7 +126,8 @@ class AuthApiTests(APITestCase):
 class RegisterApiTests(APITestCase):
     url = '/api/auth/register/'
     payload = {
-        'company_name': 'Cuñapés SRL', 'username': 'maria', 'first_name': 'María', 'last_name': 'Quispe',
+        'company_name': 'Cuñapés SRL', 'company_type': 'servicios', 'username': 'maria',
+        'first_name': 'María', 'last_name': 'Quispe',
         'email': 'maria@example.com', 'password': 'Cl4ve-segura-2026',
     }
 
@@ -147,7 +148,7 @@ class RegisterApiTests(APITestCase):
         self.assertEqual(body['token'], Token.objects.get(user=user).key)
         self.assertEqual(body['user'], {
             'id': user.id, 'username': 'maria', 'first_name': 'María', 'last_name': 'Quispe',
-            'role': 'admin', 'company': {'id': str(user.company.id), 'name': 'Cuñapés SRL'},
+            'role': 'admin', 'company': {'id': str(user.company.id), 'name': 'Cuñapés SRL', 'type': 'servicios'},
         })
 
     def test_registered_token_authenticates_business_api(self):  # AC-01
@@ -192,7 +193,22 @@ class RegisterApiTests(APITestCase):
         response = self.client.post(self.url, {}, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(set(response.json()),
-                         {'company_name', 'username', 'first_name', 'last_name', 'email', 'password'})
+                         {'company_name', 'company_type', 'username', 'first_name', 'last_name', 'email', 'password'})
+
+    def test_company_type_must_be_one_of_the_three_public_types(self):  # AC-01, EDGE-02
+        for value in ('general', 'Servicios', ' servicios', 'otro', ''):
+            response = self.register(company_type=value)
+            self.assertEqual(response.status_code, 400, value)
+            self.assertEqual(set(response.json()), {'company_type'}, value)
+        self.assertFalse(Company.objects.filter(name='Cuñapés SRL').exists())
+        self.assertFalse(get_user_model().objects.filter(username='maria').exists())
+
+    def test_company_type_is_stored_and_returned_in_login(self):  # AC-02, AC-04
+        self.register(company_type='odontologia')
+        self.assertEqual(Company.objects.get(name='Cuñapés SRL').company_type, 'odontologia')
+        login = self.client.post('/api/auth/login/', {'username': 'maria', 'password': 'Cl4ve-segura-2026'},
+                                 format='json')
+        self.assertEqual(login.json()['user']['company']['type'], 'odontologia')
 
     def test_blank_or_too_long_company_name_is_rejected(self):  # EDGE-06
         for name in ('   ', 'x' * 151):

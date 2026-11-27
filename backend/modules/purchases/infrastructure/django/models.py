@@ -39,6 +39,11 @@ class PurchaseModel(models.Model):
     cancellation_reason = models.TextField(blank=True, default='')
     reception_status = models.CharField(max_length=20, default='not_received')
     payment_status = models.CharField(max_length=20, default='unpaid')
+    # Número correlativo de la serie de compras por período fiscal: se asigna al confirmar y no cambia (ver ADR).
+    # `fiscal_period_id` es solo UUID, sin FK (el período es de Contabilidad); el nombre es una instantánea.
+    fiscal_period_id = models.UUIDField(null=True, blank=True)
+    fiscal_period_name = models.CharField(max_length=80, blank=True, default='')
+    number = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -48,6 +53,16 @@ class PurchaseModel(models.Model):
         indexes = [
             models.Index(fields=['company_id', 'purchase_date'], name='purch_purch_company_date'),
             models.Index(fields=['company_id', 'supplier_id'], name='purch_purch_company_supplier'),
+        ]
+        constraints = [
+            models.CheckConstraint(condition=models.Q(number__isnull=True) | models.Q(number__gt=0),
+                                   name='purch_purchase_number_gt_0'),
+            models.CheckConstraint(
+                condition=(models.Q(number__isnull=True, fiscal_period_id__isnull=True)
+                           | models.Q(number__isnull=False, fiscal_period_id__isnull=False)),
+                name='purch_purchase_number_with_period'),
+            models.UniqueConstraint(fields=['company_id', 'fiscal_period_id', 'number'],
+                                    condition=models.Q(number__isnull=False), name='purch_purchase_number_unique'),
         ]
 
 
@@ -150,3 +165,18 @@ class SettingsModel(models.Model):
     class Meta:
         db_table = 'purchases_settings'
         constraints = [models.UniqueConstraint(fields=['company_id'], name='purchases_settings_company_uniq')]
+
+
+class PurchaseNumberCounterModel(models.Model):
+    """Último número asignado de la serie de compras de una empresa en un período fiscal."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    fiscal_period_id = models.UUIDField()
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'purchases_purchase_number_counter'
+        constraints = [
+            models.UniqueConstraint(fields=['company_id', 'fiscal_period_id'], name='purch_purchase_counter_unique'),
+        ]

@@ -8,7 +8,7 @@ from modules.sales.application.ports import Actor, StockProductInfo, StockWareho
 from modules.sales.domain.enums import OrderStatus
 from modules.sales.domain.exceptions import OrderRuleViolation, OrderValidationError
 
-from .fakes import FixedClock
+from .fakes import FixedClock, FakeOrderNumbering
 from .test_application import ApplicationTestCase
 
 
@@ -65,7 +65,7 @@ class DeliveryApplicationTests(ApplicationTestCase):
         order = self.create()
         for product, quantity in products_and_quantities:
             order = self.add_item(order, product, quantity)
-        StartOrderPreparation(self.repository).execute(order.id)
+        StartOrderPreparation(self.repository, FakeOrderNumbering()).execute(order.id)
         return MarkOrderReady(self.repository).execute(order.id)
 
     def use_case(self):

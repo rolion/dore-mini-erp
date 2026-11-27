@@ -12,7 +12,8 @@ import {
 } from '@angular/forms';
 import { FeatherModule } from 'angular-feather';
 import { finalize } from 'rxjs';
-import { AuthService, RegisterError, RegisterField } from '@core';
+import { AuthService, REGISTERABLE_COMPANY_TYPES, RegisterableCompanyType, RegisterError, RegisterField } from '@core';
+import { PasswordToggleComponent } from '../../shared/components/password-toggle/password-toggle.component';
 import { APP_PATHS } from '../../core/routing/app-paths';
 
 export const DEFAULT_ROUTE_AFTER_SIGNUP = APP_PATHS.dashboard;
@@ -21,11 +22,28 @@ export const NAME_MAX_LENGTH = 150;
 
 const REQUIRED_MESSAGES: Record<RegisterField, string> = {
   get companyName() { return tr('AUTH.SIGNUP.EL_NOMBRE_DE_LA_EMPRESA'); },
+  get companyType() { return tr('AUTH.SIGNUP.EL_TIPO_DE_EMPRESA_ES_OBLIGATORIO'); },
   get firstName() { return tr('AUTH.SIGNUP.EL_NOMBRE_ES_OBLIGATORIO'); },
   get lastName() { return tr('AUTH.SIGNUP.EL_APELLIDO_ES_OBLIGATORIO'); },
   get username() { return tr('AUTH.SIGNUP.EL_USUARIO_ES_OBLIGATORIO'); },
   get email() { return tr('AUTH.SIGNUP.EL_CORREO_ES_OBLIGATORIO'); },
   get password() { return tr('AUTH.SIGNUP.LA_CONTRASENA_ES_OBLIGATORIA'); },
+};
+
+/** Etiqueta y ayuda de cada tipo de empresa (claves literales para que `npm run i18n:check` las vea). */
+const COMPANY_TYPE_TEXT: Record<RegisterableCompanyType, { label: () => string; help: () => string }> = {
+  compraventa: {
+    label: () => tr('AUTH.SIGNUP.TIPO_COMPRAVENTA'),
+    help: () => tr('AUTH.SIGNUP.TIPO_COMPRAVENTA_AYUDA'),
+  },
+  servicios: {
+    label: () => tr('AUTH.SIGNUP.TIPO_SERVICIOS'),
+    help: () => tr('AUTH.SIGNUP.TIPO_SERVICIOS_AYUDA'),
+  },
+  odontologia: {
+    label: () => tr('AUTH.SIGNUP.TIPO_ODONTOLOGIA'),
+    help: () => tr('AUTH.SIGNUP.TIPO_ODONTOLOGIA_AYUDA'),
+  },
 };
 
 /** Rechaza textos vacíos o solo con espacios (el backend también recorta). */
@@ -43,7 +61,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   selector: 'app-signup',
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.sass'],
-  imports: [TranslatePipe, ReactiveFormsModule, FeatherModule, RouterLink],
+  imports: [TranslatePipe, ReactiveFormsModule, FeatherModule, RouterLink, PasswordToggleComponent],
 })
 export class SignupComponent {
   private formBuilder = inject(NonNullableFormBuilder);
@@ -52,10 +70,12 @@ export class SignupComponent {
   private destroyRef = inject(DestroyRef);
 
   readonly nameMaxLength = NAME_MAX_LENGTH;
+  readonly companyTypes = REGISTERABLE_COMPANY_TYPES;
 
   registerForm = this.formBuilder.group(
     {
       companyName: ['', [Validators.required, notBlank, Validators.maxLength(NAME_MAX_LENGTH)]],
+      companyType: this.formBuilder.control<RegisterableCompanyType | ''>('', [Validators.required]),
       firstName: ['', [Validators.required, notBlank, Validators.maxLength(NAME_MAX_LENGTH)]],
       lastName: ['', [Validators.required, notBlank, Validators.maxLength(NAME_MAX_LENGTH)]],
       username: ['', [Validators.required, notBlank, Validators.maxLength(NAME_MAX_LENGTH)]],
@@ -78,6 +98,16 @@ export class SignupComponent {
 
   get f() {
     return this.registerForm.controls;
+  }
+
+  companyTypeLabel(type: RegisterableCompanyType): string {
+    return COMPANY_TYPE_TEXT[type].label();
+  }
+
+  /** Ayuda bajo el selector: la del tipo elegido o, sin elegir, la explicación general. */
+  get companyTypeHelp(): string {
+    const type = this.f.companyType.value;
+    return type ? COMPANY_TYPE_TEXT[type].help() : tr('AUTH.SIGNUP.TIPO_DE_EMPRESA_AYUDA');
   }
 
   /** Mensaje bajo un campo: el del servidor, o el de validación local una vez tocado o enviado. */
@@ -119,11 +149,12 @@ export class SignupComponent {
       return;
     }
 
-    const { companyName, firstName, lastName, username, email, password } = this.registerForm.getRawValue();
+    const { companyName, companyType, firstName, lastName, username, email, password } = this.registerForm.getRawValue();
     this.loading = true;
     this.authService
       .register({
         companyName: companyName.trim(),
+        companyType: companyType as RegisterableCompanyType,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         username: username.trim(),

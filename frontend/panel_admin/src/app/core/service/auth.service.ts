@@ -16,6 +16,7 @@ export const REGISTER_INVALID_MESSAGE = (): string => tr('CORE.AUTH_SERVICE.REVI
 /** Campo del backend (snake_case) → control del formulario de registro. */
 const REGISTER_FIELD_BY_API_KEY: Record<string, RegisterField> = {
   company_name: 'companyName',
+  company_type: 'companyType',
   username: 'username',
   first_name: 'firstName',
   last_name: 'lastName',
@@ -68,6 +69,7 @@ export class AuthService {
   register(input: RegisterInput): Observable<User> {
     const body = {
       company_name: input.companyName,
+      company_type: input.companyType,
       username: input.username,
       first_name: input.firstName,
       last_name: input.lastName,

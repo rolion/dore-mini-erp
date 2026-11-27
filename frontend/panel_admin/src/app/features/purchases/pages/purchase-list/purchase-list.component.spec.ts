@@ -78,6 +78,18 @@ describe('PurchaseListComponent', () => {
     expect(byTestId('balance').textContent).toContain('Bs 15.00');
   });
 
+  it('shows the fiscal period only for numbered purchases, in table and cards (UI-01)', async () => {
+    await setup({}, page([
+      makePurchaseSummary({ id: 'c-1' }),
+      makePurchaseSummary({ id: 'c-2', reference: 'NC-000012', fiscalPeriod: { id: 'fp-1', name: 'Gestión 2026' } }),
+    ]));
+    const root = fixture.nativeElement as HTMLElement;
+    const periods = Array.from(root.querySelectorAll('[data-testid="row-period"], [data-testid="card-period"]'));
+    expect(periods.length).toBeGreaterThan(0);
+    expect(periods.every((el) => el.textContent?.includes('Período Gestión 2026'))).toBeTrue();
+    expect(root.textContent).toContain('NC-000012');
+  });
+
   it('shows a dash where reception, payment and balance do not apply (AC-07)', async () => {
     await setup({}, page([makePurchaseSummary({ status: 'cancelled' })]));
     expect(byTestId('reception-none').textContent).toBe('—');

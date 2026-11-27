@@ -284,6 +284,7 @@ class ReceptionFormAndQueriesTests(ReceiptApiTestCase):
         detail = self.client.get(purchase_url(purchase['id'], f'receipts/{first["id"]}/')).json()
         self.assertEqual((detail['purchase']['id'], detail['purchase']['reference']),
                          (purchase['id'], purchase['reference']))
+        self.assertRegex(detail['purchase']['reference'], r'^NC-\d{6}$')  # API-03: la compra confirmada ya tiene número
 
     def test_receipt_of_another_purchase_or_company_is_404(self):  # AC-13, AC-15
         purchase, other = self.confirmed_purchase(), self.confirmed_purchase()

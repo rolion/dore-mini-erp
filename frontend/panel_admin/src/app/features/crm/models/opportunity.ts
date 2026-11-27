@@ -2,6 +2,7 @@ import { CrmContact } from './lead';
 
 export const CRM_OPPORTUNITY_TITLE_MAX_LENGTH = 150;
 export const CRM_LOST_REASON_MAX_LENGTH = 500;
+export const CRM_OPPORTUNITY_DESCRIPTION_MAX_LENGTH = 1000;
 /** Importe con hasta 2 decimales, sin signo (el servidor exige `amount` ≥ 0 en `Decimal(12,2)`). */
 export const CRM_AMOUNT_PATTERN = /^\d{1,10}(\.\d{1,2})?$/;
 /** Tarjetas que el tablero pide de una vez (el servidor limita la página a 200). */
@@ -23,6 +24,7 @@ export interface CrmOpportunityDto {
   lead: CrmContact | null;
   customer: CrmContact | null;
   title: string;
+  description: string;
   owner: CrmOwner;
   amount: string;
   currency: string;
@@ -48,6 +50,7 @@ export interface CrmOpportunity {
   lead: CrmContact | null;
   customer: CrmContact | null;
   title: string;
+  description: string;
   owner: CrmOwner;
   /** Decimal como texto, tal como lo entrega el servidor. */
   amount: string;
@@ -81,7 +84,9 @@ export interface CrmOpportunityCreate {
   leadId?: string;
   customerId?: string;
   title: string;
-  amount: string;
+  /** Opcional: sin importe el servidor guarda 0.00 (tarjetas de seguimiento). */
+  amount?: string;
+  description?: string;
   nextActionAt?: string | null;
   ownerId?: number;
 }
@@ -89,6 +94,7 @@ export interface CrmOpportunityCreate {
 export interface CrmOpportunityUpdate {
   title?: string;
   amount?: string;
+  description?: string;
   nextActionAt?: string | null;
   ownerId?: number;
 }

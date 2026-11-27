@@ -7,6 +7,7 @@ from django.db.models import F
 from django.db.transaction import TransactionManagementError
 from django.test import TestCase, TransactionTestCase
 
+from modules.sales.tests.fakes import fake_number
 from modules.sales.domain.enums import OrderStatus, PaymentMethod, PaymentStatus, SalesChannel
 from modules.sales.domain.order import Order
 from modules.sales.domain.repositories import (
@@ -69,7 +70,7 @@ class RoundTripTests(RepositoryTestCase):
 
     def test_state_changes_and_cancellation_are_persisted(self):  # AC-11
         order = self.store(make_order())
-        order.start_preparation()
+        order.start_preparation(fake_number())
         order.cancel('Cliente desistió', NOW)
         loaded = self.store(order)
         self.assertEqual((loaded.status, loaded.cancellation_reason, loaded.cancelled_at),
@@ -77,7 +78,7 @@ class RoundTripTests(RepositoryTestCase):
 
     def test_delivery_date_is_persisted(self):  # AC-10
         order = self.store(make_order())
-        order.start_preparation()
+        order.start_preparation(fake_number())
         order.mark_ready()
         order.deliver(date(2026, 10, 6), TODAY)
         self.assertEqual(self.store(order).delivered_date, date(2026, 10, 6))

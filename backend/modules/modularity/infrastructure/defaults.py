@@ -5,6 +5,7 @@ fecha de corte = hoy) cuando ya existe el resto de la configuración.
 """
 from uuid import UUID
 
+from modules.modularity.domain.company_types import template_modules
 from modules.modularity.domain.modules import BASE_KEYS, BY_KEY
 from modules.modularity.domain.settings import BY_SETTING_KEY, validate
 from shared import company_defaults, module_lifecycle
@@ -24,7 +25,9 @@ def apply_modularity(company_id: UUID, data: dict, ctx: dict) -> dict[str, int]:
     created = existing = 0
     # Marca la empresa como inicializada para que la siembra perezosa no vuelva a añadir los módulos por defecto.
     CompanySettingsModel.objects.get_or_create(company_id=company_id)
-    for key in data.get('modules', []):
+    # Con perfil (tipo de empresa) los módulos salen de su plantilla; sin perfil, del snapshot.
+    modules = template_modules(ctx.get('profile') or '')
+    for key in (data.get('modules', []) if modules is None else modules):
         if key in BASE_KEYS:
             continue
         if key not in BY_KEY:

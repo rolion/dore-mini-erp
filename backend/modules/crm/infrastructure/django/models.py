@@ -71,6 +71,7 @@ class OpportunityModel(models.Model):
     owner_id = models.BigIntegerField(db_index=True)
     order_id = models.UUIDField(null=True, blank=True)
     title = models.CharField(max_length=150)
+    description = models.CharField(max_length=1000, blank=True, default='')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=3, default='BOB')
     next_action_at = models.DateTimeField(null=True, blank=True)

@@ -5,7 +5,7 @@ from typing import Protocol, Sequence
 from uuid import UUID
 
 from .enums import OrderStatus, PaymentStatus, SalesChannel
-from .order import Order
+from .order import Order, OrderNumber, order_code
 
 ORDER_DATE = 'order_date'
 EXPECTED_DELIVERY_DATE = 'expected_delivery_date'
@@ -26,6 +26,7 @@ class OrderFilters:
     date_from: date | None = None
     date_to: date | None = None
     has_balance: bool | None = None
+    fiscal_period_id: UUID | None = None
     ordering: str = NEWEST_FIRST
 
 
@@ -42,17 +43,31 @@ class OrderSummary:
     payment_status: PaymentStatus
     total: Decimal
     paid_total: Decimal
+    number: OrderNumber | None = None
 
     @property
     def balance(self) -> Decimal:
         return self.total - self.paid_total
+
+    @property
+    def code(self) -> str:
+        return self.number.code if self.number is not None else order_code(self.id)
 
     @classmethod
     def from_order(cls, order: Order) -> 'OrderSummary':
         return cls(id=order.id, customer_id=order.customer_id, sales_channel=order.sales_channel,
                    order_date=order.order_date, expected_delivery_date=order.expected_delivery_date,
                    status=order.status, payment_status=order.payment_status, total=order.total,
-                   paid_total=order.paid_total)
+                   paid_total=order.paid_total, number=order.number)
+
+
+@dataclass(frozen=True)
+class OrderTotals:
+    """Totales de un conjunto filtrado de pedidos: cantidad, importe y saldo por cobrar."""
+
+    orders_count: int
+    total: Decimal
+    balance: Decimal
 
 
 class OrderRepository(Protocol):
@@ -68,4 +83,8 @@ class OrderRepository(Protocol):
 
     def list(self, filters: OrderFilters) -> Sequence[OrderSummary]:
         """Resúmenes de pedidos según los filtros y el orden indicados."""
+        ...
+
+    def totals(self, filters: OrderFilters) -> OrderTotals:
+        """Totales de todos los pedidos que cumplen los filtros (sin paginar)."""
         ...

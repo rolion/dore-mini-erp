@@ -15,7 +15,7 @@ from modules.sales.domain.repositories import OrderRepository
 
 from .commands import _customer_errors
 from .delivery import controlled_lines
-from .ports import Clock, CustomerDirectory, ProductCatalog, SalesSettingsReader, StockOutput
+from .ports import Clock, CustomerDirectory, OrderNumbering, ProductCatalog, SalesSettingsReader, StockOutput
 
 ITEMS_REQUIRED = 'Agregue al menos un producto.'
 WAREHOUSE_INVALID = 'El almacén no existe o está inactivo.'
@@ -35,11 +35,13 @@ class PlaceOrder:
     valida la existencia en él (sin reservarla); la entrega vuelve a validarla."""
 
     def __init__(self, repository: OrderRepository, customers: CustomerDirectory, products: ProductCatalog,
-                 clock: Clock, settings: SalesSettingsReader | None = None, stock: StockOutput | None = None):
+                 clock: Clock, numbering: OrderNumbering, settings: SalesSettingsReader | None = None,
+                 stock: StockOutput | None = None):
         self.repository = repository
         self.customers = customers
         self.products = products
         self.clock = clock
+        self.numbering = numbering
         self.settings = settings
         self.stock = stock
 
@@ -58,7 +60,8 @@ class PlaceOrder:
         if errors:
             raise OrderValidationError(errors)
         self._assign_warehouse(order, warehouse_id)
-        order.start_preparation()
+        order.ensure_confirmable()
+        order.start_preparation(self.numbering.next_number(order.order_date))
         return self.repository.save(order)
 
     def _create(self, errors, sales_channel, order_date, customer_id, expected_delivery_date, notes) -> Order | None:

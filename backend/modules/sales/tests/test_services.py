@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from django.test import TestCase
 
+from modules.sales.tests.fakes import fake_number
 from modules.sales import services
 from modules.sales.domain.order import Order
 from modules.sales.infrastructure.django.repositories import DjangoOrderRepository
@@ -32,12 +33,12 @@ class SalesServicesTestCase(TestCase):
         if paid:
             order.register_payment(paid, 'CASH', on, '', TODAY)
         if status == 'IN_PREPARATION':
-            order.start_preparation()
+            order.start_preparation(fake_number())
         elif status == 'READY':
-            order.start_preparation()
+            order.start_preparation(fake_number())
             order.mark_ready()
         elif status == 'DELIVERED':
-            order.start_preparation()
+            order.start_preparation(fake_number())
             order.mark_ready()
             order.deliver(on, TODAY)
         elif status == 'CANCELLED':

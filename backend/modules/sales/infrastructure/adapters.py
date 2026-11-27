@@ -38,7 +38,8 @@ from modules.sales.domain.exceptions import (
     ShortLine,
 )
 from modules.sales.domain.enums import OrderStatus
-from modules.sales.domain.order import MAX_DISCOUNT_PERCENT
+from modules.sales.domain.order import MAX_DISCOUNT_PERCENT, OrderNumber
+from modules.sales.infrastructure.django.models import OrderNumberCounterModel
 from shared import module_gate
 
 CUSTOMERS_MODULE = 'customers'
@@ -310,7 +311,8 @@ class SalesPostingAdapter:
         applied = sum((payment.amount for payment in order.payments), Decimal('0'))
         with _posting_errors():
             accounting_services.post_automatic_entry(
-                self.company_id, SALE_DELIVERY, order.id, delivered_on, f'Entrega del pedido {order.code}', order.total,
+                self.company_id, SALE_DELIVERY, order.id, delivered_on,
+                f'Entrega del pedido {order.code}{_period_suffix(order)}', order.total,
                 advance_applied=applied, created_by=actor.user_id, created_by_name=actor.user_name)
 
     def reverse_recognition(self, order, reason: str, actor: Actor, today: date) -> None:
@@ -480,6 +482,42 @@ def _posting_errors():
 
 def _first_message(errors: dict[str, list[str]]) -> str:
     return next((messages[0] for messages in errors.values() if messages), 'datos no válidos.')
+
+
+def _period_suffix(order) -> str:
+    """El número se repite entre períodos: el texto contable lleva el período para no ser ambiguo."""
+    return f' ({order.number.period_name})' if order.number is not None else ''
+
+
+class OrderNumberingAdapter:
+    """Serie de ventas por período fiscal (ADR numeración correlativa): bloquea el período y su contador.
+
+    `lock_open_period` toma la fila del período con `select_for_update`: serializa las confirmaciones del mismo
+    período entre sí y frente a su cierre. El contador se incrementa bajo ese bloqueo y en la transacción de la
+    confirmación, así un fallo posterior revierte también el número (sin huecos).
+    """
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def next_number(self, order_date: date) -> OrderNumber:
+        try:
+            period = accounting_services.lock_open_period(self.company_id, order_date)
+        except accounting_services.DateOutsideFiscalPeriod:
+            raise OrderRuleViolation(
+                'fiscal_period_missing',
+                f'La fecha del pedido ({order_date.isoformat()}) no está dentro de ningún período fiscal. '
+                'Cree el período en Contabilidad para poder confirmarlo.') from None
+        except accounting_services.FiscalPeriodClosed as exc:
+            raise OrderRuleViolation(
+                'fiscal_period_closed',
+                f'El período fiscal «{exc.name}» está cerrado: no se puede confirmar un pedido con fecha '
+                f'{order_date.isoformat()}. Reabra el período en Contabilidad.', {'period': exc.name}) from None
+        counter, _ = OrderNumberCounterModel.objects.select_for_update().get_or_create(
+            company_id=self.company_id, fiscal_period_id=period.id)
+        counter.last_number += 1
+        counter.save(update_fields=['last_number'])
+        return OrderNumber(period.id, period.name, counter.last_number)
 
 
 class SystemClock:

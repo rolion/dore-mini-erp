@@ -3,7 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { PurchaseApiError, PurchaseDto, PurchaseSummaryDto } from '../models/purchase';
+import { Purchase, PurchaseApiError, PurchaseDto, PurchaseSummaryDto } from '../models/purchase';
 import { makePurchase } from '../testing/purchase-fixtures';
 import {
   GENERIC_ERROR_MESSAGE,
@@ -25,6 +25,8 @@ const DTO: PurchaseDto = {
   currency: 'BOB',
   editable: true,
   reference: 'COM-1A2B3C4D',
+  number: null,
+  fiscal_period: null,
   reception_status: 'not_received',
   payment_status: 'unpaid',
   confirmed_at: null,
@@ -82,6 +84,8 @@ describe('PurchasesApiService', () => {
       status: 'draft',
       items_count: 2,
       reference: 'COM-1A2B3C4D',
+      number: null,
+      fiscal_period: null,
       reception_status: 'partial',
       payment_status: 'unpaid',
       paid_total: '0.00',
@@ -194,6 +198,28 @@ describe('PurchasesApiService', () => {
       expect(error?.message).withContext(String(status)).toBe(message);
       expect(error?.status).toBe(status);
     }
+  });
+
+  it('maps the fiscal period of a numbered purchase (API-01)', () => {
+    let result: Purchase | undefined;
+    service.confirm('c-1').subscribe((purchase) => (result = purchase));
+    http.expectOne((r) => r.url.endsWith('/purchases/c-1/confirm/')).flush({
+      ...DTO, status: 'confirmed', reference: 'NC-000001', number: 1,
+      fiscal_period: { id: 'fp-1', name: 'Gestión 2026' },
+    });
+    expect(result?.reference).toBe('NC-000001');
+    expect(result?.fiscalPeriod).toEqual({ id: 'fp-1', name: 'Gestión 2026' });
+  });
+
+  it('carries the code and the closed period name of a fiscal period 409 (UI-03)', () => {
+    let error: PurchaseApiError | undefined;
+    service.confirm('c-1').subscribe({ error: (e: PurchaseApiError) => (error = e) });
+    http.expectOne((r) => r.url.endsWith('/purchases/c-1/confirm/')).flush(
+      { code: 'fiscal_period_closed', detail: 'Cerrado.', period: 'Gestión 2026' },
+      { status: 409, statusText: 'Conflict' });
+    expect(error?.code).toBe('fiscal_period_closed');
+    expect(error?.periodName).toBe('Gestión 2026');
+    expect(error?.message).toBe('Cerrado.');
   });
 
   it('confirms with a POST and maps the lifecycle fields', () => {

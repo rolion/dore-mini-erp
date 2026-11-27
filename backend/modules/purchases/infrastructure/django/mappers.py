@@ -10,7 +10,7 @@ from modules.purchases.domain.enums import (
     ReceptionStatus,
 )
 from modules.purchases.domain.payment import Payment
-from modules.purchases.domain.purchase import Purchase, PurchaseItem
+from modules.purchases.domain.purchase import Purchase, PurchaseItem, PurchaseNumber
 from modules.purchases.domain.receipt import Receipt, ReceiptLine
 from modules.purchases.domain.supplier import Supplier
 
@@ -60,6 +60,8 @@ def purchase_to_entity(model: PurchaseModel, items: Iterable[PurchaseItemModel])
         cancellation_reason=model.cancellation_reason,
         reception_status=ReceptionStatus(model.reception_status),
         payment_status=PaymentStatus(model.payment_status),
+        number=(PurchaseNumber(model.fiscal_period_id, model.fiscal_period_name, model.number)
+                if model.number is not None else None),
     )
 
 
@@ -76,6 +78,9 @@ def purchase_to_model_values(purchase: Purchase) -> dict[str, object]:
         'cancellation_reason': purchase.cancellation_reason,
         'reception_status': purchase.reception_status.value,
         'payment_status': purchase.payment_status.value,
+        'fiscal_period_id': purchase.number.period_id if purchase.number else None,
+        'fiscal_period_name': purchase.number.period_name if purchase.number else '',
+        'number': purchase.number.number if purchase.number else None,
     }
 
 

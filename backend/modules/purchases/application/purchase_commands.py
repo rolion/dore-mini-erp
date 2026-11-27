@@ -8,7 +8,7 @@ from modules.purchases.domain.enums import PurchaseStatus
 from modules.purchases.domain.purchase import UNSET, ItemDraft, Purchase
 from modules.purchases.domain.repositories import PurchaseRepository, SupplierRepository
 
-from .ports import ProductCatalog
+from .ports import ProductCatalog, PurchaseNumbering
 
 PRODUCT_MISSING = 'El producto no existe.'
 PRODUCT_INACTIVE = 'El producto está inactivo.'
@@ -119,18 +119,22 @@ def _load_locked(purchases: PurchaseRepository, purchase_id: UUID) -> Purchase:
 
 
 class ConfirmPurchase:
-    """`draft -> confirmed`. Repetir la acción sobre una confirmada no cambia nada (idempotente)."""
+    """`draft -> confirmed` y le asigna su número correlativo del período fiscal, en la misma transacción. Repetir la
+    acción sobre una confirmada no cambia nada ni consume número (idempotente)."""
 
-    def __init__(self, purchases: PurchaseRepository, suppliers: SupplierRepository):
+    def __init__(self, purchases: PurchaseRepository, suppliers: SupplierRepository, numbering: PurchaseNumbering):
         self.purchases = purchases
         self.suppliers = suppliers
+        self.numbering = numbering
 
     def execute(self, purchase_id: UUID, now: datetime) -> Purchase:
         purchase = _load_locked(self.purchases, purchase_id)
         if purchase.status is PurchaseStatus.CONFIRMED:
             return purchase
         supplier = self.suppliers.get(purchase.supplier_id)
-        purchase.confirm(now, supplier_active=supplier is not None and supplier.active)
+        supplier_active = supplier is not None and supplier.active
+        purchase.ensure_confirmable(supplier_active)
+        purchase.confirm(now, self.numbering.next_number(purchase.purchase_date), supplier_active=supplier_active)
         return self.purchases.save(purchase)
 
 

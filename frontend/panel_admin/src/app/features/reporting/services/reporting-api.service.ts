@@ -14,7 +14,7 @@ import {
   PeriodSelection,
   PendingReport,
   ProductsReport,
-  SalesReport,
+  DocumentReport,
 } from '../models/report';
 
 export const NETWORK_ERROR_MESSAGE = (): string => tr('REPORTING.REPORTING_API_SERVICE.NO_SE_PUDO_CONECTAR_CON');
@@ -153,8 +153,8 @@ export class ReportingApiService {
     }));
   }
 
-  sales(selection: PeriodSelection): Observable<SalesReport> {
-    return this.get<SalesDto, SalesReport>('sales/', selection, (dto) => ({
+  sales(selection: PeriodSelection): Observable<DocumentReport> {
+    return this.get<SalesDto, DocumentReport>('sales/', selection, (dto) => ({
       period: toPeriod(dto.period),
       total: dto.total,
       ordersCount: dto.orders_count,

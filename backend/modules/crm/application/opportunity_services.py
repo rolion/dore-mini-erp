@@ -112,9 +112,10 @@ class OpportunityService:
     def _record(self, opportunity_id: UUID, from_stage: UUID | None, to_stage: UUID, actor_id: int | None) -> None:
         self.opportunities.add_stage_change(StageChange(opportunity_id, from_stage, to_stage, actor_id, self.clock()))
 
-    def create(self, *, actor_id: int, board_id: UUID, title: object, amount: object, stage_id: UUID | None = None,
-               lead_id: UUID | None = None, customer_id: UUID | None = None, next_action_at: datetime | None = None,
-               owner_id: int | None = None) -> Opportunity:
+    def create(self, *, actor_id: int, board_id: UUID, title: object, amount: object = None,
+               stage_id: UUID | None = None, lead_id: UUID | None = None, customer_id: UUID | None = None,
+               next_action_at: datetime | None = None, owner_id: int | None = None,
+               description: object = None) -> Opportunity:
         board = self._board(board_id)
         if not board.is_active:
             raise CrmValidationError({'board_id': ['El tablero está archivado.']})
@@ -128,7 +129,8 @@ class OpportunityService:
         owner = self._owner(owner_id, actor_id)
         stage = self._stage_of(board, stage_id)
         opportunity = Opportunity.create(board_id=board.id, stage_id=stage, lead_id=lead_id, customer_id=customer_id,
-                                         title=title, amount=amount, owner_id=owner, next_action_at=next_action_at)
+                                         title=title, amount=amount, owner_id=owner, next_action_at=next_action_at,
+                                         description=description)
         opportunity = self.opportunities.save(opportunity)
         self._record(opportunity.id, None, stage, actor_id)
         return opportunity
@@ -142,14 +144,16 @@ class OpportunityService:
         return customer
 
     def edit(self, opportunity_id: UUID, *, actor_id: int, title: object = UNSET, amount: object = UNSET,
-             next_action_at: object = UNSET, owner_id: object = UNSET) -> Opportunity:
+             next_action_at: object = UNSET, owner_id: object = UNSET,
+             description: object = UNSET) -> Opportunity:
         opportunity = self._get(opportunity_id, for_update=True)
         owner = None
         if owner_id is not UNSET:
             owner = self._owner(owner_id, actor_id) if owner_id is not None else actor_id
         opportunity.edit(title=None if title is UNSET else title, amount=None if amount is UNSET else amount,
                          owner_id=owner, next_action_at=None if next_action_at is UNSET else next_action_at,
-                         change_next_action=next_action_at is not UNSET)
+                         change_next_action=next_action_at is not UNSET,
+                         description=None if description is UNSET else description)
         return self.opportunities.save(opportunity)
 
     def move(self, opportunity_id: UUID, stage_id: UUID, *, actor_id: int) -> Opportunity:

@@ -13,6 +13,7 @@ from django.db import close_old_connections, connection, transaction
 from django.test import TransactionTestCase
 from django.utils import timezone
 
+from .numbering_support import fake_number
 from modules.accounting import services as accounting
 from modules.accounts.testing import make_admin, make_company
 from modules.catalog.infrastructure.django.models import ProductModel, UnitModel
@@ -53,7 +54,7 @@ class PostingConcurrencyCase(TransactionTestCase):
         self.warehouse = WarehouseModel.objects.create(company_id=self.company.id, name='Central', is_default=True)
         purchase = Purchase.create(supplier_id=supplier.id, purchase_date=TODAY, items=[
             ItemDraft(product.id, '100', '10.00', product_name='Harina', unit_abbreviation='kg')])
-        purchase.confirm(timezone.now())
+        purchase.confirm(timezone.now(), fake_number())
         self.purchase = DjangoPurchaseRepository(self.company.id).save(purchase)
         self.item_id = self.purchase.items[0].id
 

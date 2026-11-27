@@ -10,7 +10,8 @@
         "JOURNAL": "Movements",
         "BALANCES": "Balances",
         "CASH_FLOW": "Cash flow",
-        "INCOME_EXPENSE": "Income and expenses"
+        "INCOME_EXPENSE": "Income and expenses",
+        "BALANCE_SHEET": "Balance sheet"
       }
     },
     "AGENDA": {
@@ -31,7 +32,8 @@
     },
     "DENTISTRY": {
       "TEXT": "Dentistry",
-      "PATIENTS": "Patients"
+      "PATIENTS": "Patients",
+      "BUDGETS": "Treatment plans"
     },
     "PERSONNEL": {
       "TEXT": "Personnel",
@@ -63,7 +65,8 @@
         "BOARD": "Board",
         "LEADS": "Leads",
         "OPPORTUNITIES": "Opportunities",
-        "TASKS": "To contact"
+        "TASKS": "To contact",
+        "TRACKING": "Sales follow-up"
       }
     },
     "ORDERS": {
@@ -147,6 +150,8 @@
       "LIST": {
         "PURCHASES": "Purchases",
         "SUPPLIERS": "Suppliers",
+        "PAID_REPORT": "Paid purchases",
+        "PAYABLE_REPORT": "Purchases payable",
         "SETTINGS": "Settings"
       }
     },
@@ -172,6 +177,8 @@
       "TEXT": "Sales",
       "LIST": {
         "ORDERS": "Orders",
+        "INCOME_REPORT": "Income by sale",
+        "RECEIVABLE_REPORT": "Orders receivable",
         "IMPORT": "Import sales",
         "SETTINGS": "Settings"
       }
@@ -183,6 +190,12 @@
     "LANGUAGE_LOAD_ERROR": "Could not change the language. Try again."
   },
   "COMMON": {
+    "FISCAL_PERIOD": {
+      "SIN_PERIODO": "The date is not inside any fiscal period, so it cannot be confirmed. Create the period in Accounting.",
+      "CERRADO": "The fiscal period of the date is closed, so it cannot be confirmed. Reopen it in Accounting.",
+      "CERRADO_NOMBRE": "The fiscal period “{{name}}” is closed, so it cannot be confirmed. Reopen it in Accounting.",
+      "IR_A_PERIODOS": "Go to fiscal periods"
+    },
     "591_7XXXXXXX": "+591 7xxxxxxx",
     "ACCIONES": "Actions",
     "ACTIVO": "Active",
@@ -309,6 +322,10 @@
       "NEW_PASSWORD": "New password",
       "CONFIRM_PASSWORD": "Confirm password"
     },
+    "PASSWORD_TOGGLE": {
+      "MOSTRAR": "Show password",
+      "OCULTAR": "Hide password"
+    },
     "SIGNIN": {
       "POCKETBIZ_VOLVER_AL_INICIO": "PocketBiz, back to home",
       "CONTRASENA": "Password",
@@ -339,7 +356,17 @@
       "CONFIRMA_LA_CONTRASENA": "Confirm the password.",
       "LAS_CONTRASENAS_NO_COINCIDEN": "The passwords do not match.",
       "INGRESA_UN_CORREO_VALIDO": "Enter a valid email.",
-      "NO_PUEDE_SUPERAR_CARACTERES": "It cannot exceed {{p0}} characters."
+      "NO_PUEDE_SUPERAR_CARACTERES": "It cannot exceed {{p0}} characters.",
+      "TIPO_DE_EMPRESA": "Company type",
+      "SELECCIONA_UN_TIPO": "Select a type",
+      "EL_TIPO_DE_EMPRESA_ES_OBLIGATORIO": "Select the company type.",
+      "TIPO_DE_EMPRESA_AYUDA": "This sets the modules you start with. You can turn on more later in Settings.",
+      "TIPO_COMPRAVENTA": "Buying and selling",
+      "TIPO_COMPRAVENTA_AYUDA": "Buying and selling products, with inventory.",
+      "TIPO_SERVICIOS": "Services",
+      "TIPO_SERVICIOS_AYUDA": "Quotes, collections and scheduling.",
+      "TIPO_ODONTOLOGIA": "Dentistry",
+      "TIPO_ODONTOLOGIA_AYUDA": "Dental care services."
     }
   },
   "CUSTOMERS": {
@@ -620,7 +647,8 @@
       "DIALOG_REACTIVAR_TEXTO": "You will be able to edit it again. All its history is kept.",
       "REGISTRO_DE_CAMBIOS": "Change log",
       "EDAD_ANO": "{{n}} year",
-      "MENOR_EDAD_ANO": "Minor · {{n}} year"
+      "MENOR_EDAD_ANO": "Minor · {{n}} year",
+      "ODONTOGRAMA": "Odontogram"
     },
     "PATIENT_LIST": {
       "PACIENTES": "Patients",
@@ -680,6 +708,132 @@
     "ROUTES": {
       "CLINICAL_ACCESS_UNAVAILABLE": "Clinical access unavailable",
       "PERMISSION_CHECK_FAILED": "The permission to access Dentistry could not be verified."
+    },
+    "ODONTOGRAM": {
+      "AGREGAR_GENERAL": "Add general finding",
+      "AGREGAR_HALLAZGO": "Add finding",
+      "ARCADA_INFERIOR": "Lower arch",
+      "ARCADA_SUPERIOR": "Upper arch",
+      "AUTOR": "Author",
+      "BORRADOR": "Draft",
+      "CARGANDO": "Loading odontogram…",
+      "CATALOGO_PROVISIONAL": "Provisional clinical catalog: pending validation by the dentist.",
+      "COL_CONDICION": "Condition",
+      "COL_DENTICION": "Dentition",
+      "COL_DIAGNOSTICO": "Diagnosis",
+      "COL_NOTAS": "Notes",
+      "COL_PIEZA": "Tooth",
+      "COL_SUPERFICIES": "Surfaces",
+      "CONDICION": "Condition / finding",
+      "CONDITION_CARIES": "Caries",
+      "CONDITION_CROWN": "Crown",
+      "CONDITION_ENDODONTICS": "Root canal",
+      "CONDITION_FILLING": "Filling",
+      "CONDITION_FRACTURE": "Fracture",
+      "CONDITION_HEALTHY": "Healthy",
+      "CONDITION_IMPLANT": "Implant",
+      "CONDITION_MISSING": "Missing",
+      "CONDITION_OTHER": "Other",
+      "CONFIRMADA": "Confirmed",
+      "CONFIRMADA_EL": "Confirmed on",
+      "CONFIRMADA_SOLO_LECTURA": "Confirmed evaluation: read-only. Use “Correct” to record changes.",
+      "CONFIRMAR": "Confirm",
+      "CONFIRMAR_EVALUACION": "Confirm evaluation",
+      "CORREGIR": "Correct (amend)",
+      "CORRIGE": "Corrects",
+      "CORRIGE_A": "Corrects #{{n}}",
+      "CREAR_CORRECCION": "Create correction",
+      "DENTICION": "Dentition type",
+      "DENT_MIXED": "Mixed",
+      "DENT_PERMANENT": "Permanent",
+      "DENT_TEMPORARY": "Primary",
+      "DESCARTAR": "Discard",
+      "DESCARTAR_BORRADOR": "Discard draft",
+      "DIAGNOSTICO": "Diagnosis",
+      "DIALOGO_CONFIRMAR_AVISO": "Once confirmed it cannot be edited. To correct it, a new evaluation is created with a reason; the previous one is kept.",
+      "DIALOGO_CONFIRMAR_TEXTO": "The evaluation will be confirmed with {{count}} finding(s).",
+      "DIALOGO_CONFIRMAR_TITULO": "Confirm evaluation",
+      "DIALOGO_CORREGIR_TEXTO": "A new draft evaluation will be created using the current findings as a base. The confirmed evaluation does not change.",
+      "DIALOGO_CORREGIR_TITULO": "Correct evaluation",
+      "DIALOGO_DESCARTAR_TEXTO": "The saved draft will be deleted and cannot be recovered.",
+      "DIALOGO_DESCARTAR_TITULO": "Discard draft",
+      "ELEGIR_CONDICION": "Choose a condition",
+      "ERR_403": "You do not have permission to access the odontogram.",
+      "ERR_404": "The patient or evaluation was not found.",
+      "ERR_409": "The evaluation changed or is already confirmed. Reload and try again.",
+      "ERR_CONDICION": "Choose a condition.",
+      "ERR_DIAGNOSTICO": "The diagnosis is required.",
+      "ERR_DUPLICADO": "That condition is already recorded on the tooth.",
+      "ERR_GENERIC": "The operation could not be completed. Your changes are still here.",
+      "ERR_FECHA": "Enter a valid clinical date (not in the future).",
+      "ERR_LARGO": "Diagnosis allows up to 500 characters and notes up to 1000.",
+      "ERR_REVISA": "Check the data:",
+      "ESTADO_CAMBIOS": "Unsaved changes",
+      "ESTADO_ERROR": "Could not save. Your changes are still here.",
+      "ESTADO_GUARDADO": "Saved ✓",
+      "ESTADO_GUARDANDO": "Saving…",
+      "ESTADO_SIN_CAMBIOS": "No changes",
+      "EVALUACION": "Evaluation",
+      "FECHA_CLINICA": "Clinical date",
+      "GENERAL_AYUDA": "Findings that do not belong to a specific tooth.",
+      "GUARDAR_BORRADOR": "Save draft",
+      "HALLAZGOS_GENERALES": "General findings",
+      "HALLAZGOS_PIEZA": "Tooth findings",
+      "KIND_CANINE": "Canine",
+      "KIND_INCISOR": "Incisor",
+      "KIND_MOLAR": "Molar",
+      "KIND_PREMOLAR": "Premolar",
+      "LEYENDA": "Legend",
+      "MIGAS_ARIA": "Breadcrumb",
+      "MIGA_ODONTOLOGIA": "Dentistry",
+      "MIGA_PACIENTES": "Patients",
+      "MOTIVO_ENMIENDA": "Reason for the correction",
+      "NOTAS": "Notes",
+      "NOTA_OBLIGATORIA": "A note is required for this condition.",
+      "NO_APLICA_SUPERFICIES": "This condition is recorded on the whole tooth.",
+      "NUEVA_EVALUACION": "New evaluation",
+      "NUEVA_SIN_GUARDAR": "New evaluation (unsaved)",
+      "OK_BORRADOR": "Draft saved.",
+      "OK_CONFIRMADA": "Evaluation confirmed.",
+      "OK_CORRECCION": "Correction created as a draft.",
+      "OK_DESCARTADO": "Draft discarded.",
+      "OPCION": "#{{n}} · {{date}} · {{status}} · {{author}}",
+      "PERFIL_ARCHIVADO": "Archived profile: read-only. Reactivate the dental profile to record evaluations.",
+      "PIEZA_ARIA": "Tooth {{piece}}, {{dent}} {{type}}, {{summary}}",
+      "PIEZA_COMPLETA": "Whole tooth",
+      "PIEZA_SELECCIONADA": "Selected tooth",
+      "PIEZA_TITULO": "Tooth {{piece}} · {{dent}} {{type}}",
+      "PROFESIONAL": "Professional",
+      "QUITAR_ARIA": "Remove {{text}}",
+      "REEMPLAZADA_POR": "Replaced by #{{n}}",
+      "REEMPLAZO": "Replacement",
+      "REGISTRADA": "Recorded",
+      "REGISTRAR_INICIAL": "Record initial evaluation",
+      "SELECCIONA_PIEZA": "Select a tooth on the chart to view or record its findings.",
+      "SIGLA_PERMANENTE": "P",
+      "SIGLA_TEMPORAL": "D",
+      "SIN_EVALUAR": "Not evaluated",
+      "SIN_EVALUAR_CORTO": "N/E",
+      "SIN_GENERALES": "No general findings.",
+      "SIN_PROFESIONAL": "No professional",
+      "SUPERFICIES": "Surfaces",
+      "SUPERFICIES_AYUDA": "Select at least one surface.",
+      "SURFACE_D": "Distal",
+      "SURFACE_I": "Incisal",
+      "SURFACE_L": "Lingual",
+      "SURFACE_M": "Mesial",
+      "SURFACE_O": "Occlusal",
+      "SURFACE_P": "Palatal",
+      "SURFACE_V": "Buccal",
+      "TABLA_CAPTION": "Evaluation findings by tooth",
+      "TABLA_VACIA": "This evaluation has no per-tooth findings yet.",
+      "TITULO": "Odontogram",
+      "VACIO": "This patient has no evaluations yet.",
+      "VISTA_ARIA": "Odontogram view",
+      "VISTA_GRAFICO": "Chart",
+      "VISTA_TABLA": "Table",
+      "VOLVER": "Back",
+      "VOLVER_A_FICHA": "Back to profile"
     }
   },
   "EXPENSES": {
@@ -1446,6 +1600,7 @@
       "PROVEEDOR_CREADO": "Supplier created"
     },
     "PURCHASE_DETAIL": {
+      "PERIODO_FISCAL": "Fiscal period",
       "DETALLE_DE_LA_COMPRA": "Purchase details",
       "RESUMEN": "Summary",
       "RECEPCIONES": "Receipts",
@@ -1516,6 +1671,7 @@
       "COMPRA_GUARDADA": "Purchase saved"
     },
     "PURCHASE_LIST": {
+      "PERIODO": "Period {{name}}",
       "NUEVA_COMPRA": "New purchase",
       "BUSCAR": "Search",
       "REFERENCIA_INTERNA_O_EXTERNA": "Internal or external reference",
@@ -1677,6 +1833,19 @@
       "ADMITE_COMO_MAXIMO_3_DECIMALES": "Allows at most 3 decimals.",
       "LA_UNIDAD_NO_ADMITE_FRACCIONES": "The unit does not allow fractions: use a whole quantity.",
       "NO_PUEDE_SUPERAR_EL_PENDIENTE": "It cannot exceed the pending amount ({{p0}})."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Paid purchases",
+      "SUBTITLE": "Confirmed purchases paid in full",
+      "EMPTY": "No records",
+      "COL_PURCHASE": "Purchase",
+      "COL_SUPPLIER": "Supplier",
+      "TOTALS": "Totals ({{count}} purchases)"
+    },
+    "PAYABLE_REPORT": {
+      "TITLE": "Purchases payable",
+      "SUBTITLE": "Confirmed purchases with an outstanding balance",
+      "EMPTY": "No records"
     }
   },
   "REPORTING": {
@@ -1815,6 +1984,7 @@
       "SALIDA_DE_INVENTARIO": "Inventory outbound"
     },
     "ORDER_DETAIL": {
+      "PERIODO_FISCAL": "Fiscal period: {{name}}",
       "PEDIDO": "Order {{p0}}",
       "CANCELAR_PEDIDO": "Cancel order",
       "VOLVER_A_PEDIDOS": "Back to orders",
@@ -1896,6 +2066,7 @@
       "PEDIDO_CAMBIO": "The order changed after the payment form was opened. It was refreshed with the current data."
     },
     "ORDER_LIST": {
+      "PERIODO": "Period {{name}}",
       "NUEVO_PEDIDO": "New order",
       "ATAJOS_DE_VISTA": "View shortcuts",
       "ESTADO_DE_ENTREGA": "Delivery status",
@@ -1977,6 +2148,31 @@
       "EVENT_SALE_PAYMENT": "Sale payment",
       "REEMBOLSADO": "Refunded",
       "REEMBOLSO_REGISTRADO": "The refund was recorded: the money was returned outside PocketBiz."
+    },
+    "PAID_REPORT": {
+      "TITLE": "Income by sale",
+      "SUBTITLE": "Delivered and paid orders",
+      "EXPORT_PDF": "Export PDF",
+      "EXPORT_EXCEL": "Export Excel",
+      "DATE_FROM": "Start date",
+      "DATE_TO": "End date",
+      "FISCAL_PERIOD": "Fiscal period",
+      "ALL_PERIODS": "All periods",
+      "RANGE_INVALID": "The end date cannot be earlier than the start date.",
+      "LOADING": "Loading…",
+      "EMPTY": "No records",
+      "COL_ORDER": "Order",
+      "COL_CUSTOMER": "Customer",
+      "COL_TOTAL": "Total",
+      "COL_BALANCE": "Balance",
+      "TOTALS": "Totals ({{count}} orders)",
+      "SHOWING": "Showing {{from}}–{{to}} of {{total}}",
+      "EXPORT_TOO_LARGE": "The report has too many orders to export: narrow the dates or the fiscal period."
+    },
+    "RECEIVABLE_REPORT": {
+      "TITLE": "Orders receivable",
+      "SUBTITLE": "Orders with an outstanding balance",
+      "EMPTY": "No records"
     }
   },
   "SERVICES": {
@@ -3125,6 +3321,24 @@
       "VER_MOVIMIENTOS": "View movements of {{name}}",
       "NOTA_APERTURA": "Balances come only from journal entries. With “From”, the opening balance before that date is shown; openings are recorded as entries."
     },
+    "BALANCE_SHEET": {
+      "NOTA_RANGO": "Balances are cumulative up to “To”. With “From”, the opening balance (before that date) is separated from the movement in the range.",
+      "SECCION_ASSET": "Assets",
+      "SECCION_LIABILITY": "Liabilities",
+      "SECCION_EQUITY": "Equity",
+      "SALDO_INICIAL": "Opening balance",
+      "MOVIMIENTO": "Movement",
+      "SALDO_FINAL": "Closing balance",
+      "RESULTADOS_ANTERIORES": "Results of previous periods",
+      "RESULTADO_PERIODO": "Result for the period",
+      "TOTAL_SECCION": "Total {{section}}",
+      "TOTAL_ACTIVO": "Total assets",
+      "TOTAL_PASIVO_PATRIMONIO": "Total liabilities + equity",
+      "ECUACION": "Assets = Liabilities + Equity",
+      "DIFERENCIA": "Difference: {{amount}}",
+      "AVISO_SIN_CLASIFICAR": "There are unclassified accounts with a balance ({{amount}}); they are left out of the balance sheet, so it may not balance. Classify them in Accounts.",
+      "SIN_REGISTROS": "No records"
+    },
     "POSTING": {
       "TAB": "Automatic entries",
       "TITLE": "Automatic entries",
@@ -3729,6 +3943,38 @@
       "ARCHIVAR_TITULO": "Archive task",
       "ARCHIVAR_TEXTO": "The task is hidden from every list and cannot be recovered from the interface.",
       "ARCHIVAR_CONFIRMAR": "Archive task"
+    },
+    "TRACKING": {
+      "TITULO": "Sales follow-up",
+      "CREAR_TABLERO": "Create new board",
+      "SIN_TABLEROS": "You have no follow-up boards yet. Create the first one.",
+      "ABRIR_TABLERO": "Open board {{name}}",
+      "VOLVER": "Back to boards",
+      "AGREGAR_COLUMNA": "Add column",
+      "NUEVA_COLUMNA": "New column",
+      "NOMBRE_COLUMNA_OBLIGATORIO": "Enter the column name.",
+      "SIN_COLUMNAS": "This board has no columns yet. Add the first one.",
+      "SIN_TARJETAS": "No cards",
+      "MENU_COLUMNA": "Options for column {{name}}",
+      "AGREGAR_TARJETA": "Add card",
+      "ARCHIVAR_COLUMNA": "Archive column",
+      "ARCHIVAR": "Archive",
+      "ARCHIVAR_CONFIRMAR": "Archive the column “{{name}}”?",
+      "ARCHIVAR_BLOQUEADO": "The column “{{name}}” has {{n}} active card(s). Move them to another column before archiving it.",
+      "TABLERO_NO_ENCONTRADO": "The board was not found.",
+      "NUEVA_TARJETA": "New card",
+      "NOMBRE_TARJETA_OBLIGATORIO": "Enter the card name.",
+      "CLIENTE_O_PROSPECTO": "Customer or prospect",
+      "CONTACTO_OBLIGATORIO": "Choose a customer or a prospect.",
+      "GRUPO_CLIENTES": "Customers",
+      "GRUPO_PROSPECTOS": "Prospects",
+      "DESCRIPCION": "Description",
+      "DESCRIPCION_MUY_LARGA": "Use at most {{n}} characters.",
+      "VER": "View",
+      "VER_DE": "View «{{title}}»",
+      "TARJETA": "Card",
+      "AGREGAR_ACTIVIDAD": "Add activity",
+      "CONTACTO_FIJO": "Customer or prospect of the card (cannot be changed)."
     }
   }
 }

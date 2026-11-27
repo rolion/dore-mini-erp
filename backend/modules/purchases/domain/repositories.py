@@ -6,7 +6,7 @@ from uuid import UUID
 
 from .enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from .payment import Payment
-from .purchase import Purchase
+from .purchase import Purchase, PurchaseNumber
 from .receipt import Receipt
 from .supplier import Supplier
 
@@ -29,6 +29,7 @@ class PurchaseSummary:
     payment_status: PaymentStatus | None = None
     paid_total: Decimal | None = None
     balance: Decimal | None = None
+    number: PurchaseNumber | None = None
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,16 @@ class PurchaseFilters:
     payment_status: PaymentStatus | None = None
     pending_payment: bool = False
     search: str = ''
+    fiscal_period_id: UUID | None = None
+
+
+@dataclass(frozen=True)
+class PurchaseTotals:
+    """Totales de un conjunto filtrado de compras: cantidad, importe y saldo por pagar."""
+
+    purchases_count: int
+    total: Decimal
+    balance: Decimal
 
 
 class PurchaseRepository(Protocol):
@@ -59,6 +70,10 @@ class PurchaseRepository(Protocol):
     def list(self, supplier_id: UUID | None = None,
              filters: PurchaseFilters | None = None) -> Sequence[PurchaseSummary]:
         """Compras de la empresa: fecha desc, creación desc, id; opcionalmente de un proveedor y con filtros."""
+        ...
+
+    def totals(self, filters: PurchaseFilters) -> PurchaseTotals:
+        """Totales de todas las compras que cumplen los filtros (sin paginar)."""
         ...
 
 

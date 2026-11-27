@@ -1,0 +1,141 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ board?.name || ('CRM.TRACKING.TITULO' | translate) }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate">
+        <i class="fas fa-home font-17" aria-hidden="true"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.CUSTOMER_LIST.BREADCRUMB' | translate }}</li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/crm/tracking">{{ 'CRM.TRACKING.TITULO' | translate }}</a></li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header">
+        <h4 data-testid="board-title">{{ board?.name || ('CRM.TRACKING.TITULO' | translate) }}</h4>
+        <a class="btn btn-light ms-auto" routerLink="/pocketbiz/crm/tracking" data-testid="back">{{ 'CRM.TRACKING.VOLVER' | translate }}</a>
+        @if (board) {
+        <button type="button" class="btn btn-primary ms-2" data-testid="add-column" (click)="addColumn()">
+          <i class="fas fa-plus me-1" aria-hidden="true"></i>{{ 'CRM.TRACKING.AGREGAR_COLUMNA' | translate }}
+        </button>
+        }
+      </div>
+      <div class="card-body">
+        @if (loading) {
+        <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+        } @else if (loadError) {
+        <div class="alert alert-danger" role="alert" data-testid="load-error">
+          {{ loadError }}
+          <button type="button" class="btn btn-light btn-sm ms-2" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else if (notFound) {
+        <div class="text-center py-4" data-testid="not-found">
+          <p class="text-muted">{{ 'CRM.TRACKING.TABLERO_NO_ENCONTRADO' | translate }}</p>
+          <a class="btn btn-primary" routerLink="/pocketbiz/crm/tracking">{{ 'CRM.TRACKING.VOLVER' | translate }}</a>
+        </div>
+        } @else {
+        <div aria-live="polite">
+          @if (notice) {
+          <div class="alert alert-warning" role="alert" data-testid="notice">{{ notice }}</div>
+          }
+          @if (archiving; as stage) {
+          <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2" role="alert" data-testid="archive-confirm">
+            <span>{{ 'CRM.TRACKING.ARCHIVAR_CONFIRMAR' | translate: { name: stage.name } }}</span>
+            <button type="button" class="btn btn-warning btn-sm" data-testid="archive-yes" [disabled]="working" (click)="confirmArchive()">{{ 'CRM.TRACKING.ARCHIVAR' | translate }}</button>
+            <button type="button" class="btn btn-light btn-sm" data-testid="archive-no" (click)="cancelArchive()">{{ 'COMMON.CANCELAR' | translate }}</button>
+          </div>
+          }
+        </div>
+        @if (!columns.length) {
+        <div class="text-center py-4" data-testid="no-columns">
+          <p class="text-muted">{{ 'CRM.TRACKING.SIN_COLUMNAS' | translate }}</p>
+        </div>
+        } @else {
+        <p class="text-muted small mb-2" data-testid="drag-hint">{{ 'CRM.OPPORTUNITY_BOARD.ARRASTRAR_AYUDA' | translate }}</p>
+        <div class="crm-kanban" data-testid="kanban" cdkDropListGroup>
+          @for (column of columns; track column.stage.id) {
+          <section class="card crm-column m-0" data-testid="column" [attr.aria-labelledby]="'crm-track-col-' + column.stage.id">
+            <header class="crm-column-header">
+              <h5 class="h6 mb-0" [id]="'crm-track-col-' + column.stage.id"><span data-testid="column-name">{{ column.stage.name }}</span> · {{ column.cards.length }}</h5>
+              <small class="text-muted ms-auto">{{ column.total | money }}</small>
+              <div ngbDropdown placement="bottom-end" class="d-inline-block">
+                <button type="button" class="btn btn-light btn-sm crm-column-menu" ngbDropdownToggle data-testid="column-menu"
+                  [attr.aria-label]="'CRM.TRACKING.MENU_COLUMNA' | translate: { name: column.stage.name }"
+                  [title]="'CRM.TRACKING.MENU_COLUMNA' | translate: { name: column.stage.name }">
+                  <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                </button>
+                <div ngbDropdownMenu>
+                  <button type="button" ngbDropdownItem data-testid="add-card" (click)="addCard(column)">{{ 'CRM.TRACKING.AGREGAR_TARJETA' | translate }}</button>
+                  <button type="button" ngbDropdownItem data-testid="archive-column" (click)="requestArchive(column)">{{ 'CRM.TRACKING.ARCHIVAR_COLUMNA' | translate }}</button>
+                </div>
+              </div>
+            </header>
+            <ul class="list-unstyled crm-column-body m-0" cdkDropList [cdkDropListData]="column" data-testid="column-list"
+              [cdkDropListDisabled]="movingId !== null" (cdkDropListDropped)="drop($event)">
+              @for (card of column.cards; track card.id) {
+              <li class="card crm-opportunity m-0" data-testid="tracking-card" cdkDrag [cdkDragData]="card"
+                cdkDragPreviewContainer="parent" [cdkDragDisabled]="movingId !== null">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <span class="crm-drag-handle" cdkDragHandle data-testid="drag-handle" role="img"
+                    [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.ARRASTRAR_DE' | translate: { title: card.title }"
+                    [title]="'CRM.OPPORTUNITY_BOARD.ARRASTRAR_DE' | translate: { title: card.title }"><i class="fas fa-grip-vertical" aria-hidden="true"></i></span>
+                  <button type="button" class="btn btn-link p-0 text-start fw-bold crm-opportunity-title flex-grow-1" data-testid="card-title"
+                    (click)="viewCard(card)">{{ card.title }}</button>
+                </div>
+                <dl class="crm-opportunity-data mb-0">
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.CONTACTO' | translate }}</dt>
+                    <dd data-testid="card-contact">
+                      @if (contact(card); as person) {
+                      {{ person.name }}@if (person.phone) { · {{ person.phone }} }
+                      @if (!card.customer) {
+                      <small class="text-muted">({{ 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' | translate }})</small>
+                      }
+                      } @else {
+                      {{ 'CRM.OPPORTUNITY_BOARD.SIN_CONTACTO' | translate }}
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.IMPORTE' | translate }}</dt>
+                    <dd class="fw-bold" data-testid="card-amount">{{ card.amount | money }}</dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.SIGUIENTE_ACCION' | translate }}</dt>
+                    <dd data-testid="card-next" [class.text-danger]="overdue(card)" [class.fw-bold]="overdue(card)">
+                      @if (card.nextActionAt) {
+                      {{ card.nextActionAt | date: 'dd/MM/yyyy HH:mm' }}
+                      @if (overdue(card)) { · {{ 'CRM.OPPORTUNITY_BOARD.VENCIDA' | translate }} }
+                      } @else {
+                      {{ 'CRM.OPPORTUNITY_BOARD.SIN_SIGUIENTE_ACCION' | translate }}
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</dt>
+                    <dd>{{ card.owner.name }}</dd>
+                  </div>
+                </dl>
+                <div class="crm-opportunity-actions">
+                  <button type="button" class="btn btn-light btn-sm" data-testid="view-card" (click)="viewCard(card)"
+                    [attr.aria-label]="'CRM.TRACKING.VER_DE' | translate: { title: card.title }">{{ 'CRM.TRACKING.VER' | translate }}</button>
+                </div>
+              </li>
+              } @empty {
+              <li class="text-muted crm-column-empty" data-testid="column-empty">{{ 'CRM.TRACKING.SIN_TARJETAS' | translate }}</li>
+              }
+            </ul>
+            <button type="button" class="btn btn-light btn-sm crm-column-add" data-testid="add-card-button" (click)="addCard(column)"
+              [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.NUEVA_EN' | translate: { name: column.stage.name }">
+              <i class="fas fa-plus me-1" aria-hidden="true"></i>{{ 'CRM.OPPORTUNITY_BOARD.AGREGAR' | translate }}
+            </button>
+          </section>
+          }
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+</section>

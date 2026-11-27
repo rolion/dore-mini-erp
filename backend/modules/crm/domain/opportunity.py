@@ -12,6 +12,7 @@ STATUSES = (OPEN, WON, LOST)
 CURRENCY = 'BOB'
 TITLE_MAX = 150
 LOST_REASON_MAX = 500
+DESCRIPTION_MAX = 1000
 AMOUNT_MAX = Decimal('9999999999.99')  # Decimal(12, 2)
 CENT = Decimal('0.01')
 
@@ -41,6 +42,14 @@ def clean_amount(value: object) -> Decimal:
     if amount > AMOUNT_MAX:
         raise CrmValidationError({'amount': ['El importe es demasiado grande.']})
     return amount.quantize(CENT)
+
+
+def clean_description(value: object) -> str:
+    """INV-03: opcional, recortada, hasta DESCRIPTION_MAX caracteres."""
+    text = value.strip() if isinstance(value, str) else ''
+    if len(text) > DESCRIPTION_MAX:
+        raise CrmValidationError({'description': [f'Usa como máximo {DESCRIPTION_MAX} caracteres.']})
+    return text
 
 
 def clean_lost_reason(value: object) -> str:
@@ -79,15 +88,20 @@ class Opportunity:
     order_id: UUID | None = None
     lost_reason: str = ''
     created_at: datetime | None = None
+    description: str = ''
 
     @classmethod
     def create(cls, *, board_id: UUID, stage_id: UUID, lead_id: UUID | None, customer_id: UUID | None,
-               title: object, amount: object, owner_id: int, next_action_at: datetime | None = None) -> 'Opportunity':
+               title: object, amount: object = None, owner_id: int, next_action_at: datetime | None = None,
+               description: object = None) -> 'Opportunity':
         errors: dict[str, list[str]] = {}
         if lead_id is None and customer_id is None:
             errors['lead_id'] = ['Elige un prospecto o un cliente.']
         values = {}
-        for field, check in (('title', lambda: clean_title(title)), ('amount', lambda: clean_amount(amount))):
+        checks = (('title', lambda: clean_title(title)),
+                  ('amount', lambda: clean_amount(amount if amount is not None else Decimal('0'))),  # INV-04
+                  ('description', lambda: clean_description(description)))
+        for field, check in checks:
             try:
                 values[field] = check()
             except CrmValidationError as exc:
@@ -107,12 +121,14 @@ class Opportunity:
                               status=self.status)
 
     def edit(self, *, title: object = None, amount: object = None, owner_id: int | None = None,
-             next_action_at: datetime | None = None, change_next_action: bool = False) -> None:
+             next_action_at: datetime | None = None, change_next_action: bool = False,
+             description: object = None) -> None:
         """Cambia solo lo indicado (`None` = sin cambio; `change_next_action` permite vaciar la fecha)."""
         self._require_open()
         new_title = clean_title(title) if title is not None else self.title
         new_amount = clean_amount(amount) if amount is not None else self.amount
-        self.title, self.amount = new_title, new_amount
+        new_description = clean_description(description) if description is not None else self.description
+        self.title, self.amount, self.description = new_title, new_amount, new_description
         if owner_id is not None:
             self.owner_id = owner_id
         if change_next_action:

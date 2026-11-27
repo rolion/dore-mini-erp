@@ -66,11 +66,16 @@ def export_all(company_id: UUID) -> dict:
     return data
 
 
-def apply_all(company_id: UUID, snapshot: dict | None = None, *, dry_run: bool = False) -> dict[str, dict[str, int]]:
-    """Aplica el snapshot a la empresa, todo o nada; con `dry_run` calcula el resultado y revierte."""
+def apply_all(company_id: UUID, snapshot: dict | None = None, *, dry_run: bool = False,
+              profile: str | None = None) -> dict[str, dict[str, int]]:
+    """Aplica el snapshot a la empresa, todo o nada; con `dry_run` calcula el resultado y revierte.
+
+    `profile` (p. ej. el tipo de empresa) llega a las secciones en `ctx['profile']`; una sección que lo entienda
+    ajusta lo suyo y las demás lo ignoran. Sin perfil se aplica el snapshot tal cual.
+    """
     data = _checked(snapshot) if snapshot is not None else load_snapshot()
     report: dict[str, dict[str, int]] = {}
-    ctx: dict = {}
+    ctx: dict = {'profile': profile}
     with transaction.atomic():
         for section in _ordered():
             report[section.key] = section.apply(company_id, data.get(section.key) or {}, ctx)

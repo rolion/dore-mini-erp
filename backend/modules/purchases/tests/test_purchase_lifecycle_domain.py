@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from unittest import TestCase
 
+from .numbering_support import fake_number
 from modules.purchases.domain.enums import PaymentStatus, PurchaseStatus, ReceptionStatus
 from modules.purchases.domain.exceptions import (
     PurchaseCancellationBlocked,
@@ -16,7 +17,7 @@ NOW = datetime(2026, 10, 30, 12, 0, tzinfo=timezone.utc)
 class LifecycleTests(TestCase):
     def test_confirm_locks_the_draft(self):  # INV-01, INV-03
         purchase = make([draft()])
-        purchase.confirm(NOW)
+        purchase.confirm(NOW, fake_number())
         self.assertEqual((purchase.status, purchase.confirmed_at, purchase.editable),
                          (PurchaseStatus.CONFIRMED, NOW, False))
         self.assertEqual(purchase.allowed_actions, ['receive', 'pay', 'cancel'])
@@ -26,7 +27,7 @@ class LifecycleTests(TestCase):
     def test_confirm_needs_items_and_an_active_supplier_reported_together(self):  # INV-01, INV-02
         purchase = make()
         with self.assertRaises(PurchaseValidationError) as ctx:
-            purchase.confirm(NOW, supplier_active=False)
+            purchase.confirm(NOW, fake_number(), supplier_active=False)
         self.assertEqual(set(ctx.exception.errors), {'items', 'supplier_id'})
         self.assertEqual(purchase.status, PurchaseStatus.DRAFT)
 
@@ -34,7 +35,7 @@ class LifecycleTests(TestCase):
         purchase = make([draft()])
         purchase.cancel('error', NOW)
         with self.assertRaises(PurchaseInvalidTransition):
-            purchase.confirm(NOW)
+            purchase.confirm(NOW, fake_number())
 
     def test_cancel_requires_a_trimmed_reason_up_to_500(self):  # INV-04, EDGE-04
         for reason in (None, '', '   ', 'x' * 501):
@@ -51,7 +52,7 @@ class LifecycleTests(TestCase):
 
     def test_cancel_a_confirmed_purchase_without_activity(self):  # INV-04
         purchase = make([draft()])
-        purchase.confirm(NOW)
+        purchase.confirm(NOW, fake_number())
         purchase.cancel('Proveedor no entrega', NOW)
         self.assertEqual(purchase.status, PurchaseStatus.CANCELLED)
 
@@ -60,7 +61,7 @@ class LifecycleTests(TestCase):
                  (('payment_status', PaymentStatus.PAID), ['receive']))
         for (field, value), actions in cases:
             purchase = make([draft()])
-            purchase.confirm(NOW)
+            purchase.confirm(NOW, fake_number())
             setattr(purchase, field, value)
             self.assertEqual(purchase.allowed_actions, actions)
             with self.assertRaises(PurchaseCancellationBlocked):

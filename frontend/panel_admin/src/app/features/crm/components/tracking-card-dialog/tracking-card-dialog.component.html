@@ -1,0 +1,77 @@
+  <div class="modal-header">
+    <h4 class="modal-title">{{ (isEdit ? 'CRM.TRACKING.TARJETA' : 'CRM.TRACKING.NUEVA_TARJETA') | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body" [style.height]="isEdit ? 'min(60vh, 440px)' : null">
+    <div class="row g-4" [class.h-100]="isEdit">
+      <div [class.col-lg-6]="isEdit" [class.col-12]="!isEdit" [class.overflow-auto]="isEdit" [class.mh-100]="isEdit">
+        @if (isEdit && !editing) {
+        <dl class="mb-0" data-testid="card-info">
+          <dt>{{ 'COMMON.NOMBRE' | translate }}</dt>
+          <dd data-testid="info-title">{{ context.card!.title }}</dd>
+          <dt>{{ 'CRM.TRACKING.CLIENTE_O_PROSPECTO' | translate }}</dt>
+          <dd data-testid="info-contact">{{ contactName }}</dd>
+          <dt>{{ 'CRM.TRACKING.DESCRIPCION' | translate }}</dt>
+          <dd class="text-break" data-testid="info-description">{{ context.card!.description || '—' }}</dd>
+        </dl>
+        <button type="button" class="btn btn-light btn-sm" data-testid="edit-card" (click)="startEdit()">{{ 'COMMON.EDITAR' | translate }}</button>
+        }
+        <form id="crm-card-form" [hidden]="isEdit && !editing" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      @if (errorMessage) {
+      <div class="alert alert-danger" role="alert" data-testid="dialog-error">{{ errorMessage }}</div>
+      }
+      <div class="form-group">
+        <label for="crm-card-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
+        <input id="crm-card-name" type="text" class="form-control" formControlName="name" [attr.maxlength]="nameMaxLength"
+          [attr.aria-invalid]="invalid('name')">
+        @if (invalid('name')) {
+        <small class="form-text text-danger" role="alert">
+          {{ serverErrors.name || (form.controls.name.hasError('maxlength') ?
+          ('CRM.OPPORTUNITY_DIALOG.TITULO_MUY_LARGO' | translate: { n: nameMaxLength }) : ('CRM.TRACKING.NOMBRE_TARJETA_OBLIGATORIO' | translate)) }}
+        </small>
+        }
+      </div>
+      <div class="form-group">
+        <label for="crm-card-contact">{{ 'CRM.TRACKING.CLIENTE_O_PROSPECTO' | translate }} <span class="text-danger">*</span></label>
+        <ng-select labelForId="crm-card-contact" formControlName="contact" [items]="contacts" bindLabel="name" groupBy="group"
+          [typeahead]="contactSearch$" [loading]="contactsLoading" [clearable]="true"
+          [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate" [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate"
+          [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate" [loadingText]="'COMMON.CARGANDO' | translate">
+          <ng-template ng-option-tmp let-item="item">
+            <span class="fw-semibold">{{ item.name }}</span>
+            <small class="text-muted d-block">{{ item.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</small>
+          </ng-template>
+        </ng-select>
+        @if (isEdit) {
+        <small class="form-text text-muted">{{ 'CRM.TRACKING.CONTACTO_FIJO' | translate }}</small>
+        }
+        @if (invalid('contact')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.contact || ('CRM.TRACKING.CONTACTO_OBLIGATORIO' | translate) }}</small>
+        }
+      </div>
+      <div class="form-group">
+        <label for="crm-card-description">{{ 'CRM.TRACKING.DESCRIPCION' | translate }}</label>
+        <textarea id="crm-card-description" class="form-control" rows="3" formControlName="description"
+          [attr.maxlength]="descriptionMaxLength" [attr.aria-invalid]="invalid('description')"></textarea>
+        @if (invalid('description')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.description || ('CRM.TRACKING.DESCRIPCION_MUY_LARGA' | translate: { n: descriptionMaxLength }) }}</small>
+        }
+      </div>
+
+        </form>
+      </div>
+      @if (isEdit) {
+      <div class="col-lg-6 mh-100" data-testid="activity-column">
+        <app-crm-activity-panel [related]="{ type: 'opportunity', id: context.card!.id, name: context.card!.title }" />
+      </div>
+      }
+    </div>
+  </div>
+  <div class="modal-footer">
+    @if (isEdit && !editing) {
+    <button type="button" class="btn btn-light" data-testid="close-card" (click)="activeModal.dismiss()">{{ 'COMMON.CERRAR' | translate }}</button>
+    } @else {
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="isEdit ? cancelEdit() : activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" form="crm-card-form" class="btn btn-primary" [disabled]="form.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
+    }
+  </div>

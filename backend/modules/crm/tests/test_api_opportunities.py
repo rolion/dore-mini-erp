@@ -88,9 +88,9 @@ class CreateTests(OpportunityApiBase):
     def test_create_for_lead_in_first_stage_with_initial_history(self):  # AC-02, INV-08
         lead = self.lead('Ana', phone='76543210')
         body = self.create(lead_id=str(lead.id), company_id=str(uuid4()), next_action_at='2026-11-25T15:00:00Z')
-        self.assertEqual(set(body), {'id', 'board_id', 'stage_id', 'lead', 'customer', 'title', 'owner', 'amount',
-                                     'currency', 'next_action_at', 'status', 'closed_at', 'order_id', 'lost_reason',
-                                     'created_at'})
+        self.assertEqual(set(body), {'id', 'board_id', 'stage_id', 'lead', 'customer', 'title', 'description', 'owner',
+                                     'amount', 'currency', 'next_action_at', 'status', 'closed_at', 'order_id',
+                                     'lost_reason', 'created_at'})
         self.assertEqual((body['stage_id'], body['status'], body['amount'], body['currency']),
                          (self.stages[0], 'open', '120.50', 'BOB'))
         self.assertEqual(body['lead'], {'id': str(lead.id), 'name': 'Ana', 'phone': '76543210'})
@@ -123,6 +123,7 @@ class CreateTests(OpportunityApiBase):
         other_user = make_admin(make_company('CRM B'), username='ajeno')
         cases = [
             ({}, 'lead_id'),
+            ({'lead_id': str(lead.id), 'description': 'x' * 1001}, 'description'),
             ({'lead_id': str(lead.id), 'amount': '-1'}, 'amount'),
             ({'lead_id': str(lead.id), 'amount': '1.234'}, 'amount'),
             ({'lead_id': str(lead.id), 'title': '  '}, 'title'),
@@ -155,6 +156,56 @@ class CreateTests(OpportunityApiBase):
         self.create(expected=404, customer_id=str(self.customer(company=other).id))
         self.create(expected=404, customer_id=str(uuid4()))
         self.assertEqual(OpportunityModel.objects.count(), 0)
+
+
+class TrackingCardTests(OpportunityApiBase):
+    """Tarjeta de seguimiento = oportunidad con nombre, contacto y descripción opcional (AC-06, AC-07)."""
+
+    def card(self, expected=201, **data):
+        payload = {'board_id': self.board['id'], 'title': 'Llamar a Ana', **data}
+        response = self.client.post(URL, payload, format='json')
+        self.assertEqual(response.status_code, expected, response.content)
+        return response.json()
+
+    def test_create_without_amount_nor_description(self):  # AC-06, INV-04
+        body = self.card(lead_id=str(self.lead().id))
+        self.assertEqual((body['amount'], body['description'], body['status']), ('0.00', '', 'open'))
+        self.assertEqual(body['owner']['id'], self.user.id)
+        self.assertEqual(body['stage_id'], self.stages[0])
+
+    def test_create_with_description_and_reload(self):  # AC-06, AC-07
+        customer = self.customer('Cliente Uno')
+        body = self.card(customer_id=str(customer.id), description='  Pidió cotización  ', stage_id=self.stages[1])
+        self.assertEqual(body['description'], 'Pidió cotización')
+        listed = self.client.get(URL, {'board_id': self.board['id']}).json()['results']
+        self.assertEqual([(o['title'], o['description'], o['stage_id']) for o in listed],
+                         [('Llamar a Ana', 'Pidió cotización', self.stages[1])])
+
+    def test_description_edit_and_limit(self):  # AC-07, INV-03
+        body = self.card(lead_id=str(self.lead().id))
+        url = f"{URL}{body['id']}/"
+        edited = self.client.patch(url, {'description': 'Detalle'}, format='json').json()
+        self.assertEqual(edited['description'], 'Detalle')
+        self.assertEqual(self.client.patch(url, {'title': 'Otro'}, format='json').json()['description'], 'Detalle')
+        too_long = self.client.patch(url, {'description': 'x' * 1001}, format='json')
+        self.assertEqual(too_long.status_code, 400)
+        self.assertIn('description', too_long.json())
+
+    def test_contact_required_and_foreign_contact_404(self):  # AC-06, AC-08
+        self.assertIn('lead_id', self.card(expected=400))
+        other = make_company('CRM Ajena')
+        self.card(expected=404, lead_id=str(self.lead(company=other).id))
+        self.card(expected=404, customer_id=str(self.customer(company=other).id))
+
+    def test_archive_empty_column_and_block_with_cards(self):  # AC-05, INV-05
+        self.card(lead_id=str(self.lead().id))
+        base = f"{BOARDS}{self.board['id']}/stages/"
+        blocked = self.client.post(f'{base}{self.stages[0]}/archive/', {}, format='json')
+        self.assertEqual((blocked.status_code, blocked.json()['code'], blocked.json()['card_count']),
+                         (409, 'stage_has_cards', 1))
+        empty = self.client.post(f'{base}{self.stages[2]}/archive/', {}, format='json')
+        self.assertEqual(empty.status_code, 200, empty.content)
+        self.assertEqual([s['id'] for s in empty.json()['stages']], self.stages[:2])
 
 
 class EditMoveTests(OpportunityApiBase):

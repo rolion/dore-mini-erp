@@ -1,0 +1,52 @@
+<div class="activity-panel" data-testid="activity-panel">
+  <div class="d-flex align-items-center mb-2 flex-shrink-0">
+    <h5 class="fs-6 mb-0">{{ 'CRM.ACTIVITY.HISTORIAL' | translate }} ({{ historyTotal }})</h5>
+    <button type="button" class="btn btn-light btn-sm ms-auto" data-testid="add-activity" [attr.aria-expanded]="formOpen"
+      (click)="toggleForm()">
+      <i class="fas fa-plus me-1" aria-hidden="true"></i>{{ 'CRM.TRACKING.AGREGAR_ACTIVIDAD' | translate }}
+    </button>
+  </div>
+  @if (formOpen) {
+  <div class="border rounded p-3 mb-3 flex-shrink-0" style="max-height: 60%; overflow-y: auto;" data-testid="activity-form">
+    @if (errorMessage) {
+    <div class="alert alert-danger" role="alert" data-testid="activity-error">{{ errorMessage }}</div>
+    }
+    <app-crm-activity-fields [form]="form" [showDate]="true" [dateFirst]="true" [errors]="fieldErrors" idPrefix="crm-card-activity" />
+    <button type="button" class="btn btn-primary" data-testid="save-activity" [disabled]="!canSave" (click)="save()">
+      {{ (saving ? 'CRM.ACTIVITY.GUARDANDO' : 'CRM.ACTIVITY.GUARDAR') | translate }}
+    </button>
+  </div>
+  }
+  @if (historyLoading && !history.length) {
+  <p class="text-muted mb-0">{{ 'COMMON.CARGANDO' | translate }}</p>
+  } @else if (historyError) {
+  <div class="alert alert-danger" role="alert">
+    {{ historyError }}
+    <button type="button" class="btn btn-light btn-sm ms-2" (click)="loadHistory()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+  </div>
+  } @else if (!history.length) {
+  <p class="text-muted mb-0" data-testid="history-empty">{{ 'CRM.ACTIVITY.SIN_HISTORIAL' | translate }}</p>
+  } @else {
+  <div class="activity-history" data-testid="history-scroll" tabindex="0" [attr.aria-label]="'CRM.ACTIVITY.HISTORIAL' | translate">
+  <ul class="list-unstyled mb-0" data-testid="history-list">
+    @for (item of history; track item.id) {
+    <li class="border-bottom py-2" data-testid="history-item">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="badge-outline col-grey" data-testid="channel-badge">{{ 'CRM.ACTIVITY.CHANNELS.' + item.channel | translate }}</span>
+        @if (item.outcome) {
+        <span class="badge-outline" [ngClass]="outcomeClass(item.outcome)" data-testid="outcome-badge">{{ 'CRM.ACTIVITY.OUTCOMES.' + item.outcome | translate }}</span>
+        }
+        <small class="text-muted ms-auto">{{ item.occurredAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+      </div>
+      @if (item.notes) {
+      <p class="mb-0 mt-1">{{ item.notes }}</p>
+      }
+    </li>
+    }
+  </ul>
+  @if (hasMoreHistory) {
+  <button type="button" class="btn btn-light btn-sm mt-2" [disabled]="historyLoading" (click)="loadHistory(true)" data-testid="history-more">{{ 'CRM.ACTIVITY.VER_MAS' | translate }}</button>
+  }
+  </div>
+  }
+</div>

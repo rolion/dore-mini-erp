@@ -2,7 +2,6 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from modules.sales.domain.order import order_code
 
 QUANTITY_PLACES = Decimal('0.0001')
 
@@ -72,10 +71,21 @@ class _CustomerMixin(serializers.Serializer):
     """`customer` = {id, name} o null; los nombres llegan por contexto (una consulta por lote)."""
 
     code = serializers.SerializerMethodField()
+    number = serializers.SerializerMethodField()
+    fiscal_period = serializers.SerializerMethodField()
     customer = serializers.SerializerMethodField()
 
     def get_code(self, obj) -> str:
-        return order_code(obj.id)
+        return obj.code
+
+    def get_number(self, obj) -> int | None:
+        return obj.number.number if obj.number is not None else None
+
+    def get_fiscal_period(self, obj):
+        """`{id, name}` del período con que se numeró el pedido; `null` si aún no tiene número."""
+        if obj.number is None:
+            return None
+        return {'id': obj.number.period_id, 'name': obj.number.period_name}
 
     def get_customer(self, obj):
         if obj.customer_id is None or not self.context.get('customers_available', True):
@@ -246,3 +256,23 @@ class OrderSummarySerializer(_CustomerMixin):
     total = _money()
     paid_total = _money()
     balance = _money()
+
+
+class PaidReportRowSerializer(serializers.Serializer):
+    """Fila del reporte «Ingresos por venta»: pedido, cliente, total y saldo."""
+
+    id = serializers.UUIDField(read_only=True)
+    code = serializers.CharField(read_only=True)
+    order_date = serializers.DateField(read_only=True)
+    customer = serializers.SerializerMethodField()
+    total = _money()
+    balance = _money()
+
+    def get_customer(self, obj):
+        if obj.customer_id is None or not self.context.get('customers_available', True):
+            return None
+        return {'id': obj.customer_id, 'name': self.context.get('customer_names', {}).get(obj.customer_id, '')}
+
+
+def paid_report_totals_data(totals) -> dict:
+    return {'orders_count': totals.orders_count, 'total': f'{totals.total:.2f}', 'balance': f'{totals.balance:.2f}'}

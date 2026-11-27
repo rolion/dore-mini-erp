@@ -1,12 +1,24 @@
 from django.urls import path
 
 from .purchase_views import PurchaseCancelView, PurchaseConfirmView, PurchaseDetailView, PurchaseListCreateView
+from .purchase_report_views import (
+    PaidPurchasesReportExportView,
+    PaidPurchasesReportView,
+    PayablePurchasesReportExportView,
+    PayablePurchasesReportView,
+)
 from .payment_views import PaymentClassificationView, PaymentListCreateView, PaymentPreviewView
 from .receipt_views import ReceiptDetailView, ReceiptListCreateView, ReceiptRevertView, ReceptionFormView
 
 urlpatterns = [
     path('', PurchaseListCreateView.as_view(), name='purchase-list'),
     path('payment-classification/', PaymentClassificationView.as_view(), name='purchase-payment-classification'),
+    path('paid-report/', PaidPurchasesReportView.as_view(), name='purchase-paid-report'),
+    path('paid-report/export/<str:file_format>/', PaidPurchasesReportExportView.as_view(),
+         name='purchase-paid-report-export'),
+    path('payable-report/', PayablePurchasesReportView.as_view(), name='purchase-payable-report'),
+    path('payable-report/export/<str:file_format>/', PayablePurchasesReportExportView.as_view(),
+         name='purchase-payable-report-export'),
     path('<uuid:purchase_id>/', PurchaseDetailView.as_view(), name='purchase-detail'),
     path('<uuid:purchase_id>/confirm/', PurchaseConfirmView.as_view(), name='purchase-confirm'),
     path('<uuid:purchase_id>/cancel/', PurchaseCancelView.as_view(), name='purchase-cancel'),

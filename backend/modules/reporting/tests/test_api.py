@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from rest_framework.test import APIClient, APITestCase
 
+from modules.sales.tests.fakes import fake_number
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.modularity.tests.test_enforcement import set_enabled
@@ -49,7 +50,7 @@ class ReportingApiTestCase(APITestCase):
         if paid:
             order.register_payment(paid, 'CASH', on, '', WEDNESDAY)
         if status in ('IN_PREPARATION', 'READY', 'DELIVERED'):
-            order.start_preparation()
+            order.start_preparation(fake_number())
         if status in ('READY', 'DELIVERED'):
             order.mark_ready()
         if status == 'DELIVERED':

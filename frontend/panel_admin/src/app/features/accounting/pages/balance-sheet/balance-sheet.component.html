@@ -1,0 +1,165 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'MENUITEMS.ACCOUNTING.LIST.BALANCE_SHEET' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main">
+        <i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.TEXT' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'MENUITEMS.ACCOUNTING.LIST.BALANCE_SHEET' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+        <div class="card">
+          <div class="p-10">
+            <div class="ngxTableHeader">
+              <div class="table-title">
+                <h2><strong>{{ 'MENUITEMS.ACCOUNTING.LIST.BALANCE_SHEET' | translate }}</strong></h2>
+              </div>
+            </div>
+
+            <form class="row g-2 m-2" [formGroup]="filterForm" data-testid="filters">
+              <div class="col-lg-3 col-sm-6 col-12">
+                <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
+                <input id="filter-from" type="date" class="form-control" formControlName="dateFrom" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-lg-3 col-sm-6 col-12">
+                <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
+                <input id="filter-to" type="date" class="form-control" formControlName="dateTo" [class.is-invalid]="rangeInvalid">
+              </div>
+              <div class="col-lg-3 col-sm-6 col-12 d-flex align-items-end">
+                <button type="button" class="btn btn-light" data-testid="clear-filters" [disabled]="!filtersActive"
+                  (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              </div>
+              @if (rangeInvalid) {
+              <div class="col-12">
+                <small class="form-text text-danger" data-testid="range-error">{{ 'ACCOUNTING.ENTRIES.LA_FECHA_HASTA_NO_PUEDE' | translate }}</small>
+              </div>
+              }
+            </form>
+
+            <small class="text-muted d-block m-2" data-testid="range-note">{{ 'ACCOUNTING.BALANCE_SHEET.NOTA_RANGO' | translate }}</small>
+
+            @if (errorMessage) {
+            <div class="alert alert-danger m-3" role="alert" data-testid="list-error">
+              {{ errorMessage }}
+              <button type="button" class="btn btn-link p-0 ms-2" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            }
+
+            @if (loading && !sheet) {
+            <p class="m-3 text-body-secondary" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            }
+
+            @if (empty) {
+            <div class="text-center p-4" data-testid="empty">
+              <p class="mb-2">{{ 'ACCOUNTING.BALANCE_SHEET.SIN_REGISTROS' | translate }}</p>
+              @if (filtersActive) {
+              <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                @for (filter of appliedFilters; track filter) {
+                <span class="badge-outline col-blue" data-testid="applied-filter">{{ filter }}</span>
+                }
+              </div>
+              <button type="button" class="btn btn-light" data-testid="empty-clear" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              }
+            </div>
+            } @else if (sheet) {
+
+            @if (hasUnclassified) {
+            <div class="alert alert-warning m-2" role="alert" data-testid="unclassified-warning">
+              {{ 'ACCOUNTING.BALANCE_SHEET.AVISO_SIN_CLASIFICAR' | translate: { amount: (sheet.totals.unclassifiedBalance | money) } }}
+            </div>
+            }
+
+            @for (section of sheet.sections; track section.key) {
+            <div class="table-responsive m-2">
+              <table class="table table-hover align-middle mb-0 balance-sheet-table" [attr.data-testid]="'section-' + section.key">
+                <caption class="caption-top fw-bold text-body"><h3 class="h5 mb-0">{{ sectionLabel(section) }}</h3></caption>
+                <thead>
+                  <tr>
+                    <th>{{ 'ACCOUNTING.BALANCES.CODIGO' | translate }}</th>
+                    <th>{{ 'ACCOUNTING.BALANCES.CUENTA' | translate }}</th>
+                    @if (sheet.hasOpening) {
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCE_SHEET.SALDO_INICIAL' | translate }}</th>
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCE_SHEET.MOVIMIENTO' | translate }}</th>
+                    }
+                    <th class="text-end">{{ 'ACCOUNTING.BALANCE_SHEET.SALDO_FINAL' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of section.rows; track row.accountId) {
+                  <tr data-testid="sheet-row">
+                    <td>{{ row.code || '—' }}</td>
+                    <td>
+                      {{ row.name }}
+                      @if (!row.isActive) {
+                      <span class="badge-outline col-grey ms-1" data-testid="disabled-badge">{{ 'ACCOUNTING.BALANCES.DESHABILITADA' | translate }}</span>
+                      }
+                    </td>
+                    @if (sheet.hasOpening) {
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(row.opening)">{{ row.opening | money }}</td>
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(row.movement)">{{ row.movement | money }}</td>
+                    }
+                    <td class="text-end text-nowrap" data-testid="row-closing" [class.text-danger]="isNegative(row.closing)">{{ row.closing | money }}</td>
+                  </tr>
+                  }
+                  @if (section.previousResult && section.periodResult) {
+                  <tr class="fst-italic text-body-secondary" data-testid="previous-result">
+                    <td></td>
+                    <td>{{ 'ACCOUNTING.BALANCE_SHEET.RESULTADOS_ANTERIORES' | translate }}</td>
+                    @if (sheet.hasOpening) {
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.previousResult.opening)">{{ section.previousResult.opening | money }}</td>
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.previousResult.movement)">{{ section.previousResult.movement | money }}</td>
+                    }
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.previousResult.closing)">{{ section.previousResult.closing | money }}</td>
+                  </tr>
+                  <tr class="fst-italic text-body-secondary" data-testid="period-result">
+                    <td></td>
+                    <td>{{ 'ACCOUNTING.BALANCE_SHEET.RESULTADO_PERIODO' | translate }}</td>
+                    @if (sheet.hasOpening) {
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.periodResult.opening)">{{ section.periodResult.opening | money }}</td>
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.periodResult.movement)">{{ section.periodResult.movement | money }}</td>
+                    }
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.periodResult.closing)">{{ section.periodResult.closing | money }}</td>
+                  </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="fw-bold" data-testid="section-total">
+                    <td colspan="2">{{ 'ACCOUNTING.BALANCE_SHEET.TOTAL_SECCION' | translate: { section: sectionLabel(section) } }}</td>
+                    @if (sheet.hasOpening) {
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.total.opening)">{{ section.total.opening | money }}</td>
+                    <td class="text-end text-nowrap" [class.text-danger]="isNegative(section.total.movement)">{{ section.total.movement | money }}</td>
+                    }
+                    <td class="text-end text-nowrap" data-testid="total-closing" [class.text-danger]="isNegative(section.total.closing)">{{ section.total.closing | money }}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            }
+
+            <dl class="row m-2 mt-4 fw-bold" data-testid="equation">
+              <dt class="col-8 col-sm-4">{{ 'ACCOUNTING.BALANCE_SHEET.TOTAL_ACTIVO' | translate }}</dt>
+              <dd class="col-4 col-sm-8 text-end text-sm-start mb-1" data-testid="total-assets" [class.text-danger]="isNegative(sheet.totals.assets)">{{ sheet.totals.assets | money }}</dd>
+              <dt class="col-8 col-sm-4">{{ 'ACCOUNTING.BALANCE_SHEET.TOTAL_PASIVO_PATRIMONIO' | translate }}</dt>
+              <dd class="col-4 col-sm-8 text-end text-sm-start mb-1" data-testid="total-liabilities-equity" [class.text-danger]="isNegative(sheet.totals.liabilitiesAndEquity)">{{ sheet.totals.liabilitiesAndEquity | money }}</dd>
+              <dt class="col-8 col-sm-4">{{ 'ACCOUNTING.BALANCE_SHEET.ECUACION' | translate }}</dt>
+              <dd class="col-4 col-sm-8 text-end text-sm-start mb-1">
+                @if (sheet.totals.balanced) {
+                <span class="badge-outline col-green" data-testid="balanced-badge">{{ 'ACCOUNTING.BALANCES.CUADRA' | translate }}</span>
+                } @else {
+                <span class="badge-outline col-red" data-testid="unbalanced-badge">{{ 'ACCOUNTING.BALANCES.NO_CUADRA' | translate }}</span>
+                <small class="d-block fw-normal" data-testid="difference">{{ 'ACCOUNTING.BALANCE_SHEET.DIFERENCIA' | translate: { amount: (sheet.totals.difference | money) } }}</small>
+                }
+              </dd>
+            </dl>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

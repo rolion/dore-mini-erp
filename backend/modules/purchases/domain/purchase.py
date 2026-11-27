@@ -20,6 +20,7 @@ from .payment import Payment
 from .receipt import Receipt, ReceiptLine
 
 CURRENCY = 'BOB'
+PURCHASE_CODE_PREFIX = 'NC-'
 REFERENCE_MAX_LENGTH = 100
 NOTES_MAX_LENGTH = 2000
 REASON_MAX_LENGTH = 500
@@ -273,6 +274,28 @@ def build_items(drafts: list[ItemDraft], existing: list[PurchaseItem] | None = N
     return items
 
 
+def provisional_reference(purchase_id: UUID) -> str:
+    """Etiqueta provisional de una compra sin número; no identifica a la compra."""
+    return f'COM-{purchase_id.hex[:8].upper()}'
+
+
+@dataclass(frozen=True)
+class PurchaseNumber:
+    """Número correlativo de la compra dentro de un período fiscal de la empresa (serie de compras).
+
+    No es único entre períodos: la identidad es `(empresa, período, número)`. `period_name` es una instantánea del
+    nombre del período al numerar, para mostrarlo aunque Contabilidad lo renombre después.
+    """
+
+    period_id: UUID
+    period_name: str
+    number: int
+
+    @property
+    def code(self) -> str:
+        return f'{PURCHASE_CODE_PREFIX}{self.number:06d}'
+
+
 @dataclass
 class Purchase:
     """Agregado raíz de las compras. Cabecera e ítems solo cambian por sus métodos; los importes se derivan."""
@@ -292,6 +315,9 @@ class Purchase:
     # Los mueven las tasks de recepción y pago; hoy nada los cambia (ADR confirmar-cancelar-compras).
     reception_status: ReceptionStatus = ReceptionStatus.NOT_RECEIVED
     payment_status: PaymentStatus = PaymentStatus.UNPAID
+    # Número correlativo por período fiscal: se asigna una sola vez, al confirmar, y no cambia nunca (ni al cancelar).
+    # None en borradores, canceladas sin confirmar y heredadas que quedaron fuera de todo período.
+    number: PurchaseNumber | None = None
 
     @classmethod
     def create(cls, supplier_id: object, purchase_date: object, external_reference: object = '',
@@ -323,8 +349,8 @@ class Purchase:
 
     @property
     def reference(self) -> str:
-        """Referencia interna provisional derivada del id (la numeración correlativa es otra task)."""
-        return f'COM-{self.id.hex[:8].upper()}'
+        """`NC-000001` si ya tiene número; si no, la etiqueta provisional derivada del id (`COM-XXXXXXXX`)."""
+        return self.number.code if self.number is not None else provisional_reference(self.id)
 
     @property
     def has_activity(self) -> bool:
@@ -358,8 +384,8 @@ class Purchase:
 
     # --- ciclo de vida ----------------------------------------------------------------------------------------
 
-    def confirm(self, now: datetime, supplier_active: bool = True) -> None:
-        """`draft -> confirmed`. El proveedor activo lo informa quien lo conoce (capa de aplicación)."""
+    def ensure_confirmable(self, supplier_active: bool = True) -> None:
+        """Lanza si la compra no se puede confirmar (no cambia nada): así no se consume número en vano."""
         if self.status is not PurchaseStatus.DRAFT:
             raise PurchaseInvalidTransition('Solo un borrador puede confirmarse.')
         errors: dict[str, object] = {}
@@ -369,8 +395,13 @@ class Purchase:
             errors['items'] = ['La compra necesita al menos un producto.']
         if errors:
             raise PurchaseValidationError(errors)
+
+    def confirm(self, now: datetime, number: PurchaseNumber, supplier_active: bool = True) -> None:
+        """`draft -> confirmed` y asigna su número correlativo. El proveedor activo lo informa la capa de aplicación."""
+        self.ensure_confirmable(supplier_active)
         self.status = PurchaseStatus.CONFIRMED
         self.confirmed_at = now
+        self.number = number
 
     def cancel(self, reason: object, now: datetime) -> None:
         """`draft|confirmed -> cancelled`, con motivo y sin recepciones ni pagos."""

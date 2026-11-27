@@ -63,6 +63,7 @@ function toPurchase(dto: PurchaseDto): Purchase {
     currency: dto.currency,
     editable: dto.editable,
     reference: dto.reference,
+    fiscalPeriod: dto.fiscal_period,
     receptionStatus: dto.reception_status,
     paymentStatus: dto.payment_status,
     confirmedAt: dto.confirmed_at,
@@ -89,6 +90,7 @@ function toSummary(dto: PurchaseSummaryDto): PurchaseSummary {
     status: dto.status,
     itemsCount: dto.items_count,
     reference: dto.reference,
+    fiscalPeriod: dto.fiscal_period,
     receptionStatus: dto.reception_status,
     paymentStatus: dto.payment_status,
     paidTotal: dto.paid_total,
@@ -166,8 +168,14 @@ function actionValidationMessage(body: unknown): string {
 function toActionError(err: HttpErrorResponse): PurchaseApiError {
   if (err.status === 400) return new PurchaseApiError(actionValidationMessage(err.error), 400);
   if (err.status === 409) {
-    const detail = (err.error as { detail?: unknown } | null)?.detail;
-    return new PurchaseApiError(typeof detail === 'string' ? detail : NOT_EDITABLE_MESSAGE(), 409);
+    const body = err.error as { detail?: unknown; code?: unknown; period?: unknown } | null;
+    return new PurchaseApiError(
+      typeof body?.detail === 'string' ? body.detail : NOT_EDITABLE_MESSAGE(),
+      409,
+      { header: {}, items: [] },
+      typeof body?.code === 'string' ? body.code : '',
+      typeof body?.period === 'string' ? body.period : '',
+    );
   }
   return toApiError(err);
 }

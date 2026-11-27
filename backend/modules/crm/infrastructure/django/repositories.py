@@ -148,7 +148,7 @@ def opportunity_to_entity(model: OpportunityModel) -> Opportunity:
         customer_id=model.customer_id, title=model.title, owner_id=model.owner_id, amount=model.amount,
         currency=model.currency, next_action_at=model.next_action_at, status=model.status,
         closed_at=model.closed_at, order_id=model.order_id, lost_reason=model.lost_reason,
-        created_at=model.created_at)
+        created_at=model.created_at, description=model.description)
 
 
 def _stage_change(model: StageChangeModel) -> StageChange:
@@ -213,7 +213,7 @@ class DjangoOpportunityRepository:
             'amount': opportunity.amount, 'currency': opportunity.currency,
             'next_action_at': opportunity.next_action_at, 'status': opportunity.status,
             'closed_at': opportunity.closed_at, 'order_id': opportunity.order_id,
-            'lost_reason': opportunity.lost_reason,
+            'lost_reason': opportunity.lost_reason, 'description': opportunity.description,
         }
         try:
             # Savepoint: un pedido vinculado en carrera choca con la restricción única sin romper la transacción.
