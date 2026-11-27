@@ -37,14 +37,6 @@ def run(operation):
         raise ValidationError(exc.errors) from exc
     except EncounterStateError as exc:
         raise Conflict({'detail': str(exc), 'code': exc.code}) from exc
-    except _agenda_errors() as exc:
-        code = getattr(exc, 'code', 'invalid_transition')
-        raise Conflict({'detail': getattr(exc, 'message', str(exc)), 'code': code}) from exc
-
-
-def _agenda_errors():
-    from modules.agenda import services
-    return services.AppointmentConflict, services.AppointmentRuleError
 
 
 class ListQuery(serializers.Serializer):

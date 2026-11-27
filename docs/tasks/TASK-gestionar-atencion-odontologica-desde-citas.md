@@ -1,6 +1,6 @@
 # TASK-gestionar-atencion-odontologica-desde-citas: Gestionar atención odontológica desde citas
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-gestionar-atencion-odontologica-desde-citas
@@ -14,6 +14,7 @@
 | 2026-11-27 | (nuevo) → INVESTIGATION | Task creado desde tarjeta PB-ODO-007 | delivery-start |
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE, diseño requerido; 4 decisiones de negocio respondidas | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 READY y PR abierto | delivery-start |
+| 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 
 ## Investigación
 
@@ -90,7 +91,23 @@ Ver `docs/adr/ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion
 `docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md` (v1, COMPLETO).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend: agregado `Encounter` (`dentistry/domain/encounter.py`), tabla `dentistry_encounter` y columna `encounter` en `dentistry_evaluation` (migración `0006_dental_encounters`), comandos/consultas (`application/encounters.py`), vistas y rutas `/api/dentistry/appointments/…`, `encounters/…`, `patients/<id>/encounters/`; fachada `agenda/services.py` y puerto de guardas `agenda/application/guards.py` (las acciones `attend|no_show|cancel|reschedule` de Agenda consultan las guardas; el flujo clínico usa `attend_by_clinic/cancel_by_clinic`). Frontend: listado «Odontología → Citas», detalle «Atención odontológica» (iniciar/finalizar/cancelar con diálogo de motivo, odontograma, observaciones), sección «Atenciones» en la ficha, aviso/enlace en el detalle de cita de Agenda, `?evaluation=&appointment=` en la pantalla de odontograma, subítem de menú e i18n es/en/pt.
+
+**Cobertura.** INV-01/INV-06 constraints de BD (+ prueba de concurrencia); INV-03/05 dominio (`test_encounter_domain.py`); AC-01..AC-12 en `test_encounter_api.py` (23 pruebas, 3 con hilos concurrentes); frontend: specs de servicio, listado, detalle (flujo iniciar → odontograma → finalizar, cancelación con motivo, conflicto de borrador), historial del paciente, y ajustes a specs de menú, odontograma y ficha. Suite completa backend 2625 pruebas (las 2 de fronteras se actualizaron, ver desviaciones), Angular 1956 OK, `ng lint` y `i18n:check` limpios, `ruff`/`flake8` limpios en lo cambiado.
+
+**Desviaciones respecto al plan.**
+- API-07: el detalle de cita de Agenda **no** añade el campo `clinical`; el frontend de Agenda consulta `GET /api/dentistry/appointments/<id>/encounter/` solo si el módulo `dentistry` está habilitado y el usuario tiene acceso clínico (ignora 403/404). Evita que Agenda conozca datos clínicos.
+- Frontera de módulos: `test_boundaries.py` exige que cada dependencia entre módulos pase por `adapters.py` y `services`; se declaró `dentistry → agenda` en `ALLOWED_DEPENDENCIES` y la guarda y el adaptador de Agenda viven en `dentistry/infrastructure/adapters.py` (no se creó `agenda_guard.py`). Es consecuencia directa del ADR.
+- E2E: no se instaló Playwright (requería confirmación); el flujo listado → detalle → iniciar → odontograma → finalizar está cubierto por la prueba de componente `encounter-detail.component.spec.ts` más las pruebas de API de punta a punta. Pendiente de decisión del usuario si exige E2E real.
+- AC-12: la prueba de migración se cubre verificando que las evaluaciones creadas sin atención conservan `encounter = NULL` y siguen consultables, y que la migración es aditiva; no hay una prueba con `MigrationExecutor`.
+- Pruebas ejecutadas contra un PostgreSQL temporal propio (initdb en carpeta temporal, puerto 5544), no contra la base local del usuario.
+
+**Deuda técnica / notas.**
+- El listado compone el filtro por estado de atención con listas de IDs (rango ≤31 días); suficiente para el MVP, a revisar si crece el volumen.
+- Un borrador de odontograma de una atención cancelada sigue siendo el borrador único del paciente (regla de PB-ODO-002).
+- «Edad» se calcula en el cliente desde `birth_date` si existe.
+
+**UI.** Listado según la plantilla *Lista de solo lectura con filtros* (referencia `inventory/pages/movement-list`, tabla `inventory-table`) y detalle según *Detalle de documento en curso con acciones en la cabecera*; reutiliza badges de Agenda (`STATUS_CLASSES`), el patrón de diálogo `<dialog>` con motivo de Agenda y `fetchAll`/`formatDateTime` de Agenda. Sin componentes nuevos en `shared/`; sin cambios al `design-system.md`.
 
 ## Review
 _Pendiente_
