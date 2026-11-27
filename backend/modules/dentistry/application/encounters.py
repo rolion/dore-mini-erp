@@ -175,7 +175,8 @@ class EncounterQueries:
     @staticmethod
     def _list_item(snapshot, encounter, names):
         return {
-            'appointment_id': snapshot.id, 'customer_id': snapshot.customer_id,
+            'appointment_id': snapshot.id, 'code': snapshot.code, 'fiscal_period_name': snapshot.fiscal_period_name,
+            'customer_id': snapshot.customer_id,
             'customer_name': snapshot.customer_name, 'professional_id': snapshot.professional_id,
             'professional_name': names.get(snapshot.professional_id, ''), 'service_name': snapshot.service_name,
             'starts': local(snapshot.starts), 'ends': local(snapshot.ends), 'status': snapshot.status,
@@ -193,7 +194,8 @@ class EncounterQueries:
         names = self.professionals.names({snapshot.professional_id})
         data = {
             'appointment': {
-                'id': snapshot.id, 'customer_id': snapshot.customer_id, 'customer_name': snapshot.customer_name,
+                'id': snapshot.id, 'code': snapshot.code, 'fiscal_period_name': snapshot.fiscal_period_name,
+                'customer_id': snapshot.customer_id, 'customer_name': snapshot.customer_name,
                 'professional_id': snapshot.professional_id,
                 'professional_name': names.get(snapshot.professional_id, ''), 'service_name': snapshot.service_name,
                 'starts': local(snapshot.starts), 'ends': local(snapshot.ends), 'status': snapshot.status,
@@ -271,6 +273,7 @@ class EncounterQueries:
                 'started_at': local(row.started_at), 'finished_at': local(row.finished_at),
                 'professional_id': row.professional_id, 'professional_name': names.get(row.professional_id, ''),
                 'service_name': appointment.service_name if appointment else '',
+                'appointment_code': appointment.code if appointment else None,
                 'has_odontogram': row.id in with_odontogram,
             })
         return items

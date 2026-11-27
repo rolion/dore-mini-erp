@@ -872,7 +872,6 @@
       "HASTA": "To",
       "HISTORIAL_ATENCIONES": "Encounters",
       "HORARIO": "Time",
-      "ID_CITA": "Appointment ID",
       "INICIANDO": "Starting…",
       "INICIAR": "Start encounter",
       "INICIO_REAL": "Actual start",
@@ -936,7 +935,9 @@
       "ODONTOGRAMA_VERSION": "Odontogram of this encounter · version {{n}}",
       "ODONTOGRAMA_NUM_PACIENTE": "No. {{n}} of the patient",
       "SIN_OBSERVACIONES": "No notes",
-      "REGISTRAR": "Record"
+      "REGISTRAR": "Record",
+      "COL_CITA": "Appointment",
+      "GESTION": "Fiscal year {{name}}"
     }
   },
   "EXPENSES": {
@@ -2670,7 +2671,12 @@
       "ABRIR_ATENCION": "Open dental encounter",
       "AVISO_FLUJO_CLINICO": "This appointment is handled from Dentistry.",
       "VAL_CLINICAL_FLOW_REQUIRED": "This appointment is handled from Dentistry: finish it from the encounter.",
-      "VAL_ENCOUNTER_STARTED": "The appointment has a dental encounter in progress; manage it from Dentistry."
+      "VAL_ENCOUNTER_STARTED": "The appointment has a dental encounter in progress; manage it from Dentistry.",
+      "COL_CITA": "Appointment",
+      "GESTION": "Fiscal year {{name}}",
+      "SIN_CODIGO": "No number",
+      "VAL_FISCAL_PERIOD_MISSING": "There is no fiscal year for today's date. Create it in Accounting to be able to schedule appointments.",
+      "VAL_FISCAL_PERIOD_CLOSED": "Today's fiscal year is closed. Reopen it in Accounting to schedule appointments."
     }
   },
   "CORE": {

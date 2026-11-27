@@ -1,7 +1,7 @@
-# PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas (v3)
+# PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas (v4)
 
 **Task:** TASK-gestionar-atencion-odontologica-desde-citas · **Modo:** COMPLETO · **Specification readiness:** READY
-**DDRs / ADRs:** DDR-gestionar-atencion-odontologica-desde-citas-listado-y-detalle-de-atencion · ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma
+**DDRs / ADRs:** DDR-gestionar-atencion-odontologica-desde-citas-listado-y-detalle-de-atencion · ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma · ADR-gestionar-atencion-odontologica-desde-citas-numeracion-de-citas-por-gestion
 
 ## Objective
 Permitir iniciar, gestionar, finalizar o cancelar una atención odontológica (DentalEncounter) desde una cita de Agenda, con resumen del paciente y odontograma opcional, manteniendo cita y atención consistentes (atómico, idempotente, concurrente) y trazabilidad clínica.
@@ -55,6 +55,8 @@ Una cita odontológica se atiende desde Odontología → Citas: iniciar crea o r
 - **AC-11** Recetario: no existe; el DTO expone `prescriptions_enabled: false`, la UI no muestra sección ni botón, y el contrato futuro queda documentado en el ADR. (Trello 9)
 - **AC-12** Migración: evaluaciones previas conservan datos con `encounter = NULL` y siguen consultables. (Trello 8)
 
+- **INV-11** (nueva, v4) Cada cita creada recibe un número correlativo `C-000001` único por (empresa, gestión fiscal); la gestión es la de la **fecha de creación** (America/La_Paz); el número no cambia al reprogramar o cancelar y no se reutiliza. Sin gestión abierta para esa fecha la creación se bloquea (409 `fiscal_period_missing` / `fiscal_period_closed`) sin crear la cita ni avanzar el contador. Las citas existentes se numeran por orden de creación (migración repetible); las que caen fuera de toda gestión quedan sin número.
+
 ## Edge cases / Error cases
 - Doble clic / peticiones simultáneas de iniciar, finalizar o crear odontograma → un solo resultado; sin doble envío en la UI.
 - Cita futura (antes de su hora): no se puede iniciar (mensaje claro).
@@ -62,6 +64,9 @@ Una cita odontológica se atiende desde Odontología → Citas: iniciar crea o r
 - Cancelar con motivo vacío o >500 → 400 con código estable.
 - Atención finalizada: odontograma y observaciones de solo lectura salvo enmienda de PB-ODO-002.
 - Borrador de una atención cancelada: sigue siendo el borrador del paciente (editable/descartable desde su ficha).
+
+- **AC-13** (nuevo, v4) Las citas se identifican con un código `C-` + 6 dígitos, correlativo y único en cada gestión fiscal; la serie reinicia en cada gestión; Odontología → Citas muestra la columna «Cita» (antes «ID de cita») con el código y la gestión; Agenda lo muestra en su listado y detalle.
+- **AC-14** (nuevo, v4) Crear una cita sin gestión fiscal abierta responde 409 con un código estable y un aviso traducido; no se crea la cita ni se consume número; las citas anteriores se numeran por orden de creación sin perder datos (migración repetible).
 
 ## Authorization / permissions
 `CompanyClinicalPermission` en todos los endpoints nuevos; `required_modules = ('dentistry','agenda','customers','personnel')`; empresa siempre desde el usuario autenticado; el cliente nunca envía `company_id`, paciente ni profesional (derivados de la cita).
@@ -73,6 +78,7 @@ Una cita odontológica se atiende desde Odontología → Citas: iniciar crea o r
 - **API-04** `PATCH /api/dentistry/encounters/<id>/` `{observations}` (≤2000, solo `in_progress`).
 - **API-05** `POST /api/dentistry/encounters/<id>/odontogram/` crea el borrador precargado (201); 409 si ya existe odontograma lógico o la atención no está en progreso.
 - **API-06** `GET /api/dentistry/patients/<customer_id>/encounters/` historial paginado.
+- **API-08** (nuevo, v4) Agenda y Odontología devuelven `code` (`C-000001` o `null`) y `fiscal_period_name` en listado y detalle de citas (`appointment_code` en el historial del paciente); `POST /api/agenda/appointments/` puede responder 409 `fiscal_period_missing` / `fiscal_period_closed`. Cambio compatible hacia atrás.
 - **API-07** Agenda: las acciones existentes pueden responder 409 `clinical_flow_required` / `encounter_started`; el resto del contrato no cambia (compatible hacia atrás). El detalle de cita **no** añade campos clínicos: el frontend de Agenda consulta `GET /api/dentistry/appointments/<id>/encounter/` (UI-08) solo con el módulo `dentistry` habilitado y acceso clínico.
 - Los errores usan `{detail, code}` estable para traducir.
 
@@ -119,6 +125,8 @@ Suites existentes de `agenda` (citas, API) y `dentistry` (evaluaciones, paciente
 | AC-10 | API con usuario clínico; autor registrado |
 | AC-11 | API `prescriptions_enabled`; componente sin sección |
 | AC-12 | Prueba de migración |
+| AC-13 | `test_appointments.py` (correlativo, reinicio por gestión, reprogramar/cancelar conservan, concurrencia); `test_encounter_api`; specs de listado Odontología, detalle y Agenda |
+| AC-14 | `test_appointments.py` (409 sin/ con gestión cerrada, sin rastro), prueba del backfill repetible |
 
 # Implementation Plan
 
@@ -156,3 +164,4 @@ Ninguna obligatoria. E2E con Playwright **requeriría instalarlo: se pedirá con
 ## Changelog
 - **v2** (2026-11-27): [Implementation Plan] Alineado con lo implementado y con los hallazgos REV-01..07 del Quality Gate: API-01 plana, API-07 sin campo `clinical`, listado acotado por rango, `amend` bloquea la atención antes que al paciente, confirmación al finalizar guardando observaciones, tarjeta/submenú condicionados al módulo Agenda. E2E real (Playwright) sigue **pendiente de decisión del usuario** (sin instalar); AC-12 se verifica por estado posterior a la migración (aditiva, nullable), sin `MigrationExecutor`. Solicitado por delivery-publish (REV-07). Sin cambio de Specification.
 - **v3** (2026-11-27): [Specification] UI-02, UI-04, UI-05 y nuevo UI-10 (franja de alerta clínica) modificados tras la crítica de diseño, **con aprobación explícita del usuario en el chat** (pidió aplicar las recomendaciones 1-5); DDR revisado (v2). Incluye contraste AA, objetivos táctiles de 44 px, «Sin registrar» y estados vacíos. Sin cambios de AC ni de backend. [Implementation Plan] Los badges de estado usan las clases `*-subtle`/`*-emphasis` de Bootstrap en listado, detalle e historial.
+- **v4** (2026-11-27): [Specification] Nuevos INV-11, AC-13, AC-14 y API-08 (numeración correlativa de citas `C-000001` por gestión fiscal y columna «Cita» en Odontología → Citas), **con aprobación explícita del usuario en el chat** (pidió el cambio y respondió las tres decisiones: gestión por fecha de creación, bloqueo sin gestión, numerar las citas existentes). [Implementation Plan] ADR nuevo `…-numeracion-de-citas-por-gestion`; migraciones `agenda/0004` y `0005`; dependencia `agenda → accounting` por fachada (ajuste de `test_boundaries`); contador por empresa y período; sin cambios en el flujo de atención.

@@ -8,7 +8,7 @@ import { provideTestTranslations } from '../../../core/i18n/testing';
 
 function appointment(overrides: Partial<Appointment> = {}): Appointment {
   return {
-    id: 'a1', professional_id: 'p', professional_name: 'Dra. Ana', customer_id: 'c', customer_name: 'Rosa Pérez', service_id: 's',
+    id: 'a1', code: 'C-000007', fiscal_period_name: '2026', professional_id: 'p', professional_name: 'Dra. Ana', customer_id: 'c', customer_name: 'Rosa Pérez', service_id: 's',
     service_name: 'Limpieza', starts: '2030-01-07T09:00:00-04:00', ends: '2030-01-07T09:30:00-04:00',
     duration_minutes: 30, notes: '', status: 'scheduled', timezone: 'America/La_Paz',
     allowed_actions: ['confirm', 'reschedule', 'cancel'], history: [{ id: 1, kind: 'created', author_id: 7, author_name: 'recepcion', created_at: '2030-01-01T08:00:00-04:00', reason: '', previous_starts: null, previous_ends: null }], ...overrides,
@@ -39,6 +39,7 @@ describe('AppointmentDetailComponent', () => {
     const fixture = create();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Rosa Pérez');
+    expect(text).toContain('C-000007');
     expect(text).toContain('Dra. Ana');
     expect(text).toContain('recepcion');
     expect(text).toContain('Confirmar');

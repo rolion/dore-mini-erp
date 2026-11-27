@@ -46,6 +46,9 @@
             <div class="col-lg-4 order-lg-last">
               <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_CITA' | translate }}</h5>
               <dl class="row">
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.COL_CITA' | translate }}</dt>
+                <dd class="col-7">{{ item.appointment.code ?? ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}
+                  @if (item.appointment.fiscal_period_name) { <small class="text-muted d-block">{{ 'DENTISTRY.ENCOUNTER.GESTION' | translate: { name: item.appointment.fiscal_period_name } }}</small> }</dd>
                 <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate }}</dt><dd class="col-7">{{ item.appointment.professional_name }}</dd>
                 <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.SERVICIO' | translate }}</dt><dd class="col-7">{{ item.appointment.service_name }}</dd>
                 <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.HORARIO' | translate }}</dt>

@@ -20,6 +20,9 @@
           <span class="badge" [class]="classes[item.status]">{{ statusLabel(item.status) }}</span>
         </div>
         <dl class="row m-4">
+          <dt class="col-sm-3">{{ 'AGENDA.CITAS.COL_CITA' | translate }}</dt>
+          <dd class="col-sm-9">{{ item.code ?? ('AGENDA.CITAS.SIN_CODIGO' | translate) }}
+            @if (item.fiscal_period_name) { <small class="text-muted ms-2">{{ 'AGENDA.CITAS.GESTION' | translate: { name: item.fiscal_period_name } }}</small> }</dd>
           <dt class="col-sm-3">{{ 'AGENDA.CITAS.SERVICIO' | translate }}</dt><dd class="col-sm-9">{{ item.service_name }}</dd>
           <dt class="col-sm-3">{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</dt><dd class="col-sm-9">{{ item.professional_name || ('AGENDA.CITAS.SIN_PROFESIONAL' | translate) }}</dd>
           <dt class="col-sm-3">{{ 'AGENDA.CITAS.INICIO' | translate }}</dt><dd class="col-sm-9">{{ 'AGENDA.CITAS.INICIO_HORA_BOLIVIA' | translate: { date: formatDateTime(item.starts) } }}</dd>

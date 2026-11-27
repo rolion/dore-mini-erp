@@ -45,3 +45,6 @@ Origen: `/design:design-critique` sobre las 4 pantallas del detalle (pendiente, 
 5. **Vacíos y solo lectura.** «Sin registrar» (antes «Sin dato») y, en alergias, enlace «Registrar» a la ficha; observaciones de solo lectura como texto («Sin observaciones» si no hay); odontograma como «Odontograma de esta atención · versión N» con el número del paciente como texto secundario («N.º 3 del paciente»).
 
 **Deuda aceptada:** el fondo azul claro de los campos de texto es estilo global de la plantilla (afecta a todo el sistema) y no se cambia aquí; el diálogo de finalizar y cancelar sigue siendo `<dialog>` nativo como Agenda.
+
+## Revisión v3 (numeración de citas)
+La columna «ID de cita» del listado se renombra **«Cita»** y muestra el código correlativo `C-000001` (en negrita) con «Gestión X» debajo en texto secundario; las citas anteriores a la serie sin gestión muestran el código corto del UUID. El detalle de atención añade la fila «Cita» (código y gestión) en «Cita y profesional», el historial de la ficha antepone el código a la fecha, y Agenda muestra la columna «Cita» en su listado y la fila «Cita» en su detalle. Sin patrones nuevos: texto en `strong` + `small.text-muted` como en el listado de ventas («Período X»).

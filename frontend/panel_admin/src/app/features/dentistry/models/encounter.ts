@@ -27,6 +27,8 @@ export function encounterStatusLabel(status: EncounterStatus): string {
 
 export interface EncounterListItem {
   appointment_id: string;
+  code: string | null;
+  fiscal_period_name: string;
   customer_id: string;
   customer_name: string;
   professional_id: string;
@@ -95,7 +97,7 @@ export interface EncounterOdontogram {
 
 export interface EncounterDetail {
   appointment: {
-    id: string; customer_id: string; customer_name: string; professional_id: string; professional_name: string;
+    id: string; code: string | null; fiscal_period_name: string; customer_id: string; customer_name: string; professional_id: string; professional_name: string;
     service_name: string; starts: string; ends: string; status: AppointmentStatusValue; notes: string;
   };
   is_dental: boolean;
@@ -109,6 +111,7 @@ export interface EncounterDetail {
 export interface PatientEncounter {
   id: string;
   appointment_id: string;
+  appointment_code: string | null;
   status: Exclude<EncounterStatus, 'pending'>;
   started_at: string;
   finished_at: string | null;

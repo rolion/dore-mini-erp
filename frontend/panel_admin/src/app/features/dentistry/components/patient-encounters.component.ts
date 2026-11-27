@@ -24,7 +24,7 @@ import { EncountersApiService, encounterFailure } from '../services/encounters-a
           <ul class="list-unstyled mb-0">
             @for (item of items; track item.id) {
               <li class="d-flex flex-wrap gap-2 align-items-center py-1">
-                <a [routerLink]="['/pocketbiz/dentistry/appointments', item.appointment_id]">{{ formatDateTime(item.started_at) }}</a>
+                <a [routerLink]="['/pocketbiz/dentistry/appointments', item.appointment_id]">{{ item.appointment_code ? item.appointment_code + ' · ' : '' }}{{ formatDateTime(item.started_at) }}</a>
                 <span>{{ item.service_name }} · {{ item.professional_name }}</span>
                 <span class="badge" [class]="tone(item.status)">{{ label(item.status) }}</span>
                 @if (item.has_odontogram) { <small class="text-muted">{{ 'DENTISTRY.ENCOUNTER.CON_ODONTOGRAMA' | translate }}</small> }

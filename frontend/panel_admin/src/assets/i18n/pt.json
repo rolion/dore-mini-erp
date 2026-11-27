@@ -872,7 +872,6 @@
       "HASTA": "Até",
       "HISTORIAL_ATENCIONES": "Atendimentos",
       "HORARIO": "Horário",
-      "ID_CITA": "ID da consulta",
       "INICIANDO": "Iniciando…",
       "INICIAR": "Iniciar atendimento",
       "INICIO_REAL": "Início real",
@@ -936,7 +935,9 @@
       "ODONTOGRAMA_VERSION": "Odontograma deste atendimento · versão {{n}}",
       "ODONTOGRAMA_NUM_PACIENTE": "N.º {{n}} do paciente",
       "SIN_OBSERVACIONES": "Sem observações",
-      "REGISTRAR": "Registrar"
+      "REGISTRAR": "Registrar",
+      "COL_CITA": "Consulta",
+      "GESTION": "Gestão {{name}}"
     }
   },
   "EXPENSES": {
@@ -2670,7 +2671,12 @@
       "ABRIR_ATENCION": "Abrir atendimento odontológico",
       "AVISO_FLUJO_CLINICO": "Esta consulta é atendida pela Odontologia.",
       "VAL_CLINICAL_FLOW_REQUIRED": "Esta consulta é atendida pela Odontologia: finalize-a no atendimento.",
-      "VAL_ENCOUNTER_STARTED": "A consulta tem um atendimento odontológico iniciado; gerencie-o na Odontologia."
+      "VAL_ENCOUNTER_STARTED": "A consulta tem um atendimento odontológico iniciado; gerencie-o na Odontologia.",
+      "COL_CITA": "Consulta",
+      "GESTION": "Gestão {{name}}",
+      "SIN_CODIGO": "Sem número",
+      "VAL_FISCAL_PERIOD_MISSING": "Não há uma gestão fiscal para a data de hoje. Crie-a em Contabilidade para poder agendar consultas.",
+      "VAL_FISCAL_PERIOD_CLOSED": "A gestão fiscal de hoje está fechada. Reabra-a em Contabilidade para poder agendar consultas."
     }
   },
   "CORE": {

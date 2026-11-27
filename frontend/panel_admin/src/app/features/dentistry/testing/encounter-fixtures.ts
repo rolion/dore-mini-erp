@@ -3,7 +3,7 @@ import { EncounterDetail, EncounterListItem } from '../models/encounter';
 export function encounterDetail(overrides: Partial<EncounterDetail> = {}): EncounterDetail {
   return {
     appointment: {
-      id: 'a1', customer_id: 'c1', customer_name: 'Ana Pérez', professional_id: 'p1', professional_name: 'Dra. Rojas',
+      id: 'a1', code: 'C-000001', fiscal_period_name: '2026', customer_id: 'c1', customer_name: 'Ana Pérez', professional_id: 'p1', professional_name: 'Dra. Rojas',
       service_name: 'Limpieza', starts: '2030-01-07T09:00:00-04:00', ends: '2030-01-07T09:30:00-04:00', status: 'confirmed', notes: '',
     },
     is_dental: true,
@@ -30,7 +30,7 @@ export function inProgress(overrides: Partial<EncounterDetail> = {}): EncounterD
 
 export function listItem(overrides: Partial<EncounterListItem> = {}): EncounterListItem {
   return {
-    appointment_id: 'a1b2c3d4-0000-0000-0000-000000000000', customer_id: 'c1', customer_name: 'Ana Pérez', professional_id: 'p1',
+    appointment_id: 'a1b2c3d4-0000-0000-0000-000000000000', code: 'C-000001', fiscal_period_name: '2026', customer_id: 'c1', customer_name: 'Ana Pérez', professional_id: 'p1',
     professional_name: 'Dra. Rojas', service_name: 'Limpieza', starts: '2030-01-07T09:00:00-04:00', ends: '2030-01-07T09:30:00-04:00',
     status: 'confirmed', encounter_id: null, encounter_status: 'pending', ...overrides,
   };

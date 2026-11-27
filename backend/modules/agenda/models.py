@@ -47,6 +47,10 @@ class Appointment(models.Model):
     status = models.CharField(max_length=12, default='scheduled')
     # Reservado para el futuro módulo de tratamientos; hoy no se valida ni se expone.
     treatment_item_id = models.UUIDField(null=True, blank=True)
+    # Número correlativo de la serie de citas en la gestión (período fiscal) en que se creó; ver el ADR de numeración.
+    number = models.PositiveIntegerField(null=True, blank=True)
+    fiscal_period_id = models.UUIDField(null=True, blank=True)
+    fiscal_period_name = models.CharField(max_length=80, blank=True, default='')
     created_by = models.BigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -55,6 +59,11 @@ class Appointment(models.Model):
         indexes = [
             models.Index(fields=('company_id', 'professional_id', 'starts'), name='agenda_appt_prof_starts'),
             models.Index(fields=('company_id', 'status', 'starts'), name='agenda_appt_status_starts'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=('company_id', 'fiscal_period_id', 'number'), name='agenda_appt_number_unique',
+                condition=models.Q(number__isnull=False)),
         ]
 
 
@@ -70,3 +79,17 @@ class AppointmentEvent(models.Model):
 
     class Meta:
         ordering = ('id',)
+
+
+class AppointmentNumberCounter(models.Model):
+    """Último número asignado de la serie de citas de una empresa en un período fiscal."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    fiscal_period_id = models.UUIDField()
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=('company_id', 'fiscal_period_id'), name='agenda_appt_counter_unique'),
+        ]

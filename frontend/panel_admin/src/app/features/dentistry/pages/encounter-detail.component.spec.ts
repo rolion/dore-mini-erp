@@ -33,6 +33,7 @@ describe('EncounterDetailComponent', () => {
     expect(text(fixture)).toContain('Atención odontológica');
     expect(text(fixture)).toContain('Ana Pérez');
     expect(text(fixture)).toContain('Penicilina');
+    expect(text(fixture)).toContain('C-000001');
     expect(text(fixture)).toContain('Iniciar atención');
     expect(text(fixture)).toContain('Cita: Confirmada');
     expect(text(fixture)).toContain('Atención: Pendiente');

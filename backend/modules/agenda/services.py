@@ -11,7 +11,7 @@ from uuid import UUID
 from modules.agenda.application import appointments as service
 from modules.agenda.application.appointments import Actor, AppointmentConflict, AppointmentNotFound, ZONE
 from modules.agenda.application.guards import AppointmentRef, Veto, register_guard  # noqa: F401
-from modules.agenda.domain.appointment import AppointmentRuleError
+from modules.agenda.domain.appointment import AppointmentRuleError, appointment_code
 from modules.agenda.models import Appointment
 
 __all__ = ['Actor', 'AppointmentConflict', 'AppointmentNotFound', 'AppointmentRuleError', 'AppointmentRef',
@@ -31,12 +31,15 @@ class AppointmentSnapshot:
     status: str
     allowed_actions: tuple[str, ...]
     notes: str
+    code: str | None = None  # `C-000001`; None en citas anteriores a la serie
+    fiscal_period_name: str = ''
 
 
 def _snapshot(row: Appointment) -> AppointmentSnapshot:
     return AppointmentSnapshot(
         row.id, row.customer_id, row.customer_name, row.professional_id, row.service_name, row.starts, row.ends,
-        row.status, tuple(service.allowed_actions(row)), row.notes)
+        row.status, tuple(service.allowed_actions(row)), row.notes, appointment_code(row.number),
+        row.fiscal_period_name)
 
 
 def get_appointment(company_id: UUID, appointment_id: UUID) -> AppointmentSnapshot | None:

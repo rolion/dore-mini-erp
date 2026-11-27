@@ -14,7 +14,7 @@ from modules.agenda.domain.appointment import (
 )
 from modules.agenda.domain.schedule import subtract
 from modules.agenda.infrastructure.adapters import (
-    get_customer_for_sale, get_service_for_new_use, professional_exists,
+    AppointmentNumbering, NumberingError, get_customer_for_sale, get_service_for_new_use, professional_exists,
 )
 from modules.agenda.models import Appointment, AppointmentEvent, Schedule
 
@@ -124,10 +124,15 @@ def create(company_id, actor, *, professional_id, customer_id, service_id, start
     ends = starts + timedelta(minutes=duration_minutes)
     _lock(company_id, professional_id)
     _ensure_placement(company_id, professional_id, starts, ends)
+    try:  # la gestión es la de la fecha en que se crea la cita (decisión del usuario)
+        assigned = AppointmentNumbering(company_id).next_number(timezone.now().astimezone(ZONE).date())
+    except NumberingError as exc:
+        raise AppointmentConflict(exc.message, exc.code) from exc
     appointment = Appointment.objects.create(
         company_id=company_id, professional_id=professional_id, customer_id=customer.id,
         customer_name=customer.name, service_id=service.id, service_name=service.name,
         starts=starts, ends=ends, duration_minutes=duration_minutes, notes=notes.strip(), created_by=actor.id,
+        number=assigned.number, fiscal_period_id=assigned.period_id, fiscal_period_name=assigned.period_name,
     )
     _event(appointment, 'created', actor)
     return appointment
