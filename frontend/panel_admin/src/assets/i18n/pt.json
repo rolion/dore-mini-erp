@@ -171,7 +171,8 @@
       "TEXT": "Produção",
       "LIST": {
         "RECIPES": "Receitas",
-        "ORDERS": "Ordens de produção"
+        "ORDERS": "Ordens de produção",
+        "SETTINGS": "Configurações"
       }
     }
   },
@@ -2143,7 +2144,8 @@
       "ACTIVADO_2": "Ativado",
       "DESACTIVADO_2": "Desativado",
       "SIN_PREDETERMINADO_2": "Sem padrão",
-      "UNIDAD_HORAS": "h"
+      "UNIDAD_HORAS": "h",
+      "PRODUCCION": "Produção"
     },
     "SETTING": {
       "NO_SE_PUDO_COMPLETAR_LA": "Não foi possível concluir a operação. Tente novamente."

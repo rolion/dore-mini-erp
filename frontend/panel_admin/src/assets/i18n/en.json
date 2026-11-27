@@ -171,7 +171,8 @@
       "TEXT": "Production",
       "LIST": {
         "RECIPES": "Recipes",
-        "ORDERS": "Production orders"
+        "ORDERS": "Production orders",
+        "SETTINGS": "Settings"
       }
     }
   },
@@ -2143,7 +2144,8 @@
       "ACTIVADO_2": "Enabled",
       "DESACTIVADO_2": "Disabled",
       "SIN_PREDETERMINADO_2": "No default",
-      "UNIDAD_HORAS": "h"
+      "UNIDAD_HORAS": "h",
+      "PRODUCCION": "Production"
     },
     "SETTING": {
       "NO_SE_PUDO_COMPLETAR_LA": "The operation could not be completed. Try again."
