@@ -43,6 +43,9 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly id = this.route.snapshot.paramMap.get('id') ?? '';
+  /** Cuando se llega desde una atención: evaluación a abrir y cita a la que se vuelve. */
+  readonly queryEvaluation = this.route.snapshot.queryParamMap.get('evaluation');
+  readonly appointmentId = this.route.snapshot.queryParamMap.get('appointment');
   readonly today = localDateInput();
   readonly diagnosisMax = DIAGNOSIS_MAX;
   readonly notesMax = NOTES_MAX;
@@ -183,7 +186,8 @@ export class OdontogramComponent implements OnInit, HasUnsavedChanges {
         this.catalog = catalog;
         this.professionals = professionals;
         this.evaluations = page.results;
-        const start = page.results.find(item => item.status === 'draft') ?? page.results[0];
+        const start = page.results.find(item => item.id === this.queryEvaluation)
+          ?? page.results.find(item => item.status === 'draft') ?? page.results[0];
         if (start) this.openEvaluation(start.id); else this.loading = false;
       },
       error: error => { this.loading = false; this.error = evaluationError(error); },

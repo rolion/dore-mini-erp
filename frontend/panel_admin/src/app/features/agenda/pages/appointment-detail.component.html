@@ -34,8 +34,12 @@
           @if (can('no_show')) { <button type="button" class="btn btn-secondary" (click)="open(dlg, 'no_show')">{{ 'AGENDA.CITAS.MARCAR_NO_ASISTIO' | translate }}</button> }
           @if (can('cancel')) { <button type="button" class="btn btn-danger" (click)="open(dlg, 'cancel')">{{ 'AGENDA.CITAS.CANCELAR_CITA' | translate }}</button> }
           <a class="btn btn-light" routerLink="/pocketbiz/agenda/citas">{{ 'AGENDA.CITAS.VOLVER' | translate }}</a>
+          @if (clinical) {
+            <a class="btn btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/appointments', item.id]">{{ 'AGENDA.CITAS.ABRIR_ATENCION' | translate }}</a>
+            <small class="text-muted">{{ 'AGENDA.CITAS.AVISO_FLUJO_CLINICO' | translate }}</small>
+          }
           @if (isTerminal) { <small class="text-muted">{{ 'AGENDA.CITAS.SIN_ACCIONES' | translate }}</small> }
-          @else if (!can('attend')) { <small class="text-muted">{{ 'AGENDA.CITAS.AVISO_HORA' | translate }}</small> }
+          @else if (!can('attend') && !clinical) { <small class="text-muted">{{ 'AGENDA.CITAS.AVISO_HORA' | translate }}</small> }
         </div>
         <h5 class="mx-4">{{ 'AGENDA.CITAS.HISTORIAL' | translate }}</h5>
         <div class="mx-4 mb-4">

@@ -42,6 +42,7 @@ export interface GeneralFinding {
 export interface Evaluation {
   id: string;
   customer_id: string;
+  encounter_id?: string | null;
   sequence: number;
   status: EvaluationStatus;
   dentition: Dentition;

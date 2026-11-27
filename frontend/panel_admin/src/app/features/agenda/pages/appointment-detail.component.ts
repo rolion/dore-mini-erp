@@ -5,6 +5,9 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { tr } from '../../../core/i18n/translate';
+import { ModulesService } from '../../../core/service/modules.service';
+import { EncounterDetail } from '../../dentistry/models/encounter';
+import { EncountersApiService } from '../../dentistry/services/encounters-api.service';
 import {
   Appointment, AppointmentAction, AppointmentFailure, REASON_MAX_LENGTH, STATUS_CLASSES, eventLabel, statusLabel,
 } from '../models/appointment';
@@ -24,6 +27,8 @@ export class AppointmentDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
   private fb = inject(FormBuilder).nonNullable;
+  private encounters = inject(EncountersApiService);
+  private modules = inject(ModulesService);
 
   readonly classes = STATUS_CLASSES;
   readonly statusLabel = statusLabel;
@@ -33,6 +38,8 @@ export class AppointmentDetailComponent implements OnInit {
   readonly form = this.fb.group({ starts: '', duration_minutes: 30, reason: '' });
 
   appointment?: Appointment;
+  /** Atención odontológica de la cita (solo con Odontología habilitada y acceso clínico). */
+  clinical?: EncounterDetail;
   action: AppointmentAction | null = null;
   loading = true;
   saving = false;
@@ -54,9 +61,27 @@ export class AppointmentDetailComponent implements OnInit {
     this.error = '';
     this.api.get(this.id).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
       .subscribe({
-        next: appointment => this.appointment = appointment,
+        next: appointment => { this.appointment = appointment; this.loadClinical(); },
         error: () => this.error = tr('AGENDA.CITAS.ERR_CARGAR_CITA'),
       });
+  }
+
+  /** Las citas de pacientes odontológicos se gestionan desde Odontología; sin acceso clínico no se muestra nada. */
+  private loadClinical(): void {
+    this.clinical = undefined;
+    if (!this.modules.enabledKeysValue?.has('dentistry')) return;
+    this.encounters.detail(this.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: detail => this.clinical = detail.is_dental || detail.encounter ? detail : undefined,
+      error: () => this.clinical = undefined,
+    });
+  }
+
+  /** `attend` pasa por el flujo clínico; con atención iniciada tampoco se reprograma, cancela ni marca no asistió. */
+  can(action: AppointmentAction): boolean {
+    if (!this.appointment?.allowed_actions.includes(action)) return false;
+    if (!this.clinical) return true;
+    if (action === 'attend') return false;
+    return !(this.clinical.encounter && ['reschedule', 'cancel', 'no_show'].includes(action));
   }
 
   title(action: AppointmentAction): string {
@@ -65,10 +90,6 @@ export class AppointmentDetailComponent implements OnInit {
 
   button(action: AppointmentAction): string {
     return tr(`AGENDA.CITAS.BTN_${action.toUpperCase()}`);
-  }
-
-  can(action: AppointmentAction): boolean {
-    return !!this.appointment?.allowed_actions.includes(action);
   }
 
   get isTerminal(): boolean {

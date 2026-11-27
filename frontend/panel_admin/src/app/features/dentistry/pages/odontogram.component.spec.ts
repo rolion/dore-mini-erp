@@ -39,7 +39,7 @@ describe('OdontogramComponent', () => {
     await TestBed.configureTestingModule({ imports: [OdontogramComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: OdontogramApiService, useValue: api }, { provide: DentistryApiService, useValue: patients },
       { provide: PersonnelApiService, useValue: personnel },
-      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }) } } },
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }), queryParamMap: convertToParamMap({}) } } },
     ] }).compileComponents();
     fixture = TestBed.createComponent(OdontogramComponent); fixture.detectChanges(); await fixture.whenStable(); fixture.detectChanges();
   }
@@ -53,7 +53,7 @@ describe('OdontogramComponent', () => {
     const personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['list']); personnel.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     await TestBed.configureTestingModule({ imports: [OdontogramComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: OdontogramApiService, useValue: api }, { provide: DentistryApiService, useValue: patients }, { provide: PersonnelApiService, useValue: personnel },
-      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }) } } }] }).compileComponents();
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }), queryParamMap: convertToParamMap({}) } } }] }).compileComponents();
     fixture = TestBed.createComponent(OdontogramComponent); fixture.detectChanges();
     expect(root().querySelector('[role="status"]')?.textContent).toContain('Cargando');
     pending.next(makeCatalog()); pending.complete(); fixture.detectChanges();
@@ -68,7 +68,7 @@ describe('OdontogramComponent', () => {
     const personnel = jasmine.createSpyObj<PersonnelApiService>('personnel', ['list']); personnel.list.and.returnValue(of({ count: 0, next: null, previous: null, results: [] }));
     await TestBed.configureTestingModule({ imports: [OdontogramComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: OdontogramApiService, useValue: api }, { provide: DentistryApiService, useValue: patients }, { provide: PersonnelApiService, useValue: personnel },
-      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }) } } }] }).compileComponents();
+      { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }), queryParamMap: convertToParamMap({}) } } }] }).compileComponents();
     fixture = TestBed.createComponent(OdontogramComponent); fixture.detectChanges();
     expect(root().querySelector('[role="alert"]')?.textContent).toContain('No se pudo');
     expect(button('Reintentar')).toBeDefined();

@@ -22,7 +22,7 @@ ZONE = ZoneInfo('America/La_Paz')
 
 
 class Actor(NamedTuple):
-    """Usuario que ejecuta la acción: el id se conserva y el nombre se guarda para mostrarlo sin consultar otro módulo."""
+    """Usuario que ejecuta la acción: el id se conserva y el nombre se guarda para mostrarlo sin otro módulo."""
 
     id: int
     name: str

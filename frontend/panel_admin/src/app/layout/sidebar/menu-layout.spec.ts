@@ -42,9 +42,9 @@ describe('arrangeRoutes (menu por tipo de empresa)', () => {
     expect(ids(arranged)).not.toContain('quotations');
     const dentistry = arranged.find((item) => item.id === 'dentistry');
     expect(dentistry?.submenu.map((item) => item.path)).toEqual([
-      '/pocketbiz/dentistry/patients', '/pocketbiz/quotations/proformas',
+      '/pocketbiz/dentistry/patients', '/pocketbiz/dentistry/appointments', '/pocketbiz/quotations/proformas',
     ]);
-    expect(dentistry?.submenu[1].title).toBe('MENUITEMS.DENTISTRY.BUDGETS');
+    expect(dentistry?.submenu[2].title).toBe('MENUITEMS.DENTISTRY.BUDGETS');
     expect(ids(arranged).slice(0, 4)).toEqual(['dashboard', 'catalog', 'customers', 'dentistry']);
   });
 
@@ -52,7 +52,7 @@ describe('arrangeRoutes (menu por tipo de empresa)', () => {
     const enabled = new Set([...everyModule].filter((module) => module !== 'quotations'));
     const arranged = arrangeRoutes(visibleRoutes(routes, enabled), 'odontologia');
     expect(arranged.find((item) => item.id === 'dentistry')?.submenu.map((item) => item.path)).toEqual([
-      '/pocketbiz/dentistry/patients',
+      '/pocketbiz/dentistry/patients', '/pocketbiz/dentistry/appointments',
     ]);
   });
 

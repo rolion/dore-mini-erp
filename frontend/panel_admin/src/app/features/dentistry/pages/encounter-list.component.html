@@ -1,0 +1,83 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item"><h5 class="page-title">{{ 'DENTISTRY.ENCOUNTER.TITULO_LISTA' | translate }}</h5></li>
+    <li class="breadcrumb-item"><a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'DENTISTRY.ENCOUNTER.IR_INICIO' | translate"><i class="fas fa-home"></i></a></li>
+    <li class="breadcrumb-item">{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGIA' | translate }}</li>
+    <li class="breadcrumb-item active">{{ 'DENTISTRY.ENCOUNTER.TITULO_LISTA' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header"><h2><strong>{{ 'DENTISTRY.ENCOUNTER.TITULO_LISTA' | translate }}</strong></h2></div>
+      <div class="card-body">
+        @if (loading) { <p role="status">{{ 'DENTISTRY.ENCOUNTER.CARGANDO' | translate }}</p> }
+        @if (error) {
+          <p class="alert alert-danger" role="alert">{{ error }}
+            <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="search(page)">{{ 'DENTISTRY.ENCOUNTER.REINTENTAR' | translate }}</button></p>
+        }
+        <form [formGroup]="filters" (ngSubmit)="search()" class="row g-2 mb-3">
+          <div class="col-md-2"><label for="e-from">{{ 'DENTISTRY.ENCOUNTER.DESDE' | translate }}</label>
+            <input id="e-from" type="date" class="form-control" formControlName="from"></div>
+          <div class="col-md-2"><label for="e-to">{{ 'DENTISTRY.ENCOUNTER.HASTA' | translate }}</label>
+            <input id="e-to" type="date" class="form-control" formControlName="to"></div>
+          <div class="col-md-3"><label for="e-professional">{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate }}</label>
+            <select id="e-professional" class="form-select" formControlName="professional">
+              <option value="">{{ 'DENTISTRY.ENCOUNTER.TODOS' | translate }}</option>
+              @for (person of people; track person.id) { <option [value]="person.id">{{ person.name }}</option> }
+            </select></div>
+          <div class="col-md-5"><label for="e-search">{{ 'DENTISTRY.ENCOUNTER.PACIENTE' | translate }}</label>
+            <input id="e-search" type="search" class="form-control" formControlName="search"
+              [attr.placeholder]="'DENTISTRY.ENCOUNTER.BUSCAR_PACIENTE' | translate"></div>
+          <div class="col-md-3"><label for="e-status">{{ 'DENTISTRY.ENCOUNTER.ESTADO_CITA' | translate }}</label>
+            <select id="e-status" class="form-select" formControlName="status">
+              <option value="">{{ 'DENTISTRY.ENCOUNTER.TODOS' | translate }}</option>
+              @for (status of statuses; track status) { <option [value]="status">{{ statusLabel(status) }}</option> }
+            </select></div>
+          <div class="col-md-3"><label for="e-encounter">{{ 'DENTISTRY.ENCOUNTER.ESTADO_ATENCION' | translate }}</label>
+            <select id="e-encounter" class="form-select" formControlName="encounter_status">
+              <option value="">{{ 'DENTISTRY.ENCOUNTER.TODOS' | translate }}</option>
+              @for (status of encounterStatuses; track status) { <option [value]="status">{{ encounterLabel(status) }}</option> }
+            </select></div>
+          <div class="col-md-6 d-flex gap-2 align-items-end">
+            <button class="btn btn-primary" type="submit" [disabled]="loading">{{ 'DENTISTRY.ENCOUNTER.FILTRAR' | translate }}</button>
+            <button class="btn btn-light" type="button" (click)="clear()" [disabled]="loading">{{ 'DENTISTRY.ENCOUNTER.LIMPIAR' | translate }}</button>
+          </div>
+        </form>
+
+        @if (!loading && !error && !rows.length) {
+          <p>{{ (hasFilters ? 'DENTISTRY.ENCOUNTER.SIN_RESULTADOS_FILTROS' : 'DENTISTRY.ENCOUNTER.SIN_CITAS_HOY') | translate }}</p>
+        }
+        @if (rows.length) {
+          <table class="table table-striped align-middle inventory-table">
+            <thead><tr>
+              <th>{{ 'DENTISTRY.ENCOUNTER.ID_CITA' | translate }}</th><th>{{ 'DENTISTRY.ENCOUNTER.PACIENTE' | translate }}</th>
+              <th>{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate }}</th><th>{{ 'DENTISTRY.ENCOUNTER.HORARIO' | translate }}</th>
+              <th>{{ 'DENTISTRY.ENCOUNTER.ESTADO_CITA' | translate }}</th><th>{{ 'DENTISTRY.ENCOUNTER.ESTADO_ATENCION' | translate }}</th>
+              <th>{{ 'DENTISTRY.ENCOUNTER.ACCIONES' | translate }}</th>
+            </tr></thead>
+            <tbody>
+              @for (row of rows; track row.appointment_id) {
+                <tr>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ID_CITA' | translate"><code>{{ shortId(row.appointment_id) }}</code></td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.PACIENTE' | translate"><strong>{{ row.customer_name }}</strong></td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate">{{ row.professional_name }}</td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.HORARIO' | translate">{{ formatDateTime(row.starts) }}–{{ time(row.ends) }}</td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ESTADO_CITA' | translate"><span class="badge" [class]="appointmentClasses[row.status]">{{ statusLabel(row.status) }}</span></td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ESTADO_ATENCION' | translate"><span class="badge" [class]="encounterClasses[row.encounter_status]">{{ encounterLabel(row.encounter_status) }}</span></td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ACCIONES' | translate"><a class="btn btn-sm btn-primary" [routerLink]="['/pocketbiz/dentistry/appointments', row.appointment_id]">{{ 'DENTISTRY.ENCOUNTER.VER_CITA' | translate }}</a></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">{{ 'DENTISTRY.ENCOUNTER.TOTAL_CITAS' | translate: { count: count } }}</small>
+            <div class="d-flex gap-2 align-items-center">
+              <button class="btn btn-light" type="button" [disabled]="page <= 1 || loading" (click)="search(page - 1)">{{ 'DENTISTRY.ENCOUNTER.ANTERIOR' | translate }}</button>
+              <span>{{ 'DENTISTRY.ENCOUNTER.PAGINA' | translate: { page: page, pages: pages } }}</span>
+              <button class="btn btn-light" type="button" [disabled]="page >= pages || loading" (click)="search(page + 1)">{{ 'DENTISTRY.ENCOUNTER.SIGUIENTE' | translate }}</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
