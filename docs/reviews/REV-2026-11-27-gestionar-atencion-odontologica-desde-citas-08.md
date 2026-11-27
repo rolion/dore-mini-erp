@@ -25,3 +25,5 @@ Con `TIME_ZONE=UTC`, una atención iniciada entre las 20:00 y las 24:00 (hora de
 
 ## Resolución
 `clinical_date()` convierte `started_at` a America/La_Paz (misma zona que Agenda). Prueba `test_odontogram_clinical_date_uses_the_agenda_time_zone` (falla sin el cambio con `TIME_ZONE=UTC`, pasa con él). Resuelto por el autor; pendiente de confirmación en una nueva pasada del Quality Gate.
+
+Confirmado en la 3.ª pasada (HEAD 45b2afe8): `clinical_date()` convierte a America/La_Paz; la prueba nueva pasa con `TIME_ZONE=UTC` y con `TIME_ZONE=America/La_Paz`. `EvaluationCommands._today()` (`timezone.localdate()`, TIME_ZONE) sigue siendo >= al día de La Paz mientras TIME_ZONE sea UTC o más al este, por lo que la validación «no futura» no rechaza la fecha precargada.
