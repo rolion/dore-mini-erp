@@ -21,3 +21,5 @@ Si el odontólogo escribe observaciones y pulsa «Finalizar» sin «Guardar obse
 - `frontend/panel_admin/src/app/features/dentistry/pages/encounter-detail.component.ts:114-125` (`run('finish')` sin guardar ni confirmar) y `:99-104` (`apply` hace `observations.setValue(detail.encounter?.observations)`).
 - `frontend/panel_admin/src/app/features/dentistry/pages/encounter-detail.component.html` (botón Finalizar con `(click)="run('finish')"`).
 - `docs/design/DDR-gestionar-atencion-odontologica-desde-citas-listado-y-detalle-de-atencion.md` («Finalizar: … con confirmación breve»).
+
+**Confirmado en la 2.ª pasada:** confirmFinish guarda las observaciones pendientes antes de finalizar y finalizar pide confirmación con diálogo; pruebas 'saves typed observations before finishing' y 'finishes directly when there is nothing unsaved'.

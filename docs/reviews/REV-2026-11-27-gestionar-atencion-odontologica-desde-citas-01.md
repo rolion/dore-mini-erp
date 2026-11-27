@@ -22,3 +22,5 @@ Se responde 409 con `code: draft_exists`; el frontend (`byCode`) muestra «El pa
 - `backend/modules/dentistry/application/encounters.py:131-132` (`except EvaluationStateError as exc: raise EncounterStateError(str(exc), 'draft_exists')`).
 - `frontend/panel_admin/src/assets/i18n/en.json:913` (`VAL_DRAFT_EXISTS`); claves `VAL_*` presentes en `DENTISTRY.ENCOUNTER`: CLINICAL_FLOW_REQUIRED, DRAFT_EXISTS, DRAFT_PENDING, ENCOUNTER_CANCELLED, ENCOUNTER_FINISHED, NOT_DENTAL, NOT_ELIGIBLE, ODONTOGRAM_EXISTS, TOO_EARLY (sin PATIENT_ARCHIVED, CUSTOMER_INACTIVE, INVALID_TRANSITION, INVALID_STATE).
 - No existe prueba de este caso en `test_encounter_api.py` (solo `draft_exists` por borrador previo).
+
+**Confirmado en la 2.ª pasada:** create_odontogram llama _require_patient (encounters.py) antes de crear: archivado -> patient_archived, inactivo -> customer_inactive; claves VAL_PATIENT_ARCHIVED/CUSTOMER_INACTIVE/INVALID_STATE/INVALID_TRANSITION en es/en/pt; prueba test_odontogram_for_archived_patient_has_its_own_code.

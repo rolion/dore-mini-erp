@@ -21,3 +21,5 @@ Con clínicas de miles de pacientes/atenciones, cada petición al listado constr
 - `backend/modules/dentistry/application/encounters.py:141-166` (`dental_customer_ids`, `exclude_ids = list(encounters.values_list('appointment_id'...))`, `only_ids`).
 - `backend/modules/agenda/services.py:70-83` (`customer_id__in=list(...)`, `exclude(pk__in=list(...))`).
 - TASK, «Deuda técnica / notas»: reconocido como suficiente para MVP.
+
+**Confirmado en la 2.ª pasada:** listing parte de las citas del rango (<=31 días) y acota las atenciones por appointment_id de esas citas; prueba test_listing_filters_by_customer_and_state_within_the_range.

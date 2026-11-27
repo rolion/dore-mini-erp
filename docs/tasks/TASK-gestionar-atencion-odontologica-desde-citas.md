@@ -17,6 +17,7 @@
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS (7 hallazgos Low abiertos) | delivery-publish |
 | 2026-11-27 | PUBLISH (sin cambio de etapa) | Rediseño del detalle por crítica de diseño; DDR v2 y PLAN v3 | delivery-build (a pedido del usuario) |
+| 2026-11-27 | PUBLISH (re-publicación) | Quality Gate 2.ª pasada PASS (1 hallazgo Low, REV-08) | delivery-publish |
 
 ## Investigación
 
@@ -121,6 +122,8 @@ Ver `docs/adr/ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion
 **Corrección de hallazgos Low (2026-11-27, delivery-build a pedido del usuario):** REV-01 (`_require_patient` antes de crear odontograma + claves `VAL_*`), REV-02 (diálogo de confirmación; guarda observaciones antes de finalizar), REV-03 (listado parte de las citas del rango; fachada `appointments_in_range`), REV-04 (`amend` bloquea la atención antes que al paciente), REV-05 (tarjeta y submenú condicionados al módulo Agenda), REV-06 (tokens `dark-tokens`, `ng-select`, spinner), REV-07 (PLAN v2). Verificación propia tras los cambios: backend agenda+dentistry 163 OK, boundaries OK, Angular 1959 OK, `ng lint`, `i18n:check` y `ng build` limpios. **El Quality Gate no se repitió sobre estos commits**; los REV quedan marcados Resolved por el autor y deben confirmarse en una nueva pasada de delivery-publish si se desea.
 
 **Rediseño del detalle (2026-11-27, a pedido del usuario tras `/design:design-critique`):** aplicadas las recomendaciones 1-5 (franja de alerta clínica, badges «Cita/Atención» con contraste AA, dos columnas con odontograma protagonista y acciones separadas, accesibilidad de contraste y 44 px, estados vacíos y numeración del odontograma). Documentos: DDR v2 («Revisión v2»), PLAN v3 (Specification UI-02/04/05/10 con aprobación del usuario) y `design-system.md`. Verificación propia: specs del módulo 129 OK, Angular completo 1964 OK, `ng lint`, `i18n:check` y `ng build` limpios. **No verificado visualmente en navegador** ni repetido el Quality Gate.
+
+**Quality Gate, 2.ª pasada (subagente aislado, HEAD 8192417b): PASS.** Backend `Ran 2629 tests` OK; Angular `TOTAL: 1965 SUCCESS`; `ng lint`, `i18n:check` (2719 claves, 0 faltantes; paridad es/en/pt 3299), `ng build`, `makemigrations --check`, `bandit` y `npm audit --omit=dev` limpios; `ruff`/`flake8` solo con el E501 preexistente. REV-01..07 **confirmados Resolved** por el revisor. Hallazgo nuevo **REV-08 (Low, abierto):** `clinical_date()` usa `settings.TIME_ZONE` (UTC en `.env.example`), no America/La_Paz; con UTC, una atención iniciada entre las 20:00 y las 24:00 de La Paz precarga el odontograma con la fecha del día siguiente. Sin pérdida de datos. No verificado: revisión visual en navegador (contraste real, modo oscuro), E2E real, prueba con `MigrationExecutor`.
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/138 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migración 0006 aditiva) y autorización clínica; respaldado por ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma. Pendiente humano: decidir si se exige E2E real (Playwright) y si los REV Low se corrigen ahora o después.

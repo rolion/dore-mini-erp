@@ -25,3 +25,5 @@ PLAN v1 sin cambios; las desviaciones solo viven en `## Implementación` del TAS
 - `docs/tasks/TASK-gestionar-atencion-odontologica-desde-citas.md` «Desviaciones respecto al plan».
 - `backend/modules/dentistry/api/encounter_views.py:106-107` y `application/encounters.py:168-177` (forma plana del listado).
 - `backend/modules/dentistry/tests/test_encounter_api.py:306-317` (AC-12).
+
+**Confirmado en la 2.ª pasada:** PLAN v2/v3 actualiza API-01, API-07, E2E pendiente de decisión y AC-12 con changelog.

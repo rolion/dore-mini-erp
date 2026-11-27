@@ -21,3 +21,5 @@ Una empresa con Odontología pero sin Agenda/Personal (posible desde Ajustes) no
 - `backend/modules/modularity/domain/modules.py:27` (`dentistry` requiere solo `customers`).
 - `backend/modules/dentistry/api/encounter_views.py:74-75` (`required_modules`).
 - `frontend/panel_admin/src/app/features/dentistry/components/patient-encounters.component.ts` (sin comprobar módulos) y `pages/patient-detail.component.html` (siempre incluida).
+
+**Confirmado en la 2.ª pasada:** PatientEncountersComponent se oculta con Agenda deshabilitada (agenda requiere personnel) y el subítem 'Citas' está condicionado al módulo agenda en routes.json.

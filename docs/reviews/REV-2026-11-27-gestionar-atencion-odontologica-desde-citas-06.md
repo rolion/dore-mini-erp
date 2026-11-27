@@ -25,3 +25,5 @@ Ver arriba. Sin impacto funcional; accesibilidad básica correcta (labels asocia
 - `frontend/panel_admin/src/app/features/dentistry/pages/encounter-detail.component.scss:3-5`.
 - `frontend/panel_admin/src/app/features/dentistry/pages/encounter-list.component.html` (`<select id="e-professional" class="form-select">`).
 - `docs/design/design-system.md` §8 y §10.
+
+**Confirmado en la 2.ª pasada:** scss sin HEX (usa dark-tokens), ng-select en el filtro de odontólogo, spinner de carga, diálogo nativo aceptado y declarado en el DDR v2.

@@ -21,3 +21,5 @@ Si la enmienda confirma su borrador entre la comprobación de `finish` y su comm
 - `backend/modules/dentistry/application/encounters.py:80-94` (comprobación de borrador en `finish`).
 - `backend/modules/dentistry/application/evaluations.py:84-98` (`amend` sin bloqueo de la atención).
 - `backend/modules/dentistry/tests/test_encounter_api.py:319-358` (clases de concurrencia: start, create odontogram, finish).
+
+**Confirmado en la 2.ª pasada:** amend bloquea la atención (lock_encounter) antes de la evaluación y del paciente; orden atención -> paciente consistente con create_odontogram y sin ciclo con finish (cita -> atención). Nota: la prueba de concurrencia solo comprueba coherencia, no discrimina la ausencia del bloqueo; la resolución se confirma por lectura del código.
