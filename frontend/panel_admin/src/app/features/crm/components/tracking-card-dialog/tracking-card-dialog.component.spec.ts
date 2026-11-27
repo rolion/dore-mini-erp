@@ -1,12 +1,12 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { CrmApiError } from '../../models/board';
+import { CrmActivitiesApiService } from '../../services/crm-activities-api.service';
 import { CrmCustomersApiService } from '../../services/crm-customers-api.service';
 import { CrmLeadsApiService } from '../../services/crm-leads-api.service';
 import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
-import { ActivityDialogComponent } from '../activity-dialog/activity-dialog.component';
 import { makeCrmCustomer, makeCrmPage, makeLead, makeOpportunity } from '../../testing/crm-fixtures';
 import { TrackingCardDialogComponent, TrackingContactOption } from './tracking-card-dialog.component';
 
@@ -17,18 +17,20 @@ describe('TrackingCardDialogComponent', () => {
     leads.list.and.returnValue(of({ count: 1, results: [makeLead()] }));
     const customers = jasmine.createSpyObj<CrmCustomersApiService>('CrmCustomersApiService', ['list']);
     customers.list.and.returnValue(of(makeCrmPage([makeCrmCustomer()])));
+    const activities = jasmine.createSpyObj<CrmActivitiesApiService>('CrmActivitiesApiService', ['list', 'create']);
+    activities.list.and.returnValue(of({ count: 0, results: [] }));
     const modal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
-    const stacked = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     TestBed.configureTestingModule({
       imports: [TrackingCardDialogComponent],
       providers: [...provideTestTranslations(), { provide: CrmOpportunitiesApiService, useValue: api },
         { provide: CrmLeadsApiService, useValue: leads }, { provide: CrmCustomersApiService, useValue: customers },
-        { provide: NgbActiveModal, useValue: modal }, { provide: NgbModal, useValue: stacked }],
+        { provide: NgbActiveModal, useValue: modal },
+        { provide: CrmActivitiesApiService, useValue: activities }],
     });
     const fixture = TestBed.createComponent(TrackingCardDialogComponent);
     fixture.componentInstance.open({ boardId: 'b-1', stageId: 's-2' });
     fixture.detectChanges();
-    return { fixture, component: fixture.componentInstance, api, leads, customers, modal, stacked };
+    return { fixture, component: fixture.componentInstance, api, leads, customers, modal };
   }
 
   const customerOption: TrackingContactOption = {
@@ -102,15 +104,13 @@ describe('TrackingCardDialogComponent', () => {
       expect(modal.close).toHaveBeenCalled();
     });
 
-    it('offers Add activity only on an existing card and opens the activity dialog for it', () => {
-      const { fixture, component, stacked } = setup();
-      expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="add-activity"]')).toBeNull();
-      const activity = jasmine.createSpyObj<ActivityDialogComponent>('ActivityDialogComponent', ['open']);
-      stacked.open.and.returnValue({ componentInstance: activity, result: Promise.resolve() } as unknown as ReturnType<NgbModal['open']>);
+    it('shows the activities column only on an existing card', () => {
+      const { fixture, component } = setup();
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('[data-testid="activity-column"]')).toBeNull();
       component.open({ boardId: 'b-1', stageId: 's-2', card });
       fixture.detectChanges();
-      ((fixture.nativeElement as HTMLElement).querySelector('[data-testid="add-activity"]') as HTMLButtonElement).click();
-      expect(activity.open).toHaveBeenCalledWith({ type: 'opportunity', id: 'o-9', name: 'Llamar' });
+      expect(el.querySelector('[data-testid="activity-column"] app-crm-activity-panel')).not.toBeNull();
     });
   });
 });

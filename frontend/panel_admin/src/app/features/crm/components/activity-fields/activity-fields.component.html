@@ -24,15 +24,7 @@
       }
     </div>
   </div>
-  <div class="form-group">
-    <label [for]="idPrefix + '-notes'">{{ 'COMMON.NOTAS' | translate }}</label>
-    <textarea [id]="idPrefix + '-notes'" class="form-control" rows="3" formControlName="notes" [attr.maxlength]="notesMaxLength"
-      [attr.aria-invalid]="!!errors['notes']" [attr.aria-describedby]="idPrefix + '-notes-count'" data-testid="activity-notes"></textarea>
-    <small [id]="idPrefix + '-notes-count'" class="form-text text-muted">{{ notesLength }} / {{ notesMaxLength }}</small>
-    @if (errors['notes']) {
-    <small class="form-text text-danger d-block" role="alert">{{ errors['notes'] }}</small>
-    }
-  </div>
+  @if (dateFirst) {
   @if (showDate) {
   <div class="form-group">
     <label [for]="idPrefix + '-date'">{{ 'CRM.ACTIVITY.FECHA' | translate }}</label>
@@ -43,5 +35,28 @@
     <small class="form-text text-danger d-block" role="alert">{{ errors['occurredAt'] }}</small>
     }
   </div>
+  }
+  }
+  <div class="form-group">
+    <label [for]="idPrefix + '-notes'">{{ 'COMMON.NOTAS' | translate }}</label>
+    <textarea [id]="idPrefix + '-notes'" class="form-control" rows="3" formControlName="notes" [attr.maxlength]="notesMaxLength"
+      [attr.aria-invalid]="!!errors['notes']" [attr.aria-describedby]="idPrefix + '-notes-count'" data-testid="activity-notes"></textarea>
+    <small [id]="idPrefix + '-notes-count'" class="form-text text-muted">{{ notesLength }} / {{ notesMaxLength }}</small>
+    @if (errors['notes']) {
+    <small class="form-text text-danger d-block" role="alert">{{ errors['notes'] }}</small>
+    }
+  </div>
+  @if (!dateFirst) {
+  @if (showDate) {
+  <div class="form-group">
+    <label [for]="idPrefix + '-date'">{{ 'CRM.ACTIVITY.FECHA' | translate }}</label>
+    <input [id]="idPrefix + '-date'" type="datetime-local" class="form-control" formControlName="occurredAt"
+      [attr.aria-invalid]="!!errors['occurredAt']" data-testid="activity-date">
+    <small class="form-text text-muted">{{ 'CRM.ACTIVITY.FECHA_AYUDA' | translate }}</small>
+    @if (errors['occurredAt']) {
+    <small class="form-text text-danger d-block" role="alert">{{ errors['occurredAt'] }}</small>
+    }
+  </div>
+  }
   }
 </div>

@@ -1,13 +1,13 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, catchError, debounceTime, distinctUntilChanged, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { CrmApiError } from '../../models/board';
-import { ActivityDialogComponent } from '../activity-dialog/activity-dialog.component';
+import { ActivityPanelComponent } from '../activity-panel/activity-panel.component';
 import {
   CRM_OPPORTUNITY_DESCRIPTION_MAX_LENGTH, CRM_OPPORTUNITY_TITLE_MAX_LENGTH, CrmOpportunity,
 } from '../../models/opportunity';
@@ -43,12 +43,12 @@ type CardField = 'name' | 'contact' | 'description';
 
 /**
  * Alta de una tarjeta de seguimiento en una columna o, con `card`, su ficha: se ve y se edita nombre y descripción
- * (el cliente o prospecto queda fijo) y desde ahí se agrega una actividad. Devuelve la tarjeta guardada.
+ * (el cliente o prospecto queda fijo); a la izquierda van sus actividades y el formulario para agregar una. Devuelve la tarjeta guardada.
  */
 @Component({
   selector: 'app-crm-tracking-card-dialog',
   templateUrl: './tracking-card-dialog.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, NgSelectModule],
+  imports: [TranslatePipe, ReactiveFormsModule, NgSelectModule, ActivityPanelComponent],
 })
 export class TrackingCardDialogComponent implements OnInit {
   readonly nameMaxLength = CRM_OPPORTUNITY_TITLE_MAX_LENGTH;
@@ -69,7 +69,6 @@ export class TrackingCardDialogComponent implements OnInit {
   serverErrors: Partial<Record<CardField, string>> = {};
 
   readonly activeModal = inject(NgbActiveModal);
-  private modal = inject(NgbModal);
   private api = inject(CrmOpportunitiesApiService);
   private leadsApi = inject(CrmLeadsApiService);
   private customersApi = inject(CrmCustomersApiService);
@@ -111,15 +110,6 @@ export class TrackingCardDialogComponent implements OnInit {
 
   get isEdit(): boolean {
     return !!this.context?.card;
-  }
-
-  /** «Agregar actividad» de la tarjeta: abre el registro de actividades encima de esta ficha. */
-  addActivity(): void {
-    const card = this.context.card;
-    if (!card) return;
-    const ref = this.modal.open(ActivityDialogComponent, { centered: true, backdrop: 'static', scrollable: true });
-    (ref.componentInstance as ActivityDialogComponent).open({ type: 'opportunity', id: card.id, name: card.title });
-    ref.result.then(() => undefined, () => undefined);
   }
 
   invalid(field: CardField): boolean {

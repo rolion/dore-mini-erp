@@ -46,6 +46,8 @@ export function activityFormValue(form: FormGroup<ActivityFormControls>): CrmAct
 export class ActivityFieldsComponent {
   @Input({ required: true }) form!: FormGroup<ActivityFormControls>;
   @Input() showDate = false;
+  /** Fecha antes de la nota (formulario embebido de la tarjeta). */
+  @Input() dateFirst = false;
   /** Errores del servidor por campo (`channel`, `outcome`, `notes`, `occurredAt`). */
   @Input() errors: CrmFieldErrors = {};
   /** Prefijo único de ids cuando hay dos formularios en pantalla. */
