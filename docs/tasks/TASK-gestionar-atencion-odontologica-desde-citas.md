@@ -19,6 +19,7 @@
 | 2026-11-27 | PUBLISH (sin cambio de etapa) | Rediseño del detalle por crítica de diseño; DDR v2 y PLAN v3 | delivery-build (a pedido del usuario) |
 | 2026-11-27 | PUBLISH (re-publicación) | Quality Gate 2.ª pasada PASS (1 hallazgo Low, REV-08) | delivery-publish |
 | 2026-11-27 | PUBLISH (re-publicación) | Quality Gate 3.ª pasada PASS (REV-08 confirmado; 1 hallazgo Low, REV-09) | delivery-publish |
+| 2026-11-27 | PUBLISH (re-publicación) | Quality Gate 4.ª pasada PASS (numeración C-000001 y REV-09; sin hallazgos) | delivery-publish |
 
 ## Investigación
 
@@ -133,6 +134,8 @@ Ver `docs/adr/ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion
 **REV-09 corregido (2026-11-27):** la prueba compara con la fecha de La Paz; pasa con `TIME_ZONE` UTC, America/La_Paz y Asia/Tokyo. Solo cambia una prueba; sin nueva pasada del Quality Gate. Con esto REV-01..09 están resueltos.
 
 **Ampliación: numeración correlativa de citas (2026-11-27, pedida por el usuario sobre el listado de Odontología):** código `C-000001` único y correlativo por gestión fiscal, con columna «Cita» (antes «ID de cita»). Decisiones del usuario: gestión por fecha de creación; bloqueo con aviso si no hay gestión abierta; numerar las citas existentes por orden de creación. Implementado según el patrón de ventas/compras: ADR `…-numeracion-de-citas-por-gestion`, PLAN v4 (INV-11, AC-13, AC-14, API-08), DDR revisión v3, migraciones `agenda/0004` y `0005` (backfill repetible), adaptador `AppointmentNumbering` (`agenda → accounting` por fachada, declarado en `test_boundaries`), frontend en Odontología y Agenda e i18n es/en/pt. Verificación propia: agenda+dentistry+fronteras 179 OK, Angular 1966 OK, `ng lint`, `i18n:check`, `ng build` y `makemigrations --check` limpios ; suite completa de backend 2636 pruebas OK. **Cambia el comportamiento de Agenda:** sin gestión fiscal abierta no se pueden crear citas. Sin nueva pasada del Quality Gate.
+
+**Quality Gate, 4.ª pasada (subagente aislado, HEAD c4f80ff6): PASS.** Sin hallazgos nuevos. Backend `Ran 2636 tests` OK; `makemigrations --check` sin cambios; `ruff`/`flake8` solo con el E501 preexistente en `test_boundaries.py:34`; `bandit` sin incidencias; agenda+dentistry 47 OK con `TIME_ZONE` Asia/Tokyo y America/La_Paz (REV-09 confirmado). Angular `TOTAL: 1966 SUCCESS`; `ng lint`, `i18n:check` (2723 claves, 0 faltantes), `ng build`, `npm audit --omit=dev` (0) OK. Revisadas INV-11, AC-13, AC-14, API-08: unicidad y concurrencia (5 hilos, C-000001..5), 409 sin gestión abierta, backfill repetible, límites DDD, `company_id`, i18n es/en/pt. No verificado: revisión visual en navegador y migración 0005 completa sobre base poblada (solo la función `backfill`). Observaciones informativas: el 409 de gestión marca `conflict` en el formulario de citas y refresca franjas; el backfill hace un UPDATE por cita.
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/138 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migración 0006 aditiva) y autorización clínica; respaldado por ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma. Pendiente humano: decidir si se exige E2E real (Playwright) y si los REV Low se corrigen ahora o después.
