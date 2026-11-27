@@ -88,8 +88,8 @@ class CreateTests(OpportunityApiBase):
     def test_create_for_lead_in_first_stage_with_initial_history(self):  # AC-02, INV-08
         lead = self.lead('Ana', phone='76543210')
         body = self.create(lead_id=str(lead.id), company_id=str(uuid4()), next_action_at='2026-11-25T15:00:00Z')
-        self.assertEqual(set(body), {'id', 'board_id', 'stage_id', 'lead', 'customer', 'title', 'owner', 'amount',
-                                     'currency', 'next_action_at', 'status', 'closed_at', 'order_id', 'lost_reason',
+        self.assertEqual(set(body), {'id', 'board_id', 'stage_id', 'lead', 'customer', 'title', 'description', 'owner',
+                                     'amount', 'currency', 'next_action_at', 'status', 'closed_at', 'order_id', 'lost_reason',
                                      'created_at'})
         self.assertEqual((body['stage_id'], body['status'], body['amount'], body['currency']),
                          (self.stages[0], 'open', '120.50', 'BOB'))

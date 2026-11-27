@@ -14,6 +14,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, diseño SI; decisiones del usuario registradas | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
+| 2026-11-27 | REVIEW → ENGINEERING → REVIEW | FAIL REV-01 corregido (una línea de prueba); pendiente corrida de API con BD | delivery-publish |
 
 ## Investigación
 
@@ -84,7 +85,7 @@ No aplica según veredicto.
 **Deuda técnica:** la tarjeta no abre detalle ni se edita desde la nueva pantalla (PB-CRM-005).
 
 ## Review
-_Pendiente_
+Quality Gate #1 (subagente aislado): **FAIL** por REV-2026-11-27-crm-tableros-seguimiento-comercial-01 (High, IMPLEMENTATION: aserción de claves sin `description`), ya corregido. Todo lo ejecutable pasó: Karma 2090/2090, `ng lint`, `i18n:check`, `ng build`, `npm audit` (0), dominio backend (24 OK), `makemigrations --check`, `ruff`/`flake8`. **No ejecutadas** (sin PostgreSQL con credenciales): pruebas de API de `crm`. Revisión visual: no verificada.
 
 ## Publicación
 _Pendiente_
