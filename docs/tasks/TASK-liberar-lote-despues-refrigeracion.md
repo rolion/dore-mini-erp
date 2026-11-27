@@ -1,6 +1,6 @@
 # TASK-liberar-lote-despues-refrigeracion: Liberar el lote después de refrigeración
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-liberar-lote-despues-refrigeracion (base: `produccion`)
@@ -15,6 +15,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
 | 2026-11-27 | REVIEW → ENGINEERING → REVIEW | Quality Gate 1 FAIL (REV-01 High, REV-02 Medium); corregidos | delivery-publish / delivery-build |
+| 2026-11-27 | REVIEW → PUBLISH | Quality Gate ciclo 2 PASS | delivery-publish |
 
 ## Investigación
 
@@ -83,4 +84,4 @@ Quality Gate ciclo 1: **FAIL** — REV-01 (High: tests de Modularidad rotos por 
 **Con PostgreSQL local (ciclo 2):** `makemigrations --check` sin cambios; suite backend completa 2645 tests OK (incluye `OrderReleaseApiTests` y `ProductionSettingsTests`; dos aserciones de mis pruebas se ajustaron al contrato real: `min_hours` llega como texto en el 409 y el 409 de estado no trae `code`). Revisión visual en navegador: no verificada.
 
 ## Publicación
-_Pendiente_
+PR #139 (base `produccion`) con descripción completa, listo para aprobación humana. No se mergea. Señalar al aprobador: toca arquitectura (ADR), base de datos (migración 0004) y la dependencia nueva `production → modularity`. Revisión visual no verificada.
