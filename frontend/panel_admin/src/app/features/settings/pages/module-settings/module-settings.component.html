@@ -67,6 +67,14 @@
                     {{ isOn(setting) ? ('SETTINGS.MODULE_SETTINGS.ACTIVADO' | translate) : ('SETTINGS.MODULE_SETTINGS.DESACTIVADO' | translate) }}
                   </label>
                 </div>
+                } @else if (setting.kind === 'integer') {
+                <div class="input-group">
+                  <input type="text" class="form-control" inputmode="numeric" autocomplete="off"
+                    [id]="'setting-' + setting.key"
+                    [formControlName]="setting.key" [class.is-invalid]="!!errorOf(setting)"
+                    [attr.aria-describedby]="'help-' + setting.key">
+                  <span class="input-group-text">{{ 'SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate }}</span>
+                </div>
                 } @else {
                 <div class="input-group">
                   <input type="text" class="form-control" inputmode="decimal" autocomplete="off"

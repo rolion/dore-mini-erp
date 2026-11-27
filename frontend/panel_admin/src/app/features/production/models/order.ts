@@ -1,6 +1,6 @@
 import { formatQuantity } from './recipe';
 
-export type OrderStatus = 'draft' | 'in_preparation' | 'refrigerating';
+export type OrderStatus = 'draft' | 'in_preparation' | 'refrigerating' | 'ready_to_pack';
 export type OrderStatusFilter = 'all' | OrderStatus;
 
 /** Tope de preparaciones que acepta el servidor (EDGE-02). */
@@ -16,6 +16,14 @@ export interface ProductionOrderIngredient {
   expectedQuantity: string;
   /** Consumo real; solo existe tras pasar a refrigeración. */
   actualQuantity: string | null;
+}
+
+export interface OrderRelease {
+  minHours: number;
+  /** ISO 8601: primera hora habilitada para liberar el lote. */
+  releasableFrom: string | null;
+  /** Lo decide el servidor al consultar; la acción lo vuelve a validar. */
+  canRelease: boolean;
 }
 
 export interface ProductionOrder {
@@ -36,6 +44,9 @@ export interface ProductionOrder {
   lot: { id: string; code: string } | null;
   /** Costo total consumido con 2 decimales; `null` = sin costo. */
   costTotal: string | null;
+  release: OrderRelease | null;
+  releasedAt: string | null;
+  releasedBy: string | null;
 }
 
 export interface ProductionOrderDto {
@@ -63,6 +74,9 @@ export interface ProductionOrderDto {
   entered_at: string | null;
   lot: { id: string; code: string } | null;
   cost_total: string | null;
+  release: { min_hours: number; releasable_from: string | null; can_release: boolean } | null;
+  released_at: string | null;
+  released_by: string | null;
 }
 
 export interface OrderWarehouse {
@@ -110,6 +124,8 @@ export interface OrderFieldErrors {
   ingredients?: string;
   /** Error por línea de `ingredients` (mismo orden que las filas de la orden; `undefined` = sin error). */
   ingredientLines?: (string | undefined)[];
+  /** Primera hora habilitada que devuelve el 409 `release_too_early`. */
+  releasableFrom?: string;
   /** Código del 409 (`insufficient_stock`, `fiscal_period_missing`…). */
   code?: string;
   recipeId?: string;

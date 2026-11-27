@@ -250,3 +250,24 @@ class HistoryTests(SettingsApiTestCase):
         before = self.client.get(history_url('modules')).json()['count']
         self.assertEqual(self.client.post('/api/modules/inventory/disable/').status_code, 409)  # lo requiere Costeo
         self.assertEqual(self.client.get(history_url('modules')).json()['count'], before)
+
+
+class ProductionSettingsTests(SettingsApiTestCase):
+    KEY = 'production.min_refrigeration_hours'
+
+    def setUp(self):
+        super().setUp()
+        self.client.post('/api/modules/inventory/enable/')
+        self.assertEqual(self.client.post('/api/modules/production/enable/').status_code, 200)
+
+    def test_integer_setting_defaults_to_twelve_hours(self):  # AC-07
+        item = self.client.get(settings_url('production')).json()['settings'][0]
+        self.assertEqual((item['key'], item['kind'], item['value'], item['default'], item['minimum'], item['maximum']),
+                         (self.KEY, 'integer', '12', '12', '0', '720'))
+
+    def test_integer_setting_validates_and_saves(self):  # AC-07
+        self.assertEqual(self.save('production', {self.KEY: '0'})['settings'][0]['value'], '0')
+        for bad in ('-1', '721', '1.5', 'abc', '', None, True):
+            with self.subTest(bad=bad):
+                self.save('production', {self.KEY: bad}, expected=400)
+        self.assertEqual(self.values('production'), {self.KEY: '0'})

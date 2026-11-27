@@ -2142,7 +2142,8 @@
       "PERMITIR": "Permitir",
       "ACTIVADO_2": "Ativado",
       "DESACTIVADO_2": "Desativado",
-      "SIN_PREDETERMINADO_2": "Sem padrão"
+      "SIN_PREDETERMINADO_2": "Sem padrão",
+      "UNIDAD_HORAS": "h"
     },
     "SETTING": {
       "NO_SE_PUDO_COMPLETAR_LA": "Não foi possível concluir a operação. Tente novamente."
@@ -3570,7 +3571,8 @@
       "STATUS": {
         "DRAFT": "Rascunho",
         "IN_PREPARATION": "Em preparação",
-        "REFRIGERATING": "Em refrigeração"
+        "REFRIGERATING": "Em refrigeração",
+        "READY_TO_PACK": "Pronto para embalar"
       },
       "ERRORS": {
         "NETWORK": "Não foi possível conectar ao servidor.",
@@ -3597,6 +3599,23 @@
         "LOT": "Lote",
         "COST": "Custo total consumido",
         "NO_COST": "Sem custo"
+      },
+      "RELEASE": {
+        "ACTION": "Liberar lote",
+        "TITLE": "Liberação do lote",
+        "ENTERED_AT": "Entrada na refrigeração",
+        "ELAPSED": "Tempo decorrido",
+        "MIN_HOURS": "Mínimo configurado",
+        "FIRST": "Primeira hora habilitada",
+        "AVAILABLE_FROM": "Disponível a partir de {{date}}",
+        "RELEASED_BY": "Liberado por",
+        "RELEASED_AT": "Liberado em",
+        "CONFIRM_TITLE": "Liberar o lote {{lot}}?",
+        "CONFIRM_TEXT": "{{quantity}} {{unit}} ficarão disponíveis para embalar. Não é possível desfazer.",
+        "DONE": "O lote foi liberado e a ordem está pronta para embalar.",
+        "HOURS_MIN": "{{hours}} h {{minutes}} min",
+        "HOURS_UNIT": "h",
+        "TOO_EARLY": "O tempo mínimo de refrigeração ainda não foi atingido. Disponível a partir de {{date}}."
       }
     }
   }

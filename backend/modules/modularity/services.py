@@ -39,3 +39,14 @@ def get_inventory_settings(company_id: UUID) -> InventorySettings:
     stored = DjangoCompanySettingRepository(company_id).values()
     key = 'inventory.allow_negative_stock'
     return InventorySettings(allow_negative_stock=stored.get(key, domain.BY_SETTING_KEY[key].default) == 'true')
+
+
+@dataclass(frozen=True)
+class ProductionSettings:
+    min_refrigeration_hours: int
+
+
+def get_production_settings(company_id: UUID) -> ProductionSettings:
+    stored = DjangoCompanySettingRepository(company_id).values()
+    key = 'production.min_refrigeration_hours'
+    return ProductionSettings(min_refrigeration_hours=int(stored.get(key, domain.BY_SETTING_KEY[key].default)))

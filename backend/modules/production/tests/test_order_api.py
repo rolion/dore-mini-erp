@@ -449,6 +449,97 @@ class OrderApiTests(APITestCase):
         self.assertIn('refrigerating', response.json()['status'][0])
 
 
+class OrderReleaseApiTests(OrderApiTests):
+    def refrigerated(self, hours_ago=0):
+        self.prepare_stock()
+        order = self.started_order()
+        self.assertEqual(self.refrigerate(order).status_code, 200)
+        if hours_ago:
+            from modules.production.infrastructure.django.models import ProductionOrderModel
+            ProductionOrderModel.objects.filter(pk=order['id']).update(
+                entered_at=timezone.now() - timedelta(hours=hours_ago))
+        return order
+
+    def release(self, order):
+        return self.client.post(f"{URL}{order['id']}/release/")
+
+    def lot_state(self, order):
+        lot = inventory_services.get_lot(self.company.id, self.client.get(f"{URL}{order['id']}/").json()['lot']['id'])
+        return lot.status, lot.physical_quantity, lot.available_quantity
+
+    def movements(self):
+        return StockMovementModel.objects.filter(company_id=self.company.id).count()
+
+    def test_detail_shows_release_data(self):  # AC-01, API-02
+        order = self.refrigerated(hours_ago=1)
+        body = self.client.get(f"{URL}{order['id']}/").json()
+        self.assertEqual((body['release']['min_hours'], body['release']['can_release']), (12, False))
+        entered = timezone.datetime.fromisoformat(body['entered_at'].replace('Z', '+00:00'))
+        first = timezone.datetime.fromisoformat(body['release']['releasable_from'].replace('Z', '+00:00'))
+        self.assertEqual(first - entered, timedelta(hours=12))
+        self.assertIsNone(self.client.get(f"{URL}{self.make_order()['id']}/").json()['release'])
+
+    def test_release_before_minimum_is_rejected_and_changes_nothing(self):  # AC-02, INV-02
+        order = self.refrigerated(hours_ago=11)
+        before = (self.movements(), self.lot_state(order))
+        response = self.release(order)
+        self.assertEqual(response.status_code, 409, response.content)
+        self.assertEqual((response.json()['code'], response.json()['min_hours']), ('release_too_early', 12))
+        self.assertIn('releasable_from', response.json())
+        self.assertEqual((self.movements(), self.lot_state(order)), before)
+        self.assertEqual(self.client.get(f"{URL}{order['id']}/").json()['status'], 'refrigerating')
+
+    def test_release_after_minimum_makes_the_lot_available(self):  # AC-03, AC-04, INV-03, INV-06
+        order = self.refrigerated(hours_ago=13)
+        self.assertEqual(self.lot_state(order), ('refrigerating', Decimal('118'), Decimal('0')))
+        moves = self.movements()
+        response = self.release(order)
+        self.assertEqual(response.status_code, 200, response.content)
+        body = response.json()
+        self.assertEqual((body['status'], body['released_by']), ('ready_to_pack', 'prod-admin'))
+        self.assertIsNotNone(body['released_at'])
+        self.assertEqual(self.lot_state(order), ('released', Decimal('118'), Decimal('118')))
+        self.assertEqual(self.movements(), moves)
+        self.assertEqual(inventory_services.get_balance(self.company.id, self.result.id, self.warehouse.id),
+                         Decimal('118'))
+        self.assertEqual(self.client.get(f'{URL}?status=ready_to_pack').json()['count'], 1)
+
+    def test_release_twice_does_not_duplicate_anything(self):  # AC-05, INV-05
+        order = self.refrigerated(hours_ago=13)
+        first = self.release(order).json()
+        moves = self.movements()
+        again = self.release(order)
+        self.assertEqual(again.status_code, 200, again.content)
+        self.assertEqual((again.json()['released_at'], self.movements(), self.lot_state(order)),
+                         (first['released_at'], moves, ('released', Decimal('118'), Decimal('118'))))
+
+    def test_release_requires_a_refrigerating_order(self):  # AC-06, INV-01
+        self.prepare_stock()
+        for order in (self.make_order(), self.started_order()):
+            response = self.release(order)
+            self.assertEqual((response.status_code, response.json()['code']), (409, 'order_state'))
+
+    def test_minimum_comes_from_the_company_setting(self):  # AC-07, EDGE-01
+        order = self.refrigerated(hours_ago=1)
+        self.assertEqual(self.release(order).status_code, 409)
+        response = self.client.patch('/api/settings/production/',
+                                     {'settings': {'production.min_refrigeration_hours': '0'}}, format='json')
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(self.release(order).status_code, 200)
+
+    def test_release_isolation_and_module_gate(self):  # AC-09
+        order = self.refrigerated(hours_ago=13)
+        other = make_company('Producción B')
+        authenticate(self.client, make_admin(other, username='other-admin'))
+        self.assertEqual(self.release(order).status_code, 403)  # módulo no habilitado
+        self.enable(other)
+        self.assertEqual(self.release(order).status_code, 404)
+        self.assertEqual(self.lot_state_by_id(order), 'refrigerating')
+
+    def lot_state_by_id(self, order):
+        return StockLotModel.objects.get(company_id=self.company.id).status
+
+
 class OrderNumberConcurrencyTests(TransactionTestCase):
     """EDGE-01: creaciones simultáneas (hilos y conexiones reales) no repiten ni saltan números."""
 

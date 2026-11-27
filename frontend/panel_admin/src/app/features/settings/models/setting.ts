@@ -1,5 +1,5 @@
 import { tr } from '../../../core/i18n/translate';
-export type SettingKind = 'choice' | 'percent' | 'boolean';
+export type SettingKind = 'choice' | 'percent' | 'boolean' | 'integer';
 
 export interface SettingChoice {
   value: string;

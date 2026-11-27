@@ -140,6 +140,9 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
     if (setting.kind === 'percent') {
       return `${setting.default} %`;
     }
+    if (setting.kind === 'integer') {
+      return `${setting.default} ${tr('SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS')}`;
+    }
     if (setting.kind === 'boolean') {
       return setting.default === 'true' ? tr('SETTINGS.MODULE_SETTINGS.ACTIVADO_2') : tr('SETTINGS.MODULE_SETTINGS.DESACTIVADO_2');
     }

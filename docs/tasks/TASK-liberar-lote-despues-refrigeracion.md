@@ -1,6 +1,6 @@
 # TASK-liberar-lote-despues-refrigeracion: Liberar el lote después de refrigeración
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-liberar-lote-despues-refrigeracion (base: `produccion`)
@@ -13,6 +13,7 @@
 | 2026-11-27 | (nuevo) → INVESTIGATION | Task creado desde DORE-PROD-005 | delivery-start |
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: nueva dependencia Producción → Modularidad (ajuste) y nuevo tipo de ajuste | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
+| 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,12 @@ Orden y lote deben cambiar juntos (una transacción); doble clic/reintento; relo
 `docs/plans/PLAN-2026-11-27-liberar-lote-despues-refrigeracion.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend:** dominio `ProductionOrder.releasable_from/release`, estado `ready_to_pack` y `ReleaseTooEarly` (INV-01, INV-02, INV-05, INV-06; AC-02..AC-06); caso de uso `ProductionOrders.release` con puerto `ReleasePolicy` y `StockGateway.release_lot` (INV-03, INV-04, AC-03, AC-05); adaptadores `InventoryStock.release_lot` y `ModularityReleasePolicy`; migración aditiva `production/0004` (3 columnas y constraint con el estado nuevo); API `POST …/release/` y campos `release`, `released_at`, `released_by` en la orden (API-01..03, AC-01, AC-09); ajuste `production.min_refrigeration_hours` con tipo nuevo `integer` y fachada `get_production_settings` (AC-07, API-04); `test_boundaries` y `ddd.md` con `production → modularity`.
+**Frontend:** sección «Liberación» y acción «Liberar lote» (confirmación, deshabilitada con «Disponible desde …», error 409 con la hora) en `order-detail`; badge y filtro «Listo para empacar» en la lista; campo entero con unidad «h» en Ajustes; i18n es/en/pt (UI-01..04, AC-08). Pantalla de referencia: detalle de orden existente (DDR); sin componentes compartidos nuevos.
+**Pruebas escritas:** dominio (`ProductionOrderReleaseTests`, 6), API (`OrderReleaseApiTests`, 7: AC-01..AC-07, AC-09, EDGE-01), ajustes (`ProductionSettingsTests`), Karma (servicio y detalle).
+**Ejecutadas:** dominio y `test_boundaries` (23 OK, sin BD); Karma `production`+`settings` 107 OK; `npm run lint` e `i18n:check` OK; `ruff`/`flake8` limpios en lo cambiado. **No ejecutadas:** las pruebas de API/ajustes del backend y `makemigrations --check` contra BD, porque esta sesión no tiene `DATABASE_URL` (el `.env` no se lee); la migración se generó con `makemigrations`. Debe correrlas `delivery-publish`/la persona con PostgreSQL local.
+**Desviaciones:** ninguna de alcance. Detalle: el botón se habilita con el reloj del navegador (informativo; el servidor revalida); el estado visual usa `col-purple`.
+**Deuda técnica:** `OrderReleaseApiTests` hereda de `OrderApiTests` y vuelve a ejecutar sus pruebas base (duplicación de tiempo de prueba); sin prueba Karma específica del campo entero de Ajustes.
 
 ## Review
 _Pendiente_

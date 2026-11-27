@@ -7,6 +7,7 @@ from uuid import UUID
 from modules.catalog import services as catalog_services
 from modules.costing import services as costing_services
 from modules.inventory import services as inventory_services
+from modules.modularity import services as modularity_services
 from modules.production.application.orders import Actor, LotView, WarehouseView
 from modules.production.application.recipes import ProductInfo
 from modules.production.domain.production_order import (
@@ -102,6 +103,23 @@ class InventoryStock:
         except inventory_services.MovementConflict as exc:  # incluye LotNumberingRejected (período fiscal)
             raise RefrigerationRejected(exc.code, str(exc)) from exc
         return LotView(lot.id, lot.code)
+
+    def release_lot(self, order: ProductionOrder, actor: Actor) -> None:
+        try:
+            inventory_services.release_lot(self.company_id, order.lot_id, user_id=actor.user_id,
+                                           user_name=actor.user_name)
+        except inventory_services.LotNotFound as exc:
+            raise RefrigerationRejected('lot_not_found', 'El lote de la orden ya no existe en Inventario.') from exc
+
+
+class ModularityReleasePolicy:
+    """Mínimo de refrigeración desde la fachada de lectura de Modularidad."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def min_refrigeration_hours(self) -> int:
+        return modularity_services.get_production_settings(self.company_id).min_refrigeration_hours
 
 
 class CostingGateway:

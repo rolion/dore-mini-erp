@@ -46,6 +46,9 @@ class StockGateway(Protocol):
 
     def enter_lot(self, order: ProductionOrder, quantity: Decimal, when: datetime, actor: Actor) -> LotView: ...
 
+    def release_lot(self, order: ProductionOrder, actor: Actor) -> None:
+        """Libera el lote de la orden en Inventario (idempotente; no crea movimientos)."""
+
 
 class CostGateway(Protocol):
     """Costeo opcional: devuelve el costo total consumido (o `None` sin costo) y registra la entrada costeada."""
@@ -54,6 +57,12 @@ class CostGateway(Protocol):
                          when: datetime) -> Decimal | None: ...
 
     def cost_entry(self, order: ProductionOrder, quantity: Decimal, total_cost: Decimal, when: datetime) -> None: ...
+
+
+class ReleasePolicy(Protocol):
+    """Mínimo de horas de refrigeración de la empresa (ajuste de Modularidad)."""
+
+    def min_refrigeration_hours(self) -> int: ...
 
 
 class RecipeSource(Protocol):
@@ -73,7 +82,9 @@ def _utc_now() -> datetime:
 class ProductionOrders:
     def __init__(self, repository: OrderRepository, recipes: RecipeSource, catalog: ProductCatalog,
                  warehouses: WarehouseDirectory, clock: Callable[[], datetime] = _utc_now,
-                 stock: StockGateway | None = None, costs: CostGateway | None = None):
+                 stock: StockGateway | None = None, costs: CostGateway | None = None,
+                 policy: ReleasePolicy | None = None):
+        self.policy = policy
         self.stock = stock
         self.costs = costs
         self.repository = repository
@@ -168,4 +179,22 @@ class ProductionOrders:
             self.costs.cost_entry(order, output, total, entered)
         order.refrigerate(now=now, entered_at=entered, actual_output=output, consumption=consumption,
                           lot_id=lot.id, lot_code=lot.code, cost_total=total)
+        return self.repository.save(order)
+
+    def min_refrigeration_hours(self) -> int:
+        return self.policy.min_refrigeration_hours()
+
+    def release(self, order_id: UUID, *, actor: Actor) -> ProductionOrder:
+        """Libera el lote tras el mínimo: orden `ready_to_pack` y lote disponible (todo o nada, idempotente).
+
+        Debe correr dentro de una transacción: con la orden bloqueada, un reintento ve el estado ya cambiado.
+        """
+        order = self.get(order_id, for_update=True)
+        if order.status == OrderStatus.READY_TO_PACK:
+            return order
+        changed = order.release(now=self.clock(), min_hours=self.min_refrigeration_hours(),
+                                user_id=actor.user_id, user_name=actor.user_name)
+        if not changed:
+            return order
+        self.stock.release_lot(order, actor)
         return self.repository.save(order)
