@@ -1,6 +1,6 @@
 # TASK-empacar-bolsas-de-6-venta-detalle: Empacar bolsas de 6 para venta al detalle
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-empacar-bolsas-de-6-venta-detalle (base: `produccion`)
@@ -14,6 +14,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN → PLANNING | NEEDS_PLAN con diseño; decisiones de negocio resueltas con el usuario | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
+| 2026-11-27 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS | delivery-publish |
 
 ## Investigación
 
@@ -82,7 +83,8 @@ No aplica según veredicto (decisiones en el PLAN).
 **Deuda técnica:** `RefrigerationRejected` se reutiliza para conflictos de Inventario al empacar (nombre histórico); el historial no pagina.
 
 ## Review
-**Quality Gate NO ejecutado por completo:** sin `DATABASE_URL` (PostgreSQL) no se pueden correr las pruebas de API del backend (`OrderPackApiTests`) ni `makemigrations --check`; por regla no se declara PASS. Etapa se mantiene en REVIEW hasta correrlas con PostgreSQL.
+Quality Gate ciclo 1 (subagente aislado): **PASS** — sin hallazgos Critical/High/Medium. Evidencia: backend con PostgreSQL, suite completa 2656 OK (autor) y `modules.production`+`test_boundaries` 125 OK (revisor); `makemigrations --check` sin cambios; `ruff`/`flake8` limpios; `npm run lint` e `i18n:check` OK; Karma `production` 72 OK (autor). **No verificado:** revisión visual en navegador (UI-01..03 solo por lectura de código).
+Hallazgos Low (no bloquean, sin REV): (1) sin prueba de EDGE-02/EDGE-03; (2) un `request_id` repetido con otros datos devuelve el empaque anterior sin avisar; (3) faltante de carrera sin unidad en el mensaje; (4) selector de productos limitado a 100; (5) `_packing` arma datos en la vista; (6) historial sin paginar.
 
 ## Publicación
-_Pendiente_
+PR #143 (base `produccion`) listo para aprobación humana; no se mergea. Señalar al aprobador: toca base de datos (migración `0005_packing`). Sin ADR ni dependencias nuevas entre módulos. Revisión visual pendiente.
