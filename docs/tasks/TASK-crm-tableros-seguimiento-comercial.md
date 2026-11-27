@@ -1,6 +1,6 @@
 # TASK-crm-tableros-seguimiento-comercial: Seguimiento comercial: tableros, columnas y tarjetas
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tableros-seguimiento-comercial` (base `origin/crm`)
@@ -15,6 +15,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-27 | REVIEW → ENGINEERING → REVIEW | FAIL REV-01 corregido (una línea de prueba); pendiente corrida de API con BD | delivery-publish |
+| 2026-11-27 | REVIEW → PUBLISH | API crm 152 OK con BD; listo para aprobación humana | delivery-publish |
 
 ## Investigación
 
@@ -85,7 +86,8 @@ No aplica según veredicto.
 **Deuda técnica:** la tarjeta no abre detalle ni se edita desde la nueva pantalla (PB-CRM-005).
 
 ## Review
-Quality Gate #1 (subagente aislado): **FAIL** por REV-2026-11-27-crm-tableros-seguimiento-comercial-01 (High, IMPLEMENTATION: aserción de claves sin `description`), ya corregido. Todo lo ejecutable pasó: Karma 2090/2090, `ng lint`, `i18n:check`, `ng build`, `npm audit` (0), dominio backend (24 OK), `makemigrations --check`, `ruff`/`flake8`. **No ejecutadas** (sin PostgreSQL con credenciales): pruebas de API de `crm`. Revisión visual: no verificada.
+Quality Gate #1 (subagente aislado): **FAIL** por REV-2026-11-27-crm-tableros-seguimiento-comercial-01 (High, IMPLEMENTATION: aserción de claves sin `description`), ya corregido. Todo lo ejecutable pasó: Karma 2090/2090, `ng lint`, `i18n:check`, `ng build`, `npm audit` (0), dominio backend (24 OK), `makemigrations --check`, `ruff`/`flake8`. Pruebas de API no ejecutadas en ese momento (sin credenciales de BD). Revisión visual: no verificada.
+Re-verificación tras el arreglo (con PostgreSQL local): `manage.py test modules.crm` con `config.settings.test` → **152 tests OK** (incluye `TrackingCardTests` y la regresión de oportunidades/tableros). El Gate completo no se repitió con subagente: lo único cambiado desde su revisión es la aserción de la prueba (REV-01).
 
 ## Publicación
-_Pendiente_
+PR #140 (base `crm`) listo para aprobación humana; no se mergea. Sin cambios de autenticación ni infraestructura; migración aditiva `0004`. Pendiente: revisión visual en navegador.
