@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-08: La fecha clínica del odontograma precargado usa TIME_ZONE y el resto de la atención usa America/La_Paz
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v3)
@@ -22,3 +22,6 @@ Con `TIME_ZONE=UTC`, una atención iniciada entre las 20:00 y las 24:00 (hora de
 - `backend/modules/dentistry/application/evaluations.py:17-18` (`_today` con `timezone.localdate()`).
 - `backend/.env.example:7` (`TIME_ZONE=UTC`); `backend/config/settings/base.py:79`.
 - `backend/modules/dentistry/tests/test_encounter_api.py:98` (solo prueba la zona de las horas devueltas, no la fecha clínica).
+
+## Resolución
+`clinical_date()` convierte `started_at` a America/La_Paz (misma zona que Agenda). Prueba `test_odontogram_clinical_date_uses_the_agenda_time_zone` (falla sin el cambio con `TIME_ZONE=UTC`, pasa con él). Resuelto por el autor; pendiente de confirmación en una nueva pasada del Quality Gate.

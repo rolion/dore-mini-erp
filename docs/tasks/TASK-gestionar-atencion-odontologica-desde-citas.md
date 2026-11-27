@@ -125,5 +125,7 @@ Ver `docs/adr/ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion
 
 **Quality Gate, 2.ª pasada (subagente aislado, HEAD 8192417b): PASS.** Backend `Ran 2629 tests` OK; Angular `TOTAL: 1965 SUCCESS`; `ng lint`, `i18n:check` (2719 claves, 0 faltantes; paridad es/en/pt 3299), `ng build`, `makemigrations --check`, `bandit` y `npm audit --omit=dev` limpios; `ruff`/`flake8` solo con el E501 preexistente. REV-01..07 **confirmados Resolved** por el revisor. Hallazgo nuevo **REV-08 (Low, abierto):** `clinical_date()` usa `settings.TIME_ZONE` (UTC en `.env.example`), no America/La_Paz; con UTC, una atención iniciada entre las 20:00 y las 24:00 de La Paz precarga el odontograma con la fecha del día siguiente. Sin pérdida de datos. No verificado: revisión visual en navegador (contraste real, modo oscuro), E2E real, prueba con `MigrationExecutor`.
 
+**REV-08 corregido (2026-11-27):** la fecha clínica del odontograma precargado usa America/La_Paz; prueba nueva (28 de `test_encounter_api` OK, suites agenda+dentistry 165 OK, lint limpio). Resuelto por el autor, sin nueva pasada del Quality Gate.
+
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/138 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migración 0006 aditiva) y autorización clínica; respaldado por ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma. Pendiente humano: decidir si se exige E2E real (Playwright) y si los REV Low se corrigen ahora o después.

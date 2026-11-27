@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from threading import Barrier
 from unittest.mock import patch
 from uuid import uuid4
@@ -312,6 +312,15 @@ class EncounterApiTests(Base, APITestCase):
         created = self.client.post(f'{ROOT}encounters/{encounter_id}/odontogram/', body, format='json').json()
         self.assertEqual(created['customer_id'], str(self.customer.id))
         self.assertEqual(created['professional']['id'], str(self.professional.id))
+
+    def test_odontogram_clinical_date_uses_the_agenda_time_zone(self):  # REV-08
+        appointment = self.appointment()
+        encounter_id = self.start(appointment)['encounter']['id']
+        day = timezone.localdate() - timedelta(days=1)
+        # 01:30 UTC del día siguiente = 21:30 del día `day` en La Paz (UTC-4)
+        started = datetime.combine(day + timedelta(days=1), datetime.min.time(), dt_timezone.utc)
+        EncounterModel.objects.filter(pk=encounter_id).update(started_at=started + timedelta(minutes=90))
+        self.assertEqual(self.odontogram(encounter_id).json()['clinical_date'], day.isoformat())
 
     def test_odontogram_for_archived_patient_has_its_own_code(self):  # REV-01
         appointment = self.appointment()

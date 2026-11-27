@@ -25,7 +25,8 @@ def local(value: datetime | None) -> str | None:
 
 
 def clinical_date(encounter_row) -> date:
-    return timezone.localtime(encounter_row.started_at).date()
+    """Día clínico de la atención en la zona de Agenda, no en la del servidor (REV-08)."""
+    return encounter_row.started_at.astimezone(ZONE).date()
 
 
 class EncounterCommands:
