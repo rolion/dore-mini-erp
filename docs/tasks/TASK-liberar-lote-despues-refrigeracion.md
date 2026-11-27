@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-liberar-lote-despues-refrigeracion (base: `produccion`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/139 (base `produccion`)
 **Fuente:** https://trello.com/c/y04uzI4Y/5-dore-prod-005-liberar-el-lote-despu%C3%A9s-de-refrigeraci%C3%B3n
 
 ## Historial de transiciones
