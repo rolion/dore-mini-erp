@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-empacar-bolsas-de-6-venta-detalle (base: `produccion`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/143 (base `produccion`)
 **Fuente:** https://trello.com/c/1kI5jd1c/7-dore-prod-007-empacar-bolsas-de-6-para-venta-al-detalle
 
 ## Historial de transiciones
