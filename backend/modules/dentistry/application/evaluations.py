@@ -44,14 +44,15 @@ class EvaluationCommands:
                 f'El paciente ya tiene la evaluación #{draft.sequence} en borrador; confírmala o descártala antes.')
 
     @transaction.atomic
-    def create(self, customer_id, data, author_id, author_name):
+    def create(self, customer_id, data, author_id, author_name, encounter_id=None):
         self._lock_patient(customer_id)
         self._ensure_no_draft(customer_id)
         self._check_professional(data.get('professional_id'))
         evaluation = Evaluation.create(
             customer_id, data.get('dentition'), data.get('clinical_date'), data.get('professional_id'),
             data.get('findings'), data.get('general_findings'), self._today())
-        return self.repository.create(evaluation, self.repository.next_sequence(customer_id), author_id, author_name)
+        return self.repository.create(evaluation, self.repository.next_sequence(customer_id), author_id, author_name,
+                                      encounter_id=encounter_id)
 
     @transaction.atomic
     def update(self, evaluation_id, data):
@@ -92,7 +93,8 @@ class EvaluationCommands:
         if self.repository.rows().filter(amends_id=source.id, status=CONFIRMED).exists():
             raise EvaluationStateError('Esta evaluación ya fue corregida por una evaluación confirmada posterior.')
         return self.repository.create(
-            amendment, self.repository.next_sequence(source.customer_id), author_id, author_name)
+            amendment, self.repository.next_sequence(source.customer_id), author_id, author_name,
+            encounter_id=source.encounter_id)
 
 
 class EvaluationQueries:
@@ -128,7 +130,7 @@ class EvaluationQueries:
             'amends_id': row.amends_id, 'amends_sequence': row.amends.sequence if row.amends_id else None,
             'amendment_reason': row.amendment_reason,
             'replaced_by_id': new[0] if new else None, 'replaced_by_sequence': new[1] if new else None,
-            'catalog_version': row.catalog_version,
+            'catalog_version': row.catalog_version, 'encounter_id': row.encounter_id,
         }
 
     def detail(self, row):

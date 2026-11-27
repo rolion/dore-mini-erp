@@ -55,3 +55,34 @@ class PatientGate:
         if not customer.active:
             raise DentalProformaValidationError({'customer_id': ['El cliente está inactivo.']})
         return customer.name
+
+
+class AgendaAdapter:
+    """Citas de Agenda por su fachada pública; los comandos clínicos no pasan por las guardas de Agenda."""
+
+    def __init__(self, company_id):
+        from modules.agenda import services
+        self.company_id, self.services = company_id, services
+
+    def get(self, appointment_id):
+        return self.services.get_appointment(self.company_id, appointment_id)
+
+    def get_many(self, ids):
+        return self.services.get_appointments(self.company_id, ids)
+
+    def lock(self, appointment_id):
+        """None si la cita no existe en la empresa."""
+        try:
+            return self.services.lock_appointment(self.company_id, appointment_id)
+        except self.services.AppointmentNotFound:
+            return None
+
+    def search(self, **filters):
+        return self.services.search_appointments(self.company_id, **filters)
+
+    def attend(self, actor_id, actor_name, appointment_id):
+        self.services.attend_by_clinic(self.company_id, self.services.Actor(actor_id, actor_name), appointment_id)
+
+    def cancel(self, actor_id, actor_name, appointment_id, reason):
+        self.services.cancel_by_clinic(
+            self.company_id, self.services.Actor(actor_id, actor_name), appointment_id, reason)

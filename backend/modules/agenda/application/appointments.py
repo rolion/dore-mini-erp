@@ -7,6 +7,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
+from modules.agenda.application import guards
 from modules.agenda.application.week import week_availability, week_records
 from modules.agenda.domain.appointment import (
     OCCUPYING, Appointment as AppointmentState, AppointmentRuleError, clean_reason, fits_in,
@@ -146,9 +147,17 @@ def _apply(appointment, state) -> None:
     appointment.save()
 
 
-def _transition(company_id, actor, appointment_id, kind, action, reason=None):
+def _check_guards(company_id, appointment, action) -> None:
+    veto = guards.first_veto(company_id, appointment, action)
+    if veto is not None:
+        raise AppointmentConflict(veto.message, veto.code)
+
+
+def _transition(company_id, actor, appointment_id, kind, action, reason=None, guard=None):
     clean = clean_reason(reason) if reason is not None else ''
     appointment = _locked(company_id, appointment_id)
+    if guard:
+        _check_guards(company_id, appointment, guard)
     state = _state(appointment)
     try:
         action(state)
@@ -165,26 +174,29 @@ def confirm(company_id, actor, appointment_id):
 
 
 @transaction.atomic
-def cancel(company_id, actor, appointment_id, reason):
-    return _transition(company_id, actor, appointment_id, 'cancelled', lambda s: s.cancel(), reason or '')
+def cancel(company_id, actor, appointment_id, reason, clinical=False):
+    """`clinical=True`: lo invoca el flujo clínico, que ya validó la atención (no pasa por las guardas)."""
+    return _transition(company_id, actor, appointment_id, 'cancelled', lambda s: s.cancel(), reason or '',
+                       None if clinical else 'cancel')
 
 
 @transaction.atomic
-def mark_attended(company_id, actor, appointment_id):
+def mark_attended(company_id, actor, appointment_id, clinical=False):
     return _transition(company_id, actor, appointment_id, 'attended',
-                       lambda s: s.mark_attended(timezone.now()))
+                       lambda s: s.mark_attended(timezone.now()), None, None if clinical else 'attend')
 
 
 @transaction.atomic
 def mark_no_show(company_id, actor, appointment_id):
     return _transition(company_id, actor, appointment_id, 'no_show',
-                       lambda s: s.mark_no_show(timezone.now()))
+                       lambda s: s.mark_no_show(timezone.now()), None, 'no_show')
 
 
 @transaction.atomic
 def reschedule(company_id, actor, appointment_id, starts, duration_minutes, reason):
     clean = clean_reason(reason)
     appointment = _locked(company_id, appointment_id)
+    _check_guards(company_id, appointment, 'reschedule')
     state = _state(appointment)
     ends = starts + timedelta(minutes=duration_minutes or appointment.duration_minutes)
     try:
