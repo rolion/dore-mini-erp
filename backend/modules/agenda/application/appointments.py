@@ -7,13 +7,14 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 
+from modules.agenda.application import guards
 from modules.agenda.application.week import week_availability, week_records
 from modules.agenda.domain.appointment import (
     OCCUPYING, Appointment as AppointmentState, AppointmentRuleError, clean_reason, fits_in,
 )
 from modules.agenda.domain.schedule import subtract
 from modules.agenda.infrastructure.adapters import (
-    get_customer_for_sale, get_service_for_new_use, professional_exists,
+    AppointmentNumbering, NumberingError, get_customer_for_sale, get_service_for_new_use, professional_exists,
 )
 from modules.agenda.models import Appointment, AppointmentEvent, Schedule
 
@@ -21,7 +22,7 @@ ZONE = ZoneInfo('America/La_Paz')
 
 
 class Actor(NamedTuple):
-    """Usuario que ejecuta la acción: el id se conserva y el nombre se guarda para mostrarlo sin consultar otro módulo."""
+    """Usuario que ejecuta la acción: el id se conserva y el nombre se guarda para mostrarlo sin otro módulo."""
 
     id: int
     name: str
@@ -123,10 +124,15 @@ def create(company_id, actor, *, professional_id, customer_id, service_id, start
     ends = starts + timedelta(minutes=duration_minutes)
     _lock(company_id, professional_id)
     _ensure_placement(company_id, professional_id, starts, ends)
+    try:  # la gestión es la de la fecha en que se crea la cita (decisión del usuario)
+        assigned = AppointmentNumbering(company_id).next_number(timezone.now().astimezone(ZONE).date())
+    except NumberingError as exc:
+        raise AppointmentConflict(exc.message, exc.code) from exc
     appointment = Appointment.objects.create(
         company_id=company_id, professional_id=professional_id, customer_id=customer.id,
         customer_name=customer.name, service_id=service.id, service_name=service.name,
         starts=starts, ends=ends, duration_minutes=duration_minutes, notes=notes.strip(), created_by=actor.id,
+        number=assigned.number, fiscal_period_id=assigned.period_id, fiscal_period_name=assigned.period_name,
     )
     _event(appointment, 'created', actor)
     return appointment
@@ -146,9 +152,17 @@ def _apply(appointment, state) -> None:
     appointment.save()
 
 
-def _transition(company_id, actor, appointment_id, kind, action, reason=None):
+def _check_guards(company_id, appointment, action) -> None:
+    veto = guards.first_veto(company_id, appointment, action)
+    if veto is not None:
+        raise AppointmentConflict(veto.message, veto.code)
+
+
+def _transition(company_id, actor, appointment_id, kind, action, reason=None, guard=None):
     clean = clean_reason(reason) if reason is not None else ''
     appointment = _locked(company_id, appointment_id)
+    if guard:
+        _check_guards(company_id, appointment, guard)
     state = _state(appointment)
     try:
         action(state)
@@ -165,26 +179,29 @@ def confirm(company_id, actor, appointment_id):
 
 
 @transaction.atomic
-def cancel(company_id, actor, appointment_id, reason):
-    return _transition(company_id, actor, appointment_id, 'cancelled', lambda s: s.cancel(), reason or '')
+def cancel(company_id, actor, appointment_id, reason, clinical=False):
+    """`clinical=True`: lo invoca el flujo clínico, que ya validó la atención (no pasa por las guardas)."""
+    return _transition(company_id, actor, appointment_id, 'cancelled', lambda s: s.cancel(), reason or '',
+                       None if clinical else 'cancel')
 
 
 @transaction.atomic
-def mark_attended(company_id, actor, appointment_id):
+def mark_attended(company_id, actor, appointment_id, clinical=False):
     return _transition(company_id, actor, appointment_id, 'attended',
-                       lambda s: s.mark_attended(timezone.now()))
+                       lambda s: s.mark_attended(timezone.now()), None, None if clinical else 'attend')
 
 
 @transaction.atomic
 def mark_no_show(company_id, actor, appointment_id):
     return _transition(company_id, actor, appointment_id, 'no_show',
-                       lambda s: s.mark_no_show(timezone.now()))
+                       lambda s: s.mark_no_show(timezone.now()), None, 'no_show')
 
 
 @transaction.atomic
 def reschedule(company_id, actor, appointment_id, starts, duration_minutes, reason):
     clean = clean_reason(reason)
     appointment = _locked(company_id, appointment_id)
+    _check_guards(company_id, appointment, 'reschedule')
     state = _state(appointment)
     ends = starts + timedelta(minutes=duration_minutes or appointment.duration_minutes)
     try:

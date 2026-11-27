@@ -1,0 +1,64 @@
+@use '../../inventory/components/inventory-table';
+@use '../../../../assets/scss/dark-tokens' as dark;
+
+$dark-surface: dark.$color-dark-primary;
+$dark-text: dark.$color-font;
+$dark-strong: white;
+
+/* Objetivo táctil mínimo de 44 px en las acciones de la atención. */
+.btn-touch {
+  min-block-size: 44px;
+}
+
+/* Verde más oscuro que el de la plantilla para que el texto blanco cumpla AA; deriva del verde del tema. */
+.btn-finish {
+  --finish-bg: color-mix(in srgb, var(--bs-success, green) 70%, black);
+
+  background-color: var(--finish-bg);
+  border-color: var(--finish-bg);
+  color: white;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background-color: color-mix(in srgb, var(--finish-bg) 85%, black);
+    border-color: color-mix(in srgb, var(--finish-bg) 85%, black);
+    color: white;
+  }
+}
+
+dialog {
+  box-sizing: border-box;
+  inline-size: min(32rem, calc(100% - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  margin: auto;
+  overflow: auto;
+  border: 1px solid var(--bs-border-color, currentcolor);
+}
+
+:host-context(.dark) {
+  dialog {
+    background-color: $dark-surface;
+    color: $dark-text;
+    border-color: $dark-text;
+
+    &::backdrop {
+      background-color: rgb(0 0 0 / 60%);
+    }
+  }
+
+  .btn-link {
+    color: $dark-strong;
+  }
+
+  .alert-success {
+    background-color: transparent;
+    border-color: var(--bs-success, currentcolor);
+    color: $dark-strong;
+  }
+
+  .alert-danger {
+    background-color: transparent;
+    border-color: var(--bs-danger, currentcolor);
+    color: $dark-strong;
+  }
+}

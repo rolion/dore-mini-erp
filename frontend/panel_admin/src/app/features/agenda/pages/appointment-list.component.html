@@ -59,7 +59,7 @@
             <div>
               <table class="table table-striped align-middle inventory-table">
                 <thead><tr>
-                  <th>{{ 'AGENDA.CITAS.INICIO' | translate }}</th><th>{{ 'AGENDA.CITAS.FIN' | translate }}</th>
+                  <th>{{ 'AGENDA.CITAS.COL_CITA' | translate }}</th><th>{{ 'AGENDA.CITAS.INICIO' | translate }}</th><th>{{ 'AGENDA.CITAS.FIN' | translate }}</th>
                   <th>{{ 'AGENDA.CITAS.CLIENTE' | translate }}</th><th>{{ 'AGENDA.CITAS.SERVICIO' | translate }}</th>
                   <th>{{ 'AGENDA.CITAS.PROFESIONAL' | translate }}</th><th>{{ 'AGENDA.CITAS.ESTADO' | translate }}</th>
                   <th>{{ 'AGENDA.CITAS.ACCIONES' | translate }}</th>
@@ -67,6 +67,10 @@
                 <tbody>
                   @for (row of rows; track row.id) {
                     <tr>
+                      <td [attr.data-label]="'AGENDA.CITAS.COL_CITA' | translate">
+                        <strong>{{ row.code ?? '—' }}</strong>
+                        @if (row.fiscal_period_name) { <br><small class="text-muted">{{ 'AGENDA.CITAS.GESTION' | translate: { name: row.fiscal_period_name } }}</small> }
+                      </td>
                       <td [attr.data-label]="'AGENDA.CITAS.INICIO' | translate">{{ formatDateTime(row.starts) }}</td>
                       <td [attr.data-label]="'AGENDA.CITAS.FIN' | translate">{{ time(row.ends) }}</td>
                       <td [attr.data-label]="'AGENDA.CITAS.CLIENTE' | translate"><a [routerLink]="['/pocketbiz/agenda/citas', row.id]"><strong>{{ row.customer_name }}</strong></a></td>

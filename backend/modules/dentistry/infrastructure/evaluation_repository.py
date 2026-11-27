@@ -4,6 +4,7 @@ from django.utils import timezone
 from modules.dentistry.domain.odontogram import (
     DRAFT, Evaluation, EvaluationNotFound, Finding, GeneralFinding,
 )
+from .encounter_models import EncounterModel
 from .evaluation_models import EvaluationFindingModel, EvaluationGeneralFindingModel, EvaluationModel
 
 
@@ -34,6 +35,9 @@ class DjangoEvaluationRepository:
             raise EvaluationNotFound('Evaluación no encontrada.')
         return row
 
+    def lock_encounter(self, encounter_id) -> None:
+        list(EncounterModel.objects.select_for_update().filter(company_id=self.company_id, pk=encounter_id))
+
     def for_customer(self, customer_id):
         return self.rows().filter(customer_id=customer_id).select_related('amends')
 
@@ -47,13 +51,14 @@ class DjangoEvaluationRepository:
     def entity(self, row: EvaluationModel) -> Evaluation:
         return to_domain(EvaluationModel.objects.prefetch_related('findings', 'general_findings').get(pk=row.pk))
 
-    def create(self, evaluation: Evaluation, sequence: int, author_id, author_name) -> EvaluationModel:
+    def create(self, evaluation: Evaluation, sequence: int, author_id, author_name,
+               encounter_id=None) -> EvaluationModel:
         row = EvaluationModel.objects.create(
             id=evaluation.id, company_id=self.company_id, customer_id=evaluation.customer_id, sequence=sequence,
             status=evaluation.status, dentition=evaluation.dentition, clinical_date=evaluation.clinical_date,
             professional_id=evaluation.professional_id, catalog_version=evaluation.catalog_version,
             amends_id=evaluation.amends_id, amendment_reason=evaluation.amendment_reason,
-            created_by=author_id, created_by_name=author_name)
+            created_by=author_id, created_by_name=author_name, encounter_id=encounter_id)
         self._write_children(row, evaluation)
         return row
 

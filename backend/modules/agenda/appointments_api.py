@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.agenda.application import appointments as service
-from modules.agenda.domain.appointment import STATUSES, AppointmentRuleError
+from modules.agenda.domain.appointment import STATUSES, AppointmentRuleError, appointment_code
 from modules.agenda.infrastructure.adapters import professional_names
 from modules.agenda.models import Appointment
 from shared.tenancy import company_id_from
@@ -83,7 +83,8 @@ class SlotsQuerySerializer(serializers.Serializer):
 
 def present(appointment, names, detail=False):
     data = {
-        'id': str(appointment.id), 'professional_id': str(appointment.professional_id),
+        'id': str(appointment.id), 'code': appointment_code(appointment.number),
+        'fiscal_period_name': appointment.fiscal_period_name, 'professional_id': str(appointment.professional_id),
         'professional_name': names.get(appointment.professional_id, ''),
         'customer_id': str(appointment.customer_id), 'customer_name': appointment.customer_name,
         'service_id': str(appointment.service_id), 'service_name': appointment.service_name,
@@ -95,7 +96,8 @@ def present(appointment, names, detail=False):
     if detail:
         data['created_at'] = _local(appointment.created_at)
         data['history'] = [
-            {'id': event.id, 'kind': event.kind, 'author_id': event.author_id, 'author_name': event.author_name, 'created_at': _local(event.created_at),
+            {'id': event.id, 'kind': event.kind, 'author_id': event.author_id, 'author_name': event.author_name,
+             'created_at': _local(event.created_at),
              'reason': event.reason, 'previous_starts': _local(event.previous_starts),
              'previous_ends': _local(event.previous_ends)}
             for event in appointment.events.all()

@@ -19,7 +19,11 @@
         </nav>
         <h3 class="mb-0 fw-bold text-reset">{{ 'DENTISTRY.ODONTOGRAM.TITULO' | translate }}</h3>
       </div>
-      <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/patients', id]">{{ 'DENTISTRY.ODONTOGRAM.VOLVER_A_FICHA' | translate }}</a>
+      @if (appointmentId) {
+        <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/appointments', appointmentId]">{{ 'DENTISTRY.ENCOUNTER.VOLVER_A_ATENCION' | translate }}</a>
+      } @else {
+        <a class="btn btn-light" [routerLink]="['/pocketbiz/dentistry/patients', id]">{{ 'DENTISTRY.ODONTOGRAM.VOLVER_A_FICHA' | translate }}</a>
+      }
     </header>
 
     @if (archived) {
