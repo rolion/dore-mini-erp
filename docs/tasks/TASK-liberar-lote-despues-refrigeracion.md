@@ -14,6 +14,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE: nueva dependencia Producción → Modularidad (ajuste) y nuevo tipo de ajuste | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY; PLAN v1 y PR abiertos | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
+| 2026-11-27 | REVIEW → ENGINEERING → REVIEW | Quality Gate 1 FAIL (REV-01 High, REV-02 Medium); corregidos | delivery-publish / delivery-build |
 
 ## Investigación
 
@@ -78,7 +79,8 @@ Orden y lote deben cambiar juntos (una transacción); doble clic/reintento; relo
 **Deuda técnica:** `OrderReleaseApiTests` hereda de `OrderApiTests` y vuelve a ejecutar sus pruebas base (duplicación de tiempo de prueba); sin prueba Karma específica del campo entero de Ajustes.
 
 ## Review
-_Pendiente_
+Quality Gate ciclo 1: **FAIL** — REV-01 (High: tests de Modularidad rotos por el tipo `integer`) y REV-02 (Medium: sin prueba unitaria de validación), ambos corregidos (ver `docs/reviews/REV-2026-11-27-liberar-lote-despues-refrigeracion-0{1,2}.md`); además se aplicó L-1 (el botón usa `release.canRelease` del servidor o el reloj local) y L-4 (nota de `ddd.md`). Tras la corrección: modularidad/producción sin BD 37 OK, Karma `production` 63 OK, lint OK; la suite Karma completa del ciclo 1 fue 1928 OK.
+**Pendiente para un PASS:** ejecutar con PostgreSQL las pruebas de API (`OrderReleaseApiTests`, `ProductionSettingsTests`) y `makemigrations --check`; revisión visual no verificada. Sin eso no se declara PASS (la sesión no tiene `DATABASE_URL`).
 
 ## Publicación
 _Pendiente_

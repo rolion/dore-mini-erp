@@ -142,7 +142,7 @@ describe('OrderDetailComponent', () => {
     const refrigerating = (hoursAfter: number): ProductionOrder => ({
       ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: entered,
       lot: { id: 'lot-1', code: 'L-20261127-0001' }, ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
-      release: { minHours: 12, canRelease: hoursAfter <= 0,
+      release: { minHours: 12, canRelease: hoursAfter < 0,
         releasableFrom: new Date(Date.parse(entered) + 12 * 3600 * 1000 + hoursAfter * 3600 * 1000).toISOString() },
     });
 

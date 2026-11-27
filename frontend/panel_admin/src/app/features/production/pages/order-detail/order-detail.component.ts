@@ -75,7 +75,8 @@ export class OrderDetailComponent implements OnInit {
 
   get canRelease(): boolean {
     const from = this.releasableFrom;
-    return this.order?.status === 'refrigerating' && !!from && this.now >= Date.parse(from);
+    if (this.order?.status !== 'refrigerating' || !from) return false;
+    return this.order.release?.canRelease === true || this.now >= Date.parse(from);
   }
 
   /** Tiempo transcurrido desde el ingreso a refrigeración, «Xh Ymin». */
