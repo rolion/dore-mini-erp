@@ -28,6 +28,7 @@ export class EncounterDetailComponent implements OnInit {
   private fb = inject(FormBuilder).nonNullable;
 
   @ViewChild('cancelDialog') cancelDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild('finishDialog') finishDialog?: ElementRef<HTMLDialogElement>;
 
   readonly appointmentClasses = STATUS_CLASSES;
   readonly encounterClasses = ENCOUNTER_CLASSES;
@@ -111,6 +112,32 @@ export class EncounterDetailComponent implements OnInit {
         next: detail => { this.apply(detail); this.success = tr(`DENTISTRY.ENCOUNTER.OK_${action.toUpperCase()}`); },
         error: failure => { this.error = encounterFailure(failure).message; this.refresh(); },
       });
+  }
+
+  openFinish(): void {
+    if (this.saving) return;
+    this.finishDialog?.nativeElement.showModal();
+  }
+
+  closeFinish(): void {
+    this.finishDialog?.nativeElement.close();
+  }
+
+  /** Finaliza sin perder lo escrito: las observaciones pendientes se guardan antes de cerrar la atención. */
+  confirmFinish(): void {
+    const encounter = this.detail?.encounter;
+    if (!encounter || this.saving) return;
+    this.closeFinish();
+    if (this.observations.value === encounter.observations) {
+      this.run('finish');
+      return;
+    }
+    this.saving = true;
+    this.error = '';
+    this.api.saveObservations(encounter.id, this.observations.value).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: detail => { this.saving = false; this.apply(detail); this.run('finish'); },
+      error: failure => { this.saving = false; this.error = encounterFailure(failure).message; },
+    });
   }
 
   openCancel(): void {

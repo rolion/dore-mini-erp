@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-06: Pantallas nuevas se apartan del DDR y del design-system (HEX repetidos, select nativo, sin spinner)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v1)

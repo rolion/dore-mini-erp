@@ -1,4 +1,4 @@
-# PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas (v1)
+# PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas (v2)
 
 **Task:** TASK-gestionar-atencion-odontologica-desde-citas · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-gestionar-atencion-odontologica-desde-citas-listado-y-detalle-de-atencion · ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma
@@ -67,13 +67,13 @@ Una cita odontológica se atiende desde Odontología → Citas: iniciar crea o r
 `CompanyClinicalPermission` en todos los endpoints nuevos; `required_modules = ('dentistry','agenda','customers','personnel')`; empresa siempre desde el usuario autenticado; el cliente nunca envía `company_id`, paciente ni profesional (derivados de la cita).
 
 ## API contract
-- **API-01** `GET /api/dentistry/appointments/?from&to&professional&customer&search&status&encounter_status&page` → lista paginada: `appointment{id,customer_id,customer_name,professional_id,professional_name,starts,ends,status}`, `encounter_status` (`pending|in_progress|finished|cancelled`), `encounter_id|null`. Rango ≤ 31 días.
+- **API-01** `GET /api/dentistry/appointments/?from&to&professional&customer&search&status&encounter_status&page&page_size` → `{count, next:null, previous:null, results, from, to}`; cada ítem es plano: `appointment_id, customer_id, customer_name, professional_id, professional_name, service_name, starts, ends, status, encounter_id|null, encounter_status` (`pending|in_progress|finished|cancelled`). Rango ≤ 31 días; el costo depende del rango (se parte de las citas del rango).
 - **API-02** `GET /api/dentistry/appointments/<id>/encounter/` → detalle: cita, atención (o `null`), resumen del paciente (nombre, edad opcional, contacto, antecedentes, alergias), odontograma vinculado (resumen), `allowed_actions` (`start|finish|cancel`), `prescriptions_enabled:false`.
 - **API-03** `POST …/encounter/start/` (200 si ya en progreso; 201 al crear; 409 no elegible), `POST …/encounter/finish/` (200, idempotente; 409 `draft_pending`), `POST …/encounter/cancel/` `{reason}` (200; 400 motivo; 409 estado).
 - **API-04** `PATCH /api/dentistry/encounters/<id>/` `{observations}` (≤2000, solo `in_progress`).
 - **API-05** `POST /api/dentistry/encounters/<id>/odontogram/` crea el borrador precargado (201); 409 si ya existe odontograma lógico o la atención no está en progreso.
 - **API-06** `GET /api/dentistry/patients/<customer_id>/encounters/` historial paginado.
-- **API-07** Agenda: las acciones existentes pueden responder 409 `clinical_flow_required` / `encounter_started`; el resto del contrato no cambia (compatible hacia atrás); el detalle de cita añade `clinical: {is_dental, encounter_id|null}` solo cuando el usuario tiene acceso clínico.
+- **API-07** Agenda: las acciones existentes pueden responder 409 `clinical_flow_required` / `encounter_started`; el resto del contrato no cambia (compatible hacia atrás). El detalle de cita **no** añade campos clínicos: el frontend de Agenda consulta `GET /api/dentistry/appointments/<id>/encounter/` (UI-08) solo con el módulo `dentistry` habilitado y acceso clínico.
 - Los errores usan `{detail, code}` estable para traducir.
 
 ## UI behavior
@@ -152,3 +152,6 @@ Ciclo agenda↔dentistry (mitigado con el puerto); concurrencia (orden de bloque
 
 ## New dependencies
 Ninguna obligatoria. E2E con Playwright **requeriría instalarlo: se pedirá confirmación antes**; hasta entonces el flujo se cubre con prueba de componente de extremo a extremo en Karma.
+
+## Changelog
+- **v2** (2026-11-27): [Implementation Plan] Alineado con lo implementado y con los hallazgos REV-01..07 del Quality Gate: API-01 plana, API-07 sin campo `clinical`, listado acotado por rango, `amend` bloquea la atención antes que al paciente, confirmación al finalizar guardando observaciones, tarjeta/submenú condicionados al módulo Agenda. E2E real (Playwright) sigue **pendiente de decisión del usuario** (sin instalar); AC-12 se verifica por estado posterior a la migración (aditiva, nullable), sin `MigrationExecutor`. Solicitado por delivery-publish (REV-07). Sin cambio de Specification.

@@ -60,6 +60,23 @@ describe('EncounterDetailComponent', () => {
     expect(text(fixture)).not.toContain('Finalizar atención');
   });
 
+  it('saves typed observations before finishing so nothing is lost', () => {
+    const fixture = create(inProgress());
+    const component = fixture.componentInstance;
+    component.observations.setValue('Sensibilidad en 16');
+    component.confirmFinish();
+    const save = http.expectOne(req => req.url.endsWith('/encounters/e1/') && req.method === 'PATCH');
+    expect(save.request.body).toEqual({ observations: 'Sensibilidad en 16' });
+    save.flush(inProgress({ encounter: { ...inProgress().encounter!, observations: 'Sensibilidad en 16' } }));
+    http.expectOne(req => req.url.endsWith('/encounter/finish/')).flush(inProgress({ allowed_actions: [] }));
+  });
+
+  it('finishes directly when there is nothing unsaved', () => {
+    const fixture = create(inProgress());
+    fixture.componentInstance.confirmFinish();
+    http.expectOne(req => req.url.endsWith('/encounter/finish/')).flush(inProgress({ allowed_actions: [] }));
+  });
+
   it('does not send a second request while one is in flight', () => {
     const fixture = create();
     fixture.componentInstance.run('start');

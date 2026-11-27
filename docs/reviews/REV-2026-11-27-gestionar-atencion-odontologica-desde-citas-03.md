@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-03: El listado clínico arma conjuntos de IDs no acotados por el rango de fechas
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v1)

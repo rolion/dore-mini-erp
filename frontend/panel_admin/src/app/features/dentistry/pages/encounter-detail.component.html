@@ -7,7 +7,7 @@
     <li class="breadcrumb-item active">{{ 'DENTISTRY.ENCOUNTER.TITULO_DETALLE' | translate }}</li>
   </ul>
   <div class="section-body">
-    @if (loading) { <p role="status">{{ 'DENTISTRY.ENCOUNTER.CARGANDO' | translate }}</p> }
+    @if (loading) { <p role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{{ 'DENTISTRY.ENCOUNTER.CARGANDO' | translate }}</p> }
     @if (error) {
       <p class="alert alert-danger" role="alert">{{ error }}
         @if (!detail) { <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">{{ 'DENTISTRY.ENCOUNTER.REINTENTAR' | translate }}</button> }</p>
@@ -21,7 +21,7 @@
             <span class="badge ms-1" [class]="encounterClasses[encounterStatus]">{{ encounterLabel(encounterStatus) }}</span></h2>
           <div class="d-flex flex-wrap gap-2">
             @if (can('start')) { <button type="button" class="btn btn-primary" [disabled]="saving" (click)="run('start')">{{ (saving ? 'DENTISTRY.ENCOUNTER.INICIANDO' : 'DENTISTRY.ENCOUNTER.INICIAR') | translate }}</button> }
-            @if (can('finish')) { <button type="button" class="btn btn-success" [disabled]="saving" (click)="run('finish')">{{ (saving ? 'DENTISTRY.ENCOUNTER.FINALIZANDO' : 'DENTISTRY.ENCOUNTER.FINALIZAR') | translate }}</button> }
+            @if (can('finish')) { <button type="button" class="btn btn-success" [disabled]="saving" (click)="openFinish()">{{ (saving ? 'DENTISTRY.ENCOUNTER.FINALIZANDO' : 'DENTISTRY.ENCOUNTER.FINALIZAR') | translate }}</button> }
             @if (can('cancel')) { <button type="button" class="btn btn-danger" [disabled]="saving" (click)="openCancel()">{{ 'DENTISTRY.ENCOUNTER.CANCELAR' | translate }}</button> }
             <a class="btn btn-light" routerLink="/pocketbiz/dentistry/appointments">{{ 'DENTISTRY.ENCOUNTER.VOLVER' | translate }}</a>
           </div>
@@ -100,6 +100,19 @@
       </div>
     }
   </div>
+
+  @if (can('finish')) {
+  <dialog #finishDialog class="appointment-dialog" aria-labelledby="finish-title">
+    <div class="p-3">
+      <h4 id="finish-title">{{ 'DENTISTRY.ENCOUNTER.TIT_FINALIZAR' | translate }}</h4>
+      <p class="alert alert-info" role="status">{{ 'DENTISTRY.ENCOUNTER.AVISO_FINALIZAR' | translate }}</p>
+      <div class="d-flex gap-2 justify-content-end">
+        <button type="button" class="btn btn-light" (click)="closeFinish()">{{ 'DENTISTRY.ENCOUNTER.VOLVER' | translate }}</button>
+        <button type="button" class="btn btn-success" [disabled]="saving" (click)="confirmFinish()">{{ 'DENTISTRY.ENCOUNTER.CONFIRMAR_FINALIZAR' | translate }}</button>
+      </div>
+    </div>
+  </dialog>
+  }
 
   <dialog #cancelDialog class="appointment-dialog" aria-labelledby="cancel-title">
     <form class="p-3" (ngSubmit)="confirmCancel()" novalidate>

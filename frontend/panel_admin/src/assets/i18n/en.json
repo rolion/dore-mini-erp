@@ -921,7 +921,14 @@
       "VER_EXPEDIENTE": "View record and history",
       "VER_ODONTOGRAMA": "View odontogram",
       "VOLVER": "Back",
-      "VOLVER_A_ATENCION": "Back to the encounter"
+      "VOLVER_A_ATENCION": "Back to the encounter",
+      "VAL_PATIENT_ARCHIVED": "Reactivate the patient's dental profile before treating them.",
+      "VAL_CUSTOMER_INACTIVE": "The customer is inactive; activate them before treating them.",
+      "VAL_INVALID_STATE": "The action is not allowed in the current state.",
+      "VAL_INVALID_TRANSITION": "The appointment does not allow this action in its current state.",
+      "TIT_FINALIZAR": "Finish dental encounter",
+      "AVISO_FINALIZAR": "The appointment will be marked as attended and the encounter becomes read-only. Typed notes are saved before finishing.",
+      "CONFIRMAR_FINALIZAR": "Finish encounter"
     }
   },
   "EXPENSES": {

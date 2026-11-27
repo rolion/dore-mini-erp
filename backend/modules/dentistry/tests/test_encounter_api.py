@@ -303,6 +303,23 @@ class EncounterApiTests(Base, APITestCase):
         self.assertEqual(created['customer_id'], str(self.customer.id))
         self.assertEqual(created['professional']['id'], str(self.professional.id))
 
+    def test_odontogram_for_archived_patient_has_its_own_code(self):  # REV-01
+        appointment = self.appointment()
+        encounter_id = self.start(appointment)['encounter']['id']
+        self.client.post(f'{ROOT}patients/{self.customer.id}/archive/')
+        response = self.odontogram(encounter_id)
+        self.assertEqual((response.status_code, response.json()['code']), (409, 'patient_archived'))
+
+    def test_listing_filters_by_customer_and_state_within_the_range(self):  # REV-03
+        mine, other = self.appointment(hours_ago=2), self.appointment(self.patient('Beatriz'), hours_ago=1)
+        self.start(other)
+        only = self.client.get(APPOINTMENTS, {'customer': str(self.customer.id)}).json()
+        self.assertEqual([r['appointment_id'] for r in only['results']], [str(mine.id)])
+        done = self.client.get(APPOINTMENTS, {'encounter_status': 'in_progress'}).json()
+        self.assertEqual([r['appointment_id'] for r in done['results']], [str(other.id)])
+        page = self.client.get(APPOINTMENTS, {'page': 2, 'page_size': 1}).json()
+        self.assertEqual((page['count'], len(page['results'])), (2, 1))
+
     def test_legacy_evaluations_have_no_encounter(self):  # AC-12
         response = self.client.post(f'{ROOT}patients/{self.customer.id}/evaluations/', {
             'dentition': 'permanent', 'clinical_date': timezone.localdate().isoformat(),
@@ -349,6 +366,32 @@ class EncounterConcurrencyTests(Base, TransactionTestCase):
             f'{ROOT}encounters/{encounter_id}/odontogram/', self.draft_body(), format='json'))
         self.assertEqual(sorted(r.status_code for r in responses), [201, 409])
         self.assertEqual(EvaluationModel.objects.filter(encounter_id=encounter_id).count(), 1)
+
+    def test_simultaneous_finish_and_amend_do_not_break(self):  # REV-04
+        appointment = self.appointment()
+        encounter_id = self.start(appointment)['encounter']['id']
+        draft = self.odontogram(encounter_id).json()
+        self.client.post(f'{ROOT}evaluations/{draft["id"]}/confirm/')
+        calls = [lambda c: c.post(self.url(appointment, 'finish/')),
+                 lambda c: c.post(f'{ROOT}evaluations/{draft["id"]}/amend/', {'reason': 'x'}, format='json')]
+        barrier, results = Barrier(2), []
+
+        def worker(call):
+            close_old_connections()
+            client = APIClient()
+            authenticate(client, self.user)
+            barrier.wait()
+            try:
+                results.append(call(client).status_code)
+            finally:
+                close_old_connections()
+        with ThreadPoolExecutor(2) as pool:
+            list(pool.map(worker, calls))
+        self.assertTrue(all(code in (200, 201, 409) for code in results), results)
+        finished = EncounterModel.objects.get().status == 'finished'
+        drafts = EvaluationModel.objects.filter(encounter_id=encounter_id, status='draft').count()
+        if not finished:  # finalizar perdió: había un borrador pendiente
+            self.assertEqual(drafts, 1)
 
     def test_simultaneous_finish_is_consistent(self):  # AC-04
         appointment = self.appointment()

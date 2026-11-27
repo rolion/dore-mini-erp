@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { ModulesService } from '../../../core/service/modules.service';
 import { ENCOUNTER_CLASSES, PatientEncounter, encounterStatusLabel } from '../models/encounter';
 import { formatDateTime } from '../../agenda/services/appointments-api.service';
 import { EncountersApiService, encounterFailure } from '../services/encounters-api.service';
@@ -12,6 +13,7 @@ import { EncountersApiService, encounterFailure } from '../services/encounters-a
   selector: 'app-patient-encounters',
   imports: [RouterLink, TranslatePipe],
   template: `
+    @if (!unavailable) {
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body">
         <h5 class="card-title">{{ 'DENTISTRY.ENCOUNTER.HISTORIAL_ATENCIONES' | translate }}</h5>
@@ -31,11 +33,13 @@ import { EncountersApiService, encounterFailure } from '../services/encounters-a
           </ul>
         }
       </div>
-    </div>`,
+    </div>
+    }`,
 })
 export class PatientEncountersComponent implements OnInit {
   private api = inject(EncountersApiService);
   private destroyRef = inject(DestroyRef);
+  private modules = inject(ModulesService);
 
   @Input({ required: true }) patientId = '';
 
@@ -49,7 +53,16 @@ export class PatientEncountersComponent implements OnInit {
     return encounterStatusLabel(status);
   }
 
+  /** Sin Agenda habilitada no hay atenciones que mostrar: la tarjeta se oculta en vez de fallar. */
+  get unavailable(): boolean {
+    return this.modules.isDisabled('agenda');
+  }
+
   ngOnInit(): void {
+    if (this.unavailable) {
+      this.loading = false;
+      return;
+    }
     this.api.forPatient(this.patientId).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false))
       .subscribe({ next: page => this.items = page.results, error: failure => this.error = encounterFailure(failure).message });
   }

@@ -1,8 +1,9 @@
 @use '../../inventory/components/inventory-table';
+@use '../../../../assets/scss/dark-tokens' as dark;
 
-$dark-surface: #16192a; // mismo valor que $color-dark-primary de skins/_dark.scss
-$dark-text: #96a2b4; // mismo valor que $color-font de skins/_dark.scss
-$dark-strong: #fff;
+$dark-surface: dark.$color-dark-primary;
+$dark-text: dark.$color-font;
+$dark-strong: white;
 
 dialog {
   box-sizing: border-box;

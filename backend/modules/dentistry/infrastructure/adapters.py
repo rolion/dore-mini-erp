@@ -84,8 +84,8 @@ class AgendaAdapter:
         except self.services.AppointmentNotFound:
             return None
 
-    def search(self, **filters):
-        return self.services.search_appointments(self.company_id, **filters)
+    def in_range(self, **filters):
+        return self.services.appointments_in_range(self.company_id, **filters)
 
     def attend(self, actor_id, actor_name, appointment_id):
         with self._translated():

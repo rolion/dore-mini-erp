@@ -4,6 +4,7 @@ from django.utils import timezone
 from modules.dentistry.domain.odontogram import (
     DRAFT, Evaluation, EvaluationNotFound, Finding, GeneralFinding,
 )
+from .encounter_models import EncounterModel
 from .evaluation_models import EvaluationFindingModel, EvaluationGeneralFindingModel, EvaluationModel
 
 
@@ -33,6 +34,9 @@ class DjangoEvaluationRepository:
         if row is None:
             raise EvaluationNotFound('Evaluación no encontrada.')
         return row
+
+    def lock_encounter(self, encounter_id) -> None:
+        list(EncounterModel.objects.select_for_update().filter(company_id=self.company_id, pk=encounter_id))
 
     def for_customer(self, customer_id):
         return self.rows().filter(customer_id=customer_id).select_related('amends')

@@ -15,8 +15,8 @@ from modules.agenda.domain.appointment import AppointmentRuleError
 from modules.agenda.models import Appointment
 
 __all__ = ['Actor', 'AppointmentConflict', 'AppointmentNotFound', 'AppointmentRuleError', 'AppointmentRef',
-           'AppointmentSnapshot', 'Veto', 'ZONE', 'attend_by_clinic', 'cancel_by_clinic', 'get_appointment',
-           'get_appointments', 'lock_appointment', 'register_guard', 'search_appointments']
+           'AppointmentSnapshot', 'Veto', 'ZONE', 'appointments_in_range', 'attend_by_clinic', 'cancel_by_clinic',
+           'get_appointment', 'get_appointments', 'lock_appointment', 'register_guard']
 
 
 @dataclass(frozen=True)
@@ -54,26 +54,18 @@ def lock_appointment(company_id: UUID, appointment_id: UUID) -> AppointmentSnaps
     return _snapshot(service._locked(company_id, appointment_id))
 
 
-def search_appointments(company_id: UUID, *, first_day: date, last_day: date, professional_id=None,
-                        customer_ids=None, status=None, only_ids=None, exclude_ids=None,
-                        offset: int = 0, limit: int = 20) -> tuple[int, list[AppointmentSnapshot]]:
-    """Citas del rango local [first_day, last_day] ordenadas por inicio; devuelve (total, página)."""
+def appointments_in_range(company_id: UUID, *, first_day: date, last_day: date, professional_id=None,
+                          status=None) -> list[AppointmentSnapshot]:
+    """Citas cuyo inicio cae en el rango local [first_day, last_day], ordenadas; el llamador acota el rango."""
     rows = Appointment.objects.filter(
         company_id=company_id,
         starts__gte=datetime.combine(first_day, datetime.min.time(), ZONE),
         starts__lt=datetime.combine(last_day + timedelta(days=1), datetime.min.time(), ZONE))
     if professional_id:
         rows = rows.filter(professional_id=professional_id)
-    if customer_ids is not None:
-        rows = rows.filter(customer_id__in=list(customer_ids))
     if status:
         rows = rows.filter(status=status)
-    if only_ids is not None:
-        rows = rows.filter(pk__in=list(only_ids))
-    if exclude_ids:
-        rows = rows.exclude(pk__in=list(exclude_ids))
-    rows = rows.order_by('starts', 'id')
-    return rows.count(), [_snapshot(row) for row in rows[offset:offset + limit]]
+    return [_snapshot(row) for row in rows.order_by('starts', 'id')]
 
 
 def attend_by_clinic(company_id: UUID, actor: Actor, appointment_id: UUID) -> None:

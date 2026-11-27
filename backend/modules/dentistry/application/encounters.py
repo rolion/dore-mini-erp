@@ -115,6 +115,7 @@ class EncounterCommands:
     def create_odontogram(self, encounter_id, data, author_id, author_name):
         row = self.repository.get(encounter_id, locked=True)
         self.repository.entity(row).ensure_in_progress()
+        self._require_patient(row.customer_id)  # perfil archivado o cliente inactivo: código propio, no «borrador»
         if self.evaluations.rows().filter(encounter=row, amends__isnull=True).exists():
             raise EncounterStateError('La atención ya tiene un odontograma; continúa con el existente.',
                                       'odontogram_exists')
@@ -138,32 +139,31 @@ class EncounterQueries:
         self.customers, self.appointments, self.professionals = customers, appointments, professionals
 
     # --- listado clínico -------------------------------------------------------------------------------------
-    def dental_customer_ids(self, search):
-        ids = set(self.patients.rows().values_list('customer_id', flat=True))
-        if search:
-            ids &= set(self.customers.search_ids(search))
-        return ids
-
     def listing(self, *, first_day, last_day, professional_id, customer_id, search, status, encounter_status,
                 offset, limit):
+        """El costo depende del rango pedido (≤31 días): se parte de las citas del rango y se filtra en memoria."""
         if (last_day - first_day).days >= MAX_RANGE_DAYS:
             raise EncounterValidationError({'to': [f'Indica un rango de hasta {MAX_RANGE_DAYS} días.']})
-        customer_ids = self.dental_customer_ids(search)
+        candidates = self.appointments.in_range(
+            first_day=first_day, last_day=last_day, professional_id=professional_id, status=status)
         if customer_id:
-            customer_ids &= {customer_id}
-        only_ids = exclude_ids = None
-        encounters = self.repository.rows().filter(customer_id__in=customer_ids)
-        if encounter_status == PENDING:
-            exclude_ids = list(encounters.values_list('appointment_id', flat=True))
-        elif encounter_status:
-            only_ids = list(encounters.filter(status=encounter_status).values_list('appointment_id', flat=True))
-        total, page = self.appointments.search(
-            first_day=first_day, last_day=last_day, professional_id=professional_id, customer_ids=customer_ids,
-            status=status, only_ids=only_ids, exclude_ids=exclude_ids, offset=offset, limit=limit)
+            candidates = [item for item in candidates if item.customer_id == customer_id]
+        dental = set(self.patients.rows().filter(
+            customer_id__in={item.customer_id for item in candidates}).values_list('customer_id', flat=True))
+        if search:
+            dental &= set(self.customers.search_ids(search))
+        candidates = [item for item in candidates if item.customer_id in dental]
         by_appointment = {row.appointment_id: row for row in self.repository.rows().filter(
-            appointment_id__in=[item.id for item in page])}
+            appointment_id__in=[item.id for item in candidates])}
+
+        def state(item):
+            row = by_appointment.get(item.id)
+            return row.status if row else PENDING
+        if encounter_status:
+            candidates = [item for item in candidates if state(item) == encounter_status]
+        page = candidates[offset:offset + limit]
         names = self.professionals.names({item.professional_id for item in page})
-        return total, [self._list_item(item, by_appointment.get(item.id), names) for item in page]
+        return len(candidates), [self._list_item(item, by_appointment.get(item.id), names) for item in page]
 
     @staticmethod
     def _list_item(snapshot, encounter, names):

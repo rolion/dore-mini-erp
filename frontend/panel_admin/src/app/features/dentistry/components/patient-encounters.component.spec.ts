@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTestTranslations } from '../../../core/i18n/testing';
+import { ModulesService } from '../../../core/service/modules.service';
 import { PatientEncountersComponent } from './patient-encounters.component';
 
 describe('PatientEncountersComponent', () => {
@@ -32,6 +33,17 @@ describe('PatientEncountersComponent', () => {
     expect(element.querySelectorAll('li').length).toBe(2);
     expect(element.textContent).toContain('Con odontograma');
     expect(element.querySelector('a[href="/pocketbiz/dentistry/appointments/a2"]')).not.toBeNull();
+  });
+
+  it('hides the card and makes no request when Agenda is disabled', () => {
+    TestBed.configureTestingModule({ providers: [...provideTestTranslations(), provideHttpClient(), provideHttpClientTesting(), provideRouter([])] });
+    http = TestBed.inject(HttpTestingController);
+    spyOn(TestBed.inject(ModulesService), 'isDisabled').and.callFake(key => key === 'agenda');
+    const fixture = TestBed.createComponent(PatientEncountersComponent);
+    fixture.componentRef.setInput('patientId', 'c1');
+    fixture.detectChanges();
+    http.expectNone(req => req.url.includes('/encounters/'));
+    expect((fixture.nativeElement as HTMLElement).querySelector('.card')).toBeNull();
   });
 
   it('shows an empty state', () => {

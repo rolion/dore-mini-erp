@@ -921,7 +921,14 @@
       "VER_EXPEDIENTE": "Ver prontuário e histórico",
       "VER_ODONTOGRAMA": "Ver odontograma",
       "VOLVER": "Voltar",
-      "VOLVER_A_ATENCION": "Voltar ao atendimento"
+      "VOLVER_A_ATENCION": "Voltar ao atendimento",
+      "VAL_PATIENT_ARCHIVED": "Reative o perfil odontológico do paciente antes de atendê-lo.",
+      "VAL_CUSTOMER_INACTIVE": "O cliente está inativo; ative-o antes de atendê-lo.",
+      "VAL_INVALID_STATE": "A ação não é permitida no estado atual.",
+      "VAL_INVALID_TRANSITION": "A consulta não permite esta ação no estado atual.",
+      "TIT_FINALIZAR": "Finalizar atendimento odontológico",
+      "AVISO_FINALIZAR": "A consulta será marcada como atendida e o atendimento ficará somente leitura. As observações digitadas são salvas antes de finalizar.",
+      "CONFIRMAR_FINALIZAR": "Finalizar atendimento"
     }
   },
   "EXPENSES": {

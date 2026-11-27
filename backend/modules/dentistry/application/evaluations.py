@@ -85,6 +85,9 @@ class EvaluationCommands:
 
     @transaction.atomic
     def amend(self, evaluation_id, reason, author_id, author_name):
+        encounter_id = self.repository.get(evaluation_id).encounter_id
+        if encounter_id is not None:  # serializa con finalizar/cancelar la atención; orden atención → paciente
+            self.repository.lock_encounter(encounter_id)
         source = self._locked_row(evaluation_id)
         self._lock_patient(source.customer_id)
         evaluation = self.repository.entity(source)

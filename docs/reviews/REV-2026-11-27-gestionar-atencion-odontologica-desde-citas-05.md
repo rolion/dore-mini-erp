@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-05: Con Agenda o Personal deshabilitados la ficha del paciente muestra un error permanente en «Atenciones»
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v1)

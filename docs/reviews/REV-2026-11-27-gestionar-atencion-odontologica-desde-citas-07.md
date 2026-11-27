@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-07: Especificación y plan desactualizados respecto de lo implementado (API-01, API-07, E2E, AC-12)
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v1)

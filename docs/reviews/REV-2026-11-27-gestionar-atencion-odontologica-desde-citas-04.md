@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-04: Carrera: finalizar puede cerrar la atención mientras una enmienda crea un borrador vinculado
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v1)

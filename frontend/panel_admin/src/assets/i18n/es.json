@@ -921,7 +921,14 @@
       "VER_EXPEDIENTE": "Ver expediente e historial",
       "VER_ODONTOGRAMA": "Ver odontograma",
       "VOLVER": "Volver",
-      "VOLVER_A_ATENCION": "Volver a la atención"
+      "VOLVER_A_ATENCION": "Volver a la atención",
+      "VAL_PATIENT_ARCHIVED": "Reactiva el perfil odontológico del paciente antes de atenderlo.",
+      "VAL_CUSTOMER_INACTIVE": "El cliente está inactivo; actívalo antes de atenderlo.",
+      "VAL_INVALID_STATE": "La acción no procede en el estado actual.",
+      "VAL_INVALID_TRANSITION": "La cita no admite esta acción en su estado actual.",
+      "TIT_FINALIZAR": "Finalizar atención odontológica",
+      "AVISO_FINALIZAR": "La cita se marcará como atendida y la atención quedará de solo lectura. Las observaciones escritas se guardan antes de finalizar.",
+      "CONFIRMAR_FINALIZAR": "Finalizar atención"
     }
   },
   "EXPENSES": {

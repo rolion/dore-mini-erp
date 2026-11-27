@@ -89,6 +89,7 @@
         {
           "path": "/pocketbiz/dentistry/appointments",
           "title": "MENUITEMS.DENTISTRY.APPOINTMENTS",
+          "module": "agenda",
           "iconType": "",
           "icon": "",
           "class": "ml-menu",

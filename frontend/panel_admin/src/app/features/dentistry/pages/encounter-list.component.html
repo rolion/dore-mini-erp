@@ -9,7 +9,7 @@
     <div class="card">
       <div class="card-header"><h2><strong>{{ 'DENTISTRY.ENCOUNTER.TITULO_LISTA' | translate }}</strong></h2></div>
       <div class="card-body">
-        @if (loading) { <p role="status">{{ 'DENTISTRY.ENCOUNTER.CARGANDO' | translate }}</p> }
+        @if (loading) { <p role="status"><span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>{{ 'DENTISTRY.ENCOUNTER.CARGANDO' | translate }}</p> }
         @if (error) {
           <p class="alert alert-danger" role="alert">{{ error }}
             <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="search(page)">{{ 'DENTISTRY.ENCOUNTER.REINTENTAR' | translate }}</button></p>
@@ -20,10 +20,8 @@
           <div class="col-md-2"><label for="e-to">{{ 'DENTISTRY.ENCOUNTER.HASTA' | translate }}</label>
             <input id="e-to" type="date" class="form-control" formControlName="to"></div>
           <div class="col-md-3"><label for="e-professional">{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate }}</label>
-            <select id="e-professional" class="form-select" formControlName="professional">
-              <option value="">{{ 'DENTISTRY.ENCOUNTER.TODOS' | translate }}</option>
-              @for (person of people; track person.id) { <option [value]="person.id">{{ person.name }}</option> }
-            </select></div>
+            <ng-select inputId="e-professional" formControlName="professional" [items]="people" bindLabel="name" bindValue="id"
+              [clearable]="true" [placeholder]="'DENTISTRY.ENCOUNTER.TODOS' | translate"></ng-select></div>
           <div class="col-md-5"><label for="e-search">{{ 'DENTISTRY.ENCOUNTER.PACIENTE' | translate }}</label>
             <input id="e-search" type="search" class="form-control" formControlName="search"
               [attr.placeholder]="'DENTISTRY.ENCOUNTER.BUSCAR_PACIENTE' | translate"></div>

@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { NgSelectComponent } from '@ng-select/ng-select';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -22,7 +23,7 @@ const PAGE_SIZE = 20;
 /** Odontología → Citas: listado clínico de las citas de pacientes odontológicos (ver DDR de atención). */
 @Component({
   selector: 'app-encounter-list',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, NgSelectComponent],
   templateUrl: './encounter-list.component.html',
   styleUrl: './encounter-list.component.scss',
 })
