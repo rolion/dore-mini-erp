@@ -1,6 +1,6 @@
 # REV-2026-11-27-consultar-ordenes-seguimiento-estado-05: Ruta de la API incorrecta en el PLAN
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** PLAN
 **Related plan:** docs/plans/PLAN-2026-11-27-consultar-ordenes-seguimiento-estado.md (v2)

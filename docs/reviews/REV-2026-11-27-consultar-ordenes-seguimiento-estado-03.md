@@ -1,6 +1,6 @@
 # REV-2026-11-27-consultar-ordenes-seguimiento-estado-03: Contraste de las etapas pendientes del stepper
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-27-consultar-ordenes-seguimiento-estado.md (v2)

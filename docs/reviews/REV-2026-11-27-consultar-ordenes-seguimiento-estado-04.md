@@ -1,6 +1,6 @@
 # REV-2026-11-27-consultar-ordenes-seguimiento-estado-04: Celdas de la tabla de ingredientes y aria-valuetext de la barra de progreso
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-consultar-ordenes-seguimiento-estado.md (v2)

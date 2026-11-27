@@ -103,7 +103,8 @@
             <span data-testid="elapsed-summary"><span data-testid="elapsed">{{ elapsed }}</span> {{ 'PRODUCTION.ORDERS.RELEASE.OF' | translate }} <span data-testid="min-hours">{{ order.release?.minHours }} {{ 'SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate }}</span></span>
           </div>
           <div class="progress order-progress" role="progressbar" [attr.aria-label]="'PRODUCTION.ORDERS.RELEASE.ELAPSED' | translate"
-            [attr.aria-valuenow]="progressPercent" aria-valuemin="0" aria-valuemax="100" data-testid="release-progress">
+            [attr.aria-valuenow]="progressPercent"
+            [attr.aria-valuetext]="elapsed + ' ' + ('PRODUCTION.ORDERS.RELEASE.OF' | translate) + ' ' + order.release?.minHours + ' ' + ('SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate)" aria-valuemin="0" aria-valuemax="100" data-testid="release-progress">
             <div class="progress-bar" [style.width.%]="progressPercent"></div>
           </div>
           <dl class="order-dl mt-2">
@@ -155,8 +156,8 @@
               <td>{{ line.productName }}</td>
               <td class="text-end">{{ quantity(line.quantityPerPreparation) }} {{ line.unitAbbreviation || '—' }}</td>
               <td class="text-end">{{ quantity(line.expectedQuantity) }} {{ line.unitAbbreviation || '—' }}</td>
-              @if (line.actualQuantity !== null) {
-              <td class="text-end" data-testid="actual-quantity">{{ quantity(line.actualQuantity) }} {{ line.unitAbbreviation || '—' }}</td>
+              @if (order.lot) {
+              <td class="text-end" data-testid="actual-quantity">{{ line.actualQuantity === null ? '—' : quantity(line.actualQuantity) + ' ' + (line.unitAbbreviation || '—') }}</td>
               <td class="text-end" data-testid="difference">{{ difference(line) ?? '—' }}</td>
               }
             </tr>

@@ -33,7 +33,7 @@ Lista con columnas Número, Receta, Previstas, Elaboradas, Saldo a granel, Estad
 - INV-02 (existente): el disponible de un lote en refrigeración es 0 aunque tenga físico.
 
 ## Acceptance criteria
-- AC-01: `GET /api/production/orders/` acepta `date_from`, `date_to` (YYYY-MM-DD, sobre la fecha de creación, inclusivo) y `recipe_id`, combinables con `status`; todos filtrados por empresa.
+- AC-01: `GET /api/production-orders/` acepta `date_from`, `date_to` (YYYY-MM-DD, sobre la fecha de creación, inclusivo) y `recipe_id`, combinables con `status`; todos filtrados por empresa.
 - AC-02: cada orden devuelve `lot` con `physical_quantity`, `available_quantity` y `status` (`refrigerating|released`); `lot` es `null` sin lote.
 - AC-03: una orden con 118 elaboradas en refrigeración muestra elaboradas 118 y saldo disponible 0; tras liberar, 118; si Inventario registra un empaque parcial de 60, el saldo visible es 58.
 - AC-04: la lista muestra las columnas indicadas, «—» donde no aplica, y cuatro estados con etiqueta en es/en/pt.
@@ -52,7 +52,7 @@ Lista con columnas Número, Receta, Previstas, Elaboradas, Saldo a granel, Estad
 Igual que hoy: módulo `production` habilitado y empresa del usuario. Solo lectura; sin permisos nuevos.
 
 ## API contract
-- API-01: `GET /api/production/orders/?status&recipe_id&date_from&date_to&page&page_size` (parámetros nuevos opcionales; retrocompatible).
+- API-01: `GET /api/production-orders/?status&recipe_id&date_from&date_to&page&page_size` (parámetros nuevos opcionales; retrocompatible).
 - API-02: `lot` ahora `{id, code, status, physical_quantity, available_quantity}` (campos añadidos; cantidades como cadena de 4 decimales).
 
 ## UI behavior

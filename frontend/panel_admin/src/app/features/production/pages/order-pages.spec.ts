@@ -301,6 +301,7 @@ describe('OrderDetailComponent', () => {
       expect(bar?.getAttribute('role')).toBe('progressbar');
       expect(Number(bar?.getAttribute('aria-valuenow'))).toBeGreaterThanOrEqual(45);
       expect(Number(bar?.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(55);
+      expect(bar?.getAttribute('aria-valuetext')).toMatch(/\d/);  // REV-04: texto legible para lectores de pantalla
       expect(root.querySelector('[data-testid="release"]')?.getAttribute('aria-describedby')).toBe('release-hint');
       expect(root.querySelector('#release-hint')).not.toBeNull();
     });

@@ -46,16 +46,17 @@
   gap: 0.25rem;
   padding-top: 0.75rem;
   border-top: 4px solid var(--bs-border-color);
-  opacity: 0.75;
+  // Pendiente: se atenúa con el color de texto secundario (contraste AA), no con opacity.
+  color: var(--bs-secondary-color);
 
   &.is-done {
     border-top-color: var(--bs-success);
-    opacity: 1;
+    color: var(--bs-body-color);
   }
 
   &.is-current {
     border-top-color: var(--bs-primary);
-    opacity: 1;
+    color: var(--bs-body-color);
     font-weight: 600;
   }
 }
