@@ -1,6 +1,6 @@
 # TASK-crm-integracion-whatsapp-cloud-api: PB-CRM-016 · Integración WhatsApp Cloud API
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-integracion-whatsapp-cloud-api` (base: `crm`)
@@ -14,6 +14,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio/técnicas respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS con reservas (sin Critical/High; REV-01 Medium y REV-02..04 Low abiertos) | delivery-publish |
 
 ## Investigación
 
@@ -97,7 +98,16 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS con reservas** (subagente aislado, 2026-11-27). Backend completo 2617 pruebas OK; frontend 1973 OK; lint y `i18n:check` limpios; `npm run build` OK; bandit sin Medium/High en código de producción. Estado visual en navegador: **no verificado** (no se levantó la app).
+
+| REV | Severidad | Categoría | Tema |
+|---|---|---|---|
+| REV-01 | Medium | IMPLEMENTATION | Una empresa puede apuntar su `secret_ref` a la variable `WHATSAPP_*` de otra (sin propiedad/unicidad de la referencia; además el estado revela si existe) |
+| REV-02 | Low | IMPLEMENTATION | Evento firmado de una conexión `disabled` responde 401 en vez de ignorarse (latente) |
+| REV-03 | Low | IMPLEMENTATION | `ProcessWebhookEvent._inbound` no es atómico: un fallo tras insertar deja la ventana sin abrir y el evento sin publicar |
+| REV-04 | Low | DESIGN | Desviaciones no declaradas del DDR (sin pestañas, `<select>` nativo, «Copiar» sin `aria-label`, menú sin `adminOnly`, ruta de archivo en el texto de ayuda) |
+
+Todos `Status: Open` en `docs/reviews/`.
 
 ## Publicación
-_Pendiente_
+PR listo para aprobación humana (no se mergea). Cambio sensible: **autenticación/seguridad** (endpoint público firmado, manejo de secretos), **base de datos** (migración inicial de `messaging`) e **infraestructura** (servicio `messaging-worker`); respaldado por el ADR `ADR-crm-integracion-whatsapp-cloud-api-modulo-messaging-y-cola-de-eventos`. Pendiente humano: prueba real con el número de prueba de Meta, variables `WHATSAPP_*` en el despliegue y decisión sobre REV-01.
