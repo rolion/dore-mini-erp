@@ -61,6 +61,8 @@ docker compose logs --tail=100 import-worker
 docker compose run --rm --no-deps import-worker python manage.py run_import_worker --once
 ```
 
+`messaging-worker` (PB-CRM-016) usa la misma imagen y ejecuta `python manage.py run_messaging_worker`: procesa los webhooks de WhatsApp ya verificados (tabla `messaging_webhook_event`) y entrega los mensajes salientes en cola con reintentos y backoff. Sin puertos. Si no está en marcha, los eventos quedan `pending` y los envíos `queued` (Meta además reintenta el webhook); procesarlos a mano: `docker compose run --rm --no-deps messaging-worker python manage.py run_messaging_worker --once`. Los secretos de WhatsApp (token del usuario del sistema y App Secret de cada empresa) se pasan como variables de entorno del servicio `backend` y `messaging-worker` con nombres `WHATSAPP_*`; la base solo guarda esos nombres. El webhook público es `/api/messaging/whatsapp/webhook/`: el proxy debe enviarlo al backend sin autenticación adicional. Guía del lado de Meta: `docs/integrations/whatsapp-cloud-api-configuracion-meta.md`.
+
 Una importación `RUNNING` sin latido durante 15 minutos (p. ej. el contenedor se reinició a mitad) pasa a «Con fallos» («se interrumpió»); se reintenta desde la pantalla y lo ya cargado no se duplica. Para desplegar sin cortar una carga, el contenedor espera hasta 2 minutos a terminar la venta en curso al detenerse.
 
 If an admin account is needed:

@@ -494,6 +494,17 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/settings/integrations/whatsapp",
+          "title": "MENUITEMS.SETTINGS.LIST.WHATSAPP",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
         }
       ]
     },

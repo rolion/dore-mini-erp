@@ -29,6 +29,8 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     # Prospectos/oportunidades: conversión por la fachada de Clientes y vínculo a pedido por la de Ventas, solo desde
     # crm/infrastructure/adapters.py (ADR crm-prospectos-oportunidades-modelo-conversion-y-vinculos).
     'crm': {'customers', 'sales', 'inventory'},
+    # Mensajería (WhatsApp): no depende de ningún módulo de negocio; otros la consumirán por su fachada (ADR messaging).
+    'messaging': set(),
     # Importación de ventas: orquesta otros módulos solo por sus fachadas (ADR cargar-ventas-desde-archivo).
     'data_import': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'purchases', 'sales'},
 }

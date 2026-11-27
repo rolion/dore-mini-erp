@@ -1,6 +1,6 @@
 # TASK-crm-integracion-whatsapp-cloud-api: PB-CRM-016 · Integración WhatsApp Cloud API
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-integracion-whatsapp-cloud-api` (base: `crm`)
@@ -13,6 +13,7 @@
 | 2026-11-27 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio/técnicas respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
+| 2026-11-27 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 
 ## Investigación
 
@@ -69,7 +70,31 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 `docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md` (v1, COMPLETO). Specification readiness: READY.
 
 ## Implementación
-_Pendiente_
+
+**Backend** (`backend/modules/messaging/`, módulo nuevo `domain/ application/ infrastructure/ api/`):
+- `domain/rules.py` — ventana de 24 h (límite inclusivo), normalización de teléfono, firma HMAC en tiempo constante, backoff, validación de `secret_ref` (INV-04, 05, 06; AC-05, AC-09). `domain/entities.py` — `Message.advance/mark_sent/fail/schedule_retry` (estados sin retroceso, INV-03; AC-06, AC-07), `Conversation`, `Connection`, `Template`. `domain/webhook.py` — parser tolerante (mensajes, estados, `pricing`).
+- `application/services.py` — `ReceiveWebhook` (valida e inserta; AC-01..03), `ProcessWebhookEvent` (idempotencia por wamid, `last_inbound_at`, evento `InboundMessageReceived`; AC-04, 08, 10), `SendMessages` (texto/interactivo/plantilla, entrega con reintentos, sincronización de plantillas), `ConnectionService`.
+- `infrastructure/` — modelos y migración `0001_initial` (INV-01/02/07/08), repositorios por `company_id` y colas (`EventQueue`, `OutboxQueue` con arrendamiento), `WhatsAppCloudAdapter` (urllib, sin dependencias nuevas), `FakeMessagingGateway`, `EnvSecretResolver`, worker y comando `run_messaging_worker`.
+- `api/` — webhook público (GET verificación, POST firmado), conexión, mensaje de prueba, plantillas (API-01..05). Settings: `MESSAGING_PROVIDER`, `WHATSAPP_API_BASE_URL`, `WHATSAPP_API_VERSION`. `compose.yaml`: servicio `messaging-worker`. `.env.example` y `docs/deployment/docker.md` actualizados.
+
+**Frontend** (`features/settings/`): `models/whatsapp.ts`, `services/whatsapp-api.service.ts`, `pages/whatsapp-integration` (plantilla «Formulario de configuración» + listado; DDR), ruta `settings/integrations/whatsapp`, entrada de menú y claves i18n es/en/pt (AC-11, UI-01..03). Referencia visual: `module-settings`/`module-list`; sin componentes compartidos nuevos.
+
+**Pruebas:** `messaging/tests/test_domain.py` (17) y `test_api.py` (33) cubren AC-01..AC-11 (ver mapeo del PLAN); Karma: servicio y página (13). Se ajustó `sidebar-menu.spec.ts` (cuenta de entradas y submenú de Configuración).
+
+**Desviaciones respecto al plan**
+- `required_modules = ()`: `messaging` no se registró en el registro de `modularity` (cambiaría los conteos de módulos por tipo de empresa y las configuraciones por defecto); el acceso es solo para el administrador de la empresa. Registrarlo queda para cuando se defina cómo se habilita por tipo de empresa.
+- La API devuelve los **nombres** `secret_ref`/`app_secret_ref` (no son secretos y la pantalla los edita); nunca valores.
+- `secret_ref` solo admite nombres `WHATSAPP_*` (no estaba en el plan): evita que un administrador de empresa apunte a `SECRET_KEY` o `DATABASE_URL` y los envíe a Meta.
+- Estado de conexión: `active` si ambas variables existen al guardar o tras sincronizar plantillas; `pending/secrets_missing` si faltan; `error/token_expired` ante el código 190 de Meta.
+- Envío de interactivos implementado en servicio y adaptador sin endpoint público (la bandeja PB-CRM-012 lo usará).
+- E2E Playwright no aplica (decidido en el PLAN); la prueba real con Meta queda como verificación manual.
+
+**Deuda técnica / límites conocidos**
+- Un estado que llegue antes de que se guarde el wamid del envío se ignora (worker secuencial: poco probable; con varias réplicas podría perderse un estado).
+- `cost`/`currency` siempre nulos hasta la conciliación con la analítica de Meta (decisión del usuario).
+- Sin gestor de secretos: alta de empresas exige variables de entorno en el despliegue.
+- La suite del backend en `--parallel` aborta sin traza por falta de `tblib` (preexistente); se corrió en serie.
+
 
 ## Review
 _Pendiente_

@@ -7,7 +7,8 @@ BUSINESS_APPS = ('catalog', 'customers', 'sales', 'expenses', 'purchases', 'cost
 # Tablas hijas: heredan la empresa de su pedido por la FK interna de Sales y se consultan siempre a través de él.
 CHILD_MODELS = {'sales.OrderItemModel', 'sales.PaymentModel', 'purchases.PurchaseItemModel',
                 'purchases.ReceiptItemModel', 'dentistry.DentalProformaLineModel'}
-PUBLIC_PREFIXES = ('api/auth/', 'api/health/')
+# El webhook de WhatsApp es público a propósito: lo llama Meta y la autenticidad la da la firma HMAC (ADR messaging).
+PUBLIC_PREFIXES = ('api/auth/', 'api/health/', 'api/messaging/whatsapp/webhook/')
 
 
 def iter_patterns(patterns, prefix=''):
