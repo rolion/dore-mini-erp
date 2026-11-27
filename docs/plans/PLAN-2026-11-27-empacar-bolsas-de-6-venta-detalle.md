@@ -1,7 +1,11 @@
-# PLAN-2026-11-27-empacar-bolsas-de-6-venta-detalle (v1)
+# PLAN-2026-11-27-empacar-bolsas-de-6-venta-detalle (v2)
 
 **Task:** TASK-empacar-bolsas-de-6-venta-detalle · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-empacar-bolsas-de-6-venta-detalle-registrar-empaque · Ninguno
+
+## Changelog
+- **v2 — [Specification]** (aprobado por el usuario en el chat): se agrega la **etiqueta (sticker)** como tercer insumo del empaque. Decisiones: 1 por pack (fija), **opcional**, con control de stock, faltantes y costo igual que la bolsa. Nuevos INV-08 y AC-09; API-01/API-02 aditivos (`label_product_id`; `label_product`, `labels_quantity`, `labels_per_pack`); migración aditiva `0006_packing_label`. **[Implementation Plan]**: `Packing.create(label, label_requested)`, `pack_out` con lista de insumos (bolsa y etiqueta), `cost_packing_outputs` con la línea de etiqueta. Además, textos del diálogo más claros (ayuda bajo cada campo) y resumen con etiquetas.
+- v1 — versión inicial.
 
 ## Objective
 Permitir registrar, desde una orden Listo para empacar, tandas de packs de 6 cuñapés: descuenta cuñapés del lote y bolsas, ingresa los packs al inventario con su costo, de forma atómica e idempotente, y muestra el historial y el saldo a granel.
@@ -37,6 +41,8 @@ En una orden `ready_to_pack`, «Registrar empaque» con N packs, un producto pac
 - INV-06 Un empaque no se edita ni se elimina (reversa fuera de alcance).
 - INV-07 Costo: con Costeo activo y valorizado, costo total = 6N × promedio del cuñapé + N × promedio de la bolsa (vía `cost_outputs`); costo unitario del pack = total ÷ N (6 decimales, mitad hacia arriba), registrado con `cost_receipt`. Sin Costeo o sin costo: el pack entra sin costo y el empaque guarda `cost_total = null`.
 
+- INV-08 Etiqueta (opcional): si se elige `label_product_id`, es un producto activo que controla stock, distinto del pack, de la bolsa y del granel; se descuentan `1 × packs` etiquetas (stock sin lote, almacén de la orden), entran en el pre-chequeo de faltantes (INV-04) y en el costo (INV-07). Sin etiqueta no se descuenta nada por ese concepto.
+
 ## Acceptance criteria
 - AC-01 Con lote liberado de 118 cuñapés y 10 bolsas, empacar 6 packs descuenta 36 del lote (restan 82) y 6 bolsas, e ingresa 6 packs; los tres movimientos referencian el empaque.
 - AC-02 Faltan cuñapés o bolsas → 409 `insufficient_stock` con todos los faltantes; los saldos quedan intactos y no se crea empaque.
@@ -46,6 +52,7 @@ En una orden `ready_to_pack`, «Registrar empaque» con N packs, un producto pac
 - AC-06 Orden que no está `ready_to_pack` → 409; orden de otra empresa → 404.
 - AC-07 Validación (400 por campo): `packs` no entero/≤0/fuera de rango; `request_id` ausente/no UUID; pack o bolsa inexistente/inactivo/sin stock/repetido/igual al granel.
 - AC-08 Detalle de orden: acción «Registrar empaque» (solo `ready_to_pack`), diálogo con resumen y faltantes, sección «Empaques» con saldo y historial; textos en es/en/pt.
+- AC-09 Con etiqueta elegida: se descuentan N etiquetas (cuarto movimiento `label`), faltan etiquetas → 409 con todos los faltantes sin escribir nada, el costo del pack las incluye, etiqueta inválida (inexistente/inactiva/sin stock/repetida/igual al granel) → 400 por campo `label_product_id`; sin etiqueta el empaque funciona como antes.
 
 ## Edge cases / error cases
 - EDGE-01 Doble clic: mismo `request_id` (AC-03).

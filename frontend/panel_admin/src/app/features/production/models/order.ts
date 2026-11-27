@@ -35,9 +35,12 @@ export interface PackingEntry {
   packs: number;
   packProduct: { id: string; name: string };
   bagProduct: { id: string; name: string };
+  /** Etiqueta opcional; `null` si no se usó. */
+  labelProduct: { id: string; name: string } | null;
   /** Cadenas decimales con 4 decimales. */
   bulkQuantity: string;
   bagsQuantity: string;
+  labelsQuantity: string;
   lot: { id: string; code: string };
   /** Costo total (2 decimales) y unitario (6); `null` = sin costo. */
   costTotal: string | null;
@@ -50,6 +53,7 @@ export interface PackingEntry {
 export interface OrderPacking {
   unitsPerPack: number;
   bagsPerPack: number;
+  labelsPerPack: number;
   bulkAvailable: string;
   bulkUnitAbbreviation: string | null;
   packings: PackingEntry[];
@@ -61,6 +65,8 @@ export interface PackInput {
   packs: number;
   packProductId: string;
   bagProductId: string;
+  /** Etiqueta opcional (una por pack); `null` = sin etiqueta. */
+  labelProductId: string | null;
 }
 
 export interface ProductionOrder {
@@ -118,12 +124,14 @@ export interface ProductionOrderDto {
   packing: {
     units_per_pack: number;
     bags_per_pack: number;
+    labels_per_pack: number;
     bulk_available: string;
     bulk_unit_abbreviation: string | null;
     packings: {
       id: string; number: number; packs: number;
       pack_product: { id: string; name: string }; bag_product: { id: string; name: string };
-      bulk_quantity: string; bags_quantity: string; lot: { id: string; code: string };
+      label_product: { id: string; name: string } | null;
+      bulk_quantity: string; bags_quantity: string; labels_quantity: string; lot: { id: string; code: string };
       cost_total: string | null; unit_cost: string | null; created_at: string; created_by: string | null;
     }[];
   } | null;
@@ -185,6 +193,7 @@ export interface OrderFieldErrors {
   packs?: string;
   packProductId?: string;
   bagProductId?: string;
+  labelProductId?: string;
   requestId?: string;
 }
 

@@ -44,12 +44,13 @@ export class PackDialogComponent implements OnInit {
   submitted = false;
   error = '';
   shortages: OrderShortage[] = [];
-  serverErrors: { packs?: string; packProductId?: string; bagProductId?: string } = {};
+  serverErrors: { packs?: string; packProductId?: string; bagProductId?: string; labelProductId?: string } = {};
   readonly quantity = formatQuantity;
 
   readonly form = this.fb.nonNullable.group({
     packProductId: ['', Validators.required],
     bagProductId: ['', Validators.required],
+    labelProductId: [''],
     packs: [1, [Validators.required, wholeNumber]],
   });
 
@@ -63,13 +64,16 @@ export class PackDialogComponent implements OnInit {
 
   get unitsPerPack(): number { return this.order.packing?.unitsPerPack ?? 6; }
   get bagsPerPack(): number { return this.order.packing?.bagsPerPack ?? 1; }
+  get labelsPerPack(): number { return this.order.packing?.labelsPerPack ?? 1; }
   get packs(): number { const value = this.form.controls.packs.value; return this.form.controls.packs.valid ? value : 0; }
   get unit(): string { return this.order.resultProduct.unit?.abbreviation ?? ''; }
 
   get summary(): string {
     return tr('PRODUCTION.ORDERS.PACK.SUMMARY', {
       bulk: this.packs * this.unitsPerPack, unit: this.unit, lot: this.order.lot?.code ?? '',
-      bags: this.packs * this.bagsPerPack, packs: this.packs });
+      bags: this.packs * this.bagsPerPack, packs: this.packs,
+      labels: this.form.controls.labelProductId.value
+        ? tr('PRODUCTION.ORDERS.PACK.SUMMARY_LABELS', { labels: this.packs * this.labelsPerPack }) : '' });
   }
 
   shortageText(item: OrderShortage): string {
@@ -88,11 +92,13 @@ export class PackDialogComponent implements OnInit {
     this.saving = true;
     this.api.pack(this.order.id, {
       requestId: this.requestId, packs: value.packs, packProductId: value.packProductId, bagProductId: value.bagProductId,
+      labelProductId: value.labelProductId || null,
     }).pipe(finalize(() => this.saving = false), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: order => this.modal.close(order),
       error: (error: OrderApiError) => {
         this.shortages = error.shortages;
-        this.serverErrors = { packs: error.fields.packs, packProductId: error.fields.packProductId, bagProductId: error.fields.bagProductId };
+        this.serverErrors = { packs: error.fields.packs, packProductId: error.fields.packProductId, bagProductId: error.fields.bagProductId,
+          labelProductId: error.fields.labelProductId };
         this.error = error.shortages.length || error.status === 400 ? '' : error.message;
       },
     });

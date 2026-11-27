@@ -3625,11 +3625,11 @@
         "TITLE": "Packings",
         "DIALOG_TITLE": "Record packing",
         "PACKS": "Number of packs",
-        "PACK_PRODUCT": "Pack product",
-        "BAG_PRODUCT": "Bag product",
+        "PACK_PRODUCT": "Pack product (what you sell)",
+        "BAG_PRODUCT": "Bag (material consumed)",
         "CHOOSE_PRODUCT": "Choose a product",
         "NO_PRODUCTS": "No stock-tracked products",
-        "SUMMARY": "{{bulk}} {{unit}} will be taken from lot {{lot}} and {{bags}} bags; {{packs}} packs will be added.",
+        "SUMMARY": "{{bulk}} {{unit}} will be taken from lot {{lot}} · bags: {{bags}}{{labels}}. {{packs}} packs will be added to inventory.",
         "BULK_AVAILABLE": "Bulk balance",
         "NOT_ENOUGH": "{{quantity}} {{unit}} left in bulk: not enough for one pack.",
         "EMPTY": "No packings yet",
@@ -3648,7 +3648,14 @@
         "SHORTAGE_LINE": "{{name}}: you need {{requested}}, there are {{available}} ({{missing}} short).",
         "PACKS_INVALID": "Enter a whole number between 1 and 99999.",
         "PRODUCT_REQUIRED": "Choose a product.",
-        "LOAD_ERROR": "Products could not be loaded."
+        "LOAD_ERROR": "Products could not be loaded.",
+        "SUMMARY_LABELS": " · labels: {{labels}}",
+        "PACK_HELP": "Catalog product sold at retail: the bag filled with 6 cuñapés.",
+        "BAG_HELP": "Empty bag each pack is made in; 1 is used per pack.",
+        "LABEL_PRODUCT": "Label or sticker (optional)",
+        "NO_LABEL": "No label",
+        "LABEL_HELP": "If you choose one, 1 is used per pack and it adds to the cost.",
+        "LABELS_USED": "Labels"
       }
     }
   }

@@ -51,6 +51,14 @@ class OrderPackApiTests(APITestCase):
         self.assertEqual(self.client.post(f"{URL}{order['id']}/release/").status_code, 200)
         return order
 
+    def add_label(self, quantity='10'):
+        """Producto etiqueta con stock en el almacén de la orden."""
+        self.label = self.product('Etiqueta', self.unit)
+        ProductModel.objects.filter(pk=self.label.pk).update(tracks_stock=True)
+        inventory_services.record_movement(
+            self.company.id, product_id=self.label.id, warehouse_id=self.warehouse.id, kind='in',
+            quantity=Decimal(quantity), user_id=self.user.id, user_name='prod-admin', reference='Seed etiquetas')
+
     def body(self, packs=6, **changes):
         body = {'request_id': str(uuid4()), 'packs': packs, 'pack_product_id': str(self.pack_product.id),
                 'bag_product_id': str(self.bag.id)}
@@ -172,3 +180,67 @@ class OrderPackApiTests(APITestCase):
                 self.assertEqual(response.status_code, 400, response.content)
                 self.assertIn(field, response.json())
         self.assertEqual((self.movements(), PackingModel.objects.count()), (moves, 0))
+
+    def test_label_is_consumed_when_chosen(self):  # AC-09, INV-08
+        order = self.ready()
+        self.add_label('10')
+        response = self.pack(order, self.body(label_product_id=str(self.label.id)))
+        self.assertEqual(response.status_code, 201, response.content)
+        packing = response.json()['packing']['packings'][0]
+        self.assertEqual((packing['label_product']['name'], packing['labels_quantity']), ('Etiqueta', '6.0000'))
+        unlotted = inventory_services.get_balances(
+            self.company.id, self.warehouse.id, [self.label.id, self.bag.id], unlotted=True)
+        self.assertEqual((unlotted[self.label.id], unlotted[self.bag.id]), (Decimal('4'), Decimal('4')))
+        self.assertEqual(StockMovementModel.objects.filter(
+            source_type='production_packing', source_id=packing['id']).count(), 4)
+
+    def test_without_label_nothing_is_consumed_for_it(self):  # AC-09
+        order = self.ready()
+        self.add_label('10')
+        packing = self.pack(order).json()['packing']['packings'][0]
+        self.assertEqual((packing['label_product'], packing['labels_quantity']), (None, '0.0000'))
+        self.assertEqual(inventory_services.get_balances(
+            self.company.id, self.warehouse.id, [self.label.id], unlotted=True)[self.label.id], Decimal('10'))
+
+    def test_missing_labels_are_listed_with_the_other_shortages(self):  # AC-09, INV-04
+        order = self.ready(bags='2')
+        self.add_label('1')
+        before, count = (self.balances(order), self.movements()), PackingModel.objects.count()
+        response = self.pack(order, self.body(packs=5, label_product_id=str(self.label.id)))
+        self.assertEqual(response.status_code, 409, response.content)
+        self.assertEqual({s['product_name']: (s['requested'], s['available'], s['missing'])
+                          for s in response.json()['shortages']},
+                         {'Bolsa': ('5.0000', '2.0000', '3.0000'), 'Etiqueta': ('5.0000', '1.0000', '4.0000')})
+        self.assertEqual(((self.balances(order), self.movements()), PackingModel.objects.count()), (before, count))
+
+    def test_invalid_label_is_rejected(self):  # AC-09, INV-08
+        order = self.ready()
+        untracked = self.product('Etiqueta sin stock', self.unit)
+        for label_id in (str(uuid4()), str(untracked.id), str(self.bag.id), str(self.pack_product.id)):
+            with self.subTest(label=label_id):
+                response = self.pack(order, self.body(label_product_id=label_id))
+                self.assertEqual(response.status_code, 400, response.content)
+                self.assertIn('label_product_id', response.json())
+        self.assertEqual(PackingModel.objects.count(), 0)
+
+    def test_label_cost_is_part_of_the_pack_cost(self):  # AC-09, INV-07
+        order = self.ready()
+        self.add_label('20')
+        CompanyModuleModel.objects.create(company_id=self.company.id, module_key='costing')
+        lines = parse_lines([
+            {'product_id': self.cheese.id, 'reconciled_quantity': '20', 'total_value': '200.00',
+             'declared_zero': False, 'source': None},
+            {'product_id': self.flour.id, 'reconciled_quantity': '30', 'total_value': '60.00',
+             'declared_zero': False, 'source': None},
+            {'product_id': self.result.id, 'reconciled_quantity': '118', 'total_value': '118.00',
+             'declared_zero': False, 'source': None},
+            {'product_id': self.bag.id, 'reconciled_quantity': '10', 'total_value': '5.00',
+             'declared_zero': False, 'source': None},
+            {'product_id': self.label.id, 'reconciled_quantity': '20', 'total_value': '2.00',
+             'declared_zero': False, 'source': None}])
+        DjangoAdoptionRepository(self.company.id).save(
+            ValuationAdoption.adopt(uuid4(), timezone.now(), None, 'ana', lines))
+        response = self.pack(order, self.body(label_product_id=str(self.label.id)))  # 36 + 3.00 + 0.60 = 39.60
+        self.assertEqual(response.status_code, 201, response.content)
+        packing = response.json()['packing']['packings'][0]
+        self.assertEqual((packing['cost_total'], packing['unit_cost']), ('39.60', '6.600000'))

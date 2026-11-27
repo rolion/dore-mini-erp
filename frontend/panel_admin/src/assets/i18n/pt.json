@@ -3625,11 +3625,11 @@
         "TITLE": "Embalagens",
         "DIALOG_TITLE": "Registrar embalagem",
         "PACKS": "Quantidade de packs",
-        "PACK_PRODUCT": "Produto pack",
-        "BAG_PRODUCT": "Produto saco",
+        "PACK_PRODUCT": "Produto pack (o que você vende)",
+        "BAG_PRODUCT": "Saco (material consumido)",
         "CHOOSE_PRODUCT": "Escolha um produto",
         "NO_PRODUCTS": "Sem produtos que controlem estoque",
-        "SUMMARY": "Serão descontados {{bulk}} {{unit}} do lote {{lot}} e {{bags}} sacos; entrarão {{packs}} packs.",
+        "SUMMARY": "Serão descontados {{bulk}} {{unit}} do lote {{lot}} · sacos: {{bags}}{{labels}}. Entrarão no estoque {{packs}} packs.",
         "BULK_AVAILABLE": "Saldo a granel",
         "NOT_ENOUGH": "Restam {{quantity}} {{unit}} a granel: não chegam para um pack.",
         "EMPTY": "Ainda não há embalagens",
@@ -3648,7 +3648,14 @@
         "SHORTAGE_LINE": "{{name}}: você precisa de {{requested}}, há {{available}} (faltam {{missing}}).",
         "PACKS_INVALID": "Informe um inteiro entre 1 e 99999.",
         "PRODUCT_REQUIRED": "Escolha um produto.",
-        "LOAD_ERROR": "Não foi possível carregar os produtos."
+        "LOAD_ERROR": "Não foi possível carregar os produtos.",
+        "SUMMARY_LABELS": " · etiquetas: {{labels}}",
+        "PACK_HELP": "Produto do catálogo vendido no varejo: o saco montado com 6 cuñapés.",
+        "BAG_HELP": "Saco vazio em que cada pack é montado; usa-se 1 por pack.",
+        "LABEL_PRODUCT": "Etiqueta ou adesivo (opcional)",
+        "NO_LABEL": "Sem etiqueta",
+        "LABEL_HELP": "Se escolher uma, usa-se 1 por pack e soma ao custo.",
+        "LABELS_USED": "Etiquetas"
       }
     }
   }

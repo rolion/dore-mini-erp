@@ -219,7 +219,8 @@ class ProductionOrders:
         return self.repository.save(order)
 
     def pack(self, order_id: UUID, *, request_id: UUID, packs: object, pack_product_id: UUID,
-             bag_product_id: UUID, actor: Actor) -> tuple[Packing, bool]:
+             bag_product_id: UUID, actor: Actor, label_product_id: UUID | None = None
+             ) -> tuple[Packing, bool]:
         """Registra una tanda de packs de 6 (salidas, entrada, costo y registro; todo o nada).
 
         Devuelve `(empaque, creado)`.
@@ -233,14 +234,17 @@ class ProductionOrders:
             return existing, False
         if order.status != OrderStatus.READY_TO_PACK:
             raise OrderStateError('La orden no está lista para empacar.')
-        found = self.catalog.products({pack_product_id, bag_product_id})
+        wanted = {pack_product_id, bag_product_id} | ({label_product_id} if label_product_id else set())
+        found = self.catalog.products(wanted)
 
         def ref(product_id: UUID) -> ProductRef | None:
             info = found.get(product_id)
             return ProductRef(info.id, info.name) if info is not None and info.active else None
 
         packing = Packing.create(order, request_id=request_id, packs=packs, pack=ref(pack_product_id),
-                                 bag=ref(bag_product_id), user_id=actor.user_id, user_name=actor.user_name)
+                                 bag=ref(bag_product_id), user_id=actor.user_id, user_name=actor.user_name,
+                                 label=ref(label_product_id) if label_product_id else None,
+                                 label_requested=label_product_id is not None)
         now = self.clock()
         self.stock.pack_out(order, packing, now, actor)
         total = self.costs.cost_packing_outputs(order, packing, now) if self.costs else None

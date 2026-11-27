@@ -3625,11 +3625,11 @@
         "TITLE": "Empaques",
         "DIALOG_TITLE": "Registrar empaque",
         "PACKS": "Cantidad de packs",
-        "PACK_PRODUCT": "Producto pack",
-        "BAG_PRODUCT": "Producto bolsa",
+        "PACK_PRODUCT": "Producto pack (lo que vendes)",
+        "BAG_PRODUCT": "Bolsa (material que se consume)",
         "CHOOSE_PRODUCT": "Elige un producto",
         "NO_PRODUCTS": "Sin productos que controlen stock",
-        "SUMMARY": "Se descontarán {{bulk}} {{unit}} del lote {{lot}} y {{bags}} bolsas; ingresarán {{packs}} packs.",
+        "SUMMARY": "Se descontarán {{bulk}} {{unit}} del lote {{lot}} · bolsas: {{bags}}{{labels}}. Ingresarán al inventario {{packs}} packs.",
         "BULK_AVAILABLE": "Saldo a granel",
         "NOT_ENOUGH": "Quedan {{quantity}} {{unit}} a granel: no alcanzan para un pack.",
         "EMPTY": "Aún no hay empaques",
@@ -3648,7 +3648,14 @@
         "SHORTAGE_LINE": "{{name}}: necesitas {{requested}}, hay {{available}} (faltan {{missing}}).",
         "PACKS_INVALID": "Ingresa un entero entre 1 y 99999.",
         "PRODUCT_REQUIRED": "Elige un producto.",
-        "LOAD_ERROR": "No se pudieron cargar los productos."
+        "LOAD_ERROR": "No se pudieron cargar los productos.",
+        "SUMMARY_LABELS": " · etiquetas: {{labels}}",
+        "PACK_HELP": "Producto del catálogo que se vende al detalle: la bolsa armada con 6 cuñapés.",
+        "BAG_HELP": "Bolsa vacía en la que se arma cada pack; se descuenta 1 por pack.",
+        "LABEL_PRODUCT": "Etiqueta o sticker (opcional)",
+        "NO_LABEL": "Sin etiqueta",
+        "LABEL_HELP": "Si eliges una, se descuenta 1 por pack y suma al costo.",
+        "LABELS_USED": "Etiquetas"
       }
     }
   }

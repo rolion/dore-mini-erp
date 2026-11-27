@@ -123,41 +123,48 @@ class InventoryStock:
             return Decimal('0')
 
     def pack_out(self, order: ProductionOrder, packing: Packing, when: datetime, actor: Actor) -> None:
-        tracked = inventory_services.get_stock_products(
-            self.company_id, [packing.pack_product_id, packing.bag_product_id])
+        wanted = [packing.pack_product_id, packing.bag_product_id]
+        if packing.label_product_id:
+            wanted.append(packing.label_product_id)
+        tracked = inventory_services.get_stock_products(self.company_id, wanted)
         errors = {}
         if packing.pack_product_id not in tracked:
             errors['pack_product_id'] = ['El producto pack no controla stock.']
         if packing.bag_product_id not in tracked:
             errors['bag_product_id'] = ['El producto bolsa no controla stock.']
+        if packing.label_product_id and packing.label_product_id not in tracked:
+            errors['label_product_id'] = ['El producto etiqueta no controla stock.']
         if errors:
             raise OrderValidationError(errors)
-        bag_available = inventory_services.get_balances(
-            self.company_id, order.warehouse_id, [packing.bag_product_id], unlotted=True
-        ).get(packing.bag_product_id, Decimal('0'))
+        supplies = [(packing.bag_product_id, packing.bag_product_name, packing.bags_quantity, 'bag')]
+        if packing.label_product_id:
+            supplies.append((packing.label_product_id, packing.label_product_name, packing.labels_quantity, 'label'))
+        balances = inventory_services.get_balances(
+            self.company_id, order.warehouse_id, [s[0] for s in supplies], unlotted=True)
         shortages = []
         bulk_available = self.lot_available(order)
         if bulk_available < packing.bulk_quantity:
             shortages.append(IngredientShortage(order.result_product_id, order.result_product_name,
                                                 order.result_unit_abbreviation, packing.bulk_quantity,
                                                 bulk_available))
-        if bag_available < packing.bags_quantity:
-            shortages.append(IngredientShortage(packing.bag_product_id, packing.bag_product_name,
-                                                tracked[packing.bag_product_id].unit_abbreviation,
-                                                packing.bags_quantity, bag_available))
+        for product_id, name, required, _line in supplies:
+            available = balances.get(product_id, Decimal('0'))
+            if available < required:
+                shortages.append(IngredientShortage(product_id, name, tracked[product_id].unit_abbreviation,
+                                                    required, available))
         if shortages:
             raise InsufficientIngredients(shortages)
         reference = order_reference(order)
         try:
             for product_id, quantity, line, lot_id in (
-                    (order.result_product_id, packing.bulk_quantity, 'bulk', order.lot_id),
-                    (packing.bag_product_id, packing.bags_quantity, 'bag', None)):
+                    [(order.result_product_id, packing.bulk_quantity, 'bulk', order.lot_id)]
+                    + [(pid, qty, ln, None) for pid, _name, qty, ln in supplies]):
                 self._record(order.warehouse_id, product_id, 'out', quantity, packing, line, lot_id, reference,
                              when, actor)
         except inventory_services.InsufficientStock as exc:  # carrera con otro documento: se revierte todo
+            names = {order.result_product_id: order.result_product_name, **{s[0]: s[1] for s in supplies}}
             raise InsufficientIngredients([
-                IngredientShortage(s.product_id, order.result_product_name if s.product_id == order.result_product_id
-                                   else packing.bag_product_name, None, s.requested, s.available)
+                IngredientShortage(s.product_id, names.get(s.product_id, ''), None, s.requested, s.available)
                 for s in exc.shortages]) from exc
 
     def pack_in(self, packing: Packing, when: datetime, actor: Actor) -> None:
@@ -222,11 +229,13 @@ class CostingGateway:
         """Valoriza cuñapés y bolsas al promedio de Costeo; `None` sin Costeo o sin costo (INV-07)."""
         if not self._active():
             return None
+        lines = [(order.result_product_id, packing.bulk_quantity), (packing.bag_product_id, packing.bags_quantity)]
+        if packing.label_product_id:
+            lines.append((packing.label_product_id, packing.labels_quantity))
         try:
             costed = costing_services.cost_outputs(
                 self.company_id, source_type=PACKING_SOURCE_TYPE, source_id=str(packing.id),
-                lines=[(order.result_product_id, packing.bulk_quantity),
-                       (packing.bag_product_id, packing.bags_quantity)], occurred_at=when)
+                lines=lines, occurred_at=when)
         except costing_services.CostUnavailable:
             return None
         return costed.total

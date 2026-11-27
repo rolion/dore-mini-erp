@@ -11,7 +11,7 @@ from modules.production.domain.production_order import (
 from modules.production.infrastructure.adapters import (
     CatalogProducts, CostingGateway, InventoryStock, InventoryWarehouses, ModularityReleasePolicy)
 from modules.production.infrastructure.django.packing_repository import DjangoPackingRepository
-from modules.production.domain.packing import BAGS_PER_PACK, UNITS_PER_PACK
+from modules.production.domain.packing import BAGS_PER_PACK, LABELS_PER_PACK, UNITS_PER_PACK
 from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
 from modules.production.infrastructure.django.repositories import DjangoRecipeRepository
 from shared.tenancy import company_id_from
@@ -83,13 +83,17 @@ def _packing(company_id, order) -> dict | None:
         return None
     return {
         'units_per_pack': UNITS_PER_PACK, 'bags_per_pack': BAGS_PER_PACK,
+        'labels_per_pack': LABELS_PER_PACK,
         'bulk_available': _qty(InventoryStock(company_id).lot_available(order)),
         'bulk_unit_abbreviation': order.result_unit_abbreviation,
         'packings': [{
             'id': p.id, 'request_id': p.request_id, 'number': p.number, 'packs': p.packs,
             'pack_product': {'id': p.pack_product_id, 'name': p.pack_product_name},
             'bag_product': {'id': p.bag_product_id, 'name': p.bag_product_name},
+            'label_product': ({'id': p.label_product_id, 'name': p.label_product_name}
+                              if p.label_product_id else None),
             'bulk_quantity': _qty(p.bulk_quantity), 'bags_quantity': _qty(p.bags_quantity),
+            'labels_quantity': _qty(p.labels_quantity),
             'lot': {'id': p.lot_id, 'code': p.lot_code},
             'cost_total': f'{p.cost_total:.2f}' if p.cost_total is not None else None,
             'unit_cost': f'{p.unit_cost:.6f}' if p.unit_cost is not None else None,
@@ -238,7 +242,8 @@ class OrderPackView(APIView):
             return orders.get(order_id)
 
         body = _run(request, pack, order_id=order_id, request_id=data['request_id'], packs=data.get('packs'),
-                    pack_product_id=data['pack_product_id'], bag_product_id=data['bag_product_id'], actor=actor)
+                    pack_product_id=data['pack_product_id'], bag_product_id=data['bag_product_id'], actor=actor,
+                    label_product_id=data.get('label_product_id'))
         return Response(body, status=201 if created and created[0] else 200)
 
 

@@ -141,7 +141,7 @@ describe('OrderDetailComponent', () => {
     const ready = (bulk: string): ProductionOrder => ({
       ...started, status: 'ready_to_pack', actualOutput: '118.0000', enteredAt: '2026-11-26T14:00:00Z',
       lot: { id: 'lot-1', code: 'L-20261127-0001' }, releasedAt: '2026-11-27T10:00:00Z', releasedBy: 'Ana',
-      packing: { unitsPerPack: 6, bagsPerPack: 1, bulkAvailable: bulk, bulkUnitAbbreviation: 'u', packings: [] },
+      packing: { unitsPerPack: 6, bagsPerPack: 1, labelsPerPack: 1, bulkAvailable: bulk, bulkUnitAbbreviation: 'u', packings: [] },
     });
 
     it('shows the bulk balance, an empty history and an enabled action when a pack fits', () => {  // AC-08, UI-01, UI-03
@@ -162,7 +162,7 @@ describe('OrderDetailComponent', () => {
       const value = ready('82.0000');
       value.packing = { ...value.packing!, packings: [{
         id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6' }, bagProduct: { id: 'p-bag', name: 'Bolsa' },
-        bulkQuantity: '36.0000', bagsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-20261127-0001' },
+        labelProduct: null, labelsQuantity: '0.0000', bulkQuantity: '36.0000', bagsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-20261127-0001' },
         costTotal: '39.00', unitCost: '6.500000', createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' }] };
       const root: HTMLElement = setup(value).nativeElement;
       const row = root.querySelector('[data-testid="packing-row"]')?.textContent ?? '';
@@ -176,7 +176,7 @@ describe('OrderDetailComponent', () => {
       const value = ready('82.0000');
       value.packing = { ...value.packing!, packings: [{
         id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6' }, bagProduct: { id: 'p-bag', name: 'Bolsa' },
-        bulkQuantity: '36.0000', bagsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-20261127-0001' },
+        labelProduct: null, labelsQuantity: '0.0000', bulkQuantity: '36.0000', bagsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-20261127-0001' },
         costTotal: null, unitCost: null, createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' }] };
       const root: HTMLElement = setup(value, true).nativeElement;
       expect(root.querySelector('[data-testid="packing-table"]')).toBeNull();

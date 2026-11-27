@@ -7,6 +7,7 @@
       <ng-select inputId="pack-product" [items]="options" bindLabel="name" bindValue="id" formControlName="packProductId"
         [placeholder]="'PRODUCTION.ORDERS.PACK.CHOOSE_PRODUCT' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"
         [clearable]="false" [ariaLabel]="'PRODUCTION.ORDERS.PACK.PACK_PRODUCT' | translate"></ng-select>
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.PACK_HELP' | translate }}</small>
       @if (serverErrors.packProductId) { <small class="form-text text-danger" role="alert">{{ serverErrors.packProductId }}</small> }
       @else if (submitted && form.controls.packProductId.invalid) { <small class="form-text text-danger" role="alert">{{ 'PRODUCTION.ORDERS.PACK.PRODUCT_REQUIRED' | translate }}</small> }
     </div>
@@ -15,8 +16,17 @@
       <ng-select inputId="bag-product" [items]="options" bindLabel="name" bindValue="id" formControlName="bagProductId"
         [placeholder]="'PRODUCTION.ORDERS.PACK.CHOOSE_PRODUCT' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"
         [clearable]="false" [ariaLabel]="'PRODUCTION.ORDERS.PACK.BAG_PRODUCT' | translate"></ng-select>
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.BAG_HELP' | translate }}</small>
       @if (serverErrors.bagProductId) { <small class="form-text text-danger" role="alert">{{ serverErrors.bagProductId }}</small> }
       @else if (submitted && form.controls.bagProductId.invalid) { <small class="form-text text-danger" role="alert">{{ 'PRODUCTION.ORDERS.PACK.PRODUCT_REQUIRED' | translate }}</small> }
+    </div>
+    <div class="form-group mb-3">
+      <label for="label-product">{{ 'PRODUCTION.ORDERS.PACK.LABEL_PRODUCT' | translate }}</label>
+      <ng-select inputId="label-product" [items]="options" bindLabel="name" bindValue="id" formControlName="labelProductId"
+        [placeholder]="'PRODUCTION.ORDERS.PACK.NO_LABEL' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"
+        [clearable]="true" [ariaLabel]="'PRODUCTION.ORDERS.PACK.LABEL_PRODUCT' | translate"></ng-select>
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.LABEL_HELP' | translate }}</small>
+      @if (serverErrors.labelProductId) { <small class="form-text text-danger d-block" role="alert">{{ serverErrors.labelProductId }}</small> }
     </div>
     <div class="form-group mb-3">
       <label for="pack-count">{{ 'PRODUCTION.ORDERS.PACK.PACKS' | translate }} <span class="text-danger">*</span></label>

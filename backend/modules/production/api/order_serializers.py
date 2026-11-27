@@ -31,3 +31,4 @@ class OrderPackSerializer(serializers.Serializer):
     packs = serializers.JSONField(required=False, allow_null=True)
     pack_product_id = serializers.UUIDField()
     bag_product_id = serializers.UUIDField()
+    label_product_id = serializers.UUIDField(required=False, allow_null=True)

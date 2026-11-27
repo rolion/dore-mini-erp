@@ -38,10 +38,12 @@ function fromDto(dto: ProductionOrderDto): ProductionOrder {
     releasedBy: dto.released_by,
     packing: dto.packing ? {
       unitsPerPack: dto.packing.units_per_pack, bagsPerPack: dto.packing.bags_per_pack,
+      labelsPerPack: dto.packing.labels_per_pack,
       bulkAvailable: dto.packing.bulk_available, bulkUnitAbbreviation: dto.packing.bulk_unit_abbreviation,
       packings: dto.packing.packings.map(entry => ({
         id: entry.id, number: entry.number, packs: entry.packs, packProduct: entry.pack_product,
-        bagProduct: entry.bag_product, bulkQuantity: entry.bulk_quantity, bagsQuantity: entry.bags_quantity,
+        bagProduct: entry.bag_product, labelProduct: entry.label_product, bulkQuantity: entry.bulk_quantity,
+        bagsQuantity: entry.bags_quantity, labelsQuantity: entry.labels_quantity,
         lot: entry.lot, costTotal: entry.cost_total, unitCost: entry.unit_cost, createdAt: entry.created_at,
         createdBy: entry.created_by,
       })),
@@ -61,7 +63,8 @@ function fieldErrors(body: unknown): OrderFieldErrors {
     recipeId: text(record['recipe_id']), warehouseId: text(record['warehouse_id']),
     preparations: text(record['preparations']), detail: text(record['detail']),
     packs: text(record['packs']), packProductId: text(record['pack_product_id']),
-    bagProductId: text(record['bag_product_id']), requestId: text(record['request_id']),
+    bagProductId: text(record['bag_product_id']), labelProductId: text(record['label_product_id']),
+    requestId: text(record['request_id']),
     actualOutput: text(record['actual_output']), enteredAt: text(record['entered_at']),
     ingredients: ingredientsText(record['ingredients']), ingredientLines: ingredientLines(record['ingredients']), code: typeof record['code'] === 'string' ? record['code'] : undefined,
     releasableFrom: typeof record['releasable_from'] === 'string' ? record['releasable_from'] : undefined,
@@ -153,7 +156,7 @@ export class OrdersApiService {
   pack(id: string, input: PackInput): Observable<ProductionOrder> {
     return this.request(this.http.post<ProductionOrderDto>(`${this.url}${id}/pack/`, {
       request_id: input.requestId, packs: input.packs, pack_product_id: input.packProductId,
-      bag_product_id: input.bagProductId,
+      bag_product_id: input.bagProductId, label_product_id: input.labelProductId,
     }));
   }
 

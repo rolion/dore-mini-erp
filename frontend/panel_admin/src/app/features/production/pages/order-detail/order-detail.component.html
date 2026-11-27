@@ -159,6 +159,7 @@
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.LOT' | translate }}</dt><dd>{{ entry.lot.code }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BULK_USED' | translate }}</dt><dd>{{ quantity(entry.bulkQuantity) }} {{ packing.bulkUnitAbbreviation }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BAGS_USED' | translate }}</dt><dd>{{ quantity(entry.bagsQuantity) }}</dd></div>
+          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.LABELS_USED' | translate }}</dt><dd>{{ entry.labelProduct ? quantity(entry.labelsQuantity) : '—' }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.COST' | translate }}</dt><dd>{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BY' | translate }}</dt><dd>{{ entry.createdBy }}</dd></div>
         </dl>
@@ -178,6 +179,7 @@
           <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.LOT' | translate }}</th>
           <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.BULK_USED' | translate }}</th>
           <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.BAGS_USED' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.LABELS_USED' | translate }}</th>
           <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.COST' | translate }}</th>
           <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.BY' | translate }}</th>
         </tr></thead>
@@ -191,6 +193,7 @@
             <td>{{ entry.lot.code }}</td>
             <td class="text-end">{{ quantity(entry.bulkQuantity) }} {{ packing.bulkUnitAbbreviation }}</td>
             <td class="text-end">{{ quantity(entry.bagsQuantity) }}</td>
+            <td class="text-end">{{ entry.labelProduct ? quantity(entry.labelsQuantity) : '—' }}</td>
             <td class="text-end">{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }}</td>
             <td>{{ entry.createdBy }}</td>
           </tr>
