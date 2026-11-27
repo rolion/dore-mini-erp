@@ -114,6 +114,19 @@
       <dd class="col-sm-9" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</dd>
     </dl>
   </section>
+  @if (order.lot) {
+  <section class="m-4" data-testid="lot-stock" aria-labelledby="lot-stock-title">
+    <h5 id="lot-stock-title">{{ 'PRODUCTION.ORDERS.LOT_STOCK.TITLE' | translate }}</h5>
+    <dl class="row">
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.LOT_STOCK.STATUS' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="lot-status">{{ order.lot.status === 'released' ? ('PRODUCTION.ORDERS.LOT_STOCK.RELEASED' | translate) : order.lot.status === 'refrigerating' ? ('PRODUCTION.ORDERS.LOT_STOCK.REFRIGERATING' | translate) : '—' }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.LOT_STOCK.PHYSICAL' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="lot-physical">{{ order.lot.physicalQuantity === null ? '—' : quantity(order.lot.physicalQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.LOT_STOCK.AVAILABLE' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="lot-available">{{ order.lot.availableQuantity === null ? '—' : quantity(order.lot.availableQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</dd>
+    </dl>
+  </section>
+  }
   @if (hasRelease) {
   <section class="m-4" data-testid="release-section" aria-labelledby="release-title">
     <h5 id="release-title">{{ 'PRODUCTION.ORDERS.RELEASE.TITLE' | translate }}</h5>

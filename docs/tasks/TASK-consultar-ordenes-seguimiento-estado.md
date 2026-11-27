@@ -1,6 +1,6 @@
 # TASK-consultar-ordenes-seguimiento-estado: Consultar órdenes de producción y seguir su estado
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-ordenes-seguimiento-estado (base: `produccion`)
@@ -14,6 +14,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN | NEEDS_PLAN, diseño requerido | delivery-start |
 | 2026-11-27 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
+| 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas escritas; verificación propia: `modules.production` 148 OK, Karma de production + i18n/core en verde, `ng lint` y `i18n:check` limpios | delivery-build |
 
 ## Investigación
 
@@ -74,7 +75,13 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-27-consultar-ordenes-seguimiento-estado.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend** — `GET /api/production-orders/` acepta `recipe_id`, `date_from`, `date_to` (validados; 400 con el campo, incluido rango invertido) combinables con `status` (`order_views.py` `_list_filters`, `order_repository.py` `list`) → AC-01, EDGE-01/03. `lot` ahora trae `status`, `physical_quantity`, `available_quantity` leídos de `inventory.services.get_lot` mediante el adaptador `InventoryLots` (`adapters.py`); si el lote no existe los saldos son `null` → AC-02/03, INV-01/02, EDGE-02. Sin migraciones ni cambios de dominio.
+**Frontend** — modelos/servicio (`OrderLot`, `OrderListParams`, filtros en `OrderFiltersState`); lista con columnas Elaboradas y Saldo a granel (tabla y tarjetas), filtros Desde/Hasta/Receta/Estado, rango inválido sin consulta, vacío con filtros activos → AC-04/05, UI-01; detalle con sección «Existencias del lote» → AC-06, UI-02; i18n es/en/pt → UI-03. AC-07 ya estaba implementado; se añadió prueba de ausencia de acciones en «Listo para empacar».
+**Pantallas de referencia:** `movement-list` (filtros de fecha) y `purchase-list` (lista con estados y saldo). Sin componentes compartidos nuevos.
+**Pruebas:** `OrderConsultApiTests` (5 casos incl. empaque parcial 118→58 vía `record_movement` con `lot_id`), specs de servicio, lista y detalle.
+**Desviaciones:** (1) el DDR habla de «filtros plegables» solo como patrón general; en pantalla estrecha los filtros quedan visibles (como ya estaba la lista de órdenes) — sin panel plegable. (2) Receta del filtro: hasta 100 recetas (máximo de la API).
+**Deuda técnica:** lectura de lote por orden (≤ 20 por página); badges sin migrar a `app-status-badge`.
+**Entorno:** pruebas backend con el venv del repo principal y copia local (ignorada por git) de `backend/.env`, autorizada por el usuario; `node_modules` por junction.
 
 ## Review
 _Pendiente_

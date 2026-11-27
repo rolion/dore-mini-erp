@@ -3618,6 +3618,18 @@
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
         "TOO_EARLY": "O tempo mínimo de refrigeração ainda não foi atingido. Disponível a partir de {{date}}."
+      },
+      "ACTUAL_OUTPUT": "Elaboradas",
+      "BULK_BALANCE": "Saldo a granel",
+      "ALL_RECIPES": "Todas as receitas",
+      "RANGE_INVALID": "A data inicial não pode ser posterior à final.",
+      "LOT_STOCK": {
+        "TITLE": "Estoque do lote",
+        "STATUS": "Estado do lote",
+        "REFRIGERATING": "Em refrigeração (bloqueado para embalagem)",
+        "RELEASED": "Liberado",
+        "PHYSICAL": "Saldo físico",
+        "AVAILABLE": "Disponível para embalagem"
       }
     }
   }

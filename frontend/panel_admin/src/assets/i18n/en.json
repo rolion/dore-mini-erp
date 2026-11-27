@@ -3618,6 +3618,18 @@
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
         "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}."
+      },
+      "ACTUAL_OUTPUT": "Produced",
+      "BULK_BALANCE": "Bulk balance",
+      "ALL_RECIPES": "All recipes",
+      "RANGE_INVALID": "The start date cannot be after the end date.",
+      "LOT_STOCK": {
+        "TITLE": "Lot stock",
+        "STATUS": "Lot status",
+        "REFRIGERATING": "Refrigerating (blocked for packing)",
+        "RELEASED": "Released",
+        "PHYSICAL": "Physical balance",
+        "AVAILABLE": "Available for packing"
       }
     }
   }

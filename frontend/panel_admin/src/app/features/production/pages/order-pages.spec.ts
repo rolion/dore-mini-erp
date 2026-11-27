@@ -5,7 +5,7 @@ import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 import { provideTestTranslations } from '../../../core/i18n/testing';
 import { Page } from '../../../shared/models/page';
-import { OrderApiError, OrderWarehouse, ProductionOrder } from '../models/order';
+import { OrderApiError, OrderLot, OrderWarehouse, ProductionOrder } from '../models/order';
 import { Recipe } from '../models/recipe';
 import { OrderFiltersState, OrdersApiService } from '../services/orders-api.service';
 import { RecipesApiService } from '../services/recipes-api.service';
@@ -21,6 +21,9 @@ const order: ProductionOrder = {
   ingredients: [{ productId: 'p-1', productName: 'Queso', unitId: 'u-2', unitAbbreviation: 'kg', quantityPerPreparation: '1.5000', expectedQuantity: '7.5000', actualQuantity: null }],
   createdAt: '2026-11-26T12:00:00Z', startedAt: null, actualOutput: null, enteredAt: null, lot: null, costTotal: null,
   release: null, releasedAt: null, releasedBy: null,
+};
+const lotRefrigerating: OrderLot = {
+  id: 'lot-1', code: 'L-20261126-0001', status: 'refrigerating', physicalQuantity: '118.0000', availableQuantity: '0.0000',
 };
 const started: ProductionOrder = { ...order, status: 'in_preparation', startedAt: '2026-11-26T13:00:00Z' };
 
@@ -42,10 +45,13 @@ function breakpoints(compact: boolean): jasmine.SpyObj<BreakpointObserver> {
 
 describe('OrderListComponent', () => {
   let api: jasmine.SpyObj<OrdersApiService>;
+  let recipesApi: jasmine.SpyObj<RecipesApiService>;
   function setup(compact = false) {
     api = jasmine.createSpyObj<OrdersApiService>('api', ['list']);
+    recipesApi = jasmine.createSpyObj<RecipesApiService>('recipesApi', ['list']);
+    recipesApi.list.and.returnValue(of(page([recipe])));
     TestBed.configureTestingModule({ imports: [OrderListComponent], providers: [...provideTestTranslations(), provideRouter([]),
-      OrderFiltersState, { provide: OrdersApiService, useValue: api }, { provide: BreakpointObserver, useValue: breakpoints(compact) }] });
+      OrderFiltersState, { provide: OrdersApiService, useValue: api }, { provide: RecipesApiService, useValue: recipesApi }, { provide: BreakpointObserver, useValue: breakpoints(compact) }] });
   }
 
   it('lists number, recipe, warehouse, preparations, output and status', () => {
@@ -82,6 +88,84 @@ describe('OrderListComponent', () => {
     fixture.componentInstance.status.setValue('draft');
     fixture.componentInstance.applyFilters();
     expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ status: 'draft', page: 1 }));
+  });
+
+  it('shows produced units and the bulk balance, with a dash while there is no lot', () => {  // AC-03, AC-04
+    setup();
+    const refrigerating: ProductionOrder = { ...started, id: 'o-2', number: 8, status: 'refrigerating', actualOutput: '118.0000', lot: lotRefrigerating };
+    const released: ProductionOrder = {
+      ...refrigerating, id: 'o-3', number: 9, status: 'ready_to_pack',
+      lot: { ...lotRefrigerating, status: 'released', physicalQuantity: '58.0000', availableQuantity: '58.0000' },
+    };
+    api.list.and.returnValue(of(page([started, refrigerating, released])));
+    const fixture = TestBed.createComponent(OrderListComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const cells = (selector: string) => Array.from(root.querySelectorAll(selector)).map(cell => (cell.textContent ?? '').trim());
+    expect(cells('[data-testid="row-actual"]')).toEqual(['—', '118 u', '118 u']);
+    expect(cells('[data-testid="row-balance"]')).toEqual(['—', '0 u', '58 u']);
+    expect(root.textContent).toContain('Listo para empacar');
+  });
+
+  it('shows produced units and balance on the compact cards', () => {  // AC-04
+    setup(true);
+    const cooling: ProductionOrder = { ...started, status: 'refrigerating', actualOutput: '118.0000', lot: lotRefrigerating };
+    api.list.and.returnValue(of(page([cooling])));
+    const fixture = TestBed.createComponent(OrderListComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="card-actual"]')?.textContent).toContain('118 u');
+    expect(root.querySelector('[data-testid="card-balance"]')?.textContent).toContain('0 u');
+  });
+
+  it('filters by recipe, dates and status together, keeps them in the state and clears them', () => {  // AC-05
+    setup();
+    api.list.and.returnValue(of(page([order])));
+    const fixture = TestBed.createComponent(OrderListComponent);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelectorAll('#order-recipe option').length).toBe(2);
+    const component = fixture.componentInstance;
+    component.recipe.setValue('r-1');
+    component.dateFrom.setValue('2026-11-01');
+    component.dateTo.setValue('2026-11-30');
+    component.status.setValue('refrigerating');
+    component.applyFilters();
+    expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({
+      status: 'refrigerating', recipeId: 'r-1', dateFrom: '2026-11-01', dateTo: '2026-11-30', page: 1 }));
+    expect(component.state.recipeId).toBe('r-1');
+    component.clearFilters();
+    expect(api.list).toHaveBeenCalledWith(jasmine.objectContaining({ status: 'all', recipeId: '', dateFrom: '', dateTo: '' }));
+    expect(component.isDefaultFilter).toBeTrue();
+  });
+
+  it('does not query with an inverted date range and says why', () => {  // EDGE-01
+    setup();
+    api.list.and.returnValue(of(page([order])));
+    const fixture = TestBed.createComponent(OrderListComponent);
+    fixture.detectChanges();
+    api.list.calls.reset();
+    fixture.componentInstance.dateFrom.setValue('2026-11-30');
+    fixture.componentInstance.dateTo.setValue('2026-11-01');
+    fixture.componentInstance.applyFilters();
+    fixture.detectChanges();
+    expect(api.list).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('[data-testid="range-error"]')).not.toBeNull();
+  });
+
+  it('with filters and no results shows each active filter and the clear button', () => {  // AC-05, EDGE-04
+    setup();
+    api.list.and.returnValue(of(page([])));
+    const fixture = TestBed.createComponent(OrderListComponent);
+    fixture.detectChanges();
+    fixture.componentInstance.recipe.setValue('r-1');
+    fixture.componentInstance.dateFrom.setValue('2026-11-01');
+    fixture.componentInstance.applyFilters();
+    fixture.detectChanges();
+    const active = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="active-filters"]')?.textContent ?? '';
+    expect(active).toContain('Cuñapé');
+    expect(active).toContain('2026-11-01');
+    expect(fixture.nativeElement.querySelector('[data-testid="clear-filters"]').disabled).toBeFalse();
   });
 });
 
@@ -122,10 +206,41 @@ describe('OrderDetailComponent', () => {
     expect(preparing.querySelector('[data-testid="registered"]')).toBeNull();
   });
 
+  it('shows the lot stock: physical, available and status, by state', () => {  // AC-06, UI-02
+    const released: ProductionOrder = {
+      ...started, status: 'ready_to_pack', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
+      lot: { ...lotRefrigerating, status: 'released', physicalQuantity: '58.0000', availableQuantity: '58.0000' },
+      release: { minHours: 12, releasableFrom: '2026-11-27T03:00:00Z', canRelease: false }, releasedAt: '2026-11-27T04:00:00Z', releasedBy: 'ana',
+    };
+    TestBed.resetTestingModule();
+    const root = setup(released).nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="lot-status"]')?.textContent).toContain('Liberado');
+    expect(root.querySelector('[data-testid="lot-physical"]')?.textContent).toContain('58 u');
+    expect(root.querySelector('[data-testid="lot-available"]')?.textContent).toContain('58 u');
+    expect(root.querySelector('[data-testid="release"]')).toBeNull();
+    expect(root.querySelector('[data-testid="refrigerate"]')).toBeNull();
+    expect(root.querySelector('[data-testid="start"]')).toBeNull();
+  });
+
+  it('shows no lot stock section before the lot exists', () => {  // AC-06
+    const root = setup(started).nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="lot-stock"]')).toBeNull();
+  });
+
+  it('shows dashes when Inventory no longer has the lot', () => {  // EDGE-02
+    const missing: ProductionOrder = {
+      ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
+      lot: { ...lotRefrigerating, status: null, physicalQuantity: null, availableQuantity: null },
+      release: { minHours: 12, releasableFrom: '2026-11-27T03:00:00Z', canRelease: false },
+    };
+    const root = setup(missing).nativeElement as HTMLElement;
+    expect(root.querySelector('[data-testid="lot-available"]')?.textContent?.trim()).toBe('—');
+  });
+
   it('shows the recorded production, lot and actual consumption once refrigerating', () => {
     const done: ProductionOrder = {
       ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
-      lot: { id: 'lot-1', code: 'L-20261126-0001' }, costTotal: null,
+      lot: { ...lotRefrigerating, code: 'L-20261126-0001' }, costTotal: null,
       ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
     };
     TestBed.resetTestingModule();
@@ -141,7 +256,7 @@ describe('OrderDetailComponent', () => {
     const entered = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
     const refrigerating = (hoursAfter: number): ProductionOrder => ({
       ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: entered,
-      lot: { id: 'lot-1', code: 'L-20261127-0001' }, ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
+      lot: { ...lotRefrigerating, code: 'L-20261127-0001' }, ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
       release: { minHours: 12, canRelease: hoursAfter < 0,
         releasableFrom: new Date(Date.parse(entered) + 12 * 3600 * 1000 + hoursAfter * 3600 * 1000).toISOString() },
     });
@@ -203,7 +318,7 @@ describe('OrderDetailComponent', () => {
   it('formats the total cost as money when there is one', () => {  // REV-03
     const costed: ProductionOrder = {
       ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: '2026-11-26T15:00:00Z',
-      lot: { id: 'lot-1', code: 'L-20261126-0001' }, costTotal: '95.00',
+      lot: { ...lotRefrigerating, code: 'L-20261126-0001' }, costTotal: '95.00',
       ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
     };
     TestBed.resetTestingModule();
