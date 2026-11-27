@@ -8,13 +8,14 @@ import urllib.error
 from datetime import timedelta
 from unittest import mock
 
+from django.db import transaction
 from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient, APITestCase
 
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.messaging.application import events
-from modules.messaging.domain.errors import PermanentGatewayError, TransientGatewayError
+from modules.messaging.domain.errors import PermanentGatewayError, SecretUnavailable, TransientGatewayError
 from modules.messaging.domain.rules import secret_ref_prefix
 from modules.messaging.infrastructure.django.models import (
     ConnectionModel,
@@ -24,6 +25,7 @@ from modules.messaging.infrastructure.django.models import (
     WebhookEventModel,
 )
 from modules.messaging.infrastructure.fake_gateway import FakeMessagingGateway
+from modules.messaging.infrastructure.secrets import EnvSecretResolver
 from modules.messaging.infrastructure.whatsapp_adapter import WhatsAppCloudAdapter
 from modules.messaging.infrastructure.worker import deliver_next_message, process_all, process_next_event
 
@@ -72,9 +74,14 @@ class MessagingBase(APITestCase):
         self.connection = self.connect(self.company, '111')
 
     def connect(self, company, phone_number_id, verify='verify-1'):
+        prefix = secret_ref_prefix(company.id)  # cada empresa usa sus propias variables (REV-01/07)
+        token_ref, app_ref = f'{prefix}TOKEN', f'{prefix}APP_SECRET'
+        env = mock.patch.dict(os.environ, {app_ref: APP_SECRET, token_ref: TOKEN})
+        env.start()
+        self.addCleanup(env.stop)
         return ConnectionModel.objects.create(
-            company_id=company.id, waba_id='9', phone_number_id=phone_number_id, secret_ref=self.token_ref,
-            app_secret_ref=self.app_ref, verify_token=verify, status='active')
+            company_id=company.id, waba_id='9', phone_number_id=phone_number_id, secret_ref=token_ref,
+            app_secret_ref=app_ref, verify_token=verify, status='active')
 
     def post_webhook(self, payload, secret=APP_SECRET, header=None):
         raw, signature = signed(payload, secret)
@@ -343,6 +350,18 @@ class ConnectionApiTests(MessagingBase):
                 self.assertIn(secret_ref_prefix(self.company.id), response.json()[field][0])
         self.assertEqual(ConnectionModel.objects.count(), 0)
 
+    def test_the_resolver_refuses_a_variable_of_another_company_even_if_it_was_stored(self):  # REV-07
+        other = make_company('Empresa Tres')
+        foreign = f'{secret_ref_prefix(other.id)}TOKEN'
+        own = f'{secret_ref_prefix(self.company.id)}TOKEN'
+        resolver = EnvSecretResolver()
+        with mock.patch.dict(os.environ, {foreign: 'ajeno', own: 'propio'}):
+            self.assertFalse(resolver.available(foreign, self.company.id))
+            with self.assertRaises(SecretUnavailable):
+                resolver.get(foreign, self.company.id)
+            self.assertEqual(resolver.get(own, self.company.id), 'propio')
+            self.assertFalse(resolver.available(secret_ref_prefix(self.company.id), self.company.id))
+
     def test_get_exposes_the_required_prefix_even_without_a_connection(self):
         data = self.client.get(CONNECTION).json()
         self.assertEqual((data['configured'], data['secret_ref_prefix']), (False, secret_ref_prefix(self.company.id)))
@@ -400,12 +419,18 @@ class AtomicProcessingTests(MessagingBase):
 
     def test_the_event_is_published_after_the_message_is_committed(self):
         found = []
-        handler = lambda event: found.append(MessageModel.objects.filter(id=event.message_id).exists())  # noqa: E731
+        baseline = len(transaction.get_connection().savepoint_ids)  # el TestCase ya envuelve cada prueba
+
+        def handler(event):
+            # dentro del `atomic()` del worker habría un savepoint más que en `baseline` (REV-05)
+            found.append((MessageModel.objects.filter(id=event.message_id).exists(),
+                          len(transaction.get_connection().savepoint_ids) - baseline))
+
         events.subscribe(handler)
         self.addCleanup(events.unsubscribe, handler)
         self.post_webhook(inbound_payload())
         process_all()
-        self.assertEqual(found, [True])
+        self.assertEqual(found, [(True, 0)])
 
 
 @override_settings(MESSAGING_PROVIDER='fake')

@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-05: La publicación de InboundMessageReceived no es durable y su prueba no distingue «tras el commit»
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Ver Description. Hoy no hay suscriptores (PB-CRM-012/018 pendientes), por eso el
 
 ## Evidence
 `backend/modules/messaging/infrastructure/worker.py`: `with transaction.atomic(): published = event_processor(connection).run(payload)` / `EventQueue.finish(...)` / `for event in published: events.publish(event)`. `application/services.py::_inbound`: `if not created: return None`. `application/events.py::publish`: `except Exception: logger.exception(...)`. `tests/test_api.py::AtomicProcessingTests` hereda de `MessagingBase(APITestCase)`.
+
+## Resolución
+Se eligió declarar el límite (alternativa permitida): ADR punto 11 documenta que la publicación es en memoria, tras el commit y «a lo sumo una vez», con el outbox como paso previo a que haya suscriptores críticos. La prueba `test_the_event_is_published_after_the_message_is_committed` ahora registra `len(connection.savepoint_ids)` al publicar: valdría 1 si la publicación estuviera dentro del `atomic()` y vale 0 tras el commit.

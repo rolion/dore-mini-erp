@@ -60,7 +60,7 @@ class ConnectionService:
         connection = Connection(
             current.id if current else uuid4(), self.company_id, waba, number, phone, refs[0], refs[1],
             current.verify_token if current else token_generator.token_urlsafe(24))
-        if self.secrets.available(refs[0]) and self.secrets.available(refs[1]):
+        if self.secrets.available(refs[0], self.company_id) and self.secrets.available(refs[1], self.company_id):
             connection.mark_active()
         else:
             connection.status, connection.status_reason = 'pending', 'secrets_missing'
@@ -85,7 +85,7 @@ class ReceiveWebhook:
             connection = self.directory.by_phone_number_id(number)
             if connection is None:
                 raise InvalidSignature()
-            if not valid_signature(body, signature, self.secrets.get(connection.app_secret_ref)):
+            if not valid_signature(body, signature, self.secrets.get(connection.app_secret_ref, connection.company_id)):
                 raise InvalidSignature()
             connections.append(connection)
         accepted = [c for c in connections if c.status != 'disabled']  # firmado y válido, pero sin efecto (REV-02)
@@ -103,7 +103,8 @@ class ProcessWebhookEvent:
 
     def run(self, payload) -> list[InboundMessageReceived]:
         """Aplica el payload y devuelve los eventos de dominio: quien llama los publica DESPUÉS de confirmar la
-        transacción, para que un fallo a medias no deje un evento sin su mensaje (REV-03)."""
+        transacción, para que un fallo a medias no deje un evento sin su mensaje (REV-03). La publicación es en
+        memoria y «a lo sumo una vez»: si el proceso cae justo tras el commit, el evento no se reemite (REV-05)."""
         inbound, statuses = webhook.parse(payload, self.connection.phone_number_id)
         published = [event for item in inbound if (event := self._inbound(item)) is not None]
         for item in statuses:

@@ -19,7 +19,8 @@ class MessagingGateway(Protocol):
 
 
 class SecretResolver(Protocol):
-    def get(self, ref: str) -> str: ...
+    def get(self, ref: str, company_id) -> str: ...
+    def available(self, ref: str, company_id) -> bool: ...
 
 
 class Clock(Protocol):

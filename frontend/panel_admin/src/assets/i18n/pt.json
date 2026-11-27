@@ -2160,6 +2160,8 @@
       "VERIFY_TOKEN": "Token de verificação",
       "COPIAR": "Copiar",
       "COPIADO": "Copiado",
+      "COPIADO_AVISO": "Copiado para a área de transferência",
+      "COPIAR_ERROR": "Não foi possível copiar. Selecione o texto e copie manualmente.",
       "MENSAJE_DE_PRUEBA": "Enviar mensagem de teste",
       "PRUEBA_REQUIERE_ACTIVA": "A conexão deve estar ativa para enviar um teste.",
       "TELEFONO_DESTINO": "Telefone de destino",

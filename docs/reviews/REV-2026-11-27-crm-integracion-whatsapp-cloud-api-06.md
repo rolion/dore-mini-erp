@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-06: PLAN, DDR, TASK y ADR no reflejan el prefijo de secretos por empresa ni `secret_ref_prefix`
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** SPECIFICATION
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Ver Description; el PLAN v1 es el contrato contra el que se revisa y no incluye 
 
 ## Evidence
 `grep -n -i "secret_ref\|prefijo" docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md` → solo líneas 25, 38, 53, 66 (sin prefijo). `grep -n -i "prefijo\|secret" docs/design/DDR-crm-integracion-whatsapp-cloud-api-pantalla-de-integracion-whatsapp.md` → línea 16 (sin prefijo). `backend/modules/messaging/api/serializers.py::connection_data` devuelve `secret_ref` y `app_secret_ref`.
+
+## Resolución
+PLAN v2 (changelog `[Specification]`, aclaración sin cambio de AC): INV-05 y API-03 recogen el prefijo y `secret_ref_prefix`. DDR (campos y accesibilidad), ADR (punto 9: la API devuelve nombres, no valores) y TASK (desviaciones) alineados.

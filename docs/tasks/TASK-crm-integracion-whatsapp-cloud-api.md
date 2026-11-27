@@ -14,6 +14,7 @@
 | 2026-11-27 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | Decisiones de negocio/técnicas respondidas por el usuario; DDR y ADR escritos | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
+| 2026-11-27 | PUBLISH → ENGINEERING → REVIEW | Corrección de REV-05..08 (Low) pedida por el usuario; PLAN v2 aclara el prefijo de secretos | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS con reservas (sin Critical/High; REV-01 Medium y REV-02..04 Low abiertos) | delivery-publish |
 | 2026-11-27 | PUBLISH | REV-01..04 corregidos a pedido del usuario; backend 2622 y frontend 1976 pruebas OK | delivery-build |
 | 2026-11-27 | PUBLISH | Segundo Quality Gate PASS con reservas: REV-01..04 verificados como resueltos; REV-05..08 (Low) abiertos | delivery-publish |
@@ -87,7 +88,7 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 **Desviaciones respecto al plan**
 - `required_modules = ()`: `messaging` no se registró en el registro de `modularity` (cambiaría los conteos de módulos por tipo de empresa y las configuraciones por defecto); el acceso es solo para el administrador de la empresa. Registrarlo queda para cuando se defina cómo se habilita por tipo de empresa.
 - La API devuelve los **nombres** `secret_ref`/`app_secret_ref` (no son secretos y la pantalla los edita); nunca valores.
-- `secret_ref` solo admite nombres `WHATSAPP_*` (no estaba en el plan): evita que un administrador de empresa apunte a `SECRET_KEY` o `DATABASE_URL` y los envíe a Meta.
+- `secret_ref` solo admite nombres `WHATSAPP_*` con el prefijo de la empresa (no estaba en el plan; ver REV-01/06/07 y PLAN v2): evita que un administrador de empresa apunte a `SECRET_KEY` o `DATABASE_URL` y los envíe a Meta.
 - Estado de conexión: `active` si ambas variables existen al guardar o tras sincronizar plantillas; `pending/secrets_missing` si faltan; `error/token_expired` ante el código 190 de Meta.
 - Envío de interactivos implementado en servicio y adaptador sin endpoint público (la bandeja PB-CRM-012 lo usará).
 - E2E Playwright no aplica (decidido en el PLAN); la prueba real con Meta queda como verificación manual.
@@ -114,6 +115,8 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 **Actualización:** REV-01..04 corregidos a pedido del usuario y marcados `Closed` (ver «Resolución» en cada uno). Tras la corrección: backend completo 2622 pruebas OK, frontend 1976 OK, lint e `i18n:check` limpios. 
 
 **Segundo Quality Gate (aislado, tras las correcciones): PASS con reservas.** REV-01..04 verificados como resueltos. Backend 2622 y frontend 1976 pruebas OK; lint, `i18n:check` y `build` limpios; bandit sin Medium/High. Hallazgos nuevos, todos Low y abiertos: REV-05 (publicación del evento de dominio en memoria, no durable; la prueba «tras commit» no lo distingue), REV-06 (PLAN/DDR/TASK/ADR no reflejan el prefijo por empresa ni `secret_ref_prefix`), REV-07 (el resolvedor de secretos no exige el prefijo al usar, solo al guardar), REV-08 (pestañas sin navegación por flechas y `copy()` sin manejo de error ni `aria-live`). Estado visual en navegador: **no verificado**.
+
+**Correcciones tras el segundo Quality Gate (REV-05..08), a petición del usuario:** REV-05: el límite «a lo sumo una vez» de `InboundMessageReceived` queda declarado en ADR (punto 11) y la prueba comprueba que no hay savepoint abierto al publicar; REV-06: PLAN v2 (INV-05, API-03), DDR, ADR y TASK coherentes con el prefijo; REV-07: `EnvSecretResolver.get/available` exigen el prefijo de la empresa de la conexión; REV-08: pestañas con `tabindex` itinerante y flechas/Inicio/Fin, `copy()` con manejo de error y región `aria-live`. Pendiente: nueva ronda del Quality Gate aislado y revisión visual a 390/1440 px.
 
 ## Publicación
 PR listo para aprobación humana (no se mergea). Cambio sensible: **autenticación/seguridad** (endpoint público firmado, manejo de secretos), **base de datos** (migración inicial de `messaging`) e **infraestructura** (servicio `messaging-worker`); respaldado por el ADR `ADR-crm-integracion-whatsapp-cloud-api-modulo-messaging-y-cola-de-eventos`. Pendiente humano: prueba real con el número de prueba de Meta, variables `WHATSAPP_*` en el despliegue y decisión sobre REV-01.

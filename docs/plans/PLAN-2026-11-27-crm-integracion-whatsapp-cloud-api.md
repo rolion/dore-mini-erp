@@ -1,7 +1,11 @@
-# PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api (v1)
+# PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api (v2)
 
 **Task:** TASK-crm-integracion-whatsapp-cloud-api · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-crm-integracion-whatsapp-cloud-api-pantalla-de-integracion-whatsapp / ADR-crm-integracion-whatsapp-cloud-api-modulo-messaging-y-cola-de-eventos
+
+## Changelog
+- **v2 (2026-11-27)** — `[Specification]` aclaración pedida por el usuario al corregir REV-06 (no cambia AC): INV-05 y API-03 recogen la regla del prefijo de secretos por empresa (REV-01) y su validación también al usar la referencia (REV-07). `[Implementation Plan]` sin cambios.
+- v1 — versión inicial.
 
 ## Objective
 Que el administrador conecte el número de WhatsApp de su empresa (Cloud API directa) y que el sistema reciba mensajes y estados de forma segura e idempotente, y envíe texto, interactivos y plantillas respetando la ventana de 24 h.
@@ -35,7 +39,7 @@ Webhook verificable, firmado y rápido; eventos persistidos y procesados por un 
 - **INV-02** `UNIQUE(connection_id, provider_message_id)`; dos conexiones activas no comparten `phone_number_id` (único global) ni `verify_token`.
 - **INV-03** Orden de estados `queued < sent < delivered < read`; un estado de menor o igual rango no modifica el mensaje. `failed` no pisa `delivered`/`read`. Cambios por métodos del agregado (`message.mark_sent()`, …), nunca por asignación.
 - **INV-04** Ventana abierta ⇔ `last_inbound_at` existe y `now - last_inbound_at <= 24 h` (límite exacto inclusivo). Texto/interactivo con ventana cerrada → `WindowClosed`. Plantilla solo si `status = APPROVED`, si no → `TemplateNotApproved`.
-- **INV-05** Los secretos nunca se persisten ni se loguean; solo `secret_ref`/`app_secret_ref` (nombres de variable). Las respuestas de la API no devuelven valores secretos.
+- **INV-05** Los secretos nunca se persisten ni se loguean; solo `secret_ref`/`app_secret_ref` (nombres de variable). Las respuestas de la API no devuelven valores secretos. Cada empresa solo puede nombrar variables con su propio prefijo `WHATSAPP_<12 hex del company_id en mayúsculas>_` (y más caracteres tras él): se valida al guardar y otra vez al resolver el secreto, para que una empresa no use la variable de otra ni `SECRET_KEY`/`DATABASE_URL`.
 - **INV-06** Teléfonos normalizados (solo dígitos, código de país; `DEFAULT_PHONE_COUNTRY_CODE` para números locales) antes de buscar/crear conversación.
 - **INV-07** `cost` y `currency` son `Decimal`/texto nulos por ahora; `pricing_category`, `billable`, `pricing_model` se guardan cuando Meta los informa.
 - **INV-08** Conexión con `status` ∈ {`pending`, `active`, `error`, `disabled`}; un token expirado la pasa a `error` con motivo.
@@ -63,7 +67,7 @@ Webhook: público, protegido por firma HMAC. Resto de la API: usuario autenticad
 ## API contract
 - **API-01** `GET /api/messaging/whatsapp/webhook/` → 200 `hub.challenge` (texto) | 403.
 - **API-02** `POST /api/messaging/whatsapp/webhook/` → 200 `{}` | 401 | 413 (nunca 4xx por contenido válido-firmado).
-- **API-03** `GET/PUT /api/messaging/whatsapp/connection/` (una conexión por empresa): `waba_id, phone_number_id, display_phone, secret_ref, app_secret_ref, verify_token (solo lectura), status, status_reason, webhook_url`.
+- **API-03** `GET/PUT /api/messaging/whatsapp/connection/` (una conexión por empresa): `waba_id, phone_number_id, display_phone, secret_ref, app_secret_ref, verify_token (solo lectura), status, status_reason, webhook_url, secret_ref_prefix` (solo lectura; prefijo obligatorio de ambos nombres, también sin conexión creada).
 - **API-04** `POST /api/messaging/whatsapp/test-message/` `{to, template_id}` → 202 `{message_id, status}`; errores de dominio → 409/400 con código (`window_closed`, `template_not_approved`, `connection_not_active`).
 - **API-05** `GET /api/messaging/whatsapp/templates/` y `POST …/templates/sync/`.
 Todo es nuevo; sin impacto en contratos existentes.

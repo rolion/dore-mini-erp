@@ -29,19 +29,19 @@
               </span>
             </h4>
           </div>
-          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist" (keydown)="onTabKeydown($event)">
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'connection'" role="tab" id="tab-connection"
-                [attr.aria-selected]="tab === 'connection'" aria-controls="panel-connection" (click)="select('connection')">{{ 'SETTINGS.WHATSAPP.CONEXION' | translate }}</button>
+                [attr.tabindex]="tab === 'connection' ? 0 : -1" [attr.aria-selected]="tab === 'connection'" aria-controls="panel-connection" (click)="select('connection')">{{ 'SETTINGS.WHATSAPP.CONEXION' | translate }}</button>
             </li>
             @if (connection?.configured) {
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'test'" role="tab" id="tab-test"
-                [attr.aria-selected]="tab === 'test'" aria-controls="panel-test" (click)="select('test')">{{ 'SETTINGS.WHATSAPP.MENSAJE_DE_PRUEBA' | translate }}</button>
+                [attr.tabindex]="tab === 'test' ? 0 : -1" [attr.aria-selected]="tab === 'test'" aria-controls="panel-test" (click)="select('test')">{{ 'SETTINGS.WHATSAPP.MENSAJE_DE_PRUEBA' | translate }}</button>
             </li>
             <li class="nav-item" role="presentation">
               <button type="button" class="nav-link" [class.active]="tab === 'templates'" role="tab" id="tab-templates"
-                [attr.aria-selected]="tab === 'templates'" aria-controls="panel-templates" (click)="select('templates')">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</button>
+                [attr.tabindex]="tab === 'templates' ? 0 : -1" [attr.aria-selected]="tab === 'templates'" aria-controls="panel-templates" (click)="select('templates')">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</button>
             </li>
             }
           </ul>
@@ -119,6 +119,10 @@
                   {{ (copied === 'token' ? 'SETTINGS.WHATSAPP.COPIADO' : 'SETTINGS.WHATSAPP.COPIAR') | translate }}</button>
               </div>
             </div>
+            <div class="visually-hidden" role="status" aria-live="polite">{{ copied ? ('SETTINGS.WHATSAPP.COPIADO_AVISO' | translate) : '' }}</div>
+            @if (copyError) {
+            <div class="alert alert-warning" role="alert">{{ 'SETTINGS.WHATSAPP.COPIAR_ERROR' | translate }}</div>
+            }
             }
           </div>
           </div>

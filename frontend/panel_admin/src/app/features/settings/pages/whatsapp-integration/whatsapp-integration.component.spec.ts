@@ -69,6 +69,43 @@ describe('WhatsappIntegrationComponent', () => {
     expect(el().querySelector('ng-select')).not.toBeNull();
   });
 
+  it('moves between tabs with the arrow keys and keeps a single tab stop (REV-08)', () => {
+    setup(connection());
+    const tabs = () => Array.from(el().querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    expect(tabs().map((t) => t.tabIndex)).toEqual([0, -1, -1]);
+    const list = el().querySelector('[role="tablist"]') as HTMLElement;
+    const press = (key: string) => {
+      list.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+    };
+    press('ArrowRight');
+    expect(component().tab).toBe('test');
+    expect(tabs().map((t) => t.tabIndex)).toEqual([-1, 0, -1]);
+    press('End');
+    expect(component().tab).toBe('templates');
+    press('ArrowRight');
+    expect(component().tab).toBe('connection');
+    press('ArrowLeft');
+    expect(component().tab).toBe('templates');
+    press('Home');
+    expect(component().tab).toBe('connection');
+  });
+
+  it('announces the copy and reports when the clipboard refuses (REV-08)', async () => {
+    setup(connection());
+    const writeText = jasmine.createSpy('writeText').and.returnValue(Promise.resolve());
+    spyOnProperty(navigator, 'clipboard', 'get').and.returnValue({ writeText } as unknown as Clipboard);
+    component().copy('abc', 'url');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el().querySelector('[role="status"]')?.textContent).toContain('Copiado');
+    writeText.and.returnValue(Promise.reject(new Error('denied')));
+    component().copy('abc', 'token');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el().querySelector('.alert-warning')).not.toBeNull();
+  });
+
   it('hides the extra tabs while nothing is configured', () => {
     setup(connection({ configured: false, status: 'none' }));
     expect(el().querySelectorAll('[role="tab"]').length).toBe(1);

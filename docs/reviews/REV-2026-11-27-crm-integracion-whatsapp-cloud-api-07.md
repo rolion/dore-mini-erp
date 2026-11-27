@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-07: El prefijo por empresa solo se valida al guardar; el resolvedor de secretos no lo exige al usar
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Una fila con `secret_ref=WHATSAPP_<otra empresa>_TOKEN` es resuelta y usada. Com
 
 ## Evidence
 `backend/modules/messaging/infrastructure/secrets.py`: `SECRET_REF_PATTERN.match(ref)` sin prefijo. `backend/modules/messaging/domain/rules.py::clean_secret_ref` solo se importa desde `application/services.py::ConnectionService.save`.
+
+## Resolución
+`EnvSecretResolver.available/get` reciben `company_id` y rechazan toda referencia sin el prefijo de esa empresa (o igual al prefijo); `ReceiveWebhook`, `gateway_for` y `ConnectionService.save` pasan la empresa de la conexión. Prueba `test_the_resolver_refuses_a_variable_of_another_company_even_if_it_was_stored`. El tamaño del prefijo (48 bits) se mantiene: no es un secreto, solo evita colisiones y errores; la barrera es la comprobación de propiedad.

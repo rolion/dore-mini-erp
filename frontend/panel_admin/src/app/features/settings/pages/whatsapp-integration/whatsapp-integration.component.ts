@@ -39,6 +39,7 @@ export class WhatsappIntegrationComponent implements OnInit {
   testing = false;
   testResult: { ok: boolean; message: string } | null = null;
   copied = '';
+  copyError = false;
 
   readonly form = this.fb.group({
     wabaId: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
@@ -59,6 +60,34 @@ export class WhatsappIntegrationComponent implements OnInit {
 
   select(tab: 'connection' | 'test' | 'templates'): void {
     this.tab = tab;
+  }
+
+  /** Patrón de teclado de WAI-ARIA para pestañas: flechas, Inicio y Fin mueven la selección y el foco (REV-08). */
+  onTabKeydown(event: KeyboardEvent): void {
+    const tabs: ('connection' | 'test' | 'templates')[] = this.connection?.configured
+      ? ['connection', 'test', 'templates']
+      : ['connection'];
+    const current = tabs.indexOf(this.tab);
+    let next = current;
+    switch (event.key) {
+      case 'ArrowRight':
+        next = (current + 1) % tabs.length;
+        break;
+      case 'ArrowLeft':
+        next = (current - 1 + tabs.length) % tabs.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    this.select(tabs[next]);
+    setTimeout(() => document.getElementById('tab-' + tabs[next])?.focus());
   }
 
   /** Cada empresa solo puede nombrar variables con su propio prefijo (REV-01); el servidor lo vuelve a validar. */
@@ -181,7 +210,16 @@ export class WhatsappIntegrationComponent implements OnInit {
   }
 
   copy(value: string, key: string): void {
-    void navigator.clipboard?.writeText(value).then(() => (this.copied = key));
+    this.copyError = false;
+    const clipboard = navigator.clipboard;
+    if (!clipboard) {
+      this.copyError = true;
+      return;
+    }
+    clipboard.writeText(value).then(
+      () => (this.copied = key),
+      () => (this.copyError = true),
+    );
   }
 
   statusClass(): string {

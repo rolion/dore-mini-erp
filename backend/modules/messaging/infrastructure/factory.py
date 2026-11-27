@@ -23,9 +23,9 @@ class SystemClock:
 def gateway_for(connection):
     if settings.MESSAGING_PROVIDER == 'fake':
         return FakeMessagingGateway()
-    return WhatsAppCloudAdapter(EnvSecretResolver().get(connection.secret_ref), connection.phone_number_id,
-                                connection.waba_id, base_url=settings.WHATSAPP_API_BASE_URL,
-                                api_version=settings.WHATSAPP_API_VERSION)
+    token = EnvSecretResolver().get(connection.secret_ref, connection.company_id)
+    return WhatsAppCloudAdapter(token, connection.phone_number_id, connection.waba_id,
+                                base_url=settings.WHATSAPP_API_BASE_URL, api_version=settings.WHATSAPP_API_VERSION)
 
 
 def send_service(company_id) -> SendMessages:
