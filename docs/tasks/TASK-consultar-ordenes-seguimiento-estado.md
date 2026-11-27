@@ -1,6 +1,6 @@
 # TASK-consultar-ordenes-seguimiento-estado: Consultar órdenes de producción y seguir su estado
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-ordenes-seguimiento-estado (base: `produccion`)
@@ -15,6 +15,7 @@
 | 2026-11-27 | DESIGN → PLANNING | DDR escrito | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas escritas; verificación propia: `modules.production` 148 OK, Karma de production + i18n/core en verde, `ng lint` y `i18n:check` limpios | delivery-build |
+| 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS (subagente aislado): 0 Critical/High; REV-01 y REV-02 Low abiertos; revisión visual no verificada | delivery-publish |
 
 ## Investigación
 
@@ -84,7 +85,9 @@ No aplica según veredicto.
 **Entorno:** pruebas backend con el venv del repo principal y copia local (ignorada por git) de `backend/.env`, autorizada por el usuario; `node_modules` por junction.
 
 ## Review
-_Pendiente_
+**Quality Gate: PASS** (subagente aislado). Backend `modules.production` + `modules.inventory`: 352 OK; ruff/flake8 limpios (bandit no disponible); Karma completo 1937/1937; `npm run lint`, `i18n:check`, `build` OK; `npm audit` 0 vulnerabilidades. Todos los AC/INV/EDGE/API/UI con verificación.
+Hallazgos abiertos (Low, IMPLEMENTATION): [REV-01](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-01.md) selector de recetas limitado a 100; [REV-02](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-02.md) aserción tautológica en la prueba de lote inexistente (la parte de AC-07 «Listo para empacar» sí tiene prueba directa: `shows the lot stock…` verifica que no hay iniciar/registrar/liberar).
+Revisión visual: **no verificada** (la app no se levantó).
 
 ## Publicación
-_Pendiente_
+PR #142 listo para aprobación humana (base `produccion`). Sin ADR, migraciones, auth ni infraestructura. No se mergea.
