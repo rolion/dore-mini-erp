@@ -1,6 +1,6 @@
 # TASK-empacar-bolsas-de-6-venta-detalle: Empacar bolsas de 6 para venta al detalle
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-empacar-bolsas-de-6-venta-detalle (base: `produccion`)
@@ -16,6 +16,7 @@
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate ciclo 1 PASS | delivery-publish |
 | 2026-11-27 | PUBLISH → ENGINEERING → REVIEW | Cambio de Specification aprobado por el usuario: etiqueta (sticker) opcional en el empaque; PLAN v2 | delivery-start / delivery-build |
+| 2026-11-27 | REVIEW → PUBLISH | Quality Gate ciclo 2 (etiqueta) PASS | delivery-publish |
 | 2026-11-27 | PUBLISH → PUBLISH | Revisión visual en navegador; REV-visual-01 (historial no apilado en móvil) corregido | delivery-publish |
 
 ## Investigación
@@ -85,7 +86,7 @@ No aplica según veredicto (decisiones en el PLAN).
 **Deuda técnica:** `RefrigerationRejected` se reutiliza para conflictos de Inventario al empacar (nombre histórico); el historial no pagina.
 
 ## Cambio posterior (etiqueta)
-Tras la revisión, el usuario indicó que la bolsa lleva una etiqueta/sticker que se pega al empacar. Decisiones: 1 por pack, opcional, con stock, faltantes y costo como la bolsa. Implementado (INV-08, AC-09; PLAN v2): dominio, caso de uso, adaptadores, migración `0006_packing_label`, API, diálogo (campo opcional + ayudas), historial (columna Etiquetas), i18n es/en/pt y pruebas. Backend `modules.production` 132 OK; Karma `production` 74 OK; lint e `i18n:check` OK. **Pendiente:** nuevo Quality Gate sobre el estado final.
+Tras la revisión, el usuario indicó que la bolsa lleva una etiqueta/sticker que se pega al empacar. Decisiones: 1 por pack, opcional, con stock, faltantes y costo como la bolsa. Implementado (INV-08, AC-09; PLAN v2): dominio, caso de uso, adaptadores, migración `0006_packing_label`, API, diálogo (campo opcional + ayudas), historial (columna Etiquetas), i18n es/en/pt y pruebas. Backend `modules.production` 132 OK; Karma `production` 74 OK; lint e `i18n:check` OK. **Quality Gate ciclo 2 (subagente aislado, commit 12c8b21b): PASS** — backend `modules.production`+`test_boundaries` 132 OK (suite completa 2663 OK, autor), `makemigrations --check` sin cambios, `ruff`/`flake8`/lint/`i18n:check` limpios, Karma `production` 74 OK; sin hallazgos Critical/High/Medium. Low: (1) el selector de etiqueta no excluye el pack/bolsa ya elegidos (el servidor responde 400 bajo el campo); (2) faltante de carrera sin unidad (preexistente). **No verificado:** revisión visual del campo de etiqueta y de la columna nueva; carrera con concurrencia real.
 
 ## Review
 Quality Gate ciclo 1 (subagente aislado): **PASS** — sin hallazgos Critical/High/Medium. Evidencia: backend con PostgreSQL, suite completa 2656 OK (autor) y `modules.production`+`test_boundaries` 125 OK (revisor); `makemigrations --check` sin cambios; `ruff`/`flake8` limpios; `npm run lint` e `i18n:check` OK; Karma `production` 72 OK (autor). **No verificado:** revisión visual en navegador (UI-01..03 solo por lectura de código).
