@@ -10,7 +10,7 @@ La persona quiere llevar el seguimiento de clientes y prospectos en tableros que
 ## Pantallas/flujos afectados
 - Menú **CRM → Seguimiento comercial** (`/pocketbiz/crm/tracking`, `moduleGuard` de `customers`).
 - **Lista de tableros** (`/pocketbiz/crm/tracking`): una tarjeta por tablero activo con su nombre (enlace al tablero); botón «Crear nuevo tablero» que abre un modal con solo **Nombre**.
-- **Tablero** (`/pocketbiz/crm/tracking/:boardId`): título con el nombre, enlace «Volver a tableros», botón «Agregar columna» (modal con **Nombre**). Una columna por etapa activa, en orden, primera a la izquierda; encabezado con nombre y botón de tres puntos (menú «Agregar tarjeta» / «Archivar columna»); debajo, tarjetas por su nombre (clic en la tarjeta no abre detalle: PB-CRM-005).
+- **Tablero** (`/pocketbiz/crm/tracking/:boardId`): título con el nombre, enlace «Volver a tableros», botón «Agregar columna» (modal con **Nombre**). Una columna por etapa activa, en orden, primera a la izquierda; encabezado con nombre y botón de tres puntos (menú «Agregar tarjeta» / «Archivar columna»); debajo, tarjetas (formato de Oportunidades, ver v2); el título y el botón «Ver» abren la ficha de la tarjeta (ver v3). Tareas e historial dentro de la tarjeta: PB-CRM-005.
 - **Diálogo «Agregar tarjeta»**: Nombre*, Cliente o prospecto* (selector único con búsqueda sobre clientes y prospectos), Descripción (opcional).
 - **Archivar columna**: columna vacía → confirmación simple; con tarjetas activas → aviso bloqueante «Mueve primero las N tarjetas…» sin opción de archivar.
 
@@ -19,6 +19,9 @@ Plantilla **Tablero Kanban de tarjetas con acciones accesibles** (`design-system
 
 ## Actualización v2 (2026-11-27, pedido del usuario)
 Columnas y tarjetas replican el formato de `crm-opportunity-board` (mismo SCSS por `styleUrls`): encabezado «Nombre · N» con total, tarjeta con asa de arrastre, contacto, importe, siguiente acción y responsable, botón «Agregar» al pie, y arrastrar para mover de columna. Se conserva el menú de tres puntos. Sustituye «tarjetas solo con su nombre». Sin acciones Editar/Cerrar/Actividad en la tarjeta.
+
+## Actualización v3 (2026-11-27, pedido del usuario)
+Cada tarjeta lleva un botón «Ver» (`btn-light btn-sm`, con `aria-label` «Ver «título»») y su título es un botón de enlace; ambos abren la **ficha de la tarjeta** (`NgbModal` `lg`, mismo componente que «Nueva tarjeta» en modo edición). La ficha muestra Nombre*, Cliente o prospecto (fijo, con nota: la API no permite cambiarlo) y Descripción; «Guardar» actualiza y recarga el tablero. En el pie, «Agregar actividad» (solo en tarjetas existentes) abre encima el diálogo de actividades de Oportunidades, con su historial. Sin cambios de API. Las tareas dentro de la tarjeta siguen en PB-CRM-005.
 
 ## Alternativas consideradas
 - Ampliar `crm-opportunity-board` con las acciones nuevas: mezcla filtros/importes/cierre con un flujo mínimo; descartado por el usuario (entrada nueva en el menú).
