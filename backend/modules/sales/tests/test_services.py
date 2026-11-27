@@ -217,3 +217,28 @@ class CompanyIsolationTests(SalesServicesTestCase):
         self.assertEqual(services.get_pending_delivery(self.company_id).count, 1)
         self.assertEqual(services.get_pending_collection(self.company_id).count, 1)
         self.assertEqual(services.get_pending_collection(self.company_id).balance_total, D('9.00'))
+
+
+class CrmOrderFacadeTests(SalesServicesTestCase):  # TASK-crm-prospectos-oportunidades
+    def test_get_order_for_crm_any_status_and_company_scoped(self):
+        customer = uuid4()
+        order = self.order(customer_id=customer, items=(('Pack', '35.00', 2),))
+        cancelled = self.order(customer_id=customer, status='CANCELLED')
+        found = services.get_order_for_crm(self.company_id, order.id)
+        self.assertEqual(found, services.OrderForCrm(id=order.id, customer_id=customer, order_date=date(2026, 10, 5),
+                                                     total=D('70.00'), status='NEW', cancelled=False))
+        self.assertTrue(services.get_order_for_crm(self.company_id, cancelled.id).cancelled)
+        self.assertIsNone(services.get_order_for_crm(uuid4(), order.id))
+        self.assertIsNone(services.get_order_for_crm(self.company_id, uuid4()))
+
+    def test_list_orders_for_customer_excludes_cancelled_and_others(self):
+        customer = uuid4()
+        old = self.order(customer_id=customer, on=date(2026, 10, 1))
+        recent = self.order(customer_id=customer, on=date(2026, 10, 9))
+        self.order(customer_id=customer, status='CANCELLED')
+        self.order(customer_id=uuid4())
+        DjangoOrderRepository(uuid4()).save(Order.create(sales_channel='WHATSAPP', order_date=date(2026, 10, 2),
+                                                         customer_id=customer))
+        rows = services.list_orders_for_customer_for_crm(self.company_id, customer)
+        self.assertEqual([r.id for r in rows], [recent.id, old.id])
+        self.assertEqual(len(services.list_orders_for_customer_for_crm(self.company_id, customer, limit=1)), 1)

@@ -1,0 +1,71 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ (isEdit ? 'CRM.TASK_DIALOG.EDITAR' : 'CRM.TASK_DIALOG.NUEVA') | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (errorMessage) {
+    <div class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert" data-testid="task-error">{{ errorMessage }}</div>
+    }
+
+    @if (choosesRelated) {
+    <div class="form-group">
+      <label for="crm-task-contact">{{ 'CRM.TASK_DIALOG.BUSCAR_CLIENTE' | translate }} <span class="text-danger">*</span></label>
+      <ng-select labelForId="crm-task-contact" formControlName="contact" [items]="contacts" bindLabel="name" [typeahead]="contactSearch$"
+        [loading]="contactsLoading" [clearable]="true" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate"
+        [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate"
+        [loadingText]="'COMMON.CARGANDO' | translate">
+        <ng-template ng-option-tmp let-item="item">
+          <span class="fw-semibold">{{ item.name }}</span>
+          <small class="text-muted d-block">{{ item.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</small>
+        </ng-template>
+      </ng-select>
+      @if (invalid('related')) {
+      <small class="form-text text-danger" role="alert">{{ serverErrors.related || ('CRM.TASK_DIALOG.CLIENTE_OBLIGATORIO' | translate) }}</small>
+      }
+    </div>
+    } @else {
+    <dl class="row mb-2">
+      <dt class="col-sm-4">{{ 'CRM.TASK_LIST.RELACIONADO' | translate }}</dt>
+      <dd class="col-sm-8" data-testid="task-related">{{ relatedName }}</dd>
+    </dl>
+    }
+
+    <div class="form-group">
+      <label for="crm-task-title">{{ 'CRM.TASK_DIALOG.TITULO' | translate }} <span class="text-danger">*</span></label>
+      <input id="crm-task-title" type="text" class="form-control" formControlName="title" [attr.maxlength]="titleMaxLength"
+        [attr.aria-invalid]="invalid('title')" data-testid="task-title">
+      @if (invalid('title')) {
+      <small class="form-text text-danger" role="alert">{{ serverErrors.title || ('CRM.TASK_DIALOG.TITULO_OBLIGATORIO' | translate) }}</small>
+      }
+    </div>
+
+    <div class="row g-2">
+      <div class="col-sm-6 form-group">
+        <label for="crm-task-due">{{ 'CRM.TASK_DIALOG.VENCIMIENTO' | translate }} <span class="text-danger">*</span></label>
+        <input id="crm-task-due" type="datetime-local" class="form-control" formControlName="dueAt" [attr.aria-invalid]="invalid('dueAt')"
+          data-testid="task-due">
+        @if (invalid('dueAt')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.dueAt || ('CRM.TASK_DIALOG.VENCIMIENTO_OBLIGATORIO' | translate) }}</small>
+        }
+      </div>
+      <div class="col-sm-6 form-group">
+        <label for="crm-task-owner">{{ 'CRM.OPPORTUNITY_BOARD.RESPONSABLE' | translate }}</label>
+        <select id="crm-task-owner" class="form-select" formControlName="ownerId" [attr.aria-invalid]="invalid('ownerId')">
+          @for (owner of ownerOptions; track owner.id) {
+          <option [value]="'' + owner.id">{{ owner.name }}</option>
+          }
+        </select>
+        @if (invalid('ownerId')) {
+        <small class="form-text text-danger" role="alert">{{ serverErrors.ownerId }}</small>
+        }
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="saving" data-testid="save-task">
+      {{ (saving ? 'CRM.TASK_DIALOG.GUARDANDO' : 'COMMON.GUARDAR') | translate }}
+    </button>
+  </div>
+</form>

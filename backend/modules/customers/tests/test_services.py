@@ -1,9 +1,20 @@
 from uuid import uuid4
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from modules.customers.infrastructure.django.models import CustomerModel
-from modules.customers.services import CustomerForSale, get_customer_for_sale, get_customer_names
+from modules.customers.services import (
+    CustomerContactForCrm,
+    CustomerForSale,
+    CustomerRejected,
+    create_customer_for_crm,
+    find_active_customers_by_phone,
+    get_customer_for_crm,
+    get_customer_for_sale,
+    get_customer_names,
+    get_customers_for_crm,
+    normalize_phone_for_crm,
+)
 
 
 COMPANY_ID = uuid4()
@@ -39,3 +50,39 @@ class GetCustomerNamesTests(TestCase):
         foreign = CustomerModel.objects.create(company_id=uuid4(), name='Ajeno')
         self.assertEqual(get_customer_names(COMPANY_ID, [mine.id, foreign.id]), {mine.id: 'Ana'})
         self.assertIsNone(get_customer_for_sale(COMPANY_ID, foreign.id))
+
+
+@override_settings(DEFAULT_PHONE_COUNTRY_CODE='591')
+class CrmProspectFacadeTests(TestCase):  # TASK-crm-prospectos-oportunidades
+    def test_normalize_phone_matches_customers(self):
+        self.assertEqual(normalize_phone_for_crm(' 765-43210 '), '+59176543210')
+        self.assertEqual(normalize_phone_for_crm('ext 12'), 'ext 12')
+        self.assertEqual(normalize_phone_for_crm('   '), '')
+
+    def test_find_active_by_phone_only_in_company(self):
+        ana = CustomerModel.objects.create(company_id=COMPANY_ID, name='Ana', phone='+59176543210')
+        CustomerModel.objects.create(company_id=COMPANY_ID, name='Inactiva', phone='+59176543210', active=False)
+        CustomerModel.objects.create(company_id=uuid4(), name='Ajena', phone='+59176543210')
+        self.assertEqual(find_active_customers_by_phone(COMPANY_ID, '+59176543210'),
+                         [CustomerContactForCrm(ana.id, 'Ana', '+59176543210', True)])
+        self.assertEqual(find_active_customers_by_phone(COMPANY_ID, ''), [])
+
+    def test_get_and_get_many_are_company_scoped(self):
+        ana = CustomerModel.objects.create(company_id=COMPANY_ID, name='Ana', active=False)
+        foreign = CustomerModel.objects.create(company_id=uuid4(), name='Ajena')
+        self.assertEqual(get_customer_for_crm(COMPANY_ID, ana.id), CustomerContactForCrm(ana.id, 'Ana', '', False))
+        self.assertIsNone(get_customer_for_crm(COMPANY_ID, foreign.id))
+        with self.assertNumQueries(1):
+            self.assertEqual(set(get_customers_for_crm(COMPANY_ID, [ana.id, foreign.id, uuid4()])), {ana.id})
+        with self.assertNumQueries(0):
+            self.assertEqual(get_customers_for_crm(COMPANY_ID, []), {})
+
+    def test_create_uses_customer_rules_without_duplicate_prompt(self):
+        CustomerModel.objects.create(company_id=COMPANY_ID, name='Ana', phone='+59176543210')
+        created = create_customer_for_crm(COMPANY_ID, 'Ana Nueva', '76543210', 'ana@example.com')
+        stored = CustomerModel.objects.get(pk=created.id)
+        self.assertEqual((stored.company_id, stored.name, stored.phone, stored.email, stored.active),
+                         (COMPANY_ID, 'Ana Nueva', '+59176543210', 'ana@example.com', True))
+        with self.assertRaises(CustomerRejected) as ctx:
+            create_customer_for_crm(COMPANY_ID, '  ', '', 'mal')
+        self.assertEqual(set(ctx.exception.errors), {'name', 'email'})

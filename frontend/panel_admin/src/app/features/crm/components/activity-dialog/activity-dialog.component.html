@@ -1,0 +1,51 @@
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'CRM.ACTIVITY.TITULO_DIALOG' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (errorMessage) {
+    <div class="alert" [class.alert-warning]="conflict" [class.alert-danger]="!conflict" role="alert" data-testid="activity-error">{{ errorMessage }}</div>
+    }
+    <p class="mb-3" data-testid="activity-related"><strong>{{ related.name }}</strong></p>
+    <app-crm-activity-fields [form]="form" [showDate]="true" [errors]="fieldErrors" idPrefix="crm-activity-dialog" />
+
+    <h5 class="mt-4 fs-6">{{ 'CRM.ACTIVITY.HISTORIAL' | translate }} ({{ historyTotal }})</h5>
+    @if (historyLoading && !history.length) {
+    <p class="text-muted mb-0">{{ 'COMMON.CARGANDO' | translate }}</p>
+    } @else if (historyError) {
+    <div class="alert alert-danger" role="alert">
+      {{ historyError }}
+      <button type="button" class="btn btn-light btn-sm ms-2" (click)="loadHistory()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+    </div>
+    } @else if (!history.length) {
+    <p class="text-muted mb-0" data-testid="history-empty">{{ 'CRM.ACTIVITY.SIN_HISTORIAL' | translate }}</p>
+    } @else {
+    <ul class="list-unstyled mb-0" data-testid="history-list">
+      @for (item of history; track item.id) {
+      <li class="border-bottom py-2" data-testid="history-item">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+          <span class="badge-outline col-grey">{{ 'CRM.ACTIVITY.CHANNELS.' + item.channel | translate }}</span>
+          @if (item.outcome) {
+          <span class="badge-outline" [ngClass]="outcomeClass(item.outcome)" data-testid="outcome-badge">{{ 'CRM.ACTIVITY.OUTCOMES.' + item.outcome | translate }}</span>
+          }
+          <small class="text-muted ms-auto">{{ item.occurredAt | date: 'dd/MM/yyyy HH:mm' }} · {{ item.actor.name }}</small>
+        </div>
+        @if (item.notes) {
+        <p class="mb-0 mt-1">{{ item.notes }}</p>
+        }
+      </li>
+      }
+    </ul>
+    @if (hasMoreHistory) {
+    <button type="button" class="btn btn-light btn-sm mt-2" [disabled]="historyLoading" (click)="loadHistory(true)" data-testid="history-more">{{ 'CRM.ACTIVITY.VER_MAS' | translate }}</button>
+    }
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="!canSave" data-testid="save-activity">
+      {{ (saving ? 'CRM.ACTIVITY.GUARDANDO' : 'CRM.ACTIVITY.GUARDAR') | translate }}
+    </button>
+  </div>
+</form>

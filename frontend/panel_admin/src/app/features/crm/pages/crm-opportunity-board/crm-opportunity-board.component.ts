@@ -1,0 +1,404 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup, transferArrayItem } from '@angular/cdk/drag-drop';
+import { DatePipe } from '@angular/common';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgSelectModule } from '@ng-select/ng-select';
+import { TranslatePipe } from '@ngx-translate/core';
+import {
+  Observable, Subject, catchError, debounceTime, distinctUntilChanged, finalize, forkJoin, map, of, switchMap, tap,
+} from 'rxjs';
+import { tr } from '../../../../core/i18n/translate';
+import { AuthService } from '../../../../core/service/auth.service';
+import { ModulesService } from '../../../../core/service/modules.service';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { sumMoney } from '../../../../shared/utils/decimal-sum';
+import {
+  CLOSE_DIALOG_CONVERT, CloseOpportunityDialogComponent,
+} from '../../components/close-opportunity-dialog/close-opportunity-dialog.component';
+import { ActivityDialogComponent } from '../../components/activity-dialog/activity-dialog.component';
+import { TaskDialogComponent } from '../../components/task-dialog/task-dialog.component';
+import { ConvertLeadDialogComponent } from '../../components/convert-lead-dialog/convert-lead-dialog.component';
+import { OpportunityDialogComponent } from '../../components/opportunity-dialog/opportunity-dialog.component';
+import { CrmApiError, CrmBoard, CrmStage } from '../../models/board';
+import { CrmContact, CrmLeadConversion } from '../../models/lead';
+import {
+  CRM_BOARD_PAGE_SIZE, CrmOpportunity, CrmOpportunityFilters, CrmOpportunityStatus, CrmOwner, isOverdue,
+  opportunityContact,
+} from '../../models/opportunity';
+import { CrmBoardsApiService } from '../../services/crm-boards-api.service';
+import { CrmLeadsApiService } from '../../services/crm-leads-api.service';
+import { CrmCustomersApiService } from '../../services/crm-customers-api.service';
+import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
+import { CrmUsersApiService } from '../../services/crm-users-api.service';
+
+const CONTACT_SEARCH_PAGE_SIZE = 20;
+
+export interface CrmColumn {
+  stage: CrmStage;
+  cards: CrmOpportunity[];
+  total: string;
+}
+
+interface ContactOption {
+  /** `lead:<id>` o `customer:<id>`. */
+  key: string;
+  name: string;
+  /** Texto de la opción: nombre y tipo. */
+  label: string;
+  kind: 'lead' | 'customer';
+}
+
+/**
+ * CRM › Oportunidades: Kanban por etapa activa del tablero elegido, con filtros por responsable, contacto y estado.
+ * Las tarjetas se mueven con «Mover a…» (sin arrastrar) y todo cambio se recarga desde el servidor.
+ */
+@Component({
+  selector: 'app-crm-opportunity-board',
+  templateUrl: './crm-opportunity-board.component.html',
+  styleUrl: './crm-opportunity-board.component.scss',
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, MoneyPipe, DatePipe, NgSelectModule, CdkDropListGroup, CdkDropList, CdkDrag,
+    CdkDragHandle],
+})
+export class CrmOpportunityBoardComponent implements OnInit {
+  private fb = inject(FormBuilder).nonNullable;
+  readonly boardSelect = this.fb.control('');
+  readonly filters = this.fb.group({
+    ownerId: [''],
+    contact: [''],
+    status: this.fb.control<CrmOpportunityStatus>('open'),
+  });
+
+  boards: CrmBoard[] = [];
+  opportunities: CrmOpportunity[] = [];
+  columns: CrmColumn[] = [];
+  loadingBoards = true;
+  loadingCards = false;
+  boardsError = '';
+  cardsError = '';
+  /** Aviso de una regla de negocio (409/404) tras una acción; el tablero ya se recargó. */
+  notice = '';
+  success = '';
+  movingId: string | null = null;
+  readonly salesEnabled: boolean;
+
+  contactsLoading = false;
+  readonly contactSearch$ = new Subject<string>();
+
+  /** Usuarios de la empresa (`/api/crm/users/`); los responsables vistos en las tarjetas se suman por si faltan. */
+  private companyUsers: CrmOwner[] = [];
+  /** Responsables y contactos vistos en el tablero y hallados al buscar, para ofrecerlos en los filtros. */
+  private knownOwners = new Map<number, CrmOwner>();
+  private knownContacts = new Map<string, ContactOption>();
+  private reload$ = new Subject<void>();
+
+  private api = inject(CrmOpportunitiesApiService);
+  private usersApi = inject(CrmUsersApiService);
+  private leadsApi = inject(CrmLeadsApiService);
+  private customersApi = inject(CrmCustomersApiService);
+  private boardsApi = inject(CrmBoardsApiService);
+  private modal = inject(NgbModal);
+  private auth = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    this.salesEnabled = inject(ModulesService).enabledKeysValue?.has('sales') ?? false;
+  }
+
+  ngOnInit(): void {
+    this.reload$.pipe(
+      switchMap(() => {
+        const board = this.selected;
+        if (!board) {
+          this.opportunities = [];
+          this.columns = [];
+          return of(null);
+        }
+        this.loadingCards = true;
+        this.cardsError = '';
+        return this.api.list(this.query(board.id)).pipe(
+          catchError((err: CrmApiError) => {
+            this.cardsError = err.message;
+            return of(null);
+          }),
+          finalize(() => (this.loadingCards = false)),
+        );
+      }),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((page) => {
+      if (!page) return;
+      this.opportunities = page.results;
+      this.remember(page.results);
+      this.buildColumns();
+    });
+
+    this.boardSelect.valueChanges.pipe(distinctUntilChanged(), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.knownOwners.clear();
+      this.knownContacts.clear();
+      this.filters.reset({ ownerId: '', contact: '', status: 'open' }, { emitEvent: false });
+      this.notice = '';
+      this.success = '';
+      this.reload$.next();
+    });
+    this.filters.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.reload$.next());
+
+    this.contactSearch$.pipe(
+      debounceTime(250),
+      distinctUntilChanged(),
+      tap(() => (this.contactsLoading = true)),
+      switchMap((term) => this.searchContacts(term.trim())),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((options) => {
+      this.contactsLoading = false;
+      for (const option of options) this.knownContacts.set(option.key, option);
+    });
+
+    this.usersApi.list().pipe(catchError(() => of([] as CrmOwner[])), takeUntilDestroyed(this.destroyRef))
+      .subscribe((users) => (this.companyUsers = users));
+
+    this.loadBoards();
+  }
+
+  get selected(): CrmBoard | null {
+    return this.boards.find((b) => b.id === this.boardSelect.value) ?? null;
+  }
+
+  get status(): CrmOpportunityStatus {
+    return this.filters.controls.status.value;
+  }
+
+  get isOpenView(): boolean {
+    return this.status === 'open';
+  }
+
+  get hasFilters(): boolean {
+    const { ownerId, contact } = this.filters.getRawValue();
+    return !!ownerId || !!contact;
+  }
+
+  get ownerOptions(): CrmOwner[] {
+    const all = new Map<number, CrmOwner>();
+    for (const owner of [...this.companyUsers, ...this.knownOwners.values()]) all.set(owner.id, owner);
+    return [...all.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  get contactOptions(): ContactOption[] {
+    return [...this.knownContacts.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  get currentUser(): CrmOwner | null {
+    const user = this.auth.currentUserValue;
+    if (!user) return null;
+    const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username;
+    return { id: user.id, name };
+  }
+
+  loadBoards(): void {
+    this.loadingBoards = true;
+    this.boardsError = '';
+    this.boardsApi.list(true).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (boards) => {
+        this.loadingBoards = false;
+        this.boards = boards.filter((b) => b.isActive);
+        const keep = this.boards.some((b) => b.id === this.boardSelect.value);
+        const id = keep ? this.boardSelect.value : (this.boards[0]?.id ?? '');
+        if (id === this.boardSelect.value) {
+          this.reload$.next();
+        } else {
+          this.boardSelect.setValue(id);
+        }
+      },
+      error: (err: CrmApiError) => {
+        this.loadingBoards = false;
+        this.boardsError = err.message;
+      },
+    });
+  }
+
+  reload(): void {
+    this.reload$.next();
+  }
+
+  clearFilters(): void {
+    this.filters.patchValue({ ownerId: '', contact: '' });
+  }
+
+  contact(opportunity: CrmOpportunity): CrmContact | null {
+    return opportunityContact(opportunity);
+  }
+
+  overdue(opportunity: CrmOpportunity): boolean {
+    return isOverdue(opportunity);
+  }
+
+  /** Etapas a las que se puede mover una tarjeta: las demás activas del mismo tablero. */
+  /**
+   * Arrastrar una tarjeta abierta a la columna de otra etapa activa la mueve (UI-03). Soltarla en su misma columna
+   * no hace nada (no hay orden manual); la tarjeta se ve ya en destino y el tablero se recarga desde el servidor.
+   */
+  drop(event: CdkDragDrop<CrmColumn, CrmColumn, CrmOpportunity>): void {
+    const target = event.container.data;
+    const source = event.previousContainer.data;
+    const opportunity = event.item.data;
+    if (event.previousContainer === event.container || !target.stage.isActive || opportunity.status !== 'open'
+      || this.movingId) return;
+    transferArrayItem(source.cards, target.cards, event.previousIndex, event.currentIndex);
+    this.move(opportunity, target.stage.id);
+  }
+
+  canLinkOrder(opportunity: CrmOpportunity): boolean {
+    return this.salesEnabled && opportunity.status === 'won' && !opportunity.orderId && !!opportunity.customer;
+  }
+
+  move(opportunity: CrmOpportunity, stageId: string): void {
+    if (!stageId || this.movingId) return;
+    this.movingId = opportunity.id;
+    this.notice = '';
+    this.success = '';
+    this.api.move(opportunity.id, stageId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.movingId = null;
+        this.success = tr('CRM.OPPORTUNITY_BOARD.MOVIDA', { title: opportunity.title });
+        this.reload$.next();
+      },
+      error: (err: CrmApiError) => {
+        this.movingId = null;
+        this.notice = err.fieldErrors['stageId'] ?? err.message;
+        this.reload$.next();
+      },
+    });
+  }
+
+  create(stageId?: string): void {
+    const board = this.selected;
+    if (!board) return;
+    const ref = this.modal.open(OpportunityDialogComponent, { centered: true, backdrop: 'static', size: 'lg' });
+    (ref.componentInstance as OpportunityDialogComponent).open({
+      board, owners: this.ownerOptions, currentUser: this.currentUser, stageId,
+    });
+    ref.result.then(() => this.done(tr('CRM.OPPORTUNITY_BOARD.CREADA')), () => this.reload$.next());
+  }
+
+  edit(opportunity: CrmOpportunity): void {
+    const board = this.selected;
+    if (!board) return;
+    const ref = this.modal.open(OpportunityDialogComponent, { centered: true, backdrop: 'static', size: 'lg' });
+    (ref.componentInstance as OpportunityDialogComponent).open({
+      board, owners: this.ownerOptions, currentUser: this.currentUser, opportunity,
+    });
+    ref.result.then(() => this.done(tr('CRM.OPPORTUNITY_BOARD.GUARDADA')), () => this.reload$.next());
+  }
+
+  logActivity(opportunity: CrmOpportunity): void {
+    const ref = this.modal.open(ActivityDialogComponent, { centered: true, backdrop: 'static', scrollable: true });
+    (ref.componentInstance as ActivityDialogComponent).open({ type: 'opportunity', id: opportunity.id, name: opportunity.title });
+    ref.result.then(() => this.announce(tr('CRM.ACTIVITY.REGISTRADA')), () => undefined);
+  }
+
+  newTask(opportunity: CrmOpportunity): void {
+    const ref = this.modal.open(TaskDialogComponent, { centered: true, backdrop: 'static' });
+    (ref.componentInstance as TaskDialogComponent).open({
+      owners: this.ownerOptions, currentUser: this.currentUser,
+      related: { type: 'opportunity', id: opportunity.id, name: opportunity.title },
+    });
+    ref.result.then(() => this.announce(tr('CRM.TASK_LIST.CREADA')), () => undefined);
+  }
+
+  close(opportunity: CrmOpportunity): void {
+    const ref = this.modal.open(CloseOpportunityDialogComponent, { centered: true, backdrop: 'static' });
+    (ref.componentInstance as CloseOpportunityDialogComponent).open(opportunity, this.salesEnabled);
+    ref.result.then(
+      (saved: CrmOpportunity) => this.done(tr(saved.status === 'lost' ? 'CRM.OPPORTUNITY_BOARD.CERRADA_PERDIDA'
+        : (opportunity.status === 'won' ? 'CRM.OPPORTUNITY_BOARD.PEDIDO_VINCULADO' : 'CRM.OPPORTUNITY_BOARD.CERRADA_GANADA'))),
+      (reason: unknown) => {
+        if (reason === CLOSE_DIALOG_CONVERT && opportunity.lead) {
+          this.convert(opportunity.lead);
+        } else {
+          this.reload$.next();
+        }
+      },
+    );
+  }
+
+  convert(lead: CrmContact): void {
+    const ref = this.modal.open(ConvertLeadDialogComponent, { centered: true, backdrop: 'static' });
+    (ref.componentInstance as ConvertLeadDialogComponent).open(lead);
+    ref.result.then(
+      (result: CrmLeadConversion) => this.done(tr(result.created ? 'CRM.LEAD_LIST.CONVERTIDO_NUEVO' : 'CRM.LEAD_LIST.CONVERTIDO_EXISTENTE',
+        { name: result.customer.name })),
+      () => this.reload$.next(),
+    );
+  }
+
+  /** Avisa sin volver a pedir las tarjetas: una actividad o una tarea no cambian la oportunidad (sin parpadeo). */
+  private announce(message: string): void {
+    this.notice = '';
+    this.success = message;
+  }
+
+  private done(message: string): void {
+    this.notice = '';
+    this.success = message;
+    this.reload$.next();
+  }
+
+  private query(boardId: string): CrmOpportunityFilters {
+    const { ownerId, contact, status } = this.filters.getRawValue();
+    const [kind, id] = (contact ?? '').split(':');
+    return {
+      boardId,
+      status,
+      ownerId: ownerId ? Number(ownerId) : undefined,
+      leadId: kind === 'lead' ? id : undefined,
+      customerId: kind === 'customer' ? id : undefined,
+      pageSize: CRM_BOARD_PAGE_SIZE,
+    };
+  }
+
+  private searchContacts(term: string): Observable<ContactOption[]> {
+    const params = { search: term, pageSize: CONTACT_SEARCH_PAGE_SIZE };
+    return forkJoin([this.leadsApi.list(params), this.customersApi.list(params)]).pipe(
+      map(([leads, customers]) => [
+        ...leads.results.map((l) => this.contactOption('lead', l.id, l.name)),
+        ...customers.results.map((c) => this.contactOption('customer', c.id, c.name)),
+      ]),
+      catchError(() => of([] as ContactOption[])),
+    );
+  }
+
+  private contactOption(kind: 'lead' | 'customer', id: string, name: string): ContactOption {
+    const type = tr(kind === 'lead' ? 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' : 'COMMON.CLIENTE');
+    return { key: `${kind}:${id}`, name, label: `${name} (${type})`, kind };
+  }
+
+  private remember(opportunities: CrmOpportunity[]): void {
+    for (const o of opportunities) {
+      this.knownOwners.set(o.owner.id, o.owner);
+      if (o.customer) {
+        this.knownContacts.set(`customer:${o.customer.id}`, this.contactOption('customer', o.customer.id, o.customer.name));
+      } else if (o.lead) {
+        this.knownContacts.set(`lead:${o.lead.id}`, this.contactOption('lead', o.lead.id, o.lead.name));
+      }
+    }
+  }
+
+  private buildColumns(): void {
+    const stages = this.selected?.stages ?? [];
+    const column = (stage: CrmStage, cards: CrmOpportunity[]): CrmColumn => ({
+      stage, cards, total: sumMoney(cards.map((c) => c.amount)),
+    });
+    this.columns = stages.map((stage) => column(stage, this.opportunities.filter((o) => o.stageId === stage.id)));
+    // Las cerradas conservan su etapa aunque luego se archive: se agrupan aparte para no esconderlas.
+    const active = new Set(stages.map((s) => s.id));
+    const orphans = this.opportunities.filter((o) => !active.has(o.stageId));
+    if (orphans.length) {
+      const archived: CrmStage = {
+        id: '', name: tr('CRM.OPPORTUNITY_BOARD.ETAPAS_ARCHIVADAS'), position: stages.length + 1, isActive: false,
+        cardCount: orphans.length,
+      };
+      this.columns.push(column(archived, orphans));
+    }
+  }
+}

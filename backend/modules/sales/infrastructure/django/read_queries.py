@@ -5,7 +5,7 @@ Una sola definición de "pedido válido" para todas las métricas: no cancelado 
 from datetime import date
 from uuid import UUID
 
-from django.db.models import Count, Exists, F, OuterRef, QuerySet, Sum
+from django.db.models import Case, Count, DecimalField, Exists, F, Max, OuterRef, QuerySet, Sum, Value, When
 
 from modules.sales.domain.enums import OrderStatus
 
@@ -93,3 +93,30 @@ def payments_between(company_id: UUID, date_from: date | None, date_to: date | N
     if date_to:
         rows = rows.filter(payment_date__lte=date_to)
     return rows.order_by('payment_date', 'created_at', 'id')
+
+
+def customer_summaries(company_id: UUID, customer_ids) -> list[dict]:
+    """Pedidos válidos, última fecha y saldo pendiente por cliente (una consulta agregada)."""
+    pending = Case(When(total__gt=F('paid_total'), then=F('total') - F('paid_total')), default=Value(0),
+                   output_field=DecimalField(max_digits=12, decimal_places=2))
+    return list(
+        valid_orders(company_id).filter(customer_id__in=list(customer_ids))
+        .values('customer_id')
+        .annotate(orders_count=Count('id'), last_order_date=Max('order_date'), balance=Sum(pending))
+    )
+
+
+def customer_ids_in_warehouse(company_id: UUID, warehouse_id: UUID) -> list:
+    return list(valid_orders(company_id).filter(customer_id__isnull=False, warehouse_id=warehouse_id)
+                .values_list('customer_id', flat=True).distinct())
+
+
+def order_by_id(company_id: UUID, order_id: UUID):
+    """El pedido de la empresa (cualquier estado) o `None`."""
+    return OrderModel.objects.filter(company_id=company_id, pk=order_id).first()
+
+
+def non_cancelled_orders_of_customer(company_id: UUID, customer_id: UUID) -> QuerySet:
+    """Pedidos no cancelados del cliente en la empresa, los más recientes primero."""
+    return (OrderModel.objects.filter(company_id=company_id, customer_id=customer_id)
+            .exclude(status=OrderStatus.CANCELLED.value).order_by('-order_date', '-created_at', 'id'))

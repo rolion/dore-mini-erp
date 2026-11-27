@@ -14,6 +14,7 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
+from modules.sales.domain.enums import OrderStatus
 from modules.sales.infrastructure.django import read_queries
 
 ZERO = Decimal('0.00')
@@ -100,6 +101,35 @@ def get_top_customers(company_id: UUID, date_from: date, date_to: date,
         CustomerSales(customer_id=row['customer_id'], orders_count=row['orders_count'], total=row['total'])
         for row in read_queries.customer_totals(company_id, date_from, date_to, limit)
     )
+
+
+@dataclass(frozen=True)
+class CustomerCommercialSummary:
+    customer_id: UUID
+    order_count: int
+    last_purchase_date: date | None
+    outstanding_amount: Decimal
+
+
+def get_customer_commercial_summaries(company_id: UUID, customer_ids) -> dict[UUID, CustomerCommercialSummary]:
+    """Pedidos válidos, última compra y saldo (Σ total − pagado, solo con saldo > 0) por cliente de la empresa.
+
+    Los clientes sin pedidos válidos no aparecen en el resultado.
+    """
+    ids = list(customer_ids)
+    if not ids:
+        return {}
+    return {
+        row['customer_id']: CustomerCommercialSummary(
+            customer_id=row['customer_id'], order_count=row['orders_count'],
+            last_purchase_date=row['last_order_date'], outstanding_amount=row['balance'] or ZERO)
+        for row in read_queries.customer_summaries(company_id, ids)
+    }
+
+
+def list_customer_ids_with_orders_in_warehouse(company_id: UUID, warehouse_id: UUID) -> list[UUID]:
+    """Clientes con al menos un pedido válido atendido desde el almacén indicado."""
+    return read_queries.customer_ids_in_warehouse(company_id, warehouse_id)
 
 
 def _pending_rows(queryset, limit: int) -> tuple[PendingOrder, ...]:
@@ -235,3 +265,32 @@ def import_delivered_sale(company_id: UUID, *, sale_date: date, sales_channel: s
         raise ImportRejected('order_rejected', message, field) from exc
     covered = post_accounting and SalesPostingAdapter(company_id).posts_on(sale_date)
     return ImportedSale(order_id=order.id, code=order.code, total=order.total, without_posting=not covered)
+
+
+# --- Vínculo de oportunidades de CRM (TASK-crm-prospectos-oportunidades) ------------------------------------
+
+@dataclass(frozen=True)
+class OrderForCrm:
+    id: UUID
+    customer_id: UUID | None
+    order_date: date
+    total: Decimal
+    status: str
+    cancelled: bool
+
+
+def _order_for_crm(order) -> OrderForCrm:
+    return OrderForCrm(id=order.id, customer_id=order.customer_id, order_date=order.order_date, total=order.total,
+                       status=order.status, cancelled=order.status == OrderStatus.CANCELLED.value)
+
+
+def get_order_for_crm(company_id: UUID, order_id: UUID) -> OrderForCrm | None:
+    """El pedido de la empresa en cualquier estado (CRM decide si es vinculable), o `None` si es ajeno."""
+    order = read_queries.order_by_id(company_id, order_id)
+    return _order_for_crm(order) if order else None
+
+
+def list_orders_for_customer_for_crm(company_id: UUID, customer_id: UUID, limit: int = 50) -> tuple[OrderForCrm, ...]:
+    """Pedidos no cancelados del cliente en la empresa, los más recientes primero (máximo `limit`)."""
+    orders = read_queries.non_cancelled_orders_of_customer(company_id, customer_id)[:limit]
+    return tuple(_order_for_crm(o) for o in orders)

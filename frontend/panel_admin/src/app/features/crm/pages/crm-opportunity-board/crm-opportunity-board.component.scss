@@ -1,0 +1,167 @@
+// Tablero Kanban (design-system §5): columnas de ancho fijo con desplazamiento horizontal desde `lg`; apiladas debajo.
+@use '../../../../../assets/scss/dark-tokens' as dark;
+
+$touch: 44px;
+$color-font: dark.$color-font;
+
+.crm-kanban {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+@media (min-width: 992px) {
+  .crm-kanban {
+    flex-direction: row;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .crm-column {
+    flex: 0 0 18rem;
+    max-width: 18rem;
+  }
+}
+
+.crm-column {
+  padding: 0.75rem;
+  background-color: var(--bs-tertiary-bg);
+  border: 1px solid var(--bs-border-color);
+}
+
+// En tema oscuro `--bs-tertiary-bg` y `--bs-secondary-color` siguen siendo los claros (el skin usa la clase `.dark`,
+// no `data-bs-theme`): se fijan colores de la paleta oscura para mantener el contraste AA.
+:host-context(.dark) {
+  .crm-column {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .crm-opportunity {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .crm-opportunity-data dt {
+    color: $color-font;
+  }
+}
+
+.crm-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.crm-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.crm-column-empty {
+  padding: 0.5rem 0;
+}
+
+.crm-column-add {
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.crm-opportunity {
+  padding: 0.625rem;
+  border: 1px solid var(--bs-border-color);
+}
+
+.crm-opportunity-title {
+  overflow-wrap: anywhere;
+}
+
+.crm-opportunity-data {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  dt {
+    font-weight: 400;
+    color: var(--bs-secondary-color);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.crm-opportunity-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+// En pantallas táctiles los controles llegan a 44 px.
+@media (max-width: 991.98px) {
+  .crm-opportunity-actions .btn,
+  .crm-drag-handle,
+  .crm-column-add {
+    min-height: $touch;
+    min-width: $touch;
+  }
+}
+
+// Botón circular de alta rápida (mismo ajuste que `crm-board`).
+.crm-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  .material-icons {
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+  }
+}
+
+// Arrastrar y soltar (design-system §5): asa, hueco y vista previa de la tarjeta.
+.crm-drag-handle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  cursor: grab;
+  touch-action: none;
+  color: var(--bs-secondary-color);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.4;
+}
+
+.cdk-drag-preview {
+  cursor: grabbing;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.crm-column-body {
+  min-height: 2.5rem;
+}
+
+:host-context(.dark) .crm-drag-handle {
+  color: $color-font;
+}

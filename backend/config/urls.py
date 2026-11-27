@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/stock/', include('modules.inventory.api.stock_urls')),
     path('api/stock-adjustments/', include('modules.inventory.api.adjustment_urls')),
     path('api/valuation/', include('modules.costing.api.urls')),
+    path('api/crm/', include('modules.crm.api.urls')),
     path('api/customers/', include('modules.customers.api.urls')),
     path('api/suppliers/', include('modules.purchases.api.urls')),
     path('api/purchases/', include('modules.purchases.api.purchase_urls')),
@@ -34,6 +35,7 @@ urlpatterns = [
     path('api/reports/', include('modules.reporting.api.urls')),
     path('api/accounting/', include('modules.accounting.api.urls')),
     path('api/imports/', include('modules.data_import.api.urls')),
+    path('api/crm/boards/', include('modules.crm.api.board_urls')),
     path('api/modules/', include('modules.modularity.api.urls')),
     path('api/settings/', include('modules.modularity.api.settings_urls')),
 ]
