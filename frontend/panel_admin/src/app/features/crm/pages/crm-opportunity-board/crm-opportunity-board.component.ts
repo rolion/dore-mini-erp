@@ -294,7 +294,7 @@ export class CrmOpportunityBoardComponent implements OnInit {
   logActivity(opportunity: CrmOpportunity): void {
     const ref = this.modal.open(ActivityDialogComponent, { centered: true, backdrop: 'static', scrollable: true });
     (ref.componentInstance as ActivityDialogComponent).open({ type: 'opportunity', id: opportunity.id, name: opportunity.title });
-    ref.result.then(() => this.done(tr('CRM.ACTIVITY.REGISTRADA')), () => undefined);
+    ref.result.then(() => this.announce(tr('CRM.ACTIVITY.REGISTRADA')), () => undefined);
   }
 
   newTask(opportunity: CrmOpportunity): void {
@@ -303,7 +303,7 @@ export class CrmOpportunityBoardComponent implements OnInit {
       owners: this.ownerOptions, currentUser: this.currentUser,
       related: { type: 'opportunity', id: opportunity.id, name: opportunity.title },
     });
-    ref.result.then(() => this.done(tr('CRM.TASK_LIST.CREADA')), () => undefined);
+    ref.result.then(() => this.announce(tr('CRM.TASK_LIST.CREADA')), () => undefined);
   }
 
   close(opportunity: CrmOpportunity): void {
@@ -330,6 +330,12 @@ export class CrmOpportunityBoardComponent implements OnInit {
         { name: result.customer.name })),
       () => this.reload$.next(),
     );
+  }
+
+  /** Avisa sin volver a pedir las tarjetas: una actividad o una tarea no cambian la oportunidad (sin parpadeo). */
+  private announce(message: string): void {
+    this.notice = '';
+    this.success = message;
   }
 
   private done(message: string): void {

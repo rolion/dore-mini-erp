@@ -7,6 +7,8 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { NEVER, of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/service/auth.service';
 import { ModulesService } from '../../../../core/service/modules.service';
+import { ActivityDialogComponent } from '../../components/activity-dialog/activity-dialog.component';
+import { TaskDialogComponent } from '../../components/task-dialog/task-dialog.component';
 import { CLOSE_DIALOG_CONVERT, CloseOpportunityDialogComponent } from '../../components/close-opportunity-dialog/close-opportunity-dialog.component';
 import { ConvertLeadDialogComponent } from '../../components/convert-lead-dialog/convert-lead-dialog.component';
 import { OpportunityDialogComponent } from '../../components/opportunity-dialog/opportunity-dialog.component';
@@ -275,6 +277,22 @@ describe('CrmOpportunityBoardComponent', () => {
     await Promise.resolve();
     expect(api.list).toHaveBeenCalledTimes(2);
     expect(component.success).toBe('Oportunidad creada.');
+  });
+
+  it('announces a logged activity or a new task without reloading the cards (no flicker)', async () => {
+    const { component, api, modal } = create();
+    const activity = jasmine.createSpyObj<ActivityDialogComponent>('activity', ['open']);
+    dialog(modal, activity, Promise.resolve(undefined));
+    component.logActivity(customerCard);
+    await Promise.resolve();
+    expect(component.success).toBe('Actividad registrada.');
+    expect(api.list).toHaveBeenCalledTimes(1);
+    const task = jasmine.createSpyObj<TaskDialogComponent>('task', ['open']);
+    dialog(modal, task, Promise.resolve(undefined));
+    component.newTask(customerCard);
+    await Promise.resolve();
+    expect(component.success).toBe('Tarea creada.');
+    expect(api.list).toHaveBeenCalledTimes(1);
   });
 
   it('opens the close dialog with the Sales flag and converts the lead when asked', async () => {
