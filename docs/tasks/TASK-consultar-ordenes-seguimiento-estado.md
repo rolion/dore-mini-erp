@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-ordenes-seguimiento-estado (base: `produccion`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/142
 **Fuente:** https://trello.com/c/fGrIBXUO/6-dore-prod-006-consultar-%C3%B3rdenes-y-seguir-su-estado
 
 ## Historial de transiciones
