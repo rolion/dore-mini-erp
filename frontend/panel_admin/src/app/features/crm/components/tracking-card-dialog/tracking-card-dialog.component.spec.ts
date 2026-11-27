@@ -89,19 +89,44 @@ describe('TrackingCardDialogComponent', () => {
   describe('card record (view and edit)', () => {
     const card = makeOpportunity({ id: 'o-9', title: 'Llamar', description: 'Quiere precio' });
 
-    it('shows the card with its customer fixed and edits name and description only', () => {
-      const { fixture, component, api, modal } = setup();
-      component.open({ boardId: 'b-1', stageId: 's-2', card });
-      fixture.detectChanges();
+    function openCard() {
+      const ctx = setup();
+      ctx.component.open({ boardId: 'b-1', stageId: 's-2', card });
+      ctx.fixture.detectChanges();
+      return ctx;
+    }
+
+    it('shows the card values read-only: title, customer and description', () => {
+      const { fixture, component } = openCard();
+      const el = fixture.nativeElement as HTMLElement;
       expect(component.isEdit).toBeTrue();
+      expect(el.querySelector('[data-testid="info-title"]')?.textContent).toContain('Llamar');
+      expect(el.querySelector('[data-testid="info-contact"]')?.textContent).toBeTruthy();
+      expect(el.querySelector('[data-testid="info-description"]')?.textContent).toContain('Quiere precio');
+      expect(el.querySelector('[data-testid="close-card"]')).not.toBeNull();
+    });
+
+    it('edits name and description only after pressing Edit, keeping the customer fixed', () => {
+      const { fixture, component, api, modal } = openCard();
+      ((fixture.nativeElement as HTMLElement).querySelector('[data-testid="edit-card"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(component.editing).toBeTrue();
       expect(component.form.controls.contact.disabled).toBeTrue();
-      expect(component.form.controls.name.value).toBe('Llamar');
       api.update.and.returnValue(of({ ...card, title: 'Nuevo' }));
       component.form.patchValue({ name: ' Nuevo ', description: ' Otra ' });
       component.onSubmit();
       expect(api.update).toHaveBeenCalledOnceWith('o-9', { title: 'Nuevo', description: 'Otra' });
       expect(api.create).not.toHaveBeenCalled();
       expect(modal.close).toHaveBeenCalled();
+    });
+
+    it('cancelling the edit restores the values', () => {
+      const { component } = openCard();
+      component.startEdit();
+      component.form.patchValue({ name: 'Cambiado' });
+      component.cancelEdit();
+      expect(component.editing).toBeFalse();
+      expect(component.form.controls.name.value).toBe('Llamar');
     });
 
     it('shows the activities column only on an existing card', () => {

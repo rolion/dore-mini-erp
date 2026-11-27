@@ -65,6 +65,8 @@ export class TrackingCardDialogComponent implements OnInit {
   contactsLoading = false;
   readonly contactSearch$ = new Subject<string>();
   saving = false;
+  /** En la ficha de una tarjeta existente: false = solo lectura, true = formulario de edición. */
+  editing = false;
   errorMessage = '';
   serverErrors: Partial<Record<CardField, string>> = {};
 
@@ -110,6 +112,22 @@ export class TrackingCardDialogComponent implements OnInit {
 
   get isEdit(): boolean {
     return !!this.context?.card;
+  }
+
+  get contactName(): string {
+    return this.form.controls.contact.value?.name ?? '';
+  }
+
+  startEdit(): void {
+    this.editing = true;
+  }
+
+  cancelEdit(): void {
+    const card = this.context.card;
+    if (card) this.form.patchValue({ name: card.title, description: card.description }, { emitEvent: false });
+    this.serverErrors = {};
+    this.errorMessage = '';
+    this.editing = false;
   }
 
   invalid(field: CardField): boolean {

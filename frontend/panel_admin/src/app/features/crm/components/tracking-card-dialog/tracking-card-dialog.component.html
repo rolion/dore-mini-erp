@@ -4,13 +4,19 @@
   </div>
   <div class="modal-body">
     <div class="row g-4">
-      @if (isEdit) {
-      <div class="col-lg-6 order-2 order-lg-1" data-testid="activity-column">
-        <app-crm-activity-panel [related]="{ type: 'opportunity', id: context.card!.id, name: context.card!.title }" />
-      </div>
-      }
-      <div class="order-1 order-lg-2" [class.col-lg-6]="isEdit" [class.col-12]="!isEdit">
-        <form id="crm-card-form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+      <div [class.col-lg-6]="isEdit" [class.col-12]="!isEdit">
+        @if (isEdit && !editing) {
+        <dl class="mb-0" data-testid="card-info">
+          <dt>{{ 'COMMON.NOMBRE' | translate }}</dt>
+          <dd data-testid="info-title">{{ context.card!.title }}</dd>
+          <dt>{{ 'CRM.TRACKING.CLIENTE_O_PROSPECTO' | translate }}</dt>
+          <dd data-testid="info-contact">{{ contactName }}</dd>
+          <dt>{{ 'CRM.TRACKING.DESCRIPCION' | translate }}</dt>
+          <dd class="text-break" data-testid="info-description">{{ context.card!.description || '—' }}</dd>
+        </dl>
+        <button type="button" class="btn btn-light btn-sm" data-testid="edit-card" (click)="startEdit()">{{ 'COMMON.EDITAR' | translate }}</button>
+        }
+        <form id="crm-card-form" [hidden]="isEdit && !editing" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       @if (errorMessage) {
       <div class="alert alert-danger" role="alert" data-testid="dialog-error">{{ errorMessage }}</div>
       }
@@ -54,9 +60,18 @@
 
         </form>
       </div>
+      @if (isEdit) {
+      <div class="col-lg-6 " data-testid="activity-column">
+        <app-crm-activity-panel [related]="{ type: 'opportunity', id: context.card!.id, name: context.card!.title }" />
+      </div>
+      }
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    @if (isEdit && !editing) {
+    <button type="button" class="btn btn-light" data-testid="close-card" (click)="activeModal.dismiss()">{{ 'COMMON.CERRAR' | translate }}</button>
+    } @else {
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="isEdit ? cancelEdit() : activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
     <button type="submit" form="crm-card-form" class="btn btn-primary" [disabled]="form.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
+    }
   </div>
