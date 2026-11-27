@@ -18,6 +18,10 @@
       @if (order.status === 'in_preparation') {
       <a class="btn btn-primary" [routerLink]="['/pocketbiz/production/orders', order.id, 'refrigerate']" data-testid="refrigerate">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTION' | translate }}</a>
       }
+      @if (order.status === 'refrigerating') {
+      <button type="button" class="btn btn-primary" [disabled]="releasing || !canRelease" (click)="release()" data-testid="release">{{ 'PRODUCTION.ORDERS.RELEASE.ACTION' | translate }}</button>
+      @if (!canRelease && releasableFrom) { <small class="text-muted align-self-center" data-testid="release-hint">{{ 'PRODUCTION.ORDERS.RELEASE.AVAILABLE_FROM' | translate: { date: formatDateTime(releasableFrom) } }}</small> }
+      }
       <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
     </div>
     @if (success) { <div role="status" class="alert alert-success mx-4" data-testid="success">{{ success }}</div> }
@@ -33,7 +37,7 @@
       <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.CREATED_AT' | translate }}</dt><dd>{{ order.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
       <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.STARTED_AT' | translate }}</dt><dd data-testid="started-at">{{ order.startedAt ? (order.startedAt | date: 'dd/MM/yyyy HH:mm') : '—' }}</dd></div>
     </dl>
-    @if (order.status === 'refrigerating') { <ng-container *ngTemplateOutlet="registered" /> }
+    @if (order.status === 'refrigerating' || order.status === 'ready_to_pack') { <ng-container *ngTemplateOutlet="registered" /> }
     <h5 class="mx-3">{{ 'PRODUCTION.RECIPES.INGREDIENTS' | translate }}</h5>
     <ul class="list-unstyled ingredient-cards" data-testid="ingredient-cards">
       @for (line of order.ingredients; track line.productId) {
@@ -50,7 +54,7 @@
       }
     </ul>
     } @else {
-      @if (order.status === 'refrigerating') { <ng-container *ngTemplateOutlet="registered" /> }
+      @if (order.status === 'refrigerating' || order.status === 'ready_to_pack') { <ng-container *ngTemplateOutlet="registered" /> }
       <dl class="row m-4">
         <dt class="col-sm-3">{{ 'COMMON.ESTADO' | translate }}</dt>
         <dd class="col-sm-9"><span class="badge-outline" [class]="statusClass">{{ statusKey | translate }}</span></dd>
@@ -76,7 +80,7 @@
             <th scope="col">{{ 'COMMON.PRODUCTO' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PER_PREPARATION' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_TOTAL' | translate }}</th>
-            @if (order.status === 'refrigerating') { <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</th> }
+            @if (order.status === 'refrigerating' || order.status === 'ready_to_pack') { <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.REFRIGERATE.ACTUAL_CONSUMPTION' | translate }}</th> }
           </tr></thead>
           <tbody>
             @for (line of order.ingredients; track line.productId) {
@@ -110,5 +114,26 @@
       <dd class="col-sm-9" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</dd>
     </dl>
   </section>
+  @if (hasRelease) {
+  <section class="m-4" data-testid="release-section" aria-labelledby="release-title">
+    <h5 id="release-title">{{ 'PRODUCTION.ORDERS.RELEASE.TITLE' | translate }}</h5>
+    <dl class="row">
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.ENTERED_AT' | translate }}</dt>
+      <dd class="col-sm-9">{{ order.enteredAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.ELAPSED' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="elapsed">{{ elapsed }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.MIN_HOURS' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="min-hours">{{ order.release?.minHours }} {{ 'SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.FIRST' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="releasable-from">{{ releasableFrom ? formatDateTime(releasableFrom) : '—' }}</dd>
+      @if (order.status === 'ready_to_pack' && order.releasedAt) {
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_BY' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="released-by">{{ order.releasedBy }}</dd>
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_AT' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="released-at">{{ formatDateTime(order.releasedAt) }}</dd>
+      }
+    </dl>
+  </section>
+  }
   }
 </ng-template>

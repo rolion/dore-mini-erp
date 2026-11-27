@@ -20,6 +20,7 @@ const order: ProductionOrder = {
   warehouse: { id: 'w-1', name: 'Principal' }, preparations: 5, yieldPerPreparation: '24.0000', expectedOutput: '120.0000',
   ingredients: [{ productId: 'p-1', productName: 'Queso', unitId: 'u-2', unitAbbreviation: 'kg', quantityPerPreparation: '1.5000', expectedQuantity: '7.5000', actualQuantity: null }],
   createdAt: '2026-11-26T12:00:00Z', startedAt: null, actualOutput: null, enteredAt: null, lot: null, costTotal: null,
+  release: null, releasedAt: null, releasedBy: null,
 };
 const started: ProductionOrder = { ...order, status: 'in_preparation', startedAt: '2026-11-26T13:00:00Z' };
 
@@ -87,7 +88,7 @@ describe('OrderListComponent', () => {
 describe('OrderDetailComponent', () => {
   let api: jasmine.SpyObj<OrdersApiService>;
   function setup(value: ProductionOrder, compact = false) {
-    api = jasmine.createSpyObj<OrdersApiService>('api', ['get', 'start']);
+    api = jasmine.createSpyObj<OrdersApiService>('api', ['get', 'start', 'release']);
     api.get.and.returnValue(of(value));
     TestBed.configureTestingModule({ imports: [OrderDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: OrdersApiService, useValue: api }, { provide: BreakpointObserver, useValue: breakpoints(compact) },
@@ -134,6 +135,69 @@ describe('OrderDetailComponent', () => {
     expect(root.querySelector('[data-testid="lot-code"]')?.textContent).toContain('L-20261126-0001');
     expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('Sin costo');
     expect(root.querySelector('[data-testid="actual-quantity"]')?.textContent).toContain('7 kg');
+  });
+
+  describe('release', () => {
+    const entered = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+    const refrigerating = (hoursAfter: number): ProductionOrder => ({
+      ...started, status: 'refrigerating', actualOutput: '118.0000', enteredAt: entered,
+      lot: { id: 'lot-1', code: 'L-20261127-0001' }, ingredients: [{ ...started.ingredients[0], actualQuantity: '7.0000' }],
+      release: { minHours: 12, canRelease: hoursAfter < 0,
+        releasableFrom: new Date(Date.parse(entered) + 12 * 3600 * 1000 + hoursAfter * 3600 * 1000).toISOString() },
+    });
+
+    it('shows entry, elapsed time, minimum and the first eligible time, with Release disabled before it', () => {  // AC-01, UI-01, UI-02
+      TestBed.resetTestingModule();
+      const root = setup(refrigerating(0)).nativeElement as HTMLElement;
+      expect(root.querySelector('[data-testid="release-section"]')).not.toBeNull();
+      expect(root.querySelector('[data-testid="elapsed"]')?.textContent).toContain('2 h');
+      expect(root.querySelector('[data-testid="min-hours"]')?.textContent).toContain('12');
+      expect(root.querySelector('[data-testid="releasable-from"]')?.textContent).not.toContain('—');
+      expect((root.querySelector('[data-testid="release"]') as HTMLButtonElement).disabled).toBeTrue();
+      expect(root.querySelector('[data-testid="release-hint"]')).not.toBeNull();
+    });
+
+    it('enables Release once the first eligible time has passed', () => {  // UI-02
+      TestBed.resetTestingModule();
+      const root = setup(refrigerating(-11)).nativeElement as HTMLElement;
+      expect((root.querySelector('[data-testid="release"]') as HTMLButtonElement).disabled).toBeFalse();
+      expect(root.querySelector('[data-testid="release-hint"]')).toBeNull();
+    });
+
+    it('confirms and then shows who released and when', async () => {  // AC-03, AC-04
+      TestBed.resetTestingModule();
+      const fixture = setup(refrigerating(-11));
+      const released: ProductionOrder = { ...refrigerating(-11), status: 'ready_to_pack', releasedAt: new Date().toISOString(), releasedBy: 'Ana' };
+      api.release.and.returnValue(of(released));
+      spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: true } as never);
+      await fixture.componentInstance.release();
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+      expect(api.release).toHaveBeenCalledOnceWith('order-1');
+      expect(root.querySelector('[data-testid="released-by"]')?.textContent).toContain('Ana');
+      expect(root.querySelector('[data-testid="release"]')).toBeNull();
+      expect(root.querySelector('[data-testid="success"]')).not.toBeNull();
+    });
+
+    it('does not release when the confirmation is cancelled', async () => {
+      TestBed.resetTestingModule();
+      const fixture = setup(refrigerating(-11));
+      spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: false } as never);
+      await fixture.componentInstance.release();
+      expect(api.release).not.toHaveBeenCalled();
+    });
+
+    it('shows the server rejection with the first eligible time', async () => {  // AC-02
+      TestBed.resetTestingModule();
+      const fixture = setup(refrigerating(-11));
+      api.release.and.returnValue(throwError(() => new OrderApiError('x', 409,
+        { code: 'release_too_early', releasableFrom: '2026-11-27T20:00:00Z' })));
+      spyOn(Swal, 'fire').and.resolveTo({ isConfirmed: true } as never);
+      await fixture.componentInstance.release();
+      fixture.detectChanges();
+      expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="action-error"]')?.textContent).toContain('2026');
+      expect(api.get).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('formats the total cost as money when there is one', () => {  // REV-03

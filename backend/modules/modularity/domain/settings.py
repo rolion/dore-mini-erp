@@ -9,6 +9,7 @@ from decimal import Decimal, InvalidOperation
 CHOICE = 'choice'
 PERCENT = 'percent'
 BOOLEAN = 'boolean'
+INTEGER = 'integer'
 BOOLEAN_LABELS = {'true': 'Permitido', 'false': 'Bloqueado'}
 PERCENT_STEP = Decimal('0.01')
 PERCENT_MIN = Decimal('0')
@@ -58,6 +59,11 @@ SETTINGS_CATALOG: tuple[SettingDefinition, ...] = (
         'dejen la existencia de un producto por debajo de cero. Si lo activa, esas operaciones se permiten y pueden '
         'existir saldos negativos.',
         BOOLEAN, 'false'),
+    SettingDefinition(
+        'production.min_refrigeration_hours', 'production', 'Horas mínimas de refrigeración',
+        'Horas que debe pasar un lote en refrigeración antes de poder liberarlo para el empaque. Con 0 se puede '
+        'liberar de inmediato. Rige al liberar: cambiarlo afecta a los lotes que aún no se liberaron.',
+        INTEGER, '12', minimum=Decimal('0'), maximum=Decimal('720')),
 )
 BY_SETTING_KEY: dict[str, SettingDefinition] = {s.key: s for s in SETTINGS_CATALOG}
 
@@ -84,6 +90,8 @@ def validate(definition: SettingDefinition, raw: object) -> str:
         return _validate_choice(definition, raw)
     if definition.kind == BOOLEAN:
         return _validate_boolean(raw)
+    if definition.kind == INTEGER:
+        return _validate_integer(definition, raw)
     return _validate_percent(definition, raw)
 
 
@@ -101,6 +109,18 @@ def _validate_boolean(raw: object) -> str:
     if isinstance(raw, str) and raw in BOOLEAN_LABELS:
         return raw
     raise ValueError('Elija una opción válida.')
+
+
+def _validate_integer(definition: SettingDefinition, raw: object) -> str:
+    if isinstance(raw, bool) or raw is None or raw == '':
+        raise ValueError('Ingrese un número entero.')
+    text = str(raw).strip()
+    if not (text.isascii() and text.isdigit()) or len(text) > 9:
+        raise ValueError('Ingrese un número entero sin decimales.')
+    value = int(text)
+    if value < definition.minimum or value > definition.maximum:
+        raise ValueError(f'Debe estar entre {definition.minimum} y {definition.maximum}.')
+    return str(value)
 
 
 def _validate_percent(definition: SettingDefinition, raw: object) -> str:
@@ -144,4 +164,6 @@ def display(definition: SettingDefinition, stored: str) -> str:
         return dict(definition.choices).get(stored, EMPTY_LABEL if stored == '' else stored)
     if definition.kind == BOOLEAN:
         return BOOLEAN_LABELS.get(stored, stored)
+    if definition.kind == INTEGER:
+        return f'{stored} h'
     return f'{stored} %'

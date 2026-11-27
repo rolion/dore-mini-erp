@@ -222,6 +222,16 @@ export const APP_ROUTE: Route[] = [
                     import('./features/production/production.routes').then((m) => m.ORDERS_ROUTE),
             },
             {
+                path: 'production/settings',
+                canActivate: [moduleGuard],
+                canDeactivate: [unsavedChangesGuard],
+                data: { module: 'production', settingsModule: 'production' },
+                loadComponent: () =>
+                    import('./features/settings/pages/module-settings/module-settings.component').then(
+                        (m) => m.ModuleSettingsComponent
+                    ),
+            },
+            {
                 path: 'customers',
                 canActivate: [moduleGuard],
                 data: { module: 'customers' },

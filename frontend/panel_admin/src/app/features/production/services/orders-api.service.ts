@@ -31,6 +31,11 @@ function fromDto(dto: ProductionOrderDto): ProductionOrder {
     enteredAt: dto.entered_at,
     lot: dto.lot,
     costTotal: dto.cost_total,
+    release: dto.release
+      ? { minHours: dto.release.min_hours, releasableFrom: dto.release.releasable_from, canRelease: dto.release.can_release }
+      : null,
+    releasedAt: dto.released_at,
+    releasedBy: dto.released_by,
   };
 }
 
@@ -47,6 +52,7 @@ function fieldErrors(body: unknown): OrderFieldErrors {
     preparations: text(record['preparations']), detail: text(record['detail']),
     actualOutput: text(record['actual_output']), enteredAt: text(record['entered_at']),
     ingredients: ingredientsText(record['ingredients']), ingredientLines: ingredientLines(record['ingredients']), code: typeof record['code'] === 'string' ? record['code'] : undefined,
+    releasableFrom: typeof record['releasable_from'] === 'string' ? record['releasable_from'] : undefined,
   };
 }
 
@@ -126,6 +132,10 @@ export class OrdersApiService {
       entered_at: input.enteredAt, actual_output: input.actualOutput,
       ingredients: input.ingredients.map(line => ({ product_id: line.productId, actual_quantity: line.actualQuantity })),
     }));
+  }
+
+  release(id: string): Observable<ProductionOrder> {
+    return this.request(this.http.post<ProductionOrderDto>(`${this.url}${id}/release/`, {}));
   }
 
   warehouses(): Observable<OrderWarehouse[]> {

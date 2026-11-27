@@ -19,6 +19,7 @@ export const MODULE_TITLES: Record<string, string> = {
   get purchases() { return tr('SETTINGS.MODULE_SETTINGS.COMPRAS'); },
   get inventory() { return tr('SETTINGS.MODULE_SETTINGS.INVENTARIO'); },
   get receivables() { return tr('SETTINGS.MODULE_SETTINGS.COBROS'); },
+  get production() { return tr('SETTINGS.MODULE_SETTINGS.PRODUCCION'); },
 };
 
 export const SAVED_MESSAGE = (): string => tr('SETTINGS.MODULE_SETTINGS.CONFIGURACION_GUARDADA');
@@ -139,6 +140,9 @@ export class ModuleSettingsComponent implements OnInit, HasUnsavedChanges {
   defaultLabel(setting: Setting): string {
     if (setting.kind === 'percent') {
       return `${setting.default} %`;
+    }
+    if (setting.kind === 'integer') {
+      return `${setting.default} ${tr('SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS')}`;
     }
     if (setting.kind === 'boolean') {
       return setting.default === 'true' ? tr('SETTINGS.MODULE_SETTINGS.ACTIVADO_2') : tr('SETTINGS.MODULE_SETTINGS.DESACTIVADO_2');

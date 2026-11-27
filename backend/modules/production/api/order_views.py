@@ -1,13 +1,15 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.exceptions import APIException, NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from modules.production.application.orders import Actor, ProductionOrders
 from modules.production.domain.production_order import (
-    InsufficientIngredients, OrderNotFound, OrderStateError, OrderStatus, OrderValidationError, RefrigerationRejected)
+    InsufficientIngredients, OrderNotFound, OrderStateError, OrderStatus, OrderValidationError, RefrigerationRejected,
+    ReleaseTooEarly)
 from modules.production.infrastructure.adapters import (
-    CatalogProducts, CostingGateway, InventoryStock, InventoryWarehouses)
+    CatalogProducts, CostingGateway, InventoryStock, InventoryWarehouses, ModularityReleasePolicy)
 from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
 from modules.production.infrastructure.django.repositories import DjangoRecipeRepository
 from shared.tenancy import company_id_from
@@ -42,6 +44,14 @@ class RefrigerationConflict(APIException):
         super().__init__({'detail': str(exc), 'code': exc.code})
 
 
+class ReleaseTooEarlyConflict(APIException):
+    status_code = 409
+
+    def __init__(self, exc: ReleaseTooEarly):
+        super().__init__({'detail': str(exc), 'code': 'release_too_early',
+                          'releasable_from': exc.releasable_from.isoformat(), 'min_hours': exc.min_hours})
+
+
 def _qty(value) -> str:
     return f'{value:.4f}'
 
@@ -50,11 +60,24 @@ def _orders(request) -> ProductionOrders:
     company_id = company_id_from(request)
     return ProductionOrders(DjangoProductionOrderRepository(company_id), DjangoRecipeRepository(company_id),
                             CatalogProducts(company_id), InventoryWarehouses(company_id),
-                            stock=InventoryStock(company_id), costs=CostingGateway(company_id))
+                            stock=InventoryStock(company_id), costs=CostingGateway(company_id),
+                            policy=ModularityReleasePolicy(company_id))
+
+
+def _release(order, min_hours: int, now) -> dict | None:
+    """Datos para decidir la liberación; la autoridad es el backend (la acción la vuelve a validar)."""
+    if order.status not in (OrderStatus.REFRIGERATING, OrderStatus.READY_TO_PACK):
+        return None
+    first = order.releasable_from(min_hours)
+    return {'min_hours': min_hours, 'releasable_from': first,
+            'can_release': order.status == OrderStatus.REFRIGERATING and first is not None and now >= first}
 
 
 def _serialize(request, orders: list) -> list[dict]:
-    names = InventoryWarehouses(company_id_from(request)).names({order.warehouse_id for order in orders})
+    company_id = company_id_from(request)
+    names = InventoryWarehouses(company_id).names({order.warehouse_id for order in orders})
+    min_hours = ModularityReleasePolicy(company_id).min_refrigeration_hours()
+    now = timezone.now()
     return [{
         'id': order.id,
         'number': order.number,
@@ -81,6 +104,9 @@ def _serialize(request, orders: list) -> list[dict]:
         'refrigerated_at': order.refrigerated_at,
         'lot': {'id': order.lot_id, 'code': order.lot_code} if order.lot_id else None,
         'cost_total': f'{order.cost_total:.2f}' if order.cost_total is not None else None,
+        'release': _release(order, min_hours, now),
+        'released_at': order.released_at,
+        'released_by': order.released_by_name or None,
     } for order in orders]
 
 
@@ -99,6 +125,8 @@ def _run(request, callback, **values):
         raise InsufficientIngredientsConflict(exc) from exc
     except RefrigerationRejected as exc:
         raise RefrigerationConflict(exc) from exc
+    except ReleaseTooEarly as exc:
+        raise ReleaseTooEarlyConflict(exc) from exc
 
 
 def _values(serializer_class, request) -> dict:
@@ -114,7 +142,7 @@ class OrderListCreateView(APIView):
     def get(self, request):
         status = request.query_params.get('status', 'all')
         if status != 'all' and status not in OrderStatus.ALL:
-            raise ValidationError({'status': ['Usa all, draft, in_preparation o refrigerating.']})
+            raise ValidationError({'status': ['Usa all, draft, in_preparation, refrigerating o ready_to_pack.']})
         orders = _orders(request).repository.list(status=status)
         paginator = RecipePagination()
         page = paginator.paginate_queryset(orders, request, view=self)
@@ -156,6 +184,15 @@ class OrderRefrigerateView(APIView):
         return Response(_run(request, _orders(request).refrigerate, order_id=order_id,
                              entered_at=data['entered_at'], actual_output=data.get('actual_output'),
                              ingredients=[dict(item) for item in data['ingredients']], actor=actor))
+
+
+class OrderReleaseView(APIView):
+    required_modules = ('production',)
+
+    def post(self, request, order_id):
+        user = request.user
+        actor = Actor(user.pk, user.get_full_name().strip() or user.get_username())
+        return Response(_run(request, _orders(request).release, order_id=order_id, actor=actor))
 
 
 class OrderWarehousesView(APIView):

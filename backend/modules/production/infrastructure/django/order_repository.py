@@ -17,7 +17,8 @@ def to_entity(model: ProductionOrderModel) -> ProductionOrder:
         preparations=model.preparations, started_at=model.started_at, created_at=model.created_at,
         updated_at=model.updated_at, actual_output=model.actual_output, entered_at=model.entered_at,
         refrigerated_at=model.refrigerated_at, lot_id=model.lot_id, lot_code=model.lot_code,
-        cost_total=model.cost_total,
+        cost_total=model.cost_total, released_at=model.released_at, released_by_id=model.released_by_id,
+        released_by_name=model.released_by_name,
         ingredients=[OrderIngredient(line.product_id, line.product_name, line.unit_id, line.unit_abbreviation,
                                      line.quantity_per_preparation, line.actual_quantity)
                      for line in model.ingredients.all()])
@@ -82,6 +83,9 @@ class DjangoProductionOrderRepository:
             model.lot_id = order.lot_id
             model.lot_code = order.lot_code
             model.cost_total = order.cost_total
+            model.released_at = order.released_at
+            model.released_by_id = order.released_by_id
+            model.released_by_name = order.released_by_name
             model.save()
             if created:
                 ProductionOrderIngredientModel.objects.bulk_create([

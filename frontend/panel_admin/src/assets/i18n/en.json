@@ -171,7 +171,8 @@
       "TEXT": "Production",
       "LIST": {
         "RECIPES": "Recipes",
-        "ORDERS": "Production orders"
+        "ORDERS": "Production orders",
+        "SETTINGS": "Settings"
       }
     }
   },
@@ -2142,7 +2143,9 @@
       "PERMITIR": "Allow",
       "ACTIVADO_2": "Enabled",
       "DESACTIVADO_2": "Disabled",
-      "SIN_PREDETERMINADO_2": "No default"
+      "SIN_PREDETERMINADO_2": "No default",
+      "UNIDAD_HORAS": "h",
+      "PRODUCCION": "Production"
     },
     "SETTING": {
       "NO_SE_PUDO_COMPLETAR_LA": "The operation could not be completed. Try again."
@@ -3570,7 +3573,8 @@
       "STATUS": {
         "DRAFT": "Draft",
         "IN_PREPARATION": "In preparation",
-        "REFRIGERATING": "In refrigeration"
+        "REFRIGERATING": "In refrigeration",
+        "READY_TO_PACK": "Ready to pack"
       },
       "ERRORS": {
         "NETWORK": "Could not connect to the server.",
@@ -3597,6 +3601,23 @@
         "LOT": "Lot",
         "COST": "Total cost consumed",
         "NO_COST": "No cost"
+      },
+      "RELEASE": {
+        "ACTION": "Release batch",
+        "TITLE": "Batch release",
+        "ENTERED_AT": "Entered refrigeration",
+        "ELAPSED": "Elapsed time",
+        "MIN_HOURS": "Configured minimum",
+        "FIRST": "First eligible time",
+        "AVAILABLE_FROM": "Available from {{date}}",
+        "RELEASED_BY": "Released by",
+        "RELEASED_AT": "Released on",
+        "CONFIRM_TITLE": "Release batch {{lot}}?",
+        "CONFIRM_TEXT": "{{quantity}} {{unit}} will become available for packing. This cannot be undone.",
+        "DONE": "The batch was released and the order is ready to pack.",
+        "HOURS_MIN": "{{hours}} h {{minutes}} min",
+        "HOURS_UNIT": "h",
+        "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}."
       }
     }
   }

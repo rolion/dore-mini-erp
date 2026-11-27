@@ -12,7 +12,8 @@ class OrderStatus:
     DRAFT = 'draft'
     IN_PREPARATION = 'in_preparation'
     REFRIGERATING = 'refrigerating'
-    ALL = (DRAFT, IN_PREPARATION, REFRIGERATING)
+    READY_TO_PACK = 'ready_to_pack'
+    ALL = (DRAFT, IN_PREPARATION, REFRIGERATING, READY_TO_PACK)
 
 
 class OrderValidationError(Exception):
@@ -58,6 +59,15 @@ class RefrigerationRejected(Exception):
     def __init__(self, code: str, message: str):
         self.code = code
         super().__init__(message)
+
+
+class ReleaseTooEarly(Exception):
+    """Aún no se cumple el mínimo de refrigeración; `releasable_from` es la primera hora habilitada."""
+
+    def __init__(self, releasable_from: datetime, min_hours: int):
+        self.releasable_from = releasable_from
+        self.min_hours = min_hours
+        super().__init__('Todavía no se cumple el tiempo mínimo de refrigeración del lote.')
 
 
 def parse_preparations(raw: object) -> int:
@@ -138,6 +148,10 @@ class ProductionOrder:
     lot_id: UUID | None = None
     lot_code: str = ''
     cost_total: Decimal | None = None
+    # Liberación del lote (solo en READY_TO_PACK).
+    released_at: datetime | None = None
+    released_by_id: UUID | None = None
+    released_by_name: str = ''
 
     @classmethod
     def create(cls, *, recipe_id, recipe_name, result_product_id, result_product_name, result_unit_id,
@@ -232,3 +246,29 @@ class ProductionOrder:
         self.ingredients = [OrderIngredient(line.product_id, line.product_name, line.unit_id, line.unit_abbreviation,
                                             line.quantity_per_preparation, consumption[line.product_id])
                             for line in self.ingredients]
+
+    def releasable_from(self, min_hours: int) -> datetime | None:
+        """Primera hora habilitada para liberar el lote: ingreso + mínimo (INV-02); `None` sin ingreso registrado."""
+        if self.entered_at is None:
+            return None
+        return self.entered_at + timedelta(hours=min_hours)
+
+    def release(self, *, now: datetime, min_hours: int, user_id: UUID | None, user_name: str) -> bool:
+        """`REFRIGERATING → READY_TO_PACK` si ya se cumplió el mínimo (INV-01, INV-02, INV-06).
+
+        Devuelve `False` sin cambios si ya estaba lista para empacar (INV-05).
+        """
+        if self.status == OrderStatus.READY_TO_PACK:
+            return False
+        if self.status != OrderStatus.REFRIGERATING:
+            raise OrderStateError('La orden no está en refrigeración.')
+        first = self.releasable_from(min_hours)
+        if first is None or self.lot_id is None:
+            raise OrderStateError('La orden no tiene un ingreso a refrigeración registrado.')
+        if now < first:
+            raise ReleaseTooEarly(first, min_hours)
+        self.status = OrderStatus.READY_TO_PACK
+        self.released_at = now
+        self.released_by_id = user_id
+        self.released_by_name = user_name
+        return True

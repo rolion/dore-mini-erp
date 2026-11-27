@@ -11,6 +11,7 @@ export const orderDto: ProductionOrderDto = {
   warehouse: { id: 'w-1', name: 'Principal' }, preparations: 5, yield_per_preparation: '24.0000', expected_output: '120.0000',
   ingredients: [{ product_id: 'p-1', product_name: 'Queso', unit_id: 'u-2', unit_abbreviation: 'kg', quantity_per_preparation: '1.5000', expected_quantity: '7.5000', actual_quantity: null }],
   created_at: '2026-11-26T12:00:00Z', started_at: null, actual_output: null, entered_at: null, lot: null, cost_total: null,
+  release: null, released_at: null, released_by: null,
 };
 
 describe('order helpers', () => {
@@ -100,6 +101,24 @@ describe('OrdersApiService', () => {
     expect(caught?.status).toBe(409);
     expect(caught?.fields.code).toBe('insufficient_stock');
     expect(caught?.shortages).toEqual([{ productId: 'p-1', productName: 'Queso', unitAbbreviation: 'kg', requested: '7.0000', available: '5.0000', missing: '2.0000' }]);
+  });
+
+  it('releases the lot and maps the release data and the too-early rejection', () => {  // AC-02, AC-03, API-01..03
+    api.release('order-1').subscribe(order => {
+      expect(order.status).toBe('ready_to_pack');
+      expect(order.releasedBy).toBe('Ana');
+      expect(order.release).toEqual({ minHours: 12, releasableFrom: '2026-11-27T20:00:00Z', canRelease: false });
+    });
+    const ok = http.expectOne('/api/production-orders/order-1/release/');
+    expect(ok.request.method).toBe('POST');
+    ok.flush({ ...orderDto, status: 'ready_to_pack', released_at: '2026-11-27T20:05:00Z', released_by: 'Ana',
+      release: { min_hours: 12, releasable_from: '2026-11-27T20:00:00Z', can_release: false } });
+    let caught: OrderApiError | undefined;
+    api.release('order-1').subscribe({ error: (error: OrderApiError) => caught = error });
+    http.expectOne('/api/production-orders/order-1/release/').flush(
+      { detail: 'x', code: 'release_too_early', releasable_from: '2026-11-27T20:00:00+00:00', min_hours: 12 }, { status: 409, statusText: 'Conflict' });
+    expect(caught?.fields.code).toBe('release_too_early');
+    expect(caught?.fields.releasableFrom).toBe('2026-11-27T20:00:00+00:00');
   });
 
   it('maps server validation errors by field', () => {

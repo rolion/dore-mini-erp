@@ -15,7 +15,7 @@ class CatalogTests(SimpleTestCase):
             self.assertTrue(definition.key.startswith(f'{definition.module}.'))
             self.assertFalse(module_domain.definition(definition.module).is_base)
             self.assertTrue(definition.label and definition.description)
-            self.assertIn(definition.kind, (s.CHOICE, s.PERCENT, s.BOOLEAN))  # sin tipos secretos (INV-08)
+            self.assertIn(definition.kind, (s.CHOICE, s.PERCENT, s.BOOLEAN, s.INTEGER))  # sin tipos secretos (INV-08)
             # el valor inicial documentado es válido según su propia regla
             self.assertEqual(s.validate(definition, definition.default), definition.default)
 
@@ -23,7 +23,8 @@ class CatalogTests(SimpleTestCase):
         initial = {d.key: d.default for d in s.SETTINGS_CATALOG}
         self.assertEqual(initial, {'sales.default_sales_channel': '', 'sales.default_payment_method': '',
                                    'sales.max_discount_percent': '100.00',
-                                   'inventory.allow_negative_stock': 'false'})
+                                   'inventory.allow_negative_stock': 'false',
+                                   'production.min_refrigeration_hours': '12'})
 
     def test_modules_without_settings(self):
         self.assertEqual(s.settings_for('purchases'), [])
@@ -55,6 +56,18 @@ class ValidationTests(SimpleTestCase):
         for bad in ('-1', '100.01', '101', '1.005', 'abc', '', None, True, 'NaN', 'Infinity'):
             with self.assertRaises(ValueError, msg=repr(bad)):
                 s.validate(self.percent, bad)
+
+    def test_integer_valid(self):  # AC-07
+        hours = s.BY_SETTING_KEY['production.min_refrigeration_hours']
+        for raw, expected in (('0', '0'), ('12', '12'), (' 720 ', '720'), (6, '6'), ('012', '12')):
+            self.assertEqual(s.validate(hours, raw), expected)
+        self.assertEqual(s.display(hours, '12'), '12 h')
+
+    def test_integer_invalid(self):  # AC-07
+        hours = s.BY_SETTING_KEY['production.min_refrigeration_hours']
+        for bad in ('-1', '721', '1.5', 'abc', '', None, True, 1.5, '1' * 10, '١٢'):
+            with self.assertRaises(ValueError, msg=repr(bad)):
+                s.validate(hours, bad)
 
     def test_validate_all_is_all_or_nothing(self):  # INV-02
         definitions = s.settings_for('sales')

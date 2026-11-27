@@ -65,6 +65,10 @@ class ProductionOrderModel(models.Model):
     lot_id = models.UUIDField(null=True, blank=True)
     lot_code = models.CharField(max_length=30, blank=True, default='')
     cost_total = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
+    # Liberación del lote (TASK-liberar-lote-despues-refrigeracion).
+    released_at = models.DateTimeField(null=True, blank=True)
+    released_by_id = models.UUIDField(null=True, blank=True)
+    released_by_name = models.CharField(max_length=150, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -78,7 +82,10 @@ class ProductionOrderModel(models.Model):
                 condition=(models.Q(status='draft', started_at__isnull=True)
                            | models.Q(status='in_preparation', started_at__isnull=False)
                            | models.Q(status='refrigerating', started_at__isnull=False, lot_id__isnull=False,
-                                      actual_output__isnull=False, entered_at__isnull=False)),
+                                      actual_output__isnull=False, entered_at__isnull=False)
+                           | models.Q(status='ready_to_pack', started_at__isnull=False, lot_id__isnull=False,
+                                      actual_output__isnull=False, entered_at__isnull=False,
+                                      released_at__isnull=False)),
                 name='production_order_started_with_status'),
         ]
 

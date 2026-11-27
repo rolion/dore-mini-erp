@@ -4,8 +4,8 @@ from unittest import TestCase
 from uuid import uuid4
 
 from modules.production.domain.production_order import (
-    OrderIngredient, OrderStateError, OrderStatus, OrderValidationError, ProductionOrder, parse_preparations,
-    parse_quantity)
+    OrderIngredient, OrderStateError, OrderStatus, OrderValidationError, ProductionOrder, ReleaseTooEarly,
+    parse_preparations, parse_quantity)
 
 
 def make_order(preparations=5):
@@ -106,3 +106,55 @@ class RefrigerationDomainTests(TestCase):
         with self.assertRaises(OrderStateError):
             order.refrigerate(now=NOW, entered_at=NOW, actual_output=Decimal('1'), consumption={},
                               lot_id=uuid4(), lot_code='L', cost_total=None)
+
+
+ENTERED = datetime(2026, 11, 27, 8, tzinfo=timezone.utc)
+
+
+def refrigerated_order():
+    order = make_order()
+    order.start(ENTERED - timedelta(hours=2))
+    consumption = {line.product_id: Decimal('1') for line in order.ingredients}
+    order.refrigerate(now=ENTERED, entered_at=ENTERED, actual_output=Decimal('118'), consumption=consumption,
+                      lot_id=uuid4(), lot_code='L-20261127-0001', cost_total=None)
+    return order
+
+
+class ProductionOrderReleaseTests(TestCase):
+    def test_releasable_from_is_entry_plus_minimum(self):  # AC-01, INV-02
+        order = refrigerated_order()
+        self.assertEqual(order.releasable_from(12), ENTERED + timedelta(hours=12))
+        self.assertIsNone(make_order().releasable_from(12))
+
+    def test_release_before_minimum_is_rejected(self):  # AC-02, INV-02
+        order = refrigerated_order()
+        just_before = ENTERED + timedelta(hours=12) - timedelta(seconds=1)
+        with self.assertRaises(ReleaseTooEarly) as caught:
+            order.release(now=just_before, min_hours=12, user_id=uuid4(), user_name='Ana')
+        self.assertEqual((caught.exception.releasable_from, caught.exception.min_hours),
+                         (ENTERED + timedelta(hours=12), 12))
+        self.assertEqual((order.status, order.released_at), (OrderStatus.REFRIGERATING, None))
+
+    def test_release_at_the_exact_minimum_records_who_and_when(self):  # AC-03, AC-04, INV-06
+        order, user = refrigerated_order(), uuid4()
+        now = ENTERED + timedelta(hours=12)
+        self.assertTrue(order.release(now=now, min_hours=12, user_id=user, user_name='Ana'))
+        self.assertEqual((order.status, order.released_at, order.released_by_id, order.released_by_name),
+                         (OrderStatus.READY_TO_PACK, now, user, 'Ana'))
+
+    def test_zero_minimum_allows_immediate_release(self):  # AC-07
+        order = refrigerated_order()
+        self.assertTrue(order.release(now=ENTERED, min_hours=0, user_id=None, user_name='Ana'))
+
+    def test_release_twice_changes_nothing(self):  # AC-05, INV-05
+        order = refrigerated_order()
+        order.release(now=ENTERED + timedelta(hours=13), min_hours=12, user_id=None, user_name='Ana')
+        self.assertFalse(order.release(now=ENTERED + timedelta(hours=20), min_hours=12, user_id=None, user_name='Beto'))
+        self.assertEqual((order.released_at, order.released_by_name), (ENTERED + timedelta(hours=13), 'Ana'))
+
+    def test_only_refrigerating_orders_can_be_released(self):  # AC-06, INV-01
+        draft, started = make_order(), make_order()
+        started.start(ENTERED)
+        for order in (draft, started):
+            with self.assertRaises(OrderStateError):
+                order.release(now=ENTERED, min_hours=0, user_id=None, user_name='Ana')
