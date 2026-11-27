@@ -2,7 +2,7 @@
     <h4 class="modal-title">{{ (isEdit ? 'CRM.TRACKING.TARJETA' : 'CRM.TRACKING.NUEVA_TARJETA') | translate }}</h4>
     <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
   </div>
-  <div class="modal-body" [style.height]="isEdit ? 'min(70vh, 600px)' : null">
+  <div class="modal-body" [style.height]="isEdit ? 'min(60vh, 440px)' : null">
     <div class="row g-4" [class.h-100]="isEdit">
       <div [class.col-lg-6]="isEdit" [class.col-12]="!isEdit" [class.overflow-auto]="isEdit" [class.mh-100]="isEdit">
         @if (isEdit && !editing) {

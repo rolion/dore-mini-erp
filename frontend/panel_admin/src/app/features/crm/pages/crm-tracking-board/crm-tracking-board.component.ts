@@ -174,7 +174,7 @@ export class CrmTrackingBoardComponent implements OnInit {
   viewCard(card: CrmOpportunity): void {
     if (!this.board) return;
     this.notice = '';
-    const ref = this.modal.open(TrackingCardDialogComponent, { centered: true, backdrop: 'static', size: 'xl', scrollable: true });
+    const ref = this.modal.open(TrackingCardDialogComponent, { centered: true, backdrop: 'static', size: 'lg', scrollable: true });
     (ref.componentInstance as TrackingCardDialogComponent).open({ boardId: this.board.id, stageId: card.stageId, card });
     ref.result.then(() => this.refresh(), () => undefined);
   }
