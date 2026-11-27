@@ -1,6 +1,6 @@
 # TASK-consultar-ordenes-seguimiento-estado: Consultar órdenes de producción y seguir su estado
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-consultar-ordenes-seguimiento-estado (base: `produccion`)
@@ -16,7 +16,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | PLAN v1 READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas escritas; verificación propia: `modules.production` 148 OK, Karma de production + i18n/core en verde, `ng lint` y `i18n:check` limpios | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS (subagente aislado): 0 Critical/High; REV-01 y REV-02 Low abiertos; revisión visual no verificada | delivery-publish |
-| 2026-11-27 | PUBLISH → PLANNING → ENGINEERING → REVIEW | El usuario pidió mejorar la UI del detalle (crítica de diseño) en este mismo PR: DDR de rediseño y PLAN v2 (cambio de Specification aprobado en el chat); implementado y verificado por el autor; falta repetir el Quality Gate aislado | delivery-start / delivery-build |
+| 2026-11-27 | PUBLISH → PLANNING → ENGINEERING → REVIEW → PUBLISH | El usuario pidió mejorar la UI del detalle (crítica de diseño) en este mismo PR: DDR de rediseño y PLAN v2 (cambio de Specification aprobado en el chat); implementado y verificado por el autor; Quality Gate aislado repetido: PASS | delivery-start / delivery-build |
 
 ## Investigación
 
@@ -90,8 +90,10 @@ No aplica según veredicto.
 Hallazgos (Low, IMPLEMENTATION; **resueltos después** a pedido del usuario: el filtro de recetas pagina hasta cargarlas todas y la prueba de lote inexistente compara contra el código real; verificación propia: production 148 OK, Karma 1938/1938, lint e i18n limpios; el Quality Gate aislado no se repitió sobre ese último commit): [REV-01](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-01.md) selector de recetas limitado a 100; [REV-02](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-02.md) aserción tautológica en la prueba de lote inexistente (la parte de AC-07 «Listo para empacar» sí tiene prueba directa: `shows the lot stock…` verifica que no hay iniciar/registrar/liberar).
 Revisión visual: **no verificada** (la app no se levantó).
 
+**Quality Gate repetido sobre el estado final (rediseño incluido): PASS** (subagente aislado, 2026-11-27). `modules.production` 148 OK; `modules.inventory` 204 OK; ruff, flake8 y bandit limpios; Karma 1944/1944; `npm run lint`, `i18n:check` (2655 claves, 0 faltantes) y `build` OK; `npm audit` 0 vulnerabilidades. Todos los AC/EDGE/UI/API con verificación; sin scope creep. Hallazgos Low abiertos: [REV-03](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-03.md) contraste de etapas pendientes (DESIGN), [REV-04](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-04.md) celdas de ingredientes y `aria-valuetext` (IMPLEMENTATION), [REV-05](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-05.md) ruta de API en el PLAN (PLAN). Revisión visual del revisor: **no verificada** (la del autor, 390/1440 px en tema claro, no se reprodujo; tema oscuro sin verificar).
+
 ## Publicación
 PR #142 listo para aprobación humana (base `produccion`). Sin ADR, migraciones, auth ni infraestructura. No se mergea.
 
 ### Rediseño del detalle (v2 del plan)
-`order-detail.component.{html,scss,ts}` reescritos según el DDR de rediseño: cabecera con `app-status-badge` y receta·producto·almacén, línea de etapas con fechas (AC-08), tarjetas de cifras clave, paneles «Datos de la orden» y «Lote y refrigeración» con barra de progreso, motivo del botón «Liberar» visible con `aria-describedby`, y columna Diferencia de ingredientes con aritmética entera (AC-06, UI-02, UI-04). Referencia visual: plantilla «Detalle de documento en curso con acciones en la cabecera»; patrón nuevo documentado en `design-system.md` («Detalle con etapas y cifras clave»). Sin cambios de backend. Pruebas: 6 nuevas en `order-pages.spec.ts` (Karma completo 1944/1944; lint, `i18n:check` y build OK). **Revisión visual propia** en el navegador integrado con una orden real en refrigeración: escritorio 1440 px y móvil 390 px correctos, sin scroll horizontal; tema oscuro no verificado (solo variables CSS de Bootstrap). El Quality Gate aislado no se ha repetido sobre este cambio.
+`order-detail.component.{html,scss,ts}` reescritos según el DDR de rediseño: cabecera con `app-status-badge` y receta·producto·almacén, línea de etapas con fechas (AC-08), tarjetas de cifras clave, paneles «Datos de la orden» y «Lote y refrigeración» con barra de progreso, motivo del botón «Liberar» visible con `aria-describedby`, y columna Diferencia de ingredientes con aritmética entera (AC-06, UI-02, UI-04). Referencia visual: plantilla «Detalle de documento en curso con acciones en la cabecera»; patrón nuevo documentado en `design-system.md` («Detalle con etapas y cifras clave»). Sin cambios de backend. Pruebas: 6 nuevas en `order-pages.spec.ts` (Karma completo 1944/1944; lint, `i18n:check` y build OK). **Revisión visual propia** en el navegador integrado con una orden real en refrigeración: escritorio 1440 px y móvil 390 px correctos, sin scroll horizontal; tema oscuro no verificado (solo variables CSS de Bootstrap). Quality Gate aislado repetido sobre este cambio: PASS (ver Review).
