@@ -95,6 +95,16 @@ class EncounterApiTests(Base, APITestCase):
         self.assertEqual(self.client.get(APPOINTMENTS, {'from': yesterday, 'to': yesterday}).json()['count'], 0)
         self.assertEqual(self.client.get(APPOINTMENTS, {'from': '2026-01-01', 'to': '2026-12-31'}).status_code, 400)
 
+    def test_times_are_returned_in_the_agenda_time_zone(self):
+        appointment = self.appointment()
+        listed = self.client.get(APPOINTMENTS).json()['results'][0]
+        detail = self.client.get(self.url(appointment)).json()['appointment']
+        agenda = self.client.get(f'{AGENDA}{appointment.id}/').json()
+        self.assertEqual((listed['starts'], detail['starts']), (agenda['starts'], agenda['starts']))
+        self.assertTrue(agenda['starts'].endswith('-04:00'), agenda['starts'])
+        started = self.start(appointment)['encounter']['started_at']
+        self.assertTrue(started.endswith('-04:00'), started)
+
     def test_detail_shows_patient_summary_and_actions(self):  # AC-01
         appointment = self.appointment()
         data = self.client.get(self.url(appointment)).json()

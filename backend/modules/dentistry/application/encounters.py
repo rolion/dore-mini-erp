@@ -3,7 +3,8 @@
 Orden de bloqueo fijo: cita (y agenda del profesional) → atención. Cada comando es una única transacción: si falla
 la sincronización con la cita, no cambia la atención y viceversa.
 """
-from datetime import date
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from django.db import IntegrityError, transaction
 from django.utils import timezone
@@ -16,6 +17,11 @@ from modules.dentistry.domain.patient import PatientArchived, PatientNotFound
 from modules.dentistry.domain.proforma import DentalProformaValidationError
 
 MAX_RANGE_DAYS = 31
+ZONE = ZoneInfo('America/La_Paz')  # misma zona que Agenda: el cliente muestra la hora tal como llega
+
+
+def local(value: datetime | None) -> str | None:
+    return value.astimezone(ZONE).isoformat() if value else None
 
 
 def clinical_date(encounter_row) -> date:
@@ -171,7 +177,7 @@ class EncounterQueries:
             'appointment_id': snapshot.id, 'customer_id': snapshot.customer_id,
             'customer_name': snapshot.customer_name, 'professional_id': snapshot.professional_id,
             'professional_name': names.get(snapshot.professional_id, ''), 'service_name': snapshot.service_name,
-            'starts': snapshot.starts, 'ends': snapshot.ends, 'status': snapshot.status,
+            'starts': local(snapshot.starts), 'ends': local(snapshot.ends), 'status': snapshot.status,
             'encounter_id': encounter.id if encounter else None,
             'encounter_status': encounter.status if encounter else PENDING,
         }
@@ -189,7 +195,7 @@ class EncounterQueries:
                 'id': snapshot.id, 'customer_id': snapshot.customer_id, 'customer_name': snapshot.customer_name,
                 'professional_id': snapshot.professional_id,
                 'professional_name': names.get(snapshot.professional_id, ''), 'service_name': snapshot.service_name,
-                'starts': snapshot.starts, 'ends': snapshot.ends, 'status': snapshot.status,
+                'starts': local(snapshot.starts), 'ends': local(snapshot.ends), 'status': snapshot.status,
                 'notes': snapshot.notes},
             'is_dental': patient_row is not None,
             'patient': self._patient(snapshot.customer_id, patient_row),
@@ -224,11 +230,11 @@ class EncounterQueries:
         if row is None:
             return None
         return {
-            'id': row.id, 'status': row.status, 'started_at': row.started_at,
+            'id': row.id, 'status': row.status, 'started_at': local(row.started_at),
             'started_by': {'id': row.started_by, 'name': row.started_by_name},
-            'finished_at': row.finished_at,
+            'finished_at': local(row.finished_at),
             'finished_by': {'id': row.finished_by, 'name': row.finished_by_name} if row.finished_at else None,
-            'cancelled_at': row.cancelled_at,
+            'cancelled_at': local(row.cancelled_at),
             'cancelled_by': {'id': row.cancelled_by, 'name': row.cancelled_by_name} if row.cancelled_at else None,
             'cancellation_reason': row.cancellation_reason, 'observations': row.observations,
         }
@@ -261,7 +267,7 @@ class EncounterQueries:
             appointment = appointments.get(row.appointment_id)
             items.append({
                 'id': row.id, 'appointment_id': row.appointment_id, 'status': row.status,
-                'started_at': row.started_at, 'finished_at': row.finished_at,
+                'started_at': local(row.started_at), 'finished_at': local(row.finished_at),
                 'professional_id': row.professional_id, 'professional_name': names.get(row.professional_id, ''),
                 'service_name': appointment.service_name if appointment else '',
                 'has_odontogram': row.id in with_odontogram,
