@@ -3651,11 +3651,14 @@
         "LOAD_ERROR": "Não foi possível carregar os produtos.",
         "SUMMARY_LABELS": " · etiquetas: {{labels}}",
         "PACK_HELP": "Produto do catálogo vendido no varejo: o saco montado com 6 cuñapés.",
-        "BAG_HELP": "Saco vazio em que cada pack é montado; usa-se 1 por pack.",
+        "BAG_HELP": "Material de que cada pack é feito (p. ex. o rolo de saco).",
         "LABEL_PRODUCT": "Etiqueta ou adesivo (opcional)",
         "NO_LABEL": "Sem etiqueta",
         "LABEL_HELP": "Se escolher uma, usa-se 1 por pack e soma ao custo.",
-        "LABELS_USED": "Etiquetas"
+        "LABELS_USED": "Etiquetas",
+        "BAG_PER_PACK": "Saco usado por pack",
+        "BAG_PER_PACK_HELP": "Na unidade do produto: com um rolo em metros, 0.17 = 17 cm por pack.",
+        "BAG_PER_PACK_INVALID": "Informe um número maior que 0 (até 4 casas decimais)."
       }
     }
   }

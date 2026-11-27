@@ -3651,11 +3651,14 @@
         "LOAD_ERROR": "No se pudieron cargar los productos.",
         "SUMMARY_LABELS": " · etiquetas: {{labels}}",
         "PACK_HELP": "Producto del catálogo que se vende al detalle: la bolsa armada con 6 cuñapés.",
-        "BAG_HELP": "Bolsa vacía en la que se arma cada pack; se descuenta 1 por pack.",
+        "BAG_HELP": "Material del que se hace cada pack (p. ej. el rollo de bolsa).",
         "LABEL_PRODUCT": "Etiqueta o sticker (opcional)",
         "NO_LABEL": "Sin etiqueta",
         "LABEL_HELP": "Si eliges una, se descuenta 1 por pack y suma al costo.",
-        "LABELS_USED": "Etiquetas"
+        "LABELS_USED": "Etiquetas",
+        "BAG_PER_PACK": "Bolsa que se usa por pack",
+        "BAG_PER_PACK_HELP": "En la unidad del producto: con un rollo en metros, 0.17 = 17 cm por pack.",
+        "BAG_PER_PACK_INVALID": "Ingresa un número mayor que 0 (hasta 4 decimales)."
       }
     }
   }

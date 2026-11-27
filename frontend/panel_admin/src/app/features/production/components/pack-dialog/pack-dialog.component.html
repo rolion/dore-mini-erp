@@ -21,6 +21,14 @@
       @else if (submitted && form.controls.bagProductId.invalid) { <small class="form-text text-danger" role="alert">{{ 'PRODUCTION.ORDERS.PACK.PRODUCT_REQUIRED' | translate }}</small> }
     </div>
     <div class="form-group mb-3">
+      <label for="bag-per-pack">{{ 'PRODUCTION.ORDERS.PACK.BAG_PER_PACK' | translate }}@if (bagUnit) { ({{ bagUnit }}) } <span class="text-danger">*</span></label>
+      <input id="bag-per-pack" type="number" min="0" step="0.01" class="form-control" formControlName="bagPerPack"
+        [attr.aria-invalid]="form.controls.bagPerPack.invalid ? 'true' : null" data-testid="bag-per-pack" />
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.BAG_PER_PACK_HELP' | translate }}</small>
+      @if (serverErrors.bagPerPack) { <small class="form-text text-danger d-block" role="alert">{{ serverErrors.bagPerPack }}</small> }
+      @else if (form.controls.bagPerPack.invalid) { <small class="form-text text-danger d-block" role="alert">{{ 'PRODUCTION.ORDERS.PACK.BAG_PER_PACK_INVALID' | translate }}</small> }
+    </div>
+    <div class="form-group mb-3">
       <label for="label-product">{{ 'PRODUCTION.ORDERS.PACK.LABEL_PRODUCT' | translate }}</label>
       <ng-select inputId="label-product" [items]="options" bindLabel="name" bindValue="id" formControlName="labelProductId"
         [placeholder]="'PRODUCTION.ORDERS.PACK.NO_LABEL' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"

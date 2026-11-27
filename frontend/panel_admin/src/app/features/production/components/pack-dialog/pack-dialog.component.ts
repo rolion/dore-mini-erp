@@ -14,6 +14,14 @@ import { OrdersApiService } from '../../services/orders-api.service';
 export interface ProductOption {
   id: string;
   name: string;
+  unit: string;
+}
+
+/** Cantidad de bolsa por pack: positiva, hasta 4 decimales (igual que el servidor). */
+function bagLength(control: AbstractControl): ValidationErrors | null {
+  const value: unknown = control.value;
+  const valid = typeof value === 'number' && value > 0 && value <= 9999.9999 && Math.abs(value * 10000 - Math.round(value * 10000)) < 1e-6;
+  return valid ? null : { bagPerPack: true };
 }
 
 function wholeNumber(control: AbstractControl): ValidationErrors | null {
@@ -44,26 +52,33 @@ export class PackDialogComponent implements OnInit {
   submitted = false;
   error = '';
   shortages: OrderShortage[] = [];
-  serverErrors: { packs?: string; packProductId?: string; bagProductId?: string; labelProductId?: string } = {};
+  serverErrors: { packs?: string; packProductId?: string; bagProductId?: string; bagPerPack?: string; labelProductId?: string } = {};
   readonly quantity = formatQuantity;
 
   readonly form = this.fb.nonNullable.group({
     packProductId: ['', Validators.required],
     bagProductId: ['', Validators.required],
+    bagPerPack: [0.17, [Validators.required, bagLength]],
     labelProductId: [''],
     packs: [1, [Validators.required, wholeNumber]],
   });
 
   ngOnInit(): void {
+    this.form.controls.bagPerPack.setValue(Number(this.order.packing?.suggestedBagPerPack ?? '0.17'));
     this.products.list({ active: true, pageSize: 100 }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: page => this.options = page.results.filter(product => product.tracksStock && product.id !== this.order.resultProduct.id)
-        .map(product => ({ id: product.id, name: product.name })),
+        .map(product => ({ id: product.id, name: product.name, unit: product.baseUnit?.abbreviation ?? '' })),
       error: () => this.loadError = tr('PRODUCTION.ORDERS.PACK.LOAD_ERROR'),
     });
   }
 
   get unitsPerPack(): number { return this.order.packing?.unitsPerPack ?? 6; }
-  get bagsPerPack(): number { return this.order.packing?.bagsPerPack ?? 1; }
+  get bagUnit(): string { return this.options.find(option => option.id === this.form.controls.bagProductId.value)?.unit ?? ''; }
+  /** Bolsa total del empaque (cantidad por pack × packs), redondeada a 4 decimales. */
+  get bagsTotal(): string {
+    const per = this.form.controls.bagPerPack;
+    return per.valid ? formatQuantity((Math.round(this.packs * per.value * 10000) / 10000).toFixed(4)) : '0';
+  }
   get labelsPerPack(): number { return this.order.packing?.labelsPerPack ?? 1; }
   get packs(): number { const value = this.form.controls.packs.value; return this.form.controls.packs.valid ? value : 0; }
   get unit(): string { return this.order.resultProduct.unit?.abbreviation ?? ''; }
@@ -71,7 +86,7 @@ export class PackDialogComponent implements OnInit {
   get summary(): string {
     return tr('PRODUCTION.ORDERS.PACK.SUMMARY', {
       bulk: this.packs * this.unitsPerPack, unit: this.unit, lot: this.order.lot?.code ?? '',
-      bags: this.packs * this.bagsPerPack, packs: this.packs,
+      bags: `${this.bagsTotal} ${this.bagUnit}`.trim(), packs: this.packs,
       labels: this.form.controls.labelProductId.value
         ? tr('PRODUCTION.ORDERS.PACK.SUMMARY_LABELS', { labels: this.packs * this.labelsPerPack }) : '' });
   }
@@ -92,12 +107,12 @@ export class PackDialogComponent implements OnInit {
     this.saving = true;
     this.api.pack(this.order.id, {
       requestId: this.requestId, packs: value.packs, packProductId: value.packProductId, bagProductId: value.bagProductId,
-      labelProductId: value.labelProductId || null,
+      bagPerPack: value.bagPerPack, labelProductId: value.labelProductId || null,
     }).pipe(finalize(() => this.saving = false), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: order => this.modal.close(order),
       error: (error: OrderApiError) => {
         this.shortages = error.shortages;
-        this.serverErrors = { packs: error.fields.packs, packProductId: error.fields.packProductId, bagProductId: error.fields.bagProductId,
+        this.serverErrors = { packs: error.fields.packs, packProductId: error.fields.packProductId, bagProductId: error.fields.bagProductId, bagPerPack: error.fields.bagPerPack,
           labelProductId: error.fields.labelProductId };
         this.error = error.shortages.length || error.status === 400 ? '' : error.message;
       },

@@ -244,3 +244,40 @@ class OrderPackApiTests(APITestCase):
         self.assertEqual(response.status_code, 201, response.content)
         packing = response.json()['packing']['packings'][0]
         self.assertEqual((packing['cost_total'], packing['unit_cost']), ('39.60', '6.600000'))
+
+    def add_roll(self, meters='15'):
+        """Rollo de bolsa que se lleva en metros (unidad fraccionable)."""
+        self.roll = self.product('Bolsa 20cm Ancho', self.kilo)
+        ProductModel.objects.filter(pk=self.roll.pk).update(tracks_stock=True)
+        inventory_services.record_movement(
+            self.company.id, product_id=self.roll.id, warehouse_id=self.warehouse.id, kind='in',
+            quantity=Decimal(meters), user_id=self.user.id, user_name='prod-admin', reference='Seed rollo')
+
+    def test_bag_length_per_pack_is_consumed_from_the_roll(self):  # AC-10, INV-02
+        order = self.ready()
+        self.add_roll('15')
+        body = self.body(bag_product_id=str(self.roll.id), bag_per_pack='0.17')
+        response = self.pack(order, body)
+        self.assertEqual(response.status_code, 201, response.content)
+        packing = response.json()['packing']['packings'][0]
+        self.assertEqual((packing['bag_per_pack'], packing['bags_quantity']), ('0.1700', '1.0200'))
+        self.assertEqual(inventory_services.get_balances(
+            self.company.id, self.warehouse.id, [self.roll.id], unlotted=True)[self.roll.id], Decimal('13.98'))
+        self.assertEqual(response.json()['packing']['suggested_bag_per_pack'], '0.1700')
+
+    def test_roll_shortage_uses_the_scaled_quantity(self):  # AC-10, INV-04
+        order = self.ready()
+        self.add_roll('1')
+        response = self.pack(order, self.body(bag_product_id=str(self.roll.id), bag_per_pack='0.17'))
+        self.assertEqual(response.status_code, 409, response.content)
+        self.assertEqual([(s['product_name'], s['requested'], s['available'], s['missing'])
+                          for s in response.json()['shortages']], [('Bolsa 20cm Ancho', '1.0200', '1.0000', '0.0200')])
+
+    def test_invalid_bag_length_is_rejected(self):  # AC-10
+        order = self.ready()
+        for bad in (0, -0.5, 'x', 0.12345, True):
+            with self.subTest(bad=bad):
+                response = self.pack(order, self.body(bag_per_pack=bad))
+                self.assertEqual(response.status_code, 400, response.content)
+                self.assertIn('bag_per_pack', response.json())
+        self.assertEqual(PackingModel.objects.count(), 0)

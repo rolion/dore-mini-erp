@@ -130,6 +130,7 @@ class PackingModel(models.Model):
     bag_product_name = models.CharField(max_length=200)
     bulk_quantity = models.DecimalField(max_digits=16, decimal_places=4)
     bags_quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    bag_per_pack = models.DecimalField(max_digits=10, decimal_places=4, default=1)
     label_product_id = models.UUIDField(null=True, blank=True)
     label_product_name = models.CharField(max_length=200, blank=True, default='')
     labels_quantity = models.DecimalField(max_digits=16, decimal_places=4, default=0)

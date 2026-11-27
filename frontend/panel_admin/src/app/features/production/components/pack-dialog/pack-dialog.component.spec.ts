@@ -12,7 +12,7 @@ import { PackDialogComponent } from './pack-dialog.component';
 const order = {
   id: 'order-1', status: 'ready_to_pack', resultProduct: { id: 'p-res', name: 'Cuñapé a granel', unit: { id: 'u-1', abbreviation: 'u' } },
   lot: { id: 'lot-1', code: 'L-1' },
-  packing: { unitsPerPack: 6, bagsPerPack: 1, labelsPerPack: 1, bulkAvailable: '82.0000', bulkUnitAbbreviation: 'u', packings: [] },
+  packing: { unitsPerPack: 6, suggestedBagPerPack: '0.1700', labelsPerPack: 1, bulkAvailable: '82.0000', bulkUnitAbbreviation: 'u', packings: [] },
 } as unknown as ProductionOrder;
 
 function product(id: string, name: string, tracksStock: boolean): Product {
@@ -60,10 +60,10 @@ describe('PackDialogComponent', () => {
     const fixture = setup();
     const component = fixture.componentInstance;
     api.pack.and.returnValue(of(order));
-    component.form.setValue({ packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: '', packs: 6 });
+    component.form.setValue({ packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 0.17, labelProductId: '', packs: 6 });
     component.submit();
     expect(api.pack).toHaveBeenCalledOnceWith('order-1',
-      { requestId: component.requestId, packs: 6, packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: null });
+      { requestId: component.requestId, packs: 6, packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 0.17, labelProductId: null });
     expect(modal.close).toHaveBeenCalledWith(order);
   });
 
@@ -71,12 +71,25 @@ describe('PackDialogComponent', () => {
     const fixture = setup();
     const component = fixture.componentInstance;
     api.pack.and.returnValue(of(order));
-    component.form.setValue({ packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: 'p-bag', packs: 6 });
+    component.form.setValue({ packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 0.17, labelProductId: 'p-bag', packs: 6 });
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="summary"]')?.textContent).toContain('6');
     component.submit();
     expect(api.pack).toHaveBeenCalledOnceWith('order-1',
-      { requestId: component.requestId, packs: 6, packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: 'p-bag' });
+      { requestId: component.requestId, packs: 6, packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 0.17, labelProductId: 'p-bag' });
+  });
+
+  it('suggests the bag length, scales the summary by it and rejects invalid values', () => {  // AC-10, UI-02
+    const fixture = setup();
+    const component = fixture.componentInstance;
+    expect(component.form.controls.bagPerPack.value).toBe(0.17);
+    component.form.patchValue({ bagProductId: 'p-bag', packs: 6 });
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="summary"]')?.textContent).toContain('1.02');
+    for (const bad of [0, -1, 0.12345]) {
+      component.form.controls.bagPerPack.setValue(bad);
+      expect(component.form.controls.bagPerPack.valid).withContext(String(bad)).toBeFalse();
+    }
   });
 
   it('lists every shortage and keeps the dialog open', () => {  // AC-02, UI-02
@@ -84,7 +97,7 @@ describe('PackDialogComponent', () => {
     const component = fixture.componentInstance;
     api.pack.and.returnValue(throwError(() => new OrderApiError('x', 409, { code: 'insufficient_stock' }, false,
       [{ productId: 'p-bag', productName: 'Bolsa', unitAbbreviation: 'u', requested: '20.0000', available: '2.0000', missing: '18.0000' }])));
-    component.form.setValue({ packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: '', packs: 20 });
+    component.form.setValue({ packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 0.17, labelProductId: '', packs: 20 });
     component.submit();
     fixture.detectChanges();
     expect(modal.close).not.toHaveBeenCalled();

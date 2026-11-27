@@ -3651,11 +3651,14 @@
         "LOAD_ERROR": "Products could not be loaded.",
         "SUMMARY_LABELS": " · labels: {{labels}}",
         "PACK_HELP": "Catalog product sold at retail: the bag filled with 6 cuñapés.",
-        "BAG_HELP": "Empty bag each pack is made in; 1 is used per pack.",
+        "BAG_HELP": "Material each pack is made from (e.g. the bag roll).",
         "LABEL_PRODUCT": "Label or sticker (optional)",
         "NO_LABEL": "No label",
         "LABEL_HELP": "If you choose one, 1 is used per pack and it adds to the cost.",
-        "LABELS_USED": "Labels"
+        "LABELS_USED": "Labels",
+        "BAG_PER_PACK": "Bag used per pack",
+        "BAG_PER_PACK_HELP": "In the product's unit: with a roll in meters, 0.17 = 17 cm per pack.",
+        "BAG_PER_PACK_INVALID": "Enter a number greater than 0 (up to 4 decimals)."
       }
     }
   }

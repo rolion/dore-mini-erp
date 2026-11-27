@@ -31,4 +31,6 @@ class OrderPackSerializer(serializers.Serializer):
     packs = serializers.JSONField(required=False, allow_null=True)
     pack_product_id = serializers.UUIDField()
     bag_product_id = serializers.UUIDField()
+    # Se valida en el dominio (positiva, hasta 4 decimales); aquí solo se acepta el valor tal como llega.
+    bag_per_pack = serializers.JSONField(required=False, allow_null=True)
     label_product_id = serializers.UUIDField(required=False, allow_null=True)

@@ -219,8 +219,8 @@ class ProductionOrders:
         return self.repository.save(order)
 
     def pack(self, order_id: UUID, *, request_id: UUID, packs: object, pack_product_id: UUID,
-             bag_product_id: UUID, actor: Actor, label_product_id: UUID | None = None
-             ) -> tuple[Packing, bool]:
+             bag_product_id: UUID, actor: Actor, label_product_id: UUID | None = None,
+             bag_per_pack: object = None) -> tuple[Packing, bool]:
         """Registra una tanda de packs de 6 (salidas, entrada, costo y registro; todo o nada).
 
         Devuelve `(empaque, creado)`.
@@ -244,7 +244,7 @@ class ProductionOrders:
         packing = Packing.create(order, request_id=request_id, packs=packs, pack=ref(pack_product_id),
                                  bag=ref(bag_product_id), user_id=actor.user_id, user_name=actor.user_name,
                                  label=ref(label_product_id) if label_product_id else None,
-                                 label_requested=label_product_id is not None)
+                                 label_requested=label_product_id is not None, bag_per_pack=bag_per_pack)
         now = self.clock()
         self.stock.pack_out(order, packing, now, actor)
         total = self.costs.cost_packing_outputs(order, packing, now) if self.costs else None

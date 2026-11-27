@@ -150,7 +150,7 @@ describe('OrdersApiService', () => {
   });
 
   it('packs with a snake_case body and maps the packing, the history and the shortages', () => {  // AC-01, AC-02, AC-04, API-01, API-02
-    api.pack('order-1', { requestId: 'req-1', packs: 6, packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: 'p-label' }).subscribe(order => {
+    api.pack('order-1', { requestId: 'req-1', packs: 6, packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 0.17, labelProductId: 'p-label' }).subscribe(order => {
       expect(order.packing?.bulkAvailable).toBe('82.0000');
       expect(order.packing?.packings[0]).toEqual(jasmine.objectContaining({
         number: 1, packs: 6, bulkQuantity: '36.0000', costTotal: null,
@@ -158,15 +158,15 @@ describe('OrdersApiService', () => {
     });
     const ok = http.expectOne('/api/production-orders/order-1/pack/');
     expect(ok.request.method).toBe('POST');
-    expect(ok.request.body).toEqual({ request_id: 'req-1', packs: 6, pack_product_id: 'p-pack', bag_product_id: 'p-bag', label_product_id: 'p-label' });
+    expect(ok.request.body).toEqual({ request_id: 'req-1', packs: 6, pack_product_id: 'p-pack', bag_product_id: 'p-bag', bag_per_pack: 0.17, label_product_id: 'p-label' });
     ok.flush({ ...orderDto, status: 'ready_to_pack', packing: {
-      units_per_pack: 6, bags_per_pack: 1, labels_per_pack: 1, bulk_available: '82.0000', bulk_unit_abbreviation: 'u',
+      units_per_pack: 6, suggested_bag_per_pack: '0.1700', labels_per_pack: 1, bulk_available: '82.0000', bulk_unit_abbreviation: 'u',
       packings: [{ id: 'k-1', number: 1, packs: 6, pack_product: { id: 'p-pack', name: 'Pack x6' }, bag_product: { id: 'p-bag', name: 'Bolsa' },
-        label_product: { id: 'p-label', name: 'Etiqueta' }, bulk_quantity: '36.0000', bags_quantity: '6.0000', labels_quantity: '6.0000', lot: { id: 'lot-1', code: 'L-1' }, cost_total: null, unit_cost: null,
+        label_product: { id: 'p-label', name: 'Etiqueta' }, bulk_quantity: '36.0000', bags_quantity: '1.0200', bag_per_pack: '0.1700', labels_quantity: '6.0000', lot: { id: 'lot-1', code: 'L-1' }, cost_total: null, unit_cost: null,
         created_at: '2026-11-27T11:00:00Z', created_by: 'Ana' }] } });
 
     let caught: OrderApiError | undefined;
-    api.pack('order-1', { requestId: 'req-2', packs: 20, packProductId: 'p-pack', bagProductId: 'p-bag', labelProductId: null }).subscribe({ error: (error: OrderApiError) => caught = error });
+    api.pack('order-1', { requestId: 'req-2', packs: 20, packProductId: 'p-pack', bagProductId: 'p-bag', bagPerPack: 1, labelProductId: null }).subscribe({ error: (error: OrderApiError) => caught = error });
     http.expectOne('/api/production-orders/order-1/pack/').flush(
       { detail: 'Faltan', code: 'insufficient_stock', shortages: [{ product_id: 'p-bag', product_name: 'Bolsa', unit_abbreviation: 'u', requested: '20.0000', available: '2.0000', missing: '18.0000' }] },
       { status: 409, statusText: 'Conflict' });

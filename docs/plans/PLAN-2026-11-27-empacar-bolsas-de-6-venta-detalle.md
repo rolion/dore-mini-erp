@@ -1,10 +1,11 @@
-# PLAN-2026-11-27-empacar-bolsas-de-6-venta-detalle (v2)
+# PLAN-2026-11-27-empacar-bolsas-de-6-venta-detalle (v3)
 
 **Task:** TASK-empacar-bolsas-de-6-venta-detalle · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-empacar-bolsas-de-6-venta-detalle-registrar-empaque · Ninguno
 
 ## Changelog
 - **v2 — [Specification]** (aprobado por el usuario en el chat): se agrega la **etiqueta (sticker)** como tercer insumo del empaque. Decisiones: 1 por pack (fija), **opcional**, con control de stock, faltantes y costo igual que la bolsa. Nuevos INV-08 y AC-09; API-01/API-02 aditivos (`label_product_id`; `label_product`, `labels_quantity`, `labels_per_pack`); migración aditiva `0006_packing_label`. **[Implementation Plan]**: `Packing.create(label, label_requested)`, `pack_out` con lista de insumos (bolsa y etiqueta), `cost_packing_outputs` con la línea de etiqueta. Además, textos del diálogo más claros (ayuda bajo cada campo) y resumen con etiquetas.
+- **v3 — [Specification]** (aprobado por el usuario en el chat): la bolsa es un **rollo** (15 m × 20 cm) y cada pack usa **17 cm**; deja de ser «1 unidad por pack». El producto bolsa se lleva en **metros**; la cantidad de bolsa por pack (`bag_per_pack`, decimal > 0 con hasta 4 decimales, en la unidad del producto bolsa) se **escribe en cada empaque** con **0,17 sugerido**. Bolsas descontadas = `packs × bag_per_pack` (4 decimales). Nuevo INV-09 y AC-10; INV-02 se ajusta; API-01 acepta `bag_per_pack` (opcional, por defecto 1: compatible); API-02 reemplaza `bags_per_pack` por `suggested_bag_per_pack` y agrega `bag_per_pack` por tanda; migración aditiva `0007_packing_bag_per_pack` (default 1 para empaques ya registrados). **[Implementation Plan]**: `parse_bag_per_pack`, campo en el diálogo con unidad del producto y resumen escalado.
 - v1 — versión inicial.
 
 ## Objective
@@ -41,6 +42,7 @@ En una orden `ready_to_pack`, «Registrar empaque» con N packs, un producto pac
 - INV-06 Un empaque no se edita ni se elimina (reversa fuera de alcance).
 - INV-07 Costo: con Costeo activo y valorizado, costo total = 6N × promedio del cuñapé + N × promedio de la bolsa (vía `cost_outputs`); costo unitario del pack = total ÷ N (6 decimales, mitad hacia arriba), registrado con `cost_receipt`. Sin Costeo o sin costo: el pack entra sin costo y el empaque guarda `cost_total = null`.
 
+- INV-09 Bolsa por pack: `bag_per_pack` (en la unidad del producto bolsa; p. ej. 0.17 m = 17 cm) positivo, hasta 4 decimales, máximo 9999.9999; las bolsas descontadas son `packs × bag_per_pack` redondeadas a 4 decimales y entran en faltantes (INV-04) y costo (INV-07) con esa cantidad. La unidad del producto bolsa debe admitir fracciones (lo valida Inventario). Reemplaza «1 bolsa por pack» de INV-02.
 - INV-08 Etiqueta (opcional): si se elige `label_product_id`, es un producto activo que controla stock, distinto del pack, de la bolsa y del granel; se descuentan `1 × packs` etiquetas (stock sin lote, almacén de la orden), entran en el pre-chequeo de faltantes (INV-04) y en el costo (INV-07). Sin etiqueta no se descuenta nada por ese concepto.
 
 ## Acceptance criteria
@@ -53,6 +55,7 @@ En una orden `ready_to_pack`, «Registrar empaque» con N packs, un producto pac
 - AC-07 Validación (400 por campo): `packs` no entero/≤0/fuera de rango; `request_id` ausente/no UUID; pack o bolsa inexistente/inactivo/sin stock/repetido/igual al granel.
 - AC-08 Detalle de orden: acción «Registrar empaque» (solo `ready_to_pack`), diálogo con resumen y faltantes, sección «Empaques» con saldo y historial; textos en es/en/pt.
 - AC-09 Con etiqueta elegida: se descuentan N etiquetas (cuarto movimiento `label`), faltan etiquetas → 409 con todos los faltantes sin escribir nada, el costo del pack las incluye, etiqueta inválida (inexistente/inactiva/sin stock/repetida/igual al granel) → 400 por campo `label_product_id`; sin etiqueta el empaque funciona como antes.
+- AC-10 Con un rollo en metros y `bag_per_pack` 0.17, empacar 6 packs descuenta 1.02 m (15 → 13.98), el faltante usa la cantidad escalada y los valores no positivos, con más de 4 decimales o no numéricos → 400 en `bag_per_pack`; sin enviarlo se usa 1 por pack (compatibilidad).
 
 ## Edge cases / error cases
 - EDGE-01 Doble clic: mismo `request_id` (AC-03).

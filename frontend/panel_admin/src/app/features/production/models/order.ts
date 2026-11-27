@@ -40,6 +40,8 @@ export interface PackingEntry {
   /** Cadenas decimales con 4 decimales. */
   bulkQuantity: string;
   bagsQuantity: string;
+  /** Cantidad de bolsa usada por pack en esa tanda. */
+  bagPerPack: string;
   labelsQuantity: string;
   lot: { id: string; code: string };
   /** Costo total (2 decimales) y unitario (6); `null` = sin costo. */
@@ -52,7 +54,8 @@ export interface PackingEntry {
 /** Empaque en packs de 6: saldo a granel e historial (solo en órdenes listas para empacar). */
 export interface OrderPacking {
   unitsPerPack: number;
-  bagsPerPack: number;
+  /** Largo/cantidad de bolsa sugerido por pack (en la unidad de la bolsa), texto decimal. */
+  suggestedBagPerPack: string;
   labelsPerPack: number;
   bulkAvailable: string;
   bulkUnitAbbreviation: string | null;
@@ -65,6 +68,8 @@ export interface PackInput {
   packs: number;
   packProductId: string;
   bagProductId: string;
+  /** Cantidad de bolsa por pack, en la unidad del producto bolsa (p. ej. 0.17 m). */
+  bagPerPack: number;
   /** Etiqueta opcional (una por pack); `null` = sin etiqueta. */
   labelProductId: string | null;
 }
@@ -123,7 +128,7 @@ export interface ProductionOrderDto {
   released_by: string | null;
   packing: {
     units_per_pack: number;
-    bags_per_pack: number;
+    suggested_bag_per_pack: string;
     labels_per_pack: number;
     bulk_available: string;
     bulk_unit_abbreviation: string | null;
@@ -131,7 +136,7 @@ export interface ProductionOrderDto {
       id: string; number: number; packs: number;
       pack_product: { id: string; name: string }; bag_product: { id: string; name: string };
       label_product: { id: string; name: string } | null;
-      bulk_quantity: string; bags_quantity: string; labels_quantity: string; lot: { id: string; code: string };
+      bulk_quantity: string; bags_quantity: string; bag_per_pack: string; labels_quantity: string; lot: { id: string; code: string };
       cost_total: string | null; unit_cost: string | null; created_at: string; created_by: string | null;
     }[];
   } | null;
@@ -193,6 +198,7 @@ export interface OrderFieldErrors {
   packs?: string;
   packProductId?: string;
   bagProductId?: string;
+  bagPerPack?: string;
   labelProductId?: string;
   requestId?: string;
 }

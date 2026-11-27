@@ -2,7 +2,7 @@ from decimal import Decimal
 from unittest import TestCase
 from uuid import uuid4
 
-from modules.production.domain.packing import Packing, ProductRef, parse_packs
+from modules.production.domain.packing import Packing, ProductRef, parse_bag_per_pack, parse_packs
 from modules.production.domain.production_order import OrderValidationError
 
 from .test_order_domain import make_order
@@ -69,3 +69,23 @@ class PackingDomainTests(TestCase):
                 Packing.create(order, request_id=uuid4(), packs=1, pack=pack, bag=bag, user_id=None, user_name='',
                                label=label, label_requested=requested)
             self.assertIn('label_product_id', caught.exception.errors)
+
+    def test_bag_per_pack_scales_the_bag_quantity(self):  # INV-02, AC-10
+        order = ready_order()
+        pack, bag = ProductRef(uuid4(), 'P'), ProductRef(uuid4(), 'Rollo')
+        packing = Packing.create(order, request_id=uuid4(), packs=6, pack=pack, bag=bag, user_id=None, user_name='',
+                                 bag_per_pack='0.17')
+        self.assertEqual((packing.bag_per_pack, packing.bags_quantity), (Decimal('0.17'), Decimal('1.0200')))
+        default = Packing.create(order, request_id=uuid4(), packs=6, pack=pack, bag=bag, user_id=None, user_name='')
+        self.assertEqual((default.bag_per_pack, default.bags_quantity), (Decimal('1'), Decimal('6.0000')))
+
+    def test_bag_per_pack_must_be_a_positive_number_with_up_to_four_decimals(self):  # AC-10
+        for bad in (0, -1, '0', 'x', '', 0.12345, '0.00001', True, [], 10000, 'NaN', 'Infinity'):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                parse_bag_per_pack(bad)
+            with self.subTest(create=bad), self.assertRaises(OrderValidationError) as caught:
+                Packing.create(ready_order(), request_id=uuid4(), packs=1, pack=ProductRef(uuid4(), 'P'),
+                               bag=ProductRef(uuid4(), 'B'), user_id=None, user_name='', bag_per_pack=bad)
+            self.assertIn('bag_per_pack', caught.exception.errors)
+        self.assertEqual((parse_bag_per_pack(0.17), parse_bag_per_pack('0.1700'), parse_bag_per_pack(2)),
+                         (Decimal('0.17'), Decimal('0.1700'), Decimal('2')))
