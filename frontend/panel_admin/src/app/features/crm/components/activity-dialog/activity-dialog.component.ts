@@ -1,6 +1,7 @@
 import { DatePipe, NgClass } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ReactiveFormsModule } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CrmActivity, CrmActivityOutcome } from '../../models/activity';
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: 'app-crm-activity-dialog',
   templateUrl: './activity-dialog.component.html',
-  imports: [TranslatePipe, ActivityFieldsComponent, DatePipe, NgClass],
+  imports: [TranslatePipe, ReactiveFormsModule, ActivityFieldsComponent, DatePipe, NgClass],
 })
 export class ActivityDialogComponent {
   readonly form = createActivityForm();

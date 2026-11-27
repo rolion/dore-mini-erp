@@ -1,4 +1,4 @@
-<form (ngSubmit)="save()" novalidate>
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
   <div class="modal-header">
     <h4 class="modal-title">{{ 'CRM.ACTIVITY.TITULO_DIALOG' | translate }}</h4>
     <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>

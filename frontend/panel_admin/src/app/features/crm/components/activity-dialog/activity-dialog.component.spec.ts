@@ -73,6 +73,18 @@ describe('ActivityDialogComponent', () => {
     expect(modal.close).toHaveBeenCalledWith(saved);
   });
 
+  it('saves through the real form submit, never as a native page submit (page-reload regression)', () => {
+    setup();
+    component.form.patchValue({ channel: 'call', notes: 'hola' });
+    api.create.and.returnValue(of(makeActivity()));
+    fixture.detectChanges();
+    const submit = new Event('submit', { cancelable: true });
+    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(submit);
+    expect(submit.defaultPrevented).toBeTrue();
+    expect(api.create).toHaveBeenCalledTimes(1);
+    expect(modal.close).toHaveBeenCalled();
+  });
+
   it('shows server field errors without closing', () => {
     setup();
     component.form.patchValue({ notes: 'x' });

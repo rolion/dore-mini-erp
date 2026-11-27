@@ -109,3 +109,6 @@ Tras las correcciones: `modules.crm` 142 pruebas OK, Karma 1957 OK, ruff/flake8/
 
 ## Publicación
 PR 123 listo para aprobación humana; no se mergea. Sin cambios de autenticación, infraestructura ni ADR; incluye una migración nueva (`0003`, solo crea tablas, reversible).
+
+### Corrección posterior (2026-11-27): envío nativo de formulario recargaba la página
+`activity-dialog` y `complete-task-dialog` usaban `<form (ngSubmit)>` sin directiva de formulario de Angular: el botón enviaba el formulario del navegador, la SPA se recargaba y la actividad no se guardaba. Las pruebas llamaban a `save()`/`confirm()` y no lo detectaron. Corregido con `[formGroup]="form"` (y `ReactiveFormsModule` en `activity-dialog`); nuevas pruebas que envían el `<form>` por el DOM y comprueban `defaultPrevented`. Verificado en navegador: solo `POST /api/crm/activities/` (y en completar, `POST …/complete/` + recarga de la lista), sin recarga de página. Además, el Kanban ya no recarga las tarjetas tras registrar actividad o crear tarea.

@@ -34,6 +34,14 @@ describe('CompleteTaskDialogComponent', () => {
     expect(modal.close).toHaveBeenCalledWith(result);
   });
 
+  it('completes through the real form submit, never as a native page submit (page-reload regression)', () => {
+    api.complete.and.returnValue(of({ task: makeTask({ status: 'done' }), activity: null }));
+    const submit = new Event('submit', { cancelable: true });
+    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(submit);
+    expect(submit.defaultPrevented).toBeTrue();
+    expect(api.complete).toHaveBeenCalledTimes(1);
+  });
+
   it('requires an outcome or notes before sending the optional activity (AC-03)', () => {
     component.withActivity.setValue(true);
     fixture.detectChanges();
