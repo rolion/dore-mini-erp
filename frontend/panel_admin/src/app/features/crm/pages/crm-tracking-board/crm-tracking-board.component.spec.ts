@@ -116,4 +116,18 @@ describe('CrmTrackingBoardComponent', () => {
     expect(dialog.open).toHaveBeenCalledWith({ boardId: 'b-1', stageId: 's-2' });
     expect(opportunities.list).toHaveBeenCalledTimes(2);
   });
+
+  it('opens the card record from the title and from the View button, and reloads after saving (UI-card)', async () => {
+    const { fixture, modal, opportunities, el } = setup();
+    const dialog = jasmine.createSpyObj('TrackingCardDialogComponent', ['open']);
+    modal.open.and.returnValue({ componentInstance: dialog, result: Promise.resolve(makeOpportunity()) } as unknown as ReturnType<NgbModal['open']>);
+    (el.querySelector('[data-testid="card-title"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(dialog.open).toHaveBeenCalledWith(jasmine.objectContaining({ boardId: 'b-1', stageId: 's-1' }));
+    expect(dialog.open.calls.mostRecent().args[0].card.id).toBe('o-1');
+    expect(opportunities.list).toHaveBeenCalledTimes(2);
+    fixture.detectChanges();
+    (el.querySelector('[data-testid="view-card"]') as HTMLButtonElement).click();
+    expect(dialog.open).toHaveBeenCalledTimes(2);
+  });
 });

@@ -1,32 +1,34 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { of, throwError } from 'rxjs';
 import { provideTestTranslations } from '../../../../core/i18n/testing';
 import { CrmApiError } from '../../models/board';
 import { CrmCustomersApiService } from '../../services/crm-customers-api.service';
 import { CrmLeadsApiService } from '../../services/crm-leads-api.service';
 import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
+import { ActivityDialogComponent } from '../activity-dialog/activity-dialog.component';
 import { makeCrmCustomer, makeCrmPage, makeLead, makeOpportunity } from '../../testing/crm-fixtures';
 import { TrackingCardDialogComponent, TrackingContactOption } from './tracking-card-dialog.component';
 
 describe('TrackingCardDialogComponent', () => {
   function setup() {
-    const api = jasmine.createSpyObj<CrmOpportunitiesApiService>('CrmOpportunitiesApiService', ['create']);
+    const api = jasmine.createSpyObj<CrmOpportunitiesApiService>('CrmOpportunitiesApiService', ['create', 'update']);
     const leads = jasmine.createSpyObj<CrmLeadsApiService>('CrmLeadsApiService', ['list']);
     leads.list.and.returnValue(of({ count: 1, results: [makeLead()] }));
     const customers = jasmine.createSpyObj<CrmCustomersApiService>('CrmCustomersApiService', ['list']);
     customers.list.and.returnValue(of(makeCrmPage([makeCrmCustomer()])));
     const modal = jasmine.createSpyObj<NgbActiveModal>('NgbActiveModal', ['close', 'dismiss']);
+    const stacked = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     TestBed.configureTestingModule({
       imports: [TrackingCardDialogComponent],
       providers: [...provideTestTranslations(), { provide: CrmOpportunitiesApiService, useValue: api },
         { provide: CrmLeadsApiService, useValue: leads }, { provide: CrmCustomersApiService, useValue: customers },
-        { provide: NgbActiveModal, useValue: modal }],
+        { provide: NgbActiveModal, useValue: modal }, { provide: NgbModal, useValue: stacked }],
     });
     const fixture = TestBed.createComponent(TrackingCardDialogComponent);
     fixture.componentInstance.open({ boardId: 'b-1', stageId: 's-2' });
     fixture.detectChanges();
-    return { fixture, component: fixture.componentInstance, api, leads, customers, modal };
+    return { fixture, component: fixture.componentInstance, api, leads, customers, modal, stacked };
   }
 
   const customerOption: TrackingContactOption = {
@@ -80,5 +82,35 @@ describe('TrackingCardDialogComponent', () => {
     expect(modal.close).not.toHaveBeenCalled();
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="dialog-error"]')?.textContent)
       .toContain('archivado');
+  });
+
+  describe('card record (view and edit)', () => {
+    const card = makeOpportunity({ id: 'o-9', title: 'Llamar', description: 'Quiere precio' });
+
+    it('shows the card with its customer fixed and edits name and description only', () => {
+      const { fixture, component, api, modal } = setup();
+      component.open({ boardId: 'b-1', stageId: 's-2', card });
+      fixture.detectChanges();
+      expect(component.isEdit).toBeTrue();
+      expect(component.form.controls.contact.disabled).toBeTrue();
+      expect(component.form.controls.name.value).toBe('Llamar');
+      api.update.and.returnValue(of({ ...card, title: 'Nuevo' }));
+      component.form.patchValue({ name: ' Nuevo ', description: ' Otra ' });
+      component.onSubmit();
+      expect(api.update).toHaveBeenCalledOnceWith('o-9', { title: 'Nuevo', description: 'Otra' });
+      expect(api.create).not.toHaveBeenCalled();
+      expect(modal.close).toHaveBeenCalled();
+    });
+
+    it('offers Add activity only on an existing card and opens the activity dialog for it', () => {
+      const { fixture, component, stacked } = setup();
+      expect((fixture.nativeElement as HTMLElement).querySelector('[data-testid="add-activity"]')).toBeNull();
+      const activity = jasmine.createSpyObj<ActivityDialogComponent>('ActivityDialogComponent', ['open']);
+      stacked.open.and.returnValue({ componentInstance: activity, result: Promise.resolve() } as unknown as ReturnType<NgbModal['open']>);
+      component.open({ boardId: 'b-1', stageId: 's-2', card });
+      fixture.detectChanges();
+      ((fixture.nativeElement as HTMLElement).querySelector('[data-testid="add-activity"]') as HTMLButtonElement).click();
+      expect(activity.open).toHaveBeenCalledWith({ type: 'opportunity', id: 'o-9', name: 'Llamar' });
+    });
   });
 });

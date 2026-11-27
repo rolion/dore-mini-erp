@@ -1,12 +1,13 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Subject, catchError, debounceTime, distinctUntilChanged, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { tr } from '../../../../core/i18n/translate';
 import { CrmApiError } from '../../models/board';
+import { ActivityDialogComponent } from '../activity-dialog/activity-dialog.component';
 import {
   CRM_OPPORTUNITY_DESCRIPTION_MAX_LENGTH, CRM_OPPORTUNITY_TITLE_MAX_LENGTH, CrmOpportunity,
 } from '../../models/opportunity';
@@ -20,6 +21,8 @@ const SEARCH_PAGE_SIZE = 10;
 export interface TrackingCardDialogContext {
   boardId: string;
   stageId: string;
+  /** Tarjeta que se ve y edita; sin ella se crea una nueva. */
+  card?: CrmOpportunity;
 }
 
 /** Cliente o prospecto elegible; `group` es el texto del encabezado del grupo en el selector. */
@@ -38,7 +41,10 @@ function notBlank(control: AbstractControl<string>): ValidationErrors | null {
 
 type CardField = 'name' | 'contact' | 'description';
 
-/** Alta de una tarjeta de seguimiento (oportunidad sin importe) en una columna; devuelve la tarjeta guardada. */
+/**
+ * Alta de una tarjeta de seguimiento en una columna o, con `card`, su ficha: se ve y se edita nombre y descripción
+ * (el cliente o prospecto queda fijo) y desde ahí se agrega una actividad. Devuelve la tarjeta guardada.
+ */
 @Component({
   selector: 'app-crm-tracking-card-dialog',
   templateUrl: './tracking-card-dialog.component.html',
@@ -63,6 +69,7 @@ export class TrackingCardDialogComponent implements OnInit {
   serverErrors: Partial<Record<CardField, string>> = {};
 
   readonly activeModal = inject(NgbActiveModal);
+  private modal = inject(NgbModal);
   private api = inject(CrmOpportunitiesApiService);
   private leadsApi = inject(CrmLeadsApiService);
   private customersApi = inject(CrmCustomersApiService);
@@ -88,6 +95,31 @@ export class TrackingCardDialogComponent implements OnInit {
 
   open(context: TrackingCardDialogContext): void {
     this.context = context;
+    const card = context.card;
+    if (!card) return;
+    const person = card.customer ?? card.lead;
+    this.form.controls.contact.disable({ emitEvent: false });
+    this.form.patchValue({
+      name: card.title,
+      description: card.description,
+      contact: person ? {
+        key: `${card.customer ? 'customer' : 'lead'}:${person.id}`, id: person.id, kind: card.customer ? 'customer' : 'lead',
+        name: person.name, phone: person.phone ?? '', group: '',
+      } : null,
+    }, { emitEvent: false });
+  }
+
+  get isEdit(): boolean {
+    return !!this.context?.card;
+  }
+
+  /** «Agregar actividad» de la tarjeta: abre el registro de actividades encima de esta ficha. */
+  addActivity(): void {
+    const card = this.context.card;
+    if (!card) return;
+    const ref = this.modal.open(ActivityDialogComponent, { centered: true, backdrop: 'static', scrollable: true });
+    (ref.componentInstance as ActivityDialogComponent).open({ type: 'opportunity', id: card.id, name: card.title });
+    ref.result.then(() => undefined, () => undefined);
   }
 
   invalid(field: CardField): boolean {
@@ -103,14 +135,18 @@ export class TrackingCardDialogComponent implements OnInit {
     const value = this.form.getRawValue();
     const contact = value.contact;
     this.saving = true;
-    this.api.create({
+    const card = this.context.card;
+    const request = card
+      ? this.api.update(card.id, { title: value.name.trim(), description: value.description.trim() })
+      : this.api.create({
       boardId: this.context.boardId,
       stageId: this.context.stageId,
       leadId: contact?.kind === 'lead' ? contact.id : undefined,
       customerId: contact?.kind === 'customer' ? contact.id : undefined,
       title: value.name.trim(),
       description: value.description.trim(),
-    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    });
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (saved: CrmOpportunity) => {
         this.saving = false;
         this.activeModal.close(saved);

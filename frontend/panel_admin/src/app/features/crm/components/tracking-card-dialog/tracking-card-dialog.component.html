@@ -1,6 +1,6 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
   <div class="modal-header">
-    <h4 class="modal-title">{{ 'CRM.TRACKING.NUEVA_TARJETA' | translate }}</h4>
+    <h4 class="modal-title">{{ (isEdit ? 'CRM.TRACKING.TARJETA' : 'CRM.TRACKING.NUEVA_TARJETA') | translate }}</h4>
     <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
   </div>
   <div class="modal-body">
@@ -29,6 +29,9 @@
           <small class="text-muted d-block">{{ item.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</small>
         </ng-template>
       </ng-select>
+      @if (isEdit) {
+      <small class="form-text text-muted">{{ 'CRM.TRACKING.CONTACTO_FIJO' | translate }}</small>
+      }
       @if (invalid('contact')) {
       <small class="form-text text-danger" role="alert">{{ serverErrors.contact || ('CRM.TRACKING.CONTACTO_OBLIGATORIO' | translate) }}</small>
       }
@@ -43,6 +46,11 @@
     </div>
   </div>
   <div class="modal-footer">
+    @if (isEdit) {
+    <button type="button" class="btn btn-light me-auto" data-testid="add-activity" [disabled]="saving" (click)="addActivity()">
+      <i class="fas fa-plus me-1" aria-hidden="true"></i>{{ 'CRM.TRACKING.AGREGAR_ACTIVIDAD' | translate }}
+    </button>
+    }
     <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
     <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving">{{ 'COMMON.GUARDAR' | translate }}</button>
   </div>

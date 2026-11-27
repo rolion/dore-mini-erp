@@ -80,7 +80,8 @@
                   <span class="crm-drag-handle" cdkDragHandle data-testid="drag-handle" role="img"
                     [attr.aria-label]="'CRM.OPPORTUNITY_BOARD.ARRASTRAR_DE' | translate: { title: card.title }"
                     [title]="'CRM.OPPORTUNITY_BOARD.ARRASTRAR_DE' | translate: { title: card.title }"><i class="fas fa-grip-vertical" aria-hidden="true"></i></span>
-                  <strong class="crm-opportunity-title flex-grow-1">{{ card.title }}</strong>
+                  <button type="button" class="btn btn-link p-0 text-start fw-bold crm-opportunity-title flex-grow-1" data-testid="card-title"
+                    (click)="viewCard(card)">{{ card.title }}</button>
                 </div>
                 <dl class="crm-opportunity-data mb-0">
                   <div>
@@ -116,6 +117,10 @@
                     <dd>{{ card.owner.name }}</dd>
                   </div>
                 </dl>
+                <div class="crm-opportunity-actions">
+                  <button type="button" class="btn btn-light btn-sm" data-testid="view-card" (click)="viewCard(card)"
+                    [attr.aria-label]="'CRM.TRACKING.VER_DE' | translate: { title: card.title }">{{ 'CRM.TRACKING.VER' | translate }}</button>
+                </div>
               </li>
               } @empty {
               <li class="text-muted crm-column-empty" data-testid="column-empty">{{ 'CRM.TRACKING.SIN_TARJETAS' | translate }}</li>

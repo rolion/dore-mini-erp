@@ -3969,7 +3969,12 @@
       "GRUPO_CLIENTES": "Clientes",
       "GRUPO_PROSPECTOS": "Prospectos",
       "DESCRIPCION": "Descripción",
-      "DESCRIPCION_MUY_LARGA": "Usa como máximo {{n}} caracteres."
+      "DESCRIPCION_MUY_LARGA": "Usa como máximo {{n}} caracteres.",
+      "VER": "Ver",
+      "VER_DE": "Ver «{{title}}»",
+      "TARJETA": "Tarjeta",
+      "AGREGAR_ACTIVIDAD": "Agregar actividad",
+      "CONTACTO_FIJO": "Cliente o prospecto de la tarjeta (no se puede cambiar)."
     }
   }
 }

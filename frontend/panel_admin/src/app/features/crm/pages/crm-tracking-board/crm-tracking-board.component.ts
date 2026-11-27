@@ -170,6 +170,15 @@ export class CrmTrackingBoardComponent implements OnInit {
     ref.result.then(() => this.refresh(), () => undefined);
   }
 
+  /** Abre la ficha de la tarjeta (ver, editar y agregar actividad); al guardar se recarga el tablero. */
+  viewCard(card: CrmOpportunity): void {
+    if (!this.board) return;
+    this.notice = '';
+    const ref = this.modal.open(TrackingCardDialogComponent, { centered: true, backdrop: 'static', size: 'lg' });
+    (ref.componentInstance as TrackingCardDialogComponent).open({ boardId: this.board.id, stageId: card.stageId, card });
+    ref.result.then(() => this.refresh(), () => undefined);
+  }
+
   /** Archivar: con tarjetas activas se bloquea con aviso; vacía, pide confirmación. */
   requestArchive(column: TrackingColumn): void {
     this.archiving = null;
