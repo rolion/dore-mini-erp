@@ -18,6 +18,9 @@ import {
   selector: 'app-crm-activity-panel',
   templateUrl: './activity-panel.component.html',
   imports: [TranslatePipe, ActivityFieldsComponent, DatePipe, NgClass],
+  // El panel tiene altura acotada: el formulario se queda fijo arriba y solo el historial se desplaza, así abrir el
+  // formulario no agranda el modal.
+  styles: ['.activity-panel { display: flex; flex-direction: column; max-height: 65vh; } .activity-history { overflow-y: auto; min-height: 8rem; }'],
 })
 export class ActivityPanelComponent implements OnInit {
   @Input({ required: true }) related!: CrmRelated;
