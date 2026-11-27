@@ -16,6 +16,7 @@
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS con reservas (sin Critical/High; REV-01 Medium y REV-02..04 Low abiertos) | delivery-publish |
 | 2026-11-27 | PUBLISH | REV-01..04 corregidos a pedido del usuario; backend 2622 y frontend 1976 pruebas OK | delivery-build |
+| 2026-11-27 | PUBLISH | Segundo Quality Gate PASS con reservas: REV-01..04 verificados como resueltos; REV-05..08 (Low) abiertos | delivery-publish |
 
 ## Investigación
 
@@ -110,7 +111,9 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 | REV-03 | Low | IMPLEMENTATION | `ProcessWebhookEvent._inbound` no es atómico: un fallo tras insertar deja la ventana sin abrir y el evento sin publicar |
 | REV-04 | Low | DESIGN | Desviaciones no declaradas del DDR (sin pestañas, `<select>` nativo, «Copiar» sin `aria-label`, menú sin `adminOnly`, ruta de archivo en el texto de ayuda) |
 
-**Actualización:** REV-01..04 corregidos a pedido del usuario y marcados `Closed` (ver «Resolución» en cada uno). Tras la corrección: backend completo 2622 pruebas OK, frontend 1976 OK, lint e `i18n:check` limpios. No se repitió el Quality Gate aislado ni la revisión visual en navegador.
+**Actualización:** REV-01..04 corregidos a pedido del usuario y marcados `Closed` (ver «Resolución» en cada uno). Tras la corrección: backend completo 2622 pruebas OK, frontend 1976 OK, lint e `i18n:check` limpios. 
+
+**Segundo Quality Gate (aislado, tras las correcciones): PASS con reservas.** REV-01..04 verificados como resueltos. Backend 2622 y frontend 1976 pruebas OK; lint, `i18n:check` y `build` limpios; bandit sin Medium/High. Hallazgos nuevos, todos Low y abiertos: REV-05 (publicación del evento de dominio en memoria, no durable; la prueba «tras commit» no lo distingue), REV-06 (PLAN/DDR/TASK/ADR no reflejan el prefijo por empresa ni `secret_ref_prefix`), REV-07 (el resolvedor de secretos no exige el prefijo al usar, solo al guardar), REV-08 (pestañas sin navegación por flechas y `copy()` sin manejo de error ni `aria-live`). Estado visual en navegador: **no verificado**.
 
 ## Publicación
 PR listo para aprobación humana (no se mergea). Cambio sensible: **autenticación/seguridad** (endpoint público firmado, manejo de secretos), **base de datos** (migración inicial de `messaging`) e **infraestructura** (servicio `messaging-worker`); respaldado por el ADR `ADR-crm-integracion-whatsapp-cloud-api-modulo-messaging-y-cola-de-eventos`. Pendiente humano: prueba real con el número de prueba de Meta, variables `WHATSAPP_*` en el despliegue y decisión sobre REV-01.
