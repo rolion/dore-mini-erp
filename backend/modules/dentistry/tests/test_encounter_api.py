@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone as dt_timezone
 from threading import Barrier
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 from uuid import uuid4
 
 from django.db import close_old_connections
@@ -228,7 +229,8 @@ class EncounterApiTests(Base, APITestCase):
         data = created.json()
         self.assertEqual((data['encounter_id'], data['professional']['id'], data['status']),
                          (encounter_id, str(self.professional.id), 'draft'))
-        self.assertEqual(data['clinical_date'], timezone.localdate().isoformat())
+        la_paz_today = timezone.now().astimezone(ZoneInfo('America/La_Paz')).date()
+        self.assertEqual(data['clinical_date'], la_paz_today.isoformat())
         second = self.client.post(f'{ROOT}encounters/{encounter_id}/odontogram/', self.draft_body(), format='json')
         self.assertEqual((second.status_code, second.json()['code']), (409, 'odontogram_exists'))
         detail = self.client.get(self.url(appointment)).json()['odontogram']

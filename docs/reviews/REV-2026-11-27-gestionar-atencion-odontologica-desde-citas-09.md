@@ -1,6 +1,6 @@
 # REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-09: Prueba dependiente de la hora del día tras el fix de REV-08
 
-**Status:** Open
+**Status:** Resolved
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas.md (v3)
@@ -22,3 +22,6 @@ Con `TIME_ZONE=UTC` (valor de `.env.example`) la prueba falla cada día entre la
 - `backend/modules/dentistry/application/encounters.py:27-29` (`clinical_date` en `ZONE`).
 - Reproducción: `TIME_ZONE=Asia/Tokyo manage.py test modules.dentistry.tests.test_encounter_api.EncounterApiTests.test_odontogram_from_encounter_preloads_context_and_is_unique` falla; con `UTC` y `America/La_Paz` pasa en el horario de la revisión.
 - Otros usos de `timezone.localdate()` en tests de dentistry (líneas 94, 344 y `test_odontogram_api.py:36,261`) no dependen de `clinical_date()` de la atención, salvo revisar la línea 94 (listado «hoy» en zona de Agenda).
+
+## Resolución
+La prueba compara con la fecha de La Paz (`timezone.now().astimezone(ZoneInfo('America/La_Paz')).date()`). `test_encounter_api` (28 pruebas) pasa con `TIME_ZONE=UTC`, `America/La_Paz` y `Asia/Tokyo`, donde antes fallaba. Resuelto por el autor; solo cambia una prueba, sin código de producción.
