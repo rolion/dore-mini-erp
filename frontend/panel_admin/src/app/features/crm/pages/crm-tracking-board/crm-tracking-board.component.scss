@@ -1,76 +1,13 @@
-// Tablero Kanban (design-system §5): columnas de ancho fijo con desplazamiento horizontal desde `lg`; apiladas debajo.
-$touch: 44px;
-
-.crm-kanban {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+// Columnas y tarjetas: los estilos de Oportunidades (`styleUrls`); aquí solo el menú de tres puntos de la columna.
+.crm-column-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-@media (min-width: 992px) {
-  .crm-kanban {
-    flex-direction: row;
-    align-items: flex-start;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-  }
-
-  .crm-column {
-    flex: 0 0 18rem;
-    max-width: 18rem;
-  }
-}
-
-.crm-column {
-  padding: 0.75rem;
-  background-color: var(--bs-tertiary-bg);
-  border: 1px solid var(--bs-border-color);
-}
-
-// En tema oscuro `--bs-tertiary-bg` y `--bs-secondary-color` siguen siendo los claros (el skin usa la clase `.dark`,
-// no `data-bs-theme`): se fijan colores de la paleta oscura para mantener el contraste AA.
-:host-context(.dark) {
-  .crm-column {
-    background-color: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .crm-opportunity {
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-}
-
-.crm-column-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.crm-column-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.crm-column-empty {
-  padding: 0.5rem 0;
-}
-
-.crm-opportunity {
-  padding: 0.625rem;
-  border: 1px solid var(--bs-border-color);
-}
-
-.crm-opportunity-title {
-  overflow-wrap: anywhere;
-}
-
-// En pantallas táctiles los controles llegan a 44 px.
 @media (max-width: 991.98px) {
   .crm-column-menu {
-    min-height: $touch;
-    min-width: $touch;
+    min-height: 44px;
+    min-width: 44px;
   }
 }

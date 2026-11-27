@@ -1,19 +1,25 @@
+import { CdkDrag, CdkDragDrop, CdkDragHandle, CdkDropList, CdkDropListGroup, transferArrayItem } from '@angular/cdk/drag-drop';
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgbDropdownModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { tr } from '../../../../core/i18n/translate';
+import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
+import { sumMoney } from '../../../../shared/utils/decimal-sum';
 import { StageNameDialogComponent } from '../../components/stage-name-dialog/stage-name-dialog.component';
 import { TrackingCardDialogComponent } from '../../components/tracking-card-dialog/tracking-card-dialog.component';
 import { CrmApiError, CrmBoard, CrmStage } from '../../models/board';
-import { CRM_BOARD_PAGE_SIZE, CrmOpportunity } from '../../models/opportunity';
+import { CrmContact } from '../../models/lead';
+import { CRM_BOARD_PAGE_SIZE, CrmOpportunity, isOverdue, opportunityContact } from '../../models/opportunity';
 import { CrmBoardsApiService } from '../../services/crm-boards-api.service';
 import { CrmOpportunitiesApiService } from '../../services/crm-opportunities-api.service';
 
 export interface TrackingColumn {
   stage: CrmStage;
   cards: CrmOpportunity[];
+  total: string;
 }
 
 /**
@@ -23,8 +29,9 @@ export interface TrackingColumn {
 @Component({
   selector: 'app-crm-tracking-board',
   templateUrl: './crm-tracking-board.component.html',
-  styleUrl: './crm-tracking-board.component.scss',
-  imports: [TranslatePipe, RouterLink, NgbDropdownModule],
+  // Mismo formato de columnas y tarjetas que Oportunidades (DDR v2); el estilo propio solo añade el menú de columna.
+  styleUrls: ['../crm-opportunity-board/crm-opportunity-board.component.scss', './crm-tracking-board.component.scss'],
+  imports: [TranslatePipe, RouterLink, NgbDropdownModule, DatePipe, MoneyPipe, CdkDropListGroup, CdkDropList, CdkDrag, CdkDragHandle],
 })
 export class CrmTrackingBoardComponent implements OnInit {
   board: CrmBoard | null = null;
@@ -37,6 +44,8 @@ export class CrmTrackingBoardComponent implements OnInit {
   /** Columna vacía a la espera de confirmar su archivo. */
   archiving: CrmStage | null = null;
   working = false;
+  /** Tarjeta que se está moviendo (bloquea otros arrastres hasta recargar). */
+  movingId: string | null = null;
 
   private route = inject(ActivatedRoute);
   private boardsApi = inject(CrmBoardsApiService);
@@ -92,7 +101,10 @@ export class CrmTrackingBoardComponent implements OnInit {
     return [...board.stages]
       .filter((s) => s.isActive)
       .sort((a, b) => a.position - b.position)
-      .map((stage) => ({ stage, cards: cards.filter((c) => c.stageId === stage.id) }));
+            .map((stage) => {
+        const own = cards.filter((c) => c.stageId === stage.id);
+        return { stage, cards: own, total: sumMoney(own.map((c) => c.amount)) };
+      });
   }
 
   /** Recarga tablero y tarjetas tras una acción, conservando el aviso mostrado. */
@@ -109,6 +121,36 @@ export class CrmTrackingBoardComponent implements OnInit {
         }
       },
       error: (err: CrmApiError) => this.fail(err),
+    });
+  }
+
+  contact(card: CrmOpportunity): CrmContact | null {
+    return opportunityContact(card);
+  }
+
+  overdue(card: CrmOpportunity): boolean {
+    return isOverdue(card);
+  }
+
+  /** Arrastrar una tarjeta a otra columna la mueve de etapa; el tablero se recarga desde el servidor. */
+  drop(event: CdkDragDrop<TrackingColumn, TrackingColumn, CrmOpportunity>): void {
+    const target = event.container.data;
+    const source = event.previousContainer.data;
+    const card = event.item.data;
+    if (event.previousContainer === event.container || this.movingId) return;
+    transferArrayItem(source.cards, target.cards, event.previousIndex, event.currentIndex);
+    this.movingId = card.id;
+    this.notice = '';
+    this.opportunitiesApi.move(card.id, target.stage.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.movingId = null;
+        this.refresh();
+      },
+      error: (err: CrmApiError) => {
+        this.movingId = null;
+        this.notice = err.fieldErrors['stageId'] ?? err.message;
+        this.refresh();
+      },
     });
   }
 

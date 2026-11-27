@@ -17,6 +17,9 @@ La persona quiere llevar el seguimiento de clientes y prospectos en tableros que
 ## Componentes/patrones elegidos
 Plantilla **Tablero Kanban de tarjetas con acciones accesibles** (`design-system.md` §5, referencia `crm-opportunity-board`): columnas `.card` de ancho fijo con scroll horizontal (apiladas en móvil), tokens de §2, botones de §3. Lista de tableros: rejilla de `.card` clicables (sin plantilla propia; mismos tokens). Menú de tres puntos: `ngbDropdown` (ng-bootstrap, ya usado en la plantilla Oreva) con `aria-label`. Modales: `NgbModal` con Reactive Forms y `board-name-dialog` como base. Selector de contacto: `ng-select` como en `opportunity-dialog`.
 
+## Actualización v2 (2026-11-27, pedido del usuario)
+Columnas y tarjetas replican el formato de `crm-opportunity-board` (mismo SCSS por `styleUrls`): encabezado «Nombre · N» con total, tarjeta con asa de arrastre, contacto, importe, siguiente acción y responsable, botón «Agregar» al pie, y arrastrar para mover de columna. Se conserva el menú de tres puntos. Sustituye «tarjetas solo con su nombre». Sin acciones Editar/Cerrar/Actividad en la tarjeta.
+
 ## Alternativas consideradas
 - Ampliar `crm-opportunity-board` con las acciones nuevas: mezcla filtros/importes/cierre con un flujo mínimo; descartado por el usuario (entrada nueva en el menú).
 - Detalle de tarjeta con tareas: PB-CRM-005, fuera de alcance.

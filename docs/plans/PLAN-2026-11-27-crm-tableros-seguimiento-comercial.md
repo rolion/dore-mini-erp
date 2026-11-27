@@ -1,7 +1,11 @@
-# PLAN-2026-11-27-crm-tableros-seguimiento-comercial (v1)
+# PLAN-2026-11-27-crm-tableros-seguimiento-comercial (v2)
 
 **Task:** TASK-crm-tableros-seguimiento-comercial · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** `docs/design/DDR-crm-tableros-seguimiento-comercial-lista-de-tableros-y-tablero.md` · Ninguno (ADR)
+
+## Changelog
+- **v2 [Specification/UI, pedido por el usuario en el chat el 2026-11-27]:** las columnas y tarjetas del tablero usan el mismo formato que Oportunidades (encabezado «Nombre · N» con total, tarjeta con asa de arrastre, contacto, importe, siguiente acción y responsable, botón «Agregar» al pie) y las tarjetas se mueven arrastrándolas. Se mantiene el menú de tres puntos (Agregar tarjeta / Archivar columna). Reemplaza «tarjetas solo con su nombre» de AC-04/UI-03; sin cambios de API. Sin Editar/Cerrar/Actividad en la tarjeta (siguen en Oportunidades).
+- v1: versión inicial.
 
 ## Objective
 Dar a CRM una entrada «Seguimiento comercial» donde se crean tableros (solo nombre, sin columnas), se agregan y archivan columnas y se registran tarjetas vinculadas a un cliente o prospecto, reutilizando tableros/etapas y oportunidades existentes.

@@ -18,7 +18,7 @@ describe('CrmTrackingBoardComponent', () => {
   function setup(boards = [board], cards = [makeOpportunity({ id: 'o-1', stageId: 's-1', title: 'Llamar a Carla' })]) {
     const boardsApi = jasmine.createSpyObj<CrmBoardsApiService>('CrmBoardsApiService', ['list', 'archiveStage']);
     boardsApi.list.and.returnValue(of(boards));
-    const opportunities = jasmine.createSpyObj<CrmOpportunitiesApiService>('CrmOpportunitiesApiService', ['list']);
+    const opportunities = jasmine.createSpyObj<CrmOpportunitiesApiService>('CrmOpportunitiesApiService', ['list', 'move']);
     opportunities.list.and.returnValue(of({ count: cards.length, results: cards }));
     const modal = jasmine.createSpyObj<NgbModal>('NgbModal', ['open']);
     TestBed.configureTestingModule({
@@ -42,6 +42,29 @@ describe('CrmTrackingBoardComponent', () => {
     const columns = el.querySelectorAll('[data-testid="column"]');
     expect(columns[0].querySelector('[data-testid="tracking-card"]')?.textContent).toContain('Llamar a Carla');
     expect(columns[1].querySelector('[data-testid="column-empty"]')?.textContent).toContain('Sin tarjetas');
+  });
+
+  it('renders columns and cards in the Opportunities format: total, contact, amount, owner, add button (DDR v2)', () => {
+    const { el } = setup();
+    const column = el.querySelector('[data-testid="column"]') as HTMLElement;
+    expect(column.querySelector('h5')?.textContent).toContain('Primera');
+    expect(column.querySelector('h5')?.textContent).toContain('· 1');
+    expect(column.querySelector('[data-testid="drag-handle"]')).toBeTruthy();
+    expect(column.querySelector('[data-testid="card-contact"]')?.textContent).toContain('Carla Rojas');
+    expect(column.querySelector('[data-testid="card-amount"]')?.textContent).toContain('150');
+    expect(column.querySelector('[data-testid="add-card-button"]')?.textContent).toContain('Agregar');
+  });
+
+  it('moves a card to another column by dragging and reloads (DDR v2)', () => {
+    const { fixture, opportunities } = setup();
+    opportunities.move.and.returnValue(of(makeOpportunity()));
+    const [first, second] = fixture.componentInstance.columns;
+    fixture.componentInstance.drop({
+      previousContainer: { data: first }, container: { data: second }, item: { data: first.cards[0] },
+      previousIndex: 0, currentIndex: 0,
+    } as never);
+    expect(opportunities.move).toHaveBeenCalledOnceWith('o-1', 's-2');
+    expect(opportunities.list).toHaveBeenCalledTimes(2);
   });
 
   it('opens an empty board with only the add-column action (AC-02)', () => {

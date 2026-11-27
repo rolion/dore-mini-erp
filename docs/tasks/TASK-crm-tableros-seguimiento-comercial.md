@@ -15,6 +15,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 | 2026-11-27 | REVIEW → ENGINEERING → REVIEW | FAIL REV-01 corregido (una línea de prueba); pendiente corrida de API con BD | delivery-publish |
+| 2026-11-27 | PUBLISH → ENGINEERING → PUBLISH | Pedido del usuario: columnas y tarjetas con el formato de Oportunidades (PLAN v2, DDR actualizado) | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | API crm 152 OK con BD; listo para aprobación humana | delivery-publish |
 
 ## Investigación
@@ -83,6 +84,7 @@ No aplica según veredicto.
 - La rama `origin/crm` se fusionó con `main` (merge `4b3fec76`): el conflicto del conteo del menú se resolvió; el merge dejó el bloque CRM de `routes.json` con `id: "dentistry"` y sin id el de Odontología, ya corregido (`id: "crm"`). Con `id: "crm"` el CRM queda en la cola previa a Ajustes en los menús por tipo de empresa (`menu-layout.ts` no lo nombra): `menu-layout.spec.ts` lo refleja; ubicarlo en el orden de cada tipo es decisión de producto pendiente.
 - «Tarjetas activas» = oportunidades abiertas (`card_count`), como en PB-CRM-004.
 **Pruebas:** dominio (`test_domain_opportunity.py`, 17 OK ejecutadas); API (`TrackingCardTests` y validación de `description` en `test_api_opportunities.py`) **escritas pero no ejecutadas** localmente: el worktree no tiene `.env` ni credenciales de PostgreSQL (regla del proyecto: no tocar `.env`); `ruff`/`flake8` limpios en lo cambiado; `makemigrations --check` sin cambios. Frontend: Karma 2090/2090, `ng lint` y `i18n:check` limpios, `ng build` compila.
+**v2 (pedido del usuario):** columnas y tarjetas del tablero con el formato de Oportunidades (total por columna, asa de arrastre, contacto, importe, siguiente acción, responsable, botón «Agregar») y movimiento por arrastre; estilos compartidos por `styleUrls`. Karma 2092/2092, lint y build OK. Sin Editar/Cerrar/Actividad en la tarjeta.
 **Deuda técnica:** la tarjeta no abre detalle ni se edita desde la nueva pantalla (PB-CRM-005).
 
 ## Review
