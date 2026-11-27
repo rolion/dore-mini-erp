@@ -38,6 +38,7 @@ SOURCE_TYPES: dict[str, SourceTypeDefinition] = {
         SourceTypeDefinition('inventory_adjustment', 'Ajuste de inventario', 'inventory'),
         SourceTypeDefinition('inventory_opening', 'Apertura de existencias', 'inventory'),
         SourceTypeDefinition('production_order', 'Orden de producción', 'production'),
+        SourceTypeDefinition('production_packing', 'Empaque de producción', 'production'),
     )
 }
 

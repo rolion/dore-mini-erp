@@ -2,6 +2,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { DatePipe, NgTemplateOutlet, formatDate } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { finalize, interval } from 'rxjs';
@@ -11,6 +12,7 @@ import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
 import { OrderApiError, ProductionOrder, formatOrderNumber } from '../../models/order';
 import { formatQuantity } from '../../models/recipe';
 import { OrdersApiService } from '../../services/orders-api.service';
+import { PackDialogComponent } from '../../components/pack-dialog/pack-dialog.component';
 
 /** Por debajo de 957 px el detalle pasa a filas «etiqueta | valor» y a tarjetas de ingredientes. */
 export const COMPACT_QUERY = '(max-width: 956.98px)';
@@ -26,6 +28,7 @@ export class OrderDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
   private breakpoints = inject(BreakpointObserver);
+  private modal = inject(NgbModal);
   /** Pantalla estrecha (< 957 px). */
   compact = false;
   order: ProductionOrder | null = null;
@@ -114,6 +117,25 @@ export class OrderDetailComponent implements OnInit {
         if (error.fields.code === 'release_too_early') this.load();
       },
     });
+  }
+
+  /** El pack necesita al menos un pack completo a granel. */
+  get canPack(): boolean {
+    const packing = this.order?.packing;
+    return this.order?.status === 'ready_to_pack' && !!packing && Number(packing.bulkAvailable) >= packing.unitsPerPack;
+  }
+
+  openPack(): void {
+    const order = this.order;
+    if (!order || !this.canPack) return;
+    this.actionError = '';
+    this.success = '';
+    const ref = this.modal.open(PackDialogComponent, { backdrop: 'static' });
+    (ref.componentInstance as PackDialogComponent).order = order;
+    ref.result.then((updated: ProductionOrder) => {
+      this.order = updated;
+      this.success = tr('PRODUCTION.ORDERS.PACK.DONE');
+    }, () => undefined);
   }
 
   get statusClass(): string {

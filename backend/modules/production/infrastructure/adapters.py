@@ -10,11 +10,13 @@ from modules.inventory import services as inventory_services
 from modules.modularity import services as modularity_services
 from modules.production.application.orders import Actor, LotView, WarehouseView
 from modules.production.application.recipes import ProductInfo
+from modules.production.domain.packing import Packing
 from modules.production.domain.production_order import (
     IngredientShortage, InsufficientIngredients, OrderValidationError, ProductionOrder, RefrigerationRejected)
 from shared import module_gate
 
 SOURCE_TYPE = 'production_order'
+PACKING_SOURCE_TYPE = 'production_packing'
 COSTING_MODULE = 'costing'
 _UNIT_COST_STEP = Decimal('0.000001')
 
@@ -111,6 +113,74 @@ class InventoryStock:
         except inventory_services.LotNotFound as exc:
             raise RefrigerationRejected('lot_not_found', 'El lote de la orden ya no existe en Inventario.') from exc
 
+    def lot_available(self, order: ProductionOrder) -> Decimal:
+        """Saldo a granel: disponible del lote de la orden (0 si no existe)."""
+        if order.lot_id is None:
+            return Decimal('0')
+        try:
+            return inventory_services.get_lot(self.company_id, order.lot_id).available_quantity
+        except inventory_services.LotNotFound:
+            return Decimal('0')
+
+    def pack_out(self, order: ProductionOrder, packing: Packing, when: datetime, actor: Actor) -> None:
+        tracked = inventory_services.get_stock_products(
+            self.company_id, [packing.pack_product_id, packing.bag_product_id])
+        errors = {}
+        if packing.pack_product_id not in tracked:
+            errors['pack_product_id'] = ['El producto pack no controla stock.']
+        if packing.bag_product_id not in tracked:
+            errors['bag_product_id'] = ['El producto bolsa no controla stock.']
+        if errors:
+            raise OrderValidationError(errors)
+        bag_available = inventory_services.get_balances(
+            self.company_id, order.warehouse_id, [packing.bag_product_id], unlotted=True
+        ).get(packing.bag_product_id, Decimal('0'))
+        shortages = []
+        bulk_available = self.lot_available(order)
+        if bulk_available < packing.bulk_quantity:
+            shortages.append(IngredientShortage(order.result_product_id, order.result_product_name,
+                                                order.result_unit_abbreviation, packing.bulk_quantity,
+                                                bulk_available))
+        if bag_available < packing.bags_quantity:
+            shortages.append(IngredientShortage(packing.bag_product_id, packing.bag_product_name,
+                                                tracked[packing.bag_product_id].unit_abbreviation,
+                                                packing.bags_quantity, bag_available))
+        if shortages:
+            raise InsufficientIngredients(shortages)
+        reference = order_reference(order)
+        try:
+            for product_id, quantity, line, lot_id in (
+                    (order.result_product_id, packing.bulk_quantity, 'bulk', order.lot_id),
+                    (packing.bag_product_id, packing.bags_quantity, 'bag', None)):
+                self._record(order.warehouse_id, product_id, 'out', quantity, packing, line, lot_id, reference,
+                             when, actor)
+        except inventory_services.InsufficientStock as exc:  # carrera con otro documento: se revierte todo
+            raise InsufficientIngredients([
+                IngredientShortage(s.product_id, order.result_product_name if s.product_id == order.result_product_id
+                                   else packing.bag_product_name, None, s.requested, s.available)
+                for s in exc.shortages]) from exc
+
+    def pack_in(self, packing: Packing, when: datetime, actor: Actor) -> None:
+        warehouse_id = inventory_services.get_lot(self.company_id, packing.lot_id).warehouse_id
+        self._record(warehouse_id, packing.pack_product_id, 'in', Decimal(packing.packs), packing, 'pack', None,
+                     f'EMP-{packing.id.hex[:8].upper()}', when, actor)
+
+    def _record(self, warehouse_id: UUID, product_id: UUID, kind: str, quantity: Decimal, packing: Packing,
+                line: str, lot_id: UUID | None, reference: str, when: datetime, actor: Actor) -> None:
+        try:
+            inventory_services.record_movement(
+                self.company_id, product_id=product_id, warehouse_id=warehouse_id, kind=kind, quantity=quantity,
+                user_id=actor.user_id, user_name=actor.user_name, reference=reference,
+                source_type=PACKING_SOURCE_TYPE, source_id=str(packing.id), source_line=line, occurred_at=when,
+                lot_id=lot_id)
+        except inventory_services.MovementValidationError as exc:
+            raise OrderValidationError({'non_field_errors': [m for msgs in exc.errors.values() for m in msgs]}
+                                       ) from exc
+        except inventory_services.InsufficientStock:
+            raise
+        except inventory_services.MovementConflict as exc:
+            raise RefrigerationRejected(exc.code, str(exc)) from exc
+
 
 class ModularityReleasePolicy:
     """Mínimo de refrigeración desde la fachada de lectura de Modularidad."""
@@ -147,3 +217,23 @@ class CostingGateway:
         costing_services.cost_receipt(
             self.company_id, source_type=SOURCE_TYPE, source_id=str(order.id),
             lines=[(order.result_product_id, quantity, unit_cost)], occurred_at=when)
+
+    def cost_packing_outputs(self, order: ProductionOrder, packing: Packing, when: datetime) -> Decimal | None:
+        """Valoriza cuñapés y bolsas al promedio de Costeo; `None` sin Costeo o sin costo (INV-07)."""
+        if not self._active():
+            return None
+        try:
+            costed = costing_services.cost_outputs(
+                self.company_id, source_type=PACKING_SOURCE_TYPE, source_id=str(packing.id),
+                lines=[(order.result_product_id, packing.bulk_quantity),
+                       (packing.bag_product_id, packing.bags_quantity)], occurred_at=when)
+        except costing_services.CostUnavailable:
+            return None
+        return costed.total
+
+    def cost_packing_entry(self, packing: Packing, total_cost: Decimal, when: datetime) -> Decimal:
+        unit_cost = (total_cost / packing.packs).quantize(_UNIT_COST_STEP, rounding=ROUND_HALF_UP)
+        costing_services.cost_receipt(
+            self.company_id, source_type=PACKING_SOURCE_TYPE, source_id=str(packing.id),
+            lines=[(packing.pack_product_id, Decimal(packing.packs), unit_cost)], occurred_at=when)
+        return unit_cost

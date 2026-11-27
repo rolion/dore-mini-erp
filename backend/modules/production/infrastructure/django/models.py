@@ -112,3 +112,37 @@ class ProductionOrderCounterModel(models.Model):
 
     class Meta:
         db_table = 'production_order_counter'
+
+
+class PackingModel(models.Model):
+    """Tanda de empaque de una orden (TASK-empacar-bolsas-de-6-venta-detalle); inmutable."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    company_id = models.UUIDField(db_index=True)
+    order = models.ForeignKey(ProductionOrderModel, on_delete=models.PROTECT, related_name='packings')
+    number = models.PositiveIntegerField()
+    request_id = models.UUIDField()
+    packs = models.PositiveIntegerField()
+    # Referencias a Catálogo e Inventario: UUID sin FK.
+    pack_product_id = models.UUIDField()
+    pack_product_name = models.CharField(max_length=200)
+    bag_product_id = models.UUIDField()
+    bag_product_name = models.CharField(max_length=200)
+    bulk_quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    bags_quantity = models.DecimalField(max_digits=16, decimal_places=4)
+    lot_id = models.UUIDField()
+    lot_code = models.CharField(max_length=30)
+    cost_total = models.DecimalField(max_digits=18, decimal_places=4, null=True, blank=True)
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by_id = models.UUIDField(null=True, blank=True)
+    created_by_name = models.CharField(max_length=150, blank=True, default='')
+
+    class Meta:
+        db_table = 'production_packing'
+        ordering = ['number']
+        constraints = [
+            models.UniqueConstraint(fields=['order', 'request_id'], name='production_packing_request_unique'),
+            models.UniqueConstraint(fields=['order', 'number'], name='production_packing_number_unique'),
+            models.CheckConstraint(condition=models.Q(packs__gt=0), name='production_packing_packs_gt_0'),
+        ]

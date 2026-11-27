@@ -7,6 +7,7 @@ from typing import Protocol
 from uuid import UUID
 
 from modules.production.application.recipes import ProductCatalog
+from modules.production.domain.packing import Packing, ProductRef
 from modules.production.domain.production_order import (
     OrderIngredient, OrderNotFound, OrderStateError, OrderStatus, OrderValidationError, ProductionOrder,
     parse_preparations)
@@ -49,6 +50,12 @@ class StockGateway(Protocol):
     def release_lot(self, order: ProductionOrder, actor: Actor) -> None:
         """Libera el lote de la orden en Inventario (idempotente; no crea movimientos)."""
 
+    def pack_out(self, order: ProductionOrder, packing: Packing, when: datetime, actor: Actor) -> None:
+        """Salida de los cuñapés del lote y de las bolsas; lanza `InsufficientIngredients` con todos los faltantes."""
+
+    def pack_in(self, packing: Packing, when: datetime, actor: Actor) -> None:
+        """Entrada de los packs al stock disponible."""
+
 
 class CostGateway(Protocol):
     """Costeo opcional: devuelve el costo total consumido (o `None` sin costo) y registra la entrada costeada."""
@@ -57,6 +64,17 @@ class CostGateway(Protocol):
                          when: datetime) -> Decimal | None: ...
 
     def cost_entry(self, order: ProductionOrder, quantity: Decimal, total_cost: Decimal, when: datetime) -> None: ...
+
+
+class PackingCostGateway(Protocol):
+    def cost_packing_outputs(self, order: ProductionOrder, packing: Packing, when: datetime) -> Decimal | None: ...
+
+    def cost_packing_entry(self, packing: Packing, total_cost: Decimal, when: datetime) -> Decimal: ...
+
+
+class PackingRepository(Protocol):
+    def find(self, order_id: UUID, request_id: UUID) -> Packing | None: ...
+    def add(self, packing: Packing) -> Packing: ...
 
 
 class ReleasePolicy(Protocol):
@@ -83,7 +101,8 @@ class ProductionOrders:
     def __init__(self, repository: OrderRepository, recipes: RecipeSource, catalog: ProductCatalog,
                  warehouses: WarehouseDirectory, clock: Callable[[], datetime] = _utc_now,
                  stock: StockGateway | None = None, costs: CostGateway | None = None,
-                 policy: ReleasePolicy | None = None):
+                 policy: ReleasePolicy | None = None, packings: PackingRepository | None = None):
+        self.packings = packings
         self.policy = policy
         self.stock = stock
         self.costs = costs
@@ -198,3 +217,34 @@ class ProductionOrders:
             return order
         self.stock.release_lot(order, actor)
         return self.repository.save(order)
+
+    def pack(self, order_id: UUID, *, request_id: UUID, packs: object, pack_product_id: UUID,
+             bag_product_id: UUID, actor: Actor) -> tuple[Packing, bool]:
+        """Registra una tanda de packs de 6 (salidas, entrada, costo y registro; todo o nada).
+
+        Devuelve `(empaque, creado)`.
+
+        Debe correr dentro de una transacción: con la orden bloqueada, un reintento con el mismo `request_id`
+        devuelve el empaque ya registrado sin nuevos movimientos.
+        """
+        order = self.get(order_id, for_update=True)
+        existing = self.packings.find(order.id, request_id)
+        if existing is not None:
+            return existing, False
+        if order.status != OrderStatus.READY_TO_PACK:
+            raise OrderStateError('La orden no está lista para empacar.')
+        found = self.catalog.products({pack_product_id, bag_product_id})
+
+        def ref(product_id: UUID) -> ProductRef | None:
+            info = found.get(product_id)
+            return ProductRef(info.id, info.name) if info is not None and info.active else None
+
+        packing = Packing.create(order, request_id=request_id, packs=packs, pack=ref(pack_product_id),
+                                 bag=ref(bag_product_id), user_id=actor.user_id, user_name=actor.user_name)
+        now = self.clock()
+        self.stock.pack_out(order, packing, now, actor)
+        total = self.costs.cost_packing_outputs(order, packing, now) if self.costs else None
+        self.stock.pack_in(packing, now, actor)
+        unit_cost = self.costs.cost_packing_entry(packing, total, now) if total is not None else None
+        packing.record_cost(total, unit_cost)
+        return self.packings.add(packing), True

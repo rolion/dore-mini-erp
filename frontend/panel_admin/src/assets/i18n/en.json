@@ -1107,7 +1107,8 @@
       "AJUSTE_DE_INVENTARIO": "Inventory adjustment",
       "APERTURA_DE_EXISTENCIAS": "Opening stock",
       "SIN_DOCUMENTO": "No document",
-      "ORDEN_DE_PRODUCCION": "Production order"
+      "ORDEN_DE_PRODUCCION": "Production order",
+      "EMPAQUE_DE_PRODUCCION": "Production packing"
     },
     "STOCK": {
       "TODAS_LAS_CLASIFICACIONES": "All classifications",
@@ -3618,6 +3619,36 @@
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
         "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}."
+      },
+      "PACK": {
+        "ACTION": "Record packing",
+        "TITLE": "Packings",
+        "DIALOG_TITLE": "Record packing",
+        "PACKS": "Number of packs",
+        "PACK_PRODUCT": "Pack product",
+        "BAG_PRODUCT": "Bag product",
+        "CHOOSE_PRODUCT": "Choose a product",
+        "NO_PRODUCTS": "No stock-tracked products",
+        "SUMMARY": "{{bulk}} {{unit}} will be taken from lot {{lot}} and {{bags}} bags; {{packs}} packs will be added.",
+        "BULK_AVAILABLE": "Bulk balance",
+        "NOT_ENOUGH": "{{quantity}} {{unit}} left in bulk: not enough for one pack.",
+        "EMPTY": "No packings yet",
+        "NUMBER": "No.",
+        "DATE": "Date",
+        "LOT": "Source lot",
+        "BULK_USED": "Bulk used",
+        "BAGS_USED": "Bags",
+        "BY": "Recorded by",
+        "COST": "Cost",
+        "NO_COST": "No cost",
+        "SAVE": "Record",
+        "SAVING": "Recording…",
+        "DONE": "Packing recorded.",
+        "SHORTAGE_TITLE": "Not enough stock:",
+        "SHORTAGE_LINE": "{{name}}: you need {{requested}}, there are {{available}} ({{missing}} short).",
+        "PACKS_INVALID": "Enter a whole number between 1 and 99999.",
+        "PRODUCT_REQUIRED": "Choose a product.",
+        "LOAD_ERROR": "Products could not be loaded."
       }
     }
   }

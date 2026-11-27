@@ -22,6 +22,10 @@
       <button type="button" class="btn btn-primary" [disabled]="releasing || !canRelease" (click)="release()" data-testid="release">{{ 'PRODUCTION.ORDERS.RELEASE.ACTION' | translate }}</button>
       @if (!canRelease && releasableFrom) { <small class="text-muted align-self-center" data-testid="release-hint">{{ 'PRODUCTION.ORDERS.RELEASE.AVAILABLE_FROM' | translate: { date: formatDateTime(releasableFrom) } }}</small> }
       }
+      @if (order.status === 'ready_to_pack') {
+      <button type="button" class="btn btn-primary" [disabled]="!canPack" (click)="openPack()" data-testid="pack">{{ 'PRODUCTION.ORDERS.PACK.ACTION' | translate }}</button>
+      @if (!canPack && order.packing) { <small class="text-muted align-self-center" data-testid="pack-hint">{{ 'PRODUCTION.ORDERS.PACK.NOT_ENOUGH' | translate: { quantity: quantity(order.packing.bulkAvailable), unit: order.packing.bulkUnitAbbreviation ?? '' } }}</small> }
+      }
       <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
     </div>
     @if (success) { <div role="status" class="alert alert-success mx-4" data-testid="success">{{ success }}</div> }
@@ -133,6 +137,49 @@
       <dd class="col-sm-9" data-testid="released-at">{{ formatDateTime(order.releasedAt) }}</dd>
       }
     </dl>
+  </section>
+  }
+  @if (order.packing; as packing) {
+  <section class="m-4" data-testid="packing-section" aria-labelledby="packing-title">
+    <h5 id="packing-title">{{ 'PRODUCTION.ORDERS.PACK.TITLE' | translate }}</h5>
+    <dl class="row">
+      <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.PACK.BULK_AVAILABLE' | translate }}</dt>
+      <dd class="col-sm-9" data-testid="bulk-available">{{ quantity(packing.bulkAvailable) }} {{ packing.bulkUnitAbbreviation }}</dd>
+    </dl>
+    @if (!packing.packings.length) { <p class="text-muted" data-testid="packing-empty">{{ 'PRODUCTION.ORDERS.PACK.EMPTY' | translate }}</p> }
+    @else {
+    <div class="table-responsive">
+      <table class="table align-middle" data-testid="packing-table">
+        <caption class="visually-hidden">{{ 'PRODUCTION.ORDERS.PACK.TITLE' | translate }}</caption>
+        <thead><tr>
+          <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.NUMBER' | translate }}</th>
+          <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.DATE' | translate }}</th>
+          <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.PACK_PRODUCT' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.PACKS' | translate }}</th>
+          <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.LOT' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.BULK_USED' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.BAGS_USED' | translate }}</th>
+          <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.COST' | translate }}</th>
+          <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.BY' | translate }}</th>
+        </tr></thead>
+        <tbody>
+          @for (entry of packing.packings; track entry.id) {
+          <tr data-testid="packing-row">
+            <td>{{ entry.number }}</td>
+            <td>{{ formatDateTime(entry.createdAt) }}</td>
+            <td>{{ entry.packProduct.name }}</td>
+            <td class="text-end">{{ entry.packs }}</td>
+            <td>{{ entry.lot.code }}</td>
+            <td class="text-end">{{ quantity(entry.bulkQuantity) }} {{ packing.bulkUnitAbbreviation }}</td>
+            <td class="text-end">{{ quantity(entry.bagsQuantity) }}</td>
+            <td class="text-end">{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }}</td>
+            <td>{{ entry.createdBy }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
   </section>
   }
   }

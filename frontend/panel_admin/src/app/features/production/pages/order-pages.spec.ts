@@ -20,7 +20,7 @@ const order: ProductionOrder = {
   warehouse: { id: 'w-1', name: 'Principal' }, preparations: 5, yieldPerPreparation: '24.0000', expectedOutput: '120.0000',
   ingredients: [{ productId: 'p-1', productName: 'Queso', unitId: 'u-2', unitAbbreviation: 'kg', quantityPerPreparation: '1.5000', expectedQuantity: '7.5000', actualQuantity: null }],
   createdAt: '2026-11-26T12:00:00Z', startedAt: null, actualOutput: null, enteredAt: null, lot: null, costTotal: null,
-  release: null, releasedAt: null, releasedBy: null,
+  release: null, releasedAt: null, releasedBy: null, packing: null,
 };
 const started: ProductionOrder = { ...order, status: 'in_preparation', startedAt: '2026-11-26T13:00:00Z' };
 
@@ -88,7 +88,7 @@ describe('OrderListComponent', () => {
 describe('OrderDetailComponent', () => {
   let api: jasmine.SpyObj<OrdersApiService>;
   function setup(value: ProductionOrder, compact = false) {
-    api = jasmine.createSpyObj<OrdersApiService>('api', ['get', 'start', 'release']);
+    api = jasmine.createSpyObj<OrdersApiService>('api', ['get', 'start', 'release', 'pack']);
     api.get.and.returnValue(of(value));
     TestBed.configureTestingModule({ imports: [OrderDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: OrdersApiService, useValue: api }, { provide: BreakpointObserver, useValue: breakpoints(compact) },
@@ -135,6 +135,48 @@ describe('OrderDetailComponent', () => {
     expect(root.querySelector('[data-testid="lot-code"]')?.textContent).toContain('L-20261126-0001');
     expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('Sin costo');
     expect(root.querySelector('[data-testid="actual-quantity"]')?.textContent).toContain('7 kg');
+  });
+
+  describe('packing', () => {
+    const ready = (bulk: string): ProductionOrder => ({
+      ...started, status: 'ready_to_pack', actualOutput: '118.0000', enteredAt: '2026-11-26T14:00:00Z',
+      lot: { id: 'lot-1', code: 'L-20261127-0001' }, releasedAt: '2026-11-27T10:00:00Z', releasedBy: 'Ana',
+      packing: { unitsPerPack: 6, bagsPerPack: 1, bulkAvailable: bulk, bulkUnitAbbreviation: 'u', packings: [] },
+    });
+
+    it('shows the bulk balance, an empty history and an enabled action when a pack fits', () => {  // AC-08, UI-01, UI-03
+      const root: HTMLElement = setup(ready('82.0000')).nativeElement;
+      expect(root.querySelector('[data-testid="bulk-available"]')?.textContent).toContain('82');
+      expect(root.querySelector('[data-testid="packing-empty"]')).not.toBeNull();
+      expect((root.querySelector('[data-testid="pack"]') as HTMLButtonElement).disabled).toBeFalse();
+      expect(root.querySelector('[data-testid="pack-hint"]')).toBeNull();
+    });
+
+    it('disables the action and explains it when less than one pack is left', () => {  // AC-08, UI-03, EDGE-04
+      const root: HTMLElement = setup(ready('5.0000')).nativeElement;
+      expect((root.querySelector('[data-testid="pack"]') as HTMLButtonElement).disabled).toBeTrue();
+      expect(root.querySelector('[data-testid="pack-hint"]')).not.toBeNull();
+    });
+
+    it('lists the history of packings with lot, quantities and cost', () => {  // AC-04, AC-08, UI-01
+      const value = ready('82.0000');
+      value.packing = { ...value.packing!, packings: [{
+        id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6' }, bagProduct: { id: 'p-bag', name: 'Bolsa' },
+        bulkQuantity: '36.0000', bagsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-20261127-0001' },
+        costTotal: '39.00', unitCost: '6.500000', createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' }] };
+      const root: HTMLElement = setup(value).nativeElement;
+      const row = root.querySelector('[data-testid="packing-row"]')?.textContent ?? '';
+      expect(row).toContain('Pack x6');
+      expect(row).toContain('L-20261127-0001');
+      expect(row).toContain('36');
+      expect(row).toContain('Ana');
+    });
+
+    it('has no packing section or action outside ready_to_pack', () => {  // AC-08, UI-03
+      const root: HTMLElement = setup(started).nativeElement;
+      expect(root.querySelector('[data-testid="packing-section"]')).toBeNull();
+      expect(root.querySelector('[data-testid="pack"]')).toBeNull();
+    });
   });
 
   describe('release', () => {

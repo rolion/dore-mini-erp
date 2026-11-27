@@ -1107,7 +1107,8 @@
       "AJUSTE_DE_INVENTARIO": "Ajuste de estoque",
       "APERTURA_DE_EXISTENCIAS": "Abertura de estoque",
       "SIN_DOCUMENTO": "Sem documento",
-      "ORDEN_DE_PRODUCCION": "Ordem de produção"
+      "ORDEN_DE_PRODUCCION": "Ordem de produção",
+      "EMPAQUE_DE_PRODUCCION": "Embalagem de produção"
     },
     "STOCK": {
       "TODAS_LAS_CLASIFICACIONES": "Todas as classificações",
@@ -3618,6 +3619,36 @@
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
         "TOO_EARLY": "O tempo mínimo de refrigeração ainda não foi atingido. Disponível a partir de {{date}}."
+      },
+      "PACK": {
+        "ACTION": "Registrar embalagem",
+        "TITLE": "Embalagens",
+        "DIALOG_TITLE": "Registrar embalagem",
+        "PACKS": "Quantidade de packs",
+        "PACK_PRODUCT": "Produto pack",
+        "BAG_PRODUCT": "Produto saco",
+        "CHOOSE_PRODUCT": "Escolha um produto",
+        "NO_PRODUCTS": "Sem produtos que controlem estoque",
+        "SUMMARY": "Serão descontados {{bulk}} {{unit}} do lote {{lot}} e {{bags}} sacos; entrarão {{packs}} packs.",
+        "BULK_AVAILABLE": "Saldo a granel",
+        "NOT_ENOUGH": "Restam {{quantity}} {{unit}} a granel: não chegam para um pack.",
+        "EMPTY": "Ainda não há embalagens",
+        "NUMBER": "N.º",
+        "DATE": "Data",
+        "LOT": "Lote de origem",
+        "BULK_USED": "A granel usado",
+        "BAGS_USED": "Sacos",
+        "BY": "Registrado por",
+        "COST": "Custo",
+        "NO_COST": "Sem custo",
+        "SAVE": "Registrar",
+        "SAVING": "Registrando…",
+        "DONE": "Embalagem registrada.",
+        "SHORTAGE_TITLE": "Não há estoque suficiente:",
+        "SHORTAGE_LINE": "{{name}}: você precisa de {{requested}}, há {{available}} (faltam {{missing}}).",
+        "PACKS_INVALID": "Informe um inteiro entre 1 e 99999.",
+        "PRODUCT_REQUIRED": "Escolha um produto.",
+        "LOAD_ERROR": "Não foi possível carregar os produtos."
       }
     }
   }
