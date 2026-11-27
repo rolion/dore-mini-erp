@@ -1,0 +1,48 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'CRM.TRACKING.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate">
+        <i class="fas fa-home font-17" aria-hidden="true"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.CUSTOMER_LIST.BREADCRUMB' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'CRM.TRACKING.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="card">
+      <div class="card-header">
+        <h4>{{ 'CRM.TRACKING.TITULO' | translate }}</h4>
+        <button type="button" class="btn btn-primary ms-auto" data-testid="create-board" (click)="create()">
+          <i class="fas fa-plus me-1" aria-hidden="true"></i>{{ 'CRM.TRACKING.CREAR_TABLERO' | translate }}
+        </button>
+      </div>
+      <div class="card-body">
+        @if (loading) {
+        <p data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+        } @else if (loadError) {
+        <div class="alert alert-danger" role="alert" data-testid="load-error">
+          {{ loadError }}
+          <button type="button" class="btn btn-light btn-sm ms-2" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else if (!boards.length) {
+        <div class="text-center py-4" data-testid="no-boards">
+          <p class="text-muted">{{ 'CRM.TRACKING.SIN_TABLEROS' | translate }}</p>
+        </div>
+        } @else {
+        <ul class="list-unstyled crm-board-grid m-0" data-testid="board-grid">
+          @for (board of boards; track board.id) {
+          <li>
+            <a class="card crm-board-tile m-0" data-testid="board-tile" [routerLink]="['/pocketbiz/crm/tracking', board.id]"
+              [attr.aria-label]="'CRM.TRACKING.ABRIR_TABLERO' | translate: { name: board.name }">
+              <span class="h6 mb-0">{{ board.name }}</span>
+            </a>
+          </li>
+          }
+        </ul>
+        }
+      </div>
+    </div>
+  </div>
+</section>

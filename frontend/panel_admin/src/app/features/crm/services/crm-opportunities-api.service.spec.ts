@@ -13,7 +13,7 @@ describe('CrmOpportunitiesApiService', () => {
   const base = `${environment.apiUrl}/crm/opportunities/`;
   const dto: CrmOpportunityDto = {
     id: 'o-1', board_id: 'b-1', stage_id: 's-1', lead: { id: 'l-1', name: 'Carla', phone: '7' }, customer: null,
-    title: 'Combo', owner: { id: 7, name: 'Ana' }, amount: '150.00', currency: 'BOB', next_action_at: '2026-11-25T14:00:00Z',
+    title: 'Combo', description: '', owner: { id: 7, name: 'Ana' }, amount: '150.00', currency: 'BOB', next_action_at: '2026-11-25T14:00:00Z',
     status: 'open', closed_at: null, order_id: null, lost_reason: '', created_at: '2026-11-20T10:00:00Z',
   };
 
@@ -67,6 +67,25 @@ describe('CrmOpportunitiesApiService', () => {
       expect(req.request.body).toEqual(body);
       req.flush(dto);
     }
+  });
+
+  it('creates a tracking card without amount and sends the description (API-01)', () => {
+    api.create({ boardId: 'b-1', stageId: 's-1', customerId: 'c-1', title: 'Llamar', description: 'Pidió precio' }).subscribe();
+    const req = http.expectOne(base);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      board_id: 'b-1', title: 'Llamar', description: 'Pidió precio', stage_id: 's-1', customer_id: 'c-1',
+    });
+    req.flush({ ...dto, title: 'Llamar', description: 'Pidió precio', amount: '0.00' });
+  });
+
+  it('maps a missing description to an empty string', () => {
+    let description: string | undefined;
+    api.get('o-1').subscribe((o) => (description = o.description));
+    const withoutDescription: Partial<CrmOpportunityDto> = { ...dto };
+    delete withoutDescription.description;
+    http.expectOne(`${base}o-1/`).flush(withoutDescription);
+    expect(description).toBe('');
   });
 
   it('reads linkable orders and stage history (API-04)', () => {

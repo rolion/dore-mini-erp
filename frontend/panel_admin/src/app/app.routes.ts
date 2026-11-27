@@ -228,6 +228,13 @@ export const APP_ROUTE: Route[] = [
                     import('./features/crm/crm.routes').then((m) => m.CRM_CUSTOMERS_ROUTE),
             },
             {
+                path: 'crm/tracking',
+                canActivate: [moduleGuard],
+                data: { module: 'customers' },
+                loadChildren: () =>
+                    import('./features/crm/crm.routes').then((m) => m.CRM_TRACKING_ROUTE),
+            },
+            {
                 path: 'crm/board',
                 canActivate: [moduleGuard],
                 data: { module: 'customers' },

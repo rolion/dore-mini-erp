@@ -58,7 +58,8 @@
         "BOARD": "Quadro",
         "LEADS": "Prospectos",
         "OPPORTUNITIES": "Oportunidades",
-        "TASKS": "Para contatar"
+        "TASKS": "Para contatar",
+        "TRACKING": "Acompanhamento comercial"
       }
     },
     "ORDERS": {
@@ -3942,6 +3943,33 @@
       "ARCHIVAR_TITULO": "Arquivar tarefa",
       "ARCHIVAR_TEXTO": "A tarefa é ocultada de todas as listas e não pode ser recuperada pela interface.",
       "ARCHIVAR_CONFIRMAR": "Arquivar tarefa"
+    },
+    "TRACKING": {
+      "TITULO": "Acompanhamento comercial",
+      "CREAR_TABLERO": "Criar novo quadro",
+      "SIN_TABLEROS": "Você ainda não tem quadros de acompanhamento. Crie o primeiro.",
+      "ABRIR_TABLERO": "Abrir o quadro {{name}}",
+      "VOLVER": "Voltar aos quadros",
+      "AGREGAR_COLUMNA": "Adicionar coluna",
+      "NUEVA_COLUMNA": "Nova coluna",
+      "NOMBRE_COLUMNA_OBLIGATORIO": "Informe o nome da coluna.",
+      "SIN_COLUMNAS": "Este quadro ainda não tem colunas. Adicione a primeira.",
+      "SIN_TARJETAS": "Sem cartões",
+      "MENU_COLUMNA": "Opções da coluna {{name}}",
+      "AGREGAR_TARJETA": "Adicionar cartão",
+      "ARCHIVAR_COLUMNA": "Arquivar coluna",
+      "ARCHIVAR": "Arquivar",
+      "ARCHIVAR_CONFIRMAR": "Arquivar a coluna “{{name}}”?",
+      "ARCHIVAR_BLOQUEADO": "A coluna “{{name}}” tem {{n}} cartão(ões) ativo(s). Mova-os para outra coluna antes de arquivá-la.",
+      "TABLERO_NO_ENCONTRADO": "O quadro não foi encontrado.",
+      "NUEVA_TARJETA": "Novo cartão",
+      "NOMBRE_TARJETA_OBLIGATORIO": "Informe o nome do cartão.",
+      "CLIENTE_O_PROSPECTO": "Cliente ou prospecto",
+      "CONTACTO_OBLIGATORIO": "Escolha um cliente ou um prospecto.",
+      "GRUPO_CLIENTES": "Clientes",
+      "GRUPO_PROSPECTOS": "Prospectos",
+      "DESCRIPCION": "Descrição",
+      "DESCRIPCION_MUY_LARGA": "Use no máximo {{n}} caracteres."
     }
   }
 }

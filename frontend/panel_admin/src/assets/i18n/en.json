@@ -65,7 +65,8 @@
         "BOARD": "Board",
         "LEADS": "Leads",
         "OPPORTUNITIES": "Opportunities",
-        "TASKS": "To contact"
+        "TASKS": "To contact",
+        "TRACKING": "Sales follow-up"
       }
     },
     "ORDERS": {
@@ -3942,6 +3943,33 @@
       "ARCHIVAR_TITULO": "Archive task",
       "ARCHIVAR_TEXTO": "The task is hidden from every list and cannot be recovered from the interface.",
       "ARCHIVAR_CONFIRMAR": "Archive task"
+    },
+    "TRACKING": {
+      "TITULO": "Sales follow-up",
+      "CREAR_TABLERO": "Create new board",
+      "SIN_TABLEROS": "You have no follow-up boards yet. Create the first one.",
+      "ABRIR_TABLERO": "Open board {{name}}",
+      "VOLVER": "Back to boards",
+      "AGREGAR_COLUMNA": "Add column",
+      "NUEVA_COLUMNA": "New column",
+      "NOMBRE_COLUMNA_OBLIGATORIO": "Enter the column name.",
+      "SIN_COLUMNAS": "This board has no columns yet. Add the first one.",
+      "SIN_TARJETAS": "No cards",
+      "MENU_COLUMNA": "Options for column {{name}}",
+      "AGREGAR_TARJETA": "Add card",
+      "ARCHIVAR_COLUMNA": "Archive column",
+      "ARCHIVAR": "Archive",
+      "ARCHIVAR_CONFIRMAR": "Archive the column “{{name}}”?",
+      "ARCHIVAR_BLOQUEADO": "The column “{{name}}” has {{n}} active card(s). Move them to another column before archiving it.",
+      "TABLERO_NO_ENCONTRADO": "The board was not found.",
+      "NUEVA_TARJETA": "New card",
+      "NOMBRE_TARJETA_OBLIGATORIO": "Enter the card name.",
+      "CLIENTE_O_PROSPECTO": "Customer or prospect",
+      "CONTACTO_OBLIGATORIO": "Choose a customer or a prospect.",
+      "GRUPO_CLIENTES": "Customers",
+      "GRUPO_PROSPECTOS": "Prospects",
+      "DESCRIPCION": "Description",
+      "DESCRIPCION_MUY_LARGA": "Use at most {{n}} characters."
     }
   }
 }

@@ -18,7 +18,8 @@ class OpportunityCreateInputSerializer(serializers.Serializer):
     lead_id = serializers.UUIDField(required=False, allow_null=True)
     customer_id = serializers.UUIDField(required=False, allow_null=True)
     title = serializers.CharField(allow_blank=True, trim_whitespace=False)
-    amount = _amount_field()
+    amount = _amount_field(required=False)  # INV-04: sin importe se guarda 0.00
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True, trim_whitespace=False)
     next_action_at = serializers.DateTimeField(required=False, allow_null=True)
     owner_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -26,6 +27,7 @@ class OpportunityCreateInputSerializer(serializers.Serializer):
 class OpportunityEditInputSerializer(serializers.Serializer):
     title = serializers.CharField(required=False, allow_blank=True, trim_whitespace=False)
     amount = _amount_field(required=False)
+    description = serializers.CharField(required=False, allow_blank=True, trim_whitespace=False)
     next_action_at = serializers.DateTimeField(required=False, allow_null=True)
     owner_id = serializers.IntegerField(required=False, allow_null=True)
 
@@ -56,7 +58,7 @@ def opportunity_data(card: OpportunityCard) -> dict:
     return {
         'id': str(o.id), 'board_id': str(o.board_id), 'stage_id': str(o.stage_id),
         'lead': _reference(o.lead_id, card.lead), 'customer': _reference(o.customer_id, card.customer),
-        'title': o.title, 'owner': {'id': o.owner_id, 'name': card.owner_name},
+        'title': o.title, 'description': o.description, 'owner': {'id': o.owner_id, 'name': card.owner_name},
         'amount': str(o.amount), 'currency': o.currency, 'next_action_at': timestamp(o.next_action_at),
         'status': o.status, 'closed_at': timestamp(o.closed_at), 'order_id': str(o.order_id) if o.order_id else None,
         'lost_reason': o.lost_reason, 'created_at': timestamp(o.created_at),

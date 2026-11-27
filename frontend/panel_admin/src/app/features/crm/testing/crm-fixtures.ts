@@ -51,6 +51,7 @@ export function makeOpportunity(overrides: Partial<CrmOpportunity> = {}): CrmOpp
     lead: { id: 'l-1', name: 'Carla Rojas', phone: '+59176543210' },
     customer: null,
     title: 'Combo familiar',
+    description: '',
     owner: { id: 7, name: 'Ana Admin' },
     amount: '150.00',
     currency: 'BOB',

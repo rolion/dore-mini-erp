@@ -58,7 +58,8 @@
         "BOARD": "Tablero",
         "LEADS": "Prospectos",
         "OPPORTUNITIES": "Oportunidades",
-        "TASKS": "Por contactar"
+        "TASKS": "Por contactar",
+        "TRACKING": "Seguimiento comercial"
       }
     },
     "ORDERS": {
@@ -3942,6 +3943,33 @@
       "ARCHIVAR_TITULO": "Archivar tarea",
       "ARCHIVAR_TEXTO": "La tarea se oculta de todas las listas y no se puede recuperar desde la interfaz.",
       "ARCHIVAR_CONFIRMAR": "Archivar tarea"
+    },
+    "TRACKING": {
+      "TITULO": "Seguimiento comercial",
+      "CREAR_TABLERO": "Crear nuevo tablero",
+      "SIN_TABLEROS": "Aún no tienes tableros de seguimiento. Crea el primero.",
+      "ABRIR_TABLERO": "Abrir el tablero {{name}}",
+      "VOLVER": "Volver a tableros",
+      "AGREGAR_COLUMNA": "Agregar columna",
+      "NUEVA_COLUMNA": "Nueva columna",
+      "NOMBRE_COLUMNA_OBLIGATORIO": "Ingresa el nombre de la columna.",
+      "SIN_COLUMNAS": "Este tablero aún no tiene columnas. Agrega la primera.",
+      "SIN_TARJETAS": "Sin tarjetas",
+      "MENU_COLUMNA": "Opciones de la columna {{name}}",
+      "AGREGAR_TARJETA": "Agregar tarjeta",
+      "ARCHIVAR_COLUMNA": "Archivar columna",
+      "ARCHIVAR": "Archivar",
+      "ARCHIVAR_CONFIRMAR": "¿Archivar la columna «{{name}}»?",
+      "ARCHIVAR_BLOQUEADO": "La columna «{{name}}» tiene {{n}} tarjeta(s) activa(s). Muévelas a otra columna antes de archivarla.",
+      "TABLERO_NO_ENCONTRADO": "No se encontró el tablero.",
+      "NUEVA_TARJETA": "Nueva tarjeta",
+      "NOMBRE_TARJETA_OBLIGATORIO": "Ingresa el nombre de la tarjeta.",
+      "CLIENTE_O_PROSPECTO": "Cliente o prospecto",
+      "CONTACTO_OBLIGATORIO": "Elige un cliente o un prospecto.",
+      "GRUPO_CLIENTES": "Clientes",
+      "GRUPO_PROSPECTOS": "Prospectos",
+      "DESCRIPCION": "Descripción",
+      "DESCRIPCION_MUY_LARGA": "Usa como máximo {{n}} caracteres."
     }
   }
 }

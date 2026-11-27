@@ -1,6 +1,6 @@
 # TASK-crm-tableros-seguimiento-comercial: Seguimiento comercial: tableros, columnas y tarjetas
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tableros-seguimiento-comercial` (base `origin/crm`)
@@ -13,6 +13,7 @@
 | 2026-11-27 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-27 | INVESTIGATION → DESIGN → PLANNING | Veredicto NEEDS_PLAN, diseño SI; decisiones del usuario registradas | delivery-start |
 | 2026-11-27 | PLANNING → ENGINEERING | Specification READY | delivery-start |
+| 2026-11-27 | ENGINEERING → REVIEW | Implementación completa | delivery-build |
 
 ## Investigación
 
@@ -73,7 +74,14 @@ No aplica según veredicto.
 `docs/plans/PLAN-2026-11-27-crm-tableros-seguimiento-comercial.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend** (`backend/modules/crm/`): `Opportunity.description` (INV-03) e importe opcional con 0.00 por defecto (INV-04) en dominio, modelo, repositorio, servicio y serializers; migración `0004_opportunity_description`; la API devuelve y acepta `description` (API-01). Archivar columna reutiliza el 409 `stage_has_cards` existente (INV-05), sin cambios de API.
+**Frontend** (`features/crm/`): páginas `crm-tracking-board-list` (AC-01, AC-02) y `crm-tracking-board` (AC-03…AC-06), diálogos `stage-name-dialog` y `tracking-card-dialog`, modelo/servicio con `description` e importe opcional (API-01), ruta `/pocketbiz/crm/tracking[/:boardId]`, entrada de menú, claves i18n `CRM.TRACKING.*` y `MENUITEMS.CRM.LIST.TRACKING` en es/en/pt.
+**UI de referencia:** `crm-opportunity-board` (Kanban) y `crm-board`; reutiliza `board-name-dialog` (crear tablero), `ng-select` y `ngbDropdown`. `design-system.md` §5 ampliado con la variante.
+**Desviaciones / notas:**
+- La rama `origin/crm` se fusionó con `main` (merge `4b3fec76`): el conflicto del conteo del menú se resolvió; el merge dejó el bloque CRM de `routes.json` con `id: "dentistry"` y sin id el de Odontología, ya corregido (`id: "crm"`). Con `id: "crm"` el CRM queda en la cola previa a Ajustes en los menús por tipo de empresa (`menu-layout.ts` no lo nombra): `menu-layout.spec.ts` lo refleja; ubicarlo en el orden de cada tipo es decisión de producto pendiente.
+- «Tarjetas activas» = oportunidades abiertas (`card_count`), como en PB-CRM-004.
+**Pruebas:** dominio (`test_domain_opportunity.py`, 17 OK ejecutadas); API (`TrackingCardTests` y validación de `description` en `test_api_opportunities.py`) **escritas pero no ejecutadas** localmente: el worktree no tiene `.env` ni credenciales de PostgreSQL (regla del proyecto: no tocar `.env`); `ruff`/`flake8` limpios en lo cambiado; `makemigrations --check` sin cambios. Frontend: Karma 2090/2090, `ng lint` y `i18n:check` limpios, `ng build` compila.
+**Deuda técnica:** la tarjeta no abre detalle ni se edita desde la nueva pantalla (PB-CRM-005).
 
 ## Review
 _Pendiente_

@@ -36,10 +36,28 @@ class OpportunityCreateTests(TestCase):
     def test_amount_rules(self):  # INV-07
         self.assertEqual(make(amount='10').amount, Decimal('10.00'))
         self.assertEqual(make(amount=Decimal('0')).amount, Decimal('0.00'))
-        for bad in (Decimal('-1'), Decimal('1.234'), 'abc', None, 10.5, Decimal('10000000000')):
+        for bad in (Decimal('-1'), Decimal('1.234'), 'abc', 10.5, Decimal('10000000000')):
             with self.assertRaises(CrmValidationError, msg=repr(bad)) as ctx:
                 make(amount=bad)
             self.assertIn('amount', ctx.exception.errors)
+
+    def test_omitted_amount_is_zero(self):  # INV-04 (TASK crm-tableros-seguimiento-comercial)
+        opportunity = make(amount=None)
+        self.assertEqual(opportunity.amount, Decimal('0.00'))
+        self.assertIsInstance(opportunity.amount, Decimal)
+
+    def test_description_is_optional_trimmed_and_limited(self):  # INV-03
+        self.assertEqual(make().description, '')
+        self.assertEqual(make(description='  Quiere pack  ').description, 'Quiere pack')
+        self.assertEqual(make(description=None).description, '')
+        with self.assertRaises(CrmValidationError) as ctx:
+            make(description='x' * 1001)
+        self.assertIn('description', ctx.exception.errors)
+        opportunity = make()
+        opportunity.edit(description=' Nueva ')
+        self.assertEqual(opportunity.description, 'Nueva')
+        opportunity.edit(title='Otro')
+        self.assertEqual(opportunity.description, 'Nueva')  # sin indicar, no cambia
 
     def test_collects_title_and_amount_errors(self):
         with self.assertRaises(CrmValidationError) as ctx:

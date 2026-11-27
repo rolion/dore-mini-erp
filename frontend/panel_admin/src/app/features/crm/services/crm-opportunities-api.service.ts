@@ -17,6 +17,7 @@ export function toOpportunity(dto: CrmOpportunityDto): CrmOpportunity {
     lead: dto.lead,
     customer: dto.customer,
     title: dto.title,
+    description: dto.description ?? '',
     owner: dto.owner,
     amount: dto.amount,
     currency: dto.currency,
@@ -55,8 +56,10 @@ export class CrmOpportunitiesApiService {
 
   create(input: CrmOpportunityCreate): Observable<CrmOpportunity> {
     const body: Record<string, string | number | null> = {
-      board_id: input.boardId, title: input.title, amount: input.amount,
+      board_id: input.boardId, title: input.title,
     };
+    if (input.amount !== undefined) body['amount'] = input.amount;
+    if (input.description) body['description'] = input.description;
     if (input.stageId) body['stage_id'] = input.stageId;
     if (input.leadId) body['lead_id'] = input.leadId;
     if (input.customerId) body['customer_id'] = input.customerId;
@@ -70,6 +73,7 @@ export class CrmOpportunitiesApiService {
     const body: Record<string, string | number | null> = {};
     if (changes.title !== undefined) body['title'] = changes.title;
     if (changes.amount !== undefined) body['amount'] = changes.amount;
+    if (changes.description !== undefined) body['description'] = changes.description;
     if (changes.nextActionAt !== undefined) body['next_action_at'] = changes.nextActionAt;
     if (changes.ownerId !== undefined) body['owner_id'] = changes.ownerId;
     return this.one(this.http.patch<CrmOpportunityDto>(this.url(opportunityId), body));

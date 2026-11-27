@@ -32,9 +32,9 @@ describe('arrangeRoutes (menu por tipo de empresa)', () => {
 
   it('puts items enabled later and missing from the layout before Settings (AC-09)', () => {
     const arranged = arrangeRoutes(visibleRoutes(routes, everyModule), 'servicios');
-    // En servicios, Ventas / Compras / Inventario / Odontología no están en el diseño: van al final, antes de Ajustes.
+    // En servicios, CRM / Ventas / Compras / Inventario / Odontología no están en el diseño: van al final, antes de Ajustes.
     const tail = ids(arranged).slice(10, -1);
-    expect(tail).toEqual(['dentistry', 'sales', 'purchases', 'inventory']);
+    expect(tail).toEqual(['crm', 'dentistry', 'sales', 'purchases', 'inventory']);
   });
 
   it('shows Quotations as «Presupuestos» inside Dentistry for dentistry companies (AC-10)', () => {
