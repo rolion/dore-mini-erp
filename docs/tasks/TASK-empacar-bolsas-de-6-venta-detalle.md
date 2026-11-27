@@ -82,7 +82,7 @@ No aplica según veredicto (decisiones en el PLAN).
 **Deuda técnica:** `RefrigerationRejected` se reutiliza para conflictos de Inventario al empacar (nombre histórico); el historial no pagina.
 
 ## Review
-_Pendiente_
+**Quality Gate NO ejecutado por completo:** sin `DATABASE_URL` (PostgreSQL) no se pueden correr las pruebas de API del backend (`OrderPackApiTests`) ni `makemigrations --check`; por regla no se declara PASS. Etapa se mantiene en REVIEW hasta correrlas con PostgreSQL.
 
 ## Publicación
 _Pendiente_
