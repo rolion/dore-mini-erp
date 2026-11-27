@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-tableros-seguimiento-comercial` (base `origin/crm`)
-**Pull Request:** _pendiente de abrir (base `crm`)_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/140 (base `crm`)
 **Fuente:** https://trello.com/c/gEOASQIy/23-crm-crear-tableros-de-seguimiento-columnas-y-tarjetas
 
 ## Historial de transiciones
