@@ -17,7 +17,7 @@ OPEN_STATUSES = (OrderStatus.NEW.value, OrderStatus.IN_PREPARATION.value, OrderS
 def valid_orders(company_id: UUID) -> QuerySet:
     has_items = Exists(OrderItemModel.objects.filter(order=OuterRef('pk')))
     return (OrderModel.objects.filter(company_id=company_id)
-            .exclude(status=OrderStatus.CANCELLED.value).filter(has_items))
+            .exclude(status__in=(OrderStatus.CANCELLED.value, OrderStatus.RETURNED.value)).filter(has_items))
 
 
 def valid_orders_between(company_id: UUID, date_from: date, date_to: date) -> QuerySet:

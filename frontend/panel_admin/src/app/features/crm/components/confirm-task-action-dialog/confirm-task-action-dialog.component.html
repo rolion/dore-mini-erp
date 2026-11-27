@@ -1,0 +1,12 @@
+<div class="modal-header">
+  <h4 class="modal-title">{{ keyPrefix + '_TITULO' | translate }}</h4>
+  <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" (click)="activeModal.dismiss()"></button>
+</div>
+<div class="modal-body">
+  <p class="mb-2"><strong data-testid="confirm-task-title">{{ task.title }}</strong></p>
+  <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle mb-0" role="note">{{ keyPrefix + '_TEXTO' | translate }}</div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()">{{ 'COMMON.VOLVER' | translate }}</button>
+  <button type="button" class="btn btn-danger" (click)="activeModal.close(true)" data-testid="confirm-task-action">{{ keyPrefix + '_CONFIRMAR' | translate }}</button>
+</div>

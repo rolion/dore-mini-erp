@@ -207,7 +207,9 @@ describe('OrdersApiService', () => {
       ['deliver', () => service.deliver('o-1').subscribe(), 'POST', '/api/orders/o-1/deliver/', {}],
       ['deliver with date', () => service.deliver('o-1', '2026-10-03').subscribe(), 'POST', '/api/orders/o-1/deliver/', { delivered_date: '2026-10-03' }],
     ['deliver with date and warehouse', () => service.deliver('o-1', '2026-10-03', 'w-1').subscribe(), 'POST', '/api/orders/o-1/deliver/', { delivered_date: '2026-10-03', warehouse_id: 'w-1' }],
-      ['cancel', () => service.cancel('o-1', 'No lo quiere').subscribe(), 'POST', '/api/orders/o-1/cancel/', { reason: 'No lo quiere' }],
+      ['cancel', () => service.cancel('o-1', 'No lo quiere').subscribe(), 'POST', '/api/orders/o-1/cancel/', { reason: 'No lo quiere', refund_acknowledged: false }],
+      ['cancel with refund', () => service.cancel('o-1', 'No lo quiere', true).subscribe(), 'POST', '/api/orders/o-1/cancel/', { reason: 'No lo quiere', refund_acknowledged: true }],
+      ['return', () => service.returnOrder('o-1', 'Defectuoso', true).subscribe(), 'POST', '/api/orders/o-1/return/', { reason: 'Defectuoso', refund_acknowledged: true }],
       [
         'registerPayment',
         () =>

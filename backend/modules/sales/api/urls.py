@@ -12,6 +12,8 @@ from .views import (
     OrderPaymentView,
     OrderPrepareView,
     OrderReadyView,
+    OrderReturnPreviewView,
+    OrderReturnView,
     OrderStartView,
 )
 
@@ -28,6 +30,8 @@ urlpatterns = [
     path('<str:order_id>/ready/', OrderReadyView.as_view(), name='order-ready'),
     path('<str:order_id>/deliver/', OrderDeliverView.as_view(), name='order-deliver'),
     path('<str:order_id>/delivery-preview/', OrderDeliveryPreviewView.as_view(), name='order-delivery-preview'),
+    path('<str:order_id>/return/', OrderReturnView.as_view(), name='order-return'),
+    path('<str:order_id>/return-preview/', OrderReturnPreviewView.as_view(), name='order-return-preview'),
     path('<str:order_id>/cancel/', OrderCancelView.as_view(), name='order-cancel'),
     path('<str:order_id>/payments/', OrderPaymentView.as_view(), name='order-payments'),
 ]

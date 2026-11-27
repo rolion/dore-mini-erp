@@ -41,7 +41,7 @@ class SalesServicesTestCase(TestCase):
             order.mark_ready()
             order.deliver(on, TODAY)
         elif status == 'CANCELLED':
-            order.cancel('Motivo', NOW)
+            order.cancel('Motivo', NOW, refund_acknowledged=True)
         return self.repository.save(order)
 
 

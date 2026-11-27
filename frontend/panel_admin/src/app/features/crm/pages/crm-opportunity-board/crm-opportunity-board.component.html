@@ -205,6 +205,16 @@
                   <button type="button" class="btn btn-light btn-sm" (click)="close(opportunity)" data-testid="link-order">{{ 'CRM.CLOSE_DIALOG.VINCULAR_PEDIDO' | translate }}</button>
                 </div>
                 }
+                <div class="crm-opportunity-actions">
+                  <div class="d-flex flex-wrap gap-1">
+                    <button type="button" class="btn btn-light btn-sm" (click)="logActivity(opportunity)" data-testid="log-activity"
+                      [attr.aria-label]="'CRM.ACTIVITY.ACCION_DE' | translate: { name: opportunity.title }">{{ 'CRM.ACTIVITY.ACCION' | translate }}</button>
+                    @if (opportunity.status === 'open') {
+                    <button type="button" class="btn btn-light btn-sm" (click)="newTask(opportunity)" data-testid="new-task-for"
+                      [attr.aria-label]="'CRM.TASK_DIALOG.ACCION_DE' | translate: { name: opportunity.title }">{{ 'CRM.TASK_DIALOG.ACCION' | translate }}</button>
+                    }
+                  </div>
+                </div>
               </li>
               } @empty {
               <li class="text-muted crm-column-empty" data-testid="column-empty">{{ 'CRM.OPPORTUNITY_BOARD.SIN_OPORTUNIDADES' | translate }}</li>

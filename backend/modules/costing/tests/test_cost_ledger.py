@@ -92,6 +92,22 @@ class CostOutputsTests(CostLedgerTestCase):
         self.out('o1', '4')
         self.assertEqual(self.out('o2', '1').total, D('100.00'))
 
+    def test_output_reversal_keeps_the_sale_cost_and_link_and_is_idempotent(self):  # AC-05 (devoluciones)
+        self.stock('10')
+        self.adopt()
+        self.out('o1', '2')
+        for _ in range(2):
+            costing.reverse_output_cost(self.company.id, source_type=ORDER, source_id='o1')
+        original = CostEventModel.objects.get(kind='out')
+        reversal = CostEventModel.objects.get(kind='out_reversal')
+        self.assertEqual((reversal.reverses_id, reversal.unit_cost, reversal.total_cost, reversal.quantity),
+                         (original.id, D('100.000000'), D('200.00'), D('2.0000')))
+        self.assertEqual(self.out('o2', '1').lines[0].unit_cost, D('100.000000'))
+
+    def test_reversing_an_output_that_was_never_costed_does_nothing(self):  # AC-05
+        costing.reverse_output_cost(self.company.id, source_type=ORDER, source_id='nunca')
+        self.assertEqual(CostEventModel.objects.count(), 0)
+
     def test_without_an_adoption_there_is_no_cost(self):  # AC-05, INV-04
         self.stock('10')
         with self.assertRaises(CostUnavailable) as ctx:

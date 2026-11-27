@@ -62,7 +62,8 @@
         "CUSTOMERS": "Customers",
         "BOARD": "Board",
         "LEADS": "Leads",
-        "OPPORTUNITIES": "Opportunities"
+        "OPPORTUNITIES": "Opportunities",
+        "TASKS": "To contact"
       }
     },
     "ORDERS": {
@@ -1934,6 +1935,48 @@
       "POR_COBRAR": "To collect",
       "ENTREGADOS": "Delivered",
       "CANCELADOS": "Cancelled"
+    },
+    "ORDER_RETURN": {
+      "DEVUELTO": "Returned",
+      "REGISTRAR_DEVOLUCION": "Register return",
+      "PEDIDO_DEVUELTO": "Order returned.",
+      "TITULO_DIALOGO": "Register return",
+      "DEVOLUCION_TOTAL": "The whole order will be returned. This cannot be undone.",
+      "MOTIVO": "Return reason",
+      "MOTIVO_OBLIGATORIO": "The reason is required.",
+      "PRODUCTOS_A_DEVOLVER": "Products to return",
+      "EXISTENCIAS_TITULO": "These units will go back into warehouse {{p0}}:",
+      "SIN_SALIDA": "The order had no stock output: stock does not change.",
+      "ASIENTOS_TITULO": "These entries will be reversed dated today:",
+      "SIN_ASIENTOS": "There are no accounting entries to reverse.",
+      "COBROS_TITULO": "The payments will also be reversed:",
+      "REEMBOLSO_CASILLA": "I already refunded the collected money to the customer outside PocketBiz",
+      "REEMBOLSO_AVISO": "The order has payments. Confirm the refund to continue.",
+      "CONFIRMAR": "Confirm return",
+      "CONFIRMANDO": "Confirming…",
+      "DEVOLUCION_REGISTRADA": "Return recorded",
+      "CANCELACION_REGISTRADA": "Cancellation recorded",
+      "FECHA": "Date",
+      "USUARIO": "User",
+      "MOTIVO_DETALLE": "Reason",
+      "REEMBOLSO": "Refund",
+      "REEMBOLSO_EXTERNO": "Confirmed: money was refunded outside PocketBiz",
+      "MOVIMIENTOS": "Stock movements",
+      "ASIENTOS": "Accounting entries",
+      "ORIGINAL": "Original",
+      "REVERSO": "Reversal",
+      "VER": "View",
+      "SIN_REVERSO": "No reversal",
+      "CANCELAR_COBROS_TITULO": "Order payments",
+      "CANCELAR_COBROS_TEXTO": "This order has payments of Bs {{p0}}. Confirm you already refunded the money outside PocketBiz: the entries of those payments will be reversed.",
+      "CANCELAR_COBROS_CONFIRMAR": "I already refunded it",
+      "EVENT_SALE_DELIVERY": "Sale recognition",
+      "EVENT_SALE_RECOGNITION": "Sale recognition (at confirmation)",
+      "EVENT_INVENTORY_SALE_COST": "Cost of sales",
+      "EVENT_SALE_ADVANCE": "Advance payment",
+      "EVENT_SALE_PAYMENT": "Sale payment",
+      "REEMBOLSADO": "Refunded",
+      "REEMBOLSO_REGISTRADO": "The refund was recorded: the money was returned outside PocketBiz."
     }
   },
   "SERVICES": {
@@ -3587,6 +3630,105 @@
       "CERRADA_GANADA": "Opportunity closed as won.",
       "CERRADA_PERDIDA": "Opportunity closed as lost.",
       "PEDIDO_VINCULADO": "Order linked to the opportunity."
+    },
+    "TASK_LIST": {
+      "TITULO": "To contact",
+      "NUEVA_TAREA": "New task",
+      "TAREA": "Task",
+      "RELACIONADO": "Related to",
+      "VENCIMIENTO": "Due",
+      "VACIO": "You have no pending tasks.",
+      "SIN_RESULTADOS": "No tasks match these filters.",
+      "FILTROS": {
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "done": "Done",
+        "cancelled": "Cancelled",
+        "all": "All"
+      },
+      "ESTADOS": {
+        "pending": "Pending",
+        "overdue": "Overdue",
+        "done": "Done",
+        "cancelled": "Cancelled",
+        "archived": "Archived"
+      },
+      "TIPOS": {
+        "customer": "Customer",
+        "opportunity": "Opportunity"
+      },
+      "COMPLETAR": "Complete",
+      "COMPLETAR_DE": "Complete task {{title}}",
+      "EDITAR_DE": "Edit task {{title}}",
+      "CANCELAR_DE": "Cancel task {{title}}",
+      "REABRIR": "Reopen",
+      "REABRIR_DE": "Reopen task {{title}}",
+      "ARCHIVAR": "Archive",
+      "ARCHIVAR_DE": "Archive task {{title}}",
+      "CREADA": "Task created.",
+      "GUARDADA": "Task saved.",
+      "COMPLETADA": "Task completed.",
+      "COMPLETADA_CON_ACTIVIDAD": "Task completed and activity logged.",
+      "CANCELADA_OK": "Task cancelled.",
+      "REABIERTA": "Task reopened.",
+      "ARCHIVADA": "Task archived."
+    },
+    "TASK_DIALOG": {
+      "NUEVA": "New task",
+      "EDITAR": "Edit task",
+      "TITULO": "Title",
+      "VENCIMIENTO": "Due",
+      "BUSCAR_CLIENTE": "Customer",
+      "CLIENTE_OBLIGATORIO": "Choose a customer.",
+      "TITULO_OBLIGATORIO": "Enter a title.",
+      "VENCIMIENTO_OBLIGATORIO": "Set the due date.",
+      "GUARDANDO": "Saving…",
+      "ACCION": "New task",
+      "ACCION_DE": "New task for {{name}}"
+    },
+    "COMPLETE_DIALOG": {
+      "TITULO": "Complete task",
+      "REGISTRAR_ACTIVIDAD": "Log what happened (activity)",
+      "CONFIRMAR": "Complete",
+      "COMPLETANDO": "Completing…"
+    },
+    "ACTIVITY": {
+      "TITULO_DIALOG": "Log activity",
+      "CANAL": "Channel",
+      "RESULTADO": "Outcome",
+      "SIN_RESULTADO": "No outcome",
+      "FECHA": "Date and time",
+      "FECHA_AYUDA": "Leave empty to use now.",
+      "HISTORIAL": "Activity history",
+      "SIN_HISTORIAL": "No activity logged yet.",
+      "GUARDAR": "Log",
+      "GUARDANDO": "Logging…",
+      "REGISTRADA": "Activity logged.",
+      "ACCION": "Activity",
+      "ACCION_DE": "Log activity for {{name}}",
+      "CHANNELS": {
+        "call": "Call",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "visit": "Visit",
+        "other": "Other"
+      },
+      "OUTCOMES": {
+        "contacted": "Contacted",
+        "no_answer": "No answer",
+        "interested": "Interested",
+        "not_interested": "Not interested",
+        "follow_up": "Follow-up pending"
+      },
+      "VER_MAS": "Show more"
+    },
+    "CONFIRM_TASK": {
+      "CANCELAR_TITULO": "Cancel task",
+      "CANCELAR_TEXTO": "The task stops being pending; you can reopen it from “Cancelled”.",
+      "CANCELAR_CONFIRMAR": "Cancel task",
+      "ARCHIVAR_TITULO": "Archive task",
+      "ARCHIVAR_TEXTO": "The task is hidden from every list and cannot be recovered from the interface.",
+      "ARCHIVAR_CONFIRMAR": "Archive task"
     }
   }
 }

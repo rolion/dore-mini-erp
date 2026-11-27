@@ -4,13 +4,13 @@ import { SALES_CHANNELS, SALES_CHANNEL_LABELS, SalesChannel } from '../../../sha
 // El canal de venta es un tipo compartido (lo usan Pedidos y Reportes); se reexporta para no cambiar los imports de Sales.
 export { SALES_CHANNELS, SALES_CHANNEL_LABELS };
 export type { SalesChannel };
-export type OrderStatus = 'NEW' | 'IN_PREPARATION' | 'READY' | 'DELIVERED' | 'CANCELLED';
+export type OrderStatus = 'NEW' | 'IN_PREPARATION' | 'READY' | 'DELIVERED' | 'CANCELLED' | 'RETURNED';
 export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'REFUNDED';
 export type PaymentMethod = 'CASH' | 'QR' | 'BANK_TRANSFER' | 'CARD' | 'OTHER';
 /** Acciones de estado que el servidor declara disponibles para un pedido. */
-export type OrderAction = 'prepare' | 'ready' | 'deliver' | 'cancel';
+export type OrderAction = 'prepare' | 'ready' | 'deliver' | 'cancel' | 'return';
 
-export const ORDER_STATUSES: readonly OrderStatus[] = ['NEW', 'IN_PREPARATION', 'READY', 'DELIVERED', 'CANCELLED'];
+export const ORDER_STATUSES: readonly OrderStatus[] = ['NEW', 'IN_PREPARATION', 'READY', 'DELIVERED', 'CANCELLED', 'RETURNED'];
 export const PAYMENT_STATUSES: readonly PaymentStatus[] = ['PENDING', 'PARTIAL', 'PAID', 'REFUNDED'];
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ['CASH', 'QR', 'BANK_TRANSFER', 'CARD', 'OTHER'];
 
@@ -20,6 +20,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   get READY() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.LISTO'); },
   get DELIVERED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.ENTREGADO'); },
   get CANCELLED() { return tr('CUSTOMERS.CUSTOMER_PURCHASE_HISTORY.CANCELADO'); },
+  get RETURNED() { return tr('SALES.ORDER_RETURN.DEVUELTO'); },
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
@@ -44,6 +45,7 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   READY: 'col-indigo',
   DELIVERED: 'col-green',
   CANCELLED: 'col-red',
+  RETURNED: 'col-purple',
 };
 
 export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
@@ -123,6 +125,14 @@ export interface Order {
   payments: Payment[];
   cancellationReason: string;
   cancelledAt: string | null;
+  cancelledByName: string;
+  returnedAt: string | null;
+  returnedByName: string;
+  returnReason: string;
+  /** La persona confirmó que el dinero cobrado se reembolsó fuera de PocketBiz. */
+  refundAcknowledged: boolean;
+  /** Movimientos y asientos vinculados a una cancelación o devolución; `null` en los demás estados. */
+  reversal: OrderReversal | null;
   /** El servidor decide qué se puede hacer; la interfaz no replica las reglas de estado. */
   editable: boolean;
   allowedTransitions: OrderAction[];
@@ -132,6 +142,46 @@ export interface Order {
   warehouse: OrderWarehouse | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Movimiento de inventario de la venta con su reverso (si ya se contrarrestó). */
+export interface ReversalMovement {
+  id: string;
+  productName: string;
+  quantity: string;
+  unit: string | null;
+  warehouseName: string;
+  reversedById: string | null;
+  reversedByReference: string;
+}
+
+/** Asiento automático de la venta con su contrasiento (si ya se contrarrestó). */
+export interface ReversalEntry {
+  event: string;
+  id: string;
+  accountingDate: string;
+  description: string;
+  total: string;
+  reversedById: string | null;
+}
+
+export interface OrderReversal {
+  movements: ReversalMovement[];
+  entries: ReversalEntry[];
+}
+
+/** Efecto informativo de la devolución total: el servidor vuelve a validar al confirmar. */
+export interface ReturnPreview {
+  orderCode: string;
+  inventoryEnabled: boolean;
+  requiresRefundAcknowledgement: boolean;
+  items: { productId: string; productName: string; quantity: number }[];
+  payments: { id: string; amount: string; paymentMethod: PaymentMethod; paymentDate: string }[];
+  stock: {
+    warehouseName: string;
+    lines: { productId: string; productName: string; quantity: string; unit: string | null }[];
+  } | null;
+  entries: { event: string; id: string; accountingDate: string; description: string; total: string }[];
 }
 
 /** Almacén activo que puede recibir la salida. */
@@ -270,6 +320,12 @@ export interface OrderDto {
   payments: PaymentDto[];
   cancellation_reason: string;
   cancelled_at: string | null;
+  cancelled_by_name: string;
+  returned_at: string | null;
+  returned_by_name: string;
+  return_reason: string;
+  refund_acknowledged: boolean;
+  reversal: OrderReversalDto | null;
   editable: boolean;
   allowed_transitions: OrderAction[];
   can_register_payment: boolean;
@@ -277,6 +333,39 @@ export interface OrderDto {
   warehouse: OrderWarehouse | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface OrderReversalDto {
+  movements: {
+    id: string;
+    product: { id: string; name: string };
+    quantity: string;
+    unit: { abbreviation: string | null };
+    warehouse_name: string;
+    reversed_by_id: string | null;
+    reversed_by_reference: string;
+  }[];
+  entries: {
+    event: string;
+    id: string;
+    accounting_date: string;
+    description: string;
+    total: string;
+    reversed_by_id: string | null;
+  }[];
+}
+
+export interface ReturnPreviewDto {
+  order_code: string;
+  inventory_enabled: boolean;
+  requires_refund_acknowledgement: boolean;
+  items: { product: { id: string; name: string }; quantity: number }[];
+  payments: { id: string; amount: string; payment_method: PaymentMethod; payment_date: string }[];
+  stock: {
+    warehouse: { id: string; name: string };
+    lines: { product: { id: string; name: string }; quantity: string; unit: { abbreviation: string | null } }[];
+  } | null;
+  entries: { event: string; id: string; accounting_date: string; description: string; total: string }[];
 }
 
 export interface StockOutputDto {

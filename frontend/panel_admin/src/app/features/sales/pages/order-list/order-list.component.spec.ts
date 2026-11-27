@@ -292,7 +292,7 @@ describe('OrderListComponent', () => {
       const options = (id: string) =>
         Array.from(element.querySelectorAll(`#${id} option`)).map((o) => o.textContent?.trim());
       expect(options('filter-status')).toEqual([
-        'Todos', 'Pendientes de entrega', 'Nuevo', 'En preparación', 'Listo', 'Entregado', 'Cancelado', 'No cancelados',
+        'Todos', 'Pendientes de entrega', 'Nuevo', 'En preparación', 'Listo', 'Entregado', 'Cancelado', 'Devuelto', 'No cancelados',
       ]);
       expect(options('filter-payment')).toEqual(['Todos', 'Pendiente', 'Parcial', 'Pagado', 'Reembolsado', 'Con saldo pendiente']);
       (element.querySelector('[data-testid="more-filters"]') as HTMLButtonElement).click();

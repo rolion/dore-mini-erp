@@ -243,27 +243,27 @@ class DeliverOrder:
 
 
 class CancelOrder:
-    """Cancela el pedido. Con cobros contabilizados no se cancela (no hay reembolsos). Un pedido reconocido al confirmar
-    (lógica anterior) sin cobros revierte su reconocimiento con las cuentas originales; uno sin reconocer se cancela
-    sin asiento."""
+    """Cancela el pedido antes de entregarlo. Con cobros exige confirmar que el dinero se reembolsó fuera de PocketBiz
+    y contrarresta sus asientos; un pedido reconocido al confirmar (lógica anterior) revierte su reconocimiento con las
+    cuentas originales; uno sin reconocer se cancela sin asiento. Nunca hubo salida de inventario: el stock no
+    cambia."""
 
     def __init__(self, repository: OrderRepository, clock: Clock, posting: SalesPosting | None = None):
         self.repository = repository
         self.clock = clock
         self.posting = posting
 
-    def execute(self, order_id: UUID, reason: object = None, actor: Actor | None = None) -> Order:
+    def execute(self, order_id: UUID, reason: object = None, actor: Actor | None = None,
+                refund_acknowledged: bool = False) -> Order:
+        actor = actor or Actor(None, '')
         order = _load_for_update(self.repository, order_id)
-        order.cancel(reason, self.clock.now())
+        order.cancel(reason, self.clock.now(), actor.user_name, bool(refund_acknowledged))
         if self.posting is not None:
-            state = self.posting.recognition_state(order.id)
-            if self.posting.has_posted_payments(order):
-                raise OrderRuleViolation(
-                    'order_has_payments_posted',
-                    'El pedido tiene cobros contabilizados: no se puede cancelar hasta que exista el reembolso.')
-            if state == AT_CONFIRM:
-                self.posting.reverse_recognition(order, order.cancellation_reason, actor or Actor(None, ''),
-                                                 self.clock.today())
+            today = self.clock.today()
+            if self.posting.recognition_state(order.id) == AT_CONFIRM:
+                self.posting.reverse_recognition(order, order.cancellation_reason, actor, today)
+            if order.payments:
+                self.posting.reverse_payments(order, order.cancellation_reason, actor, today)
         return self.repository.save(order)
 
 

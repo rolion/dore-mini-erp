@@ -19,6 +19,7 @@ class CostKind(str, Enum):
     IN = 'in'  # recepción: actualiza el promedio
     OUT = 'out'  # salida valorizada al promedio vigente
     IN_REVERSAL = 'in_reversal'  # reversa de una recepción, al costo original
+    OUT_REVERSAL = 'out_reversal'  # reversa (devolución) de una salida, al costo registrado al vender
 
 
 def weighted_average(previous_balance: Decimal, previous_average: Decimal | None, quantity: Decimal,
@@ -70,6 +71,11 @@ class CostEvent:
         """Contra-evento de una recepción: conserva el costo original y el vínculo."""
         return CostEvent(CostKind.IN_REVERSAL, self.source_type, self.source_id, self.product_id, self.quantity,
                          self.unit_cost, self.total_cost, average_after, occurred_at, reverses_id=self.id)
+
+    def output_reversal(self, occurred_at: datetime) -> 'CostEvent':
+        """Contra-evento de una salida (devolución): conserva el costo de venta; el promedio no cambia."""
+        return CostEvent(CostKind.OUT_REVERSAL, self.source_type, self.source_id, self.product_id, self.quantity,
+                         self.unit_cost, self.total_cost, self.average_after, occurred_at, reverses_id=self.id)
 
 
 class CostUnavailable(Exception):

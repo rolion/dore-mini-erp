@@ -55,7 +55,8 @@
         "CUSTOMERS": "Clientes",
         "BOARD": "Tablero",
         "LEADS": "Prospectos",
-        "OPPORTUNITIES": "Oportunidades"
+        "OPPORTUNITIES": "Oportunidades",
+        "TASKS": "Por contactar"
       }
     },
     "ORDERS": {
@@ -1934,6 +1935,48 @@
       "POR_COBRAR": "Por cobrar",
       "ENTREGADOS": "Entregados",
       "CANCELADOS": "Cancelados"
+    },
+    "ORDER_RETURN": {
+      "DEVUELTO": "Devuelto",
+      "REGISTRAR_DEVOLUCION": "Registrar devolución",
+      "PEDIDO_DEVUELTO": "Pedido devuelto.",
+      "TITULO_DIALOGO": "Registrar devolución",
+      "DEVOLUCION_TOTAL": "Se devolverá el pedido completo. Esta acción no se puede deshacer.",
+      "MOTIVO": "Motivo de la devolución",
+      "MOTIVO_OBLIGATORIO": "El motivo es obligatorio.",
+      "PRODUCTOS_A_DEVOLVER": "Productos a devolver",
+      "EXISTENCIAS_TITULO": "Se reingresarán al almacén {{p0}}:",
+      "SIN_SALIDA": "El pedido no tuvo salida de inventario: las existencias no cambian.",
+      "ASIENTOS_TITULO": "Se contrarrestarán estos asientos con fecha de hoy:",
+      "SIN_ASIENTOS": "No hay asientos contables que contrarrestar.",
+      "COBROS_TITULO": "Se contrarrestarán también los cobros:",
+      "REEMBOLSO_CASILLA": "Ya devolví el dinero cobrado al cliente fuera de PocketBiz",
+      "REEMBOLSO_AVISO": "El pedido tiene cobros. Debes confirmar el reembolso para continuar.",
+      "CONFIRMAR": "Confirmar devolución",
+      "CONFIRMANDO": "Confirmando…",
+      "DEVOLUCION_REGISTRADA": "Devolución registrada",
+      "CANCELACION_REGISTRADA": "Cancelación registrada",
+      "FECHA": "Fecha",
+      "USUARIO": "Usuario",
+      "MOTIVO_DETALLE": "Motivo",
+      "REEMBOLSO": "Reembolso",
+      "REEMBOLSO_EXTERNO": "Confirmado: el dinero se devolvió fuera de PocketBiz",
+      "MOVIMIENTOS": "Movimientos de inventario",
+      "ASIENTOS": "Asientos contables",
+      "ORIGINAL": "Original",
+      "REVERSO": "Reverso",
+      "VER": "Ver",
+      "SIN_REVERSO": "Sin reverso",
+      "CANCELAR_COBROS_TITULO": "Cobros del pedido",
+      "CANCELAR_COBROS_TEXTO": "Este pedido tiene cobros por Bs {{p0}}. Confirma que ya devolviste el dinero al cliente fuera de PocketBiz: se contrarrestarán los asientos de esos cobros.",
+      "CANCELAR_COBROS_CONFIRMAR": "Ya devolví el dinero",
+      "EVENT_SALE_DELIVERY": "Reconocimiento de la venta",
+      "EVENT_SALE_RECOGNITION": "Reconocimiento de la venta (al confirmar)",
+      "EVENT_INVENTORY_SALE_COST": "Costo de ventas",
+      "EVENT_SALE_ADVANCE": "Anticipo cobrado",
+      "EVENT_SALE_PAYMENT": "Cobro de la venta",
+      "REEMBOLSADO": "Reembolsado",
+      "REEMBOLSO_REGISTRADO": "El reembolso quedó registrado: el dinero se devolvió fuera de PocketBiz."
     }
   },
   "SERVICES": {
@@ -3587,6 +3630,105 @@
       "CERRADA_GANADA": "Oportunidad cerrada como ganada.",
       "CERRADA_PERDIDA": "Oportunidad cerrada como perdida.",
       "PEDIDO_VINCULADO": "Pedido vinculado a la oportunidad."
+    },
+    "TASK_LIST": {
+      "TITULO": "Por contactar",
+      "NUEVA_TAREA": "Nueva tarea",
+      "TAREA": "Tarea",
+      "RELACIONADO": "Relacionado",
+      "VENCIMIENTO": "Vencimiento",
+      "VACIO": "No tienes tareas pendientes.",
+      "SIN_RESULTADOS": "No hay tareas con estos filtros.",
+      "FILTROS": {
+        "pending": "Pendientes",
+        "overdue": "Vencidas",
+        "done": "Hechas",
+        "cancelled": "Canceladas",
+        "all": "Todas"
+      },
+      "ESTADOS": {
+        "pending": "Pendiente",
+        "overdue": "Vencida",
+        "done": "Hecha",
+        "cancelled": "Cancelada",
+        "archived": "Archivada"
+      },
+      "TIPOS": {
+        "customer": "Cliente",
+        "opportunity": "Oportunidad"
+      },
+      "COMPLETAR": "Completar",
+      "COMPLETAR_DE": "Completar la tarea {{title}}",
+      "EDITAR_DE": "Editar la tarea {{title}}",
+      "CANCELAR_DE": "Cancelar la tarea {{title}}",
+      "REABRIR": "Reabrir",
+      "REABRIR_DE": "Reabrir la tarea {{title}}",
+      "ARCHIVAR": "Archivar",
+      "ARCHIVAR_DE": "Archivar la tarea {{title}}",
+      "CREADA": "Tarea creada.",
+      "GUARDADA": "Tarea guardada.",
+      "COMPLETADA": "Tarea completada.",
+      "COMPLETADA_CON_ACTIVIDAD": "Tarea completada y actividad registrada.",
+      "CANCELADA_OK": "Tarea cancelada.",
+      "REABIERTA": "Tarea reabierta.",
+      "ARCHIVADA": "Tarea archivada."
+    },
+    "TASK_DIALOG": {
+      "NUEVA": "Nueva tarea",
+      "EDITAR": "Editar tarea",
+      "TITULO": "Título",
+      "VENCIMIENTO": "Vencimiento",
+      "BUSCAR_CLIENTE": "Cliente",
+      "CLIENTE_OBLIGATORIO": "Elige un cliente.",
+      "TITULO_OBLIGATORIO": "Ingresa un título.",
+      "VENCIMIENTO_OBLIGATORIO": "Indica el vencimiento.",
+      "GUARDANDO": "Guardando…",
+      "ACCION": "Nueva tarea",
+      "ACCION_DE": "Nueva tarea para {{name}}"
+    },
+    "COMPLETE_DIALOG": {
+      "TITULO": "Completar tarea",
+      "REGISTRAR_ACTIVIDAD": "Registrar qué pasó (actividad)",
+      "CONFIRMAR": "Completar",
+      "COMPLETANDO": "Completando…"
+    },
+    "ACTIVITY": {
+      "TITULO_DIALOG": "Registrar actividad",
+      "CANAL": "Canal",
+      "RESULTADO": "Resultado",
+      "SIN_RESULTADO": "Sin resultado",
+      "FECHA": "Fecha y hora",
+      "FECHA_AYUDA": "Si la dejas vacía se usa ahora.",
+      "HISTORIAL": "Historial de actividad",
+      "SIN_HISTORIAL": "Aún no hay actividad registrada.",
+      "GUARDAR": "Registrar",
+      "GUARDANDO": "Registrando…",
+      "REGISTRADA": "Actividad registrada.",
+      "ACCION": "Actividad",
+      "ACCION_DE": "Registrar actividad de {{name}}",
+      "CHANNELS": {
+        "call": "Llamada",
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "visit": "Visita",
+        "other": "Otro"
+      },
+      "OUTCOMES": {
+        "contacted": "Contactado",
+        "no_answer": "Sin respuesta",
+        "interested": "Interesado",
+        "not_interested": "No interesado",
+        "follow_up": "Seguimiento pendiente"
+      },
+      "VER_MAS": "Ver más"
+    },
+    "CONFIRM_TASK": {
+      "CANCELAR_TITULO": "Cancelar tarea",
+      "CANCELAR_TEXTO": "La tarea deja de estar pendiente; podrás reabrirla desde «Canceladas».",
+      "CANCELAR_CONFIRMAR": "Cancelar tarea",
+      "ARCHIVAR_TITULO": "Archivar tarea",
+      "ARCHIVAR_TEXTO": "La tarea se oculta de todas las listas y no se puede recuperar desde la interfaz.",
+      "ARCHIVAR_CONFIRMAR": "Archivar tarea"
     }
   }
 }

@@ -382,12 +382,23 @@ class CancelAndLockTests(PostingApiBase):
         self.act(order, 'cancel', {'reason': 'Ya no lo quiere'})
         self.assertEqual((self.get(order)['status'], self.books.journal().count()), ('CANCELLED', 0))
 
-    def test_cancelling_with_posted_payments_is_rejected(self):  # AC-11
+    def test_cancelling_with_posted_payments_requires_the_refund_confirmation(self):  # AC-02
         order = self.confirmed('100.00')
         self.pay(order, '10.00')
         body = self.act(order, 'cancel', {'reason': 'Ya no lo quiere'}, expected_status=409)
-        self.assertEqual(body['code'], 'order_has_payments_posted')
+        self.assertEqual(body['code'], 'refund_acknowledgement_required')
         self.assertEqual((self.get(order)['status'], self.books.journal().count()), ('IN_PREPARATION', 1))
+
+    def test_cancelling_with_a_confirmed_refund_counter_posts_the_payments(self):  # AC-02
+        order = self.confirmed('100.00')
+        self.pay(order, '10.00')
+        self.act(order, 'cancel', {'reason': 'Ya no lo quiere', 'refund_acknowledged': True})
+        body = self.get(order)
+        self.assertEqual((body['status'], body['payment_status'], body['refund_acknowledged']),
+                         ('CANCELLED', 'REFUNDED', True))
+        self.assertEqual(self.books.journal().count(), 2)
+        self.assertEqual(len(body['reversal']['entries']), 1)
+        self.assertIsNotNone(body['reversal']['entries'][0]['reversed_by_id'])
 
     def test_a_delivered_order_cannot_be_cancelled_as_before(self):  # AC-11
         order = self.ready('100.00')
@@ -465,12 +476,12 @@ class TransitionTests(PostingApiBase):
         self.assertEqual(self.books.journal().count(), 2)
         self.assertEqual(self.books.net(self.books.ingresos), (Decimal('100.00'), Decimal('100.00')))
 
-    def test_cancelling_an_order_recognized_at_confirm_with_payments_is_rejected(self):  # AC-10, AC-11
+    def test_cancelling_an_order_recognized_at_confirm_with_payments_requires_the_refund(self):  # AC-10, AC-02
         order = self.confirmed('100.00')
         self.seed_old_recognition(order)
         self.pay(order, '10.00')
         body = self.act(order, 'cancel', {'reason': 'Error'}, expected_status=409)
-        self.assertEqual(body['code'], 'order_has_payments_posted')
+        self.assertEqual(body['code'], 'refund_acknowledgement_required')
 
     def test_a_payment_without_entry_blocks_the_delivery_with_coverage(self):  # AC-13
         # Contabilidad deshabilitada: el cobro no deja asiento; luego se habilita y se entrega con cobertura.

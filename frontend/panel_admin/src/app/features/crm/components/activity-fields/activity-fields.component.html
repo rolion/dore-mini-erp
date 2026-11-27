@@ -1,0 +1,47 @@
+<div [formGroup]="form">
+  <div class="row g-2">
+    <div class="col-sm-6 form-group">
+      <label [for]="idPrefix + '-channel'">{{ 'CRM.ACTIVITY.CANAL' | translate }} <span class="text-danger">*</span></label>
+      <select [id]="idPrefix + '-channel'" class="form-select" formControlName="channel" [attr.aria-invalid]="!!errors['channel']" data-testid="activity-channel">
+        @for (channel of channels; track channel) {
+        <option [value]="channel">{{ 'CRM.ACTIVITY.CHANNELS.' + channel | translate }}</option>
+        }
+      </select>
+      @if (errors['channel']) {
+      <small class="form-text text-danger" role="alert">{{ errors['channel'] }}</small>
+      }
+    </div>
+    <div class="col-sm-6 form-group">
+      <label [for]="idPrefix + '-outcome'">{{ 'CRM.ACTIVITY.RESULTADO' | translate }}</label>
+      <select [id]="idPrefix + '-outcome'" class="form-select" formControlName="outcome" [attr.aria-invalid]="!!errors['outcome']" data-testid="activity-outcome">
+        <option value="">{{ 'CRM.ACTIVITY.SIN_RESULTADO' | translate }}</option>
+        @for (outcome of outcomes; track outcome) {
+        <option [value]="outcome">{{ 'CRM.ACTIVITY.OUTCOMES.' + outcome | translate }}</option>
+        }
+      </select>
+      @if (errors['outcome']) {
+      <small class="form-text text-danger" role="alert">{{ errors['outcome'] }}</small>
+      }
+    </div>
+  </div>
+  <div class="form-group">
+    <label [for]="idPrefix + '-notes'">{{ 'COMMON.NOTAS' | translate }}</label>
+    <textarea [id]="idPrefix + '-notes'" class="form-control" rows="3" formControlName="notes" [attr.maxlength]="notesMaxLength"
+      [attr.aria-invalid]="!!errors['notes']" [attr.aria-describedby]="idPrefix + '-notes-count'" data-testid="activity-notes"></textarea>
+    <small [id]="idPrefix + '-notes-count'" class="form-text text-muted">{{ notesLength }} / {{ notesMaxLength }}</small>
+    @if (errors['notes']) {
+    <small class="form-text text-danger d-block" role="alert">{{ errors['notes'] }}</small>
+    }
+  </div>
+  @if (showDate) {
+  <div class="form-group">
+    <label [for]="idPrefix + '-date'">{{ 'CRM.ACTIVITY.FECHA' | translate }}</label>
+    <input [id]="idPrefix + '-date'" type="datetime-local" class="form-control" formControlName="occurredAt"
+      [attr.aria-invalid]="!!errors['occurredAt']" data-testid="activity-date">
+    <small class="form-text text-muted">{{ 'CRM.ACTIVITY.FECHA_AYUDA' | translate }}</small>
+    @if (errors['occurredAt']) {
+    <small class="form-text text-danger d-block" role="alert">{{ errors['occurredAt'] }}</small>
+    }
+  </div>
+  }
+</div>

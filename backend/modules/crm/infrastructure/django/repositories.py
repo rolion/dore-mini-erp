@@ -1,15 +1,26 @@
 from collections.abc import Collection, Iterable
+from datetime import datetime
 from uuid import UUID
 
 from django.db import IntegrityError, transaction
 from django.db.models import Q, QuerySet
 
 from modules.crm.domain.board import Board, BoardValidationError, Stage
+from modules.crm.domain.activity import Activity
 from modules.crm.domain.errors import CrmConflict
 from modules.crm.domain.lead import Lead
 from modules.crm.domain.opportunity import OPEN, Opportunity, StageChange
+from modules.crm.domain.task import ARCHIVED, CANCELLED, DONE, PENDING, Task
 
-from .models import BoardModel, LeadModel, OpportunityModel, StageChangeModel, StageModel
+from .models import (
+    ActivityModel,
+    BoardModel,
+    LeadModel,
+    OpportunityModel,
+    StageChangeModel,
+    StageModel,
+    TaskModel,
+)
 
 _CONSTRAINT_MESSAGES = {
     'crm_board_active_name_unique': ('name', 'Ya existe un tablero activo con este nombre en tu empresa.'),
@@ -162,6 +173,12 @@ class DjangoOpportunityRepository:
         model = queryset.filter(pk=opportunity_id).first()
         return opportunity_to_entity(model) if model else None
 
+    def get_many(self, opportunity_ids: Iterable[UUID]) -> dict[UUID, Opportunity]:
+        ids = set(opportunity_ids)
+        if not ids:
+            return {}
+        return {m.id: opportunity_to_entity(m) for m in self._opportunities().filter(pk__in=ids)}
+
     def list(self, *, board_id: UUID, owner_id: int | None = None, lead_id: UUID | None = None,
              customer_id: UUID | None = None, status: str | None = None) -> _Rows:
         queryset = self._opportunities().filter(board_id=board_id).order_by('created_at', 'id')
@@ -247,3 +264,78 @@ class DjangoStageCards:
             StageChangeModel(opportunity_id=pk, from_stage_id=from_stage_id, to_stage_id=to_stage_id,
                              changed_by=None, changed_at=now) for pk in ids])
         return len(ids)
+
+
+def task_to_entity(model: TaskModel) -> Task:
+    return Task(id=model.id, customer_id=model.customer_id, opportunity_id=model.opportunity_id,
+                title=model.title, owner_id=model.owner_id, due_at=model.due_at, status=model.status,
+                completed_at=model.completed_at, created_at=model.created_at)
+
+
+class DjangoTaskRepository:
+    """Tareas de la empresa; las archivadas nunca se listan (INV-08) aunque se pueden leer por id."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def _tasks(self) -> QuerySet:
+        return TaskModel.objects.filter(company_id=self.company_id)
+
+    def get(self, task_id: UUID, *, for_update: bool = False) -> Task | None:
+        queryset = self._tasks().select_for_update() if for_update else self._tasks()
+        model = queryset.filter(pk=task_id).first()
+        return task_to_entity(model) if model else None
+
+    def list(self, *, now: datetime, owner_id: int | None = None, status: str | None = None,
+             customer_id: UUID | None = None, opportunity_id: UUID | None = None) -> _Rows:
+        queryset = self._tasks().exclude(status=ARCHIVED).order_by('due_at', 'created_at', 'id')
+        if status == 'overdue':
+            queryset = queryset.filter(status=PENDING, due_at__lt=now)
+        elif status in (PENDING, DONE, CANCELLED):
+            queryset = queryset.filter(status=status)
+        if owner_id is not None:
+            queryset = queryset.filter(owner_id=owner_id)
+        if customer_id is not None:
+            queryset = queryset.filter(customer_id=customer_id)
+        if opportunity_id is not None:
+            queryset = queryset.filter(opportunity_id=opportunity_id)
+        return _Rows(queryset, task_to_entity)
+
+    def save(self, task: Task) -> Task:
+        TaskModel.objects.update_or_create(
+            company_id=self.company_id, pk=task.id,
+            defaults={'customer_id': task.customer_id, 'opportunity_id': task.opportunity_id, 'title': task.title,
+                      'owner_id': task.owner_id, 'due_at': task.due_at, 'status': task.status,
+                      'completed_at': task.completed_at})
+        return self.get(task.id)
+
+
+def activity_to_entity(model: ActivityModel) -> Activity:
+    return Activity(id=model.id, actor_id=model.actor_id, customer_id=model.customer_id,
+                    opportunity_id=model.opportunity_id, channel=model.channel, outcome=model.outcome,
+                    notes=model.notes, occurred_at=model.occurred_at, task_id=model.task_id,
+                    created_at=model.created_at)
+
+
+class DjangoActivityRepository:
+    """Actividades de la empresa: solo `add` y lectura (inmutables)."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def add(self, activity: Activity) -> Activity:
+        model = ActivityModel.objects.create(
+            id=activity.id, company_id=self.company_id, actor_id=activity.actor_id,
+            customer_id=activity.customer_id, opportunity_id=activity.opportunity_id, task_id=activity.task_id,
+            channel=activity.channel, outcome=activity.outcome, notes=activity.notes,
+            occurred_at=activity.occurred_at)
+        return activity_to_entity(model)
+
+    def list(self, *, customer_id: UUID | None = None, opportunity_id: UUID | None = None) -> _Rows:
+        queryset = ActivityModel.objects.filter(company_id=self.company_id).order_by(
+            '-occurred_at', '-created_at', 'id')
+        if customer_id is not None:
+            queryset = queryset.filter(customer_id=customer_id)
+        if opportunity_id is not None:
+            queryset = queryset.filter(opportunity_id=opportunity_id)
+        return _Rows(queryset, activity_to_entity)
