@@ -3,8 +3,9 @@ import logging
 import time
 from collections.abc import Callable
 
-from django.db import close_old_connections
+from django.db import close_old_connections, transaction
 
+from ..application import events
 from .django.repositories import ConnectionDirectory, EventQueue, OutboxQueue
 from .factory import SystemClock, event_processor, gateway_for, send_service
 
@@ -22,8 +23,11 @@ def process_next_event() -> bool:
         connection = ConnectionDirectory.by_id(connection_id)
         if connection is None:
             raise LookupError('connection_missing')
-        event_processor(connection).run(payload)
+        with transaction.atomic():  # mensaje, ventana y estados se confirman juntos o ninguno
+            published = event_processor(connection).run(payload)
         EventQueue.finish(event_id, SystemClock().now())
+        for event in published:
+            events.publish(event)
     except Exception as exc:
         logger.exception('Falló el evento de webhook %s', event_id)
         EventQueue.finish(event_id, SystemClock().now(), error=type(exc).__name__)

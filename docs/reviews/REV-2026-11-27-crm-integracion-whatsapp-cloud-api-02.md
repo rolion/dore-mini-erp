@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-02: Evento firmado de conexion disabled responde 401 en vez de ignorarse (sin prueba)
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Responde 401 y no hay prueba del caso. Hoy ninguna ruta de la API pone una conex
 
 ## Evidence
 Lectura de codigo: `infrastructure/django/repositories.py::ConnectionDirectory.by_phone_number_id`, `application/services.py::ReceiveWebhook.handle`, `api/views.py::WhatsAppWebhookView.post`. grep de tests en `modules/messaging/tests/test_api.py`: sin caso de conexion disabled.
+
+## Resolución (2026-11-27)
+`ReceiveWebhook` verifica la firma y, si la conexión está `disabled`, responde 200 sin encolar. Prueba: `test_signed_event_of_a_disabled_connection_is_accepted_without_effect`. El 503 por variable ausente se mantiene a propósito (Meta reintenta); solo distingue la existencia de un `phone_number_id` ya público en el webhook configurado en Meta: riesgo aceptado.

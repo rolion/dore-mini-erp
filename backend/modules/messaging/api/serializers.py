@@ -14,14 +14,15 @@ class TestMessageInputSerializer(serializers.Serializer):
     template_id = serializers.UUIDField()
 
 
-def connection_data(connection, webhook_url: str) -> dict:
+def connection_data(connection, webhook_url: str, secret_ref_prefix: str) -> dict:
     """Solo nombres de variables y datos públicos: el token y el App Secret nunca pasan por la API."""
     if connection is None:
-        return {'configured': False, 'webhook_url': webhook_url}
+        return {'configured': False, 'webhook_url': webhook_url, 'secret_ref_prefix': secret_ref_prefix}
     return {'configured': True, 'waba_id': connection.waba_id, 'phone_number_id': connection.phone_number_id,
             'display_phone': connection.display_phone, 'secret_ref': connection.secret_ref,
             'app_secret_ref': connection.app_secret_ref, 'verify_token': connection.verify_token,
-            'status': connection.status, 'status_reason': connection.status_reason, 'webhook_url': webhook_url}
+            'status': connection.status, 'status_reason': connection.status_reason, 'webhook_url': webhook_url,
+            'secret_ref_prefix': secret_ref_prefix}
 
 
 def template_data(t) -> dict:

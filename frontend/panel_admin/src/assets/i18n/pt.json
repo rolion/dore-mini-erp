@@ -2139,7 +2139,7 @@
         "ERROR": "Com erro",
         "DISABLED": "Desativado"
       },
-      "SIN_CONEXION": "Você ainda não conectou um número. Preencha os dados da sua conta do WhatsApp Business na Meta (guia: docs/integrations/whatsapp-cloud-api-configuracion-meta.md).",
+      "SIN_CONEXION": "Você ainda não conectou um número. Preencha os dados da sua conta do WhatsApp Business na Meta; o guia de configuração está na documentação do projeto.",
       "REASONS": {
         "SECRETS_MISSING": "Faltam no servidor as variáveis de ambiente com o token ou o App Secret. Peça a quem administra a implantação que as crie e salve novamente.",
         "TOKEN_EXPIRED": "A Meta rejeitou o token (expirou ou foi revogado). Gere um novo, atualize a variável no servidor e sincronize os modelos."
@@ -2148,9 +2148,9 @@
       "PHONE_NUMBER_ID": "ID do número de telefone",
       "DISPLAY_PHONE": "Número exibido (opcional)",
       "SECRET_REF": "Variável do token",
-      "SECRET_REF_AYUDA": "Nome da variável de ambiente do servidor com o token do usuário do sistema. Deve começar com WHATSAPP_. O token nunca é digitado aqui.",
+      "SECRET_REF_AYUDA": "Nome da variável de ambiente do servidor com o token do usuário do sistema. Deve começar com {{prefix}} (prefixo próprio da sua empresa). O token nunca é digitado aqui.",
       "APP_SECRET_REF": "Variável do App Secret",
-      "APP_SECRET_REF_AYUDA": "Nome da variável de ambiente com o App Secret do app da Meta. Deve começar com WHATSAPP_.",
+      "APP_SECRET_REF_AYUDA": "Nome da variável de ambiente com o App Secret do app da Meta. Deve começar com {{prefix}}.",
       "GUARDADO": "Conexão salva.",
       "CONFIRMAR_CAMBIO": "Alterar a conta ou o número muda de onde as mensagens são enviadas. Confirma a alteração?",
       "CONFIRMAR": "Confirmar alteração",
@@ -2190,7 +2190,10 @@
         "PENDING": "Pendente",
         "DISABLED": "Desativado",
         "OTHER": "Outro"
-      }
+      },
+      "COPIAR_URL": "Copiar a URL do webhook",
+      "COPIAR_TOKEN": "Copiar o token de verificação",
+      "SIN_PLANTILLAS_APROBADAS": "Nenhum modelo aprovado"
     }
   },
   "LAYOUT": {

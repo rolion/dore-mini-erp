@@ -2139,7 +2139,7 @@
         "ERROR": "Con error",
         "DISABLED": "Deshabilitada"
       },
-      "SIN_CONEXION": "Aún no conectaste un número. Completa los datos de tu cuenta de WhatsApp Business en Meta (guía: docs/integrations/whatsapp-cloud-api-configuracion-meta.md).",
+      "SIN_CONEXION": "Aún no conectaste un número. Completa los datos de tu cuenta de WhatsApp Business en Meta; la guía de configuración está en la documentación del proyecto.",
       "REASONS": {
         "SECRETS_MISSING": "Faltan las variables de entorno con el token o el App Secret en el servidor. Pide a quien administra el despliegue que las cree y vuelve a guardar.",
         "TOKEN_EXPIRED": "Meta rechazó el token (expiró o fue revocado). Genera uno nuevo, actualiza la variable en el servidor y sincroniza las plantillas."
@@ -2148,9 +2148,9 @@
       "PHONE_NUMBER_ID": "ID del número de teléfono",
       "DISPLAY_PHONE": "Número visible (opcional)",
       "SECRET_REF": "Variable del token",
-      "SECRET_REF_AYUDA": "Nombre de la variable de entorno del servidor con el token del usuario del sistema. Debe empezar con WHATSAPP_. El token nunca se escribe aquí.",
+      "SECRET_REF_AYUDA": "Nombre de la variable de entorno del servidor con el token del usuario del sistema. Debe empezar con {{prefix}} (prefijo propio de tu empresa). El token nunca se escribe aquí.",
       "APP_SECRET_REF": "Variable del App Secret",
-      "APP_SECRET_REF_AYUDA": "Nombre de la variable de entorno con el App Secret de la app de Meta. Debe empezar con WHATSAPP_.",
+      "APP_SECRET_REF_AYUDA": "Nombre de la variable de entorno con el App Secret de la app de Meta. Debe empezar con {{prefix}}.",
       "GUARDADO": "Conexión guardada.",
       "CONFIRMAR_CAMBIO": "Cambiar la cuenta o el número cambia desde dónde se envían los mensajes. ¿Confirmas el cambio?",
       "CONFIRMAR": "Confirmar cambio",
@@ -2190,7 +2190,10 @@
         "PENDING": "Pendiente",
         "DISABLED": "Deshabilitada",
         "OTHER": "Otro"
-      }
+      },
+      "COPIAR_URL": "Copiar la URL del webhook",
+      "COPIAR_TOKEN": "Copiar el token de verificación",
+      "SIN_PLANTILLAS_APROBADAS": "No hay plantillas aprobadas"
     }
   },
   "LAYOUT": {

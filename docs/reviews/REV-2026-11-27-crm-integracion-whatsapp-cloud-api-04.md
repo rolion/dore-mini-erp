@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-04: Pantalla de WhatsApp se aparta del DDR/UI-01 y de accesibilidad (UI-03)
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** DESIGN
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Ver descripcion. No se pudo verificar visualmente a 390/1440 px (ver informe: no
 
 ## Evidence
 `frontend/panel_admin/src/app/features/settings/pages/whatsapp-integration/whatsapp-integration.component.html` (botones copiar, select nativo, sin tabs); `frontend/panel_admin/src/assets/data/routes.json` (entrada sin adminOnly); `frontend/panel_admin/src/assets/i18n/es.json` clave SETTINGS.WHATSAPP.SIN_CONEXION. Nota: la entrada vecina `settings/modules` tampoco es adminOnly (consistente con lo existente).
+
+## Resolución (2026-11-27)
+Pestañas Conexión / Mensaje de prueba / Plantillas, `ng-select` para la plantilla, botones «Copiar» con `aria-label` distinto, entrada de menú `adminOnly`, texto sin ruta de archivo. El submenú «Integraciones» queda plano (una sola integración; se agrupará al sumar otra). Pruebas Karma ampliadas.

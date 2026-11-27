@@ -15,6 +15,7 @@ from rest_framework.test import APIClient, APITestCase
 from modules.accounts.testing import authenticate, make_admin, make_company
 from modules.messaging.application import events
 from modules.messaging.domain.errors import PermanentGatewayError, TransientGatewayError
+from modules.messaging.domain.rules import secret_ref_prefix
 from modules.messaging.infrastructure.django.models import (
     ConnectionModel,
     ConversationModel,
@@ -59,10 +60,12 @@ def status_payload(wamid, status, phone_number_id='111', pricing=None, errors=No
 class MessagingBase(APITestCase):
     def setUp(self):
         FakeMessagingGateway.reset()
-        env = mock.patch.dict(os.environ, {'WHATSAPP_APP_SECRET': APP_SECRET, 'WHATSAPP_TOKEN': TOKEN})
+        self.company = make_company('Empresa Uno')
+        prefix = secret_ref_prefix(self.company.id)
+        self.token_ref, self.app_ref = f'{prefix}TOKEN', f'{prefix}APP_SECRET'
+        env = mock.patch.dict(os.environ, {self.app_ref: APP_SECRET, self.token_ref: TOKEN})
         env.start()
         self.addCleanup(env.stop)
-        self.company = make_company('Empresa Uno')
         self.admin = make_admin(self.company, 'ana')
         self.client = APIClient()
         authenticate(self.client, self.admin)
@@ -70,8 +73,8 @@ class MessagingBase(APITestCase):
 
     def connect(self, company, phone_number_id, verify='verify-1'):
         return ConnectionModel.objects.create(
-            company_id=company.id, waba_id='9', phone_number_id=phone_number_id, secret_ref='WHATSAPP_TOKEN',
-            app_secret_ref='WHATSAPP_APP_SECRET', verify_token=verify, status='active')
+            company_id=company.id, waba_id='9', phone_number_id=phone_number_id, secret_ref=self.token_ref,
+            app_secret_ref=self.app_ref, verify_token=verify, status='active')
 
     def post_webhook(self, payload, secret=APP_SECRET, header=None):
         raw, signature = signed(payload, secret)
@@ -123,7 +126,7 @@ class WebhookVerificationTests(MessagingBase):
         self.assertEqual((event.status, event.company_id), ('pending', self.company.id))
 
     def test_missing_app_secret_variable_is_503_so_meta_retries(self):
-        with mock.patch.dict(os.environ, {'WHATSAPP_APP_SECRET': ''}):
+        with mock.patch.dict(os.environ, {self.app_ref: ''}):
             self.assertEqual(self.post_webhook(inbound_payload()).status_code, 503)
         self.assertEqual(WebhookEventModel.objects.count(), 0)
 
@@ -305,12 +308,11 @@ class AdapterTests(MessagingBase):
 
 
 class ConnectionApiTests(MessagingBase):
-    BODY = {'waba_id': '9', 'phone_number_id': '555', 'display_phone': '+591 76543210',
-            'secret_ref': 'WHATSAPP_TOKEN', 'app_secret_ref': 'WHATSAPP_APP_SECRET'}
-
     def setUp(self):
         super().setUp()
         ConnectionModel.objects.all().delete()
+        self.BODY = {'waba_id': '9', 'phone_number_id': '555', 'display_phone': '+591 76543210',
+                     'secret_ref': self.token_ref, 'app_secret_ref': self.app_ref}
 
     def test_save_activates_when_secrets_exist_and_never_returns_secret_values(self):  # AC-09, AC-11
         response = self.client.put(CONNECTION, self.BODY, format='json')
@@ -322,14 +324,28 @@ class ConnectionApiTests(MessagingBase):
         self.assertEqual(self.client.get(CONNECTION).json()['phone_number_id'], '555')
 
     def test_pending_when_variables_are_missing(self):
-        with mock.patch.dict(os.environ, {'WHATSAPP_TOKEN': ''}):
+        with mock.patch.dict(os.environ, {self.token_ref: ''}):
             data = self.client.put(CONNECTION, self.BODY, format='json').json()
         self.assertEqual((data['status'], data['status_reason']), ('pending', 'secrets_missing'))
 
     def test_rejects_refs_that_could_leak_server_secrets(self):
-        for ref in ('SECRET_KEY', 'DATABASE_URL'):
+        for ref in ('SECRET_KEY', 'DATABASE_URL', 'WHATSAPP_TOKEN'):
             response = self.client.put(CONNECTION, {**self.BODY, 'secret_ref': ref}, format='json')
             self.assertEqual(response.status_code, 400)
+
+    def test_a_company_cannot_use_the_variables_of_another_company(self):  # REV-01
+        other = make_company('Empresa Dos')
+        foreign = f'{secret_ref_prefix(other.id)}TOKEN'
+        with mock.patch.dict(os.environ, {foreign: 'ajeno'}):
+            for field in ('secret_ref', 'app_secret_ref'):
+                response = self.client.put(CONNECTION, {**self.BODY, field: foreign}, format='json')
+                self.assertEqual(response.status_code, 400, field)
+                self.assertIn(secret_ref_prefix(self.company.id), response.json()[field][0])
+        self.assertEqual(ConnectionModel.objects.count(), 0)
+
+    def test_get_exposes_the_required_prefix_even_without_a_connection(self):
+        data = self.client.get(CONNECTION).json()
+        self.assertEqual((data['configured'], data['secret_ref_prefix']), (False, secret_ref_prefix(self.company.id)))
 
     def test_number_of_another_company_is_rejected(self):
         self.connect(make_company('Otra'), '555', verify='v-x')
@@ -359,6 +375,37 @@ class ConnectionApiTests(MessagingBase):
 
     def test_sync_without_connection_is_404(self):
         self.assertEqual(self.client.post('/api/messaging/whatsapp/templates/sync/').status_code, 404)
+
+
+class DisabledConnectionTests(MessagingBase):
+    def test_signed_event_of_a_disabled_connection_is_accepted_without_effect(self):  # REV-02
+        ConnectionModel.objects.update(status='disabled')
+        self.assertEqual(self.post_webhook(inbound_payload()).status_code, 200)
+        self.assertEqual(WebhookEventModel.objects.count(), 0)
+        self.assertEqual(self.post_webhook(inbound_payload(), secret='otro').status_code, 401)
+
+
+class AtomicProcessingTests(MessagingBase):
+    def test_a_partial_failure_rolls_everything_back_and_publishes_nothing(self):  # REV-03
+        seen = []
+        events.subscribe(seen.append)
+        self.addCleanup(events.unsubscribe, seen.append)
+        self.post_webhook(inbound_payload())
+        target = 'modules.messaging.infrastructure.django.repositories.DjangoConversationRepository.save'
+        with mock.patch(target, side_effect=RuntimeError('boom')):
+            process_next_event()
+        self.assertEqual(MessageModel.objects.count(), 0)
+        self.assertEqual(seen, [])
+        self.assertEqual(WebhookEventModel.objects.get().status, 'failed')
+
+    def test_the_event_is_published_after_the_message_is_committed(self):
+        found = []
+        handler = lambda event: found.append(MessageModel.objects.filter(id=event.message_id).exists())  # noqa: E731
+        events.subscribe(handler)
+        self.addCleanup(events.unsubscribe, handler)
+        self.post_webhook(inbound_payload())
+        process_all()
+        self.assertEqual(found, [True])
 
 
 @override_settings(MESSAGING_PROVIDER='fake')

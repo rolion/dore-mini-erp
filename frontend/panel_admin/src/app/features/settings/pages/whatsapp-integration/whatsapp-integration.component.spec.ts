@@ -7,8 +7,8 @@ import { WhatsappApiService } from '../../services/whatsapp-api.service';
 import { WhatsappIntegrationComponent } from './whatsapp-integration.component';
 
 const connection = (extra: Partial<WhatsappConnection> = {}): WhatsappConnection => ({
-  configured: true, webhookUrl: 'https://x/hook/', wabaId: '9', phoneNumberId: '111', displayPhone: '', secretRef: 'WHATSAPP_T',
-  appSecretRef: 'WHATSAPP_A', verifyToken: 'verify-1', status: 'active', statusReason: '', ...extra,
+  configured: true, webhookUrl: 'https://x/hook/', secretRefPrefix: 'WHATSAPP_AAAA_', wabaId: '9', phoneNumberId: '111', displayPhone: '', secretRef: 'WHATSAPP_AAAA_T',
+  appSecretRef: 'WHATSAPP_AAAA_A', verifyToken: 'verify-1', status: 'active', statusReason: '', ...extra,
 });
 const template = (status: string): WhatsappTemplate => ({ id: `t-${status}`, name: `n-${status}`, language: 'es', category: 'UTILITY', status, syncedAt: null });
 
@@ -41,10 +41,37 @@ describe('WhatsappIntegrationComponent', () => {
 
   it('rejects secret names without the WHATSAPP_ prefix and does not call the API', () => {
     setup(connection({ configured: false, status: 'none' }));
-    component().form.setValue({ wabaId: '9', phoneNumberId: '1', displayPhone: '', secretRef: 'SECRET_KEY', appSecretRef: 'WHATSAPP_A' });
+    component().form.setValue({ wabaId: '9', phoneNumberId: '1', displayPhone: '', secretRef: 'SECRET_KEY', appSecretRef: 'WHATSAPP_AAAA_A' });
     component().submit();
     expect(api.saveConnection).not.toHaveBeenCalled();
     expect(component().form.controls.secretRef.invalid).toBeTrue();
+  });
+
+  it('only accepts variable names with the company prefix (REV-01)', () => {
+    setup(connection({ configured: false, status: 'none' }));
+    const { secretRef } = component().form.controls;
+    secretRef.setValue('WHATSAPP_BBBB_TOKEN');
+    expect(secretRef.invalid).toBeTrue();
+    secretRef.setValue('WHATSAPP_AAAA_');
+    expect(secretRef.invalid).toBeTrue();
+    secretRef.setValue('WHATSAPP_AAAA_TOKEN');
+    expect(secretRef.valid).toBeTrue();
+  });
+
+  it('shows one tab per block and names the copy buttons (UI-01, UI-03)', () => {
+    setup(connection());
+    expect(el().querySelectorAll('[role="tab"]').length).toBe(3);
+    const labels = Array.from(el().querySelectorAll<HTMLButtonElement>('.input-group button')).map((b) => b.getAttribute('aria-label'));
+    expect(labels.length).toBe(2);
+    expect(new Set(labels).size).toBe(2);
+    component().select('test');
+    fixture.detectChanges();
+    expect(el().querySelector('ng-select')).not.toBeNull();
+  });
+
+  it('hides the extra tabs while nothing is configured', () => {
+    setup(connection({ configured: false, status: 'none' }));
+    expect(el().querySelectorAll('[role="tab"]').length).toBe(1);
   });
 
   it('asks for confirmation before changing the sender and saves once confirmed', () => {
@@ -62,7 +89,7 @@ describe('WhatsappIntegrationComponent', () => {
   it('shows server field errors', () => {
     setup(connection({ configured: false, status: 'none' }));
     api.saveConnection.and.returnValue(throwError(() => new WhatsappApiError('x', 400, null, { phoneNumberId: 'Este número ya está conectado' })));
-    component().form.setValue({ wabaId: '9', phoneNumberId: '1', displayPhone: '', secretRef: 'WHATSAPP_T', appSecretRef: 'WHATSAPP_A' });
+    component().form.setValue({ wabaId: '9', phoneNumberId: '1', displayPhone: '', secretRef: 'WHATSAPP_AAAA_T', appSecretRef: 'WHATSAPP_AAAA_A' });
     component().submit();
     fixture.detectChanges();
     expect(el().textContent).toContain('Este número ya está conectado');
@@ -70,9 +97,11 @@ describe('WhatsappIntegrationComponent', () => {
 
   it('lists templates with badges and offers only approved ones for the test (UI-01)', () => {
     setup(connection(), [template('APPROVED'), template('REJECTED'), template('PAUSED')]);
+    component().select('templates');
+    fixture.detectChanges();
     expect(el().querySelectorAll('tbody tr').length).toBe(3);
     expect(el().querySelector('.badge-outline.col-red')).not.toBeNull();
-    expect(el().querySelectorAll('#wa-template option').length).toBe(2); // placeholder + aprobada
+    expect(component().templateOptions.length).toBe(1); // solo la aprobada
   });
 
   it('sends the test message and reports an error from the server', () => {

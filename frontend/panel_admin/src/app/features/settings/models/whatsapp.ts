@@ -6,6 +6,8 @@ export type WhatsappStatus = 'pending' | 'active' | 'error' | 'disabled';
 export interface WhatsappConnection {
   configured: boolean;
   webhookUrl: string;
+  /** Prefijo que deben llevar los nombres de variable de esta empresa (REV-01). */
+  secretRefPrefix: string;
   wabaId: string;
   phoneNumberId: string;
   displayPhone: string;
@@ -19,6 +21,7 @@ export interface WhatsappConnection {
 export interface WhatsappConnectionDto {
   configured: boolean;
   webhook_url: string;
+  secret_ref_prefix: string;
   waba_id?: string;
   phone_number_id?: string;
   display_phone?: string;

@@ -23,12 +23,30 @@
         } @else {
         <div class="card">
           <div class="card-header">
-            <h4>{{ 'SETTINGS.WHATSAPP.CONEXION' | translate }}
+            <h4>{{ 'SETTINGS.WHATSAPP.TITULO' | translate }}
               <span class="badge-outline ms-2" [class]="statusClass()" id="whatsapp-status">
                 {{ 'SETTINGS.WHATSAPP.STATUS.' + (connection?.status ?? 'none').toUpperCase() | translate }}
               </span>
             </h4>
           </div>
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'connection'" role="tab" id="tab-connection"
+                [attr.aria-selected]="tab === 'connection'" aria-controls="panel-connection" (click)="select('connection')">{{ 'SETTINGS.WHATSAPP.CONEXION' | translate }}</button>
+            </li>
+            @if (connection?.configured) {
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'test'" role="tab" id="tab-test"
+                [attr.aria-selected]="tab === 'test'" aria-controls="panel-test" (click)="select('test')">{{ 'SETTINGS.WHATSAPP.MENSAJE_DE_PRUEBA' | translate }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'templates'" role="tab" id="tab-templates"
+                [attr.aria-selected]="tab === 'templates'" aria-controls="panel-templates" (click)="select('templates')">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</button>
+            </li>
+            }
+          </ul>
+          @if (tab === 'connection' || !connection?.configured) {
+          <div id="panel-connection" role="tabpanel" aria-labelledby="tab-connection">
           <div class="card-body">
             @if (!connection?.configured) {
             <p class="text-muted">{{ 'SETTINGS.WHATSAPP.SIN_CONEXION' | translate }}</p>
@@ -58,14 +76,14 @@
                 <div class="col-md-6 mb-3"></div>
                 <div class="col-md-6 mb-3">
                   <label for="wa-secret" class="form-label">{{ 'SETTINGS.WHATSAPP.SECRET_REF' | translate }}</label>
-                  <input id="wa-secret" class="form-control" formControlName="secretRef" autocomplete="off" placeholder="WHATSAPP_TOKEN_EMPRESA">
-                  <small class="text-muted">{{ 'SETTINGS.WHATSAPP.SECRET_REF_AYUDA' | translate }}</small>
+                  <input id="wa-secret" class="form-control" formControlName="secretRef" autocomplete="off" [placeholder]="(connection?.secretRefPrefix ?? '') + 'TOKEN'">
+                  <small class="text-muted">{{ 'SETTINGS.WHATSAPP.SECRET_REF_AYUDA' | translate: { prefix: connection?.secretRefPrefix } }}</small>
                   @if (fieldErrors['secretRef']) { <small class="text-danger d-block">{{ fieldErrors['secretRef'] }}</small> }
                 </div>
                 <div class="col-md-6 mb-3">
                   <label for="wa-app-secret" class="form-label">{{ 'SETTINGS.WHATSAPP.APP_SECRET_REF' | translate }}</label>
-                  <input id="wa-app-secret" class="form-control" formControlName="appSecretRef" autocomplete="off" placeholder="WHATSAPP_APP_SECRET_EMPRESA">
-                  <small class="text-muted">{{ 'SETTINGS.WHATSAPP.APP_SECRET_REF_AYUDA' | translate }}</small>
+                  <input id="wa-app-secret" class="form-control" formControlName="appSecretRef" autocomplete="off" [placeholder]="(connection?.secretRefPrefix ?? '') + 'APP_SECRET'">
+                  <small class="text-muted">{{ 'SETTINGS.WHATSAPP.APP_SECRET_REF_AYUDA' | translate: { prefix: connection?.secretRefPrefix } }}</small>
                   @if (fieldErrors['appSecretRef']) { <small class="text-danger d-block">{{ fieldErrors['appSecretRef'] }}</small> }
                 </div>
               </div>
@@ -89,7 +107,7 @@
               <label for="wa-webhook" class="form-label">{{ 'SETTINGS.WHATSAPP.WEBHOOK_URL' | translate }}</label>
               <div class="input-group">
                 <input id="wa-webhook" class="form-control" [value]="connection?.webhookUrl" readonly>
-                <button type="button" class="btn btn-light" (click)="copy(connection?.webhookUrl ?? '', 'url')">
+                <button type="button" class="btn btn-light" (click)="copy(connection?.webhookUrl ?? '', 'url')" [attr.aria-label]="'SETTINGS.WHATSAPP.COPIAR_URL' | translate">
                   {{ (copied === 'url' ? 'SETTINGS.WHATSAPP.COPIADO' : 'SETTINGS.WHATSAPP.COPIAR') | translate }}</button>
               </div>
             </div>
@@ -97,18 +115,15 @@
               <label for="wa-verify" class="form-label">{{ 'SETTINGS.WHATSAPP.VERIFY_TOKEN' | translate }}</label>
               <div class="input-group">
                 <input id="wa-verify" class="form-control" [value]="connection?.verifyToken" readonly>
-                <button type="button" class="btn btn-light" (click)="copy(connection?.verifyToken ?? '', 'token')">
+                <button type="button" class="btn btn-light" (click)="copy(connection?.verifyToken ?? '', 'token')" [attr.aria-label]="'SETTINGS.WHATSAPP.COPIAR_TOKEN' | translate">
                   {{ (copied === 'token' ? 'SETTINGS.WHATSAPP.COPIADO' : 'SETTINGS.WHATSAPP.COPIAR') | translate }}</button>
               </div>
             </div>
             }
           </div>
-        </div>
-
-        @if (connection?.configured) {
-        <div class="card">
-          <div class="card-header"><h4>{{ 'SETTINGS.WHATSAPP.MENSAJE_DE_PRUEBA' | translate }}</h4></div>
-          <div class="card-body">
+          </div>
+          } @else if (tab === 'test') {
+          <div class="card-body" id="panel-test" role="tabpanel" aria-labelledby="tab-test">
             @if (!canSendTest) {
             <p class="text-muted">{{ 'SETTINGS.WHATSAPP.PRUEBA_REQUIERE_ACTIVA' | translate }}</p>
             }
@@ -120,12 +135,10 @@
                 </div>
                 <div class="col-md-5 mb-3">
                   <label for="wa-template" class="form-label">{{ 'SETTINGS.WHATSAPP.PLANTILLA' | translate }}</label>
-                  <select id="wa-template" class="form-select" formControlName="templateId">
-                    <option value="" disabled>{{ 'SETTINGS.WHATSAPP.ELIGE_PLANTILLA' | translate }}</option>
-                    @for (t of approvedTemplates; track t.id) {
-                    <option [value]="t.id">{{ t.name }} ({{ t.language }})</option>
-                    }
-                  </select>
+                  <ng-select inputId="wa-template" [items]="templateOptions" bindLabel="label" bindValue="id"
+                    formControlName="templateId" [clearable]="false" data-testid="wa-template"
+                    [placeholder]="'SETTINGS.WHATSAPP.ELIGE_PLANTILLA' | translate"
+                    [notFoundText]="'SETTINGS.WHATSAPP.SIN_PLANTILLAS_APROBADAS' | translate"></ng-select>
                 </div>
                 <div class="col-md-2 mb-3 d-flex align-items-end">
                   <button type="submit" class="btn btn-primary w-100" [disabled]="testForm.invalid || testing || !canSendTest">
@@ -139,15 +152,13 @@
             </div>
             }
           </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</h4>
-            <button type="button" class="btn btn-light" (click)="sync()" [disabled]="syncing || !canSendTest">
-              {{ (syncing ? 'SETTINGS.WHATSAPP.SINCRONIZANDO' : 'SETTINGS.WHATSAPP.SINCRONIZAR') | translate }}</button>
-          </div>
-          <div class="card-body">
+          } @else {
+          <div class="card-body" id="panel-templates" role="tabpanel" aria-labelledby="tab-templates">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</h5>
+              <button type="button" class="btn btn-light" (click)="sync()" [disabled]="syncing || !canSendTest">
+                {{ (syncing ? 'SETTINGS.WHATSAPP.SINCRONIZANDO' : 'SETTINGS.WHATSAPP.SINCRONIZAR') | translate }}</button>
+            </div>
             @if (syncError) { <div class="alert alert-danger" role="alert">{{ syncError }}</div> }
             @if (!templates.length) {
             <p class="text-muted">{{ 'SETTINGS.WHATSAPP.SIN_PLANTILLAS' | translate }}</p>
@@ -179,8 +190,8 @@
             </div>
             }
           </div>
+          }
         </div>
-        }
         }
       </div>
     </div>

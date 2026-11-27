@@ -35,7 +35,7 @@ Guía para PB-CRM-016. Qué debe existir en Meta **antes** de conectar un númer
 | WABA ID | Paso 4 |
 | Phone number ID | Paso 5 |
 | Verify token | Lo genera PocketBiz; se copia a Meta (sección 2) |
-| Token del System User | **No se escribe en la pantalla ni en la BD.** Va al servidor como variable de entorno; la conexión guarda solo `secret_ref` (el nombre de la variable) |
+| Token del System User | **No se escribe en la pantalla ni en la BD.** Va al servidor como variable de entorno cuyo nombre empieza con el **prefijo de la empresa** (`WHATSAPP_<12 hex del id>_…`, que la pantalla muestra); la conexión guarda solo `secret_ref` (el nombre) |
 | App Secret | Igual: variable de entorno; la conexión guarda `app_secret_ref` |
 
 ## 5. Precios (afecta al requisito de «costo informado por Meta»)

@@ -15,6 +15,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa según PLAN v1 | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS con reservas (sin Critical/High; REV-01 Medium y REV-02..04 Low abiertos) | delivery-publish |
+| 2026-11-27 | PUBLISH | REV-01..04 corregidos a pedido del usuario; backend 2622 y frontend 1976 pruebas OK | delivery-build |
 
 ## Investigación
 
@@ -90,6 +91,8 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 - Envío de interactivos implementado en servicio y adaptador sin endpoint público (la bandeja PB-CRM-012 lo usará).
 - E2E Playwright no aplica (decidido en el PLAN); la prueba real con Meta queda como verificación manual.
 
+**Correcciones tras el Quality Gate (REV-01..04):** variables de secreto con prefijo propio de la empresa (`WHATSAPP_<12 hex del company_id>_`; la API devuelve `secret_ref_prefix`); eventos firmados de conexiones `disabled` responden 200 sin efecto; procesamiento de cada evento en una transacción y publicación del evento de dominio solo tras confirmar; pantalla con pestañas, `ng-select`, `aria-label` en «Copiar», menú `adminOnly`.
+
 **Deuda técnica / límites conocidos**
 - Un estado que llegue antes de que se guarde el wamid del envío se ignora (worker secuencial: poco probable; con varias réplicas podría perderse un estado).
 - `cost`/`currency` siempre nulos hasta la conciliación con la analítica de Meta (decisión del usuario).
@@ -107,7 +110,7 @@ Payloads reales de Meta, verificación del negocio pendiente, endpoint público,
 | REV-03 | Low | IMPLEMENTATION | `ProcessWebhookEvent._inbound` no es atómico: un fallo tras insertar deja la ventana sin abrir y el evento sin publicar |
 | REV-04 | Low | DESIGN | Desviaciones no declaradas del DDR (sin pestañas, `<select>` nativo, «Copiar» sin `aria-label`, menú sin `adminOnly`, ruta de archivo en el texto de ayuda) |
 
-Todos `Status: Open` en `docs/reviews/`.
+**Actualización:** REV-01..04 corregidos a pedido del usuario y marcados `Closed` (ver «Resolución» en cada uno). Tras la corrección: backend completo 2622 pruebas OK, frontend 1976 OK, lint e `i18n:check` limpios. No se repitió el Quality Gate aislado ni la revisión visual en navegador.
 
 ## Publicación
 PR listo para aprobación humana (no se mergea). Cambio sensible: **autenticación/seguridad** (endpoint público firmado, manejo de secretos), **base de datos** (migración inicial de `messaging`) e **infraestructura** (servicio `messaging-worker`); respaldado por el ADR `ADR-crm-integracion-whatsapp-cloud-api-modulo-messaging-y-cola-de-eventos`. Pendiente humano: prueba real con el número de prueba de Meta, variables `WHATSAPP_*` en el despliegue y decisión sobre REV-01.

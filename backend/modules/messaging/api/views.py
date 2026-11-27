@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..application.services import ConnectionInput, ConnectionService, ReceiveWebhook
+from ..domain.rules import secret_ref_prefix
 from ..domain.errors import (
     InvalidSignature,
     MessagingError,
@@ -93,7 +94,8 @@ class ConnectionView(APIView):
                                  settings.DEFAULT_PHONE_COUNTRY_CODE)
 
     def get(self, request):
-        return Response(connection_data(self._service(request).get(), _webhook_url(request)))
+        return Response(connection_data(self._service(request).get(), _webhook_url(request),
+                                        secret_ref_prefix(company_id_from(request))))
 
     def put(self, request):
         serializer = ConnectionInputSerializer(data=request.data)
@@ -102,7 +104,7 @@ class ConnectionView(APIView):
             connection = self._service(request).save(ConnectionInput(**serializer.validated_data))
         except MessagingError as exc:
             return _error(exc)
-        return Response(connection_data(connection, _webhook_url(request)))
+        return Response(connection_data(connection, _webhook_url(request), secret_ref_prefix(company_id_from(request))))
 
 
 class TestMessageView(APIView):

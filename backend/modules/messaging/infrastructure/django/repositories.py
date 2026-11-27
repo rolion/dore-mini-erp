@@ -52,7 +52,7 @@ class ConnectionDirectory:
 
     @staticmethod
     def by_phone_number_id(phone_number_id: str) -> Connection | None:
-        row = ConnectionModel.objects.filter(phone_number_id=phone_number_id).exclude(status='disabled').first()
+        row = ConnectionModel.objects.filter(phone_number_id=phone_number_id).first()
         return _connection(row) if row else None
 
     @staticmethod

@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-03: Procesamiento de mensaje entrante no es atomico: ventana y evento pueden perderse
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Tras un fallo parcial el Message existe pero `last_inbound_at` no se actualiza (
 
 ## Evidence
 Lectura de codigo: `application/services.py::ProcessWebhookEvent._inbound`, `infrastructure/worker.py::process_next_event`, `repositories.py::add_inbound_once`. No hay prueba de fallo parcial.
+
+## Resolución (2026-11-27)
+El worker procesa cada evento dentro de `transaction.atomic()` y publica `InboundMessageReceived` solo después de confirmar (`ProcessWebhookEvent.run` devuelve los eventos). Pruebas: `AtomicProcessingTests`.

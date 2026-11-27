@@ -18,8 +18,7 @@ from ..domain.errors import (
     TransientGatewayError,
 )
 from ..domain.events import InboundMessageReceived
-from ..domain.rules import clean_secret_ref, normalize_phone, valid_signature
-from . import events
+from ..domain.rules import clean_secret_ref, normalize_phone, secret_ref_prefix, valid_signature
 
 logger = logging.getLogger(__name__)
 MAX_BODY_BYTES = 1_000_000
@@ -51,8 +50,9 @@ class ConnectionService:
 
     def save(self, data: ConnectionInput) -> Connection:
         waba, number = _digits(data.waba_id, 'waba_id'), _digits(data.phone_number_id, 'phone_number_id')
-        refs = (clean_secret_ref(data.secret_ref, 'secret_ref'),
-                clean_secret_ref(data.app_secret_ref, 'app_secret_ref'))
+        prefix = secret_ref_prefix(self.company_id)
+        refs = (clean_secret_ref(data.secret_ref, 'secret_ref', prefix),
+                clean_secret_ref(data.app_secret_ref, 'app_secret_ref', prefix))
         if self.connections.phone_number_taken(number):
             raise MessagingValidationError({'phone_number_id': ['Este número ya está conectado a otra empresa.']})
         phone = normalize_phone(data.display_phone, self.cc) if (data.display_phone or '').strip() else ''
@@ -88,9 +88,10 @@ class ReceiveWebhook:
             if not valid_signature(body, signature, self.secrets.get(connection.app_secret_ref)):
                 raise InvalidSignature()
             connections.append(connection)
-        for connection in connections:
+        accepted = [c for c in connections if c.status != 'disabled']  # firmado y válido, pero sin efecto (REV-02)
+        for connection in accepted:
             self.queue.add(connection, payload)
-        return len(connections)
+        return len(accepted)
 
 
 class ProcessWebhookEvent:
@@ -100,14 +101,16 @@ class ProcessWebhookEvent:
         self.connection, self.messages, self.conversations = connection, messages, conversations
         self.clock, self.cc = clock, default_country_code
 
-    def run(self, payload) -> None:
+    def run(self, payload) -> list[InboundMessageReceived]:
+        """Aplica el payload y devuelve los eventos de dominio: quien llama los publica DESPUÉS de confirmar la
+        transacción, para que un fallo a medias no deje un evento sin su mensaje (REV-03)."""
         inbound, statuses = webhook.parse(payload, self.connection.phone_number_id)
-        for item in inbound:
-            self._inbound(item)
+        published = [event for item in inbound if (event := self._inbound(item)) is not None]
         for item in statuses:
             self._status(item)
+        return published
 
-    def _inbound(self, item) -> None:
+    def _inbound(self, item) -> InboundMessageReceived | None:
         conversation = self.conversations.get_or_create(self.connection.id,
                                                         normalize_phone('+' + item.sender, self.cc))
         message = Message(uuid4(), self.connection.company_id, self.connection.id, conversation.id, INBOUND,
@@ -115,11 +118,11 @@ class ProcessWebhookEvent:
                           sent_at=item.at)
         stored, created = self.messages.add_inbound_once(message)
         if not created:
-            return  # mismo wamid repetido: un solo Message y un solo evento
+            return None  # mismo wamid repetido: un solo Message y un solo evento
         conversation.register_inbound(item.at)
         self.conversations.save(conversation)
-        events.publish(InboundMessageReceived(self.connection.company_id, self.connection.id, conversation.id,
-                                              stored.id, conversation.phone, item.type, item.at))
+        return InboundMessageReceived(self.connection.company_id, self.connection.id, conversation.id,
+                                      stored.id, conversation.phone, item.type, item.at)
 
     def _status(self, item) -> None:
         message = self.messages.by_provider_id(self.connection.id, item.wamid)

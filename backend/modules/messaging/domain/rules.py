@@ -49,10 +49,17 @@ def backoff_delay(attempt: int) -> timedelta:
     return BACKOFF_BASE * (2 ** (attempt - 1))
 
 
-def clean_secret_ref(value: str, field: str) -> str:
-    """Solo nombres `WHATSAPP_*`: así una empresa no puede apuntar a `SECRET_KEY` ni a `DATABASE_URL`."""
+def secret_ref_prefix(company_id) -> str:
+    """Prefijo propio de cada empresa para sus variables (`WHATSAPP_<12 hex del id>_`): no se adivina y evita que
+    una empresa apunte al token de otra o a `SECRET_KEY`/`DATABASE_URL` (REV-01)."""
+    return f'WHATSAPP_{company_id.hex[:12].upper()}_'
+
+
+def clean_secret_ref(value: str, field: str, prefix: str) -> str:
     text = (value or '').strip()
-    if not SECRET_REF_PATTERN.match(text):
-        message = 'Usa un nombre de variable que empiece con WHATSAPP_ (mayúsculas, números y _).'
+    valid = (SECRET_REF_PATTERN.match(text) and text.startswith(prefix) and len(text) > len(prefix)
+             and len(text) <= 64)
+    if not valid:
+        message = f'Usa un nombre de variable que empiece con {prefix} (mayúsculas, números y _).'
         raise MessagingValidationError({field: [message]})
     return text

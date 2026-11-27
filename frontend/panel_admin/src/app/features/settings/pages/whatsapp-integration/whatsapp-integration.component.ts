@@ -2,7 +2,8 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { NgSelectComponent } from '@ng-select/ng-select';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import {
@@ -13,7 +14,7 @@ import { WhatsappApiService } from '../../services/whatsapp-api.service';
 @Component({
   selector: 'app-whatsapp-integration',
   templateUrl: './whatsapp-integration.component.html',
-  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [TranslatePipe, ReactiveFormsModule, RouterLink, DatePipe, NgSelectComponent],
 })
 export class WhatsappIntegrationComponent implements OnInit {
   private api = inject(WhatsappApiService);
@@ -23,6 +24,7 @@ export class WhatsappIntegrationComponent implements OnInit {
   readonly templateBadge = templateBadge;
   readonly templateStatusLabel = templateStatusLabel;
 
+  tab: 'connection' | 'test' | 'templates' = 'connection';
   connection: WhatsappConnection | null = null;
   templates: WhatsappTemplate[] = [];
   loading = false;
@@ -42,8 +44,8 @@ export class WhatsappIntegrationComponent implements OnInit {
     wabaId: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
     phoneNumberId: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
     displayPhone: [''],
-    secretRef: ['', [Validators.required, Validators.pattern(/^WHATSAPP_[A-Z0-9_]+$/)]],
-    appSecretRef: ['', [Validators.required, Validators.pattern(/^WHATSAPP_[A-Z0-9_]+$/)]],
+    secretRef: ['', [Validators.required, (c: AbstractControl) => this.refError(c)]],
+    appSecretRef: ['', [Validators.required, (c: AbstractControl) => this.refError(c)]],
   });
 
   readonly testForm = this.fb.group({
@@ -53,6 +55,23 @@ export class WhatsappIntegrationComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+  }
+
+  select(tab: 'connection' | 'test' | 'templates'): void {
+    this.tab = tab;
+  }
+
+  /** Cada empresa solo puede nombrar variables con su propio prefijo (REV-01); el servidor lo vuelve a validar. */
+  private refError(control: AbstractControl): ValidationErrors | null {
+    const prefix = this.connection?.secretRefPrefix ?? '';
+    const value = String(control.value ?? '').trim();
+    if (!value) return null;
+    const ok = /^WHATSAPP_[A-Z0-9_]+$/.test(value) && value.startsWith(prefix) && value.length > prefix.length;
+    return ok ? null : { prefix: true };
+  }
+
+  get templateOptions(): { id: string; label: string }[] {
+    return this.approvedTemplates.map((t) => ({ id: t.id, label: `${t.name} (${t.language})` }));
   }
 
   get approvedTemplates(): WhatsappTemplate[] {
@@ -87,6 +106,8 @@ export class WhatsappIntegrationComponent implements OnInit {
       wabaId: connection.wabaId, phoneNumberId: connection.phoneNumberId, displayPhone: connection.displayPhone,
       secretRef: connection.secretRef, appSecretRef: connection.appSecretRef,
     });
+    this.form.controls.secretRef.updateValueAndValidity();
+    this.form.controls.appSecretRef.updateValueAndValidity();
   }
 
   /** Cambiar WABA o número cambia el remitente: se pide confirmación antes de guardar. */

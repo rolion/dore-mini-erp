@@ -21,7 +21,7 @@ describe('WhatsappApiService', () => {
   it('maps an unconfigured connection (API-03)', () => {
     let status = '';
     api.getConnection().subscribe((c) => (status = c.status));
-    http.expectOne(`${base}connection/`).flush({ configured: false, webhook_url: 'https://x/hook/' });
+    http.expectOne(`${base}connection/`).flush({ configured: false, webhook_url: 'https://x/hook/', secret_ref_prefix: 'WHATSAPP_AAAA_' });
     expect(status).toBe('none');
   });
 
@@ -30,7 +30,7 @@ describe('WhatsappApiService', () => {
     const req = http.expectOne(`${base}connection/`);
     expect(req.request.method).toBe('PUT');
     expect(req.request.body).toEqual({ waba_id: '9', phone_number_id: '111', display_phone: '', secret_ref: 'WHATSAPP_T', app_secret_ref: 'WHATSAPP_A' });
-    req.flush({ configured: true, webhook_url: 'u', waba_id: '9', phone_number_id: '111', status: 'active', verify_token: 'v' });
+    req.flush({ configured: true, webhook_url: 'u', secret_ref_prefix: 'WHATSAPP_AAAA_', waba_id: '9', phone_number_id: '111', status: 'active', verify_token: 'v' });
   });
 
   it('turns a 400 into field errors and a 409 code into a translated message (API-04)', () => {

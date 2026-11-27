@@ -2139,7 +2139,7 @@
         "ERROR": "Error",
         "DISABLED": "Disabled"
       },
-      "SIN_CONEXION": "You have not connected a number yet. Fill in your WhatsApp Business account details from Meta (guide: docs/integrations/whatsapp-cloud-api-configuracion-meta.md).",
+      "SIN_CONEXION": "You have not connected a number yet. Fill in your WhatsApp Business account details from Meta; the setup guide is in the project documentation.",
       "REASONS": {
         "SECRETS_MISSING": "The server is missing the environment variables with the token or the App Secret. Ask whoever manages the deployment to create them, then save again.",
         "TOKEN_EXPIRED": "Meta rejected the token (expired or revoked). Generate a new one, update the server variable and sync the templates."
@@ -2148,9 +2148,9 @@
       "PHONE_NUMBER_ID": "Phone number ID",
       "DISPLAY_PHONE": "Display number (optional)",
       "SECRET_REF": "Token variable",
-      "SECRET_REF_AYUDA": "Name of the server environment variable holding the system user token. It must start with WHATSAPP_. The token is never typed here.",
+      "SECRET_REF_AYUDA": "Name of the server environment variable holding the system user token. It must start with {{prefix}} (your company’s own prefix). The token is never typed here.",
       "APP_SECRET_REF": "App Secret variable",
-      "APP_SECRET_REF_AYUDA": "Name of the environment variable holding the Meta app App Secret. It must start with WHATSAPP_.",
+      "APP_SECRET_REF_AYUDA": "Name of the environment variable holding the Meta app App Secret. It must start with {{prefix}}.",
       "GUARDADO": "Connection saved.",
       "CONFIRMAR_CAMBIO": "Changing the account or the number changes where messages are sent from. Confirm the change?",
       "CONFIRMAR": "Confirm change",
@@ -2190,7 +2190,10 @@
         "PENDING": "Pending",
         "DISABLED": "Disabled",
         "OTHER": "Other"
-      }
+      },
+      "COPIAR_URL": "Copy the webhook URL",
+      "COPIAR_TOKEN": "Copy the verify token",
+      "SIN_PLANTILLAS_APROBADAS": "No approved templates"
     }
   },
   "LAYOUT": {

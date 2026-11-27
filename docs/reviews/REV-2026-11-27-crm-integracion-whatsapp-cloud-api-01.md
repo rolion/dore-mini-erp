@@ -1,6 +1,6 @@
 # REV-2026-11-27-crm-integracion-whatsapp-cloud-api-01: secret_ref puede apuntar a la variable WHATSAPP_* de otra empresa
 
-**Status:** Open
+**Status:** Closed
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-27-crm-integracion-whatsapp-cloud-api.md (v1)
@@ -19,3 +19,6 @@ Un administrador de la empresa A puede guardar `secret_ref=WHATSAPP_TOKEN_EMPRES
 
 ## Evidence
 Lectura de codigo: `backend/modules/messaging/domain/rules.py` (SECRET_REF_PATTERN, clean_secret_ref), `application/services.py::ConnectionService.save`, `infrastructure/django/models.py::ConnectionModel` (sin unique en secret_ref/app_secret_ref). Prueba existente solo cubre refs sin prefijo WHATSAPP_ (`test_rejects_refs_that_could_leak_server_secrets`); ninguna cubre refs compartidas entre empresas.
+
+## Resolución (2026-11-27)
+Cada empresa solo puede nombrar variables con su prefijo `WHATSAPP_<12 hex del company_id>_` (`domain/rules.py::secret_ref_prefix`/`clean_secret_ref`); la API devuelve `secret_ref_prefix` y la pantalla lo exige. Pruebas: `test_a_company_cannot_use_the_variables_of_another_company`, `test_secret_ref_only_with_the_company_prefix`.

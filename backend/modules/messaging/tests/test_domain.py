@@ -2,7 +2,7 @@
 import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from django.test import SimpleTestCase
 
@@ -14,6 +14,7 @@ from modules.messaging.domain.rules import (
     backoff_delay,
     clean_secret_ref,
     normalize_phone,
+    secret_ref_prefix,
     valid_signature,
     window_open,
 )
@@ -80,11 +81,15 @@ class BackoffAndSecretRefTests(SimpleTestCase):
         self.assertEqual([backoff_delay(n) for n in (1, 2, 3)],
                          [timedelta(minutes=1), timedelta(minutes=2), timedelta(minutes=4)])
 
-    def test_secret_ref_only_whatsapp_prefix(self):
-        self.assertEqual(clean_secret_ref('WHATSAPP_TOKEN_A', 'secret_ref'), 'WHATSAPP_TOKEN_A')
-        for bad in ('SECRET_KEY', 'DATABASE_URL', 'whatsapp_x', '', 'WHATSAPP_a b'):
+    def test_secret_ref_only_with_the_company_prefix(self):
+        prefix = secret_ref_prefix(UUID('0123456789abcdef0123456789abcdef'))
+        self.assertEqual(prefix, 'WHATSAPP_0123456789AB_')
+        self.assertEqual(clean_secret_ref(prefix + 'TOKEN', 'secret_ref', prefix), prefix + 'TOKEN')
+        other = secret_ref_prefix(UUID('fedcba9876543210fedcba9876543210'))
+        for bad in ('SECRET_KEY', 'DATABASE_URL', 'whatsapp_x', '', 'WHATSAPP_TOKEN', prefix, prefix + 'a b',
+                    other + 'TOKEN', prefix + 'X' * 60):
             with self.assertRaises(MessagingValidationError):
-                clean_secret_ref(bad, 'secret_ref')
+                clean_secret_ref(bad, 'secret_ref', prefix)
 
 
 class MessageStateTests(SimpleTestCase):

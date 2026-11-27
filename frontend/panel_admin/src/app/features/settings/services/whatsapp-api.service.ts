@@ -39,6 +39,7 @@ export function toConnection(dto: WhatsappConnectionDto): WhatsappConnection {
   return {
     configured: dto.configured,
     webhookUrl: dto.webhook_url,
+    secretRefPrefix: dto.secret_ref_prefix ?? '',
     wabaId: dto.waba_id ?? '',
     phoneNumberId: dto.phone_number_id ?? '',
     displayPhone: dto.display_phone ?? '',
