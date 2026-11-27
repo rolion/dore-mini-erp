@@ -2,7 +2,7 @@
 
 **Estado:** Propuesto
 **Task relacionado:** TASK-gestionar-atencion-odontologica-desde-citas
-**Fecha:** 2026-11-27
+**Fecha:** 2026-11-27 · **Revisión v2:** 2026-11-27 (crítica de diseño; ver «Revisión v2»)
 
 ## Contexto
 El odontólogo necesita pasar de la agenda a la atención clínica sin duplicar la agenda: ver las citas de sus pacientes, abrir la atención, iniciarla, registrar odontograma opcional y finalizarla o cancelarla con trazabilidad.
@@ -34,3 +34,14 @@ El odontólogo necesita pasar de la agenda a la atención clínica sin duplicar 
 
 ## Consecuencias
 Una pantalla nueva por función y un enlace entre Agenda y Atención. Deuda aceptada: el odontograma se abre en otra pantalla (navegación), no embebido. El texto va por i18n (es/en/pt).
+
+## Revisión v2 (crítica de diseño, aprobada por el usuario en el chat)
+Origen: `/design:design-critique` sobre las 4 pantallas del detalle (pendiente, en progreso, con odontograma, finalizada). El usuario pidió aplicar las recomendaciones 1-5. Reemplaza lo indicado del detalle en «Componentes/patrones elegidos»; el resto del DDR sigue vigente.
+
+1. **Franja de alerta clínica.** Bajo el encabezado, si hay alergias, antecedentes médicos o medicación, un `alert alert-warning` (`role="note"`) con una línea «Etiqueta: valor» por dato. Visible en todos los estados; sin datos no se muestra (el resumen sigue diciendo «Sin registrar»).
+2. **Estados etiquetados y accesibles.** Dos badges junto al nombre del paciente: «Cita: …» y «Atención: …», con las clases Bootstrap `bg-{tono}-subtle text-{tono}-emphasis` (contraste AA en claro y oscuro). Tonos: Programada/Pendiente `warning`, Confirmada/En progreso `primary`, Atendida/Finalizada `success`, Cancelada `danger`, No asistió `secondary`. Mismo mapeo en el listado y en el historial de la ficha. El título de la tarjeta pasa a ser el nombre del paciente (el título de página ya dice «Atención odontológica»).
+3. **Distribución en dos columnas (≥ `lg`).** Izquierda: Estado clínico, **Odontograma** (bloque con borde), Observaciones y la barra de acciones; derecha: Cita y profesional y Resumen del paciente (en móvil el resumen va primero). Barra de acciones junto a las observaciones: «Guardar observaciones» (secundario, solo con cambios), **«Finalizar atención»** (principal, verde oscuro derivado del tema con `color-mix`, texto blanco AA) y, separado a la derecha, «Cancelar atención» como `btn-outline-danger`. El encabezado conserva «Iniciar atención» (deshabilitado con el motivo en un `alert alert-info` + `aria-describedby` cuando aún no procede) y «Volver».
+4. **Accesibilidad.** Acciones con `min-block-size: 44px` (`btn-touch`); sin colores HEX nuevos; mensaje de éxito con margen dentro del contenedor.
+5. **Vacíos y solo lectura.** «Sin registrar» (antes «Sin dato») y, en alergias, enlace «Registrar» a la ficha; observaciones de solo lectura como texto («Sin observaciones» si no hay); odontograma como «Odontograma de esta atención · versión N» con el número del paciente como texto secundario («N.º 3 del paciente»).
+
+**Deuda aceptada:** el fondo azul claro de los campos de texto es estilo global de la plantilla (afecta a todo el sistema) y no se cambia aquí; el diálogo de finalizar y cancelar sigue siendo `<dialog>` nativo como Agenda.

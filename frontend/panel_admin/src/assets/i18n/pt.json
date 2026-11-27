@@ -880,7 +880,6 @@
       "LIMPIAR": "Limpar filtros",
       "MOTIVO": "Motivo",
       "OBSERVACIONES_AYUDA": "Observações clínicas opcionais",
-      "ODONTOGRAMA_ACTUAL": "Odontograma #{{n}}",
       "ODONTOLOGIA": "Odontologia",
       "ODONTOLOGO": "Dentista",
       "OK_CANCEL": "Atendimento e consulta cancelados.",
@@ -900,7 +899,7 @@
       "SIGUIENTE": "Próxima",
       "SIN_ATENCIONES": "Este paciente ainda não tem atendimentos.",
       "SIN_CITAS_HOY": "Não há consultas para hoje.",
-      "SIN_DATO": "Sem dado",
+      "SIN_DATO": "Sem registro",
       "SIN_ODONTOGRAMA": "Este atendimento ainda não tem odontograma (opcional).",
       "SIN_RESULTADOS_FILTROS": "Não há consultas com estes filtros.",
       "TITULO_DETALLE": "Atendimento odontológico",
@@ -928,7 +927,16 @@
       "VAL_INVALID_TRANSITION": "A consulta não permite esta ação no estado atual.",
       "TIT_FINALIZAR": "Finalizar atendimento odontológico",
       "AVISO_FINALIZAR": "A consulta será marcada como atendida e o atendimento ficará somente leitura. As observações digitadas são salvas antes de finalizar.",
-      "CONFIRMAR_FINALIZAR": "Finalizar atendimento"
+      "CONFIRMAR_FINALIZAR": "Finalizar atendimento",
+      "CITA_ESTADO": "Consulta: {{estado}}",
+      "ATENCION_ESTADO": "Atendimento: {{estado}}",
+      "ALERTAS_CLINICAS": "Alertas clínicos",
+      "ANTECEDENTES_MEDICOS": "Antecedentes médicos",
+      "MEDICACION": "Medicação",
+      "ODONTOGRAMA_VERSION": "Odontograma deste atendimento · versão {{n}}",
+      "ODONTOGRAMA_NUM_PACIENTE": "N.º {{n}} do paciente",
+      "SIN_OBSERVACIONES": "Sem observações",
+      "REGISTRAR": "Registrar"
     }
   },
   "EXPENSES": {

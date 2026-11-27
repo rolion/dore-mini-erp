@@ -59,8 +59,8 @@
                   <td [attr.data-label]="'DENTISTRY.ENCOUNTER.PACIENTE' | translate"><strong>{{ row.customer_name }}</strong></td>
                   <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate">{{ row.professional_name }}</td>
                   <td [attr.data-label]="'DENTISTRY.ENCOUNTER.HORARIO' | translate">{{ formatDateTime(row.starts) }}–{{ time(row.ends) }}</td>
-                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ESTADO_CITA' | translate"><span class="badge" [class]="appointmentClasses[row.status]">{{ statusLabel(row.status) }}</span></td>
-                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ESTADO_ATENCION' | translate"><span class="badge" [class]="encounterClasses[row.encounter_status]">{{ encounterLabel(row.encounter_status) }}</span></td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ESTADO_CITA' | translate"><span class="badge" [class]="appointmentTone(row.status)">{{ statusLabel(row.status) }}</span></td>
+                  <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ESTADO_ATENCION' | translate"><span class="badge" [class]="encounterTone(row.encounter_status)">{{ encounterLabel(row.encounter_status) }}</span></td>
                   <td [attr.data-label]="'DENTISTRY.ENCOUNTER.ACCIONES' | translate"><a class="btn btn-sm btn-primary" [routerLink]="['/pocketbiz/dentistry/appointments', row.appointment_id]">{{ 'DENTISTRY.ENCOUNTER.VER_CITA' | translate }}</a></td>
                 </tr>
               }

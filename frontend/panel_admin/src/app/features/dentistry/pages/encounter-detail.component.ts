@@ -5,11 +5,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { tr } from '../../../core/i18n/translate';
-import { STATUS_CLASSES, statusLabel } from '../../agenda/models/appointment';
+import { statusLabel } from '../../agenda/models/appointment';
 import { formatDateTime } from '../../agenda/services/appointments-api.service';
 import {
-  CANCEL_REASON_MAX, ENCOUNTER_CLASSES, EncounterAction, EncounterDetail, EncounterStatus, OBSERVATIONS_MAX,
-  encounterStatusLabel,
+  CANCEL_REASON_MAX, EncounterAction, EncounterDetail, EncounterStatus, OBSERVATIONS_MAX,
+  appointmentTone, encounterStatusLabel, encounterTone,
 } from '../models/encounter';
 import { EncountersApiService, encounterFailure } from '../services/encounters-api.service';
 
@@ -30,8 +30,6 @@ export class EncounterDetailComponent implements OnInit {
   @ViewChild('cancelDialog') cancelDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('finishDialog') finishDialog?: ElementRef<HTMLDialogElement>;
 
-  readonly appointmentClasses = STATUS_CLASSES;
-  readonly encounterClasses = ENCOUNTER_CLASSES;
   readonly statusLabel = statusLabel;
   readonly encounterLabel = encounterStatusLabel;
   readonly formatDateTime = formatDateTime;
@@ -75,6 +73,24 @@ export class EncounterDetailComponent implements OnInit {
     let years = now.getFullYear() - born.getFullYear();
     if (now.getMonth() < born.getMonth() || (now.getMonth() === born.getMonth() && now.getDate() < born.getDate())) years--;
     return years >= 0 ? years : null;
+  }
+
+  readonly appointmentTone = appointmentTone;
+  readonly encounterTone = encounterTone;
+
+  /** Lo que el odontólogo debe ver antes de tocar al paciente: alergias, antecedentes médicos y medicación. */
+  get clinicalAlerts(): string[] {
+    const patient = this.detail?.patient;
+    if (!patient) return [];
+    const lines: [string, string | undefined][] = [
+      [tr('DENTISTRY.ENCOUNTER.ALERGIAS'), patient.allergies], [tr('DENTISTRY.ENCOUNTER.ANTECEDENTES_MEDICOS'), patient.medical_history],
+      [tr('DENTISTRY.ENCOUNTER.MEDICACION'), patient.medication],
+    ];
+    return lines.filter(([, value]) => !!value?.trim()).map(([label, value]) => `${label}: ${value?.trim()}`);
+  }
+
+  get observationsDirty(): boolean {
+    return this.observations.value !== (this.detail?.encounter?.observations ?? '');
   }
 
   get canSubmitCancel(): boolean {

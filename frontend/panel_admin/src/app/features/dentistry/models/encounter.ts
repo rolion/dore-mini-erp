@@ -6,12 +6,16 @@ export type AppointmentStatusValue = 'scheduled' | 'confirmed' | 'cancelled' | '
 
 export const ENCOUNTER_STATUSES: EncounterStatus[] = ['pending', 'in_progress', 'finished', 'cancelled'];
 
-export const ENCOUNTER_CLASSES: Record<EncounterStatus, string> = {
-  pending: 'col-orange',
-  in_progress: 'col-blue',
-  finished: 'col-green',
-  cancelled: 'col-red',
-};
+/** Badges con fondo suave y texto de énfasis de Bootstrap: contraste AA en tema claro y oscuro (siempre con texto). */
+export function appointmentTone(status: AppointmentStatusValue): string {
+  const tone = { scheduled: 'warning', confirmed: 'primary', cancelled: 'danger', attended: 'success', no_show: 'secondary' }[status];
+  return `bg-${tone}-subtle text-${tone}-emphasis`;
+}
+
+export function encounterTone(status: EncounterStatus): string {
+  const tone = { pending: 'warning', in_progress: 'primary', finished: 'success', cancelled: 'danger' }[status];
+  return `bg-${tone}-subtle text-${tone}-emphasis`;
+}
 
 export const CANCEL_REASON_MAX = 500;
 export const OBSERVATIONS_MAX = 2000;

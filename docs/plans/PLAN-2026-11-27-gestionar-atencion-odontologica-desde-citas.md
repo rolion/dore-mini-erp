@@ -1,4 +1,4 @@
-# PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas (v2)
+# PLAN-2026-11-27-gestionar-atencion-odontologica-desde-citas (v3)
 
 **Task:** TASK-gestionar-atencion-odontologica-desde-citas · **Modo:** COMPLETO · **Specification readiness:** READY
 **DDRs / ADRs:** DDR-gestionar-atencion-odontologica-desde-citas-listado-y-detalle-de-atencion · ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma
@@ -77,7 +77,7 @@ Una cita odontológica se atiende desde Odontología → Citas: iniciar crea o r
 - Los errores usan `{detail, code}` estable para traducir.
 
 ## UI behavior
-Según DDR: **UI-01** listado clínico (plantilla lista de solo lectura con filtros; compacta < `lg`); **UI-02** detalle «Atención odontológica» con acciones por `allowed_actions`; **UI-03** diálogo de cancelación con motivo; **UI-04** sección Odontograma (Agregar/Continuar/Ver; reutiliza la pantalla existente con `?encounter=`); **UI-05** observaciones con un solo envío; **UI-06** sin sección de recetas hoy; **UI-07** ficha del paciente → sección «Atenciones»; **UI-08** Agenda: aviso y enlace en lugar de «Marcar atendida» para citas odontológicas; **UI-09** subítem de menú «Citas» en Odontología. Estados cargando/vacío/error/éxito en todas.
+Según DDR: **UI-01** listado clínico (plantilla lista de solo lectura con filtros; compacta < `lg`); **UI-02** detalle «Atención odontológica» en dos columnas (≥ `lg`) con badges «Cita: …» / «Atención: …», franja de alerta clínica (**UI-10**: alergias, antecedentes médicos y medicación en `alert-warning`), «Finalizar» como acción principal junto a las observaciones y «Cancelar» como acción secundaria separada; acciones por `allowed_actions`; **UI-03** diálogo de cancelación con motivo; **UI-04** sección Odontograma («Odontograma de esta atención · versión N», número del paciente como texto secundario; Agregar/Continuar/Ver; reutiliza la pantalla existente); **UI-05** observaciones con un solo envío (texto de solo lectura con «Sin observaciones» al cerrar la atención); **UI-06** sin sección de recetas hoy; **UI-07** ficha del paciente → sección «Atenciones»; **UI-08** Agenda: aviso y enlace en lugar de «Marcar atendida» para citas odontológicas; **UI-09** subítem de menú «Citas» en Odontología. Estados cargando/vacío/error/éxito en todas.
 
 ## Non-functional requirements
 i18n es/en/pt sin texto hardcodeado (`npm run i18n:check`); sin consultas N+1 en el listado; lint (`ruff`, `flake8`) limpio en lo cambiado.
@@ -155,3 +155,4 @@ Ninguna obligatoria. E2E con Playwright **requeriría instalarlo: se pedirá con
 
 ## Changelog
 - **v2** (2026-11-27): [Implementation Plan] Alineado con lo implementado y con los hallazgos REV-01..07 del Quality Gate: API-01 plana, API-07 sin campo `clinical`, listado acotado por rango, `amend` bloquea la atención antes que al paciente, confirmación al finalizar guardando observaciones, tarjeta/submenú condicionados al módulo Agenda. E2E real (Playwright) sigue **pendiente de decisión del usuario** (sin instalar); AC-12 se verifica por estado posterior a la migración (aditiva, nullable), sin `MigrationExecutor`. Solicitado por delivery-publish (REV-07). Sin cambio de Specification.
+- **v3** (2026-11-27): [Specification] UI-02, UI-04, UI-05 y nuevo UI-10 (franja de alerta clínica) modificados tras la crítica de diseño, **con aprobación explícita del usuario en el chat** (pidió aplicar las recomendaciones 1-5); DDR revisado (v2). Incluye contraste AA, objetivos táctiles de 44 px, «Sin registrar» y estados vacíos. Sin cambios de AC ni de backend. [Implementation Plan] Los badges de estado usan las clases `*-subtle`/`*-emphasis` de Bootstrap en listado, detalle e historial.

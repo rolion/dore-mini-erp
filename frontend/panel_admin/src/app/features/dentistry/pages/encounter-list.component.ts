@@ -7,13 +7,13 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { tr } from '../../../core/i18n/translate';
-import { APPOINTMENT_STATUSES, STATUS_CLASSES, statusLabel } from '../../agenda/models/appointment';
+import { APPOINTMENT_STATUSES, statusLabel } from '../../agenda/models/appointment';
 import { formatDateTime } from '../../agenda/services/appointments-api.service';
 import { fetchAll } from '../../agenda/services/fetch-all';
 import { Profile } from '../../personnel/models/profile';
 import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import {
-  ENCOUNTER_CLASSES, ENCOUNTER_STATUSES, EncounterFilters, EncounterListItem, EncounterStatus, encounterStatusLabel,
+  ENCOUNTER_STATUSES, EncounterFilters, EncounterListItem, EncounterStatus, appointmentTone, encounterStatusLabel, encounterTone,
   AppointmentStatusValue,
 } from '../models/encounter';
 import { EncountersApiService } from '../services/encounters-api.service';
@@ -39,8 +39,8 @@ export class EncounterListComponent implements OnInit {
   readonly encounterStatuses = ENCOUNTER_STATUSES;
   readonly statusLabel = statusLabel;
   readonly encounterLabel = encounterStatusLabel;
-  readonly appointmentClasses = STATUS_CLASSES;
-  readonly encounterClasses = ENCOUNTER_CLASSES;
+  readonly appointmentTone = appointmentTone;
+  readonly encounterTone = encounterTone;
   readonly formatDateTime = formatDateTime;
   readonly filters = this.fb.group({ from: this.today(), to: this.today(), professional: '', search: '', status: '', encounter_status: '' });
 

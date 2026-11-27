@@ -34,8 +34,61 @@ describe('EncounterDetailComponent', () => {
     expect(text(fixture)).toContain('Ana Pérez');
     expect(text(fixture)).toContain('Penicilina');
     expect(text(fixture)).toContain('Iniciar atención');
+    expect(text(fixture)).toContain('Cita: Confirmada');
+    expect(text(fixture)).toContain('Atención: Pendiente');
     expect(text(fixture)).not.toContain('Finalizar atención');
     expect(text(fixture)).not.toContain('Recetas médicas');
+  });
+
+  it('shows allergies and medical history in a clinical alert strip above everything else', () => {
+    const fixture = create();
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[data-testid="clinical-alert"]');
+    expect(alert?.textContent).toContain('Alergias: Penicilina');
+    expect(alert?.textContent).toContain('Antecedentes médicos: Asma');
+    expect(alert?.getAttribute('role')).toBe('note');
+  });
+
+  it('shows no alert strip when nothing is recorded and says "Sin registrar" with a link to the record', () => {
+    const base = encounterDetail();
+    const fixture = create(encounterDetail({ patient: { ...base.patient, allergies: '', medical_history: '', birth_date: null } }));
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('[data-testid="clinical-alert"]')).toBeNull();
+    expect(text(fixture)).toContain('Sin registrar');
+    expect(text(fixture)).not.toContain('Sin dato');
+    expect(element.querySelector('a[href="/pocketbiz/dentistry/patients/c1"]')).not.toBeNull();
+  });
+
+  it('shows the odontogram version of this encounter and the patient number as secondary text', () => {
+    const current = { id: 'ev3', sequence: 3, status: 'confirmed' as const };
+    const fixture = create(inProgress({ odontogram: { can_create: false, root: current, current, versions: 1 } }));
+    expect(text(fixture)).toContain('Odontograma de esta atención · versión 1');
+    expect(text(fixture)).toContain('N.º 3 del paciente');
+  });
+
+  it('keeps Cancel as a separate secondary action and Finish as the primary one next to the notes', () => {
+    const fixture = create(inProgress());
+    const buttons = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button'));
+    const finish = buttons.find(b => b.textContent?.includes('Finalizar atención'));
+    const cancel = buttons.find(b => b.textContent?.includes('Cancelar atención'));
+    expect(finish?.classList).toContain('btn-finish');
+    expect(cancel?.classList).toContain('btn-outline-danger');
+    expect(finish?.classList).toContain('btn-touch');
+  });
+
+  it('shows read-only notes as text, with an explicit empty message', () => {
+    const done = inProgress({ allowed_actions: [] });
+    done.encounter = { ...done.encounter!, status: 'finished', finished_at: '2030-01-07T09:40:00-04:00', finished_by: { id: 1, name: 'ana' } };
+    const fixture = create(done);
+    expect((fixture.nativeElement as HTMLElement).querySelector('textarea#obs')).toBeNull();
+    expect(text(fixture)).toContain('Sin observaciones');
+  });
+
+  it('shows the start button disabled with the reason when the appointment cannot be started yet', () => {
+    const fixture = create(encounterDetail({ allowed_actions: [] }));
+    const button = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find(b => b.textContent?.includes('Iniciar atención'));
+    expect(button?.disabled).toBeTrue();
+    expect(button?.getAttribute('aria-describedby')).toBe('start-hint');
+    expect(text(fixture)).toContain('cuando llegue la hora');
   });
 
   it('runs the whole flow: start, add odontogram, finish', () => {

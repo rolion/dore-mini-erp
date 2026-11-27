@@ -4,7 +4,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ModulesService } from '../../../core/service/modules.service';
-import { ENCOUNTER_CLASSES, PatientEncounter, encounterStatusLabel } from '../models/encounter';
+import { PatientEncounter, encounterStatusLabel, encounterTone } from '../models/encounter';
 import { formatDateTime } from '../../agenda/services/appointments-api.service';
 import { EncountersApiService, encounterFailure } from '../services/encounters-api.service';
 
@@ -26,7 +26,7 @@ import { EncountersApiService, encounterFailure } from '../services/encounters-a
               <li class="d-flex flex-wrap gap-2 align-items-center py-1">
                 <a [routerLink]="['/pocketbiz/dentistry/appointments', item.appointment_id]">{{ formatDateTime(item.started_at) }}</a>
                 <span>{{ item.service_name }} · {{ item.professional_name }}</span>
-                <span class="badge" [class]="classes[item.status]">{{ label(item.status) }}</span>
+                <span class="badge" [class]="tone(item.status)">{{ label(item.status) }}</span>
                 @if (item.has_odontogram) { <small class="text-muted">{{ 'DENTISTRY.ENCOUNTER.CON_ODONTOGRAMA' | translate }}</small> }
               </li>
             }
@@ -43,7 +43,7 @@ export class PatientEncountersComponent implements OnInit {
 
   @Input({ required: true }) patientId = '';
 
-  readonly classes = ENCOUNTER_CLASSES;
+  readonly tone = encounterTone;
   readonly formatDateTime = formatDateTime;
   items: PatientEncounter[] = [];
   loading = true;

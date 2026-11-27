@@ -12,90 +12,121 @@
       <p class="alert alert-danger" role="alert">{{ error }}
         @if (!detail) { <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">{{ 'DENTISTRY.ENCOUNTER.REINTENTAR' | translate }}</button> }</p>
     }
-    @if (success) { <p class="alert alert-success" role="status">{{ success }}</p> }
+    @if (success) { <p class="alert alert-success mb-3" role="status">{{ success }}</p> }
     @if (detail; as item) {
       <div class="card">
-        <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
-          <h2><strong>{{ 'DENTISTRY.ENCOUNTER.TITULO_DETALLE' | translate }}</strong>
-            <span class="badge ms-2" [class]="appointmentClasses[item.appointment.status]">{{ statusLabel(item.appointment.status) }}</span>
-            <span class="badge ms-1" [class]="encounterClasses[encounterStatus]">{{ encounterLabel(encounterStatus) }}</span></h2>
+        <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
+          <div>
+            <h2 class="mb-1"><strong>{{ item.appointment.customer_name }}</strong></h2>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="badge fs-6" [class]="appointmentTone(item.appointment.status)">{{ 'DENTISTRY.ENCOUNTER.CITA_ESTADO' | translate: { estado: statusLabel(item.appointment.status) } }}</span>
+              <span class="badge fs-6" [class]="encounterTone(encounterStatus)">{{ 'DENTISTRY.ENCOUNTER.ATENCION_ESTADO' | translate: { estado: encounterLabel(encounterStatus) } }}</span>
+            </div>
+          </div>
           <div class="d-flex flex-wrap gap-2">
-            @if (can('start')) { <button type="button" class="btn btn-primary" [disabled]="saving" (click)="run('start')">{{ (saving ? 'DENTISTRY.ENCOUNTER.INICIANDO' : 'DENTISTRY.ENCOUNTER.INICIAR') | translate }}</button> }
-            @if (can('finish')) { <button type="button" class="btn btn-success" [disabled]="saving" (click)="openFinish()">{{ (saving ? 'DENTISTRY.ENCOUNTER.FINALIZANDO' : 'DENTISTRY.ENCOUNTER.FINALIZAR') | translate }}</button> }
-            @if (can('cancel')) { <button type="button" class="btn btn-danger" [disabled]="saving" (click)="openCancel()">{{ 'DENTISTRY.ENCOUNTER.CANCELAR' | translate }}</button> }
-            <a class="btn btn-light" routerLink="/pocketbiz/dentistry/appointments">{{ 'DENTISTRY.ENCOUNTER.VOLVER' | translate }}</a>
+            @if (!item.encounter) {
+              <button type="button" class="btn btn-primary btn-touch" [disabled]="!can('start') || saving"
+                [attr.aria-describedby]="startHint ? 'start-hint' : null" (click)="run('start')">{{ (saving ? 'DENTISTRY.ENCOUNTER.INICIANDO' : 'DENTISTRY.ENCOUNTER.INICIAR') | translate }}</button>
+            }
+            <a class="btn btn-light btn-touch" routerLink="/pocketbiz/dentistry/appointments">{{ 'DENTISTRY.ENCOUNTER.VOLVER' | translate }}</a>
           </div>
         </div>
         <div class="card-body">
-          @if (startHint) { <p class="text-muted">{{ startHint }}</p> }
-
-          <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_CITA' | translate }}</h5>
-          <dl class="row">
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.PACIENTE' | translate }}</dt><dd class="col-sm-9">{{ item.appointment.customer_name }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate }}</dt><dd class="col-sm-9">{{ item.appointment.professional_name }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.SERVICIO' | translate }}</dt><dd class="col-sm-9">{{ item.appointment.service_name }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.HORARIO' | translate }}</dt>
-            <dd class="col-sm-9">{{ formatDateTime(item.appointment.starts) }}–{{ item.appointment.ends.slice(11, 16) }}</dd>
-          </dl>
-
-          <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_PACIENTE' | translate }}</h5>
-          <dl class="row">
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.EDAD' | translate }}</dt>
-            <dd class="col-sm-9">{{ age !== null ? ('DENTISTRY.ENCOUNTER.ANIOS' | translate: { count: age }) : ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.CONTACTO' | translate }}</dt>
-            <dd class="col-sm-9">{{ item.patient.phone || item.patient.email || ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.ALERGIAS' | translate }}</dt><dd class="col-sm-9">{{ item.patient.allergies || ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
-            <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.ANTECEDENTES' | translate }}</dt>
-            <dd class="col-sm-9">{{ item.patient.medical_history || item.patient.dental_history || ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
-          </dl>
-          <a class="btn btn-sm btn-outline-primary mb-3" [routerLink]="['/pocketbiz/dentistry/patients', item.patient.id]">{{ 'DENTISTRY.ENCOUNTER.VER_EXPEDIENTE' | translate }}</a>
-
-          @if (item.encounter; as enc) {
-            <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_ESTADO' | translate }}</h5>
-            <dl class="row">
-              <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.INICIO_REAL' | translate }}</dt>
-              <dd class="col-sm-9">{{ formatDateTime(enc.started_at) }} · {{ enc.started_by.name }}</dd>
-              @if (enc.finished_at) {
-                <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.FIN_REAL' | translate }}</dt>
-                <dd class="col-sm-9">{{ formatDateTime(enc.finished_at) }} · {{ enc.finished_by?.name }}</dd>
-              }
-              @if (enc.cancelled_at) {
-                <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.CANCELADA_EL' | translate }}</dt>
-                <dd class="col-sm-9">{{ formatDateTime(enc.cancelled_at) }} · {{ enc.cancelled_by?.name }}</dd>
-                <dt class="col-sm-3">{{ 'DENTISTRY.ENCOUNTER.MOTIVO' | translate }}</dt><dd class="col-sm-9">{{ enc.cancellation_reason }}</dd>
-              }
-            </dl>
-
-            <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_ODONTOGRAMA' | translate }}</h5>
-            <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-              @if (item.odontogram.current; as current) {
-                <span>{{ 'DENTISTRY.ENCOUNTER.ODONTOGRAMA_ACTUAL' | translate: { n: current.sequence } }}
-                  <span class="badge" [class]="current.status === 'draft' ? 'col-orange' : 'col-green'">{{ (current.status === 'draft' ? 'DENTISTRY.ENCOUNTER.BORRADOR' : 'DENTISTRY.ENCOUNTER.CONFIRMADO') | translate }}</span></span>
-                <button type="button" class="btn btn-outline-primary" (click)="openOdontogram(current.id)">
-                  {{ (inProgress && current.status === 'draft' ? 'DENTISTRY.ENCOUNTER.CONTINUAR_ODONTOGRAMA' : 'DENTISTRY.ENCOUNTER.VER_ODONTOGRAMA') | translate }}</button>
-              } @else if (item.odontogram.can_create) {
-                <span class="text-muted">{{ 'DENTISTRY.ENCOUNTER.SIN_ODONTOGRAMA' | translate }}</span>
-                <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="addOdontogram()">{{ 'DENTISTRY.ENCOUNTER.AGREGAR_ODONTOGRAMA' | translate }}</button>
-              } @else {
-                <span class="text-muted">{{ 'DENTISTRY.ENCOUNTER.SIN_ODONTOGRAMA' | translate }}</span>
-              }
+          @if (clinicalAlerts.length) {
+            <div class="alert alert-warning" role="note" data-testid="clinical-alert">
+              <strong>{{ 'DENTISTRY.ENCOUNTER.ALERTAS_CLINICAS' | translate }}</strong>
+              <ul class="mb-0">
+                @for (line of clinicalAlerts; track line) { <li>{{ line }}</li> }
+              </ul>
             </div>
-
-            @if (item.prescriptions_enabled) {
-              <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_RECETAS' | translate }}</h5>
-            }
-
-            <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_OBSERVACIONES' | translate }}</h5>
-            <div class="form-group mb-2">
-              <label for="obs" class="visually-hidden">{{ 'DENTISTRY.ENCOUNTER.SEC_OBSERVACIONES' | translate }}</label>
-              <textarea id="obs" class="form-control" rows="3" [maxlength]="observationsMax" [formControl]="observations"
-                [attr.placeholder]="'DENTISTRY.ENCOUNTER.OBSERVACIONES_AYUDA' | translate"></textarea>
-              <small class="text-muted">{{ observations.value.length }}/{{ observationsMax }}</small>
-            </div>
-            @if (inProgress) {
-              <button type="button" class="btn btn-primary" [disabled]="saving || observations.invalid" (click)="saveObservations()">{{ (saving ? 'DENTISTRY.ENCOUNTER.GUARDANDO' : 'DENTISTRY.ENCOUNTER.GUARDAR_OBSERVACIONES') | translate }}</button>
-            }
           }
+          @if (startHint) { <p id="start-hint" class="alert alert-info" role="status">{{ startHint }}</p> }
+
+          <div class="row g-4">
+            <div class="col-lg-4 order-lg-last">
+              <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_CITA' | translate }}</h5>
+              <dl class="row">
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.ODONTOLOGO' | translate }}</dt><dd class="col-7">{{ item.appointment.professional_name }}</dd>
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.SERVICIO' | translate }}</dt><dd class="col-7">{{ item.appointment.service_name }}</dd>
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.HORARIO' | translate }}</dt>
+                <dd class="col-7">{{ formatDateTime(item.appointment.starts) }}–{{ item.appointment.ends.slice(11, 16) }}</dd>
+              </dl>
+
+              <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_PACIENTE' | translate }}</h5>
+              <dl class="row">
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.EDAD' | translate }}</dt>
+                <dd class="col-7">{{ age !== null ? ('DENTISTRY.ENCOUNTER.ANIOS' | translate: { count: age }) : ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.CONTACTO' | translate }}</dt>
+                <dd class="col-7">{{ item.patient.phone || item.patient.email || ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.ALERGIAS' | translate }}</dt>
+                <dd class="col-7">
+                  @if (item.patient.allergies) { {{ item.patient.allergies }} }
+                  @else { {{ 'DENTISTRY.ENCOUNTER.SIN_DATO' | translate }} <a [routerLink]="['/pocketbiz/dentistry/patients', item.patient.id]">{{ 'DENTISTRY.ENCOUNTER.REGISTRAR' | translate }}</a> }
+                </dd>
+                <dt class="col-5">{{ 'DENTISTRY.ENCOUNTER.ANTECEDENTES' | translate }}</dt>
+                <dd class="col-7">{{ item.patient.medical_history || item.patient.dental_history || ('DENTISTRY.ENCOUNTER.SIN_DATO' | translate) }}</dd>
+              </dl>
+              <a class="btn btn-sm btn-outline-primary" [routerLink]="['/pocketbiz/dentistry/patients', item.patient.id]">{{ 'DENTISTRY.ENCOUNTER.VER_EXPEDIENTE' | translate }}</a>
+            </div>
+
+            <div class="col-lg-8">
+              @if (item.encounter; as enc) {
+                <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_ESTADO' | translate }}</h5>
+                <dl class="row">
+                  <dt class="col-sm-4">{{ 'DENTISTRY.ENCOUNTER.INICIO_REAL' | translate }}</dt>
+                  <dd class="col-sm-8">{{ formatDateTime(enc.started_at) }} · {{ enc.started_by.name }}</dd>
+                  @if (enc.finished_at) {
+                    <dt class="col-sm-4">{{ 'DENTISTRY.ENCOUNTER.FIN_REAL' | translate }}</dt>
+                    <dd class="col-sm-8">{{ formatDateTime(enc.finished_at) }} · {{ enc.finished_by?.name }}</dd>
+                  }
+                  @if (enc.cancelled_at) {
+                    <dt class="col-sm-4">{{ 'DENTISTRY.ENCOUNTER.CANCELADA_EL' | translate }}</dt>
+                    <dd class="col-sm-8">{{ formatDateTime(enc.cancelled_at) }} · {{ enc.cancelled_by?.name }}</dd>
+                    <dt class="col-sm-4">{{ 'DENTISTRY.ENCOUNTER.MOTIVO' | translate }}</dt><dd class="col-sm-8">{{ enc.cancellation_reason }}</dd>
+                  }
+                </dl>
+
+                <div class="border rounded p-3 mb-4">
+                  <h5 class="mb-2">{{ 'DENTISTRY.ENCOUNTER.SEC_ODONTOGRAMA' | translate }}</h5>
+                  @if (item.odontogram.current; as current) {
+                    <p class="mb-2 d-flex flex-wrap gap-2 align-items-center">
+                      <span>{{ 'DENTISTRY.ENCOUNTER.ODONTOGRAMA_VERSION' | translate: { n: item.odontogram.versions ?? 1 } }}</span>
+                      <span class="badge" [class]="current.status === 'draft' ? 'bg-warning-subtle text-warning-emphasis' : 'bg-success-subtle text-success-emphasis'">{{ (current.status === 'draft' ? 'DENTISTRY.ENCOUNTER.BORRADOR' : 'DENTISTRY.ENCOUNTER.CONFIRMADO') | translate }}</span>
+                      <small class="text-muted">{{ 'DENTISTRY.ENCOUNTER.ODONTOGRAMA_NUM_PACIENTE' | translate: { n: current.sequence } }}</small>
+                    </p>
+                    <button type="button" class="btn btn-outline-primary btn-touch" (click)="openOdontogram(current.id)">
+                      {{ (inProgress && current.status === 'draft' ? 'DENTISTRY.ENCOUNTER.CONTINUAR_ODONTOGRAMA' : 'DENTISTRY.ENCOUNTER.VER_ODONTOGRAMA') | translate }}</button>
+                  } @else if (item.odontogram.can_create) {
+                    <p class="text-muted mb-2">{{ 'DENTISTRY.ENCOUNTER.SIN_ODONTOGRAMA' | translate }}</p>
+                    <button type="button" class="btn btn-outline-primary btn-touch" [disabled]="saving" (click)="addOdontogram()">{{ 'DENTISTRY.ENCOUNTER.AGREGAR_ODONTOGRAMA' | translate }}</button>
+                  } @else {
+                    <p class="text-muted mb-0">{{ 'DENTISTRY.ENCOUNTER.SIN_ODONTOGRAMA' | translate }}</p>
+                  }
+                </div>
+
+                @if (item.prescriptions_enabled) {
+                  <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_RECETAS' | translate }}</h5>
+                }
+
+                <h5>{{ 'DENTISTRY.ENCOUNTER.SEC_OBSERVACIONES' | translate }}</h5>
+                @if (inProgress) {
+                  <div class="form-group mb-3">
+                    <label for="obs" class="visually-hidden">{{ 'DENTISTRY.ENCOUNTER.SEC_OBSERVACIONES' | translate }}</label>
+                    <textarea id="obs" class="form-control" rows="4" [maxlength]="observationsMax" [formControl]="observations"
+                      [attr.placeholder]="'DENTISTRY.ENCOUNTER.OBSERVACIONES_AYUDA' | translate"></textarea>
+                    <small class="text-muted">{{ observations.value.length }}/{{ observationsMax }}</small>
+                  </div>
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button type="button" class="btn btn-outline-primary btn-touch" [disabled]="saving || observations.invalid || !observationsDirty" (click)="saveObservations()">{{ (saving ? 'DENTISTRY.ENCOUNTER.GUARDANDO' : 'DENTISTRY.ENCOUNTER.GUARDAR_OBSERVACIONES') | translate }}</button>
+                    @if (can('finish')) { <button type="button" class="btn btn-finish btn-touch" [disabled]="saving" (click)="openFinish()">{{ (saving ? 'DENTISTRY.ENCOUNTER.FINALIZANDO' : 'DENTISTRY.ENCOUNTER.FINALIZAR') | translate }}</button> }
+                    @if (can('cancel')) { <button type="button" class="btn btn-outline-danger btn-touch ms-auto" [disabled]="saving" (click)="openCancel()">{{ 'DENTISTRY.ENCOUNTER.CANCELAR' | translate }}</button> }
+                  </div>
+                } @else {
+                  <p [class.text-muted]="!enc.observations" class="mb-0">{{ enc.observations || ('DENTISTRY.ENCOUNTER.SIN_OBSERVACIONES' | translate) }}</p>
+                }
+              }
+            </div>
+          </div>
         </div>
       </div>
     }

@@ -16,6 +16,7 @@
 | 2026-11-27 | PLANNING → ENGINEERING | Plan v1 READY y PR abierto | delivery-start |
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación y pruebas completas | delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate PASS (7 hallazgos Low abiertos) | delivery-publish |
+| 2026-11-27 | PUBLISH (sin cambio de etapa) | Rediseño del detalle por crítica de diseño; DDR v2 y PLAN v3 | delivery-build (a pedido del usuario) |
 
 ## Investigación
 
@@ -118,6 +119,8 @@ Ver `docs/adr/ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion
 - Hallazgos Low abiertos (no bloquean): REV-01 mensaje/`VAL_*` con paciente archivado al crear odontograma; REV-02 «Finalizar» descarta observaciones sin guardar; REV-03 listado sin acotar conjuntos de IDs; REV-04 carrera `finish` vs enmienda; REV-05 error permanente en «Atenciones» con Agenda/Personal deshabilitados; REV-06 HEX/`select`/spinner en el detalle; REV-07 plan v1 desactualizado (API-01, API-07, E2E, AC-12). Archivos: `docs/reviews/REV-2026-11-27-gestionar-atencion-odontologica-desde-citas-01..07.md`.
 
 **Corrección de hallazgos Low (2026-11-27, delivery-build a pedido del usuario):** REV-01 (`_require_patient` antes de crear odontograma + claves `VAL_*`), REV-02 (diálogo de confirmación; guarda observaciones antes de finalizar), REV-03 (listado parte de las citas del rango; fachada `appointments_in_range`), REV-04 (`amend` bloquea la atención antes que al paciente), REV-05 (tarjeta y submenú condicionados al módulo Agenda), REV-06 (tokens `dark-tokens`, `ng-select`, spinner), REV-07 (PLAN v2). Verificación propia tras los cambios: backend agenda+dentistry 163 OK, boundaries OK, Angular 1959 OK, `ng lint`, `i18n:check` y `ng build` limpios. **El Quality Gate no se repitió sobre estos commits**; los REV quedan marcados Resolved por el autor y deben confirmarse en una nueva pasada de delivery-publish si se desea.
+
+**Rediseño del detalle (2026-11-27, a pedido del usuario tras `/design:design-critique`):** aplicadas las recomendaciones 1-5 (franja de alerta clínica, badges «Cita/Atención» con contraste AA, dos columnas con odontograma protagonista y acciones separadas, accesibilidad de contraste y 44 px, estados vacíos y numeración del odontograma). Documentos: DDR v2 («Revisión v2»), PLAN v3 (Specification UI-02/04/05/10 con aprobación del usuario) y `design-system.md`. Verificación propia: specs del módulo 129 OK, Angular completo 1964 OK, `ng lint`, `i18n:check` y `ng build` limpios. **No verificado visualmente en navegador** ni repetido el Quality Gate.
 
 ## Publicación
 PR https://github.com/rolion/dore-mini-erp/pull/138 listo para aprobación humana (no se mergea). Cambio sensible: base de datos (migración 0006 aditiva) y autorización clínica; respaldado por ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma. Pendiente humano: decidir si se exige E2E real (Playwright) y si los REV Low se corrigen ahora o después.

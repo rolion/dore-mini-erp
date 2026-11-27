@@ -5,6 +5,27 @@ $dark-surface: dark.$color-dark-primary;
 $dark-text: dark.$color-font;
 $dark-strong: white;
 
+/* Objetivo táctil mínimo de 44 px en las acciones de la atención. */
+.btn-touch {
+  min-block-size: 44px;
+}
+
+/* Verde más oscuro que el de la plantilla para que el texto blanco cumpla AA; deriva del verde del tema. */
+.btn-finish {
+  --finish-bg: color-mix(in srgb, var(--bs-success, green) 70%, black);
+
+  background-color: var(--finish-bg);
+  border-color: var(--finish-bg);
+  color: white;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    background-color: color-mix(in srgb, var(--finish-bg) 85%, black);
+    border-color: color-mix(in srgb, var(--finish-bg) 85%, black);
+    color: white;
+  }
+}
+
 dialog {
   box-sizing: border-box;
   inline-size: min(32rem, calc(100% - 2rem));

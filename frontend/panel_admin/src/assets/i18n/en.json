@@ -880,7 +880,6 @@
       "LIMPIAR": "Clear filters",
       "MOTIVO": "Reason",
       "OBSERVACIONES_AYUDA": "Optional clinical notes",
-      "ODONTOGRAMA_ACTUAL": "Odontogram #{{n}}",
       "ODONTOLOGIA": "Dentistry",
       "ODONTOLOGO": "Dentist",
       "OK_CANCEL": "Encounter and appointment cancelled.",
@@ -900,7 +899,7 @@
       "SIGUIENTE": "Next",
       "SIN_ATENCIONES": "This patient has no encounters yet.",
       "SIN_CITAS_HOY": "There are no appointments today.",
-      "SIN_DATO": "No data",
+      "SIN_DATO": "Not recorded",
       "SIN_ODONTOGRAMA": "This encounter has no odontogram yet (optional).",
       "SIN_RESULTADOS_FILTROS": "No appointments match these filters.",
       "TITULO_DETALLE": "Dental encounter",
@@ -928,7 +927,16 @@
       "VAL_INVALID_TRANSITION": "The appointment does not allow this action in its current state.",
       "TIT_FINALIZAR": "Finish dental encounter",
       "AVISO_FINALIZAR": "The appointment will be marked as attended and the encounter becomes read-only. Typed notes are saved before finishing.",
-      "CONFIRMAR_FINALIZAR": "Finish encounter"
+      "CONFIRMAR_FINALIZAR": "Finish encounter",
+      "CITA_ESTADO": "Appointment: {{estado}}",
+      "ATENCION_ESTADO": "Encounter: {{estado}}",
+      "ALERTAS_CLINICAS": "Clinical alerts",
+      "ANTECEDENTES_MEDICOS": "Medical history",
+      "MEDICACION": "Medication",
+      "ODONTOGRAMA_VERSION": "Odontogram of this encounter · version {{n}}",
+      "ODONTOGRAMA_NUM_PACIENTE": "No. {{n}} of the patient",
+      "SIN_OBSERVACIONES": "No notes",
+      "REGISTRAR": "Record"
     }
   },
   "EXPENSES": {
