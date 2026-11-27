@@ -1,0 +1,35 @@
+# ADR-gestionar-atencion-odontologica-desde-citas-modelo-integracion-agenda-y-odontograma: Modelo de atención, integración con Agenda y vínculo con el odontograma
+
+**Estado:** Propuesto
+**Task relacionado:** TASK-gestionar-atencion-odontologica-desde-citas
+**Fecha:** 2026-11-27
+
+## Contexto
+Hace falta un registro clínico por encuentro (DentalEncounter) anclado a una cita de Agenda, con estado propio (distinto del estado administrativo de la cita), que se inicie/finalice/cancele de forma atómica con la cita y al que se vincule opcionalmente un odontograma (PB-ODO-002, hoy por paciente). Agenda y Odontología son módulos distintos: no pueden importarse infraestructura (`docs/architecture/ddd.md`).
+
+## Decisión
+1. **Agregado `DentalEncounter` en `dentistry`** (`domain/encounter.py`, sin Django). Estados: `in_progress`, `finished`, `cancelled`; «Pendiente» es **derivado** (cita sin atención, no se persiste). Transiciones por métodos del agregado: `finish()` solo desde `in_progress`; `cancel(reason)` solo desde `in_progress`; `finished` y `cancelled` son terminales.
+2. **Tabla `dentistry_encounter`:** `id` UUID, `company_id`, `appointment_id` UUID (sin FK entre módulos), `customer_id` y `professional_id` (copiados de la cita al iniciar: identidad clínica histórica), `status`, `started_at`, `started_by/_name`, `finished_at/_by/_name`, `cancelled_at/_by/_name`, `cancellation_reason`, `observations`, `created_at/updated_at`. **`UniqueConstraint(company_id, appointment_id)`** garantiza una atención por cita; `index(company_id, customer_id, started_at)` para el historial.
+3. **Vínculo con el odontograma:** nueva columna nullable `encounter` (FK a `dentistry_encounter`, `PROTECT`) en `dentistry_evaluation`. Las enmiendas heredan el `encounter` de su origen. **`UniqueConstraint(encounter, condition=Q(amends__isnull=True, encounter__isnull=False))`**: un odontograma lógico por atención (raíz); las enmiendas conservan la original. Las evaluaciones existentes quedan con `encounter = NULL` (**legado consultable**, sin inventar citas ni atenciones); la regla «un borrador por paciente» de PB-ODO-002 no cambia. Crear desde la atención reutiliza `EvaluationCommands.create` precargando paciente, profesional y fecha clínica (fecha de inicio real); solo con la atención `in_progress`.
+4. **Integración con Agenda (inversión de dependencia):**
+   - Agenda expone una **fachada pública `modules/agenda/services.py`** con DTO inmutables: `get_appointment(company_id, id)`, `search_appointments(company_id, filtros…)`, y comandos transaccionales para uso clínico: `lock_appointment`, `mark_attended_by_clinic(company_id, actor, id)`, `cancel_by_clinic(company_id, actor, id, reason)`. Dentistry **solo** importa esta fachada.
+   - Agenda define un **puerto de guardas** (`modules/agenda/application/guards.py`): `register_guard(fn)` y `check(company_id, appointment, action)`. `dentistry` lo registra en `DentistryConfig.ready()`. Las acciones públicas de Agenda `attend`, `no_show`, `reschedule` y `cancel` consultan las guardas y responden **409** con código estable. Reglas registradas: (a) `attend` de una cita odontológica (cliente con perfil odontológico + módulo `dentistry` activo) → `clinical_flow_required`; (b) `no_show`/`reschedule`/`cancel` con atención existente → `encounter_started`. Las rutas clínicas llaman a las variantes `*_by_clinic`, que no pasan por esa guarda. Sin guardas registradas Agenda se comporta como hoy (citas no odontológicas intactas).
+5. **Atomicidad y concurrencia:** cada comando clínico corre en `transaction.atomic` con orden de bloqueo fijo **cita (vía `Schedule` + `select_for_update` de Agenda) → atención**. Iniciar: bloquea la cita, valida elegibilidad (`attend` permitido y paciente activo con perfil), `get_or_create` por la restricción única (ante `IntegrityError` recupera la existente); idempotente si ya está `in_progress`, 409 si `finished/cancelled`. Finalizar: bloquea cita y atención; si ya está `finished` devuelve el mismo resultado (idempotente); 409 `draft_pending` si hay odontograma en borrador; `mark_attended_by_clinic` + `finish()` en la misma transacción (un fallo revierte ambos). Cancelar: motivo obligatorio (≤500), `cancel_by_clinic` + `cancel()` atómicos. Crear odontograma: bloquea la atención y confía en la restricción única como defensa final.
+6. **Contrato API** (`/api/dentistry/…`, `ClinicalView`, módulos `dentistry`, `agenda`, `customers`, `personnel`): `GET appointments/` (listado clínico), `GET appointments/<id>/encounter/` (detalle compuesto: cita + atención derivada + paciente), `POST appointments/<id>/encounter/start|finish|cancel/`, `PATCH encounters/<id>/` (observaciones), `POST encounters/<id>/odontogram/`, `GET patients/<customer_id>/encounters/` (historial). El listado reutiliza los datos de Agenda por la fachada, restringido a clientes con perfil odontológico.
+7. **Recetas:** no existe recetario. El contrato futuro queda documentado: un recurso `prescription` pertenecerá a `encounter_id`, 0..n por atención; el DTO del detalle reserva `prescriptions_enabled: false` y la UI no muestra botón alguno. Sin cambio de esquema hoy.
+8. **Cambio de profesional/paciente de la cita:** Agenda no permite hoy cambiarlos (no hay edición de esos campos); la guardia `encounter_started` protege el único camino que mueve la cita (reprogramar). Un futuro cambio de profesional deberá consultar la misma guarda.
+
+## Alternativas consideradas
+- **Estado clínico como columnas de `Appointment`:** más simple pero mezcla Agenda con clínica, expone datos clínicos en un módulo no clínico y no admite historial por paciente. Descartada.
+- **Atención creada automáticamente con la cita (estado «pendiente» persistido):** genera filas innecesarias para citas canceladas/no asistidas (la tarjeta lo desaconseja). Descartada.
+- **Agenda importando `dentistry.services` directamente:** crea ciclo de importación. Descartada a favor del puerto de guardas.
+- **Evaluación con FK directa a la cita:** acopla odontograma y Agenda; la atención es el ancla natural.
+
+## Estrategia de rollback / mitigación
+Migraciones aditivas (tabla nueva y columna nullable con constraint parcial): revertibles con `migrate dentistry 0005` sin pérdida de datos previos. Las guardas se registran al arrancar: quitar el registro en `ready()` restaura el comportamiento anterior de Agenda. Backup previo al deploy ya lo hace el workflow de producción. Una migración de datos no es necesaria (legado `encounter = NULL`); la prueba de migración verifica que las evaluaciones existentes conservan identidad y contenido.
+
+## Consecuencias
+- Nueva fachada de Agenda y puerto de guardas (pequeño, justificado por el ciclo).
+- Un borrador de odontograma de una atención cancelada sigue siendo el borrador único del paciente hasta confirmarse/descartarse.
+- Empresas odontológicas ya no marcan «atendida» desde Agenda para pacientes con perfil dental (decisión del usuario).
+- Los listados filtrados por estado de atención componen en dentistry sobre IDs de citas dentro de un rango de fechas acotado (≤31 días), sin consultas cruzadas a las tablas de Agenda.
