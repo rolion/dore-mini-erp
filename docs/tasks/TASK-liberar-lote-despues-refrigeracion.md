@@ -16,6 +16,7 @@
 | 2026-11-27 | ENGINEERING → REVIEW | Implementación completa; pruebas de API del backend pendientes de BD | delivery-build |
 | 2026-11-27 | REVIEW → ENGINEERING → REVIEW | Quality Gate 1 FAIL (REV-01 High, REV-02 Medium); corregidos | delivery-publish / delivery-build |
 | 2026-11-27 | REVIEW → PUBLISH | Quality Gate ciclo 2 PASS | delivery-publish |
+| 2026-11-27 | PUBLISH → PUBLISH | REV-03 corregido tras revisión visual; Quality Gate ciclo 3 PASS sobre el estado final | delivery-publish |
 
 ## Investigación
 
@@ -80,6 +81,7 @@ Orden y lote deben cambiar juntos (una transacción); doble clic/reintento; relo
 **Deuda técnica:** `OrderReleaseApiTests` hereda de `OrderApiTests` y vuelve a ejecutar sus pruebas base (duplicación de tiempo de prueba); sin prueba Karma específica del campo entero de Ajustes.
 
 ## Review
+Quality Gate ciclo 3 (estado final, tras REV-03): **PASS** — backend 2645 OK, Karma completo 1928 OK, `makemigrations --check` sin cambios, lint/`i18n:check`/build/ruff/flake8 limpios, 0 hallazgos abiertos.
 Quality Gate ciclo 1: **FAIL** — REV-01 (High: tests de Modularidad rotos por el tipo `integer`) y REV-02 (Medium: sin prueba unitaria de validación), ambos corregidos (ver `docs/reviews/REV-2026-11-27-liberar-lote-despues-refrigeracion-0{1,2}.md`); además se aplicó L-1 (el botón usa `release.canRelease` del servidor o el reloj local) y L-4 (nota de `ddd.md`). Tras la corrección: modularidad/producción sin BD 37 OK, Karma `production` 63 OK, lint OK; la suite Karma completa del ciclo 1 fue 1928 OK.
 **Con PostgreSQL local (ciclo 2):** `makemigrations --check` sin cambios; suite backend completa 2645 tests OK (incluye `OrderReleaseApiTests` y `ProductionSettingsTests`; dos aserciones de mis pruebas se ajustaron al contrato real: `min_hours` llega como texto en el 409 y el 409 de estado no trae `code`). Revisión visual en navegador (escritorio 1440 px y móvil 390 px, tema oscuro; con datos de ejemplo en una empresa de prueba local): detalle En refrigeración (botón deshabilitado con «Disponible desde …», sección «Liberación», sin desborde horizontal) y Listo para empacar (badge, quién/cuándo, sin botón) correctos. Defecto hallado y corregido: **REV-03** — el ajuste de horas no tenía ruta ni menú en la UI (se agregó `production/settings`); pantalla verificada.
 
