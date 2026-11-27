@@ -86,7 +86,7 @@ No aplica según veredicto.
 
 ## Review
 **Quality Gate: PASS** (subagente aislado). Backend `modules.production` + `modules.inventory`: 352 OK; ruff/flake8 limpios (bandit no disponible); Karma completo 1937/1937; `npm run lint`, `i18n:check`, `build` OK; `npm audit` 0 vulnerabilidades. Todos los AC/INV/EDGE/API/UI con verificación.
-Hallazgos abiertos (Low, IMPLEMENTATION): [REV-01](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-01.md) selector de recetas limitado a 100; [REV-02](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-02.md) aserción tautológica en la prueba de lote inexistente (la parte de AC-07 «Listo para empacar» sí tiene prueba directa: `shows the lot stock…` verifica que no hay iniciar/registrar/liberar).
+Hallazgos (Low, IMPLEMENTATION; **resueltos después** a pedido del usuario: el filtro de recetas pagina hasta cargarlas todas y la prueba de lote inexistente compara contra el código real; verificación propia: production 148 OK, Karma 1938/1938, lint e i18n limpios; el Quality Gate aislado no se repitió sobre ese último commit): [REV-01](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-01.md) selector de recetas limitado a 100; [REV-02](../reviews/REV-2026-11-27-consultar-ordenes-seguimiento-estado-02.md) aserción tautológica en la prueba de lote inexistente (la parte de AC-07 «Listo para empacar» sí tiene prueba directa: `shows the lot stock…` verifica que no hay iniciar/registrar/liberar).
 Revisión visual: **no verificada** (la app no se levantó).
 
 ## Publicación

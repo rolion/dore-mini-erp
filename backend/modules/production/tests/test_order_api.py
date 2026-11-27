@@ -606,11 +606,12 @@ class OrderConsultApiTests(OrderReleaseApiTests):
 
     def test_missing_lot_does_not_break_the_list(self):  # EDGE-02
         order = self.refrigerated()
+        code = self.lot(order)['code']
         with transaction.atomic():
             StockMovementModel.objects.filter(lot_id=self.lot(order)['id']).delete()
             StockLotModel.objects.filter(pk=self.lot(order)['id']).delete()
         lot = self.client.get(URL).json()['results'][0]['lot']
-        self.assertEqual((lot['code'], lot['status'], lot['available_quantity']), (lot['code'], None, None))
+        self.assertEqual((lot['code'], lot['status'], lot['available_quantity']), (code, None, None))
 
 
 class OrderNumberConcurrencyTests(TransactionTestCase):

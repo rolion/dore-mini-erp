@@ -139,6 +139,17 @@ describe('OrderListComponent', () => {
     expect(component.isDefaultFilter).toBeTrue();
   });
 
+  it('loads every recipe page into the recipe filter', () => {  // REV-01
+    setup();
+    const second: Recipe = { ...recipe, id: 'r-2', name: 'Otra receta' };
+    recipesApi.list.and.returnValues(of({ ...page([recipe]), next: 'p2' }), of(page([second])));
+    api.list.and.returnValue(of(page([order])));
+    const fixture = TestBed.createComponent(OrderListComponent);
+    fixture.detectChanges();
+    expect(recipesApi.list).toHaveBeenCalledWith(jasmine.objectContaining({ page: 2, pageSize: 100 }));
+    expect(fixture.componentInstance.recipes.map(item => item.id)).toEqual(['r-1', 'r-2']);
+  });
+
   it('does not query with an inverted date range and says why', () => {  // EDGE-01
     setup();
     api.list.and.returnValue(of(page([order])));

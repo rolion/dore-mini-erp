@@ -7,7 +7,7 @@ import { RouterLink } from '@angular/router';
 import { NgbPagination } from '@ng-bootstrap/ng-bootstrap';
 import { TranslatePipe } from '@ngx-translate/core';
 import { tr } from '../../../../core/i18n/translate';
-import { EMPTY, Subject, catchError, finalize, startWith, switchMap, throwError } from 'rxjs';
+import { EMPTY, Observable, Subject, catchError, expand, finalize, reduce, startWith, switchMap, throwError } from 'rxjs';
 import { OrderApiError, OrderListParams, OrderStatus, OrderStatusFilter, ProductionOrder, formatOrderNumber } from '../../models/order';
 import { Recipe, formatQuantity } from '../../models/recipe';
 import { OrderFiltersState, OrdersApiService } from '../../services/orders-api.service';
@@ -49,8 +49,8 @@ export class OrderListComponent implements OnInit {
   readonly number = formatOrderNumber;
 
   ngOnInit(): void {
-    this.recipesApi.list({ status: 'all', pageSize: 100 }).pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: page => this.recipes = page.results, error: () => this.recipes = [] });
+    this.allRecipes().pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: recipes => this.recipes = recipes, error: () => this.recipes = [] });
     this.breakpoints.observe(COMPACT_QUERY).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(state => this.compact = state.matches);
     this.reload$.pipe(startWith(undefined), switchMap(() => {
       this.loading = true;
@@ -68,6 +68,13 @@ export class OrderListComponent implements OnInit {
         catchError((error: OrderApiError) => { this.error = error.message; this.rows = []; this.total = 0; return EMPTY; }),
         finalize(() => this.loading = false));
     }), takeUntilDestroyed(this.destroyRef)).subscribe(page => { this.rows = page.results; this.total = page.count; });
+  }
+
+  /** Todas las recetas, página a página (la API limita a 100 por página), para que ninguna falte en el filtro. */
+  private allRecipes(): Observable<Recipe[]> {
+    return this.recipesApi.list({ status: 'all', page: 1, pageSize: 100 }).pipe(
+      expand((page, index) => page.next ? this.recipesApi.list({ status: 'all', page: index + 2, pageSize: 100 }) : EMPTY),
+      reduce((all: Recipe[], page) => [...all, ...page.results], []));
   }
 
   reload(): void { this.reload$.next(); }

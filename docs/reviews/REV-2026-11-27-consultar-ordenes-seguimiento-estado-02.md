@@ -1,6 +1,6 @@
 # REV-02: AC-07 sin prueba directa para "Listo para empacar" y una asercion tautologica en EDGE-02
 
-- **Status:** Open
+- **Status:** Resolved (corregido tras el Quality Gate; verificación propia, sin repetir el gate aislado)
 - **Severity:** Low
 - **Category:** IMPLEMENTATION
 - **Related plan:** PLAN-2026-11-27-consultar-ordenes-seguimiento-estado (Test Specification, AC-07)

@@ -1,6 +1,6 @@
 # REV-01: El filtro de receta de la lista solo carga las primeras 100 recetas
 
-- **Status:** Open
+- **Status:** Resolved (corregido tras el Quality Gate; verificación propia, sin repetir el gate aislado)
 - **Severity:** Low
 - **Category:** IMPLEMENTATION
 - **Related plan:** PLAN-2026-11-27-consultar-ordenes-seguimiento-estado (paso 5)
