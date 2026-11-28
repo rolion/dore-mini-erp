@@ -5,8 +5,11 @@ import { unsavedChangesGuard } from '../../core/guard/unsaved-changes.guard';
 import { clinicalGuard } from './clinical.guard';
 import { PatientListComponent } from './pages/patient-list.component';
 import { PatientDetailComponent } from './pages/patient-detail.component';
+import { OdontogramComponent } from './pages/odontogram.component';
 import { DentalProformaDetailComponent } from './pages/dental-proforma-detail.component';
 import { DentalProformaFormComponent } from './pages/dental-proforma-form.component';
+import { EncounterListComponent } from './pages/encounter-list.component';
+import { EncounterDetailComponent } from './pages/encounter-detail.component';
 
 @Component({
   selector: 'app-clinical-denied',
@@ -21,9 +24,12 @@ export class ClinicalDeniedComponent {}
 
 export const DENTISTRY_ROUTES: Route[] = [
   { path: 'access-denied', component: ClinicalDeniedComponent },
+  { path: 'appointments', component: EncounterListComponent, canActivate: [clinicalGuard] },
+  { path: 'appointments/:appointmentId', component: EncounterDetailComponent, canActivate: [clinicalGuard] },
   { path: 'patients', component: PatientListComponent, canActivate: [clinicalGuard] },
   { path: 'patients/new', pathMatch: 'full', redirectTo: () => inject(Router).createUrlTree(['/pocketbiz/dentistry/patients'], { queryParams: { new: 'true' } }) },
   { path: 'patients/:id', component: PatientDetailComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
+  { path: 'patients/:id/odontogram', component: OdontogramComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
   { path: 'patients/:patientId/proformas/nueva', component: DentalProformaFormComponent, canActivate: [clinicalGuard], canDeactivate: [unsavedChangesGuard] },
   { path: 'proformas/:proformaId', component: DentalProformaDetailComponent, canActivate: [clinicalGuard] },
   {

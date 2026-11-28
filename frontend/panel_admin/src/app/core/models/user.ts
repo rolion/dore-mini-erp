@@ -1,6 +1,13 @@
+/** Tipos que se pueden elegir al registrarse; `general` solo lo tienen las empresas anteriores al tipo. */
+export const REGISTERABLE_COMPANY_TYPES = ['compraventa', 'servicios', 'odontologia'] as const;
+export type RegisterableCompanyType = (typeof REGISTERABLE_COMPANY_TYPES)[number];
+export type CompanyType = RegisterableCompanyType | 'general';
+
 export interface UserCompany {
   id: string;
   name: string;
+  /** Ausente en sesiones guardadas antes del tipo de empresa: se trata como `general`. */
+  type?: string;
 }
 
 export class User {
@@ -29,6 +36,7 @@ export interface LoginResponse {
 
 export interface RegisterInput {
   companyName: string;
+  companyType: RegisterableCompanyType;
   username: string;
   firstName: string;
   lastName: string;

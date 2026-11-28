@@ -11,7 +11,7 @@ NON_BUSINESS = {'accounts', 'modularity'}
 # Dependencias permitidas entre módulos de negocio, siempre y solo a través de `modules.<otro>.services`.
 ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'accounting': {'receivables', 'sales'},
-    'agenda': {'personnel', 'customers', 'service_catalog'},
+    'agenda': {'accounting', 'personnel', 'customers', 'service_catalog'},
     'personnel': set(),
     'catalog': set(),
     'service_catalog': {'personnel'},
@@ -22,7 +22,7 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     'costing': {'inventory'},
     'production': {'catalog', 'costing', 'inventory', 'modularity'},
     'customers': set(),
-    'dentistry': {'customers', 'service_catalog'},
+    'dentistry': {'agenda', 'customers', 'personnel', 'service_catalog'},
     'expenses': {'accounting'},
     'purchases': {'accounting', 'catalog', 'costing', 'inventory'},
     'sales': {'accounting', 'catalog', 'costing', 'customers', 'inventory', 'modularity'},

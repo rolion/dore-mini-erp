@@ -1,16 +1,22 @@
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date, datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 from threading import Barrier
+from zoneinfo import ZoneInfo
 
+from django.apps import apps as django_apps
 from django.db import connections
 from django.test import TransactionTestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from modules.accounts.testing import make_admin
-from modules.agenda.models import Appointment, AppointmentEvent
+from modules.accounting.infrastructure.django.models import FiscalPeriodModel
+from modules.agenda.models import Appointment, AppointmentEvent, AppointmentNumberCounter
 from modules.customers.infrastructure.django.models import CustomerModel
 from modules.modularity.infrastructure.django.repositories import DjangoCompanyModuleRepository
 from modules.personnel.infrastructure.django.models import ProfessionalModel
+from modules.sales.tests.periods import open_test_period
 from modules.service_catalog.infrastructure.django.models import ServiceModel
 
 FUTURE = '2030-01-07'  # lunes
@@ -33,6 +39,7 @@ class AppointmentApiTests(TransactionTestCase):
         for key in ('personnel', 'catalog', 'services', 'agenda'):
             self.modules.enable(key)
         company = self.admin.company_id
+        self.period = open_test_period(company)  # crear una cita exige una gestión fiscal abierta (ADR numeración)
         self.pro = ProfessionalModel.objects.create(
             company_id=company, name='Ana', created_by=self.admin.pk, updated_by=self.admin.pk)
         self.customer = CustomerModel.objects.create(company_id=company, name='Rosa Pérez')
@@ -167,7 +174,8 @@ class AppointmentApiTests(TransactionTestCase):
                                                           'duration_minutes': 15, 'reason': ' Pidió cambio '})
         self.assertEqual(self_move.status_code, 200, self_move.content)
         event = self_move.json()['history'][-1]
-        self.assertEqual((event['kind'], event['reason'], event['author_id']), ('rescheduled', 'Pidió cambio', self.admin.pk))
+        self.assertEqual(
+            (event['kind'], event['reason'], event['author_id']), ('rescheduled', 'Pidió cambio', self.admin.pk))
         self.assertEqual(event['author_name'], self.admin.username)
         self.assertEqual((event['previous_starts'], event['previous_ends']), (at(FUTURE, '09:30'), at(FUTURE, '10:00')))
         overlap_self = self.act(second['id'], 'reschedule', {'starts': at(FUTURE, '09:40'), 'reason': 'ajuste'})
@@ -224,3 +232,79 @@ class AppointmentApiTests(TransactionTestCase):
             {'starts': at(FUTURE, '09:30'), 'ends': at(FUTURE, '10:00')},
             {'starts': at(FUTURE, '10:30'), 'ends': at(FUTURE, '12:00')},
         ])
+
+    # --- numeración correlativa por gestión fiscal (C-000001) ---
+    def test_numbers_are_correlative_with_the_period_name(self):
+        first, second = self.create(time='09:00').json(), self.create(time='09:30').json()
+        self.assertEqual((first['code'], second['code']), ('C-000001', 'C-000002'))
+        self.assertEqual(first['fiscal_period_name'], 'Pruebas')
+        self.assertEqual(self.client.get(f'/api/agenda/appointments/{second["id"]}/').json()['code'], 'C-000002')
+        self.assertEqual(AppointmentNumberCounter.objects.get().last_number, 2)
+
+    def test_series_restarts_in_a_new_fiscal_period_and_numbers_are_never_reused(self):
+        self.assertEqual(self.create(time='09:00').json()['code'], 'C-000001')
+        today = timezone.now().astimezone(ZoneInfo('America/La_Paz')).date()
+        FiscalPeriodModel.objects.filter(pk=self.period.pk).update(end_date=today - timedelta(days=1))
+        FiscalPeriodModel.objects.create(
+            company_id=self.admin.company_id, name='Gestión nueva', start_date=today, end_date=date(2099, 12, 31),
+            status='OPEN')
+        again = self.create(time='09:30').json()
+        self.assertEqual((again['code'], again['fiscal_period_name']), ('C-000001', 'Gestión nueva'))
+        self.assertEqual(self.create(time='10:30').json()['code'], 'C-000002')
+        self.assertEqual(Appointment.objects.filter(number=1).count(), 2)  # mismo número, distinta gestión
+
+    def test_cancel_and_reschedule_keep_the_number(self):
+        created = self.create(time='09:00').json()
+        moved = self.act(created['id'], 'reschedule', {'starts': at(FUTURE, '11:00'), 'reason': 'Pidió otro horario'})
+        self.assertEqual(moved.json()['code'], 'C-000001')
+        cancelled = self.act(created['id'], 'cancel', {'reason': 'Ya no viene'})
+        self.assertEqual(cancelled.json()['code'], 'C-000001')
+        self.assertEqual(self.create(time='09:00').json()['code'], 'C-000002')  # nunca se reutiliza
+
+    def test_creating_without_an_open_fiscal_period_is_blocked_and_leaves_no_trace(self):
+        FiscalPeriodModel.objects.filter(pk=self.period.pk).update(status='CLOSED')
+        closed = self.create()
+        self.assertEqual((closed.status_code, closed.json()['code']), (409, 'fiscal_period_closed'))
+        FiscalPeriodModel.objects.filter(pk=self.period.pk).delete()
+        missing = self.create()
+        self.assertEqual((missing.status_code, missing.json()['code']), (409, 'fiscal_period_missing'))
+        self.assertEqual((Appointment.objects.count(), AppointmentNumberCounter.objects.count()), (0, 0))
+
+    def test_concurrent_creations_get_distinct_contiguous_numbers(self):
+        times = ['09:00', '09:30', '10:30', '11:00', '11:30']
+        barrier = Barrier(len(times), timeout=10)
+
+        def submit(time):
+            client = APIClient()
+            client.force_authenticate(self.admin)
+            try:
+                barrier.wait()
+                return client.post('/api/agenda/appointments/', self.body(time=time), format='json')
+            finally:
+                connections.close_all()
+
+        with ThreadPoolExecutor(max_workers=len(times)) as pool:
+            responses = [future.result(timeout=30) for future in [pool.submit(submit, time) for time in times]]
+        self.assertEqual([r.status_code for r in responses], [201] * 5, [r.content for r in responses])
+        self.assertCountEqual([r.json()['code'] for r in responses], [f'C-{n:06d}' for n in range(1, 6)])
+
+    def test_backfill_numbers_existing_appointments_by_creation_order_and_is_repeatable(self):
+        from importlib import import_module
+        backfill = import_module('modules.agenda.migrations.0005_backfill_appointment_numbers').backfill
+        company = self.admin.company_id
+        base = dict(company_id=company, professional_id=self.pro.pk, customer_id=self.customer.pk,
+                    customer_name='Rosa', service_id=self.service.pk, service_name='Limpieza',
+                    duration_minutes=30, created_by=self.admin.pk, ends=timezone.now())
+        rows = [Appointment.objects.create(starts=timezone.now(), **base) for _ in range(3)]
+        for index, row in enumerate(rows):
+            Appointment.objects.filter(pk=row.pk).update(created_at=timezone.now() - timedelta(days=10 - index))
+        outside = Appointment.objects.create(starts=timezone.now(), **base)
+        Appointment.objects.filter(pk=outside.pk).update(created_at=datetime(1990, 1, 1, tzinfo=dt_timezone.utc))
+        backfill(django_apps, None)
+        backfill(django_apps, None)  # repetible
+        numbers = [Appointment.objects.get(pk=row.pk).number for row in rows]
+        self.assertEqual(numbers, [1, 2, 3])
+        outside.refresh_from_db()
+        self.assertIsNone(outside.number)
+        self.assertEqual(AppointmentNumberCounter.objects.get().last_number, 3)
+        self.assertEqual(self.create(time='09:00').json()['code'], 'C-000004')

@@ -17,6 +17,7 @@ import { ageAt } from '../services/demographics-form';
 @Component({
   selector: 'app-patient-list', imports: [TranslatePipe, DatePipe, RouterLink, ReactiveFormsModule, NgxDatatableModule],
   templateUrl: './patient-list.component.html',
+  styleUrl: './patient-list.component.scss',
 })
 export class PatientListComponent implements OnInit {
   private modal = inject(NgbModal);

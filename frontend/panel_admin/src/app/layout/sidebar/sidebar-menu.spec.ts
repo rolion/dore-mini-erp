@@ -19,7 +19,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
-    expect(dentistry.submenu.map((item) => item.path)).toEqual(['/pocketbiz/dentistry/patients']);
+    expect(dentistry.submenu.map((item) => item.path)).toEqual(['/pocketbiz/dentistry/patients', '/pocketbiz/dentistry/appointments']);
     expect(visibleRoutes(routes, new Set(['customers'])).some((route) => route.module === 'dentistry')).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers', 'dentistry'])).some((route) => route.module === 'dentistry')).toBeTrue();
     expect(agenda.module).toBe('agenda');
@@ -42,6 +42,8 @@ describe('Sidebar menu (routes.json)', () => {
     expect(purchases.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/purchases',
       '/pocketbiz/purchases/suppliers',
+      '/pocketbiz/purchases/reports/paid',
+      '/pocketbiz/purchases/reports/payable',
       '/pocketbiz/purchases/settings',
     ]);
     expect(purchases.submenu[0].title).toBe('MENUITEMS.PURCHASES.LIST.PURCHASES');
@@ -64,8 +66,8 @@ describe('Sidebar menu (routes.json)', () => {
     expect(visibleRoutes(routes, new Set(['customers', 'accounting']), true).some((route) => route.title === 'MENUITEMS.ACCOUNTING.TEXT')).toBeTrue();
     expect(accounting.submenu.map((item) => item.path)).toEqual([
       '/pocketbiz/accounting/accounts', '/pocketbiz/accounting/journal', '/pocketbiz/accounting/balances', '/pocketbiz/accounting/cash-flow',
-      '/pocketbiz/accounting/income-expense', '/pocketbiz/accounting/settings',
-    ]); // Cuentas, Movimientos, Saldos, Flujo de dinero, Ingresos y egresos, Configuración (AC-09)
+      '/pocketbiz/accounting/income-expense', '/pocketbiz/accounting/balance-sheet', '/pocketbiz/accounting/settings',
+    ]); // Cuentas, Movimientos, Saldos, Flujo de dinero, Ingresos y egresos, Balance general, Configuración (AC-09, AC-10)
     expect(settings.module).toBeUndefined();
     expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
@@ -84,7 +86,7 @@ describe('Sidebar menu (routes.json)', () => {
     expect(orders.title).toBe('MENUITEMS.SALES.TEXT');
     expect(orders.icon).toBe('shopping-cart');
     expect(orders.class).toBe('menu-toggle');
-    expect(orders.submenu.map((item) => item.path)).toEqual(['/pocketbiz/sales/orders', '/pocketbiz/sales/import', '/pocketbiz/sales/settings']);
+    expect(orders.submenu.map((item) => item.path)).toEqual(['/pocketbiz/sales/orders', '/pocketbiz/sales/reports/income', '/pocketbiz/sales/reports/receivable', '/pocketbiz/sales/import', '/pocketbiz/sales/settings']);
     const salesFor = (isAdmin: boolean) => visibleRoutes(routes, new Set(['sales']), isAdmin).find((route) => route.module === 'sales')!;
     expect(salesFor(true).submenu.map((item) => item.path)).toContain('/pocketbiz/sales/import');
     expect(salesFor(false).submenu.map((item) => item.path)).not.toContain('/pocketbiz/sales/import');
@@ -106,7 +108,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(53);
+    expect(titles.length).toBe(59);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

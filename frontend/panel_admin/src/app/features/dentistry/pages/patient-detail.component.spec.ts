@@ -7,6 +7,7 @@ import { DentistryApiService } from '../services/dentistry-api.service';
 import { PatientDetailComponent } from './patient-detail.component';
 import { makePatient, EMPTY_HISTORY } from '../testing/patient-fixtures';
 import { Patient } from '../models/patient';
+import { EncountersApiService } from '../services/encounters-api.service';
 
 function yearsAgo(years: number): string {
   const date = new Date(); date.setFullYear(date.getFullYear() - years);
@@ -21,6 +22,7 @@ describe('PatientDetailComponent', () => {
     api.get.and.returnValue(of(patient)); api.history.and.returnValue(of(EMPTY_HISTORY));
     await TestBed.configureTestingModule({ imports: [PatientDetailComponent], providers: [...provideTestTranslations(), provideRouter([]),
       { provide: DentistryApiService, useValue: api },
+      { provide: EncountersApiService, useValue: { forPatient: () => of({ count: 0, next: null, previous: null, results: [] }) } },
       { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'c-1' }), queryParamMap: convertToParamMap(query) } } },
     ] }).compileComponents();
     fixture = TestBed.createComponent(PatientDetailComponent); fixture.detectChanges();
@@ -34,7 +36,7 @@ describe('PatientDetailComponent', () => {
     expect(text()).toContain('Ana'); expect(text()).toContain('Dato clínico privado');
     expect(text()).toContain('Ver cliente');
     expect(text()).not.toContain('ID cliente'); expect(text()).not.toContain('Editar ficha');
-    expect(text()).not.toContain('Odontograma');
+    expect(text()).toContain('Odontograma'); // PB-ODO-002: acceso al odontograma desde la ficha
     expect(root().querySelector('textarea')).toBeNull();
     expect(text().indexOf('Resumen clínico')).toBeLessThan(text().indexOf('Antecedentes médicos'));
     expect(text().indexOf('Antecedentes médicos')).toBeLessThan(text().indexOf('Datos personales'));

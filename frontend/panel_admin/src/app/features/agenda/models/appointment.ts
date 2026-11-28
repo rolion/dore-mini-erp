@@ -41,6 +41,9 @@ export interface AppointmentEvent {
 
 export interface Appointment {
   id: string;
+  /** Código correlativo de la serie de la gestión fiscal (`C-000001`); null en citas anteriores a la serie. */
+  code: string | null;
+  fiscal_period_name: string;
   professional_id: string;
   professional_name: string;
   customer_id: string;

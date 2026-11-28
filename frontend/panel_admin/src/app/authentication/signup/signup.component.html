@@ -24,6 +24,22 @@
                     }
                   </div>
                 </div>
+                <div class="col-lg-12">
+                  <div class="form-group position-relative">
+                    <label for="signup-company-type">{{ 'AUTH.SIGNUP.TIPO_DE_EMPRESA' | translate }} <span class="text-danger">*</span></label>
+                    <select id="signup-company-type" class="form-select form-control" formControlName="companyType"
+                      aria-describedby="signup-company-type-help">
+                      <option value="" disabled>{{ 'AUTH.SIGNUP.SELECCIONA_UN_TIPO' | translate }}</option>
+                      @for (type of companyTypes; track type) {
+                        <option [value]="type">{{ companyTypeLabel(type) }}</option>
+                      }
+                    </select>
+                    <small id="signup-company-type-help" class="form-text text-muted">{{ companyTypeHelp }}</small>
+                    @if (fieldError('companyType')) {
+                      <small class="form-text text-danger">{{ fieldError('companyType') }}</small>
+                    }
+                  </div>
+                </div>
                 <div class="col-md-6">
                   <div class="form-group position-relative">
                     <label for="signup-first-name">{{ 'COMMON.NOMBRE' | translate }} <span class="text-danger">*</span></label>
@@ -72,8 +88,9 @@
                   <div class="form-group position-relative">
                     <label for="signup-password">{{ 'AUTH.SIGNUP.CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="key" class="login-icons"></i-feather>
-                    <input id="signup-password" type="password" class="form-control psl-5" formControlName="password"
+                    <input #pw id="signup-password" type="password" class="form-control psl-5 psr-password" formControlName="password"
                       [placeholder]="'AUTH.SIGNUP.CONTRASENA' | translate" autocomplete="new-password">
+                    <app-password-toggle [target]="pw"></app-password-toggle>
                     @if (fieldError('password')) {
                       <small class="form-text text-danger">{{ fieldError('password') }}</small>
                     }
@@ -83,8 +100,9 @@
                   <div class="form-group position-relative">
                     <label for="signup-confirm-password">{{ 'AUTH.SIGNUP.CONFIRMAR_CONTRASENA' | translate }} <span class="text-danger">*</span></label>
                     <i-feather name="key" class="login-icons"></i-feather>
-                    <input id="signup-confirm-password" type="password" class="form-control psl-5"
+                    <input #cpw id="signup-confirm-password" type="password" class="form-control psl-5 psr-password"
                       formControlName="confirmPassword" [placeholder]="'AUTH.SIGNUP.CONFIRMAR_CONTRASENA' | translate" autocomplete="new-password">
+                    <app-password-toggle [target]="cpw"></app-password-toggle>
                     @if (fieldError('confirmPassword')) {
                       <small class="form-text text-danger">{{ fieldError('confirmPassword') }}</small>
                     }
