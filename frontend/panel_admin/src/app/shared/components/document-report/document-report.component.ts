@@ -69,7 +69,7 @@ export class DocumentReportComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (!this.modules.isDisabled('accounting')) {
+    if (!this.config.doctorColumn && !this.modules.isDisabled('accounting')) {
       this.periodsApi
         .list()
         .pipe(catchError(() => of([] as FiscalPeriod[])), takeUntilDestroyed(this.destroyRef))

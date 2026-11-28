@@ -17,7 +17,7 @@ from modules.dentistry.domain.proforma import (
     ACCEPTED, CURRENCY, MAX_NAME, MAX_REASON, MAX_REFERENCE, STATUSES, DentalProformaNotFound,
     DentalProformaStateError, DentalProformaValidationError, money,
 )
-from modules.dentistry.infrastructure.adapters import CustomersAdapter, PatientGate, ServiceLookup
+from modules.dentistry.infrastructure.adapters import CustomersAdapter, PatientGate, ProfessionalLookup, ServiceLookup
 from modules.dentistry.infrastructure.proforma_repository import DjangoDentalProformaRepository, to_domain
 from modules.dentistry.infrastructure.repository import DjangoPatientRepository
 from rest_framework.views import APIView
@@ -70,6 +70,7 @@ class ProformaInputSerializer(serializers.Serializer):
     valid_until = serializers.DateField(required=False, allow_null=True, default=None)
     notes = serializers.CharField(required=False, allow_blank=True, default='', max_length=2000)
     lines = LineInputSerializer(many=True, max_length=500)
+    professional_id = serializers.UUIDField(required=False, allow_null=True, default=None)
     # El paciente sale de la URL: cualquier `customer_id` del cuerpo se ignora.
 
     def to_input(self) -> DentalProformaInput:
@@ -77,7 +78,7 @@ class ProformaInputSerializer(serializers.Serializer):
         lines = [LineInput(quantity=l['quantity'], id=l.get('id'), service_id=l.get('service_id'),
                            unit_price=l.get('unit_price'), dental_piece=l.get('dental_piece'))
                  for l in data['lines']]
-        return DentalProformaInput(data['date'], data['valid_until'], data['notes'], lines)
+        return DentalProformaInput(data['date'], data['valid_until'], data['notes'], lines, data['professional_id'])
 
 
 class DecisionInputSerializer(serializers.Serializer):
@@ -115,8 +116,15 @@ def line_data(line, *, proforma_status='presented') -> dict:
             'authorized': line.decision == ACCEPTED and proforma_status == 'presented'}
 
 
-def summary_data(proforma) -> dict:
+def professional_data(proforma, names) -> dict | None:
+    if proforma.professional_id is None:
+        return None
+    return {'id': str(proforma.professional_id), 'name': (names or {}).get(proforma.professional_id, '')}
+
+
+def summary_data(proforma, names=None) -> dict:
     return {'id': str(proforma.id), 'number': proforma.number, 'version': proforma.version,
+            'professional': professional_data(proforma, names),
             'status': proforma.status, 'customer_id': str(proforma.customer_id),
             'patient_name': proforma.patient_name, 'date': proforma.date.isoformat(),
             'valid_until': proforma.valid_until.isoformat() if proforma.valid_until else None,
@@ -125,14 +133,14 @@ def summary_data(proforma) -> dict:
             'collectible': proforma.status == 'presented' and proforma.totals['accepted'] > 0}
 
 
-def detail_data(proforma, *, allowed_actions, can_edit, versions, decision_actions=()) -> dict:
+def detail_data(proforma, *, allowed_actions, can_edit, versions, decision_actions=(), names=None) -> dict:
     previous = next((v for v in versions if v.version == proforma.version - 1), None)
     history = [{**decision_data(record), 'line_id': str(line.id), 'line_description': line.description}
                for line, record in proforma.decision_history()]
-    return {**summary_data(proforma), 'notes': proforma.notes,
+    return {**summary_data(proforma, names), 'notes': proforma.notes,
             'lines': [line_data(l, proforma_status=proforma.status) for l in proforma.lines],
             'allowed_actions': allowed_actions, 'can_edit_price': can_edit,
-            'versions': [summary_data(v) for v in versions],
+            'versions': [summary_data(v, names) for v in versions],
             'decision_actions': list(decision_actions),
             'totals': {key: f'{value:.2f}' for key, value in proforma.totals.items()},
             'decision_history': history, 'previous_version_id': str(previous.id) if previous else None}
@@ -167,13 +175,17 @@ def _service(request) -> DentalProformaService:
     patients = PatientGate(DjangoPatientRepository(company_id), CustomersAdapter(company_id))
     return DentalProformaService(DjangoDentalProformaRepository(company_id), ServiceLookup(company_id), patients,
                                  can_edit_price=can_edit_price(request.user), user_id=request.user.pk,
-                                 can_rectify=can_rectify(request.user), user_name=_user_name(request.user))
+                                 can_rectify=can_rectify(request.user), user_name=_user_name(request.user),
+                                 professionals=ProfessionalLookup(company_id))
 
 
 def _detail(service: DentalProformaService, proforma) -> dict:
+    versions = service.versions(proforma)
+    ids = {v.professional_id for v in [proforma, *versions] if v.professional_id}
+    names = service.professionals.names(ids) if ids else {}
     return detail_data(proforma, allowed_actions=service.allowed_actions(proforma),
-                       can_edit=service.can_edit_price, versions=service.versions(proforma),
-                       decision_actions=service.decision_actions(proforma))
+                       can_edit=service.can_edit_price, versions=versions,
+                       decision_actions=service.decision_actions(proforma), names=names)
 
 
 def _run(callback):
@@ -207,7 +219,10 @@ class PatientProformaListCreateView(ProformaView):
         rows = DjangoDentalProformaRepository(company_id).for_patient(customer_id, status=status)
         paginator = ProformaPagination()
         page = paginator.paginate_queryset(rows, request, view=self)
-        return paginator.get_paginated_response([summary_data(to_domain(row)) for row in page])
+        proformas = [to_domain(row) for row in page]
+        ids = {p.professional_id for p in proformas if p.professional_id}
+        names = ProfessionalLookup(company_id).names(ids) if ids else {}
+        return paginator.get_paginated_response([summary_data(p, names) for p in proformas])
 
     def post(self, request, customer_id):
         serializer = ProformaInputSerializer(data=request.data)

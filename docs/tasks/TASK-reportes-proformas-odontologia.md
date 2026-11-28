@@ -1,6 +1,6 @@
 # TASK-reportes-proformas-odontologia: Reportes «Proformas por cobrar» y «Proformas pagadas» en Odontología
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** task/TASK-reportes-proformas-odontologia
@@ -12,6 +12,7 @@
 | 2026-11-28 | (nuevo) → INVESTIGATION | Task creado | delivery-start |
 | 2026-11-28 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | NEEDS_ARCHITECTURE (migración en `dentistry`, lectura entre módulos), diseño SI; 3 decisiones de negocio resueltas con el usuario | delivery-start |
 | 2026-11-28 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
+| 2026-11-28 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
 
 ## Investigación
 
@@ -71,7 +72,22 @@ Reportes de compras pagadas/por pagar y de ventas (ver arriba); `DDR-reporte-ing
 `docs/plans/PLAN-2026-11-28-reportes-proformas-odontologia.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Resumen.** Backend (`dentistry`): `professional_id` (UUID, nullable) en `DentalProformaModel` con migración aditiva `0007_proforma_professional`; el agregado lo guarda, `replace_content` lo cambia en borrador y `new_version()` lo hereda; el servicio lo valida con `ProfessionalLookup.exists` (400 en `professional_id`); resumen y detalle exponen `professional: {id, name} | null` (nombres resueltos en lote). Nuevo caso de uso `application/proforma_reports.py` (`ProformaReports`) que lee las proformas presentadas del rango (`presented_between` en el repositorio), calcula el aceptado con el dominio y lo cobrado con el puerto `CollectionsReader` (adaptador sobre `receivables.services.paid_totals`, nueva lectura agrupada de solo lectura); vistas de lista y exportación en `api/proforma_report_views.py`, rutas `/api/dentistry/reports/proformas/{receivable|paid}/` y `…/export/{xlsx|pdf}/` con `CompanyClinicalPermission` y módulos `dentistry` + `receivables`. `shared/report_export.py` gana `build_table_xlsx` / `build_table_pdf` (columnas y pie declarados); `build_xlsx` / `build_pdf` delegan en ellos con la misma salida.
+Frontend: `DocumentReport` admite los tipos `dental-receivable` y `dental-paid` (`doctorColumn`: columnas Doctor y Monto, sin período fiscal, totales con suma de Monto); rutas `dentistry/reports/{receivable,paid}` (guards `moduleGuard` + `clinicalGuard`); dos entradas en el submenú de Odontología (con `module: receivables`); formulario de proforma con selector «Doctor» (opcional) y detalle con el doctor; i18n es/en/pt.
+
+**Cobertura.** AC-01/AC-02 + INV-01/02: `test_proforma_professional_api.py`, `DentalProformaProfessionalTests`, specs del formulario, detalle y servicio de proformas. AC-03..09 + INV-03/04: `test_proforma_reports_api.py` (por cobrar/pagadas con cobro parcial y total, fechas inclusivas e inválidas, totales de todo el conjunto, exportación xlsx/pdf, neutralización de `=`, límite de filas, aislamiento por empresa, 403 sin módulos, una sola fila con versiones) y `test_paid_totals.py`. AC-10: `sidebar-menu.spec`, `menu-layout.spec`, spec de `document-report` con el tipo dental y del servicio. AC-11: specs del formulario y detalle. AC-12: pruebas existentes de ventas y compras siguen en verde. AC-13: `npm run i18n:check`.
+
+**Desviaciones respecto al plan.**
+- `build_xlsx`/`build_pdf` no se «generalizaron» en sitio: se añadieron `build_table_*` y los anteriores delegan en ellos (misma salida; evita tocar ventas y compras).
+- En el menú «Odontología» de empresas de tipo `odontologia`, «Presupuestos» (anidado por `menu-layout.ts`) queda **después** de los dos reportes; se ajustaron los specs de orden.
+- El `ng-select` de Doctor usa `NgSelectComponent` como `encounter-list`.
+
+**Deuda técnica.** Cálculo del aceptado en memoria sobre el rango (ver ADR). `professional_id` ausente en un PUT equivale a «sin doctor» (el formulario siempre lo envía).
+
+**Pantallas.** Referencia: reporte compartido `document-report` (DDR-reporte-ingresos-por-venta-pantalla) y formulario `dental-proforma-form`; sin componentes compartidos nuevos.
+
+**Entorno / verificación propia (no es el Quality Gate).** Se copió `backend/.env` del proyecto principal (no versionado, sin leerlo) y se enlazó `frontend/panel_admin/node_modules` por *junction* al del proyecto principal (sin instalar dependencias). Backend: 237 pruebas de `dentistry`, `receivables`, ventas y compras OK; `ruff`/`flake8` sin avisos nuevos en lo cambiado. Frontend: `ng test` 1970 OK, `ng lint`, `ng build` e `i18n:check` OK. Suite completa del backend: ver nota final.
+
 
 ## Review
 _Pendiente_

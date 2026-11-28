@@ -6,6 +6,7 @@ from modules.dentistry.domain.encounter import EncounterStateError
 from modules.dentistry.domain.patient import PatientArchived, PatientNotFound
 from modules.dentistry.domain.proforma import DentalProformaValidationError
 from modules.personnel.services import professional_exists, professional_names
+from modules.receivables.services import paid_totals
 from modules.service_catalog.services import ServiceSnapshot, get_service_for_new_use
 from shared import module_gate
 
@@ -35,6 +36,18 @@ class ProfessionalLookup:
 
     def names(self, ids) -> dict:
         return professional_names(self.company_id, set(ids))
+
+
+class CollectionsReader:
+    """Lo cobrado por proforma, desde la fachada pública de Cobros (solo lectura)."""
+
+    KIND = 'dental'
+
+    def __init__(self, company_id):
+        self.company_id = company_id
+
+    def paid_totals(self, numbers) -> dict:
+        return paid_totals(self.company_id, self.KIND, numbers)
 
 
 class ServiceLookup:

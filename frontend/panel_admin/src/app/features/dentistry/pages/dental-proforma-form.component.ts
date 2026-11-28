@@ -1,6 +1,7 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgSelectComponent } from '@ng-select/ng-select';
 import { TranslatePipe } from '@ngx-translate/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -8,6 +9,8 @@ import { HasUnsavedChanges } from '../../../core/guard/unsaved-changes.guard';
 import { tr } from '../../../core/i18n/translate';
 import { fetchAll } from '../../agenda/services/fetch-all';
 import { CatalogService } from '../../services/models/service';
+import { Profile } from '../../personnel/models/profile';
+import { PersonnelApiService } from '../../personnel/services/personnel-api.service';
 import { ServicesApiService } from '../../services/services/services-api.service';
 import {
   DENTAL_PIECE_MAX_LENGTH, DentalProforma, DentalProformaFailure, DentalProformaInput, PROFORMA_NOTES_MAX_LENGTH,
@@ -19,13 +22,14 @@ import { DentalProformasApiService } from '../services/dental-proformas-api.serv
 /** Alta y edición de borrador de una proforma odontológica: tabla de líneas con pieza dental. El servidor recalcula todo. */
 @Component({
   selector: 'app-dental-proforma-form',
-  imports: [ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [ReactiveFormsModule, RouterLink, TranslatePipe, NgSelectComponent],
   templateUrl: './dental-proforma-form.component.html',
 })
 export class DentalProformaFormComponent implements OnInit, HasUnsavedChanges {
   private api = inject(DentalProformasApiService);
   private patientsApi = inject(DentistryApiService);
   private servicesApi = inject(ServicesApiService);
+  private personnel = inject(PersonnelApiService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
@@ -36,6 +40,7 @@ export class DentalProformaFormComponent implements OnInit, HasUnsavedChanges {
   readonly form = this.fb.group({
     date: [this.today(), Validators.required],
     valid_until: '',
+    professional_id: '',
     notes: ['', Validators.maxLength(PROFORMA_NOTES_MAX_LENGTH)],
     lines: this.fb.array([this.newLine()]),
   });
@@ -45,6 +50,7 @@ export class DentalProformaFormComponent implements OnInit, HasUnsavedChanges {
   patientName = '';
   header = '';
   services: CatalogService[] = [];
+  doctors: Profile[] = [];
   canEditPrice = true;
   saving = false;
   readOnly = false;
@@ -66,6 +72,9 @@ export class DentalProformaFormComponent implements OnInit, HasUnsavedChanges {
     const fail = () => { this.error = tr('DENTISTRY.PROFORMAS.ERR_CARGA_FORM'); done(); };
     fetchAll(page => this.servicesApi.list({ active: true, pageSize: 100, page })).pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: services => { this.services = services; done(); }, error: fail });
+    // El doctor es opcional: si la lista no carga, la proforma se puede guardar sin doctor.
+    fetchAll(page => this.personnel.list('professionals', { page, page_size: 100 })).pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: people => this.doctors = people, error: () => this.error = tr('DENTISTRY.PROFORMAS.ERR_DOCTORES') });
     if (this.proformaId) {
       this.api.get(this.proformaId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: proforma => { this.load(proforma); done(); },
@@ -109,7 +118,8 @@ export class DentalProformaFormComponent implements OnInit, HasUnsavedChanges {
       this.error = tr('DENTISTRY.PROFORMAS.ERR_SOLO_BORRADOR');
       this.readOnly = true;
     }
-    this.form.patchValue({ date: proforma.date, valid_until: proforma.valid_until ?? '', notes: proforma.notes });
+    this.form.patchValue({ date: proforma.date, valid_until: proforma.valid_until ?? '',
+      professional_id: proforma.professional?.id ?? '', notes: proforma.notes });
     this.lines.clear();
     for (const line of proforma.lines) this.lines.push(this.newLine(line));
     this.form.markAsPristine();
@@ -157,6 +167,7 @@ export class DentalProformaFormComponent implements OnInit, HasUnsavedChanges {
     const input: DentalProformaInput = {
       date: value.date,
       valid_until: value.valid_until || null,
+      professional_id: value.professional_id || null,
       notes: value.notes,
       // Solo se envía el precio si la persona lo editó: si no, el servidor usa el vigente (nuevas) o el congelado.
       lines: (value.lines as { id: string; service_id: string; quantity: string; unit_price: string; dental_piece: string }[])

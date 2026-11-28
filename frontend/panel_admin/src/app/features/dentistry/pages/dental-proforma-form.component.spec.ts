@@ -26,6 +26,7 @@ describe('DentalProformaFormComponent', () => {
     const fixture = TestBed.createComponent(DentalProformaFormComponent);
     fixture.detectChanges();
     http.expectOne(req => req.url.endsWith('/services/')).flush({ ...EMPTY_PAGE, count: 1, results: [SERVICE] });
+    http.expectOne(req => req.url.includes('/professionals/')).flush({ ...EMPTY_PAGE, count: 1, results: [{ id: 'd1', name: 'Dra. Paz' }] });
     http.expectOne(req => req.url.endsWith('/patients/c-1/')).flush(makePatient({ active: patientActive }));
     fixture.detectChanges();
     return fixture;
@@ -63,6 +64,30 @@ describe('DentalProformaFormComponent', () => {
     expect('unit_price' in first).toBeFalse();
     expect('customer_id' in requests[0].request.body).toBeFalse();
     requests[0].flush({ id: 'p1' });
+  });
+
+  it('offers an optional doctor and sends it (or null) with the proforma', () => {
+    const fixture = create();
+    const component = fixture.componentInstance;
+    expect(component.doctors.map(d => d.name)).toEqual(['Dra. Paz']);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Doctor');
+    component.lines.at(0).patchValue({ service_id: 's1' });
+    component.pickService(0);
+    component.form.patchValue({ professional_id: 'd1' });
+    component.submit();
+    const [request] = http.match(req => req.method === 'POST');
+    expect(request.request.body.professional_id).toBe('d1');
+    request.flush({ id: 'p1' });
+  });
+
+  it('sends no doctor when none is chosen', () => {
+    const component = create().componentInstance;
+    component.lines.at(0).patchValue({ service_id: 's1' });
+    component.pickService(0);
+    component.submit();
+    const [request] = http.match(req => req.method === 'POST');
+    expect(request.request.body.professional_id).toBeNull();
+    request.flush({ id: 'p1' });
   });
 
   it('rejects a piece longer than 20 characters before sending', () => {

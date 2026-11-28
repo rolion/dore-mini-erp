@@ -34,7 +34,9 @@
       "TEXT": "Dentistry",
       "PATIENTS": "Patients",
       "BUDGETS": "Treatment plans",
-      "APPOINTMENTS": "Appointments"
+      "APPOINTMENTS": "Appointments",
+      "RECEIVABLE_REPORT": "Receivable quotes",
+      "PAID_REPORT": "Paid quotes"
     },
     "PERSONNEL": {
       "TEXT": "Personnel",
@@ -564,7 +566,11 @@
       "E_DENTAL_PIECE": "The dental piece must be single-line text of up to 20 characters.",
       "ERR_PACIENTE": "The patient could not be loaded.",
       "REFERENCIA_PIEZA": "Dental piece",
-      "NUEVA_PARA": "New proforma · {{name}}"
+      "NUEVA_PARA": "New proforma · {{name}}",
+      "DOCTOR": "Doctor",
+      "SIN_DOCTOR": "No doctor",
+      "E_PROFESSIONAL_ID": "The doctor does not exist in this company.",
+      "ERR_DOCTORES": "The list of doctors could not be loaded."
     },
     "PATIENT_CREATE": {
       "NUEVO_PACIENTE": "New patient",
@@ -938,6 +944,20 @@
       "REGISTRAR": "Record",
       "COL_CITA": "Appointment",
       "GESTION": "Fiscal year {{name}}"
+    },
+    "REPORTS": {
+      "RECEIVABLE_TITLE": "Receivable quotes",
+      "RECEIVABLE_SUBTITLE": "Presented quotes with an outstanding balance",
+      "RECEIVABLE_EMPTY": "There are no receivable quotes in this range.",
+      "PAID_TITLE": "Paid quotes",
+      "PAID_SUBTITLE": "Presented quotes collected in full",
+      "PAID_EMPTY": "There are no paid quotes in this range.",
+      "COL_PROFORMA": "Quote",
+      "COL_PATIENT": "Patient",
+      "COL_DOCTOR": "Doctor",
+      "COL_AMOUNT_RECEIVABLE": "Balance due",
+      "COL_AMOUNT_PAID": "Amount collected",
+      "TOTALS": "Totals ({{count}} quotes)"
     }
   },
   "EXPENSES": {

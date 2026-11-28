@@ -3,6 +3,10 @@ from .proforma_views import (
     PatientProformaListCreateView, ProformaActionView, ProformaDecisionView, ProformaDetailView,
     ProformaPrintableView, ProformaRectifyView,
 )
+from .proforma_report_views import (
+    PaidProformasReportExportView, PaidProformasReportView, ReceivableProformasReportExportView,
+    ReceivableProformasReportView,
+)
 from .evaluation_views import (
     CatalogView, EvaluationAmendView, EvaluationConfirmView, EvaluationDetailView, PatientEvaluationListView,
 )
@@ -39,4 +43,8 @@ urlpatterns = [
     path('proformas/<uuid:proforma_id>/decisions/', ProformaDecisionView.as_view()),
     path('proformas/<uuid:proforma_id>/lines/<uuid:line_id>/rectify/', ProformaRectifyView.as_view()),
     path('proformas/<uuid:proforma_id>/printable/', ProformaPrintableView.as_view()),
+    path('reports/proformas/receivable/', ReceivableProformasReportView.as_view()),
+    path('reports/proformas/receivable/export/<str:file_format>/', ReceivableProformasReportExportView.as_view()),
+    path('reports/proformas/paid/', PaidProformasReportView.as_view()),
+    path('reports/proformas/paid/export/<str:file_format>/', PaidProformasReportExportView.as_view()),
 ]

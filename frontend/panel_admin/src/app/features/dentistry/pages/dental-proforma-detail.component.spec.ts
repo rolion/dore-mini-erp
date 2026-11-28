@@ -14,11 +14,11 @@ const DECISION_FIELDS = { line_kind: 'original', origin_line_id: null, decision:
 
 const PROFORMA = (status: DentalProforma['status'], actions: DentalProforma['allowed_actions']): DentalProforma => ({
   id: 'p1', number: 'ODO-000001', version: 1, status, customer_id: 'c-1', patient_name: 'Ana', date: '2026-11-04',
-  valid_until: null, currency: 'BOB', total: '250.00', notes: '', can_edit_price: true, allowed_actions: actions,
+  valid_until: null, professional: { id: 'd1', name: 'Dra. Paz' }, currency: 'BOB', total: '250.00', notes: '', can_edit_price: true, allowed_actions: actions,
   lines: [{ id: 'l1', service_id: 's1', description: 'Limpieza', quantity: '1.00', unit_price: '250.00', subtotal: '250.00', dental_piece: '18', ...DECISION_FIELDS },
     { id: 'l2', service_id: 's2', description: 'Corona', quantity: '1.00', unit_price: '0.00', subtotal: '0.00', dental_piece: '', ...DECISION_FIELDS }],
   versions: [{ id: 'p1', number: 'ODO-000001', version: 1, status, customer_id: 'c-1', patient_name: 'Ana', date: '2026-11-04',
-    valid_until: null, currency: 'BOB', total: '250.00', accepted_total: '0.00', acceptance_status: 'pending' }],
+    valid_until: null, professional: null, currency: 'BOB', total: '250.00', accepted_total: '0.00', acceptance_status: 'pending' }],
   decision_actions: [], totals: { proposed: '250.00', accepted: '0.00', pending: '250.00', rejected: '0.00' },
   decision_history: [], previous_version_id: null, acceptance_status: 'pending', accepted_total: '0.00',
 });
@@ -58,6 +58,8 @@ describe('DentalProformaDetailComponent', () => {
     expect(text).toContain('Pieza dental');
     expect(text).toContain('18');
     expect(text).toContain('Borrador');
+    expect(text).toContain('Doctor');
+    expect(text).toContain('Dra. Paz');
     expect(text).toContain('Presentar');
     expect(text).toContain('Editar');
     expect(text).not.toContain('Nueva versión');

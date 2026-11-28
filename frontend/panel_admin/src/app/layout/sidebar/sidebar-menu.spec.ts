@@ -19,7 +19,11 @@ describe('Sidebar menu (routes.json)', () => {
     expect(routes.slice(0, 7).map((route) => route.module)).toEqual([
       'reporting', 'catalog', 'customers', 'dentistry', 'sales', 'expenses', 'reporting',
     ]);
-    expect(dentistry.submenu.map((item) => item.path)).toEqual(['/pocketbiz/dentistry/patients', '/pocketbiz/dentistry/appointments']);
+    expect(dentistry.submenu.map((item) => item.path)).toEqual([
+      '/pocketbiz/dentistry/patients', '/pocketbiz/dentistry/appointments',
+      '/pocketbiz/dentistry/reports/receivable', '/pocketbiz/dentistry/reports/paid',
+    ]);
+    expect(dentistry.submenu.slice(2).every((item) => item.module === 'receivables')).toBeTrue();
     expect(visibleRoutes(routes, new Set(['customers'])).some((route) => route.module === 'dentistry')).toBeFalse();
     expect(visibleRoutes(routes, new Set(['customers', 'dentistry'])).some((route) => route.module === 'dentistry')).toBeTrue();
     expect(agenda.module).toBe('agenda');
@@ -106,7 +110,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(54);
+    expect(titles.length).toBe(56);
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

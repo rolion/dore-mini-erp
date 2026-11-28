@@ -39,6 +39,8 @@ export interface DentalProformaSummary {
   patient_name: string;
   date: string;
   valid_until: string | null;
+  /** Doctor responsable (opcional). */
+  professional: { id: string; name: string } | null;
   currency: string;
   total: string;
   accepted_total: string;
@@ -67,6 +69,7 @@ export interface DentalProformaLineInput {
 export interface DentalProformaInput {
   date: string;
   valid_until: string | null;
+  professional_id: string | null;
   notes: string;
   lines: DentalProformaLineInput[];
 }

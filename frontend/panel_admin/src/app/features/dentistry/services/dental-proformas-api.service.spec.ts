@@ -9,7 +9,7 @@ describe('DentalProformasApiService', () => {
   let service: DentalProformasApiService;
   let http: HttpTestingController;
   const input: DentalProformaInput = {
-    date: '2026-11-04', valid_until: null, notes: '',
+    date: '2026-11-04', valid_until: null, professional_id: 'd1', notes: '',
     lines: [{ service_id: 's1', quantity: '1', dental_piece: '18' }],
   };
 
@@ -33,6 +33,7 @@ describe('DentalProformasApiService', () => {
     service.create('c-1', input).subscribe();
     const req = http.expectOne(r => r.method === 'POST' && r.url.endsWith('/dentistry/patients/c-1/proformas/'));
     expect(req.request.body.lines[0].dental_piece).toBe('18');
+    expect(req.request.body.professional_id).toBe('d1');
     expect('customer_id' in req.request.body).toBeFalse();
     req.flush({});
   });

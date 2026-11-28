@@ -36,6 +36,14 @@
                 @if (fields['valid_until']) { <small class="form-text text-danger">{{ fields['valid_until'] }}</small> }
               </div>
             </div>
+            <div class="row">
+              <div class="form-group col-md-6">
+                <label for="d-doctor">{{ 'DENTISTRY.PROFORMAS.DOCTOR' | translate }}</label>
+                <ng-select inputId="d-doctor" formControlName="professional_id" [items]="doctors" bindLabel="name" bindValue="id"
+                  [clearable]="true" [placeholder]="'DENTISTRY.PROFORMAS.SIN_DOCTOR' | translate"></ng-select>
+                @if (fields['professional_id']) { <small class="form-text text-danger">{{ fields['professional_id'] }}</small> }
+              </div>
+            </div>
 
             <h5 class="mt-3">{{ 'DENTISTRY.PROFORMAS.LINEAS' | translate }}</h5>
             @if (fields['lines']) { <p class="alert alert-danger" role="alert">{{ fields['lines'] }}</p> }
