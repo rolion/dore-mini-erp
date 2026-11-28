@@ -11,7 +11,22 @@
           <i class="fas fa-plus me-2" aria-hidden="true"></i>{{ 'PRODUCTION.ORDERS.NEW' | translate }}</a>
       </div>
       <form class="row g-2 m-2 align-items-end" [formGroup]="filters" (ngSubmit)="applyFilters()" [attr.aria-label]="'PRODUCTION.ORDERS.FILTERS' | translate">
-        <div class="col-md-4">
+        <div class="col-6 col-md-2">
+          <label for="filter-from">{{ 'COMMON.DESDE' | translate }}</label>
+          <input id="filter-from" type="date" class="form-control" [formControl]="dateFrom" [class.is-invalid]="rangeInvalid" [attr.aria-invalid]="rangeInvalid">
+        </div>
+        <div class="col-6 col-md-2">
+          <label for="filter-to">{{ 'COMMON.HASTA' | translate }}</label>
+          <input id="filter-to" type="date" class="form-control" [formControl]="dateTo" [class.is-invalid]="rangeInvalid" [attr.aria-invalid]="rangeInvalid">
+        </div>
+        <div class="col-md-3">
+          <label for="order-recipe">{{ 'PRODUCTION.RECIPES.RECIPE' | translate }}</label>
+          <select id="order-recipe" class="form-select form-control" [formControl]="recipe">
+            <option value="">{{ 'PRODUCTION.ORDERS.ALL_RECIPES' | translate }}</option>
+            @for (item of recipes; track item.id) { <option [value]="item.id">{{ item.name }}</option> }
+          </select>
+        </div>
+        <div class="col-md-3">
           <label for="order-status">{{ 'COMMON.ESTADO' | translate }}</label>
           <select id="order-status" class="form-select form-control" [formControl]="status">
             <option value="all">{{ 'COMMON.TODOS' | translate }}</option>
@@ -21,9 +36,10 @@
             <option value="ready_to_pack">{{ 'PRODUCTION.ORDERS.STATUS.READY_TO_PACK' | translate }}</option>
           </select>
         </div>
-        <div class="col-md-4">
+        @if (rangeInvalid) { <div class="col-12 text-danger" role="alert" data-testid="range-error">{{ 'PRODUCTION.ORDERS.RANGE_INVALID' | translate }}</div> }
+        <div class="col-12">
           <button type="submit" class="btn btn-primary me-2" data-testid="apply-filters">{{ 'PRODUCTION.RECIPES.APPLY' | translate }}</button>
-          <button type="button" class="btn btn-light" [disabled]="isDefaultFilter && status.value === 'all'" (click)="clearFilters()" data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+          <button type="button" class="btn btn-light" [disabled]="isDefaultFilter && !hasPendingFilters" (click)="clearFilters()" data-testid="clear-filters">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
         </div>
       </form>
       @if (error) { <div role="alert" class="alert alert-danger m-2">{{ error }} <button class="btn btn-light" type="button" (click)="reload()">{{ 'COMMON.REINTENTAR' | translate }}</button></div> }
@@ -31,6 +47,11 @@
       @if (!loading && !error && total === 0) {
         <div class="m-2" data-testid="order-empty">
           <p>{{ (isDefaultFilter ? 'PRODUCTION.ORDERS.EMPTY' : 'PRODUCTION.ORDERS.EMPTY_FILTER') | translate }}</p>
+          @if (!isDefaultFilter) {
+          <p class="d-flex flex-wrap gap-2" data-testid="active-filters">
+            @for (label of activeFilters; track label) { <span class="badge-outline col-blue">{{ label }}</span> }
+          </p>
+          }
           @if (isDefaultFilter) { <a routerLink="/pocketbiz/production/orders/new" class="btn btn-primary">{{ 'PRODUCTION.ORDERS.NEW' | translate }}</a> }
         </div>
       }
@@ -48,6 +69,8 @@
             <div class="order-card-row"><dt>{{ 'COMMON.ALMACEN' | translate }}</dt><dd>{{ row.warehouse.name }}</dd></div>
             <div class="order-card-row"><dt>{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</dt><dd>{{ row.preparations }}</dd></div>
             <div class="order-card-row"><dt>{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</dt><dd>{{ quantity(row.expectedOutput) }} {{ row.resultProduct.unit?.abbreviation }}</dd></div>
+            <div class="order-card-row"><dt>{{ 'PRODUCTION.ORDERS.ACTUAL_OUTPUT' | translate }}</dt><dd data-testid="card-actual">{{ amount(row.actualOutput, row.resultProduct.unit?.abbreviation) }}</dd></div>
+            <div class="order-card-row"><dt>{{ 'PRODUCTION.ORDERS.BULK_BALANCE' | translate }}</dt><dd data-testid="card-balance">{{ amount(row.lot?.availableQuantity, row.resultProduct.unit?.abbreviation) }}</dd></div>
             <div class="order-card-row"><dt>{{ 'COMMON.FECHA' | translate }}</dt><dd>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
           </dl>
         </li>
@@ -64,6 +87,8 @@
                 <th scope="col">{{ 'COMMON.ALMACEN' | translate }}</th>
                 <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PREPARATIONS' | translate }}</th>
                 <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.EXPECTED_OUTPUT' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.ACTUAL_OUTPUT' | translate }}</th>
+                <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.BULK_BALANCE' | translate }}</th>
                 <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
                 <th scope="col">{{ 'COMMON.FECHA' | translate }}</th>
               </tr>
@@ -76,6 +101,8 @@
                 <td>{{ row.warehouse.name }}</td>
                 <td class="text-end">{{ row.preparations }}</td>
                 <td class="text-end">{{ quantity(row.expectedOutput) }} {{ row.resultProduct.unit?.abbreviation }}</td>
+                <td class="text-end" data-testid="row-actual">{{ amount(row.actualOutput, row.resultProduct.unit?.abbreviation) }}</td>
+                <td class="text-end" data-testid="row-balance">{{ amount(row.lot?.availableQuantity, row.resultProduct.unit?.abbreviation) }}</td>
                 <td><span class="badge-outline" [class]="statusClass(row.status)">{{ statusKey(row.status) | translate }}</span></td>
                 <td>{{ row.createdAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               </tr>

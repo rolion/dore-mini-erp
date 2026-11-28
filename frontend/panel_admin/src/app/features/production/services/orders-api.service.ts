@@ -5,7 +5,7 @@ import { environment } from '../../../../environments/environment';
 import { tr } from '../../../core/i18n/translate';
 import { Page } from '../../../shared/models/page';
 import {
-  OrderApiError, OrderCreateInput, OrderFieldErrors, OrderShortage, OrderStatusFilter, OrderUpdateInput, OrderWarehouse,
+  OrderApiError, OrderCreateInput, OrderFieldErrors, OrderShortage, OrderStatusFilter, OrderListParams, OrderUpdateInput, OrderWarehouse,
   OrderWarehouseDto, ProductionOrder, ProductionOrderDto, RefrigerateInput,
 } from '../models/order';
 
@@ -29,7 +29,10 @@ function fromDto(dto: ProductionOrderDto): ProductionOrder {
     startedAt: dto.started_at,
     actualOutput: dto.actual_output,
     enteredAt: dto.entered_at,
-    lot: dto.lot,
+    lot: dto.lot
+      ? { id: dto.lot.id, code: dto.lot.code, status: dto.lot.status, physicalQuantity: dto.lot.physical_quantity,
+          availableQuantity: dto.lot.available_quantity }
+      : null,
     costTotal: dto.cost_total,
     release: dto.release
       ? { minHours: dto.release.min_hours, releasableFrom: dto.release.releasable_from, canRelease: dto.release.can_release }
@@ -50,6 +53,7 @@ function fieldErrors(body: unknown): OrderFieldErrors {
   return {
     recipeId: text(record['recipe_id']), warehouseId: text(record['warehouse_id']),
     preparations: text(record['preparations']), detail: text(record['detail']),
+    dateFrom: text(record['date_from']), dateTo: text(record['date_to']),
     actualOutput: text(record['actual_output']), enteredAt: text(record['entered_at']),
     ingredients: ingredientsText(record['ingredients']), ingredientLines: ingredientLines(record['ingredients']), code: typeof record['code'] === 'string' ? record['code'] : undefined,
     releasableFrom: typeof record['releasable_from'] === 'string' ? record['releasable_from'] : undefined,
@@ -100,9 +104,12 @@ export class OrdersApiService {
   private http = inject(HttpClient);
   private url = `${environment.apiUrl}/production-orders/`;
 
-  list(params: { status?: OrderStatusFilter; page?: number; pageSize?: number } = {}): Observable<Page<ProductionOrder>> {
+  list(params: OrderListParams = {}): Observable<Page<ProductionOrder>> {
     let query = new HttpParams();
     if (params.status) query = query.set('status', params.status);
+    if (params.recipeId) query = query.set('recipe_id', params.recipeId);
+    if (params.dateFrom) query = query.set('date_from', params.dateFrom);
+    if (params.dateTo) query = query.set('date_to', params.dateTo);
     if (params.page) query = query.set('page', params.page);
     if (params.pageSize) query = query.set('page_size', params.pageSize);
     return this.http.get<Page<ProductionOrderDto>>(this.url, { params: query }).pipe(
@@ -151,5 +158,8 @@ export class OrdersApiService {
 @Injectable({ providedIn: 'root' })
 export class OrderFiltersState {
   status: OrderStatusFilter = 'all';
+  recipeId = '';
+  dateFrom = '';
+  dateTo = '';
   pageIndex = 0;
 }

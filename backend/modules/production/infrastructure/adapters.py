@@ -112,6 +112,22 @@ class InventoryStock:
             raise RefrigerationRejected('lot_not_found', 'El lote de la orden ya no existe en Inventario.') from exc
 
 
+class InventoryLots:
+    """Lectura del saldo de los lotes de las órdenes (Inventario es la fuente; Producción no lo calcula)."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def positions(self, lot_ids: Iterable[UUID]) -> dict[UUID, inventory_services.LotRecord]:
+        found: dict[UUID, inventory_services.LotRecord] = {}
+        for lot_id in set(lot_ids):
+            try:
+                found[lot_id] = inventory_services.get_lot(self.company_id, lot_id)
+            except inventory_services.LotNotFound:
+                continue  # lote ausente: la orden se muestra sin saldo
+        return found
+
+
 class ModularityReleasePolicy:
     """Mínimo de refrigeración desde la fachada de lectura de Modularidad."""
 

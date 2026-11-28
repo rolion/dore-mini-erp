@@ -1,7 +1,7 @@
 from decimal import Decimal
 from threading import Barrier, Thread
 from datetime import timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from django.db import connection, transaction
 from django.test import TransactionTestCase
@@ -539,6 +539,79 @@ class OrderReleaseApiTests(OrderApiTests):
 
     def lot_state_by_id(self, order):
         return StockLotModel.objects.get(company_id=self.company.id).status
+
+
+class OrderConsultApiTests(OrderReleaseApiTests):
+    """DORE-PROD-006: filtros de la lista y saldo del lote."""
+
+    def other_recipe(self):
+        return self.client.post('/api/recipes/', self.payload(name='Otra receta'), format='json').json()
+
+    def lot(self, order):
+        return self.client.get(f"{URL}{order['id']}/").json()['lot']
+
+    def test_list_filters_by_recipe_and_dates(self):  # AC-01
+        from modules.production.infrastructure.django.models import ProductionOrderModel
+        other = self.other_recipe()
+        old = self.make_order()
+        recent = self.make_order(recipe_id=other['id'])
+        ProductionOrderModel.objects.filter(pk=old['id']).update(created_at=timezone.now() - timedelta(days=10))
+        ids = lambda params: {o['id'] for o in self.client.get(URL, params).json()['results']}  # noqa: E731
+        self.assertEqual(ids({'recipe_id': other['id']}), {recent['id']})
+        self.assertEqual(ids({'recipe_id': self.recipe['id']}), {old['id']})
+        today = timezone.localdate().isoformat()
+        self.assertEqual(ids({'date_from': today}), {recent['id']})
+        self.assertEqual(ids({'date_to': (timezone.localdate() - timedelta(days=5)).isoformat()}), {old['id']})
+        self.assertEqual(ids({'date_from': today, 'date_to': today}), {recent['id']})
+        self.assertEqual(ids({'date_from': today, 'status': 'in_preparation'}), set())
+        self.assertEqual(ids({'status': 'draft', 'recipe_id': self.recipe['id']}), {old['id']})
+
+    def test_list_rejects_invalid_filters(self):  # EDGE-01
+        for params, field in (({'recipe_id': 'x'}, 'recipe_id'), ({'date_from': '2026-13-01'}, 'date_from'),
+                              ({'date_to': 'ayer'}, 'date_to'),
+                              ({'date_from': '2026-02-02', 'date_to': '2026-02-01'}, 'date_from')):
+            response = self.client.get(URL, params)
+            self.assertEqual(response.status_code, 400, params)
+            self.assertIn(field, response.json())
+
+    def test_list_filters_respect_company_isolation(self):  # EDGE-03
+        mine = self.make_order()
+        other = make_company('Otra')
+        self.enable(other)
+        authenticate(self.client, make_admin(other, username='otro-admin'))
+        self.assertEqual(self.client.get(URL, {'recipe_id': self.recipe['id']}).json()['count'], 0)
+        authenticate(self.client, self.user)
+        self.assertEqual(self.client.get(URL, {'recipe_id': self.recipe['id']}).json()['count'], 1)
+        self.assertEqual(self.client.get(URL).json()['results'][0]['id'], mine['id'])
+
+    def test_lot_balance_follows_refrigeration_release_and_packing(self):  # AC-02, AC-03, INV-01, INV-02
+        order = self.refrigerated(hours_ago=13)
+        item = self.client.get(URL).json()['results'][0]
+        self.assertEqual(item['actual_output'], '118.0000')
+        self.assertEqual((item['lot']['status'], item['lot']['physical_quantity'], item['lot']['available_quantity']),
+                         ('refrigerating', '118.0000', '0.0000'))
+        self.assertEqual(self.release(order).status_code, 200)
+        lot = self.client.get(f"{URL}{order['id']}/").json()['lot']
+        self.assertEqual((lot['status'], lot['physical_quantity'], lot['available_quantity']),
+                         ('released', '118.0000', '118.0000'))
+        inventory_services.record_movement(
+            self.company.id, product_id=self.result.id, warehouse_id=self.warehouse.id, kind='out',
+            quantity=Decimal('60'), user_id=self.user.id, user_name='prod-admin', lot_id=UUID(lot['id']))
+        lot = self.client.get(URL).json()['results'][0]['lot']
+        self.assertEqual((lot['physical_quantity'], lot['available_quantity']), ('58.0000', '58.0000'))
+
+    def test_orders_without_lot_have_no_balance(self):  # AC-02
+        self.make_order()
+        self.assertIsNone(self.client.get(URL).json()['results'][0]['lot'])
+
+    def test_missing_lot_does_not_break_the_list(self):  # EDGE-02
+        order = self.refrigerated()
+        code = self.lot(order)['code']
+        with transaction.atomic():
+            StockMovementModel.objects.filter(lot_id=self.lot(order)['id']).delete()
+            StockLotModel.objects.filter(pk=self.lot(order)['id']).delete()
+        lot = self.client.get(URL).json()['results'][0]['lot']
+        self.assertEqual((lot['code'], lot['status'], lot['available_quantity']), (code, None, None))
 
 
 class OrderNumberConcurrencyTests(TransactionTestCase):

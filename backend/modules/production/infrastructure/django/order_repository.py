@@ -1,3 +1,4 @@
+from datetime import date
 from uuid import UUID
 
 from django.db import transaction
@@ -103,8 +104,16 @@ class DjangoProductionOrderRepository:
                         line.save(update_fields=['actual_quantity'])
         return to_entity(self._orders().get(pk=order.id))
 
-    def list(self, *, status: str = 'all') -> OrderList:
+    def list(self, *, status: str = 'all', recipe_id: UUID | None = None, date_from: date | None = None,
+             date_to: date | None = None) -> OrderList:
+        """Filtros combinables; las fechas son días calendario de creación (zona horaria del proyecto), inclusivos."""
         queryset = self._orders().order_by('-number')
         if status != 'all':
             queryset = queryset.filter(status=status)
+        if recipe_id is not None:
+            queryset = queryset.filter(recipe_id=recipe_id)
+        if date_from is not None:
+            queryset = queryset.filter(created_at__date__gte=date_from)
+        if date_to is not None:
+            queryset = queryset.filter(created_at__date__lte=date_to)
         return OrderList(queryset)

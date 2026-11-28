@@ -26,6 +26,19 @@ export interface OrderRelease {
   canRelease: boolean;
 }
 
+export type OrderLotStatus = 'refrigerating' | 'released';
+
+/** Lote de la orden con su saldo de Inventario; `null` en los saldos si el lote ya no existe allí. */
+export interface OrderLot {
+  id: string;
+  code: string;
+  status: OrderLotStatus | null;
+  /** Cadena decimal con 4 decimales. */
+  physicalQuantity: string | null;
+  /** Disponible para empaque: 0 en refrigeración; en lote liberado, el físico restante. */
+  availableQuantity: string | null;
+}
+
 export interface ProductionOrder {
   id: string;
   number: number;
@@ -41,7 +54,7 @@ export interface ProductionOrder {
   startedAt: string | null;
   actualOutput: string | null;
   enteredAt: string | null;
-  lot: { id: string; code: string } | null;
+  lot: OrderLot | null;
   /** Costo total consumido con 2 decimales; `null` = sin costo. */
   costTotal: string | null;
   release: OrderRelease | null;
@@ -72,11 +85,24 @@ export interface ProductionOrderDto {
   started_at: string | null;
   actual_output: string | null;
   entered_at: string | null;
-  lot: { id: string; code: string } | null;
+  lot: {
+    id: string; code: string; status: OrderLotStatus | null;
+    physical_quantity: string | null; available_quantity: string | null;
+  } | null;
   cost_total: string | null;
   release: { min_hours: number; releasable_from: string | null; can_release: boolean } | null;
   released_at: string | null;
   released_by: string | null;
+}
+
+export interface OrderListParams {
+  status?: OrderStatusFilter;
+  recipeId?: string;
+  /** AAAA-MM-DD (día de creación, inclusivo). */
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface OrderWarehouse {
@@ -132,6 +158,8 @@ export interface OrderFieldErrors {
   warehouseId?: string;
   preparations?: string;
   detail?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export class OrderApiError extends Error {

@@ -1,6 +1,165 @@
-// Pantallas estrechas (< 957 px): datos en filas «etiqueta | valor» e ingredientes en tarjetas.
-.order-info {
-  margin: 1rem;
+// Detalle de la orden: cabecera, etapas, cifras clave, paneles e ingredientes (DDR detalle-orden-rediseno).
+.order-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.order-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.release-hint {
+  color: var(--bs-body-color);
+  font-size: 0.875rem;
+}
+
+// Línea de etapas: 2 columnas en móvil, 4 desde 576 px; el estado va con icono/número y texto, nunca solo color.
+.order-steps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1.25rem 1.5rem;
+  padding: 0;
+
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.order-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 4px solid var(--bs-border-color);
+  // Pendiente: se atenúa con el color de texto secundario (contraste AA), no con opacity.
+  color: var(--bs-secondary-color);
+
+  &.is-done {
+    border-top-color: var(--bs-success);
+    color: var(--bs-body-color);
+  }
+
+  &.is-current {
+    border-top-color: var(--bs-primary);
+    color: var(--bs-body-color);
+    font-weight: 600;
+  }
+}
+
+.order-step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  border: 2px solid var(--bs-border-color);
+  font-size: 0.8rem;
+
+  .is-done & {
+    border-color: var(--bs-success);
+    color: var(--bs-success-text-emphasis);
+  }
+
+  .is-current & {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+  }
+}
+
+.order-step-date {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+// Cifras clave.
+.order-kpis {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 0 1.5rem 1.25rem;
+
+  @media (min-width: 576px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+}
+
+.order-kpis-lot {
+  display: contents;
+}
+
+.order-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  box-shadow: none;
+  border: 1px solid var(--bs-border-color);
+}
+
+.order-kpi-main {
+  border-color: var(--bs-primary);
+  border-width: 2px;
+}
+
+.order-kpi-label {
+  font-size: 0.85rem;
+}
+
+.order-kpi-value {
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.order-kpi-hint {
+  font-size: 0.8rem;
+}
+
+// Paneles «Datos de la orden» y «Lote y refrigeración».
+.order-panels {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin: 0 1.5rem 1.25rem;
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.order-panel {
+  margin: 0;
+  padding: 1rem;
+  box-shadow: none;
+  border: 1px solid var(--bs-border-color);
+
+  h5 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.order-dl {
+  margin-bottom: 0;
 }
 
 .order-row {
@@ -8,7 +167,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.5rem 0;
+  padding: 0.4rem 0;
 
   dt {
     font-weight: 600;
@@ -23,11 +182,17 @@
   }
 }
 
+.order-progress {
+  height: 0.6rem;
+  margin-top: 0.35rem;
+}
+
+// Ingredientes en tarjetas (< 957 px).
 .ingredient-cards {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
-  margin: 0 1rem 1rem;
+  margin: 0 1.5rem 1.5rem;
   padding: 0;
 }
 
@@ -36,11 +201,4 @@
   border: 1px solid var(--bs-border-color, #dee2e6);
   padding: 0.5rem 1rem;
   margin: 0;
-}
-
-.order-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
 }
