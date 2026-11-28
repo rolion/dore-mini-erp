@@ -30,6 +30,9 @@
           <small class="text-muted d-block">{{ item.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</small>
         </ng-template>
       </ng-select>
+      @if (kind === 'lead') {
+      <button type="button" class="btn btn-link px-0" data-testid="create-lead" [disabled]="saving" (click)="createLead()">{{ 'CRM.INBOX_CONTACT.CREAR_PROSPECTO' | translate }}</button>
+      }
     </div>
   </div>
   <div class="modal-footer">

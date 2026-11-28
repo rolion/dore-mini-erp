@@ -160,6 +160,11 @@ class UserDirectoryAdapter:
         return list(self._directory.list(search=search))
 
 
+def subscribe_inbound(handler) -> None:
+    """Avisa `handler(company_id, conversation_id)` por cada mensaje entrante nuevo (alta al arrancar la app)."""
+    messaging_services.subscribe_inbound(handler)
+
+
 def _inbox_message(m) -> InboxMessage:
     return InboxMessage(m.id, m.direction, m.type, m.content, m.status, m.failure_reason, m.created_at, m.sent_at)
 

@@ -335,7 +335,47 @@ class AccessAndIsolationTests(InboxBase):
                 else getattr(other, method)(self.url(conversation, tail))
             self.assertEqual(response.status_code, 404, (method, tail))
 
-    def test_existing_conversations_survive_the_migration_without_links(self):  # AC-12
+    def test_foreign_template_message_and_opportunity_are_404(self):  # AC-10, INV-01
         self.receive('wamid.A')
-        row = ConversationModel.objects.get()
-        self.assertEqual((row.owner_id, row.customer_id, row.lead_id, row.opportunity_id), (None,) * 4)
+        self.receive('wamid.B', BETO)
+        other_company, other = self.other_company_client()
+        foreign_connection = self.connect(other_company, '222', verify='verify-2')
+        foreign_template = TemplateModel.objects.create(
+            company_id=other_company.id, connection=foreign_connection, name='ajena', language='es', category='UTILITY',
+            status='APPROVED', synced_at=timezone.now())
+        conversation = self.conv()
+        response = self.client.post(self.url(conversation, 'messages/'),
+                                    {'type': 'template', 'template_id': str(foreign_template.id)}, format='json')
+        self.assertEqual(response.status_code, 404)
+        self.client.post(self.url(conversation, 'messages/'), {'type': 'text', 'body': 'Hola'}, format='json')
+        message_id = MessageModel.objects.get(direction='out').id
+        beto = self.conv(BETO)  # el mensaje es de la conversación de Ana
+        retry = self.client.post(self.url(beto, f'messages/{message_id}/retry/'))
+        self.assertEqual(retry.status_code, 404)
+        board = other.post(BOARDS, {'name': 'Otra'}, format='json').json()
+        other.post(f"{BOARDS}{board['id']}/stages/", {'name': 'Nuevo'}, format='json')
+        customer = self.customer('Otra', company=other_company)
+        foreign_opportunity = other.post(OPPORTUNITIES, {'board_id': board['id'], 'title': 'X', 'amount': '1.00',
+                                                         'customer_id': str(customer.id)}, format='json').json()
+        link = self.client.put(self.url(conversation, 'opportunity/'), {'opportunity_id': foreign_opportunity['id']},
+                               format='json')
+        self.assertEqual(link.status_code, 404)
+
+    def test_list_is_paginated(self):  # AC-01
+        for n in range(3):
+            self.receive(f'wamid.{n}', f'5917000000{n}')
+        first = self.client.get(INBOX, {'page_size': 2}).json()
+        self.assertEqual((first['count'], len(first['results']), bool(first['next'])), (3, 2, True))
+        second = self.client.get(INBOX, {'page_size': 2, 'page': 2}).json()
+        self.assertEqual((len(second['results']), second['next']), (1, None))
+        self.assertEqual(len({r['id'] for r in first['results'] + second['results']}), 3)
+
+    def test_assigning_does_not_overwrite_the_window_and_inbound_does_not_unassign(self):  # REV-04
+        self.receive('wamid.A')
+        conversation = self.conv()
+        self.client.put(self.url(conversation, 'owner/'), {'owner_id': self.admin.id}, format='json')
+        self.receive('wamid.B')  # el worker guarda `last_inbound_at` sin tocar el responsable
+        self.assertEqual(self.client.get(self.url(conversation)).json()['owner']['id'], self.admin.id)
+        before = ConversationModel.objects.get(id=conversation).last_inbound_at
+        self.client.put(self.url(conversation, 'owner/'), {'owner_id': None}, format='json')
+        self.assertEqual(ConversationModel.objects.get(id=conversation).last_inbound_at, before)

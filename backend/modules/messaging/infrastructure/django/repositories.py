@@ -93,9 +93,13 @@ class DjangoConversationRepository:
         return _conversation(row) if row else None
 
     def save(self, c: Conversation) -> None:
+        """Solo la ventana: el worker no debe pisar el responsable ni los vínculos que otro usuario acaba de fijar."""
+        ConversationModel.objects.filter(company_id=self.company_id, id=c.id).update(last_inbound_at=c.last_inbound_at)
+
+    def save_links(self, c: Conversation) -> None:
+        """Solo responsable y vínculos: asignar no debe pisar `last_inbound_at` de un mensaje que llega a la vez."""
         ConversationModel.objects.filter(company_id=self.company_id, id=c.id).update(
-            last_inbound_at=c.last_inbound_at, owner_id=c.owner_id, customer_id=c.customer_id, lead_id=c.lead_id,
-            opportunity_id=c.opportunity_id)
+            owner_id=c.owner_id, customer_id=c.customer_id, lead_id=c.lead_id, opportunity_id=c.opportunity_id)
 
     def page(self, *, owner_id: int | None, unassigned: bool, opportunity_id: UUID | None, search: str | None,
              customer_ids, lead_ids, offset: int, limit: int) -> tuple[int, list[Conversation], dict]:

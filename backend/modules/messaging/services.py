@@ -101,7 +101,7 @@ def assign(company_id: UUID, conversation_id: UUID, owner_id: int | None) -> Con
     repository = DjangoConversationRepository(company_id)
     conversation = _conversation(company_id, conversation_id)
     conversation.assign(owner_id)
-    repository.save(conversation)
+    repository.save_links(conversation)
     return conversation
 
 
@@ -112,7 +112,7 @@ def link_contact(company_id: UUID, conversation_id: UUID, customer_id: UUID | No
     conversation = _conversation(company_id, conversation_id)
     conversation.link_contact(customer_id, lead_id)
     conversation.link_opportunity(opportunity_id)
-    repository.save(conversation)
+    repository.save_links(conversation)
     return conversation
 
 
@@ -120,7 +120,7 @@ def link_opportunity(company_id: UUID, conversation_id: UUID, opportunity_id: UU
     repository = DjangoConversationRepository(company_id)
     conversation = _conversation(company_id, conversation_id)
     conversation.link_opportunity(opportunity_id)
-    repository.save(conversation)
+    repository.save_links(conversation)
     return conversation
 
 

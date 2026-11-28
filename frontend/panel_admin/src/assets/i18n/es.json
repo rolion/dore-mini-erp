@@ -3849,7 +3849,8 @@
     "INBOX_CONTACT": {
       "TITULO": "Vincular contacto",
       "TIPO": "Tipo de contacto",
-      "QUITAR": "Quitar contacto"
+      "QUITAR": "Quitar contacto",
+      "CREAR_PROSPECTO": "Crear prospecto"
     },
     "INBOX_OPPORTUNITY": {
       "TITULO": "Oportunidad de la conversación",

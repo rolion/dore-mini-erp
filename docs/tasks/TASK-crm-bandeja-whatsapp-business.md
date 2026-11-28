@@ -14,6 +14,8 @@
 | 2026-11-28 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | DDR y ADR escritos; decisiones por defecto documentadas | delivery-start |
 | 2026-11-28 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
 | 2026-11-28 | ENGINEERING → REVIEW | Implementación completa; backend `crm`+`messaging` 231 pruebas OK, frontend Karma/lint/build OK | delivery-build |
+| 2026-11-28 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 y REV-07 High: pruebas globales de menú y fronteras; REV-02..06 Medium/Low) | delivery-publish |
+| 2026-11-28 | ENGINEERING → REVIEW | REV-01..07 corregidos; backend 242 pruebas de crm/messaging/fronteras y Karma completo (2007) OK | delivery-build |
 
 ## Investigación
 
@@ -76,12 +78,14 @@ Acoplamiento `crm`↔`messaging` (mitigado con puerto + fachada, ADR); autovínc
 **Frontend**: `features/crm` — página `crm-inbox` (lista + hilo, consulta cada 10 s con la pestaña visible), diálogos `inbox-contact-dialog` e `inbox-opportunity-dialog`, `crm-inbox-api.service`, ruta `/pocketbiz/crm/inbox`, menú CRM → Bandeja, claves es/en/pt. Pantalla de referencia: lista (`crm-task-list`) y diálogos CRM; plantilla «Bandeja de conversaciones» ya añadida a `design-system.md`.
 
 **Desviaciones respecto al plan**: (1) endpoint extra `GET /api/crm/inbox/conversations/<id>/opportunities/` (necesario para el diálogo, no cambia AC); (2) la asignación se hace con un `<select>` en la cabecera en vez de un diálogo (más simple, mismo contrato); (3) el hilo se recarga completo en cada consulta (los estados de mensajes antiguos cambian, `after` queda disponible en la API pero la UI no lo usa).
+**Correcciones tras el Quality Gate**: ver REV-01..07 (menú, fronteras crm→messaging declaradas, prueba de migración con reversa, «Crear prospecto» en el diálogo de contacto —cumple UI-04—, `save()` sin pisar campos concurrentes, pruebas de aislamiento y paginación).
 **Deuda técnica**: `crm/infrastructure/inbox_subscriber.py` importa `inbox_views.inbox_service` para armar el servicio (mover el armado a un módulo neutral si crece); sin «no leídos» ni multimedia (fuera de alcance).
 
 **Verificación propia (no es el Quality Gate)**: frontend `ng lint`, `i18n:check` (0 faltantes), `ng build` y 28 pruebas Karma de la bandeja OK; backend `manage.py check`, `makemigrations --check` (sin cambios), ruff/flake8 limpios y pruebas de dominio de `messaging` OK. Pruebas de integración de la bandeja (`crm/tests/test_api_inbox.py`) y suites `crm` + `messaging`: 231 OK.
 
 ## Review
-_Pendiente_
+**Primer Quality Gate: FAIL** (subagente aislado). Hallazgos: [REV-01](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-01.md) High (2 pruebas Karma del menú), [REV-07](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-07.md) High (2 pruebas de fronteras de módulos), REV-02 y REV-03 Medium, REV-04..06 Low. Corregidos todos; REV-06 se resuelve documentando el alcance (abajo). Pendiente: segundo Quality Gate.
+Alcance aclarado (REV-06): las plantillas se envían sin variables (`components` vacío) y el hilo muestra los 200 mensajes más recientes.
 
 ## Publicación
 _Pendiente_

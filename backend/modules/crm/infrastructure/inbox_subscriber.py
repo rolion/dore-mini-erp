@@ -2,7 +2,7 @@
 import logging
 from uuid import UUID
 
-from modules.messaging import services as messaging_services
+from modules.crm.infrastructure.adapters import subscribe_inbound
 
 logger = logging.getLogger(__name__)
 _registered = False
@@ -21,5 +21,5 @@ def register() -> None:
     """Se llama al arrancar la app: así queda activo también en el proceso del worker (ADR)."""
     global _registered
     if not _registered:
-        messaging_services.subscribe_inbound(link_inbound)
+        subscribe_inbound(link_inbound)
         _registered = True

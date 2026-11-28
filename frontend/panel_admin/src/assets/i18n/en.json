@@ -3849,7 +3849,8 @@
     "INBOX_CONTACT": {
       "TITULO": "Link contact",
       "TIPO": "Contact type",
-      "QUITAR": "Remove contact"
+      "QUITAR": "Remove contact",
+      "CREAR_PROSPECTO": "Create lead"
     },
     "INBOX_OPPORTUNITY": {
       "TITULO": "Conversation opportunity",
