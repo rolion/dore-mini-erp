@@ -4,7 +4,7 @@
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-bandeja-whatsapp-business` (base: `crm`)
-**Pull Request:** _sin abrir todavía_
+**Pull Request:** https://github.com/rolion/dore-mini-erp/pull/144
 **Fuente:** https://trello.com/c/mkyxOy1O/11-pb-crm-012-bandeja-de-whatsapp-business
 
 ## Historial de transiciones
