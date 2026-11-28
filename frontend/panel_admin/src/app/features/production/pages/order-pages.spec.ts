@@ -372,6 +372,19 @@ describe('OrderDetailComponent', () => {
       expect(root.querySelector('[data-testid="packed-packs"]')?.textContent).toContain('6');
     });
 
+    it('adds up several packings in the Packed figure', () => {  // AC-04, UI-01
+      const entry = (id: string, number: number, packs: number, bulk: string) => ({
+        id, number, packs, packProduct: { id: 'p-pack', name: 'Pack x6', unit: 'u' }, bagProduct: { id: 'p-bag', name: 'Bolsa', unit: 'm' },
+        labelProduct: null, labelsQuantity: '0.0000', bulkQuantity: bulk, bagsQuantity: '1.0200', bagPerPack: '0.1700',
+        lot: { id: 'lot-1', code: 'L-20261127-0001' }, costTotal: null, unitCost: null, createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' });
+      const value = ready('64.0000');
+      value.packing = { ...value.packing!, packings: [entry('k-1', 1, 6, '36.0000'), entry('k-2', 2, 3, '18.0000')] };
+      const root: HTMLElement = setup(value).nativeElement;
+      expect(root.querySelector('[data-testid="packed"]')?.textContent).toContain('54 u');
+      expect(root.querySelector('[data-testid="packed-packs"]')?.textContent).toContain('9');
+      expect(root.querySelectorAll('[data-testid="packing-row"]').length).toBe(2);
+    });
+
     it('stacks the history as cards on narrow screens', () => {  // AC-04, UI-01
       const value = ready('82.0000');
       value.packing = { ...value.packing!, packings: [{
