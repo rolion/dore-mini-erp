@@ -3644,6 +3644,7 @@
         "DIALOG_TITLE": "Registrar embalagem",
         "PACKS": "Quantidade de packs",
         "PACK_PRODUCT": "Produto pack (o que você vende)",
+        "PACK_COLUMN": "Pack",
         "BAG_PRODUCT": "Saco (material consumido)",
         "CHOOSE_PRODUCT": "Escolha um produto",
         "NO_PRODUCTS": "Sem produtos que controlem estoque",

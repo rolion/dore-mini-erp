@@ -31,10 +31,6 @@
       <button type="button" class="btn btn-primary" [disabled]="!canPack" (click)="openPack()" data-testid="pack">{{ 'PRODUCTION.ORDERS.PACK.ACTION' | translate }}</button>
       @if (!canPack && order.packing) { <small class="text-muted align-self-center" data-testid="pack-hint">{{ 'PRODUCTION.ORDERS.PACK.NOT_ENOUGH' | translate: { quantity: quantity(order.packing.bulkAvailable), unit: order.packing.bulkUnitAbbreviation ?? '' } }}</small> }
       }
-      @if (order.status === 'ready_to_pack') {
-      <button type="button" class="btn btn-primary" [disabled]="!canPack" (click)="openPack()" data-testid="pack">{{ 'PRODUCTION.ORDERS.PACK.ACTION' | translate }}</button>
-      @if (!canPack && order.packing) { <small class="text-muted align-self-center" data-testid="pack-hint">{{ 'PRODUCTION.ORDERS.PACK.NOT_ENOUGH' | translate: { quantity: quantity(order.packing.bulkAvailable), unit: order.packing.bulkUnitAbbreviation ?? '' } }}</small> }
-      }
       <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
     </div>
     @if (order.status === 'refrigerating' && !canRelease && releasableFrom) {
@@ -143,7 +139,7 @@
           <dl class="mb-0">
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.NUMBER' | translate }}</dt><dd>{{ entry.number }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.DATE' | translate }}</dt><dd>{{ formatDateTime(entry.createdAt) }}</dd></div>
-            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.PACK_PRODUCT' | translate }}</dt><dd>{{ entry.packProduct.name }}</dd></div>
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.PACK_COLUMN' | translate }}</dt><dd>{{ entry.packProduct.name }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.PACKS' | translate }}</dt><dd>{{ entry.packs }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.LOT' | translate }}</dt><dd>{{ entry.lot.code }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BULK_USED' | translate }}</dt><dd>{{ quantity(entry.bulkQuantity) }} {{ packing.bulkUnitAbbreviation }}</dd></div>
@@ -163,7 +159,7 @@
           <thead><tr>
             <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.NUMBER' | translate }}</th>
             <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.DATE' | translate }}</th>
-            <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.PACK_PRODUCT' | translate }}</th>
+            <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.PACK_COLUMN' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.PACKS' | translate }}</th>
             <th scope="col">{{ 'PRODUCTION.ORDERS.PACK.LOT' | translate }}</th>
             <th scope="col" class="text-end">{{ 'PRODUCTION.ORDERS.PACK.BULK_USED' | translate }}</th>

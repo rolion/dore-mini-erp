@@ -3644,6 +3644,7 @@
         "DIALOG_TITLE": "Record packing",
         "PACKS": "Number of packs",
         "PACK_PRODUCT": "Pack product (what you sell)",
+        "PACK_COLUMN": "Pack",
         "BAG_PRODUCT": "Bag (material consumed)",
         "CHOOSE_PRODUCT": "Choose a product",
         "NO_PRODUCTS": "No stock-tracked products",
