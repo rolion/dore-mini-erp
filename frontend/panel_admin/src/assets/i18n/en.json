@@ -3618,8 +3618,26 @@
         "DONE": "The batch was released and the order is ready to pack.",
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
-        "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}."
+        "TOO_EARLY": "The minimum refrigeration time has not been reached yet. Available from {{date}}.",
+        "OF": "of"
       },
+      "ACTUAL_OUTPUT": "Produced",
+      "BULK_BALANCE": "Bulk balance",
+      "ALL_RECIPES": "All recipes",
+      "RANGE_INVALID": "The start date cannot be after the end date.",
+      "LOT_STOCK": {
+        "TITLE": "Lot stock",
+        "STATUS": "Lot status",
+        "REFRIGERATING": "Refrigerating (blocked for packing)",
+        "RELEASED": "Released",
+        "PHYSICAL": "Physical balance",
+        "AVAILABLE": "Available for packing",
+        "BLOCKED": "Blocked for packing until released"
+      },
+      "OF_EXPECTED": "of {{quantity}} planned",
+      "DIFFERENCE": "Difference",
+      "DATA_TITLE": "Order details",
+      "LOT_TITLE": "Lot and refrigeration",
       "PACK": {
         "ACTION": "Record packing",
         "TITLE": "Packings",
@@ -3659,6 +3677,9 @@
         "BAG_PER_PACK": "Bag used per pack",
         "BAG_PER_PACK_HELP": "In the product's unit: with a roll in meters, 0.17 = 17 cm per pack.",
         "BAG_PER_PACK_INVALID": "Enter a number greater than 0 (up to 4 decimals)."
+      },
+      "STEPS": {
+        "LABEL": "Order stages"
       }
     }
   }

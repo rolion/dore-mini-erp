@@ -1,3 +1,6 @@
+from datetime import date
+from uuid import UUID
+
 from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import APIException, NotFound, ValidationError
@@ -9,7 +12,7 @@ from modules.production.domain.production_order import (
     InsufficientIngredients, OrderNotFound, OrderStateError, OrderStatus, OrderValidationError, RefrigerationRejected,
     ReleaseTooEarly)
 from modules.production.infrastructure.adapters import (
-    CatalogProducts, CostingGateway, InventoryStock, InventoryWarehouses, ModularityReleasePolicy)
+    CatalogProducts, CostingGateway, InventoryLots, InventoryStock, InventoryWarehouses, ModularityReleasePolicy)
 from modules.production.infrastructure.django.packing_repository import DjangoPackingRepository
 from modules.production.domain.packing import LABELS_PER_PACK, SUGGESTED_BAG_PER_PACK, UNITS_PER_PACK
 from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
@@ -102,10 +105,19 @@ def _packing(company_id, order) -> dict | None:
         } for p in DjangoPackingRepository(company_id).list(order.id)]}
 
 
+def _lot(order, record) -> dict:
+    """Lote con su saldo de Inventario (físico y disponible para empaque); `null` si el lote ya no existe."""
+    return {'id': order.lot_id, 'code': order.lot_code,
+            'status': record.status if record else None,
+            'physical_quantity': _qty(record.physical_quantity) if record else None,
+            'available_quantity': _qty(record.available_quantity) if record else None}
+
+
 def _serialize(request, orders: list, *, detail: bool = False) -> list[dict]:
     company_id = company_id_from(request)
     names = InventoryWarehouses(company_id).names({order.warehouse_id for order in orders})
     min_hours = ModularityReleasePolicy(company_id).min_refrigeration_hours()
+    lots = InventoryLots(company_id).positions([o.lot_id for o in orders if o.lot_id])
     now = timezone.now()
     return [{
         'id': order.id,
@@ -131,7 +143,7 @@ def _serialize(request, orders: list, *, detail: bool = False) -> list[dict]:
         'actual_output': _qty(order.actual_output) if order.actual_output is not None else None,
         'entered_at': order.entered_at,
         'refrigerated_at': order.refrigerated_at,
-        'lot': {'id': order.lot_id, 'code': order.lot_code} if order.lot_id else None,
+        'lot': _lot(order, lots.get(order.lot_id)) if order.lot_id else None,
         'cost_total': f'{order.cost_total:.2f}' if order.cost_total is not None else None,
         'release': _release(order, min_hours, now),
         'released_at': order.released_at,
@@ -166,6 +178,28 @@ def _values(serializer_class, request) -> dict:
     return {**data, 'preparations': data.get('preparations')}
 
 
+def _list_filters(params) -> dict:
+    """`recipe_id`, `date_from` y `date_to` opcionales; un valor mal formado responde 400 con el campo."""
+    errors: dict = {}
+    values: dict = {}
+    if params.get('recipe_id'):
+        try:
+            values['recipe_id'] = UUID(params['recipe_id'])
+        except ValueError:
+            errors['recipe_id'] = ['Receta no válida.']
+    for key in ('date_from', 'date_to'):
+        if params.get(key):
+            try:
+                values[key] = date.fromisoformat(params[key])
+            except ValueError:
+                errors[key] = ['Usa una fecha con formato AAAA-MM-DD.']
+    if not errors and values.get('date_from') and values.get('date_to') and values['date_from'] > values['date_to']:
+        errors['date_from'] = ['La fecha inicial no puede ser posterior a la final.']
+    if errors:
+        raise ValidationError(errors)
+    return values
+
+
 class OrderListCreateView(APIView):
     required_modules = ('production',)
 
@@ -173,7 +207,7 @@ class OrderListCreateView(APIView):
         status = request.query_params.get('status', 'all')
         if status != 'all' and status not in OrderStatus.ALL:
             raise ValidationError({'status': ['Usa all, draft, in_preparation, refrigerating o ready_to_pack.']})
-        orders = _orders(request).repository.list(status=status)
+        orders = _orders(request).repository.list(status=status, **_list_filters(request.query_params))
         paginator = RecipePagination()
         page = paginator.paginate_queryset(orders, request, view=self)
         return paginator.get_paginated_response(_serialize(request, page))

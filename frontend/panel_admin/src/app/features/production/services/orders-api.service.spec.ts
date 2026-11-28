@@ -62,6 +62,16 @@ describe('OrdersApiService', () => {
     req.flush({ count: 1, next: null, previous: null, results: [orderDto] });
   });
 
+  it('lists with recipe and date filters and maps the lot balance', () => {  // AC-01, AC-02, API-01, API-02
+    api.list({ status: 'all', recipeId: 'r-1', dateFrom: '2026-11-01', dateTo: '2026-11-30' }).subscribe(page =>
+      expect(page.results[0].lot).toEqual({ id: 'lot-1', code: 'L-1', status: 'released', physicalQuantity: '58.0000', availableQuantity: '58.0000' }));
+    const req = http.expectOne(r => r.url === '/api/production-orders/');
+    expect(req.request.params.get('recipe_id')).toBe('r-1');
+    expect(req.request.params.get('date_from')).toBe('2026-11-01');
+    expect(req.request.params.get('date_to')).toBe('2026-11-30');
+    req.flush({ count: 1, next: null, previous: null, results: [{ ...orderDto, lot: { id: 'lot-1', code: 'L-1', status: 'released', physical_quantity: '58.0000', available_quantity: '58.0000' } }] });
+  });
+
   it('gets, updates with PUT, starts and lists warehouses', () => {
     api.get('order-1').subscribe();
     http.expectOne('/api/production-orders/order-1/').flush(orderDto);
@@ -90,7 +100,7 @@ describe('OrdersApiService', () => {
     expect(ok.request.method).toBe('POST');
     expect(ok.request.body).toEqual({ entered_at: input.enteredAt, actual_output: '118', ingredients: [{ product_id: 'p-1', actual_quantity: '7' }] });
     ok.flush({
-      ...orderDto, status: 'refrigerating', actual_output: '118.0000', entered_at: input.enteredAt, lot: { id: 'lot-1', code: 'L-20261126-0001' },
+      ...orderDto, status: 'refrigerating', actual_output: '118.0000', entered_at: input.enteredAt, lot: { id: 'lot-1', code: 'L-20261126-0001', status: 'refrigerating', physical_quantity: '118.0000', available_quantity: '0.0000' },
       cost_total: null, ingredients: [{ ...orderDto.ingredients[0], actual_quantity: '7.0000' }],
     });
     let caught: OrderApiError | undefined;

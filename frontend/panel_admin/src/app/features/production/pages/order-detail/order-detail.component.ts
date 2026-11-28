@@ -1,5 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { DatePipe, NgTemplateOutlet, formatDate } from '@angular/common';
+import { DatePipe, formatDate } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -8,8 +8,9 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { finalize, interval } from 'rxjs';
 import Swal from 'sweetalert2';
 import { tr } from '../../../../core/i18n/translate';
+import { StatusBadgeComponent, StatusTone } from '../../../../shared/components/status-badge/status-badge.component';
 import { MoneyPipe } from '../../../../shared/pipes/money.pipe';
-import { OrderApiError, ProductionOrder, formatOrderNumber } from '../../models/order';
+import { OrderApiError, ProductionOrder, ProductionOrderIngredient, formatOrderNumber, fromScaled, toScaled } from '../../models/order';
 import { formatQuantity } from '../../models/recipe';
 import { OrdersApiService } from '../../services/orders-api.service';
 import { PackDialogComponent } from '../../components/pack-dialog/pack-dialog.component';
@@ -17,9 +18,17 @@ import { PackDialogComponent } from '../../components/pack-dialog/pack-dialog.co
 /** Por debajo de 957 px el detalle pasa a filas «etiqueta | valor» y a tarjetas de ingredientes. */
 export const COMPACT_QUERY = '(max-width: 956.98px)';
 
+export interface OrderStep {
+  key: string;
+  label: string;
+  /** ISO 8601 de la etapa alcanzada; `null` si aún no ocurre. */
+  date: string | null;
+  state: 'done' | 'current' | 'pending';
+}
+
 @Component({
   selector: 'app-order-detail',
-  imports: [TranslatePipe, RouterLink, DatePipe, NgTemplateOutlet, MoneyPipe],
+  imports: [TranslatePipe, RouterLink, DatePipe, MoneyPipe, StatusBadgeComponent],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.scss',
 })
@@ -138,9 +147,46 @@ export class OrderDetailComponent implements OnInit {
     }, () => undefined);
   }
 
-  get statusClass(): string {
+  /** Tono del badge de estado (icono + texto, nunca solo color). */
+  get statusTone(): StatusTone {
     const status = this.order?.status;
-    return status === 'draft' ? 'col-blue' : status === 'refrigerating' ? 'col-green' : status === 'ready_to_pack' ? 'col-purple' : 'col-orange';
+    return status === 'draft' ? 'muted' : status === 'refrigerating' ? 'info' : status === 'ready_to_pack' ? 'success' : 'warning';
+  }
+
+  /** Las cuatro etapas con su fecha y si están hechas, es la actual o faltan. */
+  get steps(): OrderStep[] {
+    const order = this.order;
+    if (!order) return [];
+    const current = ['draft', 'in_preparation', 'refrigerating', 'ready_to_pack'].indexOf(order.status);
+    const dates = [order.createdAt, order.startedAt, order.enteredAt, order.releasedAt];
+    const labels = ['PRODUCTION.ORDERS.STATUS.DRAFT', 'PRODUCTION.ORDERS.STATUS.IN_PREPARATION',
+      'PRODUCTION.ORDERS.STATUS.REFRIGERATING', 'PRODUCTION.ORDERS.STATUS.READY_TO_PACK'];
+    return labels.map((label, index) => ({
+      key: label, label, date: index <= current ? dates[index] : null,
+      // «Listo para empacar» es el final del flujo: cuando se alcanza queda como hecho.
+      state: index < current || (index === current && order.status === 'ready_to_pack') ? 'done' : index === current ? 'current' : 'pending',
+    }));
+  }
+
+  /** Avance (0–100) del tiempo en refrigeración hacia el mínimo configurado. */
+  get progressPercent(): number {
+    const order = this.order;
+    if (!order?.release || !order.enteredAt) return 0;
+    if (order.status === 'ready_to_pack') return 100;
+    const total = order.release.minHours * 60;
+    if (total <= 0) return 100;
+    const minutes = Math.max(0, (this.now - Date.parse(order.enteredAt)) / 60000);
+    return Math.min(100, Math.round((minutes / total) * 100));
+  }
+
+  /** Consumo real − previsto con aritmética entera («+0.5 kg» / «−1 kg»); `null` si no hay consumo real o no difiere. */
+  difference(line: ProductionOrderIngredient): string | null {
+    const expected = toScaled(line.expectedQuantity);
+    const actual = line.actualQuantity === null ? null : toScaled(line.actualQuantity);
+    if (expected === null || actual === null || actual === expected) return null;
+    const delta = actual - expected;
+    const text = fromScaled(delta < 0n ? -delta : delta);
+    return `${delta < 0n ? '−' : '+'}${text} ${line.unitAbbreviation ?? ''}`.trim();
   }
 
   async start(): Promise<void> {

@@ -3618,8 +3618,26 @@
         "DONE": "El lote fue liberado y la orden está lista para empacar.",
         "HOURS_MIN": "{{hours}} h {{minutes}} min",
         "HOURS_UNIT": "h",
-        "TOO_EARLY": "Todavía no se cumple el tiempo mínimo de refrigeración. Disponible desde {{date}}."
+        "TOO_EARLY": "Todavía no se cumple el tiempo mínimo de refrigeración. Disponible desde {{date}}.",
+        "OF": "de"
       },
+      "ACTUAL_OUTPUT": "Elaboradas",
+      "BULK_BALANCE": "Saldo a granel",
+      "ALL_RECIPES": "Todas las recetas",
+      "RANGE_INVALID": "La fecha inicial no puede ser posterior a la final.",
+      "LOT_STOCK": {
+        "TITLE": "Existencias del lote",
+        "STATUS": "Estado del lote",
+        "REFRIGERATING": "En refrigeración (bloqueado para empaque)",
+        "RELEASED": "Liberado",
+        "PHYSICAL": "Saldo físico",
+        "AVAILABLE": "Disponible para empaque",
+        "BLOCKED": "Bloqueado para empaque hasta liberar"
+      },
+      "OF_EXPECTED": "de {{quantity}} previstas",
+      "DIFFERENCE": "Diferencia",
+      "DATA_TITLE": "Datos de la orden",
+      "LOT_TITLE": "Lote y refrigeración",
       "PACK": {
         "ACTION": "Registrar empaque",
         "TITLE": "Empaques",
@@ -3659,6 +3677,9 @@
         "BAG_PER_PACK": "Bolsa que se usa por pack",
         "BAG_PER_PACK_HELP": "En la unidad del producto: con un rollo en metros, 0.17 = 17 cm por pack.",
         "BAG_PER_PACK_INVALID": "Ingresa un número mayor que 0 (hasta 4 decimales)."
+      },
+      "STEPS": {
+        "LABEL": "Etapas de la orden"
       }
     }
   }

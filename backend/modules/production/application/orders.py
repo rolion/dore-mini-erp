@@ -1,7 +1,7 @@
 """Casos de uso de órdenes de producción; leen recetas, Catálogo e Inventario solo por puertos."""
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
@@ -90,7 +90,8 @@ class RecipeSource(Protocol):
 class OrderRepository(Protocol):
     def get(self, order_id: UUID, *, for_update: bool = False) -> ProductionOrder | None: ...
     def save(self, order: ProductionOrder) -> ProductionOrder: ...
-    def list(self, *, status: str = 'all'): ...
+    def list(self, *, status: str = 'all', recipe_id: UUID | None = None, date_from: date | None = None,
+             date_to: date | None = None): ...
 
 
 def _utc_now() -> datetime:
