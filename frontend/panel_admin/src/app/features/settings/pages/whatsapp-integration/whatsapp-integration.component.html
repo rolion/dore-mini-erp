@@ -1,0 +1,203 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'SETTINGS.WHATSAPP.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main"><i class="fas fa-home font-17"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'COMMON.CONFIGURACION' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'SETTINGS.WHATSAPP.INTEGRACIONES' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'SETTINGS.WHATSAPP.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row clearfix">
+      <div class="col-lg-12">
+        @if (loading) {
+        <p class="m-4" role="status">{{ 'COMMON.CARGANDO' | translate }}</p>
+        } @else if (loadError) {
+        <div class="m-4">
+          <small class="form-text text-danger d-block mb-2" role="alert">{{ loadError }}</small>
+          <button type="button" class="btn btn-light" (click)="load()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+        </div>
+        } @else {
+        <div class="card">
+          <div class="card-header">
+            <h4>{{ 'SETTINGS.WHATSAPP.TITULO' | translate }}
+              <span class="badge-outline ms-2" [class]="statusClass()" id="whatsapp-status">
+                {{ 'SETTINGS.WHATSAPP.STATUS.' + (connection?.status ?? 'none').toUpperCase() | translate }}
+              </span>
+            </h4>
+          </div>
+          <ul class="nav nav-tabs px-3 pt-2" role="tablist" (keydown)="onTabKeydown($event)">
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'connection'" role="tab" id="tab-connection"
+                [attr.tabindex]="tab === 'connection' ? 0 : -1" [attr.aria-selected]="tab === 'connection'" aria-controls="panel-connection" (click)="select('connection')">{{ 'SETTINGS.WHATSAPP.CONEXION' | translate }}</button>
+            </li>
+            @if (connection?.configured) {
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'test'" role="tab" id="tab-test"
+                [attr.tabindex]="tab === 'test' ? 0 : -1" [attr.aria-selected]="tab === 'test'" aria-controls="panel-test" (click)="select('test')">{{ 'SETTINGS.WHATSAPP.MENSAJE_DE_PRUEBA' | translate }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button type="button" class="nav-link" [class.active]="tab === 'templates'" role="tab" id="tab-templates"
+                [attr.tabindex]="tab === 'templates' ? 0 : -1" [attr.aria-selected]="tab === 'templates'" aria-controls="panel-templates" (click)="select('templates')">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</button>
+            </li>
+            }
+          </ul>
+          @if (tab === 'connection' || !connection?.configured) {
+          <div id="panel-connection" role="tabpanel" aria-labelledby="tab-connection">
+          <div class="card-body">
+            @if (!connection?.configured) {
+            <p class="text-muted">{{ 'SETTINGS.WHATSAPP.SIN_CONEXION' | translate }}</p>
+            }
+            @if (connection?.statusReason) {
+            <div class="alert alert-warning" role="alert">
+              {{ 'SETTINGS.WHATSAPP.REASONS.' + (connection?.statusReason ?? '').toUpperCase() | translate }}
+            </div>
+            }
+            <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="wa-waba" class="form-label">{{ 'SETTINGS.WHATSAPP.WABA_ID' | translate }}</label>
+                  <input id="wa-waba" class="form-control" formControlName="wabaId" inputmode="numeric" autocomplete="off">
+                  @if (fieldErrors['wabaId']) { <small class="text-danger">{{ fieldErrors['wabaId'] }}</small> }
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="wa-number" class="form-label">{{ 'SETTINGS.WHATSAPP.PHONE_NUMBER_ID' | translate }}</label>
+                  <input id="wa-number" class="form-control" formControlName="phoneNumberId" inputmode="numeric" autocomplete="off">
+                  @if (fieldErrors['phoneNumberId']) { <small class="text-danger">{{ fieldErrors['phoneNumberId'] }}</small> }
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="wa-display" class="form-label">{{ 'SETTINGS.WHATSAPP.DISPLAY_PHONE' | translate }}</label>
+                  <input id="wa-display" class="form-control" formControlName="displayPhone" inputmode="tel" autocomplete="off">
+                  @if (fieldErrors['displayPhone']) { <small class="text-danger">{{ fieldErrors['displayPhone'] }}</small> }
+                </div>
+                <div class="col-md-6 mb-3"></div>
+                <div class="col-md-6 mb-3">
+                  <label for="wa-secret" class="form-label">{{ 'SETTINGS.WHATSAPP.SECRET_REF' | translate }}</label>
+                  <input id="wa-secret" class="form-control" formControlName="secretRef" autocomplete="off" [placeholder]="(connection?.secretRefPrefix ?? '') + 'TOKEN'">
+                  <small class="text-muted">{{ 'SETTINGS.WHATSAPP.SECRET_REF_AYUDA' | translate: { prefix: connection?.secretRefPrefix } }}</small>
+                  @if (fieldErrors['secretRef']) { <small class="text-danger d-block">{{ fieldErrors['secretRef'] }}</small> }
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="wa-app-secret" class="form-label">{{ 'SETTINGS.WHATSAPP.APP_SECRET_REF' | translate }}</label>
+                  <input id="wa-app-secret" class="form-control" formControlName="appSecretRef" autocomplete="off" [placeholder]="(connection?.secretRefPrefix ?? '') + 'APP_SECRET'">
+                  <small class="text-muted">{{ 'SETTINGS.WHATSAPP.APP_SECRET_REF_AYUDA' | translate: { prefix: connection?.secretRefPrefix } }}</small>
+                  @if (fieldErrors['appSecretRef']) { <small class="text-danger d-block">{{ fieldErrors['appSecretRef'] }}</small> }
+                </div>
+              </div>
+              @if (saveError) { <div class="alert alert-danger" role="alert">{{ saveError }}</div> }
+              @if (saved) { <div class="alert alert-success" role="status">{{ 'SETTINGS.WHATSAPP.GUARDADO' | translate }}</div> }
+              @if (confirmingChange) {
+              <div class="alert alert-warning" role="alert">
+                <p class="mb-2">{{ 'SETTINGS.WHATSAPP.CONFIRMAR_CAMBIO' | translate }}</p>
+                <button type="button" class="btn btn-warning me-2" (click)="submit(true)">{{ 'SETTINGS.WHATSAPP.CONFIRMAR' | translate }}</button>
+                <button type="button" class="btn btn-light" (click)="cancelChange()">{{ 'COMMON.CANCELAR' | translate }}</button>
+              </div>
+              }
+              <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving || loading">{{ 'COMMON.GUARDAR' | translate }}</button>
+            </form>
+
+            @if (connection?.configured) {
+            <hr>
+            <h5>{{ 'SETTINGS.WHATSAPP.DATOS_PARA_META' | translate }}</h5>
+            <p class="text-muted">{{ 'SETTINGS.WHATSAPP.DATOS_PARA_META_AYUDA' | translate }}</p>
+            <div class="mb-3">
+              <label for="wa-webhook" class="form-label">{{ 'SETTINGS.WHATSAPP.WEBHOOK_URL' | translate }}</label>
+              <div class="input-group">
+                <input id="wa-webhook" class="form-control" [value]="connection?.webhookUrl" readonly>
+                <button type="button" class="btn btn-light" (click)="copy(connection?.webhookUrl ?? '', 'url')" [attr.aria-label]="'SETTINGS.WHATSAPP.COPIAR_URL' | translate">
+                  {{ (copied === 'url' ? 'SETTINGS.WHATSAPP.COPIADO' : 'SETTINGS.WHATSAPP.COPIAR') | translate }}</button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="wa-verify" class="form-label">{{ 'SETTINGS.WHATSAPP.VERIFY_TOKEN' | translate }}</label>
+              <div class="input-group">
+                <input id="wa-verify" class="form-control" [value]="connection?.verifyToken" readonly>
+                <button type="button" class="btn btn-light" (click)="copy(connection?.verifyToken ?? '', 'token')" [attr.aria-label]="'SETTINGS.WHATSAPP.COPIAR_TOKEN' | translate">
+                  {{ (copied === 'token' ? 'SETTINGS.WHATSAPP.COPIADO' : 'SETTINGS.WHATSAPP.COPIAR') | translate }}</button>
+              </div>
+            </div>
+            <div class="visually-hidden" role="status" aria-live="polite">{{ copied ? ('SETTINGS.WHATSAPP.COPIADO_AVISO' | translate) : '' }}</div>
+            @if (copyError) {
+            <div class="alert alert-warning" role="alert">{{ 'SETTINGS.WHATSAPP.COPIAR_ERROR' | translate }}</div>
+            }
+            }
+          </div>
+          </div>
+          } @else if (tab === 'test') {
+          <div class="card-body" id="panel-test" role="tabpanel" aria-labelledby="tab-test">
+            @if (!canSendTest) {
+            <p class="text-muted">{{ 'SETTINGS.WHATSAPP.PRUEBA_REQUIERE_ACTIVA' | translate }}</p>
+            }
+            <form [formGroup]="testForm" (ngSubmit)="sendTest()" novalidate>
+              <div class="row">
+                <div class="col-md-5 mb-3">
+                  <label for="wa-to" class="form-label">{{ 'SETTINGS.WHATSAPP.TELEFONO_DESTINO' | translate }}</label>
+                  <input id="wa-to" class="form-control" formControlName="to" inputmode="tel" autocomplete="off">
+                </div>
+                <div class="col-md-5 mb-3">
+                  <label for="wa-template" class="form-label">{{ 'SETTINGS.WHATSAPP.PLANTILLA' | translate }}</label>
+                  <ng-select inputId="wa-template" [items]="templateOptions" bindLabel="label" bindValue="id"
+                    formControlName="templateId" [clearable]="false" data-testid="wa-template"
+                    [placeholder]="'SETTINGS.WHATSAPP.ELIGE_PLANTILLA' | translate"
+                    [notFoundText]="'SETTINGS.WHATSAPP.SIN_PLANTILLAS_APROBADAS' | translate"></ng-select>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                  <button type="submit" class="btn btn-primary w-100" [disabled]="testForm.invalid || testing || !canSendTest">
+                    {{ 'SETTINGS.WHATSAPP.ENVIAR_PRUEBA' | translate }}</button>
+                </div>
+              </div>
+            </form>
+            @if (testResult) {
+            <div class="alert" [class.alert-success]="testResult.ok" [class.alert-danger]="!testResult.ok" role="status" id="whatsapp-test-result">
+              {{ testResult.ok ? ('SETTINGS.WHATSAPP.PRUEBA_ENCOLADA' | translate) : testResult.message }}
+            </div>
+            }
+          </div>
+          } @else {
+          <div class="card-body" id="panel-templates" role="tabpanel" aria-labelledby="tab-templates">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</h5>
+              <button type="button" class="btn btn-light" (click)="sync()" [disabled]="syncing || !canSendTest">
+                {{ (syncing ? 'SETTINGS.WHATSAPP.SINCRONIZANDO' : 'SETTINGS.WHATSAPP.SINCRONIZAR') | translate }}</button>
+            </div>
+            @if (syncError) { <div class="alert alert-danger" role="alert">{{ syncError }}</div> }
+            @if (!templates.length) {
+            <p class="text-muted">{{ 'SETTINGS.WHATSAPP.SIN_PLANTILLAS' | translate }}</p>
+            } @else {
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <caption class="visually-hidden">{{ 'SETTINGS.WHATSAPP.PLANTILLAS' | translate }}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'COMMON.NOMBRE' | translate }}</th>
+                    <th scope="col">{{ 'SETTINGS.WHATSAPP.IDIOMA' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.CATEGORIA' | translate }}</th>
+                    <th scope="col">{{ 'COMMON.ESTADO' | translate }}</th>
+                    <th scope="col">{{ 'SETTINGS.WHATSAPP.SINCRONIZADA' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (t of templates; track t.id) {
+                  <tr>
+                    <td>{{ t.name }}</td>
+                    <td>{{ t.language }}</td>
+                    <td>{{ t.category }}</td>
+                    <td><div class="badge-outline" [class]="templateBadge(t.status)">{{ templateStatusLabel(t.status) }}</div></td>
+                    <td>{{ t.syncedAt | date: 'short' }}</td>
+                  </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

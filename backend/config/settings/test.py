@@ -11,3 +11,4 @@ TEST_RUNNER = 'shared.test_runner.StrictClockRunner'
 # Base de pruebas propia por sesión/worktree: dos corridas a la vez sobre `test_<base>` se pisan
 # (create/destroy simultáneos). Opcional; sin la variable, Django usa `test_<base>`.
 DATABASES['default']['TEST'] = {'NAME': env('TEST_DATABASE_NAME', default=None)}
+MESSAGING_PROVIDER = 'fake'

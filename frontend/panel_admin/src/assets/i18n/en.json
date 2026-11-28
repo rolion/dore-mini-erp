@@ -165,7 +165,8 @@
     "SETTINGS": {
       "TEXT": "Settings",
       "LIST": {
-        "MODULES": "Modules"
+        "MODULES": "Modules",
+        "WHATSAPP": "WhatsApp"
       }
     },
     "SALES": {
@@ -2126,6 +2127,75 @@
       "NAMED_NOT_ENABLED": "The {{p0}} module is not enabled for your company.",
       "THIS_NOT_ENABLED": "This module is not enabled for your company.",
       "ADMIN_CAN_ENABLE": "An administrator can enable it in Settings › Modules."
+    },
+    "WHATSAPP": {
+      "TITULO": "WhatsApp",
+      "INTEGRACIONES": "Integrations",
+      "CONEXION": "Connection",
+      "STATUS": {
+        "NONE": "Not configured",
+        "PENDING": "Pending",
+        "ACTIVE": "Connected",
+        "ERROR": "Error",
+        "DISABLED": "Disabled"
+      },
+      "SIN_CONEXION": "You have not connected a number yet. Fill in your WhatsApp Business account details from Meta; the setup guide is in the project documentation.",
+      "REASONS": {
+        "SECRETS_MISSING": "The server is missing the environment variables with the token or the App Secret. Ask whoever manages the deployment to create them, then save again.",
+        "TOKEN_EXPIRED": "Meta rejected the token (expired or revoked). Generate a new one, update the server variable and sync the templates."
+      },
+      "WABA_ID": "WhatsApp Business Account ID (WABA)",
+      "PHONE_NUMBER_ID": "Phone number ID",
+      "DISPLAY_PHONE": "Display number (optional)",
+      "SECRET_REF": "Token variable",
+      "SECRET_REF_AYUDA": "Name of the server environment variable holding the system user token. It must start with {{prefix}} (your company’s own prefix). The token is never typed here.",
+      "APP_SECRET_REF": "App Secret variable",
+      "APP_SECRET_REF_AYUDA": "Name of the environment variable holding the Meta app App Secret. It must start with {{prefix}}.",
+      "GUARDADO": "Connection saved.",
+      "CONFIRMAR_CAMBIO": "Changing the account or the number changes where messages are sent from. Confirm the change?",
+      "CONFIRMAR": "Confirm change",
+      "DATOS_PARA_META": "Values to set in Meta",
+      "DATOS_PARA_META_AYUDA": "Copy these values into your Meta app webhook settings and subscribe to the “messages” field.",
+      "WEBHOOK_URL": "Callback URL (webhook)",
+      "VERIFY_TOKEN": "Verify token",
+      "COPIAR": "Copy",
+      "COPIADO": "Copied",
+      "COPIADO_AVISO": "Copied to the clipboard",
+      "COPIAR_ERROR": "Could not copy. Select the text and copy it manually.",
+      "MENSAJE_DE_PRUEBA": "Send test message",
+      "PRUEBA_REQUIERE_ACTIVA": "The connection must be active to send a test.",
+      "TELEFONO_DESTINO": "Destination phone",
+      "PLANTILLA": "Template",
+      "ELIGE_PLANTILLA": "Choose an approved template",
+      "ENVIAR_PRUEBA": "Send test",
+      "PRUEBA_ENCOLADA": "Test message queued: it will be sent in a few seconds.",
+      "PLANTILLAS": "Templates",
+      "SINCRONIZAR": "Sync",
+      "SINCRONIZANDO": "Syncing…",
+      "SIN_PLANTILLAS": "No templates synced. Create and get templates approved in WhatsApp Manager, then press “Sync”.",
+      "IDIOMA": "Language",
+      "SINCRONIZADA": "Synced",
+      "ERROR_RED": "Could not reach the server.",
+      "ERROR_GENERICO": "The operation could not be completed.",
+      "ERRORS": {
+        "WINDOW_CLOSED": "The 24-hour window is closed: only approved templates can be sent.",
+        "TEMPLATE_NOT_APPROVED": "The template is not approved by Meta.",
+        "CONNECTION_NOT_ACTIVE": "The WhatsApp connection is not active.",
+        "NOT_FOUND": "Not found.",
+        "PROVIDER_REJECTED": "WhatsApp rejected the request.",
+        "SECRET_UNAVAILABLE": "The token environment variable is missing on the server."
+      },
+      "TEMPLATE_STATUS": {
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected",
+        "PAUSED": "Paused",
+        "PENDING": "Pending",
+        "DISABLED": "Disabled",
+        "OTHER": "Other"
+      },
+      "COPIAR_URL": "Copy the webhook URL",
+      "COPIAR_TOKEN": "Copy the verify token",
+      "SIN_PLANTILLAS_APROBADAS": "No approved templates"
     }
   },
   "LAYOUT": {

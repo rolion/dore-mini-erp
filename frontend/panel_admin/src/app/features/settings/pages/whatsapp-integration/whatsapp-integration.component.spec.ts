@@ -1,0 +1,172 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
+import { provideTestTranslations } from '../../../../core/i18n/testing';
+import { WhatsappApiError, WhatsappConnection, WhatsappTemplate } from '../../models/whatsapp';
+import { WhatsappApiService } from '../../services/whatsapp-api.service';
+import { WhatsappIntegrationComponent } from './whatsapp-integration.component';
+
+const connection = (extra: Partial<WhatsappConnection> = {}): WhatsappConnection => ({
+  configured: true, webhookUrl: 'https://x/hook/', secretRefPrefix: 'WHATSAPP_AAAA_', wabaId: '9', phoneNumberId: '111', displayPhone: '', secretRef: 'WHATSAPP_AAAA_T',
+  appSecretRef: 'WHATSAPP_AAAA_A', verifyToken: 'verify-1', status: 'active', statusReason: '', ...extra,
+});
+const template = (status: string): WhatsappTemplate => ({ id: `t-${status}`, name: `n-${status}`, language: 'es', category: 'UTILITY', status, syncedAt: null });
+
+describe('WhatsappIntegrationComponent', () => {
+  let fixture: ComponentFixture<WhatsappIntegrationComponent>;
+  let api: jasmine.SpyObj<WhatsappApiService>;
+  const el = () => fixture.nativeElement as HTMLElement;
+
+  const setup = (conn: WhatsappConnection, templates: WhatsappTemplate[] = []) => {
+    api.getConnection.and.returnValue(of(conn));
+    api.listTemplates.and.returnValue(of(templates));
+    fixture = TestBed.createComponent(WhatsappIntegrationComponent);
+    fixture.detectChanges();
+  };
+
+  beforeEach(() => {
+    api = jasmine.createSpyObj<WhatsappApiService>('WhatsappApiService', ['getConnection', 'saveConnection', 'listTemplates', 'syncTemplates', 'sendTestMessage']);
+    TestBed.configureTestingModule({
+      imports: [WhatsappIntegrationComponent],
+      providers: [...provideTestTranslations(), provideRouter([]), { provide: WhatsappApiService, useValue: api }],
+    });
+  });
+
+  it('shows the empty state and hides test and templates when nothing is configured (UI-02)', () => {
+    setup(connection({ configured: false, status: 'none', wabaId: '', phoneNumberId: '', secretRef: '', appSecretRef: '' }));
+    expect(el().querySelector('#whatsapp-status')?.textContent).toContain('Sin configurar');
+    expect(el().querySelector('#wa-webhook')).toBeNull();
+    expect(el().querySelector('#wa-template')).toBeNull();
+  });
+
+  it('rejects secret names without the WHATSAPP_ prefix and does not call the API', () => {
+    setup(connection({ configured: false, status: 'none' }));
+    component().form.setValue({ wabaId: '9', phoneNumberId: '1', displayPhone: '', secretRef: 'SECRET_KEY', appSecretRef: 'WHATSAPP_AAAA_A' });
+    component().submit();
+    expect(api.saveConnection).not.toHaveBeenCalled();
+    expect(component().form.controls.secretRef.invalid).toBeTrue();
+  });
+
+  it('only accepts variable names with the company prefix (REV-01)', () => {
+    setup(connection({ configured: false, status: 'none' }));
+    const { secretRef } = component().form.controls;
+    secretRef.setValue('WHATSAPP_BBBB_TOKEN');
+    expect(secretRef.invalid).toBeTrue();
+    secretRef.setValue('WHATSAPP_AAAA_');
+    expect(secretRef.invalid).toBeTrue();
+    secretRef.setValue('WHATSAPP_AAAA_TOKEN');
+    expect(secretRef.valid).toBeTrue();
+  });
+
+  it('shows one tab per block and names the copy buttons (UI-01, UI-03)', () => {
+    setup(connection());
+    expect(el().querySelectorAll('[role="tab"]').length).toBe(3);
+    const labels = Array.from(el().querySelectorAll<HTMLButtonElement>('.input-group button')).map((b) => b.getAttribute('aria-label'));
+    expect(labels.length).toBe(2);
+    expect(new Set(labels).size).toBe(2);
+    component().select('test');
+    fixture.detectChanges();
+    expect(el().querySelector('ng-select')).not.toBeNull();
+  });
+
+  it('moves between tabs with the arrow keys and keeps a single tab stop (REV-08)', () => {
+    setup(connection());
+    const tabs = () => Array.from(el().querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    expect(tabs().map((t) => t.tabIndex)).toEqual([0, -1, -1]);
+    const list = el().querySelector('[role="tablist"]') as HTMLElement;
+    const press = (key: string) => {
+      list.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      fixture.detectChanges();
+    };
+    press('ArrowRight');
+    expect(component().tab).toBe('test');
+    expect(tabs().map((t) => t.tabIndex)).toEqual([-1, 0, -1]);
+    press('End');
+    expect(component().tab).toBe('templates');
+    press('ArrowRight');
+    expect(component().tab).toBe('connection');
+    press('ArrowLeft');
+    expect(component().tab).toBe('templates');
+    press('Home');
+    expect(component().tab).toBe('connection');
+  });
+
+  it('announces the copy and reports when the clipboard refuses (REV-08)', async () => {
+    setup(connection());
+    const writeText = jasmine.createSpy('writeText').and.returnValue(Promise.resolve());
+    spyOnProperty(navigator, 'clipboard', 'get').and.returnValue({ writeText } as unknown as Clipboard);
+    component().copy('abc', 'url');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el().querySelector('[role="status"]')?.textContent).toContain('Copiado');
+    writeText.and.returnValue(Promise.reject(new Error('denied')));
+    component().copy('abc', 'token');
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(el().querySelector('.alert-warning')).not.toBeNull();
+  });
+
+  it('hides the extra tabs while nothing is configured', () => {
+    setup(connection({ configured: false, status: 'none' }));
+    expect(el().querySelectorAll('[role="tab"]').length).toBe(1);
+  });
+
+  it('asks for confirmation before changing the sender and saves once confirmed', () => {
+    setup(connection());
+    api.saveConnection.and.returnValue(of(connection({ phoneNumberId: '222' })));
+    component().form.patchValue({ phoneNumberId: '222' });
+    component().submit();
+    expect(component().confirmingChange).toBeTrue();
+    expect(api.saveConnection).not.toHaveBeenCalled();
+    component().submit(true);
+    expect(api.saveConnection).toHaveBeenCalledTimes(1);
+    expect(component().saved).toBeTrue();
+  });
+
+  it('shows server field errors', () => {
+    setup(connection({ configured: false, status: 'none' }));
+    api.saveConnection.and.returnValue(throwError(() => new WhatsappApiError('x', 400, null, { phoneNumberId: 'Este número ya está conectado' })));
+    component().form.setValue({ wabaId: '9', phoneNumberId: '1', displayPhone: '', secretRef: 'WHATSAPP_AAAA_T', appSecretRef: 'WHATSAPP_AAAA_A' });
+    component().submit();
+    fixture.detectChanges();
+    expect(el().textContent).toContain('Este número ya está conectado');
+  });
+
+  it('lists templates with badges and offers only approved ones for the test (UI-01)', () => {
+    setup(connection(), [template('APPROVED'), template('REJECTED'), template('PAUSED')]);
+    component().select('templates');
+    fixture.detectChanges();
+    expect(el().querySelectorAll('tbody tr').length).toBe(3);
+    expect(el().querySelector('.badge-outline.col-red')).not.toBeNull();
+    expect(component().templateOptions.length).toBe(1); // solo la aprobada
+  });
+
+  it('sends the test message and reports an error from the server', () => {
+    setup(connection(), [template('APPROVED')]);
+    component().testForm.setValue({ to: '76543210', templateId: 't-APPROVED' });
+    api.sendTestMessage.and.returnValue(of({ id: 'm', status: 'queued' }));
+    component().sendTest();
+    expect(component().testResult?.ok).toBeTrue();
+    api.sendTestMessage.and.returnValue(throwError(() => new WhatsappApiError('Plantilla no aprobada', 409, 'template_not_approved')));
+    component().sendTest();
+    expect(component().testResult).toEqual({ ok: false, message: 'Plantilla no aprobada' });
+  });
+
+  it('disables the test when the connection is not active', () => {
+    setup(connection({ status: 'error', statusReason: 'token_expired' }), [template('APPROVED')]);
+    expect(component().canSendTest).toBeFalse();
+    expect(el().querySelector('.alert-warning')?.textContent).toContain('Meta rechazó el token');
+  });
+
+  it('syncs templates', () => {
+    setup(connection());
+    api.syncTemplates.and.returnValue(of([template('APPROVED')]));
+    api.getConnection.and.returnValue(of(connection()));
+    component().sync();
+    expect(component().templates.length).toBe(1);
+  });
+
+  function component(): WhatsappIntegrationComponent {
+    return fixture.componentInstance;
+  }
+});

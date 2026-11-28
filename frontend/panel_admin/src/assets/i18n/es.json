@@ -158,7 +158,8 @@
     "SETTINGS": {
       "TEXT": "Configuración",
       "LIST": {
-        "MODULES": "Módulos"
+        "MODULES": "Módulos",
+        "WHATSAPP": "WhatsApp"
       }
     },
     "SALES": {
@@ -2126,6 +2127,75 @@
       "NAMED_NOT_ENABLED": "El módulo {{p0}} no está habilitado para tu empresa.",
       "THIS_NOT_ENABLED": "Este módulo no está habilitado para tu empresa.",
       "ADMIN_CAN_ENABLE": "Un administrador puede habilitarlo en Configuración › Módulos."
+    },
+    "WHATSAPP": {
+      "TITULO": "WhatsApp",
+      "INTEGRACIONES": "Integraciones",
+      "CONEXION": "Conexión",
+      "STATUS": {
+        "NONE": "Sin configurar",
+        "PENDING": "Pendiente",
+        "ACTIVE": "Conectada",
+        "ERROR": "Con error",
+        "DISABLED": "Deshabilitada"
+      },
+      "SIN_CONEXION": "Aún no conectaste un número. Completa los datos de tu cuenta de WhatsApp Business en Meta; la guía de configuración está en la documentación del proyecto.",
+      "REASONS": {
+        "SECRETS_MISSING": "Faltan las variables de entorno con el token o el App Secret en el servidor. Pide a quien administra el despliegue que las cree y vuelve a guardar.",
+        "TOKEN_EXPIRED": "Meta rechazó el token (expiró o fue revocado). Genera uno nuevo, actualiza la variable en el servidor y sincroniza las plantillas."
+      },
+      "WABA_ID": "ID de la cuenta de WhatsApp Business (WABA)",
+      "PHONE_NUMBER_ID": "ID del número de teléfono",
+      "DISPLAY_PHONE": "Número visible (opcional)",
+      "SECRET_REF": "Variable del token",
+      "SECRET_REF_AYUDA": "Nombre de la variable de entorno del servidor con el token del usuario del sistema. Debe empezar con {{prefix}} (prefijo propio de tu empresa). El token nunca se escribe aquí.",
+      "APP_SECRET_REF": "Variable del App Secret",
+      "APP_SECRET_REF_AYUDA": "Nombre de la variable de entorno con el App Secret de la app de Meta. Debe empezar con {{prefix}}.",
+      "GUARDADO": "Conexión guardada.",
+      "CONFIRMAR_CAMBIO": "Cambiar la cuenta o el número cambia desde dónde se envían los mensajes. ¿Confirmas el cambio?",
+      "CONFIRMAR": "Confirmar cambio",
+      "DATOS_PARA_META": "Datos para configurar en Meta",
+      "DATOS_PARA_META_AYUDA": "Copia estos valores en la configuración del webhook de tu app de Meta y suscribe el campo «messages».",
+      "WEBHOOK_URL": "URL de devolución de llamada (webhook)",
+      "VERIFY_TOKEN": "Token de verificación",
+      "COPIAR": "Copiar",
+      "COPIADO": "Copiado",
+      "COPIADO_AVISO": "Copiado en el portapapeles",
+      "COPIAR_ERROR": "No se pudo copiar. Selecciona el texto y cópialo a mano.",
+      "MENSAJE_DE_PRUEBA": "Enviar mensaje de prueba",
+      "PRUEBA_REQUIERE_ACTIVA": "La conexión debe estar activa para enviar una prueba.",
+      "TELEFONO_DESTINO": "Teléfono de destino",
+      "PLANTILLA": "Plantilla",
+      "ELIGE_PLANTILLA": "Elige una plantilla aprobada",
+      "ENVIAR_PRUEBA": "Enviar prueba",
+      "PRUEBA_ENCOLADA": "Mensaje de prueba en cola: se enviará en unos segundos.",
+      "PLANTILLAS": "Plantillas",
+      "SINCRONIZAR": "Sincronizar",
+      "SINCRONIZANDO": "Sincronizando…",
+      "SIN_PLANTILLAS": "No hay plantillas sincronizadas. Crea y aprueba plantillas en WhatsApp Manager y pulsa «Sincronizar».",
+      "IDIOMA": "Idioma",
+      "SINCRONIZADA": "Sincronizada",
+      "ERROR_RED": "No se pudo conectar con el servidor.",
+      "ERROR_GENERICO": "No se pudo completar la operación.",
+      "ERRORS": {
+        "WINDOW_CLOSED": "La ventana de 24 h está cerrada: solo se pueden enviar plantillas aprobadas.",
+        "TEMPLATE_NOT_APPROVED": "La plantilla no está aprobada por Meta.",
+        "CONNECTION_NOT_ACTIVE": "La conexión de WhatsApp no está activa.",
+        "NOT_FOUND": "No encontrado.",
+        "PROVIDER_REJECTED": "WhatsApp rechazó la solicitud.",
+        "SECRET_UNAVAILABLE": "Falta la variable de entorno del token en el servidor."
+      },
+      "TEMPLATE_STATUS": {
+        "APPROVED": "Aprobada",
+        "REJECTED": "Rechazada",
+        "PAUSED": "Pausada",
+        "PENDING": "Pendiente",
+        "DISABLED": "Deshabilitada",
+        "OTHER": "Otro"
+      },
+      "COPIAR_URL": "Copiar la URL del webhook",
+      "COPIAR_TOKEN": "Copiar el token de verificación",
+      "SIN_PLANTILLAS_APROBADAS": "No hay plantillas aprobadas"
     }
   },
   "LAYOUT": {

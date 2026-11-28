@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/stock-adjustments/', include('modules.inventory.api.adjustment_urls')),
     path('api/valuation/', include('modules.costing.api.urls')),
     path('api/crm/', include('modules.crm.api.urls')),
+    path('api/messaging/', include('modules.messaging.api.urls')),
     path('api/customers/', include('modules.customers.api.urls')),
     path('api/suppliers/', include('modules.purchases.api.urls')),
     path('api/purchases/', include('modules.purchases.api.purchase_urls')),

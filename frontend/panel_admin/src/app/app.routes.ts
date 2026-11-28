@@ -421,6 +421,13 @@ export const APP_ROUTE: Route[] = [
                     ),
             },
             {
+                path: 'settings/integrations/whatsapp',
+                loadComponent: () =>
+                    import('./features/settings/pages/whatsapp-integration/whatsapp-integration.component').then(
+                        (m) => m.WhatsappIntegrationComponent
+                    ),
+            },
+            {
                 path: 'settings/modules',
                 loadComponent: () =>
                     import('./features/settings/pages/module-list/module-list.component').then(

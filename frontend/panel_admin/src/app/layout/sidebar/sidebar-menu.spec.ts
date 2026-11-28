@@ -68,7 +68,7 @@ describe('Sidebar menu (routes.json)', () => {
       '/pocketbiz/accounting/income-expense', '/pocketbiz/accounting/settings',
     ]); // Cuentas, Movimientos, Saldos, Flujo de dinero, Ingresos y egresos, Configuración (AC-09)
     expect(settings.module).toBeUndefined();
-    expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules']);
+    expect(settings.submenu.map((item) => item.path)).toEqual(['/pocketbiz/settings/modules', '/pocketbiz/settings/integrations/whatsapp']);
     expect(dashboard.path).toBe('/pocketbiz/dashboard/main');
     expect(dashboard.submenu).toEqual([]);
     expect(dashboard.groupTitle).toBeFalse();
@@ -107,7 +107,7 @@ describe('Sidebar menu (routes.json)', () => {
 
   it('has a translation in en, es and pt for every menu title (AC-09)', () => {
     const titles = routes.flatMap((route) => [route.title, ...route.submenu.map((item) => item.title)]);
-    expect(titles.length).toBe(54); // PB-CRM-004 suma Prospectos y Oportunidades; PB-CRM-005, Por contactar
+    expect(titles.length).toBe(55); // PB-CRM-016 suma WhatsApp; PB-CRM-004 suma Prospectos y Oportunidades; PB-CRM-005, Por contactar
 
     for (const [lang, dictionary] of [['en', en], ['es', es], ['pt', pt]] as const) {
       for (const title of titles) {

@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'modules.receivables',
     'modules.reporting',
     'modules.crm',
+    'modules.messaging',
     'modules.modularity',
     'modules.accounting',
     'modules.data_import',
@@ -83,6 +84,11 @@ USE_TZ = True
 
 # Código de país (sin '+') que se antepone a teléfonos locales al normalizarlos (Customers).
 DEFAULT_PHONE_COUNTRY_CODE = env('DEFAULT_PHONE_COUNTRY_CODE', default='591')
+
+# Mensajería (WhatsApp Cloud API). `fake` = proveedor simulado sin red. Los secretos van en variables WHATSAPP_*.
+MESSAGING_PROVIDER = env('MESSAGING_PROVIDER', default='whatsapp')
+WHATSAPP_API_BASE_URL = env('WHATSAPP_API_BASE_URL', default='https://graph.facebook.com')
+WHATSAPP_API_VERSION = env('WHATSAPP_API_VERSION', default='v21.0')
 
 # Interruptor del registro público (`POST /api/auth/register/`): en falso responde 403 y no crea nada.
 REGISTRATION_ENABLED = env.bool('REGISTRATION_ENABLED', default=True)
