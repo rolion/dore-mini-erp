@@ -28,6 +28,7 @@ export const SOURCE_TYPE_OPTIONS: readonly { value: string; label: string }[] = 
   { value: 'inventory_adjustment', get label() { return tr('INVENTORY.MOVEMENT.AJUSTE_DE_INVENTARIO'); } },
   { value: 'inventory_opening', get label() { return tr('INVENTORY.MOVEMENT.APERTURA_DE_EXISTENCIAS'); } },
   { value: 'production_order', get label() { return tr('INVENTORY.MOVEMENT.ORDEN_DE_PRODUCCION'); } },
+  { value: 'production_packing', get label() { return tr('INVENTORY.MOVEMENT.EMPAQUE_DE_PRODUCCION'); } },
   { value: 'none', get label() { return tr('INVENTORY.MOVEMENT.SIN_DOCUMENTO'); } },
 ];
 

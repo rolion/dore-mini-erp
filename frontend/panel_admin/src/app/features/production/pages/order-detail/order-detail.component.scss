@@ -160,6 +160,11 @@
 
 .order-dl {
   margin-bottom: 0;
+
+  // En pantallas anchas, etiqueta y valor no deben quedar a un extremo y otro del panel.
+  @media (min-width: 1200px) {
+    max-width: 38rem;
+  }
 }
 
 .order-row {
@@ -188,7 +193,8 @@
 }
 
 // Ingredientes en tarjetas (< 957 px).
-.ingredient-cards {
+.ingredient-cards,
+.packing-cards {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.75rem;
@@ -196,9 +202,15 @@
   padding: 0;
 }
 
-.ingredient-card {
+.ingredient-card,
+.packing-card {
   box-shadow: none;
   border: 1px solid var(--bs-border-color, #dee2e6);
   padding: 0.5rem 1rem;
   margin: 0;
+}
+
+// Dentro de la sección «Empaques» (ya tiene margen propio).
+.packing-cards {
+  margin: 0 0 1rem;
 }

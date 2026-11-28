@@ -1,0 +1,36 @@
+<div class="odo-chart">
+  @for (item of rows(); track item.row.id; let r = $index) {
+    <div class="odo-row" role="group" [attr.aria-label]="rowLabel(item.row)" [attr.data-testid]="'row-' + item.row.id">
+      @for (tooth of item.teeth; track tooth.piece; let c = $index) {
+        <button type="button" class="odo-tooth" [class.selected]="tooth.selected" [class.temporary]="tooth.temporary"
+          [class.unevaluated]="!tooth.evaluated" [attr.data-piece]="tooth.piece" [attr.aria-label]="tooth.label"
+          [attr.aria-pressed]="tooth.selected" [attr.tabindex]="tabIndex(tooth.piece)"
+          (click)="pieceSelected.emit(tooth.piece)" (focus)="onFocus(tooth.piece)" (keydown)="onKey($event, r, c)">
+          <span class="odo-number">{{ tooth.piece }}@if (mixed) {<small class="ms-1 badge text-bg-light border" aria-hidden="true">{{ tooth.temporary ? temporaryMark : permanentMark }}</small>}</span>
+          <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false" [class]="tooth.wholeColor ? 'whole fill-' + tooth.wholeColor : ''">
+            @for (shape of tooth.shapes; track shape.code) {
+              <polygon [attr.points]="shape.points" [attr.data-surface]="shape.code"
+                [class]="shape.color ? 'fill-' + shape.color : (tooth.wholeColor ? 'fill-none-whole' : 'fill-empty')"></polygon>
+            }
+          </svg>
+          <span class="odo-abbr">{{ tooth.evaluated ? tooth.abbr : ('DENTISTRY.ODONTOGRAM.SIN_EVALUAR_CORTO' | translate) }}</span>
+        </button>
+      }
+    </div>
+  }
+  <section class="odo-legend mt-3" aria-labelledby="odo-legend-title">
+    <h5 id="odo-legend-title" class="h6 fw-semibold">{{ 'DENTISTRY.ODONTOGRAM.LEYENDA' | translate }}</h5>
+    <ul class="list-inline mb-0">
+      @for (item of legend(); track item.code) {
+        <li class="list-inline-item me-3">
+          <span class="odo-swatch" [class]="'odo-swatch fill-' + item.color" aria-hidden="true"></span>
+          <strong>{{ item.abbr }}</strong> · {{ item.name }}
+        </li>
+      }
+      <li class="list-inline-item">
+        <span class="odo-swatch odo-swatch-empty" aria-hidden="true"></span>
+        <strong>{{ 'DENTISTRY.ODONTOGRAM.SIN_EVALUAR_CORTO' | translate }}</strong> · {{ 'DENTISTRY.ODONTOGRAM.SIN_EVALUAR' | translate }}
+      </li>
+    </ul>
+  </section>
+</div>

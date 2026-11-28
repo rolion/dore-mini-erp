@@ -163,6 +163,12 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () => import('./features/accounting/pages/income-expense/income-expense.component').then(m => m.IncomeExpenseComponent),
             },
             {
+                path: 'accounting/balance-sheet',
+                canActivate: [moduleGuard],
+                data: { module: 'accounting' },
+                loadComponent: () => import('./features/accounting/pages/balance-sheet/balance-sheet.component').then(m => m.BalanceSheetComponent),
+            },
+            {
                 path: 'accounting/entries',
                 canActivate: [moduleGuard],
                 data: { module: 'accounting' },
@@ -246,6 +252,24 @@ export const APP_ROUTE: Route[] = [
                     import('./features/sales/sales.routes').then((m) => m.SALES_ORDERS_ROUTE),
             },
             {
+                path: 'sales/reports/income',
+                canActivate: [moduleGuard],
+                data: { module: 'sales', report: 'paid' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
+                    ),
+            },
+            {
+                path: 'sales/reports/receivable',
+                canActivate: [moduleGuard],
+                data: { module: 'sales', report: 'receivable' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
+                    ),
+            },
+            {
                 // Importar ventas (asistente e historial): bajo Ventas; el servidor exige rol admin.
                 path: 'sales/import',
                 canActivate: [moduleGuard],
@@ -284,6 +308,24 @@ export const APP_ROUTE: Route[] = [
                 loadComponent: () =>
                     import('./features/settings/pages/coming-soon/coming-soon.component').then(
                         (m) => m.ComingSoonComponent
+                    ),
+            },
+            {
+                path: 'purchases/reports/paid',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases', report: 'purchases-paid' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
+                    ),
+            },
+            {
+                path: 'purchases/reports/payable',
+                canActivate: [moduleGuard],
+                data: { module: 'purchases', report: 'purchases-payable' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
                     ),
             },
             {

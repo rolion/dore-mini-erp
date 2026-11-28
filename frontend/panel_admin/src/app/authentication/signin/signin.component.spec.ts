@@ -76,4 +76,12 @@ describe('SigninComponent', () => {
     expect(alertText()).toBe('Credenciales inválidas');
     expect(component.loading).toBeFalse();
   });
+
+  it('has a show/hide toggle on the password field, hidden at first (AC-01, AC-02)', () => {
+    const el: HTMLElement = fixture.nativeElement;
+    const input = el.querySelector<HTMLInputElement>('input[formControlName="password"]') as HTMLInputElement;
+    expect(input.type).toBe('password');
+    el.querySelector<HTMLButtonElement>('.password-toggle')?.click();
+    expect(input.type).toBe('text');
+  });
 });

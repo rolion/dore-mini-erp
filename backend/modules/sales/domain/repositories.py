@@ -26,6 +26,7 @@ class OrderFilters:
     date_from: date | None = None
     date_to: date | None = None
     has_balance: bool | None = None
+    fiscal_period_id: UUID | None = None
     ordering: str = NEWEST_FIRST
 
 
@@ -60,6 +61,15 @@ class OrderSummary:
                    paid_total=order.paid_total, number=order.number)
 
 
+@dataclass(frozen=True)
+class OrderTotals:
+    """Totales de un conjunto filtrado de pedidos: cantidad, importe y saldo por cobrar."""
+
+    orders_count: int
+    total: Decimal
+    balance: Decimal
+
+
 class OrderRepository(Protocol):
     def get(self, order_id: UUID) -> Order | None: ...
 
@@ -73,4 +83,8 @@ class OrderRepository(Protocol):
 
     def list(self, filters: OrderFilters) -> Sequence[OrderSummary]:
         """Resúmenes de pedidos según los filtros y el orden indicados."""
+        ...
+
+    def totals(self, filters: OrderFilters) -> OrderTotals:
+        """Totales de todos los pedidos que cumplen los filtros (sin paginar)."""
         ...

@@ -1,0 +1,59 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate data-testid="pack-form">
+  <div class="modal-header"><h4 class="modal-title">{{ 'PRODUCTION.ORDERS.PACK.DIALOG_TITLE' | translate }}</h4></div>
+  <div class="modal-body">
+    @if (loadError) { <div role="alert" class="alert alert-danger">{{ loadError }}</div> }
+    <div class="form-group mb-3">
+      <label for="pack-product">{{ 'PRODUCTION.ORDERS.PACK.PACK_PRODUCT' | translate }} <span class="text-danger">*</span></label>
+      <ng-select inputId="pack-product" [items]="options" bindLabel="name" bindValue="id" formControlName="packProductId"
+        [placeholder]="'PRODUCTION.ORDERS.PACK.CHOOSE_PRODUCT' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"
+        [clearable]="false" [ariaLabel]="'PRODUCTION.ORDERS.PACK.PACK_PRODUCT' | translate"></ng-select>
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.PACK_HELP' | translate }}</small>
+      @if (serverErrors.packProductId) { <small class="form-text text-danger" role="alert">{{ serverErrors.packProductId }}</small> }
+      @else if (submitted && form.controls.packProductId.invalid) { <small class="form-text text-danger" role="alert">{{ 'PRODUCTION.ORDERS.PACK.PRODUCT_REQUIRED' | translate }}</small> }
+    </div>
+    <div class="form-group mb-3">
+      <label for="bag-product">{{ 'PRODUCTION.ORDERS.PACK.BAG_PRODUCT' | translate }} <span class="text-danger">*</span></label>
+      <ng-select inputId="bag-product" [items]="options" bindLabel="name" bindValue="id" formControlName="bagProductId"
+        [placeholder]="'PRODUCTION.ORDERS.PACK.CHOOSE_PRODUCT' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"
+        [clearable]="false" [ariaLabel]="'PRODUCTION.ORDERS.PACK.BAG_PRODUCT' | translate"></ng-select>
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.BAG_HELP' | translate }}</small>
+      @if (serverErrors.bagProductId) { <small class="form-text text-danger" role="alert">{{ serverErrors.bagProductId }}</small> }
+      @else if (submitted && form.controls.bagProductId.invalid) { <small class="form-text text-danger" role="alert">{{ 'PRODUCTION.ORDERS.PACK.PRODUCT_REQUIRED' | translate }}</small> }
+    </div>
+    <div class="form-group mb-3">
+      <label for="bag-per-pack">{{ 'PRODUCTION.ORDERS.PACK.BAG_PER_PACK' | translate }}@if (bagUnit) { ({{ bagUnit }}) } <span class="text-danger">*</span></label>
+      <input id="bag-per-pack" type="number" min="0" step="any" class="form-control" formControlName="bagPerPack"
+        [attr.aria-invalid]="form.controls.bagPerPack.invalid ? 'true' : null" data-testid="bag-per-pack" />
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.BAG_PER_PACK_HELP' | translate }}</small>
+      @if (serverErrors.bagPerPack) { <small class="form-text text-danger d-block" role="alert">{{ serverErrors.bagPerPack }}</small> }
+      @else if (form.controls.bagPerPack.invalid) { <small class="form-text text-danger d-block" role="alert">{{ 'PRODUCTION.ORDERS.PACK.BAG_PER_PACK_INVALID' | translate }}</small> }
+    </div>
+    <div class="form-group mb-3">
+      <label for="label-product">{{ 'PRODUCTION.ORDERS.PACK.LABEL_PRODUCT' | translate }}</label>
+      <ng-select inputId="label-product" [items]="options" bindLabel="name" bindValue="id" formControlName="labelProductId"
+        [placeholder]="'PRODUCTION.ORDERS.PACK.NO_LABEL' | translate" [notFoundText]="'PRODUCTION.ORDERS.PACK.NO_PRODUCTS' | translate"
+        [clearable]="true" [ariaLabel]="'PRODUCTION.ORDERS.PACK.LABEL_PRODUCT' | translate"></ng-select>
+      <small class="form-text text-muted">{{ 'PRODUCTION.ORDERS.PACK.LABEL_HELP' | translate }}</small>
+      @if (serverErrors.labelProductId) { <small class="form-text text-danger d-block" role="alert">{{ serverErrors.labelProductId }}</small> }
+    </div>
+    <div class="form-group mb-3">
+      <label for="pack-count">{{ 'PRODUCTION.ORDERS.PACK.PACKS' | translate }} <span class="text-danger">*</span></label>
+      <input id="pack-count" type="number" min="1" step="1" class="form-control" formControlName="packs"
+        [attr.aria-invalid]="submitted && form.controls.packs.invalid ? 'true' : null" data-testid="packs" />
+      @if (serverErrors.packs) { <small class="form-text text-danger" role="alert">{{ serverErrors.packs }}</small> }
+      @else if (form.controls.packs.invalid) { <small class="form-text text-danger" role="alert">{{ 'PRODUCTION.ORDERS.PACK.PACKS_INVALID' | translate }}</small> }
+    </div>
+    @if (packs > 0) { <p class="text-muted" data-testid="summary">{{ summary }}</p> }
+    @if (shortages.length) {
+    <div role="alert" class="alert alert-danger" data-testid="shortages">
+      <strong>{{ 'PRODUCTION.ORDERS.PACK.SHORTAGE_TITLE' | translate }}</strong>
+      <ul class="mb-0">@for (item of shortages; track item.productId) { <li>{{ shortageText(item) }}</li> }</ul>
+    </div>
+    }
+    @if (error) { <div role="alert" class="alert alert-danger" data-testid="pack-error">{{ error }}</div> }
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-primary" [disabled]="saving" data-testid="pack-save">{{ (saving ? 'PRODUCTION.ORDERS.PACK.SAVING' : 'PRODUCTION.ORDERS.PACK.SAVE') | translate }}</button>
+    <button type="button" class="btn btn-light ms-2" (click)="modal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+  </div>
+</form>

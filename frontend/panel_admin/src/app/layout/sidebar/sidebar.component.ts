@@ -26,6 +26,7 @@ import { SidebarService } from './sidebar.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, combineLatest } from 'rxjs';
 import { ModulesService } from '../../core/service/modules.service';
+import { arrangeRoutes } from './menu-layout';
 
 function isVisible(item: RouteInfo, enabled: ReadonlySet<string> | null): boolean {
   return !item.module || (enabled !== null && enabled.has(item.module));
@@ -127,7 +128,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
       combineLatest([this.sidebarService.getRouteInfo(), this.modulesService.enabledKeys$])
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe(([routes, enabled]) => {
-          this.sidebarItems = visibleRoutes(routes, enabled, this.authService.currentUserValue?.role === 'admin');
+          const user = this.authService.currentUserValue;
+          this.sidebarItems = arrangeRoutes(visibleRoutes(routes, enabled, user?.role === 'admin'), user?.company?.type);
         });
     }
     this.initLeftSidebar();

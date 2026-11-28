@@ -51,6 +51,7 @@ def parse_purchase_filters(params) -> PurchaseFilters:
             errors[name] = [str(exc)]
 
     read('supplier_id', _parse_uuid)
+    read('fiscal_period_id', _parse_uuid)
     read('date_from', _parse_date)
     read('date_to', _parse_date)
     read('status', _enum(PurchaseStatus))
@@ -75,4 +76,5 @@ def parse_purchase_filters(params) -> PurchaseFilters:
         payment_status=payment if isinstance(payment, PaymentStatus) else None,
         pending_payment=payment == PENDING,
         search=search,
+        fiscal_period_id=values.get('fiscal_period_id'),
     )

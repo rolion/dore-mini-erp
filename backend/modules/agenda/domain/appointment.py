@@ -11,6 +11,12 @@ NO_SHOW = 'no_show'
 STATUSES = (SCHEDULED, CONFIRMED, CANCELLED, ATTENDED, NO_SHOW)
 OCCUPYING = (SCHEDULED, CONFIRMED)
 REASON_MAX = 500
+CODE_PREFIX = 'C-'
+
+
+def appointment_code(number: int | None) -> str | None:
+    """Código visible de la cita (`C-000001`); None si aún no tiene número (citas anteriores a la serie)."""
+    return f'{CODE_PREFIX}{number:06d}' if number else None
 
 
 class AppointmentRuleError(Exception):

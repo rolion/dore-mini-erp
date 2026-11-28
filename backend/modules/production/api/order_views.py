@@ -13,11 +13,14 @@ from modules.production.domain.production_order import (
     ReleaseTooEarly)
 from modules.production.infrastructure.adapters import (
     CatalogProducts, CostingGateway, InventoryLots, InventoryStock, InventoryWarehouses, ModularityReleasePolicy)
+from modules.production.infrastructure.django.packing_repository import DjangoPackingRepository
+from modules.production.domain.packing import LABELS_PER_PACK, SUGGESTED_BAG_PER_PACK, UNITS_PER_PACK
 from modules.production.infrastructure.django.order_repository import DjangoProductionOrderRepository
 from modules.production.infrastructure.django.repositories import DjangoRecipeRepository
 from shared.tenancy import company_id_from
 
-from .order_serializers import OrderCreateSerializer, OrderRefrigerateSerializer, OrderUpdateSerializer
+from .order_serializers import (
+    OrderCreateSerializer, OrderPackSerializer, OrderRefrigerateSerializer, OrderUpdateSerializer)
 from .views import RecipePagination
 
 
@@ -64,7 +67,8 @@ def _orders(request) -> ProductionOrders:
     return ProductionOrders(DjangoProductionOrderRepository(company_id), DjangoRecipeRepository(company_id),
                             CatalogProducts(company_id), InventoryWarehouses(company_id),
                             stock=InventoryStock(company_id), costs=CostingGateway(company_id),
-                            policy=ModularityReleasePolicy(company_id))
+                            policy=ModularityReleasePolicy(company_id),
+                            packings=DjangoPackingRepository(company_id))
 
 
 def _release(order, min_hours: int, now) -> dict | None:
@@ -76,6 +80,38 @@ def _release(order, min_hours: int, now) -> dict | None:
             'can_release': order.status == OrderStatus.REFRIGERATING and first is not None and now >= first}
 
 
+def _packing(company_id, order) -> dict | None:
+    """Saldo a granel e historial de empaques; solo para la orden lista para empacar (detalle)."""
+    if order.status != OrderStatus.READY_TO_PACK:
+        return None
+    packings = DjangoPackingRepository(company_id).list(order.id)
+    ids = {pid for p in packings for pid in (p.pack_product_id, p.bag_product_id, p.label_product_id) if pid}
+    found = CatalogProducts(company_id).products(ids) if ids else {}
+    units = {pid: info.unit_abbreviation for pid, info in found.items()}
+
+    def product(pid, name):
+        return {'id': pid, 'name': name, 'unit': units.get(pid)}
+
+    return {
+        'units_per_pack': UNITS_PER_PACK, 'suggested_bag_per_pack': f'{SUGGESTED_BAG_PER_PACK:.4f}',
+        'labels_per_pack': LABELS_PER_PACK,
+        'bulk_available': _qty(InventoryStock(company_id).lot_available(order)),
+        'bulk_unit_abbreviation': order.result_unit_abbreviation,
+        'packings': [{
+            'id': p.id, 'request_id': p.request_id, 'number': p.number, 'packs': p.packs,
+            'pack_product': product(p.pack_product_id, p.pack_product_name),
+            'bag_product': product(p.bag_product_id, p.bag_product_name),
+            'label_product': product(p.label_product_id, p.label_product_name) if p.label_product_id else None,
+            'bulk_quantity': _qty(p.bulk_quantity), 'bags_quantity': _qty(p.bags_quantity),
+            'bag_per_pack': _qty(p.bag_per_pack),
+            'labels_quantity': _qty(p.labels_quantity),
+            'lot': {'id': p.lot_id, 'code': p.lot_code},
+            'cost_total': f'{p.cost_total:.2f}' if p.cost_total is not None else None,
+            'unit_cost': f'{p.unit_cost:.6f}' if p.unit_cost is not None else None,
+            'created_at': p.created_at, 'created_by': p.created_by_name or None,
+        } for p in packings]}
+
+
 def _lot(order, record) -> dict:
     """Lote con su saldo de Inventario (físico y disponible para empaque); `null` si el lote ya no existe."""
     return {'id': order.lot_id, 'code': order.lot_code,
@@ -84,7 +120,7 @@ def _lot(order, record) -> dict:
             'available_quantity': _qty(record.available_quantity) if record else None}
 
 
-def _serialize(request, orders: list) -> list[dict]:
+def _serialize(request, orders: list, *, detail: bool = False) -> list[dict]:
     company_id = company_id_from(request)
     names = InventoryWarehouses(company_id).names({order.warehouse_id for order in orders})
     min_hours = ModularityReleasePolicy(company_id).min_refrigeration_hours()
@@ -119,6 +155,7 @@ def _serialize(request, orders: list) -> list[dict]:
         'release': _release(order, min_hours, now),
         'released_at': order.released_at,
         'released_by': order.released_by_name or None,
+        'packing': _packing(company_id, order) if detail else None,
     } for order in orders]
 
 
@@ -126,7 +163,7 @@ def _run(request, callback, **values):
     try:
         with transaction.atomic():
             order = callback(**values)
-        return _serialize(request, [order])[0]
+        return _serialize(request, [order], detail=True)[0]
     except OrderNotFound as exc:
         raise NotFound('Orden de producción no encontrada.') from exc
     except OrderValidationError as exc:
@@ -227,6 +264,29 @@ class OrderReleaseView(APIView):
         user = request.user
         actor = Actor(user.pk, user.get_full_name().strip() or user.get_username())
         return Response(_run(request, _orders(request).release, order_id=order_id, actor=actor))
+
+
+class OrderPackView(APIView):
+    required_modules = ('production',)
+
+    def post(self, request, order_id):
+        serializer = OrderPackSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        user = request.user
+        actor = Actor(user.pk, user.get_full_name().strip() or user.get_username())
+        created = []
+
+        def pack(**values):
+            orders = _orders(request)
+            packing, was_created = orders.pack(**values)
+            created.append(was_created)
+            return orders.get(order_id)
+
+        body = _run(request, pack, order_id=order_id, request_id=data['request_id'], packs=data.get('packs'),
+                    pack_product_id=data['pack_product_id'], bag_product_id=data['bag_product_id'], actor=actor,
+                    label_product_id=data.get('label_product_id'), bag_per_pack=data.get('bag_per_pack'))
+        return Response(body, status=201 if created and created[0] else 200)
 
 
 class OrderWarehousesView(APIView):

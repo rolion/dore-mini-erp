@@ -6,6 +6,9 @@ export type OrderStatusFilter = 'all' | OrderStatus;
 /** Tope de preparaciones que acepta el servidor (EDGE-02). */
 export const MAX_PREPARATIONS = 99999;
 
+/** Tope de packs por empaque que acepta el servidor. */
+export const MAX_PACKS = 99999;
+
 export interface ProductionOrderIngredient {
   productId: string;
   productName: string | null;
@@ -39,6 +42,58 @@ export interface OrderLot {
   availableQuantity: string | null;
 }
 
+/** Producto de un empaque con la unidad en la que se lleva su stock (`null` si no se conoce). */
+export interface PackingProduct {
+  id: string;
+  name: string;
+  unit: string | null;
+}
+
+export interface PackingEntry {
+  id: string;
+  number: number;
+  packs: number;
+  packProduct: PackingProduct;
+  bagProduct: PackingProduct;
+  /** Etiqueta opcional; `null` si no se usó. */
+  labelProduct: PackingProduct | null;
+  /** Cadenas decimales con 4 decimales. */
+  bulkQuantity: string;
+  bagsQuantity: string;
+  /** Cantidad de bolsa usada por pack en esa tanda. */
+  bagPerPack: string;
+  labelsQuantity: string;
+  lot: { id: string; code: string };
+  /** Costo total (2 decimales) y unitario (6); `null` = sin costo. */
+  costTotal: string | null;
+  unitCost: string | null;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+/** Empaque en packs de 6: saldo a granel e historial (solo en órdenes listas para empacar). */
+export interface OrderPacking {
+  unitsPerPack: number;
+  /** Largo/cantidad de bolsa sugerido por pack (en la unidad de la bolsa), texto decimal. */
+  suggestedBagPerPack: string;
+  labelsPerPack: number;
+  bulkAvailable: string;
+  bulkUnitAbbreviation: string | null;
+  packings: PackingEntry[];
+}
+
+export interface PackInput {
+  /** UUID por intento: reintentar el mismo no duplica el empaque. */
+  requestId: string;
+  packs: number;
+  packProductId: string;
+  bagProductId: string;
+  /** Cantidad de bolsa por pack, en la unidad del producto bolsa (p. ej. 0.17 m). */
+  bagPerPack: number;
+  /** Etiqueta opcional (una por pack); `null` = sin etiqueta. */
+  labelProductId: string | null;
+}
+
 export interface ProductionOrder {
   id: string;
   number: number;
@@ -60,6 +115,7 @@ export interface ProductionOrder {
   release: OrderRelease | null;
   releasedAt: string | null;
   releasedBy: string | null;
+  packing: OrderPacking | null;
 }
 
 export interface ProductionOrderDto {
@@ -93,6 +149,20 @@ export interface ProductionOrderDto {
   release: { min_hours: number; releasable_from: string | null; can_release: boolean } | null;
   released_at: string | null;
   released_by: string | null;
+  packing: {
+    units_per_pack: number;
+    suggested_bag_per_pack: string;
+    labels_per_pack: number;
+    bulk_available: string;
+    bulk_unit_abbreviation: string | null;
+    packings: {
+      id: string; number: number; packs: number;
+      pack_product: PackingProduct; bag_product: PackingProduct;
+      label_product: PackingProduct | null;
+      bulk_quantity: string; bags_quantity: string; bag_per_pack: string; labels_quantity: string; lot: { id: string; code: string };
+      cost_total: string | null; unit_cost: string | null; created_at: string; created_by: string | null;
+    }[];
+  } | null;
 }
 
 export interface OrderListParams {
@@ -160,6 +230,12 @@ export interface OrderFieldErrors {
   detail?: string;
   dateFrom?: string;
   dateTo?: string;
+  packs?: string;
+  packProductId?: string;
+  bagProductId?: string;
+  bagPerPack?: string;
+  labelProductId?: string;
+  requestId?: string;
 }
 
 export class OrderApiError extends Error {
