@@ -34,7 +34,9 @@
       "TEXT": "Odontología",
       "PATIENTS": "Pacientes",
       "BUDGETS": "Presupuestos",
-      "APPOINTMENTS": "Citas"
+      "APPOINTMENTS": "Citas",
+      "RECEIVABLE_REPORT": "Proformas por cobrar",
+      "PAID_REPORT": "Proformas pagadas"
     },
     "MAIN": {
       "TEXT": "-- Principal"
@@ -564,7 +566,11 @@
       "E_DENTAL_PIECE": "La pieza dental debe ser texto de una línea de hasta 20 caracteres.",
       "ERR_PACIENTE": "No se pudo cargar el paciente.",
       "REFERENCIA_PIEZA": "Pieza dental",
-      "NUEVA_PARA": "Nueva proforma · {{name}}"
+      "NUEVA_PARA": "Nueva proforma · {{name}}",
+      "DOCTOR": "Doctor",
+      "SIN_DOCTOR": "Sin doctor",
+      "E_PROFESSIONAL_ID": "El doctor no existe en esta empresa.",
+      "ERR_DOCTORES": "No se pudo cargar la lista de doctores."
     },
     "PATIENT_CREATE": {
       "NUEVO_PACIENTE": "Nuevo paciente",
@@ -938,6 +944,20 @@
       "REGISTRAR": "Registrar",
       "COL_CITA": "Cita",
       "GESTION": "Gestión {{name}}"
+    },
+    "REPORTS": {
+      "RECEIVABLE_TITLE": "Proformas por cobrar",
+      "RECEIVABLE_SUBTITLE": "Proformas presentadas con saldo pendiente de cobro",
+      "RECEIVABLE_EMPTY": "No hay proformas por cobrar en este rango.",
+      "PAID_TITLE": "Proformas pagadas",
+      "PAID_SUBTITLE": "Proformas presentadas cobradas por completo",
+      "PAID_EMPTY": "No hay proformas pagadas en este rango.",
+      "COL_PROFORMA": "Proforma",
+      "COL_PATIENT": "Paciente",
+      "COL_DOCTOR": "Doctor",
+      "COL_AMOUNT_RECEIVABLE": "Saldo por cobrar",
+      "COL_AMOUNT_PAID": "Total cobrado",
+      "TOTALS": "Totales ({{count}} proformas)"
     }
   },
   "EXPENSES": {

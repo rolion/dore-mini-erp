@@ -97,6 +97,30 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/dentistry/reports/receivable",
+          "title": "MENUITEMS.DENTISTRY.RECEIVABLE_REPORT",
+          "module": "receivables",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
+        },
+        {
+          "path": "/pocketbiz/dentistry/reports/paid",
+          "title": "MENUITEMS.DENTISTRY.PAID_REPORT",
+          "module": "receivables",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
         }
       ]
     },

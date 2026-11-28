@@ -74,3 +74,18 @@ class DentalProformaDomainTests(SimpleTestCase):
         self.assertEqual(original.status, SUPERSEDED)
         with self.assertRaises(DentalProformaStateError):
             original.supersede()
+
+
+class DentalProformaProfessionalTests(SimpleTestCase):
+    def test_professional_is_optional_replaced_in_draft_and_inherited_by_new_versions(self):  # AC-02 / INV-02
+        doctor = uuid4()
+        proforma = DentalProforma.create(number='ODO-000001', customer_id=uuid4(), patient_name='Ana',
+                                         date=date(2026, 11, 4), lines=[line()], professional_id=doctor)
+        self.assertEqual(proforma.professional_id, doctor)
+        proforma.replace_content(patient_name='Ana', date=date(2026, 11, 4), valid_until=None, notes='',
+                                 lines=proforma.lines, professional_id=None)
+        self.assertIsNone(proforma.professional_id)
+        proforma.replace_content(patient_name='Ana', date=date(2026, 11, 4), valid_until=None, notes='',
+                                 lines=proforma.lines, professional_id=doctor)
+        proforma.present()
+        self.assertEqual(proforma.new_version().professional_id, doctor)

@@ -40,6 +40,7 @@
           <app-collection-panel #collection kind="dental" [number]="p.number" [status]="p.status" [acceptedTotal]="p.accepted_total" (paid)="reload()" />
           <dl class="row">
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.PACIENTE' | translate }}</dt><dd class="col-sm-9">{{ p.patient_name }}</dd>
+            <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.DOCTOR' | translate }}</dt><dd class="col-sm-9">{{ p.professional?.name || '—' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.FECHA' | translate }}</dt><dd class="col-sm-9">{{ p.date | date: 'dd/MM/yyyy' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.VIGENCIA' | translate }}</dt><dd class="col-sm-9">{{ (p.valid_until | date: 'dd/MM/yyyy') || '—' }}</dd>
             <dt class="col-sm-3">{{ 'DENTISTRY.PROFORMAS.MONEDA' | translate }}</dt><dd class="col-sm-9">{{ p.currency }}</dd>

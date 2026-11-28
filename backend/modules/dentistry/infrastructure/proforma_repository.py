@@ -21,7 +21,7 @@ def to_domain(row: DentalProformaModel) -> DentalProforma:
                                 l.origin_line_id, l.line_kind, tuple(_decision(d) for d in l.decisions.all()), l.collected)
              for l in row.lines.all()]
     return DentalProforma(row.id, row.number, row.version, row.status, row.customer_id, row.patient_name, row.date,
-                          row.valid_until, row.notes, lines, row.created_by)
+                          row.valid_until, row.notes, lines, row.created_by, row.professional_id)
 
 
 class DjangoDentalProformaRepository:
@@ -58,6 +58,15 @@ class DjangoDentalProformaRepository:
     def versions_of(self, numbers) -> list[DentalProforma]:
         return [to_domain(r) for r in self._qs().filter(number__in=list(numbers))]
 
+    def presented_between(self, date_from, date_to) -> list[DentalProforma]:
+        """Proformas presentadas vigentes (una por número) cuya fecha cae en el rango inclusivo."""
+        qs = self._qs().filter(status=PRESENTED)
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+        return [to_domain(row) for row in qs]
+
     def draft_exists(self, number: str) -> bool:
         return DentalProformaModel.objects.filter(company_id=self.company_id, number=number, status=DRAFT).exists()
 
@@ -89,7 +98,7 @@ class DjangoDentalProformaRepository:
                 defaults={'number': proforma.number, 'version': proforma.version, 'status': proforma.status,
                           'customer_id': proforma.customer_id, 'patient_name': proforma.patient_name,
                           'date': proforma.date, 'valid_until': proforma.valid_until, 'notes': proforma.notes,
-                          'created_by': proforma.created_by})
+                          'created_by': proforma.created_by, 'professional_id': proforma.professional_id})
             keep = [line.id for line in proforma.lines]
             if proforma.status == DRAFT:  # solo un borrador puede perder líneas
                 DentalProformaLineModel.objects.filter(proforma_id=proforma.id).exclude(pk__in=keep).delete()

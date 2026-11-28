@@ -7,6 +7,8 @@ from datetime import date
 from decimal import Decimal
 from uuid import UUID
 
+from django.db.models import Sum
+
 from modules.receivables.infrastructure.django.models import PaymentModel
 
 
@@ -38,3 +40,14 @@ def list_historical_payments(company_id: UUID, date_from: date | None = None,
                           reference=p.reference, recorded_by=p.recorded_by, recorded_by_name=p.recorded_by_name)
         for p in rows.order_by('payment_date', 'created_at', 'id')
     )
+
+
+def paid_totals(company_id: UUID, source_kind: str, numbers) -> dict[str, Decimal]:
+    """Total cobrado por número de fuente (p. ej. proformas `dental`) en una sola consulta. Solo lectura."""
+    numbers = list(set(numbers))
+    if not numbers:
+        return {}
+    rows = (PaymentModel.objects.filter(company_id=company_id, obligation__source_kind=source_kind,
+                                        obligation__source_number__in=numbers)
+            .values('obligation__source_number').annotate(total=Sum('amount')))
+    return {row['obligation__source_number']: row['total'] for row in rows}

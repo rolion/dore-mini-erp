@@ -80,8 +80,13 @@
                   <tr>
                     <th scope="col">{{ config.documentColumnKey | translate }}</th>
                     <th scope="col">{{ config.partyColumnKey | translate }}</th>
+                    @if (config.doctorColumn) {
+                    <th scope="col">{{ 'DENTISTRY.REPORTS.COL_DOCTOR' | translate }}</th>
+                    <th scope="col" class="text-end">{{ config.amountColumnKey ?? '' | translate }}</th>
+                    } @else {
                     <th scope="col" class="text-end">{{ 'SALES.PAID_REPORT.COL_TOTAL' | translate }}</th>
                     <th scope="col" class="text-end">{{ 'SALES.PAID_REPORT.COL_BALANCE' | translate }}</th>
+                    }
                   </tr>
                 </thead>
                 <tbody>
@@ -89,16 +94,26 @@
                   <tr data-testid="report-row">
                     <td><a class="fw-semibold" [routerLink]="[config.detailRoute, row.id]">{{ row.code }}</a></td>
                     <td>{{ row.customerName ?? '—' }}</td>
+                    @if (config.doctorColumn) {
+                    <td>{{ row.doctorName ?? '—' }}</td>
+                    <td class="text-end">{{ row.amount ?? '0.00' | money }}</td>
+                    } @else {
                     <td class="text-end">{{ row.total | money }}</td>
                     <td class="text-end">{{ row.balance | money }}</td>
+                    }
                   </tr>
                   }
                 </tbody>
                 <tfoot>
                   <tr class="fw-bold" data-testid="report-totals">
+                    @if (config.doctorColumn) {
+                    <td colspan="3">{{ config.totalsKey | translate: { count: report.totals.ordersCount } }}</td>
+                    <td class="text-end">{{ report.totals.amount ?? '0.00' | money }}</td>
+                    } @else {
                     <td colspan="2">{{ config.totalsKey | translate: { count: report.totals.ordersCount } }}</td>
                     <td class="text-end">{{ report.totals.total | money }}</td>
                     <td class="text-end">{{ report.totals.balance | money }}</td>
+                    }
                   </tr>
                 </tfoot>
               </table>

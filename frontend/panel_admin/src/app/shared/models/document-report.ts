@@ -1,11 +1,15 @@
 /**
  * Reportes de documentos con las mismas columnas y filtros (fecha inicio, fecha fin y período fiscal):
  * ventas «Ingresos por venta» (`paid`) y «Pedidos por cobrar» (`receivable`); compras «Compras pagadas»
- * (`purchases-paid`) y «Compras por pagar» (`purchases-payable`).
+ * (`purchases-paid`) y «Compras por pagar» (`purchases-payable`). Odontología («Proformas por cobrar» y «Proformas
+ * pagadas») usa los mismos filtros de fecha pero sin período fiscal y con columnas Doctor y Monto (`doctorColumn`).
  */
-export type DocumentReportKind = 'paid' | 'receivable' | 'purchases-paid' | 'purchases-payable';
+export type DocumentReportKind =
+  | 'paid' | 'receivable' | 'purchases-paid' | 'purchases-payable' | 'dental-receivable' | 'dental-paid';
 
-export const DOCUMENT_REPORT_KINDS: readonly DocumentReportKind[] = ['paid', 'receivable', 'purchases-paid', 'purchases-payable'];
+export const DOCUMENT_REPORT_KINDS: readonly DocumentReportKind[] = [
+  'paid', 'receivable', 'purchases-paid', 'purchases-payable', 'dental-receivable', 'dental-paid',
+];
 
 /** Qué cambia entre reportes: endpoint, textos, etiquetas de columna y destino del enlace al documento. */
 export interface DocumentReportConfig {
@@ -20,6 +24,10 @@ export interface DocumentReportConfig {
   /** Prefijo de la ruta del detalle: se le añade `/<id>`. */
   detailRoute: string;
   fileName: string;
+  /** Columnas Doctor y un único Monto en lugar de Total y Saldo; sin filtro de período fiscal. */
+  doctorColumn?: boolean;
+  /** Cabecera de la columna Monto (solo con `doctorColumn`). */
+  amountColumnKey?: string;
 }
 
 export const DOCUMENT_REPORT_CONFIG: Record<DocumentReportKind, DocumentReportConfig> = {
@@ -67,6 +75,32 @@ export const DOCUMENT_REPORT_CONFIG: Record<DocumentReportKind, DocumentReportCo
     detailRoute: '/pocketbiz/purchases',
     fileName: 'compras-por-pagar',
   },
+  'dental-receivable': {
+    apiPath: 'dentistry/reports/proformas/receivable/',
+    titleKey: 'DENTISTRY.REPORTS.RECEIVABLE_TITLE',
+    subtitleKey: 'DENTISTRY.REPORTS.RECEIVABLE_SUBTITLE',
+    emptyKey: 'DENTISTRY.REPORTS.RECEIVABLE_EMPTY',
+    documentColumnKey: 'DENTISTRY.REPORTS.COL_PROFORMA',
+    totalsKey: 'DENTISTRY.REPORTS.TOTALS',
+    partyColumnKey: 'DENTISTRY.REPORTS.COL_PATIENT',
+    detailRoute: '/pocketbiz/dentistry/proformas',
+    fileName: 'proformas-por-cobrar',
+    doctorColumn: true,
+    amountColumnKey: 'DENTISTRY.REPORTS.COL_AMOUNT_RECEIVABLE',
+  },
+  'dental-paid': {
+    apiPath: 'dentistry/reports/proformas/paid/',
+    titleKey: 'DENTISTRY.REPORTS.PAID_TITLE',
+    subtitleKey: 'DENTISTRY.REPORTS.PAID_SUBTITLE',
+    emptyKey: 'DENTISTRY.REPORTS.PAID_EMPTY',
+    documentColumnKey: 'DENTISTRY.REPORTS.COL_PROFORMA',
+    totalsKey: 'DENTISTRY.REPORTS.TOTALS',
+    partyColumnKey: 'DENTISTRY.REPORTS.COL_PATIENT',
+    detailRoute: '/pocketbiz/dentistry/proformas',
+    fileName: 'proformas-pagadas',
+    doctorColumn: true,
+    amountColumnKey: 'DENTISTRY.REPORTS.COL_AMOUNT_PAID',
+  },
 };
 
 export interface DocumentReportRow {
@@ -77,12 +111,17 @@ export interface DocumentReportRow {
   customerName: string | null;
   total: string;
   balance: string;
+  /** Solo reportes con `doctorColumn`. */
+  doctorName?: string | null;
+  amount?: string;
 }
 
 export interface DocumentReportTotals {
   ordersCount: number;
   total: string;
   balance: string;
+  /** Solo reportes con `doctorColumn`: suma de la columna Monto. */
+  amount?: string;
 }
 
 export interface DocumentReportPage {
@@ -105,14 +144,16 @@ export interface DocumentReportRowDto {
   code: string;
   order_date: string;
   customer: { id: string; name: string } | null;
-  total: string;
-  balance: string;
+  total?: string;
+  balance?: string;
+  doctor?: { id: string; name: string } | null;
+  amount?: string;
 }
 
 export interface DocumentReportPageDto {
   count: number;
   results: DocumentReportRowDto[];
-  totals: { orders_count: number; total: string; balance: string };
+  totals: { orders_count?: number; count?: number; total?: string; balance?: string; amount?: string };
 }
 
 export function toDocumentReportPage(dto: DocumentReportPageDto): DocumentReportPage {
@@ -123,9 +164,15 @@ export function toDocumentReportPage(dto: DocumentReportPageDto): DocumentReport
       code: row.code,
       orderDate: row.order_date,
       customerName: row.customer?.name || null,
-      total: row.total,
-      balance: row.balance,
+      total: row.total ?? '0.00',
+      balance: row.balance ?? '0.00',
+      ...(row.amount !== undefined ? { doctorName: row.doctor?.name || null, amount: row.amount } : {}),
     })),
-    totals: { ordersCount: dto.totals.orders_count, total: dto.totals.total, balance: dto.totals.balance },
+    totals: {
+      ordersCount: dto.totals.orders_count ?? dto.totals.count ?? 0,
+      total: dto.totals.total ?? '0.00',
+      balance: dto.totals.balance ?? '0.00',
+      ...(dto.totals.amount !== undefined ? { amount: dto.totals.amount } : {}),
+    },
   };
 }

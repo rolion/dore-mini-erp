@@ -39,6 +39,27 @@ describe('DocumentReportApiService', () => {
     });
   });
 
+  it('maps the dental report with doctor, amount and the plain count total (AC-10)', () => {
+    let result: unknown;
+    service.list('dental-paid', { dateFrom: '2026-11-01', dateTo: '', fiscalPeriodId: '' }, 1, 10).subscribe((page) => (result = page));
+    const req = http.expectOne((r) => r.url.endsWith('/dentistry/reports/proformas/paid/'));
+    expect(req.request.params.get('date_from')).toBe('2026-11-01');
+    req.flush({
+      count: 1,
+      results: [{ id: 'p1', code: 'ODO-000001', order_date: '2026-11-04', customer: { id: 'c1', name: 'Rosa' },
+        doctor: { id: 'd1', name: 'Dra. Paz' }, amount: '100.00' }],
+      totals: { count: 1, amount: '100.00' },
+    });
+    expect(result).toEqual({
+      count: 1,
+      rows: [{ id: 'p1', code: 'ODO-000001', orderDate: '2026-11-04', customerName: 'Rosa', total: '0.00', balance: '0.00',
+        doctorName: 'Dra. Paz', amount: '100.00' }],
+      totals: { ordersCount: 1, total: '0.00', balance: '0.00', amount: '100.00' },
+    });
+    service.export('dental-paid', 'xlsx', { dateFrom: '', dateTo: '', fiscalPeriodId: '' }).subscribe();
+    http.expectOne((r) => r.url.endsWith('/dentistry/reports/proformas/paid/export/xlsx/')).flush(new Blob(['x']));
+  });
+
   it('omits empty filters', () => {
     service.list('paid', { dateFrom: '', dateTo: '', fiscalPeriodId: '' }, 1, 10).subscribe();
     const req = http.expectOne((r) => r.url.endsWith('/orders/paid-report/'));

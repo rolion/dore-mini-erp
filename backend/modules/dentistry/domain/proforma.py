@@ -166,6 +166,7 @@ class DentalProforma:
     notes: str = ''
     lines: list[DentalProformaLine] = field(default_factory=list)
     created_by: int | None = None
+    professional_id: UUID | None = None  # doctor responsable (opcional); solo el UUID, sin FK entre módulos
 
     currency = CURRENCY
 
@@ -196,14 +197,15 @@ class DentalProforma:
 
     @classmethod
     def create(cls, *, number: str, customer_id: UUID, patient_name: str, date: date,
-               valid_until: date | None = None, notes: str = '', lines=(), created_by: int | None = None):
+               valid_until: date | None = None, notes: str = '', lines=(), created_by: int | None = None,
+               professional_id: UUID | None = None):
         proforma = cls(uuid4(), number, 1, DRAFT, customer_id, patient_name, date, created_by=created_by)
         proforma.replace_content(patient_name=patient_name, date=date, valid_until=valid_until, notes=notes,
-                                 lines=lines)
+                                 lines=lines, professional_id=professional_id)
         return proforma
 
     def replace_content(self, *, patient_name: str, date: date, valid_until: date | None, notes: str, lines,
-                        origins: dict | None = None) -> None:
+                        origins: dict | None = None, professional_id: UUID | None = None) -> None:
         if self.status != DRAFT:
             raise DentalProformaStateError('Solo se puede editar una proforma en borrador.')
         lines = list(lines)
@@ -223,6 +225,7 @@ class DentalProforma:
         lines = self._classify([replace(line, dental_piece=clean_piece(line.dental_piece)) for line in lines],
                                origins or {})
         self.patient_name, self.date, self.valid_until, self.notes = patient_name, date, valid_until, notes
+        self.professional_id = professional_id
         self.lines = lines
 
     def _classify(self, lines: list[DentalProformaLine], origins: dict) -> list[DentalProformaLine]:
@@ -270,7 +273,8 @@ class DentalProforma:
         copied = [replace(line, id=uuid4(), origin_line_id=line.id, line_kind=LINE_CARRIED,
                           decisions=_carry(line.current_decision)) for line in self.lines]
         return DentalProforma(uuid4(), self.number, self.version + 1, DRAFT, self.customer_id, self.patient_name,
-                              self.date, self.valid_until, self.notes, copied, self.created_by)
+                              self.date, self.valid_until, self.notes, copied, self.created_by,
+                              self.professional_id)
 
     # --- decisiones (INV-01..05) ----------------------------------------------------------------------------
     def decide(self, line_ids, decision: str, *, now: datetime, recorded_by: int | None = None,

@@ -29,7 +29,7 @@ describe('DocumentReportComponent', () => {
   const root = (): HTMLElement => fixture.nativeElement as HTMLElement;
   const text = (testId: string): string => root().querySelector(`[data-testid="${testId}"]`)?.textContent ?? '';
 
-  function start(report?: 'receivable' | 'purchases-payable'): void {
+  function start(report?: 'receivable' | 'purchases-payable' | 'dental-receivable'): void {
     if (report) {
       TestBed.overrideProvider(ActivatedRoute, { useValue: { snapshot: { data: { report } } } });
     }
@@ -152,5 +152,25 @@ describe('DocumentReportComponent', () => {
     expect(root().querySelector('[data-testid="report-row"] a')?.getAttribute('href')).toBe('/pocketbiz/purchases/o1');
     expect(text('report-totals')).toContain('2 compras');
     expect(api.list).toHaveBeenCalledOnceWith('purchases-payable', { dateFrom: '', dateTo: '', fiscalPeriodId: '' }, 1, 10);
+  });
+
+  it('shows the dental columns (doctor and amount), no fiscal period and links to the proforma', () => {
+    api.list.and.returnValue(of({
+      count: 1,
+      rows: [{ id: 'p1', code: 'ODO-000001', orderDate: '2026-11-04', customerName: 'Rosa', total: '0.00', balance: '0.00',
+        doctorName: 'Dra. Paz', amount: '70.00' }],
+      totals: { ordersCount: 1, total: '0.00', balance: '0.00', amount: '70.00' },
+    }));
+    start('dental-receivable');
+    expect(root().querySelector('h2')?.textContent).toContain('Proformas por cobrar');
+    const headers = Array.from(root().querySelectorAll('th')).map((th) => th.textContent?.trim());
+    expect(headers).toEqual(['Proforma', 'Paciente', 'Doctor', 'Saldo por cobrar']);
+    expect(text('report-row')).toContain('Dra. Paz');
+    expect(text('report-row')).toContain('70.00');
+    expect(text('report-totals')).toContain('1 proformas');
+    expect(root().querySelector('[data-testid="report-row"] a')?.getAttribute('href')).toBe('/pocketbiz/dentistry/proformas/p1');
+    expect(root().querySelector('#report-period')).toBeNull();
+    expect(periods.list).not.toHaveBeenCalled();
+    expect(api.list).toHaveBeenCalledOnceWith('dental-receivable', { dateFrom: '', dateTo: '', fiscalPeriodId: '' }, 1, 10);
   });
 });

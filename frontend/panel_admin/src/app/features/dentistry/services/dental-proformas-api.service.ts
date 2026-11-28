@@ -13,7 +13,7 @@ function firstMessage(value: unknown): string {
 }
 
 const FIELD_ERRORS = ['quantity', 'unit_price', 'service_id', 'customer_id', 'valid_until', 'notes', 'lines', 'date', 'id',
-  'dental_piece'];
+  'dental_piece', 'professional_id'];
 
 /** Traduce el error de un campo por su nombre; si no se conoce, conserva el mensaje del servidor. */
 function fieldMessage(field: string, value: unknown): string {

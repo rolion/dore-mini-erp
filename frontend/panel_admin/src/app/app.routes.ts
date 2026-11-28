@@ -6,6 +6,7 @@ import { moduleGuard } from './core/guard/module.guard';
 import { unsavedChangesGuard } from './core/guard/unsaved-changes.guard';
 import { Page404Component } from './authentication/page404/page404.component';
 import { LEGACY_REDIRECTS } from './core/routing/legacy-redirects';
+import { clinicalGuard } from './features/dentistry/clinical.guard';
 import { personnelAdminGuard } from './features/personnel/personnel.routes';
 
 export const APP_ROUTE: Route[] = [
@@ -103,6 +104,24 @@ export const APP_ROUTE: Route[] = [
                 canActivate: [moduleGuard],
                 data: { module: 'receivables' },
                 loadComponent: () => import('./features/receivables/pages/commitment-detail.component').then(m => m.CommitmentDetailComponent),
+            },
+            {
+                path: 'dentistry/reports/receivable',
+                canActivate: [moduleGuard, clinicalGuard],
+                data: { module: 'dentistry', report: 'dental-receivable' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
+                    ),
+            },
+            {
+                path: 'dentistry/reports/paid',
+                canActivate: [moduleGuard, clinicalGuard],
+                data: { module: 'dentistry', report: 'dental-paid' },
+                loadComponent: () =>
+                    import('./shared/components/document-report/document-report.component').then(
+                        (m) => m.DocumentReportComponent
+                    ),
             },
             {
                 path: 'dentistry',

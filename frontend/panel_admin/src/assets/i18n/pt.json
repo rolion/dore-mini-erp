@@ -34,7 +34,9 @@
       "TEXT": "Odontologia",
       "PATIENTS": "Pacientes",
       "BUDGETS": "Orçamentos",
-      "APPOINTMENTS": "Consultas"
+      "APPOINTMENTS": "Consultas",
+      "RECEIVABLE_REPORT": "Orçamentos a receber",
+      "PAID_REPORT": "Orçamentos pagos"
     },
     "MAIN": {
       "TEXT": "-- Principal"
@@ -564,7 +566,11 @@
       "E_DENTAL_PIECE": "A peça dentária deve ser um texto de uma linha com até 20 caracteres.",
       "ERR_PACIENTE": "Não foi possível carregar o paciente.",
       "REFERENCIA_PIEZA": "Peça dentária",
-      "NUEVA_PARA": "Nova proforma · {{name}}"
+      "NUEVA_PARA": "Nova proforma · {{name}}",
+      "DOCTOR": "Doutor",
+      "SIN_DOCTOR": "Sem doutor",
+      "E_PROFESSIONAL_ID": "O doutor não existe nesta empresa.",
+      "ERR_DOCTORES": "Não foi possível carregar a lista de doutores."
     },
     "PATIENT_CREATE": {
       "NUEVO_PACIENTE": "Novo paciente",
@@ -938,6 +944,20 @@
       "REGISTRAR": "Registrar",
       "COL_CITA": "Consulta",
       "GESTION": "Gestão {{name}}"
+    },
+    "REPORTS": {
+      "RECEIVABLE_TITLE": "Orçamentos a receber",
+      "RECEIVABLE_SUBTITLE": "Orçamentos apresentados com saldo pendente",
+      "RECEIVABLE_EMPTY": "Não há orçamentos a receber neste intervalo.",
+      "PAID_TITLE": "Orçamentos pagos",
+      "PAID_SUBTITLE": "Orçamentos apresentados recebidos por completo",
+      "PAID_EMPTY": "Não há orçamentos pagos neste intervalo.",
+      "COL_PROFORMA": "Orçamento",
+      "COL_PATIENT": "Paciente",
+      "COL_DOCTOR": "Doutor",
+      "COL_AMOUNT_RECEIVABLE": "Saldo a receber",
+      "COL_AMOUNT_PAID": "Total recebido",
+      "TOTALS": "Totais ({{count}} orçamentos)"
     }
   },
   "EXPENSES": {

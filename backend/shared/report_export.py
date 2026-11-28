@@ -42,56 +42,75 @@ def _money(value: Decimal) -> str:
     return f'{value:,.2f}'
 
 
-def build_xlsx(rows, totals, title: str = TITLE, headers: tuple[str, ...] = HEADERS,
-               count_label: str = 'pedidos') -> bytes:
+def build_table_xlsx(title: str, headers: tuple[str, ...], rows, footer, money_columns: tuple[int, ...],
+                     widths: tuple[int, ...]) -> bytes:
+    """Excel genérico: encabezados, filas y un pie en negrita; `money_columns` (0-based) con formato de dinero."""
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = title
     sheet.append(headers)
     for cell in sheet[1]:
         cell.font = Font(bold=True)
-    for code, customer, total, balance in rows:
-        sheet.append([code, customer, total, balance])
-    sheet.append(['Totales', f'{totals.orders_count} {count_label}', totals.total, totals.balance])
+    for row in rows:
+        sheet.append(list(row))
+    sheet.append(list(footer))
     for cell in sheet[sheet.max_row]:
         cell.font = Font(bold=True)
-    for row in sheet.iter_rows(min_row=2, max_col=2):
-        for cell in row:  # un texto que empieza por «=» (p. ej. un nombre de cliente) nunca debe ser una fórmula
-            if isinstance(cell.value, str) and cell.value.startswith('='):
-                cell.data_type = 's'
-    for row in sheet.iter_rows(min_row=2, min_col=3, max_col=4):
+    for row in sheet.iter_rows(min_row=2):
         for cell in row:
-            cell.number_format = '#,##0.00'
-            cell.alignment = Alignment(horizontal='right')
-    for column, width in zip('ABCD', (18, 36, 16, 16)):
-        sheet.column_dimensions[column].width = width
+            if isinstance(cell.value, str) and cell.value.startswith('='):
+                cell.data_type = 's'  # un texto que empieza por «=» (p. ej. un nombre) nunca debe ser una fórmula
+            if cell.column - 1 in money_columns:
+                cell.number_format = '#,##0.00'
+                cell.alignment = Alignment(horizontal='right')
+    for index, width in enumerate(widths):
+        sheet.column_dimensions[chr(ord('A') + index)].width = width
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
 
 
-def build_pdf(rows, totals, filters_text: str, generated_on: date, title: str = TITLE,
-              headers: tuple[str, ...] = HEADERS, count_label: str = 'pedidos') -> bytes:
+def build_table_pdf(title: str, filters_text: str, generated_on: date, headers: tuple[str, ...], rows, footer,
+                    money_columns: tuple[int, ...], col_widths: tuple[int, ...]) -> bytes:
+    """PDF genérico con la misma estructura que `build_table_xlsx`."""
     buffer = BytesIO()
     document = SimpleDocTemplate(buffer, pagesize=A4, title=title, leftMargin=36, rightMargin=36,
                                  topMargin=36, bottomMargin=36)
     styles = getSampleStyleSheet()
     story = [Paragraph(escape(title), styles['Title']),
-             Paragraph(f'{filters_text} · Generado el {generated_on.strftime("%d/%m/%Y")}', styles['Normal']),
+             Paragraph(f'{escape(filters_text)} · Generado el {generated_on.strftime("%d/%m/%Y")}', styles['Normal']),
              Spacer(1, 12)]
+
+    def cell(index: int, value):
+        if index in money_columns and isinstance(value, Decimal):
+            return _money(value)
+        return Paragraph(escape(str(value)), styles['Normal']) if index else str(value)
+
     data = [list(headers)]
-    data += [[code, Paragraph(escape(customer), styles['Normal']), _money(total), _money(balance)]
-             for code, customer, total, balance in rows]
-    data.append(['Totales', f'{totals.orders_count} {count_label}', _money(totals.total), _money(totals.balance)])
-    table = Table(data, colWidths=[110, 230, 90, 90], repeatRows=1)
-    table.setStyle(TableStyle([
+    data += [[cell(index, value) for index, value in enumerate(row)] for row in rows]
+    data.append([_money(v) if i in money_columns and isinstance(v, Decimal) else v for i, v in enumerate(footer)])
+    table = Table(data, colWidths=list(col_widths), repeatRows=1)
+    style = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('ALIGN', (2, 0), (-1, -1), 'RIGHT'),
         ('GRID', (0, 0), (-1, -1), 0.25, colors.HexColor('#adb5bd')),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    ]
+    style += [('ALIGN', (c, 0), (c, -1), 'RIGHT') for c in money_columns]
+    table.setStyle(TableStyle(style))
     story.append(table)
     document.build(story)
     return buffer.getvalue()
+
+
+def build_xlsx(rows, totals, title: str = TITLE, headers: tuple[str, ...] = HEADERS,
+               count_label: str = 'pedidos') -> bytes:
+    footer = ('Totales', f'{totals.orders_count} {count_label}', totals.total, totals.balance)
+    return build_table_xlsx(title, headers, rows, footer, (2, 3), (18, 36, 16, 16))
+
+
+def build_pdf(rows, totals, filters_text: str, generated_on: date, title: str = TITLE,
+              headers: tuple[str, ...] = HEADERS, count_label: str = 'pedidos') -> bytes:
+    footer = ('Totales', f'{totals.orders_count} {count_label}', totals.total, totals.balance)
+    return build_table_pdf(title, filters_text, generated_on, headers, rows, footer, (2, 3), (110, 230, 90, 90))

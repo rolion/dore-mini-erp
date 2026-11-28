@@ -46,18 +46,30 @@ class LineInput:
     dental_piece: str | None = None  # None: no se envió (se conserva la pieza guardada)
 
 
+class _Keep:
+    """Marca «no se envió»: en una edición conserva el doctor guardado; al crear equivale a sin doctor."""
+
+    def __repr__(self) -> str:
+        return 'KEEP'
+
+
+KEEP = _Keep()
+
+
 @dataclass(frozen=True)
 class DentalProformaInput:
     date: date
     valid_until: date | None
     notes: str
     lines: list[LineInput]
+    professional_id: UUID | None | _Keep = KEEP
 
 
 class DentalProformaService:
     def __init__(self, repository, services, patients, *, can_edit_price: bool, user_id: int | None = None,
-                 can_rectify: bool = False, user_name: str = '', clock=None):
+                 can_rectify: bool = False, user_name: str = '', clock=None, professionals=None):
         self.repository, self.services, self.patients = repository, services, patients
+        self.professionals = professionals
         self.can_edit_price, self.user_id = can_edit_price, user_id
         self.can_rectify, self.user_name = can_rectify, user_name
         self.clock = clock or (lambda: datetime.now(timezone.utc))
@@ -97,10 +109,12 @@ class DentalProformaService:
     # --- escritura ---------------------------------------------------------------------------------------
     def create(self, customer_id: UUID, data: DentalProformaInput) -> DentalProforma:
         name = self.patients.require_active(customer_id)
+        professional_id = None if data.professional_id is KEEP else data.professional_id
+        self._check_professional(professional_id)
         lines = self._lines(data.lines, existing={})
         proforma = DentalProforma.create(number='', customer_id=customer_id, patient_name=name, date=data.date,
                                          valid_until=data.valid_until, notes=data.notes, lines=lines,
-                                         created_by=self.user_id)
+                                         created_by=self.user_id, professional_id=professional_id)
         proforma.number = self.repository.next_number()  # al final: un rechazo no consume número
         self.repository.save(proforma)
         return proforma
@@ -110,9 +124,11 @@ class DentalProformaService:
         if proforma.status != DRAFT:
             raise DentalProformaStateError('Solo se puede editar una proforma en borrador.')
         name = self.patients.require_active(proforma.customer_id)
+        professional_id = proforma.professional_id if data.professional_id is KEEP else data.professional_id
+        self._check_professional(professional_id)
         lines = self._lines(data.lines, existing={line.id: line for line in proforma.lines})
         proforma.replace_content(patient_name=name, date=data.date, valid_until=data.valid_until,
-                                 notes=data.notes, lines=lines,
+                                 notes=data.notes, lines=lines, professional_id=professional_id,
                                  origins=self.repository.origin_lines(proforma.number, proforma.version))
         self.repository.save(proforma)
         return proforma
@@ -183,6 +199,12 @@ class DentalProformaService:
         if proforma is None:
             raise DentalProformaNotFound()
         return proforma
+
+    def _check_professional(self, professional_id: UUID | None) -> None:
+        if professional_id is None or self.professionals is None:
+            return
+        if not self.professionals.exists(professional_id):
+            raise DentalProformaValidationError({'professional_id': ['El profesional no existe en esta empresa.']})
 
     def _lines(self, inputs: list[LineInput], *, existing: dict[UUID, DentalProformaLine]) -> list[DentalProformaLine]:
         result: list[DentalProformaLine] = []

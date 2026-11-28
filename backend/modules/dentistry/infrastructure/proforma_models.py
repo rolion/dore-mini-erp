@@ -17,6 +17,8 @@ class DentalProformaModel(models.Model):
     currency = models.CharField(max_length=3, default='BOB')
     notes = models.TextField(blank=True, default='')
     created_by = models.BigIntegerField(null=True, blank=True)
+    # Doctor responsable (opcional): UUID del profesional de Personal, sin FK entre módulos.
+    professional_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
