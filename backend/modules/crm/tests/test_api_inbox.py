@@ -289,7 +289,7 @@ class AutoLinkTests(InboxBase):
         self.assertEqual(contact, {'type': 'customer', 'id': str(existing.id), 'name': 'Ana Cliente'})
 
     def test_links_single_lead_when_no_customer_matches(self):  # AC-08
-        lead = self.lead('Lia', phone='76543210', normalized=ANA)
+        lead = self.lead('Lia', phone='76543210', normalized='+' + ANA)
         self.receive('wamid.A')
         contact = self.client.get(self.url(self.conv())).json()['contact']
         self.assertEqual((contact['type'], contact['id']), ('lead', str(lead.id)))

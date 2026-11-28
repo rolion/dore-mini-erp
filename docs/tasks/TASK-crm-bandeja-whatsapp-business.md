@@ -1,6 +1,6 @@
 # TASK-crm-bandeja-whatsapp-business: PB-CRM-012 · Bandeja de WhatsApp Business
 
-**Etapa actual:** ENGINEERING
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-bandeja-whatsapp-business` (base: `crm`)
@@ -13,7 +13,7 @@
 | 2026-11-28 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-28 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | DDR y ADR escritos; decisiones por defecto documentadas | delivery-start |
 | 2026-11-28 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
-| 2026-11-28 | ENGINEERING | Implementación completa; pruebas de integración del backend sin ejecutar (falta `DATABASE_URL`) | delivery-build |
+| 2026-11-28 | ENGINEERING → REVIEW | Implementación completa; backend `crm`+`messaging` 231 pruebas OK, frontend Karma/lint/build OK | delivery-build |
 
 ## Investigación
 
@@ -78,7 +78,7 @@ Acoplamiento `crm`↔`messaging` (mitigado con puerto + fachada, ADR); autovínc
 **Desviaciones respecto al plan**: (1) endpoint extra `GET /api/crm/inbox/conversations/<id>/opportunities/` (necesario para el diálogo, no cambia AC); (2) la asignación se hace con un `<select>` en la cabecera en vez de un diálogo (más simple, mismo contrato); (3) el hilo se recarga completo en cada consulta (los estados de mensajes antiguos cambian, `after` queda disponible en la API pero la UI no lo usa).
 **Deuda técnica**: `crm/infrastructure/inbox_subscriber.py` importa `inbox_views.inbox_service` para armar el servicio (mover el armado a un módulo neutral si crece); sin «no leídos» ni multimedia (fuera de alcance).
 
-**Verificación propia (no es el Quality Gate)**: frontend `ng lint`, `i18n:check` (0 faltantes), `ng build` y 28 pruebas Karma de la bandeja OK; backend `manage.py check`, `makemigrations --check` (sin cambios), ruff/flake8 limpios y pruebas de dominio de `messaging` OK. **Las pruebas de integración de API del backend (`crm/tests/test_api_inbox.py`) están escritas pero NO se ejecutaron**: el entorno no tenía `DATABASE_URL` y no se copió `backend/.env` (regla del proyecto). Quedan pendientes de correr antes del Quality Gate.
+**Verificación propia (no es el Quality Gate)**: frontend `ng lint`, `i18n:check` (0 faltantes), `ng build` y 28 pruebas Karma de la bandeja OK; backend `manage.py check`, `makemigrations --check` (sin cambios), ruff/flake8 limpios y pruebas de dominio de `messaging` OK. Pruebas de integración de la bandeja (`crm/tests/test_api_inbox.py`) y suites `crm` + `messaging`: 231 OK.
 
 ## Review
 _Pendiente_
