@@ -49,10 +49,17 @@ class ConversationModel(models.Model):
     connection = models.ForeignKey(ConnectionModel, on_delete=models.CASCADE, related_name='conversations')
     phone = models.CharField(max_length=20)
     last_inbound_at = models.DateTimeField(null=True, blank=True)
+    # Vínculos opacos hacia CRM (ADR): sin claves foráneas, `messaging` no sabe qué significan.
+    owner_id = models.IntegerField(null=True, blank=True)
+    customer_id = models.UUIDField(null=True, blank=True)
+    lead_id = models.UUIDField(null=True, blank=True)
+    opportunity_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'messaging_conversation'
+        indexes = [models.Index(fields=['company_id', 'owner_id'], name='messaging_conv_owner_idx'),
+                   models.Index(fields=['company_id', 'opportunity_id'], name='messaging_conv_opp_idx')]
         constraints = [models.UniqueConstraint(fields=['connection', 'phone'], name='messaging_conversation_unique')]
 
 

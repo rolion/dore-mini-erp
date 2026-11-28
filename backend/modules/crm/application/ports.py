@@ -3,7 +3,7 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Protocol
+from typing import Any, Protocol
 from uuid import UUID
 
 
@@ -110,3 +110,57 @@ class UserDirectory(Protocol):
 
 class Clock(Protocol):
     def __call__(self) -> datetime: ...
+
+
+# --- Bandeja de WhatsApp (PB-CRM-012) -----------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class InboxMessage:
+    id: UUID
+    direction: str
+    type: str
+    content: dict[str, Any]
+    status: str
+    failure_reason: str
+    created_at: datetime | None
+    sent_at: datetime | None
+
+
+@dataclass(frozen=True)
+class InboxConversation:
+    id: UUID
+    phone: str
+    owner_id: int | None
+    customer_id: UUID | None
+    lead_id: UUID | None
+    opportunity_id: UUID | None
+    last_message: InboxMessage | None
+    window_open: bool
+    window_expires_at: datetime | None
+
+
+class ConversationInbox(Protocol):
+    """Conversaciones y mensajes de WhatsApp de la empresa (los guarda `messaging`). Traduce sus errores a los de CRM:
+    inexistente → `CrmNotFound`; datos inválidos → `CrmValidationError`; ventana cerrada, plantilla no aprobada,
+    conexión inactiva o mensaje no reintentable → `CrmConflict`."""
+
+    def page(self, *, owner_id: int | None, unassigned: bool, opportunity_id: UUID | None, search: str | None,
+             customer_ids: Collection[UUID], lead_ids: Collection[UUID], offset: int, limit: int
+             ) -> tuple[int, list[InboxConversation]]: ...
+
+    def get(self, conversation_id: UUID) -> InboxConversation: ...
+
+    def messages(self, conversation_id: UUID, after: datetime | None) -> list[InboxMessage]: ...
+
+    def connection_active(self) -> bool: ...
+
+    def send_text(self, conversation_id: UUID, body: str) -> InboxMessage: ...
+
+    def send_template(self, conversation_id: UUID, template_id: UUID, components: list | None) -> InboxMessage: ...
+
+    def retry(self, conversation_id: UUID, message_id: UUID) -> InboxMessage: ...
+
+    def assign(self, conversation_id: UUID, owner_id: int | None) -> None: ...
+
+    def link(self, conversation_id: UUID, customer_id: UUID | None, lead_id: UUID | None,
+             opportunity_id: UUID | None) -> None: ...

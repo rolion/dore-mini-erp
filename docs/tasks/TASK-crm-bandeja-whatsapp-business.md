@@ -13,6 +13,7 @@
 | 2026-11-28 | (nuevo) → INVESTIGATION | Task creado desde tarjeta de Trello | delivery-start |
 | 2026-11-28 | INVESTIGATION → DESIGN → ARCHITECTURE → PLANNING | DDR y ADR escritos; decisiones por defecto documentadas | delivery-start |
 | 2026-11-28 | PLANNING → ENGINEERING | Plan v1 COMPLETO, Specification READY | delivery-start |
+| 2026-11-28 | ENGINEERING | Implementación completa; pruebas de integración del backend sin ejecutar (falta `DATABASE_URL`) | delivery-build |
 
 ## Investigación
 
@@ -70,7 +71,14 @@ Acoplamiento `crm`↔`messaging` (mitigado con puerto + fachada, ADR); autovínc
 `docs/plans/PLAN-2026-11-28-crm-bandeja-whatsapp-business.md` (v1, COMPLETO, READY).
 
 ## Implementación
-_Pendiente_
+**Backend `messaging`**: migración aditiva `0002_conversation_inbox_links` (owner_id, customer_id, lead_id, opportunity_id + 2 índices; INV-02/03, AC-12); `Conversation.assign/link_contact/link_opportunity` y `Message.requeue()` (INV-08/09); repositorios con página por último mensaje (una consulta + `DISTINCT ON`, sin N+1), hilo con `after`; fachada pública `messaging/services.py` (ADR) que también reexporta sus errores y `subscribe_inbound`.
+**Backend `crm`**: puerto `ConversationInbox`, `InboxService` (INV-03…07), `ConversationInboxAdapter` (traduce errores de `messaging` a `CrmNotFound/CrmValidationError/CrmConflict`), API `/api/crm/inbox/…` (API-01…08 + `GET …/opportunities/` para listar las oportunidades vinculables), suscriptor de `InboundMessageReceived` registrado en `CrmConfig.ready()` (autovínculo, AC-08), búsqueda de prospecto por teléfono normalizado.
+**Frontend**: `features/crm` — página `crm-inbox` (lista + hilo, consulta cada 10 s con la pestaña visible), diálogos `inbox-contact-dialog` e `inbox-opportunity-dialog`, `crm-inbox-api.service`, ruta `/pocketbiz/crm/inbox`, menú CRM → Bandeja, claves es/en/pt. Pantalla de referencia: lista (`crm-task-list`) y diálogos CRM; plantilla «Bandeja de conversaciones» ya añadida a `design-system.md`.
+
+**Desviaciones respecto al plan**: (1) endpoint extra `GET /api/crm/inbox/conversations/<id>/opportunities/` (necesario para el diálogo, no cambia AC); (2) la asignación se hace con un `<select>` en la cabecera en vez de un diálogo (más simple, mismo contrato); (3) el hilo se recarga completo en cada consulta (los estados de mensajes antiguos cambian, `after` queda disponible en la API pero la UI no lo usa).
+**Deuda técnica**: `crm/infrastructure/inbox_subscriber.py` importa `inbox_views.inbox_service` para armar el servicio (mover el armado a un módulo neutral si crece); sin «no leídos» ni multimedia (fuera de alcance).
+
+**Verificación propia (no es el Quality Gate)**: frontend `ng lint`, `i18n:check` (0 faltantes), `ng build` y 28 pruebas Karma de la bandeja OK; backend `manage.py check`, `makemigrations --check` (sin cambios), ruff/flake8 limpios y pruebas de dominio de `messaging` OK. **Las pruebas de integración de API del backend (`crm/tests/test_api_inbox.py`) están escritas pero NO se ejecutaron**: el entorno no tenía `DATABASE_URL` y no se copió `backend/.env` (regla del proyecto). Quedan pendientes de correr antes del Quality Gate.
 
 ## Review
 _Pendiente_

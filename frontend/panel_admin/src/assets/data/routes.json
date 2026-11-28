@@ -124,6 +124,17 @@
           "badge": "",
           "badgeClass": "",
           "submenu": []
+        },
+        {
+          "path": "/pocketbiz/crm/inbox",
+          "title": "MENUITEMS.CRM.LIST.INBOX",
+          "iconType": "",
+          "icon": "",
+          "class": "ml-menu",
+          "groupTitle": false,
+          "badge": "",
+          "badgeClass": "",
+          "submenu": []
         }
       ],
       "module": "customers"

@@ -1,0 +1,42 @@
+<form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'CRM.INBOX_CONTACT.TITULO' | translate }}</h4>
+    <button type="button" class="btn-close" [attr.aria-label]="'COMMON.CERRAR' | translate" [disabled]="saving" (click)="activeModal.dismiss()"></button>
+  </div>
+  <div class="modal-body">
+    @if (errorMessage) {
+    <div class="alert alert-warning" role="alert" data-testid="contact-error">{{ errorMessage }}</div>
+    }
+    <p class="text-muted">{{ conversation.phone }}</p>
+    <fieldset class="mb-2">
+      <legend class="form-label fs-6">{{ 'CRM.INBOX_CONTACT.TIPO' | translate }}</legend>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="crm-inbox-kind-customer" value="customer" formControlName="kind">
+        <label class="form-check-label" for="crm-inbox-kind-customer">{{ 'COMMON.CLIENTE' | translate }}</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="crm-inbox-kind-lead" value="lead" formControlName="kind">
+        <label class="form-check-label" for="crm-inbox-kind-lead">{{ 'CRM.OPPORTUNITY_DIALOG.PROSPECTO' | translate }}</label>
+      </div>
+    </fieldset>
+    <div class="form-group">
+      <label for="crm-inbox-contact">{{ (kind === 'customer' ? 'CRM.OPPORTUNITY_DIALOG.BUSCAR_CLIENTE' : 'CRM.OPPORTUNITY_DIALOG.BUSCAR_PROSPECTO') | translate }} <span class="text-danger">*</span></label>
+      <ng-select labelForId="crm-inbox-contact" formControlName="contact" [items]="contacts" bindLabel="name" [typeahead]="contactSearch$"
+        [loading]="contactsLoading" [clearable]="true" [placeholder]="'COMMON.BUSCAR_POR_NOMBRE_O_TELEFONO' | translate"
+        [notFoundText]="'COMMON.NO_RESULTS_SHORT' | translate" [typeToSearchText]="'COMMON.TYPE_TO_SEARCH_2' | translate"
+        [loadingText]="'COMMON.CARGANDO' | translate">
+        <ng-template ng-option-tmp let-item="item">
+          <span class="fw-semibold">{{ item.name }}</span>
+          <small class="text-muted d-block">{{ item.phone || ('CRM.CONVERT_DIALOG.SIN_TELEFONO' | translate) }}</small>
+        </ng-template>
+      </ng-select>
+    </div>
+  </div>
+  <div class="modal-footer">
+    @if (conversation.contact) {
+    <button type="button" class="btn btn-outline-danger me-auto" [disabled]="saving" data-testid="remove-contact" (click)="remove()">{{ 'CRM.INBOX_CONTACT.QUITAR' | translate }}</button>
+    }
+    <button type="button" class="btn btn-light" [disabled]="saving" (click)="activeModal.dismiss()">{{ 'COMMON.CANCELAR' | translate }}</button>
+    <button type="submit" class="btn btn-primary" [disabled]="form.invalid || saving" data-testid="save-contact">{{ 'COMMON.GUARDAR' | translate }}</button>
+  </div>
+</form>

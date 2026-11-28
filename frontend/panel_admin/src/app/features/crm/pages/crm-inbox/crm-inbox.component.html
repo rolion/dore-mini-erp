@@ -1,0 +1,212 @@
+<section class="main-content">
+  <ul class="breadcrumb breadcrumb-style ">
+    <li class="breadcrumb-item">
+      <h5 class="page-title m-b-0">{{ 'CRM.INBOX.TITULO' | translate }}</h5>
+    </li>
+    <li class="breadcrumb-item bcrumb-1">
+      <a routerLink="/pocketbiz/dashboard/main" [attr.aria-label]="'COMMON.INICIO' | translate">
+        <i class="fas fa-home font-17" aria-hidden="true"></i></a>
+    </li>
+    <li class="breadcrumb-item">{{ 'CRM.CUSTOMER_LIST.BREADCRUMB' | translate }}</li>
+    <li class="breadcrumb-item">{{ 'CRM.INBOX.TITULO' | translate }}</li>
+  </ul>
+  <div class="section-body">
+    <div class="row">
+      <!-- Lista: en pantallas angostas se oculta al abrir una conversación -->
+      <div class="col-lg-4" [class.d-none]="selected" [class.d-lg-block]="true">
+        <div class="card">
+          <div class="p-10">
+            <div class="table-title mb-2">
+              <h2><strong>{{ 'CRM.INBOX.TITULO' | translate }}</strong></h2>
+            </div>
+            <form class="mb-2" (submit)="$event.preventDefault()" [attr.aria-label]="'CRM.CUSTOMER_LIST.FILTERS' | translate">
+              <div class="btn-group w-100 mb-2" role="group" [attr.aria-label]="'CRM.INBOX.FILTRO_RESPONSABLE' | translate">
+                @for (scope of scopes; track scope) {
+                <input type="radio" class="btn-check" name="crm-inbox-scope" [id]="'crm-inbox-scope-' + scope" [value]="scope"
+                  [checked]="scopeControl.value === scope" (change)="scopeControl.setValue(scope)" [attr.data-testid]="'scope-' + scope">
+                <label class="btn btn-outline-primary" [for]="'crm-inbox-scope-' + scope">{{ 'CRM.INBOX.SCOPES.' + scope | translate }}</label>
+                }
+              </div>
+              <label for="crm-inbox-search" class="visually-hidden">{{ 'CRM.INBOX.BUSCAR' | translate }}</label>
+              <input id="crm-inbox-search" type="search" class="form-control" [formControl]="searchControl"
+                [placeholder]="'CRM.INBOX.BUSCAR' | translate" data-testid="search">
+            </form>
+
+            @if (error) {
+            <div class="alert alert-danger d-flex justify-content-between align-items-center" role="alert" data-testid="inbox-error">
+              <span>{{ error }}</span>
+              <button type="button" class="btn btn-sm btn-outline-danger" data-testid="retry" (click)="retry()">{{ 'COMMON.REINTENTAR' | translate }}</button>
+            </div>
+            }
+
+            @if (loading && !rows.length) {
+            <p class="text-muted" role="status" data-testid="loading">{{ 'COMMON.CARGANDO' | translate }}</p>
+            } @else if (!rows.length && !error) {
+            <div class="text-center text-muted py-4" data-testid="empty">
+              @if (hasFilters) {
+              <p>{{ 'CRM.INBOX.VACIA_FILTRADA' | translate }}</p>
+              <button type="button" class="btn btn-light" data-testid="clear-filters" (click)="clearFilters()">{{ 'COMMON.LIMPIAR_FILTROS' | translate }}</button>
+              } @else {
+              <p>{{ 'CRM.INBOX.VACIA' | translate }}</p>
+              <a class="btn btn-light" routerLink="/pocketbiz/settings/integrations/whatsapp">{{ 'CRM.INBOX.IR_CONFIGURACION' | translate }}</a>
+              }
+            </div>
+            } @else {
+            <ul class="list-group list-group-flush crm-inbox-list" data-testid="conversation-list">
+              @for (row of rows; track row.id) {
+              <li class="list-group-item p-0">
+                <button type="button" class="btn btn-link text-reset text-decoration-none crm-conversation-row p-2 border-0"
+                  [class.active]="selected?.id === row.id" [attr.aria-current]="selected?.id === row.id ? 'true' : null"
+                  data-testid="conversation-row" (click)="open(row)">
+                  <span class="d-flex justify-content-between gap-2">
+                    <strong>{{ row.contact?.name || row.phone }}</strong>
+                    @if (row.lastMessage?.at) {
+                    <small class="text-muted">{{ row.lastMessage?.at | date: 'short' }}</small>
+                    }
+                  </span>
+                  @if (row.contact) {
+                  <small class="text-muted d-block">{{ row.phone }}</small>
+                  }
+                  <span class="d-block text-truncate text-muted">{{ row.lastMessage?.preview }}</span>
+                  <span class="d-flex flex-wrap gap-1 mt-1">
+                    @if (row.owner) {
+                    <span class="badge bg-info">{{ row.owner.name }}</span>
+                    } @else {
+                    <span class="badge bg-secondary">{{ 'CRM.INBOX.SIN_RESPONSABLE' | translate }}</span>
+                    }
+                    @if (!row.windowOpen) {
+                    <span class="badge bg-warning text-dark">{{ 'CRM.INBOX.VENTANA_CERRADA' | translate }}</span>
+                    }
+                  </span>
+                </button>
+              </li>
+              }
+            </ul>
+            <div class="d-flex justify-content-center mt-2">
+              <ngb-pagination [collectionSize]="total" [pageSize]="pageSize" [page]="page" [maxSize]="3" [boundaryLinks]="false"
+                size="sm" (pageChange)="onPage($event)"></ngb-pagination>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Conversación -->
+      <div class="col-lg-8" [class.d-none]="!selected" [class.d-lg-block]="true">
+        <div class="card">
+          <div class="p-10">
+            @if (!selected) {
+            <p class="text-muted text-center py-5 mb-0" data-testid="no-selection">{{ 'CRM.INBOX.ELIGE' | translate }}</p>
+            } @else {
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <button type="button" class="btn btn-light d-lg-none" data-testid="back" (click)="back()">{{ 'CRM.INBOX.VOLVER' | translate }}</button>
+              <div>
+                <h3 class="h5 mb-0" data-testid="thread-title">{{ selected.contact?.name || selected.phone }}</h3>
+                @if (selected.contact) {
+                <small class="text-muted">{{ selected.phone }}</small>
+                }
+              </div>
+            </div>
+
+            <div class="row g-2 align-items-end mb-2">
+              <div class="col-sm-6">
+                <label for="crm-inbox-owner" class="form-label">{{ 'CRM.INBOX.RESPONSABLE' | translate }}</label>
+                <select id="crm-inbox-owner" class="form-select" data-testid="owner-select" [value]="selected.owner ? '' + selected.owner.id : ''"
+                  (change)="assign($any($event.target).value)">
+                  <option value="">{{ 'CRM.INBOX.SIN_RESPONSABLE' | translate }}</option>
+                  @for (user of users; track user.id) {
+                  <option [value]="'' + user.id" [selected]="selected.owner?.id === user.id">{{ user.name }}</option>
+                  }
+                </select>
+              </div>
+              <div class="col-sm-6 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary" data-testid="link-contact" (click)="linkContact()">
+                  {{ (selected.contact ? 'CRM.INBOX.CAMBIAR_CONTACTO' : 'CRM.INBOX.VINCULAR_CONTACTO') | translate }}
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-testid="link-opportunity" (click)="linkOpportunity()">
+                  {{ 'CRM.INBOX.VINCULAR_OPORTUNIDAD' | translate }}
+                </button>
+              </div>
+            </div>
+            <p class="mb-2">
+              <span class="text-muted">{{ 'CRM.INBOX.OPORTUNIDAD' | translate }}:</span>
+              <span data-testid="opportunity-label">{{ selected.opportunity?.title || ('CRM.INBOX.SIN_OPORTUNIDAD' | translate) }}</span>
+            </p>
+
+            @if (success) {
+            <div class="alert alert-success" role="status" data-testid="success">{{ success }}</div>
+            }
+            @if (actionError) {
+            <div class="alert alert-warning" role="alert" data-testid="action-error">{{ actionError }}</div>
+            }
+            @if (connectionDown) {
+            <div class="alert alert-warning" role="alert" data-testid="connection-down">
+              {{ 'CRM.INBOX.SIN_CONEXION' | translate }}
+              <a routerLink="/pocketbiz/settings/integrations/whatsapp">{{ 'CRM.INBOX.IR_CONFIGURACION' | translate }}</a>
+            </div>
+            }
+
+            @if (threadError) {
+            <div class="alert alert-danger" role="alert" data-testid="thread-error">{{ threadError }}</div>
+            }
+            <div #thread class="crm-inbox-thread border rounded mb-2" role="log" aria-live="polite" data-testid="thread"
+              [attr.aria-label]="'CRM.INBOX.MENSAJES' | translate">
+              @if (threadLoading) {
+              <p class="text-muted" role="status">{{ 'COMMON.CARGANDO' | translate }}</p>
+              }
+              @for (message of messages; track message.id) {
+              <div class="crm-bubble" [class.crm-bubble-out]="message.direction === 'out'" [class.crm-bubble-in]="message.direction === 'in'"
+                data-testid="message">
+                <span class="visually-hidden">{{ (message.direction === 'out' ? 'CRM.INBOX.SALIENTE' : 'CRM.INBOX.ENTRANTE') | translate }}:</span>
+                {{ message.text }}
+                <small>
+                  {{ message.createdAt | date: 'short' }}
+                  @if (message.direction === 'out') {
+                  · <span [class.text-danger]="message.status === 'failed'" data-testid="message-status">{{ 'CRM.INBOX.ESTADOS.' + message.status | translate }}</span>
+                  }
+                </small>
+                @if (message.status === 'failed') {
+                <small class="text-danger" data-testid="failure">{{ message.failureReason }}</small>
+                <button type="button" class="btn btn-sm btn-outline-danger mt-1" data-testid="resend" (click)="resend(message)">{{ 'CRM.INBOX.REENVIAR' | translate }}</button>
+                }
+              </div>
+              }
+            </div>
+
+            @if (selected.windowOpen) {
+            <form class="d-flex gap-2 align-items-end" (submit)="$event.preventDefault(); send()">
+              <div class="flex-grow-1">
+                <label for="crm-inbox-reply" class="visually-hidden">{{ 'CRM.INBOX.ESCRIBE' | translate }}</label>
+                <textarea id="crm-inbox-reply" class="form-control" rows="2" [formControl]="replyControl" [attr.maxlength]="bodyMax"
+                  [placeholder]="'CRM.INBOX.ESCRIBE' | translate" data-testid="reply"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" [disabled]="sending || !replyControl.value.trim()" data-testid="send">{{ 'CRM.INBOX.ENVIAR' | translate }}</button>
+            </form>
+            } @else {
+            <div data-testid="window-closed">
+              <div class="alert alert-info" role="status">{{ 'CRM.INBOX.VENTANA_CERRADA_AVISO' | translate }}</div>
+              @if (templates.length) {
+              <form class="d-flex gap-2 align-items-end" (submit)="$event.preventDefault(); sendTemplate()">
+                <div class="flex-grow-1">
+                  <label for="crm-inbox-template" class="form-label">{{ 'CRM.INBOX.PLANTILLA' | translate }}</label>
+                  <select id="crm-inbox-template" class="form-select" [formControl]="templateControl" data-testid="template-select">
+                    <option value="">{{ 'CRM.INBOX.ELIGE_PLANTILLA' | translate }}</option>
+                    @for (template of templates; track template.id) {
+                    <option [value]="template.id">{{ template.name }} ({{ template.language }})</option>
+                    }
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-primary" [disabled]="sending || !templateControl.value" data-testid="send-template">{{ 'CRM.INBOX.ENVIAR_PLANTILLA' | translate }}</button>
+              </form>
+              } @else {
+              <p class="text-muted mb-0" data-testid="no-templates">{{ 'CRM.INBOX.SIN_PLANTILLAS' | translate }}</p>
+              }
+            </div>
+            }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

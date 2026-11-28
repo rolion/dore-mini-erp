@@ -1,0 +1,30 @@
+// Dos paneles desde `lg`; por debajo se muestra uno a la vez (la plantilla alterna `d-none`).
+.crm-inbox-list { max-height: 70vh; overflow-y: auto; }
+
+.crm-inbox-thread {
+  max-height: 55vh;
+  min-height: 12rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.crm-bubble {
+  max-width: 80%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--bs-light);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.crm-bubble-out {
+  align-self: flex-end;
+  background: var(--bs-primary-bg-subtle);
+}
+
+.crm-bubble-in { align-self: flex-start; }
+.crm-bubble small { display: block; color: var(--bs-secondary-color); }
+.crm-conversation-row { cursor: pointer; text-align: start; width: 100%; }

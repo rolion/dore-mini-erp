@@ -56,7 +56,8 @@
         "BOARD": "Quadro",
         "LEADS": "Prospectos",
         "OPPORTUNITIES": "Oportunidades",
-        "TASKS": "Para contatar"
+        "TASKS": "Para contatar",
+        "INBOX": "Caixa de entrada"
       }
     },
     "ORDERS": {
@@ -3799,6 +3800,65 @@
       "ARCHIVAR_TITULO": "Arquivar tarefa",
       "ARCHIVAR_TEXTO": "A tarefa é ocultada de todas as listas e não pode ser recuperada pela interface.",
       "ARCHIVAR_CONFIRMAR": "Arquivar tarefa"
+    },
+    "INBOX": {
+      "TITULO": "Caixa de entrada",
+      "FILTRO_RESPONSABLE": "Filtrar por responsável",
+      "SCOPES": {
+        "mine": "Minhas",
+        "unassigned": "Sem atribuição",
+        "all": "Todas"
+      },
+      "BUSCAR": "Buscar por telefone ou nome",
+      "VACIA": "Ainda não há conversas. Quando um cliente escrever para o seu WhatsApp, aparecerá aqui.",
+      "VACIA_FILTRADA": "Nenhuma conversa corresponde aos filtros.",
+      "IR_CONFIGURACION": "Ir para Configurações › WhatsApp",
+      "SIN_CONEXION": "A conexão do WhatsApp não está ativa: não será possível enviar mensagens.",
+      "VENTANA_CERRADA": "Janela fechada",
+      "ELIGE": "Escolha uma conversa para vê-la.",
+      "VOLVER": "Voltar à lista",
+      "RESPONSABLE": "Responsável",
+      "SIN_RESPONSABLE": "Sem responsável",
+      "VINCULAR_CONTACTO": "Vincular contato",
+      "CAMBIAR_CONTACTO": "Alterar contato",
+      "VINCULAR_OPORTUNIDAD": "Vincular ou criar oportunidade",
+      "OPORTUNIDAD": "Oportunidade",
+      "SIN_OPORTUNIDAD": "Sem oportunidade",
+      "MENSAJES": "Mensagens da conversa",
+      "ENTRANTE": "Recebida",
+      "SALIENTE": "Enviada",
+      "ESCRIBE": "Escreva sua resposta",
+      "ENVIAR": "Enviar",
+      "PLANTILLA": "Modelo",
+      "ELIGE_PLANTILLA": "Escolha um modelo",
+      "ENVIAR_PLANTILLA": "Enviar modelo",
+      "SIN_PLANTILLAS": "Não há modelos aprovados. Sincronize-os em Configurações › WhatsApp.",
+      "VENTANA_CERRADA_AVISO": "Passaram mais de 24 h desde a última mensagem do cliente: você só pode enviar um modelo aprovado.",
+      "ESTADOS": {
+        "queued": "Na fila",
+        "sent": "Enviada",
+        "delivered": "Entregue",
+        "read": "Lida",
+        "failed": "Falhou"
+      },
+      "REENVIAR": "Reenviar",
+      "RESPONSABLE_ACTUALIZADO": "Responsável atualizado.",
+      "CONTACTO_VINCULADO": "Contato atualizado.",
+      "OPORTUNIDAD_ACTUALIZADA": "Oportunidade atualizada."
+    },
+    "INBOX_CONTACT": {
+      "TITULO": "Vincular contato",
+      "TIPO": "Tipo de contato",
+      "QUITAR": "Remover contato"
+    },
+    "INBOX_OPPORTUNITY": {
+      "TITULO": "Oportunidade da conversa",
+      "NECESITA_CONTACTO": "Vincule primeiro um contato à conversa.",
+      "VINCULAR_EXISTENTE": "Vincular uma existente",
+      "CREAR_NUEVA": "Criar uma nova",
+      "SIN_ABIERTAS": "O contato não tem oportunidades abertas.",
+      "TABLERO": "Quadro",
+      "QUITAR": "Remover oportunidade"
     }
   }
 }

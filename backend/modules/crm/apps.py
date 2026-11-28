@@ -9,3 +9,6 @@ class CrmConfig(AppConfig):
         from .infrastructure import defaults
 
         defaults.register()
+        from .infrastructure import inbox_subscriber
+
+        inbox_subscriber.register()
