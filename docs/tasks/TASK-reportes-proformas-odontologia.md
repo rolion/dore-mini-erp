@@ -86,7 +86,7 @@ Frontend: `DocumentReport` admite los tipos `dental-receivable` y `dental-paid` 
 
 **Pantallas.** Referencia: reporte compartido `document-report` (DDR-reporte-ingresos-por-venta-pantalla) y formulario `dental-proforma-form`; sin componentes compartidos nuevos.
 
-**Entorno / verificación propia (no es el Quality Gate).** Se copió `backend/.env` del proyecto principal (no versionado, sin leerlo) y se enlazó `frontend/panel_admin/node_modules` por *junction* al del proyecto principal (sin instalar dependencias). Backend: 237 pruebas de `dentistry`, `receivables`, ventas y compras OK; `ruff`/`flake8` sin avisos nuevos en lo cambiado. Frontend: `ng test` 1970 OK, `ng lint`, `ng build` e `i18n:check` OK. Suite completa del backend: ver nota final.
+**Entorno / verificación propia (no es el Quality Gate).** Se copió `backend/.env` del proyecto principal (no versionado, sin leerlo) y se enlazó `frontend/panel_admin/node_modules` por *junction* al del proyecto principal (sin instalar dependencias). Backend: 237 pruebas de `dentistry`, `receivables`, ventas y compras OK; `ruff`/`flake8` sin avisos nuevos en lo cambiado. Frontend: `ng test` 1970 OK, `ng lint`, `ng build` e `i18n:check` OK. Suite completa del backend: 2649 pruebas OK (en serie; el ejecutor paralelo aborta por una prueba intermitente del reloj, ajena). Una prueba de fronteras (`test_boundaries`) obligó a declarar la dependencia `dentistry → receivables` del ADR.
 
 
 ## Review
