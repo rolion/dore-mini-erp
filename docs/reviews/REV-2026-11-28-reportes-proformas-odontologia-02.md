@@ -1,6 +1,6 @@
 # REV-2026-11-28-reportes-proformas-odontologia-02: PUT sin `professional_id` borra el doctor en silencio
 
-**Status:** Open
+**Status:** Closed (PUT sin professional_id conserva el doctor; null explícito lo quita)
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-28-reportes-proformas-odontologia.md (v1)

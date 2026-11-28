@@ -14,6 +14,7 @@
 | 2026-11-28 | PLANNING → ENGINEERING | Specification READY, PLAN v1 y PR | delivery-start |
 | 2026-11-28 | ENGINEERING → REVIEW | Implementación completa; pendiente Quality Gate | delivery-build |
 | 2026-11-28 | REVIEW → PUBLISH | Quality Gate PASS con observaciones (REV-01 Medium, REV-02 Low abiertos) | delivery-publish |
+| 2026-11-28 | PUBLISH | REV-01 y REV-02 cerrados por petición del usuario (pruebas agregadas; PUT sin `professional_id` conserva el doctor) | delivery-build |
 
 ## Investigación
 
@@ -92,7 +93,7 @@ Frontend: `DocumentReport` admite los tipos `dental-receivable` y `dental-paid` 
 
 ## Review
 **Quality Gate: PASS con observaciones** (subagente aislado, sobre `ba2a49be`). Backend: suite completa 2649 pruebas OK. Frontend: 1970 OK, `lint`, `build`, `i18n:check` y `npm audit` (0 vulnerabilidades) OK; `ruff`/`flake8`/`bandit` sin avisos nuevos. Sin revisión visual en navegador (no verificada) ni E2E (el plan lo descarta).
-Hallazgos: [REV-01](../reviews/REV-2026-11-28-reportes-proformas-odontologia-01.md) Medium (faltan pruebas del plan: sobrepago, doctor borrado, `report_export` unitario, 403 clínico); [REV-02](../reviews/REV-2026-11-28-reportes-proformas-odontologia-02.md) Low (PUT sin `professional_id` borra el doctor). Ambos abiertos, no bloquean; no se repitió el Quality Gate tras ellos.
+Hallazgos: [REV-01](../reviews/REV-2026-11-28-reportes-proformas-odontologia-01.md) Medium (faltan pruebas del plan: sobrepago, doctor borrado, `report_export` unitario, 403 clínico); [REV-02](../reviews/REV-2026-11-28-reportes-proformas-odontologia-02.md) Low (PUT sin `professional_id` borra el doctor). **Cerrados** después del Quality Gate: se agregaron las pruebas de REV-01 y el PUT sin `professional_id` ahora conserva el doctor (REV-02); verificado con las pruebas de dentistry, sales y shared (513 OK) y lint. No se repitió el Quality Gate completo.
 
 ## Publicación
-PR #145 listo para aprobación humana (no se mergea). Cambios sensibles: **base de datos** (migración aditiva 0007) y dependencia nueva entre módulos (`dentistry → receivables`), respaldados por el ADR; sin cambios de autenticación ni infraestructura. Pendiente de la persona que aprueba: revisar en navegador los dos reportes y el selector de doctor (estados, contraste, móvil 390 px, tema oscuro) y decidir si cerrar REV-01/02 antes del merge.
+PR #145 listo para aprobación humana (no se mergea). Cambios sensibles: **base de datos** (migración aditiva 0007) y dependencia nueva entre módulos (`dentistry → receivables`), respaldados por el ADR; sin cambios de autenticación ni infraestructura. Pendiente de la persona que aprueba: revisar en navegador los dos reportes y el selector de doctor (estados, contraste, móvil 390 px, tema oscuro) (REV-01/02 ya cerrados).

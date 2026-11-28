@@ -46,13 +46,23 @@ class LineInput:
     dental_piece: str | None = None  # None: no se envió (se conserva la pieza guardada)
 
 
+class _Keep:
+    """Marca «no se envió»: en una edición conserva el doctor guardado; al crear equivale a sin doctor."""
+
+    def __repr__(self) -> str:
+        return 'KEEP'
+
+
+KEEP = _Keep()
+
+
 @dataclass(frozen=True)
 class DentalProformaInput:
     date: date
     valid_until: date | None
     notes: str
     lines: list[LineInput]
-    professional_id: UUID | None = None
+    professional_id: UUID | None | _Keep = KEEP
 
 
 class DentalProformaService:
@@ -99,11 +109,12 @@ class DentalProformaService:
     # --- escritura ---------------------------------------------------------------------------------------
     def create(self, customer_id: UUID, data: DentalProformaInput) -> DentalProforma:
         name = self.patients.require_active(customer_id)
-        self._check_professional(data.professional_id)
+        professional_id = None if data.professional_id is KEEP else data.professional_id
+        self._check_professional(professional_id)
         lines = self._lines(data.lines, existing={})
         proforma = DentalProforma.create(number='', customer_id=customer_id, patient_name=name, date=data.date,
                                          valid_until=data.valid_until, notes=data.notes, lines=lines,
-                                         created_by=self.user_id, professional_id=data.professional_id)
+                                         created_by=self.user_id, professional_id=professional_id)
         proforma.number = self.repository.next_number()  # al final: un rechazo no consume número
         self.repository.save(proforma)
         return proforma
@@ -113,10 +124,11 @@ class DentalProformaService:
         if proforma.status != DRAFT:
             raise DentalProformaStateError('Solo se puede editar una proforma en borrador.')
         name = self.patients.require_active(proforma.customer_id)
-        self._check_professional(data.professional_id)
+        professional_id = proforma.professional_id if data.professional_id is KEEP else data.professional_id
+        self._check_professional(professional_id)
         lines = self._lines(data.lines, existing={line.id: line for line in proforma.lines})
         proforma.replace_content(patient_name=name, date=data.date, valid_until=data.valid_until,
-                                 notes=data.notes, lines=lines, professional_id=data.professional_id,
+                                 notes=data.notes, lines=lines, professional_id=professional_id,
                                  origins=self.repository.origin_lines(proforma.number, proforma.version))
         self.repository.save(proforma)
         return proforma

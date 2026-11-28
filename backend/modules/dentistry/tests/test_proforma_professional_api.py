@@ -65,3 +65,12 @@ class ProformaProfessionalApiTests(TransactionTestCase):
         self.client.post(f"{ROOT}proformas/{draft['id']}/present/")
         version = self.client.post(f"{ROOT}proformas/{draft['id']}/new-version/").json()
         self.assertEqual((version['version'], version['professional']['id']), (2, str(self.doctor.pk)))
+
+    # REV-02: un PUT sin `professional_id` no borra el doctor; solo un `null` explícito lo quita
+    def test_put_without_professional_keeps_it_and_null_clears_it(self):
+        draft = self.client.post(self.url, self.body(professional_id=str(self.doctor.pk)), format='json').json()
+        url = f"{ROOT}proformas/{draft['id']}/"
+        kept = self.client.put(url, self.body(), format='json').json()
+        self.assertEqual(kept['professional']['id'], str(self.doctor.pk))
+        cleared = self.client.put(url, self.body(professional_id=None), format='json').json()
+        self.assertIsNone(cleared['professional'])

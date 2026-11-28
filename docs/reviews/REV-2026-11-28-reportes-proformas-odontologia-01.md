@@ -1,6 +1,6 @@
 # REV-2026-11-28-reportes-proformas-odontologia-01: Casos de borde y pruebas unitarias del plan sin cubrir
 
-**Status:** Open
+**Status:** Closed (pruebas agregadas; ver commit de cierre)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-28-reportes-proformas-odontologia.md (v1)

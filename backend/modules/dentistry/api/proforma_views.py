@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from config.permissions import CompanyClinicalPermission
 from modules.dentistry.application.proformas import (
-    DecisionInput, DentalProformaInput, DentalProformaService, LineInput, PriceEditNotAllowed, RectifyNotAllowed,
+    KEEP, DecisionInput, DentalProformaInput, DentalProformaService, LineInput, PriceEditNotAllowed, RectifyNotAllowed,
 )
 from modules.dentistry.domain.patient import PatientArchived, PatientNotFound
 from modules.dentistry.domain.proforma import (
@@ -70,7 +70,7 @@ class ProformaInputSerializer(serializers.Serializer):
     valid_until = serializers.DateField(required=False, allow_null=True, default=None)
     notes = serializers.CharField(required=False, allow_blank=True, default='', max_length=2000)
     lines = LineInputSerializer(many=True, max_length=500)
-    professional_id = serializers.UUIDField(required=False, allow_null=True, default=None)
+    professional_id = serializers.UUIDField(required=False, allow_null=True)  # ausente: se conserva el guardado
     # El paciente sale de la URL: cualquier `customer_id` del cuerpo se ignora.
 
     def to_input(self) -> DentalProformaInput:
@@ -78,7 +78,8 @@ class ProformaInputSerializer(serializers.Serializer):
         lines = [LineInput(quantity=l['quantity'], id=l.get('id'), service_id=l.get('service_id'),
                            unit_price=l.get('unit_price'), dental_piece=l.get('dental_piece'))
                  for l in data['lines']]
-        return DentalProformaInput(data['date'], data['valid_until'], data['notes'], lines, data['professional_id'])
+        return DentalProformaInput(data['date'], data['valid_until'], data['notes'], lines,
+                                   data.get('professional_id', KEEP))
 
 
 class DecisionInputSerializer(serializers.Serializer):

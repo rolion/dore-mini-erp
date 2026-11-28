@@ -1,5 +1,6 @@
 from decimal import Decimal
 from io import BytesIO
+from unittest import mock
 from uuid import uuid4
 
 from django.test import TransactionTestCase
@@ -130,7 +131,6 @@ class ProformaReportsApiTests(TransactionTestCase):
         self.assertEqual(self.client.get(PAID + 'export/pdf/?date_from=x').status_code, 400)
 
     def test_export_limit(self):
-        from unittest import mock
         self.proforma(self.patient('Rosa'))
         with mock.patch('modules.dentistry.api.proforma_report_views.MAX_EXPORT_ROWS', 0):
             self.assertEqual(self.client.get(RECEIVABLE + 'export/xlsx/').status_code, 400)
@@ -167,3 +167,33 @@ class ProformaReportsApiTests(TransactionTestCase):
         draft = self.client.post(f"{ROOT}proformas/{p['id']}/new-version/").json()
         self.assertEqual(draft['version'], 2)
         self.assertEqual([r['code'] for r in self.client.get(RECEIVABLE).json()['results']], [p['number']])
+
+    # Edge: un pago mayor al aceptado (p. ej. tras rectificar) cuenta como pagada con Monto = total cobrado
+    def test_overpaid_proforma_is_paid_not_receivable(self):
+        p = self.proforma(self.patient('Rosa'))
+        with mock.patch('modules.dentistry.infrastructure.adapters.paid_totals',
+                        return_value={p['number']: Decimal('130.00')}):
+            self.assertEqual(self.client.get(RECEIVABLE).json()['results'], [])
+            done = self.client.get(PAID).json()
+        self.assertEqual([(r['code'], r['amount']) for r in done['results']], [(p['number'], '130.00')])
+        self.assertEqual(done['totals'], {'count': 1, 'amount': '130.00'})
+
+    # Edge: sin doctor o con un profesional borrado, la columna Doctor muestra «—» en la lista y en los archivos
+    def test_missing_or_deleted_doctor_shows_dash(self):
+        gone = ProfessionalModel.objects.create(company_id=self.admin.company_id, name='Dr. Borrado', created_by=1,
+                                                updated_by=1)
+        self.proforma(self.patient('Rosa'))
+        self.proforma(self.patient('Luis'), doctor=gone)
+        gone.delete()
+        rows = self.client.get(RECEIVABLE).json()['results']
+        self.assertEqual(sorted(r['doctor']['name'] if r['doctor'] else '' for r in rows), ['', ''])
+        sheet = load_workbook(BytesIO(self.client.get(RECEIVABLE + 'export/xlsx/').content)).active
+        self.assertEqual([sheet['C2'].value, sheet['C3'].value], ['—', '—'])
+        self.assertTrue(self.client.get(RECEIVABLE + 'export/pdf/').content.startswith(b'%PDF'))
+
+    # AC-09: mismos permisos que la lista de proformas, incluida la política clínica
+    def test_requires_clinical_access(self):
+        self.proforma(self.patient('Rosa'))
+        with mock.patch('config.permissions.has_clinical_access', return_value=False):
+            for url in (RECEIVABLE, PAID, RECEIVABLE + 'export/xlsx/', PAID + 'export/pdf/'):
+                self.assertEqual(self.client.get(url).status_code, 403, url)
