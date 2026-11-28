@@ -164,15 +164,15 @@ describe('OrdersApiService', () => {
       expect(order.packing?.bulkAvailable).toBe('82.0000');
       expect(order.packing?.packings[0]).toEqual(jasmine.objectContaining({
         number: 1, packs: 6, bulkQuantity: '36.0000', costTotal: null,
-        packProduct: { id: 'p-pack', name: 'Pack x6' }, labelProduct: { id: 'p-label', name: 'Etiqueta' }, labelsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-1' } }));
+        packProduct: { id: 'p-pack', name: 'Pack x6', unit: 'u' }, labelProduct: { id: 'p-label', name: 'Etiqueta', unit: 'u' }, labelsQuantity: '6.0000', lot: { id: 'lot-1', code: 'L-1' } }));
     });
     const ok = http.expectOne('/api/production-orders/order-1/pack/');
     expect(ok.request.method).toBe('POST');
     expect(ok.request.body).toEqual({ request_id: 'req-1', packs: 6, pack_product_id: 'p-pack', bag_product_id: 'p-bag', bag_per_pack: 0.17, label_product_id: 'p-label' });
     ok.flush({ ...orderDto, status: 'ready_to_pack', packing: {
       units_per_pack: 6, suggested_bag_per_pack: '0.1700', labels_per_pack: 1, bulk_available: '82.0000', bulk_unit_abbreviation: 'u',
-      packings: [{ id: 'k-1', number: 1, packs: 6, pack_product: { id: 'p-pack', name: 'Pack x6' }, bag_product: { id: 'p-bag', name: 'Bolsa' },
-        label_product: { id: 'p-label', name: 'Etiqueta' }, bulk_quantity: '36.0000', bags_quantity: '1.0200', bag_per_pack: '0.1700', labels_quantity: '6.0000', lot: { id: 'lot-1', code: 'L-1' }, cost_total: null, unit_cost: null,
+      packings: [{ id: 'k-1', number: 1, packs: 6, pack_product: { id: 'p-pack', name: 'Pack x6', unit: 'u' }, bag_product: { id: 'p-bag', name: 'Bolsa', unit: 'm' },
+        label_product: { id: 'p-label', name: 'Etiqueta', unit: 'u' }, bulk_quantity: '36.0000', bags_quantity: '1.0200', bag_per_pack: '0.1700', labels_quantity: '6.0000', lot: { id: 'lot-1', code: 'L-1' }, cost_total: null, unit_cost: null,
         created_at: '2026-11-27T11:00:00Z', created_by: 'Ana' }] } });
 
     let caught: OrderApiError | undefined;

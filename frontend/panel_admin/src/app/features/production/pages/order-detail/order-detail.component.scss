@@ -160,6 +160,11 @@
 
 .order-dl {
   margin-bottom: 0;
+
+  // En pantallas anchas, etiqueta y valor no deben quedar a un extremo y otro del panel.
+  @media (min-width: 1200px) {
+    max-width: 38rem;
+  }
 }
 
 .order-row {

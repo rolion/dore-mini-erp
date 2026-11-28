@@ -226,8 +226,9 @@ describe('OrderDetailComponent', () => {
     TestBed.resetTestingModule();
     const root = setup(released).nativeElement as HTMLElement;
     expect(root.querySelector('[data-testid="lot-status"]')?.textContent).toContain('Liberado');
-    expect(root.querySelector('[data-testid="lot-physical"]')?.textContent).toContain('58 u');
-    expect(root.querySelector('[data-testid="lot-available"]')?.textContent).toContain('58 u');
+    expect(root.querySelector('[data-testid="lot-bulk"]')?.textContent).toContain('58 u');
+    expect(root.querySelector('[data-testid="release-progress"]')).toBeNull();  // tras liberar ya no hay cuenta regresiva
+    expect(root.querySelector('[data-testid="releasable-from"]')).toBeNull();
     expect(root.querySelector('[data-testid="release"]')).toBeNull();
     expect(root.querySelector('[data-testid="refrigerate"]')).toBeNull();
     expect(root.querySelector('[data-testid="start"]')).toBeNull();
@@ -245,7 +246,7 @@ describe('OrderDetailComponent', () => {
       release: { minHours: 12, releasableFrom: '2026-11-27T03:00:00Z', canRelease: false },
     };
     const root = setup(missing).nativeElement as HTMLElement;
-    expect(root.querySelector('[data-testid="lot-available"]')?.textContent?.trim()).toBe('—');
+    expect(root.querySelector('[data-testid="lot-bulk"]')?.textContent?.trim()).toBe('—');
   });
 
   describe('layout (DDR detalle-orden-rediseno)', () => {
@@ -295,7 +296,9 @@ describe('OrderDetailComponent', () => {
       TestBed.resetTestingModule();
       const root = setup(cooling).nativeElement as HTMLElement;
       expect(root.querySelector('[data-testid="actual-output"]')?.textContent).toContain('20 u');
-      expect(root.querySelector('[data-testid="lot-available"]')?.textContent).toContain('0 u');
+      expect(root.querySelector('[data-testid="lot-bulk"]')?.textContent).toContain('118 u');  // físico, aún bloqueado
+      expect(root.querySelector('[data-testid="lot-stock"]')).not.toBeNull();
+      expect(root.querySelector('[data-testid="packed"]')).toBeNull();
       expect(root.querySelector('[data-testid="cost"]')?.textContent).toContain('18.65');
       const bar = root.querySelector('[data-testid="release-progress"]');
       expect(bar?.getAttribute('role')).toBe('progressbar');
@@ -338,7 +341,8 @@ describe('OrderDetailComponent', () => {
 
     it('shows the bulk balance, an empty history and an enabled action when a pack fits', () => {  // AC-08, UI-01, UI-03
       const root: HTMLElement = setup(ready('82.0000')).nativeElement;
-      expect(root.querySelector('[data-testid="bulk-available"]')?.textContent).toContain('82');
+      expect(root.querySelector('[data-testid="lot-bulk"]')?.textContent).toContain('82');
+      expect(root.querySelector('[data-testid="packed"]')).toBeNull();
       expect(root.querySelector('[data-testid="packing-empty"]')).not.toBeNull();
       expect((root.querySelector('[data-testid="pack"]') as HTMLButtonElement).disabled).toBeFalse();
       expect(root.querySelector('[data-testid="pack-hint"]')).toBeNull();
@@ -353,7 +357,7 @@ describe('OrderDetailComponent', () => {
     it('lists the history of packings with lot, quantities and cost', () => {  // AC-04, AC-08, UI-01
       const value = ready('82.0000');
       value.packing = { ...value.packing!, packings: [{
-        id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6' }, bagProduct: { id: 'p-bag', name: 'Bolsa' },
+        id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6', unit: 'u' }, bagProduct: { id: 'p-bag', name: 'Bolsa', unit: 'm' },
         labelProduct: null, labelsQuantity: '0.0000', bulkQuantity: '36.0000', bagsQuantity: '1.0200', bagPerPack: '0.1700', lot: { id: 'lot-1', code: 'L-20261127-0001' },
         costTotal: '39.00', unitCost: '6.500000', createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' }] };
       const root: HTMLElement = setup(value).nativeElement;
@@ -362,12 +366,16 @@ describe('OrderDetailComponent', () => {
       expect(row).toContain('L-20261127-0001');
       expect(row).toContain('36');
       expect(row).toContain('Ana');
+      expect(row).toContain('1.02 m');  // la bolsa lleva su unidad
+      expect(row).toContain('6.50');  // costo unitario por pack
+      expect(root.querySelector('[data-testid="packed"]')?.textContent).toContain('36 u');
+      expect(root.querySelector('[data-testid="packed-packs"]')?.textContent).toContain('6');
     });
 
     it('stacks the history as cards on narrow screens', () => {  // AC-04, UI-01
       const value = ready('82.0000');
       value.packing = { ...value.packing!, packings: [{
-        id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6' }, bagProduct: { id: 'p-bag', name: 'Bolsa' },
+        id: 'k-1', number: 1, packs: 6, packProduct: { id: 'p-pack', name: 'Pack x6', unit: 'u' }, bagProduct: { id: 'p-bag', name: 'Bolsa', unit: 'm' },
         labelProduct: null, labelsQuantity: '0.0000', bulkQuantity: '36.0000', bagsQuantity: '1.0200', bagPerPack: '0.1700', lot: { id: 'lot-1', code: 'L-20261127-0001' },
         costTotal: null, unitCost: null, createdAt: '2026-11-27T11:00:00Z', createdBy: 'Ana' }] };
       const root: HTMLElement = setup(value, true).nativeElement;

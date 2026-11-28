@@ -128,6 +128,23 @@ export class OrderDetailComponent implements OnInit {
     });
   }
 
+  /** Cuñapés a granel ya empacados y packs obtenidos, sumando todas las tandas. */
+  get packedBulk(): string {
+    const total = (this.order?.packing?.packings ?? []).reduce((sum, entry) => sum + Number(entry.bulkQuantity), 0);
+    return formatQuantity(total.toFixed(4));
+  }
+
+  get packedPacks(): number {
+    return (this.order?.packing?.packings ?? []).reduce((sum, entry) => sum + entry.packs, 0);
+  }
+
+  /** A granel: en refrigeración el físico (bloqueado); liberado, lo disponible para empacar. */
+  get bulkBalance(): string | null {
+    const lot = this.order?.lot;
+    if (!lot) return null;
+    return this.order?.status === 'ready_to_pack' ? lot.availableQuantity : lot.physicalQuantity;
+  }
+
   /** El pack necesita al menos un pack completo a granel. */
   get canPack(): boolean {
     const packing = this.order?.packing;

@@ -1,6 +1,6 @@
 # TASK-empacar-bolsas-de-6-venta-detalle: Empacar bolsas de 6 para venta al detalle
 
-**Etapa actual:** PUBLISH
+**Etapa actual:** REVIEW
 **Veredicto de complejidad:** NEEDS_PLAN
 **Diseño requerido:** SI
 **Rama:** task/TASK-empacar-bolsas-de-6-venta-detalle (base: `produccion`)
@@ -98,6 +98,9 @@ Hecha en el navegador (base PostgreSQL aparte, servidores en puertos propios 420
 
 ## Quality Gate sobre el merge (ciclo 4, subagente aislado)
 **PASS** sobre el estado final tras el merge con `produccion` (commit 780c29b1): backend suite completa 2710 OK, `makemigrations --check` sin cambios, `ruff`/`flake8` limpios, `npm run lint`, `i18n:check` (2693 claves, 0 faltantes) y `npm run build` sin errores de tipos, Karma completo 1956 OK. Sin marcadores de conflicto ni bloques duplicados; las pruebas del PR #142 no se borraron ni relajaron; la lista de órdenes no calcula `packing` (sin N+1); claves i18n idénticas en es/en/pt. Sin hallazgos abiertos. Revisión visual: verificada por el autor en el navegador (escritorio y móvil, tema claro); tema oscuro no revisado tras el merge.
+
+## Refinamiento de UI del detalle (pedido del usuario, dentro de este PR)
+Crítica de diseño: la misma cifra salía 4 veces («Saldo físico», «Disponible para empaque», «Saldo a granel» y la pista del botón) y faltaba lo empacado. Cambios (solo interfaz; el backend solo agrega la unidad de pack/bolsa/etiqueta al historial): indicadores «Elaboradas», **«Empacado» (u y packs)**, **«A granel»** (físico y bloqueado durante la refrigeración; disponible tras liberar) y «Costo del lote» (renombrado); se quitó «Saldo a granel» de «Empaques» y la fila «Ingreso a refrigeración» repetida; tras liberar se ocultan la barra de tiempo, el transcurrido y la hora habilitada; la tabla muestra unidad en bolsas y etiquetas y el costo por pack; la pista del botón ya no repite la cifra («No alcanza para un pack: se necesitan 6 u a granel»); en pantallas anchas las filas de los paneles tienen ancho máximo. Pruebas de PR #142 adaptadas a los nuevos indicadores (`lot-bulk` reemplaza `lot-physical`/`lot-available`) y ampliadas. Verificado en el navegador (escritorio 1440 px y móvil 390 px, tema claro). **Pendiente:** Quality Gate sobre este refinamiento; tema oscuro no revisado.
 
 ## Review
 Quality Gate ciclo 1 (subagente aislado): **PASS** — sin hallazgos Critical/High/Medium. Evidencia: backend con PostgreSQL, suite completa 2656 OK (autor) y `modules.production`+`test_boundaries` 125 OK (revisor); `makemigrations --check` sin cambios; `ruff`/`flake8` limpios; `npm run lint` e `i18n:check` OK; Karma `production` 72 OK (autor). **No verificado:** revisión visual en navegador (UI-01..03 solo por lectura de código).

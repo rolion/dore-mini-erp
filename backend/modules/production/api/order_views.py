@@ -84,6 +84,14 @@ def _packing(company_id, order) -> dict | None:
     """Saldo a granel e historial de empaques; solo para la orden lista para empacar (detalle)."""
     if order.status != OrderStatus.READY_TO_PACK:
         return None
+    packings = DjangoPackingRepository(company_id).list(order.id)
+    ids = {pid for p in packings for pid in (p.pack_product_id, p.bag_product_id, p.label_product_id) if pid}
+    found = CatalogProducts(company_id).products(ids) if ids else {}
+    units = {pid: info.unit_abbreviation for pid, info in found.items()}
+
+    def product(pid, name):
+        return {'id': pid, 'name': name, 'unit': units.get(pid)}
+
     return {
         'units_per_pack': UNITS_PER_PACK, 'suggested_bag_per_pack': f'{SUGGESTED_BAG_PER_PACK:.4f}',
         'labels_per_pack': LABELS_PER_PACK,
@@ -91,10 +99,9 @@ def _packing(company_id, order) -> dict | None:
         'bulk_unit_abbreviation': order.result_unit_abbreviation,
         'packings': [{
             'id': p.id, 'request_id': p.request_id, 'number': p.number, 'packs': p.packs,
-            'pack_product': {'id': p.pack_product_id, 'name': p.pack_product_name},
-            'bag_product': {'id': p.bag_product_id, 'name': p.bag_product_name},
-            'label_product': ({'id': p.label_product_id, 'name': p.label_product_name}
-                              if p.label_product_id else None),
+            'pack_product': product(p.pack_product_id, p.pack_product_name),
+            'bag_product': product(p.bag_product_id, p.bag_product_name),
+            'label_product': product(p.label_product_id, p.label_product_name) if p.label_product_id else None,
             'bulk_quantity': _qty(p.bulk_quantity), 'bags_quantity': _qty(p.bags_quantity),
             'bag_per_pack': _qty(p.bag_per_pack),
             'labels_quantity': _qty(p.labels_quantity),
@@ -102,7 +109,7 @@ def _packing(company_id, order) -> dict | None:
             'cost_total': f'{p.cost_total:.2f}' if p.cost_total is not None else None,
             'unit_cost': f'{p.unit_cost:.6f}' if p.unit_cost is not None else None,
             'created_at': p.created_at, 'created_by': p.created_by_name or None,
-        } for p in DjangoPackingRepository(company_id).list(order.id)]}
+        } for p in packings]}
 
 
 def _lot(order, record) -> dict:

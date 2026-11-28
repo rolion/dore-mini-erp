@@ -42,14 +42,21 @@ export interface OrderLot {
   availableQuantity: string | null;
 }
 
+/** Producto de un empaque con la unidad en la que se lleva su stock (`null` si no se conoce). */
+export interface PackingProduct {
+  id: string;
+  name: string;
+  unit: string | null;
+}
+
 export interface PackingEntry {
   id: string;
   number: number;
   packs: number;
-  packProduct: { id: string; name: string };
-  bagProduct: { id: string; name: string };
+  packProduct: PackingProduct;
+  bagProduct: PackingProduct;
   /** Etiqueta opcional; `null` si no se usó. */
-  labelProduct: { id: string; name: string } | null;
+  labelProduct: PackingProduct | null;
   /** Cadenas decimales con 4 decimales. */
   bulkQuantity: string;
   bagsQuantity: string;
@@ -150,8 +157,8 @@ export interface ProductionOrderDto {
     bulk_unit_abbreviation: string | null;
     packings: {
       id: string; number: number; packs: number;
-      pack_product: { id: string; name: string }; bag_product: { id: string; name: string };
-      label_product: { id: string; name: string } | null;
+      pack_product: PackingProduct; bag_product: PackingProduct;
+      label_product: PackingProduct | null;
       bulk_quantity: string; bags_quantity: string; bag_per_pack: string; labels_quantity: string; lot: { id: string; code: string };
       cost_total: string | null; unit_cost: string | null; created_at: string; created_by: string | null;
     }[];

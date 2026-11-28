@@ -29,7 +29,7 @@
       }
       @if (order.status === 'ready_to_pack') {
       <button type="button" class="btn btn-primary" [disabled]="!canPack" (click)="openPack()" data-testid="pack">{{ 'PRODUCTION.ORDERS.PACK.ACTION' | translate }}</button>
-      @if (!canPack && order.packing) { <small class="text-muted align-self-center" data-testid="pack-hint">{{ 'PRODUCTION.ORDERS.PACK.NOT_ENOUGH' | translate: { quantity: quantity(order.packing.bulkAvailable), unit: order.packing.bulkUnitAbbreviation ?? '' } }}</small> }
+      @if (!canPack && order.packing) { <small class="text-muted align-self-center" data-testid="pack-hint">{{ 'PRODUCTION.ORDERS.PACK.NOT_ENOUGH' | translate: { needed: order.packing.unitsPerPack, unit: order.packing.bulkUnitAbbreviation ?? '' } }}</small> }
       }
       <a class="btn btn-light" routerLink="/pocketbiz/production/orders">{{ 'COMMON.VOLVER' | translate }}</a>
     </div>
@@ -61,17 +61,20 @@
         <strong class="order-kpi-value" data-testid="actual-output">{{ quantity(order.actualOutput ?? '0') }} {{ order.resultProduct.unit?.abbreviation }}</strong>
         <span class="order-kpi-hint text-muted">{{ 'PRODUCTION.ORDERS.OF_EXPECTED' | translate: { quantity: quantity(order.expectedOutput) } }}</span>
       </div>
+      @if (order.packing && order.packing.packings.length) {
       <div class="card order-kpi">
-        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_STOCK.PHYSICAL' | translate }}</span>
-        <strong class="order-kpi-value" data-testid="lot-physical">{{ order.lot.physicalQuantity === null ? '—' : quantity(order.lot.physicalQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</strong>
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_STOCK.PACKED' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="packed">{{ packedBulk }} {{ order.resultProduct.unit?.abbreviation }}</strong>
+        <span class="order-kpi-hint text-muted" data-testid="packed-packs">{{ 'PRODUCTION.ORDERS.LOT_STOCK.PACKED_HINT' | translate: { packs: packedPacks } }}</span>
       </div>
+      }
       <div class="card order-kpi order-kpi-main">
-        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_STOCK.AVAILABLE' | translate }}</span>
-        <strong class="order-kpi-value" data-testid="lot-available">{{ order.lot.availableQuantity === null ? '—' : quantity(order.lot.availableQuantity) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</strong>
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_STOCK.BULK' | translate }}</span>
+        <strong class="order-kpi-value" data-testid="lot-bulk">{{ bulkBalance === null ? '—' : quantity(bulkBalance) + ' ' + (order.resultProduct.unit?.abbreviation ?? '') }}</strong>
         @if (order.status === 'refrigerating') { <span class="order-kpi-hint text-muted">{{ 'PRODUCTION.ORDERS.LOT_STOCK.BLOCKED' | translate }}</span> }
       </div>
       <div class="card order-kpi">
-        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.REFRIGERATE.COST' | translate }}</span>
+        <span class="order-kpi-label">{{ 'PRODUCTION.ORDERS.LOT_COST' | translate }}</span>
         <strong class="order-kpi-value" data-testid="cost">{{ order.costTotal ? (order.costTotal | money) : ('PRODUCTION.ORDERS.REFRIGERATE.NO_COST' | translate) }}</strong>
       </div>
       </div>
@@ -96,12 +99,10 @@
         <dl class="order-dl">
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.REFRIGERATE.LOT' | translate }}</dt><dd data-testid="lot-code">{{ order.lot.code }}</dd></div>
           <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.LOT_STOCK.STATUS' | translate }}</dt><dd data-testid="lot-status">{{ order.lot.status === 'released' ? ('PRODUCTION.ORDERS.LOT_STOCK.RELEASED' | translate) : order.lot.status === 'refrigerating' ? ('PRODUCTION.ORDERS.LOT_STOCK.REFRIGERATING' | translate) : '—' }}</dd></div>
-          @if (hasRelease) {
-          <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.ENTERED_AT' | translate }}</dt><dd>{{ order.enteredAt | date: 'dd/MM/yyyy HH:mm' }}</dd></div>
-          }
         </dl>
         @if (hasRelease) {
         <div data-testid="release-section">
+          @if (order.status === 'refrigerating') {
           <div class="d-flex justify-content-between align-items-baseline">
             <span class="fw-semibold">{{ 'PRODUCTION.ORDERS.RELEASE.ELAPSED' | translate }}</span>
             <span data-testid="elapsed-summary"><span data-testid="elapsed">{{ elapsed }}</span> {{ 'PRODUCTION.ORDERS.RELEASE.OF' | translate }} <span data-testid="min-hours">{{ order.release?.minHours }} {{ 'SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate }}</span></span>
@@ -111,8 +112,11 @@
             [attr.aria-valuetext]="elapsed + ' ' + ('PRODUCTION.ORDERS.RELEASE.OF' | translate) + ' ' + order.release?.minHours + ' ' + ('SETTINGS.MODULE_SETTINGS.UNIDAD_HORAS' | translate)" aria-valuemin="0" aria-valuemax="100" data-testid="release-progress">
             <div class="progress-bar" [style.width.%]="progressPercent"></div>
           </div>
+          }
           <dl class="order-dl mt-2">
+            @if (order.status === 'refrigerating') {
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.FIRST' | translate }}</dt><dd data-testid="releasable-from">{{ releasableFrom ? formatDateTime(releasableFrom) : '—' }}</dd></div>
+            }
             @if (order.status === 'ready_to_pack' && order.releasedAt) {
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_BY' | translate }}</dt><dd data-testid="released-by">{{ order.releasedBy }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.RELEASE.RELEASED_AT' | translate }}</dt><dd data-testid="released-at">{{ formatDateTime(order.releasedAt) }}</dd></div>
@@ -127,10 +131,6 @@
     @if (order.packing; as packing) {
     <section class="mx-4 mb-3" data-testid="packing-section" aria-labelledby="packing-title">
       <h5 id="packing-title">{{ 'PRODUCTION.ORDERS.PACK.TITLE' | translate }}</h5>
-      <dl class="row">
-        <dt class="col-sm-3">{{ 'PRODUCTION.ORDERS.PACK.BULK_AVAILABLE' | translate }}</dt>
-        <dd class="col-sm-9" data-testid="bulk-available">{{ quantity(packing.bulkAvailable) }} {{ packing.bulkUnitAbbreviation }}</dd>
-      </dl>
       @if (!packing.packings.length) { <p class="text-muted" data-testid="packing-empty">{{ 'PRODUCTION.ORDERS.PACK.EMPTY' | translate }}</p> }
       @else if (compact) {
       <ul class="list-unstyled packing-cards" data-testid="packing-cards">
@@ -143,9 +143,9 @@
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.PACKS' | translate }}</dt><dd>{{ entry.packs }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.LOT' | translate }}</dt><dd>{{ entry.lot.code }}</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BULK_USED' | translate }}</dt><dd>{{ quantity(entry.bulkQuantity) }} {{ packing.bulkUnitAbbreviation }}</dd></div>
-            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BAGS_USED' | translate }}</dt><dd>{{ quantity(entry.bagsQuantity) }}</dd></div>
-            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.LABELS_USED' | translate }}</dt><dd>{{ entry.labelProduct ? quantity(entry.labelsQuantity) : '—' }}</dd></div>
-            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.COST' | translate }}</dt><dd>{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }}</dd></div>
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BAGS_USED' | translate }}</dt><dd>{{ quantity(entry.bagsQuantity) }} {{ entry.bagProduct.unit }}</dd></div>
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.LABELS_USED' | translate }}</dt><dd>{{ entry.labelProduct ? quantity(entry.labelsQuantity) + ' ' + (entry.labelProduct.unit ?? '') : '—' }}</dd></div>
+            <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.COST' | translate }}</dt><dd>{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }} @if (entry.unitCost) { <small class="d-block text-muted">{{ entry.unitCost | money }} {{ 'PRODUCTION.ORDERS.PACK.PER_PACK' | translate }}</small> }</dd></div>
             <div class="order-row"><dt>{{ 'PRODUCTION.ORDERS.PACK.BY' | translate }}</dt><dd>{{ entry.createdBy }}</dd></div>
           </dl>
         </li>
@@ -177,9 +177,9 @@
               <td class="text-end">{{ entry.packs }}</td>
               <td>{{ entry.lot.code }}</td>
               <td class="text-end">{{ quantity(entry.bulkQuantity) }} {{ packing.bulkUnitAbbreviation }}</td>
-              <td class="text-end">{{ quantity(entry.bagsQuantity) }}</td>
-              <td class="text-end">{{ entry.labelProduct ? quantity(entry.labelsQuantity) : '—' }}</td>
-              <td class="text-end">{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }}</td>
+              <td class="text-end text-nowrap">{{ quantity(entry.bagsQuantity) }} {{ entry.bagProduct.unit }}</td>
+              <td class="text-end text-nowrap">{{ entry.labelProduct ? quantity(entry.labelsQuantity) + ' ' + (entry.labelProduct.unit ?? '') : '—' }}</td>
+              <td class="text-end text-nowrap">{{ entry.costTotal ? (entry.costTotal | money) : ('PRODUCTION.ORDERS.PACK.NO_COST' | translate) }} @if (entry.unitCost) { <small class="d-block text-muted">{{ entry.unitCost | money }} {{ 'PRODUCTION.ORDERS.PACK.PER_PACK' | translate }}</small> }</td>
               <td>{{ entry.createdBy }}</td>
             </tr>
             }

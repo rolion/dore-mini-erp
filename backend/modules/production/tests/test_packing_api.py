@@ -281,3 +281,13 @@ class OrderPackApiTests(APITestCase):
                 self.assertEqual(response.status_code, 400, response.content)
                 self.assertIn('bag_per_pack', response.json())
         self.assertEqual(PackingModel.objects.count(), 0)
+
+    def test_history_products_carry_their_unit(self):  # UI-01
+        order = self.ready()
+        self.add_roll('15')
+        self.add_label('10')
+        body = self.body(bag_product_id=str(self.roll.id), bag_per_pack='0.17', label_product_id=str(self.label.id))
+        self.assertEqual(self.pack(order, body).status_code, 201)
+        entry = self.client.get(f"{URL}{order['id']}/").json()['packing']['packings'][0]
+        self.assertEqual((entry['pack_product']['unit'], entry['bag_product']['unit'], entry['label_product']['unit']),
+                         ('u', 'kg', 'u'))
