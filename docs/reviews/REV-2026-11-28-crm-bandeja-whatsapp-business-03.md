@@ -1,6 +1,6 @@
 # REV-2026-11-28-crm-bandeja-whatsapp-business-03: Diálogo «Vincular contacto» no ofrece «Crear prospecto» (UI-04 / DDR)
 
-**Status:** Resolved (pendiente de re-verificación por el Quality Gate)
+**Status:** Closed (verificado en 2º Quality Gate)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-28-crm-bandeja-whatsapp-business.md (v1)

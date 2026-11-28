@@ -1,6 +1,6 @@
 # REV-2026-11-28-crm-bandeja-whatsapp-business-04: Actualización lectura-modificación-escritura de la conversación puede pisar campos concurrentes
 
-**Status:** Resolved (pendiente de re-verificación por el Quality Gate)
+**Status:** Open
 **Severity:** Low
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-28-crm-bandeja-whatsapp-business.md (v1)
@@ -23,3 +23,6 @@ Lectura de código: `save()` → `.update(last_inbound_at=c.last_inbound_at, own
 
 ## Resolution
 `save()` solo guarda la ventana y `save_links()` solo responsable/vínculos + prueba.
+
+## Re-verificación (2º Quality Gate)
+Parcialmente corregido: `save()` ya solo escribe `last_inbound_at` y `save_links()` solo responsable/vínculos (prueba `test_assigning_does_not_overwrite_the_window...` pasa, pero es secuencial y también pasaba antes del cambio, no ejercita concurrencia). Sin embargo `save_links()` sigue escribiendo los cuatro campos (owner, customer, lead, opportunity) con valores leídos antes: `assign` puede deshacer un vínculo fijado entre su lectura y su escritura, y `InboxService.auto_link` (crm/application/inbox_services.py) lee la conversación, consulta clientes/prospectos y luego llama `inbox.link(..., conversation.opportunity_id)` con la oportunidad leída al inicio: un vínculo manual (contacto u oportunidad) hecho en ese intervalo se pisa, contra INV-07 («nunca se pisa un vínculo manual»). Esperado: UPDATE condicional (p. ej. `filter(customer_id__isnull=True, lead_id__isnull=True)` en el autovínculo) o `select_for_update` en una transacción. Severidad Low (ventana de milisegundos).

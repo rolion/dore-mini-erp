@@ -1,6 +1,6 @@
 # REV-2026-11-28-crm-bandeja-whatsapp-business-02: AC-12: no hay prueba de migración con datos previos ni reversa
 
-**Status:** Resolved (pendiente de re-verificación por el Quality Gate)
+**Status:** Closed (verificado en 2º Quality Gate)
 **Severity:** Medium
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-28-crm-bandeja-whatsapp-business.md (v1)

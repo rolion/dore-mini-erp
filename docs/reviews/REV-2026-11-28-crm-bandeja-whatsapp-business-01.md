@@ -1,6 +1,6 @@
 # REV-2026-11-28-crm-bandeja-whatsapp-business-01: Dos pruebas Karma del menú lateral fallan por la nueva entrada «Bandeja»
 
-**Status:** Resolved (pendiente de re-verificación por el Quality Gate)
+**Status:** Closed (verificado en 2º Quality Gate)
 **Severity:** High
 **Category:** IMPLEMENTATION
 **Related plan:** docs/plans/PLAN-2026-11-28-crm-bandeja-whatsapp-business.md (v1)

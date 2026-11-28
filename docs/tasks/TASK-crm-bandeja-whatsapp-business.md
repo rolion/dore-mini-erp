@@ -1,6 +1,6 @@
 # TASK-crm-bandeja-whatsapp-business: PB-CRM-012 · Bandeja de WhatsApp Business
 
-**Etapa actual:** REVIEW
+**Etapa actual:** PUBLISH
 **Veredicto de complejidad:** NEEDS_ARCHITECTURE
 **Diseño requerido:** SI
 **Rama:** `task/TASK-crm-bandeja-whatsapp-business` (base: `crm`)
@@ -16,6 +16,7 @@
 | 2026-11-28 | ENGINEERING → REVIEW | Implementación completa; backend `crm`+`messaging` 231 pruebas OK, frontend Karma/lint/build OK | delivery-build |
 | 2026-11-28 | REVIEW → ENGINEERING | Quality Gate FAIL (REV-01 y REV-07 High: pruebas globales de menú y fronteras; REV-02..06 Medium/Low) | delivery-publish |
 | 2026-11-28 | ENGINEERING → REVIEW | REV-01..07 corregidos; backend 242 pruebas de crm/messaging/fronteras y Karma completo (2007) OK | delivery-build |
+| 2026-11-28 | REVIEW → PUBLISH | Segundo Quality Gate PASS con reservas (sin Critical/High; REV-04 y REV-08 Low abiertos; revisión visual no verificada) | delivery-publish |
 
 ## Investigación
 
@@ -84,8 +85,8 @@ Acoplamiento `crm`↔`messaging` (mitigado con puerto + fachada, ADR); autovínc
 **Verificación propia (no es el Quality Gate)**: frontend `ng lint`, `i18n:check` (0 faltantes), `ng build` y 28 pruebas Karma de la bandeja OK; backend `manage.py check`, `makemigrations --check` (sin cambios), ruff/flake8 limpios y pruebas de dominio de `messaging` OK. Pruebas de integración de la bandeja (`crm/tests/test_api_inbox.py`) y suites `crm` + `messaging`: 231 OK.
 
 ## Review
-**Primer Quality Gate: FAIL** (subagente aislado). Hallazgos: [REV-01](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-01.md) High (2 pruebas Karma del menú), [REV-07](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-07.md) High (2 pruebas de fronteras de módulos), REV-02 y REV-03 Medium, REV-04..06 Low. Corregidos todos; REV-06 se resuelve documentando el alcance (abajo). Pendiente: segundo Quality Gate.
+**Primer Quality Gate: FAIL** (subagente aislado). Hallazgos: [REV-01](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-01.md) High (2 pruebas Karma del menú), [REV-07](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-07.md) High (2 pruebas de fronteras de módulos), REV-02 y REV-03 Medium, REV-04..06 Low. Corregidos todos; REV-06 se resuelve documentando el alcance (abajo). **Segundo Quality Gate: PASS con reservas.** Suite completa backend 2656 OK y Karma 2007 OK; lint, `i18n:check`, build, `npm audit` (0 vulnerabilidades), bandit y `makemigrations --check` limpios. REV-01..03 y 05..07 cerrados; abiertos solo [REV-04](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-04.md) (Low: lectura-modificación-escritura residual en el autovínculo, sin prueba de concurrencia) y [REV-08](../reviews/REV-2026-11-28-crm-bandeja-whatsapp-business-08.md) (Low: `inbox_subscriber` depende de la capa API). **Revisión visual en navegador (390/1440 px, claro/oscuro): no verificada.**
 Alcance aclarado (REV-06): las plantillas se envían sin variables (`components` vacío) y el hilo muestra los 200 mensajes más recientes.
 
 ## Publicación
-_Pendiente_
+PR #144 (base `crm`) listo para aprobación humana; no se mergea desde el flujo. Cambio sensible: **ADR** (`crm` consume `messaging` por fachada) y **migración de base de datos** aditiva `messaging 0002` (reversible: `migrate messaging 0001`). Limitaciones conocidas: REV-04, REV-08, plantillas sin variables, hilo de 200 mensajes, sin no leídos/multimedia/tiempo real, revisión visual pendiente. Al desplegar: nada nuevo de infraestructura (el worker `run_messaging_worker` de PB-CRM-016 ya cubre el autovínculo).
