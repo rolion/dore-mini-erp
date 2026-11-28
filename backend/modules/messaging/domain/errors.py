@@ -22,6 +22,10 @@ class WindowClosed(MessagingError):
     code = 'window_closed'
 
 
+class NotRetryable(MessagingError):
+    code = 'not_retryable'
+
+
 class TemplateNotApproved(MessagingError):
     code = 'template_not_approved'
 

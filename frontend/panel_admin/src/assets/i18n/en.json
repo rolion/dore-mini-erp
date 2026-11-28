@@ -63,7 +63,8 @@
         "BOARD": "Board",
         "LEADS": "Leads",
         "OPPORTUNITIES": "Opportunities",
-        "TASKS": "To contact"
+        "TASKS": "To contact",
+        "INBOX": "Inbox"
       }
     },
     "ORDERS": {
@@ -3799,6 +3800,66 @@
       "ARCHIVAR_TITULO": "Archive task",
       "ARCHIVAR_TEXTO": "The task is hidden from every list and cannot be recovered from the interface.",
       "ARCHIVAR_CONFIRMAR": "Archive task"
+    },
+    "INBOX": {
+      "TITULO": "Inbox",
+      "FILTRO_RESPONSABLE": "Filter by owner",
+      "SCOPES": {
+        "mine": "Mine",
+        "unassigned": "Unassigned",
+        "all": "All"
+      },
+      "BUSCAR": "Search by phone or name",
+      "VACIA": "There are no conversations yet. When a customer writes to your WhatsApp it will show up here.",
+      "VACIA_FILTRADA": "No conversations match the filters.",
+      "IR_CONFIGURACION": "Go to Settings › WhatsApp",
+      "SIN_CONEXION": "The WhatsApp connection is not active: messages cannot be sent.",
+      "VENTANA_CERRADA": "Window closed",
+      "ELIGE": "Choose a conversation to view it.",
+      "VOLVER": "Back to the list",
+      "RESPONSABLE": "Owner",
+      "SIN_RESPONSABLE": "No owner",
+      "VINCULAR_CONTACTO": "Link contact",
+      "CAMBIAR_CONTACTO": "Change contact",
+      "VINCULAR_OPORTUNIDAD": "Link or create opportunity",
+      "OPORTUNIDAD": "Opportunity",
+      "SIN_OPORTUNIDAD": "No opportunity",
+      "MENSAJES": "Conversation messages",
+      "ENTRANTE": "Received",
+      "SALIENTE": "Sent",
+      "ESCRIBE": "Write your reply",
+      "ENVIAR": "Send",
+      "PLANTILLA": "Template",
+      "ELIGE_PLANTILLA": "Choose a template",
+      "ENVIAR_PLANTILLA": "Send template",
+      "SIN_PLANTILLAS": "There are no approved templates. Sync them in Settings › WhatsApp.",
+      "VENTANA_CERRADA_AVISO": "More than 24 h have passed since the customer's last message: you can only send an approved template.",
+      "ESTADOS": {
+        "queued": "Queued",
+        "sent": "Sent",
+        "delivered": "Delivered",
+        "read": "Read",
+        "failed": "Failed"
+      },
+      "REENVIAR": "Resend",
+      "RESPONSABLE_ACTUALIZADO": "Owner updated.",
+      "CONTACTO_VINCULADO": "Contact updated.",
+      "OPORTUNIDAD_ACTUALIZADA": "Opportunity updated."
+    },
+    "INBOX_CONTACT": {
+      "TITULO": "Link contact",
+      "TIPO": "Contact type",
+      "QUITAR": "Remove contact",
+      "CREAR_PROSPECTO": "Create lead"
+    },
+    "INBOX_OPPORTUNITY": {
+      "TITULO": "Conversation opportunity",
+      "NECESITA_CONTACTO": "Link a contact to the conversation first.",
+      "VINCULAR_EXISTENTE": "Link an existing one",
+      "CREAR_NUEVA": "Create a new one",
+      "SIN_ABIERTAS": "The contact has no open opportunities.",
+      "TABLERO": "Board",
+      "QUITAR": "Remove opportunity"
     }
   }
 }

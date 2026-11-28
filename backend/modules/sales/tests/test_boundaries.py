@@ -28,7 +28,9 @@ ALLOWED_DEPENDENCIES: dict[str, set[str]] = {
     # CRM: el listado compone Clientes, Ventas e Inventario por sus fachadas (ADR crm-listado-clientes); los tableros y etapas son propios.
     # Prospectos/oportunidades: conversión por la fachada de Clientes y vínculo a pedido por la de Ventas, solo desde
     # crm/infrastructure/adapters.py (ADR crm-prospectos-oportunidades-modelo-conversion-y-vinculos).
-    'crm': {'customers', 'sales', 'inventory'},
+    # Bandeja de WhatsApp (PB-CRM-012): conversaciones y envío por la fachada de Mensajería, solo desde adapters.py
+    # (ADR crm-bandeja-whatsapp-business-bandeja-en-crm-sobre-fachada-de-messaging).
+    'crm': {'customers', 'sales', 'inventory', 'messaging'},
     # Mensajería (WhatsApp): no depende de ningún módulo de negocio; otros la consumirán por su fachada (ADR messaging).
     'messaging': set(),
     # Importación de ventas: orquesta otros módulos solo por sus fachadas (ADR cargar-ventas-desde-archivo).

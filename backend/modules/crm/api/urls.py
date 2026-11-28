@@ -9,4 +9,5 @@ urlpatterns = [
     path('opportunities/', include('modules.crm.api.opportunity_urls')),
     path('tasks/', include('modules.crm.api.task_urls')),
     path('activities/', include('modules.crm.api.activity_urls')),
+    path('inbox/', include('modules.crm.api.inbox_urls')),
 ]

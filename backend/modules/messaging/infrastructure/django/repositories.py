@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from django.db import IntegrityError, transaction
+from django.db.models import F, Max, Q
 
 from ...domain.entities import Connection, Conversation, Message, Template
 from .models import ConnectionModel, ConversationModel, MessageModel, TemplateModel, WebhookEventModel
@@ -20,11 +21,16 @@ def _message(row: MessageModel) -> Message:
     return Message(row.id, row.company_id, row.connection_id, row.conversation_id, row.direction, row.type,
                    row.content, row.status, row.provider_message_id, row.template_id, row.pricing_category,
                    row.billable, row.pricing_model, row.cost, row.currency, row.sent_at, row.attempts,
-                   row.next_attempt_at, row.failure_reason)
+                   row.next_attempt_at, row.failure_reason, row.created_at)
 
 
 def _template(row: TemplateModel) -> Template:
     return Template(row.id, row.name, row.language, row.category, row.status, row.components, row.synced_at)
+
+
+def _conversation(row: ConversationModel) -> Conversation:
+    return Conversation(row.id, row.company_id, row.connection_id, row.phone, row.last_inbound_at, row.owner_id,
+                        row.customer_id, row.lead_id, row.opportunity_id)
 
 
 class DjangoConnectionRepository:
@@ -77,15 +83,54 @@ class DjangoConversationRepository:
     def get_or_create(self, connection_id: UUID, phone: str) -> Conversation:
         row, _ = ConversationModel.objects.get_or_create(
             company_id=self.company_id, connection_id=connection_id, phone=phone)
-        return Conversation(row.id, row.company_id, row.connection_id, row.phone, row.last_inbound_at)
+        return _conversation(row)
 
     def get(self, conversation_id: UUID) -> Conversation:
-        row = ConversationModel.objects.get(company_id=self.company_id, id=conversation_id)
-        return Conversation(row.id, row.company_id, row.connection_id, row.phone, row.last_inbound_at)
+        return _conversation(ConversationModel.objects.get(company_id=self.company_id, id=conversation_id))
+
+    def find(self, conversation_id: UUID) -> Conversation | None:
+        row = ConversationModel.objects.filter(company_id=self.company_id, id=conversation_id).first()
+        return _conversation(row) if row else None
 
     def save(self, c: Conversation) -> None:
+        """Solo la ventana: el worker no debe pisar el responsable ni los vínculos que otro usuario acaba de fijar."""
+        ConversationModel.objects.filter(company_id=self.company_id, id=c.id).update(last_inbound_at=c.last_inbound_at)
+
+    def save_links(self, c: Conversation) -> None:
+        """Solo responsable y vínculos: asignar no debe pisar `last_inbound_at` de un mensaje que llega a la vez."""
         ConversationModel.objects.filter(company_id=self.company_id, id=c.id).update(
-            last_inbound_at=c.last_inbound_at)
+            owner_id=c.owner_id, customer_id=c.customer_id, lead_id=c.lead_id, opportunity_id=c.opportunity_id)
+
+    def page(self, *, owner_id: int | None, unassigned: bool, opportunity_id: UUID | None, search: str | None,
+             customer_ids, lead_ids, offset: int, limit: int) -> tuple[int, list[Conversation], dict]:
+        """Conversaciones por último mensaje (más reciente primero) y su último mensaje, en dos consultas."""
+        rows = ConversationModel.objects.filter(company_id=self.company_id)
+        if owner_id is not None:
+            rows = rows.filter(owner_id=owner_id)
+        if unassigned:
+            rows = rows.filter(owner_id__isnull=True)
+        if opportunity_id is not None:
+            rows = rows.filter(opportunity_id=opportunity_id)
+        if search:
+            digits = ''.join(ch for ch in search if ch.isdigit())
+            condition = Q(customer_id__in=list(customer_ids)) | Q(lead_id__in=list(lead_ids))
+            if digits:
+                condition |= Q(phone__contains=digits)
+            rows = rows.filter(condition)
+        rows = rows.annotate(last_at=Max('messages__created_at')).order_by(F('last_at').desc(nulls_last=True), 'id')
+        total = rows.count()
+        page = list(rows[offset:offset + limit])
+        last = {}
+        if page:
+            latest = (MessageModel.objects.filter(company_id=self.company_id, conversation_id__in=[r.id for r in page])
+                      .order_by('conversation_id', '-created_at', '-id').distinct('conversation_id'))
+            last = {m.conversation_id: _message(m) for m in latest}
+        return total, [_conversation(r) for r in page], last
+
+    def last_message(self, conversation_id: UUID) -> Message | None:
+        row = (MessageModel.objects.filter(company_id=self.company_id, conversation_id=conversation_id)
+               .order_by('-created_at', '-id').first())
+        return _message(row) if row else None
 
 
 class DjangoMessageRepository:
@@ -121,6 +166,15 @@ class DjangoMessageRepository:
     def get(self, message_id: UUID) -> Message | None:
         row = MessageModel.objects.filter(company_id=self.company_id, id=message_id).first()
         return _message(row) if row else None
+
+    def thread(self, conversation_id: UUID, after: datetime | None, limit: int) -> list[Message]:
+        """Mensajes de la conversación en orden cronológico; con `after` solo los creados desde esa fecha (incl.)."""
+        rows = MessageModel.objects.filter(company_id=self.company_id, conversation_id=conversation_id)
+        if after is not None:
+            rows = rows.filter(created_at__gte=after)
+            return [_message(r) for r in rows.order_by('created_at', 'id')[:limit]]
+        newest = list(rows.order_by('-created_at', '-id')[:limit])
+        return [_message(r) for r in reversed(newest)]
 
     def save(self, m: Message) -> None:
         MessageModel.objects.filter(company_id=self.company_id, id=m.id).update(**{
@@ -185,7 +239,6 @@ class OutboxQueue:
 
     @staticmethod
     def claim_next(now: datetime):
-        from django.db.models import Q
         with transaction.atomic():
             row = (MessageModel.objects.select_for_update(skip_locked=True)
                    .filter(status='queued', direction='out').filter(Q(next_attempt_at__isnull=True)

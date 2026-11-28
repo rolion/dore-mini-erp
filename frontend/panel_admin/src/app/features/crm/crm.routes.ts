@@ -3,6 +3,7 @@ import { CrmBoardComponent } from './pages/crm-board/crm-board.component';
 import { CrmCustomerListComponent } from './pages/crm-customer-list/crm-customer-list.component';
 import { CrmLeadListComponent } from './pages/crm-lead-list/crm-lead-list.component';
 import { CrmTaskListComponent } from './pages/crm-task-list/crm-task-list.component';
+import { CrmInboxComponent } from './pages/crm-inbox/crm-inbox.component';
 import { CrmOpportunityBoardComponent } from './pages/crm-opportunity-board/crm-opportunity-board.component';
 
 export const CRM_CUSTOMERS_ROUTE: Route[] = [{ path: '', component: CrmCustomerListComponent }];
@@ -14,3 +15,5 @@ export const CRM_OPPORTUNITIES_ROUTE: Routes = [{ path: '', component: CrmOpport
 export const CRM_LEADS_ROUTE: Routes = [{ path: '', component: CrmLeadListComponent }];
 
 export const CRM_TASKS_ROUTE: Routes = [{ path: '', component: CrmTaskListComponent }];
+
+export const CRM_INBOX_ROUTE: Routes = [{ path: '', component: CrmInboxComponent }];

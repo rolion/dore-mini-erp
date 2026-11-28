@@ -5,7 +5,10 @@ from uuid import UUID
 
 from django.utils import timezone
 
+from modules.crm.domain.errors import CrmConflict, CrmNotFound, CrmValidationError
 from modules.crm.application.ports import (
+    InboxConversation,
+    InboxMessage,
     CommercialSummary,
     CustomerContact,
     CustomerGatewayError,
@@ -14,6 +17,7 @@ from modules.crm.application.ports import (
 )
 from modules.customers import services as customer_services
 from modules.inventory import services as inventory_services
+from modules.messaging import services as messaging_services
 from modules.sales import services as sales_services
 from shared import module_gate
 from shared.identity import CompanyUserDirectory
@@ -154,3 +158,81 @@ class UserDirectoryAdapter:
     def search(self, search: str = '') -> list[dict]:
         """Usuarios de la empresa (`{id, name}`) cuyo nombre o usuario contiene el texto."""
         return list(self._directory.list(search=search))
+
+
+def subscribe_inbound(handler) -> None:
+    """Avisa `handler(company_id, conversation_id)` por cada mensaje entrante nuevo (alta al arrancar la app)."""
+    messaging_services.subscribe_inbound(handler)
+
+
+def _inbox_message(m) -> InboxMessage:
+    return InboxMessage(m.id, m.direction, m.type, m.content, m.status, m.failure_reason, m.created_at, m.sent_at)
+
+
+def _inbox_conversation(summary) -> InboxConversation:
+    c, last = summary.conversation, summary.last_message
+    return InboxConversation(c.id, c.phone, c.owner_id, c.customer_id, c.lead_id, c.opportunity_id,
+                             _inbox_message(last) if last else None, summary.window_open, summary.window_expires_at)
+
+
+_MESSAGES = {
+    'window_closed': 'La ventana de 24 h está cerrada: envía una plantilla aprobada.',
+    'template_not_approved': 'La plantilla no está aprobada.',
+    'connection_not_active': 'La conexión de WhatsApp no está activa.',
+    'not_retryable': 'Solo se puede reenviar un mensaje que falló.',
+}
+
+
+def _translated(call):
+    """Los errores de `messaging` se presentan con los de CRM: la API de la bandeja solo conoce estos."""
+    try:
+        return call()
+    except messaging_services.MessagingNotFound as exc:
+        raise CrmNotFound('No encontrado.') from exc
+    except messaging_services.MessagingValidationError as exc:
+        raise CrmValidationError(exc.errors) from exc
+    except (messaging_services.WindowClosed, messaging_services.TemplateNotApproved,
+            messaging_services.ConnectionNotActive, messaging_services.NotRetryable) as exc:
+        raise CrmConflict(exc.code, _MESSAGES[exc.code]) from exc
+
+
+class ConversationInboxAdapter:
+    """Único lugar de la bandeja que conoce a `messaging`, y solo por su `services.py`."""
+
+    def __init__(self, company_id: UUID):
+        self.company_id = company_id
+
+    def page(self, *, owner_id, unassigned, opportunity_id, search, customer_ids, lead_ids, offset, limit):
+        total, rows = messaging_services.list_conversations(
+            self.company_id, owner_id=owner_id, unassigned=unassigned, opportunity_id=opportunity_id,
+            search=search, customer_ids=customer_ids, lead_ids=lead_ids, offset=offset, limit=limit)
+        return total, [_inbox_conversation(r) for r in rows]
+
+    def get(self, conversation_id: UUID) -> InboxConversation:
+        return _translated(lambda: _inbox_conversation(
+            messaging_services.get_conversation(self.company_id, conversation_id)))
+
+    def messages(self, conversation_id: UUID, after: datetime | None):
+        return _translated(lambda: [_inbox_message(m) for m in messaging_services.list_messages(
+            self.company_id, conversation_id, after)])
+
+    def connection_active(self) -> bool:
+        return messaging_services.connection_active(self.company_id)
+
+    def send_text(self, conversation_id: UUID, body: str) -> InboxMessage:
+        return _translated(lambda: _inbox_message(messaging_services.send_text(self.company_id, conversation_id, body)))
+
+    def send_template(self, conversation_id: UUID, template_id: UUID, components) -> InboxMessage:
+        return _translated(lambda: _inbox_message(messaging_services.send_template(
+            self.company_id, conversation_id, template_id, components)))
+
+    def retry(self, conversation_id: UUID, message_id: UUID) -> InboxMessage:
+        return _translated(lambda: _inbox_message(messaging_services.retry_message(
+            self.company_id, conversation_id, message_id)))
+
+    def assign(self, conversation_id: UUID, owner_id: int | None) -> None:
+        _translated(lambda: messaging_services.assign(self.company_id, conversation_id, owner_id))
+
+    def link(self, conversation_id, customer_id, lead_id, opportunity_id) -> None:
+        _translated(lambda: messaging_services.link_contact(
+            self.company_id, conversation_id, customer_id, lead_id, opportunity_id))

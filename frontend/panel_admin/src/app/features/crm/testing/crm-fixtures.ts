@@ -1,3 +1,4 @@
+import { InboxConversation, InboxMessage } from '../models/inbox';
 import { CrmBoard, CrmStage } from '../models/board';
 import { CrmCustomer, CrmCustomerPage } from '../models/crm-customer';
 import { CrmActivity } from '../models/activity';
@@ -92,5 +93,27 @@ export function makeActivity(overrides: Partial<CrmActivity> = {}): CrmActivity 
     occurredAt: '2026-11-25T14:00:00Z',
     createdAt: '2026-11-25T14:00:00Z',
     ...overrides,
+  };
+}
+
+export function makeInboxConversation(overrides: Partial<InboxConversation> = {}): InboxConversation {
+  return {
+    id: 'v-1',
+    phone: '59176543210',
+    contact: null,
+    owner: null,
+    opportunity: null,
+    lastMessage: { type: 'text', preview: 'hola', direction: 'in', status: 'delivered', at: '2026-11-28T10:00:00Z' },
+    windowOpen: true,
+    windowExpiresAt: '2026-11-29T10:00:00Z',
+    connectionActive: null,
+    ...overrides,
+  };
+}
+
+export function makeInboxMessage(overrides: Partial<InboxMessage> = {}): InboxMessage {
+  return {
+    id: 'm-1', direction: 'in', type: 'text', text: 'hola', status: 'delivered', failureReason: '',
+    createdAt: '2026-11-28T10:00:00Z', ...overrides,
   };
 }

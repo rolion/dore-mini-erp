@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from .errors import ConnectionNotActive, TemplateNotApproved, WindowClosed
+from .errors import ConnectionNotActive, MessagingValidationError, NotRetryable, TemplateNotApproved, WindowClosed
 from .rules import MAX_ATTEMPTS, backoff_delay, window_open
 
 QUEUED, SENT, DELIVERED, READ, FAILED = 'queued', 'sent', 'delivered', 'read', 'failed'
@@ -59,6 +59,22 @@ class Conversation:
     connection_id: UUID
     phone: str
     last_inbound_at: datetime | None = None
+    owner_id: int | None = None
+    customer_id: UUID | None = None
+    lead_id: UUID | None = None
+    opportunity_id: UUID | None = None
+
+    def assign(self, owner_id: int | None) -> None:
+        self.owner_id = owner_id
+
+    def link_contact(self, customer_id: UUID | None = None, lead_id: UUID | None = None) -> None:
+        """A lo sumo un contacto: cliente o prospecto (INV-03). Sin ninguno, lo quita."""
+        if customer_id is not None and lead_id is not None:
+            raise MessagingValidationError({'customer_id': ['Vincula un cliente o un prospecto, no ambos.']})
+        self.customer_id, self.lead_id = customer_id, lead_id
+
+    def link_opportunity(self, opportunity_id: UUID | None) -> None:
+        self.opportunity_id = opportunity_id
 
     def register_inbound(self, at: datetime) -> None:
         if self.last_inbound_at is None or at > self.last_inbound_at:
@@ -93,6 +109,7 @@ class Message:
     attempts: int = 0
     next_attempt_at: datetime | None = None
     failure_reason: str = ''
+    created_at: datetime | None = None
 
     def mark_sent(self, provider_message_id: str, now: datetime) -> None:
         self.provider_message_id = provider_message_id
@@ -114,6 +131,12 @@ class Message:
         if new_status != FAILED:
             self.failure_reason = ''
         return True
+
+    def requeue(self) -> None:
+        """Reintento manual (INV-08): solo un saliente `failed` vuelve a la cola, con intentos en cero."""
+        if self.direction != OUTBOUND or self.status != FAILED:
+            raise NotRetryable(self.status)
+        self.status, self.attempts, self.next_attempt_at, self.failure_reason = QUEUED, 0, None, ''
 
     def record_pricing(self, category: str, billable: bool | None, model: str) -> None:
         self.pricing_category = category or self.pricing_category

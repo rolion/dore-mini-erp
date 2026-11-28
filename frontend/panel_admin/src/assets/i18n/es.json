@@ -56,7 +56,8 @@
         "BOARD": "Tablero",
         "LEADS": "Prospectos",
         "OPPORTUNITIES": "Oportunidades",
-        "TASKS": "Por contactar"
+        "TASKS": "Por contactar",
+        "INBOX": "Bandeja"
       }
     },
     "ORDERS": {
@@ -3799,6 +3800,66 @@
       "ARCHIVAR_TITULO": "Archivar tarea",
       "ARCHIVAR_TEXTO": "La tarea se oculta de todas las listas y no se puede recuperar desde la interfaz.",
       "ARCHIVAR_CONFIRMAR": "Archivar tarea"
+    },
+    "INBOX": {
+      "TITULO": "Bandeja",
+      "FILTRO_RESPONSABLE": "Filtrar por responsable",
+      "SCOPES": {
+        "mine": "Mías",
+        "unassigned": "Sin asignar",
+        "all": "Todas"
+      },
+      "BUSCAR": "Buscar por teléfono o nombre",
+      "VACIA": "Aún no hay conversaciones. Cuando un cliente escriba a tu WhatsApp aparecerá aquí.",
+      "VACIA_FILTRADA": "No hay conversaciones que coincidan con los filtros.",
+      "IR_CONFIGURACION": "Ir a Configuración › WhatsApp",
+      "SIN_CONEXION": "La conexión de WhatsApp no está activa: no se podrán enviar mensajes.",
+      "VENTANA_CERRADA": "Ventana cerrada",
+      "ELIGE": "Elige una conversación para verla.",
+      "VOLVER": "Volver a la lista",
+      "RESPONSABLE": "Responsable",
+      "SIN_RESPONSABLE": "Sin responsable",
+      "VINCULAR_CONTACTO": "Vincular contacto",
+      "CAMBIAR_CONTACTO": "Cambiar contacto",
+      "VINCULAR_OPORTUNIDAD": "Vincular o crear oportunidad",
+      "OPORTUNIDAD": "Oportunidad",
+      "SIN_OPORTUNIDAD": "Sin oportunidad",
+      "MENSAJES": "Mensajes de la conversación",
+      "ENTRANTE": "Recibido",
+      "SALIENTE": "Enviado",
+      "ESCRIBE": "Escribe tu respuesta",
+      "ENVIAR": "Enviar",
+      "PLANTILLA": "Plantilla",
+      "ELIGE_PLANTILLA": "Elige una plantilla",
+      "ENVIAR_PLANTILLA": "Enviar plantilla",
+      "SIN_PLANTILLAS": "No hay plantillas aprobadas. Sincronízalas en Configuración › WhatsApp.",
+      "VENTANA_CERRADA_AVISO": "Pasaron más de 24 h desde el último mensaje del cliente: solo puedes enviar una plantilla aprobada.",
+      "ESTADOS": {
+        "queued": "En cola",
+        "sent": "Enviado",
+        "delivered": "Entregado",
+        "read": "Leído",
+        "failed": "Falló"
+      },
+      "REENVIAR": "Reenviar",
+      "RESPONSABLE_ACTUALIZADO": "Responsable actualizado.",
+      "CONTACTO_VINCULADO": "Contacto actualizado.",
+      "OPORTUNIDAD_ACTUALIZADA": "Oportunidad actualizada."
+    },
+    "INBOX_CONTACT": {
+      "TITULO": "Vincular contacto",
+      "TIPO": "Tipo de contacto",
+      "QUITAR": "Quitar contacto",
+      "CREAR_PROSPECTO": "Crear prospecto"
+    },
+    "INBOX_OPPORTUNITY": {
+      "TITULO": "Oportunidad de la conversación",
+      "NECESITA_CONTACTO": "Vincula primero un contacto a la conversación.",
+      "VINCULAR_EXISTENTE": "Vincular una existente",
+      "CREAR_NUEVA": "Crear una nueva",
+      "SIN_ABIERTAS": "El contacto no tiene oportunidades abiertas.",
+      "TABLERO": "Tablero",
+      "QUITAR": "Quitar oportunidad"
     }
   }
 }

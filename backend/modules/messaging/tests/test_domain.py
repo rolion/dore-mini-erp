@@ -8,7 +8,7 @@ from django.test import SimpleTestCase
 
 from modules.messaging.domain import webhook
 from modules.messaging.domain.entities import Conversation, Message
-from modules.messaging.domain.errors import MessagingValidationError, WindowClosed
+from modules.messaging.domain.errors import MessagingValidationError, NotRetryable, WindowClosed
 from modules.messaging.domain.rules import (
     MAX_ATTEMPTS,
     backoff_delay,
@@ -138,3 +138,43 @@ class ParserTests(SimpleTestCase):
         self.assertEqual(webhook.parse(self.PAYLOAD, '999'), ([], []))
         for junk in (None, [], {'entry': 'x'}, {'entry': [{'changes': [1]}]}):
             self.assertEqual(webhook.phone_number_ids(junk), set())
+
+
+class InboxLinkTests(SimpleTestCase):
+    """Vínculos de la conversación y reintento manual (INV-03, INV-08, INV-09)."""
+
+    def conversation(self):
+        return Conversation(uuid4(), uuid4(), uuid4(), '59176543210')
+
+    def test_assign_and_unassign(self):
+        c = self.conversation()
+        c.assign(7)
+        self.assertEqual(c.owner_id, 7)
+        c.assign(None)
+        self.assertIsNone(c.owner_id)
+
+    def test_contact_is_customer_or_lead_never_both(self):  # INV-03
+        c, customer, lead = self.conversation(), uuid4(), uuid4()
+        c.link_contact(customer_id=customer)
+        self.assertEqual((c.customer_id, c.lead_id), (customer, None))
+        c.link_contact(lead_id=lead)
+        self.assertEqual((c.customer_id, c.lead_id), (None, lead))
+        with self.assertRaises(MessagingValidationError):
+            c.link_contact(customer_id=customer, lead_id=lead)
+        c.link_contact()
+        self.assertEqual((c.customer_id, c.lead_id), (None, None))
+
+    def test_requeue_only_failed_outbound(self):  # INV-08
+        m = message('queued')
+        m.fail('429')
+        m.attempts = 5
+        m.requeue()
+        self.assertEqual((m.status, m.attempts, m.failure_reason, m.next_attempt_at), ('queued', 0, '', None))
+        with self.assertRaises(NotRetryable):
+            m.requeue()  # ya no está `failed`
+
+    def test_inbound_is_not_retryable(self):
+        m = message('failed')
+        m.direction = 'in'
+        with self.assertRaises(NotRetryable):
+            m.requeue()

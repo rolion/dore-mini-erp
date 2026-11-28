@@ -122,6 +122,13 @@ class DjangoLeadRepository:
             return {}
         return {m.id: lead_to_entity(m) for m in self._leads().filter(pk__in=ids)}
 
+    def find_unconverted_by_phone(self, normalized_phone: str) -> list[Lead]:
+        """Prospectos sin convertir con exactamente ese teléfono normalizado (autovínculo de la bandeja)."""
+        if not normalized_phone:
+            return []
+        rows = self._leads().filter(normalized_phone=normalized_phone, converted_customer_id__isnull=True)
+        return [lead_to_entity(m) for m in rows.order_by('created_at', 'id')]
+
     def list(self, *, search: str | None = None, converted: bool | None = None) -> _Rows:
         queryset = self._leads().order_by('-created_at', 'id')
         if search:
@@ -195,6 +202,16 @@ class DjangoOpportunityRepository:
     def open_for_lead(self, lead_id: UUID) -> "list[Opportunity]":
         queryset = self._opportunities().filter(lead_id=lead_id, status=OPEN).select_for_update()
         return [opportunity_to_entity(m) for m in queryset.order_by('created_at', 'id')]
+
+    def open_for_contact(self, customer_id: UUID | None, lead_id: UUID | None) -> "list[Opportunity]":
+        """Oportunidades abiertas del cliente o del prospecto (sin bloquear filas: solo lectura)."""
+        condition = Q(pk__in=[])
+        if customer_id is not None:
+            condition |= Q(customer_id=customer_id)
+        if lead_id is not None:
+            condition |= Q(lead_id=lead_id)
+        queryset = self._opportunities().filter(condition, status=OPEN).order_by('created_at', 'id')
+        return [opportunity_to_entity(m) for m in queryset]
 
     def stage_in_company(self, stage_id: UUID) -> bool:
         return StageModel.objects.filter(pk=stage_id, board__company_id=self.company_id).exists()
